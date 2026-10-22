@@ -34,6 +34,13 @@ projects, tasks, milestones and delivery evidence; Vox owns live coordination.
 Neither is required for local file inspection. Memory SHOULD retain useful
 lessons and source links rather than copies of those systems' changing state.
 
+## Conflicting claims
+
+A session MUST read [authority/GUIDE.md](authority/GUIDE.md) when remembered
+claims disagree with code, approved intent, work records, coordination or another
+lesson. It MUST use the appropriate current authority and retain unresolved
+contradictions for the detecting developer rather than use landing order as truth.
+
 ## Applicability
 
 A session MUST read [scope/GUIDE.md](scope/GUIDE.md) when resolving repository

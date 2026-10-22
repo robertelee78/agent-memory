@@ -104,3 +104,7 @@ initialization and the complete installed workflow remain under execution.
 The [scope policy](skills/agent-memory/scope/GUIDE.md) defines shared repository
 knowledge and explicit component, branch, worktree, task and session conditions.
 Its read-only decision helper evaluates applicability without claiming access control.
+
+The [authority policy](skills/agent-memory/authority/GUIDE.md) resolves remembered
+claims against current sources and routes unresolved contradictions to the
+detecting developer. Its evaluator produces read-only correction/revocation candidates.
