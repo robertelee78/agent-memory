@@ -10,6 +10,7 @@ import unittest
 import uuid
 
 from world import World
+from record_fixtures import record_text, project_id
 
 ROOT = Path(__file__).resolve().parents[2]
 HELPER = ROOT / "scripts/bank_transactions.py"
@@ -305,6 +306,10 @@ class BankTransactionsContract(unittest.TestCase):
 
     def optional_files(self, files, additions):
         files = dict(files)
+        # Callers that materialize the source bank also use this map. Retain the
+        # exact generated fixture bytes instead of generating another identity.
+        additions.update({path: record_text(body, project_id(files['MEMORY.md']))
+                          for path, body in additions.items() if not body.startswith('---\n')})
         rows = "".join(f"| [{p}](<{p}>) | Context | repository | active | When relevant |\n" for p in additions)
         files["MEMORY.md"] = files["MEMORY.md"].replace("\n## Omitted contexts\n", rows + "\n## Omitted contexts\n")
         files.update(additions)

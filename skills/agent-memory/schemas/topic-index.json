@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "agent-memory/topic-index-v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "project-id",
+    "updated"
+  ],
+  "properties": {
+    "schema": {
+      "const": "agent-memory/topic-index-v1"
+    },
+    "project-id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "updated": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "x-max-bytes": 16384,
+  "x-max-routes": 64,
+  "x-max-nested-indexes": 2,
+  "x-route-contract": "bank-router.json; labels bank-relative, hrefs relative to the index file"
+}

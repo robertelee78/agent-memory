@@ -116,3 +116,7 @@ tracking is kept distinct from publication and refreshed shared memory.
 The [typed record contract](skills/agent-memory/records/GUIDE.md) preserves
 provenance, conditions, validity and explicit stale state in standalone Markdown.
 Its read-only validator also handles optional history and the safe tombstone exception.
+
+The [optional-record loader](skills/agent-memory/layout/GUIDE.md) checks typed
+records and bounded topic indexes through one shared algorithm, preserving
+provenance and conditions while refusing ambiguous routes or pending observations.

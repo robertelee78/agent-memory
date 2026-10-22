@@ -57,6 +57,10 @@ typed provenance, validity, correction or revocation. Ordinary context prose
 does not need metadata on every paragraph. Record format validation MUST NOT
 be treated as admission or proof that its evidence and conditions are correct.
 
+A session MUST read [layout/GUIDE.md](layout/GUIDE.md) when adding or inspecting
+optional records, maintaining topic indexes, or resolving missing, duplicate or
+inconsistent routes. Index routing MUST preserve each lesson's own conditions.
+
 ## Sharing boundary
 
 A local edit, branch commit or successful validation MUST NOT be described as

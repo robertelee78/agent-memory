@@ -11,8 +11,9 @@ The contract's machine-readable limits, field names, context names and allowed
 directories are in
 [`bank-router.json`](../../skills/agent-memory/schemas/bank-router.json).
 The same portable helper renders and validates these rules from a checkout or
-from a copied artifact. Its current boundary is router/file validation;
-record lifecycle validation, evidence-led initialization and mediated mutation
+from a copied artifact. Its current boundary includes the
+[optional-record layout](../../skills/agent-memory/layout/GUIDE.md) and shared
+record format. Admission, lifecycle mutations and evidence-led initialization
 have separate first-release stories.
 
 ## Router
@@ -78,9 +79,9 @@ candidate, quarantined, active, superseded, revoked, expired and deleted;
 a route's existence MUST NOT imply its content is current guidance.
 
 The router MUST stay within 16 KiB and 64 direct routes. Larger bodies belong
-in project context; bounded topic-index traversal is owned by the disclosure
-and optional-record stories. This initial validator accepts directly routed
-optional Markdown files. It MUST reject traversal, absolute paths, duplicate
+in project context or bounded topic indexes. The shared layout validator follows
+up to two nested topic indexes and validates standalone record metadata.
+It MUST reject traversal, absolute paths, duplicate
 routes, symlinks, runtime/hidden targets, missing/empty files and orphan Markdown.
 Ordinary path spaces use angle-bracket link destinations. Paths MUST NOT contain
 ambiguous Markdown metacharacters, URL escapes, fragments or backslashes.
@@ -127,7 +128,7 @@ The portable equivalent is `skills/agent-memory/scripts/bank_contract.py`.
 Both commands emit one JSON document and write no bank or runtime files.
 `render` emits a map of relative file names to Markdown contents; it MUST NOT
 apply that proposal or overwrite existing memory. `validate` inspects only the
-default bank and reports the `router-and-file-contract` scope. Exit 0 means a
+default bank and reports the `router-layout-and-record-format` scope. Exit 0 means a
 rendered proposal or a valid file contract; exit 1 means refusal; exit 2 means
 invalid command arguments. A successful render is not an admission decision,
 verified mutation, or evidence that a bank has landed on main.
