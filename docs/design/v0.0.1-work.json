@@ -1813,7 +1813,6 @@
         "robertelee78/agent-memory:ADR-0010:manual-file-protocol",
         "robertelee78/agent-memory:ADR-0010:optional-record-layout",
         "robertelee78/agent-memory:ADR-0010:recoverable-multi-file-writes",
-        "robertelee78/agent-memory:ADR-0010:router-and-context-files",
         "robertelee78/agent-memory:ADR-0010:safe-tombstone-format",
         "robertelee78/agent-memory:ADR-0010:single-file-checkpoint",
         "robertelee78/agent-memory:ADR-0011:principal-registry",

@@ -17,13 +17,22 @@ def check():
     assert len(release_gates) == 1 and release_gates[0]["issue"] == 96
     final = release_gates[0]
     assert final["delivery"]["release"] == plan["release"] == "v0.0.1"
-    assert set(final["depends_on"]) == set(by_key) - {final["work_key"]}
+    covered = set()
+    pending = list(final["depends_on"])
+    while pending:
+        key = pending.pop()
+        assert key in by_key, "Unknown release predecessor"
+        if key not in covered:
+            covered.add(key)
+            pending.extend(by_key[key]["depends_on"])
+    assert covered == set(by_key) - {final["work_key"]}
     inspected_sources = set()
     for s in stories:
         assert s["milestone"] == plan["release"]
         assert s["outcome"] and s["acceptance"] and s["validation"]
         assert s["fixtures"] and all(f"`{f}`" in design for f in s["fixtures"])
         deps = s["depends_on"]
+        assert len(deps) <= 50, "GitHub dependency relationship limit exceeded"
         assert len(deps) == len(set(deps)), (s["issue"], "duplicate predecessor")
         assert all(d in by_key for d in deps), (s["issue"], "outside-release predecessor")
         assert all(by_key[d]["wave"] < s["wave"] for d in deps), "Cycle or wrong wave"
