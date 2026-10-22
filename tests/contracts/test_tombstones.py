@@ -173,6 +173,48 @@ class TombstonesContract(unittest.TestCase):
             self.assertEqual(p.returncode, 1)
             self.assertEqual(file.read_bytes(), original)
 
+    def test_every_physical_history_occupant_is_checked_before_returning_stale_content(self):
+        variants = ("wrong-extension", "uppercase-extension", "hidden-runtime", "subdirectory",
+                    "nested-marker", "history-file", "tombstones-file", "history-alias", "tombstones-alias")
+        for variant in variants:
+            with self.subTest(variant=variant), World() as w:
+                repo, bank, dead, file, stale = self.fixture(w)
+                content = file.read_bytes()
+                # Simulate a malformed imported history that ordinary Markdown
+                # inventory sees as absent rather than as an orphaned route.
+                router = bank / "MEMORY.md"
+                router.write_text("\n".join(line for line in router.read_text().split("\n") if dead["id"] not in line))
+                file.unlink()
+                directory = bank / "history/tombstones"
+                if variant == "wrong-extension":
+                    (directory / (dead["id"] + ".txt")).write_bytes(content)
+                elif variant == "uppercase-extension":
+                    (directory / (dead["id"] + ".MD")).write_bytes(content)
+                elif variant == "hidden-runtime":
+                    (directory / ".agent-memory-hidden.txt").write_bytes(content)
+                elif variant == "subdirectory":
+                    (directory / "other").mkdir()
+                elif variant == "nested-marker":
+                    (directory / "other").mkdir()
+                    (directory / "other" / (dead["id"] + ".txt")).write_bytes(content)
+                elif variant == "history-file":
+                    directory.rmdir()
+                    directory.parent.rmdir()
+                    directory.parent.write_bytes(content)
+                elif variant == "tombstones-file":
+                    directory.rmdir()
+                    directory.write_bytes(content)
+                elif variant == "history-alias":
+                    directory.parent.rename(bank / "History")
+                else:
+                    directory.rename(directory.parent / "Tombstones")
+                before = {p.relative_to(bank).as_posix(): p.read_bytes() for p in bank.rglob("*") if p.is_file()}
+                p, error = self.command(w, "filter", "--repo", repo, "--input", self.save(w, stale))
+                self.assertEqual(p.returncode, 1, (variant, error))
+                self.assertNotIn("DELETED_SECRET_CANARY", p.stdout)
+                self.assertNotIn("records", error)
+                self.assertEqual({p.relative_to(bank).as_posix(): p.read_bytes() for p in bank.rglob("*") if p.is_file()}, before)
+
 
 if __name__ == "__main__":
     unittest.main()

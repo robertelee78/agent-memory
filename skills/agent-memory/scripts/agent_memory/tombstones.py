@@ -6,8 +6,9 @@ import json
 from pathlib import Path
 import sys
 
+from . import bank_contract as contract
 from . import bank_writes as writes
-from .developer_identity import load, uuid_valid
+from .developer_identity import digest, load, uuid_valid
 from .frontmatter import ContractError, read, write
 from .lifecycle import time_value
 
@@ -50,13 +51,33 @@ def history(repo):
     _, bank = writes.bank_path(repo)
     tombstones = {}
     routes = {route["path"]: route for route in checked["routes"]}
+    # Markdown inventory deliberately ignores other file types and runtime
+    # names. None of those omissions may mean "no deletion" in this namespace.
+    contract.portable_aliases([p.relative_to(bank).as_posix() for p in bank.rglob("*")]
+                              + ["history", "history/tombstones"])
+    for directory in (bank / "history", bank / "history/tombstones"):
+        if directory.is_symlink() or (directory.exists() and not directory.is_dir()):
+            raise ContractError("Deletion history requires canonical directories")
+    directory = bank / "history/tombstones"
+    physical = set()
+    if directory.exists():
+        for entry in directory.iterdir():
+            if (entry.is_symlink() or not entry.is_file() or entry.suffix != ".md"
+                    or not uuid_valid(entry.stem)):
+                raise ContractError("Deletion history permits only canonical UUID marker files")
+            physical.add(entry.relative_to(bank).as_posix())
+    if physical != {path for path in observed if path.startswith(PREFIX)}:
+        raise ContractError("Deletion history changed during inventory")
     # Use every canonical history file, including targets that a later bounded
     # index resolver makes reachable. Never restrict deletion to the read set
     # chosen for the current coding task.
     for path in observed:
         if not path.startswith(PREFIX):
             continue
-        metadata = parse((bank / path).read_bytes().decode("utf-8"))
+        raw = (bank / path).read_bytes()
+        if digest(raw) != observed[path]:
+            raise ContractError("Deletion history changed during inventory")
+        metadata = parse(raw.decode("utf-8"))
         route = routes.get(path)
         if (path != relative_path(metadata["id"]) or metadata["scope"] != checked["project_id"] or metadata["id"] in tombstones
                 or (route is not None and (route["lifecycle"] != "deleted" or route["scope"] != "repository"))):
@@ -79,8 +100,8 @@ def filter_projection(repo, projection):
             suppressed += 1
         else:
             kept.append(record)
-    latest, latest_hashes = writes.snapshot(repo)
-    if latest["project_id"] != project_id or latest_hashes != observed:
+    latest_project, latest_hashes, latest_deleted = history(repo)
+    if latest_project != project_id or latest_hashes != observed or latest_deleted != deleted:
         raise ContractError("Canonical history changed during projection filtering; reread before rebuild")
     return {"schema": "agent-memory/projection-guard-result-v1", "operation": "filter", "project_id": project_id,
             "records": kept, "suppressed": suppressed, "source_hashes": observed, "writes_performed": False,

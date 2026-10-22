@@ -45,6 +45,10 @@ tombstones use repository scope, deleted lifecycle and a rebuild read condition.
 The tombstone's project UUID must match the containing bank. The strict tombstone
 directory contains UUID marker files only; a bounded history index belongs
 outside that directory. Losing a disposable index must not lose this history.
+The guard MUST inspect every physical occupant, including non-Markdown and
+hidden runtime names. Extra files, subdirectories, wrong directory types and
+case/Unicode spelling aliases MUST fail closed. It MUST repeat that namespace
+check before returning survivors; a skipped file is not absent deletion history.
 
 These helpers establish the format and rebuild guard. They do not perform the
 full governed forget operation, purge existing caches/backups, erase Git history,
