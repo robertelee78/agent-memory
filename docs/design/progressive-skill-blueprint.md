@@ -1,6 +1,10 @@
 # Progressive skill blueprint
 
-Status: Design input; the linked ADRs remain Proposed.
+Status: Supporting design for the ADRs approved for v0.0.1 in the
+[operator approval record](v0.0.1-approval.md). Later-milestone proposals remain
+under review. The [execution queue](v0.0.1-work.json) defines the first-release
+operations; the larger target taxonomy does not make deferred leaves release
+prerequisites.
 
 ## The progression being copied from AWA
 

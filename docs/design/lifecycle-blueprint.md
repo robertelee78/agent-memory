@@ -1,12 +1,21 @@
 # Install, update, and uninstall blueprint
 
-Status: Design input for ADR-0007, which remains Proposed.
+Status: Supporting design for ADR-0007, approved for v0.0.1 in the
+[operator approval record](v0.0.1-approval.md). Later-milestone proposals remain
+under review; implementation and acceptance require separate evidence.
 
 ## Product boundary
 
 Installation manages code, the portable skill, command wrappers, and bounded
 client activation. It does not own project Memory Banks. Runtime lifecycle and
 user-data lifecycle are separate authority domains.
+
+The [execution queue](v0.0.1-work.json) defines the first-release subset of this
+blueprint. v0.0.1 SHALL declare support for its initial `agent-memory/v1` bank
+schema and an empty migrator source range. Unsupported banks MUST refuse ordinary
+mutation. The migration engine (#48, v0.0.2) and signed channel (#49, v0.0.3)
+are later work, not prerequisites for installing or releasing v0.0.1. Migration
+procedures below apply when a supported migrator ships.
 
 The design inherits AWA's managed-checkout, preflight, backup, sentinel-block,
 receipt, digest, and fast-forward update patterns. It strengthens transaction,
