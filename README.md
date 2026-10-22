@@ -78,6 +78,10 @@ supports explicit stable-ID creation, adoption and selection before installation
 The [project identity contract](docs/contracts/project-identity.md) describes
 stable bank IDs, worktree/clone evidence, remote normalization and explicit binding decisions.
 
+The [common scope-binding workflow](docs/contracts/scope-binding.md) combines
+developer/project status, previews and verifies registry/bank identity changes,
+and guards mediated writes with the resolved scope.
+
 The [observed write contract](docs/contracts/observed-writes.md) defines the
 common bank lock, single-file replacement, readback, retry and recovery mechanism.
 

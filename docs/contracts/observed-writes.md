@@ -12,7 +12,8 @@ The current public primitive replaces one existing routed Markdown target. It
 MUST NOT delete content, change the router/project ID, initialize an empty bank
 or present several replacements as one atomic transaction. Those operations use
 the dependent initialization/binding/multi-file and forgetting protocols.
-Checkpoint's product-specific fields and identity gates are a separate caller.
+The [common scope resolver](scope-binding.md) now guards public mediated writes.
+Checkpoint's product-specific fields remain a separate caller.
 
 ```sh
 python3 -I scripts/bank_writes.py inspect --repo /path/to/repository
@@ -26,7 +27,10 @@ emit one JSON document; exit 0 means the command completed, exit 1 means refusal
 or an interrupted/uncertain result requiring inspection, exit 2 means invalid
 arguments. A preview binds a random operation ID, stable bank project ID,
 canonical repository root, complete observed Markdown hashes, target path and
-reviewed replacement bytes. It writes nothing. Inspect validates the current
+reviewed replacement bytes, plus a pinned resolved `scope_context` when setup
+is complete. A missing context or a changed developer/project registry refuses
+apply and requires a fresh preview. Identity is checked again under the bank
+lock. Preview writes nothing. Inspect validates the current
 file contract and returns the canonical Markdown path inventory; it does not
 claim admission or current truth for each prose statement. A visible lock or
 transaction marker MUST prevent a stable read result and route to retry/recovery.

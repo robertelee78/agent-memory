@@ -122,6 +122,10 @@ write/transaction guards and verify both surfaces. They MUST NOT relabel an
 existing bank by copying an entire rendered snapshot. This split permits first
 setup without requiring a bank that can only be created after identity resolves.
 
+The [combined scope-binding operation](scope-binding.md) implements that
+registry/bank handoff. Use it for complete binding rather than treating this
+registry-only primitive's successful receipt as a fully resolved bank.
+
 ## Concurrency and recovery
 
 Apply takes an exclusive `.projects.lock`, records operation/host/PID/start,

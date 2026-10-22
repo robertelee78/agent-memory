@@ -46,6 +46,10 @@ contradictions for the detecting developer rather than use landing order as trut
 
 ## Applicability
 
+A session MUST read [identity/GUIDE.md](identity/GUIDE.md) before mediated writes
+or explicit bank binding. It MUST use the common developer/project resolver and
+surface unresolved identity; clients MUST NOT invent alternate ID algorithms.
+
 A session MUST read [scope/GUIDE.md](scope/GUIDE.md) when resolving repository
 scope or component, branch, worktree, task and session conditions. Unknown or
 mismatched conditions MUST NOT be silently widened into current guidance.
