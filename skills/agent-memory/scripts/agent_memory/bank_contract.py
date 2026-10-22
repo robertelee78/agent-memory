@@ -173,6 +173,31 @@ def render(proposal):
             "files": files, "writes_performed": False}
 
 
+def validate_files(files):
+    """Validate a proposed complete canonical map without temporary file writes."""
+    if not isinstance(files, dict) or "MEMORY.md" not in files:
+        raise ContractError("A complete bank requires MEMORY.md")
+    for path, body in files.items():
+        if path != "MEMORY.md":
+            path_value(path)
+        if not isinstance(body, str) or not body.strip():
+            raise ContractError(f"Missing or empty routed file: {path}")
+        body.encode("utf-8")
+    metadata, routes, omitted = parse_router(files["MEMORY.md"])
+    for route in routes:
+        if route["path"] not in files:
+            raise ContractError(f"Missing or empty routed file: {route['path']}")
+    for path in omitted:
+        if path in files:
+            raise ContractError(f"Context exists but is marked omitted: {path}")
+    if set(files) != {"MEMORY.md", *[r["path"] for r in routes]}:
+        raise ContractError("Project Markdown must be reachable from the router")
+    return {"schema": "agent-memory/bank-contract-result-v1", "operation": "validate",
+            "valid": True, "validation_scope": "router-and-file-contract", "project_id": metadata["project-id"],
+            "router_updated": metadata["router-updated"], "routes": routes, "omitted": omitted,
+            "writes_performed": False}
+
+
 def validate(repo, *, owned_lock=None):
     bank = Path(repo).resolve() / SPEC["x-bank-path"]
     if bank.is_symlink():
@@ -200,17 +225,14 @@ def validate(repo, *, owned_lock=None):
     # Optional files cannot become an unindexed second bank. Bounded topic-index
     # traversal is added by the disclosure/optional-record stories; this first
     # contract accepts directly routed optional Markdown files.
-    routed = {r["path"] for r in routes}
+    files = {"MEMORY.md": router.read_text(encoding="utf-8")}
     for target in bank.rglob("*"):
         if target.is_symlink():
             raise ContractError("Bank paths must not be symlinks")
         relative = target.relative_to(bank).as_posix()
-        if target.is_file() and target.suffix == ".md" and relative != "MEMORY.md" and relative not in routed:
-            raise ContractError("Project Markdown must be reachable from the router")
-    return {"schema": "agent-memory/bank-contract-result-v1", "operation": "validate",
-            "valid": True, "validation_scope": "router-and-file-contract", "project_id": metadata["project-id"],
-            "router_updated": metadata["router-updated"], "routes": routes, "omitted": omitted,
-            "writes_performed": False}
+        if target.is_file() and target.suffix == ".md" and not any(part.startswith(".agent-memory") for part in Path(relative).parts):
+            files[relative] = target.read_text(encoding="utf-8")
+    return validate_files(files)
 
 
 def main(argv=None):
