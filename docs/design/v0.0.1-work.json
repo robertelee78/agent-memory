@@ -2,7 +2,7 @@
   "schema": "agent-memory/execution-plan-v1",
   "release": "v0.0.1",
   "design": "docs/design/v0.0.1-execution.md",
-  "approval": "technical-review-pending",
+  "approval": "operator-approved",
   "selected_by": "operator request: reload AWA and prepare v0.0.1 for execution, 2026-10-22",
   "stories": [
     {
@@ -19,9 +19,9 @@
       "source": {
         "kind": "adr",
         "path": "docs/adr/0001-local-first-authority-boundaries.md",
-        "commit": "1c3cd96a0d843f5f3359286c16b27116c9192825",
-        "blob": "af2775363f9317d6e570a8885b6f7ebc33580e04",
-        "decision_status": "proposed"
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "11e677f0c7c2c1f203e7f6ace6f4a7a0b2be555a",
+        "decision_status": "accepted"
       },
       "outcome": "A fresh agent can use the shared Markdown bank and portable skill without optional infrastructure.",
       "acceptance": [
@@ -35,7 +35,12 @@
         "bank-roundtrip",
         "identity-isolation",
         "security-canaries"
-      ]
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-2",
+        "work_key": "robertelee78/agent-memory:ADR-0001:offline-core",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0001:offline-core"
+      }
     },
     {
       "work_key": "robertelee78/agent-memory:ADR-0001:scope-policy",
@@ -51,9 +56,9 @@
       "source": {
         "kind": "adr",
         "path": "docs/adr/0001-local-first-authority-boundaries.md",
-        "commit": "1c3cd96a0d843f5f3359286c16b27116c9192825",
-        "blob": "af2775363f9317d6e570a8885b6f7ebc33580e04",
-        "decision_status": "proposed"
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "11e677f0c7c2c1f203e7f6ace6f4a7a0b2be555a",
+        "decision_status": "accepted"
       },
       "outcome": "The shared model and skill make project scope the default and cross-scope access explicit.",
       "acceptance": [
@@ -66,7 +71,12 @@
         "bank-roundtrip",
         "identity-isolation",
         "security-canaries"
-      ]
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-3",
+        "work_key": "robertelee78/agent-memory:ADR-0001:scope-policy",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0001:scope-policy"
+      }
     },
     {
       "work_key": "robertelee78/agent-memory:ADR-0001:authority-policy",
@@ -82,9 +92,9 @@
       "source": {
         "kind": "adr",
         "path": "docs/adr/0001-local-first-authority-boundaries.md",
-        "commit": "1c3cd96a0d843f5f3359286c16b27116c9192825",
-        "blob": "af2775363f9317d6e570a8885b6f7ebc33580e04",
-        "decision_status": "proposed"
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "11e677f0c7c2c1f203e7f6ace6f4a7a0b2be555a",
+        "decision_status": "accepted"
       },
       "outcome": "Memory points to current authorities and routes conflicts to correction.",
       "acceptance": [
@@ -97,7 +107,12 @@
         "bank-roundtrip",
         "identity-isolation",
         "security-canaries"
-      ]
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-4",
+        "work_key": "robertelee78/agent-memory:ADR-0001:authority-policy",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0001:authority-policy"
+      }
     },
     {
       "work_key": "robertelee78/agent-memory:ADR-0002:canonical-bank",
@@ -113,9 +128,9 @@
       "source": {
         "kind": "adr",
         "path": "docs/adr/0002-markdown-first-temporal-memory.md",
-        "commit": "1c3cd96a0d843f5f3359286c16b27116c9192825",
-        "blob": "3c6308d8fb25dd4ba1689aae9772451825eecab1",
-        "decision_status": "proposed"
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "c2d7f022d00c5e81de607c2c4bc8b59d0efe4169",
+        "decision_status": "accepted"
       },
       "outcome": "The smallest useful Cline-shaped bank remains the canonical readable project state.",
       "acceptance": [
@@ -128,7 +143,12 @@
         "bank-roundtrip",
         "correction-erasure",
         "observed-writes"
-      ]
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-6",
+        "work_key": "robertelee78/agent-memory:ADR-0002:canonical-bank",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0002:canonical-bank"
+      }
     },
     {
       "work_key": "robertelee78/agent-memory:ADR-0005:lifecycle-schema",
@@ -144,9 +164,9 @@
       "source": {
         "kind": "adr",
         "path": "docs/adr/0005-admission-consolidation-retrieval.md",
-        "commit": "bdba5342d173f8b23e92d81897941e6ae3813cf7",
-        "blob": "52da7e0eddcb65ab5f9cc057d4565110b7b80610",
-        "decision_status": "proposed"
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "31b082a255750cb0e66b103a0c2f23b4e5474dbd",
+        "decision_status": "accepted"
       },
       "outcome": "One machine-readable model defines lifecycle transitions and current visibility.",
       "acceptance": [
@@ -160,7 +180,12 @@
         "learning-admission",
         "retrieval-context",
         "correction-erasure"
-      ]
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-26",
+        "work_key": "robertelee78/agent-memory:ADR-0005:lifecycle-schema",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0005:lifecycle-schema"
+      }
     },
     {
       "work_key": "robertelee78/agent-memory:ADR-0006:honest-boundaries",
@@ -176,9 +201,9 @@
       "source": {
         "kind": "adr",
         "path": "docs/adr/0006-security-and-evaluation.md",
-        "commit": "60a787b4f40123329cbecd66d58f0fbe1faf0b36",
-        "blob": "0cb8169a143758a05144d5e035991298e502e2d6",
-        "decision_status": "proposed"
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "bfe1a93b72b13bedbce08cb2e4b03774c412be33",
+        "decision_status": "accepted"
       },
       "outcome": "The product accurately explains raw-file access and the limits of local identities.",
       "acceptance": [
@@ -190,7 +215,12 @@
       "fixtures": [
         "security-canaries",
         "identity-isolation"
-      ]
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-34",
+        "work_key": "robertelee78/agent-memory:ADR-0006:honest-boundaries",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0006:honest-boundaries"
+      }
     },
     {
       "work_key": "robertelee78/agent-memory:ADR-0008:independent-local-bank",
@@ -206,9 +236,9 @@
       "source": {
         "kind": "adr",
         "path": "docs/adr/0008-project-bank-and-optional-federation.md",
-        "commit": "60a787b4f40123329cbecd66d58f0fbe1faf0b36",
-        "blob": "fab2f3cbab0bf8a00cc9ecae60ba7ee05a148baf",
-        "decision_status": "proposed"
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "75d5b7b1dc5cff5fddd7a43cb92a39e3f8661fdd",
+        "decision_status": "accepted"
       },
       "outcome": "A single project can initialize, checkpoint, resume, search, validate and repair without any global service.",
       "acceptance": [
@@ -219,7 +249,12 @@
       "fixtures": [
         "identity-isolation",
         "bank-roundtrip"
-      ]
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-54",
+        "work_key": "robertelee78/agent-memory:ADR-0008:independent-local-bank",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0008:independent-local-bank"
+      }
     },
     {
       "work_key": "robertelee78/agent-memory:ADR-0009:top-level-gate",
@@ -235,9 +270,9 @@
       "source": {
         "kind": "adr",
         "path": "docs/adr/0009-contract-tests-and-fault-injection.md",
-        "commit": "bdba5342d173f8b23e92d81897941e6ae3813cf7",
-        "blob": "1b38ace4a8dc3af441d4a1982902268b977bbe55",
-        "decision_status": "proposed"
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "4678f01ef697279aec404c10787919b79f919588",
+        "decision_status": "accepted"
       },
       "outcome": "One test command verifies the product contracts in completely isolated test worlds.",
       "acceptance": [
@@ -251,7 +286,12 @@
         "cross-clone-sharing",
         "offline-replay",
         "skill-routes"
-      ]
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-59",
+        "work_key": "robertelee78/agent-memory:ADR-0009:top-level-gate",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0009:top-level-gate"
+      }
     },
     {
       "work_key": "robertelee78/agent-memory:ADR-0010:router-and-context-files",
@@ -267,9 +307,9 @@
       "source": {
         "kind": "adr",
         "path": "docs/adr/0010-memory-bank-file-contract.md",
-        "commit": "1c3cd96a0d843f5f3359286c16b27116c9192825",
-        "blob": "3f463c3ebf8e679bcb3bd37589b7e933ff67b37b",
-        "decision_status": "proposed"
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "12200f488d4a87e80118f8c9e8176db6596c4d7d",
+        "decision_status": "accepted"
       },
       "outcome": "A project bank has a precise, human-editable file contract.",
       "acceptance": [
@@ -285,7 +325,12 @@
         "observed-writes",
         "initialize-evidence",
         "correction-erasure"
-      ]
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-71",
+        "work_key": "robertelee78/agent-memory:ADR-0010:router-and-context-files",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0010:router-and-context-files"
+      }
     },
     {
       "work_key": "robertelee78/agent-memory:ADR-0010:bank-lock-and-hashes",
@@ -301,9 +346,9 @@
       "source": {
         "kind": "adr",
         "path": "docs/adr/0010-memory-bank-file-contract.md",
-        "commit": "1c3cd96a0d843f5f3359286c16b27116c9192825",
-        "blob": "3f463c3ebf8e679bcb3bd37589b7e933ff67b37b",
-        "decision_status": "proposed"
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "12200f488d4a87e80118f8c9e8176db6596c4d7d",
+        "decision_status": "accepted"
       },
       "outcome": "A bank-wide exclusive lock and base hashes protect mediated mutations.",
       "acceptance": [
@@ -320,7 +365,12 @@
         "observed-writes",
         "initialize-evidence",
         "correction-erasure"
-      ]
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-75",
+        "work_key": "robertelee78/agent-memory:ADR-0010:bank-lock-and-hashes",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0010:bank-lock-and-hashes"
+      }
     },
     {
       "work_key": "robertelee78/agent-memory:ADR-0010:manual-file-protocol",
@@ -336,9 +386,9 @@
       "source": {
         "kind": "adr",
         "path": "docs/adr/0010-memory-bank-file-contract.md",
-        "commit": "1c3cd96a0d843f5f3359286c16b27116c9192825",
-        "blob": "3f463c3ebf8e679bcb3bd37589b7e933ff67b37b",
-        "decision_status": "proposed"
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "12200f488d4a87e80118f8c9e8176db6596c4d7d",
+        "decision_status": "accepted"
       },
       "outcome": "A client can safely follow the documented single-file manual fallback.",
       "acceptance": [
@@ -353,7 +403,12 @@
         "observed-writes",
         "initialize-evidence",
         "correction-erasure"
-      ]
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-76",
+        "work_key": "robertelee78/agent-memory:ADR-0010:manual-file-protocol",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0010:manual-file-protocol"
+      }
     },
     {
       "work_key": "robertelee78/agent-memory:ADR-0010:safe-tombstone-format",
@@ -369,9 +424,9 @@
       "source": {
         "kind": "adr",
         "path": "docs/adr/0010-memory-bank-file-contract.md",
-        "commit": "1c3cd96a0d843f5f3359286c16b27116c9192825",
-        "blob": "3f463c3ebf8e679bcb3bd37589b7e933ff67b37b",
-        "decision_status": "proposed"
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "12200f488d4a87e80118f8c9e8176db6596c4d7d",
+        "decision_status": "accepted"
       },
       "outcome": "Deleted sections or files cannot be recreated by projections and retain no sensitive fingerprint.",
       "acceptance": [
@@ -385,7 +440,12 @@
         "observed-writes",
         "initialize-evidence",
         "correction-erasure"
-      ]
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-78",
+        "work_key": "robertelee78/agent-memory:ADR-0010:safe-tombstone-format",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0010:safe-tombstone-format"
+      }
     },
     {
       "work_key": "robertelee78/agent-memory:ADR-0011:principal-registry",
@@ -401,9 +461,9 @@
       "source": {
         "kind": "adr",
         "path": "docs/adr/0011-principal-and-project-identity.md",
-        "commit": "1c3cd96a0d843f5f3359286c16b27116c9192825",
-        "blob": "ffeff04b62844e351aa18c21e8740b6f0139adf0",
-        "decision_status": "proposed"
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "77adfb0b03185a3d1e10157fac0d8a390012b69b",
+        "decision_status": "accepted"
       },
       "outcome": "Shared project learning identifies its originating developer across machines and harnesses.",
       "acceptance": [
@@ -416,7 +476,12 @@
       "validation": "Run install/developer selection fixtures with changed Git/client/user aliases.",
       "fixtures": [
         "identity-isolation"
-      ]
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-84",
+        "work_key": "robertelee78/agent-memory:ADR-0011:principal-registry",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0011:principal-registry"
+      }
     },
     {
       "work_key": "robertelee78/agent-memory:ADR-0011:project-registry",
@@ -432,9 +497,9 @@
       "source": {
         "kind": "adr",
         "path": "docs/adr/0011-principal-and-project-identity.md",
-        "commit": "1c3cd96a0d843f5f3359286c16b27116c9192825",
-        "blob": "ffeff04b62844e351aa18c21e8740b6f0139adf0",
-        "decision_status": "proposed"
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "77adfb0b03185a3d1e10157fac0d8a390012b69b",
+        "decision_status": "accepted"
       },
       "outcome": "Stable bank IDs and repository evidence prevent accidental namespace splits or merges.",
       "acceptance": [
@@ -446,7 +511,12 @@
       "validation": "Run table-driven real repository/worktree/move/clone/fork/multiple-remote fixtures.",
       "fixtures": [
         "identity-isolation"
-      ]
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-85",
+        "work_key": "robertelee78/agent-memory:ADR-0011:project-registry",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0011:project-registry"
+      }
     },
     {
       "work_key": "robertelee78/agent-memory:ADR-0002:typed-records",
@@ -464,9 +534,9 @@
       "source": {
         "kind": "adr",
         "path": "docs/adr/0002-markdown-first-temporal-memory.md",
-        "commit": "1c3cd96a0d843f5f3359286c16b27116c9192825",
-        "blob": "3c6308d8fb25dd4ba1689aae9772451825eecab1",
-        "decision_status": "proposed"
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "c2d7f022d00c5e81de607c2c4bc8b59d0efe4169",
+        "decision_status": "accepted"
       },
       "outcome": "Standalone records and optional history expose type, scope, provenance and changing truth.",
       "acceptance": [
@@ -482,7 +552,12 @@
         "bank-roundtrip",
         "correction-erasure",
         "observed-writes"
-      ]
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-7",
+        "work_key": "robertelee78/agent-memory:ADR-0002:typed-records",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0002:typed-records"
+      }
     },
     {
       "work_key": "robertelee78/agent-memory:ADR-0003:bounded-disclosure",
@@ -500,9 +575,9 @@
       "source": {
         "kind": "adr",
         "path": "docs/adr/0003-progressive-disclosure.md",
-        "commit": "b85970ab8b35154e3ff37b749c23907e9b1afcb8",
-        "blob": "d182c376df50a1e755c72f3c150d2a2ec93544a7",
-        "decision_status": "proposed"
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "6a1c3b0e1a64f32a0033223caf0597e687aed9aa",
+        "decision_status": "accepted"
       },
       "outcome": "Resume loads a bounded router and only the context relevant to the current task.",
       "acceptance": [
@@ -515,7 +590,12 @@
       "fixtures": [
         "skill-routes",
         "retrieval-context"
-      ]
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-13",
+        "work_key": "robertelee78/agent-memory:ADR-0003:bounded-disclosure",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0003:bounded-disclosure"
+      }
     },
     {
       "work_key": "robertelee78/agent-memory:ADR-0003:portable-instruction-tree",
@@ -536,9 +616,9 @@
       "source": {
         "kind": "adr",
         "path": "docs/adr/0003-progressive-disclosure.md",
-        "commit": "b85970ab8b35154e3ff37b749c23907e9b1afcb8",
-        "blob": "d182c376df50a1e755c72f3c150d2a2ec93544a7",
-        "decision_status": "proposed"
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "6a1c3b0e1a64f32a0033223caf0597e687aed9aa",
+        "decision_status": "accepted"
       },
       "outcome": "One registerable skill routes through shared domains to implemented operation leaves.",
       "acceptance": [
@@ -553,7 +633,12 @@
       "fixtures": [
         "skill-routes",
         "retrieval-context"
-      ]
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-14",
+        "work_key": "robertelee78/agent-memory:ADR-0003:portable-instruction-tree",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0003:portable-instruction-tree"
+      }
     },
     {
       "work_key": "robertelee78/agent-memory:ADR-0006:first-release-canaries",
@@ -573,9 +658,9 @@
       "source": {
         "kind": "adr",
         "path": "docs/adr/0006-security-and-evaluation.md",
-        "commit": "60a787b4f40123329cbecd66d58f0fbe1faf0b36",
-        "blob": "0cb8169a143758a05144d5e035991298e502e2d6",
-        "decision_status": "proposed"
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "bfe1a93b72b13bedbce08cb2e4b03774c412be33",
+        "decision_status": "accepted"
       },
       "outcome": "The first published release has executable canaries for every required baseline risk.",
       "acceptance": [
@@ -587,7 +672,12 @@
       "fixtures": [
         "security-canaries",
         "identity-isolation"
-      ]
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-35",
+        "work_key": "robertelee78/agent-memory:ADR-0006:first-release-canaries",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0006:first-release-canaries"
+      }
     },
     {
       "work_key": "robertelee78/agent-memory:ADR-0009:durable-write-faults",
@@ -605,9 +695,9 @@
       "source": {
         "kind": "adr",
         "path": "docs/adr/0009-contract-tests-and-fault-injection.md",
-        "commit": "bdba5342d173f8b23e92d81897941e6ae3813cf7",
-        "blob": "1b38ace4a8dc3af441d4a1982902268b977bbe55",
-        "decision_status": "proposed"
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "4678f01ef697279aec404c10787919b79f919588",
+        "decision_status": "accepted"
       },
       "outcome": "Every shipped state-changing operation has replayable failure points and idempotent retry.",
       "acceptance": [
@@ -621,7 +711,12 @@
         "cross-clone-sharing",
         "offline-replay",
         "skill-routes"
-      ]
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-60",
+        "work_key": "robertelee78/agent-memory:ADR-0009:durable-write-faults",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0009:durable-write-faults"
+      }
     },
     {
       "work_key": "robertelee78/agent-memory:ADR-0009:incident-and-doc-evidence",
@@ -639,9 +734,9 @@
       "source": {
         "kind": "adr",
         "path": "docs/adr/0009-contract-tests-and-fault-injection.md",
-        "commit": "bdba5342d173f8b23e92d81897941e6ae3813cf7",
-        "blob": "1b38ace4a8dc3af441d4a1982902268b977bbe55",
-        "decision_status": "proposed"
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "4678f01ef697279aec404c10787919b79f919588",
+        "decision_status": "accepted"
       },
       "outcome": "Regressions and guide examples preserve user-visible behavior and normative rules.",
       "acceptance": [
@@ -656,7 +751,12 @@
         "cross-clone-sharing",
         "offline-replay",
         "skill-routes"
-      ]
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-63",
+        "work_key": "robertelee78/agent-memory:ADR-0009:incident-and-doc-evidence",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0009:incident-and-doc-evidence"
+      }
     },
     {
       "work_key": "robertelee78/agent-memory:ADR-0010:recoverable-multi-file-writes",
@@ -674,9 +774,9 @@
       "source": {
         "kind": "adr",
         "path": "docs/adr/0010-memory-bank-file-contract.md",
-        "commit": "1c3cd96a0d843f5f3359286c16b27116c9192825",
-        "blob": "3f463c3ebf8e679bcb3bd37589b7e933ff67b37b",
-        "decision_status": "proposed"
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "12200f488d4a87e80118f8c9e8176db6596c4d7d",
+        "decision_status": "accepted"
       },
       "outcome": "A torn bank is visibly interrupted and can be finished or rolled back.",
       "acceptance": [
@@ -692,7 +792,12 @@
         "observed-writes",
         "initialize-evidence",
         "correction-erasure"
-      ]
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-77",
+        "work_key": "robertelee78/agent-memory:ADR-0010:recoverable-multi-file-writes",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0010:recoverable-multi-file-writes"
+      }
     },
     {
       "work_key": "robertelee78/agent-memory:ADR-0010:bank-usability-check",
@@ -710,9 +815,9 @@
       "source": {
         "kind": "adr",
         "path": "docs/adr/0010-memory-bank-file-contract.md",
-        "commit": "1c3cd96a0d843f5f3359286c16b27116c9192825",
-        "blob": "3f463c3ebf8e679bcb3bd37589b7e933ff67b37b",
-        "decision_status": "proposed"
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "12200f488d4a87e80118f8c9e8176db6596c4d7d",
+        "decision_status": "accepted"
       },
       "outcome": "A fresh agent can resume solely from current routed Markdown.",
       "acceptance": [
@@ -726,7 +831,12 @@
         "observed-writes",
         "initialize-evidence",
         "correction-erasure"
-      ]
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-79",
+        "work_key": "robertelee78/agent-memory:ADR-0010:bank-usability-check",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0010:bank-usability-check"
+      }
     },
     {
       "work_key": "robertelee78/agent-memory:ADR-0011:scope-bind",
@@ -745,9 +855,9 @@
       "source": {
         "kind": "adr",
         "path": "docs/adr/0011-principal-and-project-identity.md",
-        "commit": "1c3cd96a0d843f5f3359286c16b27116c9192825",
-        "blob": "ffeff04b62844e351aa18c21e8740b6f0139adf0",
-        "decision_status": "proposed"
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "77adfb0b03185a3d1e10157fac0d8a390012b69b",
+        "decision_status": "accepted"
       },
       "outcome": "Status and scope/bind expose one identity algorithm shared by all clients.",
       "acceptance": [
@@ -759,7 +869,12 @@
       "validation": "Invoke status/bind against unambiguous and conflicting fixtures and verify registry/bank readback.",
       "fixtures": [
         "identity-isolation"
-      ]
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-86",
+        "work_key": "robertelee78/agent-memory:ADR-0011:scope-bind",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0011:scope-bind"
+      }
     },
     {
       "work_key": "robertelee78/agent-memory:ADR-0010:evidence-led-initialization",
@@ -778,9 +893,9 @@
       "source": {
         "kind": "adr",
         "path": "docs/adr/0010-memory-bank-file-contract.md",
-        "commit": "1c3cd96a0d843f5f3359286c16b27116c9192825",
-        "blob": "3f463c3ebf8e679bcb3bd37589b7e933ff67b37b",
-        "decision_status": "proposed"
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "12200f488d4a87e80118f8c9e8176db6596c4d7d",
+        "decision_status": "accepted"
       },
       "outcome": "Initialization builds a useful orientation map and surfaces unresolved product conflicts.",
       "acceptance": [
@@ -795,7 +910,12 @@
         "observed-writes",
         "initialize-evidence",
         "correction-erasure"
-      ]
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-89",
+        "work_key": "robertelee78/agent-memory:ADR-0010:evidence-led-initialization",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0010:evidence-led-initialization"
+      }
     },
     {
       "work_key": "robertelee78/agent-memory:ADR-0012:boundary-policy",
@@ -814,9 +934,9 @@
       "source": {
         "kind": "adr",
         "path": "docs/adr/0012-git-shared-memory.md",
-        "commit": "60a787b4f40123329cbecd66d58f0fbe1faf0b36",
-        "blob": "c33810eae4926723cea127556b18e4eeaf75ce97",
-        "decision_status": "proposed"
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "bcff06c5f21d180d1422f318a8f35334318fa149",
+        "decision_status": "accepted"
       },
       "outcome": "A configured Git bank boundary preserves the separate roles of memory, AWA and Vox.",
       "acceptance": [
@@ -830,7 +950,12 @@
         "concurrent-sharing",
         "offline-replay",
         "later-code-merge"
-      ]
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-91",
+        "work_key": "robertelee78/agent-memory:ADR-0012:boundary-policy",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0012:boundary-policy"
+      }
     },
     {
       "work_key": "robertelee78/agent-memory:ADR-0002:safe-erasure",
@@ -849,9 +974,9 @@
       "source": {
         "kind": "adr",
         "path": "docs/adr/0002-markdown-first-temporal-memory.md",
-        "commit": "1c3cd96a0d843f5f3359286c16b27116c9192825",
-        "blob": "3c6308d8fb25dd4ba1689aae9772451825eecab1",
-        "decision_status": "proposed"
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "c2d7f022d00c5e81de607c2c4bc8b59d0efe4169",
+        "decision_status": "accepted"
       },
       "outcome": "Current guidance excludes revoked, superseded and deleted content without unsafe residual copies.",
       "acceptance": [
@@ -864,7 +989,12 @@
         "bank-roundtrip",
         "correction-erasure",
         "observed-writes"
-      ]
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-8",
+        "work_key": "robertelee78/agent-memory:ADR-0002:safe-erasure",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0002:safe-erasure"
+      }
     },
     {
       "work_key": "robertelee78/agent-memory:ADR-0002:write-and-projection-contract",
@@ -883,9 +1013,9 @@
       "source": {
         "kind": "adr",
         "path": "docs/adr/0002-markdown-first-temporal-memory.md",
-        "commit": "1c3cd96a0d843f5f3359286c16b27116c9192825",
-        "blob": "3c6308d8fb25dd4ba1689aae9772451825eecab1",
-        "decision_status": "proposed"
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "c2d7f022d00c5e81de607c2c4bc8b59d0efe4169",
+        "decision_status": "accepted"
       },
       "outcome": "Mediated writes detect conflicts and every projection is bound to source revisions.",
       "acceptance": [
@@ -899,7 +1029,12 @@
         "bank-roundtrip",
         "correction-erasure",
         "observed-writes"
-      ]
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-9",
+        "work_key": "robertelee78/agent-memory:ADR-0002:write-and-projection-contract",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0002:write-and-projection-contract"
+      }
     },
     {
       "work_key": "robertelee78/agent-memory:ADR-0003:pack-validator",
@@ -917,9 +1052,9 @@
       "source": {
         "kind": "adr",
         "path": "docs/adr/0003-progressive-disclosure.md",
-        "commit": "b85970ab8b35154e3ff37b749c23907e9b1afcb8",
-        "blob": "d182c376df50a1e755c72f3c150d2a2ec93544a7",
-        "decision_status": "proposed"
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "6a1c3b0e1a64f32a0033223caf0597e687aed9aa",
+        "decision_status": "accepted"
       },
       "outcome": "Publishing and activation reject mechanically invalid or unreachable skill packs.",
       "acceptance": [
@@ -932,7 +1067,12 @@
       "fixtures": [
         "skill-routes",
         "retrieval-context"
-      ]
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-15",
+        "work_key": "robertelee78/agent-memory:ADR-0003:pack-validator",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0003:pack-validator"
+      }
     },
     {
       "work_key": "robertelee78/agent-memory:ADR-0004:core-cli",
@@ -950,9 +1090,9 @@
       "source": {
         "kind": "adr",
         "path": "docs/adr/0004-client-independent-integration.md",
-        "commit": "b85970ab8b35154e3ff37b749c23907e9b1afcb8",
-        "blob": "573f265cded16a290953d2a49ebedc8393b27dca",
-        "decision_status": "proposed"
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "eee41d18ea81b7be94fb8ac89ffdf3ba3cee9e41",
+        "decision_status": "accepted"
       },
       "outcome": "A client-neutral command surface validates the bank while raw Markdown remains usable.",
       "acceptance": [
@@ -967,7 +1107,12 @@
         "skill-routes",
         "bank-roundtrip",
         "cross-clone-sharing"
-      ]
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-17",
+        "work_key": "robertelee78/agent-memory:ADR-0004:core-cli",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0004:core-cli"
+      }
     },
     {
       "work_key": "robertelee78/agent-memory:ADR-0005:retrieval",
@@ -987,9 +1132,9 @@
       "source": {
         "kind": "adr",
         "path": "docs/adr/0005-admission-consolidation-retrieval.md",
-        "commit": "bdba5342d173f8b23e92d81897941e6ae3813cf7",
-        "blob": "52da7e0eddcb65ab5f9cc057d4565110b7b80610",
-        "decision_status": "proposed"
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "31b082a255750cb0e66b103a0c2f23b4e5474dbd",
+        "decision_status": "accepted"
       },
       "outcome": "Scope-safe recall works through routes, identifiers and ordinary text search.",
       "acceptance": [
@@ -1002,7 +1147,12 @@
         "learning-admission",
         "retrieval-context",
         "correction-erasure"
-      ]
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-29",
+        "work_key": "robertelee78/agent-memory:ADR-0005:retrieval",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0005:retrieval"
+      }
     },
     {
       "work_key": "robertelee78/agent-memory:ADR-0006:security-controls",
@@ -1021,9 +1171,9 @@
       "source": {
         "kind": "adr",
         "path": "docs/adr/0006-security-and-evaluation.md",
-        "commit": "60a787b4f40123329cbecd66d58f0fbe1faf0b36",
-        "blob": "0cb8169a143758a05144d5e035991298e502e2d6",
-        "decision_status": "proposed"
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "bfe1a93b72b13bedbce08cb2e4b03774c412be33",
+        "decision_status": "accepted"
       },
       "outcome": "Mediated operations persist and retrieve only within explicit safety boundaries.",
       "acceptance": [
@@ -1039,7 +1189,12 @@
       "fixtures": [
         "security-canaries",
         "identity-isolation"
-      ]
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-33",
+        "work_key": "robertelee78/agent-memory:ADR-0006:security-controls",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0006:security-controls"
+      }
     },
     {
       "work_key": "robertelee78/agent-memory:ADR-0009:concurrent-bank-writers",
@@ -1059,9 +1214,9 @@
       "source": {
         "kind": "adr",
         "path": "docs/adr/0009-contract-tests-and-fault-injection.md",
-        "commit": "bdba5342d173f8b23e92d81897941e6ae3813cf7",
-        "blob": "1b38ace4a8dc3af441d4a1982902268b977bbe55",
-        "decision_status": "proposed"
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "4678f01ef697279aec404c10787919b79f919588",
+        "decision_status": "accepted"
       },
       "outcome": "Concurrent bank writers cannot silently overwrite each other.",
       "acceptance": [
@@ -1075,7 +1230,12 @@
         "cross-clone-sharing",
         "offline-replay",
         "skill-routes"
-      ]
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-61",
+        "work_key": "robertelee78/agent-memory:ADR-0009:concurrent-bank-writers",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0009:concurrent-bank-writers"
+      }
     },
     {
       "work_key": "robertelee78/agent-memory:ADR-0010:optional-record-layout",
@@ -1093,9 +1253,9 @@
       "source": {
         "kind": "adr",
         "path": "docs/adr/0010-memory-bank-file-contract.md",
-        "commit": "1c3cd96a0d843f5f3359286c16b27116c9192825",
-        "blob": "3f463c3ebf8e679bcb3bd37589b7e933ff67b37b",
-        "decision_status": "proposed"
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "12200f488d4a87e80118f8c9e8176db6596c4d7d",
+        "decision_status": "accepted"
       },
       "outcome": "Optional structured records remain reachable ordinary Markdown.",
       "acceptance": [
@@ -1111,7 +1271,12 @@
         "observed-writes",
         "initialize-evidence",
         "correction-erasure"
-      ]
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-72",
+        "work_key": "robertelee78/agent-memory:ADR-0010:optional-record-layout",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0010:optional-record-layout"
+      }
     },
     {
       "work_key": "robertelee78/agent-memory:ADR-0010:single-file-checkpoint",
@@ -1130,9 +1295,9 @@
       "source": {
         "kind": "adr",
         "path": "docs/adr/0010-memory-bank-file-contract.md",
-        "commit": "1c3cd96a0d843f5f3359286c16b27116c9192825",
-        "blob": "3f463c3ebf8e679bcb3bd37589b7e933ff67b37b",
-        "decision_status": "proposed"
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "12200f488d4a87e80118f8c9e8176db6596c4d7d",
+        "decision_status": "accepted"
       },
       "outcome": "The common checkpoint changes only activeContext.md.",
       "acceptance": [
@@ -1146,7 +1311,12 @@
         "observed-writes",
         "initialize-evidence",
         "correction-erasure"
-      ]
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-74",
+        "work_key": "robertelee78/agent-memory:ADR-0010:single-file-checkpoint",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0010:single-file-checkpoint"
+      }
     },
     {
       "work_key": "robertelee78/agent-memory:ADR-0012:retry-and-merges",
@@ -1166,9 +1336,9 @@
       "source": {
         "kind": "adr",
         "path": "docs/adr/0012-git-shared-memory.md",
-        "commit": "60a787b4f40123329cbecd66d58f0fbe1faf0b36",
-        "blob": "c33810eae4926723cea127556b18e4eeaf75ce97",
-        "decision_status": "proposed"
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "bcff06c5f21d180d1422f318a8f35334318fa149",
+        "decision_status": "accepted"
       },
       "outcome": "Retries and ordinary branch integration preserve readable canonical memory.",
       "acceptance": [
@@ -1183,7 +1353,12 @@
         "concurrent-sharing",
         "offline-replay",
         "later-code-merge"
-      ]
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-95",
+        "work_key": "robertelee78/agent-memory:ADR-0012:retry-and-merges",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0012:retry-and-merges"
+      }
     },
     {
       "work_key": "robertelee78/agent-memory:ADR-0005:assembly",
@@ -1201,9 +1376,9 @@
       "source": {
         "kind": "adr",
         "path": "docs/adr/0005-admission-consolidation-retrieval.md",
-        "commit": "bdba5342d173f8b23e92d81897941e6ae3813cf7",
-        "blob": "52da7e0eddcb65ab5f9cc057d4565110b7b80610",
-        "decision_status": "proposed"
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "31b082a255750cb0e66b103a0c2f23b4e5474dbd",
+        "decision_status": "accepted"
       },
       "outcome": "Retrieved context fits its budget and retains unresolved contradictions.",
       "acceptance": [
@@ -1215,7 +1390,12 @@
         "learning-admission",
         "retrieval-context",
         "correction-erasure"
-      ]
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-30",
+        "work_key": "robertelee78/agent-memory:ADR-0005:assembly",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0005:assembly"
+      }
     },
     {
       "work_key": "robertelee78/agent-memory:ADR-0007:portable-artifact",
@@ -1234,9 +1414,9 @@
       "source": {
         "kind": "adr",
         "path": "docs/adr/0007-portable-pack-and-lifecycle.md",
-        "commit": "60a787b4f40123329cbecd66d58f0fbe1faf0b36",
-        "blob": "1fa3c3bc7c5c2d75889c28fd02eca19ead7f13d4",
-        "decision_status": "proposed"
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "455a136d8406068c7a128658ccc3f3e969cf3cdd",
+        "decision_status": "accepted"
       },
       "outcome": "One self-contained skills/agent-memory artifact can operate the implemented protocol.",
       "acceptance": [
@@ -1247,7 +1427,12 @@
       "fixtures": [
         "portable-lifecycle",
         "skill-routes"
-      ]
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-44",
+        "work_key": "robertelee78/agent-memory:ADR-0007:portable-artifact",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0007:portable-artifact"
+      }
     },
     {
       "work_key": "robertelee78/agent-memory:ADR-0005:deduplicate-before-write",
@@ -1265,9 +1450,9 @@
       "source": {
         "kind": "adr",
         "path": "docs/adr/0005-admission-consolidation-retrieval.md",
-        "commit": "bdba5342d173f8b23e92d81897941e6ae3813cf7",
-        "blob": "52da7e0eddcb65ab5f9cc057d4565110b7b80610",
-        "decision_status": "proposed"
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "31b082a255750cb0e66b103a0c2f23b4e5474dbd",
+        "decision_status": "accepted"
       },
       "outcome": "Automatic capture avoids semantic duplicates and preserves distinct learning.",
       "acceptance": [
@@ -1281,7 +1466,12 @@
         "learning-admission",
         "retrieval-context",
         "correction-erasure"
-      ]
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-87",
+        "work_key": "robertelee78/agent-memory:ADR-0005:deduplicate-before-write",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0005:deduplicate-before-write"
+      }
     },
     {
       "work_key": "robertelee78/agent-memory:ADR-0005:admission",
@@ -1303,9 +1493,9 @@
       "source": {
         "kind": "adr",
         "path": "docs/adr/0005-admission-consolidation-retrieval.md",
-        "commit": "bdba5342d173f8b23e92d81897941e6ae3813cf7",
-        "blob": "52da7e0eddcb65ab5f9cc057d4565110b7b80610",
-        "decision_status": "proposed"
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "31b082a255750cb0e66b103a0c2f23b4e5474dbd",
+        "decision_status": "accepted"
       },
       "outcome": "Capture and durable admission remain distinct, reviewable stages.",
       "acceptance": [
@@ -1320,7 +1510,12 @@
         "learning-admission",
         "retrieval-context",
         "correction-erasure"
-      ]
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-27",
+        "work_key": "robertelee78/agent-memory:ADR-0005:admission",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0005:admission"
+      }
     },
     {
       "work_key": "robertelee78/agent-memory:ADR-0007:install-layout",
@@ -1338,9 +1533,9 @@
       "source": {
         "kind": "adr",
         "path": "docs/adr/0007-portable-pack-and-lifecycle.md",
-        "commit": "60a787b4f40123329cbecd66d58f0fbe1faf0b36",
-        "blob": "1fa3c3bc7c5c2d75889c28fd02eca19ead7f13d4",
-        "decision_status": "proposed"
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "455a136d8406068c7a128658ccc3f3e969cf3cdd",
+        "decision_status": "accepted"
       },
       "outcome": "A managed installation has one shared artifact and an external ownership receipt.",
       "acceptance": [
@@ -1353,7 +1548,12 @@
       "fixtures": [
         "portable-lifecycle",
         "skill-routes"
-      ]
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-45",
+        "work_key": "robertelee78/agent-memory:ADR-0007:install-layout",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0007:install-layout"
+      }
     },
     {
       "work_key": "robertelee78/agent-memory:ADR-0005:consolidation",
@@ -1371,9 +1571,9 @@
       "source": {
         "kind": "adr",
         "path": "docs/adr/0005-admission-consolidation-retrieval.md",
-        "commit": "bdba5342d173f8b23e92d81897941e6ae3813cf7",
-        "blob": "52da7e0eddcb65ab5f9cc057d4565110b7b80610",
-        "decision_status": "proposed"
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "31b082a255750cb0e66b103a0c2f23b4e5474dbd",
+        "decision_status": "accepted"
       },
       "outcome": "Maintenance proposes deduplication and higher-order patterns without destructive history rewrites.",
       "acceptance": [
@@ -1389,7 +1589,12 @@
         "learning-admission",
         "retrieval-context",
         "correction-erasure"
-      ]
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-28",
+        "work_key": "robertelee78/agent-memory:ADR-0005:consolidation",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0005:consolidation"
+      }
     },
     {
       "work_key": "robertelee78/agent-memory:ADR-0005:forgetting",
@@ -1408,9 +1613,9 @@
       "source": {
         "kind": "adr",
         "path": "docs/adr/0005-admission-consolidation-retrieval.md",
-        "commit": "bdba5342d173f8b23e92d81897941e6ae3813cf7",
-        "blob": "52da7e0eddcb65ab5f9cc057d4565110b7b80610",
-        "decision_status": "proposed"
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "31b082a255750cb0e66b103a0c2f23b4e5474dbd",
+        "decision_status": "accepted"
       },
       "outcome": "Expiration, supersession, revocation, deletion and retention remove guidance appropriately.",
       "acceptance": [
@@ -1426,7 +1631,12 @@
         "learning-admission",
         "retrieval-context",
         "correction-erasure"
-      ]
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-31",
+        "work_key": "robertelee78/agent-memory:ADR-0005:forgetting",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0005:forgetting"
+      }
     },
     {
       "work_key": "robertelee78/agent-memory:ADR-0007:installer",
@@ -1445,9 +1655,9 @@
       "source": {
         "kind": "adr",
         "path": "docs/adr/0007-portable-pack-and-lifecycle.md",
-        "commit": "60a787b4f40123329cbecd66d58f0fbe1faf0b36",
-        "blob": "1fa3c3bc7c5c2d75889c28fd02eca19ead7f13d4",
-        "decision_status": "proposed"
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "455a136d8406068c7a128658ccc3f3e969cf3cdd",
+        "decision_status": "accepted"
       },
       "outcome": "Install safely activates owned targets and preserves unrelated user content.",
       "acceptance": [
@@ -1460,7 +1670,12 @@
       "fixtures": [
         "portable-lifecycle",
         "skill-routes"
-      ]
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-46",
+        "work_key": "robertelee78/agent-memory:ADR-0007:installer",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0007:installer"
+      }
     },
     {
       "work_key": "robertelee78/agent-memory:ADR-0007:updater",
@@ -1478,9 +1693,9 @@
       "source": {
         "kind": "adr",
         "path": "docs/adr/0007-portable-pack-and-lifecycle.md",
-        "commit": "60a787b4f40123329cbecd66d58f0fbe1faf0b36",
-        "blob": "1fa3c3bc7c5c2d75889c28fd02eca19ead7f13d4",
-        "decision_status": "proposed"
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "455a136d8406068c7a128658ccc3f3e969cf3cdd",
+        "decision_status": "accepted"
       },
       "outcome": "A verified fast-forward update preserves data and can resume or roll back.",
       "acceptance": [
@@ -1493,7 +1708,12 @@
       "fixtures": [
         "portable-lifecycle",
         "skill-routes"
-      ]
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-47",
+        "work_key": "robertelee78/agent-memory:ADR-0007:updater",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0007:updater"
+      }
     },
     {
       "work_key": "robertelee78/agent-memory:ADR-0007:uninstall",
@@ -1511,9 +1731,9 @@
       "source": {
         "kind": "adr",
         "path": "docs/adr/0007-portable-pack-and-lifecycle.md",
-        "commit": "60a787b4f40123329cbecd66d58f0fbe1faf0b36",
-        "blob": "1fa3c3bc7c5c2d75889c28fd02eca19ead7f13d4",
-        "decision_status": "proposed"
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "455a136d8406068c7a128658ccc3f3e969cf3cdd",
+        "decision_status": "accepted"
       },
       "outcome": "Ordinary uninstall preserves memory, unrelated settings, user edits and backups.",
       "acceptance": [
@@ -1526,7 +1746,12 @@
       "fixtures": [
         "portable-lifecycle",
         "skill-routes"
-      ]
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-50",
+        "work_key": "robertelee78/agent-memory:ADR-0007:uninstall",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0007:uninstall"
+      }
     },
     {
       "work_key": "robertelee78/agent-memory:ADR-0007:diagnostics",
@@ -1544,9 +1769,9 @@
       "source": {
         "kind": "adr",
         "path": "docs/adr/0007-portable-pack-and-lifecycle.md",
-        "commit": "60a787b4f40123329cbecd66d58f0fbe1faf0b36",
-        "blob": "1fa3c3bc7c5c2d75889c28fd02eca19ead7f13d4",
-        "decision_status": "proposed"
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "455a136d8406068c7a128658ccc3f3e969cf3cdd",
+        "decision_status": "accepted"
       },
       "outcome": "Users can diagnose installation identity, bank health and interrupted operations.",
       "acceptance": [
@@ -1559,7 +1784,12 @@
       "fixtures": [
         "portable-lifecycle",
         "skill-routes"
-      ]
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-51",
+        "work_key": "robertelee78/agent-memory:ADR-0007:diagnostics",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0007:diagnostics"
+      }
     },
     {
       "work_key": "robertelee78/agent-memory:ADR-0012:semantic-reconciliation",
@@ -1580,9 +1810,9 @@
       "source": {
         "kind": "adr",
         "path": "docs/adr/0012-git-shared-memory.md",
-        "commit": "60a787b4f40123329cbecd66d58f0fbe1faf0b36",
-        "blob": "c33810eae4926723cea127556b18e4eeaf75ce97",
-        "decision_status": "proposed"
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "bcff06c5f21d180d1422f318a8f35334318fa149",
+        "decision_status": "accepted"
       },
       "outcome": "Semantic conflicts are resolved explicitly without blocking unrelated work.",
       "acceptance": [
@@ -1598,7 +1828,12 @@
         "concurrent-sharing",
         "offline-replay",
         "later-code-merge"
-      ]
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-94",
+        "work_key": "robertelee78/agent-memory:ADR-0012:semantic-reconciliation",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0012:semantic-reconciliation"
+      }
     },
     {
       "work_key": "robertelee78/agent-memory:ADR-0007:lifecycle-contract-suite",
@@ -1619,9 +1854,9 @@
       "source": {
         "kind": "adr",
         "path": "docs/adr/0007-portable-pack-and-lifecycle.md",
-        "commit": "60a787b4f40123329cbecd66d58f0fbe1faf0b36",
-        "blob": "1fa3c3bc7c5c2d75889c28fd02eca19ead7f13d4",
-        "decision_status": "proposed"
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "455a136d8406068c7a128658ccc3f3e969cf3cdd",
+        "decision_status": "accepted"
       },
       "outcome": "Lifecycle safety is proven through the installed user-facing surface.",
       "acceptance": [
@@ -1634,7 +1869,12 @@
       "fixtures": [
         "portable-lifecycle",
         "skill-routes"
-      ]
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-52",
+        "work_key": "robertelee78/agent-memory:ADR-0007:lifecycle-contract-suite",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0007:lifecycle-contract-suite"
+      }
     },
     {
       "work_key": "robertelee78/agent-memory:ADR-0012:publish-memory",
@@ -1657,9 +1897,9 @@
       "source": {
         "kind": "adr",
         "path": "docs/adr/0012-git-shared-memory.md",
-        "commit": "60a787b4f40123329cbecd66d58f0fbe1faf0b36",
-        "blob": "c33810eae4926723cea127556b18e4eeaf75ce97",
-        "decision_status": "proposed"
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "bcff06c5f21d180d1422f318a8f35334318fa149",
+        "decision_status": "accepted"
       },
       "outcome": "Admitted learning can land independently of feature code.",
       "acceptance": [
@@ -1674,7 +1914,12 @@
         "concurrent-sharing",
         "offline-replay",
         "later-code-merge"
-      ]
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-92",
+        "work_key": "robertelee78/agent-memory:ADR-0012:publish-memory",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0012:publish-memory"
+      }
     },
     {
       "work_key": "robertelee78/agent-memory:ADR-0012:refresh-memory",
@@ -1696,9 +1941,9 @@
       "source": {
         "kind": "adr",
         "path": "docs/adr/0012-git-shared-memory.md",
-        "commit": "60a787b4f40123329cbecd66d58f0fbe1faf0b36",
-        "blob": "c33810eae4926723cea127556b18e4eeaf75ce97",
-        "decision_status": "proposed"
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "bcff06c5f21d180d1422f318a8f35334318fa149",
+        "decision_status": "accepted"
       },
       "outcome": "New shared learning arrives without rebasing or importing feature code.",
       "acceptance": [
@@ -1713,7 +1958,12 @@
         "concurrent-sharing",
         "offline-replay",
         "later-code-merge"
-      ]
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-93",
+        "work_key": "robertelee78/agent-memory:ADR-0012:refresh-memory",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0012:refresh-memory"
+      }
     },
     {
       "work_key": "robertelee78/agent-memory:ADR-0009:multi-machine-learning-contract",
@@ -1737,9 +1987,9 @@
       "source": {
         "kind": "adr",
         "path": "docs/adr/0009-contract-tests-and-fault-injection.md",
-        "commit": "bdba5342d173f8b23e92d81897941e6ae3813cf7",
-        "blob": "1b38ace4a8dc3af441d4a1982902268b977bbe55",
-        "decision_status": "proposed"
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "4678f01ef697279aec404c10787919b79f919588",
+        "decision_status": "accepted"
       },
       "outcome": "Two developers and multiple harnesses exchange correct memory without changing feature code.",
       "acceptance": [
@@ -1754,7 +2004,12 @@
         "cross-clone-sharing",
         "offline-replay",
         "skill-routes"
-      ]
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-88",
+        "work_key": "robertelee78/agent-memory:ADR-0009:multi-machine-learning-contract",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0009:multi-machine-learning-contract"
+      }
     },
     {
       "work_key": "robertelee78/agent-memory:ADR-0012:sharing-release-gate",
@@ -1822,9 +2077,9 @@
       "source": {
         "kind": "adr",
         "path": "docs/adr/0012-git-shared-memory.md",
-        "commit": "60a787b4f40123329cbecd66d58f0fbe1faf0b36",
-        "blob": "c33810eae4926723cea127556b18e4eeaf75ce97",
-        "decision_status": "proposed"
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "bcff06c5f21d180d1422f318a8f35334318fa149",
+        "decision_status": "accepted"
       },
       "outcome": "The first release proves useful shared learning across developers and harnesses.",
       "acceptance": [
@@ -1840,7 +2095,19 @@
         "concurrent-sharing",
         "offline-replay",
         "later-code-merge"
-      ]
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-96",
+        "work_key": "robertelee78/agent-memory:ADR-0012:sharing-release-gate",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0012:sharing-release-gate"
+      }
     }
-  ]
+  ],
+  "approval_record": {
+    "path": "docs/design/v0.0.1-approval.md",
+    "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+    "approved_design_commit": "3ae20761376514b340c963e4135062ff3df41305",
+    "approver": "repository operator, product owner and technical reviewer",
+    "date": "2026-10-22"
+  }
 }

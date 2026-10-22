@@ -2,6 +2,7 @@
 """Validate the checked-in v0.0.1 execution queue, not product behavior."""
 import json
 from pathlib import Path
+import re
 import subprocess
 
 
@@ -13,6 +14,23 @@ def check():
     by_key = {s["work_key"]: s for s in stories}
     assert len(stories) == len(by_key) == 52, "Expected 52 distinct release stories"
     assert len({s["issue"] for s in stories}) == 52, "Duplicate issue identity"
+    if plan["approval"] == "operator-approved":
+        approval = plan["approval_record"]
+        recorded = subprocess.check_output(
+            ["git", "show", f"{approval['commit']}:{approval['path']}"], cwd=root, text=True
+        )
+        assert set(re.findall(r"Work key: `([^`]+)`", recorded)) == set(by_key)
+        assert approval["approved_design_commit"] in recorded
+        for s in stories:
+            evidence = s["design_approval"]
+            assert evidence["work_key"] == s["work_key"]
+            assert evidence["requirement"] == s["source"]["commit"] + ":" + s["work_key"].split(":", 1)[1]
+            assert evidence["ref"] == (
+                f"https://github.com/robertelee78/agent-memory/blob/{approval['commit']}/"
+                f"{approval['path']}#issue-{s['issue']}"
+            )
+            assert f'id="issue-{s["issue"]}"' in recorded
+            assert s["source"]["decision_status"] == "accepted"
     release_gates = [s for s in stories if s["delivery"]["kind"] == "release"]
     assert len(release_gates) == 1 and release_gates[0]["issue"] == 96
     final = release_gates[0]
