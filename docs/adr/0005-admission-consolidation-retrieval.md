@@ -107,6 +107,20 @@ paths/identifiers, and ordinary text search. Embeddings and graph traversal are
 optional ranking signals. Disabling or deleting them MUST leave the baseline
 workflow intact.
 
+**Growing-bank recall in v0.0.2.**
+
+`v0.0.2` SHALL improve recall quality as the shared project bank grows. Evaluation
+SHALL use representative task queries and increasing bank sizes, including
+paraphrases, conditional lessons, corrections, duplicate candidates, and stale
+records. It SHALL measure relevant-memory retrieval, inappropriate or missed
+recall, context size, and retrieval cost against the v0.0.1 baseline. Workloads
+and acceptance targets SHALL be agreed before claiming improvement; exact
+thresholds remain an open product decision rather than invented requirements.
+
+Scope, trust, validity, provenance, and applicability filters MUST remain intact.
+A larger bank MUST NOT imply loading everything into every turn or introducing
+a required vector store. Lessons from actual v0.0.1 use MAY add further scope.
+
 ### Assembly
 
 Context assembly SHALL enforce a token budget, preserve source and status

@@ -71,6 +71,17 @@ only disputed memory and dependent work SHALL pause. Initialization fixtures
 SHALL combine code/tests, docs/ADRs, and AWA work evidence, preserve existing
 memory, and distinguish genuine contradictions from different lifecycle states.
 
+For `v0.0.2`, reliability and recovery in daily use SHALL be a release focus
+alongside growing-bank recall in ADR-0005. Extended user-level scenarios SHALL
+exercise repeated multi-session/multi-machine use, offline intervals, competing
+writers, interruption, recovery, and later ordinary code integration. They SHALL
+assess usable memory after recovery, pending/freshness reporting, repeated
+failures, and the clarity and effort of recovery. Representative workload sizes
+and measurable acceptance targets SHALL be refined from operator input and
+v0.0.1 experience before implementation claims. Baseline data integrity and safe
+sharing remain v0.0.1 requirements; this focus does not defer those guarantees.
+Additional post-v0.0.1 findings MAY expand the v0.0.2 plan.
+
 For optional stores and indexes, tests SHALL prove that:
 
 - deleting all generated state leaves the Markdown bank usable;

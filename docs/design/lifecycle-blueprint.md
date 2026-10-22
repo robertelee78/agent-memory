@@ -208,7 +208,6 @@ schema.
 - data readability and schema compatibility;
 - atomic-write, lock, and backup permissions;
 - pending transaction recovery;
-- optional MCP/hook configuration only when enabled;
 - projection freshness and full rebuildability from Markdown;
 - update and migration preconditions.
 

@@ -12,9 +12,9 @@ progressive skill and lifecycle discipline of `agent-work-accountability`, and
 improve it without losing that simplicity.
 
 The common path MUST remain useful with files, Git, and the installed skill
-alone. A database, embedding model, vector index, knowledge graph, MCP server,
-background daemon, or client hook may improve particular workflows, but none
-may become a prerequisite for remembering and resuming a project.
+alone, with a deterministic CLI for governed operations. MCP and harness-hook
+integrations are outside planned scope. Any optional search projection must
+remain disposable; it cannot become the authority for project memory.
 
 The product is not “save more chat and vector-search it.” It is a maintained
 project memory that helps a fresh agent understand what the project is, what

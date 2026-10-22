@@ -30,7 +30,7 @@ requirements are specified in the
 
 ### Memory disclosure
 
-At session start an adapter SHOULD expose only:
+At session start the skill SHOULD expose only:
 
 1. the repository `MEMORY.md` index;
 2. active task or component context when confidently resolved.
@@ -51,8 +51,8 @@ SHALL support exact lookup without embeddings.
 At turn boundaries the skill SHALL check for newly landed shared memory using
 ADR-0012, refresh only memory paths, and load the relevant changed knowledge.
 It MUST NOT interrupt an executing turn or require a background watcher. A
-custom harness SHALL be able to invoke the same explicit boundary operation;
-client hooks MAY automate invocation but MUST NOT own its semantics. Retrieval
+custom harness SHALL be able to invoke the same explicit skill/CLI boundary
+operation. Client hooks are outside planned scope under ADR-0004. Retrieval
 SHALL check applicability against the working branch, rather than assuming the
 branch's code has advanced with imported memory.
 

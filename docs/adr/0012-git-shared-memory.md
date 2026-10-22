@@ -56,8 +56,8 @@ snapshot, rebase the feature branch, import non-memory code changes, or alter
 unrelated index entries and working files. Relevant imported knowledge SHALL be
 read with its provenance and applicability conditions. Refresh MUST NOT imply
 that the branch's implementation now matches the authority branch. Invocation
-SHALL work through a harness-neutral skill and explicit helper; optional client
-hooks MAY automate it without interrupting ongoing work or requiring a daemon.
+SHALL work through a harness-neutral skill and explicit CLI helper, without
+interrupting ongoing work or requiring client hooks, MCP, or a daemon.
 
 **Semantic reconciliation and clarification.** Compatible edits SHALL combine
 even when they touch the same memory file. Same-concept duplicates SHALL

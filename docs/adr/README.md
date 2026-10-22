@@ -21,7 +21,7 @@ MUST NOT be treated as evidence that a guide is semantically complete.
 | [0001](0001-local-first-authority-boundaries.md) | Local-first memory and authority boundaries | Proposed |
 | [0002](0002-markdown-first-temporal-memory.md) | Markdown-first, typed, temporal memory model | Proposed |
 | [0003](0003-progressive-disclosure.md) | Progressive disclosure for memory and skills | Proposed |
-| [0004](0004-client-independent-integration.md) | Client-independent core with CLI, MCP, and adapters | Proposed |
+| [0004](0004-client-independent-integration.md) | Harness-independent skill and CLI | Proposed |
 | [0005](0005-admission-consolidation-retrieval.md) | Separate admission, consolidation, retrieval, and forgetting | Proposed |
 | [0006](0006-security-and-evaluation.md) | Security boundaries and executable evaluation | Proposed |
 | [0007](0007-portable-pack-and-lifecycle.md) | Portable skill pack and installation lifecycle | Proposed |

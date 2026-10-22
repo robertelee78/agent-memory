@@ -5,27 +5,34 @@ date: 2026-10-21
 depends-on: [ADR-0001, ADR-0002]
 ---
 
-# ADR-0004: Client-independent core with CLI, MCP, and adapters
+# ADR-0004: Harness-independent skill and CLI
 
 ## Context
 
-Codex, Claude Code, and OpenCode have different instruction files, hooks,
-plugin formats, and subprocess lifecycles. MCP provides a common tool surface
-but does not guarantee automatic capture or recall. Hook-only designs become
-client products rather than portable memory systems.
+Claude Code, Codex, OpenCode, and custom harnesses need the same memory behavior.
+The operator selected the AWA-style portable skill plus CLI interface. MCP and
+harness-hook integrations were proposals, not requested product capabilities.
 
 ## Decision
 
 The portable core SHALL be the Memory Bank file contract plus the skill that
 operates it. A deterministic local CLI SHALL validate and maintain that
-contract. MCP SHALL be a thin protocol adapter over the same files and CLI.
-Client plugins, skills, and lifecycle hooks SHALL be optional adapters.
+contract. All supported harnesses SHALL use the same files, semantic model,
+commands, and verified mutation protocol.
 
 The first release SHALL provide the shared skill and deterministic helpers for
 automatic durable capture, search-before-write, consolidation, pruning, and the
-memory-only Git exchange in ADR-0012. Claude Code, Codex, OpenCode, and custom
-harnesses SHALL use the same bank and protocol. Harness-specific hooks and MCP
-integration MAY follow; their absence MUST NOT prevent this workflow.
+memory-only Git exchange in ADR-0012. Turn boundaries SHALL invoke the common
+skill/CLI operation; no protocol server, client plugin, hook, or daemon SHALL be
+required or implemented as a planned integration capability.
+
+MCP integration SHALL NOT be implemented in the planned releases. Its previous
+proposal is withdrawn by the operator, who selected skill plus CLI as sufficient.
+
+Harness-specific capture/recall hooks SHALL NOT be planned for these releases.
+Their previous integration proposal is withdrawn. Installing a portable skill
+for discovery or adding a short activation shim is distinct from implementing a
+new client runtime or lifecycle-hook system.
 
 Failure or absence of the CLI beyond installation MUST NOT prevent a client
 from reading the current bank or making the constrained single-file manual
@@ -44,48 +51,34 @@ agent-memory project|compact|rebuild|migrate
 agent-memory eval
 ```
 
-The MCP server SHALL expose typed equivalents, use the caller's resolved
-project and developer identity, and refuse ambiguous project selection. Tool
-responses SHALL include memory IDs, scope, validity, provenance, and whether a
-result is current or historical.
+Public operations SHALL resolve project identity and developer attribution,
+refuse ambiguous project selection, and expose memory IDs, applicability,
+validity, provenance, and current/historical status where relevant. Resolution
+SHALL follow [ADR-0011](0011-principal-and-project-identity.md).
 
-Adapters SHALL follow these rules:
-
-- A client hook MAY capture candidate observations but MUST NOT bypass durable
-  admission policy.
-- A first-turn hook MAY request bounded context but MUST NOT inject global or
-  cross-project memory implicitly.
-- A client instruction file SHALL be a short activation shim, not a fork of the
-  core policy.
-- A client-specific capability failure SHALL degrade to explicit CLI or MCP
-  commands, not change memory semantics.
-- Installing or updating one adapter MUST NOT overwrite unrelated user config.
-- All adapters SHALL identify the actual client, session, repository, and
-  operation in captured provenance.
-
-Developer attribution and project identity SHALL follow
-[ADR-0011](0011-principal-and-project-identity.md). No adapter MAY substitute a
-directory basename, active credential, or client-local project identifier.
+Installation bindings SHALL preserve one core policy. Client instruction files
+SHALL be short activation shims, not independent implementations. Installation
+or update MUST preserve unrelated user configuration. Provenance SHALL identify
+the actual harness, session, repository, developer, and operation.
 
 The implementation SHOULD support Codex `AGENTS.md`, OpenCode `AGENTS.md` and
 `instructions`, and Claude Code `CLAUDE.md`/`AGENTS.md` without requiring those
 files to share identical syntax. Generated, sentinel-delimited activation
-blocks are preferred to whole-file symlinks.
+blocks are preferred to whole-file symlinks. No binding MAY substitute a
+client-local repository identifier or credential for the common identity model.
 
 ## Consequences
 
-- The system remains usable from scripts and future clients.
-- MCP supplies broad interoperability while hooks improve ergonomics.
-- Adapter tests must run against real client-visible configuration and tool
-  schemas, not only internal functions.
-- Perfect automatic end-of-session capture cannot be assumed; checkpoints and
-  pending-event recovery are required.
+- One skill and CLI serve current and future harnesses, including scripts.
+- Installation bindings are tested through real client-visible files and public
+  commands; memory semantics remain shared.
+- Boundary invocation and recovery are explicit skill responsibilities.
 
 ## Alternatives considered
 
-- **MCP only:** rejected because tools alone do not provide reliable lifecycle
-  capture or progressive first-turn context.
-- **One plugin implementation per client:** rejected because behavior and state
-  would drift.
+- **MCP:** excluded by the operator; no separate protocol surface is needed.
+- **Harness-specific hooks or plugins:** outside planned scope; the selected
+  skill/CLI workflow is sufficient.
+- **One implementation per client:** rejected because behavior and state drift.
 - **Instruction files only:** rejected because free-form direct edits cannot
   enforce schemas, locking, provenance, or deletion.

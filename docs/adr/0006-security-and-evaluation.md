@@ -21,7 +21,7 @@ Memory SHALL be treated as untrusted data when retrieved. Only separately
 reviewed procedural memory may become instructions, and its source, version,
 scope, and approval SHALL remain visible.
 
-CLI, MCP, hook, and adapter operations SHALL enforce:
+Skill-guided and CLI-mediated operations SHALL enforce:
 
 - separation of user statements, assistant claims, tool observations, external
   content, and verified repository evidence;

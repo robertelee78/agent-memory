@@ -20,6 +20,18 @@ synchronization, schema, retrieval, and operational failure modes to the common
 case. Conversely, treating every repository as isolated loses useful knowledge
 when several repositories really are parts of one shared product or ecosystem.
 
+## Planning status
+
+Current product scope is memory shared between sessions, worktrees, and machines
+working on the same repository. Cross-project federation is a deferred proposal
+for possible `v0.0.4`, not a selected implementation commitment. The operator
+will seek Vince's input before refining that milestone. Public and private
+repositories have different sensitivity and access boundaries; authorization,
+export destinations, and how to avoid revealing private project knowledge are
+unresolved product/design questions. Existing access to two repositories MUST
+NOT imply permission to copy memory between them. No federation implementation
+or automatic cross-project sharing is authorized by this proposal.
+
 ## Decision
 
 The default unit of memory SHALL be one project-local `memory-bank/`. It SHALL
