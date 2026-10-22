@@ -92,3 +92,6 @@ bounded resume from current Markdown with memory-generated state removed.
 
 The [multi-file transaction contract](docs/contracts/bank-transactions.md) defines
 visible interruption, external recovery backups and guarded finish/rollback.
+
+The [tombstone contract](docs/contracts/tombstones.md) keeps terminal deletion
+markers content-free and guards stale projection rebuilds by stable record ID.
