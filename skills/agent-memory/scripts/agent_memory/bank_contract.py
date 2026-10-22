@@ -12,6 +12,7 @@ import uuid
 from .frontmatter import ContractError, read, unique_object, write
 from .lifecycle import MODEL, time_value
 from .remote_identity import normalize
+from .scopes import parse_scope
 
 PACK = Path(__file__).resolve().parents[2]
 SPEC = json.loads((PACK / "schemas/bank-router.json").read_text())
@@ -68,13 +69,7 @@ def route_value(route):
         raise ContractError("Routes require path, purpose, scope, lifecycle and read-when")
     route = {key: text_cell(route[key]) for key in FIELDS}
     path_value(route["path"])
-    scope = route["scope"]
-    if scope != "repository" and not re.fullmatch(r"(?:component|branch|worktree|task|session):\S(?:.*\S)?", scope):
-        raise ContractError("Scope must be repository or an explicit component/branch/worktree/task/session condition")
-    if scope.startswith("component:"):
-        component = PurePosixPath(scope.removeprefix("component:"))
-        if component.is_absolute() or any(part in {".", ".."} for part in component.parts):
-            raise ContractError("Component scope must stay within the repository")
+    parse_scope(route["scope"])
     if route["lifecycle"] not in MODEL["states"]:
         raise ContractError("Unknown route lifecycle")
     return route

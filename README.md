@@ -100,3 +100,7 @@ The initial [portable skill](skills/agent-memory/SKILL.md) provides an
 [offline file workflow](skills/agent-memory/offline/GUIDE.md) for useful manual
 setup, inspection, checkpoint and clean resume. Automatic exchange, governed
 initialization and the complete installed workflow remain under execution.
+
+The [scope policy](skills/agent-memory/scope/GUIDE.md) defines shared repository
+knowledge and explicit component, branch, worktree, task and session conditions.
+Its read-only decision helper evaluates applicability without claiming access control.
