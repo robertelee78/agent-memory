@@ -97,13 +97,15 @@ The first release is not:
 - an automatic global knowledge graph;
 - a replacement for source code, tests, ADRs, Git, issue tracking, CI, or user
   decisions;
-- MCP servers or harness-specific capture/recall hook integrations;
+- MCP servers;
 - personal profiles or private per-developer memory banks.
 
 Same-repository Git sharing is part of the first release. Memory-only changes
 land through existing repository rules and refresh into working branches at turn
 boundaries without importing code changes. The selected interface is a portable
-skill plus CLI, similar to AWA. v0.0.2 focuses on daily reliability/recovery and
+skill plus CLI, similar to AWA. v0.0.3 hooks will invoke its shared capture/refresh
+operation automatically at turn boundaries even if an agent forgets to do so.
+v0.0.2 focuses on daily reliability/recovery and
 recall quality as the bank grows, with additional scope informed by v0.0.1 use.
 Cross-project federation remains deferred for possible v0.0.4 pending operator
 and Vince input, including the unresolved public/private repository boundary.

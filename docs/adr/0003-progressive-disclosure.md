@@ -52,7 +52,8 @@ At turn boundaries the skill SHALL check for newly landed shared memory using
 ADR-0012, refresh only memory paths, and load the relevant changed knowledge.
 It MUST NOT interrupt an executing turn or require a background watcher. A
 custom harness SHALL be able to invoke the same explicit skill/CLI boundary
-operation. Client hooks are outside planned scope under ADR-0004. Retrieval
+operation. In v0.0.3, turn-boundary hooks SHALL invoke that same operation even
+when an agent forgets to do so, as specified by ADR-0004. Retrieval
 SHALL check applicability against the working branch, rather than assuming the
 branch's code has advanced with imported memory.
 

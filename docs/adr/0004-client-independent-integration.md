@@ -23,16 +23,21 @@ commands, and verified mutation protocol.
 The first release SHALL provide the shared skill and deterministic helpers for
 automatic durable capture, search-before-write, consolidation, pruning, and the
 memory-only Git exchange in ADR-0012. Turn boundaries SHALL invoke the common
-skill/CLI operation; no protocol server, client plugin, hook, or daemon SHALL be
-required or implemented as a planned integration capability.
+skill/CLI operation. No hook, client plugin, or daemon SHALL be required for
+the common workflow; MCP is excluded below.
 
 MCP integration SHALL NOT be implemented in the planned releases. Its previous
 proposal is withdrawn by the operator, who selected skill plus CLI as sufficient.
 
-Harness-specific capture/recall hooks SHALL NOT be planned for these releases.
-Their previous integration proposal is withdrawn. Installing a portable skill
-for discovery or adding a short activation shim is distinct from implementing a
-new client runtime or lifecycle-hook system.
+In `v0.0.3`, harness hooks SHALL invoke the common capture/refresh operation
+automatically at turn boundaries, including when an agent forgets to invoke the
+skill. Hooks SHALL supply invocation only: they MUST NOT own memory semantics,
+bypass admission or Git rules, or interrupt ongoing work. Supported harness
+events and integration details SHALL be established and tested through each
+selected harness's public invocation surface before claiming support.
+Explicit skill/CLI invocation MUST remain available to custom harnesses and
+clients without hooks. Skill discovery/activation bindings are distinct from
+these optional runtime callbacks.
 
 Failure or absence of the CLI beyond installation MUST NOT prevent a client
 from reading the current bank or making the constrained single-file manual
@@ -72,13 +77,14 @@ client-local repository identifier or credential for the common identity model.
 - One skill and CLI serve current and future harnesses, including scripts.
 - Installation bindings are tested through real client-visible files and public
   commands; memory semantics remain shared.
-- Boundary invocation and recovery are explicit skill responsibilities.
+- Boundary semantics and recovery belong to the skill/CLI; optional hooks may
+  supply invocation without creating a second memory implementation.
 
 ## Alternatives considered
 
 - **MCP:** excluded by the operator; no separate protocol surface is needed.
-- **Harness-specific hooks or plugins:** outside planned scope; the selected
-  skill/CLI workflow is sufficient.
+- **Hook-owned memory logic:** rejected because semantics would diverge.
+  v0.0.3 callbacks invoke the common skill/CLI rather than duplicate it.
 - **One implementation per client:** rejected because behavior and state drift.
 - **Instruction files only:** rejected because free-form direct edits cannot
   enforce schemas, locking, provenance, or deletion.

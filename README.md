@@ -12,8 +12,9 @@ progressive skill and lifecycle discipline of `agent-work-accountability`, and
 improve it without losing that simplicity.
 
 The common path MUST remain useful with files, Git, and the installed skill
-alone, with a deterministic CLI for governed operations. MCP and harness-hook
-integrations are outside planned scope. Any optional search projection must
+alone, with a deterministic CLI for governed operations. MCP is outside planned
+scope. v0.0.3 hooks will invoke the shared capture/refresh operation at turn
+boundaries. Any optional search projection must
 remain disposable; it cannot become the authority for project memory.
 
 The product is not “save more chat and vector-search it.” It is a maintained
