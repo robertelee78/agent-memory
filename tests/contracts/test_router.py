@@ -107,6 +107,33 @@ class RouterContract(unittest.TestCase):
                 self.assertEqual(result.returncode, 1, receipt)
                 self.assertFalse(receipt["valid"])
 
+    def test_timezone_offsets_are_validated_without_normalizing_invalid_components(self):
+        # Independent review caught datetime.fromisoformat normalizing +00:99.
+        # Both public surfaces must enforce RFC3339 component ranges first.
+        with World() as world:
+            bank = self.bank(world)
+            router = bank / "MEMORY.md"
+            original = router.read_text()
+            for offset in ("+00:99", "-00:60", "+24:00", "-24:00", "+99:00", "+01:99"):
+                timestamp = "2026-10-22T17:00:00" + offset
+                proposal = self.proposal()
+                proposal["router-updated"] = timestamp
+                file = world.inside("proposal.json")
+                file.write_text(json.dumps(proposal))
+                result, receipt = self.command(world, "render", "--input", file)
+                self.assertEqual(result.returncode, 1, receipt)
+                router.write_text(original.replace("2026-10-22T17:00:00Z", timestamp))
+                result, receipt = self.validate(world)
+                self.assertEqual(result.returncode, 1, receipt)
+            for offset in ("Z", "+00:00", "-00:00", "+05:30", "-07:00", "+23:59", "-23:59"):
+                timestamp = "2026-10-22T17:00:00" + offset
+                proposal = self.proposal()
+                proposal["router-updated"] = timestamp
+                file.write_text(json.dumps(proposal))
+                self.assertEqual(self.command(world, "render", "--input", file)[0].returncode, 0)
+                router.write_text(original.replace("2026-10-22T17:00:00Z", timestamp))
+                self.assertEqual(self.validate(world)[0].returncode, 0)
+
     def test_missing_empty_and_omitted_existing_targets_fail(self):
         with World() as world:
             bank = self.bank(world)
