@@ -6,6 +6,7 @@ import json
 from pathlib import Path, PurePosixPath
 import re
 import sys
+import unicodedata
 import uuid
 
 from .frontmatter import ContractError, read, unique_object, write
@@ -173,11 +174,87 @@ def render(proposal):
             "files": files, "writes_performed": False}
 
 
-def validate(repo, *, owned_lock=None):
+def portable_key(value):
+    return unicodedata.normalize("NFC", unicodedata.normalize("NFC", value).casefold())
+
+
+def portable_aliases(paths):
+    seen = {}
+    for path in paths:
+        parts = PurePosixPath(path).parts
+        for size in range(1, len(parts) + 1):
+            spelling = PurePosixPath(*parts[:size]).as_posix()
+            key = portable_key(spelling)
+            if key in seen and seen[key] != spelling:
+                raise ContractError("Bank paths have case or Unicode component aliases; preserve the physical entries")
+            seen[key] = spelling
+
+
+def runtime_path(path):
+    return any(part.startswith(".agent-memory") for part in PurePosixPath(path).parts)
+
+
+def bank_root(bank):
+    # Do not adopt a differently spelled directory just because this host treats
+    # it as the same path. Such a bank would fail on a case-sensitive clone.
+    if bank.parent.is_dir():
+        for entry in bank.parent.iterdir():
+            if portable_key(entry.name) == portable_key(bank.name) and entry.name != bank.name:
+                raise ContractError("Bank root has a case or Unicode spelling alias; explicit repair is required")
+
+
+def physical_paths(bank):
+    paths = []
+    for target in bank.rglob("*"):
+        if target.is_symlink():
+            raise ContractError("Bank paths must not be symlinks")
+        path = target.relative_to(bank).as_posix()
+        if not runtime_path(path):
+            paths.append(path)
+    return paths
+
+
+def file_topology(paths):
+    paths = set(paths)
+    portable_aliases(paths)
+    for path in paths:
+        if any(parent.as_posix() in paths for parent in PurePosixPath(path).parents):
+            raise ContractError("A canonical file cannot also be a parent directory")
+
+
+def validate_files(files):
+    """Validate a proposed complete canonical map without temporary file writes."""
+    if not isinstance(files, dict) or "MEMORY.md" not in files:
+        raise ContractError("A complete bank requires MEMORY.md")
+    for path, body in files.items():
+        if path != "MEMORY.md":
+            path_value(path)
+        if not isinstance(body, str) or not body.strip():
+            raise ContractError(f"Missing or empty routed file: {path}")
+        body.encode("utf-8")
+    file_topology(files)
+    metadata, routes, omitted = parse_router(files["MEMORY.md"])
+    for route in routes:
+        if route["path"] not in files:
+            raise ContractError(f"Missing or empty routed file: {route['path']}")
+    for path in omitted:
+        if path in files:
+            raise ContractError(f"Context exists but is marked omitted: {path}")
+    if set(files) != {"MEMORY.md", *[r["path"] for r in routes]}:
+        raise ContractError("Project Markdown must be reachable from the router")
+    return {"schema": "agent-memory/bank-contract-result-v1", "operation": "validate",
+            "valid": True, "validation_scope": "router-and-file-contract", "project_id": metadata["project-id"],
+            "router_updated": metadata["router-updated"], "routes": routes, "omitted": omitted,
+            "writes_performed": False}
+
+
+def validate(repo, *, owned_lock=None, owned_transaction=None):
     bank = Path(repo).resolve() / SPEC["x-bank-path"]
+    bank_root(bank)
     if bank.is_symlink():
         raise ContractError("Bank directory must not be a symlink")
-    if (bank / ".agent-memory-transaction.md").exists():
+    marker = bank / ".agent-memory-transaction.md"
+    if marker.is_symlink() or (marker.exists() and (owned_transaction is None or marker.read_bytes() != owned_transaction)):
         raise ContractError("Interrupted bank: recover the transaction before resuming")
     lock = bank / ".agent-memory.lock"
     if lock.is_symlink() or (lock.exists() and (owned_lock is None or lock.read_bytes() != owned_lock)):
@@ -185,14 +262,15 @@ def validate(repo, *, owned_lock=None):
     router = bank / "MEMORY.md"
     if router.is_symlink():
         raise ContractError("Router must not be a symlink")
-    metadata, routes, omitted = parse_router(router.read_text(encoding="utf-8"))
+    metadata, routes, omitted = parse_router(router.read_bytes().decode("utf-8"))
+    portable_aliases([*physical_paths(bank), "MEMORY.md", *[route["path"] for route in routes]])
     for route in routes:
         target = bank / route["path"]
         relative = target.relative_to(bank)
         parts = [bank.joinpath(*relative.parts[:i]) for i in range(1, len(relative.parts) + 1)]
         if any(part.is_symlink() for part in parts) or not target.resolve().is_relative_to(bank.resolve()):
             raise ContractError("Routed target must remain inside the bank without symlinks")
-        if not target.is_file() or not target.read_text(encoding="utf-8").strip():
+        if not target.is_file() or not target.read_bytes().decode("utf-8").strip():
             raise ContractError(f"Missing or empty routed file: {route['path']}")
     for path in omitted:
         if (bank / path).exists() or (bank / path).is_symlink():
@@ -200,17 +278,14 @@ def validate(repo, *, owned_lock=None):
     # Optional files cannot become an unindexed second bank. Bounded topic-index
     # traversal is added by the disclosure/optional-record stories; this first
     # contract accepts directly routed optional Markdown files.
-    routed = {r["path"] for r in routes}
+    files = {"MEMORY.md": router.read_bytes().decode("utf-8")}
     for target in bank.rglob("*"):
         if target.is_symlink():
             raise ContractError("Bank paths must not be symlinks")
         relative = target.relative_to(bank).as_posix()
-        if target.is_file() and target.suffix == ".md" and relative != "MEMORY.md" and relative not in routed:
-            raise ContractError("Project Markdown must be reachable from the router")
-    return {"schema": "agent-memory/bank-contract-result-v1", "operation": "validate",
-            "valid": True, "validation_scope": "router-and-file-contract", "project_id": metadata["project-id"],
-            "router_updated": metadata["router-updated"], "routes": routes, "omitted": omitted,
-            "writes_performed": False}
+        if target.is_file() and target.suffix == ".md" and not runtime_path(relative):
+            files[relative] = target.read_bytes().decode("utf-8")
+    return validate_files(files)
 
 
 def main(argv=None):

@@ -24,13 +24,14 @@ PROPOSAL_FIELDS = {"schema", "operation_id", "operation", "repo_root", "project_
 def bank_path(repo):
     root = Path(repo).resolve()
     bank = root / contract.SPEC["x-bank-path"]
+    contract.bank_root(bank)
     if bank.is_symlink() or not bank.is_dir():
         raise ContractError("An existing canonical bank directory is required; initialization uses the multi-file protocol")
     return root, bank
 
 
 def runtime(path):
-    return any(part.startswith(".agent-memory") for part in Path(path).parts)
+    return contract.runtime_path(path)
 
 
 def hashes(bank):
@@ -129,9 +130,10 @@ def fault(stage):
         if not directory.is_absolute() or not directory.resolve().is_relative_to(root.resolve()) or directory.is_symlink():
             raise ContractError("Fault rendezvous must stay in the disposable world")
         directory.mkdir(parents=True, exist_ok=True)
-        (directory / (stage + ".ready")).touch()
+        leaf = stage.replace("/", "%2F")
+        (directory / (leaf + ".ready")).touch()
         deadline = time.monotonic() + 10
-        while not (directory / (stage + ".release")).exists():
+        while not (directory / (leaf + ".release")).exists():
             if time.monotonic() > deadline:
                 raise ContractError("Isolated fault rendezvous timed out")
             time.sleep(0.01)

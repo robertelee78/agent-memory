@@ -89,3 +89,6 @@ single-file edits, resume, and subsequent validation of external changes.
 
 The [clean-bank usability check](docs/contracts/bank-usability.md) demonstrates
 bounded resume from current Markdown with memory-generated state removed.
+
+The [multi-file transaction contract](docs/contracts/bank-transactions.md) defines
+visible interruption, external recovery backups and guarded finish/rollback.
