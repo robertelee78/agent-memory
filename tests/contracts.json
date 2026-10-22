@@ -7,6 +7,7 @@
     {"name": "developer-attribution", "layer": "client", "scope": "v0.0.1", "path": "tests/contracts/test_developer_identity.py"},
     {"name": "project-identity", "layer": "client", "scope": "v0.0.1", "path": "tests/contracts/test_project_identity.py"},
     {"name": "single-file-writes", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_bank_writes.py"},
+    {"name": "authority-boundaries", "layer": "evaluation", "scope": "v0.0.1", "path": "tests/contracts/test_authority_boundary.py"},
     {"name": "bank-roundtrip", "layer": "bank", "scope": "v0.0.1", "path": null, "reason": "Bank operations have not shipped."},
     {"name": "identity-isolation", "layer": "client", "scope": "v0.0.1", "path": null, "reason": "Identity operations have not shipped."},
     {"name": "observed-writes", "layer": "concurrency", "scope": "v0.0.1", "path": null, "reason": "Governed writes have not shipped."},

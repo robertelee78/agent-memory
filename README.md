@@ -80,3 +80,6 @@ stable bank IDs, worktree/clone evidence, remote normalization and explicit bind
 
 The [observed write contract](docs/contracts/observed-writes.md) defines the
 common bank lock, single-file replacement, readback, retry and recovery mechanism.
+
+The [access and remembered-authority contract](docs/contracts/security-authority.md)
+explains shared-bank access, developer attribution and the treatment of memory as untrusted data.
