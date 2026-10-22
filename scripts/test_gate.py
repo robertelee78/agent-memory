@@ -28,11 +28,13 @@ def registry():
         raise ValueError("Unsupported contract registry schema")
     entries = data["suites"]
     names = [entry["name"] for entry in entries]
-    if len(names) != len(set(names)) or set(names) != REQUIRED | {"harness", "optional-stores"}:
+    if len(names) != len(set(names)) or not (REQUIRED | {"harness", "optional-stores"}).issubset(names):
         raise ValueError("Registry must declare every v0.0.1 contract exactly once")
     if set(entry["layer"] for entry in entries) != LAYERS:
         raise ValueError("Registry must route every contract layer")
     for entry in entries:
+        if entry["name"] not in REQUIRED | {"harness", "optional-stores"} and not entry.get("path"):
+            raise ValueError("Additional foundation suites must be implemented")
         if entry["name"] == "optional-stores":
             if entry.get("scope") != "future" or not entry.get("reason") or entry.get("path"):
                 raise ValueError("Optional stores must be explicitly outside v0.0.1")
