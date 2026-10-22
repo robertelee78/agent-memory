@@ -1,0 +1,21 @@
+{
+  "schema": "agent-memory/test-contracts-v1",
+  "suites": [
+    {"name": "harness", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_harness.py"},
+    {"name": "bank-roundtrip", "layer": "bank", "scope": "v0.0.1", "path": null, "reason": "Bank operations have not shipped."},
+    {"name": "identity-isolation", "layer": "client", "scope": "v0.0.1", "path": null, "reason": "Identity operations have not shipped."},
+    {"name": "observed-writes", "layer": "concurrency", "scope": "v0.0.1", "path": null, "reason": "Governed writes have not shipped."},
+    {"name": "learning-admission", "layer": "bank", "scope": "v0.0.1", "path": null, "reason": "Admission operations have not shipped."},
+    {"name": "retrieval-context", "layer": "bank", "scope": "v0.0.1", "path": null, "reason": "Recall operations have not shipped."},
+    {"name": "correction-erasure", "layer": "bank", "scope": "v0.0.1", "path": null, "reason": "Correction and erasure have not shipped."},
+    {"name": "initialize-evidence", "layer": "bank", "scope": "v0.0.1", "path": null, "reason": "Evidence-based initialization has not shipped."},
+    {"name": "cross-clone-sharing", "layer": "concurrency", "scope": "v0.0.1", "path": null, "reason": "Memory sharing has not shipped."},
+    {"name": "concurrent-sharing", "layer": "concurrency", "scope": "v0.0.1", "path": null, "reason": "Sharing reconciliation has not shipped."},
+    {"name": "offline-replay", "layer": "concurrency", "scope": "v0.0.1", "path": null, "reason": "Offline retry has not shipped."},
+    {"name": "later-code-merge", "layer": "concurrency", "scope": "v0.0.1", "path": null, "reason": "Memory integration has not shipped."},
+    {"name": "portable-lifecycle", "layer": "lifecycle", "scope": "v0.0.1", "path": null, "reason": "Install/update/uninstall have not shipped."},
+    {"name": "security-canaries", "layer": "evaluation", "scope": "v0.0.1", "path": null, "reason": "Security operations have not shipped."},
+    {"name": "skill-routes", "layer": "pack", "scope": "v0.0.1", "path": null, "reason": "Portable skill guides have not shipped."},
+    {"name": "optional-stores", "layer": "optional", "scope": "future", "path": null, "reason": "Cross-repository federation and optional stores are outside v0.0.1."}
+  ]
+}
