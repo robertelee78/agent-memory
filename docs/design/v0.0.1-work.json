@@ -1,0 +1,1847 @@
+{
+  "schema": "agent-memory/execution-plan-v1",
+  "release": "v0.0.1",
+  "design": "docs/design/v0.0.1-execution.md",
+  "approval": "technical-review-pending",
+  "selected_by": "operator request: reload AWA and prepare v0.0.1 for execution, 2026-10-22",
+  "stories": [
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0001:offline-core",
+      "issue": 2,
+      "url": "https://github.com/robertelee78/agent-memory/issues/2",
+      "title": "Keep the core Memory Bank usable offline",
+      "wave": 0,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0001-local-first-authority-boundaries.md",
+        "commit": "1c3cd96a0d843f5f3359286c16b27116c9192825",
+        "blob": "af2775363f9317d6e570a8885b6f7ebc33580e04",
+        "decision_status": "proposed"
+      },
+      "outcome": "A fresh agent can use the shared Markdown bank and portable skill without optional infrastructure.",
+      "acceptance": [
+        "Initialize, inspect, edit, checkpoint and resume using files and the skill with all optional services disabled.",
+        "No hosted service, model, client, daemon, embedding, MCP or hook is a core prerequisite.",
+        "Same-repository Git publication and turn-boundary memory refresh are part of v0.0.1; local use remains available offline while sharing is pending.",
+        "Keep AWA work/delivery evidence, Vox coordination, and durable memory under their separate authorities."
+      ],
+      "validation": "Run an isolated file-and-skill resume walkthrough with generated state removed.",
+      "fixtures": [
+        "bank-roundtrip",
+        "identity-isolation",
+        "security-canaries"
+      ]
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0001:scope-policy",
+      "issue": 3,
+      "url": "https://github.com/robertelee78/agent-memory/issues/3",
+      "title": "Define explicit memory scopes and retrieval consent",
+      "wave": 0,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0001-local-first-authority-boundaries.md",
+        "commit": "1c3cd96a0d843f5f3359286c16b27116c9192825",
+        "blob": "af2775363f9317d6e570a8885b6f7ebc33580e04",
+        "decision_status": "proposed"
+      },
+      "outcome": "The shared model and skill make project scope the default and cross-scope access explicit.",
+      "acceptance": [
+        "Shared repository knowledge is the memory unit; component, branch, task and session conditions refine applicability.",
+        "Cross-project retrieval is explicit; personal profiles, private per-developer banks and personal preference stores are excluded.",
+        "Developer identity supports provenance and clarification, never a personal namespace or separate memory ACL."
+      ],
+      "validation": "Review the scope matrix against isolation fixtures and portable instructions.",
+      "fixtures": [
+        "bank-roundtrip",
+        "identity-isolation",
+        "security-canaries"
+      ]
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0001:authority-policy",
+      "issue": 4,
+      "url": "https://github.com/robertelee78/agent-memory/issues/4",
+      "title": "Resolve memory conflicts using stronger authorities",
+      "wave": 0,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0001-local-first-authority-boundaries.md",
+        "commit": "1c3cd96a0d843f5f3359286c16b27116c9192825",
+        "blob": "af2775363f9317d6e570a8885b6f7ebc33580e04",
+        "decision_status": "proposed"
+      },
+      "outcome": "Memory points to current authorities and routes conflicts to correction.",
+      "acceptance": [
+        "Preserve every authority in the ADR table, including work tracking, coordination and reviewed procedures.",
+        "A stronger current source wins over remembered text; memory never proves delivery or agent ownership.",
+        "A conflict can be recorded as a correction or revocation candidate."
+      ],
+      "validation": "Exercise conflicting code, ADR, user-preference and stale-memory fixtures.",
+      "fixtures": [
+        "bank-roundtrip",
+        "identity-isolation",
+        "security-canaries"
+      ]
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0002:canonical-bank",
+      "issue": 6,
+      "url": "https://github.com/robertelee78/agent-memory/issues/6",
+      "title": "Keep current Markdown complete without application state",
+      "wave": 0,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0002-markdown-first-temporal-memory.md",
+        "commit": "1c3cd96a0d843f5f3359286c16b27116c9192825",
+        "blob": "3c6308d8fb25dd4ba1689aae9772451825eecab1",
+        "decision_status": "proposed"
+      },
+      "outcome": "The smallest useful Cline-shaped bank remains the canonical readable project state.",
+      "acceptance": [
+        "Provide the six recognizable contexts and bounded MEMORY.md router while omitting irrelevant empty files.",
+        "Tracked banks link to Git/evidence; untracked or unpublished project learning reports local/pending sharing honestly.",
+        "Removing caches, journals and indexes leaves current memory complete and readable."
+      ],
+      "validation": "Initialize minimal tracked/untracked fixtures and resume after deleting generated state.",
+      "fixtures": [
+        "bank-roundtrip",
+        "correction-erasure",
+        "observed-writes"
+      ]
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0005:lifecycle-schema",
+      "issue": 26,
+      "url": "https://github.com/robertelee78/agent-memory/issues/26",
+      "title": "Define one versioned lifecycle and current-selection predicate",
+      "wave": 0,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0005-admission-consolidation-retrieval.md",
+        "commit": "bdba5342d173f8b23e92d81897941e6ae3813cf7",
+        "blob": "52da7e0eddcb65ab5f9cc057d4565110b7b80610",
+        "decision_status": "proposed"
+      },
+      "outcome": "One machine-readable model defines lifecycle transitions and current visibility.",
+      "acceptance": [
+        "Include candidate, quarantined, active, superseded, revoked, expired and deleted states.",
+        "Model correction/new version, replacement-aware supersession, revocation, expiry, new-evidence reactivation and terminal deletion.",
+        "Keep confidence, trust, visibility and valid time independent.",
+        "CLI, validators, tests and generated model guide share authorized-scope/active/time/trust/no-superseder selection semantics."
+      ],
+      "validation": "Validate the transition table and generated model/predicate agreement with state fixtures.",
+      "fixtures": [
+        "learning-admission",
+        "retrieval-context",
+        "correction-erasure"
+      ]
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0006:honest-boundaries",
+      "issue": 34,
+      "url": "https://github.com/robertelee78/agent-memory/issues/34",
+      "title": "Document the OS security boundary and authority precedence",
+      "wave": 0,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0006-security-and-evaluation.md",
+        "commit": "60a787b4f40123329cbecd66d58f0fbe1faf0b36",
+        "blob": "0cb8169a143758a05144d5e035991298e502e2d6",
+        "decision_status": "proposed"
+      },
+      "outcome": "The product accurately explains raw-file access and the limits of local identities.",
+      "acceptance": [
+        "Direct file access is governed by OS/repository/hosting access and cannot promise CLI audit or mediation.",
+        "Developer IDs provide provenance; they are neither authentication nor per-developer memory ACLs.",
+        "Developers with repository access use the same bank; tests and documentation preserve these limits."
+      ],
+      "validation": "Review security claims and run malicious-memory/manual-access canaries.",
+      "fixtures": [
+        "security-canaries",
+        "identity-isolation"
+      ]
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0008:independent-local-bank",
+      "issue": 54,
+      "url": "https://github.com/robertelee78/agent-memory/issues/54",
+      "title": "Prove local banks stay independent of federation",
+      "wave": 0,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0008-project-bank-and-optional-federation.md",
+        "commit": "60a787b4f40123329cbecd66d58f0fbe1faf0b36",
+        "blob": "fab2f3cbab0bf8a00cc9ecae60ba7ee05a148baf",
+        "decision_status": "proposed"
+      },
+      "outcome": "A single project can initialize, checkpoint, resume, search, validate and repair without any global service.",
+      "acceptance": [
+        "Local Markdown stays readable, editable, versionable, exportable and useful.",
+        "No federation service/catalog is required for the baseline."
+      ],
+      "validation": "Run file-based workflow with all federation/optional state absent.",
+      "fixtures": [
+        "identity-isolation",
+        "bank-roundtrip"
+      ]
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0009:top-level-gate",
+      "issue": 59,
+      "url": "https://github.com/robertelee78/agent-memory/issues/59",
+      "title": "Provide one offline public-interface contract-test gate",
+      "wave": 0,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0009-contract-tests-and-fault-injection.md",
+        "commit": "bdba5342d173f8b23e92d81897941e6ae3813cf7",
+        "blob": "1b38ace4a8dc3af441d4a1982902268b977bbe55",
+        "decision_status": "proposed"
+      },
+      "outcome": "One test command verifies the product contracts in completely isolated test worlds.",
+      "acceptance": [
+        "Route pack/lifecycle/bank/concurrency/client/optional/evaluation layers through one gate, enabling later layers as their operations ship.",
+        "Acceptance uses real CLI/scripts/file workflows rather than internal helpers alone.",
+        "Isolate home/XDG/client/repo/bank/state/cache/backup roots; require no real credentials/network/live data."
+      ],
+      "validation": "Run the top-level gate from an empty temporary environment and verify live paths remain untouched.",
+      "fixtures": [
+        "observed-writes",
+        "cross-clone-sharing",
+        "offline-replay",
+        "skill-routes"
+      ]
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0010:router-and-context-files",
+      "issue": 71,
+      "url": "https://github.com/robertelee78/agent-memory/issues/71",
+      "title": "Create the minimal useful bank and bounded schema-bearing router",
+      "wave": 0,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0010-memory-bank-file-contract.md",
+        "commit": "1c3cd96a0d843f5f3359286c16b27116c9192825",
+        "blob": "3f463c3ebf8e679bcb3bd37589b7e933ff67b37b",
+        "decision_status": "proposed"
+      },
+      "outcome": "A project bank has a precise, human-editable file contract.",
+      "acceptance": [
+        "Default to repository-root memory-bank tracked as shared project memory.",
+        "Require MEMORY.md with byte-zero schema/project-id/router-updated frontmatter.",
+        "Routes carry relative Markdown path, purpose, scope, lifecycle and read conditions; router time is not every-file revision.",
+        "Create useful recognizable context files only and link volatile/authoritative claims to stronger sources.",
+        "Exclude disposable pending/runtime/recovery state from shared routes and do not maintain a second durable bank or personal overlay."
+      ],
+      "validation": "Validate minimal and expanded bank fixtures, omission routes and fresh-agent resume.",
+      "fixtures": [
+        "bank-roundtrip",
+        "observed-writes",
+        "initialize-evidence",
+        "correction-erasure"
+      ]
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0010:bank-lock-and-hashes",
+      "issue": 75,
+      "url": "https://github.com/robertelee78/agent-memory/issues/75",
+      "title": "Serialize mediated writers and reject unobserved external edits",
+      "wave": 0,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0010-memory-bank-file-contract.md",
+        "commit": "1c3cd96a0d843f5f3359286c16b27116c9192825",
+        "blob": "3f463c3ebf8e679bcb3bd37589b7e933ff67b37b",
+        "decision_status": "proposed"
+      },
+      "outcome": "A bank-wide exclusive lock and base hashes protect mediated mutations.",
+      "acceptance": [
+        "Exclusive-create lock precedes inventory and remains through readback/receipt; record random operation ID, host, PID, operation and start.",
+        "Second writer stops; stale recovery proves same-host process death or uses explicit operator review for another host.",
+        "Compute/recheck target hashes immediately before replacement; stop on external edits.",
+        "Document filesystem capability and non-cooperating manual-writer limits.",
+        "Locks govern one worktree only; exclude locks, transaction markers and recovery state from shared Git memory commits.",
+        "The safe mediated write baseline required by automatic capture and maintenance ships in v0.0.1."
+      ],
+      "validation": "Race actual writers and manual edits; test local/remote stale-lock refusal and recovery.",
+      "fixtures": [
+        "bank-roundtrip",
+        "observed-writes",
+        "initialize-evidence",
+        "correction-erasure"
+      ]
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0010:manual-file-protocol",
+      "issue": 76,
+      "url": "https://github.com/robertelee78/agent-memory/issues/76",
+      "title": "Teach constrained manual checkpoint and external-change validation",
+      "wave": 0,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0010-memory-bank-file-contract.md",
+        "commit": "1c3cd96a0d843f5f3359286c16b27116c9192825",
+        "blob": "3f463c3ebf8e679bcb3bd37589b7e933ff67b37b",
+        "decision_status": "proposed"
+      },
+      "outcome": "A client can safely follow the documented single-file manual fallback.",
+      "acceptance": [
+        "Reread the target, change only the intended section and read back.",
+        "Treat a visible lock as do-not-edit and route interrupted banks to recovery.",
+        "Describe ordinary Markdown/Git recoverability without claiming audited mediated guarantees.",
+        "Subsequent mediated operations validate the external change instead of overwriting it."
+      ],
+      "validation": "Run a file-only checkpoint/resume walkthrough and a mediated external-change fixture when that surface ships.",
+      "fixtures": [
+        "bank-roundtrip",
+        "observed-writes",
+        "initialize-evidence",
+        "correction-erasure"
+      ]
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0010:safe-tombstone-format",
+      "issue": 78,
+      "url": "https://github.com/robertelee78/agent-memory/issues/78",
+      "title": "Define content-free durable tombstones for deleted memory",
+      "wave": 0,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0010-memory-bank-file-contract.md",
+        "commit": "1c3cd96a0d843f5f3359286c16b27116c9192825",
+        "blob": "3f463c3ebf8e679bcb3bd37589b7e933ff67b37b",
+        "decision_status": "proposed"
+      },
+      "outcome": "Deleted sections or files cannot be recreated by projections and retain no sensitive fingerprint.",
+      "acceptance": [
+        "Retain only random record ID, scope, deletion time, deletion authority and non-sensitive reason class.",
+        "Exclude content/evidence/secrets/personal data and reversible or low-entropy hashes.",
+        "Place safe tombstones in the project history whenever another projection could recreate deleted guidance."
+      ],
+      "validation": "Inspect tombstone fields and run delete/rebuild/resurrection canaries.",
+      "fixtures": [
+        "bank-roundtrip",
+        "observed-writes",
+        "initialize-evidence",
+        "correction-erasure"
+      ]
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0011:principal-registry",
+      "issue": 84,
+      "url": "https://github.com/robertelee78/agent-memory/issues/84",
+      "title": "Record stable developer attribution without personal memory namespaces",
+      "wave": 0,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0011-principal-and-project-identity.md",
+        "commit": "1c3cd96a0d843f5f3359286c16b27116c9192825",
+        "blob": "ffeff04b62844e351aa18c21e8740b6f0139adf0",
+        "decision_status": "proposed"
+      },
+      "outcome": "Shared project learning identifies its originating developer across machines and harnesses.",
+      "acceptance": [
+        "Aliases/evidence never silently replace the stable developer provenance ID.",
+        "Select another developer identity explicitly; no personal memory or preference data is stored in the attribution registry.",
+        "Repository and OS access govern the bank; developer IDs are not authentication or memory ACLs.",
+        "Explicitly adopt the same stable identity across two to five machines and keep collaborators distinct from harness/session identities.",
+        "Changing Git/hosting credentials never silently changes attribution; unknown/conflicting evidence remains visible."
+      ],
+      "validation": "Run install/developer selection fixtures with changed Git/client/user aliases.",
+      "fixtures": [
+        "identity-isolation"
+      ]
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0011:project-registry",
+      "issue": 85,
+      "url": "https://github.com/robertelee78/agent-memory/issues/85",
+      "title": "Resolve projects consistently across worktrees, remotes, moves and forks",
+      "wave": 0,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0011-principal-and-project-identity.md",
+        "commit": "1c3cd96a0d843f5f3359286c16b27116c9192825",
+        "blob": "ffeff04b62844e351aa18c21e8740b6f0139adf0",
+        "decision_status": "proposed"
+      },
+      "outcome": "Stable bank IDs and repository evidence prevent accidental namespace splits or merges.",
+      "acceptance": [
+        "Generate stable project IDs and bind observed locations/evidence; common Git directory joins linked worktrees.",
+        "Normalize credential/query/fragment/trailing-slash/.git and HTTPS/SSH/SCP syntax with host-specific case rules.",
+        "Preserve different hosts/owners/repos/forks; configured authority wins, otherwise use origin only if unambiguous.",
+        "Stop on conflicts/remote changes; no-remote moves keep identity; independent copies explicitly link or fork and rebinding retains alias history."
+      ],
+      "validation": "Run table-driven real repository/worktree/move/clone/fork/multiple-remote fixtures.",
+      "fixtures": [
+        "identity-isolation"
+      ]
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0002:typed-records",
+      "issue": 7,
+      "url": "https://github.com/robertelee78/agent-memory/issues/7",
+      "title": "Specify typed records with provenance and temporal validity",
+      "wave": 1,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [
+        "robertelee78/agent-memory:ADR-0002:canonical-bank"
+      ],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0002-markdown-first-temporal-memory.md",
+        "commit": "1c3cd96a0d843f5f3359286c16b27116c9192825",
+        "blob": "3c6308d8fb25dd4ba1689aae9772451825eecab1",
+        "decision_status": "proposed"
+      },
+      "outcome": "Standalone records and optional history expose type, scope, provenance and changing truth.",
+      "acceptance": [
+        "Support semantic fact, feedback, decision, attempt, result, reference and procedural candidate records.",
+        "Validate stable ID/schema, scope, kind/state, actor/source/evidence, time and derivation/correction links.",
+        "Record confidence, admission/trust/redaction metadata when required; mark visible stale statements explicitly.",
+        "Optional event history never contains the only readable current memory or replaces recovery journals.",
+        "Preserve originating developer identity, harness/session, evidence, and component/branch/revision/version/environment/prerequisite conditions.",
+        "Shared observations from unmerged work remain conditional; landing memory does not assert that main or an older branch has matching code."
+      ],
+      "validation": "Validate representative records and journal-loss fixtures against the schema.",
+      "fixtures": [
+        "bank-roundtrip",
+        "correction-erasure",
+        "observed-writes"
+      ]
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0003:bounded-disclosure",
+      "issue": 13,
+      "url": "https://github.com/robertelee78/agent-memory/issues/13",
+      "title": "Expose bounded routes and consented session context",
+      "wave": 1,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [
+        "robertelee78/agent-memory:ADR-0010:router-and-context-files"
+      ],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0003-progressive-disclosure.md",
+        "commit": "b85970ab8b35154e3ff37b749c23907e9b1afcb8",
+        "blob": "d182c376df50a1e755c72f3c150d2a2ec93544a7",
+        "decision_status": "proposed"
+      },
+      "outcome": "Resume loads a bounded router and only the context relevant to the current task.",
+      "acceptance": [
+        "MEMORY.md names purpose, validity and retrieval keys; detailed records load on demand.",
+        "Load the shared project router and relevant task/component context; maintain no personal profile or private memory layer.",
+        "Filter project scope, validity, trust and type before ranking; exact lookup works without embeddings.",
+        "Use turn-boundary memory-only refresh and applicability checks from ADR-0012."
+      ],
+      "validation": "Run representative file-only resume tasks and verify the selected file set.",
+      "fixtures": [
+        "skill-routes",
+        "retrieval-context"
+      ]
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0003:portable-instruction-tree",
+      "issue": 14,
+      "url": "https://github.com/robertelee78/agent-memory/issues/14",
+      "title": "Build one progressive portable skill and shared model guide",
+      "wave": 1,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [
+        "robertelee78/agent-memory:ADR-0001:authority-policy",
+        "robertelee78/agent-memory:ADR-0001:scope-policy",
+        "robertelee78/agent-memory:ADR-0010:router-and-context-files",
+        "robertelee78/agent-memory:ADR-0005:lifecycle-schema"
+      ],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0003-progressive-disclosure.md",
+        "commit": "b85970ab8b35154e3ff37b749c23907e9b1afcb8",
+        "blob": "d182c376df50a1e755c72f3c150d2a2ec93544a7",
+        "decision_status": "proposed"
+      },
+      "outcome": "One registerable skill routes through shared domains to implemented operation leaves.",
+      "acceptance": [
+        "Use discovery, root, domain and leaf layers; nested instructions use GUIDE.md.",
+        "Follow the linked blueprint loading order, leaf contract, conditional model reference and context-budget guardrails.",
+        "Add routes only for implemented operations; leaves require their domain and do not depend on unstated sibling rules.",
+        "Use uppercase RFC 2119 requirements and keep client policy outside core semantics.",
+        "Include implemented refresh and publication routes plus automatic capture/deduplication/consolidation/pruning under the shared domain/leaf rules.",
+        "Initialization follows ADR-0010 evidence discovery and focused clarification; refresh preserves code and local unpublished memory."
+      ],
+      "validation": "Validate the pack and perform representative initialize/resume/manual-checkpoint walkthroughs from only loaded instructions.",
+      "fixtures": [
+        "skill-routes",
+        "retrieval-context"
+      ]
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0006:first-release-canaries",
+      "issue": 35,
+      "url": "https://github.com/robertelee78/agent-memory/issues/35",
+      "title": "Ship structural, lifecycle, isolation, deletion and poisoning canaries",
+      "wave": 1,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [
+        "robertelee78/agent-memory:ADR-0009:top-level-gate",
+        "robertelee78/agent-memory:ADR-0005:lifecycle-schema",
+        "robertelee78/agent-memory:ADR-0010:router-and-context-files"
+      ],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0006-security-and-evaluation.md",
+        "commit": "60a787b4f40123329cbecd66d58f0fbe1faf0b36",
+        "blob": "0cb8169a143758a05144d5e035991298e502e2d6",
+        "decision_status": "proposed"
+      },
+      "outcome": "The first published release has executable canaries for every required baseline risk.",
+      "acceptance": [
+        "Cover structural routes, lifecycle state selection, project isolation and developer attribution, tombstones and poisoned content.",
+        "Run against the public file/skill/lifecycle surfaces present in v0.0.1 and expand as governed operations arrive.",
+        "Canaries run offline in isolated roots and make no claims of coding-outcome improvement."
+      ],
+      "validation": "Run the top-level release gate and retain canary results.",
+      "fixtures": [
+        "security-canaries",
+        "identity-isolation"
+      ]
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0009:durable-write-faults",
+      "issue": 60,
+      "url": "https://github.com/robertelee78/agent-memory/issues/60",
+      "title": "Inject durable-write interrupts and successful writes with lost responses",
+      "wave": 1,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [
+        "robertelee78/agent-memory:ADR-0009:top-level-gate"
+      ],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0009-contract-tests-and-fault-injection.md",
+        "commit": "bdba5342d173f8b23e92d81897941e6ae3813cf7",
+        "blob": "1b38ace4a8dc3af441d4a1982902268b977bbe55",
+        "decision_status": "proposed"
+      },
+      "outcome": "Every shipped state-changing operation has replayable failure points and idempotent retry.",
+      "acceptance": [
+        "Interrupt before/after each durable write and drop responses after commit.",
+        "Rerun the same operation without duplicates, data loss or weakened semantics.",
+        "Ship lifecycle failpoints first and extend this harness to governed bank operations in v0.0.2."
+      ],
+      "validation": "Enumerate failpoints against real public commands and compare final state/receipts with a clean run.",
+      "fixtures": [
+        "observed-writes",
+        "cross-clone-sharing",
+        "offline-replay",
+        "skill-routes"
+      ]
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0009:incident-and-doc-evidence",
+      "issue": 63,
+      "url": "https://github.com/robertelee78/agent-memory/issues/63",
+      "title": "Retain incident reproductions and observed guide examples",
+      "wave": 1,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [
+        "robertelee78/agent-memory:ADR-0009:top-level-gate"
+      ],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0009-contract-tests-and-fault-injection.md",
+        "commit": "bdba5342d173f8b23e92d81897941e6ae3813cf7",
+        "blob": "1b38ace4a8dc3af441d4a1982902268b977bbe55",
+        "decision_status": "proposed"
+      },
+      "outcome": "Regressions and guide examples preserve user-visible behavior and normative rules.",
+      "acceptance": [
+        "Name minimal public-interface incident tests after the symptom and connect outcome/acceptance/integration/delivery to its work item.",
+        "Capture quoted commands/results/errors/exit meanings from observed test or read-only output.",
+        "Documentation refactors map every normative rule at equal/stronger force and retain route reachability.",
+        "Representative independent reviews use only runtime-loaded instructions."
+      ],
+      "validation": "Audit an example captured command transcript and execute route/rule-preservation checks.",
+      "fixtures": [
+        "observed-writes",
+        "cross-clone-sharing",
+        "offline-replay",
+        "skill-routes"
+      ]
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0010:recoverable-multi-file-writes",
+      "issue": 77,
+      "url": "https://github.com/robertelee78/agent-memory/issues/77",
+      "title": "Detect and recover interrupted multi-file bank mutations",
+      "wave": 1,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [
+        "robertelee78/agent-memory:ADR-0010:bank-lock-and-hashes"
+      ],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0010-memory-bank-file-contract.md",
+        "commit": "1c3cd96a0d843f5f3359286c16b27116c9192825",
+        "blob": "3f463c3ebf8e679bcb3bd37589b7e933ff67b37b",
+        "decision_status": "proposed"
+      },
+      "outcome": "A torn bank is visibly interrupted and can be finished or rolled back.",
+      "acceptance": [
+        "Create an exclusive no-replace transaction marker under the bank lock with ID/paths/base hashes/operation/phase and no secrets/deleted content.",
+        "Use per-file atomic replacements, change MEMORY.md last when needed and remove marker only after verifying every target.",
+        "Readers encountering the marker avoid mutation and route to recovery.",
+        "Keep recovery journal/backups outside repository; never claim cross-file atomicity.",
+        "Protect consolidation, correction and pruning with this v0.0.1 recovery protocol; shared Git reconciliation is a separate boundary."
+      ],
+      "validation": "Interrupt each write and verify visible refusal plus finish/rollback convergence.",
+      "fixtures": [
+        "bank-roundtrip",
+        "observed-writes",
+        "initialize-evidence",
+        "correction-erasure"
+      ]
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0010:bank-usability-check",
+      "issue": 79,
+      "url": "https://github.com/robertelee78/agent-memory/issues/79",
+      "title": "Verify a clean bank is complete without generated state",
+      "wave": 1,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [
+        "robertelee78/agent-memory:ADR-0010:router-and-context-files"
+      ],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0010-memory-bank-file-contract.md",
+        "commit": "1c3cd96a0d843f5f3359286c16b27116c9192825",
+        "blob": "3f463c3ebf8e679bcb3bd37589b7e933ff67b37b",
+        "decision_status": "proposed"
+      },
+      "outcome": "A fresh agent can resume solely from current routed Markdown.",
+      "acceptance": [
+        "All visible scope/current/stale status is understandable.",
+        "No active transaction marker is present.",
+        "No index/database/MCP/hook/federation/cache/recovery journal is required for usability."
+      ],
+      "validation": "Delete all generated state in a clean fixture and perform bounded resume; reject interrupted fixtures.",
+      "fixtures": [
+        "bank-roundtrip",
+        "observed-writes",
+        "initialize-evidence",
+        "correction-erasure"
+      ]
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0011:scope-bind",
+      "issue": 86,
+      "url": "https://github.com/robertelee78/agent-memory/issues/86",
+      "title": "Preview, apply and verify identity binding before scoped operations",
+      "wave": 1,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [
+        "robertelee78/agent-memory:ADR-0011:principal-registry",
+        "robertelee78/agent-memory:ADR-0011:project-registry"
+      ],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0011-principal-and-project-identity.md",
+        "commit": "1c3cd96a0d843f5f3359286c16b27116c9192825",
+        "blob": "ffeff04b62844e351aa18c21e8740b6f0139adf0",
+        "decision_status": "proposed"
+      },
+      "outcome": "Status and scope/bind expose one identity algorithm shared by all clients.",
+      "acceptance": [
+        "Show resolved IDs and supporting evidence in status.",
+        "Resolve developer attribution and project identity before mediated writes or federation export; reject ambiguity.",
+        "Scope/bind previews bank/registry changes, preserves aliases and reads back the result.",
+        "Adapters cannot invent alternate project-ID algorithms."
+      ],
+      "validation": "Invoke status/bind against unambiguous and conflicting fixtures and verify registry/bank readback.",
+      "fixtures": [
+        "identity-isolation"
+      ]
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0010:evidence-led-initialization",
+      "issue": 89,
+      "url": "https://github.com/robertelee78/agent-memory/issues/89",
+      "title": "Initialize from existing memory, code, ADRs and AWA work evidence",
+      "wave": 1,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [
+        "robertelee78/agent-memory:ADR-0010:router-and-context-files",
+        "robertelee78/agent-memory:ADR-0001:authority-policy"
+      ],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0010-memory-bank-file-contract.md",
+        "commit": "1c3cd96a0d843f5f3359286c16b27116c9192825",
+        "blob": "3f463c3ebf8e679bcb3bd37589b7e933ff67b37b",
+        "decision_status": "proposed"
+      },
+      "outcome": "Initialization builds a useful orientation map and surfaces unresolved product conflicts.",
+      "acceptance": [
+        "Inventory and preserve existing memory before creation; inspect docs, code/tests, ADRs and AWA projects/tasks/release milestones.",
+        "Link to authorities and record useful missing context without duplicating source documents or inventing requirements.",
+        "Distinguish intent, implementation and planned work; genuine internal contradictions trigger focused PM Q&A with the detecting developer.",
+        "AWA unavailability reports an evidence gap while local inspection remains available."
+      ],
+      "validation": "Run empty/existing bank initialization with agreeing and conflicting docs/code/ADR/AWA fixtures; verify preserved content and focused clarification.",
+      "fixtures": [
+        "bank-roundtrip",
+        "observed-writes",
+        "initialize-evidence",
+        "correction-erasure"
+      ]
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0012:boundary-policy",
+      "issue": 91,
+      "url": "https://github.com/robertelee78/agent-memory/issues/91",
+      "title": "Keep shared memory tracked and separate from runtime and work state",
+      "wave": 1,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [
+        "robertelee78/agent-memory:ADR-0001:authority-policy",
+        "robertelee78/agent-memory:ADR-0010:router-and-context-files"
+      ],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0012-git-shared-memory.md",
+        "commit": "60a787b4f40123329cbecd66d58f0fbe1faf0b36",
+        "blob": "c33810eae4926723cea127556b18e4eeaf75ce97",
+        "decision_status": "proposed"
+      },
+      "outcome": "A configured Git bank boundary preserves the separate roles of memory, AWA and Vox.",
+      "acceptance": [
+        "Track admitted project Markdown under the configured bank root and default authority branch.",
+        "Exclude raw transcripts, credentials and runtime/cache/recovery artifacts; provide no personal memory layer.",
+        "Keep local use independent of AWA/Vox availability and avoid a duplicate tracker or message bus."
+      ],
+      "validation": "Validate included/excluded Git paths and authority behavior in isolated fixtures.",
+      "fixtures": [
+        "cross-clone-sharing",
+        "concurrent-sharing",
+        "offline-replay",
+        "later-code-merge"
+      ]
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0002:safe-erasure",
+      "issue": 8,
+      "url": "https://github.com/robertelee78/agent-memory/issues/8",
+      "title": "Represent supersession, revocation and deletion safely",
+      "wave": 2,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [
+        "robertelee78/agent-memory:ADR-0002:typed-records",
+        "robertelee78/agent-memory:ADR-0010:safe-tombstone-format"
+      ],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0002-markdown-first-temporal-memory.md",
+        "commit": "1c3cd96a0d843f5f3359286c16b27116c9192825",
+        "blob": "3c6308d8fb25dd4ba1689aae9772451825eecab1",
+        "decision_status": "proposed"
+      },
+      "outcome": "Current guidance excludes revoked, superseded and deleted content without unsafe residual copies.",
+      "acceptance": [
+        "Keep only safe explanations for inactive guidance.",
+        "Use durable content-free tombstones when any projection could recreate deleted data.",
+        "Rebuild and consolidation cannot resurrect deleted content or reversible/low-entropy content hashes."
+      ],
+      "validation": "Run selective-forgetting and tombstone-content canaries.",
+      "fixtures": [
+        "bank-roundtrip",
+        "correction-erasure",
+        "observed-writes"
+      ]
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0002:write-and-projection-contract",
+      "issue": 9,
+      "url": "https://github.com/robertelee78/agent-memory/issues/9",
+      "title": "Enforce observed writes and disposable projections",
+      "wave": 2,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [
+        "robertelee78/agent-memory:ADR-0002:typed-records",
+        "robertelee78/agent-memory:ADR-0010:recoverable-multi-file-writes"
+      ],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0002-markdown-first-temporal-memory.md",
+        "commit": "1c3cd96a0d843f5f3359286c16b27116c9192825",
+        "blob": "3c6308d8fb25dd4ba1689aae9772451825eecab1",
+        "decision_status": "proposed"
+      },
+      "outcome": "Mediated writes detect conflicts and every projection is bound to source revisions.",
+      "acceptance": [
+        "Hold the ADR-0010 lock from inventory through readback; replace files atomically after observed-content checks.",
+        "Multi-file operations use recovery markers and do not claim global atomicity.",
+        "Optional event writers use idempotency keys and projections record source revisions/digests.",
+        "Any optional SQLite store remains disposable and cannot hold the sole admitted record."
+      ],
+      "validation": "Run conflicting-write, idempotency and projection-source-binding contract tests.",
+      "fixtures": [
+        "bank-roundtrip",
+        "correction-erasure",
+        "observed-writes"
+      ]
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0003:pack-validator",
+      "issue": 15,
+      "url": "https://github.com/robertelee78/agent-memory/issues/15",
+      "title": "Validate the route graph and normative guide contract",
+      "wave": 2,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [
+        "robertelee78/agent-memory:ADR-0003:portable-instruction-tree"
+      ],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0003-progressive-disclosure.md",
+        "commit": "b85970ab8b35154e3ff37b749c23907e9b1afcb8",
+        "blob": "d182c376df50a1e755c72f3c150d2a2ec93544a7",
+        "decision_status": "proposed"
+      },
+      "outcome": "Publishing and activation reject mechanically invalid or unreachable skill packs.",
+      "acceptance": [
+        "Check exactly one SKILL.md, frontmatter, all relative file/anchor links, reachability and unconditional-load cycles.",
+        "Validate required leaf sections/order/backlinks, executable modes, referenced schemas/templates and command-to-dispatch or file-operation mapping.",
+        "Check mechanical RFC 2119 forms without claiming keyword count establishes semantic completeness.",
+        "Documentation refactors retain a rule/strength/location map and representative independent usage review."
+      ],
+      "validation": "Run positive pack validation and deliberately malformed route, link, frontmatter and leaf fixtures.",
+      "fixtures": [
+        "skill-routes",
+        "retrieval-context"
+      ]
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0004:core-cli",
+      "issue": 17,
+      "url": "https://github.com/robertelee78/agent-memory/issues/17",
+      "title": "Expose the deterministic CLI and honest file-only fallback",
+      "wave": 2,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [
+        "robertelee78/agent-memory:ADR-0011:scope-bind"
+      ],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0004-client-independent-integration.md",
+        "commit": "b85970ab8b35154e3ff37b749c23907e9b1afcb8",
+        "blob": "573f265cded16a290953d2a49ebedc8393b27dca",
+        "decision_status": "proposed"
+      },
+      "outcome": "A client-neutral command surface validates the bank while raw Markdown remains usable.",
+      "acceptance": [
+        "One portable skill plus deterministic CLI implements the same contract for Claude Code, Codex, OpenCode and custom harnesses.",
+        "Expose public CLI operation groups with project identity, developer attribution, memory IDs, applicability, validity and provenance as relevant.",
+        "Support automatic durable learning and memory-only Git exchange at turn boundaries without requiring MCP, hooks, a plugin or a daemon.",
+        "Preserve a readable file-only/manual fallback without claiming mediated guarantees.",
+        "Preserve unrelated client configuration and use short activation bindings, never a separate client policy or identity algorithm."
+      ],
+      "validation": "Invoke the installed CLI and demonstrate fresh-agent resume with it removed.",
+      "fixtures": [
+        "skill-routes",
+        "bank-roundtrip",
+        "cross-clone-sharing"
+      ]
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0005:retrieval",
+      "issue": 29,
+      "url": "https://github.com/robertelee78/agent-memory/issues/29",
+      "title": "Filter before ranking and explain baseline retrieval",
+      "wave": 2,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [
+        "robertelee78/agent-memory:ADR-0005:lifecycle-schema",
+        "robertelee78/agent-memory:ADR-0011:scope-bind",
+        "robertelee78/agent-memory:ADR-0010:router-and-context-files"
+      ],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0005-admission-consolidation-retrieval.md",
+        "commit": "bdba5342d173f8b23e92d81897941e6ae3813cf7",
+        "blob": "52da7e0eddcb65ab5f9cc057d4565110b7b80610",
+        "decision_status": "proposed"
+      },
+      "outcome": "Scope-safe recall works through routes, identifiers and ordinary text search.",
+      "acceptance": [
+        "Apply project authorization, active validity/time, trust/type and contextual applicability filters before ranking.",
+        "Explain every selected memory and use exact IDs/paths and text search as the baseline.",
+        "Optional semantic, temporal or graph ranking can be removed without losing baseline recall."
+      ],
+      "validation": "Run scope, stale, trust, exact-match and explanation fixtures with all optional indexes disabled.",
+      "fixtures": [
+        "learning-admission",
+        "retrieval-context",
+        "correction-erasure"
+      ]
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0006:security-controls",
+      "issue": 33,
+      "url": "https://github.com/robertelee78/agent-memory/issues/33",
+      "title": "Enforce mediated trust, privacy and injection boundaries",
+      "wave": 2,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [
+        "robertelee78/agent-memory:ADR-0005:lifecycle-schema",
+        "robertelee78/agent-memory:ADR-0011:scope-bind"
+      ],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0006-security-and-evaluation.md",
+        "commit": "60a787b4f40123329cbecd66d58f0fbe1faf0b36",
+        "blob": "0cb8169a143758a05144d5e035991298e502e2d6",
+        "decision_status": "proposed"
+      },
+      "outcome": "Mediated operations persist and retrieve only within explicit safety boundaries.",
+      "acceptance": [
+        "Separate user, assistant, tool, external and verified-repository source classes.",
+        "Authorize repository/project scope before recall and require approval for cross-project/procedural promotion.",
+        "Scan/redact secrets, limit content/size, quarantine suspected instructions or unverifiable identity.",
+        "Audit mediated admission/mutation/retrieval/promotion and invalidate deleted data.",
+        "Never interpolate retrieved text into shell commands or execute commands because memory contains them.",
+        "Apply source classification, secret scanning, scope, quarantine and reviewed-procedure boundaries before automatic shared-memory commits in v0.0.1.",
+        "Routine capture authorization never permits secret/raw conversation export or procedural promotion."
+      ],
+      "validation": "Exercise secret, poisoning, identity, oversized-input, approval and audit fixtures.",
+      "fixtures": [
+        "security-canaries",
+        "identity-isolation"
+      ]
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0009:concurrent-bank-writers",
+      "issue": 61,
+      "url": "https://github.com/robertelee78/agent-memory/issues/61",
+      "title": "Test true concurrent processes and observed-write conflicts",
+      "wave": 2,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [
+        "robertelee78/agent-memory:ADR-0009:durable-write-faults",
+        "robertelee78/agent-memory:ADR-0010:bank-lock-and-hashes",
+        "robertelee78/agent-memory:ADR-0010:recoverable-multi-file-writes"
+      ],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0009-contract-tests-and-fault-injection.md",
+        "commit": "bdba5342d173f8b23e92d81897941e6ae3813cf7",
+        "blob": "1b38ace4a8dc3af441d4a1982902268b977bbe55",
+        "decision_status": "proposed"
+      },
+      "outcome": "Concurrent bank writers cannot silently overwrite each other.",
+      "acceptance": [
+        "Use actual competing processes on the same temporary bank.",
+        "Prove lock recovery, observed-hash checks, atomic replacement, bounded retry and no last-write-wins loss.",
+        "Distinguish a worktree-local bank lock from cross-clone Git reconciliation; shared runtime locks must not enter memory commits."
+      ],
+      "validation": "Run synchronized process races, external-edit races and stale-lock recovery cases.",
+      "fixtures": [
+        "observed-writes",
+        "cross-clone-sharing",
+        "offline-replay",
+        "skill-routes"
+      ]
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0010:optional-record-layout",
+      "issue": 72,
+      "url": "https://github.com/robertelee78/agent-memory/issues/72",
+      "title": "Validate routed topics, episodes, procedure candidates and history",
+      "wave": 2,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [
+        "robertelee78/agent-memory:ADR-0002:typed-records"
+      ],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0010-memory-bank-file-contract.md",
+        "commit": "1c3cd96a0d843f5f3359286c16b27116c9192825",
+        "blob": "3f463c3ebf8e679bcb3bd37589b7e933ff67b37b",
+        "decision_status": "proposed"
+      },
+      "outcome": "Optional structured records remain reachable ordinary Markdown.",
+      "acceptance": [
+        "Support topics/episodes/procedures/history with bounded direct or topic-index reachability.",
+        "Validate record frontmatter ID/kind/status/scope/source/validity/updated and optional trust/confidence.",
+        "Decisions link to ADRs, episodes retain bounded lessons/evidence, and procedure candidates remain non-binding until promotion.",
+        "Admitted independently useful branch discoveries can be shared with conditions; unadmitted/transient observations remain outside the bank until admitted and do not form a personal store.",
+        "Automatic consolidation preserves record identity/source links, distinct conditions and all developer/session provenance; the router stays bounded."
+      ],
+      "validation": "Run record-layout, missing-route, metadata and candidate-procedure fixtures.",
+      "fixtures": [
+        "bank-roundtrip",
+        "observed-writes",
+        "initialize-evidence",
+        "correction-erasure"
+      ]
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0010:single-file-checkpoint",
+      "issue": 74,
+      "url": "https://github.com/robertelee78/agent-memory/issues/74",
+      "title": "Checkpoint active context as one verified observed replacement",
+      "wave": 2,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [
+        "robertelee78/agent-memory:ADR-0011:scope-bind",
+        "robertelee78/agent-memory:ADR-0010:bank-lock-and-hashes"
+      ],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0010-memory-bank-file-contract.md",
+        "commit": "1c3cd96a0d843f5f3359286c16b27116c9192825",
+        "blob": "3f463c3ebf8e679bcb3bd37589b7e933ff67b37b",
+        "decision_status": "proposed"
+      },
+      "outcome": "The common checkpoint changes only activeContext.md.",
+      "acceptance": [
+        "Capture focus, meaningful recent changes, open questions and next concrete step.",
+        "Progress, topics and router updates are separate observed writes.",
+        "Atomic replacement runs under the common lock and readback protocol."
+      ],
+      "validation": "Invoke checkpoint and verify all other canonical file contents remain unchanged.",
+      "fixtures": [
+        "bank-roundtrip",
+        "observed-writes",
+        "initialize-evidence",
+        "correction-erasure"
+      ]
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0012:retry-and-merges",
+      "issue": 95,
+      "url": "https://github.com/robertelee78/agent-memory/issues/95",
+      "title": "Recover Git sharing and reconcile deletions through later code merges",
+      "wave": 2,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [
+        "robertelee78/agent-memory:ADR-0012:boundary-policy",
+        "robertelee78/agent-memory:ADR-0010:safe-tombstone-format",
+        "robertelee78/agent-memory:ADR-0010:recoverable-multi-file-writes"
+      ],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0012-git-shared-memory.md",
+        "commit": "60a787b4f40123329cbecd66d58f0fbe1faf0b36",
+        "blob": "c33810eae4926723cea127556b18e4eeaf75ce97",
+        "decision_status": "proposed"
+      },
+      "outcome": "Retries and ordinary branch integration preserve readable canonical memory.",
+      "acceptance": [
+        "Keep local capture useful offline; report sharing as pending/stale and never claim unverified freshness.",
+        "Inventory current Git state on retry, recover lost successful push/merge responses and avoid duplicate publication.",
+        "Treat cursor/retry state as disposable; loss may require reconciliation but cannot lose canonical Markdown.",
+        "Reconcile deletion/tombstones/pruned guidance and later ordinary code merge/rebase without resurrection, duplication or reversal."
+      ],
+      "validation": "Inject failure/offline/lost-response/cursor-loss and later ordinary code merge cases against isolated remotes.",
+      "fixtures": [
+        "cross-clone-sharing",
+        "concurrent-sharing",
+        "offline-replay",
+        "later-code-merge"
+      ]
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0005:assembly",
+      "issue": 30,
+      "url": "https://github.com/robertelee78/agent-memory/issues/30",
+      "title": "Assemble bounded diverse context with source and status labels",
+      "wave": 3,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [
+        "robertelee78/agent-memory:ADR-0005:retrieval"
+      ],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0005-admission-consolidation-retrieval.md",
+        "commit": "bdba5342d173f8b23e92d81897941e6ae3813cf7",
+        "blob": "52da7e0eddcb65ab5f9cc057d4565110b7b80610",
+        "decision_status": "proposed"
+      },
+      "outcome": "Retrieved context fits its budget and retains unresolved contradictions.",
+      "acceptance": [
+        "Enforce token/content budgets without dropping provenance or lifecycle labels.",
+        "Include unresolved contradictory evidence and prefer diverse useful types over duplicate results."
+      ],
+      "validation": "Compare assembled contexts against budget, provenance, contradiction and duplication fixtures.",
+      "fixtures": [
+        "learning-admission",
+        "retrieval-context",
+        "correction-erasure"
+      ]
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0007:portable-artifact",
+      "issue": 44,
+      "url": "https://github.com/robertelee78/agent-memory/issues/44",
+      "title": "Package the complete client-neutral portable artifact",
+      "wave": 3,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [
+        "robertelee78/agent-memory:ADR-0003:portable-instruction-tree",
+        "robertelee78/agent-memory:ADR-0003:pack-validator"
+      ],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0007-portable-pack-and-lifecycle.md",
+        "commit": "60a787b4f40123329cbecd66d58f0fbe1faf0b36",
+        "blob": "1fa3c3bc7c5c2d75889c28fd02eca19ead7f13d4",
+        "decision_status": "proposed"
+      },
+      "outcome": "One self-contained skills/agent-memory artifact can operate the implemented protocol.",
+      "acceptance": [
+        "Include one SKILL.md, progressive guides, scripts, schemas and templates.",
+        "Follow the linked lifecycle blueprint; mark adapters separately without core dependencies on client APIs or marketplaces."
+      ],
+      "validation": "Copy the artifact to an isolated location and validate every implemented route/asset.",
+      "fixtures": [
+        "portable-lifecycle",
+        "skill-routes"
+      ]
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0005:deduplicate-before-write",
+      "issue": 87,
+      "url": "https://github.com/robertelee78/agent-memory/issues/87",
+      "title": "Find and reconcile existing learning before every write and landing",
+      "wave": 3,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [
+        "robertelee78/agent-memory:ADR-0005:retrieval"
+      ],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0005-admission-consolidation-retrieval.md",
+        "commit": "bdba5342d173f8b23e92d81897941e6ae3813cf7",
+        "blob": "52da7e0eddcb65ab5f9cc057d4565110b7b80610",
+        "decision_status": "proposed"
+      },
+      "outcome": "Automatic capture avoids semantic duplicates and preserves distinct learning.",
+      "acceptance": [
+        "Consult the router, search same-concept and alternative wording, and read plausible matches with evidence and conditions before changing memory.",
+        "Update/merge equivalent learning; keep genuinely distinct facts separate with stable identities.",
+        "Interrupted/unavailable memory does not prove absence; publication repeats the comparison against newly landed main.",
+        "No vector index is required; preserve source/provenance/conditions when combining learning."
+      ],
+      "validation": "Run same-concept paraphrase, near-match, distinct-condition, interrupted-bank and concurrent-duplicate scenarios.",
+      "fixtures": [
+        "learning-admission",
+        "retrieval-context",
+        "correction-erasure"
+      ]
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0005:admission",
+      "issue": 27,
+      "url": "https://github.com/robertelee78/agent-memory/issues/27",
+      "title": "Admit small evidenced records and quarantine unsafe candidates",
+      "wave": 4,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [
+        "robertelee78/agent-memory:ADR-0005:lifecycle-schema",
+        "robertelee78/agent-memory:ADR-0005:deduplicate-before-write",
+        "robertelee78/agent-memory:ADR-0002:typed-records",
+        "robertelee78/agent-memory:ADR-0010:bank-lock-and-hashes",
+        "robertelee78/agent-memory:ADR-0006:security-controls"
+      ],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0005-admission-consolidation-retrieval.md",
+        "commit": "bdba5342d173f8b23e92d81897941e6ae3813cf7",
+        "blob": "52da7e0eddcb65ab5f9cc057d4565110b7b80610",
+        "decision_status": "proposed"
+      },
+      "outcome": "Capture and durable admission remain distinct, reviewable stages.",
+      "acceptance": [
+        "Admission considers utility, evidence confidence, novelty, durability, scope, type and security classification.",
+        "User statements and verified tools may follow deterministic rules; assistant inferences/external text require stronger evidence or review.",
+        "Untrusted content cannot promote procedures or global preferences automatically.",
+        "Automatically capture durable discoveries, verified fixes, useful failed approaches, user corrections and confirmed decisions without per-record approval.",
+        "Assistant proposals and unanswered suggestions remain unconfirmed; label uncertainty and do not accumulate raw transcripts, redundant source facts, or copied work state."
+      ],
+      "validation": "Run admission/quarantine fixtures across source classes and attempted instruction promotion.",
+      "fixtures": [
+        "learning-admission",
+        "retrieval-context",
+        "correction-erasure"
+      ]
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0007:install-layout",
+      "issue": 45,
+      "url": "https://github.com/robertelee78/agent-memory/issues/45",
+      "title": "Expose lifecycle commands and separate runtime, state and data",
+      "wave": 4,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [
+        "robertelee78/agent-memory:ADR-0007:portable-artifact"
+      ],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0007-portable-pack-and-lifecycle.md",
+        "commit": "60a787b4f40123329cbecd66d58f0fbe1faf0b36",
+        "blob": "1fa3c3bc7c5c2d75889c28fd02eca19ead7f13d4",
+        "decision_status": "proposed"
+      },
+      "outcome": "A managed installation has one shared artifact and an external ownership receipt.",
+      "acceptance": [
+        "Provide install, uninstall, update --check, update, version, doctor and status.",
+        "Use XDG-compatible managed source; keep memory data, runtime state, caches and indexes in distinct paths.",
+        "Store receipt and recoverable backups outside the checkout at the specified XDG state location.",
+        "Support generic, Codex, Claude, OpenCode, custom and no-client-link targets."
+      ],
+      "validation": "Run installed command discovery in temporary homes and inspect the receipt/target layout.",
+      "fixtures": [
+        "portable-lifecycle",
+        "skill-routes"
+      ]
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0005:consolidation",
+      "issue": 28,
+      "url": "https://github.com/robertelee78/agent-memory/issues/28",
+      "title": "Consolidate idempotently with source links and events",
+      "wave": 5,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [
+        "robertelee78/agent-memory:ADR-0005:admission"
+      ],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0005-admission-consolidation-retrieval.md",
+        "commit": "bdba5342d173f8b23e92d81897941e6ae3813cf7",
+        "blob": "52da7e0eddcb65ab5f9cc057d4565110b7b80610",
+        "decision_status": "proposed"
+      },
+      "outcome": "Maintenance proposes deduplication and higher-order patterns without destructive history rewrites.",
+      "acceptance": [
+        "Run outside the foreground task by default without requiring a background daemon.",
+        "Preserve evidence and derivation links, emit events and converge on repeat execution.",
+        "Procedure promotion remains a separate reviewed operation.",
+        "Automatically combine duplicates and tighten wording at natural turn boundaries, preserving distinct conditions, evidence, all developer/session provenance and useful correction history.",
+        "Keep routine success quiet; promptly surface conflicts, failures and consequential corrections.",
+        "Unresolved changes of meaning route to the detecting developer; do not invent higher-order decisions."
+      ],
+      "validation": "Repeat consolidation on duplicates, conflicts and revoked/deleted source fixtures.",
+      "fixtures": [
+        "learning-admission",
+        "retrieval-context",
+        "correction-erasure"
+      ]
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0005:forgetting",
+      "issue": 31,
+      "url": "https://github.com/robertelee78/agent-memory/issues/31",
+      "title": "Keep forgetting operations distinct and propagate invalidation",
+      "wave": 5,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [
+        "robertelee78/agent-memory:ADR-0005:admission",
+        "robertelee78/agent-memory:ADR-0010:safe-tombstone-format"
+      ],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0005-admission-consolidation-retrieval.md",
+        "commit": "bdba5342d173f8b23e92d81897941e6ae3813cf7",
+        "blob": "52da7e0eddcb65ab5f9cc057d4565110b7b80610",
+        "decision_status": "proposed"
+      },
+      "outcome": "Expiration, supersession, revocation, deletion and retention remove guidance appropriately.",
+      "acceptance": [
+        "Expose separate operations with the shared lifecycle semantics.",
+        "Invalidate every materialized view/cache/index.",
+        "Deleted memory cannot reappear from cached retrieval or consolidation output.",
+        "Automatically prune incorrect or irrelevant guidance only when stronger evidence establishes it; age alone does not justify pruning.",
+        "Preserve narrower applicability for older branches/environments and a concise safe correction or supersession explanation.",
+        "Ask the detecting developer when evidence is ambiguous; explicit deletion still uses safe tombstones."
+      ],
+      "validation": "Run end-to-end forgetting/rebuild/reconsolidation fixtures.",
+      "fixtures": [
+        "learning-admission",
+        "retrieval-context",
+        "correction-erasure"
+      ]
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0007:installer",
+      "issue": 46,
+      "url": "https://github.com/robertelee78/agent-memory/issues/46",
+      "title": "Install idempotently with preflight, ownership and verified activation",
+      "wave": 5,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [
+        "robertelee78/agent-memory:ADR-0007:install-layout",
+        "robertelee78/agent-memory:ADR-0011:principal-registry"
+      ],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0007-portable-pack-and-lifecycle.md",
+        "commit": "60a787b4f40123329cbecd66d58f0fbe1faf0b36",
+        "blob": "1fa3c3bc7c5c2d75889c28fd02eca19ead7f13d4",
+        "decision_status": "proposed"
+      },
+      "outcome": "Install safely activates owned targets and preserves unrelated user content.",
+      "acceptance": [
+        "Inventory/plan and preflight all targets before changes, stage backups, activate atomically per target, read back and write a verified receipt.",
+        "Refuse unrelated files/directories/symlinks; link and copy modes converge on the same digest.",
+        "Preserve replaced managed copies and sentinel surroundings; install wrappers atomically.",
+        "Report revision/version/dirty qualification/digest/adapters/data location; restart guidance appears only when loaded content changes."
+      ],
+      "validation": "Run fresh/repeat, collision, copy/link, spaces, sentinel-edit and partial-activation rollback tests from the lifecycle blueprint.",
+      "fixtures": [
+        "portable-lifecycle",
+        "skill-routes"
+      ]
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0007:updater",
+      "issue": 47,
+      "url": "https://github.com/robertelee78/agent-memory/issues/47",
+      "title": "Guard updates and recover interrupted multi-target activation",
+      "wave": 6,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [
+        "robertelee78/agent-memory:ADR-0007:installer"
+      ],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0007-portable-pack-and-lifecycle.md",
+        "commit": "60a787b4f40123329cbecd66d58f0fbe1faf0b36",
+        "blob": "1fa3c3bc7c5c2d75889c28fd02eca19ead7f13d4",
+        "decision_status": "proposed"
+      },
+      "outcome": "A verified fast-forward update preserves data and can resume or roll back.",
+      "acceptance": [
+        "Lock lifecycle operations and bind channel to recorded remote/ref.",
+        "Refuse dirty/unexpected/downgrade/non-fast-forward candidates; update --check is read-only.",
+        "Validate candidate before activation; journal per-target switches and verify all client-visible targets/command.",
+        "Failed validation retains the prior installation; lost responses and interrupted activation converge on retry without global atomicity claims."
+      ],
+      "validation": "Use temporary local remotes and failpoints before/after each durable update write.",
+      "fixtures": [
+        "portable-lifecycle",
+        "skill-routes"
+      ]
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0007:uninstall",
+      "issue": 50,
+      "url": "https://github.com/robertelee78/agent-memory/issues/50",
+      "title": "Remove owned runtime safely and preview any explicit data purge",
+      "wave": 6,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [
+        "robertelee78/agent-memory:ADR-0007:installer"
+      ],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0007-portable-pack-and-lifecycle.md",
+        "commit": "60a787b4f40123329cbecd66d58f0fbe1faf0b36",
+        "blob": "1fa3c3bc7c5c2d75889c28fd02eca19ead7f13d4",
+        "decision_status": "proposed"
+      },
+      "outcome": "Ordinary uninstall preserves memory, unrelated settings, user edits and backups.",
+      "acceptance": [
+        "Inventory/preview owned targets against the external receipt; remove only proven unchanged ownership.",
+        "Restore sentinel-managed surroundings, preserve modified targets and keep data/projections/backups.",
+        "Retain an uninstall receipt and reinstall instructions; remove managed source only when no active target references it.",
+        "A distinct purge requires exact paths/counts and confirmation; refuse unresolved broad paths, symlink escapes, home or filesystem root."
+      ],
+      "validation": "Run uninstall/reinstall, modified-target, missing-source-receipt and bounded explicit purge fixtures.",
+      "fixtures": [
+        "portable-lifecycle",
+        "skill-routes"
+      ]
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0007:diagnostics",
+      "issue": 51,
+      "url": "https://github.com/robertelee78/agent-memory/issues/51",
+      "title": "Report version, cheap status and actionable doctor recovery",
+      "wave": 6,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [
+        "robertelee78/agent-memory:ADR-0007:installer"
+      ],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0007-portable-pack-and-lifecycle.md",
+        "commit": "60a787b4f40123329cbecd66d58f0fbe1faf0b36",
+        "blob": "1fa3c3bc7c5c2d75889c28fd02eca19ead7f13d4",
+        "decision_status": "proposed"
+      },
+      "outcome": "Users can diagnose installation identity, bank health and interrupted operations.",
+      "acceptance": [
+        "Version reports source/version/revision/digest/cleanliness/mode/channel/receipt schema.",
+        "Status is cheap/read-only and reports resolved identities, store/bank state, enabled adapters and pending transactions.",
+        "Doctor checks prerequisites, permissions, ownership, routes, wrappers, links/blocks, schema compatibility and enabled optional surfaces.",
+        "Separate warnings/failures and provide bounded repairs; interrupted lifecycle operations and lost responses are resumable or safely rollbackable."
+      ],
+      "validation": "Invoke actual commands against healthy and intentionally broken isolated installations.",
+      "fixtures": [
+        "portable-lifecycle",
+        "skill-routes"
+      ]
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0012:semantic-reconciliation",
+      "issue": 94,
+      "url": "https://github.com/robertelee78/agent-memory/issues/94",
+      "title": "Combine compatible learning and escalate contradictions to the detecting developer",
+      "wave": 6,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [
+        "robertelee78/agent-memory:ADR-0012:boundary-policy",
+        "robertelee78/agent-memory:ADR-0005:deduplicate-before-write",
+        "robertelee78/agent-memory:ADR-0005:forgetting",
+        "robertelee78/agent-memory:ADR-0011:principal-registry"
+      ],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0012-git-shared-memory.md",
+        "commit": "60a787b4f40123329cbecd66d58f0fbe1faf0b36",
+        "blob": "c33810eae4926723cea127556b18e4eeaf75ce97",
+        "decision_status": "proposed"
+      },
+      "outcome": "Semantic conflicts are resolved explicitly without blocking unrelated work.",
+      "acceptance": [
+        "Combine same-file compatible changes and semantic duplicates, retaining distinct conditions, evidence/provenance/history.",
+        "Inspect same-subject/overlapping-condition contradictions even in separate files and textually clean Git merges.",
+        "Show both claims/evidence to the current detecting developer; identify other-developer attribution and recommend clarification as needed without automatic messaging.",
+        "Pause only disputed updates/dependent work, continue independent work, and never choose truth by last writer/identity/recency.",
+        "Record the clarifying decision and correct/supersede guidance safely."
+      ],
+      "validation": "Run yellow/blue, differently worded duplicate, disjoint-condition, cross-developer and independent-work fixtures.",
+      "fixtures": [
+        "cross-clone-sharing",
+        "concurrent-sharing",
+        "offline-replay",
+        "later-code-merge"
+      ]
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0007:lifecycle-contract-suite",
+      "issue": 52,
+      "url": "https://github.com/robertelee78/agent-memory/issues/52",
+      "title": "Gate releases with isolated real-command lifecycle tests",
+      "wave": 7,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [
+        "robertelee78/agent-memory:ADR-0007:updater",
+        "robertelee78/agent-memory:ADR-0007:uninstall",
+        "robertelee78/agent-memory:ADR-0007:diagnostics",
+        "robertelee78/agent-memory:ADR-0009:durable-write-faults"
+      ],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0007-portable-pack-and-lifecycle.md",
+        "commit": "60a787b4f40123329cbecd66d58f0fbe1faf0b36",
+        "blob": "1fa3c3bc7c5c2d75889c28fd02eca19ead7f13d4",
+        "decision_status": "proposed"
+      },
+      "outcome": "Lifecycle safety is proven through the installed user-facing surface.",
+      "acceptance": [
+        "Cover the full ADR and linked-blueprint matrix: fresh/reinstall, link/copy/custom/no-client, conflicts, update/ref guards, interrupts/lost responses, rollback/locks, uninstall/purge and preserved data.",
+        "Verify all enabled clients resolve the same revision/digest and generated-state deletion does not impair resume.",
+        "Validate the pack before publication and update activation.",
+        "Tests never use real credentials, mutate live client config/data/developer checkouts or require the network by default."
+      ],
+      "validation": "Run the complete temporary-home CLI lifecycle gate with deterministic failpoints.",
+      "fixtures": [
+        "portable-lifecycle",
+        "skill-routes"
+      ]
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0012:publish-memory",
+      "issue": 92,
+      "url": "https://github.com/robertelee78/agent-memory/issues/92",
+      "title": "Automatically land memory-only changes through repository rules",
+      "wave": 7,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [
+        "robertelee78/agent-memory:ADR-0012:boundary-policy",
+        "robertelee78/agent-memory:ADR-0012:semantic-reconciliation",
+        "robertelee78/agent-memory:ADR-0012:retry-and-merges",
+        "robertelee78/agent-memory:ADR-0005:admission",
+        "robertelee78/agent-memory:ADR-0005:deduplicate-before-write",
+        "robertelee78/agent-memory:ADR-0006:security-controls"
+      ],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0012-git-shared-memory.md",
+        "commit": "60a787b4f40123329cbecd66d58f0fbe1faf0b36",
+        "blob": "c33810eae4926723cea127556b18e4eeaf75ce97",
+        "decision_status": "proposed"
+      },
+      "outcome": "Admitted learning can land independently of feature code.",
+      "acceptance": [
+        "Use current shared memory as publication base; preserve non-memory staged/work files and exclude feature ancestry.",
+        "Follow permissions/checks/review/branch rules; required human review stays pending, with no force push or bypass.",
+        "Repeat deduplication and semantic review before landing; reconcile a racing main head and read back actual landing.",
+        "Retain applicability/evidence for independently useful unmerged discoveries."
+      ],
+      "validation": "Run memory-only publication with feature-code ancestors, dirty/staged unrelated paths, competing main, required review and lost response fixtures.",
+      "fixtures": [
+        "cross-clone-sharing",
+        "concurrent-sharing",
+        "offline-replay",
+        "later-code-merge"
+      ]
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0012:refresh-memory",
+      "issue": 93,
+      "url": "https://github.com/robertelee78/agent-memory/issues/93",
+      "title": "Reconcile only landed memory into each branch at turn boundaries",
+      "wave": 7,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [
+        "robertelee78/agent-memory:ADR-0012:boundary-policy",
+        "robertelee78/agent-memory:ADR-0012:semantic-reconciliation",
+        "robertelee78/agent-memory:ADR-0012:retry-and-merges",
+        "robertelee78/agent-memory:ADR-0005:retrieval",
+        "robertelee78/agent-memory:ADR-0010:recoverable-multi-file-writes"
+      ],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0012-git-shared-memory.md",
+        "commit": "60a787b4f40123329cbecd66d58f0fbe1faf0b36",
+        "blob": "c33810eae4926723cea127556b18e4eeaf75ce97",
+        "decision_status": "proposed"
+      },
+      "outcome": "New shared learning arrives without rebasing or importing feature code.",
+      "acceptance": [
+        "Three-way compare last-observed shared, current local, and incoming shared memory; preserve unpublished local learning.",
+        "Change only allowed memory paths, preserve unrelated index/work files and branch history, and do not snapshot-overwrite memory.",
+        "Read relevant imports with provenance/conditions; do not imply branch code changed.",
+        "Support explicit harness-neutral invocation without required hooks, daemon or mid-turn interruption."
+      ],
+      "validation": "Refresh stale-code/dirty-memory worktrees from a second clone and verify exact non-memory and history preservation.",
+      "fixtures": [
+        "cross-clone-sharing",
+        "concurrent-sharing",
+        "offline-replay",
+        "later-code-merge"
+      ]
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0009:multi-machine-learning-contract",
+      "issue": 88,
+      "url": "https://github.com/robertelee78/agent-memory/issues/88",
+      "title": "Prove shared learning survives independent clones and concurrent sessions",
+      "wave": 8,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [
+        "robertelee78/agent-memory:ADR-0009:top-level-gate",
+        "robertelee78/agent-memory:ADR-0009:durable-write-faults",
+        "robertelee78/agent-memory:ADR-0012:publish-memory",
+        "robertelee78/agent-memory:ADR-0012:refresh-memory",
+        "robertelee78/agent-memory:ADR-0012:semantic-reconciliation",
+        "robertelee78/agent-memory:ADR-0012:retry-and-merges",
+        "robertelee78/agent-memory:ADR-0010:evidence-led-initialization"
+      ],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0009-contract-tests-and-fault-injection.md",
+        "commit": "bdba5342d173f8b23e92d81897941e6ae3813cf7",
+        "blob": "1b38ace4a8dc3af441d4a1982902268b977bbe55",
+        "decision_status": "proposed"
+      },
+      "outcome": "Two developers and multiple harnesses exchange correct memory without changing feature code.",
+      "acceptance": [
+        "Exercise independent clones, worktrees, branches, developer identities and harness/session identities through public user-facing operations on an isolated remote.",
+        "Preserve non-memory files/index/history while publishing from unfinished work and recalling at the next successful boundary.",
+        "Cover concurrent compatible edits, duplicates before write/landing, semantic yellow/blue contradictions, stale code and conditional applicability, evidence-based pruning and contradictory initialization evidence.",
+        "Cover offline/retry/lost-success-response and later ordinary code merge without loss, duplication or resurrection; only disputed memory/dependent work pauses."
+      ],
+      "validation": "Run the isolated end-to-end multi-clone/worktree acceptance matrix with snapshots of unrelated Git state.",
+      "fixtures": [
+        "observed-writes",
+        "cross-clone-sharing",
+        "offline-replay",
+        "skill-routes"
+      ]
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0012:sharing-release-gate",
+      "issue": 96,
+      "url": "https://github.com/robertelee78/agent-memory/issues/96",
+      "title": "Gate v0.0.1 on the complete quiet cross-machine learning loop",
+      "wave": 9,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "release",
+        "release": "v0.0.1"
+      },
+      "depends_on": [
+        "robertelee78/agent-memory:ADR-0012:boundary-policy",
+        "robertelee78/agent-memory:ADR-0012:publish-memory",
+        "robertelee78/agent-memory:ADR-0012:refresh-memory",
+        "robertelee78/agent-memory:ADR-0012:retry-and-merges",
+        "robertelee78/agent-memory:ADR-0012:semantic-reconciliation",
+        "robertelee78/agent-memory:ADR-0001:authority-policy",
+        "robertelee78/agent-memory:ADR-0001:offline-core",
+        "robertelee78/agent-memory:ADR-0001:scope-policy",
+        "robertelee78/agent-memory:ADR-0002:canonical-bank",
+        "robertelee78/agent-memory:ADR-0002:safe-erasure",
+        "robertelee78/agent-memory:ADR-0002:typed-records",
+        "robertelee78/agent-memory:ADR-0002:write-and-projection-contract",
+        "robertelee78/agent-memory:ADR-0003:bounded-disclosure",
+        "robertelee78/agent-memory:ADR-0003:pack-validator",
+        "robertelee78/agent-memory:ADR-0003:portable-instruction-tree",
+        "robertelee78/agent-memory:ADR-0004:core-cli",
+        "robertelee78/agent-memory:ADR-0005:admission",
+        "robertelee78/agent-memory:ADR-0005:assembly",
+        "robertelee78/agent-memory:ADR-0005:consolidation",
+        "robertelee78/agent-memory:ADR-0005:deduplicate-before-write",
+        "robertelee78/agent-memory:ADR-0005:forgetting",
+        "robertelee78/agent-memory:ADR-0005:lifecycle-schema",
+        "robertelee78/agent-memory:ADR-0005:retrieval",
+        "robertelee78/agent-memory:ADR-0006:first-release-canaries",
+        "robertelee78/agent-memory:ADR-0006:honest-boundaries",
+        "robertelee78/agent-memory:ADR-0006:security-controls",
+        "robertelee78/agent-memory:ADR-0007:diagnostics",
+        "robertelee78/agent-memory:ADR-0007:install-layout",
+        "robertelee78/agent-memory:ADR-0007:installer",
+        "robertelee78/agent-memory:ADR-0007:lifecycle-contract-suite",
+        "robertelee78/agent-memory:ADR-0007:portable-artifact",
+        "robertelee78/agent-memory:ADR-0007:uninstall",
+        "robertelee78/agent-memory:ADR-0007:updater",
+        "robertelee78/agent-memory:ADR-0008:independent-local-bank",
+        "robertelee78/agent-memory:ADR-0009:concurrent-bank-writers",
+        "robertelee78/agent-memory:ADR-0009:durable-write-faults",
+        "robertelee78/agent-memory:ADR-0009:incident-and-doc-evidence",
+        "robertelee78/agent-memory:ADR-0009:multi-machine-learning-contract",
+        "robertelee78/agent-memory:ADR-0009:top-level-gate",
+        "robertelee78/agent-memory:ADR-0010:bank-lock-and-hashes",
+        "robertelee78/agent-memory:ADR-0010:bank-usability-check",
+        "robertelee78/agent-memory:ADR-0010:evidence-led-initialization",
+        "robertelee78/agent-memory:ADR-0010:manual-file-protocol",
+        "robertelee78/agent-memory:ADR-0010:optional-record-layout",
+        "robertelee78/agent-memory:ADR-0010:recoverable-multi-file-writes",
+        "robertelee78/agent-memory:ADR-0010:router-and-context-files",
+        "robertelee78/agent-memory:ADR-0010:safe-tombstone-format",
+        "robertelee78/agent-memory:ADR-0010:single-file-checkpoint",
+        "robertelee78/agent-memory:ADR-0011:principal-registry",
+        "robertelee78/agent-memory:ADR-0011:project-registry",
+        "robertelee78/agent-memory:ADR-0011:scope-bind"
+      ],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0012-git-shared-memory.md",
+        "commit": "60a787b4f40123329cbecd66d58f0fbe1faf0b36",
+        "blob": "c33810eae4926723cea127556b18e4eeaf75ce97",
+        "decision_status": "proposed"
+      },
+      "outcome": "The first release proves useful shared learning across developers and harnesses.",
+      "acceptance": [
+        "One session publishes from unfinished feature work; another harness on another clone recalls at its next successful boundary without code changes.",
+        "Include two developers, races, compatible edits, duplicates, semantic conflicts, conditions, pruning, retry and later code merge.",
+        "Routine successful maintenance is quiet; conflicts, failures and consequential corrections surface promptly at boundaries.",
+        "No real credentials or live repositories/client data are used by acceptance tests.",
+        "Every other v0.0.1 story is Done at its reviewed-merge delivery boundary before the complete release gate can pass; include lifecycle, portable artifact, security, identity, storage and learning outcomes as well as sharing."
+      ],
+      "validation": "Run the isolated multi-clone public-interface release scenario and inspect output plus Git-state snapshots.",
+      "fixtures": [
+        "cross-clone-sharing",
+        "concurrent-sharing",
+        "offline-replay",
+        "later-code-merge"
+      ]
+    }
+  ]
+}

@@ -34,6 +34,7 @@ and the progressive-disclosure architecture used by
 - [Progressive skill blueprint](docs/design/progressive-skill-blueprint.md)
 - [Install, update, and uninstall blueprint](docs/design/lifecycle-blueprint.md)
 - [Architecture decision records](docs/adr/README.md)
+- [v0.0.1 execution contract and review handoff](docs/design/v0.0.1-execution.md)
 
 The ADRs are currently **Proposed**. They describe the intended boundaries and
 architecture; they are not claims that the implementation already exists.
@@ -42,7 +43,10 @@ Implementation planning is tracked in the repository's
 [GitHub Projects](https://github.com/robertelee78/agent-memory/projects) and
 [release milestones](https://github.com/robertelee78/agent-memory/milestones),
 starting with `v0.0.1`. Each ADR has its own Project; release milestones span
-Projects. The initial tasks are in Backlog; execution requires design approval.
+Projects. The v0.0.1 tasks are selected for design review; execution requires
+recorded design approval. Their [ordered queue](docs/design/v0.0.1-work.json)
+preserves the existing task identities. Prerequisite delivery is reviewed merge
+to main, with the complete release tracked by its final publication gate.
 
 The refined `v0.0.1` scope includes automatic durable capture, deduplication,
 consolidation, relevant recall, and evidence-based pruning, plus
