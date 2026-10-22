@@ -2,6 +2,7 @@
   "schema": "agent-memory/test-contracts-v1",
   "suites": [
     {"name": "harness", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_harness.py"},
+    {"name": "router-contract", "layer": "bank", "scope": "v0.0.1", "path": "tests/contracts/test_router.py"},
     {"name": "bank-roundtrip", "layer": "bank", "scope": "v0.0.1", "path": null, "reason": "Bank operations have not shipped."},
     {"name": "identity-isolation", "layer": "client", "scope": "v0.0.1", "path": null, "reason": "Identity operations have not shipped."},
     {"name": "observed-writes", "layer": "concurrency", "scope": "v0.0.1", "path": null, "reason": "Governed writes have not shipped."},

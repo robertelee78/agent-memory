@@ -64,3 +64,7 @@ implemented offline public-interface suites in disposable test worlds and
 reports remaining contracts as pending. `scripts/test.sh --release` rejects
 incomplete release coverage. See the [test gate guide](docs/testing/README.md)
 for isolation rules, suite registration and receipt fields.
+
+The [bank router contract](docs/contracts/bank-router.md) defines the initial
+shared Markdown layout and its read-only render/validate helper. The full
+learning, sharing and installed lifecycle workflows remain under execution.

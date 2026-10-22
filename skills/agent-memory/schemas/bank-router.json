@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "agent-memory/bank-router-v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "project-id", "router-updated"],
+  "properties": {
+    "schema": {"const": "agent-memory/v1"},
+    "project-id": {"type": "string", "format": "uuid"},
+    "router-updated": {"type": "string", "format": "date-time"}
+  },
+  "x-bank-path": "memory-bank",
+  "x-max-router-bytes": 16384,
+  "x-max-routes": 64,
+  "x-contexts": {
+    "projectbrief.md": "Stable goals and boundaries",
+    "productContext.md": "User problem and intended experience",
+    "activeContext.md": "Current focus, meaningful changes, questions and next step",
+    "systemPatterns.md": "Architecture and established patterns",
+    "techContext.md": "Stack, setup, commands and constraints",
+    "progress.md": "Validated capabilities, remaining work and known problems"
+  },
+  "x-route-fields": ["path", "purpose", "scope", "lifecycle", "read-when"],
+  "x-lifecycle-states": ["candidate", "quarantined", "active", "superseded", "revoked", "expired", "deleted"],
+  "x-optional-directories": ["topics", "episodes", "procedures", "history"]
+}

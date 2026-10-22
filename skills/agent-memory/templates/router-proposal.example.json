@@ -1,0 +1,20 @@
+{
+  "project-id": "REPLACE-WITH-THE-RESOLVED-PROJECT-UUID",
+  "router-updated": "2026-10-22T17:00:00Z",
+  "contexts": {
+    "projectbrief.md": {
+      "body": "# Project brief\n\nGoals and boundaries: [project source](../README.md).\n",
+      "purpose": "Orient a fresh session using project evidence",
+      "scope": "repository",
+      "lifecycle": "active",
+      "read-when": "When starting or resuming project work"
+    }
+  },
+  "omitted": {
+    "productContext.md": "No additional product context has been supplied",
+    "activeContext.md": "No current session focus has been supplied",
+    "systemPatterns.md": "No established patterns have been supplied",
+    "techContext.md": "No verified setup information has been supplied",
+    "progress.md": "No validated progress evidence has been supplied"
+  }
+}
