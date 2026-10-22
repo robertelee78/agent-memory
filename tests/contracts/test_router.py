@@ -6,6 +6,7 @@ import sys
 import unittest
 
 from world import World
+from record_fixtures import record_text, project_id
 
 ROOT = Path(__file__).resolve().parents[2]
 HELPER = ROOT / "scripts/bank_contract.py"
@@ -167,7 +168,9 @@ class RouterContract(unittest.TestCase):
             bank = self.bank(world)
             router = bank / "MEMORY.md"
             (bank / "topics").mkdir()
-            (bank / "topics/design notes.md").write_text("# Design\n\nA conditional lesson; [ADR](../../docs/adr.md).\n")
+            (bank / "topics/design notes.md").write_text(record_text(
+                "# Design\n\nA conditional lesson; [ADR](../../docs/adr.md).\n",
+                project_id(router.read_text()), 'branch:feature'))
             row = "| [topics/design notes.md](<topics/design notes.md>) | Design context | branch:feature | active | When editing the feature |\n"
             router.write_text(router.read_text().replace("\n## Omitted contexts", "\n" + row + "\n## Omitted contexts"))
             result, receipt = self.validate(world)

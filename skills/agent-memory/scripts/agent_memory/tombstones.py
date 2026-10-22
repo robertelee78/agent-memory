@@ -46,11 +46,7 @@ def render(metadata):
             "identity_authenticated": False}
 
 
-def history(repo):
-    checked, observed = writes.snapshot(repo)
-    _, bank = writes.bank_path(repo)
-    tombstones = {}
-    routes = {route["path"]: route for route in checked["routes"]}
+def canonical_paths(bank):
     # Markdown inventory deliberately ignores other file types and runtime
     # names. None of those omissions may mean "no deletion" in this namespace.
     contract.portable_aliases([p.relative_to(bank).as_posix() for p in bank.rglob("*")]
@@ -66,7 +62,15 @@ def history(repo):
                     or not uuid_valid(entry.stem)):
                 raise ContractError("Deletion history permits only canonical UUID marker files")
             physical.add(entry.relative_to(bank).as_posix())
-    if physical != {path for path in observed if path.startswith(PREFIX)}:
+    return physical
+
+
+def history(repo):
+    checked, observed = writes.snapshot(repo)
+    _, bank = writes.bank_path(repo)
+    tombstones = {}
+    routes = {route["path"]: route for route in checked["routes"]}
+    if canonical_paths(bank) != {path for path in observed if path.startswith(PREFIX)}:
         raise ContractError("Deletion history changed during inventory")
     # Use every canonical history file, including targets that a later bounded
     # index resolver makes reachable. Never restrict deletion to the read set

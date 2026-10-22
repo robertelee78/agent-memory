@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import posixpath
 from pathlib import Path, PurePosixPath
 import re
 import sys
@@ -59,7 +60,8 @@ def path_value(value):
 
 
 def text_cell(value):
-    if not isinstance(value, str) or not value.strip() or any(c in value for c in "\n\r|\\"):
+    if (not isinstance(value, str) or not value.strip() or any(c in value for c in "|\\")
+            or any(ord(c) < 32 or ord(c) == 127 or c in "\u0085\u2028\u2029" for c in value)):
         raise ContractError("Route cells require nonempty single-line text without pipes or backslashes")
     return value.strip()
 
@@ -75,6 +77,46 @@ def route_value(route):
     return route
 
 
+def route_table(routes, source="MEMORY.md"):
+    if len(routes) > SPEC["x-max-routes"]:
+        raise ContractError("Route limit exceeded; use a bounded topic index")
+    routes = [route_value(route) for route in routes]
+    text = "| Path | Purpose | Scope | Lifecycle | Read when |\n| --- | --- | --- | --- | --- |\n"
+    for route in routes:
+        destination = posixpath.relpath(route['path'], str(PurePosixPath(source).parent))
+        cells = [f"[{route['path']}](<{destination}>)", *[route[key] for key in FIELDS[1:]]]
+        text += "| " + " | ".join(cells) + " |\n"
+    return text
+
+
+def parse_table(text, source="MEMORY.md"):
+    rows = [line.strip() for line in text.splitlines() if line.strip()]
+    if rows[:2] != ["| Path | Purpose | Scope | Lifecycle | Read when |", "| --- | --- | --- | --- | --- |"]:
+        raise ContractError("Invalid route table header")
+    if len(rows) - 2 > SPEC["x-max-routes"]:
+        raise ContractError("Route limit exceeded; use a bounded topic index")
+    routes = []
+    for row in rows[2:]:
+        if not row.startswith("|") or not row.endswith("|"):
+            raise ContractError("Invalid route table row")
+        cells = [cell.strip() for cell in row[1:-1].split("|")]
+        if len(cells) != len(FIELDS):
+            raise ContractError("Route row must have five columns")
+        match = re.fullmatch(r"\[([^\]]+)\]\((?:<([^<>]+)>|([^<>\s]+))\)", cells[0])
+        destination = (match[2] or match[3]) if match else None
+        if not match:
+            raise ContractError("Route requires an explicit relative Markdown link")
+        path_value(match[1])
+        expected = posixpath.relpath(match[1], str(PurePosixPath(source).parent))
+        if destination != expected:
+            raise ContractError("Route label and relative target must agree")
+        cells[0] = match[1]
+        routes.append(route_value(dict(zip(FIELDS, cells))))
+    if len({route['path'] for route in routes}) != len(routes):
+        raise ContractError("Duplicate route path")
+    return routes
+
+
 def router_text(metadata, routes, omitted):
     header(metadata)
     if len(routes) > SPEC["x-max-routes"]:
@@ -87,10 +129,7 @@ def router_text(metadata, routes, omitted):
     if set(omitted) != expected:
         raise ContractError("Every absent context needs exactly one omission reason")
     body = "# Project memory\n\nRouter time describes this map, not every file's revision.\n\n## Routes\n\n"
-    body += "| Path | Purpose | Scope | Lifecycle | Read when |\n| --- | --- | --- | --- | --- |\n"
-    for route in routes:
-        cells = [f"[{route['path']}](<{route['path']}>)", *[route[key] for key in FIELDS[1:]]]
-        body += "| " + " | ".join(cells) + " |\n"
+    body += route_table(routes)
     body += "\n## Omitted contexts\n\n"
     if omitted:
         body += "".join(f"- `{path}`: {text_cell(omitted[path])}\n" for path in CONTEXTS if path in omitted)
@@ -111,22 +150,7 @@ def parse_router(text):
         raise ContractError("Router needs exactly one Routes and Omitted contexts section")
     _, rest = body.split("\n## Routes\n")
     routes_body, omissions_body = rest.split("\n## Omitted contexts\n")
-    rows = [line.strip() for line in routes_body.splitlines() if line.strip()]
-    if rows[:2] != ["| Path | Purpose | Scope | Lifecycle | Read when |", "| --- | --- | --- | --- | --- |"]:
-        raise ContractError("Invalid route table header")
-    routes = []
-    for row in rows[2:]:
-        if not row.startswith("|") or not row.endswith("|"):
-            raise ContractError("Invalid route table row")
-        cells = [cell.strip() for cell in row[1:-1].split("|")]
-        if len(cells) != len(FIELDS):
-            raise ContractError("Route row must have five columns")
-        match = re.fullmatch(r"\[([^\]]+)\]\((?:<([^<>]+)>|([^<>\s]+))\)", cells[0])
-        destination = (match[2] or match[3]) if match else None
-        if not match or match[1] != destination:
-            raise ContractError("Route label and relative target must agree")
-        cells[0] = destination
-        routes.append(route_value(dict(zip(FIELDS, cells))))
+    routes = parse_table(routes_body)
     omitted = {}
     if omissions_body.strip() != "None.":
         for line in omissions_body.strip().splitlines():
@@ -235,11 +259,11 @@ def validate_files(files):
     for path in omitted:
         if path in files:
             raise ContractError(f"Context exists but is marked omitted: {path}")
-    if set(files) != {"MEMORY.md", *[r["path"] for r in routes]}:
-        raise ContractError("Project Markdown must be reachable from the router")
+    from .bank_layout import inventory
+    entries = inventory(files, metadata, routes)
     return {"schema": "agent-memory/bank-contract-result-v1", "operation": "validate",
-            "valid": True, "validation_scope": "router-and-file-contract", "project_id": metadata["project-id"],
-            "router_updated": metadata["router-updated"], "routes": routes, "omitted": omitted,
+            "valid": True, "validation_scope": "router-layout-and-record-format", "project_id": metadata["project-id"],
+            "router_updated": metadata["router-updated"], "routes": routes, "omitted": omitted, "entries": entries,
             "writes_performed": False}
 
 
@@ -270,9 +294,10 @@ def validate(repo, *, owned_lock=None, owned_transaction=None):
     for path in omitted:
         if (bank / path).exists() or (bank / path).is_symlink():
             raise ContractError(f"Context exists but is marked omitted: {path}")
-    # Optional files cannot become an unindexed second bank. Bounded topic-index
-    # traversal is added by the disclosure/optional-record stories; this first
-    # contract accepts directly routed optional Markdown files.
+    from .tombstones import canonical_paths
+    deletion_paths = canonical_paths(bank)
+    # Inventory every physical Markdown source before the shared pure layout
+    # validator resolves bounded topic indices and standalone record metadata.
     files = {"MEMORY.md": router.read_bytes().decode("utf-8")}
     for target in bank.rglob("*"):
         if target.is_symlink():
@@ -280,7 +305,10 @@ def validate(repo, *, owned_lock=None, owned_transaction=None):
         relative = target.relative_to(bank).as_posix()
         if target.is_file() and target.suffix == ".md" and not runtime_path(relative):
             files[relative] = target.read_bytes().decode("utf-8")
-    return validate_files(files)
+    result = validate_files(files)
+    if canonical_paths(bank) != deletion_paths:
+        raise ContractError("Deletion history changed during validation")
+    return result
 
 
 def main(argv=None):
