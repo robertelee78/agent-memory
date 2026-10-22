@@ -50,6 +50,17 @@ They do not require record-level metadata on every paragraph. They SHALL link to
 the stronger code, test, ADR, issue, user decision, or other evidence when a
 claim's authority or volatility makes that useful.
 
+Initialization SHALL inventory existing memory before creating files, then
+inspect documentation, code and executable tests, ADRs, and projects, tasks,
+and release milestones through the AWA skill when available. It SHALL preserve
+and incorporate existing memory and create a small orientation map with source
+links and useful missing context, rather than duplicate authoritative artifacts.
+It SHALL distinguish approved intent, observed implementation, and planned
+work. Genuine internal conflicts or missing product decisions SHALL trigger a
+focused product-manager Q&A with the detecting developer; absent evidence MUST
+NOT be filled with invented requirements. AWA unavailability SHALL be reported
+as incomplete evidence without preventing local bank inspection.
+
 ### Optional project records
 
 Projects MAY add:
@@ -73,6 +84,13 @@ authority rather than copying its full content. Episodes SHOULD preserve only
 the task-stage lesson and evidence needed to avoid a repeated failure, not the
 whole chat or tool transcript. Procedure files are non-binding candidates until
 the governed promotion operation creates or updates a reviewed skill.
+
+Records about independently useful branch discoveries MAY be shared with their
+evidence and applicability conditions under ADR-0012. Private or transient
+observations SHALL remain outside the shared bank unless admitted under that
+policy. Existing source links, record identities, distinct conditions, and
+developer/session provenance SHALL survive automatic deduplication and
+consolidation; the router MUST NOT grow by copying every record into it.
 
 ### Non-project scopes
 
@@ -136,6 +154,13 @@ allow the CLI to finish or roll back.
 
 This protocol detects a torn multi-file bank; it does not claim a cross-file
 atomic primitive the filesystem cannot provide.
+
+These locks and transaction markers SHALL govern one worktree's bank only.
+Separate branches, worktrees, and clones SHALL reconcile through the Git
+protocol in ADR-0012; a local bank lock MUST NOT be described as a cross-machine
+lock. Runtime locks, transaction markers, and recovery artifacts MUST NOT enter
+shared memory commits. The baseline mediated writes required by automatic
+capture, consolidation, pruning, and checkpoint SHALL ship in `v0.0.1`.
 
 ### Deletion and tombstones
 

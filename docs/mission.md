@@ -6,6 +6,14 @@ Take what is good about Cline's Memory Bank, package it with the progressive
 skill and operational discipline of `agent-work-accountability`, and improve it
 without turning it into a brittle memory platform.
 
+The first users work across Claude Code, Codex, OpenCode, and custom harnesses,
+with concurrent sessions in separate branches/worktrees, two to five computers,
+and two collaborating developers. GitHub carries shared repository knowledge,
+code, and ADRs; AWA owns work state and delivery evidence; Vox owns live agent
+coordination. `agent-memory` owns durable learning and relevant context. The
+first release MUST preserve useful learning through ordinary Git publication,
+merge, and recall, without a shared mutable database.
+
 `agent-memory` exists so a fresh coding agent can enter a project and quickly
 understand:
 
@@ -27,8 +35,9 @@ understand:
 4. **It is client-independent.** Any capable coding agent can use the files.
 5. **It grows with the project.** Initialization creates only useful content;
    new topics appear when actual complexity requires them.
-6. **Maintenance is visible.** The agent does not silently ingest every chat and
-   claim that accumulation equals understanding.
+6. **Maintenance is accountable.** The agent captures durable learning
+   automatically and quietly; conflicts, failures, and consequential corrections
+   are surfaced promptly. Accumulating chat is not understanding.
 
 ## What AWA contributes
 
@@ -90,9 +99,12 @@ The first release is not:
   decisions;
 - a promise that hooks can perfectly infer what deserves to be remembered.
 
-MCP, hooks, embeddings, SQLite, synchronization, and graphs are optional later
-adapters or projections. None belongs on the critical path until the file-and-
-skill workflow is demonstrably insufficient.
+Same-repository Git sharing is part of the first release. Memory-only changes
+land through existing repository rules and refresh into working branches at turn
+boundaries without importing code changes. MCP, client-specific hooks,
+embeddings, SQLite, additional synchronization services, and graphs remain
+optional later adapters or projections. None belongs on the critical path until
+the file-and-skill workflow is demonstrably insufficient.
 
 ## Design litmus tests
 

@@ -51,6 +51,14 @@ Retrieval SHALL first narrow by scope, validity, trust, and type, then rank by
 keyword, semantic, temporal, relational, and task-stage signals. The system
 SHALL support exact lookup without embeddings.
 
+At turn boundaries the skill SHALL check for newly landed shared memory using
+ADR-0012, refresh only memory paths, and load the relevant changed knowledge.
+It MUST NOT interrupt an executing turn or require a background watcher. A
+custom harness SHALL be able to invoke the same explicit boundary operation;
+client hooks MAY automate invocation but MUST NOT own its semantics. Retrieval
+SHALL check applicability against the working branch, rather than assuming the
+branch's code has advanced with imported memory.
+
 ### Skill disclosure
 
 The portable skill SHALL contain exactly one registered `SKILL.md`. Nested

@@ -58,12 +58,35 @@ rules. Assistant inferences and external content SHALL require stronger
 evidence or review. Procedures and global preferences MUST NOT be promoted from
 untrusted content automatically.
 
+The skill SHALL automatically capture durable discoveries, verified fixes,
+useful failed approaches, user corrections, and confirmed project decisions
+when they would materially change a future session's behavior. It MUST NOT ask
+for approval for each routine memory. Assistant proposals and unanswered
+recommendations MUST NOT become confirmed decisions; uncertainty and unverified
+inferences SHALL remain labeled. Raw transcripts, easily recovered source facts,
+and duplicate tracker state MUST NOT accumulate as learning records.
+
+Before creating or updating a memory, the skill SHALL consult the bounded
+router, search existing memory for the same concept and alternate wording, and
+read plausible matches with their evidence and conditions. The same learning
+SHALL update or combine with its existing record; distinct knowledge SHALL keep
+a separate identity. Unavailable or interrupted memory MUST NOT be treated as
+proof that no match exists. The first release SHALL support this semantic
+comparison using ordinary search and agent judgment without requiring vectors.
+Before publication the skill SHALL repeat the comparison against the latest
+landed memory, so concurrent sessions cannot bypass deduplication.
+
 ### Consolidation
 
-Consolidation SHALL run outside the foreground task by default. It MAY merge
-duplicates, propose higher-order patterns, link related memories, or suggest
-procedural promotion. It MUST retain source links, be idempotent, and emit
-events rather than destructively rewriting history.
+Consolidation SHALL run at natural turn boundaries outside foreground work by
+default. It SHALL automatically combine duplicate memories and tighten wording
+while preserving distinct conditions, evidence, developer/session provenance,
+and useful correction history. It MAY propose higher-order patterns, link
+related memories, or suggest procedural promotion. It MUST retain source links,
+be idempotent, and emit events rather than destructively rewriting history.
+Unresolved changes in meaning SHALL route to the detecting developer as defined
+by ADR-0012. Routine maintenance SHALL be quiet; conflicts, failures, and
+consequential corrections SHALL be surfaced promptly at a boundary.
 
 ### Retrieval
 
@@ -96,6 +119,16 @@ The system SHALL support expiration, supersession, revocation, user deletion,
 and policy retention as separate operations. Forgetting SHALL propagate to all
 materialized views and derived indices. A deleted memory MUST NOT reappear from
 a cached index or consolidation output.
+
+The skill SHALL automatically prune incorrect or no-longer-relevant guidance
+when stronger evidence establishes the correction or loss of applicability.
+Age alone MUST NOT justify pruning. A memory that is obsolete on `main` but
+still applies to an older branch or environment SHALL retain that narrower
+condition. Pruning SHALL remove the claim from active guidance while preserving
+a concise safe correction or supersession explanation; explicit deletion SHALL
+follow the content-free tombstone contract. Ambiguous evidence SHALL prompt
+clarification rather than silent removal. The baseline capture, deduplication,
+consolidation, scoped retrieval, and pruning loop SHALL ship in `v0.0.1`.
 
 ## Consequences
 

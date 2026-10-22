@@ -21,6 +21,12 @@ operates it. A deterministic local CLI SHALL validate and maintain that
 contract. MCP SHALL be a thin protocol adapter over the same files and CLI.
 Client plugins, skills, and lifecycle hooks SHALL be optional adapters.
 
+The first release SHALL provide the shared skill and deterministic helpers for
+automatic durable capture, search-before-write, consolidation, pruning, and the
+memory-only Git exchange in ADR-0012. Claude Code, Codex, OpenCode, and custom
+harnesses SHALL use the same bank and protocol. Harness-specific hooks and MCP
+integration MAY follow; their absence MUST NOT prevent this workflow.
+
 Failure or absence of the CLI beyond installation MUST NOT prevent a client
 from reading the current bank or making the constrained single-file manual
 checkpoint described by ADR-0010. That fallback does not provide mediated

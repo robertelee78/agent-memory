@@ -42,3 +42,9 @@ Implementation planning is tracked in the repository's
 [release milestones](https://github.com/robertelee78/agent-memory/milestones),
 starting with `v0.0.1`. Each ADR has its own Project; release milestones span
 Projects. The initial tasks are in Backlog; execution requires design approval.
+
+The refined `v0.0.1` scope includes automatic durable capture, deduplication,
+consolidation, relevant recall, and evidence-based pruning, plus
+[memory-only Git publication and turn-boundary refresh](docs/adr/0012-git-shared-memory.md)
+across worktrees, computers, and developers. Code integration keeps its normal
+workflow. Later release milestones remain planning proposals for refinement.

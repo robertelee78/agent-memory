@@ -86,6 +86,14 @@ recorded when the admission policy or content class requires them. Content
 hashes MAY be computed for observed-write and projection checks but SHOULD NOT
 be stored in a tombstone.
 
+Shared learning SHALL carry its originating developer identity, harness and
+session, evidence references, and applicable conditions. Conditions MAY include
+component, branch, source revision, version, environment, or prerequisite state.
+An observation made on unmerged code MAY be shared when independently useful,
+but MUST NOT be presented as current implementation on the default branch.
+Unknown applicability SHALL remain explicit. Landing a memory on `main` MUST NOT
+make a conditional statement universally applicable.
+
 Revocation and supersession SHALL remove a memory from current guidance while
 preserving the minimum safe explanation or evidence required for audit.
 Deletion SHALL create a durable tombstone when another artifact could recreate

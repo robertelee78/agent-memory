@@ -48,6 +48,12 @@ and filesystem permissions. Principal IDs prevent accidental logical mixing but
 do not authenticate mutually distrusting users who share one OS account.
 Security tests and product claims SHALL preserve that distinction.
 
+Automatic project-memory capture and publication SHALL apply the same source,
+secret-scanning, scope, and quarantine rules before committing shared files.
+Permission to maintain shared project memory MUST NOT imply permission to share
+private preferences, raw conversations, or unreviewed procedures. The first
+release SHALL enforce these baseline controls on its automatic path.
+
 Memory MAY inform a task, but it MUST NOT override the current operator request,
 the portable skill's safety and authority rules, repository instructions, or a
 stronger authoritative artifact. Only an explicitly reviewed and promoted

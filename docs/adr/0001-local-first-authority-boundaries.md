@@ -28,8 +28,10 @@ and resuming a bank MUST NOT require a database, service, daemon, embedding
 model, knowledge graph, MCP server, or client hook.
 
 The core SHALL NOT require a hosted service, a particular model, a particular
-agent client, lifecycle hooks, or an orchestrator. Optional synchronization MAY
-be added without changing the local data model.
+agent client, lifecycle hooks, or an orchestrator. Same-repository memory sharing
+through Git SHALL be part of the first release, as specified by
+[ADR-0012](0012-git-shared-memory.md). Additional synchronization services MAY be
+added without changing the local data model.
 
 The system SHALL distinguish these scopes:
 
@@ -64,8 +66,9 @@ Retrieved memory is context, not enforced policy and not proof.
 - GitHub/AWA and Vox can coexist without duplicated lifecycle or ownership
   state; memory stores links and durable lessons, not a second tracker.
 - Repository identity and scope resolution become security-critical.
-- Cross-machine synchronization is deferred and must preserve provenance,
-  tombstones, and conflicts rather than using blind last-write-wins.
+- Git carries shared project memory across worktrees, machines, and developers;
+  additional synchronization services remain optional. Reconciliation preserves
+  provenance, tombstones, and conflicts rather than using blind last-write-wins.
 
 ## Alternatives considered
 

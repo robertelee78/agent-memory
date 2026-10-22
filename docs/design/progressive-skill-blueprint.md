@@ -75,6 +75,7 @@ skills/agent-memory/
 ├── recall/
 │   ├── GUIDE.md
 │   ├── resume/GUIDE.md
+│   ├── refresh/GUIDE.md
 │   ├── context/GUIDE.md
 │   ├── search/GUIDE.md
 │   └── explain/GUIDE.md
@@ -82,7 +83,8 @@ skills/agent-memory/
 │   ├── GUIDE.md
 │   ├── initialize/GUIDE.md
 │   ├── checkpoint/GUIDE.md
-│   └── remember/GUIDE.md
+│   ├── remember/GUIDE.md
+│   └── publish/GUIDE.md
 ├── govern/
 │   ├── GUIDE.md
 │   ├── correct/GUIDE.md
@@ -231,6 +233,17 @@ diverge as AWA's ready predicate currently does.
 
 “Read all files” is intentionally not a route. Resume reads the bounded router,
 current active context, and only the topic files selected for the task.
+
+For the first-release sharing loop, the root SHALL also route turn-boundary
+refresh to `recall` → `refresh` and memory-only publication to `capture` →
+`publish`, following ADR-0012. Capture SHALL search and read plausible existing
+memory before writing and before landing. Quiet automatic consolidation and
+evidence-based pruning SHALL preserve conditions and provenance; unresolved
+contradictions SHALL route to clarification by the detecting developer. These
+operations SHALL be available to custom harnesses through the same skill and
+helpers, without requiring a client hook. Refresh MUST NOT change code or discard
+unpublished local memory. Initialization SHALL use the evidence and product-Q&A
+contract in ADR-0010.
 
 ## Executable pack validation
 

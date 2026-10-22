@@ -52,6 +52,25 @@ The suite SHALL include true concurrent processes operating on the same bank.
 It SHALL verify observed-hash conflicts, lock recovery, atomic replacement,
 bounded retry, and the absence of last-write-wins data loss.
 
+The first release SHALL additionally exercise independent Git clones, separate
+worktrees and branches, two developer identities, and multiple harness/session
+identities against an isolated shared remote. A lesson published from one clone
+SHALL be recalled by another at its next successful turn-boundary refresh while
+non-memory working files, staged changes, and feature history remain unchanged.
+The suite SHALL test simultaneous publication, three-way reconciliation, retry
+after a successful push or merge with a lost response, offline retry, and
+replay after a later ordinary code merge without duplicated learning.
+
+Fixtures SHALL cover same-concept deduplication before write and before landing;
+compatible edits to the same file; semantic contradictions that Git merges
+cleanly; yellow/blue decisions for the same wall; conditional lessons about
+unmerged code; stale code receiving newer memory; and evidence-based pruning
+that preserves still-applicable older-branch guidance. Clarification SHALL go
+to the detecting developer, cross-developer provenance SHALL be visible, and
+only disputed memory and dependent work SHALL pause. Initialization fixtures
+SHALL combine code/tests, docs/ADRs, and AWA work evidence, preserve existing
+memory, and distinguish genuine contradictions from different lifecycle states.
+
 For optional stores and indexes, tests SHALL prove that:
 
 - deleting all generated state leaves the Markdown bank usable;

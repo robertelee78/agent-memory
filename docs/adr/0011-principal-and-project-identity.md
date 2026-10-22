@@ -35,6 +35,15 @@ mutually distrusting users of the same OS account. The CLI SHALL state this and
 MUST NOT describe registry selection as an ACL. Strong multi-principal access
 control requires separate OS identities or a later authenticated service.
 
+Shared project-memory provenance SHALL identify the developer separately from
+the harness and session. The same developer using two to five machines SHALL be
+able to explicitly adopt the same stable developer identity on each, without
+sharing private local memory by implication. A different developer SHALL retain
+a distinct identity. Git authors and hosting logins MAY help resolve aliases,
+but MUST NOT silently change identity when credentials change. Conflicting or
+unknown attribution SHALL remain visible during clarification; it MUST NOT be
+misrepresented as a verified identity or authentication claim.
+
 ### Project identity
 
 Every bank SHALL carry a random stable project ID in `MEMORY.md`. The local
