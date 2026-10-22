@@ -34,6 +34,12 @@ projects, tasks, milestones and delivery evidence; Vox owns live coordination.
 Neither is required for local file inspection. Memory SHOULD retain useful
 lessons and source links rather than copies of those systems' changing state.
 
+## Applicability
+
+A session MUST read [scope/GUIDE.md](scope/GUIDE.md) when resolving repository
+scope or component, branch, worktree, task and session conditions. Unknown or
+mismatched conditions MUST NOT be silently widened into current guidance.
+
 ## Sharing boundary
 
 A local edit, branch commit or successful validation MUST NOT be described as

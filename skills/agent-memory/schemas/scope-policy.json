@@ -1,0 +1,11 @@
+{
+  "schema": "agent-memory/scope-policy-v1",
+  "namespace": "repository-project-uuid",
+  "default-scope": "repository",
+  "condition-kinds": ["component", "branch", "worktree", "task", "session"],
+  "condition-combination": "all-known-and-matching",
+  "developer-role": "provenance-and-clarification-only",
+  "personal-namespaces": false,
+  "cross-repository": "unavailable-in-v0.0.1; future retrieval requires explicit selection and consent",
+  "authorization": "repository-and-OS-permissions; applicability is not an ACL"
+}
