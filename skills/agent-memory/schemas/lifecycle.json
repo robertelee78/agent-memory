@@ -1,0 +1,36 @@
+{
+  "schema": "agent-memory/lifecycle-v1",
+  "states": ["candidate", "quarantined", "active", "superseded", "revoked", "expired", "deleted"],
+  "trust-order": ["untrusted", "reviewed", "verified"],
+  "visibility": ["visible", "hidden"],
+  "guards": {
+    "new-event": "A fresh event ID records the operation; it differs from the prior event.",
+    "evidence": "At least one nonempty evidence reference is supplied.",
+    "new-evidence": "Evidence includes a reference absent from the previous version.",
+    "authority": "The invoking agent supplies the resolved correction/deletion authority.",
+    "reason": "A concise reason explains the change.",
+    "reviewed": "The agent has reviewed admission and its evidence.",
+    "replacement": "An active, different replacement version explicitly names the original version and preserves applicability.",
+    "new-version": "The replacement version number increases while retaining the record ID.",
+    "expiry-reached": "The known exclusive valid-until boundary has been reached."
+  },
+  "transitions": [
+    {"operation": "quarantine", "from": ["candidate"], "to": "quarantined", "requires": ["new-event", "reason"], "new-version": false},
+    {"operation": "admit", "from": ["candidate", "quarantined"], "to": "active", "requires": ["new-event", "evidence", "reviewed"], "new-version": false},
+    {"operation": "correct", "from": ["active"], "to": "superseded", "requires": ["new-event", "new-evidence", "authority", "reason", "replacement", "new-version"], "new-version": true},
+    {"operation": "supersede", "from": ["active"], "to": "superseded", "requires": ["new-event", "evidence", "authority", "reason", "replacement"], "new-version": false},
+    {"operation": "revoke", "from": ["active"], "to": "revoked", "requires": ["new-event", "authority", "reason"], "new-version": false},
+    {"operation": "expire", "from": ["active"], "to": "expired", "requires": ["new-event", "expiry-reached"], "new-version": false},
+    {"operation": "reactivate", "from": ["superseded", "revoked", "expired"], "to": "active", "requires": ["new-event", "new-evidence", "authority", "reason", "replacement", "new-version"], "new-version": true},
+    {"operation": "delete", "from": ["candidate", "quarantined", "active", "superseded", "revoked", "expired"], "to": "deleted", "requires": ["new-event", "authority", "reason"], "new-version": false}
+  ],
+  "current-predicate": [
+    {"gate": "authorized-scope", "meaning": "Resolved project scope is authorized for this operation."},
+    {"gate": "applicable", "meaning": "The current component/branch/worktree/task/session conditions apply."},
+    {"gate": "active", "meaning": "Lifecycle is active."},
+    {"gate": "valid-time", "meaning": "Current time is at or after valid-from and strictly before valid-until, when known."},
+    {"gate": "sufficient-trust", "meaning": "Trust meets the explicit operation threshold, independently of confidence."},
+    {"gate": "visible", "meaning": "The record is visible rather than explicitly omitted from current assembly."},
+    {"gate": "no-active-superseder", "meaning": "The observed bank has no active superseding record for this version."}
+  ]
+}

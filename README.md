@@ -45,8 +45,8 @@ Implementation planning is tracked in the repository's
 [GitHub Projects](https://github.com/robertelee78/agent-memory/projects) and
 [release milestones](https://github.com/robertelee78/agent-memory/milestones),
 starting with `v0.0.1`. Each ADR has its own Project; release milestones span
-Projects. The v0.0.1 tasks have recorded design approval and are Ready, with
-predecessor dependencies still governing when each can start. Their
+Projects. The v0.0.1 tasks have recorded design approval; GitHub tracks their
+execution, with predecessor dependencies governing when each can start. Their
 [ordered queue](docs/design/v0.0.1-work.json)
 preserves the existing task identities. Prerequisite delivery is reviewed merge
 to main, with the complete release tracked by its final publication gate.
@@ -68,3 +68,6 @@ for isolation rules, suite registration and receipt fields.
 The [bank router contract](docs/contracts/bank-router.md) defines the initial
 shared Markdown layout and its read-only render/validate helper. The full
 learning, sharing and installed lifecycle workflows remain under execution.
+
+The [shared lifecycle model](docs/contracts/lifecycle-model.md) supplies the
+read-only transition and current-selection decisions used by later operations.

@@ -21,6 +21,6 @@
     "progress.md": "Validated capabilities, remaining work and known problems"
   },
   "x-route-fields": ["path", "purpose", "scope", "lifecycle", "read-when"],
-  "x-lifecycle-states": ["candidate", "quarantined", "active", "superseded", "revoked", "expired", "deleted"],
+  "x-lifecycle-model": "lifecycle.json",
   "x-optional-directories": ["topics", "episodes", "procedures", "history"]
 }
