@@ -112,3 +112,7 @@ detecting developer. Its evaluator produces read-only correction/revocation cand
 The [canonical current-bank view](skills/agent-memory/bank/GUIDE.md) inspects
 Markdown contexts and local Git facts without generated application state;
 tracking is kept distinct from publication and refreshed shared memory.
+
+The [typed record contract](skills/agent-memory/records/GUIDE.md) preserves
+provenance, conditions, validity and explicit stale state in standalone Markdown.
+Its read-only validator also handles optional history and the safe tombstone exception.

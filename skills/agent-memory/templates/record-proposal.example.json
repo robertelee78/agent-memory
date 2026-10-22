@@ -1,0 +1,39 @@
+{
+  "metadata": {
+    "schema": "agent-memory/record-v1",
+    "id": "a9abac6f-c33e-44c9-b40f-7b2ebafda860",
+    "version": 1,
+    "project-id": "75b38e17-c36e-4fab-8ba9-5fa51f25de91",
+    "kind": "semantic-fact",
+    "status": "candidate",
+    "scope": "component:src/retry",
+    "applicability": "known",
+    "conditions": {
+      "branch": "feature/retry",
+      "revision": "REPLACE-WITH-OBSERVED-REVISION",
+      "environment": "isolated-fixture",
+      "prerequisite": "transient-failure-case"
+    },
+    "source": {
+      "actor": "fixture-observer",
+      "kind": "executable-test"
+    },
+    "evidence": [
+      "../evidence/retry-limit.txt"
+    ],
+    "origin": {
+      "developer-id": "b3dcae21-f5f3-40ac-bcfe-e845a3d2868b",
+      "harness": "custom-harness",
+      "session": "example-session",
+      "code-state": "unmerged"
+    },
+    "recorded-at": "2026-10-22T21:00:00Z",
+    "updated": "2026-10-22T21:00:00Z",
+    "valid-from": null,
+    "valid-until": null,
+    "derived-from": [],
+    "corrects": [],
+    "supersedes": []
+  },
+  "body": "# Conditional retry observation\n\nIn the inspected feature revision, the isolated transient-failure probe returned a limit of three. This does not establish the behavior on main or another revision.\n"
+}

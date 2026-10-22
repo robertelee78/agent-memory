@@ -17,6 +17,7 @@ person or grant access beyond repository/OS permissions.
 | worktree:value | Explicit worktree identity condition matches | Exclude |
 | task:value | Explicit task identity condition matches | Exclude |
 | session:value | Explicit session identity condition matches | Exclude |
+| revision/version/environment/prerequisite condition | Explicit observed value matches exactly | Exclude; no inferred ranges or prerequisite satisfaction |
 | developer identity | Attribution and who can clarify a lesson | Never a selection boundary or personal ACL |
 | related project | Future explicit selection and consent | Unavailable in v0.0.1 |
 
@@ -53,7 +54,12 @@ python3 -I "$SKILL_DIR/scripts/scope_policy.py" decide --input /tmp/scope-reques
 
 A request has `bank_project_id` and `project_id` as explicit canonical UUIDv4
 values. Optional `scope` defaults to `repository`; optional `conditions` and
-`context` objects use the condition names in the matrix and string values.
+`context` objects use the condition names in the matrix. Conditions use string
+values or explicit `null` for an unknown requirement; context uses known strings.
+An unknown requirement MUST remain excluded even if the context supplies a value.
+The four additional record conditions are not router scope kinds. A standalone
+record's overall applicability MAY also remain unknown; its record helper MUST
+apply that exclusion in addition to this scope decision.
 Optional `developer_id` is a canonical UUIDv4 used only as supplied provenance;
 it never changes applicability. Extra fields, personal scopes and fabricated
 federation options MUST be rejected.

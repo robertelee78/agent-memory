@@ -1,0 +1,416 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "agent-memory/record-v1",
+  "title": "Standalone project memory metadata; format is not admission",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "id",
+    "version",
+    "project-id",
+    "kind",
+    "status",
+    "scope",
+    "applicability",
+    "conditions",
+    "source",
+    "evidence",
+    "origin",
+    "recorded-at",
+    "updated",
+    "valid-from",
+    "valid-until",
+    "derived-from",
+    "corrects",
+    "supersedes"
+  ],
+  "properties": {
+    "schema": {
+      "const": "agent-memory/record-v1"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "format": "uuid"
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "project-id": {
+      "type": "string",
+      "minLength": 1,
+      "format": "uuid"
+    },
+    "kind": {
+      "enum": [
+        "semantic-fact",
+        "user-feedback",
+        "project-decision",
+        "episodic-attempt",
+        "result",
+        "reference",
+        "procedural-candidate"
+      ]
+    },
+    "status": {
+      "enum": [
+        "candidate",
+        "quarantined",
+        "active",
+        "superseded",
+        "revoked",
+        "expired"
+      ]
+    },
+    "scope": {
+      "type": "string",
+      "minLength": 1
+    },
+    "applicability": {
+      "enum": [
+        "known",
+        "unknown"
+      ]
+    },
+    "conditions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "component": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "branch": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "worktree": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "task": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "session": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "revision": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "version": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "environment": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "prerequisite": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "actor",
+        "kind"
+      ],
+      "properties": {
+        "actor": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "origin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "developer-id",
+        "harness",
+        "session",
+        "code-state"
+      ],
+      "properties": {
+        "developer-id": {
+          "type": "string",
+          "minLength": 1,
+          "format": "uuid"
+        },
+        "harness": {
+          "type": "string",
+          "minLength": 1
+        },
+        "session": {
+          "type": "string",
+          "minLength": 1
+        },
+        "code-state": {
+          "enum": [
+            "unmerged",
+            "default-branch",
+            "not-code",
+            "unknown"
+          ]
+        }
+      }
+    },
+    "recorded-at": {
+      "type": "string",
+      "minLength": 1,
+      "format": "date-time"
+    },
+    "updated": {
+      "type": "string",
+      "minLength": 1,
+      "format": "date-time"
+    },
+    "valid-from": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "valid-until": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "derived-from": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "version"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "format": "uuid"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      }
+    },
+    "corrects": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "version"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "format": "uuid"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      }
+    },
+    "supersedes": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "version"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "format": "uuid"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      }
+    },
+    "confidence": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "maximum": 1
+    },
+    "admission-reason": {
+      "type": "string",
+      "minLength": 1
+    },
+    "trust": {
+      "enum": [
+        "untrusted",
+        "reviewed",
+        "verified"
+      ]
+    },
+    "visibility": {
+      "enum": [
+        "visible",
+        "hidden"
+      ]
+    },
+    "redaction": {
+      "type": "string",
+      "minLength": 1
+    },
+    "state-reason": {
+      "type": "string",
+      "minLength": 1
+    },
+    "superseded-by": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "version"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "format": "uuid"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      },
+      "minItems": 1
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "active"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "admission-reason",
+          "trust",
+          "visibility"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "enum": [
+              "quarantined",
+              "superseded",
+              "revoked",
+              "expired"
+            ]
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "state-reason"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "superseded"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "superseded-by"
+        ]
+      }
+    }
+  ],
+  "x-local-invariants": "record_contract.py additionally checks canonical UUIDv4, exact RFC3339 ordering, path scopes, version links and conditional unmerged observations",
+  "x-policy-fields": [
+    "confidence",
+    "admission-reason",
+    "trust",
+    "visibility",
+    "redaction"
+  ]
+}

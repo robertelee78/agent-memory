@@ -50,6 +50,13 @@ A session MUST read [scope/GUIDE.md](scope/GUIDE.md) when resolving repository
 scope or component, branch, worktree, task and session conditions. Unknown or
 mismatched conditions MUST NOT be silently widened into current guidance.
 
+## Standalone lessons
+
+A session MUST read [records/GUIDE.md](records/GUIDE.md) when a lesson needs
+typed provenance, validity, correction or revocation. Ordinary context prose
+does not need metadata on every paragraph. Record format validation MUST NOT
+be treated as admission or proof that its evidence and conditions are correct.
+
 ## Sharing boundary
 
 A local edit, branch commit or successful validation MUST NOT be described as
