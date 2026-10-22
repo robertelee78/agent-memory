@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "agent-memory/tombstone-v1",
+  "title": "Content-free terminal deletion marker",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "scope", "deleted-at", "deletion-authority", "reason-class"],
+  "properties": {
+    "id": {"type": "string", "format": "uuid"},
+    "scope": {"type": "string", "format": "uuid", "description": "Canonical project UUID; deletion is terminal for this record across its conditions"},
+    "deleted-at": {"type": "string", "format": "date-time"},
+    "deletion-authority": {"type": "string", "format": "uuid"},
+    "reason-class": {"enum": ["user-request", "incorrect", "obsolete", "sensitive", "retention"]}
+  },
+  "x-identity": "Canonical random UUIDv4 of the deleted record, never a content-derived identifier",
+  "x-path": "history/tombstones/<id>.md",
+  "x-body": "empty"
+}

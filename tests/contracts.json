@@ -11,6 +11,7 @@
     {"name": "manual-checkpoint", "layer": "bank", "scope": "v0.0.1", "path": "tests/contracts/test_manual_checkpoint.py"},
     {"name": "bank-usability", "layer": "bank", "scope": "v0.0.1", "path": "tests/contracts/test_bank_usability.py"},
     {"name": "bank-transactions", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_bank_transactions.py"},
+    {"name": "tombstones", "layer": "bank", "scope": "v0.0.1", "path": "tests/contracts/test_tombstones.py"},
     {"name": "bank-roundtrip", "layer": "bank", "scope": "v0.0.1", "path": null, "reason": "Bank operations have not shipped."},
     {"name": "identity-isolation", "layer": "client", "scope": "v0.0.1", "path": null, "reason": "Identity operations have not shipped."},
     {"name": "observed-writes", "layer": "concurrency", "scope": "v0.0.1", "path": null, "reason": "Governed writes have not shipped."},
