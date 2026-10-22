@@ -52,7 +52,7 @@ class BankTransactionsContract(unittest.TestCase):
         return repo, bank, before, after, p
 
     def canonical(self, bank):
-        return {p.relative_to(bank).as_posix(): p.read_text() for p in bank.rglob("*.md") if not p.name.startswith(".agent-memory")}
+        return {p.relative_to(bank).as_posix(): p.read_text() for p in bank.rglob("*.md") if p.is_file() and not p.name.startswith(".agent-memory")}
 
     def apply(self, world, p, env=None):
         return self.command(world, "apply", "--proposal", self.save(world, p), env=env)
@@ -302,6 +302,109 @@ class BankTransactionsContract(unittest.TestCase):
             self.assertEqual(r.returncode, 0, done)
             self.assertFalse(sentinel.exists())
             self.assertTrue(done["verified"])
+
+    def optional_files(self, files, additions):
+        files = dict(files)
+        rows = "".join(f"| [{p}](<{p}>) | Context | repository | active | When relevant |\n" for p in additions)
+        files["MEMORY.md"] = files["MEMORY.md"].replace("\n## Omitted contexts\n", rows + "\n## Omitted contexts\n")
+        files.update(additions)
+        return files
+
+    def test_raw_crlf_router_rejected_before_preview_or_journal_even_if_changed_after_preview(self):
+        for timing in ("before-preview", "after-preview"):
+            with self.subTest(timing=timing), World() as w:
+                repo, bank, before, after, p = self.fixture(w)
+                router = bank / "MEMORY.md"
+                crlf = router.read_bytes().replace(b"\n", b"\r\n")
+                router.write_bytes(crlf)
+                r, invalid = self.command(w, "validate", "--repo", repo, helper=RENDER)
+                self.assertEqual(r.returncode, 1, invalid)
+                if timing == "before-preview":
+                    r, error = self.command(w, "preview", "--repo", repo, "--files", self.save(w, after, "desired.json"))
+                else:
+                    r, error = self.apply(w, p)
+                self.assertEqual(r.returncode, 1, error)
+                self.assertIn("Frontmatter must start at byte zero", error["error"])
+                self.assertEqual(router.read_bytes(), crlf)
+                self.assertFalse((bank / MARKER).exists())
+                self.assertFalse((bank / ".agent-memory.lock").exists())
+                self.assertFalse(Path(w.env["AGENT_MEMORY_STATE_HOME"]).exists())
+
+    def test_impossible_projection_and_leaf_directory_conversions_refuse_before_journaling(self):
+        cases = ("both", "leaf-to-directory", "directory-to-leaf", "existing-directory", "non-directory-parent")
+        for case in cases:
+            with self.subTest(case=case), World() as w:
+                repo, bank, before, after, p = self.fixture(w)
+                if case == "leaf-to-directory":
+                    extra = {"topics/a.md": "# Old leaf\n\nPreserve the source.\n"}
+                    before = self.optional_files(before, extra)
+                    (bank / "topics").mkdir()
+                    (bank / "topics/a.md").write_text(extra["topics/a.md"])
+                    (bank / "MEMORY.md").write_text(before["MEMORY.md"])
+                    after = self.optional_files(after, {"topics/a.md/b.md": "# Child\n\nDesired context.\n"})
+                elif case == "directory-to-leaf":
+                    extra = {"topics/a.md/b.md": "# Old child\n\nPreserve the source.\n"}
+                    before = self.optional_files(before, extra)
+                    (bank / "topics/a.md").mkdir(parents=True)
+                    (bank / "topics/a.md/b.md").write_text(extra["topics/a.md/b.md"])
+                    (bank / "MEMORY.md").write_text(before["MEMORY.md"])
+                    after = self.optional_files(after, {"topics/a.md": "# Leaf\n\nDesired context.\n"})
+                elif case == "both":
+                    after = self.optional_files(after, {"topics/a.md": "# Leaf\n", "topics/a.md/b.md": "# Child\n"})
+                elif case == "existing-directory":
+                    (bank / "topics/a.md").mkdir(parents=True)
+                    after = self.optional_files(after, {"topics/a.md": "# Leaf\n"})
+                else:
+                    (bank / "topics").mkdir()
+                    (bank / "topics/occupant.bin").write_text("Unrelated file")
+                    after = self.optional_files(after, {"topics/occupant.bin/b.md": "# Child\n"})
+                original = self.canonical(bank)
+                r, error = self.command(w, "preview", "--repo", repo, "--files", self.save(w, after, "desired.json"))
+                self.assertEqual(r.returncode, 1, error)
+                self.assertEqual(self.canonical(bank), original)
+                self.assertFalse((bank / MARKER).exists())
+                self.assertFalse(Path(w.env["AGENT_MEMORY_STATE_HOME"]).exists())
+
+    def test_noncanonical_physical_blocker_arriving_after_preview_is_checked_before_journal(self):
+        with World() as w:
+            repo, bank, before, after, _ = self.fixture(w)
+            after = self.optional_files(after, {"topics/occupant.bin/b.md": "# Child\n"})
+            r, p = self.command(w, "preview", "--repo", repo, "--files", self.save(w, after, "desired.json"))
+            self.assertEqual(r.returncode, 0, p)
+            (bank / "topics").mkdir()
+            occupant = bank / "topics/occupant.bin"
+            occupant.write_text("Unrelated external file")
+            r, error = self.apply(w, p)
+            self.assertEqual(r.returncode, 1, error)
+            self.assertIn("non-directory parent", error["error"])
+            self.assertEqual(occupant.read_text(), "Unrelated external file")
+            self.assertEqual(self.canonical(bank), before)
+            self.assertFalse((bank / MARKER).exists())
+            self.assertFalse(Path(w.env["AGENT_MEMORY_STATE_HOME"]).exists())
+
+    def test_external_omitted_context_directory_before_receipt_cannot_be_reported_as_a_usable_bank(self):
+        with World() as w:
+            repo, bank, before, after, p = self.fixture(w)
+            stage = "transaction-before-receipt"
+            rendezvous = w.inside("readback pause")
+            w.env.update(AGENT_MEMORY_FAULT_STAGE=stage, AGENT_MEMORY_FAULT_MODE="pause", AGENT_MEMORY_FAULT_DIR=str(rendezvous))
+            child = w.spawn([sys.executable, "-I", HELPER, "apply", "--proposal", self.save(w, p)])
+            for key in ("AGENT_MEMORY_FAULT_STAGE", "AGENT_MEMORY_FAULT_MODE", "AGENT_MEMORY_FAULT_DIR"):
+                w.env.pop(key)
+            deadline = time.monotonic() + 5
+            while not (rendezvous / (stage + ".ready")).exists() and child.poll() is None and time.monotonic() < deadline:
+                time.sleep(0.01)
+            self.assertTrue((rendezvous / (stage + ".ready")).exists())
+            # An editor ignoring the lock adds a directory, which the Markdown
+            # hash map alone cannot see but normal filesystem validation rejects.
+            (bank / "projectbrief.md").mkdir()
+            (rendezvous / (stage + ".release")).touch()
+            stdout, stderr = child.communicate(timeout=20)
+            self.assertEqual(child.returncode, 1, stdout + stderr)
+            self.assertIn("marked omitted", json.loads(stdout)["error"])
+            self.assertTrue((bank / MARKER).exists())
+            self.assertTrue((bank / "projectbrief.md").is_dir())
+            self.assertEqual(list(Path(w.env["AGENT_MEMORY_STATE_HOME"]).rglob("operations/*.json")), [])
 
 
 if __name__ == "__main__":

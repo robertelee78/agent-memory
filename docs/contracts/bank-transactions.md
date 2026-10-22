@@ -23,6 +23,12 @@ paths mean deletion. Preview validates the projected bank with the same router
 contract as ordinary readers, emits an operation UUID and full observed hash map,
 and writes nothing. The complete map makes source conditions part of the read
 set. It is temporary operation input, not another project memory store.
+Filesystem validation and journal validation inspect the same raw UTF-8 bytes;
+unsupported router line endings MUST fail before a journal or marker is created.
+File/parent collisions and leaf/directory conversions are unsupported by this
+per-file recovery order and MUST fail during preparation, then be checked again
+under the lock. Existing directories and unrelated non-directory occupants MUST
+be preserved rather than repurposed as canonical targets or parents.
 
 Apply MUST acquire the common exclusive bank lock before inventory. It refuses a
 changed project ID or base, unknown receipt, interruption marker, unsafe path or

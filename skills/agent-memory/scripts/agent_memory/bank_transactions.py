@@ -69,7 +69,24 @@ def preview(repo, files, operation="compact"):
     checked, hashes = writes.snapshot(root)
     p = proposal_value({"schema": SCHEMA, "operation_id": str(uuid.uuid4()), "operation": operation,
                         "repo_root": str(root), "project_id": checked["project_id"], "observed_hashes": hashes, "files": files})
+    preflight(bank, p)
     return result("preview", proposal=p, writes_performed=False, verified=False)
+
+
+def preflight(bank, p):
+    # File/directory shape changes cannot use the same per-file rollback order.
+    # Refuse them before a journal/marker rather than accepting an unrealizable
+    # desired bank. Unrelated non-Markdown occupants must also be preserved.
+    contract.file_topology(set(p["observed_hashes"]) | set(p["files"]))
+    for path in p["files"]:
+        target = bank / path
+        if target.exists() and target.is_dir():
+            raise ContractError("Canonical target is an existing directory; layout conversion requires explicit repair")
+        for parent in target.parents:
+            if parent == bank:
+                break
+            if parent.exists() and not parent.is_dir():
+                raise ContractError("Canonical target has a non-directory parent; preserve the existing layout")
 
 
 def locations(root, bank, operation_id):
@@ -200,7 +217,7 @@ def allowed_partial(p, observed):
         raise ContractError("Interrupted bank contains an external edit; automatic recovery would overwrite it")
 
 
-def converge(root, bank, p, base_files, journal, raw, receipt_path, mode, observed):
+def converge(root, bank, p, base_files, journal, raw, receipt_path, mode, observed, owner):
     marker = marker_bytes(p)
     known = receipt_value(receipt_path, p)
     outcome = "finished" if mode == "finish" else "rolled-back"
@@ -222,10 +239,11 @@ def converge(root, bank, p, base_files, journal, raw, receipt_path, mode, observ
         writes.fault("transaction-after-write:" + path)
     check_marker(bank, marker)
     check_observed(bank, expected)
-    checked = contract.validate_files(files_at(bank))
+    checked = contract.validate(root, owned_lock=owner, owned_transaction=marker)
     writes.fault("transaction-before-receipt")
     check_marker(bank, marker)
     check_observed(bank, expected)
+    contract.validate(root, owned_lock=owner, owned_transaction=marker)
     if not known:
         known = {"schema": "agent-memory/transaction-receipt-v1", "operation_id": p["operation_id"],
                  "request_sha256": digest(encoded(p)), "bank_path": str(bank), "project_id": checked["project_id"],
@@ -236,6 +254,7 @@ def converge(root, bank, p, base_files, journal, raw, receipt_path, mode, observ
     writes.fault("transaction-after-receipt")
     check_marker(bank, marker)
     check_observed(bank, expected)
+    contract.validate(root, owned_lock=owner, owned_transaction=marker)
     (bank / MARKER).unlink()
     flush_directory(bank)
     writes.fault("transaction-after-marker-removal")
@@ -264,8 +283,10 @@ def apply(prepared):
         if checked["project_id"] != p["project_id"] or observed != p["observed_hashes"]:
             raise ContractError("Bank changed after preview; prepare a fresh transaction")
         base_files = files_at(bank)
+        contract.validate_files(base_files)
         if file_hashes(base_files) != observed:
             raise ContractError("Bank changed before journaling")
+        preflight(bank, p)
         raw = encoded({"schema": "agent-memory/transaction-journal-v1", "proposal": p, "base_files": base_files})
         journal.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
         if journal.exists():
@@ -277,7 +298,7 @@ def apply(prepared):
         check_observed(bank, observed)
         create_marker(bank / MARKER, marker_bytes(p))
         writes.fault("transaction-after-marker")
-        return converge(root, bank, p, base_files, journal, raw, receipt_path, "finish", observed)
+        return converge(root, bank, p, base_files, journal, raw, receipt_path, "finish", observed, owner)
 
 
 def recover(repo, mode=None, prepared=None):
@@ -288,7 +309,7 @@ def recover(repo, mode=None, prepared=None):
                 or not uuid_valid(r["operation_id"]) or r["repo_root"] != str(root) or r["mode"] not in {"finish", "rollback"}):
             raise ContractError("Invalid transaction recovery proposal")
         # Bank lock recovery is deliberately separate; never steal a lock by age.
-        with storage.exclusive(bank / ".agent-memory.lock", r["operation_id"], "bank-recover"):
+        with storage.exclusive(bank / ".agent-memory.lock", r["operation_id"], "bank-recover") as owner:
             marker = bank / MARKER
             journal, receipt_path = locations(root, bank, r["operation_id"])
             raw = journal.read_bytes()
@@ -299,7 +320,7 @@ def recover(repo, mode=None, prepared=None):
             if observed != r["observed_hashes"]:
                 raise ContractError("Bank changed after recovery preview; preserve the edit")
             allowed_partial(p, observed)
-            return converge(root, bank, p, j["base_files"], journal, raw, receipt_path, r["mode"], observed)
+            return converge(root, bank, p, j["base_files"], journal, raw, receipt_path, r["mode"], observed, owner)
     if mode not in {"finish", "rollback"}:
         raise ContractError("Recovery preview requires an explicit finish or rollback choice")
     lock = bank / ".agent-memory.lock"

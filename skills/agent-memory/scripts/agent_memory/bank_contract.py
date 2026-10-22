@@ -173,6 +173,13 @@ def render(proposal):
             "files": files, "writes_performed": False}
 
 
+def file_topology(paths):
+    paths = set(paths)
+    for path in paths:
+        if any(parent.as_posix() in paths for parent in PurePosixPath(path).parents):
+            raise ContractError("A canonical file cannot also be a parent directory")
+
+
 def validate_files(files):
     """Validate a proposed complete canonical map without temporary file writes."""
     if not isinstance(files, dict) or "MEMORY.md" not in files:
@@ -183,6 +190,7 @@ def validate_files(files):
         if not isinstance(body, str) or not body.strip():
             raise ContractError(f"Missing or empty routed file: {path}")
         body.encode("utf-8")
+    file_topology(files)
     metadata, routes, omitted = parse_router(files["MEMORY.md"])
     for route in routes:
         if route["path"] not in files:
@@ -198,11 +206,12 @@ def validate_files(files):
             "writes_performed": False}
 
 
-def validate(repo, *, owned_lock=None):
+def validate(repo, *, owned_lock=None, owned_transaction=None):
     bank = Path(repo).resolve() / SPEC["x-bank-path"]
     if bank.is_symlink():
         raise ContractError("Bank directory must not be a symlink")
-    if (bank / ".agent-memory-transaction.md").exists():
+    marker = bank / ".agent-memory-transaction.md"
+    if marker.is_symlink() or (marker.exists() and (owned_transaction is None or marker.read_bytes() != owned_transaction)):
         raise ContractError("Interrupted bank: recover the transaction before resuming")
     lock = bank / ".agent-memory.lock"
     if lock.is_symlink() or (lock.exists() and (owned_lock is None or lock.read_bytes() != owned_lock)):
@@ -210,14 +219,14 @@ def validate(repo, *, owned_lock=None):
     router = bank / "MEMORY.md"
     if router.is_symlink():
         raise ContractError("Router must not be a symlink")
-    metadata, routes, omitted = parse_router(router.read_text(encoding="utf-8"))
+    metadata, routes, omitted = parse_router(router.read_bytes().decode("utf-8"))
     for route in routes:
         target = bank / route["path"]
         relative = target.relative_to(bank)
         parts = [bank.joinpath(*relative.parts[:i]) for i in range(1, len(relative.parts) + 1)]
         if any(part.is_symlink() for part in parts) or not target.resolve().is_relative_to(bank.resolve()):
             raise ContractError("Routed target must remain inside the bank without symlinks")
-        if not target.is_file() or not target.read_text(encoding="utf-8").strip():
+        if not target.is_file() or not target.read_bytes().decode("utf-8").strip():
             raise ContractError(f"Missing or empty routed file: {route['path']}")
     for path in omitted:
         if (bank / path).exists() or (bank / path).is_symlink():
@@ -225,13 +234,13 @@ def validate(repo, *, owned_lock=None):
     # Optional files cannot become an unindexed second bank. Bounded topic-index
     # traversal is added by the disclosure/optional-record stories; this first
     # contract accepts directly routed optional Markdown files.
-    files = {"MEMORY.md": router.read_text(encoding="utf-8")}
+    files = {"MEMORY.md": router.read_bytes().decode("utf-8")}
     for target in bank.rglob("*"):
         if target.is_symlink():
             raise ContractError("Bank paths must not be symlinks")
         relative = target.relative_to(bank).as_posix()
         if target.is_file() and target.suffix == ".md" and not any(part.startswith(".agent-memory") for part in Path(relative).parts):
-            files[relative] = target.read_text(encoding="utf-8")
+            files[relative] = target.read_bytes().decode("utf-8")
     return validate_files(files)
 
 
