@@ -1,0 +1,10 @@
+{
+  "schema": "agent-memory/projects-v1",
+  "registry-file": "projects.json",
+  "actions": ["create", "bind", "link", "rebind", "fork"],
+  "registry-fields": ["schema", "projects", "checkouts", "operations"],
+  "project-fields": ["canonical_remote", "aliases", "history"],
+  "checkout-fields": ["project_id", "locations", "authority_name", "history"],
+  "proposal-fields": ["schema", "operation_id", "action", "project_id", "reason", "registry_path", "observed_sha256", "evidence", "bank_identity"],
+  "security-boundary": "Repository and OS permissions; project IDs identify a bank, not authentication or an ACL."
+}

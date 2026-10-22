@@ -34,13 +34,17 @@ as a new project's identity. `router-updated` is timezone-qualified RFC3339
 and describes the router itself; it MUST NOT be used as every target file's
 revision or freshness clock. The initial supported schema is `agent-memory/v1`.
 An unknown schema MUST fail validation and MUST NOT trigger implicit migration.
+The optional known `canonical-remote` field carries a sanitized authority
+identifier, as defined by [project identity](project-identity.md). A bank without
+a remote omits it; a remote-backed bank needs explicit authority binding before
+guarded writes. The common renderer accepts it as an optional proposal field.
 
 The restricted frontmatter reader accepts top-level known keys; strings,
 booleans, null and JSON numbers; JSON-compatible flow lists/maps; and indented
 block lists of scalar strings. Canonical writers quote strings with JSON
 syntax. Alias references, tags, duplicate keys (including flow-object keys),
 unsupported nesting, malformed syntax and unknown fields MUST be rejected.
-The router's three fields specifically MUST be strings matching their schema;
+The router's three required fields MUST be strings matching their schema;
 the broader grammar exists for subsequent typed records. Markdown bodies of
 context and record files remain unrestricted.
 
