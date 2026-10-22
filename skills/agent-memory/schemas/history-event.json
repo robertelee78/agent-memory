@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "agent-memory/history-event-v1",
+  "title": "Optional historical event, never the only current memory",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "id",
+    "project-id",
+    "kind",
+    "record",
+    "actor",
+    "recorded-at",
+    "evidence"
+  ],
+  "properties": {
+    "schema": {
+      "const": "agent-memory/history-event-v1"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "format": "uuid"
+    },
+    "project-id": {
+      "type": "string",
+      "minLength": 1,
+      "format": "uuid"
+    },
+    "kind": {
+      "enum": [
+        "observation-captured",
+        "memory-admitted",
+        "memory-corrected",
+        "memory-superseded",
+        "memory-revoked",
+        "memory-expired",
+        "memory-promoted-to-procedure",
+        "projection-built"
+      ]
+    },
+    "record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "version"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "format": "uuid"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "actor": {
+      "type": "string",
+      "minLength": 1
+    },
+    "recorded-at": {
+      "type": "string",
+      "minLength": 1,
+      "format": "date-time"
+    },
+    "evidence": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  },
+  "x-idempotency-key": "id; a future writer must reject reuse with different content",
+  "x-deletion": "memory-deleted uses only the five-field content-free tombstone; never this evidence-bearing event format",
+  "x-body": "empty"
+}
