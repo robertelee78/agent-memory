@@ -17,6 +17,7 @@ import tempfile
 
 class World:
     def __init__(self):
+        self._children = []
         # Ignore TMPDIR: it may point at a developer's project or live home.
         self._temp = tempfile.TemporaryDirectory(prefix="agent-memory-test-", dir="/tmp")
         self.root = Path(self._temp.name).resolve()
@@ -70,6 +71,10 @@ class World:
         self.close()
 
     def close(self):
+        for child in self._children:
+            if child.poll() is None:
+                child.kill()
+            child.communicate(timeout=10)
         self._temp.cleanup()
 
     def inside(self, path):
@@ -97,6 +102,16 @@ class World:
 
     def git(self, *args, cwd=None, **kwargs):
         return self.run(["git", *args], cwd=cwd, **kwargs)
+
+    def spawn(self, args, *, cwd=None):
+        """Concurrent public commands with the same roots; kill/reap on cleanup."""
+        if isinstance(args, (str, bytes)):
+            raise ValueError("Commands require an argument list; shell execution is disabled")
+        working = self.inside(cwd or self.paths["repo"])
+        child = subprocess.Popen([str(a) for a in args], cwd=working, env=self.env.copy(),
+                                 text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        self._children.append(child)
+        return child
 
     def repository(self, name="repo", *, bare=False):
         path = self.inside(name)

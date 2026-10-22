@@ -71,3 +71,6 @@ learning, sharing and installed lifecycle workflows remain under execution.
 
 The [shared lifecycle model](docs/contracts/lifecycle-model.md) supplies the
 read-only transition and current-selection decisions used by later operations.
+
+The [developer attribution initializer](docs/contracts/developer-attribution.md)
+supports explicit stable-ID creation, adoption and selection before installation.
