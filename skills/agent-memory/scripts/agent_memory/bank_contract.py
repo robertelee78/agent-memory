@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import argparse
-from datetime import datetime
 import json
 from pathlib import Path, PurePosixPath
 import re
@@ -10,6 +9,7 @@ import sys
 import uuid
 
 from .frontmatter import ContractError, read, unique_object, write
+from .lifecycle import MODEL, time_value
 
 PACK = Path(__file__).resolve().parents[2]
 SPEC = json.loads((PACK / "schemas/bank-router.json").read_text())
@@ -18,11 +18,9 @@ FIELDS = SPEC["x-route-fields"]
 
 
 def timestamp(value):
-    if not isinstance(value, str) or not re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)", value):
-        raise ContractError("router-updated must be a timezone-qualified RFC3339 time")
     try:
-        datetime.fromisoformat(value.replace("Z", "+00:00"))
-    except ValueError as exc:
+        time_value(value)
+    except ContractError as exc:
         raise ContractError("Invalid router-updated time") from exc
 
 
@@ -71,7 +69,7 @@ def route_value(route):
         component = PurePosixPath(scope.removeprefix("component:"))
         if component.is_absolute() or any(part in {".", ".."} for part in component.parts):
             raise ContractError("Component scope must stay within the repository")
-    if route["lifecycle"] not in SPEC["x-lifecycle-states"]:
+    if route["lifecycle"] not in MODEL["states"]:
         raise ContractError("Unknown route lifecycle")
     return route
 
