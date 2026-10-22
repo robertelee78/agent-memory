@@ -48,9 +48,12 @@ write and to simulate a write that commits successfully before its response is
 lost. Rerunning the same operation MUST converge without duplicating, losing,
 or silently weakening memory.
 
-The suite SHALL include true concurrent processes operating on the same bank.
-It SHALL verify observed-hash conflicts, lock recovery, atomic replacement,
-bounded retry, and the absence of last-write-wins data loss.
+Supplemental defensive tests SHALL include concurrent processes attempting to
+mutate the same physical bank, solely to verify observed-hash conflicts, lock
+recovery, atomic replacement, bounded retry, and absence of last-write-wins data
+loss. This is not the operator's normal multi-session workflow: each session
+SHALL have its own worktree and branch. All worktrees and clones of the same
+repository SHALL use that repository's one logical shared memory bank.
 
 The first release SHALL additionally exercise independent Git clones, separate
 worktrees and branches, two developer identities, and multiple harness/session
@@ -81,6 +84,33 @@ and measurable acceptance targets SHALL be refined from operator input and
 v0.0.1 experience before implementation claims. Baseline data integrity and safe
 sharing remain v0.0.1 requirements; this focus does not defer those guarantees.
 Additional post-v0.0.1 findings MAY expand the v0.0.2 plan.
+
+The initial v0.0.2 workload envelope SHALL be:
+
+| Workload | Sessions in distinct worktrees/branches | Distinct durable lessons |
+| --- | ---: | ---: |
+| Representative use | 12 | 1,000 |
+| Stress gate | 24 | 10,000 |
+| Exploratory upper bound | 48 | 50,000 |
+
+Session count and bank size SHALL also vary independently so contention and
+retrieval growth can be diagnosed separately. Independent clones SHALL model
+machines and multiple explicit developer/harness identities SHALL share one
+repository identity. The primary scenarios MUST NOT place multiple coding
+sessions in one worktree. Concurrent edits to the same logical memory SHALL
+occur in different branches and reconcile through memory-only publication to
+`main` and turn-boundary refresh, preserving unpublished learning and unrelated
+code. The existing same-physical-bank lock tests are defensive checks only.
+
+The upper-bound workload SHALL measure the fixed labeled-query quality/cost
+curves from ADR-0005, including stale, superseded, duplicate, and conditionally
+applicable records. Raw measurements and degradations SHALL be retained even
+when an exploratory test exceeds a target. A successful capacity or concurrent
+write test MUST NOT stand in for retrieval-quality evidence. The 48-session /
+50,000-lesson combined case is exploratory and does not by itself block release;
+baseline correctness and the 24-session / 10,000-lesson stress gate remain
+required. Additional scope and quantitative tolerances MAY be refined from
+v0.0.1 usage and measured baselines.
 
 For optional stores and indexes, tests SHALL prove that:
 

@@ -117,6 +117,27 @@ recall, context size, and retrieval cost against the v0.0.1 baseline. Workloads
 and acceptance targets SHALL be agreed before claiming improvement; exact
 thresholds remain an open product decision rather than invented requirements.
 
+The initial scale envelope SHALL use banks of 1,000, 10,000, and 50,000 distinct
+durable lessons. These are test workloads, not accumulation goals or counts of
+files. The 50,000-lesson workload SHALL be used to investigate retrieval quality
+at the upper bound; its session-contention combination remains exploratory
+under ADR-0009. Fixture size SHALL also record bytes/tokens and record lengths.
+
+A fixed, labeled query suite SHALL run across increasing sizes with realistic
+additional distractors, paraphrases, duplicate candidates, superseded lessons,
+and branch-specific conditions. Ground truth SHALL identify relevant records
+and applicable versions/conditions. Instrumentation SHALL measure relevant
+lessons found and missed; irrelevant, stale, or incorrectly applicable guidance;
+latency; retrieved-context size; and retrieval cost. Measurements SHALL compare
+quality and cost curves across sizes and with the v0.0.1 baseline, exposing
+slopes or sudden degradation rather than merely proving storage capacity.
+
+Preserving retrieval quality as the bank grows SHALL be an acceptance objective,
+not an assumed result. The agreed query suite, measured baseline, tolerances,
+and failure criteria SHALL be recorded before a performance pass is claimed.
+Exact tolerances remain to be derived from the data and operator review; no
+unmeasured scalability or absence-of-degradation claim is permitted.
+
 Scope, trust, validity, provenance, and applicability filters MUST remain intact.
 A larger bank MUST NOT imply loading everything into every turn or introducing
 a required vector store. Lessons from actual v0.0.1 use MAY add further scope.
