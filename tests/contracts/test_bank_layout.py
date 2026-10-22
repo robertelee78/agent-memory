@@ -228,6 +228,30 @@ class LayoutContract(unittest.TestCase):
                 self.assertEqual(p.returncode, 0 if case == 'safe' else 1, output)
                 self.assertNotIn('SECRET_DELETION_CANARY', p.stdout + p.stderr)
 
+    def test_source_index_locations_reject_controls_and_preserve_ordinary_unicode_and_spaces(self):
+        with World() as w:
+            project = str(uuid.uuid4())
+            routes = [self.route('episodes/retry.md')]
+            good = self.index(w, 'topics/café index.md', project, routes)
+            source = w.inside('valid-index.md')
+            source.write_text(good)
+            for codepoint in (0, 9, 10, 13, 28, 127, 133, 8232, 8233):
+                path = 'topics/in' + chr(codepoint) + 'dex.md'
+                p, rendered = self.command(w, 'render-index', request={'path': path, 'project-id': project,
+                                           'updated': '2026-10-22T22:00:00Z', 'routes': routes})
+                self.assertEqual(p.returncode, 1, codepoint)
+                self.assertFalse(rendered['valid'])
+                if codepoint == 0:
+                    # The OS itself rejects NUL in argv; render exercises the
+                    # public JSON-input route that can actually carry it.
+                    continue
+                p, checked = self.command(w, 'validate-index', file=source, path=path)
+                self.assertEqual(p.returncode, 1, codepoint)
+                self.assertFalse(checked['valid'])
+            p, checked = self.command(w, 'validate-index', file=source, path='topics/café index.md')
+            self.assertEqual(p.returncode, 0, checked)
+            self.assertEqual(source.read_text(), good)
+
     def test_optional_history_event_is_not_current_guidance_and_duplicate_or_deletion_labels_refuse(self):
         for case in ('safe', 'duplicate', 'deleted', 'body', 'current-only-in-history'):
             with self.subTest(case=case), World() as w:

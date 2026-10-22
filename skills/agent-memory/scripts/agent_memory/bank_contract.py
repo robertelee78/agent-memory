@@ -47,7 +47,8 @@ def header(metadata):
 
 
 def path_value(value):
-    if not isinstance(value, str) or not value or any(c in value for c in "\\\n\r|[]()<>#%"):
+    if (not isinstance(value, str) or not value or any(c in value for c in "\\|[]()<>#%")
+            or any(ord(c) < 32 or ord(c) == 127 or c in "\u0085\u2028\u2029" for c in value)):
         raise ContractError("Route path must be an unambiguous relative Markdown path")
     path = PurePosixPath(value)
     if path.is_absolute() or str(path) != value or any(p in {".", ".."} or p.startswith(".") for p in path.parts):
