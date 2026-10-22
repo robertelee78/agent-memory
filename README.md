@@ -77,3 +77,6 @@ supports explicit stable-ID creation, adoption and selection before installation
 
 The [project identity contract](docs/contracts/project-identity.md) describes
 stable bank IDs, worktree/clone evidence, remote normalization and explicit binding decisions.
+
+The [observed write contract](docs/contracts/observed-writes.md) defines the
+common bank lock, single-file replacement, readback, retry and recovery mechanism.
