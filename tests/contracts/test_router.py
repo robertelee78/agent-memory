@@ -197,6 +197,25 @@ class RouterContract(unittest.TestCase):
             (bank / "topics/orphan.md").write_text("Not reachable")
             self.assertEqual(self.validate(world)[0].returncode, 1)
 
+    def test_optional_authority_anchor_uses_the_common_reader_and_canonical_identifiers(self):
+        with World() as world:
+            proposal = self.proposal()
+            proposal["canonical-remote"] = "repo://github.com/owner/project"
+            file = world.inside("proposal.json")
+            file.write_text(json.dumps(proposal))
+            result, receipt = self.command(world, "render", "--input", file)
+            self.assertEqual(result.returncode, 0, receipt)
+            bank = world.paths["repo"] / "memory-bank"
+            bank.mkdir()
+            for path, body in receipt["files"].items():
+                (bank / path).write_text(body)
+            self.assertEqual(self.validate(world)[0].returncode, 0)
+            for remote in (None, "https://secret@github.com/owner/project", "repo://github.com/Owner/Project", "unknown"):
+                proposal["canonical-remote"] = remote
+                file.write_text(json.dumps(proposal))
+                result, receipt = self.command(world, "render", "--input", file)
+                self.assertEqual(result.returncode, 1, receipt)
+
     def test_portable_helper_works_after_copy_outside_checkout(self):
         with World() as world:
             pack = world.inside("portable pack")

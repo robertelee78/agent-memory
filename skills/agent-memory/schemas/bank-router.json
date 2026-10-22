@@ -7,7 +7,8 @@
   "properties": {
     "schema": {"const": "agent-memory/v1"},
     "project-id": {"type": "string", "format": "uuid"},
-    "router-updated": {"type": "string", "format": "date-time"}
+    "router-updated": {"type": "string", "format": "date-time"},
+    "canonical-remote": {"type": "string", "description": "Sanitized repository identifier for shared authority evidence; never a transport URL."}
   },
   "x-bank-path": "memory-bank",
   "x-max-router-bytes": 16384,

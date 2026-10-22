@@ -10,6 +10,7 @@ import uuid
 
 from .frontmatter import ContractError, read, unique_object, write
 from .lifecycle import MODEL, time_value
+from .remote_identity import normalize
 
 PACK = Path(__file__).resolve().parents[2]
 SPEC = json.loads((PACK / "schemas/bank-router.json").read_text())
@@ -25,8 +26,12 @@ def timestamp(value):
 
 
 def header(metadata):
-    if set(metadata) != set(SPEC["required"]):
-        raise ContractError("Router requires exactly schema, project-id and router-updated")
+    if not set(SPEC["required"]).issubset(metadata) or not set(metadata).issubset(SPEC["properties"]):
+        raise ContractError("Router requires schema, project-id and router-updated; only known fields are allowed")
+    if "canonical-remote" in metadata:
+        remote = metadata["canonical-remote"]
+        if not isinstance(remote, str) or normalize(remote) != remote:
+            raise ContractError("canonical-remote must be a sanitized canonical repository identifier")
     if metadata["schema"] != SPEC["properties"]["schema"]["const"]:
         raise ContractError("Unsupported bank schema; no mutation or implicit migration is allowed")
     try:
@@ -139,7 +144,8 @@ def parse_router(text):
 
 
 def render(proposal):
-    if not isinstance(proposal, dict) or set(proposal) != {"project-id", "router-updated", "contexts", "omitted"}:
+    required = {"project-id", "router-updated", "contexts", "omitted"}
+    if not isinstance(proposal, dict) or not required.issubset(proposal) or not set(proposal).issubset(required | {"canonical-remote"}):
         raise ContractError("Render input needs project-id, router-updated, contexts and omitted")
     contexts = proposal["contexts"]
     if not isinstance(contexts, dict) or not contexts or not set(contexts).issubset(CONTEXTS):
@@ -147,6 +153,8 @@ def render(proposal):
     if not isinstance(proposal["omitted"], dict):
         raise ContractError("omitted must map absent contexts to explicit reasons")
     metadata = {"schema": "agent-memory/v1", "project-id": proposal["project-id"], "router-updated": proposal["router-updated"]}
+    if "canonical-remote" in proposal:
+        metadata["canonical-remote"] = proposal["canonical-remote"]
     files, routes = {}, []
     for path in CONTEXTS:
         if path not in contexts:
