@@ -23,11 +23,10 @@ mere renderings of a hidden database.
 
 The canonical project memory SHALL be human-readable Markdown under a
 `memory-bank/` directory. When the bank is tracked, Git history and linked source
-evidence provide the baseline audit trail. An intentionally untracked/private
-bank has reduced history unless the user configures a separate protected backup
-or versioned store; the product SHALL report that condition rather than claiming
-Git auditability. The current bank MUST remain complete and usable without any
-generated index or local application state.
+evidence provide the baseline audit trail. A bank not yet tracked or published
+SHALL be reported as local or pending sharing rather than claiming Git
+auditability or cross-session freshness. The current bank MUST remain complete
+and usable without any generated index or local application state.
 
 The initial bank SHALL preserve Cline's recognizable project model:
 
@@ -43,7 +42,7 @@ Projects MAY omit irrelevant documents or add topic files. Initialization SHALL
 start with the smallest useful set and evolve it rather than producing empty
 boilerplate.
 
-The exact route, optional-directory, private-overlay, direct-edit, transaction,
+The exact route, optional-directory, transient-state, direct-edit, transaction,
 and tombstone contract is defined by [ADR-0010](0010-memory-bank-file-contract.md).
 
 Durable changes that need correction, revocation, or historical explanation
@@ -75,7 +74,7 @@ decision, episodic attempt, result, reference, and procedural candidate.
 Every standalone admitted record SHALL carry:
 
 - a stable memory ID and schema version;
-- a resolved scope, which MAY inherit the containing project or private overlay;
+- a resolved project scope and applicable component/branch/session conditions;
 - memory kind and lifecycle state;
 - source actor, source kind, and evidence reference;
 - recorded time and applicable valid time when known;

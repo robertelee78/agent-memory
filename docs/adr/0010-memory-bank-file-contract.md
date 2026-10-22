@@ -10,7 +10,7 @@ depends-on: [ADR-0001, ADR-0002, ADR-0003]
 ## Context
 
 Naming Cline's six files is not a complete storage contract. The system must say
-where optional topics, episodes, procedures, private overlays, tombstones, and
+where optional topics, episodes, procedures, transient state, tombstones, and
 transactions live; which content is normally shared; and what “usable without a
 database” means. Without that contract, a Markdown-first design can become an
 unspecified record platform.
@@ -20,8 +20,7 @@ unspecified record platform.
 ### Project bank
 
 The default project bank SHALL be `memory-bank/` at the repository root and
-SHOULD be committed with the project unless its contents are intentionally
-private. Its minimum useful form is:
+SHALL be tracked with the project for shared memory. Its minimum useful form is:
 
 ```text
 memory-bank/
@@ -86,28 +85,24 @@ whole chat or tool transcript. Procedure files are non-binding candidates until
 the governed promotion operation creates or updates a reviewed skill.
 
 Records about independently useful branch discoveries MAY be shared with their
-evidence and applicability conditions under ADR-0012. Private or transient
-observations SHALL remain outside the shared bank unless admitted under that
-policy. Existing source links, record identities, distinct conditions, and
+evidence and applicability conditions under ADR-0012. Unadmitted or transient observations SHALL remain outside the shared bank
+until admitted under that policy; this temporary state is not a personal memory
+store. Existing source links, record identities, distinct conditions, and
 developer/session provenance SHALL survive automatic deduplication and
 consolidation; the router MUST NOT grow by copying every record into it.
 
 ### Non-project scopes
 
-Content that should not be committed to the project SHALL live outside the
-repository:
+Personal profiles and private per-developer overlays SHALL NOT be implemented.
+The previous personal-memory overlay proposal is withdrawn by the operator; it
+was not a requested capability and creates no release obligation. Developer
+attribution MUST NOT become a personal memory namespace.
 
-- the principal profile under an XDG-compatible data root keyed by principal;
-- a project-personal overlay under the same data root keyed by both principal
-  and stable project ID;
-- worktree, branch, task, and session observations under an XDG-compatible
-  state root until explicitly promoted;
-- federation manifests and federation-owned relations in a separate explicit
-  federation directory.
-
-The project bank SHALL NOT link to a private overlay by absolute path. An
-adapter MAY layer the resolved overlay after scope authorization. Export from an
-overlay to the project bank or federation MUST be explicit.
+Only disposable pending observations and runtime/recovery state SHALL live under
+an XDG-compatible state root until project-memory admission or cleanup. This
+state MUST NOT form a second durable memory bank. Optional federation manifests
+and federation-owned relations MAY live in a separate explicitly configured
+federation directory. Project routes MUST NOT point to local runtime state.
 
 ### Checkpoint and direct-file behavior
 
@@ -168,8 +163,8 @@ A deletion tombstone SHALL contain only a random record ID, scope, deletion
 time, deletion authority, and non-sensitive reason class. It MUST NOT retain the
 deleted content, evidence excerpt, secret, personal data, or a reversible or
 low-entropy content hash. File- or section-level deletion that could be recreated
-by an optional projection SHALL leave such a tombstone in `history/` or the
-authorized private scope.
+by an optional projection SHALL leave such a tombstone in the project bank
+under `history/`.
 
 ### Usability definition
 
@@ -182,8 +177,8 @@ federation, caches, and recovery journals are not part of that definition.
 ## Consequences
 
 - The common bank remains Cline-shaped and directly editable.
-- Private and transient memory do not leak into a Git-tracked project by
-  default.
+- Admitted project learning is shared; disposable runtime state is excluded
+  from Git and there is no personal memory layer.
 - Checkpoint is intentionally a one-file operation in v1.
 - Rich records are available without imposing frontmatter on every paragraph.
 - Multi-file operations are detectable and recoverable but not falsely called
@@ -191,8 +186,9 @@ federation, caches, and recovery journals are not part of that definition.
 
 ## Alternatives considered
 
-- **Put every scope under the repository bank:** rejected because personal and
-  transient information would be shared accidentally.
+- **Personal or private per-developer overlays:** excluded by the operator.
+- **Commit runtime state and raw observations:** rejected because these are not
+  admitted durable project learning.
 - **Require metadata for every prose statement:** rejected because it destroys
   the main usability advantage of a Memory Bank.
 - **Claim atomic multi-file replacement:** rejected because ordinary filesystems

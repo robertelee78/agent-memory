@@ -148,7 +148,7 @@ enabled, store readability, event-log integrity, projection freshness, index
 rebuildability, and pending migrations. It SHALL separate warnings from failures
 and print a bounded repair for each known failure.
 
-`status` SHALL be cheap and read-only. It SHOULD report the resolved principal,
+`status` SHALL be cheap and read-only. It SHOULD report the resolved developer,
 repository identity, active store, memory counts by lifecycle state, pending
 capture, projection position, index freshness, and enabled client adapters.
 

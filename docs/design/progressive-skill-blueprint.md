@@ -156,7 +156,7 @@ then route among those leaves. Examples:
 
 | Domain | Shared concern |
 | --- | --- |
-| access | principal/project resolution, current installation, permissions, ambiguity |
+| access | developer/project resolution, current installation, permissions, ambiguity |
 | lifecycle | install ownership, update checks, activation, rollback, uninstall, version |
 | recall | bounded context assembly, validity filters, provenance labels, token budget |
 | capture | candidate vs admitted memory, source classes, checkpoint boundaries |

@@ -33,16 +33,18 @@ through Git SHALL be part of the first release, as specified by
 [ADR-0012](0012-git-shared-memory.md). Additional synchronization services MAY be
 added without changing the local data model.
 
-The system SHALL distinguish these scopes:
+The system SHALL support shared project memory with these applicability scopes:
 
-- principal-wide preferences and feedback;
-- repository-wide project knowledge;
+- repository-wide durable learning and project knowledge;
 - directory or component context;
 - worktree, branch, task, and session observations;
-- explicitly shared organizational memory.
+- explicitly selected related projects through optional federation.
 
-Repository scope SHALL be the default for coding memories. Cross-repository and
-principal-wide retrieval MUST be explicit.
+Repository scope SHALL be the default for coding memories. Cross-repository
+retrieval MUST be explicit. Personal profiles, personal preferences stores, and
+private per-developer memory overlays SHALL NOT be product capabilities.
+Developer identity SHALL provide attribution and clarification context only; it
+MUST NOT select a separate personal memory bank.
 
 Memory SHALL NOT replace these authorities:
 
@@ -52,7 +54,7 @@ Memory SHALL NOT replace these authorities:
 | Product intent and acceptance | Current approved planning source |
 | Work progress and delivery | Issue tracker, CI, integration, and release evidence |
 | Agent ownership or coordination | The active coordination system |
-| User preference | Direct user statement or user-approved profile change |
+| Project requirement or correction | Direct user statement and approved project decisions |
 | Historical attempt or observation | Immutable memory event and its evidence |
 | Reusable procedure | Reviewed, versioned skill or rule |
 
@@ -76,6 +78,7 @@ Retrieved memory is context, not enforced policy and not proof.
   availability, privacy, lock-in, and audit dependencies.
 - **One global memory namespace:** rejected because relevance and access-control
   failures become unavoidable.
-- **Commit every memory into the product repository:** rejected as the only
-  mode because personal preferences and noisy observations do not belong in
-  shared product history. Curated export MAY be supported.
+- **Capture every observation as shared memory:** rejected because unadmitted
+  noise, secrets, and raw transcripts do not belong in project history.
+- **Personal profiles or private per-developer banks:** excluded by the operator;
+  this product exists to share durable project learning among sessions and developers.

@@ -25,7 +25,7 @@ CLI, MCP, hook, and adapter operations SHALL enforce:
 
 - separation of user statements, assistant claims, tool observations, external
   content, and verified repository evidence;
-- per-principal and per-project authorization before retrieval;
+- repository authorization and explicit project selection before retrieval;
 - explicit approval for global promotion and procedural promotion;
 - redaction and secret scanning before persistence;
 - size and content limits on capture and context assembly;
@@ -43,15 +43,16 @@ MUST NOT claim that `agent-memory` can authorize or audit a raw editor, `cat`, o
 Git checkout. A later mediated shared service MAY add stronger controls without
 changing the local bank format.
 
-In v1, per-principal authorization is bounded by the operating-system account
-and filesystem permissions. Principal IDs prevent accidental logical mixing but
-do not authenticate mutually distrusting users who share one OS account.
-Security tests and product claims SHALL preserve that distinction.
+In v1, repository access, the operating-system account, and filesystem
+permissions bound access to project memory. Developer IDs record attribution;
+they MUST NOT be presented as authentication, per-developer ACLs, or selection
+of personal memory. Collaborating developers with repository access use the
+same shared bank. Security tests and product claims SHALL preserve that distinction.
 
 Automatic project-memory capture and publication SHALL apply the same source,
 secret-scanning, scope, and quarantine rules before committing shared files.
 Permission to maintain shared project memory MUST NOT imply permission to share
-private preferences, raw conversations, or unreviewed procedures. The first
+secrets, raw conversations, or unreviewed procedures. The first
 release SHALL enforce these baseline controls on its automatic path.
 
 Memory MAY inform a task, but it MUST NOT override the current operator request,
@@ -72,7 +73,7 @@ harness. The complete evaluation program SHALL measure:
 - admission precision and recall;
 - retrieval recall, ranking quality, and abstention;
 - correct knowledge updates and selective forgetting;
-- cross-project and cross-principal leakage;
+- cross-project leakage and incorrect developer attribution;
 - poisoning at content, evidence, scope, selection, and consolidation-path
   interfaces;
 - reproducibility across Codex, Claude Code, and OpenCode adapters.
@@ -83,7 +84,7 @@ recorded. A promoted reusable procedure SHOULD be tested on held-out
 repositories or tasks and SHOULD include an applicability predicate.
 
 The project SHALL maintain adversarial fixtures for stale facts, malicious
-repository documents, poisoned tool output, conflicting user preferences,
+repository documents, poisoned tool output, conflicting project requirements,
 deleted data, ambiguous repository identities, and hostile memory files.
 
 ## Consequences

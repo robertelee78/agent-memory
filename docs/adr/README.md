@@ -28,7 +28,7 @@ MUST NOT be treated as evidence that a guide is semantically complete.
 | [0008](0008-project-bank-and-optional-federation.md) | Project Memory Bank first; optional ecosystem federation | Proposed |
 | [0009](0009-contract-tests-and-fault-injection.md) | End-to-end contract tests and incident-derived regressions | Proposed |
 | [0010](0010-memory-bank-file-contract.md) | Concrete Memory Bank file and scope contract | Proposed |
-| [0011](0011-principal-and-project-identity.md) | Stable principal and project identity | Proposed |
+| [0011](0011-principal-and-project-identity.md) | Stable developer attribution and project identity | Proposed |
 | [0012](0012-git-shared-memory.md) | Git-shared memory across worktrees, machines, and developers | Proposed |
 
 ## Status values

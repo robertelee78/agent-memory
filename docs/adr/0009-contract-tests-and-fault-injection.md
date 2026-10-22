@@ -76,7 +76,7 @@ For optional stores and indexes, tests SHALL prove that:
 - deleting all generated state leaves the Markdown bank usable;
 - rebuilding reproduces current visible memory;
 - revoked or deleted content does not reappear;
-- project, principal, and federation scopes do not leak;
+- project and federation scopes do not leak; developer attribution stays accurate;
 - an unavailable optional service does not block local checkpoint/resume.
 
 Every production failure in scope SHOULD first receive the smallest user-level

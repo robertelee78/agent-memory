@@ -237,7 +237,7 @@ boundary for a local, auditable coding memory layer.
 Graphiti represents entities and relationships with temporal validity and raw
 episode provenance, then combines semantic, keyword, and graph retrieval. It
 is compelling when multi-hop relational queries justify a graph database. It
-is too operationally heavy for the first version of a personal coding-memory
+is too operationally heavy for the first version of a shared project coding-memory
 tool; the data model should preserve the option to derive a graph later.
 
 ### projectmem
@@ -302,8 +302,8 @@ full-text or vector indices are disposable projections. A temporal graph is an
 optional federation projection for a real ecosystem of related projects, not
 the default storage engine for an individual repository.
 
-Memory access is partitioned at minimum by principal, repository,
-worktree/session, and trust class. Global retrieval is explicit, never the
+Project memory is selected by repository, applicability, and trust class.
+Developer identity records attribution and does not create personal banks. Global retrieval is explicit, never the
 default. Standalone records and high-impact claims carry provenance and an
 explicit lifecycle state such as active, superseded, revoked, expired, or
 quarantined; ordinary prose should not be buried under metadata without need.
@@ -366,3 +366,11 @@ reading, or action rather than calling all of them “memory quality.”
 - [Bad Memory](https://arxiv.org/abs/2607.14611)
 - [MemForm](https://arxiv.org/abs/2610.14431)
 - [XRepoSkill](https://arxiv.org/abs/2609.36807)
+
+## Product-scope correction — 2026-10-22
+
+Comparisons above describe other systems, including their personal-memory
+features. Those features are not requirements for agent-memory. The operator
+explicitly excludes personal profiles, personal preference banks, and private
+per-developer overlays. This product stores shared project learning; developer
+identity exists for provenance and clarification. Current ADRs govern scope.

@@ -5,7 +5,7 @@ date: 2026-10-21
 depends-on: [ADR-0001, ADR-0004, ADR-0010]
 ---
 
-# ADR-0011: Stable principal and project identity
+# ADR-0011: Stable developer attribution and project identity
 
 ## Context
 
@@ -16,30 +16,29 @@ remotes otherwise cause silent namespace splits or merges.
 
 ## Decision
 
-### Principal identity
+### Developer attribution
 
-Installation SHALL create or adopt a random stable principal ID in the local
-principal registry. A human-readable label, operating-system account, Git author,
-GitHub login, and client identity MAY be attached as evidence or aliases, but
-none alone SHALL silently replace the stable ID.
+Installation SHALL create or adopt a random stable developer ID for provenance.
+A human-readable label, operating-system account, Git author, GitHub login, and
+client identity MAY be attached as evidence or aliases, but none alone SHALL
+silently replace the stable ID. The local attribution registry stores identity
+metadata only, never personal memories or preferences.
 
-Selecting or creating a different principal SHALL be explicit. Shared or
-organizational principals require an explicit configuration and authorization
-policy; sharing a machine, Git credential, or repository does not imply shared
-personal memory.
+Selecting or creating a different developer identity SHALL be explicit.
+Developers with repository access share the project bank; their attribution
+identities MUST NOT create separate memory banks or imply separate access rights.
 
 In v1 the operating-system account and filesystem permissions are the security
-boundary. Principal IDs provide logical selection, provenance, and leakage
-prevention against accidental mixing; they are not authentication between
-mutually distrusting users of the same OS account. The CLI SHALL state this and
-MUST NOT describe registry selection as an ACL. Strong multi-principal access
-control requires separate OS identities or a later authenticated service.
+boundary. Developer IDs provide provenance, not private-memory selection or
+authentication between mutually distrusting users of the same OS account. The
+CLI SHALL state this and MUST NOT describe registry selection as an ACL.
+Repository and OS permissions govern access; no per-developer memory access
+control is promised.
 
 Shared project-memory provenance SHALL identify the developer separately from
 the harness and session. The same developer using two to five machines SHALL be
-able to explicitly adopt the same stable developer identity on each, without
-sharing private local memory by implication. A different developer SHALL retain
-a distinct identity. Git authors and hosting logins MAY help resolve aliases,
+able to explicitly adopt the same stable developer identity on each. A different
+developer SHALL retain a distinct identity. Git authors and hosting logins MAY help resolve aliases,
 but MUST NOT silently change identity when credentials change. Conflicting or
 unknown attribution SHALL remain visible during clarification; it MUST NOT be
 misrepresented as a verified identity or authentication claim.
@@ -73,8 +72,8 @@ new ID. A remote rebind SHALL preserve an auditable alias history.
 ### Resolution and repair
 
 Read-only discovery MAY use the current directory and `MEMORY.md` as a fast
-path. Before any mediated write, private-overlay access, or federation export,
-the system SHALL resolve the stable principal and project IDs and reject
+path. Before any mediated write or federation export,
+the system SHALL resolve the stable developer and project IDs and reject
 ambiguity.
 
 `agent-memory status` SHALL show the resolved IDs and evidence. A dedicated
@@ -86,7 +85,7 @@ own repository-ID algorithm.
 
 - Directory moves and worktrees do not fragment project memory.
 - Forks and unrelated same-named repositories do not silently share memory.
-- Principal identity is not accidentally coupled to a client or credential.
+- Developer attribution is not accidentally coupled to a client or credential.
 - Initial setup and unusual remote changes require explicit decisions.
 
 ## Alternatives considered
@@ -94,5 +93,5 @@ own repository-ID algorithm.
 - **Directory basename:** rejected because collisions and moves are routine.
 - **Canonical remote only:** rejected because projects can lack remotes, change
   hosts, or have multiple legitimate remotes.
-- **Active GitHub login as principal:** rejected because credentials are not the
-  same thing as the human or organizational memory principal.
+- **Active GitHub login as developer:** rejected because credentials are not the
+  same thing as the developer who originated shared project learning.

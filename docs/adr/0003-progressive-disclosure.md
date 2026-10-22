@@ -32,15 +32,12 @@ requirements are specified in the
 
 At session start an adapter SHOULD expose only:
 
-1. a compact principal profile only when the user has explicitly configured it
-   as always visible to that client or session;
-2. the repository `MEMORY.md` index;
-3. active task or component context when confidently resolved.
+1. the repository `MEMORY.md` index;
+2. active task or component context when confidently resolved.
 
-Configuration of an always-visible principal profile counts as explicit consent
-for that bounded profile, not for arbitrary cross-project retrieval. Without
-that configuration, principal-wide recall requires an explicit request in the
-current session.
+No personal profile SHALL be loaded or maintained. Developer attribution does
+not partition the shared project bank into personal namespaces. Cross-project
+recall requires explicit selection of the relevant projects.
 
 `MEMORY.md` SHALL be a bounded router, not a history dump. It SHALL name topic
 files, their purpose, current validity, and retrieval keys. Detailed semantic,

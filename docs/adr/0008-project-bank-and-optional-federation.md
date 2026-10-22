@@ -18,7 +18,7 @@ few ecosystems whose cross-project coupling is actively maintained.
 Making every project participate in a global graph would add identity,
 synchronization, schema, retrieval, and operational failure modes to the common
 case. Conversely, treating every repository as isolated loses useful knowledge
-when several repositories really are parts of one product or personal system.
+when several repositories really are parts of one shared product or ecosystem.
 
 ## Decision
 
@@ -40,7 +40,7 @@ project exports and federation-owned records, never the sole authority for a
 project's bank.
 
 A project SHALL publish only deliberately exported memories to a federation.
-Personal, session, branch, quarantined, secret-bearing, and deleted records MUST
+Unadmitted session/branch observations, quarantined, secret-bearing, and deleted records MUST
 NOT become cross-project merely because they are locally retrievable. A
 federation query MUST preserve the source project, evidence, validity, trust,
 and access scope of every result.

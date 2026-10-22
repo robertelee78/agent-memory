@@ -27,7 +27,7 @@ mean the same thing or contradict each other.
 Markdown under the configured bank root, defaulting to `memory-bank/`. The
 shared authority branch SHALL be the repository's configured default branch
 (`main` in this repository). Only admitted project memory SHALL enter this
-channel. Private overlays, raw transcripts, credentials, runtime locks,
+channel. Raw transcripts, credentials, runtime locks,
 transaction markers, caches, and recovery state MUST NOT be committed by this
 workflow. AWA SHALL remain authoritative for work state and delivery; Vox SHALL
 remain authoritative for live coordination. Their absence MUST NOT prevent

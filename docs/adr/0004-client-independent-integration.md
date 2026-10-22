@@ -45,7 +45,7 @@ agent-memory eval
 ```
 
 The MCP server SHALL expose typed equivalents, use the caller's resolved
-project and principal identity, and refuse ambiguous project selection. Tool
+project and developer identity, and refuse ambiguous project selection. Tool
 responses SHALL include memory IDs, scope, validity, provenance, and whether a
 result is current or historical.
 
@@ -63,7 +63,7 @@ Adapters SHALL follow these rules:
 - All adapters SHALL identify the actual client, session, repository, and
   operation in captured provenance.
 
-Principal and project identity SHALL follow
+Developer attribution and project identity SHALL follow
 [ADR-0011](0011-principal-and-project-identity.md). No adapter MAY substitute a
 directory basename, active credential, or client-local project identifier.
 

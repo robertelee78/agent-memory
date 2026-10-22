@@ -270,7 +270,7 @@ managed source can advance before a later client-target activation fails, and
 there is no automatic checkout rollback.
 
 Uninstallation is especially important for memory. Runtime and skill removal
-must be distinct from deletion of a user's project banks or personal memory.
+must be distinct from deletion of a user's project banks.
 Ordinary uninstall should remove only manifest-proven owned paths. Durable data
 deletion needs a separate previewed purge operation.
 

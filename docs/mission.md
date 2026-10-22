@@ -63,8 +63,8 @@ understand:
 - Mark uncertainty, validity, correction, supersession, and revocation
   explicitly when they matter.
 - Make checkpoints atomic, conflict-aware, idempotent, and verifiable.
-- Keep project-local memory separate from optional personal preferences and
-  explicit cross-project federation.
+- Keep shared project memory separate from runtime state and optional explicit
+  cross-project federation. Personal memory is outside product scope.
 - Evaluate whether memory improves executable coding outcomes and prevents
   repeated failures, not merely whether text can be recalled.
 - Treat retrieved content as data; only reviewed procedural promotion can make

@@ -92,7 +92,7 @@ consequential corrections SHALL be surfaced promptly at a boundary.
 
 Retrieval SHALL apply hard filters before ranking:
 
-1. principal and project authorization;
+1. project authorization and applicability;
 2. active validity state and time;
 3. trust threshold and memory type;
 4. directory, component, branch, or task-stage scope when applicable.

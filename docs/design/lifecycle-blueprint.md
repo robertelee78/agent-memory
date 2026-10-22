@@ -169,7 +169,7 @@ Ordinary uninstall SHALL:
 4. remove only unchanged paths owned by the receipt;
 5. restore sentinel-managed client files without changing surrounding content;
 6. preserve user modifications and report conflicts;
-7. preserve project Memory Banks, personal memory, indexes, logs, and backups;
+7. preserve project Memory Banks, indexes, logs, and backups;
 8. read back target absence/restoration;
 9. retain a minimal uninstall receipt and reinstall instructions.
 
@@ -177,8 +177,8 @@ The managed code checkout MAY be removed only after all active targets no longer
 reference it. Backups SHOULD be retained by default with a bounded cleanup
 command.
 
-`--purge-data` SHALL first inventory each data root, classify project-local and
-personal content, show exact paths and counts, and require explicit confirmation
+`--purge-data` SHALL first inventory each data root, classify project memory and
+generated/runtime state, show exact paths and counts, and require explicit confirmation
 for the resolved targets. It MUST NOT accept an unresolved broad path, symlink
 escape, home directory, or filesystem root.
 
@@ -191,7 +191,7 @@ schema.
 `status` SHALL be cheap and read-only. It SHOULD report:
 
 - installation health and enabled adapters;
-- resolved principal and current project identity;
+- resolved developer and current project identity;
 - current bank path and format version;
 - current/available update summary when already cached;
 - optional index/federation presence and freshness;
