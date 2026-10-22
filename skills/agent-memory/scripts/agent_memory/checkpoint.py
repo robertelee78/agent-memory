@@ -29,10 +29,14 @@ def result(operation, **values):
 
 def headings(body):
     """Recognize stable H2 sections outside Markdown fences; never execute content."""
-    output, offset, fence = [], 0, None
+    if any(c in body for c in '\x85\u2028\u2029'):
+        raise ContractError('Unsupported Unicode line separator; inspect context before checkpointing')
+    output, offset, fence, previous_plain = [], 0, None, False
     for line in body.splitlines(keepends=True):
-        token = re.match(r' {0,3}(`{3,}|~{3,})(.*)', line.rstrip('\r\n'))
+        raw = line.rstrip('\r\n')
+        token = re.match(r' {0,3}(`{3,}|~{3,})(.*)', raw)
         if token:
+            previous_plain = False
             marker, rest = token.groups()
             if fence is None:
                 if marker[0] != '`' or '`' not in rest:
@@ -40,9 +44,15 @@ def headings(body):
             elif marker[0] == fence[0] and len(marker) >= len(fence) and not rest.strip():
                 fence = None
         elif fence is None:
-            match = re.fullmatch(r'## (.+?)\s*\n?', line)
+            if previous_plain and re.fullmatch(r' {0,3}(?:-+|=+)[ \t]*', raw):
+                raise ContractError('Setext heading boundary requires explicit inspection before checkpointing; preserve the original context')
+            match = re.fullmatch(r' {0,3}##(?:[ \t]+(.*))?[ \t]*', raw)
             if match:
-                output.append((offset, match[1]))
+                title = re.sub(r'(?:^|[ \t]+)#+[ \t]*$', '', match[1] or '').strip(' \t')
+                output.append((offset, title))
+                previous_plain = False
+            else:
+                previous_plain = bool(raw.strip()) and not raw.startswith(('    ', '\t'))
         offset += len(line)
     if fence is not None:
         raise ContractError('Active context/input has an unterminated Markdown fence; inspect it before checkpointing')
@@ -52,9 +62,18 @@ def headings(body):
 
 def text(value, limit=2048):
     if (not isinstance(value, str) or not value.strip() or len(value.encode()) > limit
-            or any(ord(c) < 32 and c not in '\n\t' for c in value) or headings(value)):
+            or any(ord(c) < 32 and c not in '\n\t' for c in value)):
         raise ContractError('Checkpoint fields require bounded useful Markdown without new level-two sections')
-    return value.strip()
+    normalized = value.strip()
+    if headings(normalized):
+        raise ContractError('Checkpoint fields must not create new level-two sections after normalization')
+    return normalized
+
+
+def list_text(items):
+    # Indent continuation lines so a fenced example remains inside its item and
+    # cannot manufacture apparent root sections on a later checkpoint.
+    return '\n'.join('- ' + text(item, 1024).replace('\n', '\n    ') for item in items)
 
 
 def input_value(value):
@@ -79,9 +98,9 @@ def input_value(value):
 def render(base, value, developer_id):
     value = input_value(value)
     desired = {FIELDS[field]: text(value[field]) if field in {'focus', 'next_step'} else
-               '\n'.join('- ' + text(item, 1024) for item in value[field]) or 'None supplied.' for field in FIELDS}
+               list_text(value[field]) or 'None supplied.' for field in FIELDS}
     desired['Checkpoint conditions'] = '```json\n' + json.dumps(value['conditions'], ensure_ascii=True, sort_keys=True, indent=2) + '\n```'
-    desired['Checkpoint evidence'] = '\n'.join('- ' + text(item, 1024) for item in value['evidence'])
+    desired['Checkpoint evidence'] = list_text(value['evidence'])
     desired['Checkpoint provenance'] = '```json\n' + json.dumps({'developer_id': developer_id, 'harness': value['harness'],
         'session': value['session'], 'identity_authenticated': False}, ensure_ascii=True, sort_keys=True, indent=2) + '\n```'
     seen, edits = set(), []
@@ -100,7 +119,9 @@ def render(base, value, developer_id):
             body += separator + '## ' + title + '\n\n' + content + '\n\n'
     if len(body.encode()) > LIMIT:
         raise ContractError('Checkpoint exceeds 16 KiB; consolidate safely without dropping distinct evidence or conditions')
-    headings(body)
+    final = [title for _, _, title in headings(body)]
+    if any(final.count(title) != 1 for title in desired):
+        raise ContractError('Rendered checkpoint has ambiguous section boundaries; preserve the original context')
     return body
 
 
@@ -137,8 +158,9 @@ def preview(repo, value, *, prepare=False):
         metadata['router-updated'] = storage.now()
         files['MEMORY.md'] = bank.router_text(metadata, routes, omitted)
         proposal = transactions.preview(root, files, 'replace')
-        if proposal['proposal']['observed_hashes'] != current['source_hashes']:
-            raise ContractError('Bank changed during context preparation; reread')
+        if (proposal['proposal']['observed_hashes'] != current['source_hashes']
+                or proposal['proposal']['scope_context'] != context):
+            raise ContractError('Bank or identity changed during context preparation; reread')
         return result('prepare', separate_router_operation=True, transaction=proposal['proposal'], writes_performed=False, verified=False)
     if current['preparation_required']:
         raise ContractError('Active context is omitted; prepare its useful content and route as a separate observed transaction first')

@@ -1,5 +1,7 @@
 """Public single-file checkpoint, section preservation and separate omitted-context setup."""
 import json
+import os
+import time
 from pathlib import Path
 import shutil
 import sys
@@ -127,6 +129,85 @@ class CheckpointContract(unittest.TestCase):
             p=self.preview(w,repo,self.payload(self.inspect(w,repo)))
             d=self.good(w,'developer_identity','preview','--create','--label','Another selected developer');self.good(w,'developer_identity','apply','--proposal',self.save(w,d))
             before=self.files(bank);self.assertEqual(self.apply(w,p)[0].returncode,1);self.assertEqual(self.files(bank),before)
+
+
+
+    def test_valid_atx_heading_forms_preserve_unknown_source_notes_and_replace_one_known_section(self):
+        for unknown in ('  ## Source notes','##\tSource notes','## Source notes ###'):
+            with self.subTest(unknown=unknown),World() as w:
+                repo,bank=self.fixture(w)
+                legacy=LEGACY.replace('## Source notes',unknown)
+                body=BASE.replace('## Next step','  ##\tNext step ###').replace(LEGACY,legacy)
+                (bank/'activeContext.md').write_text(body)
+                p=self.preview(w,repo,self.payload(self.inspect(w,repo)))
+                self.assertTrue(self.apply(w,p)[1]['verified'])
+                saved=(bank/'activeContext.md').read_text()
+                self.assertIn(legacy,saved);self.assertNotIn('Inspect the other clone.',saved)
+                again=self.preview(w,repo,self.payload(self.inspect(w,repo)))
+                self.assertEqual(again['changed_memory_paths'],[])
+        with World() as w:
+            repo,bank=self.fixture(w);(bank/'activeContext.md').write_text(BASE+'\n  ## Next step ##\n\nConflicting next step.\n')
+            before=self.files(bank)
+            r,value=self.command(w,'checkpoint','preview','--repo',repo,'--input',self.save(w,self.payload(self.inspect(w,repo))))
+            self.assertEqual(r.returncode,1,value);self.assertIn('Duplicate checkpoint section',value['error']);self.assertEqual(self.files(bank),before)
+
+    def test_multiline_fenced_list_items_remain_repeatably_checkpointable(self):
+        with World() as w:
+            repo,bank=self.fixture(w);payload=self.payload(self.inspect(w,repo))
+            payload['recent_changes']=['```markdown\n## Current focus\nQuoted example, not a root section\n```',
+                                       'A multiline result\nwith [evidence](../result.md).']
+            payload['open_questions']=['~~~markdown\n## Next step\nAn unresolved example\n~~~']
+            p=self.preview(w,repo,payload);self.assertTrue(self.apply(w,p)[1]['verified'])
+            body=(bank/'activeContext.md').read_text();self.assertIn(LEGACY,body)
+            self.assertIn('    ## Current focus\n',body);self.assertIn('    with [evidence]',body)
+            payload['observed_active_sha256']=self.inspect(w,repo)['observed_active_sha256']
+            again=self.preview(w,repo,payload);self.assertEqual(again['changed_memory_paths'],[])
+            self.assertTrue(self.apply(w,again)[1]['verified'])
+            payload['observed_active_sha256']=self.inspect(w,repo)['observed_active_sha256']
+            payload['next_step']='Reproduce a consequential new result before broadening conditions.'
+            self.assertTrue(self.apply(w,self.preview(w,repo,payload))[1]['verified'])
+            self.assertIn(LEGACY,(bank/'activeContext.md').read_text())
+
+    def test_normalized_fields_cannot_create_new_root_sections_or_unclosed_fences(self):
+        with World() as w:
+            repo,bank=self.fixture(w);before=self.files(bank)
+            for field,value in (('focus','    ## Current focus'),('next_step','    ```markdown')):
+                payload=self.payload(self.inspect(w,repo));payload[field]=value
+                r,result=self.command(w,'checkpoint','preview','--repo',repo,'--input',self.save(w,payload))
+                self.assertEqual(r.returncode,1,result);self.assertEqual(self.files(bank),before)
+            payload=self.payload(self.inspect(w,repo));payload['recent_changes']=['    ## Current focus']
+            self.assertEqual(self.command(w,'checkpoint','preview','--repo',repo,'--input',self.save(w,payload))[0].returncode,1)
+            self.assertEqual(self.files(bank),before)
+
+    def test_unsupported_setext_and_unicode_boundaries_stop_without_dropping_original_notes(self):
+        for heading in ('Source notes\n---','Source notes\n===','## Source notes\u2028'):
+            with self.subTest(heading=heading),World() as w:
+                repo,bank=self.fixture(w);(bank/'activeContext.md').write_text(BASE.replace('## Source notes',heading))
+                before=self.files(bank);payload=self.payload(self.inspect(w,repo))
+                r,value=self.command(w,'checkpoint','preview','--repo',repo,'--input',self.save(w,payload))
+                self.assertEqual(r.returncode,1,value);self.assertEqual(self.files(bank),before)
+
+    def test_missing_context_preparation_refuses_identity_switch_during_resolution(self):
+        with World() as w:
+            repo,bank=self.fixture(w,False);a=self.good(w,'scope_binding','status','--repo',repo)['developer_id']
+            b=self.good(w,'developer_identity','preview','--create','--label','Developer B')
+            b=self.good(w,'developer_identity','apply','--proposal',self.save(w,b))['developer_id']
+            select=self.good(w,'developer_identity','preview','--select',a)
+            self.good(w,'developer_identity','apply','--proposal',self.save(w,select))
+            before=self.files(bank);payload=self.save(w,self.payload(self.inspect(w,repo)),'input.json')
+            real_git=shutil.which('git',path=w.env['PATH']);directory=w.inside('identity-rendezvous');directory.mkdir()
+            ready,release=directory/'ready',directory/'release';bindir=w.inside('bin');bindir.mkdir();wrapper=bindir/'git'
+            wrapper.write_text('#!'+sys.executable+'\nimport os,sys,time\nfrom pathlib import Path\nready=Path('+repr(str(ready))+'); release=Path('+repr(str(release))+')\nif "--show-toplevel" in sys.argv and not ready.exists():\n ready.touch()\n deadline=time.monotonic()+10\n while not release.exists() and time.monotonic()<deadline:time.sleep(.005)\nos.execv('+repr(real_git)+',['+repr(real_git)+',*sys.argv[1:]])\n')
+            wrapper.chmod(0o700);w.env['PATH']=str(bindir)+os.pathsep+w.env['PATH']
+            child=w.spawn([sys.executable,'-I',SCRIPTS/'checkpoint.py','prepare','--repo',repo,'--input',payload])
+            deadline=time.monotonic()+5
+            while not ready.exists() and child.poll() is None and time.monotonic()<deadline:time.sleep(.005)
+            self.assertTrue(ready.exists(),child.poll())
+            select=self.good(w,'developer_identity','preview','--select',b)
+            self.good(w,'developer_identity','apply','--proposal',self.save(w,select,'select-b.json'))
+            release.touch();out,err=child.communicate(timeout=20)
+            self.assertFalse(err);self.assertEqual(child.returncode,1,out)
+            self.assertIn('identity changed',json.loads(out)['error']);self.assertEqual(self.files(bank),before)
 
 
 if __name__=='__main__':unittest.main()
