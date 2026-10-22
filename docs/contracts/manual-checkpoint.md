@@ -106,4 +106,5 @@ files. Apply of a stale proposal MUST refuse and preserve the manual bytes;
 starting a fresh preview after reading valid changes MAY proceed through the
 caller’s governed policy. A file-contract validation result alone MUST NOT be
 presented as semantic admission or authorization. The dedicated checkpoint
-story will add its product fields and identity gates on this same write kernel.
+operation now supplies its [product fields and identity gates](checkpoint.md)
+on this same write kernel.

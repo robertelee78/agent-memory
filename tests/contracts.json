@@ -10,6 +10,7 @@
     {"name": "single-file-writes", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_bank_writes.py"},
     {"name": "authority-boundaries", "layer": "evaluation", "scope": "v0.0.1", "path": "tests/contracts/test_authority_boundary.py"},
     {"name": "manual-checkpoint", "layer": "bank", "scope": "v0.0.1", "path": "tests/contracts/test_manual_checkpoint.py"},
+    {"name": "checkpoint", "layer": "bank", "scope": "v0.0.1", "path": "tests/contracts/test_checkpoint.py"},
     {"name": "bank-usability", "layer": "bank", "scope": "v0.0.1", "path": "tests/contracts/test_bank_usability.py"},
     {"name": "bank-transactions", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_bank_transactions.py"},
     {"name": "tombstones", "layer": "bank", "scope": "v0.0.1", "path": "tests/contracts/test_tombstones.py"},
