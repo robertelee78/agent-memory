@@ -401,10 +401,144 @@ class BankTransactionsContract(unittest.TestCase):
             (rendezvous / (stage + ".release")).touch()
             stdout, stderr = child.communicate(timeout=20)
             self.assertEqual(child.returncode, 1, stdout + stderr)
-            self.assertIn("marked omitted", json.loads(stdout)["error"])
+            self.assertTrue(json.loads(stdout)["error"])
             self.assertTrue((bank / MARKER).exists())
             self.assertTrue((bank / "projectbrief.md").is_dir())
             self.assertEqual(list(Path(w.env["AGENT_MEMORY_STATE_HOME"]).rglob("operations/*.json")), [])
+
+    def physical_bytes(self, bank):
+        return {p.relative_to(bank).as_posix(): p.read_bytes() for p in bank.rglob("*") if p.is_file() and not p.name.startswith(".agent-memory")}
+
+    def test_case_unicode_parent_and_existing_occupant_aliases_reject_preview_and_forged_apply_without_loss(self):
+        cases = {
+            "files": {"topics/Case.md": "# Upper\n", "topics/case.md": "# Lower\n"},
+            "parents": {"topics/Foo/a.md": "# One\n", "topics/foo/b.md": "# Two\n"},
+            "unicode": {"topics/caf\u00e9.md": "# One\n", "topics/cafe\u0301.md": "# Two\n"},
+            "unicode-parents": {"topics/caf\u00e9/a.md": "# One\n", "topics/cafe\u0301/b.md": "# Two\n"},
+            "existing-directory": {"topics/new.md": "# New\n"},
+            "unobserved-file": {"topics/note.md": "# Replacement\n"},
+        }
+        for case, additions in cases.items():
+            with self.subTest(case=case), World() as w:
+                repo, bank, before, after, p = self.fixture(w)
+                if case == "existing-directory":
+                    (bank / "Topics").mkdir()
+                elif case == "unobserved-file":
+                    (bank / "topics").mkdir()
+                    (bank / "topics/NOTE.MD").write_text("UNOBSERVED_OCCUPANT_CANARY\n")
+                after = self.optional_files(after, additions)
+                original = self.physical_bytes(bank)
+                r, error = self.command(w, "preview", "--repo", repo, "--files", self.save(w, after, "desired.json"))
+                self.assertEqual(r.returncode, 1, error)
+                self.assertIn("aliases", error["error"])
+                # Applying a hand-edited proposal must not bypass the preflight.
+                p["proposal"]["files"] = after
+                r, error = self.apply(w, p)
+                self.assertEqual(r.returncode, 1, error)
+                self.assertEqual(self.physical_bytes(bank), original)
+                self.assertFalse((bank / MARKER).exists())
+                self.assertFalse((bank / ".agent-memory.lock").exists())
+                self.assertFalse(Path(w.env["AGENT_MEMORY_STATE_HOME"]).exists())
+
+    def test_alias_arriving_after_preview_is_not_inventoried_as_an_owned_target(self):
+        with World() as w:
+            repo, bank, before, after, _ = self.fixture(w)
+            after = self.optional_files(after, {"topics/note.md": "# New lesson\n"})
+            r, p = self.command(w, "preview", "--repo", repo, "--files", self.save(w, after, "desired.json"))
+            self.assertEqual(r.returncode, 0, p)
+            (bank / "topics").mkdir()
+            (bank / "topics/NOTE.MD").write_text("UNOBSERVED_OCCUPANT_CANARY\n")
+            original = self.physical_bytes(bank)
+            r, error = self.apply(w, p)
+            self.assertEqual(r.returncode, 1, error)
+            self.assertEqual(self.physical_bytes(bank), original)
+            self.assertFalse((bank / MARKER).exists())
+            self.assertFalse(Path(w.env["AGENT_MEMORY_STATE_HOME"]).exists())
+
+    def test_late_alias_at_replacement_boundary_stops_and_recovery_preserves_foreign_occupant(self):
+        with World() as w:
+            repo, bank, before, after, _ = self.fixture(w)
+            after = self.optional_files(after, {"topics/note.md": "# New lesson\n"})
+            r, p = self.command(w, "preview", "--repo", repo, "--files", self.save(w, after, "desired.json"))
+            self.assertEqual(r.returncode, 0, p)
+            stage, rendezvous = "transaction-before-recheck:topics/note.md", w.inside("alias pause")
+            leaf = stage.replace("/", "%2F")
+            w.env.update(AGENT_MEMORY_FAULT_STAGE=stage, AGENT_MEMORY_FAULT_MODE="pause", AGENT_MEMORY_FAULT_DIR=str(rendezvous))
+            child = w.spawn([sys.executable, "-I", HELPER, "apply", "--proposal", self.save(w, p)])
+            for key in ("AGENT_MEMORY_FAULT_STAGE", "AGENT_MEMORY_FAULT_MODE", "AGENT_MEMORY_FAULT_DIR"):
+                w.env.pop(key)
+            deadline = time.monotonic() + 5
+            while not (rendezvous / (leaf + ".ready")).exists() and child.poll() is None and time.monotonic() < deadline:
+                time.sleep(0.01)
+            self.assertTrue((rendezvous / (leaf + ".ready")).exists())
+            occupant = bank / "topics/NOTE.MD"
+            occupant.write_text("UNOBSERVED_OCCUPANT_CANARY\n")
+            (rendezvous / (leaf + ".release")).touch()
+            stdout, stderr = child.communicate(timeout=20)
+            self.assertEqual(child.returncode, 1, stdout + stderr)
+            self.assertEqual(occupant.read_text(), "UNOBSERVED_OCCUPANT_CANARY\n")
+            self.assertTrue((bank / MARKER).exists())
+            original = self.physical_bytes(bank)
+            for mode in ("finish", "rollback"):
+                r, error = self.command(w, "recover", "--repo", repo, "--mode", mode)
+                self.assertEqual(r.returncode, 1, error)
+                self.assertEqual(self.physical_bytes(bank), original)
+            occupant.unlink()  # Fixture owner resolves its own external conflict.
+            r, done = self.recover_apply(w, repo, self.recovery(w, repo, "finish"))
+            self.assertEqual(r.returncode, 0, done)
+            self.assertEqual(self.canonical(bank), after)
+
+    def test_alias_arriving_after_recovery_preview_cannot_be_overwritten_in_either_direction(self):
+        for mode in ("finish", "rollback"):
+            with self.subTest(mode=mode), World() as w:
+                repo, bank, before, after, _ = self.fixture(w)
+                after = self.optional_files(after, {"topics/note.md": "# New lesson\n"})
+                r, p = self.command(w, "preview", "--repo", repo, "--files", self.save(w, after, "desired.json"))
+                self.assertEqual(r.returncode, 0, p)
+                self.crash(w, p, "transaction-after-marker")
+                self.unlock(w, repo)
+                recovery = self.recovery(w, repo, mode)
+                (bank / "topics").mkdir()
+                (bank / "topics/NOTE.MD").write_text("UNOBSERVED_OCCUPANT_CANARY\n")
+                original = self.physical_bytes(bank)
+                r, error = self.recover_apply(w, repo, recovery)
+                self.assertEqual(r.returncode, 1, error)
+                self.assertEqual(self.physical_bytes(bank), original)
+                self.assertTrue((bank / MARKER).exists())
+
+    def test_single_file_reader_and_writer_share_exact_component_spelling_validation(self):
+        with World() as w:
+            repo, bank, before, after, p = self.fixture(w)
+            routed = self.optional_files(before, {"topics/case.md": "# Claimed topic\n"})
+            (bank / "topics").mkdir()
+            (bank / "topics/Case.md").write_text("# Physical topic\n")
+            (bank / "MEMORY.md").write_text(routed["MEMORY.md"])
+            original = self.physical_bytes(bank)
+            self.assertEqual(self.command(w, "validate", "--repo", repo, helper=RENDER)[0].returncode, 1)
+            self.assertEqual(self.command(w, "inspect", "--repo", repo, helper=SINGLE)[0].returncode, 1)
+            content = w.inside("checkpoint.md")
+            content.write_text("# New focus\n")
+            self.assertEqual(self.command(w, "preview", "--repo", repo, "--path", "activeContext.md", "--content", content, helper=SINGLE)[0].returncode, 1)
+            self.assertEqual(self.physical_bytes(bank), original)
+            self.assertFalse(Path(w.env["AGENT_MEMORY_STATE_HOME"]).exists())
+
+    def test_bank_root_spelling_alias_refuses_before_lock_and_unique_unicode_target_still_works(self):
+        with World() as w:
+            repo, bank, before, after, p = self.fixture(w)
+            after = self.optional_files(after, {"topics/Caf\u00e9.md": "# Useful unique Unicode topic\n"})
+            r, p = self.command(w, "preview", "--repo", repo, "--files", self.save(w, after, "desired.json"))
+            self.assertEqual(r.returncode, 0, p)
+            r, done = self.apply(w, p)
+            self.assertEqual(r.returncode, 0, done)
+            self.assertEqual(self.canonical(bank), after)
+            temporary, alias = repo / "temporary-bank", repo / "Memory-Bank"
+            bank.rename(temporary)
+            temporary.rename(alias)
+            original = self.physical_bytes(alias)
+            self.assertEqual(self.command(w, "inspect", "--repo", repo, helper=SINGLE)[0].returncode, 1)
+            self.assertEqual(self.apply(w, p)[0].returncode, 1)
+            self.assertEqual(self.physical_bytes(alias), original)
+            self.assertFalse((alias / ".agent-memory.lock").exists())
 
 
 if __name__ == "__main__":

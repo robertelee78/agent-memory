@@ -73,20 +73,27 @@ def preview(repo, files, operation="compact"):
     return result("preview", proposal=p, writes_performed=False, verified=False)
 
 
-def preflight(bank, p):
-    # File/directory shape changes cannot use the same per-file rollback order.
-    # Refuse them before a journal/marker rather than accepting an unrealizable
-    # desired bank. Unrelated non-Markdown occupants must also be preserved.
-    contract.file_topology(set(p["observed_hashes"]) | set(p["files"]))
-    for path in p["files"]:
+def check_layout(bank, participants, observed):
+    contract.bank_root(bank)
+    contract.portable_aliases([*contract.physical_paths(bank), *participants])
+    for path in participants:
         target = bank / path
-        if target.exists() and target.is_dir():
-            raise ContractError("Canonical target is an existing directory; layout conversion requires explicit repair")
+        if target.exists() and (not target.is_file() or path not in observed):
+            raise ContractError("Canonical target has an unobserved physical occupant; preserve it for inspection")
         for parent in target.parents:
             if parent == bank:
                 break
             if parent.exists() and not parent.is_dir():
                 raise ContractError("Canonical target has a non-directory parent; preserve the existing layout")
+
+
+def preflight(bank, p, observed=None):
+    # File/directory shape changes cannot use the same per-file rollback order.
+    # Refuse them before a journal/marker rather than accepting an unrealizable
+    # desired bank. Unrelated non-Markdown occupants must also be preserved.
+    participants = set(p["observed_hashes"]) | set(p["files"])
+    contract.file_topology(participants)
+    check_layout(bank, participants, p["observed_hashes"] if observed is None else observed)
 
 
 def locations(root, bank, operation_id):
@@ -142,12 +149,13 @@ def check_observed(bank, expected):
         raise ContractError("External edit observed; preserve it and inspect the interrupted transaction")
 
 
-def replace_file(bank, path, body, expected, marker):
+def replace_file(bank, path, body, expected, marker, participants):
     target = bank / path
     temporary = None
     try:
         check_marker(bank, marker)
         check_observed(bank, expected)
+        check_layout(bank, participants, expected)
         if body is not None:
             target.parent.mkdir(parents=True, exist_ok=True)
             with tempfile.NamedTemporaryFile(prefix=".agent-memory-transaction-", suffix=".tmp", dir=target.parent, delete=False) as stream:
@@ -158,6 +166,7 @@ def replace_file(bank, path, body, expected, marker):
         # Check the entire read set immediately before every individual change.
         check_marker(bank, marker)
         check_observed(bank, expected)
+        check_layout(bank, participants, expected)
         if body is None:
             target.unlink()
         else:
@@ -226,12 +235,13 @@ def converge(root, bank, p, base_files, journal, raw, receipt_path, mode, observ
     desired = p["files"] if mode == "finish" else base_files
     expected = file_hashes(desired)
     running = dict(observed)
+    participants = set(p["observed_hashes"]) | set(p["files"])
     paths = sorted((path for path in set(running) | set(expected) if running.get(path) != expected.get(path)),
                    key=lambda path: (path == "MEMORY.md", path))
     if known and paths:
         raise ContractError("Bank differs from a recorded outcome; do not replay over newer edits")
     for path in paths:
-        replace_file(bank, path, desired.get(path), running, marker)
+        replace_file(bank, path, desired.get(path), running, marker, participants)
         if path in expected:
             running[path] = expected[path]
         else:
@@ -239,10 +249,12 @@ def converge(root, bank, p, base_files, journal, raw, receipt_path, mode, observ
         writes.fault("transaction-after-write:" + path)
     check_marker(bank, marker)
     check_observed(bank, expected)
+    check_layout(bank, participants, expected)
     checked = contract.validate(root, owned_lock=owner, owned_transaction=marker)
     writes.fault("transaction-before-receipt")
     check_marker(bank, marker)
     check_observed(bank, expected)
+    check_layout(bank, participants, expected)
     contract.validate(root, owned_lock=owner, owned_transaction=marker)
     if not known:
         known = {"schema": "agent-memory/transaction-receipt-v1", "operation_id": p["operation_id"],
@@ -254,6 +266,7 @@ def converge(root, bank, p, base_files, journal, raw, receipt_path, mode, observ
     writes.fault("transaction-after-receipt")
     check_marker(bank, marker)
     check_observed(bank, expected)
+    check_layout(bank, participants, expected)
     contract.validate(root, owned_lock=owner, owned_transaction=marker)
     (bank / MARKER).unlink()
     flush_directory(bank)
@@ -320,6 +333,7 @@ def recover(repo, mode=None, prepared=None):
             if observed != r["observed_hashes"]:
                 raise ContractError("Bank changed after recovery preview; preserve the edit")
             allowed_partial(p, observed)
+            preflight(bank, p, observed)
             return converge(root, bank, p, j["base_files"], journal, raw, receipt_path, r["mode"], observed, owner)
     if mode not in {"finish", "rollback"}:
         raise ContractError("Recovery preview requires an explicit finish or rollback choice")
@@ -338,6 +352,7 @@ def recover(repo, mode=None, prepared=None):
     j, p = journal_value(raw, root, bank, m["transaction_id"])
     observed = writes.hashes(bank)
     allowed_partial(p, observed)
+    preflight(bank, p, observed)
     known = receipt_value(receipt_path, p)
     if known and known["outcome"] != ("finished" if mode == "finish" else "rolled-back"):
         raise ContractError("Transaction already has a different verified outcome")

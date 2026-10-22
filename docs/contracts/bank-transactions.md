@@ -29,6 +29,12 @@ File/parent collisions and leaf/directory conversions are unsupported by this
 per-file recovery order and MUST fail during preparation, then be checked again
 under the lock. Existing directories and unrelated non-directory occupants MUST
 be preserved rather than repurposed as canonical targets or parents.
+Every path component MUST have one portable spelling. Case-folded,
+Unicode-normalization-equivalent aliases are rejected across proposed paths,
+base paths, and all physical bank entries, including directories and files whose
+suffix is not canonical Markdown. The bank root must also have its exact
+configured spelling. An existing target MUST belong to the exact observed
+canonical read set; filesystem existence alone does not establish ownership.
 
 Apply MUST acquire the common exclusive bank lock before inventory. It refuses a
 changed project ID or base, unknown receipt, interruption marker, unsafe path or
@@ -47,8 +53,10 @@ it is not a claim that every target has changed.
 
 Each target uses a same-directory staged, flushed atomic replacement (or an
 observed unlink for deletion). The writer checks the full read set and marker
-immediately before every change. `MEMORY.md` changes last. It verifies every
-resulting canonical path and the complete projected bank, records the readback
+immediately before every change. `MEMORY.md` changes last. It checks physical
+targets and parents again at replacement and recovery boundaries, so an
+unobserved alias appearing after preview MUST stop rather than be overwritten.
+It verifies every resulting canonical path and the complete projected bank, records the readback
 receipt while locked, then removes the marker and flushes the bank directory.
 Only then does it discard its exact known journal/backups. Unrelated state files
 are preserved. Completed receipts contain operation/hash/path metadata, not

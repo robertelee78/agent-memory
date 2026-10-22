@@ -6,6 +6,7 @@ import json
 from pathlib import Path, PurePosixPath
 import re
 import sys
+import unicodedata
 import uuid
 
 from .frontmatter import ContractError, read, unique_object, write
@@ -173,8 +174,49 @@ def render(proposal):
             "files": files, "writes_performed": False}
 
 
+def portable_key(value):
+    return unicodedata.normalize("NFC", unicodedata.normalize("NFC", value).casefold())
+
+
+def portable_aliases(paths):
+    seen = {}
+    for path in paths:
+        parts = PurePosixPath(path).parts
+        for size in range(1, len(parts) + 1):
+            spelling = PurePosixPath(*parts[:size]).as_posix()
+            key = portable_key(spelling)
+            if key in seen and seen[key] != spelling:
+                raise ContractError("Bank paths have case or Unicode component aliases; preserve the physical entries")
+            seen[key] = spelling
+
+
+def runtime_path(path):
+    return any(part.startswith(".agent-memory") for part in PurePosixPath(path).parts)
+
+
+def bank_root(bank):
+    # Do not adopt a differently spelled directory just because this host treats
+    # it as the same path. Such a bank would fail on a case-sensitive clone.
+    if bank.parent.is_dir():
+        for entry in bank.parent.iterdir():
+            if portable_key(entry.name) == portable_key(bank.name) and entry.name != bank.name:
+                raise ContractError("Bank root has a case or Unicode spelling alias; explicit repair is required")
+
+
+def physical_paths(bank):
+    paths = []
+    for target in bank.rglob("*"):
+        if target.is_symlink():
+            raise ContractError("Bank paths must not be symlinks")
+        path = target.relative_to(bank).as_posix()
+        if not runtime_path(path):
+            paths.append(path)
+    return paths
+
+
 def file_topology(paths):
     paths = set(paths)
+    portable_aliases(paths)
     for path in paths:
         if any(parent.as_posix() in paths for parent in PurePosixPath(path).parents):
             raise ContractError("A canonical file cannot also be a parent directory")
@@ -208,6 +250,7 @@ def validate_files(files):
 
 def validate(repo, *, owned_lock=None, owned_transaction=None):
     bank = Path(repo).resolve() / SPEC["x-bank-path"]
+    bank_root(bank)
     if bank.is_symlink():
         raise ContractError("Bank directory must not be a symlink")
     marker = bank / ".agent-memory-transaction.md"
@@ -220,6 +263,7 @@ def validate(repo, *, owned_lock=None, owned_transaction=None):
     if router.is_symlink():
         raise ContractError("Router must not be a symlink")
     metadata, routes, omitted = parse_router(router.read_bytes().decode("utf-8"))
+    portable_aliases([*physical_paths(bank), "MEMORY.md", *[route["path"] for route in routes]])
     for route in routes:
         target = bank / route["path"]
         relative = target.relative_to(bank)
@@ -239,7 +283,7 @@ def validate(repo, *, owned_lock=None, owned_transaction=None):
         if target.is_symlink():
             raise ContractError("Bank paths must not be symlinks")
         relative = target.relative_to(bank).as_posix()
-        if target.is_file() and target.suffix == ".md" and not any(part.startswith(".agent-memory") for part in Path(relative).parts):
+        if target.is_file() and target.suffix == ".md" and not runtime_path(relative):
             files[relative] = target.read_bytes().decode("utf-8")
     return validate_files(files)
 
