@@ -83,3 +83,6 @@ common bank lock, single-file replacement, readback, retry and recovery mechanis
 
 The [access and remembered-authority contract](docs/contracts/security-authority.md)
 explains shared-bank access, developer attribution and the treatment of memory as untrusted data.
+
+The [manual checkpoint workflow](docs/contracts/manual-checkpoint.md) covers
+single-file edits, resume, and subsequent validation of external changes.
