@@ -1,11 +1,17 @@
 ---
 id: ADR-0009
-status: proposed
+status: accepted
+approval-scope: v0.0.1
 date: 2026-10-21
 depends-on: [ADR-0003, ADR-0006, ADR-0007]
 ---
 
 # ADR-0009: End-to-end contract tests and incident-derived regressions
+
+Accepted for **v0.0.1 only**, as recorded in the
+[operator approval](../design/v0.0.1-approval.md). Later-milestone proposals
+remain under review. Implementation, acceptance and delivery require separate
+evidence.
 
 ## Context
 

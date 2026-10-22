@@ -1,11 +1,17 @@
 ---
 id: ADR-0006
-status: proposed
+status: accepted
+approval-scope: v0.0.1
 date: 2026-10-21
 depends-on: [ADR-0001, ADR-0002, ADR-0005]
 ---
 
 # ADR-0006: Security boundaries and executable evaluation
+
+Accepted for **v0.0.1 only**, as recorded in the
+[operator approval](../design/v0.0.1-approval.md). Later-milestone proposals
+remain under review. Implementation, acceptance and delivery require separate
+evidence.
 
 ## Context
 

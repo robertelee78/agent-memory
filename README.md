@@ -36,15 +36,18 @@ and the progressive-disclosure architecture used by
 - [Architecture decision records](docs/adr/README.md)
 - [v0.0.1 execution contract and review handoff](docs/design/v0.0.1-execution.md)
 
-The ADRs are currently **Proposed**. They describe the intended boundaries and
-architecture; they are not claims that the implementation already exists.
+The ADRs are **Accepted for v0.0.1**, with the operator's
+[design approval](docs/design/v0.0.1-approval.md) bound to the 52 first-release
+tasks. Later-release proposals remain under review. Design approval does not
+claim that the implementation already exists.
 
 Implementation planning is tracked in the repository's
 [GitHub Projects](https://github.com/robertelee78/agent-memory/projects) and
 [release milestones](https://github.com/robertelee78/agent-memory/milestones),
 starting with `v0.0.1`. Each ADR has its own Project; release milestones span
-Projects. The v0.0.1 tasks are selected for design review; execution requires
-recorded design approval. Their [ordered queue](docs/design/v0.0.1-work.json)
+Projects. The v0.0.1 tasks have recorded design approval and are Ready, with
+predecessor dependencies still governing when each can start. Their
+[ordered queue](docs/design/v0.0.1-work.json)
 preserves the existing task identities. Prerequisite delivery is reviewed merge
 to main, with the complete release tracked by its final publication gate.
 

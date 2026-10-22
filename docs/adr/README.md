@@ -1,7 +1,9 @@
 # Architecture decision records
 
-These ADRs are proposals derived from the
+These ADRs were derived from the
 [state-of-the-art review](../research/2026-10-21-agent-memory-state-of-the-art.md).
+The operator accepted their v0.0.1 scope in the
+[recorded design approval](../design/v0.0.1-approval.md).
 
 ## Normative language
 
@@ -18,18 +20,18 @@ MUST NOT be treated as evidence that a guide is semantically complete.
 
 | ADR | Decision | Status |
 | --- | --- | --- |
-| [0001](0001-local-first-authority-boundaries.md) | Local-first memory and authority boundaries | Proposed |
-| [0002](0002-markdown-first-temporal-memory.md) | Markdown-first, typed, temporal memory model | Proposed |
-| [0003](0003-progressive-disclosure.md) | Progressive disclosure for memory and skills | Proposed |
-| [0004](0004-client-independent-integration.md) | Harness-independent skill and CLI | Proposed |
-| [0005](0005-admission-consolidation-retrieval.md) | Separate admission, consolidation, retrieval, and forgetting | Proposed |
-| [0006](0006-security-and-evaluation.md) | Security boundaries and executable evaluation | Proposed |
-| [0007](0007-portable-pack-and-lifecycle.md) | Portable skill pack and installation lifecycle | Proposed |
-| [0008](0008-project-bank-and-optional-federation.md) | Project Memory Bank first; optional ecosystem federation | Proposed |
-| [0009](0009-contract-tests-and-fault-injection.md) | End-to-end contract tests and incident-derived regressions | Proposed |
-| [0010](0010-memory-bank-file-contract.md) | Concrete Memory Bank file and scope contract | Proposed |
-| [0011](0011-principal-and-project-identity.md) | Stable developer attribution and project identity | Proposed |
-| [0012](0012-git-shared-memory.md) | Git-shared memory across worktrees, machines, and developers | Proposed |
+| [0001](0001-local-first-authority-boundaries.md) | Local-first memory and authority boundaries | Accepted (v0.0.1) |
+| [0002](0002-markdown-first-temporal-memory.md) | Markdown-first, typed, temporal memory model | Accepted (v0.0.1) |
+| [0003](0003-progressive-disclosure.md) | Progressive disclosure for memory and skills | Accepted (v0.0.1) |
+| [0004](0004-client-independent-integration.md) | Harness-independent skill and CLI | Accepted (v0.0.1) |
+| [0005](0005-admission-consolidation-retrieval.md) | Separate admission, consolidation, retrieval, and forgetting | Accepted (v0.0.1) |
+| [0006](0006-security-and-evaluation.md) | Security boundaries and executable evaluation | Accepted (v0.0.1) |
+| [0007](0007-portable-pack-and-lifecycle.md) | Portable skill pack and installation lifecycle | Accepted (v0.0.1) |
+| [0008](0008-project-bank-and-optional-federation.md) | Project Memory Bank first; optional ecosystem federation | Accepted (v0.0.1) |
+| [0009](0009-contract-tests-and-fault-injection.md) | End-to-end contract tests and incident-derived regressions | Accepted (v0.0.1) |
+| [0010](0010-memory-bank-file-contract.md) | Concrete Memory Bank file and scope contract | Accepted (v0.0.1) |
+| [0011](0011-principal-and-project-identity.md) | Stable developer attribution and project identity | Accepted (v0.0.1) |
+| [0012](0012-git-shared-memory.md) | Git-shared memory across worktrees, machines, and developers | Accepted (v0.0.1) |
 
 ## Status values
 
@@ -37,6 +39,12 @@ MUST NOT be treated as evidence that a guide is semantically complete.
 - **Accepted:** approved as the current architectural direction.
 - **Superseded:** replaced by another ADR, which must be linked.
 - **Rejected:** considered and deliberately not adopted.
+
+An Accepted ADR with `approval-scope: v0.0.1` approves only the exact first-release
+work keys in the approval record. Later-release proposals in that document
+remain under review and receive no design approval from this status. Withdrawn
+capabilities remain withdrawn. Acceptance is a design decision; implementation,
+independent acceptance and delivery require their own evidence.
 
 Changes to an accepted decision should add a new ADR rather than silently
 rewriting the old decision. Clarifications that do not alter the decision may

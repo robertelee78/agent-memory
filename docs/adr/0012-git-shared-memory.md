@@ -1,11 +1,17 @@
 ---
 id: ADR-0012
-status: proposed
+status: accepted
+approval-scope: v0.0.1
 date: 2026-10-22
 depends-on: [ADR-0001, ADR-0002, ADR-0005, ADR-0010, ADR-0011]
 ---
 
 # ADR-0012: Git-shared memory across worktrees, machines, and developers
+
+Accepted for **v0.0.1 only**, as recorded in the
+[operator approval](../design/v0.0.1-approval.md). Later-milestone proposals
+remain under review. Implementation, acceptance and delivery require separate
+evidence.
 
 ## Context
 

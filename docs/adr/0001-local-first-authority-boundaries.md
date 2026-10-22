@@ -1,10 +1,16 @@
 ---
 id: ADR-0001
-status: proposed
+status: accepted
+approval-scope: v0.0.1
 date: 2026-10-21
 ---
 
 # ADR-0001: Local-first memory and authority boundaries
+
+Accepted for **v0.0.1 only**, as recorded in the
+[operator approval](../design/v0.0.1-approval.md). Later-milestone proposals
+remain under review. Implementation, acceptance and delivery require separate
+evidence.
 
 ## Context
 
