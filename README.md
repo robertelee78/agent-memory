@@ -95,3 +95,8 @@ visible interruption, external recovery backups and guarded finish/rollback.
 
 The [tombstone contract](docs/contracts/tombstones.md) keeps terminal deletion
 markers content-free and guards stale projection rebuilds by stable record ID.
+
+The initial [portable skill](skills/agent-memory/SKILL.md) provides an
+[offline file workflow](skills/agent-memory/offline/GUIDE.md) for useful manual
+setup, inspection, checkpoint and clean resume. Automatic exchange, governed
+initialization and the complete installed workflow remain under execution.
