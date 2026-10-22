@@ -123,7 +123,7 @@ def record(metadata, required_metadata=()):
         if key in metadata and metadata[key] not in MODEL['properties'][key]['enum']:
             raise ContractError('Unknown trust or visibility')
     confidence = metadata.get('confidence')
-    if confidence is not None and (type(confidence) not in {int, float} or not math.isfinite(confidence) or not 0 <= confidence <= 1):
+    if confidence is not None and (type(confidence) not in {int, float} or not 0 <= confidence <= 1 or not math.isfinite(confidence)):
         raise ContractError('Confidence must be null or finite in the range zero to one')
     if metadata['status'] in {'quarantined', 'superseded', 'revoked', 'expired'} and 'state-reason' not in metadata:
         raise ContractError('Non-current lifecycle needs a visible reason')

@@ -102,6 +102,35 @@ class RecordContract(unittest.TestCase):
                 p, _ = self.command(w, 'render', value=old)
                 self.assertEqual(p.returncode, 1)
 
+    def test_unicode_metadata_separators_roundtrip_without_losing_values_or_body_text(self):
+        with World() as w:
+            for separator in ('\u0085', '\u2028', '\u2029'):
+                value = self.proposal()
+                meta = value['metadata']
+                meta['source'] = {'actor': 'Zoë' + separator + '李', 'kind': 'test' + separator + 'probe'}
+                meta['origin']['harness'] = 'custom' + separator + 'harness'
+                meta['origin']['session'] = 'session' + separator + '22'
+                meta['evidence'] = ['../evidence/probe' + separator + '.txt']
+                meta['conditions']['environment'] = 'machine' + separator + '2'
+                value['body'] += '\nUnicode body 言葉' + separator + 'is preserved.\n'
+                _, result = self.roundtrip(w, value)
+                header = result['content'].split('\n---\n', 1)[0]
+                self.assertNotIn(separator, header)
+                self.assertIn('Zoë', header)
+                self.assertIn('李', header)
+                self.assertIn(separator, result['body'])
+
+    def test_arbitrarily_large_integer_confidence_returns_structured_rejection(self):
+        with World() as w:
+            for confidence in (10 ** 400, -(10 ** 400)):
+                value = self.proposal()
+                value['metadata']['confidence'] = confidence
+                p, output = self.command(w, 'render', value=value)
+                self.assertEqual(p.returncode, 1)
+                self.assertFalse(output['valid'])
+                self.assertFalse(output['writes_performed'])
+                self.assertNotIn('Traceback', p.stdout + p.stderr)
+
     def test_malformed_identity_source_time_links_and_metadata_are_rejected_without_echo(self):
         with World() as w:
             value = self.proposal()

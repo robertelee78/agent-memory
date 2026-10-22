@@ -5,6 +5,10 @@ Nested values use JSON-compatible flow syntax. No general YAML loader is used.
 import json
 import re
 
+# JSON permits these Unicode separators literally, but line-based YAML readers
+# treat them as framing. Preserve their values using JSON/YAML Unicode escapes.
+LINE_ESCAPES = {0x85: "\\u0085", 0x2028: "\\u2028", 0x2029: "\\u2029"}
+
 
 class ContractError(ValueError):
     pass
@@ -74,5 +78,5 @@ def read(text, *, allowed):
 
 
 def write(metadata):
-    return "---\n" + "".join(f"{key}: {json.dumps(value, ensure_ascii=False, allow_nan=False)}\n"
+    return "---\n" + "".join(f"{key}: {json.dumps(value, ensure_ascii=False, allow_nan=False).translate(LINE_ESCAPES)}\n"
                                   for key, value in metadata.items()) + "---\n"
