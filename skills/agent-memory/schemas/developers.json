@@ -1,0 +1,10 @@
+{
+  "schema": "agent-memory/developers-v1",
+  "registry-file": "developers.json",
+  "alias-kinds": ["os-user", "git-author-name", "git-author-email", "github-login", "external"],
+  "actions": ["create", "adopt", "select"],
+  "registry-fields": ["schema", "selected", "developers", "operations"],
+  "developer-fields": ["labels", "aliases"],
+  "proposal-fields": ["schema", "operation_id", "action", "developer_id", "labels", "aliases", "observed_sha256", "registry_path"],
+  "security-boundary": "Repository and OS permissions govern access. Developer IDs provide provenance, not authentication, memory ACLs or personal memory namespaces."
+}
