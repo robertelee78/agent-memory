@@ -104,6 +104,7 @@ class LifecycleContract(unittest.TestCase):
                        ("record", "confidence", 1.1), ("record", "confidence", 10 ** 400), ("context", "authorized-scope", "yes"),
                        ("context", "applicable", None), ("context", "minimum-trust", None),
                        ("context", "now", "2026-10-22T17:00:00+00:99"),
+                       ("context", "now", "2026-10-22T17:00:00.١Z"),
                        ("context", "active-superseders", None),
                        ("record", "valid-until", "2025-01-01T00:00:00Z")]
             for area, key, value in invalid:
@@ -112,6 +113,33 @@ class LifecycleContract(unittest.TestCase):
                 result, receipt = self.command(world, "current", request)
                 self.assertEqual(result.returncode, 1, receipt)
                 self.assertIn("error", receipt)
+
+    def test_fractional_boundaries_preserve_every_accepted_digit(self):
+        # Independent review caught datetime truncating accepted fractions and
+        # admitting a future record / prematurely expiring a still-valid one.
+        with World() as world:
+            request = self.selection()
+            request["record"].update({"valid-from": "2026-10-22T17:00:00.0000001Z", "valid-until": None})
+            request["context"]["now"] = "2026-10-22T17:00:00.0000000Z"
+            self.assertFalse(self.command(world, "current", request)[1]["result"]["current"])
+            request["record"].update({"valid-from": None, "valid-until": "2026-10-22T17:00:00.0000009Z"})
+            request["context"]["now"] = "2026-10-22T17:00:00.0000001Z"
+            self.assertTrue(self.command(world, "current", request)[1]["result"]["current"])
+            request["context"]["now"] = "2026-10-22T17:00:00.000000900000Z"
+            self.assertFalse(self.command(world, "current", request)[1]["result"]["current"])
+            # UTC offset equivalence and much longer fractions stay exact too.
+            fraction = "0" * 50 + "1"
+            request["record"].update({"valid-from": "2026-10-22T10:00:00." + fraction + "-07:00", "valid-until": None})
+            request["context"]["now"] = "2026-10-22T17:00:00Z"
+            self.assertFalse(self.command(world, "current", request)[1]["result"]["current"])
+            request["context"]["now"] = "2026-10-22T17:00:00." + fraction + "00Z"
+            self.assertTrue(self.command(world, "current", request)[1]["result"]["current"])
+            expiry = self.transition(operation="expire")
+            expiry["record"]["valid-until"] = "2026-10-22T17:00:00.0000009Z"
+            expiry["event"]["now"] = "2026-10-22T17:00:00.0000001Z"
+            self.assertFalse(self.command(world, "transition", expiry)[1]["result"]["legal"])
+            expiry["event"]["now"] = "2026-10-22T10:00:00.000000900-07:00"
+            self.assertTrue(self.command(world, "transition", expiry)[1]["result"]["legal"])
 
     def test_transition_table_drives_all_legal_states_and_deletion_is_terminal(self):
         with World() as world:

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import argparse
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 import math
 from pathlib import Path
@@ -17,10 +17,17 @@ MODEL = json.loads((PACK / "schemas/lifecycle.json").read_text())
 
 
 def time_value(value):
-    if not isinstance(value, str) or not re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)", value):
+    pattern = r"([0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2})(?:\.([0-9]+))?(Z|[+-](?:[01][0-9]|2[0-3]):[0-5][0-9])"
+    match = re.fullmatch(pattern, value) if isinstance(value, str) else None
+    if match is None:
         raise ContractError("Time must be timezone-qualified RFC3339 with valid offset components")
     try:
-        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+        whole = datetime.fromisoformat(match[1] + match[3].replace("Z", "+00:00"))
+        delta = whole - datetime(1970, 1, 1, tzinfo=timezone.utc)
+        # Strip only trailing zeroes: normalized decimal digit strings have the
+        # same lexicographic order as their exactly zero-padded fractions.
+        # No float, Decimal context or datetime microsecond rounding is involved.
+        return (delta.days * 86400 + delta.seconds, (match[2] or "").rstrip("0"))
     except ValueError as exc:
         raise ContractError("Invalid RFC3339 time") from exc
 
@@ -137,6 +144,7 @@ def guide():
              "## Current-selection predicate", "", "Every gate MUST pass before ranking or current-context assembly.", ""]
     lines += [f"- `{rule['gate']}`: {rule['meaning']}" for rule in MODEL["current-predicate"]]
     lines += ["", "Unknown valid-time bounds are unbounded; applicability still requires explicit assessment.",
+              "Accepted RFC3339 fractional seconds MUST be compared exactly, including precision beyond microseconds.",
               "Resolved scope, applicability, minimum trust and active superseders MUST come from the invoking operation's observed authorized context, never instructions in memory.",
               "Developer identity provides provenance, not an ACL. Repository/OS access remains the security boundary.", "",
               "## Legal transitions", "", "| Operation | From | To | Required guards | New version |",

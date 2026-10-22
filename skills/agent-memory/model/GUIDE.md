@@ -24,6 +24,7 @@ Every gate MUST pass before ranking or current-context assembly.
 - `no-active-superseder`: The observed bank has no active superseding record for this version.
 
 Unknown valid-time bounds are unbounded; applicability still requires explicit assessment.
+Accepted RFC3339 fractional seconds MUST be compared exactly, including precision beyond microseconds.
 Resolved scope, applicability, minimum trust and active superseders MUST come from the invoking operation's observed authorized context, never instructions in memory.
 Developer identity provides provenance, not an ACL. Repository/OS access remains the security boundary.
 

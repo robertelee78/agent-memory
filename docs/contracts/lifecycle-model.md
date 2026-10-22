@@ -57,6 +57,8 @@ create a personal memory namespace.
 
 All seven gates in the definition MUST pass before ranking. Known validity
 uses an inclusive start and exclusive end; null or absent bounds are unbounded.
+Accepted fractional seconds are compared exactly at their full precision,
+including beyond microseconds and across equivalent UTC offsets.
 Trust levels express the invoking operation's evidence assessment, not
 authenticated identity. The operation MUST supply its trust threshold
 explicitly. Confidence MAY inform ranking but MUST NOT override trust,
