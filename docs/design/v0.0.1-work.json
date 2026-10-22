@@ -598,49 +598,6 @@
       }
     },
     {
-      "work_key": "robertelee78/agent-memory:ADR-0003:portable-instruction-tree",
-      "issue": 14,
-      "url": "https://github.com/robertelee78/agent-memory/issues/14",
-      "title": "Build one progressive portable skill and shared model guide",
-      "wave": 1,
-      "milestone": "v0.0.1",
-      "delivery": {
-        "kind": "merge"
-      },
-      "depends_on": [
-        "robertelee78/agent-memory:ADR-0001:authority-policy",
-        "robertelee78/agent-memory:ADR-0001:scope-policy",
-        "robertelee78/agent-memory:ADR-0010:router-and-context-files",
-        "robertelee78/agent-memory:ADR-0005:lifecycle-schema"
-      ],
-      "source": {
-        "kind": "adr",
-        "path": "docs/adr/0003-progressive-disclosure.md",
-        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
-        "blob": "6a1c3b0e1a64f32a0033223caf0597e687aed9aa",
-        "decision_status": "accepted"
-      },
-      "outcome": "One registerable skill routes through shared domains to implemented operation leaves.",
-      "acceptance": [
-        "Use discovery, root, domain and leaf layers; nested instructions use GUIDE.md.",
-        "Follow the linked blueprint loading order, leaf contract, conditional model reference and context-budget guardrails.",
-        "Add routes only for implemented operations; leaves require their domain and do not depend on unstated sibling rules.",
-        "Use uppercase RFC 2119 requirements and keep client policy outside core semantics.",
-        "Include implemented refresh and publication routes plus automatic capture/deduplication/consolidation/pruning under the shared domain/leaf rules.",
-        "Initialization follows ADR-0010 evidence discovery and focused clarification; refresh preserves code and local unpublished memory."
-      ],
-      "validation": "Validate the pack and perform representative initialize/resume/manual-checkpoint walkthroughs from only loaded instructions.",
-      "fixtures": [
-        "skill-routes",
-        "retrieval-context"
-      ],
-      "design_approval": {
-        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-14",
-        "work_key": "robertelee78/agent-memory:ADR-0003:portable-instruction-tree",
-        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0003:portable-instruction-tree"
-      }
-    },
-    {
       "work_key": "robertelee78/agent-memory:ADR-0006:first-release-canaries",
       "issue": 35,
       "url": "https://github.com/robertelee78/agent-memory/issues/35",
@@ -1037,84 +994,6 @@
       }
     },
     {
-      "work_key": "robertelee78/agent-memory:ADR-0003:pack-validator",
-      "issue": 15,
-      "url": "https://github.com/robertelee78/agent-memory/issues/15",
-      "title": "Validate the route graph and normative guide contract",
-      "wave": 2,
-      "milestone": "v0.0.1",
-      "delivery": {
-        "kind": "merge"
-      },
-      "depends_on": [
-        "robertelee78/agent-memory:ADR-0003:portable-instruction-tree"
-      ],
-      "source": {
-        "kind": "adr",
-        "path": "docs/adr/0003-progressive-disclosure.md",
-        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
-        "blob": "6a1c3b0e1a64f32a0033223caf0597e687aed9aa",
-        "decision_status": "accepted"
-      },
-      "outcome": "Publishing and activation reject mechanically invalid or unreachable skill packs.",
-      "acceptance": [
-        "Check exactly one SKILL.md, frontmatter, all relative file/anchor links, reachability and unconditional-load cycles.",
-        "Validate required leaf sections/order/backlinks, executable modes, referenced schemas/templates and command-to-dispatch or file-operation mapping.",
-        "Check mechanical RFC 2119 forms without claiming keyword count establishes semantic completeness.",
-        "Documentation refactors retain a rule/strength/location map and representative independent usage review."
-      ],
-      "validation": "Run positive pack validation and deliberately malformed route, link, frontmatter and leaf fixtures.",
-      "fixtures": [
-        "skill-routes",
-        "retrieval-context"
-      ],
-      "design_approval": {
-        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-15",
-        "work_key": "robertelee78/agent-memory:ADR-0003:pack-validator",
-        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0003:pack-validator"
-      }
-    },
-    {
-      "work_key": "robertelee78/agent-memory:ADR-0004:core-cli",
-      "issue": 17,
-      "url": "https://github.com/robertelee78/agent-memory/issues/17",
-      "title": "Expose the deterministic CLI and honest file-only fallback",
-      "wave": 2,
-      "milestone": "v0.0.1",
-      "delivery": {
-        "kind": "merge"
-      },
-      "depends_on": [
-        "robertelee78/agent-memory:ADR-0011:scope-bind"
-      ],
-      "source": {
-        "kind": "adr",
-        "path": "docs/adr/0004-client-independent-integration.md",
-        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
-        "blob": "eee41d18ea81b7be94fb8ac89ffdf3ba3cee9e41",
-        "decision_status": "accepted"
-      },
-      "outcome": "A client-neutral command surface validates the bank while raw Markdown remains usable.",
-      "acceptance": [
-        "One portable skill plus deterministic CLI implements the same contract for Claude Code, Codex, OpenCode and custom harnesses.",
-        "Expose public CLI operation groups with project identity, developer attribution, memory IDs, applicability, validity and provenance as relevant.",
-        "Support automatic durable learning and memory-only Git exchange at turn boundaries without requiring MCP, hooks, a plugin or a daemon.",
-        "Preserve a readable file-only/manual fallback without claiming mediated guarantees.",
-        "Preserve unrelated client configuration and use short activation bindings, never a separate client policy or identity algorithm."
-      ],
-      "validation": "Invoke the installed CLI and demonstrate fresh-agent resume with it removed.",
-      "fixtures": [
-        "skill-routes",
-        "bank-roundtrip",
-        "cross-clone-sharing"
-      ],
-      "design_approval": {
-        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-17",
-        "work_key": "robertelee78/agent-memory:ADR-0004:core-cli",
-        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0004:core-cli"
-      }
-    },
-    {
       "work_key": "robertelee78/agent-memory:ADR-0005:retrieval",
       "issue": 29,
       "url": "https://github.com/robertelee78/agent-memory/issues/29",
@@ -1398,43 +1277,6 @@
       }
     },
     {
-      "work_key": "robertelee78/agent-memory:ADR-0007:portable-artifact",
-      "issue": 44,
-      "url": "https://github.com/robertelee78/agent-memory/issues/44",
-      "title": "Package the complete client-neutral portable artifact",
-      "wave": 3,
-      "milestone": "v0.0.1",
-      "delivery": {
-        "kind": "merge"
-      },
-      "depends_on": [
-        "robertelee78/agent-memory:ADR-0003:portable-instruction-tree",
-        "robertelee78/agent-memory:ADR-0003:pack-validator"
-      ],
-      "source": {
-        "kind": "adr",
-        "path": "docs/adr/0007-portable-pack-and-lifecycle.md",
-        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
-        "blob": "455a136d8406068c7a128658ccc3f3e969cf3cdd",
-        "decision_status": "accepted"
-      },
-      "outcome": "One self-contained skills/agent-memory artifact can operate the implemented protocol.",
-      "acceptance": [
-        "Include one SKILL.md, progressive guides, scripts, schemas and templates.",
-        "Follow the linked lifecycle blueprint; mark adapters separately without core dependencies on client APIs or marketplaces."
-      ],
-      "validation": "Copy the artifact to an isolated location and validate every implemented route/asset.",
-      "fixtures": [
-        "portable-lifecycle",
-        "skill-routes"
-      ],
-      "design_approval": {
-        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-44",
-        "work_key": "robertelee78/agent-memory:ADR-0007:portable-artifact",
-        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0007:portable-artifact"
-      }
-    },
-    {
       "work_key": "robertelee78/agent-memory:ADR-0005:deduplicate-before-write",
       "issue": 87,
       "url": "https://github.com/robertelee78/agent-memory/issues/87",
@@ -1515,44 +1357,6 @@
         "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-27",
         "work_key": "robertelee78/agent-memory:ADR-0005:admission",
         "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0005:admission"
-      }
-    },
-    {
-      "work_key": "robertelee78/agent-memory:ADR-0007:install-layout",
-      "issue": 45,
-      "url": "https://github.com/robertelee78/agent-memory/issues/45",
-      "title": "Expose lifecycle commands and separate runtime, state and data",
-      "wave": 4,
-      "milestone": "v0.0.1",
-      "delivery": {
-        "kind": "merge"
-      },
-      "depends_on": [
-        "robertelee78/agent-memory:ADR-0007:portable-artifact"
-      ],
-      "source": {
-        "kind": "adr",
-        "path": "docs/adr/0007-portable-pack-and-lifecycle.md",
-        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
-        "blob": "455a136d8406068c7a128658ccc3f3e969cf3cdd",
-        "decision_status": "accepted"
-      },
-      "outcome": "A managed installation has one shared artifact and an external ownership receipt.",
-      "acceptance": [
-        "Provide install, uninstall, update --check, update, version, doctor and status.",
-        "Use XDG-compatible managed source; keep memory data, runtime state, caches and indexes in distinct paths.",
-        "Store receipt and recoverable backups outside the checkout at the specified XDG state location.",
-        "Support generic, Codex, Claude, OpenCode, custom and no-client-link targets."
-      ],
-      "validation": "Run installed command discovery in temporary homes and inspect the receipt/target layout.",
-      "fixtures": [
-        "portable-lifecycle",
-        "skill-routes"
-      ],
-      "design_approval": {
-        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-45",
-        "work_key": "robertelee78/agent-memory:ADR-0007:install-layout",
-        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0007:install-layout"
       }
     },
     {
@@ -1639,159 +1443,6 @@
       }
     },
     {
-      "work_key": "robertelee78/agent-memory:ADR-0007:installer",
-      "issue": 46,
-      "url": "https://github.com/robertelee78/agent-memory/issues/46",
-      "title": "Install idempotently with preflight, ownership and verified activation",
-      "wave": 5,
-      "milestone": "v0.0.1",
-      "delivery": {
-        "kind": "merge"
-      },
-      "depends_on": [
-        "robertelee78/agent-memory:ADR-0007:install-layout",
-        "robertelee78/agent-memory:ADR-0011:principal-registry"
-      ],
-      "source": {
-        "kind": "adr",
-        "path": "docs/adr/0007-portable-pack-and-lifecycle.md",
-        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
-        "blob": "455a136d8406068c7a128658ccc3f3e969cf3cdd",
-        "decision_status": "accepted"
-      },
-      "outcome": "Install safely activates owned targets and preserves unrelated user content.",
-      "acceptance": [
-        "Inventory/plan and preflight all targets before changes, stage backups, activate atomically per target, read back and write a verified receipt.",
-        "Refuse unrelated files/directories/symlinks; link and copy modes converge on the same digest.",
-        "Preserve replaced managed copies and sentinel surroundings; install wrappers atomically.",
-        "Report revision/version/dirty qualification/digest/adapters/data location; restart guidance appears only when loaded content changes."
-      ],
-      "validation": "Run fresh/repeat, collision, copy/link, spaces, sentinel-edit and partial-activation rollback tests from the lifecycle blueprint.",
-      "fixtures": [
-        "portable-lifecycle",
-        "skill-routes"
-      ],
-      "design_approval": {
-        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-46",
-        "work_key": "robertelee78/agent-memory:ADR-0007:installer",
-        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0007:installer"
-      }
-    },
-    {
-      "work_key": "robertelee78/agent-memory:ADR-0007:updater",
-      "issue": 47,
-      "url": "https://github.com/robertelee78/agent-memory/issues/47",
-      "title": "Guard updates and recover interrupted multi-target activation",
-      "wave": 6,
-      "milestone": "v0.0.1",
-      "delivery": {
-        "kind": "merge"
-      },
-      "depends_on": [
-        "robertelee78/agent-memory:ADR-0007:installer"
-      ],
-      "source": {
-        "kind": "adr",
-        "path": "docs/adr/0007-portable-pack-and-lifecycle.md",
-        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
-        "blob": "455a136d8406068c7a128658ccc3f3e969cf3cdd",
-        "decision_status": "accepted"
-      },
-      "outcome": "A verified fast-forward update preserves data and can resume or roll back.",
-      "acceptance": [
-        "Lock lifecycle operations and bind channel to recorded remote/ref.",
-        "Refuse dirty/unexpected/downgrade/non-fast-forward candidates; update --check is read-only.",
-        "Validate candidate before activation; journal per-target switches and verify all client-visible targets/command.",
-        "Failed validation retains the prior installation; lost responses and interrupted activation converge on retry without global atomicity claims."
-      ],
-      "validation": "Use temporary local remotes and failpoints before/after each durable update write.",
-      "fixtures": [
-        "portable-lifecycle",
-        "skill-routes"
-      ],
-      "design_approval": {
-        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-47",
-        "work_key": "robertelee78/agent-memory:ADR-0007:updater",
-        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0007:updater"
-      }
-    },
-    {
-      "work_key": "robertelee78/agent-memory:ADR-0007:uninstall",
-      "issue": 50,
-      "url": "https://github.com/robertelee78/agent-memory/issues/50",
-      "title": "Remove owned runtime safely and preview any explicit data purge",
-      "wave": 6,
-      "milestone": "v0.0.1",
-      "delivery": {
-        "kind": "merge"
-      },
-      "depends_on": [
-        "robertelee78/agent-memory:ADR-0007:installer"
-      ],
-      "source": {
-        "kind": "adr",
-        "path": "docs/adr/0007-portable-pack-and-lifecycle.md",
-        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
-        "blob": "455a136d8406068c7a128658ccc3f3e969cf3cdd",
-        "decision_status": "accepted"
-      },
-      "outcome": "Ordinary uninstall preserves memory, unrelated settings, user edits and backups.",
-      "acceptance": [
-        "Inventory/preview owned targets against the external receipt; remove only proven unchanged ownership.",
-        "Restore sentinel-managed surroundings, preserve modified targets and keep data/projections/backups.",
-        "Retain an uninstall receipt and reinstall instructions; remove managed source only when no active target references it.",
-        "A distinct purge requires exact paths/counts and confirmation; refuse unresolved broad paths, symlink escapes, home or filesystem root."
-      ],
-      "validation": "Run uninstall/reinstall, modified-target, missing-source-receipt and bounded explicit purge fixtures.",
-      "fixtures": [
-        "portable-lifecycle",
-        "skill-routes"
-      ],
-      "design_approval": {
-        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-50",
-        "work_key": "robertelee78/agent-memory:ADR-0007:uninstall",
-        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0007:uninstall"
-      }
-    },
-    {
-      "work_key": "robertelee78/agent-memory:ADR-0007:diagnostics",
-      "issue": 51,
-      "url": "https://github.com/robertelee78/agent-memory/issues/51",
-      "title": "Report version, cheap status and actionable doctor recovery",
-      "wave": 6,
-      "milestone": "v0.0.1",
-      "delivery": {
-        "kind": "merge"
-      },
-      "depends_on": [
-        "robertelee78/agent-memory:ADR-0007:installer"
-      ],
-      "source": {
-        "kind": "adr",
-        "path": "docs/adr/0007-portable-pack-and-lifecycle.md",
-        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
-        "blob": "455a136d8406068c7a128658ccc3f3e969cf3cdd",
-        "decision_status": "accepted"
-      },
-      "outcome": "Users can diagnose installation identity, bank health and interrupted operations.",
-      "acceptance": [
-        "Version reports source/version/revision/digest/cleanliness/mode/channel/receipt schema.",
-        "Status is cheap/read-only and reports resolved identities, store/bank state, enabled adapters and pending transactions.",
-        "Doctor checks prerequisites, permissions, ownership, routes, wrappers, links/blocks, schema compatibility and enabled optional surfaces.",
-        "Separate warnings/failures and provide bounded repairs; interrupted lifecycle operations and lost responses are resumable or safely rollbackable."
-      ],
-      "validation": "Invoke actual commands against healthy and intentionally broken isolated installations.",
-      "fixtures": [
-        "portable-lifecycle",
-        "skill-routes"
-      ],
-      "design_approval": {
-        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-51",
-        "work_key": "robertelee78/agent-memory:ADR-0007:diagnostics",
-        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0007:diagnostics"
-      }
-    },
-    {
       "work_key": "robertelee78/agent-memory:ADR-0012:semantic-reconciliation",
       "issue": 94,
       "url": "https://github.com/robertelee78/agent-memory/issues/94",
@@ -1833,47 +1484,6 @@
         "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-94",
         "work_key": "robertelee78/agent-memory:ADR-0012:semantic-reconciliation",
         "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0012:semantic-reconciliation"
-      }
-    },
-    {
-      "work_key": "robertelee78/agent-memory:ADR-0007:lifecycle-contract-suite",
-      "issue": 52,
-      "url": "https://github.com/robertelee78/agent-memory/issues/52",
-      "title": "Gate releases with isolated real-command lifecycle tests",
-      "wave": 7,
-      "milestone": "v0.0.1",
-      "delivery": {
-        "kind": "merge"
-      },
-      "depends_on": [
-        "robertelee78/agent-memory:ADR-0007:updater",
-        "robertelee78/agent-memory:ADR-0007:uninstall",
-        "robertelee78/agent-memory:ADR-0007:diagnostics",
-        "robertelee78/agent-memory:ADR-0009:durable-write-faults"
-      ],
-      "source": {
-        "kind": "adr",
-        "path": "docs/adr/0007-portable-pack-and-lifecycle.md",
-        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
-        "blob": "455a136d8406068c7a128658ccc3f3e969cf3cdd",
-        "decision_status": "accepted"
-      },
-      "outcome": "Lifecycle safety is proven through the installed user-facing surface.",
-      "acceptance": [
-        "Cover the full ADR and linked-blueprint matrix: fresh/reinstall, link/copy/custom/no-client, conflicts, update/ref guards, interrupts/lost responses, rollback/locks, uninstall/purge and preserved data.",
-        "Verify all enabled clients resolve the same revision/digest and generated-state deletion does not impair resume.",
-        "Validate the pack before publication and update activation.",
-        "Tests never use real credentials, mutate live client config/data/developer checkouts or require the network by default."
-      ],
-      "validation": "Run the complete temporary-home CLI lifecycle gate with deterministic failpoints.",
-      "fixtures": [
-        "portable-lifecycle",
-        "skill-routes"
-      ],
-      "design_approval": {
-        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-52",
-        "work_key": "robertelee78/agent-memory:ADR-0007:lifecycle-contract-suite",
-        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0007:lifecycle-contract-suite"
       }
     },
     {
@@ -1966,6 +1576,57 @@
       }
     },
     {
+      "work_key": "robertelee78/agent-memory:ADR-0003:portable-instruction-tree",
+      "issue": 14,
+      "url": "https://github.com/robertelee78/agent-memory/issues/14",
+      "title": "Build one progressive portable skill and shared model guide",
+      "wave": 8,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [
+        "robertelee78/agent-memory:ADR-0001:authority-policy",
+        "robertelee78/agent-memory:ADR-0001:scope-policy",
+        "robertelee78/agent-memory:ADR-0010:router-and-context-files",
+        "robertelee78/agent-memory:ADR-0005:lifecycle-schema",
+        "robertelee78/agent-memory:ADR-0005:consolidation",
+        "robertelee78/agent-memory:ADR-0005:retrieval",
+        "robertelee78/agent-memory:ADR-0005:forgetting",
+        "robertelee78/agent-memory:ADR-0010:single-file-checkpoint",
+        "robertelee78/agent-memory:ADR-0010:manual-file-protocol",
+        "robertelee78/agent-memory:ADR-0010:evidence-led-initialization",
+        "robertelee78/agent-memory:ADR-0012:publish-memory",
+        "robertelee78/agent-memory:ADR-0012:refresh-memory"
+      ],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0003-progressive-disclosure.md",
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "6a1c3b0e1a64f32a0033223caf0597e687aed9aa",
+        "decision_status": "accepted"
+      },
+      "outcome": "One registerable skill routes through shared domains to implemented operation leaves.",
+      "acceptance": [
+        "Use discovery, root, domain and leaf layers; nested instructions use GUIDE.md.",
+        "Follow the linked blueprint loading order, leaf contract, conditional model reference and context-budget guardrails.",
+        "Add routes only for implemented operations; leaves require their domain and do not depend on unstated sibling rules.",
+        "Use uppercase RFC 2119 requirements and keep client policy outside core semantics.",
+        "Include implemented refresh and publication routes plus automatic capture/deduplication/consolidation/pruning under the shared domain/leaf rules.",
+        "Initialization follows ADR-0010 evidence discovery and focused clarification; refresh preserves code and local unpublished memory."
+      ],
+      "validation": "Validate the pack and perform representative initialize/resume/manual-checkpoint walkthroughs from only loaded instructions.",
+      "fixtures": [
+        "skill-routes",
+        "retrieval-context"
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-14",
+        "work_key": "robertelee78/agent-memory:ADR-0003:portable-instruction-tree",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0003:portable-instruction-tree"
+      }
+    },
+    {
       "work_key": "robertelee78/agent-memory:ADR-0009:multi-machine-learning-contract",
       "issue": 88,
       "url": "https://github.com/robertelee78/agent-memory/issues/88",
@@ -2012,11 +1673,363 @@
       }
     },
     {
+      "work_key": "robertelee78/agent-memory:ADR-0003:pack-validator",
+      "issue": 15,
+      "url": "https://github.com/robertelee78/agent-memory/issues/15",
+      "title": "Validate the route graph and normative guide contract",
+      "wave": 9,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [
+        "robertelee78/agent-memory:ADR-0003:portable-instruction-tree"
+      ],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0003-progressive-disclosure.md",
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "6a1c3b0e1a64f32a0033223caf0597e687aed9aa",
+        "decision_status": "accepted"
+      },
+      "outcome": "Publishing and activation reject mechanically invalid or unreachable skill packs.",
+      "acceptance": [
+        "Check exactly one SKILL.md, frontmatter, all relative file/anchor links, reachability and unconditional-load cycles.",
+        "Validate required leaf sections/order/backlinks, executable modes, referenced schemas/templates and command-to-dispatch or file-operation mapping.",
+        "Check mechanical RFC 2119 forms without claiming keyword count establishes semantic completeness.",
+        "Documentation refactors retain a rule/strength/location map and representative independent usage review."
+      ],
+      "validation": "Run positive pack validation and deliberately malformed route, link, frontmatter and leaf fixtures.",
+      "fixtures": [
+        "skill-routes",
+        "retrieval-context"
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-15",
+        "work_key": "robertelee78/agent-memory:ADR-0003:pack-validator",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0003:pack-validator"
+      }
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0007:portable-artifact",
+      "issue": 44,
+      "url": "https://github.com/robertelee78/agent-memory/issues/44",
+      "title": "Package the complete client-neutral portable artifact",
+      "wave": 10,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [
+        "robertelee78/agent-memory:ADR-0003:portable-instruction-tree",
+        "robertelee78/agent-memory:ADR-0003:pack-validator"
+      ],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0007-portable-pack-and-lifecycle.md",
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "455a136d8406068c7a128658ccc3f3e969cf3cdd",
+        "decision_status": "accepted"
+      },
+      "outcome": "One self-contained skills/agent-memory artifact can operate the implemented protocol.",
+      "acceptance": [
+        "Include one SKILL.md, progressive guides, scripts, schemas and templates.",
+        "Follow the linked lifecycle blueprint; mark adapters separately without core dependencies on client APIs or marketplaces."
+      ],
+      "validation": "Copy the artifact to an isolated location and validate every implemented route/asset.",
+      "fixtures": [
+        "portable-lifecycle",
+        "skill-routes"
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-44",
+        "work_key": "robertelee78/agent-memory:ADR-0007:portable-artifact",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0007:portable-artifact"
+      }
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0007:installer",
+      "issue": 46,
+      "url": "https://github.com/robertelee78/agent-memory/issues/46",
+      "title": "Install idempotently with preflight, ownership and verified activation",
+      "wave": 11,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [
+        "robertelee78/agent-memory:ADR-0011:principal-registry",
+        "robertelee78/agent-memory:ADR-0007:portable-artifact"
+      ],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0007-portable-pack-and-lifecycle.md",
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "455a136d8406068c7a128658ccc3f3e969cf3cdd",
+        "decision_status": "accepted"
+      },
+      "outcome": "Install safely activates owned targets and preserves unrelated user content.",
+      "acceptance": [
+        "Inventory/plan and preflight all targets before changes, stage backups, activate atomically per target, read back and write a verified receipt.",
+        "Refuse unrelated files/directories/symlinks; link and copy modes converge on the same digest.",
+        "Preserve replaced managed copies and sentinel surroundings; install wrappers atomically.",
+        "Report revision/version/dirty qualification/digest/adapters/data location; restart guidance appears only when loaded content changes."
+      ],
+      "validation": "Run fresh/repeat, collision, copy/link, spaces, sentinel-edit and partial-activation rollback tests from the lifecycle blueprint.",
+      "fixtures": [
+        "portable-lifecycle",
+        "skill-routes"
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-46",
+        "work_key": "robertelee78/agent-memory:ADR-0007:installer",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0007:installer"
+      }
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0007:updater",
+      "issue": 47,
+      "url": "https://github.com/robertelee78/agent-memory/issues/47",
+      "title": "Guard updates and recover interrupted multi-target activation",
+      "wave": 12,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [
+        "robertelee78/agent-memory:ADR-0007:installer"
+      ],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0007-portable-pack-and-lifecycle.md",
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "455a136d8406068c7a128658ccc3f3e969cf3cdd",
+        "decision_status": "accepted"
+      },
+      "outcome": "A verified fast-forward update preserves data and can resume or roll back.",
+      "acceptance": [
+        "Lock lifecycle operations and bind channel to recorded remote/ref.",
+        "Refuse dirty/unexpected/downgrade/non-fast-forward candidates; update --check is read-only.",
+        "Validate candidate before activation; journal per-target switches and verify all client-visible targets/command.",
+        "Failed validation retains the prior installation; lost responses and interrupted activation converge on retry without global atomicity claims."
+      ],
+      "validation": "Use temporary local remotes and failpoints before/after each durable update write.",
+      "fixtures": [
+        "portable-lifecycle",
+        "skill-routes"
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-47",
+        "work_key": "robertelee78/agent-memory:ADR-0007:updater",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0007:updater"
+      }
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0007:uninstall",
+      "issue": 50,
+      "url": "https://github.com/robertelee78/agent-memory/issues/50",
+      "title": "Remove owned runtime safely and preview any explicit data purge",
+      "wave": 12,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [
+        "robertelee78/agent-memory:ADR-0007:installer"
+      ],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0007-portable-pack-and-lifecycle.md",
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "455a136d8406068c7a128658ccc3f3e969cf3cdd",
+        "decision_status": "accepted"
+      },
+      "outcome": "Ordinary uninstall preserves memory, unrelated settings, user edits and backups.",
+      "acceptance": [
+        "Inventory/preview owned targets against the external receipt; remove only proven unchanged ownership.",
+        "Restore sentinel-managed surroundings, preserve modified targets and keep data/projections/backups.",
+        "Retain an uninstall receipt and reinstall instructions; remove managed source only when no active target references it.",
+        "A distinct purge requires exact paths/counts and confirmation; refuse unresolved broad paths, symlink escapes, home or filesystem root."
+      ],
+      "validation": "Run uninstall/reinstall, modified-target, missing-source-receipt and bounded explicit purge fixtures.",
+      "fixtures": [
+        "portable-lifecycle",
+        "skill-routes"
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-50",
+        "work_key": "robertelee78/agent-memory:ADR-0007:uninstall",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0007:uninstall"
+      }
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0007:diagnostics",
+      "issue": 51,
+      "url": "https://github.com/robertelee78/agent-memory/issues/51",
+      "title": "Report version, cheap status and actionable doctor recovery",
+      "wave": 12,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [
+        "robertelee78/agent-memory:ADR-0007:installer"
+      ],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0007-portable-pack-and-lifecycle.md",
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "455a136d8406068c7a128658ccc3f3e969cf3cdd",
+        "decision_status": "accepted"
+      },
+      "outcome": "Users can diagnose installation identity, bank health and interrupted operations.",
+      "acceptance": [
+        "Version reports source/version/revision/digest/cleanliness/mode/channel/receipt schema.",
+        "Status is cheap/read-only and reports resolved identities, store/bank state, enabled adapters and pending transactions.",
+        "Doctor checks prerequisites, permissions, ownership, routes, wrappers, links/blocks, schema compatibility and enabled optional surfaces.",
+        "Separate warnings/failures and provide bounded repairs; interrupted lifecycle operations and lost responses are resumable or safely rollbackable."
+      ],
+      "validation": "Invoke actual commands against healthy and intentionally broken isolated installations.",
+      "fixtures": [
+        "portable-lifecycle",
+        "skill-routes"
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-51",
+        "work_key": "robertelee78/agent-memory:ADR-0007:diagnostics",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0007:diagnostics"
+      }
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0007:install-layout",
+      "issue": 45,
+      "url": "https://github.com/robertelee78/agent-memory/issues/45",
+      "title": "Expose lifecycle commands and separate runtime, state and data",
+      "wave": 13,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [
+        "robertelee78/agent-memory:ADR-0007:portable-artifact",
+        "robertelee78/agent-memory:ADR-0007:installer",
+        "robertelee78/agent-memory:ADR-0007:updater",
+        "robertelee78/agent-memory:ADR-0007:uninstall",
+        "robertelee78/agent-memory:ADR-0007:diagnostics"
+      ],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0007-portable-pack-and-lifecycle.md",
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "455a136d8406068c7a128658ccc3f3e969cf3cdd",
+        "decision_status": "accepted"
+      },
+      "outcome": "A managed installation has one shared artifact and an external ownership receipt.",
+      "acceptance": [
+        "Provide install, uninstall, update --check, update, version, doctor and status.",
+        "Use XDG-compatible managed source; keep memory data, runtime state, caches and indexes in distinct paths.",
+        "Store receipt and recoverable backups outside the checkout at the specified XDG state location.",
+        "Support generic, Codex, Claude, OpenCode, custom and no-client-link targets."
+      ],
+      "validation": "Run installed command discovery in temporary homes and inspect the receipt/target layout.",
+      "fixtures": [
+        "portable-lifecycle",
+        "skill-routes"
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-45",
+        "work_key": "robertelee78/agent-memory:ADR-0007:install-layout",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0007:install-layout"
+      }
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0007:lifecycle-contract-suite",
+      "issue": 52,
+      "url": "https://github.com/robertelee78/agent-memory/issues/52",
+      "title": "Gate releases with isolated real-command lifecycle tests",
+      "wave": 13,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [
+        "robertelee78/agent-memory:ADR-0007:updater",
+        "robertelee78/agent-memory:ADR-0007:uninstall",
+        "robertelee78/agent-memory:ADR-0007:diagnostics",
+        "robertelee78/agent-memory:ADR-0009:durable-write-faults"
+      ],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0007-portable-pack-and-lifecycle.md",
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "455a136d8406068c7a128658ccc3f3e969cf3cdd",
+        "decision_status": "accepted"
+      },
+      "outcome": "Lifecycle safety is proven through the installed user-facing surface.",
+      "acceptance": [
+        "Cover the full ADR and linked-blueprint matrix: fresh/reinstall, link/copy/custom/no-client, conflicts, update/ref guards, interrupts/lost responses, rollback/locks, uninstall/purge and preserved data.",
+        "Verify all enabled clients resolve the same revision/digest and generated-state deletion does not impair resume.",
+        "Validate the pack before publication and update activation.",
+        "Tests never use real credentials, mutate live client config/data/developer checkouts or require the network by default."
+      ],
+      "validation": "Run the complete temporary-home CLI lifecycle gate with deterministic failpoints.",
+      "fixtures": [
+        "portable-lifecycle",
+        "skill-routes"
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-52",
+        "work_key": "robertelee78/agent-memory:ADR-0007:lifecycle-contract-suite",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0007:lifecycle-contract-suite"
+      }
+    },
+    {
+      "work_key": "robertelee78/agent-memory:ADR-0004:core-cli",
+      "issue": 17,
+      "url": "https://github.com/robertelee78/agent-memory/issues/17",
+      "title": "Expose the deterministic CLI and honest file-only fallback",
+      "wave": 14,
+      "milestone": "v0.0.1",
+      "delivery": {
+        "kind": "merge"
+      },
+      "depends_on": [
+        "robertelee78/agent-memory:ADR-0011:scope-bind",
+        "robertelee78/agent-memory:ADR-0007:install-layout"
+      ],
+      "source": {
+        "kind": "adr",
+        "path": "docs/adr/0004-client-independent-integration.md",
+        "commit": "7ca331173f75ccbd06d929647dc5bc68fe002c2c",
+        "blob": "eee41d18ea81b7be94fb8ac89ffdf3ba3cee9e41",
+        "decision_status": "accepted"
+      },
+      "outcome": "A client-neutral command surface validates the bank while raw Markdown remains usable.",
+      "acceptance": [
+        "One portable skill plus deterministic CLI implements the same contract for Claude Code, Codex, OpenCode and custom harnesses.",
+        "Expose public CLI operation groups with project identity, developer attribution, memory IDs, applicability, validity and provenance as relevant.",
+        "Support automatic durable learning and memory-only Git exchange at turn boundaries without requiring MCP, hooks, a plugin or a daemon.",
+        "Preserve a readable file-only/manual fallback without claiming mediated guarantees.",
+        "Preserve unrelated client configuration and use short activation bindings, never a separate client policy or identity algorithm."
+      ],
+      "validation": "Invoke the installed CLI and demonstrate fresh-agent resume with it removed.",
+      "fixtures": [
+        "skill-routes",
+        "bank-roundtrip",
+        "cross-clone-sharing"
+      ],
+      "design_approval": {
+        "ref": "https://github.com/robertelee78/agent-memory/blob/7ca331173f75ccbd06d929647dc5bc68fe002c2c/docs/design/v0.0.1-approval.md#issue-17",
+        "work_key": "robertelee78/agent-memory:ADR-0004:core-cli",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0004:core-cli"
+      }
+    },
+    {
       "work_key": "robertelee78/agent-memory:ADR-0012:sharing-release-gate",
       "issue": 96,
       "url": "https://github.com/robertelee78/agent-memory/issues/96",
       "title": "Gate v0.0.1 on the complete quiet cross-machine learning loop",
-      "wave": 9,
+      "wave": 15,
       "milestone": "v0.0.1",
       "delivery": {
         "kind": "release",
