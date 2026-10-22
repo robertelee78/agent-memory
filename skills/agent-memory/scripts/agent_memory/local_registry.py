@@ -41,14 +41,14 @@ def exclusive(lock, operation_id, operation):
     try:
         fd = os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
     except FileExistsError as exc:
-        raise ContractError("Project registry is locked; inspect status/recover") from exc
+        raise ContractError("Memory metadata is locked; inspect status/recover") from exc
     inode = os.fstat(fd).st_ino
     try:
         with os.fdopen(fd, "wb", closefd=False) as stream:
             stream.write(encoded(owner)); stream.flush(); os.fsync(fd)
         if fcntl is not None:
             fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        yield
+        yield encoded(owner)
     finally:
         try:
             if not lock.is_symlink() and lock.exists() and lock.lstat().st_ino == inode and lock.read_bytes() == encoded(owner):
@@ -81,7 +81,7 @@ def replace(registry, payload, observed):
             temporary.unlink(missing_ok=True)
 
 
-def recover(registry, lock, operations, prepared=None):
+def recover(registry, lock, operations, prepared=None, *, schema="agent-memory/project-lock-recovery-v1"):
     if not lock.exists() or fcntl is None:
         raise ContractError("Safe stale-lock recovery requires an existing local lock and supported file locking; operator review otherwise")
     fd = os.open(lock, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0))
@@ -111,12 +111,12 @@ def recover(registry, lock, operations, prepared=None):
         else:
             raise ContractError("Lock owner is still alive")
         if prepared is None:
-            return {"proposal": {"schema": "agent-memory/project-lock-recovery-v1", "operation_id": str(uuid.uuid4()),
+            return {"proposal": {"schema": schema, "operation_id": str(uuid.uuid4()),
                                  "registry_path": str(registry), "observed_lock_sha256": digest(raw)},
                     "lock_owner": owner, "writes_performed": False, "verified": False}
         prepared = prepared.get("proposal", prepared) if isinstance(prepared, dict) else prepared
         if (not isinstance(prepared, dict) or set(prepared) != {"schema", "operation_id", "registry_path", "observed_lock_sha256"}
-                or prepared["schema"] != "agent-memory/project-lock-recovery-v1" or not uuid_valid(prepared["operation_id"])
+                or prepared["schema"] != schema or not uuid_valid(prepared["operation_id"])
                 or prepared["registry_path"] != str(registry) or prepared["observed_lock_sha256"] != digest(raw)
                 or lock.lstat().st_ino != inode or lock.read_bytes() != raw):
             raise ContractError("Stale or invalid lock-recovery proposal")

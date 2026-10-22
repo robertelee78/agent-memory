@@ -173,13 +173,14 @@ def render(proposal):
             "files": files, "writes_performed": False}
 
 
-def validate(repo):
+def validate(repo, *, owned_lock=None):
     bank = Path(repo).resolve() / SPEC["x-bank-path"]
     if bank.is_symlink():
         raise ContractError("Bank directory must not be a symlink")
     if (bank / ".agent-memory-transaction.md").exists():
         raise ContractError("Interrupted bank: recover the transaction before resuming")
-    if (bank / ".agent-memory.lock").exists():
+    lock = bank / ".agent-memory.lock"
+    if lock.is_symlink() or (lock.exists() and (owned_lock is None or lock.read_bytes() != owned_lock)):
         raise ContractError("Busy bank: retry validation after the writer finishes")
     router = bank / "MEMORY.md"
     if router.is_symlink():
