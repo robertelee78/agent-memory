@@ -19,7 +19,7 @@ from .frontmatter import ContractError
 
 MARKER = ".agent-memory-transaction.md"
 SCHEMA = "agent-memory/transaction-proposal-v1"
-FIELDS = {"schema", "operation_id", "operation", "repo_root", "project_id", "observed_hashes", "files"}
+FIELDS = {"schema", "operation_id", "operation", "repo_root", "project_id", "observed_hashes", "files", "scope_context"}
 RECOVERY_SCHEMA = "agent-memory/transaction-recovery-v1"
 RECOVERY_FIELDS = {"schema", "operation_id", "repo_root", "mode", "journal_sha256", "marker_sha256", "observed_hashes"}
 
@@ -42,6 +42,7 @@ def files_at(bank):
 
 
 def proposal_value(prepared):
+    from .scope_binding import context_value
     p = prepared.get("proposal", prepared) if isinstance(prepared, dict) else prepared
     if (not isinstance(p, dict) or set(p) != FIELDS or p["schema"] != SCHEMA
             or not uuid_valid(p["operation_id"]) or not uuid_valid(p["project_id"])
@@ -49,6 +50,7 @@ def proposal_value(prepared):
             or not Path(p["repo_root"]).is_absolute() or str(Path(p["repo_root"]).resolve()) != p["repo_root"]):
         raise ContractError("Invalid bank transaction proposal")
     contract.validate_files(p["files"])
+    context_value(p['scope_context'])
     if p["operation"] == "checkpoint":
         raise ContractError("Checkpoint must use the single-file activeContext replacement")
     if not isinstance(p["observed_hashes"], dict) or "MEMORY.md" not in p["observed_hashes"]:
@@ -65,10 +67,12 @@ def proposal_value(prepared):
 
 
 def preview(repo, files, operation="compact"):
+    from .scope_binding import capture
     root, bank = writes.bank_path(repo)
     checked, hashes = writes.snapshot(root)
     p = proposal_value({"schema": SCHEMA, "operation_id": str(uuid.uuid4()), "operation": operation,
-                        "repo_root": str(root), "project_id": checked["project_id"], "observed_hashes": hashes, "files": files})
+                        "repo_root": str(root), "project_id": checked["project_id"], "observed_hashes": hashes,
+                        "files": files, "scope_context": capture(root)})
     preflight(bank, p)
     return result("preview", proposal=p, writes_performed=False, verified=False)
 
@@ -277,10 +281,24 @@ def converge(root, bank, p, base_files, journal, raw, receipt_path, mode, observ
 
 
 def apply(prepared):
+    from .scope_binding import require
+    p = proposal_value(prepared)
+    if p['operation'] == 'bind':
+        raise ContractError('Identity changes require scope_binding preview/apply, not an ordinary bank transaction')
+    if p['scope_context'] is None:
+        raise ContractError('Proposal has no resolved scope; finish identity setup and preview again')
+    context = require(p['repo_root'], p['project_id'], expected=p['scope_context'])
+    receipt = _apply(p, check_identity=lambda owner: require(p['repo_root'], p['project_id'],
+                                                            expected=context, owned_lock=owner))
+    return {**receipt, 'resolved_scope': context}
+
+
+def _apply(prepared, *, check_identity):
     p = proposal_value(prepared)
     root, bank = writes.bank_path(p["repo_root"])
     journal, receipt_path = locations(root, bank, p["operation_id"])
     with storage.exclusive(bank / ".agent-memory.lock", p["operation_id"], "bank-" + p["operation"]) as owner:
+        check_identity(owner)
         checked, observed = writes.snapshot(root, owner)
         known = receipt_value(receipt_path, p)
         if known:
@@ -315,6 +333,26 @@ def apply(prepared):
 
 
 def recover(repo, mode=None, prepared=None):
+    if prepared is None:
+        return _recover(repo, mode)
+    from .scope_binding import require
+    root, bank = writes.bank_path(repo)
+    r = prepared.get('proposal', prepared) if isinstance(prepared, dict) else prepared
+    operation_id = r.get('operation_id') if isinstance(r, dict) else None
+    if not uuid_valid(operation_id):
+        raise ContractError('Invalid transaction recovery operation')
+    journal, _ = locations(root, bank, operation_id)
+    _, p = journal_value(journal.read_bytes(), root, bank, operation_id)
+    if p['operation'] == 'bind':
+        raise ContractError('Resume identity binding through its original scope_binding bundle')
+    marker = marker_bytes(p)
+    context = require(root, p['project_id'], owned_transaction=marker)
+    receipt = _recover(root, prepared=prepared, check_identity=lambda owner, marker: require(
+        root, p['project_id'], expected=context, owned_lock=owner, owned_transaction=marker))
+    return {**receipt, 'resolved_scope': context}
+
+
+def _recover(repo, mode=None, prepared=None, *, check_identity=None):
     root, bank = writes.bank_path(repo)
     if prepared is not None:
         r = prepared.get("proposal", prepared) if isinstance(prepared, dict) else prepared
@@ -329,6 +367,9 @@ def recover(repo, mode=None, prepared=None):
             if digest(raw) != r["journal_sha256"] or digest(marker.read_bytes()) != r["marker_sha256"]:
                 raise ContractError("Recovery evidence changed after preview; inspect again")
             j, p = journal_value(raw, root, bank, r["operation_id"])
+            if check_identity is None:
+                raise ContractError('Recovery writer requires resolved scope')
+            check_identity(owner, marker_bytes(p))
             observed = writes.hashes(bank)
             if observed != r["observed_hashes"]:
                 raise ContractError("Bank changed after recovery preview; preserve the edit")

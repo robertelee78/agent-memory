@@ -7,6 +7,9 @@ NOT use a repository basename, harness, email or developer alias as identity.
 Local identity evidence supports that resolution; it does not authenticate a
 person or grant access beyond repository/OS permissions.
 
+A session MUST follow [identity resolution and binding](../identity/GUIDE.md)
+for concrete status, developer setup, bank/registry previews and write guards.
+
 ## Scope matrix
 
 | Scope or condition | Applies when | Unknown or different context |

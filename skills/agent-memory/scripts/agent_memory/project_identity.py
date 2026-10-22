@@ -16,22 +16,13 @@ from .developer_identity import digest, encoded, load, text, uuid_valid
 from .frontmatter import ContractError
 from . import local_registry as storage
 from .remote_identity import normalize
+from .identity_git import git
 
 PACK = Path(__file__).resolve().parents[2]
 SPEC = json.loads((PACK / "schemas/projects.json").read_text())
 
 
-def git(repo, *args, optional=False):
-    env = os.environ.copy()
-    for name in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE"):
-        env.pop(name, None)
-    command = subprocess.run(["git", "-C", str(repo), *args], env=env, text=True, capture_output=True, timeout=10)
-    if command.returncode and not optional:
-        raise ContractError("Cannot inspect repository evidence with Git; no identity change performed")
-    return command.stdout.strip() if command.returncode == 0 else None
-
-
-def discover(repo, authority=None):
+def discover(repo, authority=None, *, owned_lock=None, owned_transaction=None):
     repo = Path(repo).resolve()
     if not repo.is_dir():
         raise ContractError("Repository location must be an existing directory")
@@ -83,8 +74,10 @@ def discover(repo, authority=None):
     router = bank / "MEMORY.md"
     if bank.is_symlink() or router.is_symlink():
         raise ContractError("Bank/router must not be symlinks")
-    if (bank / ".agent-memory.lock").exists() or (bank / ".agent-memory-transaction.md").exists():
-        raise ContractError("Bank busy or interrupted; inspect/recover before resolving identity")
+    for name, owned in ((".agent-memory.lock", owned_lock), (".agent-memory-transaction.md", owned_transaction)):
+        path = bank / name
+        if path.is_symlink() or (path.exists() and (owned is None or path.read_bytes() != owned)):
+            raise ContractError("Bank busy or interrupted; inspect/recover before resolving identity")
     raw = router.read_bytes() if router.exists() else None
     metadata = parse_router(raw.decode("utf-8"))[0] if raw is not None else {}
     return {"repo_root": str(root), "is_git": is_git, "common_git_dir": str(common) if is_git else None,
@@ -161,13 +154,13 @@ def observe():
             {"schema": SPEC["schema"], "projects": {}, "checkouts": {}, "operations": {}}), digest(raw)
 
 
-def evidence(repo, data, authority=None):
+def evidence(repo, data, authority=None, **owned):
     # A saved explicit authority decision remains effective for this checkout.
-    initial = discover(repo, authority)
+    initial = discover(repo, authority, **owned)
     known = data["checkouts"].get(initial["checkout_key"])
     configured = git(initial["repo_root"], "config", "--get-all", "agent-memory.authorityRemote", optional=True) if initial["is_git"] else None
     if authority is None and not configured and known and known["authority_name"] is not None:
-        return discover(repo, known["authority_name"])
+        return discover(repo, known["authority_name"], **owned)
     return initial
 
 
@@ -176,9 +169,9 @@ def result(operation, **values):
             "changed_memory_paths": [], **values}
 
 
-def status(repo, authority=None):
+def status(repo, authority=None, **owned):
     data, sha = observe()
-    proof = evidence(repo, data, authority)
+    proof = evidence(repo, data, authority, **owned)
     checkout = data["checkouts"].get(proof["checkout_key"])
     project_id = proof["bank_project_id"] or (checkout["project_id"] if checkout else None)
     issues = list(proof["issues"])

@@ -11,6 +11,7 @@ import unittest
 import uuid
 
 from world import World
+from identity_fixtures import bind
 
 ROOT = Path(__file__).resolve().parents[2]
 HELPER = ROOT / "scripts/bank_writes.py"
@@ -37,6 +38,7 @@ class BankWritesContract(unittest.TestCase):
         bank.mkdir()
         for name, body in json.loads(output.stdout)["files"].items():
             (bank / name).write_text(body)
+        bind(world, repo)
         return bank
 
     def preview(self, world, bank, body="# Focus\n\nNext: verify the new lesson.\n", path="activeContext.md"):

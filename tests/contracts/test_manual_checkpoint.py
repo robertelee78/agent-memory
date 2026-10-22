@@ -7,6 +7,7 @@ import unittest
 import uuid
 
 from world import World
+from identity_fixtures import bind
 
 ROOT = Path(__file__).resolve().parents[2]
 WRITES = ROOT / "scripts/bank_writes.py"
@@ -100,6 +101,7 @@ class ManualCheckpointContract(unittest.TestCase):
     def test_stale_mediated_proposal_refuses_then_fresh_write_preserves_manual_evidence(self):
         with World() as world:
             repo, bank = self.bank(world)
+            bind(world, repo)
             result, old = self.preview(world, bank, BODY.replace("first clone", "old in-session snapshot"))
             self.assertEqual(result.returncode, 0, old)
             target = bank / "activeContext.md"

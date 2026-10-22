@@ -18,7 +18,7 @@ from .developer_identity import digest, encoded, load, uuid_valid
 from .frontmatter import ContractError
 
 OPERATIONS = {"replace", "checkpoint", "initialize", "bind", "capture", "compact", "correct", "supersede", "revoke", "forget", "refresh", "recover"}
-PROPOSAL_FIELDS = {"schema", "operation_id", "operation", "repo_root", "project_id", "observed_hashes", "path", "content"}
+PROPOSAL_FIELDS = {"schema", "operation_id", "operation", "repo_root", "project_id", "observed_hashes", "path", "content", "scope_context"}
 
 
 def bank_path(repo):
@@ -79,16 +79,18 @@ def result(operation, **fields):
 
 
 def preview(repo, path, content, operation="replace"):
+    from .scope_binding import capture
     root, _ = bank_path(repo)
     checked, observed = snapshot(root)
     proposal = {"schema": "agent-memory/write-proposal-v1", "operation_id": str(uuid.uuid4()), "operation": operation,
                 "repo_root": str(root), "project_id": checked["project_id"], "observed_hashes": observed,
-                "path": path, "content": content}
+                "path": path, "content": content, "scope_context": capture(root)}
     proposal_value(proposal)
     return result("preview", proposal=proposal, writes_performed=False, verified=False, changed_memory_paths=[])
 
 
 def proposal_value(prepared):
+    from .scope_binding import context_value
     proposal = prepared.get("proposal", prepared) if isinstance(prepared, dict) else prepared
     if (not isinstance(proposal, dict) or set(proposal) != PROPOSAL_FIELDS or proposal["schema"] != "agent-memory/write-proposal-v1"
             or not uuid_valid(proposal["operation_id"]) or not uuid_valid(proposal["project_id"])
@@ -96,6 +98,7 @@ def proposal_value(prepared):
             or not Path(proposal["repo_root"]).is_absolute() or str(Path(proposal["repo_root"]).resolve()) != proposal["repo_root"]):
         raise ContractError("Invalid observed-write proposal")
     contract.path_value(proposal["path"])
+    context_value(proposal['scope_context'])
     if proposal["path"] == "MEMORY.md":
         raise ContractError("Router/identity changes require the governed multi-file or binding operation")
     if not isinstance(proposal["content"], str) or not proposal["content"].strip():
@@ -149,6 +152,17 @@ def record(receipt_path, payload):
 
 
 def apply(prepared):
+    from .scope_binding import require
+    proposal = proposal_value(prepared)
+    if proposal['scope_context'] is None:
+        raise ContractError('Proposal has no resolved scope; finish identity setup and preview again')
+    context = require(proposal['repo_root'], proposal['project_id'], expected=proposal['scope_context'])
+    receipt = _apply(proposal, check_identity=lambda owner: require(proposal['repo_root'], proposal['project_id'],
+                                                                    expected=context, owned_lock=owner))
+    return {**receipt, 'resolved_scope': context}
+
+
+def _apply(prepared, *, check_identity):
     proposal = proposal_value(prepared)
     root, bank = bank_path(proposal["repo_root"])
     directory, receipt_path = state_paths(root, bank, proposal["operation_id"])
@@ -160,6 +174,7 @@ def apply(prepared):
     # No bank inventory or previous receipt is read until this lock is acquired.
     with storage.exclusive(bank / ".agent-memory.lock", proposal["operation_id"], "bank-" + proposal["operation"]) as owner:
         fault("locked-before-inventory")
+        check_identity(owner)
         checked, observed = snapshot(root, owner)
         if checked["project_id"] != proposal["project_id"]:
             raise ContractError("Bank project identity changed after preview")
@@ -216,6 +231,8 @@ def apply(prepared):
 
 
 def recover(repo, prepared=None):
+    # Lock removal changes runtime state only. It must stay available before
+    # identity resolution, which intentionally refuses an unknown visible lock.
     _, bank = bank_path(repo)
     return result("recover", **storage.recover(bank / "MEMORY.md", bank / ".agent-memory.lock",
                   {"bank-" + op for op in OPERATIONS}, prepared, schema="agent-memory/bank-lock-recovery-v1"))

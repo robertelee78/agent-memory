@@ -10,6 +10,7 @@ import unittest
 import uuid
 
 from world import World
+from identity_fixtures import bind
 from record_fixtures import record_text, project_id
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -48,6 +49,7 @@ class BankTransactionsContract(unittest.TestCase):
         bank.mkdir()
         for path, body in before.items():
             (bank / path).write_text(body)
+        bind(world, repo)
         r, p = self.command(world, "preview", "--repo", repo, "--files", self.save(world, after, "files.json"), "--operation", "compact")
         self.assertEqual(r.returncode, 0, p)
         return repo, bank, before, after, p

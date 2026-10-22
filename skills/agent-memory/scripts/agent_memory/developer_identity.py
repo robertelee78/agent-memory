@@ -148,15 +148,16 @@ def declared(values):
     return aliases(output)
 
 
-def status(observations, harness=None, session=None):
+def status(observations, harness=None, session=None, repo="."):
     data, sha = observe()
     _, registry, lock = paths()
     observed = list(observations)
     for key, kind in (("user.email", "git-author-email"), ("user.name", "git-author-name")):
         try:
-            query = subprocess.run(["git", "config", "--get", key], text=True, capture_output=True, timeout=5)
-            if query.returncode == 0 and query.stdout.strip():
-                item = alias({"kind": kind, "value": query.stdout.strip()})
+            from .identity_git import git
+            value = git(repo, "config", "--get", key, optional=True)
+            if value:
+                item = alias({"kind": kind, "value": value})
                 if item not in observed:
                     observed.append(item)
         except (FileNotFoundError, subprocess.TimeoutExpired):
@@ -358,6 +359,7 @@ def main(argv=None):
     status_parser.add_argument("--observe", action="append", default=[])
     status_parser.add_argument("--harness")
     status_parser.add_argument("--session")
+    status_parser.add_argument("--repo", default=".")
     planner = commands.add_parser("preview")
     action = planner.add_mutually_exclusive_group(required=True)
     action.add_argument("--create", action="store_true")
@@ -372,7 +374,7 @@ def main(argv=None):
     args = parser.parse_args(argv)
     try:
         if args.command == "status":
-            receipt = status(declared(args.observe), args.harness, args.session)
+            receipt = status(declared(args.observe), args.harness, args.session, args.repo)
         elif args.command == "preview":
             action_name = "create" if args.create else "adopt" if args.adopt else "select"
             receipt = preview(action_name, args.adopt or args.select, args.label, declared(args.alias))
