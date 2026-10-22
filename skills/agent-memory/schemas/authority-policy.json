@@ -1,0 +1,15 @@
+{
+  "schema": "agent-memory/authority-policy-v1",
+  "domains": [
+    {"fact": "implementation", "meaning": "Current implementation behavior", "authority": "Code and executable tests", "source-kinds": ["code", "test"]},
+    {"fact": "intent", "meaning": "Product intent and acceptance", "authority": "Current approved planning source", "source-kinds": ["approved-planning"]},
+    {"fact": "delivery", "meaning": "Work progress and delivery", "authority": "Issue tracker, CI, integration, and release evidence", "source-kinds": ["issue", "ci", "integration", "release"]},
+    {"fact": "coordination", "meaning": "Agent ownership or coordination", "authority": "The active coordination system", "source-kinds": ["coordination"]},
+    {"fact": "requirement", "meaning": "Project requirement or correction", "authority": "Direct user statement and approved project decisions", "source-kinds": ["user-statement", "approved-decision"]},
+    {"fact": "historical-observation", "meaning": "Historical attempt or observation", "authority": "Immutable memory event and its evidence", "source-kinds": ["memory-event"]},
+    {"fact": "procedure", "meaning": "Reusable procedure", "authority": "Reviewed, versioned skill or rule", "source-kinds": ["reviewed-procedure"]}
+  ],
+  "memory-is-proof": false,
+  "peer-conflict": "clarify-with-detecting-developer",
+  "landing-time-is-authority": false
+}

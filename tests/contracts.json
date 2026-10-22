@@ -14,6 +14,7 @@
     {"name": "tombstones", "layer": "bank", "scope": "v0.0.1", "path": "tests/contracts/test_tombstones.py"},
     {"name": "offline-skill", "layer": "pack", "scope": "v0.0.1", "path": "tests/contracts/test_offline_skill.py"},
     {"name": "scope-policy", "layer": "bank", "scope": "v0.0.1", "path": "tests/contracts/test_scope_policy.py"},
+    {"name": "authority-policy", "layer": "bank", "scope": "v0.0.1", "path": "tests/contracts/test_authority_policy.py"},
     {"name": "bank-roundtrip", "layer": "bank", "scope": "v0.0.1", "path": null, "reason": "Bank operations have not shipped."},
     {"name": "identity-isolation", "layer": "client", "scope": "v0.0.1", "path": null, "reason": "Identity operations have not shipped."},
     {"name": "observed-writes", "layer": "concurrency", "scope": "v0.0.1", "path": null, "reason": "Governed writes have not shipped."},
