@@ -134,7 +134,10 @@ reviewed planning authority, and delivery requires actual relevant work proof.
 Each evidence reference MUST name a selected local source or AWA handoff source.
 Each claim MUST answer one comparable question under explicit scope/conditions.
 Local implementation observations MUST retain an explicit branch or revision
-condition matching the inspected source context. Initialization does not prove
+condition matching the inspected source context. Every supplied branch condition
+MUST match a known current branch, and every supplied revision MUST match the
+exact known inspected HEAD; a detached or unborn checkout MUST NOT supply an
+invented branch or revision. Initialization does not prove
 that local code is committed, on remote `main`, or universally applicable.
 Unknown or unqualified interpretations remain evidence gaps and MUST NOT become
 current guidance. Conditions MUST survive in the resulting prose. A session
@@ -198,6 +201,11 @@ On a visible lock or marker, the session MUST preserve the original proposal
 and recovery journal. It MUST recover the dead bank lock using the documented
 preview/apply workflow, then explicitly preview `bank_transactions.py recover
 --repo PATH --mode finish` or `--mode rollback` and apply that recovery proposal.
+The private journal retains the original selected-source hashes, branch/HEAD,
+AWA handoff and reviewed interpretation. Finish MUST revalidate that evidence
+before offering recovery and again under the bank lock before writing. Source
+drift or missing initialization proof MUST stop finish; rollback remains
+available for a known journal/base, so the session can restore and inspect anew.
 Initial empty-bank rollback returns an uninitialized checkout; it MUST NOT be
 described as a usable bank. Initial finish validates the complete bank. A
 previous rolled-back operation MUST NOT resurrect content on replay.

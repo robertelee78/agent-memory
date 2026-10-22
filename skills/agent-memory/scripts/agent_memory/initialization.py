@@ -185,8 +185,8 @@ def link(ref):
     # JSON strings and percent-encoded hrefs preserve data without giving source
     # names control over headings, Markdown structure or executable commands.
     from urllib.parse import quote
-    label = ref.replace('[', '\\[').replace(']', '\\]')
-    href = quote(ref if ref.startswith('https://') else '../' + ref, safe='/:#?=&%')
+    label = ref.replace('\\', '\\\\').replace('[', '\\[').replace(']', '\\]')
+    href = quote(ref, safe='/:#?=&%') if ref.startswith('https://') else quote('../' + ref, safe='/')
     return '[' + label + '](' + href + ')'
 
 
@@ -220,9 +220,12 @@ def review_value(review, observed, detecting_developer_id):
             branch = observed['local_git_context']['branch']
             if not (scope_kind == 'branch' or any(key in claim['conditions'] for key in ('branch', 'revision'))):
                 raise ContractError('Local implementation observations need explicit branch/revision conditions; initialization does not prove main publication')
-            if ((scope_kind == 'branch' and branch is not None and scope_value != branch)
-                    or ('branch' in claim['conditions'] and branch is not None and claim['conditions']['branch'] != branch)):
-                raise ContractError('Implementation condition differs from the inspected source branch')
+            if ((scope_kind == 'branch' and (branch is None or scope_value != branch))
+                    or ('branch' in claim['conditions'] and (branch is None or claim['conditions']['branch'] != branch))):
+                raise ContractError('Implementation branch condition must match the known inspected source branch')
+            revision = observed['local_git_context']['head']
+            if 'revision' in claim['conditions'] and (revision is None or claim['conditions']['revision'] != revision):
+                raise ContractError('Implementation revision condition must match the known inspected source revision')
         # Code or work records alone cannot qualify approved product intent.
         kinds = {known[ref]['kind'] for ref in claim['evidence']}
         if ((claim['fact'] in {'intent', 'requirement'} and not kinds & {'planning', 'documentation'})
@@ -334,7 +337,9 @@ def preview(repo, review):
             files['MEMORY.md'] = bank.router_text(metadata, routes, omitted)
     tx = transactions.proposal_value({'schema': transactions.SCHEMA, 'operation_id': str(uuid.uuid4()), 'operation': 'initialize',
         'repo_root': str(root), 'project_id': context['project_id'], 'observed_hashes': observed['existing_hashes'],
-        'files': files, 'scope_context': context})
+        'files': files, 'scope_context': context, 'initialization_evidence': {
+            'inventory': observed, 'existing_memory_reviewed': review['existing_memory_reviewed'],
+            'claims': review['claims'], 'questions': review['questions'], 'base_router': base.get('MEMORY.md')}})
     p = {'schema': SCHEMA, 'inventory': observed, 'review': review, 'transaction': tx, 'base_router': base.get('MEMORY.md')}
     return result('preview', proposal=p, questions=questions, evidence_gaps=[*observed['evidence_gaps'], *gaps],
                   changed_memory_paths=['memory-bank/' + path for path in transactions.changed(tx)],
@@ -351,11 +356,18 @@ def check_sources(inventory):
         raise ContractError('Source evidence changed after initialization preview; inspect and review again')
 
 
-def apply(prepared):
-    p = prepared.get('proposal', prepared) if isinstance(prepared, dict) else prepared
-    if (not isinstance(p, dict) or set(p) != {'schema', 'inventory', 'review', 'transaction', 'base_router'} or p['schema'] != SCHEMA):
-        raise ContractError('Invalid initialization proposal')
-    tx = transactions.proposal_value(p['transaction'])
+def transaction_evidence(tx):
+    proof = tx.get('initialization_evidence')
+    fields = {'inventory', 'existing_memory_reviewed', 'claims', 'questions', 'base_router'}
+    if not isinstance(proof, dict) or set(proof) != fields:
+        raise ContractError('Initialization source proof is missing; preserve the journal and use rollback')
+    review = {key: proof[key] for key in ('inventory', 'existing_memory_reviewed', 'claims', 'questions')}
+    return {'schema': SCHEMA, 'inventory': proof['inventory'], 'review': review,
+            'transaction': tx, 'base_router': proof['base_router']}
+
+
+def validate_transaction(tx):
+    p = transaction_evidence(tx)
     if (tx['operation'] != 'initialize' or tx['repo_root'] != p['inventory']['repo_root']
             or tx['project_id'] != p['inventory']['project_id'] or tx['observed_hashes'] != p['inventory']['existing_hashes']):
         raise ContractError('Initialization proposal has a different operation/repository')
@@ -394,7 +406,8 @@ def apply(prepared):
     else:
         metadata = {'schema': 'agent-memory/v1', 'project-id': tx['project_id'],
                     'router-updated': bank.parse_router(tx['files']['MEMORY.md'])[0]['router-updated']}
-        remote = identity.project.status(tx['repo_root'])['evidence']['canonical_remote']
+        data, _ = identity.project.observe()
+        remote = data['projects'][tx['project_id']]['canonical_remote']
         if remote is not None:
             metadata['canonical-remote'] = remote
         routes = [{'path': path, 'purpose': 'Source-linked initialization orientation', 'scope': 'repository',
@@ -412,12 +425,23 @@ def apply(prepared):
     for path, body in tx['files'].items():
         if path != 'MEMORY.md' and path not in original and body != bodies.get(path):
             raise ContractError('New context differs from the reviewed source-linked orientation')
+    return claims, questions, gaps
+
+
+def apply(prepared):
+    p = prepared.get('proposal', prepared) if isinstance(prepared, dict) else prepared
+    if (not isinstance(p, dict) or set(p) != {'schema', 'inventory', 'review', 'transaction', 'base_router'} or p['schema'] != SCHEMA):
+        raise ContractError('Invalid initialization proposal')
+    tx = transactions.proposal_value(p['transaction'])
+    if authority.comparable(p) != authority.comparable(transaction_evidence(tx)):
+        raise ContractError('Initialization wrapper differs from the original transaction evidence')
+    claims, questions, gaps = validate_transaction(tx)
     root, bank_path = Path(tx['repo_root']), Path(tx['repo_root']) / 'memory-bank'
     bank.bank_root(bank_path)
     if bank_path.is_symlink() or (bank_path.exists() and not bank_path.is_dir()):
         raise ContractError('Bank location changed after preview; preserve it')
     bank_path.mkdir(exist_ok=True)
-    receipt = transactions.apply(tx, before_inventory=lambda: check_sources(p['inventory']))
+    receipt = transactions.apply(tx)
     return result('apply', transaction=receipt, questions=questions, evidence_gaps=[*p['inventory']['evidence_gaps'], *gaps],
                   existing_memory_preserved=True, writes_performed=receipt['writes_performed'],
                   verified=receipt['verified'] and receipt['outcome'] == 'finished' and receipt['still_current'],

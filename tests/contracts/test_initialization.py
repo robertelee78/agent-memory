@@ -291,4 +291,107 @@ class InitializationContract(unittest.TestCase):
             self.assertFalse((repo/'memory-bank/.agent-memory-transaction.md').exists())
 
 
+    def test_implementation_conditions_match_known_branch_and_exact_revision(self):
+        with World() as w:
+            repo,_,_=self.setup(w)
+            w.git('add','.',cwd=repo);w.git('commit','-m','Inspected source baseline',cwd=repo)
+            obs=self.inventory(w,repo)
+            head=obs['local_git_context']['head']
+            for conditions in ({'revision':'b'*40}, {'branch':'another'}, {'branch':'main','revision':'b'*40}):
+                claim=self.claim('implementation',3,'src/app.py');claim['conditions']=conditions
+                self.assertEqual(self.command(w,'initialize','preview','--repo',repo,'--review',self.save(w,self.review(obs,[claim])))[0].returncode,1)
+            claim=self.claim('implementation',3,'src/app.py');claim['conditions']={'revision':head}
+            self.preview(w,repo,self.review(obs,[claim]))
+            w.git('checkout','--detach',head,cwd=repo);obs=self.inventory(w,repo)
+            self.assertIsNone(obs['local_git_context']['branch'])
+            claim['conditions']={'branch':'main'}
+            self.assertEqual(self.command(w,'initialize','preview','--repo',repo,'--review',self.save(w,self.review(obs,[claim])))[0].returncode,1)
+            claim['conditions']={'revision':head}
+            self.preview(w,repo,self.review(obs,[claim]))
+            w.git('checkout','--orphan','unborn',cwd=repo);obs=self.inventory(w,repo)
+            self.assertIsNone(obs['local_git_context']['head'])
+            self.assertEqual(self.command(w,'initialize','preview','--repo',repo,'--review',self.save(w,self.review(obs,[claim])))[0].returncode,1)
+
+    def test_local_source_hrefs_resolve_exact_punctuation_unicode_and_percent_bytes(self):
+        from urllib.parse import unquote, urlsplit
+        import re
+        with World() as w:
+            repo,_,_=self.setup(w)
+            names=['docs/hash#query?100%ready.md','docs/space ü [bracket]\\backslash.md']
+            for name in names:(repo/name).write_text('# Source evidence\n')
+            p=self.preview(w,repo,self.review(self.inventory(w,repo)))
+            body=p['proposal']['transaction']['files']['projectbrief.md']
+            links=re.findall(r'\]\(([^)]+)\)',body)
+            for name in names:
+                href=next(href for href in links if unquote(href)=='../'+name)
+                parsed=urlsplit(href)
+                self.assertEqual((parsed.query,parsed.fragment),('',''))
+                self.assertEqual((repo/'memory-bank'/unquote(parsed.path)).resolve(),(repo/name).resolve())
+                self.assertIn('%25',href) if '%' in name else None
+
+    def interrupted(self,w,repo,p):
+        r,_=self.apply(w,p,env={'AGENT_MEMORY_FAULT_STAGE':'transaction-after-marker','AGENT_MEMORY_FAULT_MODE':'exit'})
+        self.assertEqual(r.returncode,86)
+        unlock=self.good(w,'bank_writes','recover','--repo',repo)
+        self.good(w,'bank_writes','recover','--repo',repo,'--proposal',self.save(w,unlock))
+
+    def test_recovery_rechecks_original_source_branch_head_and_awa_but_rollback_remains_available(self):
+        for drift in ('source','branch','head','awa'):
+            with self.subTest(drift=drift),World() as w:
+                repo,pid,_=self.setup(w)
+                awa=self.save(w,{'schema':'agent-memory/awa-initialization-evidence-v1','project_id':pid,
+                    'availability':'unavailable','reason':'Offline original evidence','sources':[]},'awa.json')
+                p=self.preview(w,repo,self.review(self.inventory(w,repo,awa)))
+                self.interrupted(w,repo,p)
+                finish=self.good(w,'bank_transactions','recover','--repo',repo,'--mode','finish')
+                marker=repo/'memory-bank/.agent-memory-transaction.md';before=marker.read_bytes()
+                if drift=='source':(repo/'src/app.py').write_text('RETRY_LIMIT = 4\n')
+                elif drift=='branch':w.git('checkout','-b','different',cwd=repo)
+                elif drift=='head':w.git('commit','--allow-empty','-m','New source context',cwd=repo)
+                else:
+                    data=json.loads(awa.read_text());data['reason']='New evidence unavailable';awa.write_text(json.dumps(data))
+                for args in (['--mode','finish'],['--proposal',self.save(w,finish)]):
+                    r,value=self.command(w,'bank_transactions','recover','--repo',repo,*args)
+                    self.assertEqual(r.returncode,1,value);self.assertIn('Source evidence changed',value['error'])
+                    self.assertEqual(marker.read_bytes(),before);self.assertEqual(self.files(repo/'memory-bank'),{})
+                rollback=self.good(w,'bank_transactions','recover','--repo',repo,'--mode','rollback')
+                done=self.good(w,'bank_transactions','recover','--repo',repo,'--proposal',self.save(w,rollback))
+                self.assertTrue(done['verified']);self.assertEqual(done['outcome'],'rolled-back')
+                self.assertFalse(marker.exists())
+
+    def test_legacy_initialization_journal_without_source_policy_can_only_rollback(self):
+        with World() as w:
+            repo,_,_=self.setup(w);p=self.preview(w,repo,self.review(self.inventory(w,repo)))
+            self.interrupted(w,repo,p)
+            journals=list(Path(w.env['AGENT_MEMORY_STATE_HOME']).rglob('journal.json'))
+            self.assertEqual(len(journals),1)
+            journal=journals[0];data=json.loads(journal.read_text());del data['proposal']['initialization_evidence']
+            journal.write_text(json.dumps(data))
+            r,value=self.command(w,'bank_transactions','recover','--repo',repo,'--mode','finish')
+            self.assertEqual(r.returncode,1,value);self.assertIn('source proof is missing',value['error'])
+            rollback=self.good(w,'bank_transactions','recover','--repo',repo,'--mode','rollback')
+            done=self.good(w,'bank_transactions','recover','--repo',repo,'--proposal',self.save(w,rollback))
+            self.assertTrue(done['verified']);self.assertFalse(journal.exists())
+
+    def test_recovery_source_change_after_lock_acquisition_stops_before_canonical_writes(self):
+        with World() as w:
+            repo,_,_=self.setup(w);p=self.preview(w,repo,self.review(self.inventory(w,repo)))
+            self.interrupted(w,repo,p)
+            recovery=self.good(w,'bank_transactions','recover','--repo',repo,'--mode','finish')
+            stage='recovery-locked-before-evidence';directory=w.inside('recovery-rendezvous')
+            w.env.update(AGENT_MEMORY_FAULT_STAGE=stage,AGENT_MEMORY_FAULT_MODE='pause',AGENT_MEMORY_FAULT_DIR=str(directory))
+            child=w.spawn([sys.executable,'-I',SCRIPTS/'bank_transactions.py','recover','--repo',repo,'--proposal',self.save(w,recovery)])
+            for key in ('AGENT_MEMORY_FAULT_STAGE','AGENT_MEMORY_FAULT_MODE','AGENT_MEMORY_FAULT_DIR'):w.env.pop(key)
+            deadline=time.monotonic()+5
+            while not (directory/(stage+'.ready')).exists() and child.poll() is None and time.monotonic()<deadline:time.sleep(.01)
+            self.assertTrue((directory/(stage+'.ready')).exists(),child.poll())
+            (repo/'src/app.py').write_text('RETRY_LIMIT = 4\n')
+            (directory/(stage+'.release')).touch();out,err=child.communicate(timeout=20)
+            self.assertFalse(err);self.assertEqual(child.returncode,1,out)
+            self.assertIn('Source evidence changed',json.loads(out)['error'])
+            self.assertEqual(self.files(repo/'memory-bank'),{})
+            rollback=self.good(w,'bank_transactions','recover','--repo',repo,'--mode','rollback')
+            self.assertTrue(self.good(w,'bank_transactions','recover','--repo',repo,'--proposal',self.save(w,rollback))['verified'])
+
+
 if __name__=='__main__':unittest.main()

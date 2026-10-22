@@ -24,7 +24,13 @@ creation uses the same private journal/visible marker/router-last transaction
 as an existing bank. The explicit initialization-only identity handoff prevents
 a circular requirement for a bank before setup can create one. Interrupted
 first creation can finish or roll back to an uninitialized checkout, preserving
-unrelated code, index and HEAD.
+unrelated code, index and HEAD. The original source/review evidence remains in
+the private transaction journal and is checked again before recovery finish,
+including under the bank lock. Changed source bytes, branch, HEAD or AWA handoff
+stop finish; known-base rollback remains available. A legacy initialization
+journal without that proof can roll back but cannot finish. Branch/revision
+claims must match known inspected context, and encoded local evidence links
+resolve exact paths containing spaces, Unicode or URL punctuation.
 
 Local verified creation is not publication, admission of arbitrary source text,
 remote freshness or release proof. Broader governed capture/security/sharing and
