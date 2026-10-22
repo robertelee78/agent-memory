@@ -25,7 +25,7 @@
     {"name": "learning-admission", "layer": "bank", "scope": "v0.0.1", "path": null, "reason": "Admission operations have not shipped."},
     {"name": "retrieval-context", "layer": "bank", "scope": "v0.0.1", "path": null, "reason": "Recall operations have not shipped."},
     {"name": "correction-erasure", "layer": "bank", "scope": "v0.0.1", "path": null, "reason": "Correction and erasure have not shipped."},
-    {"name": "initialize-evidence", "layer": "bank", "scope": "v0.0.1", "path": null, "reason": "Evidence-based initialization has not shipped."},
+    {"name": "initialize-evidence", "layer": "bank", "scope": "v0.0.1", "path": "tests/contracts/test_initialization.py"},
     {"name": "cross-clone-sharing", "layer": "concurrency", "scope": "v0.0.1", "path": null, "reason": "Memory sharing has not shipped."},
     {"name": "concurrent-sharing", "layer": "concurrency", "scope": "v0.0.1", "path": null, "reason": "Sharing reconciliation has not shipped."},
     {"name": "offline-replay", "layer": "concurrency", "scope": "v0.0.1", "path": null, "reason": "Offline retry has not shipped."},

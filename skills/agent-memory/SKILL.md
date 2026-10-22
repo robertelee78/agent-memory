@@ -15,6 +15,10 @@ containing this file before using a packaged script.
 
 ## Start and resume
 
+A session MUST read [initialize/GUIDE.md](initialize/GUIDE.md) when creating a
+bank or filling useful missing orientation. It MUST inspect existing memory and
+source evidence, including AWA work when available, before storing new context.
+
 A session MUST read [offline/GUIDE.md](offline/GUIDE.md) for initial file-based
 setup, inspection, manual checkpoint or resume. It SHOULD open only the material
 its current operation needs. The guide works without an installed CLI or any
