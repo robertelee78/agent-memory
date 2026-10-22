@@ -108,3 +108,7 @@ Its read-only decision helper evaluates applicability without claiming access co
 The [authority policy](skills/agent-memory/authority/GUIDE.md) resolves remembered
 claims against current sources and routes unresolved contradictions to the
 detecting developer. Its evaluator produces read-only correction/revocation candidates.
+
+The [canonical current-bank view](skills/agent-memory/bank/GUIDE.md) inspects
+Markdown contexts and local Git facts without generated application state;
+tracking is kept distinct from publication and refreshed shared memory.

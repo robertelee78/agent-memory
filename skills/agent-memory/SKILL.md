@@ -34,6 +34,9 @@ projects, tasks, milestones and delivery evidence; Vox owns live coordination.
 Neither is required for local file inspection. Memory SHOULD retain useful
 lessons and source links rather than copies of those systems' changing state.
 
+A session SHOULD read [bank/GUIDE.md](bank/GUIDE.md) for the context-file model,
+state loss and local tracking/sharing interpretation.
+
 ## Conflicting claims
 
 A session MUST read [authority/GUIDE.md](authority/GUIDE.md) when remembered
