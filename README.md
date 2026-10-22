@@ -36,3 +36,9 @@ and the progressive-disclosure architecture used by
 
 The ADRs are currently **Proposed**. They describe the intended boundaries and
 architecture; they are not claims that the implementation already exists.
+
+Implementation planning is tracked in the repository's
+[GitHub Projects](https://github.com/robertelee78/agent-memory/projects) and
+[release milestones](https://github.com/robertelee78/agent-memory/milestones),
+starting with `v0.0.1`. Each ADR has its own Project; release milestones span
+Projects. The initial tasks are in Backlog; execution requires design approval.
