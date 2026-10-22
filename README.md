@@ -86,3 +86,6 @@ explains shared-bank access, developer attribution and the treatment of memory a
 
 The [manual checkpoint workflow](docs/contracts/manual-checkpoint.md) covers
 single-file edits, resume, and subsequent validation of external changes.
+
+The [clean-bank usability check](docs/contracts/bank-usability.md) demonstrates
+bounded resume from current Markdown with memory-generated state removed.
