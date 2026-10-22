@@ -56,3 +56,11 @@ consolidation, relevant recall, and evidence-based pruning, plus
 [memory-only Git publication and turn-boundary refresh](docs/adr/0012-git-shared-memory.md)
 across worktrees, computers, and developers. Code integration keeps its normal
 workflow. Later release milestones remain planning proposals for refinement.
+
+## Development checks
+
+Run `scripts/test.sh` from a checkout with Python 3.11+ and Git. It runs the
+implemented offline public-interface suites in disposable test worlds and
+reports remaining contracts as pending. `scripts/test.sh --release` rejects
+incomplete release coverage. See the [test gate guide](docs/testing/README.md)
+for isolation rules, suite registration and receipt fields.
