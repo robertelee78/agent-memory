@@ -86,13 +86,13 @@ def capture(repo):
         return None
 
 
-def context_value(context):
+def context_value(context, *, initialize=False):
     if context is None:
         return
     if (not isinstance(context, dict) or set(context) != {'developer_id', 'project_id', 'developer_sha256',
             'project_sha256', 'checkout_key', 'initialization_only'}
             or not uuid_valid(context['developer_id']) or not uuid_valid(context['project_id'])
-            or context['initialization_only'] is not False):
+            or context['initialization_only'] is not initialize):
         raise ContractError('Invalid pinned scope context')
 
 

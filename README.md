@@ -82,6 +82,10 @@ The [common scope-binding workflow](docs/contracts/scope-binding.md) combines
 developer/project status, previews and verifies registry/bank identity changes,
 and guards mediated writes with the resolved scope.
 
+The [evidence-led initializer](docs/contracts/initialization.md) builds a bounded
+orientation from existing memory, project sources and AWA work evidence while
+preserving older content and surfacing unresolved product questions.
+
 The [observed write contract](docs/contracts/observed-writes.md) defines the
 common bank lock, single-file replacement, readback, retry and recovery mechanism.
 
