@@ -102,6 +102,7 @@ unneeded siblings or interrupting an executing turn.
 | Inspect inactive guidance | [govern](govern/GUIDE.md) | [inactive](inactive/GUIDE.md) |
 | Consolidate duplicates | [maintain](maintain/GUIDE.md) | [consolidation](consolidation/GUIDE.md) |
 | Validate a portable instruction package | [maintain](maintain/GUIDE.md) | [pack validation](maintain/pack/GUIDE.md) |
+| Inspect artifact identity and declared compatibility | [maintain](maintain/GUIDE.md) | [artifact](maintain/artifact/GUIDE.md) |
 | Inspect record/index layout | [maintain](maintain/GUIDE.md) | [layout](layout/GUIDE.md) |
 | Build/check derived references | [maintain](maintain/GUIDE.md) | [projections](projections/GUIDE.md) |
 | Use the file-only workflow | [bank](bank/GUIDE.md) | [offline](offline/GUIDE.md) |

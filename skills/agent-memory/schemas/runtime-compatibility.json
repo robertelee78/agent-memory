@@ -1,0 +1,10 @@
+{
+  "schema": "agent-memory/runtime-compatibility-v1",
+  "readable_bank_schemas": ["agent-memory/v1"],
+  "migrator_source_schemas": [],
+  "python_minimum": "3.11",
+  "git_required_for": ["governed-repository-operations", "git-sharing"],
+  "required_python_packages": [],
+  "required_agent_clients": [],
+  "optional_adapters": ["adapters/github-publication.json"]
+}
