@@ -34,6 +34,10 @@ The [baseline retrieval contract](../contracts/retrieval.md) adds public recall
 cases for hard filters before ranking, exact/text explanations, nested conditions,
 optional-index loss, safe source handling and independently bound local clones.
 
+The [learning comparison contract](../contracts/comparison.md) covers alternate
+wording, distinct conditions, source-bound judgment, newly arrived duplicates,
+unsafe/unavailable sources and terminal deletion before a durable learning change.
+
 `tests/world.py` provides private temporary home, XDG, client, repository, bank,
 runtime, cache, credential and backup roots. It constructs an allowlisted
 subprocess environment instead of inheriting credentials or live config, and

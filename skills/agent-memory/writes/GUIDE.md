@@ -7,6 +7,12 @@ write primitives provide mechanics, not semantic admission. Changing an
 operation label MUST NOT substitute for a governed capture/correction/forget
 decision or permission to publish memory.
 
+A governed durable-learning writer MUST follow
+[comparison](../comparison/GUIDE.md) before preparing its delta and revalidate
+the source-bound judgment against its locked bank. Before landing, it MUST repeat
+the comparison against actual latest shared memory. A stale or unavailable
+comparison MUST NOT count as proof that no previous learning exists.
+
 The [checkpoint](../checkpoint/GUIDE.md), [initializer](../initialize/GUIDE.md)
 and explicit identity-binding operations own their product-specific inputs.
 For an independently reviewed existing-file replacement a session MAY use:
