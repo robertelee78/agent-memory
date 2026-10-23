@@ -69,6 +69,12 @@ A session MUST read [layout/GUIDE.md](layout/GUIDE.md) when adding or inspecting
 optional records, maintaining topic indexes, or resolving missing, duplicate or
 inconsistent routes. Index routing MUST preserve each lesson's own conditions.
 
+## Checkpoint
+
+A session MUST read [checkpoint/GUIDE.md](checkpoint/GUIDE.md) when saving current
+focus, meaningful changes, questions and next step. The mediated checkpoint
+changes only `activeContext.md`; missing-context route preparation is separate.
+
 ## Sharing boundary
 
 A local edit, branch commit or successful validation MUST NOT be described as
