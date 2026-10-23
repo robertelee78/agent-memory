@@ -44,13 +44,15 @@ def files_at(bank):
 def proposal_value(prepared):
     from .scope_binding import context_value
     p = prepared.get("proposal", prepared) if isinstance(prepared, dict) else prepared
-    if (not isinstance(p, dict) or set(p) not in (FIELDS, FIELDS | {"initialization_evidence"}) or p["schema"] != SCHEMA
+    if (not isinstance(p, dict) or set(p) not in (FIELDS, FIELDS | {"initialization_evidence"}, FIELDS | {"admission_evidence"}) or p["schema"] != SCHEMA
             or not uuid_valid(p["operation_id"]) or not uuid_valid(p["project_id"])
             or p["operation"] not in writes.OPERATIONS or not isinstance(p["repo_root"], str)
             or not Path(p["repo_root"]).is_absolute() or str(Path(p["repo_root"]).resolve()) != p["repo_root"]):
         raise ContractError("Invalid bank transaction proposal")
     if 'initialization_evidence' in p and p['operation'] != 'initialize':
         raise ContractError('Source initialization evidence belongs only to initialization')
+    if 'admission_evidence' in p and p['operation'] != 'capture':
+        raise ContractError('Admission evidence belongs only to its governed capture transaction')
     contract.validate_files(p["files"])
     first_bank = p['operation'] == 'initialize' and p['observed_hashes'] == {}
     context_value(p['scope_context'], initialize=first_bank)
@@ -287,6 +289,9 @@ def converge(root, bank, p, base_files, journal, raw, receipt_path, mode, observ
 
 
 def validate_outcome(root, bank, desired, p, owner, marker):
+    if 'admission_evidence' in p and desired == p['files']:
+        from .admission import check_sources
+        check_sources(p, owner=owner, marker=marker)
     if not desired and p['operation'] == 'initialize' and p['observed_hashes'] == {}:
         if contract.physical_paths(bank) or writes.hashes(bank):
             raise ContractError('Uninitialized rollback has an unexpected occupant; preserve it')
@@ -304,6 +309,11 @@ def apply(prepared):
     if p['operation'] == 'initialize':
         from .initialization import validate_transaction
         validate_transaction(p)
+    if 'admission_evidence' in p:
+        from .admission import validate_transaction
+        # A recorded outcome is read back by _apply; it never reapplies bytes.
+        if not locations(*writes.bank_path(p['repo_root']), p['operation_id'])[1].exists():
+            validate_transaction(p)
     first_bank = p['operation'] == 'initialize' and p['observed_hashes'] == {}
     initializing = first_bank and not (Path(p['repo_root']) / 'memory-bank/MEMORY.md').exists()
     pinned = {**p['scope_context'], 'initialization_only': initializing}
@@ -314,12 +324,20 @@ def apply(prepared):
         raise ContractError('Authority identity changes require explicit scope binding, including during initialization')
     from . import security
     classes = ['external']
+    if 'admission_evidence' in p:
+        classes = [p['admission_evidence']['capture']['request']['source_class']]
     if p['operation'] == 'initialize':
         evidence = p['initialization_evidence']['inventory']
         classes = ['assistant'] + (['verified-repository'] if evidence['sources'] else []) + (['tool'] if evidence['awa']['sources'] else [])
     def check(owner):
         require(p['repo_root'], p['project_id'], expected=context, owned_lock=owner, initialize=initializing)
-        if p['operation'] == 'initialize':
+        if 'admission_evidence' in p:
+            from .admission import validate_transaction
+            if not locations(*writes.bank_path(p['repo_root']), p['operation_id'])[1].exists():
+                validate_transaction(p, owned_lock=owner)
+            security.guarded_start(p['repo_root'], p['operation_id'], context,
+                {path: p['files'][path] for path in changed(p) if path in p['files']}, classes, action='capture')
+        elif p['operation'] == 'initialize':
             validate_transaction(p)
             security.guarded_start(p['repo_root'], p['operation_id'], context,
                 {path: p['files'][path] for path in changed(p) if path in p['files']}, classes, action='initialize')
@@ -389,6 +407,8 @@ def recover(repo, mode=None, prepared=None):
         raise ContractError('Invalid transaction recovery operation')
     journal, _ = locations(root, bank, operation_id)
     _, p = journal_value(journal.read_bytes(), root, bank, operation_id)
+    if 'admission_evidence' in p and r['mode'] == 'finish':
+        raise ContractError('Interrupted admission requires rollback, then fresh evidence and comparison; do not finish from partial memory')
     if p['operation'] == 'bind':
         raise ContractError('Resume identity binding through its original scope_binding bundle')
     marker = marker_bytes(p)
@@ -450,6 +470,8 @@ def _recover(repo, mode=None, prepared=None, *, check_identity=None):
     journal, receipt_path = locations(root, bank, m["transaction_id"])
     raw = journal.read_bytes()
     j, p = journal_value(raw, root, bank, m["transaction_id"])
+    if 'admission_evidence' in p and mode == 'finish':
+        raise ContractError('Interrupted admission requires rollback, then fresh evidence and comparison; preserve the journal')
     if mode == 'finish' and p['operation'] == 'initialize':
         from .initialization import validate_transaction
         validate_transaction(p)

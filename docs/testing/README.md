@@ -38,6 +38,10 @@ The [learning comparison contract](../contracts/comparison.md) covers alternate
 wording, distinct conditions, source-bound judgment, newly arrived duplicates,
 unsafe/unavailable sources and terminal deletion before a durable learning change.
 
+The [admission contract](../contracts/admission.md) covers source classification,
+uncertainty and quarantine, qualified automatic admission, exact-delta/evidence
+checks, duplicate/conflict routing, replay and interrupted rollback.
+
 `tests/world.py` provides private temporary home, XDG, client, repository, bank,
 runtime, cache, credential and backup roots. It constructs an allowlisted
 subprocess environment instead of inheriting credentials or live config, and

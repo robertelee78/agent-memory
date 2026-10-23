@@ -78,8 +78,10 @@ transactions MUST resume through their original binding bundle. A session MUST
 preserve unknown markers or missing journals for explicit inspection.
 
 Private write/recovery receipts are separate from optional historical events.
-There is no optional historical-event writer in this baseline. Any future
-writer MUST use the stable event ID as its idempotency key and refuse that ID
+The [admission workflow](../admission/GUIDE.md) writes its admission event with
+the current record. Interrupted admission requires rollback and fresh comparison;
+ordinary finish MUST NOT bypass its evidence checks. An event writer
+MUST use the stable event ID as its idempotency key and refuse that ID
 with different content. Historical events/projections MUST NOT replace the
 current bank, and terminal deletion MUST use only its content-free tombstone.
 Any owned view/cache/index MUST honor current invalidation before rebuild.
