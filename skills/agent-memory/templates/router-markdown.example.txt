@@ -1,0 +1,22 @@
+---
+schema: "agent-memory/v1"
+project-id: "11111111-1111-4111-8111-111111111111"
+router-updated: "2026-10-22T17:00:00Z"
+---
+# Project memory
+
+Router time describes this map, not every file's revision.
+
+## Routes
+
+| Path | Purpose | Scope | Lifecycle | Read when |
+| --- | --- | --- | --- | --- |
+| [projectbrief.md](<projectbrief.md>) | Orient a fresh session using project evidence | repository | active | When starting or resuming project work |
+| [activeContext.md](<activeContext.md>) | Resume current task using qualified local context | repository | active | When continuing the current task |
+
+## Omitted contexts
+
+- `productContext.md`: No additional product context has been supplied
+- `systemPatterns.md`: No established patterns have been supplied
+- `techContext.md`: No verified setup information has been supplied
+- `progress.md`: No validated progress evidence has been supplied

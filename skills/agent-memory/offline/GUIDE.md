@@ -52,6 +52,8 @@ The packaged `templates/router-proposal.example.json` demonstrates the exact
 proposal shape. A session MUST replace its example identity, timestamp, context
 body and omission reasons with actual project evidence. Render writes nothing:
 
+For file-only creation, the session MUST use the [complete literal router example](../templates/router-markdown.example.txt) as the serialization contract, without running a renderer. It MUST copy the structure into the selected bank’s `MEMORY.md`, replacing the sample project UUID/timestamp with actual values while preserving any existing project UUID. The byte-zero frontmatter, exact `Routes` and `Omitted contexts` section names, table headings/link syntax and omission bullet format MUST remain intact. The session MUST author the chosen context bodies from actual project evidence, adjust rows/omissions to the useful files actually created, and MUST NOT treat example IDs, routing captions or sample omissions as project facts. The text resource is a format example, not another bank or an instruction to create empty context files.
+
 ## Observe
 
 A session MUST select the intended repository explicitly and inspect
