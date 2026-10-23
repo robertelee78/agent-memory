@@ -117,3 +117,7 @@ fields, with no event schema, evidence, actor text or body added. The record
 validator recognizes this exception using the shared tombstone parser. Full
 erasure must also remove unsafe historical artifacts through its governed
 operation; validating a marker does not erase content elsewhere.
+
+A session MUST use the [inactive representation and invalidation guide](../inactive/GUIDE.md)
+for minimal safe historical summaries and derived input. It MUST NOT reuse an
+old cached body merely because its record ID is still present somewhere.
