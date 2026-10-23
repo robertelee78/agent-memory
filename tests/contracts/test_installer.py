@@ -287,9 +287,15 @@ class InstallerContract(unittest.TestCase):
             source = self.source(world)
             world.env['XDG_STATE_HOME'] = str(source/'runtime state')
             before = snapshot(world.root)
-            refused = self.run_install(world, source, '--presets', 'none', expected=1)
+            for options in ((), ('--check',)):
+                refused = self.run_install(world, source, '--presets', 'none', *options, expected=1)
+                self.assertEqual(snapshot(world.root), before)
+                self.assertIn('development source', refused['error'])
+                self.assertIn('Do not run recovery', refused['repair'])
+            recovered = world.run([sys.executable, '-I', source/'scripts/installer.py', 'recover'], check=False)
+            self.assertEqual(recovered.returncode, 1)
+            self.assertFalse(json.loads(recovered.stdout)['verified'])
             self.assertEqual(snapshot(world.root), before)
-            self.assertIn('development source', refused['error'])
 
     def test_explicit_development_link_refresh_still_revalidates_new_content(self):
         with World() as world:
@@ -302,3 +308,11 @@ class InstallerContract(unittest.TestCase):
                                 first['receipt']['source']['artifact_digest'])
             self.assertEqual(result['restart_clients'], ['codex'])
             self.assertEqual(self.run_install(world, source)['restart_clients'], [])
+
+    def test_recover_with_no_pending_transaction_is_read_only(self):
+        with World() as world:
+            source = self.source(world); before = snapshot(world.root)
+            result = world.run([sys.executable, '-I', source/'scripts/installer.py', 'recover'])
+            value = json.loads(result.stdout)
+            self.assertTrue(value['verified']); self.assertEqual(value['status'], 'no-pending-transaction')
+            self.assertEqual(snapshot(world.root), before); self.assertFalse(value['writes_performed'])

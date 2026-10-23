@@ -35,6 +35,15 @@ SHIM = (BEGIN + '\nWhen this repository contains memory-bank/MEMORY.md, or the u
 DEFAULT_REMOTE = 'https://github.com/robertelee78/agent-memory.git'
 
 
+class LayoutError(ContractError):
+    """Unsafe storage layout; recovery must not be suggested under that layout."""
+
+
+def require_layout(condition, message):
+    if not condition:
+        raise LayoutError(message)
+
+
 def require(condition, message):
     if not condition:
         raise ContractError(message)
@@ -298,7 +307,7 @@ def preflight_path(path):
     require(parent.is_dir() and os.access(parent, os.W_OK | os.X_OK)
             and parent.stat().st_mode & 0o222, 'Target ancestor is not writable/searchable: ' + str(parent))
     for ancestor in [path, *path.parents]:
-        require(ancestor.name != 'memory-bank' and not (ancestor/'MEMORY.md').is_file(),
+        require_layout(ancestor.name != 'memory-bank' and not (ancestor/'MEMORY.md').is_file(),
                 'Installer runtime and targets must not overlap a project Memory Bank: ' + str(path))
 
 
@@ -315,29 +324,44 @@ def configuration(args, old):
 def preflight_layout(args, state, code, old):
     # This must precede locked(): its mkdir/lock metadata are writes too.
     preflight_path(state)
-    require(not state.is_relative_to(code) and not code.is_relative_to(state),
-            'Installation state and managed code paths must be separate')
-    if args.command != 'install':
-        return
-    cfg = configuration(args, old)
-    paths = [cfg['bin_dir']/'agent-memory']
-    for _, target, guidance in presets(cfg['presets']):
-        paths.append(absolute(target/'agent-memory'))
-        if guidance and not cfg['no_guidance']:
-            paths.append(absolute(guidance))
-    paths.extend(absolute(target)/'agent-memory' for target in cfg['custom_targets'])
+    require_layout(not state.is_relative_to(code) and not code.is_relative_to(state),
+                   'Installation state and managed code paths must be separate')
+    pack = artifact.PACK.resolve()
+    sources = {pack}
+    if pack.parent.name == 'skills' and (pack.parents[1]/'.git').exists():
+        sources.add(pack.parents[1])
+    if old:
+        sources.add(absolute(old['source']['path']).resolve())
+    journal_path = state/'journal.json'
+    if journal_path.exists():
+        journal = load(journal_path)
+        require(isinstance(journal, dict) and journal.get('schema') == JOURNAL_SCHEMA,
+                'Unsupported lifecycle journal')
+        recorded = journal.get('receipt')
+        require(isinstance(recorded, dict) and isinstance(recorded.get('source'), dict),
+                'Lifecycle journal has no source identity')
+        declared = recorded['source'].get('path')
+        require(isinstance(declared, str), 'Lifecycle journal has no source identity')
+        sources.add(absolute(declared).resolve())
+    paths = [state]
+    if args.command == 'install':
+        cfg = configuration(args, old)
+        paths.append(cfg['bin_dir']/'agent-memory')
+        for _, target, guidance in presets(cfg['presets']):
+            paths.append(absolute(target/'agent-memory'))
+            if guidance and not cfg['no_guidance']:
+                paths.append(absolute(guidance))
+        paths.extend(absolute(target)/'agent-memory' for target in cfg['custom_targets'])
+        if args.development_source:
+            sources.add(absolute(args.development_source).resolve(strict=True))
+        for path in paths[1:]:
+            preflight_path(path)
+            require_layout(not path.is_relative_to(state) and not state.is_relative_to(path),
+                           'Installation target overlaps the external receipt directory')
     for path in paths:
-        preflight_path(path)
-        require(not path.is_relative_to(state) and not state.is_relative_to(path),
-                'Installation target overlaps the external receipt directory')
-    selected_source = args.development_source
-    if not selected_source and old and old['source']['kind'] == 'development':
-        selected_source = old['source']['path']
-    if selected_source:
-        source = absolute(selected_source).resolve(strict=True)
-        for path in [state, *paths]:
-            require(not path.is_relative_to(source) and not source.is_relative_to(path),
-                    'Installer must not mutate a development source: ' + str(path))
+        for source in sources:
+            require_layout(not path.is_relative_to(source) and not source.is_relative_to(path),
+                           'Installer must not mutate a source package or development source: ' + str(path))
 
 
 def public_plan(plan):
@@ -679,7 +703,10 @@ def main(argv=None):
         require(sys.version_info >= (3,11) and shutil.which('git'), 'Python 3.11+ and Git are required')
         state, code = locations()
         preflight_layout(args, state, code, read_receipt(state))
-        if args.command == 'install' and args.check:
+        if args.command == 'recover' and not os.path.lexists(state/'journal.json'):
+            result = {'operation':'recover', 'verified':True, 'status':'no-pending-transaction',
+                      'writes_performed':False}
+        elif args.command == 'install' and args.check:
             require(not (state/'journal.json').exists() or load(state/'journal.json')['status'] in ('complete','rolled-back'),
                     'An interrupted transaction requires recover before a new install plan')
             with prepare(args, state, code, read_receipt(state)) as plan:
@@ -693,7 +720,9 @@ def main(argv=None):
                     with prepare(args, state, code, read_receipt(state)) as plan:
                         result = install(plan)
     except (OSError, ValueError, TypeError, KeyError, UnicodeError, subprocess.SubprocessError) as exc:
-        result = {'operation': args.command, 'verified': False, 'error': str(exc),
-                  'repair': 'Preserve reported paths; rerun this trusted helper with recover before retrying installation.'}
+        repair = ('Choose separate writable XDG state/data and client targets outside Memory Banks and source trees; '
+                  'rerun install --check. Do not run recovery under the refused layout.' if isinstance(exc, LayoutError)
+                  else 'Preserve reported paths; rerun this trusted helper with recover before retrying installation.')
+        result = {'operation': args.command, 'verified': False, 'error': str(exc), 'repair': repair}
     print(json.dumps(result, indent=2))
     return 0 if result.get('verified') or result.get('schema') == 'agent-memory/install-plan-v1' else 1
