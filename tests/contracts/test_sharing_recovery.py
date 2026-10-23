@@ -1,0 +1,258 @@
+"""Actual local-remote retry/readback, cursor loss and deletion-aware Git merges."""
+import hashlib
+import json
+from pathlib import Path
+import shutil
+import sys
+import time
+import unittest
+import uuid
+
+from world import World
+from record_fixtures import record_text, project_id
+from contracts import test_sharing_boundary as boundary
+
+ROOT = Path(__file__).resolve().parents[2]
+
+
+class SharingRecoveryContract(unittest.TestCase):
+    def save(self, w, value, name='recovery-input.json'):
+        path=w.inside(name);path.write_text(json.dumps(value));return path
+
+    def call(self,w,*args):
+        p=w.run([sys.executable,'-I',self.pack/'scripts/sharing_recovery.py',*args],check=False)
+        return p,json.loads(p.stdout)
+
+    def good(self,w,*args):
+        p,v=self.call(w,*args);self.assertEqual(p.returncode,0,(v,p.stderr));return v
+
+    def fixture(self,w,root='memory-bank'):
+        helper=boundary.SharingBoundaryContract();repo,bank=helper.fixture(w,root);self.pack=helper.pack
+        w.git('reset','--','code.py',cwd=repo)
+        (bank/'activeContext.md').write_text('# Current focus\n\nA useful isolated session focus.\n')
+        router=bank/'MEMORY.md';text=router.read_text()
+        text=''.join(line for line in text.splitlines(keepends=True) if not line.startswith('- `activeContext.md`:'))
+        text=text.replace('\n## Omitted contexts\n','| [activeContext.md](<activeContext.md>) | Session focus | repository | active | At a boundary |\n\n## Omitted contexts\n')
+        router.write_text(text);w.git('add',root,cwd=repo);w.git('commit','-m','Useful fixture context',cwd=repo)
+        w.git('add','code.py',cwd=repo)
+        w.git('push','origin','HEAD:main',cwd=repo)
+        remote=w.git('remote','get-url','origin',cwd=repo).stdout.strip()
+        peer=w.clone(remote,'peer')
+        base=w.git('rev-parse','HEAD',cwd=repo).stdout.strip()
+        return repo,bank,peer,base
+
+    def state(self,w,repo,bank):
+        return ({p.relative_to(bank).as_posix():p.read_bytes() for p in bank.rglob('*') if p.is_file()},
+                (repo/'code.py').read_bytes(),(repo/'.git/index').read_bytes(),w.git('rev-parse','HEAD',cwd=repo).stdout,
+                w.git('symbolic-ref','HEAD',cwd=repo).stdout)
+
+    def publish(self,w,peer,path,text):
+        target=peer/path;target.parent.mkdir(parents=True,exist_ok=True);target.write_text(text)
+        w.git('add','--',path,cwd=peer);w.git('commit','-m','Reviewed isolated memory change',cwd=peer)
+        candidate=w.git('rev-parse','HEAD',cwd=peer).stdout.strip();w.git('push','origin','HEAD:main',cwd=peer)
+        return candidate
+
+    def test_offline_capture_stays_readable_and_online_observation_preserves_feature_state(self):
+        with World() as w:
+            repo,bank,peer,base=self.fixture(w);before=self.state(w,repo,bank)
+            initial=self.good(w,'inspect','--repo',repo)
+            self.assertFalse(initial['remote_freshness_verified']);self.assertEqual(initial['sharing_state'],'pending-stale')
+            remote=Path(w.git('remote','get-url','origin',cwd=repo).stdout.strip());away=remote.with_name('offline.git');remote.rename(away)
+            pending=self.good(w,'inspect','--repo',repo,'--fetch');self.assertFalse(pending['remote_freshness_verified'])
+            self.assertTrue(pending['local_memory_available']);self.assertFalse(pending['publication_verified'])
+            away.rename(remote)
+            online=self.good(w,'inspect','--repo',repo,'--fetch');self.assertEqual(online['observation']['authority_head'],base)
+            self.assertTrue(online['remote_freshness_verified']);self.assertEqual(before,self.state(w,repo,bank))
+            self.assertEqual(w.git('for-each-ref','--format=%(refname)','refs/agent-memory',cwd=repo).stdout.strip(),'')
+
+    def test_lost_success_response_and_squash_readback_do_not_require_a_duplicate_push(self):
+        with World() as w:
+            repo,bank,peer,base=self.fixture(w);before=self.state(w,repo,bank)
+            content=(peer/'memory-bank/projectbrief.md').read_text()+'\nReviewed branch-independent learning.\n'
+            candidate=self.publish(w,peer,'memory-bank/projectbrief.md',content)
+            # The caller loses the successful push response and all optional cursors.
+            state=Path(w.env['AGENT_MEMORY_STATE_HOME']);shutil.rmtree(state,ignore_errors=True)
+            request=self.save(w,{'base':base,'candidate':candidate})
+            first=self.good(w,'replay','--repo',repo,'--request',request)
+            self.assertTrue(first['publication_verified']);self.assertEqual(first['retry_state'],'already-landed')
+            self.assertTrue(first['intended_delta_current']);self.assertFalse(first['canonical_writes_performed']);self.assertTrue(first['git_metadata_writes_performed'])
+            again=self.good(w,'replay','--repo',repo,'--request',request)
+            self.assertEqual(again['witnessed_commit'],candidate);self.assertEqual(before,self.state(w,repo,bank))
+            # Distinct commit identity, same reviewed bytes (squash/recreated commit).
+            w.git('checkout','-b','recreated',base,cwd=peer)
+            (peer/'memory-bank/projectbrief.md').write_text(content);w.git('add','memory-bank/projectbrief.md',cwd=peer)
+            w.git('commit','-m','Different candidate identity with same memory-only delta',cwd=peer)
+            alternate=w.git('rev-parse','HEAD',cwd=peer).stdout.strip();w.git('push','origin','HEAD:refs/heads/proposed',cwd=peer)
+            # Fetch only the local candidate object; it has not landed as that commit.
+            w.git('fetch','origin','refs/heads/proposed',cwd=repo)
+            readback=self.good(w,'replay','--repo',repo,'--request',self.save(w,{'base':base,'candidate':alternate}))
+            self.assertTrue(readback['intended_delta_landed']);self.assertEqual(readback['witnessed_commit'],candidate)
+
+    def test_later_correction_keeps_historical_publication_receipt_without_claiming_current_truth(self):
+        with World() as w:
+            repo,bank,peer,base=self.fixture(w)
+            candidate=self.publish(w,peer,'memory-bank/projectbrief.md','# Project\n\nInitial actual learning.\n')
+            self.publish(w,peer,'memory-bank/projectbrief.md','# Project\n\nLater confirmed correction.\n')
+            value=self.good(w,'replay','--repo',repo,'--request',self.save(w,{'base':base,'candidate':candidate}))
+            self.assertTrue(value['intended_delta_landed']);self.assertFalse(value['intended_delta_current'])
+            self.assertEqual(value['witnessed_commit'],candidate)
+            self.assertIn('Later confirmed correction',(peer/'memory-bank/projectbrief.md').read_text())
+
+    def test_changed_default_remote_history_and_unrelated_candidate_code_require_review(self):
+        with World() as w:
+            repo,bank,peer,base=self.fixture(w);before=self.state(w,repo,bank)
+            (peer/'code.py').write_text('FEATURE = 99\n');w.git('add','code.py',cwd=peer);w.git('commit','-m','Code not eligible as memory publication',cwd=peer)
+            candidate=w.git('rev-parse','HEAD',cwd=peer).stdout.strip();w.git('push','origin','HEAD:refs/heads/proposed',cwd=peer)
+            w.git('fetch','origin','refs/heads/proposed',cwd=repo)
+            p,v=self.call(w,'replay','--repo',repo,'--request',self.save(w,{'base':base,'candidate':candidate}));self.assertEqual(p.returncode,1)
+            remote=Path(w.git('remote','get-url','origin',cwd=repo).stdout.strip())
+            w.git('symbolic-ref','HEAD','refs/heads/other',cwd=remote)
+            p,v=self.call(w,'inspect','--repo',repo,'--fetch');self.assertEqual(p.returncode,0);self.assertFalse(v['remote_freshness_verified'])
+            self.assertEqual(before,self.state(w,repo,bank))
+
+    def test_cursor_loss_combines_independent_edits_and_repeated_normal_merge_without_reversing_memory(self):
+        with World() as w:
+            repo,bank,peer,base=self.fixture(w)
+            # A separate feature branch keeps its own staged code and local memory.
+            w.git('checkout','-b','feature',cwd=repo)
+            (bank/'activeContext.md').write_text('# Current focus\n\nUseful unpublished feature observation.\n')
+            landed='# Project\n\nA source-linked landed shared goal.\n'
+            candidate=self.publish(w,peer,'memory-bank/projectbrief.md',landed)
+            before=self.state(w,repo,bank)
+            value=self.good(w,'reconcile','--repo',repo)
+            self.assertEqual(value['base'],base);self.assertTrue(value['semantic_review_required'])
+            self.assertEqual(value['candidate_files']['activeContext.md'],(bank/'activeContext.md').read_text())
+            self.assertEqual(value['candidate_files']['projectbrief.md'],landed)
+            self.assertFalse(value['publication_verified']);self.assertEqual(before,self.state(w,repo,bank))
+            # The explicit reviewed mechanical plan uses the existing recoverable
+            # writer; automatic semantic review and boundary refresh are later stories.
+            files=self.save(w,value['candidate_files'],'files.json')
+            r=w.run([sys.executable,'-I',self.pack/'scripts/bank_transactions.py','preview','--repo',repo,'--files',files,'--operation','refresh'])
+            proposal=self.save(w,json.loads(r.stdout),'apply.json')
+            w.run([sys.executable,'-I',self.pack/'scripts/bank_transactions.py','apply','--proposal',proposal])
+            w.git('add','memory-bank',cwd=repo);w.git('commit','-m','Reviewed imported memory with feature work',cwd=repo)
+            # A normal code merge includes the already imported landed memory.
+            w.git('fetch','origin',cwd=repo);w.git('merge','--no-edit','origin/main',cwd=repo)
+            repeated=self.good(w,'reconcile','--repo',repo)
+            self.assertEqual(repeated['candidate_files']['projectbrief.md'],landed)
+            self.assertEqual(repeated['changed_memory_paths'],[])
+            self.assertIn('unpublished feature observation',repeated['candidate_files']['activeContext.md'])
+            self.assertFalse(repeated['feature_code_freshness_verified'])
+
+    def add_record(self,w,repo,bank):
+        body=record_text('A branch lesson that will be explicitly erased.\n',project_id((bank/'MEMORY.md').read_text()))
+        identity=json.loads(next(x.split(': ',1)[1] for x in body.splitlines() if x.startswith('id: ')))
+        path='topics/lesson.md';(bank/'topics').mkdir(exist_ok=True);(bank/path).write_text(body)
+        row='| ['+path+'](<'+path+'>) | Conditional lesson | repository | active | Before retry work |\n'
+        p=bank/'MEMORY.md';p.write_text(p.read_text().replace('\n## Omitted contexts\n',row+'\n## Omitted contexts\n'))
+        w.git('add','memory-bank',cwd=repo);w.git('commit','-m','Typed isolated admitted fixture',cwd=repo)
+        w.git('push','origin','HEAD:main',cwd=repo)
+        return identity
+
+    def test_older_branch_edit_cannot_restore_tombstoned_learning_after_later_code_merge_or_cursor_loss(self):
+        with World() as w:
+            repo,bank,peer,base=self.fixture(w);identity=self.add_record(w,repo,bank)
+            base=w.git('rev-parse','HEAD',cwd=repo).stdout.strip();w.git('pull','--ff-only',cwd=peer)
+            w.git('checkout','-b','old-feature',cwd=repo)
+            (bank/'topics/lesson.md').write_text((bank/'topics/lesson.md').read_text().replace('will be explicitly erased','was locally edited before erasure'))
+            peer_bank=peer/'memory-bank';(peer_bank/'topics/lesson.md').unlink()
+            path='history/tombstones/'+identity+'.md';target=peer_bank/path;target.parent.mkdir(parents=True)
+            tomb={'id':identity,'scope':project_id((peer_bank/'MEMORY.md').read_text()),'deleted-at':'2026-10-23T01:00:00Z','deletion-authority':str(uuid.uuid4()),'reason-class':'user-request'}
+            target.write_text('---\n'+''.join(k+': '+json.dumps(v)+'\n' for k,v in tomb.items())+'---\n')
+            router=peer_bank/'MEMORY.md';rows=router.read_text().splitlines(keepends=True)
+            text=''.join(x for x in rows if '[topics/lesson.md]' not in x)
+            text=text.replace('\n## Omitted contexts\n','| ['+path+'](<'+path+'>) | Terminal deletion guard | repository | deleted | Before recall |\n\n## Omitted contexts\n')
+            router.write_text(text)
+            # Stage all tombstone/deletion files as one actual remote commit.
+            w.git('add','-A','memory-bank',cwd=peer);w.git('commit','-m','Complete explicit erasure',cwd=peer);w.git('push','origin','HEAD:main',cwd=peer)
+            before=self.state(w,repo,bank);value=self.good(w,'reconcile','--repo',repo)
+            self.assertNotIn('topics/lesson.md',value['candidate_files']);self.assertIn(path,value['candidate_files'])
+            self.assertNotIn('locally edited',json.dumps(value));self.assertEqual(before,self.state(w,repo,bank))
+            # No remembered private cursor is necessary to derive this plan.
+            shutil.rmtree(Path(w.env['AGENT_MEMORY_STATE_HOME']),ignore_errors=True)
+            again=self.good(w,'reconcile','--repo',repo);self.assertEqual(value['candidate_files'],again['candidate_files'])
+
+    def test_both_changed_same_prose_requires_meaning_review_without_choosing_landing_order(self):
+        with World() as w:
+            repo,bank,peer,base=self.fixture(w)
+            (bank/'projectbrief.md').write_text('# Project\n\nThe wall should be yellow.\n')
+            self.publish(w,peer,'memory-bank/projectbrief.md','# Project\n\nThe wall should be blue.\n')
+            before=self.state(w,repo,bank);p,v=self.call(w,'reconcile','--repo',repo)
+            self.assertEqual(p.returncode,1);self.assertEqual(v['sharing_state'],'pending-stale')
+            self.assertNotIn('candidate_files',v);self.assertEqual(before,self.state(w,repo,bank))
+
+    def test_normal_rebase_keeps_previously_imported_memory_once_and_local_feature_code(self):
+        with World() as w:
+            repo,bank,peer,base=self.fixture(w);w.git('checkout','-b','feature-rebase',cwd=repo)
+            landed='# Project\n\nA verified shared goal imported before code rebase.\n'
+            self.publish(w,peer,'memory-bank/projectbrief.md',landed)
+            value=self.good(w,'reconcile','--repo',repo)
+            files=self.save(w,value['candidate_files'],'rebase-files.json')
+            r=w.run([sys.executable,'-I',self.pack/'scripts/bank_transactions.py','preview','--repo',repo,'--files',files,'--operation','refresh'])
+            proposal=self.save(w,json.loads(r.stdout),'rebase-apply.json')
+            w.run([sys.executable,'-I',self.pack/'scripts/bank_transactions.py','apply','--proposal',proposal])
+            w.git('add','memory-bank',cwd=repo);w.git('commit','-m','Feature plus reviewed imported memory',cwd=repo)
+            w.git('fetch','origin',cwd=repo);w.git('rebase','origin/main',cwd=repo)
+            before=self.state(w,repo,bank);repeated=self.good(w,'reconcile','--repo',repo)
+            self.assertEqual(repeated['candidate_files']['projectbrief.md'],landed)
+            self.assertEqual(repeated['changed_memory_paths'],[]);self.assertEqual(before,self.state(w,repo,bank))
+            self.assertIn('VALUE = 2',(repo/'code.py').read_text())
+
+    def test_current_untracked_admitted_record_does_not_block_fresh_remote_inventory(self):
+        with World() as w:
+            repo,bank,peer,base=self.fixture(w)
+            body=record_text('Useful local admitted learning not committed yet.\n',project_id((bank/'MEMORY.md').read_text()))
+            (bank/'topics').mkdir();(bank/'topics/new.md').write_text(body)
+            router=bank/'MEMORY.md';router.write_text(router.read_text().replace('\n## Omitted contexts\n',
+                '| [topics/new.md](<topics/new.md>) | Useful local lesson | repository | active | Before matching work |\n\n## Omitted contexts\n'))
+            before=self.state(w,repo,bank);value=self.good(w,'inspect','--repo',repo,'--fetch')
+            self.assertTrue(value['remote_freshness_verified']);self.assertFalse(value['publication_verified'])
+            self.assertEqual(before,self.state(w,repo,bank))
+
+    def test_inactive_stable_version_cannot_be_reactivated_by_an_older_working_copy(self):
+        with World() as w:
+            repo,bank,peer,base=self.fixture(w);identity=self.add_record(w,repo,bank)
+            path=bank/'topics/lesson.md';original=path.read_text()
+            revoked=original.replace('status: "active"','status: "revoked"')
+            revoked=revoked.replace('\n---\n','\nstate-reason: "Actual confirmed fixture revocation"\n---\n',1)
+            path.write_text(revoked);router=bank/'MEMORY.md'
+            original_router=router.read_text();router.write_text(original_router.replace('| repository | active | Before retry work |','| repository | revoked | Before retry work |'))
+            w.git('reset','--','code.py',cwd=repo);w.git('add','memory-bank',cwd=repo);w.git('commit','-m','Confirmed inactive fixture baseline',cwd=repo)
+            w.git('push','origin','HEAD:main',cwd=repo);w.git('add','code.py',cwd=repo)
+            # Losing a cursor must not let an older body override that baseline.
+            path.write_text(original);router.write_text(original_router)
+            before=self.state(w,repo,bank);p,value=self.call(w,'reconcile','--repo',repo)
+            self.assertEqual(p.returncode,1);self.assertNotIn('candidate_files',value)
+            self.assertEqual(before,self.state(w,repo,bank))
+
+    def test_remote_advance_during_observation_requires_new_inventory(self):
+        with World() as w:
+            repo,bank,peer,base=self.fixture(w);before=self.state(w,repo,bank)
+            barrier=w.inside('fetch barrier')
+            w.env.update(AGENT_MEMORY_FAULT_STAGE='sharing-after-fetch',AGENT_MEMORY_FAULT_MODE='pause',AGENT_MEMORY_FAULT_DIR=str(barrier))
+            child=w.spawn([sys.executable,'-I',self.pack/'scripts/sharing_recovery.py','inspect','--repo',repo,'--fetch'])
+            ready=barrier/'sharing-after-fetch.ready';deadline=time.monotonic()+15
+            while not ready.exists() and time.monotonic()<deadline:time.sleep(.02)
+            self.assertTrue(ready.exists(),'actual fetch did not reach barrier')
+            candidate=self.publish(w,peer,'memory-bank/projectbrief.md','# Project\n\nConcurrent actual learning.\n')
+            (barrier/'sharing-after-fetch.release').touch()
+            out,err=child.communicate(timeout=30);self.assertEqual(child.returncode,0,err)
+            self.assertFalse(json.loads(out)['remote_freshness_verified'])
+            for key in ['AGENT_MEMORY_FAULT_STAGE','AGENT_MEMORY_FAULT_MODE','AGENT_MEMORY_FAULT_DIR']:w.env.pop(key)
+            retried=self.good(w,'inspect','--repo',repo,'--fetch')
+            self.assertEqual(retried['observation']['authority_head'],candidate)
+            self.assertEqual(before,self.state(w,repo,bank))
+
+    def test_nested_bank_observation_reconciliation_and_replay_use_same_configured_prefix(self):
+        with World() as w:
+            repo,bank,peer,base=self.fixture(w,'docs/shared memory')
+            candidate=self.publish(w,peer,'docs/shared memory/projectbrief.md','# Project\n\nA nested-bank shared lesson.\n')
+            before=self.state(w,repo,bank);value=self.good(w,'reconcile','--repo',repo)
+            self.assertEqual(value['observation']['bank_root'],'docs/shared memory')
+            self.assertTrue(all(p.startswith('docs/shared memory/') for p in value['changed_memory_paths']))
+            replay=self.good(w,'replay','--repo',repo,'--request',self.save(w,{'base':base,'candidate':candidate}))
+            self.assertTrue(replay['publication_verified']);self.assertFalse((repo/'memory-bank').exists())
+            self.assertEqual(before,self.state(w,repo,bank))
+
+
+if __name__=='__main__':unittest.main()

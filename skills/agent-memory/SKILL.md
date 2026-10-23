@@ -111,6 +111,9 @@ changes only `activeContext.md`; missing-context route preparation is separate.
 A session MUST read [sharing/GUIDE.md](sharing/GUIDE.md) before configuring the
 repository bank/default branch or inspecting eligible memory-only Git paths.
 
+A session MUST read [sharing/recovery/GUIDE.md](sharing/recovery/GUIDE.md)
+before recovering a lost sharing response or reconstructing a merge baseline.
+
 A local edit, branch commit or successful validation MUST NOT be described as
 landed shared memory. Other sessions can rely on a change only after the
 repository's publication rules have landed it on `main` and they have refreshed
