@@ -24,7 +24,7 @@
     {"name": "identity-isolation", "layer": "client", "scope": "v0.0.1", "path": "tests/contracts/test_identity_canaries.py"},
     {"name": "observed-writes", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_projection_contract.py"},
     {"name": "learning-admission", "layer": "bank", "scope": "v0.0.1", "path": null, "reason": "Admission operations have not shipped."},
-    {"name": "retrieval-context", "layer": "bank", "scope": "v0.0.1", "path": null, "reason": "Recall operations have not shipped."},
+    {"name": "retrieval-context", "layer": "bank", "scope": "v0.0.1", "path": "tests/contracts/test_retrieval.py"},
     {"name": "correction-erasure", "layer": "bank", "scope": "v0.0.1", "path": null, "reason": "Correction and erasure have not shipped."},
     {"name": "initialize-evidence", "layer": "bank", "scope": "v0.0.1", "path": "tests/contracts/test_initialization.py"},
     {"name": "cross-clone-sharing", "layer": "concurrency", "scope": "v0.0.1", "path": null, "reason": "Memory sharing has not shipped."},

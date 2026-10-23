@@ -72,6 +72,10 @@ knowledge; it MUST NOT become a binding skill without reviewed promotion.
 
 ## Read-only helpers
 
+A session MUST use the [recall guide](../retrieval/GUIDE.md) for current
+file/ID/text selection. Schema validity and an exact match alone do not qualify
+a record as current guidance.
+
 With `SKILL_DIR` resolved to the packaged skill directory:
 
 ```sh
