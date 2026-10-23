@@ -19,7 +19,11 @@ Public copied-pack fixtures cover user/repository and reviewed tool/assistant/
 external sources, uncertainty, instruction promotion, raw conversation, redundant
 work state, duplicate/conflict routing, actual unfinished-code conditions,
 arriving learning, tampered plans, changed evidence, replay and interruption.
-Interrupted admission requires rollback followed by new evidence/comparison;
-finishing partial memory cannot establish novelty. Code, index and HEAD remain
+Before recorded completion, interrupted admission requires rollback followed by
+new evidence/comparison; finishing partial memory cannot establish novelty.
+After an exactly verified finished receipt exists, recovery cleans the recorded
+outcome without replaying bytes or requiring new source evidence. Public probes
+cover both receipt and marker-removal crash windows, with later evidence changes.
+Code, index and HEAD remain
 unchanged. Latest-main comparison/publication is separate exchange work and
 remains pending; local admission never claims cross-machine visibility.

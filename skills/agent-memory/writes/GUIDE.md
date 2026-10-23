@@ -79,8 +79,10 @@ preserve unknown markers or missing journals for explicit inspection.
 
 Private write/recovery receipts are separate from optional historical events.
 The [admission workflow](../admission/GUIDE.md) writes its admission event with
-the current record. Interrupted admission requires rollback and fresh comparison;
-ordinary finish MUST NOT bypass its evidence checks. An event writer
+the current record. Before verified completion, interrupted admission requires
+rollback and fresh comparison. An exact verified finished receipt instead allows
+finish to clean the recorded outcome without replay; ordinary finish MUST NOT
+bypass the pre-completion evidence checks. An event writer
 MUST use the stable event ID as its idempotency key and refuse that ID
 with different content. Historical events/projections MUST NOT replace the
 current bank, and terminal deletion MUST use only its content-free tombstone.

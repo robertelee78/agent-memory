@@ -130,12 +130,23 @@ success only; the session MUST inspect current memory before further use. A
 different plan MUST use a new operation ID and fresh capture/comparison evidence.
 
 An interrupted admission MUST remain unreadable behind its transaction marker.
-The session MUST follow [lock recovery](../writes/GUIDE.md), then use transaction
-`recover --mode rollback` with its original journal. Finish is deliberately refused
-because partial memory cannot support a fresh complete comparison. Rollback MUST
-preserve unrelated edits and is allowed even when supporting evidence changed.
-After rollback, the session MUST inspect evidence and compare again before a new
-admission. Unknown/missing journals MUST remain for explicit inspection.
+The session MUST follow [lock recovery](../writes/GUIDE.md). Before a verified
+completion receipt exists, it MUST use transaction `recover --mode rollback`
+with the original journal: partial memory cannot support a fresh complete
+comparison. Rollback MUST preserve unrelated edits and is allowed even when
+supporting evidence changed. After rollback, the session MUST inspect evidence
+and compare again before a new admission.
+
+If the exact verified finished receipt exists, admission already reached its
+commit point. Transaction `recover --mode finish` MUST clean up that recorded
+outcome without replaying bytes or demanding fresh semantic/source evidence;
+rollback MUST NOT undo it. Later evidence changes do not change that historical
+receipt into a new admission. The current bank must still exactly match the
+recorded completed bytes; external edits, unknown receipts or missing journals
+MUST remain for explicit inspection. After a crash following marker removal,
+retrying the original admission reads its receipt and cleans its leftover
+journal without replacing newer memory. A session MUST still qualify current
+evidence before using the historical lesson as present truth.
 
 This operation does not commit, fetch, push, merge or establish latest-main
 freshness. It MUST NOT report local admission as shared publication. Actual

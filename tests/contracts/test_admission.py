@@ -219,3 +219,53 @@ class AdmissionContract(unittest.TestCase):
                 result=self.capture(w,repo,request);self.assertEqual(result['decision'],'quarantine');self.assertIsNone(result['capture'])
                 self.assertIn('terminal-deletion',result['reasons'])
             self.assertEqual(before,self.state(w,repo,bank))
+
+    def test_recorded_admission_recovers_lost_response_without_replaying_or_requiring_new_evidence(self):
+        for stage in ('transaction-after-receipt','transaction-after-marker-removal'):
+            for changed_source in (False,True):
+                with self.subTest(stage=stage,changed_source=changed_source),World() as w:
+                    repo,bank=self.fixture(w);request=self.request('verified-repository')
+                    request['repository_evidence']={'path':'evidence.md','sha256':hashlib.sha256((repo/'evidence.md').read_bytes()).hexdigest()}
+                    p=self.prepared(w,repo,request)
+                    w.env.update(AGENT_MEMORY_FAULT_STAGE=stage,AGENT_MEMORY_FAULT_MODE='exit')
+                    child=w.run([sys.executable,'-I',self.pack/'scripts/admit_learning.py','apply','--proposal',self.save(w,p,'admission.json')],check=False)
+                    w.env.pop('AGENT_MEMORY_FAULT_STAGE');w.env.pop('AGENT_MEMORY_FAULT_MODE');self.assertEqual(child.returncode,86,child.stdout+child.stderr)
+                    marker=bank/'.agent-memory-transaction.md'
+                    self.assertEqual(marker.exists(),stage=='transaction-after-receipt')
+                    if changed_source:(repo/'evidence.md').write_text('# Later evidence; do not change the recorded historical outcome\n')
+                    unlock=self.good(w,'bank_writes.py','recover','--repo',repo)
+                    self.good(w,'bank_writes.py','recover','--repo',repo,'--proposal',self.save(w,unlock,'unlock.json'))
+                    before=self.state(w,repo,bank)
+                    if marker.exists():
+                        self.assertEqual(self.call(w,'bank_transactions.py','recover','--repo',repo,'--mode','rollback')[0].returncode,1)
+                        recovery=self.good(w,'bank_transactions.py','recover','--repo',repo,'--mode','finish')
+                        done=self.good(w,'bank_transactions.py','recover','--repo',repo,'--proposal',self.save(w,recovery,'finish.json'))
+                        self.assertEqual(done['outcome'],'finished');self.assertFalse(done['writes_performed'])
+                    else:
+                        r,done=self.apply(w,p);self.assertEqual(r.returncode,0,done);self.assertTrue(done['already_applied'])
+                    self.assertTrue(done['verified']);self.assertFalse(marker.exists())
+                    after=self.state(w,repo,bank);before_bank={k:v for k,v in before[0].items() if k!='.agent-memory-transaction.md'}
+                    self.assertEqual(before_bank,after[0]);self.assertEqual(before[1:],after[1:])
+                    self.good(w,'bank_contract.py','validate','--repo',repo)
+
+    def test_completed_receipt_cleanup_does_not_trust_corrupt_receipts_or_overwrite_external_memory(self):
+        with World() as w:
+            repo,bank=self.fixture(w);p=self.prepared(w,repo)
+            w.env.update(AGENT_MEMORY_FAULT_STAGE='transaction-after-receipt',AGENT_MEMORY_FAULT_MODE='exit')
+            r=w.run([sys.executable,'-I',self.pack/'scripts/admit_learning.py','apply','--proposal',self.save(w,p,'admission.json')],check=False)
+            w.env.pop('AGENT_MEMORY_FAULT_STAGE');w.env.pop('AGENT_MEMORY_FAULT_MODE');self.assertEqual(r.returncode,86)
+            unlock=self.good(w,'bank_writes.py','recover','--repo',repo)
+            self.good(w,'bank_writes.py','recover','--repo',repo,'--proposal',self.save(w,unlock,'unlock.json'))
+            receipts=[]
+            for path in Path(w.env['AGENT_MEMORY_STATE_HOME']).rglob('*.json'):
+                value=json.loads(path.read_text())
+                if value.get('schema')=='agent-memory/transaction-receipt-v1' and value.get('operation_id')==p['operation_id']:receipts.append(path)
+            self.assertEqual(len(receipts),1);path=receipts[0];original=path.read_bytes()
+            value=json.loads(original);value['verified']=False;path.write_text(json.dumps(value))
+            before=self.state(w,repo,bank)
+            self.assertEqual(self.call(w,'bank_transactions.py','recover','--repo',repo,'--mode','finish')[0].returncode,1)
+            self.assertEqual(before,self.state(w,repo,bank));path.write_bytes(original)
+            target=bank/'projectbrief.md';original_body=target.read_text();target.write_text(original_body+'\nA foreign edit must be preserved.\n')
+            before=self.state(w,repo,bank)
+            self.assertEqual(self.call(w,'bank_transactions.py','recover','--repo',repo,'--mode','finish')[0].returncode,1)
+            self.assertEqual(before,self.state(w,repo,bank));self.assertTrue((bank/'.agent-memory-transaction.md').exists())

@@ -217,6 +217,12 @@ def receipt_value(path, p):
     return r
 
 
+def admission_recovery(p, mode, known):
+    if ('admission_evidence' in p and mode == 'finish'
+            and (known is None or known['outcome'] != 'finished')):
+        raise ContractError('Unfinished admission requires rollback, then fresh evidence and comparison; preserve the journal')
+
+
 def journal_value(raw, root, bank, operation_id, *, require_marker=True):
     j = load(raw)
     if not isinstance(j, dict) or set(j) != {"schema", "proposal", "base_files"} or j["schema"] != "agent-memory/transaction-journal-v1":
@@ -238,9 +244,14 @@ def allowed_partial(p, observed):
         raise ContractError("Interrupted bank contains an external edit; automatic recovery would overwrite it")
 
 
-def converge(root, bank, p, base_files, journal, raw, receipt_path, mode, observed, owner):
+def converge(root, bank, p, base_files, journal, raw, receipt_path, mode, observed, owner, *, recovery=False):
     marker = marker_bytes(p)
     known = receipt_value(receipt_path, p)
+    if recovery:
+        admission_recovery(p, mode, known)
+    # An exact verified outcome is already committed. Recovery may clean its
+    # marker, but cannot replay bytes or demand new semantic/source evidence.
+    historical = recovery and known is not None
     outcome = "finished" if mode == "finish" else "rolled-back"
     if known and known["outcome"] != outcome:
         raise ContractError("Transaction already has a different verified outcome; use a new reviewed operation")
@@ -262,12 +273,12 @@ def converge(root, bank, p, base_files, journal, raw, receipt_path, mode, observ
     check_marker(bank, marker)
     check_observed(bank, expected)
     check_layout(bank, participants, expected)
-    checked = validate_outcome(root, bank, desired, p, owner, marker)
+    checked = validate_outcome(root, bank, desired, p, owner, marker, admission_sources=not historical)
     writes.fault("transaction-before-receipt")
     check_marker(bank, marker)
     check_observed(bank, expected)
     check_layout(bank, participants, expected)
-    validate_outcome(root, bank, desired, p, owner, marker)
+    validate_outcome(root, bank, desired, p, owner, marker, admission_sources=not historical)
     if not known:
         known = {"schema": "agent-memory/transaction-receipt-v1", "operation_id": p["operation_id"],
                  "request_sha256": digest(encoded(p)), "bank_path": str(bank), "project_id": checked["project_id"],
@@ -279,7 +290,7 @@ def converge(root, bank, p, base_files, journal, raw, receipt_path, mode, observ
     check_marker(bank, marker)
     check_observed(bank, expected)
     check_layout(bank, participants, expected)
-    validate_outcome(root, bank, desired, p, owner, marker)
+    validate_outcome(root, bank, desired, p, owner, marker, admission_sources=not historical)
     (bank / MARKER).unlink()
     flush_directory(bank)
     writes.fault("transaction-after-marker-removal")
@@ -288,8 +299,8 @@ def converge(root, bank, p, base_files, journal, raw, receipt_path, mode, observ
                   already_applied=not paths, still_current=True, receipt_path=str(receipt_path), interrupted=False)
 
 
-def validate_outcome(root, bank, desired, p, owner, marker):
-    if 'admission_evidence' in p and desired == p['files']:
+def validate_outcome(root, bank, desired, p, owner, marker, *, admission_sources=True):
+    if admission_sources and 'admission_evidence' in p and desired == p['files']:
         from .admission import check_sources
         check_sources(p, owner=owner, marker=marker)
     if not desired and p['operation'] == 'initialize' and p['observed_hashes'] == {}:
@@ -405,10 +416,9 @@ def recover(repo, mode=None, prepared=None):
     operation_id = r.get('operation_id') if isinstance(r, dict) else None
     if not uuid_valid(operation_id):
         raise ContractError('Invalid transaction recovery operation')
-    journal, _ = locations(root, bank, operation_id)
+    journal, receipt_path = locations(root, bank, operation_id)
     _, p = journal_value(journal.read_bytes(), root, bank, operation_id)
-    if 'admission_evidence' in p and r['mode'] == 'finish':
-        raise ContractError('Interrupted admission requires rollback, then fresh evidence and comparison; do not finish from partial memory')
+    admission_recovery(p, r['mode'], receipt_value(receipt_path, p))
     if p['operation'] == 'bind':
         raise ContractError('Resume identity binding through its original scope_binding bundle')
     marker = marker_bytes(p)
@@ -454,7 +464,7 @@ def _recover(repo, mode=None, prepared=None, *, check_identity=None):
                 raise ContractError("Bank changed after recovery preview; preserve the edit")
             allowed_partial(p, observed)
             preflight(bank, p, observed)
-            return converge(root, bank, p, j["base_files"], journal, raw, receipt_path, r["mode"], observed, owner)
+            return converge(root, bank, p, j["base_files"], journal, raw, receipt_path, r["mode"], observed, owner, recovery=True)
     if mode not in {"finish", "rollback"}:
         raise ContractError("Recovery preview requires an explicit finish or rollback choice")
     lock = bank / ".agent-memory.lock"
@@ -470,8 +480,7 @@ def _recover(repo, mode=None, prepared=None, *, check_identity=None):
     journal, receipt_path = locations(root, bank, m["transaction_id"])
     raw = journal.read_bytes()
     j, p = journal_value(raw, root, bank, m["transaction_id"])
-    if 'admission_evidence' in p and mode == 'finish':
-        raise ContractError('Interrupted admission requires rollback, then fresh evidence and comparison; preserve the journal')
+    admission_recovery(p, mode, receipt_value(receipt_path, p))
     if mode == 'finish' and p['operation'] == 'initialize':
         from .initialization import validate_transaction
         validate_transaction(p)
