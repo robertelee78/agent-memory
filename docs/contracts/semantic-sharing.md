@@ -41,3 +41,11 @@ explicit dependency isolation, compatible same-file edits, differently worded
 duplicates, disjoint and unknown conditions, full pair coverage, stale/tampered
 proofs, hidden/other-kind invalidators and an actual clarification/correction/
 consolidation path. Optional caches, hooks, MCP and live credentials are absent.
+
+Router and custom-index introductions are explicit semantic sources with complete
+scope variants and container metadata/navigation context. Conflicting prose is
+held independently of routes, so an unrelated routed record can continue. Actual
+root/index yellow-blue and compatible-introduction regressions retain the
+independently observed source-omission incident. Identical prose under several
+routing conditions must be disjoint under every actual variant before using a
+condition-distinction label.

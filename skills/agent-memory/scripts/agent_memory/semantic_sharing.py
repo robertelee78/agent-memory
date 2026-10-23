@@ -12,13 +12,13 @@ from datetime import datetime, timezone
 import difflib
 import itertools
 import json
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import sys
 import uuid
 
 from . import bank_contract as bank, bank_layout as layout, bank_transactions as tx
 from . import bank_writes as writes, consolidation, governance, lifecycle, records
-from . import retrieval, scope_binding, security
+from . import retrieval, scope_binding, security, scopes
 from .developer_identity import digest, encoded, load
 from .frontmatter import ContractError, read, write
 from .identity_git import git
@@ -57,17 +57,25 @@ def snapshots(repo, base=None):
 def units(values,checked):
     output={}
     for side in ('local','landed'):
-        for entry in checked[side]['entries']:
-            if entry['format'] not in {'context-prose','standalone-record'}:continue
+        entries=[{'path':'MEMORY.md','format':'root-router','scope_chain':['repository'],'lifecycle':'active'},*checked[side]['entries']]
+        for entry in entries:
+            if entry['format'] not in {'context-prose','standalone-record','root-router','topic-index'}:continue
             path=entry['path'];text=values[side][path];sha=digest(text.encode())
             key=digest(encoded({'path':path,'sha256':sha}))
             if key in output:
                 output[key]['sides'].append(side)
                 output[key]['scope_chains'][side]=entry['scope_chain'];continue
             metadata=None;body=text
+            container=None
             if entry['format']=='standalone-record':_,metadata,body=records.parse(text)
+            elif entry['format'] in {'root-router','topic-index'}:
+                header,fullbody=read(text,allowed=set(bank.SPEC['properties'])|set(layout.SPEC['properties']))
+                body=fullbody.split('\n## Routes\n',1)[0]
+                container={'metadata':header,'routes':bank.parse_router(text)[1] if entry['format']=='root-router' else layout.parse_index(path,header,fullbody)}
+                if entry['format']=='root-router':container['omitted']=bank.parse_router(text)[2]
             row={'key':key,'path':path,'sha256':sha,'sides':[side], 'metadata':metadata,'body':body,
-                 'scope_chain':entry['scope_chain'],'scope_chains':{side:entry['scope_chain']},'lifecycle':entry['lifecycle']}
+                 'scope_chain':entry['scope_chain'],'scope_chains':{side:entry['scope_chain']},'lifecycle':entry['lifecycle'],
+                 'format':entry['format'],'component':'introduction' if container is not None else 'body','container':container}
             security.ensure_safe({path:text})
             output[key]=row
     if len(output)>32 or len(encoded(output))>65536:
@@ -122,18 +130,45 @@ def qualified_sources(files,root,project_id):
 
 
 def disjoint(left,right):
-    if left['metadata'] is None or right['metadata'] is None:return False
+    def constraints(row,chain):
+        output={key:[value] for key,value in (layout.constraints(row['metadata']) if row['metadata'] else {}).items()}
+        for scope in chain:
+            parsed=scopes.parse_scope(scope)
+            if parsed:output.setdefault(parsed[0],[]).append(parsed[1])
+        return output
+    def nonoverlap(ca,cb):
+        for key in set(ca)&set(cb):
+            for a,b in itertools.product(ca[key],cb[key]):
+                if a is None or b is None:continue
+                if key=='component':
+                    pa,pb=PurePosixPath(a),PurePosixPath(b)
+                    if pa!=pb and pa not in pb.parents and pb not in pa.parents:return True
+                elif a!=b:return True
+        return False
     a,b=left['metadata'],right['metadata']
-    ca,cb=layout.constraints(a),layout.constraints(b)
-    for key in set(ca)&set(cb):
-        if ca[key] is None or cb[key] is None:continue
-        if key=='component':
-            pa,pb=Path(ca[key]),Path(cb[key])
-            if pa!=pb and pa not in pb.parents and pb not in pa.parents:return True
-        elif ca[key]!=cb[key]:return True
-    if a['valid-until'] and b['valid-from'] and lifecycle.time_value(a['valid-until'])<=lifecycle.time_value(b['valid-from']):return True
-    if b['valid-until'] and a['valid-from'] and lifecycle.time_value(b['valid-until'])<=lifecycle.time_value(a['valid-from']):return True
-    return False
+    if a is not None and b is not None:
+        if a['valid-until'] and b['valid-from'] and lifecycle.time_value(a['valid-until'])<=lifecycle.time_value(b['valid-from']):return True
+        if b['valid-until'] and a['valid-from'] and lifecycle.time_value(b['valid-until'])<=lifecycle.time_value(a['valid-from']):return True
+    # Identical bytes can be routed under different conditions on each side.
+    # Every actual source-scope variant must be disjoint, not only the first.
+    ca=[constraints(left,chain) for chain in left['scope_chains'].values()]
+    cb=[constraints(right,chain) for chain in right['scope_chains'].values()]
+    return bool(ca and cb) and all(nonoverlap(x,y) for x,y in itertools.product(ca,cb))
+
+
+def introduction(text):
+    return text.split('\n---\n',1)[1].split('\n## Routes\n',1)[0]
+
+
+def replace_introduction(text,prefix):
+    header,body=text.split('\n---\n',1)
+    _,tail=body.split('\n## Routes\n',1)
+    return header+'\n---\n'+prefix+'\n## Routes\n'+tail
+
+
+def container_paths(files):
+    checked=bank.validate_files(files)
+    return {'MEMORY.md',*[e['path'] for e in checked['entries'] if e['format']=='topic-index']}
 
 
 def compatible_prose(base,local,landed):
@@ -156,8 +191,20 @@ def compatible_prose(base,local,landed):
 def mask(files,baseline,blocked):
     """Undo only disputed payload deltas; structural containers follow the payload."""
     checked=bank.validate_files(files);previous=bank.validate_files(baseline)
-    current=dict(files);removed={p for p in blocked if p in files};additions=[]
-    for path in blocked:
+    current=dict(files);structural=container_paths(files)|container_paths(baseline)
+    for path in blocked&structural:
+        if path not in current:continue
+        if path in baseline:prefix=introduction(baseline[path])
+        elif path!='MEMORY.md':
+            header,body=read(current[path],allowed=layout.SPEC['properties'])
+            routes=layout.parse_index(path,header,body)
+            prefix=introduction(layout.index_text(path,header,routes))
+        else:raise ContractError('An existing project router is required')
+        current[path]=replace_introduction(current[path],prefix)
+    routed_input=dict(current)
+    ordinary=blocked-structural
+    removed={p for p in ordinary if p in files};additions=[]
+    for path in ordinary:
         if path in baseline:
             current[path]=baseline[path]
             route=next((r for r in previous['routes'] if r['path']==path),None)
@@ -171,7 +218,7 @@ def mask(files,baseline,blocked):
     # Reuse the existing route-preserving removal protocol. Context omission
     # changes need their original explanations, rather than fabricated prose.
     at=bank.parse_router(files['MEMORY.md'])[0]['router-updated']
-    routed=governance.reroute(files,checked,{},removed,additions,at)
+    routed=governance.reroute(routed_input,bank.validate_files(routed_input),{},removed,additions,at)
     for path in removed:
         if path in current:routed[path]=current[path]
     # The intermediate router can lack the omission row for a disputed new
@@ -289,8 +336,6 @@ def review(repo,judgment):
         expanded=blocked|{p for p,required in dependencies.items() if set(required)&blocked}
         if expanded==blocked:break
         blocked=expanded
-    if any(p in {'MEMORY.md'} or any(e['path']==p and e['format']=='topic-index' for side in checked.values() for e in side['entries']) for p in blocked):
-        raise ContractError('Disputed structural changes require explicit isolation')
     # No ungrouped same-axis equivalent records can silently become duplicates.
     grouped={tuple(sorted(pair)) for group in judgment['consolidations'] for pair in itertools.combinations(group.get('sources',[]),2)}
     for pair in equivalents:
@@ -309,6 +354,17 @@ def review(repo,judgment):
             # Resolve exactly the reviewed nonoverlapping delta, not arbitrary replacement text.
             local=dict(local);landed=dict(landed);baseline=dict(baseline)
             local[path]=landed[path]=baseline[path]=body
+    structural=set().union(*(container_paths(f) for f in (baseline,local,landed)))
+    for path in structural-blocked:
+        if not all(path in f for f in (baseline,local,landed)):continue
+        prefixes=[introduction(f[path]) for f in (baseline,local,landed)]
+        if prefixes[1]!=prefixes[2] and prefixes[1]!=prefixes[0] and prefixes[2]!=prefixes[0]:
+            pair=tuple(sorted([digest(encoded({'path':path,'sha256':digest(side[path].encode())})) for side in (local,landed)]))
+            if decisions[pair]['classification'] not in {'compatible','equivalent'}:
+                raise ContractError('Concurrent container introductions require actual compatible meaning review')
+            prefix=compatible_prose(*prefixes)
+            baseline=dict(baseline);local=dict(local);landed=dict(landed)
+            for files in (baseline,local,landed):files[path]=replace_introduction(files[path],prefix)
     refresh_land=mask(landed,baseline,blocked) if blocked else landed
     publish_local=mask(local,baseline,blocked) if blocked else local
     refresh=recovery.merge_files(baseline,local,refresh_land)
@@ -324,7 +380,8 @@ def review(repo,judgment):
     if len(encoded(proof))>LIMIT:raise ContractError('Complete semantic proof exceeds bound; no truncation')
     return {'schema':'agent-memory/semantic-sharing-result-v1','operation':'review','proof':proof,
             'proof_sha256':digest(encoded(proof)),'audit':audit,'audit_writes_performed':True,'refresh_files':refresh,'publish_files':publish,
-            'conflicts':conflicts,'blocked_paths':sorted(blocked),'detecting_developer_id':actor,
+            'conflicts':conflicts,'blocked_paths':sorted(blocked),
+            'blocked_introduction_paths':sorted(blocked&structural),'detecting_developer_id':actor,
             'other_developer_ids':sorted(peer),'recommend_other_developer_clarification':bool(peer),'messages_sent':False,
             'independent_updates_may_continue':True,'semantic_truth_verified':False,'judgment_is_agent_assertion':True,
             'remote_freshness_verified':True,'publication_verified':False,'canonical_writes_performed':False,
