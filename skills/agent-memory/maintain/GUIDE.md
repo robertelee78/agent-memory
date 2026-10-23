@@ -27,6 +27,7 @@ inconsistent routes. Index routing MUST preserve each lesson's own conditions.
 
 | Intent | Operation |
 | --- | --- |
+| Validate a portable instruction package before publishing or activation | [pack validation](pack/GUIDE.md) |
 | Consolidate duplicates | [consolidation](../consolidation/GUIDE.md) |
 | Inspect record/index layout | [layout](../layout/GUIDE.md) |
 | Build/check derived references | [projections](../projections/GUIDE.md) |

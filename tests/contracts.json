@@ -34,7 +34,7 @@
     {"name": "later-code-merge", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_refresh_integration.py"},
     {"name": "portable-lifecycle", "layer": "lifecycle", "scope": "v0.0.1", "path": null, "reason": "Install/update/uninstall have not shipped."},
     {"name": "security-canaries", "layer": "evaluation", "scope": "v0.0.1", "path": "tests/contracts/test_release_canaries.py"},
-    {"name": "skill-routes", "layer": "pack", "scope": "v0.0.1", "path": null, "reason": "Portable skill guides have not shipped."},
+    {"name": "skill-routes", "layer": "pack", "scope": "v0.0.1", "path": "tests/contracts/test_skill_routes.py"},
     {"name": "optional-stores", "layer": "optional", "scope": "future", "path": null, "reason": "Cross-repository federation and optional stores are outside v0.0.1."},
     {"name": "mediated-security", "layer": "evaluation", "scope": "v0.0.1", "path": "tests/contracts/test_security_policy.py"},
     {"name": "inactive-guidance", "layer": "bank", "scope": "v0.0.1", "path": "tests/contracts/test_inactive_guidance.py"},
