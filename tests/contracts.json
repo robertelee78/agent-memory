@@ -45,6 +45,8 @@
     {"name": "learning-consolidation", "layer": "bank", "scope": "v0.0.1", "path": "tests/contracts/test_consolidation.py"},
     {"name": "governance-recovery", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_governance_recovery.py"},
     {"name": "sharing-recovery", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_sharing_recovery.py"},
+    {"name": "semantic-sharing", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_semantic_sharing.py"},
+    {"name": "semantic-introductions", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_semantic_introductions.py"},
     {"name": "incident-evidence", "layer": "evaluation", "scope": "v0.0.1", "path": "tests/contracts/test_incident_evidence.py"}
   ]
 }
