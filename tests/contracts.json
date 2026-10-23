@@ -41,6 +41,7 @@
     {"name": "sharing-boundary", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_sharing_boundary.py"},
     {"name": "learning-comparison", "layer": "bank", "scope": "v0.0.1", "path": "tests/contracts/test_comparison.py"},
     {"name": "context-assembly", "layer": "bank", "scope": "v0.0.1", "path": "tests/contracts/test_assembly.py"},
+    {"name": "bounded-resume", "layer": "pack", "scope": "v0.0.1", "path": "tests/contracts/test_bounded_resume.py"},
     {"name": "learning-consolidation", "layer": "bank", "scope": "v0.0.1", "path": "tests/contracts/test_consolidation.py"}
   ]
 }

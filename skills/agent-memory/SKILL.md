@@ -15,6 +15,10 @@ containing this file before using a packaged script.
 
 ## Start and resume
 
+A starting or resuming session MUST follow [resume/GUIDE.md](resume/GUIDE.md)
+to load the bounded project router and only confidently relevant task/component
+context, then continue to the operation guides it actually needs.
+
 A session MUST read [initialize/GUIDE.md](initialize/GUIDE.md) when creating a
 bank or filling useful missing orientation. It MUST inspect existing memory and
 source evidence, including AWA work when available, before storing new context.

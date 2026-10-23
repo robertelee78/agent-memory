@@ -58,6 +58,10 @@ The [context assembly contract](../contracts/assembly.md) adds complete metadata
 type diversity, duplicate provenance, byte and externally measured token budgets,
 and indivisible unresolved conflict groups through the copied portable CLI.
 
+The [bounded resume contract](../contracts/bounded-resume.md) selects only current
+task/component context through exact recall, with no personal layer or optional
+store dependency and with explicit pending sharing freshness.
+
 `tests/world.py` provides private temporary home, XDG, client, repository, bank,
 runtime, cache, credential and backup roots. It constructs an allowlisted
 subprocess environment instead of inheriting credentials or live config, and
