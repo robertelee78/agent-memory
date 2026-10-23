@@ -244,6 +244,15 @@ class SkillRouteContract(unittest.TestCase):
             self.assertFalse(value['valid'])
             self.assertEqual(value['issues'][0]['code'], 'markdown')
 
+    def test_empty_literal_argument_is_data_not_a_hidden_shell_operator(self):
+        with World() as world:
+            pack = self.copy(world)
+            self.append(pack/'SKILL.md', '\n```sh\ngit config example.note ""\n```\n')
+            before = observed(pack)
+            value = self.check(world, pack)
+            self.assertTrue(value['valid'], value)
+            self.assertEqual(observed(pack), before)
+
     def test_candidate_code_is_never_imported_or_executed_by_static_validation(self):
         with World() as world:
             pack = self.copy(world); marker = world.inside('must-not-exist')

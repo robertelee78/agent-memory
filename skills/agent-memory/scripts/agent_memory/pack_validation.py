@@ -256,7 +256,7 @@ def command_argv(line, path):
     lexer = shlex.shlex(line, posix=True, punctuation_chars=';&|<>')
     lexer.whitespace_split = True; lexer.commenters = ''
     argv = list(lexer)
-    require(bool(argv) and not any(t != '>' and set(t) <= set(';&|<>') for t in argv),
+    require(bool(argv) and not any(t and t != '>' and set(t) <= set(';&|<>') for t in argv),
             'dispatch', path, 'Document one supported command per line, without hidden shell operations')
     if '>' in argv:
         require(argv.count('>') == 1 and len(argv) >= 3 and argv[-2] == '>',
