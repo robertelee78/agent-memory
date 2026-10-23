@@ -77,10 +77,15 @@ class SkillRouteContract(unittest.TestCase):
             'duplicate-metadata': ('frontmatter', lambda p: self.replace(p/'SKILL.md', 'name: agent-memory', 'name: agent-memory\nname: agent-memory')),
             'empty-prerelease': ('frontmatter', lambda p: self.replace(p/'SKILL.md', '0.0.1-dev', '0.0.1-..dev')),
             'leading-zero-prerelease': ('frontmatter', lambda p: self.replace(p/'SKILL.md', '0.0.1-dev', '0.0.1-01')),
+            'unicode-core-version': ('frontmatter', lambda p: self.replace(p/'SKILL.md', '0.0.1-dev', '1\u0662.0.0')),
             'missing-section': ('leaf-contract', lambda p: self.replace(p/'checkpoint/GUIDE.md', '## Observe', '## Missing')),
             'duplicate-section': ('leaf-contract', lambda p: self.append(p/'checkpoint/GUIDE.md', '\n## Observe\nAgain.\n')),
             'wrong-order': ('leaf-contract', lambda p: self.replace(p/'checkpoint/GUIDE.md', '## Observe', '## Verify')),
             'wrong-domain': ('domain', lambda p: self.replace(p/'checkpoint/GUIDE.md', 'domain: capture', 'domain: unknown')),
+            'negative-owner-binding': ('domain', lambda p: self.replace(p/'checkpoint/GUIDE.md',
+                'MUST first load and follow the [capture domain]', 'MUST NOT load or follow the [capture domain]')),
+            'optional-owner-binding': ('domain', lambda p: self.replace(p/'checkpoint/GUIDE.md',
+                'MUST first load and follow the [capture domain]', 'MAY load and follow the [capture domain]')),
             'cross-wired-root-route': ('route', lambda p: self.replace(p/'SKILL.md',
                 '| Checkpoint active context | [capture](capture/GUIDE.md)', '| Checkpoint active context | [access](access/GUIDE.md)')),
             'missing-asset': ('link', lambda p: (p/'templates/router-markdown.example.txt').unlink()),
@@ -88,6 +93,9 @@ class SkillRouteContract(unittest.TestCase):
             'missing-helper': ('dispatch', lambda p: (p/'scripts/checkpoint.py').unlink()),
             'unknown-command': ('dispatch', lambda p: self.replace(p/'checkpoint/GUIDE.md', 'checkpoint.py" inspect', 'checkpoint.py" nonexistent')),
             'unknown-inline-command': ('dispatch', lambda p: self.append(p/'checkpoint/GUIDE.md', '\nUse `python3 -I "$SKILL_DIR/scripts/checkpoint.py" absent`.\n')),
+            'config-remote-is-not-config-operation': ('dispatch', lambda p: self.append(p/'SKILL.md', '\n```sh\ngit push config HEAD:main\n```\n')),
+            'git-followed-by-extra-operation': ('dispatch', lambda p: self.append(p/'SKILL.md', '\n```sh\ngit config example.value test && git push config HEAD:main\n```\n')),
+            'helper-followed-by-extra-operation': ('dispatch', lambda p: self.append(p/'SKILL.md', '\n```sh\npython3 -I "$SKILL_DIR/scripts/checkpoint.py" inspect --repo /tmp/example; git push config HEAD:main\n```\n')),
             'unknown-option': ('dispatch', lambda p: self.replace(p/'checkpoint/GUIDE.md', 'inspect --repo', 'inspect --imaginary')),
             'lowercase-requirement': ('rfc-form', lambda p: self.append(p/'SKILL.md', '\nA session must preserve evidence.\n')),
             'mixed-negative': ('rfc-form', lambda p: self.append(p/'SKILL.md', '\nA session MUST not lose evidence.\n')),
@@ -146,6 +154,39 @@ class SkillRouteContract(unittest.TestCase):
             value = self.check(world, pack)
             self.assertFalse(value['valid']); self.assertEqual(value['issues'][0]['code'], 'file-type')
             self.assertEqual(target.read_text(), 'private fixture')
+
+    def test_unreadable_directory_cannot_hide_a_second_registered_skill(self):
+        with World() as world:
+            pack = self.copy(world); hidden = pack/'hidden-directory'; hidden.mkdir()
+            shutil.copy2(pack/'SKILL.md', hidden/'SKILL.md')
+            try:
+                hidden.chmod(0o000)
+                value = self.check(world, pack)
+                self.assertFalse(value['valid'])
+                self.assertEqual(value['issues'][0]['code'], 'asset-mode')
+                self.assertEqual(hidden.stat().st_mode & 0o777, 0)
+                hidden.chmod(0o700)
+                value = self.check(world, pack)
+                self.assertFalse(value['valid'])
+                self.assertEqual(value['issues'][0]['code'], 'registration')
+            finally:
+                hidden.chmod(0o700)
+
+    def test_modifiers_and_purpose_words_cannot_hide_required_load_cycles(self):
+        # Source-bound independent preflight reproductions on 89b5fa46 (#15).
+        directives = (
+            'A session MUST always read [checkpoint](../checkpoint/GUIDE.md).',
+            'A session MUST preload [checkpoint](../checkpoint/GUIDE.md) for completeness.',
+            'A session MUST read [checkpoint](../checkpoint/GUIDE.md) for complete context only.',
+            'A session MUST read [checkpoint](../checkpoint/GUIDE.md) at all times.',
+        )
+        for directive in directives:
+            with self.subTest(directive=directive), World() as world:
+                pack = self.copy(world)
+                self.append(pack/'capture/GUIDE.md', '\n' + directive + '\n')
+                value = self.check(world, pack)
+                self.assertFalse(value['valid'], directive)
+                self.assertEqual(value['issues'][0]['code'], 'loading-cycle')
 
     def test_candidate_code_is_never_imported_or_executed_by_static_validation(self):
         with World() as world:

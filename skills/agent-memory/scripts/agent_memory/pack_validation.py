@@ -22,7 +22,7 @@ SECTIONS = ('Use when', 'Required context', 'Inputs and preconditions', 'Observe
             'Plan', 'Apply', 'Read back', 'Verify', 'Outcomes', 'Failure handling',
             'Diagnostic fallback')
 LINK = re.compile(r'!?\[([^\]\n]*)\]\((<[^>\n]+>|[^\s)]+)(?:\s+["\'][^\n]*["\'])?\)')
-VERSION = re.compile(r'(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)'
+VERSION = re.compile(r'(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)'
                      r'(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?'
                      r'(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?')
 
@@ -53,7 +53,10 @@ def frontmatter(text, allowed, path):
 
 def inventory(root):
     files = {}; size = 0; entries = 0
-    for directory, dirs, names in os.walk(root, followlinks=False):
+    def traversal_failed(exc):
+        raise Invalid('inventory', '.', 'Every pack directory must be completely readable') from exc
+    require(root.stat().st_mode & 0o500 == 0o500, 'asset-mode', '.', 'Pack root needs owner read/search mode')
+    for directory, dirs, names in os.walk(root, followlinks=False, onerror=traversal_failed):
         entries += len(dirs) + len(names)
         require(entries <= 4096, 'inventory-bound', '.', 'Pack exceeds 4096 filesystem entries')
         for name in dirs + names:
@@ -63,6 +66,7 @@ def inventory(root):
             require(not stat.S_ISLNK(mode), 'file-type', rel, 'Internal symlinks are not portable assets')
             require(stat.S_ISREG(mode) or stat.S_ISDIR(mode), 'file-type', rel, 'Only regular files/directories are supported')
             if name in dirs:
+                require(mode & 0o500 == 0o500, 'asset-mode', rel, 'Directories need owner read/search mode; no subtree may be skipped')
                 continue
             require(path.stat().st_size <= 2097152, 'inventory-bound', rel, 'Asset exceeds 2 MiB')
             with path.open('rb') as stream:
@@ -145,6 +149,65 @@ def destination(source, target, files):
     rel = '/'.join(parts) if path else source
     require(rel in files, 'link', source, 'Missing relative asset: ' + rel)
     return rel, unquote(parsed.fragment)
+
+
+RFC = re.compile(r'\b(?:MUST(?:\s+NOT)?|SHALL(?:\s+NOT)?|SHOULD(?:\s+NOT)?|'
+                 r'NOT\s+RECOMMENDED|REQUIRED|RECOMMENDED|MAY|OPTIONAL)\b')
+LOAD = r'\b(?:(?:first|always|also|unconditionally)\s+)*(?:read|load|open|preload|follow)'
+
+
+def mandatory_targets(prose, path, files):
+    """Supported positive load clauses; purpose words never imply a guard."""
+    targets = []; result = set()
+    def substitute(match):
+        targets.append(match[2].strip('<>'))
+        return 'GUIDELINK' + str(len(targets) - 1)
+    text = re.sub(r'`+[^`\n]*`+', '', prose)
+    sentences = re.split(r'(?<=[.!?;])\s+|\n\s*\n', LINK.sub(substitute, text))
+    for sentence in sentences:
+        # Only explicit condition clauses and the protocol's named boundary
+        # event suppress a mandatory edge. Bare for/only/at/selected do not.
+        conditional = bool(
+            re.search(r'\b(?:when|if|unless)\b', sentence, re.I)
+            or re.search(r'\bat\s+(?:a\s+)?natural\s+(?:turn\s+)?boundar(?:y|ies)\b', sentence, re.I)
+            or re.match(r'^\s*For\s+(?:qualified|eligible)\b', sentence, re.I))
+        markers = list(RFC.finditer(sentence))
+        for index, marker in enumerate(markers):
+            if ' '.join(marker[0].split()) not in {'MUST', 'SHALL'}:
+                continue
+            end = markers[index + 1].start() if index + 1 < len(markers) else len(sentence)
+            clause = sentence[marker.end():end]
+            if conditional:
+                continue
+            require(not re.search(LOAD + r'\s+(?:all|every|the (?:whole|entire))\b', clause),
+                    'loading', path, 'Unconditional whole-tree loading is forbidden')
+            for match in re.finditer(LOAD + r'(?:\s+and\s+follow)?\s+(?:the\s+)?GUIDELINK([0-9]+)', clause):
+                dest, _ = destination(path, targets[int(match[1])], files)
+                if dest and dest.endswith('.md'):
+                    result.add(dest)
+    return result
+
+
+def git_operation(argv, path):
+    index = 1
+    while index < len(argv) and argv[index] in {'-C', '-c', '--git-dir', '--work-tree'}:
+        require(index + 1 < len(argv), 'dispatch', path, 'Missing Git global-option value')
+        index += 2
+    require(index < len(argv) and argv[index] == 'config', 'dispatch', path, 'Unsupported external Git operation')
+    return argv[index]
+
+
+def command_argv(line, path):
+    lexer = shlex.shlex(line, posix=True, punctuation_chars=';&|<>')
+    lexer.whitespace_split = True; lexer.commenters = ''
+    argv = list(lexer)
+    require(bool(argv) and not any(t in {';', '&', '&&', '|', '||', '<', '<<', '>>'} for t in argv),
+            'dispatch', path, 'Document one supported command per line, without hidden shell operations')
+    if '>' in argv:
+        require(argv.count('>') == 1 and len(argv) >= 3 and argv[-2] == '>',
+                'dispatch', path, 'Only a trailing stdout-file redirection is supported')
+        argv = argv[:-2]
+    return argv
 
 
 def dispatch(script, files):
@@ -281,8 +344,8 @@ def validate(pack):
             parent = domain + '/GUIDE.md'
             require(metadata.get(parent, {}).get('kind') == 'domain', 'domain', path, 'Owning domain is missing')
             context = prose.split('## Required context\n', 1)[1].split('\n## ', 1)[0]
-            resolved = {destination(path, target, files)[0] for _, target in links(context)}
-            require(parent in resolved and 'MUST' in context, 'domain', path, 'Required context must bind the owning domain')
+            require(parent in mandatory_targets(context, path, files), 'domain', path,
+                    'Required context must positively and unconditionally require its owning domain')
             require(path in graph[parent], 'domain', path, 'Owning domain must route to its operation')
             mandatory[path].add(parent)
         if 'file-operations' in meta:
@@ -291,25 +354,7 @@ def validate(pack):
                     and all(isinstance(v, str) and re.fullmatch('[a-z][a-z0-9-]*', v) for v in ops)
                     and len(set(ops)) == len(ops), 'file-operation', path, 'File-only operations need explicit distinct names')
             file_ops[path] = ops
-        # Recognize direct mandatory loading sentences. Intent/condition clauses
-        # remain navigation, not mandatory edges. This is not an English parser.
-        targets = []
-        def substitute(match):
-            targets.append(match[2].strip('<>'))
-            return 'GUIDELINK' + str(len(targets) - 1)
-        sentences = re.split(r'(?<=[.!?])\s+|\n\s*\n', LINK.sub(substitute, prose))
-        for sentence in sentences:
-            if re.search(r'\b(?:MUST|SHALL)\s+(?:always\s+)?(?:read|load|open|preload|follow)\s+(?:all|every|the (?:whole|entire))\b', sentence):
-                raise Invalid('loading', path, 'Unconditional whole-tree loading is forbidden')
-            # Bare "for" can introduce a purpose, not a condition. A leading
-            # qualified/eligible state clause is distinct from "for completeness".
-            if (re.search(r'\b(?:when|if|unless|before|after|only|at|selected)\b', sentence, re.I)
-                    or re.match(r'^\s*For\s+(?:qualified|eligible)\b', sentence, re.I)):
-                continue
-            for match in re.finditer(r'\b(?:MUST|SHALL)\s+(?:first\s+)?(?:read|load|open|follow)(?: and follow)?\s+(?:the\s+)?GUIDELINK(\d+)', sentence):
-                dest, _ = destination(path, targets[int(match[1])], files)
-                if dest in mandatory:
-                    mandatory[path].add(dest)
+        mandatory[path].update(dest for dest in mandatory_targets(prose, path, files) if dest in mandatory)
         clean = re.sub(r'`+[^`\n]*`+', '', prose)
         require(not re.search(r'\b(?:must|shall)\b', clean), 'rfc-form', path, 'Normative must/shall must use uppercase RFC forms')
         require(not re.search(r'\b(?:MUST|SHALL|SHOULD)\s+(?:not|may|should|must|shall)\b', clean), 'rfc-form', path, 'Ambiguous or mixed-case RFC form')
@@ -324,10 +369,9 @@ def validate(pack):
                 line = line.strip()
                 if not line or line.startswith('#'):
                     continue
-                argv = shlex.split(line)
+                argv = command_argv(line, path)
                 if argv[0] == 'git':
-                    require('config' in argv, 'dispatch', path, 'Unsupported external Git command form')
-                    mappings.append({'guide': path, 'external': 'git', 'operation': 'config'})
+                    mappings.append({'guide': path, 'external': 'git', 'operation': git_operation(argv, path)})
                     continue
                 require(argv[:2] == ['python3', '-I'] and len(argv) >= 3
                         and argv[2].startswith('$SKILL_DIR/scripts/'), 'dispatch', path, 'Undeclared shell command form')

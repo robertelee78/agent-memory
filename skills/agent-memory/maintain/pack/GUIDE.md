@@ -34,6 +34,13 @@ It checks one root registration, restricted frontmatter/version, links/anchors,
 reachability, domain ownership, ordered nonempty operation sections, asset
 references/modes, supported literal dispatch, and mechanical RFC forms.
 
+Loading checks recognize positive MUST/SHALL read, load, open, preload and follow
+clauses, including first/always modifiers. Explicit when/if/unless clauses,
+natural-boundary events and leading qualified/eligible state clauses are
+conditional. Purpose words alone do not make a requirement conditional. A
+session MUST express an actual loading condition explicitly and preserve its
+meaning, rather than weaken an obligation to obtain a pass.
+
 ## Plan
 
 The session MUST plan only the check. Validation writes no package or bank files.
