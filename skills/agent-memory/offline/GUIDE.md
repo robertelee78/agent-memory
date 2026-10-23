@@ -5,6 +5,17 @@ service, embedding store, daemon, MCP server, hook, harness profile, AWA or Vox
 installation is required. Python 3.11+ is required only for the optional packaged
 helpers below. Plain Markdown remains readable without Python.
 
+The project bank MUST remain useful without federation membership, a global
+catalog, graph or embedding index. For governed local operations a session MUST
+follow [initialize](../initialize/GUIDE.md), [checkpoint](../checkpoint/GUIDE.md)
+and [retrieval](../retrieval/GUIDE.md) directly from this portable package.
+Local developer/project binding and private receipts support those operations;
+they are not a hosted or federation dependency. A same-project Git archive MAY
+serve as an inspected backup, but MUST NOT imply permission to import memory
+into another repository. Losing identity state requires explicit resolution
+before mediated writes; losing a required recovery journal is not disposable
+cache loss and MUST NOT trigger a template rebuild over interrupted memory.
+
 ## Select and inspect
 
 A session MUST select the intended repository explicitly and inspect

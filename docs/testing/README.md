@@ -34,6 +34,10 @@ The [baseline retrieval contract](../contracts/retrieval.md) adds public recall
 cases for hard filters before ranking, exact/text explanations, nested conditions,
 optional-index loss, safe source handling and independently bound local clones.
 
+The [independent local-bank contract](../contracts/independent-local-bank.md)
+proves initialization, checkpoint/resume, orientation lookup, validation, Git
+version/export and bounded local recovery without federation or optional stores.
+
 The [learning comparison contract](../contracts/comparison.md) covers alternate
 wording, distinct conditions, source-bound judgment, newly arrived duplicates,
 unsafe/unavailable sources and terminal deletion before a durable learning change.
