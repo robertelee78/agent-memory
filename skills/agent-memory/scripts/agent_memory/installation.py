@@ -180,6 +180,7 @@ def locations():
 
 @contextmanager
 def locked(state):
+    preflight_path(state)
     unchanged_parent(state)
     require(not state.is_symlink(), 'Installation state directory is a symlink')
     state.mkdir(parents=True, exist_ok=True, mode=0o700)
@@ -297,10 +298,46 @@ def preflight_path(path):
     require(parent.is_dir() and os.access(parent, os.W_OK | os.X_OK)
             and parent.stat().st_mode & 0o222, 'Target ancestor is not writable/searchable: ' + str(parent))
     for ancestor in [path, *path.parents]:
-        if (ancestor/'MEMORY.md').is_file() or (ancestor/'memory-bank/MEMORY.md').is_file():
-            # A repository may contain a Memory Bank while its unrelated client roots live elsewhere.
-            require(not (ancestor/'MEMORY.md').is_file() and path.name != 'memory-bank',
-                    'Installer targets must not overlap a project Memory Bank')
+        require(ancestor.name != 'memory-bank' and not (ancestor/'MEMORY.md').is_file(),
+                'Installer runtime and targets must not overlap a project Memory Bank: ' + str(path))
+
+
+def configuration(args, old):
+    return {
+        'mode': args.mode or (old['mode'] if old else 'link'),
+        'presets': args.presets or (old['presets'] if old else 'all'),
+        'custom_targets': args.target_dir if args.target_dir is not None else (old['custom_targets'] if old else []),
+        'no_guidance': args.no_guidance or (old.get('no_guidance', False) if old else False),
+        'bin_dir': absolute(args.bin_dir or (old['bin_dir'] if old else Path.home()/'.local/bin')),
+    }
+
+
+def preflight_layout(args, state, code, old):
+    # This must precede locked(): its mkdir/lock metadata are writes too.
+    preflight_path(state)
+    require(not state.is_relative_to(code) and not code.is_relative_to(state),
+            'Installation state and managed code paths must be separate')
+    if args.command != 'install':
+        return
+    cfg = configuration(args, old)
+    paths = [cfg['bin_dir']/'agent-memory']
+    for _, target, guidance in presets(cfg['presets']):
+        paths.append(absolute(target/'agent-memory'))
+        if guidance and not cfg['no_guidance']:
+            paths.append(absolute(guidance))
+    paths.extend(absolute(target)/'agent-memory' for target in cfg['custom_targets'])
+    for path in paths:
+        preflight_path(path)
+        require(not path.is_relative_to(state) and not state.is_relative_to(path),
+                'Installation target overlaps the external receipt directory')
+    selected_source = args.development_source
+    if not selected_source and old and old['source']['kind'] == 'development':
+        selected_source = old['source']['path']
+    if selected_source:
+        source = absolute(selected_source).resolve(strict=True)
+        for path in [state, *paths]:
+            require(not path.is_relative_to(source) and not source.is_relative_to(path),
+                    'Installer must not mutate a development source: ' + str(path))
 
 
 def public_plan(plan):
@@ -351,11 +388,9 @@ def prepare(args, state, code, old):
         active_root = root if source['kind'] == 'development' else code
         active_pack = active_root / pack_source.relative_to(root)
         source = {**source, 'path': str(active_root), 'pack': str(active_pack)}
-        mode = args.mode or (old['mode'] if old else 'link')
-        selected = args.presets or (old['presets'] if old else 'all')
-        custom = args.target_dir if args.target_dir is not None else (old['custom_targets'] if old else [])
-        no_guidance = args.no_guidance or (old.get('no_guidance', False) if old else False)
-        bin_dir = absolute(args.bin_dir or (old['bin_dir'] if old else Path.home()/'.local/bin'))
+        cfg = configuration(args, old)
+        mode, selected, custom = cfg['mode'], cfg['presets'], cfg['custom_targets']
+        no_guidance, bin_dir = cfg['no_guidance'], cfg['bin_dir']
         prior = {item['path']: item for item in old['targets']} if old else {}
         actions = []; adapters = []
         def add(path, kind, raw=None, source_path=None, mode_bits=0o644, block=False):
@@ -466,7 +501,7 @@ def rollback(state, journal):
                                   if p is not None and fingerprint(Path(p)) is not None]}
 
 
-def recover(state):
+def recover(state, *, for_install=False):
     path = state/'journal.json'
     if not path.exists():
         return {'operation': 'recover', 'verified': True, 'status': 'no-pending-transaction'}
@@ -483,8 +518,23 @@ def recover(state):
                 and (action.get('backup') is None or Path(action['backup']) == Path(action['path']).parent/
                      ('.agent-memory-backup-' + journal['transaction'] + '-' + str(index))),
                 'Malformed lifecycle journal target or staging path')
-    if journal['status'] in ('complete', 'rolled-back'):
-        return {'operation': 'recover', 'verified': True, 'status': journal['status']}
+    if journal['status'] == 'complete':
+        require(journal.get('receipt_identity') is not None
+                and fingerprint(state/'receipt.json') == journal['receipt_identity'],
+                'Completed installation receipt is missing or changed; preserve the journal and reconcile ownership')
+        if for_install:
+            # Installation will re-plan ownership, including allowed surrounding
+            # edits and explicit development-source changes, before any activation.
+            return {'operation': 'recover', 'verified': False, 'status': 'install-validation-pending'}
+        verify_targets(journal['receipt']['targets'])
+        return {'operation': 'recover', 'verified': True, 'status': 'complete'}
+    if journal['status'] == 'rolled-back':
+        if for_install:
+            return {'operation': 'recover', 'verified': False, 'status': 'install-validation-pending'}
+        for action in journal['actions']:
+            require(fingerprint(Path(action['path'])) == action['before'],
+                    'Rolled-back target changed; preserve and reconcile: ' + action['path'])
+        return {'operation': 'recover', 'verified': True, 'status': 'rolled-back'}
     # Receipt activation is the commit point; a lost final response must not undo it.
     receipt = state/'receipt.json'
     if journal.get('receipt_identity') is not None and fingerprint(receipt) == journal['receipt_identity']:
@@ -628,6 +678,7 @@ def main(argv=None):
     try:
         require(sys.version_info >= (3,11) and shutil.which('git'), 'Python 3.11+ and Git are required')
         state, code = locations()
+        preflight_layout(args, state, code, read_receipt(state))
         if args.command == 'install' and args.check:
             require(not (state/'journal.json').exists() or load(state/'journal.json')['status'] in ('complete','rolled-back'),
                     'An interrupted transaction requires recover before a new install plan')
@@ -635,7 +686,7 @@ def main(argv=None):
                 result = public_plan(plan)
         else:
             with locked(state):
-                recovered = recover(state)
+                recovered = recover(state, for_install=args.command == 'install')
                 if args.command == 'recover':
                     result = recovered
                 else:

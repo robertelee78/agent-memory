@@ -20,6 +20,8 @@ def snapshot(root):
     for path in root.rglob('*'):
         if path.is_symlink():
             result[str(path.relative_to(root))] = ('link', os.readlink(path))
+        elif path.is_dir():
+            result[str(path.relative_to(root))] = ('directory', path.stat().st_mode & 0o777)
         elif path.is_file():
             result[str(path.relative_to(root))] = (hashlib.sha256(path.read_bytes()).hexdigest(),
                                                   path.stat().st_mode & 0o777)
@@ -227,3 +229,76 @@ class InstallerContract(unittest.TestCase):
             before = snapshot(world.paths['bank'])
             self.run_install(world, source, expected=1)
             self.assertEqual(snapshot(world.paths['bank']), before)
+
+    def test_completed_recovery_checks_the_actual_receipt_and_owned_targets(self):
+        for case in ('missing-receipt', 'edited-copy', 'missing-copy', 'healthy'):
+            with self.subTest(case=case), World() as world:
+                source = self.source(world)
+                installed = self.run_install(world, source, '--mode', 'copy', '--presets', 'codex')
+                client = world.paths['codex']/'skills/agent-memory'
+                if case == 'missing-receipt':
+                    (self.state(world)/'receipt.json').unlink()
+                elif case == 'edited-copy':
+                    (client/'user-note.txt').write_text('Preserve my edited installed copy.\n')
+                elif case == 'missing-copy':
+                    shutil.rmtree(client)
+                before = snapshot(world.root)
+                result = world.run([sys.executable, '-I', HELPER, 'recover'], check=False)
+                value = json.loads(result.stdout)
+                self.assertEqual(result.returncode, 0 if case=='healthy' else 1, value)
+                self.assertEqual(value['verified'], case=='healthy')
+                after = snapshot(world.root)
+                self.assertEqual({k:v for k,v in before.items() if k!='state/agent-memory/install/lock'},
+                                 {k:v for k,v in after.items() if k!='state/agent-memory/install/lock'})
+
+    def test_bank_state_overlap_is_refused_before_any_bank_or_runtime_write(self):
+        with World() as world:
+            source = self.source(world)
+            proposal = {
+                'project-id':'8e0b66aa-2be5-4fa3-b47f-1245474aa7dd',
+                'router-updated':'2026-10-22T17:00:00Z',
+                'contexts':{'projectbrief.md':{'body':'# Project\n\nPreserve shared project learning.\n',
+                    'purpose':'Orient the agent','scope':'repository','lifecycle':'active',
+                    'read-when':'When resuming work'}},
+                'omitted':{name:'No relevant evidence yet' for name in
+                           ('productContext.md','activeContext.md','systemPatterns.md','techContext.md','progress.md')},
+            }
+            path = world.inside('bank-fixture.json'); path.write_text(json.dumps(proposal))
+            rendered = json.loads(world.run([sys.executable, '-I', ROOT/'scripts/bank_contract.py',
+                                            'render', '--input', path]).stdout)
+            bank = world.paths['repo']/'memory-bank'; bank.mkdir()
+            for name, body in rendered['files'].items():
+                (bank/name).write_text(body)
+            validated = world.run([sys.executable, '-I', ROOT/'scripts/bank_contract.py',
+                                   'validate', '--repo', world.paths['repo']])
+            self.assertEqual(validated.returncode, 0)
+            world.env['XDG_STATE_HOME'] = str(bank)
+            before = snapshot(world.root)
+            for options in ((), ('--check',)):
+                refused = self.run_install(world, source, *options, expected=1)
+                self.assertIn('Memory Bank', refused['error'])
+                self.assertEqual(snapshot(world.root), before)
+            recovery = world.run([sys.executable, '-I', HELPER, 'recover'], check=False)
+            self.assertEqual(recovery.returncode, 1)
+            self.assertEqual(snapshot(world.root), before)
+
+    def test_state_inside_development_source_refuses_before_creating_a_lock(self):
+        with World() as world:
+            source = self.source(world)
+            world.env['XDG_STATE_HOME'] = str(source/'runtime state')
+            before = snapshot(world.root)
+            refused = self.run_install(world, source, '--presets', 'none', expected=1)
+            self.assertEqual(snapshot(world.root), before)
+            self.assertIn('development source', refused['error'])
+
+    def test_explicit_development_link_refresh_still_revalidates_new_content(self):
+        with World() as world:
+            source = self.source(world)
+            first = self.run_install(world, source, '--mode', 'link', '--presets', 'codex')
+            (source/'templates/new-local-source-asset.txt').write_text('Explicit new development artifact.\n')
+            result = self.run_install(world, source)
+            self.assertTrue(result['verified'])
+            self.assertNotEqual(result['receipt']['source']['artifact_digest'],
+                                first['receipt']['source']['artifact_digest'])
+            self.assertEqual(result['restart_clients'], ['codex'])
+            self.assertEqual(self.run_install(world, source)['restart_clients'], [])
