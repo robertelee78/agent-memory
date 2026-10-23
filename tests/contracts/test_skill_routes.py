@@ -95,6 +95,10 @@ class SkillRouteContract(unittest.TestCase):
             'unknown-inline-command': ('dispatch', lambda p: self.append(p/'checkpoint/GUIDE.md', '\nUse `python3 -I "$SKILL_DIR/scripts/checkpoint.py" absent`.\n')),
             'config-remote-is-not-config-operation': ('dispatch', lambda p: self.append(p/'SKILL.md', '\n```sh\ngit push config HEAD:main\n```\n')),
             'git-followed-by-extra-operation': ('dispatch', lambda p: self.append(p/'SKILL.md', '\n```sh\ngit config example.value test && git push config HEAD:main\n```\n')),
+            'git-pipe-and-extra-operation': ('dispatch', lambda p: self.append(p/'SKILL.md', '\n```sh\ngit config example.value test |& git push config HEAD:main\n```\n')),
+            'git-command-substitution': ('dispatch', lambda p: self.append(p/'SKILL.md', '\n```sh\ngit config example.value "$(git push config HEAD:main)"\n```\n')),
+            'git-expanded-global-value': ('dispatch', lambda p: self.append(p/'SKILL.md', '\n```sh\ngit -C $EXTRA_ARGS config example.value test\n```\n')),
+            'git-globbed-global-value': ('dispatch', lambda p: self.append(p/'SKILL.md', '\n```sh\ngit -C * config example.value test\n```\n')),
             'helper-followed-by-extra-operation': ('dispatch', lambda p: self.append(p/'SKILL.md', '\n```sh\npython3 -I "$SKILL_DIR/scripts/checkpoint.py" inspect --repo /tmp/example; git push config HEAD:main\n```\n')),
             'unknown-option': ('dispatch', lambda p: self.replace(p/'checkpoint/GUIDE.md', 'inspect --repo', 'inspect --imaginary')),
             'lowercase-requirement': ('rfc-form', lambda p: self.append(p/'SKILL.md', '\nA session must preserve evidence.\n')),
@@ -187,6 +191,58 @@ class SkillRouteContract(unittest.TestCase):
                 value = self.check(world, pack)
                 self.assertFalse(value['valid'], directive)
                 self.assertEqual(value['issues'][0]['code'], 'loading-cycle')
+
+    def test_supported_reference_and_html_links_cannot_hide_a_required_load_cycle(self):
+        directives = (
+            'A session MUST read [checkpoint][cp].\n\n[cp]: ../checkpoint/GUIDE.md',
+            'A session MUST read [checkpoint][].\n\n[checkpoint]: ../checkpoint/GUIDE.md',
+            'A session MUST read [checkpoint].\n\n[checkpoint]: ../checkpoint/GUIDE.md',
+            'A session MUST read <a href="../checkpoint/GUIDE.md">checkpoint</a>.',
+        )
+        for directive in directives:
+            with self.subTest(directive=directive), World() as world:
+                pack = self.copy(world)
+                self.append(pack/'capture/GUIDE.md', '\n' + directive + '\n')
+                value = self.check(world, pack)
+                self.assertFalse(value['valid'], directive)
+                self.assertEqual(value['issues'][0]['code'], 'loading-cycle')
+
+    def test_coordinated_objects_and_later_conditions_preserve_the_initial_required_load(self):
+        directives = (
+            'A session MUST read [bank](../bank/GUIDE.md) and [checkpoint](../checkpoint/GUIDE.md).',
+            'A session MUST read [checkpoint](../checkpoint/GUIDE.md) and [bank](../bank/GUIDE.md).',
+            'A session MUST read [checkpoint](../checkpoint/GUIDE.md), and if a source is uncertain it MUST preserve evidence.',
+        )
+        for directive in directives:
+            with self.subTest(directive=directive), World() as world:
+                pack = self.copy(world)
+                self.append(pack/'capture/GUIDE.md', '\n' + directive + '\n')
+                value = self.check(world, pack)
+                self.assertFalse(value['valid'], directive)
+                self.assertEqual(value['issues'][0]['code'], 'loading-cycle')
+        with World() as world:
+            pack = self.copy(world)
+            self.append(pack/'capture/GUIDE.md', '\nA session MUST read [bank](../bank/GUIDE.md).\n')
+            self.assertTrue(self.check(world, pack)['valid'])
+
+    def test_reference_forms_work_for_owner_bindings_and_root_routes_with_global_definitions(self):
+        with World() as world:
+            pack = self.copy(world)
+            self.replace(pack/'checkpoint/GUIDE.md', '[capture domain](../capture/GUIDE.md)', '[capture domain][owner]')
+            self.append(pack/'checkpoint/GUIDE.md', '\n[owner]: ../capture/GUIDE.md\n')
+            self.replace(pack/'SKILL.md', '[checkpoint](checkpoint/GUIDE.md)', '[checkpoint][checkpoint-route]')
+            self.append(pack/'SKILL.md', '\n[checkpoint-route]: checkpoint/GUIDE.md\n')
+            self.assertTrue(self.check(world, pack)['valid'])
+
+    def test_literal_marker_words_are_prose_and_cannot_index_internal_link_state(self):
+        with World() as world:
+            pack = self.copy(world)
+            self.append(pack/'capture/GUIDE.md', '\nA session MUST read GUIDELINK999.\n')
+            self.assertTrue(self.check(world, pack)['valid'])
+            self.append(pack/'capture/GUIDE.md', '\nA session MUST read \x00L999\x00.\n')
+            value = self.check(world, pack)
+            self.assertFalse(value['valid'])
+            self.assertEqual(value['issues'][0]['code'], 'markdown')
 
     def test_candidate_code_is_never_imported_or_executed_by_static_validation(self):
         with World() as world:

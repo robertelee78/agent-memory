@@ -8,6 +8,7 @@ from __future__ import annotations
 import argparse
 import ast
 import hashlib
+import html
 import json
 import os
 from pathlib import Path
@@ -104,20 +105,57 @@ def markdown(text):
     return '\n'.join(prose), shell
 
 
-def links(text):
-    found = [(m[1], m[2].strip('<>')) for m in LINK.finditer(text)]
-    definitions = {m[1].strip().casefold(): m[2].strip('<>') for m in
-                   re.finditer(r'^ {0,3}\[([^\]]+)\]:\s*(<[^>]+>|\S+)', text, re.M)}
-    for m in re.finditer(r'!?\[([^\]\n]+)\]\[([^\]\n]*)\]', text):
-        key = (m[2] or m[1]).strip().casefold()
+REFDEF = re.compile(r'^ {0,3}\[([^\]]+)\]:\s*(<[^>]+>|\S+)', re.M)
+
+
+def reference_definitions(text):
+    definitions = {}
+    for match in REFDEF.finditer(text):
+        key = ' '.join(match[1].split()).casefold(); target = match[2].strip('<>')
+        require(key not in definitions or definitions[key] == target,
+                'link', '.', 'Conflicting reference definitions')
+        definitions[key] = target
+    return definitions
+
+
+def link_occurrences(text, references=None):
+    """One occurrence resolver shared by navigation and loading checks."""
+    require('\x00' not in text, 'markdown', '.', 'NUL is not supported in instruction prose')
+    definitions = reference_definitions(text) if references is None else references
+    # Preserve positions while masking literal inline code. Backticks inside a
+    # link label do not hide its surrounding Markdown destination.
+    masked = re.sub(r'(?<!`)(`+)(?!`)([^\n]*?)(?<!`)\1(?!`)',
+                    lambda m: ' ' * len(m[0]), text)
+    blocked = bytearray(len(masked)); found = []
+    for match in REFDEF.finditer(masked):
+        blocked[match.start():match.end()] = b'\1' * len(match[0])
+    def add(match, label, target, image=False):
+        start, end = match.span()
+        if any(blocked[start:end]):
+            return
+        blocked[start:end] = b'\1' * (end - start)
+        found.append((start, end, label, target, image))
+    for match in re.finditer(r'<a\b[^>]*\bhref=["\']([^"\']+)["\'][^>]*>.*?</a\s*>', masked, re.I | re.S):
+        add(match, '', html.unescape(match[1]))
+    for match in re.finditer(r'<(?:a|img)\b[^>]*\b(?:href|src)=["\']([^"\']+)["\'][^>]*>', masked, re.I):
+        add(match, '', html.unescape(match[1]), match[0].lower().startswith('<img'))
+    for match in LINK.finditer(masked):
+        add(match, match[1], match[2].strip('<>'), match[0].startswith('!'))
+    for match in re.finditer(r'!?\[([^\]\n]+)\]\[([^\]\n]*)\]', masked):
+        if any(blocked[match.start():match.end()]):
+            continue
+        key = ' '.join((match[2] or match[1]).split()).casefold()
         require(key in definitions, 'link', '.', 'Undefined reference link')
-        found.append((m[1], definitions[key]))
-    for m in re.finditer(r'(?<!!)\[([^\]\n]+)\](?![\[(:])', text):
-        key = m[1].strip().casefold()
+        add(match, match[1], definitions[key], match[0].startswith('!'))
+    for match in re.finditer(r'!?\[([^\]\n]+)\](?![\[(:])', masked):
+        key = ' '.join(match[1].split()).casefold()
         if key in definitions:
-            found.append((m[1], definitions[key]))
-    found.extend(('', m[1]) for m in re.finditer(r'<(?:a|img)\b[^>]*\b(?:href|src)=["\']([^"\']+)["\']', text, re.I))
-    return found
+            add(match, match[1], definitions[key], match[0].startswith('!'))
+    return sorted(found)
+
+
+def links(text, references=None):
+    return [(label, target) for _, _, label, target, image in link_occurrences(text, references) if not image]
 
 
 def anchors(text):
@@ -156,14 +194,21 @@ RFC = re.compile(r'\b(?:MUST(?:\s+NOT)?|SHALL(?:\s+NOT)?|SHOULD(?:\s+NOT)?|'
 LOAD = r'\b(?:(?:first|always|also|unconditionally)\s+)*(?:read|load|open|preload|follow)'
 
 
-def mandatory_targets(prose, path, files):
+def mandatory_targets(prose, path, files, references=None):
     """Supported positive load clauses; purpose words never imply a guard."""
-    targets = []; result = set()
-    def substitute(match):
-        targets.append(match[2].strip('<>'))
-        return 'GUIDELINK' + str(len(targets) - 1)
-    text = re.sub(r'`+[^`\n]*`+', '', prose)
-    sentences = re.split(r'(?<=[.!?;])\s+|\n\s*\n', LINK.sub(substitute, text))
+    targets = []; result = set(); pieces = []; position = 0
+    for start, end, _, target, image in link_occurrences(prose, references):
+        pieces.append(prose[position:start])
+        pieces.append(' ' if image else '\x00L' + str(len(targets)) + '\x00')
+        targets.append(target); position = end
+    pieces.append(prose[position:])
+    text = ''.join(pieces)
+    text = re.sub(r'`+[^`\n]*`+', '', text)
+    text = REFDEF.sub('', text)
+    # A newly introduced conditional clause cannot guard an earlier independent
+    # directive. Keep genuine trailing and leading guards with their own clause.
+    text = re.sub(r',?\s+\b(?:and|but|or|then)\s+(?=(?:if|when|unless)\b)', '\n\n', text, flags=re.I)
+    sentences = re.split(r'(?<=[.!?;])\s+|\n\s*\n', text)
     for sentence in sentences:
         # Only explicit condition clauses and the protocol's named boundary
         # event suppress a mandatory edge. Bare for/only/at/selected do not.
@@ -181,10 +226,15 @@ def mandatory_targets(prose, path, files):
                 continue
             require(not re.search(LOAD + r'\s+(?:all|every|the (?:whole|entire))\b', clause),
                     'loading', path, 'Unconditional whole-tree loading is forbidden')
-            for match in re.finditer(LOAD + r'(?:\s+and\s+follow)?\s+(?:the\s+)?GUIDELINK([0-9]+)', clause):
-                dest, _ = destination(path, targets[int(match[1])], files)
-                if dest and dest.endswith('.md'):
-                    result.add(dest)
+            token = r'\x00L([0-9]+)\x00'
+            for match in re.finditer(LOAD + r'(?:\s+and\s+follow)?\s+(?:the\s+)?' + token, clause):
+                indexes = [int(match[1])]; tail = clause[match.end():]
+                while (extra := re.match(r'\s*(?:,\s*(?:and\s+)?|and\s+)(?:the\s+)?' + token, tail)):
+                    indexes.append(int(extra[1])); tail = tail[extra.end():]
+                for index in indexes:
+                    dest, _ = destination(path, targets[index], files)
+                    if dest and dest.endswith('.md'):
+                        result.add(dest)
     return result
 
 
@@ -198,10 +248,15 @@ def git_operation(argv, path):
 
 
 def command_argv(line, path):
+    require('$(' not in line and '`' not in line, 'dispatch', path, 'Command substitutions are outside the literal command contract')
+    literal = re.sub(r'"\$SKILL_DIR/scripts/[a-z_]+\.py"', '', line)
+    require('$' not in literal, 'dispatch', path, 'Only the quoted SKILL_DIR helper path may expand')
+    unquoted = re.sub(r"'[^']*'|\"(?:\\.|[^\"\\])*\"", '', literal)
+    require(not re.search(r'[*?\[\]{}~]', unquoted), 'dispatch', path, 'Unquoted shell expansions are outside the literal command contract')
     lexer = shlex.shlex(line, posix=True, punctuation_chars=';&|<>')
     lexer.whitespace_split = True; lexer.commenters = ''
     argv = list(lexer)
-    require(bool(argv) and not any(t in {';', '&', '&&', '|', '||', '<', '<<', '>>'} for t in argv),
+    require(bool(argv) and not any(t != '>' and set(t) <= set(';&|<>') for t in argv),
             'dispatch', path, 'Document one supported command per line, without hidden shell operations')
     if '>' in argv:
         require(argv.count('>') == 1 and len(argv) >= 3 and argv[-2] == '>',
@@ -310,9 +365,9 @@ def validate(pack):
     for path, prose in documents.items():
         for match in re.finditer(r'^ {0,3}\[[^\]]+\]:\s*(<[^>]+>|\S+)', prose, re.M):
             destination(path, match[1].strip('<>'), files)
-        for label, target in links(prose):
+        for _, _, label, target, image in link_occurrences(prose):
             dest, anchor = destination(path, target, files)
-            if dest in graph:
+            if dest in graph and not image:
                 graph[path].add(dest)
             if anchor and dest:
                 require(dest in all_anchors and anchor in all_anchors[dest], 'anchor', path, 'Missing anchor in ' + dest + ': ' + anchor)
@@ -321,7 +376,7 @@ def validate(pack):
     for line in root_routes[1].split('\n## ', 1)[0].splitlines():
         if not line.startswith('|'):
             continue
-        targets = [destination('SKILL.md', target, files)[0] for _, target in links(line)]
+        targets = [destination('SKILL.md', target, files)[0] for _, target in links(line, reference_definitions(documents['SKILL.md']))]
         if len(targets) == 2 and metadata.get(targets[1], {}).get('kind') == 'operation':
             owner = metadata[targets[1]].get('domain')
             if metadata.get(str(owner) + '/GUIDE.md', {}).get('kind') == 'domain':
@@ -344,7 +399,7 @@ def validate(pack):
             parent = domain + '/GUIDE.md'
             require(metadata.get(parent, {}).get('kind') == 'domain', 'domain', path, 'Owning domain is missing')
             context = prose.split('## Required context\n', 1)[1].split('\n## ', 1)[0]
-            require(parent in mandatory_targets(context, path, files), 'domain', path,
+            require(parent in mandatory_targets(context, path, files, reference_definitions(prose)), 'domain', path,
                     'Required context must positively and unconditionally require its owning domain')
             require(path in graph[parent], 'domain', path, 'Owning domain must route to its operation')
             mandatory[path].add(parent)

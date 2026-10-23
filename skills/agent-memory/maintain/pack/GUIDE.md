@@ -41,6 +41,12 @@ conditional. Purpose words alone do not make a requirement conditional. A
 session MUST express an actual loading condition explicitly and preserve its
 meaning, rather than weaken an obligation to obtain a pass.
 
+Navigation and loading use the same inline, reference and HTML link resolver.
+The documented shell profile accepts one literal command and an optional
+trailing stdout-file redirection. The quoted `SKILL_DIR` helper-path expansion
+is supported; other expansions, pipelines and command substitutions are
+refused. These checks do not execute candidate shell commands.
+
 ## Plan
 
 The session MUST plan only the check. Validation writes no package or bank files.
