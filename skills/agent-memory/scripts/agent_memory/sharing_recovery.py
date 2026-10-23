@@ -318,8 +318,10 @@ def reconcile(repo, base=None):
             raise ContractError('Lost cursor has no unique common base; inspect instead of guessing')
         base = ancestors[0]
     commit(root, base)
-    if not ancestor(root, base, head) or not ancestor(root, base, observation['local_head']):
-        raise ContractError('Observed base is outside current histories; explicit reconciliation required')
+    # A remembered shared-memory observation need not be in feature-code
+    # ancestry: importing memory explicitly does not rebase or merge that code.
+    if not ancestor(root, base, head):
+        raise ContractError('Observed base is outside current authority history; explicit reconciliation required')
     _, hashes = writes.snapshot(root)
     local = transactions.files_at(root / prefix)
     if transactions.file_hashes(local) != hashes:

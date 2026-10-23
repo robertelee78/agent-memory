@@ -75,7 +75,10 @@ python3 -I "$SKILL_DIR/scripts/sharing_recovery.py" reconcile --repo /path/to/re
 The helper compares previously shared memory, current local canonical memory,
 and freshly observed authority. With no cursor, the unique actual Git merge
 base reconstructs the comparison baseline; ambiguous/unrelated histories MUST
-be reviewed. The explicit base MUST be in both current histories. Losing a
+be reviewed. The explicit base MUST be reachable from current authority. It need not be an
+ancestor of the feature HEAD: a previous memory-only import MUST NOT require
+merging authority code or changing feature ancestry. Local HEAD remains pinned
+and a changed HEAD requires a new comparison. Losing a
 cursor MUST NOT justify replacing the whole bank with an authority snapshot.
 
 The result contains a complete validated candidate and exact local/source

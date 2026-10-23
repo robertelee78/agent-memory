@@ -17,6 +17,10 @@ prior successful landing and its current applicability are reported separately.
 Unknown, rewritten or over-budget history requires reconciliation, never a
 blind duplicate push. The helper never pushes or bypasses branch protections.
 
+A previous observed shared-memory base may be outside feature-code ancestry.
+It must remain reachable from authority; a memory-only import never requires
+rebasing or merging authority code. Current feature HEAD stays pinned.
+
 The three-way kernel preserves independent local/landed edits, structured route
 maps, introductions, omissions and stable provenance. Tombstones from all three
 snapshots are monotonic. Deleted payload versions are excluded even if locally

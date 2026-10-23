@@ -221,6 +221,29 @@ class SharingRecoveryContract(unittest.TestCase):
             shutil.rmtree(Path(w.env['AGENT_MEMORY_STATE_HOME']),ignore_errors=True)
             again=self.good(w,'reconcile','--repo',repo);self.assertEqual(value['candidate_files'],again['candidate_files'])
 
+    def test_last_observed_memory_base_does_not_require_importing_authority_code_ancestry(self):
+        with World() as w:
+            repo,bank,peer,base=self.fixture(w);w.git('checkout','-b','stale-feature',cwd=repo)
+            (peer/'memory-bank/projectbrief.md').write_text('# Project\n\nFirst landed shared goal.\n')
+            (peer/'code.py').write_text('VALUE = 99  # authority code must stay outside feature refresh\n')
+            w.git('add','memory-bank/projectbrief.md','code.py',cwd=peer);w.git('commit','-m','Authority code and independently useful memory',cwd=peer)
+            observed=w.git('rev-parse','HEAD',cwd=peer).stdout.strip();w.git('push','origin','HEAD:main',cwd=peer)
+            first=self.good(w,'reconcile','--repo',repo)
+            self.assertEqual(first['observation']['authority_head'],observed)
+            files=self.save(w,first['candidate_files'],'first-import.json')
+            r=w.run([sys.executable,'-I',self.pack/'scripts/bank_transactions.py','preview','--repo',repo,'--files',files,'--operation','refresh'])
+            w.run([sys.executable,'-I',self.pack/'scripts/bank_transactions.py','apply','--proposal',self.save(w,json.loads(r.stdout),'first-apply.json')])
+            self.assertEqual(w.git('merge-base','--is-ancestor',observed,'HEAD',cwd=repo,check=False).returncode,1)
+            self.assertEqual(w.git('rev-parse','HEAD',cwd=repo).stdout.strip(),base)
+            (bank/'activeContext.md').write_text('# Current focus\n\nLocal unpublished work must be preserved.\n')
+            latest='# Project\n\nA later landed shared goal.\n';self.publish(w,peer,'memory-bank/projectbrief.md',latest)
+            before=self.state(w,repo,bank)
+            second=self.good(w,'reconcile','--repo',repo,'--base',observed)
+            self.assertEqual(second['candidate_files']['projectbrief.md'],latest)
+            self.assertIn('Local unpublished work',second['candidate_files']['activeContext.md'])
+            self.assertFalse(second['feature_code_freshness_verified']);self.assertEqual(before,self.state(w,repo,bank))
+            self.assertIn('VALUE = 2',(repo/'code.py').read_text());self.assertNotIn('VALUE = 99',(repo/'code.py').read_text())
+
     def test_both_changed_same_prose_requires_meaning_review_without_choosing_landing_order(self):
         with World() as w:
             repo,bank,peer,base=self.fixture(w)
