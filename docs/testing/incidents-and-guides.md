@@ -37,7 +37,10 @@ python3 -I scripts/capture_guide_examples.py > /private/observed-examples.json
 
 The script executes three public `bank_contract.py` commands in a credential-free
 isolated world. It records the actual argument vector, result/status hashes and
-observed JSON fields or stderr, plus the complete portable artifact file hashes.
+observed JSON fields or stderr, the Python runtime version, and the complete
+portable artifact file hashes. Runtime-dependent cosmetic argparse differences
+MUST NOT be mistaken for a product semantic change; quote the actual captured
+runtime output.
 Its `command` field is a display template: `$SKILL_DIR` and input filenames replace
 actual disposable paths. Those are placeholders, not a claim that a shell expanded
 them during capture. `observed_file_paths` lists actual keys in the rendered
@@ -88,7 +91,8 @@ conditions and meaning, and its progressive route reachability. A stronger word
 MUST NOT be used to conceal a changed requirement or lost exception.
 
 The checker compares the saved before evidence with the still-preserved actual
-old source, inventories RFC 2119 terms outside fenced code, and requires complete
+old source, inventories RFC 2119 terms outside fenced code (including line-wrapped
+prohibitions), and requires complete
 old-rule coverage. It checks force and obligation/prohibition polarity, and that
 every current runtime Markdown guide remains reachable from `SKILL.md` through
 existing relative links within the portable artifact. It refuses missing,
@@ -109,3 +113,9 @@ readback, complete current-pack reachability and the observed public examples.
 Exit 0 from the checker means these mechanical checks passed; exit 1 means the
 source/map needs review. No checker or example command changes canonical memory
 or live client configuration.
+
+Fence collection retains the opening marker character and run length; shorter
+literal fences inside longer examples MUST NOT hide real prose rules. Wrapped
+`MUST NOT`, `SHALL NOT`, `SHOULD NOT` and `NOT RECOMMENDED` retain their prohibition
+polarity. An unclosed fence refuses rather than certifies incomplete evidence.
+The public regressions retain both independently observed rule-loss incidents.

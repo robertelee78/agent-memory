@@ -35,6 +35,7 @@ def main():
             if result.stderr:item['observed_stderr']=result.stderr
             examples.append(item)
     print(json.dumps({'schema':'agent-memory/observed-guide-examples-v1',
+        'runtime':{'python_version':sys.version.split()[0],'implementation':sys.implementation.name},
         'helper_path':'skills/agent-memory/scripts/bank_contract.py','helper_sha256':hashlib.sha256(helper.read_bytes()).hexdigest(),
         'artifact_files':{p.relative_to(pack).as_posix():hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(pack.rglob('*')) if p.is_file() and '__pycache__' not in p.parts},
         'examples':examples,'live_credentials_required':False,'live_configuration_changed':False,

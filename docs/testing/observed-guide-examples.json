@@ -1,5 +1,9 @@
 {
   "schema": "agent-memory/observed-guide-examples-v1",
+  "runtime": {
+    "python_version": "3.15.0",
+    "implementation": "cpython"
+  },
   "helper_path": "skills/agent-memory/scripts/bank_contract.py",
   "helper_sha256": "b69c16b0e1543b860088465308c20fa000b41a49085fc60be1e566a75c1f1ff7",
   "artifact_files": {
@@ -160,5 +164,5 @@
     "-I",
     "scripts/capture_guide_examples.py"
   ],
-  "raw_capture_sha256": "e1f8945515e3b79a2dc2bbb2fe7b8cf3dacdc1a212415c8f7d041d76b3e67724"
+  "raw_capture_sha256": "56c711ec816f5fdd5cf773145b97d47404b7d9169940a4b0de59dcf7cd365482"
 }

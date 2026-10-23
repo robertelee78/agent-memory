@@ -73,6 +73,33 @@ class IncidentEvidenceContract(unittest.TestCase):
                 else:mapping={}
                 r,v=self.check(w,old,new,before,mapping);self.assertEqual(r.returncode,1,v);self.assertFalse(v['passed'])
 
+    def test_shorter_literal_fences_cannot_hide_a_real_rule_between_longer_examples(self):
+        for char in ('`','~'):
+            with self.subTest(char=char),World() as w:
+                old=w.inside('old-pack');old.mkdir();new=w.inside('new-pack')
+                literal=char*3;outer=char*4
+                text=('# Fence documentation\n\nFirst example:\n\n'+outer+'markdown\n'+literal+'\n'+outer+'\n\n'
+                    'A session MUST preserve the original source evidence.\n\nSecond example:\n\n'+outer+'markdown\n'+literal+'\n'+outer+'\n\n'
+                    'A session MUST retain unrelated working files.\n')
+                (old/'SKILL.md').write_text(text);shutil.copytree(old,new)
+                (new/'SKILL.md').write_text(text.replace('A session MUST preserve the original source evidence.\n',''))
+                before=self.snapshot(w,old);self.assertEqual(len(before['rules']),2)
+                r,result=self.check(w,old,new,before);self.assertEqual(r.returncode,1,result);self.assertFalse(result['passed'])
+
+    def test_existing_runtime_wrapped_must_not_cannot_invert_to_a_positive_obligation(self):
+        with World() as w:
+            old=w.inside('old-pack');shutil.copytree(ROOT/'skills/agent-memory',old)
+            new=w.inside('new-pack');shutil.copytree(old,new)
+            path=new/'consolidation/GUIDE.md';needle='The helper MUST\nNOT change unrelated source files, the Git index, HEAD or feature ancestry.'
+            self.assertIn(needle,path.read_text());path.write_text(path.read_text().replace(needle,needle.replace('\nNOT ','\n')))
+            before=self.snapshot(w,old);after=self.snapshot(w,new)
+            a=next(k for k,r in before['rules'].items() if needle in r['text'])
+            b=next(k for k,r in after['rules'].items() if 'The helper MUST\nchange unrelated source files' in r['text'])
+            self.assertIn(['negative',3],before['rules'][a]['force'])
+            mapping={a:{'new_rules':[b],'meaning_preserved':True,'reason':'A false review assertion cannot override removal of the actual wrapped prohibition.'}}
+            r,result=self.check(w,old,new,before,mapping);self.assertEqual(r.returncode,1,result)
+            self.assertFalse(result['passed'])
+
     def test_examples_are_actual_public_exit_results_bound_to_the_complete_pack(self):
         with World() as w:
             r=w.run([sys.executable,'-I',ROOT/'scripts/capture_guide_examples.py']);value=json.loads(r.stdout)

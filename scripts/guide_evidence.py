@@ -16,7 +16,7 @@ import sys
 from urllib.parse import unquote, urlsplit
 
 SCHEMA='agent-memory/guide-evidence-v1'
-TOKENS=re.compile(r'\b(?:MUST NOT|SHALL NOT|SHOULD NOT|NOT RECOMMENDED|MUST|SHALL|REQUIRED|SHOULD|RECOMMENDED|MAY|OPTIONAL)\b')
+TOKENS=re.compile(r'\b(?:MUST\s+NOT|SHALL\s+NOT|SHOULD\s+NOT|NOT\s+RECOMMENDED|MUST|SHALL|REQUIRED|SHOULD|RECOMMENDED|MAY|OPTIONAL)\b')
 FORCE={'MUST':('positive',3),'SHALL':('positive',3),'REQUIRED':('positive',3),
        'SHOULD':('positive',2),'RECOMMENDED':('positive',2),'MAY':('positive',1),'OPTIONAL':('positive',1),
        'MUST NOT':('negative',3),'SHALL NOT':('negative',3),'SHOULD NOT':('negative',2),'NOT RECOMMENDED':('negative',2)}
@@ -25,15 +25,21 @@ FORCE={'MUST':('positive',3),'SHALL':('positive',3),'REQUIRED':('positive',3),
 def sha(raw):return hashlib.sha256(raw).hexdigest()
 
 
+def forces(text):
+    return [list(FORCE[' '.join(token.split())]) for token in TOKENS.findall(text)]
+
+
 def outside_code(text):
     lines=[];fence=None
     for line in text.splitlines():
-        match=re.match(r'^\s*(`{3,}|~{3,})',line)
-        if match:
-            if fence is None:fence=match[1][0]
-            elif match[1][0]==fence:fence=None
+        if fence is not None:
+            char,length=fence
+            if re.fullmatch(r' {0,3}'+re.escape(char)+'{'+str(length)+r',}[ \t]*',line):fence=None
             lines.append('');continue
-        lines.append('' if fence else line)
+        match=re.match(r'^ {0,3}(`{3,}|~{3,})(.*)$',line)
+        if match and not (match[1][0]=='`' and '`' in match[2]):
+            fence=(match[1][0],len(match[1]));lines.append('');continue
+        lines.append(line)
     if fence:raise ValueError('Unclosed code fence')
     return '\n'.join(lines)
 
@@ -53,7 +59,7 @@ def snapshot(pack):
             if not tokens:continue
             line=text[:match.start(1)].count('\n')+1
             key=sha((relative+'\0'+str(line)+'\0'+paragraph).encode())
-            rules[key]={'path':relative,'line':line,'text':paragraph,'force':[list(FORCE[t]) for t in tokens]}
+            rules[key]={'path':relative,'line':line,'text':paragraph,'force':forces(paragraph)}
         for match in re.finditer(r'(?<!!)\[[^\]]*\]\(([^\n)]+)\)',text):
             target=match[1].strip()
             if target.startswith('<') and target.endswith('>'):target=target[1:-1]
@@ -80,7 +86,7 @@ def validate_before(before):
     for key,rule in before['rules'].items():
         if (set(rule)!={'path','line','text','force'} or not isinstance(rule['text'],str)
                 or key!=sha((rule['path']+'\0'+str(rule['line'])+'\0'+rule['text']).encode())
-                or rule['force']!=[list(FORCE[t]) for t in TOKENS.findall(rule['text'])]):
+                or rule['force']!=forces(rule['text'])):
             raise ValueError('Prior rule evidence was substituted or is incomplete')
 
 
