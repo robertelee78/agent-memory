@@ -49,3 +49,10 @@ root/index yellow-blue and compatible-introduction regressions retain the
 independently observed source-omission incident. Identical prose under several
 routing conditions must be disjoint under every actual variant before using a
 condition-distinction label.
+
+Navigation purpose/read conditions and omission explanations are distinct source
+components. Holding disputed navigation also holds its actual dependent payload
+or index descendants; unrelated routes continue. A held caption never removes a
+terminal guard or rolls back revocation/history. Both candidate banks are checked
+against the original complete invalidation set, and public regressions exercise
+actual erasure/revocation plus stale-cache readback under a disputed caption.

@@ -56,29 +56,41 @@ def snapshots(repo, base=None):
 
 def units(values,checked):
     output={}
+    def add(side,entry,body,metadata=None,*,component='body',target=None,container=None,scope_chain=None):
+        path=entry['path'];sha=digest(values[side][path].encode());chain=scope_chain or entry['scope_chain']
+        identity={'path':path,'sha256':sha} if component=='body' else {
+            'path':path,'component':component,'target_path':target,'body_sha256':digest(body.encode())}
+        key=digest(encoded(identity))
+        if key in output:
+            row=output[key];row['sides'].append(side);row['scope_chains'][side]=chain
+            row['source_sha256_by_side'][side]=sha;row['container_variants'][side]=container
+            return
+        row={'key':key,'path':path,'sha256':sha,'source_sha256_by_side':{side:sha},'sides':[side],
+             'metadata':metadata,'body':body,'scope_chain':chain,'scope_chains':{side:chain},
+             'lifecycle':entry['lifecycle'],'format':entry['format'],'component':component,'target_path':target,
+             'container':container,'container_variants':{side:container}}
+        output[key]=row
     for side in ('local','landed'):
         entries=[{'path':'MEMORY.md','format':'root-router','scope_chain':['repository'],'lifecycle':'active'},*checked[side]['entries']]
         for entry in entries:
             if entry['format'] not in {'context-prose','standalone-record','root-router','topic-index'}:continue
-            path=entry['path'];text=values[side][path];sha=digest(text.encode())
-            key=digest(encoded({'path':path,'sha256':sha}))
-            if key in output:
-                output[key]['sides'].append(side)
-                output[key]['scope_chains'][side]=entry['scope_chain'];continue
-            metadata=None;body=text
-            container=None
-            if entry['format']=='standalone-record':_,metadata,body=records.parse(text)
-            elif entry['format'] in {'root-router','topic-index'}:
-                header,fullbody=read(text,allowed=set(bank.SPEC['properties'])|set(layout.SPEC['properties']))
-                body=fullbody.split('\n## Routes\n',1)[0]
-                container={'metadata':header,'routes':bank.parse_router(text)[1] if entry['format']=='root-router' else layout.parse_index(path,header,fullbody)}
-                if entry['format']=='root-router':container['omitted']=bank.parse_router(text)[2]
-            row={'key':key,'path':path,'sha256':sha,'sides':[side], 'metadata':metadata,'body':body,
-                 'scope_chain':entry['scope_chain'],'scope_chains':{side:entry['scope_chain']},'lifecycle':entry['lifecycle'],
-                 'format':entry['format'],'component':'introduction' if container is not None else 'body','container':container}
-            security.ensure_safe({path:text})
-            output[key]=row
-    if len(output)>32 or len(encoded(output))>65536:
+            path=entry['path'];text=values[side][path];security.ensure_safe({path:text})
+            if entry['format']=='standalone-record':
+                _,metadata,body=records.parse(text);add(side,entry,body,metadata);continue
+            if entry['format']=='context-prose':add(side,entry,text);continue
+            header,body=read(text,allowed=set(bank.SPEC['properties'])|set(layout.SPEC['properties']))
+            routes=bank.parse_router(text)[1] if entry['format']=='root-router' else layout.parse_index(path,header,body)
+            context={'metadata':header,'routes':routes}
+            if entry['format']=='root-router':context['omitted']=bank.parse_router(text)[2]
+            add(side,entry,body.split('\n## Routes\n',1)[0],component='introduction',container=context)
+            for route in routes:
+                prose='Purpose: '+route['purpose']+'\nRead when: '+route['read-when']+'\n'
+                add(side,entry,prose,component='route-prose',target=route['path'],
+                    container={'metadata':header,'route':route},scope_chain=[*entry['scope_chain'],route['scope']])
+            for target,reason in context.get('omitted',{}).items():
+                add(side,entry,reason,component='omission',target=target,
+                    container={'metadata':header,'context_path':target})
+    if len(output)>64 or len(encoded(output))>65536:
         raise ContractError('Complete semantic source review exceeds its bound; split reviewed independent units without claiming absence')
     return output
 
@@ -188,56 +200,112 @@ def compatible_prose(base,local,landed):
     return ''.join(result)
 
 
-def mask(files,baseline,blocked):
-    """Undo only disputed payload deltas; structural containers follow the payload."""
-    checked=bank.validate_files(files);previous=bank.validate_files(baseline)
-    current=dict(files);structural=container_paths(files)|container_paths(baseline)
-    for path in blocked&structural:
-        if path not in current:continue
-        if path in baseline:prefix=introduction(baseline[path])
-        elif path!='MEMORY.md':
-            header,body=read(current[path],allowed=layout.SPEC['properties'])
-            routes=layout.parse_index(path,header,body)
-            prefix=introduction(layout.index_text(path,header,routes))
-        else:raise ContractError('An existing project router is required')
-        current[path]=replace_introduction(current[path],prefix)
-    routed_input=dict(current)
-    ordinary=blocked-structural
-    removed={p for p in ordinary if p in files};additions=[]
-    for path in ordinary:
-        if path in baseline:
-            current[path]=baseline[path]
-            route=next((r for r in previous['routes'] if r['path']==path),None)
-            if route is None:
-                entry=next((e for e in previous['entries'] if e['path']==path),None)
-                if entry is None or entry['format']!='standalone-record':
-                    raise ContractError('Disputed nested structural changes require explicit isolation')
-                _,meta,_=records.parse(baseline[path]);route=consolidation.route(path,'Retained reviewed source',meta)
-            additions.append(route)
+def child_paths(files,path):
+    if path=='MEMORY.md':return set(files)
+    checked=bank.validate_files(files)
+    indices={entry['path'] for entry in checked['entries'] if entry['format']=='topic-index'}
+    found=set();pending=[path]
+    while pending:
+        current=pending.pop()
+        if current in found:continue
+        found.add(current)
+        if current in indices:
+            header,body=read(files[current],allowed=layout.SPEC['properties'])
+            pending.extend(row['path'] for row in layout.parse_index(current,header,body))
+    return found
+
+
+def mask(files,baseline,held):
+    """Hold exact prose components and their real navigation-dependent payloads."""
+    original=bank.validate_files(files);old=bank.validate_files(baseline)
+    current=dict(files)
+    protected={entry['path'] for entry in original['entries'] if entry['format'] in {'tombstone','optional-history-event'}
+        or (entry['format']=='standalone-record' and entry['lifecycle']!='active')}
+    body_paths={path for path,component,target in held if component=='body'}-protected
+    for path in body_paths:
+        if path in baseline:current[path]=baseline[path]
         else:current.pop(path,None)
-    # Reuse the existing route-preserving removal protocol. Context omission
-    # changes need their original explanations, rather than fabricated prose.
-    at=bank.parse_router(files['MEMORY.md'])[0]['router-updated']
-    routed=governance.reroute(routed_input,bank.validate_files(routed_input),{},removed,additions,at)
-    for path in removed:
-        if path in current:routed[path]=current[path]
-    # The intermediate router can lack the omission row for a disputed new
-    # context. Read its actual table before completing omission bookkeeping;
-    # never validate or publish that intermediate shape.
-    meta,body=read(routed['MEMORY.md'],allowed=bank.SPEC['properties'])
-    route_text=body.split('\n## Routes\n',1)[1].split('\n## Omitted contexts\n',1)[0]
-    routes=bank.parse_table(route_text)
-    omitted=dict(bank.parse_router(files['MEMORY.md'])[2])
-    before_omitted=bank.parse_router(baseline['MEMORY.md'])[2]
-    for context in bank.CONTEXTS:
-        if context in routed:omitted.pop(context,None)
-        elif context in before_omitted:omitted[context]=before_omitted[context]
-    _,body=read(routed['MEMORY.md'],allowed=meta)
-    prefix,tail=body.split('\n## Routes\n',1)
-    routed['MEMORY.md']=write(meta)+prefix+'\n## Routes\n\n'+bank.route_table(routes)+'\n## Omitted contexts\n\n'+(
-        ''.join('- `'+p+'`: '+omitted[p]+'\n' for p in bank.CONTEXTS if p in omitted) or 'None.\n')
-    bank.validate_files(routed)
-    return routed
+    # Every container remains a source-owned prefix/header and a structured map.
+    tables={};headers={};prefixes={};omitted={}
+    for path in container_paths(files)|container_paths(baseline):
+        if path not in current:continue
+        header,body=read(current[path],allowed=set(bank.SPEC['properties'])|set(layout.SPEC['properties']))
+        if path=='MEMORY.md':_,routes,omitted=bank.parse_router(current[path])
+        else:routes=layout.parse_index(path,header,body)
+        headers[path]=header;prefixes[path]=body.split('\n## Routes\n',1)[0]
+        tables[path]={row['path']:row for row in routes if row['path'] not in body_paths}
+    base_routes={row['path']:('MEMORY.md',row) for row in old['routes']}
+    for entry in old['entries']:
+        if entry['format']!='topic-index':continue
+        path=entry['path'];header,body=read(baseline[path],allowed=layout.SPEC['properties'])
+        base_routes.update({row['path']:(path,row) for row in layout.parse_index(path,header,body)})
+    for path in body_paths:
+        if path not in current or path=='MEMORY.md':continue
+        parent,row=base_routes[path]
+        if parent not in tables:
+            # Typed source metadata retains inherited conditions. Context prose
+            # is always a direct root route. Structural moves need review.
+            if path in container_paths(baseline):raise ContractError('A disputed index move needs explicit dependency isolation')
+            parent='MEMORY.md'
+        tables[parent][path]=row
+    for path,component,target in held:
+        if component!='route-prose' or target not in protected or path not in tables or target not in tables[path]:continue
+        row=tables[path][target]
+        previous=base_routes.get(target)
+        if previous:
+            tables[path][target]={**row,'purpose':previous[1]['purpose'],'read-when':previous[1]['read-when']}
+        else:
+            tables[path][target]={**row,'purpose':'Retained canonical invalidation or history',
+                'read-when':'Before using or rebuilding affected guidance'}
+    for path,component,target in held:
+        if component!='introduction' or path not in tables:continue
+        if path in baseline:prefixes[path]=introduction(baseline[path])
+        elif path!='MEMORY.md':
+            prefixes[path]=introduction(layout.index_text(path,headers[path],list(tables[path].values()))) if tables[path] else ''
+        else:raise ContractError('A project router cannot disappear during reconciliation')
+    # Empty new indexes are dependent on their held children, not independent
+    # publishable guidance. Their original prose remains in the untouched input.
+    while True:
+        removed={path for path,rows in tables.items() if path!='MEMORY.md' and not rows}
+        if not removed:break
+        for path in removed:tables.pop(path);current.pop(path,None)
+        for rows in tables.values():
+            for path in removed:rows.pop(path,None)
+    for path,rows in tables.items():
+        rows={target:row for target,row in rows.items() if target in current}
+        content=write(headers[path])+prefixes[path]+'\n## Routes\n\n'+bank.route_table(list(rows.values()),path)
+        if path=='MEMORY.md':
+            previous=bank.parse_router(baseline[path])[2]
+            reasons={}
+            for context in bank.CONTEXTS:
+                if context in current:continue
+                if context in body_paths and context in previous:reasons[context]=previous[context]
+                elif context in omitted:reasons[context]=omitted[context]
+                elif context in previous:reasons[context]=previous[context]
+                else:raise ContractError('An omitted context needs its actual source explanation')
+            content+='\n## Omitted contexts\n\n'+(''.join('- `'+p+'`: '+reasons[p]+'\n' for p in bank.CONTEXTS if p in reasons) or 'None.\n')
+        current[path]=content
+    bank.validate_files(current)
+    return current
+
+
+def preserve_invalidation(values,candidate):
+    guards={};inactive={}
+    for files in values.values():
+        checked=bank.validate_files(files)
+        for entry in checked['entries']:
+            if entry['format']=='tombstone':
+                path=entry['path']
+                if path in guards and guards[path]!=files[path]:raise ContractError('Conflicting terminal guards require source review')
+                guards[path]=files[path]
+            elif entry['format']=='standalone-record' and entry['lifecycle']!='active':
+                inactive[entry['id']]=max(inactive.get(entry['id'],0),entry['version'])
+    if any(candidate.get(path)!=body for path,body in guards.items()):
+        raise ContractError('Semantic deferral cannot discard a terminal guard from the original inputs')
+    for entry in bank.validate_files(candidate)['entries']:
+        if (entry['format']=='standalone-record' and entry['lifecycle']=='active'
+                and entry['version']<=inactive.get(entry['id'],0)):
+            raise ContractError('Semantic deferral cannot restore an invalidated original version')
 
 
 def reviewed_value(judgment,inspection):
@@ -304,7 +372,7 @@ def review(repo,judgment):
     if not isinstance(judgment,dict) or not isinstance(judgment.get('binding'),dict):raise ContractError('Review requires an inspection binding')
     base=judgment['binding'].get('base');root,observation,binding,values,checked=snapshots(repo,base)
     rows=units(values,checked);inspection={'binding':binding,'sources':list(rows.values()),'required_pairs':pairs(rows)}
-    decisions=reviewed_value(judgment,inspection);blocked=set();conflicts=[];peer=set();equivalents=set()
+    decisions=reviewed_value(judgment,inspection);held=set();blocked=set();conflicts=[];peer=set();equivalents=set()
     actor=observation['scope_context']['developer_id']
     for pair,decision in decisions.items():
         left,right=(rows[key] for key in pair);classification=decision['classification']
@@ -320,6 +388,7 @@ def review(repo,judgment):
                 raise ContractError('A lifecycle distinction needs actual retained version links')
         if classification=='equivalent':equivalents.add(pair)
         if classification in {'contradiction','uncertain'}:
+            for row in (left,right):held.add((row['path'],row['component'],row['target_path']))
             blocked.update((left['path'],right['path']))
             other={row['metadata']['origin']['developer-id'] for row in (left,right) if row['metadata'] is not None}- {actor}
             peer.update(other)
@@ -332,10 +401,19 @@ def review(repo,judgment):
     for path,prerequisites in dependencies.items():
         if path not in actual or not isinstance(prerequisites,list) or any(p not in actual for p in prerequisites):
             raise ContractError('Dependencies must name actual bank paths')
+    # A disputed read condition/purpose controls its linked payload. Hold
+    # that update and index descendants, while unrelated routes can continue.
+    seeds={target for path,component,target in held if component in {'route-prose','omission'}}
+    seeds.update(path for path,component,target in held if component=='body')
     while True:
-        expanded=blocked|{p for p,required in dependencies.items() if set(required)&blocked}
-        if expanded==blocked:break
-        blocked=expanded
+        payload=set()
+        for path in seeds:
+            for files in values.values():payload.update(child_paths(files,path))
+        held.update((path,'body',None) for path in payload)
+        blocked.update(payload)
+        expanded=seeds|{path for path,required in dependencies.items() if set(required)&blocked}
+        if expanded==seeds:break
+        seeds=expanded
     # No ungrouped same-axis equivalent records can silently become duplicates.
     grouped={tuple(sorted(pair)) for group in judgment['consolidations'] for pair in itertools.combinations(group.get('sources',[]),2)}
     for pair in equivalents:
@@ -355,18 +433,18 @@ def review(repo,judgment):
             local=dict(local);landed=dict(landed);baseline=dict(baseline)
             local[path]=landed[path]=baseline[path]=body
     structural=set().union(*(container_paths(f) for f in (baseline,local,landed)))
-    for path in structural-blocked:
+    for path in structural-{p for p,c,t in held if c in {'introduction','body'}}:
         if not all(path in f for f in (baseline,local,landed)):continue
         prefixes=[introduction(f[path]) for f in (baseline,local,landed)]
         if prefixes[1]!=prefixes[2] and prefixes[1]!=prefixes[0] and prefixes[2]!=prefixes[0]:
-            pair=tuple(sorted([digest(encoded({'path':path,'sha256':digest(side[path].encode())})) for side in (local,landed)]))
+            pair=tuple(sorted(next(key for key,row in rows.items() if row['path']==path and row['component']=='introduction' and side in row['sides']) for side in ('local','landed')))
             if decisions[pair]['classification'] not in {'compatible','equivalent'}:
                 raise ContractError('Concurrent container introductions require actual compatible meaning review')
             prefix=compatible_prose(*prefixes)
             baseline=dict(baseline);local=dict(local);landed=dict(landed)
             for files in (baseline,local,landed):files[path]=replace_introduction(files[path],prefix)
-    refresh_land=mask(landed,baseline,blocked) if blocked else landed
-    publish_local=mask(local,baseline,blocked) if blocked else local
+    refresh_land=mask(landed,baseline,held) if held else landed
+    publish_local=mask(local,baseline,held) if held else local
     refresh=recovery.merge_files(baseline,local,refresh_land)
     publish=recovery.merge_files(baseline,publish_local,landed)
     operation_id=str(uuid.UUID(hex=digest(encoded(judgment))[:32],version=4))
@@ -374,14 +452,16 @@ def review(repo,judgment):
     publish=consolidate(publish,judgment['consolidations'],rows,decisions,observation,operation_id,judgment['recorded_at'],blocked)
     audit=security.audit(root,operation_id,'retrieval','checked',observation['scope_context'],['external'],
         record_ids=sorted({row['metadata']['id'] for row in rows.values() if row['metadata'] is not None}))
+    preserve_invalidation(values,refresh);preserve_invalidation(values,publish)
     final_sources(root,observation,binding)
     proof={'schema':'agent-memory/semantic-sharing-proof-v1','judgment':judgment,
-           'refresh_hashes':tx.file_hashes(refresh),'publish_hashes':tx.file_hashes(publish),'blocked_paths':sorted(blocked)}
+           'refresh_hashes':tx.file_hashes(refresh),'publish_hashes':tx.file_hashes(publish),'blocked_paths':sorted(blocked),
+           'blocked_components':[{'path':p,'component':c,'target_path':t} for p,c,t in sorted(held,key=lambda x:(x[0],x[1],x[2] or ''))]}
     if len(encoded(proof))>LIMIT:raise ContractError('Complete semantic proof exceeds bound; no truncation')
     return {'schema':'agent-memory/semantic-sharing-result-v1','operation':'review','proof':proof,
             'proof_sha256':digest(encoded(proof)),'audit':audit,'audit_writes_performed':True,'refresh_files':refresh,'publish_files':publish,
             'conflicts':conflicts,'blocked_paths':sorted(blocked),
-            'blocked_introduction_paths':sorted(blocked&structural),'detecting_developer_id':actor,
+            'blocked_introduction_paths':sorted({p for p,c,t in held if c=='introduction'}),'detecting_developer_id':actor,
             'other_developer_ids':sorted(peer),'recommend_other_developer_clarification':bool(peer),'messages_sent':False,
             'independent_updates_may_continue':True,'semantic_truth_verified':False,'judgment_is_agent_assertion':True,
             'remote_freshness_verified':True,'publication_verified':False,'canonical_writes_performed':False,
@@ -389,7 +469,7 @@ def review(repo,judgment):
 
 
 def check(repo,proof):
-    if not isinstance(proof,dict) or set(proof)!={'schema','judgment','refresh_hashes','publish_hashes','blocked_paths'} or proof['schema']!='agent-memory/semantic-sharing-proof-v1':
+    if not isinstance(proof,dict) or set(proof)!={'schema','judgment','refresh_hashes','publish_hashes','blocked_paths','blocked_components'} or proof['schema']!='agent-memory/semantic-sharing-proof-v1':
         raise ContractError('Use the complete actual semantic proof')
     value=review(repo,proof['judgment'])
     if encoded(value['proof'])!=encoded(proof):raise ContractError('Semantic proof does not describe current reviewed sources and outputs')
