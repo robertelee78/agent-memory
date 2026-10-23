@@ -100,3 +100,8 @@ failing to change the real registry. They do not certify a language model's
 behavior or replace the complete poisoning, deletion and admission fixtures.
 All fixtures use disposable local homes and repositories; no real credentials,
 new OS accounts, live permissions or external services are involved.
+
+The [mediated security policy](security-policy.md) adds bounded source
+classification, secret/quarantine checks, explicit procedure eligibility and
+private content-free audit. Its foundation canaries are distinct from the
+complete first-release poisoning and outcome-evaluation suites.

@@ -84,3 +84,10 @@ that memory. Memory-only publication and turn-boundary refresh are required
 v0.0.1 capabilities; the initial offline workflow in this artifact does not yet
 implement that exchange. While offline or exchange is unavailable, a session
 MUST retain local work and report sharing as pending when freshness matters.
+
+## Before governed memory use
+
+A session MUST follow [security/GUIDE.md](security/GUIDE.md) for actual source
+classification, same-project checks, secret/quarantine controls, separate
+procedure approval and private audit before governed admission, mutation,
+retrieval or publication. A mechanical write receipt does not admit learning.

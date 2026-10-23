@@ -312,11 +312,22 @@ def apply(prepared):
     proposed_remote = contract.parse_router(p['files']['MEMORY.md'])[0].get('canonical-remote')
     if proposed_remote != project_status(p['repo_root'])['evidence']['canonical_remote']:
         raise ContractError('Authority identity changes require explicit scope binding, including during initialization')
+    from . import security
+    classes = ['external']
+    if p['operation'] == 'initialize':
+        evidence = p['initialization_evidence']['inventory']
+        classes = ['assistant'] + (['verified-repository'] if evidence['sources'] else []) + (['tool'] if evidence['awa']['sources'] else [])
     def check(owner):
         require(p['repo_root'], p['project_id'], expected=context, owned_lock=owner, initialize=initializing)
         if p['operation'] == 'initialize':
             validate_transaction(p)
+            security.guarded_start(p['repo_root'], p['operation_id'], context,
+                {path: p['files'][path] for path in changed(p) if path in p['files']}, classes, action='initialize')
+        else:
+            security.audit(p['repo_root'], p['operation_id'], 'mutation', 'started', context, classes, action=p['operation'])
     receipt = _apply(p, check_identity=check)
+    if receipt['outcome'] == 'finished':
+        receipt['security_audit'] = security.audit(p['repo_root'], p['operation_id'], 'mutation', 'completed', context, classes, action=p['operation'])
     return {**receipt, 'resolved_scope': context}
 
 
@@ -383,12 +394,19 @@ def recover(repo, mode=None, prepared=None):
     marker = marker_bytes(p)
     initializing = p['operation'] == 'initialize' and not (bank / 'MEMORY.md').exists()
     context = require(root, p['project_id'], owned_transaction=marker, initialize=initializing)
+    from . import security
+    action = 'recover-' + r['mode']
     def check(owner, marker):
         require(root, p['project_id'], expected=context, owned_lock=owner, owned_transaction=marker, initialize=initializing)
         if r['mode'] == 'finish' and p['operation'] == 'initialize':
             from .initialization import validate_transaction
             validate_transaction(p)
+            security.guarded_start(root, p['operation_id'], context,
+                {path: p['files'][path] for path in changed(p) if path in p['files']}, ['tool'], action=action)
+        else:
+            security.audit(root, p['operation_id'], 'mutation', 'started', context, ['tool'], action=action)
     receipt = _recover(root, prepared=prepared, check_identity=check)
+    receipt['security_audit'] = security.audit(root, p['operation_id'], 'mutation', 'completed', context, ['tool'], action=action)
     return {**receipt, 'resolved_scope': context}
 
 

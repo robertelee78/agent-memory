@@ -12,6 +12,7 @@ from . import bank_transactions as transactions
 from . import bank_writes as writes
 from . import scope_binding as identity
 from . import scopes
+from . import security
 from . import local_registry as storage
 from .developer_identity import digest, load
 from .frontmatter import ContractError
@@ -162,6 +163,7 @@ def preview(repo, value, *, prepare=False):
         root, bank_path = writes.bank_path(repo)
         files = transactions.files_at(bank_path)
         files['activeContext.md'] = render('# Active context\n', value, context['developer_id'])
+        security.ensure_safe({'activeContext.md': files['activeContext.md']})
         metadata, routes, omitted = bank.parse_router(files['MEMORY.md'])
         routes.append({'path': 'activeContext.md', 'purpose': 'Current focus, changes, questions and next step',
                        'scope': 'repository', 'lifecycle': 'active', 'read-when': 'When starting or resuming work'})
@@ -176,6 +178,7 @@ def preview(repo, value, *, prepare=False):
     if current['preparation_required']:
         raise ContractError('Active context is omitted; prepare its useful content and route as a separate observed transaction first')
     body = render(current['active_context'], value, context['developer_id'])
+    security.ensure_safe({'activeContext.md': body})
     prepared = writes.preview(repo, 'activeContext.md', body, 'checkpoint')['proposal']
     if prepared['observed_hashes'] != current['source_hashes'] or prepared['scope_context'] != context:
         raise ContractError('Bank or identity changed during checkpoint preparation; inspect again')
