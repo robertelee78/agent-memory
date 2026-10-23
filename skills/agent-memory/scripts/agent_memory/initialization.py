@@ -15,6 +15,7 @@ from . import bank_transactions as transactions
 from . import bank_writes as writes
 from . import scope_binding as identity
 from . import scopes
+from . import security
 from . import local_registry as storage
 from .developer_identity import digest, encoded, load, uuid_valid
 from .frontmatter import ContractError
@@ -340,6 +341,7 @@ def preview(repo, review):
         'files': files, 'scope_context': context, 'initialization_evidence': {
             'inventory': observed, 'existing_memory_reviewed': review['existing_memory_reviewed'],
             'claims': review['claims'], 'questions': review['questions'], 'base_router': base.get('MEMORY.md')}})
+    security.ensure_safe({path: tx['files'][path] for path in transactions.changed(tx) if path in tx['files']})
     p = {'schema': SCHEMA, 'inventory': observed, 'review': review, 'transaction': tx, 'base_router': base.get('MEMORY.md')}
     return result('preview', proposal=p, questions=questions, evidence_gaps=[*observed['evidence_gaps'], *gaps],
                   changed_memory_paths=['memory-bank/' + path for path in transactions.changed(tx)],
@@ -425,6 +427,7 @@ def validate_transaction(tx):
     for path, body in tx['files'].items():
         if path != 'MEMORY.md' and path not in original and body != bodies.get(path):
             raise ContractError('New context differs from the reviewed source-linked orientation')
+    security.ensure_safe({path: tx['files'][path] for path in transactions.changed(tx) if path in tx['files']})
     return claims, questions, gaps
 
 

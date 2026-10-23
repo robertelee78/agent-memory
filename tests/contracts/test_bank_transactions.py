@@ -50,9 +50,26 @@ class BankTransactionsContract(unittest.TestCase):
         for path, body in before.items():
             (bank / path).write_text(body)
         bind(world, repo)
+        runtime_before = self.runtime_files(world)
         r, p = self.command(world, "preview", "--repo", repo, "--files", self.save(world, after, "files.json"), "--operation", "compact")
         self.assertEqual(r.returncode, 0, p)
+        self.assertEqual(self.runtime_files(world), runtime_before)
         return repo, bank, before, after, p
+
+    def runtime_files(self, world):
+        root = Path(world.env['AGENT_MEMORY_STATE_HOME'])
+        return {p.relative_to(root).as_posix(): p.read_bytes() for p in root.rglob('*') if p.is_file()}
+
+    def assert_only_audit_state(self, world):
+        # Scope setup and refused attempts may have content-free audit facts.
+        # No body journal, write receipt or other derived content is permitted.
+        for relative, raw in self.runtime_files(world).items():
+            self.assertIn('security-audit', Path(relative).parts, relative)
+            value = json.loads(raw)
+            self.assertEqual(set(value), {'schema', 'operation_id', 'project_id', 'developer_id',
+                'category', 'phase', 'action', 'source_classes', 'reasons', 'record_ids', 'identity_authenticated'})
+            self.assertEqual(value['schema'], 'agent-memory/security-audit-v1')
+            self.assertFalse(value['identity_authenticated'])
 
     def canonical(self, bank):
         return {p.relative_to(bank).as_posix(): p.read_text() for p in bank.rglob("*.md") if p.is_file() and not p.name.startswith(".agent-memory")}
@@ -85,7 +102,7 @@ class BankTransactionsContract(unittest.TestCase):
         with World() as w:
             repo, bank, before, after, p = self.fixture(w)
             self.assertEqual(self.canonical(bank), before)
-            self.assertFalse(Path(w.env["AGENT_MEMORY_STATE_HOME"]).exists())
+            self.assert_only_audit_state(w)
             (repo / "code.txt").write_text("Unfinished feature\n")
             w.git("add", "code.txt", cwd=repo)
             index = (repo / ".git/index").read_bytes()
@@ -335,7 +352,7 @@ class BankTransactionsContract(unittest.TestCase):
                 self.assertEqual(router.read_bytes(), crlf)
                 self.assertFalse((bank / MARKER).exists())
                 self.assertFalse((bank / ".agent-memory.lock").exists())
-                self.assertFalse(Path(w.env["AGENT_MEMORY_STATE_HOME"]).exists())
+                self.assert_only_audit_state(w)
 
     def test_impossible_projection_and_leaf_directory_conversions_refuse_before_journaling(self):
         cases = ("both", "leaf-to-directory", "directory-to-leaf", "existing-directory", "non-directory-parent")
@@ -370,7 +387,7 @@ class BankTransactionsContract(unittest.TestCase):
                 self.assertEqual(r.returncode, 1, error)
                 self.assertEqual(self.canonical(bank), original)
                 self.assertFalse((bank / MARKER).exists())
-                self.assertFalse(Path(w.env["AGENT_MEMORY_STATE_HOME"]).exists())
+                self.assert_only_audit_state(w)
 
     def test_noncanonical_physical_blocker_arriving_after_preview_is_checked_before_journal(self):
         with World() as w:
@@ -387,7 +404,7 @@ class BankTransactionsContract(unittest.TestCase):
             self.assertEqual(occupant.read_text(), "Unrelated external file")
             self.assertEqual(self.canonical(bank), before)
             self.assertFalse((bank / MARKER).exists())
-            self.assertFalse(Path(w.env["AGENT_MEMORY_STATE_HOME"]).exists())
+            self.assert_only_audit_state(w)
 
     def test_external_omitted_context_directory_before_receipt_cannot_be_reported_as_a_usable_bank(self):
         with World() as w:
@@ -445,7 +462,7 @@ class BankTransactionsContract(unittest.TestCase):
                 self.assertEqual(self.physical_bytes(bank), original)
                 self.assertFalse((bank / MARKER).exists())
                 self.assertFalse((bank / ".agent-memory.lock").exists())
-                self.assertFalse(Path(w.env["AGENT_MEMORY_STATE_HOME"]).exists())
+                self.assert_only_audit_state(w)
 
     def test_alias_arriving_after_preview_is_not_inventoried_as_an_owned_target(self):
         with World() as w:
@@ -460,7 +477,7 @@ class BankTransactionsContract(unittest.TestCase):
             self.assertEqual(r.returncode, 1, error)
             self.assertEqual(self.physical_bytes(bank), original)
             self.assertFalse((bank / MARKER).exists())
-            self.assertFalse(Path(w.env["AGENT_MEMORY_STATE_HOME"]).exists())
+            self.assert_only_audit_state(w)
 
     def test_late_alias_at_replacement_boundary_stops_and_recovery_preserves_foreign_occupant(self):
         with World() as w:
@@ -527,7 +544,7 @@ class BankTransactionsContract(unittest.TestCase):
             content.write_text("# New focus\n")
             self.assertEqual(self.command(w, "preview", "--repo", repo, "--path", "activeContext.md", "--content", content, helper=SINGLE)[0].returncode, 1)
             self.assertEqual(self.physical_bytes(bank), original)
-            self.assertFalse(Path(w.env["AGENT_MEMORY_STATE_HOME"]).exists())
+            self.assert_only_audit_state(w)
 
     def test_bank_root_spelling_alias_refuses_before_lock_and_unique_unicode_target_still_works(self):
         with World() as w:

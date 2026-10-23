@@ -204,6 +204,9 @@ def apply(prepared):
     if p['operation_id'] not in registered['operations'] and p['base_files'] is not None:
         if writes.snapshot(root)[1] != transactions.file_hashes(p['base_files']):
             raise ContractError('Bank changed after binding preview; preserve the edit and prepare again')
+    from . import security
+    audit_context = {'developer_id': dev['developer_id'], 'project_id': p['project']['project_id']}
+    security.audit(root, p['operation_id'], 'mutation', 'started', audit_context, ['external'], action='bind')
     bundle_path = None
     if tx is not None:
         # Persist the exact two-store decision before either step. There is no
@@ -244,13 +247,16 @@ def apply(prepared):
     verified = not pending and current['resolved'] and still_current
     if not pending and not verified:
         raise ContractError('Binding readback differs or was superseded; preserve current state and inspect')
+    audit = security.audit(root, p['operation_id'], 'mutation', 'completed', audit_context,
+                           ['external'], action='bind') if verified else None
     return result('apply', operation_id=p['operation_id'], project_id=p['project']['project_id'], developer_id=p['developer_id'],
                   registry=registry, bank=bank_result, status=current, resolved=verified,
                   initialization_pending=pending, initialization_context=require(root, initialize=True) if pending else None,
                   recovery_bundle=str(bundle_path) if bundle_path else None,
                   writes_performed=registry['writes_performed'] or bool(bank_result and bank_result['writes_performed']),
                   changed_memory_paths=bank_result['changed_memory_paths'] if bank_result else [],
-                  verified=verified, registry_verified=registry['verified'], still_current=still_current)
+                  verified=verified, registry_verified=registry['verified'], still_current=still_current,
+                  security_audit=audit)
 
 
 def main(argv=None):

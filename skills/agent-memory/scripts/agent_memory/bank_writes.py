@@ -157,9 +157,19 @@ def apply(prepared):
     if proposal['scope_context'] is None:
         raise ContractError('Proposal has no resolved scope; finish identity setup and preview again')
     context = require(proposal['repo_root'], proposal['project_id'], expected=proposal['scope_context'])
-    receipt = _apply(proposal, check_identity=lambda owner: require(proposal['repo_root'], proposal['project_id'],
-                                                                    expected=context, owned_lock=owner))
-    return {**receipt, 'resolved_scope': context}
+    from . import security
+    def check(owner):
+        require(proposal['repo_root'], proposal['project_id'], expected=context, owned_lock=owner)
+        if proposal['operation'] == 'checkpoint':
+            security.guarded_start(proposal['repo_root'], proposal['operation_id'], context,
+                {proposal['path']: proposal['content']}, ['assistant'], action='checkpoint')
+        else:
+            security.audit(proposal['repo_root'], proposal['operation_id'], 'mutation', 'started',
+                context, ['external'], action=proposal['operation'])
+    receipt = _apply(proposal, check_identity=check)
+    audit = security.audit(proposal['repo_root'], proposal['operation_id'], 'mutation', 'completed',
+        context, ['assistant'] if proposal['operation'] == 'checkpoint' else ['external'], action=proposal['operation'])
+    return {**receipt, 'resolved_scope': context, 'security_audit': audit}
 
 
 def _apply(prepared, *, check_identity):
