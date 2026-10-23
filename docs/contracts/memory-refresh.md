@@ -26,7 +26,10 @@ paths/dependencies are excluded from current context while independent imports
 continue; retained local disputes do not become winners.
 
 The optional content-free cursor binds the actual finished receipt/checksum and
-an observed authority head. It is a disposable baseline hint, not canonical
+an observed authority head plus actual Git branch/revision. A changed checkout
+context falls back to the actual Git common base, preserving a caller’s stash and
+reimporting shared lessons instead of treating their absence as an intentional
+local deletion. It is a disposable baseline hint, not canonical
 memory or authenticated authority. Missing state can be reconstructed from Git;
 damaged state remains preserved. A later import/local correction survives an
 older retry, and ordinary later code integration is a separate branch workflow.

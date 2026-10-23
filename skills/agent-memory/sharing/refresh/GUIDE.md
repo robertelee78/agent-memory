@@ -38,8 +38,11 @@ and their real dependencies remain held. A clean Git text merge MUST NOT
 substitute for this review or choose truth by landing order.
 
 A verified local cursor is only a disposable baseline hint, bound to its actual
-completed transaction receipt and checksum. The helper fetches current authority
-and verifies the baseline in actual Git history. The cursor MAY name a shared
+completed transaction receipt, checksum and actual Git branch/revision. A session
+MUST reuse it only in that same checkout context; a branch switch or changed
+revision requires a reconstructed Git baseline, so stashed imports do not become
+apparent intentional deletions. The helper fetches current authority and verifies
+the baseline in actual Git history. The cursor MAY name a shared
 commit outside the feature HEAD's ancestry; importing code is not needed to use
 it. With no usable cursor, actual Git common ancestry reconstructs a baseline.
 Ambiguous/replaced history MUST require inspection rather than overwrite memory.

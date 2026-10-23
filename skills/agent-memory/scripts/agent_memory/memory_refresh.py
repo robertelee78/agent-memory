@@ -16,7 +16,7 @@ from .identity_git import git
 LIMIT = 4 * 1048576
 CURSOR = 'agent-memory/refresh-cursor-v1'
 CURSOR_FIELDS = {'schema', 'repo_root', 'project_id', 'authority_head', 'operation_id',
-                 'receipt_sha256', 'resulting_hashes', 'checksum'}
+                 'receipt_sha256', 'resulting_hashes', 'git_context', 'checksum'}
 
 
 def result(operation, state, **values):
@@ -73,6 +73,16 @@ def cursor(root):
                 or r['operation_id'] != value['operation_id'] or r['project_id'] != value['project_id']
                 or r['bank_path'] != str(writes.bank_path(root)[1]) or r['resulting_hashes'] != value['resulting_hashes']):
             raise ContractError('Cursor receipt does not prove this bank operation')
+        recorded = value['git_context']
+        if (not isinstance(recorded, dict) or set(recorded) not in ({'revision'}, {'branch', 'revision'})
+                or not all(isinstance(v, str) and v for v in recorded.values())):
+            raise ContractError('Cursor lacks its original branch/revision context')
+        recovery.oid(recorded['revision'])
+        if recorded != retrieval.git_context(root):
+            # A caller may have stashed imported memory before switching
+            # branches or committing code. Its absence in the new checkout
+            # must not be interpreted using another checkout's import base.
+            return None, sha, 'checkout-context-changed'
         return value, sha, 'verified-local-hint'
     except (ContractError, ValueError, TypeError, KeyError, UnicodeError):
         # Disposable state is not authority. Preserve damaged bytes and recover
@@ -82,9 +92,13 @@ def cursor(root):
 
 def inspect(repo, base=None):
     root, _ = writes.bank_path(repo)
+    observed_context = retrieval.git_context(root)
     previous, _, state = cursor(root)
     chosen = base if base is not None else previous['authority_head'] if previous else None
     value = semantic.inspect(root, chosen)
+    if (retrieval.git_context(root) != observed_context
+            or value['binding']['local_head'] != observed_context.get('revision')):
+        raise ContractError('Checkout changed during cursor/base inspection; inspect again')
     return result('inspect', 'review-required', inspection=value, cursor_state=state,
                   baseline_source='explicit' if base is not None else 'cursor' if previous else 'git-common-base',
                   git_metadata_writes_performed=True, remote_freshness_verified=True)
@@ -129,7 +143,8 @@ def save_cursor(root, p, observation, receipt, expected):
     value = {'schema': CURSOR, 'repo_root': str(root), 'project_id': p['project_id'],
              'authority_head': observation['authority_head'], 'operation_id': p['operation_id'],
              'receipt_sha256': digest(Path(receipt['receipt_path']).read_bytes()),
-             'resulting_hashes': receipt['resulting_hashes']}
+             'resulting_hashes': receipt['resulting_hashes'],
+             'git_context': p['refresh_evidence']['git_context']}
     value['checksum'] = digest(encoded(value))
     path = cursor_path(root); path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
     storage.replace(path, encoded(value), expected)
