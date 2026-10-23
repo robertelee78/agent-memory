@@ -73,8 +73,10 @@ observations under the bank lock when applying a proposal.
 The older `tombstones.py filter` remains a terminal-deletion-only format guard;
 a session MUST NOT treat it as lifecycle-current recall. Neither helper owns
 or invalidates arbitrary third-party caches, authenticates a developer, admits
-learning, publishes memory, or implements the later governed forgetting and
-consolidation decisions. Those operations MUST use these canonical safeguards
+learning or publishes memory. A session MUST follow
+[governance](../governance/GUIDE.md) for actual lifecycle decisions and
+[consolidation](../consolidation/GUIDE.md) for meaning-preserving maintenance.
+Those operations MUST use these canonical safeguards
 for each derived input and invalidate every view/cache/index they own.
 
 Exit 0 means a safe representation or a completed invalidation check. Exit 1

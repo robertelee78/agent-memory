@@ -12,7 +12,7 @@ from .developer_identity import digest, encoded, load, uuid_valid
 from .frontmatter import ContractError, write
 
 REQUEST = {'project_id', 'candidate', 'searches', 'read_paths'}
-CLASSES = {'equivalent', 'refinement', 'distinct-conditions', 'distinct-knowledge',
+CLASSES = {'equivalent', 'refinement', 'scope-correction', 'distinct-conditions', 'distinct-knowledge',
            'contradiction', 'related-context', 'uncertain'}
 LIMIT = 65536
 
@@ -62,6 +62,28 @@ def inspect(repo, request, *, owned_lock=None):
     if any(path not in entries or entries[path]['format'] not in {'standalone-record', 'context-prose'}
            for path in request['read_paths']):
         raise ContractError('Read each plausible match from actual canonical learning, not an absent path or event')
+    capture_owners, capture_identity_review_paths = set(), set()
+    for entry in checked['entries']:
+        path = entry['path']
+        if not path.startswith('history/sources/'):continue
+        if entry['format'] != 'standalone-record':
+            raise ContractError('Original capture provenance is incomplete; inspect before claiming absence')
+        with (bank / path).open('rb') as stream:raw = stream.read(16385)
+        if len(raw) > 16384 or digest(raw) != observed[path]:
+            raise ContractError('Capture provenance changed or exceeds its reader')
+        _, source, _ = records.parse(raw.decode('utf-8'))
+        captured_id = records.source_capture_id(path, source)
+        if path.startswith('history/sources/' + metadata['id'] + '/') and captured_id != metadata['id']:
+            raise ContractError('Original capture identity is unresolved; inspect before claiming absence')
+        if captured_id == metadata['id']:
+            capture_owners.add(source['id'])
+            capture_owners.update(ref['id'] for ref in source.get('superseded-by', []))
+        elif captured_id is None and any(ref['id'] == metadata['id'] for ref in source['derived-from']):
+            # Older admitted banks use flat source paths. Their references do
+            # not identify which UUID was the consumed capture. A lexical miss
+            # after compaction cannot establish novelty or license re-admission.
+            # Preserve every source/ref and require actual role clarification.
+            capture_identity_review_paths.add(path)
     router = (bank / 'MEMORY.md').read_bytes()
     if digest(router) != observed['MEMORY.md']:
         raise ContractError('Router changed during comparison')
@@ -83,8 +105,8 @@ def inspect(repo, request, *, owned_lock=None):
             _, existing, body = records.parse(text)
         query_hits = [query for query in request['searches'] if retrieval.match(
             {'ids': [], 'paths': [], 'query': query}, {'path': path, 'body': body}) is not None]
-        same_id = existing is not None and existing['id'] == metadata['id']
-        if not query_hits and path not in request['read_paths'] and not same_id:
+        same_id = existing is not None and existing['id'] in {metadata['id'], *capture_owners}
+        if not query_hits and path not in request['read_paths'] and path not in capture_identity_review_paths and not same_id:
             continue
         security.ensure_safe({path: text + '\n' + json.dumps(entry['scope_chain'], ensure_ascii=False)})
         if existing is not None and existing.get('visibility') == 'hidden':
@@ -112,6 +134,8 @@ def inspect(repo, request, *, owned_lock=None):
     if writes.snapshot(root, owned_lock=owned_lock)[1] != observed:
         raise ContractError('Memory changed before comparison readback; do not use an earlier novelty judgment')
     return {'schema': 'agent-memory/comparison-result-v1', 'operation': 'inspect', 'observation': observation,
+        'capture_identity_owners': sorted(capture_owners),
+        'capture_identity_review_paths': sorted(capture_identity_review_paths),
         'router': router.decode('utf-8'), 'matches': matches, 'candidate': request['candidate'],
         'detecting_developer_id': context['developer_id'], 'audit': audit, 'comparison_read_complete': True,
         'semantic_completeness_verified': False, 'source_assertions_verified': False,
@@ -134,11 +158,14 @@ def judge(inspection, request, judgment):
         raise ContractError('Do not omit, substitute or duplicate a plausible source in the comparison judgment')
     by_path = {row['path']: row for row in inspection['matches']}
     candidate = request['candidate']['metadata']
-    targets, conflicts, uncertain, inactive, other_developers = [], [], [], [], set()
+    targets, conflicts, uncertain, inactive, scope_corrections, other_developers = [], [], [], [], [], set()
     for decision in decisions:
         safe_text(decision['rationale'])
         row, classification = by_path[decision['path']], decision['classification']
         existing = row['metadata']
+        if (row['path'] in inspection['capture_identity_review_paths'] and existing
+                and existing['origin']['developer-id'] != inspection['detecting_developer_id']):
+            other_developers.add(existing['origin']['developer-id'])
         if classification == 'contradiction':
             conflicts.append(row['path'])
             if existing and existing['origin']['developer-id'] != inspection['detecting_developer_id']:
@@ -151,7 +178,16 @@ def judge(inspection, request, judgment):
                 raise ContractError('Different conditions or types must stay distinct rather than be silently combined')
             if classification == 'distinct-conditions' and same_conditions:
                 raise ContractError('A condition distinction needs actual different conditions, not a duplicate label')
-        if classification in {'equivalent', 'refinement'}:
+        if classification == 'scope-correction':
+            if (existing is None or existing['id'] != candidate['id'] or existing['kind'] != candidate['kind']
+                    or existing['scope'] != candidate['scope'] or existing['applicability'] != candidate['applicability']
+                    or any(candidate['conditions'].get(key, object()) != value for key, value in existing['conditions'].items())
+                    or not set(existing['conditions']) < set(candidate['conditions'])
+                    or any(value is None for value in candidate['conditions'].values())
+                    or row['body'] != request['candidate']['body']):
+                raise ContractError('Scope correction retains the exact same learning body and known conditions while adding a narrower constraint')
+            scope_corrections.append(row['path'])
+        if classification in {'equivalent', 'refinement', 'scope-correction'}:
             targets.append({'path': row['path'], 'sha256': row['sha256'],
                 'id': existing['id'] if existing else None, 'version': existing['version'] if existing else None,
                 'required_preserved_metadata': existing, 'scope_chain': row['scope_chain']})
@@ -159,15 +195,20 @@ def judge(inspection, request, judgment):
                 inactive.append(row['path'])
     if conflicts:
         disposition = 'clarification-required'
+    elif inspection['capture_identity_review_paths']:
+        disposition = 'provenance-identity-review-required'
     elif uncertain:
         disposition = 'review-required'
+    elif scope_corrections:
+        disposition = 'governance-required'
     elif inactive:
         disposition = 'lifecycle-review-required'
     elif targets:
         disposition = 'update-existing' if len(targets) == 1 else 'consolidate-existing'
     else:
         disposition = 'create-distinct'
-    if disposition == 'create-distinct' and any(row['metadata'] and row['metadata']['id'] == candidate['id'] for row in inspection['matches']):
+    if disposition == 'create-distinct' and (inspection['capture_identity_owners'] or any(
+            row['metadata'] and row['metadata']['id'] == candidate['id'] for row in inspection['matches'])):
         raise ContractError('Distinct new knowledge must use a separate stable identity, not reuse an existing one')
     proof = {'schema': 'agent-memory/comparison-proof-v1', 'judgment': judgment,
              'disposition': disposition, 'targets': targets}

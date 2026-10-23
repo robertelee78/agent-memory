@@ -37,6 +37,9 @@ not merely repeat the new sentence. Each query uses the baseline's case-folded
 AND terms; alternatives are OR queries. A session MUST add plausible routes or
 paths found while reading; lexical matching cannot prove semantic completeness.
 An existing same-ID record is inspected even without a query hit.
+An original capture ID also finds its retained source and owning learning through
+the structured provenance path, even after inactive bodies are compacted. A
+consumed capture identity MUST NOT be reused to claim distinct new knowledge.
 
 Inspect reads the bounded router and every canonical learning file needed to
 establish the search, then returns complete plausible matches with full typed
@@ -87,6 +90,7 @@ that the agent actually understood the sources.
 | --- | --- |
 | `equivalent` | Same learning; reuse the existing stable record identity or prose path |
 | `refinement` | Compatible tightening/addition; preserve original evidence, conditions and provenance |
+| `scope-correction` | Same stable ID and exact body, with retained old conditions plus a known narrower constraint; requires governance |
 | `distinct-conditions` | Genuinely different applicability; keep a separate identity and those conditions |
 | `distinct-knowledge` | Different fact despite similar wording; keep a separate identity |
 | `related-context` | Useful orientation without claiming equivalence |
@@ -101,7 +105,11 @@ the helper does not fabricate record identity, trust or origin for it.
 
 The result's disposition is `create-distinct`, `update-existing`,
 `consolidate-existing`, `clarification-required`, `review-required` or
-`lifecycle-review-required`. Existing targets retain their exact IDs/versions,
+`lifecycle-review-required`; exact-body narrowing returns `governance-required`.
+Scope correction MUST NOT be treated as ordinary equivalence or a contradiction
+between compatible scoped statements. The session MUST use
+[governance](../governance/GUIDE.md), with actual stronger source evidence, to
+change applicability. Existing targets retain their exact IDs/versions,
 source hashes and complete required metadata. Multiple equivalent targets
 require reconciliation of those existing records rather than a third copy.
 A governed writer MUST preserve each retained source and useful correction
@@ -147,3 +155,15 @@ Exit 1 means unsafe, incomplete, unavailable or changed input/state; it supplies
 no proof of absence. Private content-free audits are reported separately from
 canonical writes. The helper executes no remembered commands, sends no messages,
 requires no daemon and changes neither bank, code, index nor HEAD.
+
+A legacy flat `history/sources/<source-id>.md` can retain several `derived-from`
+references after its assertion body is compacted. If a proposed identity appears
+in an unresolved source's references, comparison MUST include that source even
+when every text search misses. `capture_identity_review_paths` names these
+sources and the result stays `provenance-identity-review-required`. The session
+MUST establish the actual reference roles from evidence before preparing a new
+comparison; it MUST NOT guess from list order, infer novelty from an empty body,
+or re-admit the original capture. An explicitly reviewed move to the structured
+capture/source path MUST preserve the source ID, all references, origin and body.
+Another developer's provenance SHOULD prompt attribution-aware clarification as
+needed; the helper MUST NOT send a message.

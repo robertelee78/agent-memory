@@ -48,7 +48,7 @@ def files_at(bank):
 def proposal_value(prepared):
     from .scope_binding import context_value
     p = prepared.get("proposal", prepared) if isinstance(prepared, dict) else prepared
-    if (not isinstance(p, dict) or set(p) not in (FIELDS, FIELDS | {"initialization_evidence"}, FIELDS | {"admission_evidence"}, FIELDS | {"consolidation_evidence"}) or p["schema"] != SCHEMA
+    if (not isinstance(p, dict) or set(p) not in (FIELDS, FIELDS | {"initialization_evidence"}, FIELDS | {"admission_evidence"}, FIELDS | {"consolidation_evidence"}, FIELDS | {"governance_evidence"}) or p["schema"] != SCHEMA
             or not uuid_valid(p["operation_id"]) or not uuid_valid(p["project_id"])
             or p["operation"] not in writes.OPERATIONS or not isinstance(p["repo_root"], str)
             or not Path(p["repo_root"]).is_absolute() or str(Path(p["repo_root"]).resolve()) != p["repo_root"]):
@@ -57,6 +57,8 @@ def proposal_value(prepared):
         raise ContractError('Source initialization evidence belongs only to initialization')
     if 'admission_evidence' in p and p['operation'] != 'capture':
         raise ContractError('Admission evidence belongs only to its governed capture transaction')
+    if 'governance_evidence' in p and p['operation'] not in {'correct', 'supersede', 'revoke', 'forget'}:
+        raise ContractError('Governance evidence belongs only to its explicit lifecycle operation')
     if 'consolidation_evidence' in p and p['operation'] != 'compact':
         raise ContractError('Consolidation evidence belongs only to governed maintenance')
     contract.validate_files(p["files"])
@@ -232,7 +234,7 @@ def receipt_value(path, p):
 
 
 def admission_recovery(p, mode, known):
-    if (('admission_evidence' in p or 'consolidation_evidence' in p) and mode == 'finish'
+    if (any(key in p for key in ('admission_evidence', 'consolidation_evidence', 'governance_evidence')) and mode == 'finish'
             and (known is None or known['outcome'] != 'finished')):
         raise ContractError('Unfinished governed learning requires rollback, then fresh evidence and comparison; preserve the journal')
 
@@ -320,6 +322,9 @@ def validate_outcome(root, bank, desired, p, owner, marker, *, admission_sources
     if admission_sources and 'admission_evidence' in p and desired == p['files']:
         from .admission import check_sources
         check_sources(p, owner=owner, marker=marker)
+    if admission_sources and 'governance_evidence' in p and desired == p['files']:
+        from .governance import check_sources as check_governance_sources
+        check_governance_sources(p, owner=owner, marker=marker)
     if admission_sources and 'consolidation_evidence' in p and desired == p['files']:
         from .consolidation import check_sources as check_consolidation_sources
         check_consolidation_sources(p, owner=owner, marker=marker)
@@ -345,6 +350,10 @@ def apply(prepared):
         # A recorded outcome is read back by _apply; it never reapplies bytes.
         if not locations(*writes.bank_path(p['repo_root']), p['operation_id'])[1].exists():
             validate_admission(p)
+    if 'governance_evidence' in p:
+        from .governance import validate_transaction as validate_governance
+        if not locations(*writes.bank_path(p['repo_root']), p['operation_id'])[1].exists():
+            validate_governance(p)
     if 'consolidation_evidence' in p:
         from .consolidation import validate_transaction as validate_consolidation
         if not locations(*writes.bank_path(p['repo_root']), p['operation_id'])[1].exists():
@@ -361,6 +370,8 @@ def apply(prepared):
     classes = ['external']
     if 'admission_evidence' in p:
         classes = [p['admission_evidence']['capture']['request']['source_class']]
+    if 'governance_evidence' in p:
+        classes = [p['governance_evidence']['request']['authority']['source_class']]
     if 'consolidation_evidence' in p and p['consolidation_evidence']['capture'] is not None:
         classes = [p['consolidation_evidence']['capture']['request']['source_class']]
     if p['operation'] == 'initialize':
@@ -368,7 +379,13 @@ def apply(prepared):
         classes = ['assistant'] + (['verified-repository'] if evidence['sources'] else []) + (['tool'] if evidence['awa']['sources'] else [])
     def check(owner):
         require(p['repo_root'], p['project_id'], expected=context, owned_lock=owner, initialize=initializing)
-        if 'admission_evidence' in p:
+        if 'governance_evidence' in p:
+            from .governance import validate_transaction as validate_governance
+            if not locations(*writes.bank_path(p['repo_root']), p['operation_id'])[1].exists():
+                validate_governance(p, owned_lock=owner)
+            security.guarded_start(p['repo_root'], p['operation_id'], context,
+                {path: p['files'][path] for path in changed(p) if path in p['files']}, classes, action=p['operation'])
+        elif 'admission_evidence' in p:
             from .admission import validate_transaction as validate_admission
             if not locations(*writes.bank_path(p['repo_root']), p['operation_id'])[1].exists():
                 validate_admission(p, owned_lock=owner)

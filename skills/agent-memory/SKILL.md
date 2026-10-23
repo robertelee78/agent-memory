@@ -87,6 +87,12 @@ turn boundaries when comparison identifies equivalent learning or wording to
 tighten. It MUST preserve every distinct condition, evidence source and origin,
 retain useful history, and leave unresolved changes of meaning for clarification.
 
+A session MUST follow [governance/GUIDE.md](governance/GUIDE.md) for correction,
+supersession, revocation, known expiry, policy retention or explicit deletion.
+It MUST automatically prune only with stronger evidence, preserve still-valid
+older conditions, and leave ambiguous meaning with the detecting developer.
+Age alone MUST NOT justify pruning; terminal deletion MUST leave safe tombstones.
+
 A session MUST read [records/GUIDE.md](records/GUIDE.md) when a lesson needs
 typed provenance, validity, correction or revocation. Ordinary context prose
 does not need metadata on every paragraph. Record format validation MUST NOT
