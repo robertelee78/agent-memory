@@ -47,6 +47,12 @@
     {"name": "sharing-recovery", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_sharing_recovery.py"},
     {"name": "semantic-sharing", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_semantic_sharing.py"},
     {"name": "semantic-introductions", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_semantic_introductions.py"},
-    {"name": "incident-evidence", "layer": "evaluation", "scope": "v0.0.1", "path": "tests/contracts/test_incident_evidence.py"}
+    {"name": "incident-evidence", "layer": "evaluation", "scope": "v0.0.1", "path": "tests/contracts/test_incident_evidence.py"},
+    {"name": "memory-publication", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_memory_publication.py"},
+    {"name": "publication-recovery", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_publication_recovery.py"},
+    {"name": "publication-pending", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_publication_pending.py"},
+    {"name": "publication-policy", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_publication_policy.py"},
+    {"name": "publication-worktree", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_publication_worktree.py"},
+    {"name": "publication-admission", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_publication_admission.py"}
   ]
 }

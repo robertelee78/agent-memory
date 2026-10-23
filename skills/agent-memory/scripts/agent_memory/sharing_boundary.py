@@ -12,6 +12,36 @@ from .frontmatter import ContractError
 from .identity_git import git
 
 
+def prior_deletions(root, prefix, indexed, current):
+    """Prove missing indexed paths belonged to the last complete canonical bank.
+
+    The original index is evidence only. Never stage a deletion in the caller's
+    index merely to make sharing possible, and never bless an arbitrary tracked
+    cache/backup as memory.
+    """
+    missing = {p for p in indexed if p not in current}
+    if not missing:
+        return set()
+    # Local import avoids the observation -> boundary -> observation cycle.
+    from . import sharing_recovery as recovery
+    head = git(root, 'rev-parse', '--verify', 'HEAD')
+    try:
+        files = recovery.tree(root, head, prefix)
+    except ContractError:
+        return set()
+    proven = set()
+    for path in missing:
+        relative = path[len(prefix) + 1:]
+        mode, blob, stage = indexed[path]
+        if (relative not in files or mode != '100644' or stage != '0'
+                or (root / path).exists() or (root / path).is_symlink()):
+            continue
+        expected = recovery.command(root, 'rev-parse', head + ':' + path).strip()
+        if blob == expected:
+            proven.add(path)
+    return proven
+
+
 def inspect(repo):
     root, bank = writes.bank_path(repo)
     context = scope_binding.require(root)
@@ -37,13 +67,18 @@ def inspect(repo):
     repository_config.validate_branch(branch)
     # Read actual Git evidence; canonical remote identifiers are never fetch URLs.
     indexed = git(root, 'ls-files', '--stage', '-z', '--', configuration['bank_root'])
-    tracked, unmerged, excluded_tracked = set(), 0, 0
+    entries = {}
     for item in indexed.split('\0'):
         if not item:
             continue
         header, path = item.split('\t', 1)
-        mode, _, stage = header.split()
-        if path not in canonical:
+        mode, blob, stage = header.split()
+        # Several stages for one path must never masquerade as ordinary.
+        entries[path] = (mode, blob, stage if path not in entries else 'unmerged')
+    deleted = prior_deletions(root, configuration['bank_root'], entries, canonical)
+    tracked, unmerged, excluded_tracked = set(), 0, 0
+    for path, (mode, _, stage) in entries.items():
+        if path not in canonical and path not in deleted:
             excluded_tracked += 1
         elif stage != '0' or mode != '100644':
             unmerged += 1
@@ -85,7 +120,8 @@ def inspect(repo):
     if safety:
         blockers.append('unsafe-or-unreviewable-memory-content')
     scope_binding.require(root, checked['project_id'], expected=context)
-    if writes.snapshot(root)[1] != observed or repository_config.settings(root) != configuration:
+    if (writes.snapshot(root)[1] != observed or repository_config.settings(root) != configuration
+            or git(root, 'ls-files', '--stage', '-z', '--', configuration['bank_root']) != indexed):
         raise ContractError('Canonical bank or boundary configuration changed; inspect again')
     return {'schema': 'agent-memory/sharing-boundary-v1', 'project_id': checked['project_id'],
         'bank_root': configuration['bank_root'], 'authority_remote': remote,
@@ -95,6 +131,7 @@ def inspect(repo):
         # Unsafe names and bodies must not be disclosed by a failed boundary check.
         'eligible_memory_paths': canonical if not safety else [],
         'untracked_memory_count': len(pending), 'ignored_memory_count': len(ignored),
+        'proven_deleted_memory_paths': sorted(deleted) if not safety else [],
         'excluded_tracked_artifact_count': excluded_tracked, 'unmerged_or_nonordinary_count': unmerged,
         'safety_reasons': sorted(set(safety)), 'blockers': blockers,
         'local_boundary_ready': not blockers,
