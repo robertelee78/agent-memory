@@ -8,6 +8,10 @@ combining duplicates. A record MUST be reachable from `MEMORY.md` directly or
 through a bounded index. Topics belong in `topics/`, attempts and results in
 `episodes/`, and non-binding procedural candidates in `procedures/`.
 
+A session MUST follow [comparison](../comparison/GUIDE.md) before a durable
+learning write or landing. Alternate wording, another branch or inactive state
+MUST NOT make previously recorded learning appear absent.
+
 ## Record contract
 
 [`schemas/record.json`](../schemas/record.json) defines byte-zero restricted YAML

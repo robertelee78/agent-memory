@@ -38,6 +38,10 @@ The [sharing boundary contract](../contracts/sharing-boundary.md) exercises a
 configured bank through public identity, initialization, checkpoint, observed
 writes and interrupted recovery, plus Git path eligibility without exchange.
 
+The [learning comparison contract](../contracts/comparison.md) covers alternate
+wording, distinct conditions, source-bound judgment, newly arrived duplicates,
+unsafe/unavailable sources and terminal deletion before a durable learning change.
+
 `tests/world.py` provides private temporary home, XDG, client, repository, bank,
 runtime, cache, credential and backup roots. It constructs an allowlisted
 subprocess environment instead of inheriting credentials or live config, and
