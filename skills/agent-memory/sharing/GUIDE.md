@@ -6,6 +6,12 @@ milestones and delivery evidence, and Vox owns live coordination. A session
 MUST NOT create personal memory, duplicate their changing state, or depend on
 those services to read local memory.
 
+Governed admission and its replay/recovery receipts MUST use this same resolved
+bank root. A configured nested bank MUST NOT create a default `memory-bank/` or
+accept receipt paths with that default prefix. The full
+[admission receipt checks](../admission/GUIDE.md) still apply; location discovery
+does not weaken project, operation, hash or interruption validation.
+
 ## Explicit local configuration
 
 A session MAY configure a different repository-relative bank directory before

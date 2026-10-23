@@ -9,6 +9,7 @@ import uuid
 
 from world import World
 from identity_fixtures import bind
+from contracts import test_admission as admission
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -71,6 +72,39 @@ class SharingBoundaryContract(unittest.TestCase):
             self.assertIn('docs/shared memory/projectbrief.md',inspected['shared_memory_paths'])
             self.assertFalse((repo/'memory-bank').exists());self.assertEqual(before[1:],self.state(w,repo,bank)[1:])
             self.assertTrue(list(Path(w.env['AGENT_MEMORY_STATE_HOME']).rglob('security-audit/*.json')))
+
+    def test_nested_bank_admission_receipts_replay_and_completed_cleanup_keep_exact_configured_prefix(self):
+        with World() as w:
+            repo,bank=self.fixture(w,'docs/shared memory')
+            (repo/'evidence.md').write_text('# Confirmed fixture correction\n\nKeep the retry cap conditional.\n')
+            helper=admission.AdmissionContract('test_user_correction_admits_small_record_and_history_automatically_without_git_changes')
+            helper.pack=self.pack
+            status=self.good(w,'scope_binding.py','status','--repo',repo)
+            helper.pid=status['project_id'];helper.actor=status['developer_id']
+            proposal=helper.prepared(w,repo);before=self.state(w,repo,bank)
+            w.env.update(AGENT_MEMORY_FAULT_STAGE='transaction-after-receipt',AGENT_MEMORY_FAULT_MODE='exit')
+            r,_=helper.apply(w,proposal)
+            w.env.pop('AGENT_MEMORY_FAULT_STAGE');w.env.pop('AGENT_MEMORY_FAULT_MODE');self.assertEqual(r.returncode,86)
+            unlock=self.good(w,'bank_writes.py','recover','--repo',repo)
+            self.good(w,'bank_writes.py','recover','--repo',repo,'--proposal',self.save(w,unlock,'unlock.json'))
+            receipts=[path for path in Path(w.env['AGENT_MEMORY_STATE_HOME']).rglob('*.json')
+                      if json.loads(path.read_text()).get('schema')=='agent-memory/transaction-receipt-v1']
+            self.assertEqual(len(receipts),1);path=receipts[0];original=path.read_bytes();value=json.loads(original)
+            self.assertEqual(value['bank_path'],str(bank))
+            self.assertTrue(all(item.startswith('docs/shared memory/') for item in value['changed_memory_paths']))
+            recovery=self.good(w,'bank_transactions.py','recover','--repo',repo,'--mode','finish')
+            value['changed_memory_paths']=[item.replace('docs/shared memory/','memory-bank/',1) for item in value['changed_memory_paths']]
+            path.write_text(json.dumps(value));current=self.state(w,repo,bank)
+            self.assertEqual(self.call(w,'bank_transactions.py','recover','--repo',repo,'--mode','finish',
+                                       '--proposal',self.save(w,recovery,'recover.json'))[0].returncode,1)
+            self.assertEqual(current,self.state(w,repo,bank));self.assertTrue((bank/'.agent-memory-transaction.md').exists())
+            path.write_bytes(original)
+            done=self.good(w,'bank_transactions.py','recover','--repo',repo,'--mode','finish',
+                           '--proposal',self.save(w,recovery,'recover.json'))
+            self.assertTrue(done['verified']);self.assertEqual(done['bank_path'],str(bank))
+            r,replay=helper.apply(w,proposal);self.assertEqual(r.returncode,0,replay);self.assertTrue(replay['admission_verified'])
+            self.assertEqual(replay['changed_memory_paths'],json.loads(original)['changed_memory_paths'])
+            self.assertEqual(before[1:],self.state(w,repo,bank)[1:]);self.assertFalse((repo/'memory-bank').exists())
 
     def test_configured_branch_or_remote_default_observation_never_uses_feature_branch_as_authority(self):
         with World() as w:

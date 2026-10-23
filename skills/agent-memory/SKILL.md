@@ -28,6 +28,9 @@ do not grant authority or establish that a lesson is true.
 A session MUST read existing applicable memory before proposing new durable
 learning. It MUST read [retrieval/GUIDE.md](retrieval/GUIDE.md) for project-bound
 file, record-ID and ordinary-text recall, including its hard selection gates.
+A session MUST read [assembly/GUIDE.md](assembly/GUIDE.md) when preparing bounded
+context for a harness, to preserve source labels and unresolved contradictions
+and qualify the exact text against its byte and measured token budgets.
 A session MUST read [comparison/GUIDE.md](comparison/GUIDE.md) before changing
 durable learning or landing it, to search/read existing matches and bind an
 explicit semantic judgment to those source versions.
@@ -68,6 +71,12 @@ scope or component, branch, worktree, task and session conditions. Unknown or
 mismatched conditions MUST NOT be silently widened into current guidance.
 
 ## Standalone lessons
+
+A session MUST follow [admission/GUIDE.md](admission/GUIDE.md) at natural turn
+boundaries to capture useful durable learning, assess actual evidence and admit
+small qualified records after fresh comparison. Routine qualified capture MUST
+NOT require per-record approval; proposals and unanswered suggestions MUST remain
+unconfirmed, and unsafe content MUST be quarantined outside shared guidance.
 
 A session MUST read [records/GUIDE.md](records/GUIDE.md) when a lesson needs
 typed provenance, validity, correction or revocation. Ordinary context prose

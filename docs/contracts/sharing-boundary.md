@@ -5,6 +5,11 @@ canonical Markdown to one repository and keeps AWA's work evidence and Vox's
 coordination separate. Local use requires neither service. There is no personal
 memory namespace or cross-repository exchange.
 
+The integrated admission contract retains its complete receipt schema and
+proposal bindings while resolving bank and changed-path prefixes through this
+same configuration. A public nested-bank crash/recovery/replay case refuses a
+substituted default-root path claim and preserves unrelated staged code.
+
 A shared resolver reads explicit local `agent-memory.bankRoot` and
 `agent-memory.authorityBranch` settings. Bank helpers use its default or configured
 root consistently; observed mutation scope pins the settings. Unsafe, ambiguous,
