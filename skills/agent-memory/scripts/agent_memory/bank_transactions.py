@@ -48,7 +48,7 @@ def files_at(bank):
 def proposal_value(prepared):
     from .scope_binding import context_value
     p = prepared.get("proposal", prepared) if isinstance(prepared, dict) else prepared
-    if (not isinstance(p, dict) or set(p) not in (FIELDS, FIELDS | {"initialization_evidence"}, FIELDS | {"admission_evidence"}) or p["schema"] != SCHEMA
+    if (not isinstance(p, dict) or set(p) not in (FIELDS, FIELDS | {"initialization_evidence"}, FIELDS | {"admission_evidence"}, FIELDS | {"governance_evidence"}) or p["schema"] != SCHEMA
             or not uuid_valid(p["operation_id"]) or not uuid_valid(p["project_id"])
             or p["operation"] not in writes.OPERATIONS or not isinstance(p["repo_root"], str)
             or not Path(p["repo_root"]).is_absolute() or str(Path(p["repo_root"]).resolve()) != p["repo_root"]):
@@ -57,6 +57,8 @@ def proposal_value(prepared):
         raise ContractError('Source initialization evidence belongs only to initialization')
     if 'admission_evidence' in p and p['operation'] != 'capture':
         raise ContractError('Admission evidence belongs only to its governed capture transaction')
+    if 'governance_evidence' in p and p['operation'] not in {'correct', 'supersede', 'revoke', 'forget'}:
+        raise ContractError('Governance evidence belongs only to its explicit lifecycle operation')
     contract.validate_files(p["files"])
     first_bank = p['operation'] == 'initialize' and p['observed_hashes'] == {}
     context_value(p['scope_context'], initialize=first_bank)
@@ -230,9 +232,9 @@ def receipt_value(path, p):
 
 
 def admission_recovery(p, mode, known):
-    if ('admission_evidence' in p and mode == 'finish'
+    if (('admission_evidence' in p or 'governance_evidence' in p) and mode == 'finish'
             and (known is None or known['outcome'] != 'finished')):
-        raise ContractError('Unfinished admission requires rollback, then fresh evidence and comparison; preserve the journal')
+        raise ContractError('Unfinished governed learning requires rollback, then fresh evidence and comparison; preserve the journal')
 
 
 def journal_value(raw, root, bank, operation_id, *, require_marker=True):
@@ -318,6 +320,9 @@ def validate_outcome(root, bank, desired, p, owner, marker, *, admission_sources
     if admission_sources and 'admission_evidence' in p and desired == p['files']:
         from .admission import check_sources
         check_sources(p, owner=owner, marker=marker)
+    if admission_sources and 'governance_evidence' in p and desired == p['files']:
+        from .governance import check_sources as check_governance_sources
+        check_governance_sources(p, owner=owner, marker=marker)
     if not desired and p['operation'] == 'initialize' and p['observed_hashes'] == {}:
         if contract.physical_paths(bank) or writes.hashes(bank):
             raise ContractError('Uninitialized rollback has an unexpected occupant; preserve it')
@@ -340,6 +345,10 @@ def apply(prepared):
         # A recorded outcome is read back by _apply; it never reapplies bytes.
         if not locations(*writes.bank_path(p['repo_root']), p['operation_id'])[1].exists():
             validate_admission(p)
+    if 'governance_evidence' in p:
+        from .governance import validate_transaction as validate_governance
+        if not locations(*writes.bank_path(p['repo_root']), p['operation_id'])[1].exists():
+            validate_governance(p)
     first_bank = p['operation'] == 'initialize' and p['observed_hashes'] == {}
     initializing = first_bank and not (repository_config.bank_path(p['repo_root']) / 'MEMORY.md').exists()
     pinned = {**p['scope_context'], 'initialization_only': initializing}
@@ -352,12 +361,20 @@ def apply(prepared):
     classes = ['external']
     if 'admission_evidence' in p:
         classes = [p['admission_evidence']['capture']['request']['source_class']]
+    if 'governance_evidence' in p:
+        classes = [p['governance_evidence']['request']['authority']['source_class']]
     if p['operation'] == 'initialize':
         evidence = p['initialization_evidence']['inventory']
         classes = ['assistant'] + (['verified-repository'] if evidence['sources'] else []) + (['tool'] if evidence['awa']['sources'] else [])
     def check(owner):
         require(p['repo_root'], p['project_id'], expected=context, owned_lock=owner, initialize=initializing)
-        if 'admission_evidence' in p:
+        if 'governance_evidence' in p:
+            from .governance import validate_transaction as validate_governance
+            if not locations(*writes.bank_path(p['repo_root']), p['operation_id'])[1].exists():
+                validate_governance(p, owned_lock=owner)
+            security.guarded_start(p['repo_root'], p['operation_id'], context,
+                {path: p['files'][path] for path in changed(p) if path in p['files']}, classes, action=p['operation'])
+        elif 'admission_evidence' in p:
             from .admission import validate_transaction as validate_admission
             if not locations(*writes.bank_path(p['repo_root']), p['operation_id'])[1].exists():
                 validate_admission(p, owned_lock=owner)
