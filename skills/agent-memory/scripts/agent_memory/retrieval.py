@@ -86,13 +86,13 @@ def match(request, candidate):
     return {'strategy': 'ordinary-text' if terms else 'current-inventory', 'score': score, 'matching_terms': terms}
 
 
-def retrieve(repo, request):
+def retrieve(repo, request, *, owned_lock=None):
     started = time.perf_counter()
     request_value(request)
     root, bank = writes.bank_path(repo)
-    selected_scope = scope_binding.require(root, request['project_id'])
+    selected_scope = scope_binding.require(root, request['project_id'], owned_lock=owned_lock)
     context, observed_git = observed_context(root, request['context'])
-    checked, observed = writes.snapshot(root)
+    checked, observed = writes.snapshot(root, owned_lock)
     project = checked['project_id']
     if project != request['project_id']:
         raise ContractError('Canonical project changed after scope resolution')
@@ -196,13 +196,13 @@ def retrieve(repo, request):
             continue
         results.append(candidate)
         used += size
-    scope_binding.require(root, project, expected=selected_scope)
+    scope_binding.require(root, project, expected=selected_scope, owned_lock=owned_lock)
     record_ids = sorted({item['record']['id'] for item in results if 'record' in item})
     audit = security.audit(root, str(uuid.uuid4()), 'retrieval', 'checked', selected_scope,
                            ['external'], record_ids=record_ids)
-    if writes.snapshot(root)[1] != observed or git_context(root) != observed_git:
+    if writes.snapshot(root, owned_lock)[1] != observed or git_context(root) != observed_git:
         raise ContractError('Bank or checkout context changed during recall; reread before use')
-    scope_binding.require(root, project, expected=selected_scope)
+    scope_binding.require(root, project, expected=selected_scope, owned_lock=owned_lock)
     return {'schema': 'agent-memory/retrieval-result-v1', 'project_id': project, 'results': results,
         'evaluated_at': now, 'context': context, 'scope_context': selected_scope,
         'bank_observation_sha256': digest(encoded({'project_id': project, 'sources': observed})),

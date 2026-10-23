@@ -82,6 +82,11 @@ small qualified records after fresh comparison. Routine qualified capture MUST
 NOT require per-record approval; proposals and unanswered suggestions MUST remain
 unconfirmed, and unsafe content MUST be quarantined outside shared guidance.
 
+A session MUST follow [consolidation/GUIDE.md](consolidation/GUIDE.md) at natural
+turn boundaries when comparison identifies equivalent learning or wording to
+tighten. It MUST preserve every distinct condition, evidence source and origin,
+retain useful history, and leave unresolved changes of meaning for clarification.
+
 A session MUST read [records/GUIDE.md](records/GUIDE.md) when a lesson needs
 typed provenance, validity, correction or revocation. Ordinary context prose
 does not need metadata on every paragraph. Record format validation MUST NOT
