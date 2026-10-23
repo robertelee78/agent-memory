@@ -269,3 +269,47 @@ class AdmissionContract(unittest.TestCase):
             before=self.state(w,repo,bank)
             self.assertEqual(self.call(w,'bank_transactions.py','recover','--repo',repo,'--mode','finish')[0].returncode,1)
             self.assertEqual(before,self.state(w,repo,bank));self.assertTrue((bank/'.agent-memory-transaction.md').exists())
+
+    def test_complete_receipt_schema_and_bindings_govern_cleanup_and_historical_replay(self):
+        with World() as w:
+            repo,bank=self.fixture(w);p=self.prepared(w,repo)
+            w.env.update(AGENT_MEMORY_FAULT_STAGE='transaction-after-receipt',AGENT_MEMORY_FAULT_MODE='exit')
+            r=w.run([sys.executable,'-I',self.pack/'scripts/admit_learning.py','apply','--proposal',self.save(w,p,'admission.json')],check=False)
+            w.env.pop('AGENT_MEMORY_FAULT_STAGE');w.env.pop('AGENT_MEMORY_FAULT_MODE');self.assertEqual(r.returncode,86)
+            unlock=self.good(w,'bank_writes.py','recover','--repo',repo)
+            self.good(w,'bank_writes.py','recover','--repo',repo,'--proposal',self.save(w,unlock,'unlock.json'))
+            paths=[path for path in Path(w.env['AGENT_MEMORY_STATE_HOME']).rglob('*.json')
+                   if json.loads(path.read_text()).get('schema')=='agent-memory/transaction-receipt-v1']
+            self.assertEqual(len(paths),1);path=paths[0];original=path.read_bytes();valid=json.loads(original)
+            recovery=self.good(w,'bank_transactions.py','recover','--repo',repo,'--mode','finish')
+            recovery_file=self.save(w,recovery,'completed-recovery.json')
+            variants=[]
+            for field,value in [('project_id',str(uuid.uuid4())),('project_id',True),
+                    ('changed_memory_paths',['code.py']),('changed_memory_paths',None),
+                    ('changed_memory_paths',valid['changed_memory_paths']*2),
+                    ('readback_at',None),('readback_at',True),('readback_at','2026-02-30T00:00:00Z'),
+                    ('readback_at','2026-01-01T00:00:00'),('verified',1),
+                    ('observed_hashes',[]),('resulting_hashes',True),('outcome',[]),
+                    ('unexpected_body','UNTRUSTED_RECEIPT_PAYLOAD_SENTINEL')]:
+                value_map=copy.deepcopy(valid);value_map[field]=value;variants.append(value_map)
+            for field in valid:
+                missing=copy.deepcopy(valid);missing.pop(field);variants.append(missing)
+            for value in variants:
+                with self.subTest(keys=list(value),readback=value.get('readback_at')):
+                    path.write_text(json.dumps(value));before=self.state(w,repo,bank)
+                    for args in [[],['--proposal',recovery_file]]:
+                        r,out=self.call(w,'bank_transactions.py','recover','--repo',repo,'--mode','finish',*args)
+                        self.assertEqual(r.returncode,1,out);self.assertFalse(out.get('verified',False))
+                        self.assertNotIn('UNTRUSTED_RECEIPT_PAYLOAD_SENTINEL',r.stdout+r.stderr)
+                    self.assertEqual(before,self.state(w,repo,bank));self.assertTrue((bank/'.agent-memory-transaction.md').exists())
+            path.write_bytes(original)
+            done=self.good(w,'bank_transactions.py','recover','--repo',repo,'--mode','finish','--proposal',recovery_file)
+            self.assertTrue(done['verified']);self.assertEqual(done['project_id'],self.pid)
+            self.assertFalse((bank/'.agent-memory-transaction.md').exists());before=self.state(w,repo,bank)
+            for value in variants:
+                path.write_text(json.dumps(value));r,out=self.apply(w,p)
+                self.assertEqual(r.returncode,1,out);self.assertFalse(out.get('verified',False))
+                self.assertNotIn('UNTRUSTED_RECEIPT_PAYLOAD_SENTINEL',r.stdout+r.stderr)
+                self.assertEqual(before,self.state(w,repo,bank))
+            path.write_bytes(original);r,done=self.apply(w,p);self.assertEqual(r.returncode,0,done)
+            self.assertTrue(done['verified']);self.assertTrue(done['admission_verified']);self.assertEqual(done['project_id'],self.pid)

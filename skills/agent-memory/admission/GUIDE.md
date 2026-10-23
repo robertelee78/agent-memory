@@ -138,7 +138,12 @@ supporting evidence changed. After rollback, the session MUST inspect evidence
 and compare again before a new admission.
 
 If the exact verified finished receipt exists, admission already reached its
-commit point. Transaction `recover --mode finish` MUST clean up that recorded
+commit point. Exact means the complete known receipt schema, proposal-bound
+project, operation, bank, hashes and changed-memory paths, actual boolean
+verification, and a required valid RFC3339 readback timestamp. Missing or
+unexpected fields MUST refuse before cleanup or historical replay; a valid
+timestamp does not establish source freshness or authentication.
+Transaction `recover --mode finish` MUST clean up that recorded
 outcome without replaying bytes or demanding fresh semantic/source evidence;
 rollback MUST NOT undo it. Later evidence changes do not change that historical
 receipt into a new admission. The current bank must still exactly match the

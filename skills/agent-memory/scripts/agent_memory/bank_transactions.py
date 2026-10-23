@@ -16,12 +16,15 @@ from . import bank_writes as writes
 from . import local_registry as storage
 from .developer_identity import digest, encoded, load, uuid_valid
 from .frontmatter import ContractError
+from .lifecycle import time_value
 
 MARKER = ".agent-memory-transaction.md"
 SCHEMA = "agent-memory/transaction-proposal-v1"
 FIELDS = {"schema", "operation_id", "operation", "repo_root", "project_id", "observed_hashes", "files", "scope_context"}
 RECOVERY_SCHEMA = "agent-memory/transaction-recovery-v1"
 RECOVERY_FIELDS = {"schema", "operation_id", "repo_root", "mode", "journal_sha256", "marker_sha256", "observed_hashes"}
+RECEIPT_FIELDS = {"schema", "operation_id", "request_sha256", "bank_path", "project_id", "observed_hashes",
+                  "resulting_hashes", "outcome", "changed_memory_paths", "readback_at", "verified"}
 
 
 def result(operation, **fields):
@@ -207,13 +210,21 @@ def receipt_value(path, p):
         raise ContractError("Transaction receipt must not be a symlink")
     r = load(path.read_bytes())
     final = file_hashes(p["files"])
-    if (not isinstance(r, dict) or r.get("schema") != "agent-memory/transaction-receipt-v1"
+    if (not isinstance(r, dict) or set(r) != RECEIPT_FIELDS
+            or r.get("schema") != "agent-memory/transaction-receipt-v1"
             or r.get("operation_id") != p["operation_id"] or r.get("request_sha256") != digest(encoded(p))
             or r.get("bank_path") != str(Path(p["repo_root"]) / contract.SPEC["x-bank-path"])
-            or r.get("outcome") not in {"finished", "rolled-back"} or r.get("verified") is not True
+            or r.get("project_id") != p["project_id"]
+            or not isinstance(r.get("outcome"), str) or r["outcome"] not in {"finished", "rolled-back"}
+            or r.get("verified") is not True
             or r.get("observed_hashes") != p["observed_hashes"]
-            or r.get("resulting_hashes") != (final if r.get("outcome") == "finished" else p["observed_hashes"])):
+            or r.get("resulting_hashes") != (final if r.get("outcome") == "finished" else p["observed_hashes"])
+            or r.get("changed_memory_paths") != [contract.SPEC["x-bank-path"] + "/" + path for path in changed(p)]):
         raise ContractError("Unknown receipt or reused operation ID; preserve it")
+    # The complete schema/bindings above make every UUID, path and hash equal
+    # to an already validated proposal-derived string/map/list. Timestamp
+    # format does not prove source freshness or authenticate a past assertion.
+    time_value(r["readback_at"])
     return r
 
 
