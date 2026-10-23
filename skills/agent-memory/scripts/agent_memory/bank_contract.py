@@ -10,6 +10,7 @@ import sys
 import unicodedata
 import uuid
 
+from . import repository_config
 from .frontmatter import ContractError, read, unique_object, write
 from .lifecycle import MODEL, time_value
 from .remote_identity import normalize
@@ -269,7 +270,7 @@ def validate_files(files):
 
 
 def validate(repo, *, owned_lock=None, owned_transaction=None):
-    bank = Path(repo).resolve() / SPEC["x-bank-path"]
+    bank = repository_config.bank_path(repo)
     bank_root(bank)
     if bank.is_symlink():
         raise ContractError("Bank directory must not be a symlink")

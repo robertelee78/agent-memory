@@ -11,6 +11,7 @@ import sys
 import tempfile
 import uuid
 
+from . import repository_config
 from . import bank_contract as contract
 from . import bank_writes as writes
 from . import local_registry as storage
@@ -213,13 +214,13 @@ def receipt_value(path, p):
     if (not isinstance(r, dict) or set(r) != RECEIPT_FIELDS
             or r.get("schema") != "agent-memory/transaction-receipt-v1"
             or r.get("operation_id") != p["operation_id"] or r.get("request_sha256") != digest(encoded(p))
-            or r.get("bank_path") != str(Path(p["repo_root"]) / contract.SPEC["x-bank-path"])
+            or r.get("bank_path") != str(repository_config.bank_path(p["repo_root"]))
             or r.get("project_id") != p["project_id"]
             or not isinstance(r.get("outcome"), str) or r["outcome"] not in {"finished", "rolled-back"}
             or r.get("verified") is not True
             or r.get("observed_hashes") != p["observed_hashes"]
             or r.get("resulting_hashes") != (final if r.get("outcome") == "finished" else p["observed_hashes"])
-            or r.get("changed_memory_paths") != [contract.SPEC["x-bank-path"] + "/" + path for path in changed(p)]):
+            or r.get("changed_memory_paths") != [repository_config.relative(p["repo_root"]) + "/" + path for path in changed(p)]):
         raise ContractError("Unknown receipt or reused operation ID; preserve it")
     # The complete schema/bindings above make every UUID, path and hash equal
     # to an already validated proposal-derived string/map/list. Timestamp
@@ -239,6 +240,9 @@ def journal_value(raw, root, bank, operation_id, *, require_marker=True):
     if not isinstance(j, dict) or set(j) != {"schema", "proposal", "base_files"} or j["schema"] != "agent-memory/transaction-journal-v1":
         raise ContractError("Unknown transaction journal; operator inspection required")
     p = proposal_value(j["proposal"])
+    pinned = p.get('scope_context')
+    if pinned is not None and pinned['repository_settings_sha256'] != digest(encoded(repository_config.settings(root))):
+        raise ContractError('Recovery configuration differs from the original bank operation; restore it before recovery')
     empty_base = p['operation'] == 'initialize' and p['observed_hashes'] == {} and j['base_files'] == {}
     checked = {'project_id': p['project_id']} if empty_base else contract.validate_files(j["base_files"])
     if (p["repo_root"] != str(root) or p["operation_id"] != operation_id
@@ -294,7 +298,7 @@ def converge(root, bank, p, base_files, journal, raw, receipt_path, mode, observ
         known = {"schema": "agent-memory/transaction-receipt-v1", "operation_id": p["operation_id"],
                  "request_sha256": digest(encoded(p)), "bank_path": str(bank), "project_id": checked["project_id"],
                  "observed_hashes": p["observed_hashes"], "resulting_hashes": expected, "outcome": outcome,
-                 "changed_memory_paths": [contract.SPEC["x-bank-path"] + "/" + path for path in changed(p)],
+                 "changed_memory_paths": [repository_config.relative(root) + "/" + path for path in changed(p)],
                  "readback_at": datetime.now(timezone.utc).isoformat(), "verified": True}
         writes.record(receipt_path, encoded(known))
     writes.fault("transaction-after-receipt")
@@ -332,12 +336,12 @@ def apply(prepared):
         from .initialization import validate_transaction
         validate_transaction(p)
     if 'admission_evidence' in p:
-        from .admission import validate_transaction
+        from .admission import validate_transaction as validate_admission
         # A recorded outcome is read back by _apply; it never reapplies bytes.
         if not locations(*writes.bank_path(p['repo_root']), p['operation_id'])[1].exists():
-            validate_transaction(p)
+            validate_admission(p)
     first_bank = p['operation'] == 'initialize' and p['observed_hashes'] == {}
-    initializing = first_bank and not (Path(p['repo_root']) / 'memory-bank/MEMORY.md').exists()
+    initializing = first_bank and not (repository_config.bank_path(p['repo_root']) / 'MEMORY.md').exists()
     pinned = {**p['scope_context'], 'initialization_only': initializing}
     context = require(p['repo_root'], p['project_id'], expected=pinned, initialize=initializing)
     from .project_identity import status as project_status
@@ -354,9 +358,9 @@ def apply(prepared):
     def check(owner):
         require(p['repo_root'], p['project_id'], expected=context, owned_lock=owner, initialize=initializing)
         if 'admission_evidence' in p:
-            from .admission import validate_transaction
+            from .admission import validate_transaction as validate_admission
             if not locations(*writes.bank_path(p['repo_root']), p['operation_id'])[1].exists():
-                validate_transaction(p, owned_lock=owner)
+                validate_admission(p, owned_lock=owner)
             security.guarded_start(p['repo_root'], p['operation_id'], context,
                 {path: p['files'][path] for path in changed(p) if path in p['files']}, classes, action='capture')
         elif p['operation'] == 'initialize':

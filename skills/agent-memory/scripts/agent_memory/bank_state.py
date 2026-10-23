@@ -10,6 +10,7 @@ import shutil
 import subprocess
 import sys
 
+from . import repository_config
 from . import bank_contract as contract
 from . import bank_writes as writes
 from .frontmatter import ContractError
@@ -38,10 +39,10 @@ def git_context(root, observed):
         oid = head.stdout.decode('ascii').strip() if head.returncode == 0 else None
         if oid is not None and re.fullmatch(r'(?:[0-9a-f]{40}|[0-9a-f]{64})', oid) is None:
             raise ContractError('Invalid Git context reference')
-        index = run('ls-files', '--stage', '-z', '--', contract.SPEC['x-bank-path'])
+        index = run('ls-files', '--stage', '-z', '--', repository_config.relative(root))
         if index.returncode:
             return {'status': 'unavailable', 'reason': 'Git index could not be inspected; no Git audit claim'}
-        prefix = contract.SPEC['x-bank-path'] + '/'
+        prefix = repository_config.relative(root) + '/'
         entries = []
         for record in index.stdout.split(b'\0'):
             if not record:

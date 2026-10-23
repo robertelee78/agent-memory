@@ -10,6 +10,7 @@ import sys
 import tempfile
 import uuid
 
+from . import repository_config
 from . import bank_writes as writes
 from . import local_registry as storage
 from . import scope_binding as identity
@@ -71,7 +72,7 @@ def audit(repo, operation_id, category, phase, context, source_classes, reasons=
             or not uuid_valid(context.get('project_id'))):
         raise ContractError('Audit requires checked attribution and project identifiers')
     root = Path(repo).resolve()
-    operations, _ = writes.state_paths(root, root / 'memory-bank', operation_id)
+    operations, _ = writes.state_paths(root, repository_config.bank_path(root), operation_id)
     directory = operations.parent / 'security-audit'
     if directory.is_symlink() or (directory.exists() and not directory.is_dir()):
         raise ContractError('Security audit location must remain a canonical private directory')
@@ -142,7 +143,7 @@ def repository_source(root, evidence):
     relative = Path(evidence['path'])
     if (relative.is_absolute() or relative.as_posix() != evidence['path'] or not relative.parts
             or any(part in {'.', '..'} or part.startswith('.') for part in relative.parts)
-            or relative.parts[0] == 'memory-bank' or any(ord(c) < 32 for c in evidence['path'])):
+            or relative.is_relative_to(repository_config.relative(root)) or any(ord(c) < 32 for c in evidence['path'])):
         raise ContractError('Repository evidence must be canonical local source, not memory or private metadata')
     target = root / relative
     if any(part.is_symlink() for part in (target, *list(target.parents)[:len(relative.parts)-1])):
