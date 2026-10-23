@@ -15,6 +15,7 @@
     {"name": "bank-transactions", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_bank_transactions.py"},
     {"name": "tombstones", "layer": "bank", "scope": "v0.0.1", "path": "tests/contracts/test_tombstones.py"},
     {"name": "offline-skill", "layer": "pack", "scope": "v0.0.1", "path": "tests/contracts/test_offline_skill.py"},
+    {"name": "independent-local-bank", "layer": "bank", "scope": "v0.0.1", "path": "tests/contracts/test_independent_local_bank.py"},
     {"name": "scope-policy", "layer": "bank", "scope": "v0.0.1", "path": "tests/contracts/test_scope_policy.py"},
     {"name": "authority-policy", "layer": "bank", "scope": "v0.0.1", "path": "tests/contracts/test_authority_policy.py"},
     {"name": "current-bank", "layer": "bank", "scope": "v0.0.1", "path": "tests/contracts/test_current_bank.py"},
