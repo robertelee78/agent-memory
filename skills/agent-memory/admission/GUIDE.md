@@ -125,6 +125,14 @@ silently omit a route or drop an older lesson to make room.
 
 ## Outcomes, interruptions and sharing
 
+Known `governance-required` scope corrections and explicitly resolved stronger
+corrections MUST follow [governance](../governance/GUIDE.md) with the same eligible
+capture and fresh comparison. A consumed capture ID remains linked to its
+canonical source/owner even when inactive bodies were compacted; it MUST NOT be
+reclassified as novel merely because its former text no longer matches a query.
+Revoked or deleted cached learning MUST NOT be relabeled under a new ID to bypass
+the canonical invalidation rules. Actual new evidence uses the governed workflow.
+
 An apply receipt requires `verified: true`, `outcome: finished` and
 `admission_verified: true`. A retry with the exact operation ID reads its existing
 outcome without replaying over newer edits. `still_current: false` means historical

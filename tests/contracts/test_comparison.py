@@ -91,6 +91,24 @@ class ComparisonContract(unittest.TestCase):
             self.assertEqual(self.check(w,repo,request,review['proof'])[0].returncode,0)
             self.assertEqual(before,self.state(w,repo,bank))
 
+    def test_exact_body_scope_narrowing_routes_to_governance_without_claiming_a_contradiction(self):
+        with World() as w:
+            repo, bank = self.fixture(w);old, path = self.add(bank, 'older-policy')
+            candidate = copy.deepcopy(old);candidate['conditions'] = {'branch': 'older/release'}
+            request = self.candidate();request['candidate'] = {'metadata': candidate, 'body': unpack((bank / path).read_text())[1]}
+            request['read_paths'] = [path]
+            observed = self.inspect(w, repo, request);before = self.state(w, repo, bank)
+            r, reviewed = self.review(w, repo, request, self.judgment(observed, 'scope-correction'))
+            self.assertEqual(r.returncode, 0, reviewed);self.assertEqual(reviewed['disposition'], 'governance-required')
+            self.assertEqual(reviewed['disputed_paths'], []);self.assertEqual(reviewed['proof']['targets'][0]['required_preserved_metadata'], old)
+            value = {'comparison_request': request, 'comparison_proof': reviewed['proof'], 'capture': None, 'context': {}}
+            r, pending = self.call(w, 'consolidate_learning.py', 'preview', '--repo', repo, '--input', self.save(w, value))
+            self.assertEqual(r.returncode, 0, pending);self.assertIsNone(pending['proposal'])
+            self.assertEqual(pending['disposition'], 'governance-required');self.assertEqual(before, self.state(w, repo, bank))
+            changed = copy.deepcopy(request);changed['candidate']['body'] += '\nA different claim is not scope-only maintenance.\n'
+            observed = self.inspect(w, repo, changed)
+            self.assertEqual(self.review(w, repo, changed, self.judgment(observed, 'scope-correction'))[0].returncode, 1)
+
     def test_similar_words_for_distinct_knowledge_keep_separate_stable_identity(self):
         with World() as w:
             repo,bank=self.fixture(w);old,path=self.add(bank,'attempt-cap');request=self.candidate('# Retry policy\n\nThe deadline is thirty seconds, independent of the attempt cap.\n')

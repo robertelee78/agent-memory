@@ -208,7 +208,7 @@ def build(base, evidence, operation_id, plan, captured):
             files[path] = write(inactive) + old_body
             additions.append(route(path, 'Previous exact learning version and origin', inactive))
         elif source is provenance:
-            path = 'history/sources/' + provenance['id'] + '.md'
+            path = records.captured_source_path(captured_metadata['id'], provenance['id'])
             if path in base:raise ContractError('Do not replace existing captured-source provenance')
             files[path] = write(inactive) + captured['request']['candidate']['body']
             additions.append(route(path, 'Captured source provenance', inactive))

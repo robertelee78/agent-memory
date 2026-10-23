@@ -54,6 +54,11 @@ The [consolidation contract](../contracts/consolidation.md) covers stable-ID
 deduplication, complete source provenance, convergence, distinct conditions,
 conflict deferral, terminal invalidation, nested routing and crash recovery.
 
+The [governance contract](../contracts/governance.md) exercises correction,
+supersession, revocation, real expiry, retention, explicit erasure and stronger
+reactivation, including retained older scope, consumed-capture invalidation,
+source changes, complete history removal, and interrupted receipt recovery.
+
 The [context assembly contract](../contracts/assembly.md) adds complete metadata,
 type diversity, duplicate provenance, byte and externally measured token budgets,
 and indivisible unresolved conflict groups through the copied portable CLI.
