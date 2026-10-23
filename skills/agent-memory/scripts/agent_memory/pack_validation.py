@@ -301,7 +301,10 @@ def validate(pack):
         for sentence in sentences:
             if re.search(r'\b(?:MUST|SHALL)\s+(?:always\s+)?(?:read|load|open|preload|follow)\s+(?:all|every|the (?:whole|entire))\b', sentence):
                 raise Invalid('loading', path, 'Unconditional whole-tree loading is forbidden')
-            if re.search(r'\b(?:when|if|unless|before|after|only|for|at|selected)\b', sentence, re.I):
+            # Bare "for" can introduce a purpose, not a condition. A leading
+            # qualified/eligible state clause is distinct from "for completeness".
+            if (re.search(r'\b(?:when|if|unless|before|after|only|at|selected)\b', sentence, re.I)
+                    or re.match(r'^\s*For\s+(?:qualified|eligible)\b', sentence, re.I)):
                 continue
             for match in re.finditer(r'\b(?:MUST|SHALL)\s+(?:first\s+)?(?:read|load|open|follow)(?: and follow)?\s+(?:the\s+)?GUIDELINK(\d+)', sentence):
                 dest, _ = destination(path, targets[int(match[1])], files)
@@ -353,7 +356,7 @@ def validate(pack):
         if path in complete:
             return
         visiting.add(path)
-        for child in mandatory[path]:
+        for child in sorted(mandatory[path]):
             visit(child)
         visiting.remove(path); complete.add(path)
     for path in mandatory:

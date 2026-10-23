@@ -44,7 +44,7 @@ MUST NOT be treated as absent. Other-bank or stale comparison evidence refuses.
 
 For existing wording alone, the candidate metadata MUST be the complete unchanged
 metadata of the existing target chosen to retain its stable ID; only the body
-proposes new wording. For a new duplicate observation, the session MUST first
+proposes new wording. When there is a new duplicate observation, the session MUST first
 follow [admission](../admission/GUIDE.md) to capture its actual evidence and origin,
 then compare that exact captured candidate. An unconfirmed or procedural capture
 MUST remain pending its separate review or explicit procedure promotion.

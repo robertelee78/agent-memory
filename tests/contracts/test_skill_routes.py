@@ -108,6 +108,7 @@ class SkillRouteContract(unittest.TestCase):
         with World() as world:
             pack = self.copy(world)
             self.append(pack/'capture/GUIDE.md', '\nA session MUST read [checkpoint](../checkpoint/GUIDE.md) when checkpointing.\n')
+            self.append(pack/'capture/GUIDE.md', '\nFor qualified duplicate records, a session MUST read [checkpoint](../checkpoint/GUIDE.md).\n')
             self.assertTrue(self.check(world, pack)['valid'])
             self.append(pack/'capture/GUIDE.md', '\nA session MUST read [checkpoint](../checkpoint/GUIDE.md).\n')
             value = self.check(world, pack)
@@ -123,6 +124,20 @@ class SkillRouteContract(unittest.TestCase):
             self.append(pack/'SKILL.md', '\n[real broken](#absent)\n')
             value = self.check(world, pack)
             self.assertFalse(value['valid']); self.assertEqual(value['issues'][0]['code'], 'anchor')
+
+    def test_purpose_clauses_cannot_hide_an_unconditional_loading_cycle(self):
+        # Actual independently reproduced false green on c796dfa, not a
+        # hypothetical English-parser test. #15 rejection and source binding:
+        # https://github.com/robertelee78/agent-memory/issues/15#issuecomment-6373996736
+        for purpose in (' for completeness', ' for complete context', '\nfor completeness',
+                        ' to complete this operation'):
+            with self.subTest(purpose=purpose), World() as world:
+                pack = self.copy(world)
+                self.append(pack/'capture/GUIDE.md',
+                            '\nA session MUST read [checkpoint](../checkpoint/GUIDE.md)' + purpose + '.\n')
+                value = self.check(world, pack)
+                self.assertFalse(value['valid'], purpose)
+                self.assertEqual(value['issues'][0]['code'], 'loading-cycle')
 
     def test_internal_symlink_is_refused_without_reading_its_target(self):
         with World() as world:

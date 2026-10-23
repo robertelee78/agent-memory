@@ -17,8 +17,9 @@ accept receipt paths with that default prefix. The full
 does not weaken project, operation, hash or interruption validation.
 
 
-A session MUST read [recovery/GUIDE.md](recovery/GUIDE.md) for fresh remote
-observations, lost-response readback, cursor loss and deletion-aware merge plans.
+When obtaining fresh remote observations, reading back a lost response,
+recovering from cursor loss or planning deletion-aware merges, a session MUST
+read [recovery/GUIDE.md](recovery/GUIDE.md).
 These recovery primitives do not themselves publish or refresh canonical memory.
 
 A session MUST follow [publication/GUIDE.md](publication/GUIDE.md) at a natural
