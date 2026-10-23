@@ -23,6 +23,8 @@ def inspect(repo):
         raise ContractError('Sharing path inventory exceeds its bounded command manifest')
     project = scope_binding.project.status(root)
     remote = project['evidence']['authority_name']
+    if remote:
+        repository_config.safe_label(remote)
     configured = configuration['authority_branch']
     remote_head = git(root, 'symbolic-ref', '--quiet', 'refs/remotes/' + remote + '/HEAD', optional=True) if remote else None
     branch_prefix = 'refs/remotes/' + remote + '/' if remote else None

@@ -278,6 +278,9 @@ class SharingBoundaryContract(unittest.TestCase):
             repo,bank=self.fixture(w,'docs/shared memory');before=self.state(w,repo,bank)
             w.git('config','--local','--unset','agent-memory.bankRoot',cwd=repo)
             w.git('rm','-r','--cached','--','docs/shared memory',cwd=repo)
+            # Remove committed ownership too: this is genuinely ignored-only
+            # memory, not a pending index removal of a known committed bank.
+            w.git('commit','-m','Fixture remove bank from current commit',cwd=repo)
             (repo/'.gitignore').write_text('docs/shared memory/\n')
             for helper,args in [('initialize.py',('inspect',)),('scope_binding.py',('status',))]:
                 r,v=self.call(w,helper,*args,'--repo',repo)
@@ -302,3 +305,51 @@ class SharingBoundaryContract(unittest.TestCase):
                 path=repo/('docs/sample-'+str(n));path.mkdir();(path/'MEMORY.md').write_text('# Ordinary documentation\n')
             r,v=self.call(w,'initialize.py','inspect','--repo',repo)
             self.assertEqual(r.returncode,1);self.assertNotIn('sources',v);self.assertFalse((repo/'memory-bank').exists())
+
+    def test_damaged_working_or_indexed_router_cannot_hide_committed_bank_ownership(self):
+        for staged in (False,True):
+            for damage in ('empty','removed-schema','other-schema'):
+                with self.subTest(staged=staged,damage=damage),World() as w:
+                    repo,bank=self.fixture(w,'docs/shared memory')
+                    w.git('config','--local','--unset','agent-memory.bankRoot',cwd=repo)
+                    path=bank/'MEMORY.md';original=path.read_text()
+                    if damage=='empty':path.write_text('')
+                    elif damage=='removed-schema':path.write_text('\n'.join(line for line in original.splitlines() if not line.startswith('schema:'))+'\n')
+                    else:path.write_text(original.replace('agent-memory/v1','not-agent-memory/v1'))
+                    if staged:w.git('add','--','docs/shared memory/MEMORY.md',cwd=repo)
+                    before=self.state(w,repo,bank)
+                    r,inventory=self.call(w,'initialize.py','inspect','--repo',repo)
+                    self.assertEqual(r.returncode,0,inventory);self.assertEqual(inventory['bank_state'],'needs-inspection')
+                    self.assertFalse(any(s['ref'].startswith('docs/shared memory/') for s in inventory['sources']))
+                    review={'inventory':inventory,'existing_memory_reviewed':True,'claims':[],'questions':[]}
+                    r,v=self.call(w,'initialize.py','preview','--repo',repo,'--review',self.save(w,review))
+                    self.assertEqual(r.returncode,1);self.assertNotIn('proposal',v)
+                    self.assertFalse((repo/'memory-bank').exists());self.assertEqual(before,self.state(w,repo,bank))
+
+    def test_secret_shaped_selected_remote_is_refused_without_eligibility_or_echo(self):
+        with World() as w:
+            repo,bank=self.fixture(w);label='password=REMOTE_LABEL_SECRET'
+            w.git('remote','rename','origin',label,cwd=repo)
+            w.git('config','--local','agent-memory.authorityRemote',label,cwd=repo)
+            p=self.good(w,'scope_binding.py','preview','--repo',repo,'--action','rebind',
+                        '--reason','Explicit same-authority remote label change')
+            self.good(w,'scope_binding.py','apply','--proposal',self.save(w,p))
+            before=self.state(w,repo,bank)
+            r,v=self.call(w,'sharing_boundary.py','--repo',repo)
+            self.assertEqual(r.returncode,1);self.assertNotIn('REMOTE_LABEL_SECRET',r.stdout+r.stderr)
+            self.assertNotIn('eligible_memory_paths',v);self.assertNotIn('local_boundary_ready',v)
+            self.assertEqual(before,self.state(w,repo,bank))
+
+    def test_damaged_untracked_context_bank_is_unknown_not_documentation_for_a_replacement(self):
+        for ignored in (False,True):
+            with self.subTest(ignored=ignored),World() as w:
+                repo,bank=self.fixture(w,'docs/shared memory')
+                w.git('config','--local','--unset','agent-memory.bankRoot',cwd=repo)
+                w.git('rm','-r','--cached','--','docs/shared memory',cwd=repo)
+                w.git('commit','-m','Fixture bank has no current Git ownership',cwd=repo)
+                (bank/'MEMORY.md').write_text('')
+                if ignored:(repo/'.gitignore').write_text('docs/shared memory/\n')
+                before=self.state(w,repo,bank)
+                r,v=self.call(w,'initialize.py','inspect','--repo',repo)
+                self.assertEqual(r.returncode,1);self.assertNotIn('sources',v);self.assertFalse((repo/'memory-bank').exists())
+                self.assertEqual(before,self.state(w,repo,bank))

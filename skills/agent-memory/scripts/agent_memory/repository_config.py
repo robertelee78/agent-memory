@@ -84,33 +84,68 @@ def router_bytes(root, relative):
     if target.is_file():
         with target.open('rb') as stream:
             return stream.read(16385)
-    # A pending deletion cannot hide a tracked bank from location discovery.
-    value = git(root, 'show', '--no-textconv', ':' + relative.as_posix(), optional=True)
+    return None
+
+
+def object_router_bytes(root, expression, cache):
+    # Resolve one immutable object before checking its size. Never run filters
+    # or load an unbounded Git blob merely to establish possible ownership.
+    oid = git(root, 'rev-parse', '--verify', expression, optional=True)
+    if oid is None or not re.fullmatch('[0-9a-f]{40}|[0-9a-f]{64}', oid):
+        raise ContractError('Tracked memory locator is unavailable; do not infer absence')
+    if oid in cache:
+        return cache[oid]
+    size = git(root, 'cat-file', '-s', oid, optional=True)
+    if size is None or not re.fullmatch('[0-9]+', size) or int(size) > 16384:
+        raise ContractError('Tracked possible memory exceeds its reader or is unavailable; inspect before initialization')
+    value = git(root, 'cat-file', 'blob', oid, optional=True)
     if value is None:
-        raise ContractError('Tracked memory locator is unavailable; do not infer an empty repository')
-    return value.encode('utf-8')
+        raise ContractError('Cannot read the tracked memory locator; do not infer absence')
+    raw = os.fsencode(value)
+    # The common text Git adapter removes one final LF. Restore it using the
+    # immutable blob's exact byte size rather than normalize source content.
+    if len(raw) + 1 == int(size):
+        raw += b'\n'
+    if len(raw) != int(size):
+        raise ContractError('Tracked memory locator bytes are incomplete; do not infer absence')
+    cache[oid] = raw
+    return raw
 
 
 def git_roots(root):
     listed = git(root, 'ls-files', '--cached', '--others', '--exclude-standard', '-z', optional=True)
-    if listed is None:
+    indexed = git(root, 'ls-files', '--cached', '-z', optional=True)
+    if listed is None or indexed is None:
         raise ContractError('Repository memory inventory is unavailable; do not infer absence')
-    paths = sorted({PurePosixPath(path) for path in listed.split('\0') if path
+    head = git(root, 'rev-parse', '--verify', 'HEAD', optional=True)
+    committed = git(root, 'ls-tree', '-r', '--name-only', '-z', head) if head else ''
+    indexed_paths = set(indexed.split('\0'))
+    committed_paths = set(committed.split('\0'))
+    paths = sorted({PurePosixPath(path) for path in [*listed.split('\0'), *committed_paths] if path
                     and PurePosixPath(path).name.casefold() == 'memory.md'
                     and not any(part.startswith('.') for part in PurePosixPath(path).parts)})
     if len(paths) > MAX_ROUTERS:
         raise ContractError('Memory locator inventory exceeds its bound; incomplete discovery cannot prove absence')
-    roots = set()
+    roots, cache = set(), {}
     for path in paths:
         if path.is_absolute() or '..' in path.parts:
             raise ContractError('Invalid possible repository memory locator')
-        if router_kind(router_bytes(root, path)):
+        raw = router_bytes(root, path)
+        versions = [raw] if raw is not None else []
+        if path.as_posix() in indexed_paths:
+            versions.append(object_router_bytes(root, ':' + path.as_posix(), cache))
+        if path.as_posix() in committed_paths:
+            versions.append(object_router_bytes(root, head + ':' + path.as_posix(), cache))
+        if not versions:
+            raise ContractError('Possible memory disappeared during discovery; do not infer absence')
+        if any(router_kind(version) for version in versions):
             roots.add(path.parent.as_posix())
     return roots
 
 
 def physical_others(root, selected):
     """Only when no selected router is present: include ignored/untracked banks."""
+    from .bank_contract import CONTEXTS
     examined, routers = 0, 0
     def unreadable(_):
         raise ContractError('Repository discovery is incomplete; do not create a bank from an unreadable inventory')
@@ -123,6 +158,10 @@ def physical_others(root, selected):
         examined += len(names) + len(files)
         if examined > MAX_DISCOVERY_ENTRIES:
             raise ContractError('Physical memory discovery exceeds its bound; absence remains unknown')
+        contexts = set(files) & set(CONTEXTS)
+        has_router = any(name.casefold() == 'memory.md' for name in files)
+        if directory != selected and contexts and (has_router or len(contexts) >= 2):
+            raise ContractError('Possible existing context bank needs explicit inspection; do not create a replacement')
         names[:] = sorted(name for name in names if not name.startswith('.')
                           and not (directory / name).is_symlink() and directory / name != selected)
         for name in files:

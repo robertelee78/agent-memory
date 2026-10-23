@@ -28,15 +28,24 @@ a location, not a new identity or source authority. Project and developer
 identity still require the [identity protocol](../identity/GUIDE.md); a new
 machine MUST explicitly bind the existing project rather than create another.
 
-Discovery inspects at most 64 possible router paths. A missing working router
-MUST NOT conceal its indexed copy. When the selected router is absent, a
+Discovery inspects at most 64 possible router paths across working files, the
+index and the current commit. A missing, emptied or damaged working/indexed
+router MUST NOT conceal committed bank ownership. Git objects are read without
+filters or networking, with a 16 KiB per-object bound; missing/oversized objects
+require inspection rather than establish absence. Discovery locates a bank;
+it MUST NOT restore or overwrite the damaged bytes. A staged location move
+requires explicit reconciliation of the existing Git locations before mediated
+initialization. When the selected router is absent, a
 bounded physical inventory also checks for ignored banks; it MUST NOT adopt
-them automatically. Unknown or damaged recognized routers, competing banks,
+them automatically. A router beside canonical context filenames, or multiple
+canonical contexts without a router, requires explicit inspection even when
+the locator is damaged and no current Git ownership remains. Unknown or damaged recognized routers, competing banks,
 unreadable inventories and exceeded bounds MUST stop initialization for review,
 not establish absence. Hidden directories and independent nested repositories
 are outside this inventory. A session MUST explicitly inspect any known bank
 there before choosing a location. Boundary labels, including the whole bank
-prefix, MUST pass listed safety checks before they can appear in output.
+prefix, authority branch and selected remote name, MUST pass listed safety
+checks before they can appear in eligibility output.
 
 Changing a setting does not move, merge or delete memory. A session MUST
 preserve the original bank and resolve a move before mediated use; it MUST NOT
