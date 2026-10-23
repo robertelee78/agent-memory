@@ -9,7 +9,7 @@ import argparse
 from datetime import datetime, timezone
 import json
 import os
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import re
 import subprocess
 import sys
@@ -25,10 +25,11 @@ from .identity_git import git
 MAX_FILES = 256
 MAX_BYTES = 1048576
 MAX_FILE = 16384
+MAX_LOCATOR_TREE_BYTES = 16 * 1024 * 1024
 MISSING = object()
 
 
-def command(repo, *args, network=False, limit=MAX_BYTES):
+def command(repo, *args, network=False, limit=MAX_BYTES, glob_pathspecs=False):
     # Never let ambient worktree/index/object redirection alter the repository.
     allowed = {'GIT_CONFIG_NOSYSTEM', 'GIT_CONFIG_SYSTEM', 'GIT_CONFIG_GLOBAL',
                'GIT_TERMINAL_PROMPT', 'GIT_ASKPASS', 'GIT_ALLOW_PROTOCOL'}
@@ -37,7 +38,7 @@ def command(repo, *args, network=False, limit=MAX_BYTES):
                GIT_TRACE2='0', GIT_TRACE2_EVENT='0', GIT_TRACE2_PERF='0', GIT_TERMINAL_PROMPT='0')
     if not network:
         env['GIT_ALLOW_PROTOCOL'] = ''
-    argv = ['git', '--no-pager', '--no-replace-objects', '--literal-pathspecs',
+    argv = ['git', '--no-pager', '--no-replace-objects', '--glob-pathspecs' if glob_pathspecs else '--literal-pathspecs',
             '-c', 'core.fsmonitor=false', '-c', 'core.untrackedCache=false',
             '-c', 'core.hooksPath=/dev/null', '-C', str(repo), *args]
     # Spool output instead of allocating an unbounded remote/tree response.
@@ -66,11 +67,13 @@ def commit(repo, value):
     return value
 
 
-def bounded(files):
+def bounded(files, *, allow_absent=False):
     if (not isinstance(files, dict) or len(files) > MAX_FILES or
             any(not isinstance(v, str) or len(v.encode()) > MAX_FILE for v in files.values()) or
             sum(len(v.encode()) for v in files.values()) > MAX_BYTES):
         raise ContractError('Complete memory snapshot exceeds recovery bounds; review without truncation')
+    if files == {} and allow_absent:
+        return {'project_id': None, 'entries': [], 'routes': []}
     checked = bank.validate_files(files)
     for path, body in files.items():
         if security.scan(path + '\n' + body)['reasons']:
@@ -98,6 +101,12 @@ def tree(repo, revision, prefix):
         if size > MAX_FILE:
             raise ContractError('Shared memory object exceeds bounded review')
         files[path] = command(repo, 'cat-file', 'blob', blob, limit=MAX_FILE)
+    if not files:
+        # Bootstrap means no bank has ever occupied this prefix on authority.
+        # A removed bank is not permission to discard its invalidation history.
+        if command(repo, 'rev-list', '--max-count=1', revision, '--', prefix).strip():
+            raise ContractError('Previously occupied shared bank is absent; inspect its history before initialization')
+        return files
     bounded(files)
     return files
 
@@ -115,6 +124,68 @@ def server(repo, remote, branch):
     if default != branch or observed is None:
         raise ContractError('Configured authority differs from the server default or is unresolved')
     return observed
+
+
+def authority_bank_location(repo, revision, selected):
+    """Inventory actual authority locators, including a peer's different root.
+
+    Looking only under the stale checkout's configured prefix cannot prove that
+    authority has no bank. Discovery is read-only and bounded independently of
+    the much smaller canonical-bank payload.
+    """
+    output = command(repo, 'ls-tree', '-rz', '--full-tree', revision, limit=MAX_LOCATOR_TREE_BYTES)
+    locators, contexts, entries = [], {}, 0
+    for item in output.split('\0'):
+        if not item:
+            continue
+        entries += 1
+        if entries > repository_config.MAX_DISCOVERY_ENTRIES:
+            raise ContractError('Authority locator inventory exceeds its complete metadata bound')
+        header, name = item.split('\t', 1); mode, kind, _ = header.split()
+        path = PurePosixPath(name)
+        if path.is_absolute() or '..' in path.parts:
+            raise ContractError('Unreviewable authority path inventory')
+        if any(part.startswith('.') for part in path.parts):
+            continue
+        parent = path.parent.as_posix()
+        if path.name in bank.CONTEXTS:
+            contexts.setdefault(parent, set()).add(path.name)
+        if path.name.casefold() == 'memory.md':
+            if mode != '100644' or kind != 'blob':
+                raise ContractError('Nonordinary authority memory locator requires inspection')
+            locators.append(path)
+            if len(locators) > repository_config.MAX_ROUTERS:
+                raise ContractError('Authority has too many possible memory locators for complete discovery')
+    cache, recognized = {}, set()
+    for path in locators:
+        raw = repository_config.object_router_bytes(repo, revision+':'+path.as_posix(), cache)
+        if repository_config.router_kind(raw):
+            if path.name != 'MEMORY.md':
+                raise ContractError('Authority memory locator spelling requires explicit reconciliation')
+            recognized.add(path.parent.as_posix())
+    if recognized - {selected}:
+        raise ContractError('Authority already contains a bank at another location; explicitly reconcile identity and location')
+    possible = {path.parent.as_posix() for path in locators}
+    if any(parent != selected and (len(names) >= 2 or parent in possible) for parent, names in contexts.items()):
+        raise ContractError('Possible damaged authority bank requires inspection before declaring absence')
+
+
+def first_bank_history(repo, head):
+    # Bound locator-changing mainline commits, not total repository age. A
+    # years-old repository with no bank history can still initialize normally.
+    # Side proposals whose bank was discarded by a mainline merge do not count.
+    revisions = command(repo, 'rev-list', '--first-parent', '--max-count=129', head, '--',
+                        ':(glob,icase)**/MEMORY.md', glob_pathspecs=True).splitlines()
+    if len(revisions) > 128:
+        raise ContractError('Historical authority locator changes exceed the complete review bound')
+    seen = set()
+    for revision in revisions:
+        parents = command(repo, 'rev-list', '--parents', '-n', '1', revision).strip().split()[1:2]
+        for snapshot in [revision, *parents]:
+            if snapshot in seen:
+                continue
+            seen.add(snapshot)
+            authority_bank_location(repo, snapshot, None)
 
 
 def observe(repo):
@@ -136,10 +207,13 @@ def observe(repo):
         fetched = git(root, 'rev-parse', '--verify', ref)
         if fetched != head or server(root, remote, branch) != head:
             raise ContractError('Authority advanced during observation; reconcile against a new observation')
+        authority_bank_location(root, head, boundary['bank_root'])
         files = tree(root, head, boundary['bank_root'])
+        if not files:
+            first_bank_history(root, head)
         local_router = bank.parse_router((root / boundary['bank_root'] / 'MEMORY.md').read_text())[0]
-        shared_router = bank.parse_router(files['MEMORY.md'])[0]
-        if (bounded(files)['project_id'] != context['project_id'] or
+        shared_router = bank.parse_router(files['MEMORY.md'])[0] if files else None
+        if files and (bounded(files)['project_id'] != context['project_id'] or
                 shared_router.get('canonical-remote') != local_router.get('canonical-remote')):
             raise ContractError('Shared authority belongs to a different project')
         scope_binding.require(root, context['project_id'], expected=context)
@@ -149,7 +223,7 @@ def observe(repo):
                 'authority_remote': remote, 'authority_branch': branch, 'authority_head': head,
                 'local_head': local_head, 'scope_context': context,
                 'local_bank_sha256': boundary['bank_observation_sha256'],
-                'landed_hashes': transactions.file_hashes(files),
+                'landed_hashes': transactions.file_hashes(files), 'shared_bank_present': bool(files),
                 'observed_at': datetime.now(timezone.utc).isoformat(), 'remote_freshness_verified': True}
     finally:
         # Objects remain addressable by immutable IDs, even if the cursor/ref is lost.
@@ -209,8 +283,8 @@ def index_parts(path, text):
 
 
 def merge_files(base, local, landed):
-    checks = [bounded(x) for x in (base, local, landed)]
-    if len({x['project_id'] for x in checks}) != 1:
+    checks = [bounded(x, allow_absent=True) for x in (base, local, landed)]
+    if len({x['project_id'] for x in checks if x['project_id'] is not None}) != 1:
         raise ContractError('A reconciliation cannot transfer memory between projects')
     # Deletion guards are monotonic even if a branch deletes an older marker.
     tombs, removed = {}, set()
@@ -271,9 +345,9 @@ def merge_files(base, local, landed):
                 raise ContractError('An empty custom index needs explicit preservation before removal')
             drops.add(path);continue
         merged[path] = write(meta) + prefix + '\n## Routes\n\n' + bank.route_table(list(routes.values()), path)
-    parts = [router_parts(f['MEMORY.md']) for f in maps]
+    parts = [router_parts(f['MEMORY.md']) if f else ({}, {}, {}, MISSING) for f in maps]
     meta = mapping(*[{k:v for k,v in p[0].items() if k != 'router-updated'} for p in parts])
-    meta['router-updated'] = max(p[0]['router-updated'] for p in parts)
+    meta['router-updated'] = max(p[0]['router-updated'] for p in parts if p[0])
     routes = mapping(*[{k:v for k,v in p[1].items() if k not in drops} for p in parts]);prefix = choose(*[p[3] for p in parts])
     routes = {p:r for p,r in routes.items() if p in merged}
     # Keep pre-existing tombstone routes even when a branch removed the marker.
@@ -350,7 +424,7 @@ def replay(repo, request):
     if not changed or any(not p.startswith(prefix + '/') for p in changed):
         raise ContractError('Replay candidate contains no memory delta or imports unrelated code')
     before, after = tree(root, base, prefix), tree(root, candidate, prefix)
-    if any(bounded(f)['project_id'] != observation['project_id'] for f in (before, after)):
+    if any(bounded(f)['project_id'] != observation['project_id'] for f in (before, after) if f):
         raise ContractError('Replay cannot change project identity')
     delta = {p: after.get(p) for p in set(before) | set(after) if before.get(p) != after.get(p)}
     head = observation['authority_head']

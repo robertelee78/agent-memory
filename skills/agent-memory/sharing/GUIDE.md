@@ -118,6 +118,10 @@ A session MUST read [recovery/GUIDE.md](recovery/GUIDE.md) for fresh remote
 observations, lost-response readback, cursor loss and deletion-aware merge plans.
 These recovery primitives do not themselves publish or refresh canonical memory.
 
+A session MUST follow [publication/GUIDE.md](publication/GUIDE.md) at a natural
+boundary to prepare and land admitted memory-only changes through actual
+repository rules. Publication does not refresh local memory or feature code.
+
 A session MUST follow [semantic/GUIDE.md](semantic/GUIDE.md) before treating
 local and landed memory as compatible, including textually clean cross-file
 claims, duplicates, source conditions and detecting-developer clarification.

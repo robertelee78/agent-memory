@@ -46,8 +46,8 @@ def snapshots(repo, base=None):
     local=tx.files_at(root/observation['bank_root'])
     values={'base':recovery.tree(root,base,observation['bank_root']), 'local':local,
             'landed':recovery.tree(root,head,observation['bank_root'])}
-    checked={side:recovery.bounded(files) for side,files in values.items()}
-    if any(v['project_id']!=observation['project_id'] for v in checked.values()):
+    checked={side:recovery.bounded(files,allow_absent=True) for side,files in values.items()}
+    if any(v['project_id'] not in {None,observation['project_id']} for v in checked.values()):
         raise ContractError('Sharing review cannot transfer knowledge between projects')
     binding={key:value for key,value in observation.items() if key not in {'observed_at'}}
     binding.update(base=base,source_hashes={side:tx.file_hashes(files) for side,files in values.items()})
@@ -71,6 +71,7 @@ def units(values,checked):
              'container':container,'container_variants':{side:container}}
         output[key]=row
     for side in ('local','landed'):
+        if not values[side]:continue
         entries=[{'path':'MEMORY.md','format':'root-router','scope_chain':['repository'],'lifecycle':'active'},*checked[side]['entries']]
         for entry in entries:
             if entry['format'] not in {'context-prose','standalone-record','root-router','topic-index'}:continue
@@ -123,6 +124,7 @@ def final_sources(root,observation,binding):
 
 
 def qualified_sources(files,root,project_id):
+    if not files:return set()
     checked=bank.validate_files(files);actual,_=retrieval.observed_context(root,{})
     now=datetime.now(timezone.utc).isoformat();qualified={};superseders={}
     for entry in checked['entries']:
@@ -179,6 +181,7 @@ def replace_introduction(text,prefix):
 
 
 def container_paths(files):
+    if not files:return set()
     checked=bank.validate_files(files)
     return {'MEMORY.md',*[e['path'] for e in checked['entries'] if e['format']=='topic-index']}
 
@@ -201,6 +204,7 @@ def compatible_prose(base,local,landed):
 
 
 def child_paths(files,path):
+    if not files:return {path}
     if path=='MEMORY.md':return set(files)
     checked=bank.validate_files(files)
     indices={entry['path'] for entry in checked['entries'] if entry['format']=='topic-index'}
@@ -217,7 +221,8 @@ def child_paths(files,path):
 
 def mask(files,baseline,held):
     """Hold exact prose components and their real navigation-dependent payloads."""
-    original=bank.validate_files(files);old=bank.validate_files(baseline)
+    if not files:return {}
+    original=bank.validate_files(files);old=bank.validate_files(baseline) if baseline else {'entries':[],'routes':[]}
     current=dict(files)
     protected={entry['path'] for entry in original['entries'] if entry['format'] in {'tombstone','optional-history-event'}
         or (entry['format']=='standalone-record' and entry['lifecycle']!='active')}
@@ -275,7 +280,7 @@ def mask(files,baseline,held):
         rows={target:row for target,row in rows.items() if target in current}
         content=write(headers[path])+prefixes[path]+'\n## Routes\n\n'+bank.route_table(list(rows.values()),path)
         if path=='MEMORY.md':
-            previous=bank.parse_router(baseline[path])[2]
+            previous=bank.parse_router(baseline[path])[2] if path in baseline else {}
             reasons={}
             for context in bank.CONTEXTS:
                 if context in current:continue
@@ -292,6 +297,7 @@ def mask(files,baseline,held):
 def preserve_invalidation(values,candidate):
     guards={};inactive={}
     for files in values.values():
+        if not files:continue
         checked=bank.validate_files(files)
         for entry in checked['entries']:
             if entry['format']=='tombstone':

@@ -22,6 +22,12 @@ python3 -I "$SKILL_DIR/scripts/sharing_recovery.py" inspect --repo /path/to/repo
 Untracked canonical learning does not prevent this read-only remote inventory;
 it is still not proof of semantic admission or publication.
 
+An authority prefix that has never contained a bank reports actual absence and
+`shared_bank_present: false`. The session MUST use the first-publication route
+with its existing bound local bank, not create a second starter. An absent
+previously occupied bank MUST require historical inspection rather than erase
+its former invalidation history.
+
 The first command is local only and reports pending/stale sharing. The second
 checks the actual selected server's default branch, fetches its immutable head
 into a unique disposable Git ref, reads its complete bounded canonical bank,

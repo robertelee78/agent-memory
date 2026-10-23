@@ -124,6 +124,10 @@ origins, isolate disputed updates and review meaning across files.
 A session MUST read [sharing/recovery/GUIDE.md](sharing/recovery/GUIDE.md)
 before recovering a lost sharing response or reconstructing a merge baseline.
 
+A session MUST follow [sharing/publication/GUIDE.md](sharing/publication/GUIDE.md)
+at natural turn boundaries to automatically prepare and land admitted memory
+independently of feature code, respecting actual repository review/check rules.
+
 A local edit, branch commit or successful validation MUST NOT be described as
 landed shared memory. Other sessions can rely on a change only after the
 repository's publication rules have landed it on `main` and they have refreshed
