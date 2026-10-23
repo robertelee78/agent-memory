@@ -336,10 +336,10 @@ def apply(prepared):
         from .initialization import validate_transaction
         validate_transaction(p)
     if 'admission_evidence' in p:
-        from .admission import validate_transaction
+        from .admission import validate_transaction as validate_admission
         # A recorded outcome is read back by _apply; it never reapplies bytes.
         if not locations(*writes.bank_path(p['repo_root']), p['operation_id'])[1].exists():
-            validate_transaction(p)
+            validate_admission(p)
     first_bank = p['operation'] == 'initialize' and p['observed_hashes'] == {}
     initializing = first_bank and not (repository_config.bank_path(p['repo_root']) / 'MEMORY.md').exists()
     pinned = {**p['scope_context'], 'initialization_only': initializing}
@@ -358,9 +358,9 @@ def apply(prepared):
     def check(owner):
         require(p['repo_root'], p['project_id'], expected=context, owned_lock=owner, initialize=initializing)
         if 'admission_evidence' in p:
-            from .admission import validate_transaction
+            from .admission import validate_transaction as validate_admission
             if not locations(*writes.bank_path(p['repo_root']), p['operation_id'])[1].exists():
-                validate_transaction(p, owned_lock=owner)
+                validate_admission(p, owned_lock=owner)
             security.guarded_start(p['repo_root'], p['operation_id'], context,
                 {path: p['files'][path] for path in changed(p) if path in p['files']}, classes, action='capture')
         elif p['operation'] == 'initialize':

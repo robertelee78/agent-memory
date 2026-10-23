@@ -88,7 +88,8 @@ class SharingBoundaryContract(unittest.TestCase):
             unlock=self.good(w,'bank_writes.py','recover','--repo',repo)
             self.good(w,'bank_writes.py','recover','--repo',repo,'--proposal',self.save(w,unlock,'unlock.json'))
             receipts=[path for path in Path(w.env['AGENT_MEMORY_STATE_HOME']).rglob('*.json')
-                      if json.loads(path.read_text()).get('schema')=='agent-memory/transaction-receipt-v1']
+                      if json.loads(path.read_text()).get('schema')=='agent-memory/transaction-receipt-v1'
+                      and json.loads(path.read_text()).get('operation_id')==proposal['operation_id']]
             self.assertEqual(len(receipts),1);path=receipts[0];original=path.read_bytes();value=json.loads(original)
             self.assertEqual(value['bank_path'],str(bank))
             self.assertTrue(all(item.startswith('docs/shared memory/') for item in value['changed_memory_paths']))
