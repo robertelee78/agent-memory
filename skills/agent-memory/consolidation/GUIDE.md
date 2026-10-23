@@ -61,6 +61,16 @@ source metadata and body in an inactive provenance record; it does not become
 another independent active lesson. These records are historical evidence, never
 current guidance or a route around later revocation or terminal deletion.
 
+Captured provenance MUST retain the original capture ID in the structured path
+`history/sources/<capture-id>/<source-id>.md` and its required derivation link.
+That identity also locates the source and owning lesson after inactive-body
+compaction. [Governed erasure](../governance/GUIDE.md) includes the original
+capture ID, so an old saved capture cannot be admitted again after deletion.
+Existing source identity/conditions/provenance MUST NOT be discarded or guessed
+when repairing an older source path. `governance-required` scope narrowing MUST
+remain pending for governance; consolidation MUST NOT preserve the old broader
+scope while pretending that it narrowed the learning.
+
 The helper retains old correction/supersession links so tightening does not
 reactivate an earlier disproved claim. It refuses a revoked, expired or deleted
 provenance source instead of silently rehabilitating it. The session MUST use

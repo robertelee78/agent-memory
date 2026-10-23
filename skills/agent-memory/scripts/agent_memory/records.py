@@ -44,6 +44,21 @@ def reference(value):
     return value
 
 
+def captured_source_path(capture_id, source_id):
+    identity(capture_id);identity(source_id)
+    return 'history/sources/' + capture_id + '/' + source_id + '.md'
+
+
+def source_capture_id(path, metadata):
+    """Original proposal identity survives inactive-body compaction and erasure."""
+    parts = path.split('/')
+    if (len(parts) == 4 and parts[:2] == ['history', 'sources'] and uuid_valid(parts[2])
+            and parts[3] == metadata['id'] + '.md'
+            and {'id': parts[2], 'version': 1} in metadata['derived-from']):
+        return parts[2]
+    return None
+
+
 def references(values, record, *, replacement=False, correction=False):
     if not isinstance(values, list):
         raise ContractError('Version links must be a list')

@@ -65,7 +65,8 @@ def request_value(value):
     records.evidence(a['evidence'])
     if len(a['evidence']) > 64 or len(encoded(a)) > 16384:
         raise ContractError('Governance authority is bounded evidence, not a transcript')
-    if a['reason_class'] not in records.TOMBSTONE['properties']['reason-class']['enum']:
+    if (value['operation'] == 'delete' and a['reason_class'] not in records.TOMBSTONE['properties']['reason-class']['enum']
+            or value['operation'] != 'delete' and a['reason_class'] is not None):
         raise ContractError('Deletion reason class must remain content free')
     if (not isinstance(value['delete_ids'], list) or len(value['delete_ids']) > 64
             or any(not uuid_valid(identity) for identity in value['delete_ids'])
@@ -105,9 +106,9 @@ def observe(repo, request, *, owned_lock=None):
     checked, observed = writes.snapshot(root, owned_lock=owned_lock)
     base = tx.files_at(bank_path)
     if tx.file_hashes(base) != observed:raise ContractError('Bank changed during governance review')
-    expected_contexts = {path: observed[path] for path in bank.CONTEXTS if path in observed}
+    expected_contexts = {path: observed[path] for path in {'MEMORY.md', *bank.CONTEXTS} if path in observed}
     if request['context_review'] != expected_contexts:
-        raise ContractError('Review every actual ordinary context against its current hash before governance')
+        raise ContractError('Review the router and every actual ordinary context against its current hash before governance')
     target = request['target'];path = target['path']
     if observed.get(path) != target['sha256']:
         raise ContractError('Governance target changed; read its current meaning and evidence again')
@@ -134,9 +135,29 @@ def observe(repo, request, *, owned_lock=None):
                 or authority['source_class'] != captured['request']['source_class']
                 or encoded(authority['repository_evidence']) != encoded(captured['request']['repository_evidence'])):
             raise ContractError('Correct the stable identity using exactly its qualified actual source capture')
+    replacement = None
+    if request['operation'] == 'supersede':
+        replacement_ref = request['replacement'];path = replacement_ref['path']
+        if observed.get(path) != replacement_ref['sha256']:raise ContractError('The existing replacement changed')
+        replacement_kind, replacement_metadata, replacement_body = records.parse(base[path])
+        if (replacement_kind != 'standalone-record' or reference(replacement_metadata) !=
+                {key: replacement_ref[key] for key in ('id', 'version')} or replacement_metadata['id'] == metadata['id']):
+            raise ContractError('Use a distinct exact existing replacement; same-ID changes use correction')
+        if encoded(request['comparison']['request']['candidate']) != encoded({'metadata': replacement_metadata, 'body': replacement_body}):
+            raise ContractError('Review the complete unchanged existing replacement before linking it')
+        if path not in {row['path'] for row in compared['proof']['targets']}:
+            raise ContractError('The exact existing replacement must be reviewed as equivalent to itself')
+        recalled = retrieval.retrieve(root, {'project_id': request['project_id'], 'query': '', 'ids': [], 'paths': [path],
+            'context': request['context'], 'kinds': list(records.MODEL['properties']['kind']['enum']),
+            'minimum_trust': 'reviewed', 'limit': 1, 'include_context': False}, owned_lock=owned_lock)
+        if ([row['path'] for row in recalled['results']] != [path]
+                or recalled['results'][0]['source_sha256'] != replacement_ref['sha256']
+                or recalled['bank_observation_sha256'] != digest(encoded({'project_id': request['project_id'], 'sources': observed}))):
+            raise ContractError('Supersession needs a currently qualified canonical replacement')
+        replacement = {'metadata': replacement_metadata, 'body': replacement_body}
     return {'root': root, 'bank': bank_path, 'base': base, 'checked': checked, 'observed': observed,
             'scope': scope, 'metadata': metadata, 'body': body, 'context': context, 'git_context': git_context,
-            'capture': captured, 'comparison': compared}
+            'capture': captured, 'comparison': compared, 'replacement': replacement}
 
 
 def pending(observation, disposition, **fields):
@@ -157,9 +178,15 @@ def narrower_conditions(old, new):
 
 
 def permitted_impact(observation, request):
-    if request['operation'] == 'delete' or request['authority']['impact'] == 'all-target-conditions':return True
+    if request['authority']['impact'] == 'all-target-conditions':return True
     return (request['operation'] == 'correct' and request['authority']['impact'] == 'narrower-contexts-remain'
-            and narrower_conditions(observation['metadata'], observation['capture']['request']['candidate']['metadata']))
+            and narrower_conditions(observation['metadata'], observation['capture']['request']['candidate']['metadata'])
+            and observation['capture']['request']['candidate']['body'] == observation['body'])
+
+
+def copied_body(body, text):
+    target = body.strip()
+    return bool(target) and (target in text if '\n' in target else target in {line.strip() for line in text.splitlines()})
 
 
 def review_deferral(observation, request):
@@ -221,6 +248,10 @@ def reroute(base, checked, changed, removed, additions, at):
         header, body = read(base[path], allowed=bank_layout.SPEC['properties'])
         rows = bank_layout.parse_index(path, header, body);updated = rows_after(rows)
         if not updated:
+            original_prefix = body.split('\n## Routes\n', 1)[0]
+            generated = bank_layout.index_text(path, header, rows).split('\n---\n', 1)[1].split('\n## Routes\n', 1)[0]
+            if ' '.join(original_prefix.split()) != ' '.join(generated.split()):
+                raise ContractError('The empty index contains custom context; preserve it before pruning its last route')
             removed.add(path);files.pop(path, None)
         elif rows != updated:
             header['updated'] = at
@@ -240,17 +271,30 @@ def route(path, purpose, state='active'):
 
 
 def delete_closure(observation, request):
-    identities = {observation['metadata']['id']};items = []
+    identities = {observation['metadata']['id'], *request['delete_ids']};items = []
     for entry in observation['checked']['entries']:
         if entry['format'] == 'standalone-record':
             _, metadata, body = records.parse(observation['base'][entry['path']]);items.append((entry['path'], metadata, body))
+    sources = [(path, metadata, records.source_capture_id(path, metadata)) for path, metadata, _ in items
+               if path.startswith('history/sources/')]
+    source_units = {metadata['id'] for _, metadata, _ in sources}
+    known = {metadata['id'] for _, metadata, _ in items} | {alias for _, _, alias in sources if alias is not None} | {
+        entry['id'] for entry in observation['checked']['entries'] if entry['format'] == 'tombstone'}
+    if not identities.issubset(known):raise ContractError('Deletion scope must name actual same-project canonical identities')
     while True:
         expanded = identities | {metadata['id'] for _, metadata, _ in items
             if any(ref['id'] in identities for ref in metadata['derived-from'])}
+        references = {ref['id'] for _, metadata, _ in items if metadata['id'] in identities for ref in metadata['derived-from']}
+        expanded.update(metadata['id'] for _, metadata, _ in items if metadata['id'] in source_units & references
+            and any(ref['id'] in identities for ref in metadata.get('superseded-by', [])))
+        for _, metadata, alias in sources:
+            if alias is not None and alias in expanded:expanded.add(metadata['id'])
+            if metadata['id'] in expanded and alias is not None:expanded.add(alias)
         if len(expanded) > 64:raise ContractError('Deletion derivation closure requires an explicitly scoped bounded review')
         if expanded == identities:break
         identities = expanded
-    return identities, items
+    unresolved = [path for path, metadata, alias in sources if metadata['id'] in identities and alias is None]
+    return identities, items, unresolved
 
 
 def desired(observation, request, operation_id, at):
@@ -262,27 +306,47 @@ def desired(observation, request, operation_id, at):
     if operation == 'delete':
         if a['source_class'] != 'user' or a['basis'] != 'explicit-deletion':
             raise ContractError('Terminal deletion requires explicit operator authority, not automatic pruning')
-        identities, items = delete_closure(observation, request)
+        identities, items, unresolved = delete_closure(observation, request)
+        if unresolved:
+            peers = sorted({metadata['origin']['developer-id'] for path, metadata, _ in items
+                if path in unresolved and metadata['origin']['developer-id'] != actor})
+            return None, {'disposition': 'provenance-identity-review-required', 'source_paths': sorted(unresolved),
+                'other_developer_ids': peers, 'recommend_other_developer_clarification': bool(peers)}
         if set(request['delete_ids']) != identities:
-            return None, {'disposition': 'deletion-scope-review-required', 'required_delete_ids': sorted(identities)}
+            peers = sorted({metadata['origin']['developer-id'] for _, metadata, _ in items
+                if metadata['id'] in identities - set(request['delete_ids']) and metadata['origin']['developer-id'] != actor})
+            return None, {'disposition': 'deletion-scope-review-required', 'required_delete_ids': sorted(identities),
+                'other_developer_ids': peers, 'recommend_other_developer_clarification': bool(peers)}
         for path, metadata, body in items:
             if metadata['id'] not in identities:continue
             if not lifecycle.transition(metadata, 'delete', event)['legal']:
                 raise ContractError('Terminal deletion must use the common lifecycle guards')
             removed.add(path)
+        for path, metadata, body in items:
+            if metadata['id'] in identities:continue
+            # The tombstone now owns terminal invalidation. Remove redundant
+            # pointers to erased guidance without deleting an independently
+            # evidenced correction/replacement or copying the erased content.
+            supersedes = [ref for ref in metadata['supersedes'] if ref['id'] not in identities]
+            if supersedes != metadata['supersedes']:
+                files[path] = write({**metadata, 'supersedes': supersedes}) + body
         for entry in observation['checked']['entries']:
             if entry['format'] != 'optional-history-event':continue
             _, metadata, _ = records.parse(base[entry['path']])
             if metadata['record']['id'] in identities:removed.add(entry['path'])
         for identity in sorted(identities):
             path = tombstones.relative_path(identity)
-            if path in base:raise ContractError('Never overwrite an existing terminal marker')
+            if path in base:
+                marker = tombstones.parse(base[path])
+                if marker['id'] != identity or marker['scope'] != request['project_id']:
+                    raise ContractError('Never overwrite an unknown terminal marker')
+                continue
             metadata = {'id': identity, 'scope': request['project_id'], 'deleted-at': at,
                         'deletion-authority': actor, 'reason-class': a['reason_class']}
             files[path] = tombstones.render(metadata)['content'];additions.append(route(path, 'Terminal deletion marker', 'deleted'))
         for path, _, body in items:
             if path not in removed:continue
-            if body.strip() and any(body.strip() in text for text in request['context_edits'].values()):
+            if any(copied_body(body, text) for text in request['context_edits'].values()):
                 raise ContractError('Deleted learning cannot be copied into retained context')
     elif operation in {'revoke', 'expire', 'retention'}:
         if operation == 'expire' and a['basis'] != 'time-boundary':raise ContractError('Expiry uses an observed valid-time boundary')
@@ -302,6 +366,8 @@ def desired(observation, request, operation_id, at):
             'actor': actor, 'recorded-at': at, 'evidence': a['evidence']}
         records.event(event_metadata);files[history] = write(event_metadata);additions.append(route(history, 'Lifecycle decision evidence'))
     elif operation in {'correct', 'reactivate'}:
+        if a['basis'] != 'stronger-evidence' and not (operation == 'correct' and a['basis'] == 'loss-of-applicability'):
+            raise ContractError('A new qualified version needs actual stronger evidence or a narrower applicability correction')
         captured = observation['capture'];candidate = captured['request']['candidate'];new = copy.deepcopy(candidate['metadata'])
         if any(new[key] != old[key] for key in ('kind', 'scope', 'applicability')):
             raise ContractError('Corrected versions preserve their type, scope and assessed applicability')
@@ -315,7 +381,7 @@ def desired(observation, request, operation_id, at):
                     or (new['valid-until'] is not None and lifecycle.time_value(new['valid-until']) <= now)):
                 raise ContractError('Reactivation requires an explicit newly evidenced currently valid period')
         new.update(version=next_version(observation, old['id']), status='active', trust='reviewed', updated=at,
-            visibility='hidden' if 'hidden' in {old['visibility'], new['visibility']} else 'visible')
+            visibility='hidden' if 'hidden' in {old.get('visibility'), new.get('visibility')} else 'visible')
         new['admission-reason'] = ('Explicit requalification: ' if operation == 'reactivate' else 'Stronger-evidence correction: ') + a['reason']
         new.pop('state-reason', None);new.pop('superseded-by', None)
         evidence = [*new['evidence'], *a['evidence']]
@@ -340,15 +406,40 @@ def desired(observation, request, operation_id, at):
             'kind': 'memory-corrected' if operation == 'correct' else 'memory-admitted', 'record': reference(new),
             'actor': actor, 'recorded-at': at, 'evidence': event['evidence']}
         records.event(event_metadata);files[history] = write(event_metadata);additions.append(route(history, 'New qualified version event'))
-    else:
-        raise ContractError('Existing-replacement supersession is not implemented in this development prototype')
+    elif operation == 'supersede':
+        if a['basis'] != 'stronger-evidence':raise ContractError('Supersession needs stronger replacement evidence')
+        replacement = observation['replacement'];previous = replacement['metadata']
+        if any(previous[key] != old[key] for key in ('kind', 'scope', 'conditions', 'applicability', 'valid-from', 'valid-until', 'trust', 'visibility')):
+            return None, {'disposition': 'narrowing-required'}
+        new = copy.deepcopy(previous);new.update(version=next_version(observation, previous['id']), updated=at)
+        new['admission-reason'] = 'Existing evidenced replacement: ' + a['reason']
+        new['evidence'] = union([*new['evidence'], *a['evidence']])
+        new['derived-from'] = union([*new['derived-from'], reference(previous)])
+        new['supersedes'] = union([*new['supersedes'], reference(old), *old['supersedes'], *old['corrects']])
+        event['replacement'] = {**reference(new), 'status': 'active', 'replaces': reference(old), 'applicability-preserved': True}
+        if not lifecycle.transition(old, 'supersede', event)['legal']:
+            raise ContractError('Supersession must name its qualified replacement and preserve applicability')
+        records.validate(new, replacement['body'])
+        archive(files, additions, previous, replacement['body'], new, at, request['replacement']['path'], a['reason'])
+        files[request['replacement']['path']] = write(new) + replacement['body']
+        prior = {**copy.deepcopy(old), 'status': 'superseded', 'updated': at,
+                 'state-reason': a['reason'], 'superseded-by': [reference(new)]}
+        files[request['target']['path']] = write(prior) + observation['body']
+        changed[request['target']['path']] = 'superseded'
+        for identity, kind, record in ((operation_id, 'memory-superseded', old),
+                (str(uuid.UUID(hex=digest((operation_id + ':replacement-version').encode())[:32], version=4)), 'memory-admitted', new)):
+            path = 'history/events/' + identity + '.md'
+            if path in base:raise ContractError('Do not overwrite another lifecycle event')
+            metadata = {'schema': 'agent-memory/history-event-v1', 'id': identity, 'project-id': request['project_id'],
+                'kind': kind, 'record': reference(record), 'actor': actor, 'recorded-at': at, 'evidence': a['evidence']}
+            records.event(metadata);files[path] = write(metadata);additions.append(route(path, 'Supersession and replacement version event'))
     routed = reroute(base, observation['checked'], changed, removed, additions, at)
     for path, body in files.items():
         if path not in removed and body != base.get(path):routed[path] = body
     routed.update(request['context_edits'])
     if operation == 'delete':
         for _, _, body in (item for item in items if item[0] in removed):
-            if body.strip() and any(body.strip() in routed[path] for path in request['context_review']):
+            if any(copied_body(body, routed[path]) for path in request['context_review']):
                 raise ContractError('A retained ordinary context still contains the deleted assertion')
     bank.validate_files(routed)
     changed_files = {path: body for path, body in routed.items() if body != base.get(path)}
@@ -392,6 +483,7 @@ def validate_transaction(p, *, owned_lock=None):
     if deferred or observation['observed'] != p['observed_hashes'] or encoded(files) != encoded(p['files']):
         raise ContractError('Governance must apply its exact observed canonical delta')
     scope_binding.require(p['repo_root'], request['project_id'], expected=p['scope_context'], owned_lock=owned_lock)
+    check_sources(p, owner=owned_lock)
 
 
 def check_sources(p, *, owner=None, marker=None):
@@ -409,6 +501,24 @@ def check_sources(p, *, owner=None, marker=None):
         if (lifecycle.time_value(metadata['valid-from']) > now
                 or (metadata['valid-until'] is not None and lifecycle.time_value(metadata['valid-until']) <= now)):
             raise ContractError('The newly requalified period ended during governance')
+    if request['operation'] == 'supersede':
+        checked = bank.validate_files(p['files']);path = request['replacement']['path']
+        _, replacement, _ = records.parse(p['files'][path])
+        context, _ = retrieval.observed_context(root, request['context']);now = datetime.now(timezone.utc).isoformat()
+        superseders = []
+        for entry in checked['entries']:
+            if entry['format'] != 'standalone-record' or retrieval.scope_reasons(request['project_id'], entry, context):continue
+            _, metadata, _ = records.parse(p['files'][entry['path']])
+            applicable = records.applicability(metadata, {'bank_project_id': request['project_id'], 'context': context})
+            selection = lifecycle.current(metadata, {'authorized-scope': True, 'applicable': applicable['applicable'],
+                'now': now, 'minimum-trust': 'reviewed', 'active-superseders': []})
+            if (all(selection['gates'][key] for key in ('authorized-scope', 'applicable', 'active', 'valid-time', 'sufficient-trust'))
+                    and reference(replacement) in metadata['supersedes'] + metadata['corrects']):
+                superseders.append(metadata['id'] + '/' + str(metadata['version']))
+        applicable = records.applicability(replacement, {'bank_project_id': request['project_id'], 'context': context})
+        if not lifecycle.current(replacement, {'authorized-scope': True, 'applicable': applicable['applicable'],
+                'now': now, 'minimum-trust': 'reviewed', 'active-superseders': superseders})['current']:
+            raise ContractError('The replacement lost its current qualification during governance')
 
 
 def apply(prepared):
