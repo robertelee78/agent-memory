@@ -1,6 +1,7 @@
 ---
 kind: operation
 domain: bank
+file-operations: ["initialize", "inspect", "checkpoint", "resume"]
 ---
 
 # Use the cooperative file-only bank workflow

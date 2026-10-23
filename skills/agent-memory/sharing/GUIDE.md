@@ -17,8 +17,9 @@ accept receipt paths with that default prefix. The full
 does not weaken project, operation, hash or interruption validation.
 
 
-A session MUST read [recovery/GUIDE.md](recovery/GUIDE.md) for fresh remote
-observations, lost-response readback, cursor loss and deletion-aware merge plans.
+When obtaining fresh remote observations, reading back a lost response,
+recovering from cursor loss or planning deletion-aware merges, a session MUST
+read [recovery/GUIDE.md](recovery/GUIDE.md).
 These recovery primitives do not themselves publish or refresh canonical memory.
 
 A session MUST follow [publication/GUIDE.md](publication/GUIDE.md) at a natural
@@ -30,8 +31,8 @@ to reconcile landed memory with its unpublished local learning, without changing
 feature code, the original index or branch history. It MUST read relevant imports
 with their actual provenance and applicability before using them as current.
 
-A session MUST follow [semantic/GUIDE.md](semantic/GUIDE.md) before treating
-local and landed memory as compatible, including textually clean cross-file
+When local and landed memory are to be treated as compatible, a session MUST
+first follow [semantic/GUIDE.md](semantic/GUIDE.md), including textually clean cross-file
 claims, duplicates, source conditions and detecting-developer clarification.
 
 ## Domain loading and routes
@@ -48,8 +49,8 @@ A session MUST follow [sharing/semantic/GUIDE.md](../sharing/semantic/GUIDE.md)
 when combining local and landed learning, to preserve source conditions and
 origins, isolate disputed updates and review meaning across files.
 
-A session MUST read [sharing/recovery/GUIDE.md](../sharing/recovery/GUIDE.md)
-before recovering a lost sharing response or reconstructing a merge baseline.
+When recovering a lost sharing response or reconstructing a merge baseline,
+a session MUST first read [sharing/recovery/GUIDE.md](../sharing/recovery/GUIDE.md).
 
 A session MUST follow [sharing/publication/GUIDE.md](../sharing/publication/GUIDE.md)
 at natural turn boundaries to automatically prepare and land admitted memory

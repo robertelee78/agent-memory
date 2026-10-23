@@ -59,7 +59,7 @@ working-file behavior or that code has landed on the default branch.
 IDs and bank-relative paths MAY select exact records/files. If either list is
 nonempty, their union is the selector and `query` does not further filter it.
 Exact lookup MUST NOT bypass any policy gate. Otherwise every case-folded,
-whitespace-separated query term must occur in a candidate's path or body. An
+whitespace-separated query term MUST occur in a candidate's path or body. An
 empty query selects the qualified inventory. Stable scoring favors path terms
 and bounded term counts, then sorts ties by path. Each selected item explains
 its matching strategy, score and terms and includes its canonical path, body,

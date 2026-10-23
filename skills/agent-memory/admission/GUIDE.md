@@ -193,7 +193,7 @@ timestamp does not establish source freshness or authentication.
 Transaction `recover --mode finish` MUST clean up that recorded
 outcome without replaying bytes or demanding fresh semantic/source evidence;
 rollback MUST NOT undo it. Later evidence changes do not change that historical
-receipt into a new admission. The current bank must still exactly match the
+receipt into a new admission. The current bank MUST still exactly match the
 recorded completed bytes; external edits, unknown receipts or missing journals
 MUST remain for explicit inspection. After a crash following marker removal,
 retrying the original admission reads its receipt and cleans its leftover

@@ -91,7 +91,7 @@ perform the pure content check before returning a proposal.
 
 A successful check returns procedure eligibility, with
 `procedural_guidance: false`. It MUST NOT be mistaken for installed instructions
-or completed promotion. A separately governed promotion must preserve the source,
+or completed promotion. A separately governed promotion MUST preserve the source,
 version, approval, scope and applicability. Reviewed guidance remains subordinate
 to current operator/repository/harness authority.
 

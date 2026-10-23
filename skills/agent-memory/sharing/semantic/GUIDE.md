@@ -78,7 +78,7 @@ The operation uses [fresh recovery observations](../recovery/GUIDE.md), explicit
 project/developer resolution and the configured single bank. It reads the prior
 shared baseline, current local bank and freshly fetched authority bank. With no
 cursor, the unique actual common Git base reconstructs the baseline. An explicit
-previous memory observation can be outside feature-code ancestry; it must remain
+previous memory observation can be outside feature-code ancestry; it MUST remain
 reachable from authority. The session MUST NOT merge code merely to import
 memory, and MUST NOT infer current branch implementation from landed learning.
 

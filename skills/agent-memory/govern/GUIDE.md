@@ -14,8 +14,9 @@ question cannot be resolved by this domain and the selected operation.
 
 ## Standing rules
 
-A session MUST follow [governance/GUIDE.md](../governance/GUIDE.md) for correction,
-supersession, revocation, known expiry, policy retention or explicit deletion.
+When performing correction, supersession, revocation, known expiry, policy
+retention or explicit deletion, a session MUST follow
+[governance/GUIDE.md](../governance/GUIDE.md).
 It MUST automatically prune only with stronger evidence, preserve still-valid
 older conditions, and leave ambiguous meaning with the detecting developer.
 Age alone MUST NOT justify pruning; terminal deletion MUST leave safe tombstones.

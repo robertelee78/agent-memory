@@ -109,7 +109,7 @@ and recovery backups; a visible interruption MUST still route to recovery.
 Deletion (`memory-deleted`) MUST use only the existing five safe tombstone
 fields, with no event schema, evidence, actor text or body added. The record
 validator recognizes this exception using the shared tombstone parser. Full
-erasure must also remove unsafe historical artifacts through its governed
+erasure MUST also remove unsafe historical artifacts through its governed
 operation; validating a marker does not erase content elsewhere.
 
 ## Observe
