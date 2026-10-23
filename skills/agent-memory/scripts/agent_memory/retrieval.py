@@ -120,6 +120,10 @@ def retrieve(repo, request):
             raw = stream.read(MAX_FILE + 1)
         canonical_bytes += len(raw)
         if len(raw) > MAX_FILE:
+            if kind == 'standalone-record':
+                # An unreadable active record may invalidate a smaller record.
+                # Do not turn an incomplete invalidation inventory into absence.
+                raise ContractError('Active record exceeds safe inspection bounds; resolve its metadata before recall')
             excluded['content-limit'] += 1
             continue
         if digest(raw) != observed[path]:

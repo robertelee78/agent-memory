@@ -12,7 +12,8 @@ Ordinary context is an explicit orientation option, separately labeled with
 unknown trust. It does not fabricate typed admission. Selected content retains
 conditions, evidence, source hashes and origin identity across clones. Source
 labels are unverified data. A quarantined replacement cannot reactivate its
-obsolete predecessor, and terminal tombstones cannot be bypassed by old cached
+obsolete predecessor. An oversized active typed record fails the whole recall
+rather than hiding a possible invalidator behind a content limit. Terminal tombstones cannot be bypassed by old cached
 content. Exclusion counts do not disclose withheld bodies or names.
 
 The helper checks canonical observations again, reports actual evaluation time

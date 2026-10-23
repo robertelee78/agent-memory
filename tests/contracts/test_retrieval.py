@@ -187,6 +187,40 @@ class RetrievalContract(unittest.TestCase):
             self.assertEqual(r.returncode, 0, v)
             self.assertEqual(v['results'][0]['record']['id'], old['id'])
 
+    def test_oversized_possible_replacements_fail_recall_instead_of_resurrecting_old_guidance(self):
+        with World() as w:
+            repo, bank, project = self.fixture(w)
+            old, old_path = self.add(bank, project, 'obsolete', body='# Retry\n\nOBSOLETE_RETRY_ASSERTION\n')
+            replacement, path = self.add(bank, project, 'replacement',
+                supersedes=[{'id': old['id'], 'version': old['version']}])
+            small = copy.deepcopy(replacement)
+            for variant in ('ordinary', 'hidden', 'different-kind', 'unsafe-body', 'metadata-only'):
+                metadata = copy.deepcopy(small)
+                body = '# Replacement\n\n' + 'x' * 17000 + '\n'
+                if variant == 'hidden': metadata['visibility'] = 'hidden'
+                if variant == 'different-kind': metadata['kind'] = 'project-decision'
+                if variant == 'unsafe-body': body += 'password=WITHHELD_LARGE_REPLACEMENT\n'
+                if variant == 'metadata-only':
+                    metadata['admission-reason'] = 'x' * 17000
+                    body = '# Replacement\n\nConcise corrected learning.\n'
+                (bank / path).write_text(render(metadata, body))
+                self.good(w, 'bank_contract.py', 'validate', '--repo', repo)
+                before, code = self.state(bank), self.code(w, repo)
+                for selector in ({'ids': [old['id']]}, {'paths': [old_path]}, {'query': 'OBSOLETE_RETRY_ASSERTION'}):
+                    r, value = self.retrieve(w, repo, project, **selector)
+                    self.assertEqual(r.returncode, 1, (variant, selector, value))
+                    self.assertFalse(value['verified'])
+                    self.assertNotIn('results', value)
+                    self.assertNotIn('OBSOLETE_RETRY_ASSERTION', r.stdout)
+                    self.assertNotIn('WITHHELD_LARGE_REPLACEMENT', r.stdout)
+                self.assertEqual(self.state(bank), before)
+                self.assertEqual(self.code(w, repo), code)
+            (bank / path).write_text(render(small, '# Replacement\n\nSafe bounded correction.\n'))
+            r, value = self.retrieve(w, repo, project, ids=[old['id']])
+            self.assertEqual(r.returncode, 0, value)
+            self.assertEqual(value['results'], [])
+            self.assertIn('no-active-superseder', value['excluded_counts'])
+
     def test_plain_context_requires_explicit_orientation_and_never_fabricates_record_trust(self):
         with World() as w:
             repo, _, project = self.fixture(w)

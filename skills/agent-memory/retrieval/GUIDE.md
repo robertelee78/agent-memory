@@ -88,7 +88,14 @@ memory. It does not implement semantic contradiction detection.
 
 ## Bounded observations and failures
 
-Each candidate reader is bounded to 16 KiB. Whole selected payloads together are
+Each candidate reader is bounded to 16 KiB. An active typed record under an
+applicable route that exceeds that bound MUST fail the whole recall: its
+uninspected metadata might invalidate an older lesson. The session MUST inspect
+and safely split/compact that source through the governed write protocol, or
+resolve its relevance manually with the same gates, before retrying. Unknown
+replacement metadata MUST NOT count as absence. Oversized ordinary orientation
+prose may be omitted because it supplies no typed invalidation relations.
+Whole selected payloads together are
 bounded to 64 KiB, with no truncation of conditions, evidence or body. A candidate
 that cannot fit is excluded; later smaller candidates may still fit. The JSON
 envelope and its metrics are additional bytes. The helper validates/hashes the
