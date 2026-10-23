@@ -37,6 +37,7 @@
     {"name": "optional-stores", "layer": "optional", "scope": "future", "path": null, "reason": "Cross-repository federation and optional stores are outside v0.0.1."},
     {"name": "mediated-security", "layer": "evaluation", "scope": "v0.0.1", "path": "tests/contracts/test_security_policy.py"},
     {"name": "inactive-guidance", "layer": "bank", "scope": "v0.0.1", "path": "tests/contracts/test_inactive_guidance.py"},
-    {"name": "learning-comparison", "layer": "bank", "scope": "v0.0.1", "path": "tests/contracts/test_comparison.py"}
+    {"name": "learning-comparison", "layer": "bank", "scope": "v0.0.1", "path": "tests/contracts/test_comparison.py"},
+    {"name": "context-assembly", "layer": "bank", "scope": "v0.0.1", "path": "tests/contracts/test_assembly.py"}
   ]
 }
