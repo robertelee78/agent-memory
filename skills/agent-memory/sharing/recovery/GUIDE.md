@@ -51,7 +51,11 @@ python3 -I "$SKILL_DIR/scripts/sharing_recovery.py" replay --repo /path/to/repo 
 ```
 
 The helper fetches current authority and checks the bounded intervening history
-for an actual tree containing the complete intended memory delta. It can
+for an actual first-parent authority tree containing the complete intended memory
+delta. Merely reaching a proposed side commit MUST NOT count as publication: a
+merge resolution may have discarded its memory. The previous observed base MUST
+be present in the bounded authority mainline; a history flip or unproved base
+requires inspection. It can
 recognize squash/recreated commits from their bytes without relying on commit
 messages or a locally remembered success flag. `intended_delta_landed: true`
 means the intended bytes were observed on authority; `intended_delta_current`

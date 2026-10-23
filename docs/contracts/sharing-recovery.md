@@ -9,7 +9,10 @@ working files, remote tracking refs or FETCH_HEAD. Objects and a unique disposab
 observation ref may be written; fetch errors never claim remote freshness.
 
 Replay inventories actual authority history for the exact intended memory-only
-delta, including squash/recreated commit identities and later corrections. A
+delta in first-parent authority trees, including squash/recreated commit
+identities and later corrections. A discarded merge-side candidate is not a
+publication witness; the observed base must be provable within the bounded
+authority mainline. A
 prior successful landing and its current applicability are reported separately.
 Unknown, rewritten or over-budget history requires reconciliation, never a
 blind duplicate push. The helper never pushes or bypasses branch protections.

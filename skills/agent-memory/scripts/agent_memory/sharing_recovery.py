@@ -356,7 +356,13 @@ def replay(repo, request):
         raise ContractError('Authority history changed; preserve candidate and reconcile instead of retrying')
     # Bound historical readback; exceeding it requires explicit inspection, never
     # an assumption that a prior publication did not happen.
-    history = command(root, 'rev-list', '--max-count=129', head, '^' + base).splitlines()
+    # A reachable side parent is a proposal, not proof that its memory was
+    # retained by an authority-branch tree. Follow the authority's mainline and
+    # require the previous observed base within the complete bounded interval.
+    lineage = command(root, 'rev-list', '--first-parent', '--max-count=130', head).splitlines()
+    if base not in lineage:
+        raise ContractError('Authority mainline base is unproved or exceeds replay bounds; inspect before retry')
+    history = lineage[:lineage.index(base)]
     if len(history) > 128:
         raise ContractError('Publication history exceeds bounded replay inventory; explicit readback required')
     witnessed = None

@@ -88,6 +88,55 @@ class SharingRecoveryContract(unittest.TestCase):
             readback=self.good(w,'replay','--repo',repo,'--request',self.save(w,{'base':base,'candidate':alternate}))
             self.assertTrue(readback['intended_delta_landed']);self.assertEqual(readback['witnessed_commit'],candidate)
 
+    def merged_publication(self, w, retain):
+        repo,bank,peer,base=self.fixture(w);before=self.state(w,repo,bank)
+        original=(bank/'projectbrief.md').read_text()
+        intended='# Project\n\nThe intended proposed memory value.\n'
+        retained='# Project\n\nThe authority retained a different reviewed value.\n'
+        # Build a genuine memory-only candidate without the original staged code.
+        w.env['GIT_INDEX_FILE']=str(w.inside('candidate-private-index'))
+        try:
+            w.git('read-tree',base,cwd=repo);(bank/'projectbrief.md').write_text(intended)
+            w.git('add','memory-bank/projectbrief.md',cwd=repo)
+            tree=w.git('write-tree',cwd=repo).stdout.strip()
+            candidate=w.git('commit-tree',tree,'-p',base,'-m','Proposed memory-only value',cwd=repo).stdout.strip()
+        finally:
+            w.env.pop('GIT_INDEX_FILE');(bank/'projectbrief.md').write_text(original)
+        self.assertEqual(before,self.state(w,repo,bank))
+        self.publish(w,peer,'memory-bank/projectbrief.md',retained)
+        w.git('fetch',str(repo),candidate,cwd=peer)
+        merge=w.git('merge','--no-ff',candidate,'-m','Integrate proposed memory with explicit resolution',cwd=peer,check=False)
+        self.assertEqual(merge.returncode,1);self.assertEqual(w.git('diff','--name-only','--diff-filter=U',cwd=peer).stdout.strip(),'memory-bank/projectbrief.md')
+        (peer/'memory-bank/projectbrief.md').write_text(intended if retain else retained)
+        w.git('add','memory-bank/projectbrief.md',cwd=peer);w.git('commit','-m','Resolved actual authority memory',cwd=peer)
+        landed=w.git('rev-parse','HEAD',cwd=peer).stdout.strip();w.git('push','origin','HEAD:main',cwd=peer)
+        lineage=w.git('rev-list','--first-parent',landed,'^'+base,cwd=peer).stdout.splitlines()
+        self.assertNotIn(candidate,lineage)
+        self.assertIn(candidate,w.git('rev-list',landed,'^'+base,cwd=peer).stdout.splitlines())
+        actual=[w.git('show',revision+':memory-bank/projectbrief.md',cwd=peer).stdout for revision in lineage]
+        self.assertEqual(any(text==intended for text in actual),retain)
+        return repo,bank,peer,base,candidate,landed,before
+
+    def test_reachable_side_parent_discarded_by_main_is_not_a_publication_witness(self):
+        with World() as w:
+            repo,bank,peer,base,candidate,landed,before=self.merged_publication(w,False)
+            value=self.good(w,'replay','--repo',repo,'--request',self.save(w,{'base':base,'candidate':candidate}))
+            self.assertFalse(value['publication_verified']);self.assertFalse(value['intended_delta_landed'])
+            self.assertIsNone(value['witnessed_commit']);self.assertEqual(value['retry_state'],'reconciliation-required')
+            self.assertFalse(value['safe_to_retry_without_reconciliation']);self.assertEqual(before,self.state(w,repo,bank))
+
+    def test_actual_merge_tree_retaining_delta_is_a_witness_even_after_later_correction(self):
+        with World() as w:
+            repo,bank,peer,base,candidate,landed,before=self.merged_publication(w,True)
+            request=self.save(w,{'base':base,'candidate':candidate})
+            value=self.good(w,'replay','--repo',repo,'--request',request)
+            self.assertTrue(value['publication_verified']);self.assertTrue(value['intended_delta_current'])
+            self.assertEqual(value['witnessed_commit'],landed);self.assertNotEqual(landed,candidate)
+            self.publish(w,peer,'memory-bank/projectbrief.md','# Project\n\nA later confirmed correction remains authoritative.\n')
+            historical=self.good(w,'replay','--repo',repo,'--request',request)
+            self.assertTrue(historical['intended_delta_landed']);self.assertFalse(historical['intended_delta_current'])
+            self.assertEqual(historical['witnessed_commit'],landed);self.assertEqual(before,self.state(w,repo,bank))
+
     def test_later_correction_keeps_historical_publication_receipt_without_claiming_current_truth(self):
         with World() as w:
             repo,bank,peer,base=self.fixture(w)
