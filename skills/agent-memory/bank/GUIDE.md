@@ -6,6 +6,11 @@ knowledge, source links and applicability in the files themselves. Caches,
 search indexes, projections and optional historical event journals MUST NOT
 contain the only current copy of admitted learning.
 
+A session MUST follow the [projection contract](../projections/GUIDE.md) when
+building/checking derived references, and the [observed write protocol](../writes/GUIDE.md)
+when applying mediated changes. Complete source observations and safe replay
+are mechanical guards; they do not qualify an assertion as true or current.
+
 ## Small useful contexts
 
 | File | Purpose |
