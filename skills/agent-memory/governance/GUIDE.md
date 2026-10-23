@@ -211,3 +211,10 @@ exit 1 means refused or uncertain state, and an apply failure MUST NOT imply
 no canonical writes. Exit 2 means invalid arguments. This local operation does
 not publish, refresh main or advance working code. Sharing MUST remain pending
 until the repository's actual memory-only exchange verifies it.
+
+Comparison MUST also stop original-capture reuse in legacy flat source layouts.
+Compaction can remove the wording needed for lexical recall, while `derived-from`
+still preserves the consumed UUID among several roles. Such a source MUST be
+reviewed for actual identity roles before novelty, reactivation or consolidation
+is claimed. A reference-list order MUST NOT authorize automatic migration or
+re-admission of revoked guidance.

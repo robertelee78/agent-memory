@@ -155,3 +155,15 @@ Exit 1 means unsafe, incomplete, unavailable or changed input/state; it supplies
 no proof of absence. Private content-free audits are reported separately from
 canonical writes. The helper executes no remembered commands, sends no messages,
 requires no daemon and changes neither bank, code, index nor HEAD.
+
+A legacy flat `history/sources/<source-id>.md` can retain several `derived-from`
+references after its assertion body is compacted. If a proposed identity appears
+in an unresolved source's references, comparison MUST include that source even
+when every text search misses. `capture_identity_review_paths` names these
+sources and the result stays `provenance-identity-review-required`. The session
+MUST establish the actual reference roles from evidence before preparing a new
+comparison; it MUST NOT guess from list order, infer novelty from an empty body,
+or re-admit the original capture. An explicitly reviewed move to the structured
+capture/source path MUST preserve the source ID, all references, origin and body.
+Another developer's provenance SHOULD prompt attribution-aware clarification as
+needed; the helper MUST NOT send a message.

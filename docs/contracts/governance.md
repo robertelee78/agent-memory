@@ -62,3 +62,11 @@ Input, per-file, batch, router, group and proposal bounds are documented in the
 guide. Exhaustion refuses without truncating evidence. Full-bank validation still
 scales with bank size; these cases establish correctness, not an unmeasured
 large-bank performance or full release-completion claim.
+
+Legacy flat source metadata is included in identity comparison independently of
+its compacted body. A candidate UUID in unresolved source references requires
+explicit provenance-role review, so even a `related-context` judgment cannot
+turn the consumed capture into new active guidance. A regression uses actual
+capture/consolidation, faithful flat multi-reference layout, revocation, full
+inactive compaction and public re-admission preview; a reviewed role/path move
+preserves every source byte and returns the existing inactive-lifecycle decision.

@@ -2,6 +2,7 @@
 import copy
 import hashlib
 import json
+import posixpath
 import sys
 import unittest
 import uuid
@@ -128,6 +129,60 @@ class GovernanceContract(unittest.TestCase):
             before = self.state(w, repo, bank);r, pending = capture_helper.preview(w, repo, captured, request, proof)
             self.assertEqual(r.returncode, 0, pending);self.assertIsNone(pending['proposal'])
             self.assertEqual(pending['disposition'], 'lifecycle-review-required');self.assertEqual(before, self.state(w, repo, bank))
+
+    def test_legacy_flat_consumed_capture_stays_pending_after_revocation_and_compaction(self):
+        with World() as w:
+            repo, bank = self.fixture(w);old, path = self.add(bank, 'existing')
+            capture_helper = admission.AdmissionContract();capture_helper.pack = self.pack;capture_helper.pid = self.pid;capture_helper.actor = self.actor
+            capture_request = capture_helper.request()
+            capture_request['candidate']['metadata']['derived-from'] = [{'id': old['id'], 'version': old['version']}]
+            captured = capture_helper.capture(w, repo, capture_request)['capture']
+            helper = consolidation.ConsolidationContract();helper.pack = self.pack;helper.pid = self.pid;helper.actor = self.actor
+            compared = helper.compared(w, repo, capture_request['candidate']['metadata'], capture_request['candidate']['body'], [path], captured=captured)
+            r, plan = helper.preview(w, repo, compared);self.assertEqual(r.returncode, 0, plan)
+            r, done = helper.apply(w, plan['proposal']);self.assertEqual(r.returncode, 0, done)
+            original = next((bank / 'history/sources').rglob('*.md'));canonical = original.relative_to(bank).as_posix()
+            legacy = 'history/sources/' + original.name
+            source, body = fixtures.unpack(original.read_text());self.assertGreaterEqual(len(source['derived-from']), 2)
+            # This is the previously accepted flat layout, with multiple origin
+            # references. Reordering cannot establish which reference was capture.
+            source['derived-from'].reverse();(bank / legacy).write_text(fixtures.render(source, body));original.unlink()
+            def move_route(previous, current):
+                for routed in bank.rglob('*.md'):
+                    base = routed.relative_to(bank).parent.as_posix()
+                    before = '[' + previous + '](<' + posixpath.relpath(previous, base) + '>)'
+                    after = '[' + current + '](<' + posixpath.relpath(current, base) + '>)'
+                    raw = routed.read_text()
+                    if before in raw:routed.write_text(raw.replace(before, after))
+            move_route(canonical, legacy)
+            current, _ = fixtures.unpack((bank / path).read_text());r, plan = self.preview(w, repo, self.request(bank, current, path))
+            self.assertEqual(r.returncode, 0, plan);r, done = self.apply(w, plan['proposal']);self.assertEqual(r.returncode, 0, done)
+            for inactive in [*(bank / 'history/sources').rglob('*.md'), *(bank / 'history/versions').rglob('*.md')]:
+                compacted = self.good(w, 'inactive_records.py', 'compact', '--file', inactive)['content']
+                content = w.inside('inactive.md');content.write_text(compacted)
+                prepared = self.good(w, 'bank_writes.py', 'preview', '--repo', repo, '--path', inactive.relative_to(bank), '--content', content)
+                self.good(w, 'bank_writes.py', 'apply', '--proposal', self.save(w, prepared, 'compact.json'))
+            before = self.state(w, repo, bank)
+            # Even a judgment that calls every body merely related context may
+            # not hide this unresolved consumed identity and declare novelty.
+            request, proof = capture_helper.compared(w, repo, captured, classification='related-context')
+            self.assertEqual(proof['disposition'], 'provenance-identity-review-required')
+            inspection = self.good(w, 'compare_learning.py', 'inspect', '--repo', repo, '--request', self.save(w, request))
+            self.assertEqual(inspection['capture_identity_review_paths'], [legacy])
+            self.assertIn(legacy, [row['path'] for row in inspection['matches']])
+            r, pending = capture_helper.preview(w, repo, captured, request, proof)
+            self.assertEqual(r.returncode, 0, pending);self.assertIsNone(pending['proposal'])
+            self.assertEqual(pending['disposition'], 'provenance-identity-review-required')
+            self.assertEqual(before, self.state(w, repo, bank))
+            recall = {'project_id': self.pid, 'query': '', 'ids': [captured['request']['candidate']['metadata']['id']],
+                'paths': [], 'context': {}, 'kinds': ['semantic-fact'], 'minimum_trust': 'reviewed', 'limit': 8, 'include_context': False}
+            self.assertEqual(self.good(w, 'retrieve.py', '--repo', repo, '--request', self.save(w, recall))['results'], [])
+            # The fixture owner can resolve the actual role from its saved raw
+            # capture. Preserve metadata/body, then use a fresh comparison.
+            retained = (bank / legacy).read_text();original.write_text(retained);(bank / legacy).unlink();move_route(legacy, canonical)
+            self.assertEqual(original.read_text(), retained)
+            request, proof = capture_helper.compared(w, repo, captured, classification='equivalent')
+            self.assertEqual(proof['disposition'], 'lifecycle-review-required')
 
     def test_scope_correction_retains_older_branch_guidance_without_applying_it_on_main(self):
         with World() as w:
