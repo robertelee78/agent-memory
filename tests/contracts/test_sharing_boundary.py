@@ -214,3 +214,91 @@ class SharingBoundaryContract(unittest.TestCase):
                 self.assertEqual(self.call(w,'sharing_boundary.py','--repo',repo)[0].returncode,1,branch)
             w.git('config','--local','agent-memory.authorityBranch','main',cwd=repo)
             self.assertEqual(before,self.state(w,repo,bank));self.assertEqual((outside/'sentinel').read_text(),'Keep this file.\n')
+
+    def test_lost_local_setting_finds_existing_bank_and_preserves_prepared_write(self):
+        with World() as w:
+            repo,bank=self.fixture(w,'docs/shared memory');before=self.state(w,repo,bank)
+            content=w.inside('changed.md');content.write_text('# Project\n\nA reviewed goal with its own evidence.\n')
+            prepared=self.good(w,'bank_writes.py','preview','--repo',repo,'--path','projectbrief.md','--content',content)
+            w.git('config','--local','--unset','agent-memory.bankRoot',cwd=repo)
+            inventory=self.good(w,'initialize.py','inspect','--repo',repo)
+            self.assertEqual(inventory['bank_state'],'usable')
+            self.assertFalse(any(s['ref'].startswith('docs/shared memory/') for s in inventory['sources']))
+            view=self.good(w,'sharing_boundary.py','--repo',repo)
+            self.assertEqual(view['bank_root'],'docs/shared memory');self.assertTrue(view['local_boundary_ready'])
+            self.assertEqual(before,self.state(w,repo,bank))
+            done=self.good(w,'bank_writes.py','apply','--proposal',self.save(w,prepared))
+            self.assertEqual(done['changed_memory_paths'],['docs/shared memory/projectbrief.md'])
+            self.assertFalse((repo/'memory-bank').exists());self.assertEqual(before[1:],self.state(w,repo,bank)[1:])
+
+    def test_fresh_clone_with_new_private_state_finds_bank_but_requires_explicit_identity_binding(self):
+        with World() as w:
+            repo,bank=self.fixture(w,'docs/shared memory')
+            original_id=self.good(w,'scope_binding.py','status','--repo',repo)['project_id']
+            w.git('push','origin','HEAD:main',cwd=repo)
+            clone=w.clone(w.git('remote','get-url','origin',cwd=repo).stdout.strip(),'fresh machine')
+            clone_bank=clone/'docs/shared memory';before=self.state(w,clone,clone_bank)
+            self.assertNotEqual(w.git('config','--local','--get','agent-memory.bankRoot',cwd=clone,check=False).returncode,0)
+            w.env['AGENT_MEMORY_CONFIG_HOME']=str(w.inside('new-machine-config'))
+            w.env['AGENT_MEMORY_STATE_HOME']=str(w.inside('new-machine-state'))
+            inventory=self.good(w,'initialize.py','inspect','--repo',clone)
+            self.assertEqual(inventory['bank_state'],'usable');self.assertEqual(inventory['project_id'],original_id)
+            self.assertFalse(any(s['ref'].startswith('docs/shared memory/') for s in inventory['sources']))
+            p=self.good(w,'developer_identity.py','preview','--create','--label','Second machine developer')
+            self.good(w,'developer_identity.py','apply','--proposal',self.save(w,p))
+            self.assertFalse(self.good(w,'scope_binding.py','status','--repo',clone)['resolved'])
+            r,v=self.call(w,'scope_binding.py','preview','--repo',clone,'--action','create','--reason','Cannot replace existing shared memory')
+            self.assertEqual(r.returncode,1)
+            p=self.good(w,'scope_binding.py','preview','--repo',clone,'--action','bind','--reason','Explicit adoption of the existing repository bank')
+            self.good(w,'scope_binding.py','apply','--proposal',self.save(w,p))
+            self.assertEqual(self.good(w,'scope_binding.py','status','--repo',clone)['project_id'],original_id)
+            self.assertEqual(self.good(w,'sharing_boundary.py','--repo',clone)['bank_root'],'docs/shared memory')
+            self.assertFalse((clone/'memory-bank').exists());self.assertEqual(before,self.state(w,clone,clone_bank))
+
+    def test_unsafe_bank_prefix_is_withheld_for_explicit_and_discovered_locations(self):
+        with World() as w:
+            repo,bank=self.fixture(w)
+            unsafe='docs/password=BOUNDARY_ROOT_SECRET'
+            target=repo/unsafe;target.parent.mkdir();bank.rename(target)
+            w.git('add','-A',cwd=repo);w.git('commit','-m','Fixture unsafe location',cwd=repo)
+            before=self.state(w,repo,target)
+            for configured in (True,False):
+                if configured:w.git('config','--local','agent-memory.bankRoot',unsafe,cwd=repo)
+                else:w.git('config','--local','--unset','agent-memory.bankRoot',cwd=repo)
+                for helper,args in [('sharing_boundary.py',()),('initialize.py',('inspect',)),('scope_binding.py',('status',))]:
+                    r,v=self.call(w,helper,*args,'--repo',repo)
+                    if helper=='scope_binding.py':self.assertFalse(v['resolved'])
+                    else:self.assertEqual(r.returncode,1,(helper,v))
+                    self.assertNotIn('BOUNDARY_ROOT_SECRET',r.stdout+r.stderr)
+                    self.assertNotIn('eligible_memory_paths',v)
+            self.assertFalse((repo/'memory-bank').exists());self.assertEqual(before,self.state(w,repo,target))
+
+    def test_ignored_existing_router_and_unknown_schema_cannot_become_source_evidence_for_second_bank(self):
+        with World() as w:
+            repo,bank=self.fixture(w,'docs/shared memory');before=self.state(w,repo,bank)
+            w.git('config','--local','--unset','agent-memory.bankRoot',cwd=repo)
+            w.git('rm','-r','--cached','--','docs/shared memory',cwd=repo)
+            (repo/'.gitignore').write_text('docs/shared memory/\n')
+            for helper,args in [('initialize.py',('inspect',)),('scope_binding.py',('status',))]:
+                r,v=self.call(w,helper,*args,'--repo',repo)
+                if helper=='scope_binding.py':self.assertFalse(v['resolved'])
+                else:self.assertEqual(r.returncode,1,v)
+            self.assertFalse((repo/'memory-bank').exists())
+            self.assertEqual(before[0],self.state(w,repo,bank)[0])
+            (repo/'.gitignore').unlink()
+            original=(bank/'MEMORY.md').read_text();(bank/'MEMORY.md').write_text(original.replace('agent-memory/v1','agent-memory/v999'))
+            r,v=self.call(w,'initialize.py','inspect','--repo',repo)
+            self.assertEqual(r.returncode,1);self.assertNotIn('sources',v);self.assertFalse((repo/'memory-bank').exists())
+
+    def test_tracked_router_deletion_and_locator_inventory_bound_never_establish_absence(self):
+        with World() as w:
+            repo,bank=self.fixture(w,'docs/shared memory')
+            w.git('config','--local','--unset','agent-memory.bankRoot',cwd=repo)
+            (bank/'MEMORY.md').unlink()
+            r,v=self.call(w,'initialize.py','inspect','--repo',repo)
+            self.assertEqual(r.returncode,0,v);self.assertEqual(v['bank_state'],'needs-inspection')
+            self.assertFalse((repo/'memory-bank').exists())
+            for n in range(65):
+                path=repo/('docs/sample-'+str(n));path.mkdir();(path/'MEMORY.md').write_text('# Ordinary documentation\n')
+            r,v=self.call(w,'initialize.py','inspect','--repo',repo)
+            self.assertEqual(r.returncode,1);self.assertNotIn('sources',v);self.assertFalse((repo/'memory-bank').exists())

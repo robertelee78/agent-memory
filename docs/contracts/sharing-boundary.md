@@ -9,8 +9,15 @@ A shared resolver reads explicit local `agent-memory.bankRoot` and
 `agent-memory.authorityBranch` settings. Bank helpers use its default or configured
 root consistently; observed mutation scope pins the settings. Unsafe, ambiguous,
 aliased or symlinked roots refuse. Changing configuration does not migrate a bank
-or reinterpret an outstanding recovery journal. A custom location must be
-explicitly configured in another clone; a lost setting is not evidence of absence.
+or reinterpret an outstanding recovery journal. With no local location setting,
+the unique Git-visible typed router locates the same bank on an existing checkout
+or a fresh clone with empty private state. Location discovery does not adopt its
+project identity; explicit binding remains required. Ignored alternate banks,
+unknown/damaged recognized routers, competing locations or an incomplete/bounded
+inventory refuse initialization rather than manufacture absence. A tracked router's
+pending deletion does not hide its indexed location. Effective resolved settings
+remain pinned across writes and recovery. Listed unsafe labels are withheld before
+printing even the directory prefix.
 
 `sharing_boundary.py --repo` inspects canonical source safety, Git index modes,
 ignore rules and the selected remote/default-branch observation without writes

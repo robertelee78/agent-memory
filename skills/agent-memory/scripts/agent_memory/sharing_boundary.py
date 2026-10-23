@@ -78,7 +78,7 @@ def inspect(repo):
         if len(raw) > 16384:
             safety.append('bounded-content-review-required')
             continue
-        scan = security.scan(raw.decode('utf-8') + '\n' + path)
+        scan = security.scan(raw.decode('utf-8') + '\n' + prefix + path)
         safety.extend(scan['reasons'])
     if safety:
         blockers.append('unsafe-or-unreviewable-memory-content')

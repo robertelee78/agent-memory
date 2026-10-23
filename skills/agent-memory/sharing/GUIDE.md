@@ -19,16 +19,32 @@ git -C /path/to/repo config --local agent-memory.authorityBranch main
 Every public bank helper uses the same resolver, including identity, inspection,
 checkpoint, audit and recovery. The bank directory MUST stay inside the actual
 repository root, with canonical spelling and no hidden components, traversal,
-symlinks or occupied file parents. The resolver MUST refuse competing default
-and configured banks. These local Git settings are not transferred by cloning;
-a session using a custom bank MUST explicitly configure the same location in a
-new clone before binding it. Changing a setting does not move, merge or delete
-memory. A session MUST preserve the original bank and resolve the move before
-mediated use; it MUST NOT initialize a replacement just because a setting was
-lost. Project and developer identity still require the [identity protocol](../identity/GUIDE.md).
+symlinks or occupied file parents. The resolver MUST refuse competing banks or
+an explicit setting that disagrees with an existing bank. These local Git
+settings are not transferred by cloning. With no explicit location, the
+resolver reuses the unique Git-visible `MEMORY.md` with `agent-memory/v1`
+router metadata, including a custom location in a fresh clone. This discovers
+a location, not a new identity or source authority. Project and developer
+identity still require the [identity protocol](../identity/GUIDE.md); a new
+machine MUST explicitly bind the existing project rather than create another.
 
-Configuration is part of the pinned scope context. A prepared mutation MUST
-refuse a changed configuration, including a changed authority branch. A session
+Discovery inspects at most 64 possible router paths. A missing working router
+MUST NOT conceal its indexed copy. When the selected router is absent, a
+bounded physical inventory also checks for ignored banks; it MUST NOT adopt
+them automatically. Unknown or damaged recognized routers, competing banks,
+unreadable inventories and exceeded bounds MUST stop initialization for review,
+not establish absence. Hidden directories and independent nested repositories
+are outside this inventory. A session MUST explicitly inspect any known bank
+there before choosing a location. Boundary labels, including the whole bank
+prefix, MUST pass listed safety checks before they can appear in output.
+
+Changing a setting does not move, merge or delete memory. A session MUST
+preserve the original bank and resolve a move before mediated use; it MUST NOT
+initialize a replacement just because a setting was lost.
+
+Effective configuration is part of the pinned scope context. A prepared mutation MUST
+refuse a changed resolved location or authority branch. Removing a local root
+setting that resolves to the same unique existing bank does not change the pin. A session
 MUST inspect and prepare a new proposal rather than edit its pin. An interrupted
 operation MUST be recovered using its original configuration and proposal;
 changing the configured bank is not recovery. Local state and journals remain

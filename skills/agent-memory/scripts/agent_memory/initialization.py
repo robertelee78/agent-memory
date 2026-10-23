@@ -52,6 +52,7 @@ def source_kind(path):
 
 def local_sources(root, selected=None):
     output, gaps, examined = [], [], 0
+    canonical_bank = repository_config.bank_path(root)
     listed = git(root, 'ls-files', '--cached', '--others', '--exclude-standard', '-z', optional=True)
     allowed = set(listed.split('\0')) if listed is not None else None
     if selected is not None:
@@ -72,7 +73,7 @@ def local_sources(root, selected=None):
     for directory, names, files in os.walk(root, followlinks=False):
         names[:] = sorted(n for n in names if n not in EXCLUDED and not n.startswith('.')
                           and not (Path(directory) / n).is_symlink()
-                          and (Path(directory) / n) != repository_config.bank_path(root))
+                          and (Path(directory) / n) != canonical_bank)
         for name in sorted(files):
             examined += 1
             if examined > 4096:
