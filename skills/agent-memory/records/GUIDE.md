@@ -1,4 +1,17 @@
-# Standalone records and optional history
+---
+kind: operation
+domain: bank
+---
+
+# Render or inspect record and history formats
+
+## Use when
+
+A session SHOULD use this operation to render or inspect a standalone record or optional historical event format. For actual current recall, admission or a lifecycle mutation, it MUST select that governed operation instead of treating formatting as completion.
+
+## Required context
+
+A session using this leaf MUST first load and follow the [bank domain](../bank/GUIDE.md). It MUST open the [shared model](../model/GUIDE.md) only when an unresolved semantic question requires it.
 
 The six context files SHOULD remain concise ordinary Markdown. A session SHOULD
 use a linked standalone record when a durable lesson needs explicit type,
@@ -12,7 +25,11 @@ A session MUST follow [comparison](../comparison/GUIDE.md) before a durable
 learning write or landing. Alternate wording, another branch or inactive state
 MUST NOT make previously recorded learning appear absent.
 
-## Record contract
+A session MUST use the [recall guide](../retrieval/GUIDE.md) for current
+file/ID/text selection. Schema validity and an exact match alone do not qualify
+a record as current guidance.
+
+## Inputs and preconditions
 
 [`schemas/record.json`](../schemas/record.json) defines byte-zero restricted YAML
 frontmatter; the body remains ordinary useful Markdown. Nested values MUST use
@@ -74,38 +91,6 @@ checking replacement authority, admission and actual lifecycle mutations are
 separate governed operations. A procedural candidate MAY be admitted as useful
 knowledge; it MUST NOT become a binding skill without reviewed promotion.
 
-## Read-only helpers
-
-A session MUST use the [recall guide](../retrieval/GUIDE.md) for current
-file/ID/text selection. Schema validity and an exact match alone do not qualify
-a record as current guidance.
-
-With `SKILL_DIR` resolved to the packaged skill directory:
-
-```sh
-python3 -I "$SKILL_DIR/scripts/record_contract.py" model
-python3 -I "$SKILL_DIR/scripts/record_contract.py" render --input /tmp/record-proposal.json
-python3 -I "$SKILL_DIR/scripts/record_contract.py" validate --file memory-bank/topics/example.md --require redaction
-python3 -I "$SKILL_DIR/scripts/record_contract.py" applicability --file memory-bank/topics/example.md --input /tmp/record-context.json
-```
-
-Render accepts exactly `metadata` and `body`; it returns content without writing
-the bank. Repeatable `--require` enforces a caller's required confidence,
-admission, trust, visibility or redaction fields. Applicability accepts exactly
-`bank_project_id` and `context`; all known conditions MUST match the observed
-context. A true result is only a scope decision. Current selection MUST also
-apply lifecycle, time, visibility, trust, authorization and active-superseder
-gates. Exit 0 means valid format or a computed applicability decision; exit 1
-means invalid input. Neither verifies sources, admission, identity, integration,
-publication or freshness, or performs a mutation. Rejected data is not echoed.
-
-The [example proposal](../templates/record-proposal.example.json) is a template,
-not project evidence. A session MUST replace its IDs and sample assertions with
-resolved values before proposing real memory. A clean current bank MUST remain
-readable with the optional history and all memory-generated state removed.
-
-## Optional historical events
-
 [`schemas/history-event.json`](../schemas/history-event.json) defines an optional
 event with a random `id`, project UUID, mutation kind, exact record reference,
 actor, recording time and evidence; its body is empty. The same render/validate
@@ -127,6 +112,59 @@ validator recognizes this exception using the shared tombstone parser. Full
 erasure must also remove unsafe historical artifacts through its governed
 operation; validating a marker does not erase content elsewhere.
 
+## Observe
+
+A session MUST read the complete selected input and actual project/source context before treating a formatted result as project knowledge. For a proposed durable write it MUST inspect existing learning and retain its actual stable IDs, versions, evidence and conditions.
+
+## Plan
+
+The format helper plans only a returned representation. A session MUST separate that representation from a governed canonical change and MUST NOT mint replacement origins or change lifecycle merely to make a template validate.
+
+## Apply
+
+With `SKILL_DIR` resolved to the packaged skill directory:
+
+```sh
+python3 -I "$SKILL_DIR/scripts/record_contract.py" model
+python3 -I "$SKILL_DIR/scripts/record_contract.py" render --input /tmp/record-proposal.json
+python3 -I "$SKILL_DIR/scripts/record_contract.py" validate --file memory-bank/topics/example.md --require redaction
+python3 -I "$SKILL_DIR/scripts/record_contract.py" applicability --file memory-bank/topics/example.md --input /tmp/record-context.json
+```
+
+## Read back
+
+Render accepts exactly `metadata` and `body`; it returns content without writing
+the bank. Repeatable `--require` enforces a caller's required confidence,
+admission, trust, visibility or redaction fields. Applicability accepts exactly
+`bank_project_id` and `context`; all known conditions MUST match the observed
+context. A true result is only a scope decision. Current selection MUST also
+apply lifecycle, time, visibility, trust, authorization and active-superseder
+gates. Exit 0 means valid format or a computed applicability decision; exit 1
+means invalid input. Neither verifies sources, admission, identity, integration,
+publication or freshness, or performs a mutation. Rejected data is not echoed.
+
+The [example proposal](../templates/record-proposal.example.json) is a template,
+not project evidence. A session MUST replace its IDs and sample assertions with
+resolved values before proposing real memory. A clean current bank MUST remain
+readable with the optional history and all memory-generated state removed.
+
+## Verify
+
 A session MUST use the [inactive representation and invalidation guide](../inactive/GUIDE.md)
 for minimal safe historical summaries and derived input. It MUST NOT reuse an
 old cached body merely because its record ID is still present somewhere.
+
+
+A session MUST verify that the result preserves its actual intended input and remains only a format result. It MUST complete the relevant admission, scope, evidence, safety, observed-write and readback contract before a durable change.
+
+## Outcomes
+
+A successful render or inspection supplies format evidence for the selected input; it does not prove admission, truth, current applicability, procedure approval or publication. The session MUST route from the actual next intended state rather than report those outcomes.
+
+## Failure handling
+
+With invalid/unsupported input, the session MUST preserve original bytes and resolve the actual format/version issue. It MUST NOT silently reinterpret an unknown schema, replace the bank with a starter or resurrect a terminally deleted ID.
+
+## Diagnostic fallback
+
+If the normal helper cannot establish a result, the session MAY inspect the current packaged schema, source Markdown and safe tombstone metadata with ordinary tools. It MUST retain the same currentness and authority qualifications and leave mediated mutation/verification pending.

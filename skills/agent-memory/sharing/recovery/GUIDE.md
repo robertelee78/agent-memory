@@ -1,4 +1,11 @@
-# Git sharing recovery and replay
+---
+kind: operation
+domain: sharing
+---
+
+# Recover shared observations, lost responses and merge baselines
+
+## Use when
 
 This guide covers a fresh remote observation, lost-response readback and the
 mechanical three-way merge used by the sharing operations. A local observation,
@@ -6,11 +13,29 @@ a mechanically compatible merge and an accepted semantic review are distinct
 facts. The helper MUST NOT be treated as permission to publish or as evidence
 that feature code matches the authority branch.
 
+## Required context
+
+A session using this leaf MUST first load and follow the [sharing domain](../../sharing/GUIDE.md). It MUST open the [shared model](../../model/GUIDE.md) only when an unresolved semantic question requires it.
+
 A session MUST retain useful local capture while remote exchange is pending.
 It MUST NOT claim freshness after a failed/offline observation. It SHOULD surface
 the failure at a natural boundary and continue independent local work.
 
-## Observe current state
+## Inputs and preconditions
+
+The session MUST inventory before retrying a push/merge. The replay request is
+exactly `{ "base": "FULL_SHA", "candidate": "FULL_SHA" }`. Both MUST name actual
+locally available commits. The candidate MUST have exactly the previous observed
+authority base as its sole parent and change only canonical memory paths.
+
+The complete three snapshots are bounded: 256 files, 16 KiB per file and 1 MiB
+total. Publication readback inspects at most 128 intervening commits. Exceeded
+bounds MUST require review, never silently truncate evidence or claim absence.
+This foundation does not bypass publication checks or implement automatic
+semantic approval, landing or boundary invocation; those operations have their
+own contracts.
+
+## Observe
 
 With `SKILL_DIR` resolved to this package:
 
@@ -45,16 +70,24 @@ remote-tracking refs and a cached JSON result MUST NOT establish server freshnes
 Losing the temporary ref, optional cursor or retry state loses no Markdown.
 Unknown locks and transaction markers MUST remain for ordinary write recovery.
 
-## Recover a lost publication response
+## Plan
 
-The session MUST inventory before retrying a push/merge. The replay request is
-exactly `{ "base": "FULL_SHA", "candidate": "FULL_SHA" }`. Both MUST name actual
-locally available commits. The candidate MUST have exactly the previous observed
-authority base as its sole parent and change only canonical memory paths.
+A session MUST choose the actual observed case: inventory a possibly completed publication before any retry, or reconstruct a three-way memory baseline from preserved sources. It MUST keep feature code/index/history and unpublished memory separate from these readback/planning primitives.
+
+## Apply
 
 ```sh
 python3 -I "$SKILL_DIR/scripts/sharing_recovery.py" replay --repo /path/to/repo --request /private/replay.json
 ```
+
+For a mechanical three-way baseline/candidate inspection, the session MUST use the appropriate reconcile/base branch below.
+
+```sh
+python3 -I "$SKILL_DIR/scripts/sharing_recovery.py" reconcile --repo /path/to/repo
+python3 -I "$SKILL_DIR/scripts/sharing_recovery.py" reconcile --repo /path/to/repo --base FULL_SHA
+```
+
+## Read back
 
 The helper fetches current authority and checks the bounded intervening history
 for an actual first-parent authority tree containing the complete intended memory
@@ -71,13 +104,6 @@ A witnessed publication MUST NOT be pushed again. An unwitnessed delta requires
 fresh reconciliation and repository rule checks, not an unconditional retry.
 Rewritten/diverged authority or exceeded history bounds require review.
 
-## Reconcile after cursor loss or ordinary code integration
-
-```sh
-python3 -I "$SKILL_DIR/scripts/sharing_recovery.py" reconcile --repo /path/to/repo
-python3 -I "$SKILL_DIR/scripts/sharing_recovery.py" reconcile --repo /path/to/repo --base FULL_SHA
-```
-
 The helper compares previously shared memory, current local canonical memory,
 and freshly observed authority. With no cursor, the unique actual Git merge
 base reconstructs the comparison baseline; ambiguous/unrelated histories MUST
@@ -86,6 +112,8 @@ ancestor of the feature HEAD: a previous memory-only import MUST NOT require
 merging authority code or changing feature ancestry. Local HEAD remains pinned
 and a changed HEAD requires a new comparison. Losing a
 cursor MUST NOT justify replacing the whole bank with an authority snapshot.
+
+## Verify
 
 The result contains a complete validated candidate and exact local/source
 hashes. Independent file edits combine; identical edits occur once. Structured
@@ -106,6 +134,8 @@ closure/erasure review. Conflicting tombstone authorities, ambiguous lifecycle
 changes, unsupported shape changes and custom index introductions that would be
 lost MUST remain pending rather than select a winner by time or landing order.
 
+## Outcomes
+
 After semantic approval, the calling sharing operation MUST use the existing
 recoverable multi-file write protocol with current source and Git pins. The
 mechanical helper itself does not write canonical memory or resolve Git's index.
@@ -116,9 +146,10 @@ next comparison recognizes the same landed memory without duplication/reversal.
 The session MUST preserve unrelated index entries, code changes and branch
 ancestry. A refresh MUST NOT imply that code from authority was imported.
 
-The complete three snapshots are bounded: 256 files, 16 KiB per file and 1 MiB
-total. Publication readback inspects at most 128 intervening commits. Exceeded
-bounds MUST require review, never silently truncate evidence or claim absence.
-This foundation does not bypass publication checks or implement automatic
-semantic approval, landing or boundary invocation; those operations have their
-own contracts.
+## Failure handling
+
+If authority, history, scope, snapshot bounds or source observation cannot be verified, the session MUST retain useful local work and report sharing pending/stale. It MUST NOT infer absence from an incomplete inventory, treat a discarded side parent as a landed witness or overwrite local memory from a directory snapshot.
+
+## Diagnostic fallback
+
+If normal readback cannot establish what landed or the correct base, a session MAY inspect bounded actual first-parent history, canonical trees and preserved proposals through read-only Git/file tools. It MUST keep uncertain publication unverified and complete fresh semantic review before a corresponding write or exchange.

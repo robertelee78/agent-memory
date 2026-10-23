@@ -1,3 +1,7 @@
+---
+kind: domain
+---
+
 # The current Markdown bank
 
 `memory-bank/` is the canonical readable project state, not a rendering that
@@ -37,42 +41,6 @@ baseline audit evidence when files have actually been committed. It MUST NOT be
 the only indication that visible guidance is stale: the current file or linked
 record MUST explain correction, revocation or supersession where needed.
 
-## Local current-file inspection
-
-A session SHOULD use [baseline recall](../retrieval/GUIDE.md) when selecting
-applicable current lessons rather than only inspecting structural bank state.
-
-With `SKILL_DIR` resolved to the packaged skill directory:
-
-```sh
-python3 -I "$SKILL_DIR/scripts/bank_state.py" inspect --repo /path/to/project
-```
-
-The command validates the bank, reports each recognizable context or its omission
-reason, routes and current source hashes, and optionally inspects local Git
-context. It writes nothing and reads no memory-generated application state.
-It does not assemble task context, admit a claim or prove semantic currentness.
-A session MUST still apply [scope](../scope/GUIDE.md), lifecycle, source-authority
-and trust checks before using a record as guidance.
-
-Git facts are deliberately limited: `context_head` is the local repository HEAD,
-and `index_entries` show current file paths in the index. Index membership does
-not prove that the current bytes were committed, pushed, merged or published.
-The inspector therefore reports `current_bytes_committed: not-assessed` and
-`local-or-pending-sharing`, with publication and freshness unverified. This
-means verification is pending, not that the helper proved a published version
-absent. A session MUST use actual Git/publication/refresh evidence before
-claiming another session can see the learning. Local Git inspection uses fixed
-read-only plumbing, disables lazy fetch/network protocols and optional locks,
-and does not execute remembered commands or refresh the worktree.
-These switches follow the [Git command reference](https://git-scm.com/docs/git/2.53.0.html).
-
-A plain untracked bank or unavailable Git metadata remains readable Markdown.
-Missing Git, a failed index read or a different enclosing Git root MUST NOT be
-presented as a verified audit trail or silently bind the bank to another project.
-The session MUST retain local work and resolve identity/publication through the
-appropriate operation. Ordinary source links remain usable independently of Git.
-
 ## State loss and recovery
 
 A session MUST scope cleanup to known memory-owned artifacts.
@@ -89,3 +57,22 @@ rendering a new starter. A clean bank has no unfinished transaction to replay.
 Known interrupted operations require explicit finish/rollback recovery and its
 retained journal. Ordinary manual checkpoints remain cooperative file edits,
 not audited admissions or concurrency-safe mediated replacements.
+
+## Domain loading and routes
+
+A session MUST load this domain before its selected operation leaf and MUST NOT
+preload sibling leaves for completeness. It MUST select the next operation from
+actual observed state. The [shared model](../model/GUIDE.md) MUST load only when
+a semantic question remains unresolved by this domain and operation.
+
+A session MUST read [records/GUIDE.md](../records/GUIDE.md) when a lesson needs
+typed provenance, validity, correction or revocation. Ordinary context prose
+does not need metadata on every paragraph. Record format validation MUST NOT
+be treated as admission or proof that its evidence and conditions are correct.
+
+| Intent | Operation |
+| --- | --- |
+| Use the file-only workflow | [offline](../offline/GUIDE.md) |
+| Inspect current bank files | [inspect](inspect/GUIDE.md) |
+| Inspect typed record format | [records](../records/GUIDE.md) |
+| Perform observed writes/recovery | [writes](../writes/GUIDE.md) |

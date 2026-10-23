@@ -1,4 +1,11 @@
-# Consolidate qualified duplicate learning
+---
+kind: operation
+domain: maintain
+---
+
+# Consolidate qualified duplicates without losing provenance
+
+## Use when
 
 At a natural turn boundary, after foreground work, the session MUST automatically
 combine equivalent learning and tighten wording when current evidence supports
@@ -7,7 +14,13 @@ MUST follow the [comparison guide](../comparison/GUIDE.md), inspect all plausibl
 sources, and preserve distinct conditions, evidence and developer/session origins.
 A semantic judgment is an agent assertion, never a mechanical proof of truth.
 
-## Prepare one source-bound group
+## Required context
+
+A session using this leaf MUST first load and follow the [maintain domain](../maintain/GUIDE.md). It MUST open the [shared model](../model/GUIDE.md) only when an unresolved semantic question requires it.
+
+The session MUST use the actual fresh source-bound comparison and applicable current targets. If that prerequisite is missing, it MUST select the comparison operation first, finish it, then return with its exact still-current evidence rather than preload unrelated maintenance leaves.
+
+## Inputs and preconditions
 
 The packaged `consolidate_learning.py` takes a JSON input with exactly:
 
@@ -18,12 +31,7 @@ The packaged `consolidate_learning.py` takes a JSON input with exactly:
 | `capture` | A qualified admission capture or response, or `null` for tightening existing learning. |
 | `context` | Actual applicability context using the [retrieval fields](../retrieval/GUIDE.md). |
 
-For existing wording alone, the candidate metadata MUST be the complete unchanged
-metadata of the existing target chosen to retain its stable ID; only the body
-proposes new wording. For a new duplicate observation, the session MUST first
-follow [admission](../admission/GUIDE.md) to capture its actual evidence and origin,
-then compare that exact captured candidate. An unconfirmed or procedural capture
-MUST remain pending its separate review or explicit procedure promotion.
+## Observe
 
 The helper qualifies every target through current recall before writing. Its
 bounded group has one to eight typed targets with the same kind, scope,
@@ -31,6 +39,25 @@ conditions, applicability, valid-time bounds, trust and visibility. Unknown,
 mismatched, expired, revoked or deleted sources MUST NOT be made current by
 consolidation. Distinct conditions MUST remain separate; an unavailable source
 MUST NOT be treated as absent. Other-bank or stale comparison evidence refuses.
+
+## Plan
+
+For existing wording alone, the candidate metadata MUST be the complete unchanged
+metadata of the existing target chosen to retain its stable ID; only the body
+proposes new wording. For a new duplicate observation, the session MUST first
+follow [admission](../admission/GUIDE.md) to capture its actual evidence and origin,
+then compare that exact captured candidate. An unconfirmed or procedural capture
+MUST remain pending its separate review or explicit procedure promotion.
+
+A preview MUST contain a non-null `proposal` before apply. `no-change` means
+nothing needs writing; repeat execution converges without another version or
+event. A distinct higher-order idea returns `proposal-only`, not a new decision.
+Contradictions or uncertain meaning MUST go to the detecting developer/session.
+If another developer originated a conflicting claim, the session SHOULD recommend
+clarification with that developer. The helper sends no messages. A real unresolved
+code, approved-intent or work-record conflict MAY require a focused PM Q&A.
+
+## Apply
 
 With `SKILL_DIR` resolved, save evidence and proposals outside canonical memory:
 
@@ -41,15 +68,7 @@ python3 -I "$SKILL_DIR/scripts/consolidate_learning.py" apply \
   --proposal /private/path/maintenance.json
 ```
 
-A preview MUST contain a non-null `proposal` before apply. `no-change` means
-nothing needs writing; repeat execution converges without another version or
-event. A distinct higher-order idea returns `proposal-only`, not a new decision.
-Contradictions or uncertain meaning MUST go to the detecting developer/session.
-If another developer originated a conflicting claim, the session SHOULD recommend
-clarification with that developer. The helper sends no messages. A real unresolved
-code, approved-intent or work-record conflict MAY require a focused PM Q&A.
-
-## Preserve provenance and history
+## Read back
 
 A successful consolidation retains one existing stable ID and creates a higher
 active version. It preserves original identity and applicable metadata, unions
@@ -83,7 +102,7 @@ bounds. Maintenance MUST stop before writing if complete provenance exceeds a
 bound; the session MUST reorganize into useful bounded groups without discarding
 evidence. Readers and operations still scale with the complete bank.
 
-## Verify, recover and continue quietly
+## Verify
 
 Successful apply requires `verified: true`, `outcome: finished`, and
 `consolidation_verified: true`. The exact observed source bank, Git context,
@@ -91,12 +110,24 @@ current applicability and optional capture evidence are checked before the write
 under the common lock, and again during transactional readback. The helper MUST
 NOT change unrelated source files, the Git index, HEAD or feature ancestry.
 
+## Outcomes
+
 A repeat of the same operation reads its existing receipt without overwriting
 newer edits. `still_current: false` describes historical success only; the session
 MUST qualify current sources before using the lesson. A different plan needs a
 fresh comparison and operation ID. A local receipt establishes no publication
 or latest-main freshness; actual exchange MUST compare against newly landed
 memory and follow repository rules.
+
+Routine success SHOULD stay quiet. Conflicts, failures and consequential
+corrections MUST surface promptly at the boundary, without interrupting unrelated
+foreground work. Exit 0 MAY mean pending or no change; exit 1 means refusal or an
+uncertain outcome and requires inspection before retry; exit 2 means invalid
+arguments. An apply failure MUST NOT be assumed to mean no canonical writes.
+The helper runs no daemon, executes no remembered commands, and grants no
+repository policy exception.
+
+## Failure handling
 
 An interruption MUST preserve its journal, marker and private receipt. Follow
 [write recovery](../writes/GUIDE.md): recover the dead owned lock first. Before a
@@ -106,10 +137,6 @@ only cleans that exact committed outcome, without fresh semantic evidence or
 replaying bytes. Unknown receipts, missing journals or external edits require
 inspection. After marker removal, exact replay preserves later memory changes.
 
-Routine success SHOULD stay quiet. Conflicts, failures and consequential
-corrections MUST surface promptly at the boundary, without interrupting unrelated
-foreground work. Exit 0 MAY mean pending or no change; exit 1 means refusal or an
-uncertain outcome and requires inspection before retry; exit 2 means invalid
-arguments. An apply failure MUST NOT be assumed to mean no canonical writes.
-The helper runs no daemon, executes no remembered commands, and grants no
-repository policy exception.
+## Diagnostic fallback
+
+If normal consolidation cannot establish a verified result, the session MUST preserve all distinct source learning, conditions, origins and recovery material. It MAY inspect current canonical records and their actual history to resolve the cause, but MUST NOT manually discard an uncertain duplicate or overwrite a newer correction from an old proposal.

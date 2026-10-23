@@ -1,6 +1,7 @@
 ---
 name: agent-memory
-description: Maintain and recall a repository's shared Markdown memory across agent sessions, worktrees and machines; use for durable project learning, checkpointing and resuming work.
+description: Maintain a repository's shared Markdown memory across sessions, worktrees and machines; use to initialize, resume, recall, capture durable project learning, correct, forget or checkpoint memory.
+metadata: {"version": "0.0.1-dev"}
 ---
 
 # Agent memory
@@ -13,7 +14,20 @@ The words MUST, MUST NOT, SHOULD and MAY carry their RFC 2119 meanings in this
 file and its linked guides. A session MUST resolve `SKILL_DIR` to the directory
 containing this file before using a packaged script.
 
-## Start and resume
+
+## Loading contract
+
+A session MUST read this root first, select one primary domain for the current
+intent, then read that domain before its operation leaf. It MUST NOT preload
+sibling leaves or the whole tree. A referenced schema/template MUST open only
+when its artifact is being created or validated. The shared model MUST load only
+when a scope, authority, type, trust, lifecycle, contradiction or validity question
+cannot be resolved by the selected domain and operation; a direct model question
+MAY route there immediately. After a state change the session MUST route again
+from observed state. Diagnostic file repair MUST remain a fallback after the
+ordinary command cannot establish a verified result.
+
+## Standing responsibility
 
 A starting or resuming session MUST follow [resume/GUIDE.md](resume/GUIDE.md)
 to load the bounded project router and only confidently relevant task/component
@@ -57,92 +71,58 @@ A session MUST read [writes/GUIDE.md](writes/GUIDE.md) before using the common
 observed-write primitives, and [projections/GUIDE.md](projections/GUIDE.md)
 before building or consuming optional derived references.
 
-## Conflicting claims
 
-A session MUST read [authority/GUIDE.md](authority/GUIDE.md) when remembered
-claims disagree with code, approved intent, work records, coordination or another
-lesson. It MUST use the appropriate current authority and retain unresolved
-contradictions for the detecting developer rather than use landing order as truth.
+At natural turn boundaries a session MUST check for newly landed same-repository
+memory through the sharing domain before using it as current guidance or
+admitting new learning. It MUST automatically capture useful durable learning
+from actual evidence after reading existing memory. It MUST consolidate qualified
+duplicates/tighten wording when comparison identifies them and prune invalid
+learning only with stronger evidence, preserving distinct conditions, evidence,
+provenance and useful history. It MUST automatically publish eligible memory
+within existing repository rules independently of feature code. The session MUST
+select and complete each relevant operation from observed state, without loading
+unneeded siblings or interrupting an executing turn.
 
-## Applicability
+## Route
 
-A session MUST read [identity/GUIDE.md](identity/GUIDE.md) before mediated writes
-or explicit bank binding. It MUST use the common developer/project resolver and
-surface unresolved identity; clients MUST NOT invent alternate ID algorithms.
-
-A session MUST read [scope/GUIDE.md](scope/GUIDE.md) when resolving repository
-scope or component, branch, worktree, task and session conditions. Unknown or
-mismatched conditions MUST NOT be silently widened into current guidance.
-
-## Standalone lessons
-
-A session MUST follow [admission/GUIDE.md](admission/GUIDE.md) at natural turn
-boundaries to capture useful durable learning, assess actual evidence and admit
-small qualified records after fresh comparison. Routine qualified capture MUST
-NOT require per-record approval; proposals and unanswered suggestions MUST remain
-unconfirmed, and unsafe content MUST be quarantined outside shared guidance.
-
-A session MUST follow [consolidation/GUIDE.md](consolidation/GUIDE.md) at natural
-turn boundaries when comparison identifies equivalent learning or wording to
-tighten. It MUST preserve every distinct condition, evidence source and origin,
-retain useful history, and leave unresolved changes of meaning for clarification.
-
-A session MUST follow [governance/GUIDE.md](governance/GUIDE.md) for correction,
-supersession, revocation, known expiry, policy retention or explicit deletion.
-It MUST automatically prune only with stronger evidence, preserve still-valid
-older conditions, and leave ambiguous meaning with the detecting developer.
-Age alone MUST NOT justify pruning; terminal deletion MUST leave safe tombstones.
-
-A session MUST read [records/GUIDE.md](records/GUIDE.md) when a lesson needs
-typed provenance, validity, correction or revocation. Ordinary context prose
-does not need metadata on every paragraph. Record format validation MUST NOT
-be treated as admission or proof that its evidence and conditions are correct.
-
-A session MUST read [inactive/GUIDE.md](inactive/GUIDE.md) when representing
-supersession/revocation/deletion or using cached records for rebuild or
-consolidation. Cached bodies MUST NOT override current canonical invalidation.
-
-A session MUST read [layout/GUIDE.md](layout/GUIDE.md) when adding or inspecting
-optional records, maintaining topic indexes, or resolving missing, duplicate or
-inconsistent routes. Index routing MUST preserve each lesson's own conditions.
-
-## Checkpoint
-
-A session MUST read [checkpoint/GUIDE.md](checkpoint/GUIDE.md) when saving current
-focus, meaningful changes, questions and next step. The mediated checkpoint
-changes only `activeContext.md`; missing-context route preparation is separate.
-
-## Sharing boundary
-
-A session MUST read [sharing/GUIDE.md](sharing/GUIDE.md) before configuring the
-repository bank/default branch or inspecting eligible memory-only Git paths.
-
-A session MUST follow [sharing/semantic/GUIDE.md](sharing/semantic/GUIDE.md)
-when combining local and landed learning, to preserve source conditions and
-origins, isolate disputed updates and review meaning across files.
-
-A session MUST read [sharing/recovery/GUIDE.md](sharing/recovery/GUIDE.md)
-before recovering a lost sharing response or reconstructing a merge baseline.
-
-A session MUST follow [sharing/publication/GUIDE.md](sharing/publication/GUIDE.md)
-at natural turn boundaries to automatically prepare and land admitted memory
-independently of feature code, respecting actual repository review/check rules.
-
-A session MUST follow [sharing/refresh/GUIDE.md](sharing/refresh/GUIDE.md) at
-natural turn boundaries to import newly landed memory, preserve unpublished
-learning and read relevant imports with their conditions and provenance.
-
-A local edit, branch commit or successful validation MUST NOT be described as
-landed shared memory. Other sessions can rely on a change only after the
-repository's publication rules have landed it on `main` and they have refreshed
-that memory. Memory-only publication and turn-boundary refresh are implemented
-by the linked operation routes; the offline file workflow remains local.
-While offline or exchange is unavailable, a session
-MUST retain local work and report sharing as pending when freshness matters.
+| Current intent | Primary domain | Operation |
+| --- | --- | --- |
+| Resolve/bind identity | [access](access/GUIDE.md) | [identity](identity/GUIDE.md) |
+| Decide applicability | [access](access/GUIDE.md) | [scope](scope/GUIDE.md) |
+| Triage conflicting sources | [access](access/GUIDE.md) | [authority](authority/GUIDE.md) |
+| Classify sources and check safety | [access](access/GUIDE.md) | [security](security/GUIDE.md) |
+| Resume a session | [recall](recall/GUIDE.md) | [resume](resume/GUIDE.md) |
+| Recall current records | [recall](recall/GUIDE.md) | [retrieval](retrieval/GUIDE.md) |
+| Assemble bounded context | [recall](recall/GUIDE.md) | [assembly](assembly/GUIDE.md) |
+| Initialize from evidence | [capture](capture/GUIDE.md) | [initialize](initialize/GUIDE.md) |
+| Compare existing learning | [capture](capture/GUIDE.md) | [comparison](comparison/GUIDE.md) |
+| Capture/admit durable learning | [capture](capture/GUIDE.md) | [admission](admission/GUIDE.md) |
+| Checkpoint active context | [capture](capture/GUIDE.md) | [checkpoint](checkpoint/GUIDE.md) |
+| Correct/prune/forget learning | [govern](govern/GUIDE.md) | [governance](governance/GUIDE.md) |
+| Inspect inactive guidance | [govern](govern/GUIDE.md) | [inactive](inactive/GUIDE.md) |
+| Consolidate duplicates | [maintain](maintain/GUIDE.md) | [consolidation](consolidation/GUIDE.md) |
+| Inspect record/index layout | [maintain](maintain/GUIDE.md) | [layout](layout/GUIDE.md) |
+| Build/check derived references | [maintain](maintain/GUIDE.md) | [projections](projections/GUIDE.md) |
+| Use the file-only workflow | [bank](bank/GUIDE.md) | [offline](offline/GUIDE.md) |
+| Inspect current bank files | [bank](bank/GUIDE.md) | [inspect](bank/inspect/GUIDE.md) |
+| Inspect typed record format | [bank](bank/GUIDE.md) | [records](records/GUIDE.md) |
+| Perform observed writes/recovery | [bank](bank/GUIDE.md) | [writes](writes/GUIDE.md) |
+| Inspect the memory-only Git boundary | [sharing](sharing/GUIDE.md) | [boundary](sharing/boundary/GUIDE.md) |
+| Review shared meaning | [sharing](sharing/GUIDE.md) | [sharing/semantic](sharing/semantic/GUIDE.md) |
+| Recover Git exchange/baselines | [sharing](sharing/GUIDE.md) | [sharing/recovery](sharing/recovery/GUIDE.md) |
+| Publish memory independently | [sharing](sharing/GUIDE.md) | [sharing/publication](sharing/publication/GUIDE.md) |
+| Refresh landed memory | [sharing](sharing/GUIDE.md) | [sharing/refresh](sharing/refresh/GUIDE.md) |
+| Semantic/model question | [shared model](model/GUIDE.md) | Direct reference |
 
 ## Before governed memory use
 
-A session MUST follow [security/GUIDE.md](security/GUIDE.md) for actual source
-classification, same-project checks, secret/quarantine controls, separate
-procedure approval and private audit before governed admission, mutation,
-retrieval or publication. A mechanical write receipt does not admit learning.
+A session MUST follow the [access domain](access/GUIDE.md) for actual identity/source resolution, classification, same-project checks, secret/quarantine controls, separate procedure approval and private audit before governed admission, mutation, retrieval or publication. A mechanical write receipt does not admit learning.
+
+## Completion and handoff
+
+A session MUST distinguish a planned delta, an applied local write, verified
+publication and fresh imported recall. It MUST preserve local edits and pending
+recovery evidence. Routine success SHOULD remain quiet; conflicts, failures and
+consequential corrections MUST reach the detecting developer promptly. A handoff
+MUST point to current canonical memory and source-bound pending work, rather than
+claim that a local edit or checkpoint has landed for other sessions.

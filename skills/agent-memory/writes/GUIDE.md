@@ -1,4 +1,17 @@
-# Observed bank writes and replay
+---
+kind: operation
+domain: bank
+---
+
+# Apply observed bank changes and recover known writes
+
+## Use when
+
+A session SHOULD use this operation for the common observed single-file or recoverable multi-file primitives. It MUST complete the higher-level operation’s admission, source, comparison and authority requirements first; mechanical writing does not qualify a lesson.
+
+## Required context
+
+A session using this leaf MUST first load and follow the [bank domain](../bank/GUIDE.md). It MUST open the [shared model](../model/GUIDE.md) only when an unresolved semantic question requires it.
 
 A session MUST use the common [identity](../identity/GUIDE.md) resolver and
 complete the operation's admission, applicability and
@@ -17,12 +30,21 @@ The [checkpoint](../checkpoint/GUIDE.md), [initializer](../initialize/GUIDE.md)
 and explicit identity-binding operations own their product-specific inputs.
 For an independently reviewed existing-file replacement a session MAY use:
 
-```sh
-python3 -I "$SKILL_DIR/scripts/bank_writes.py" inspect --repo /path/to/repo
-python3 -I "$SKILL_DIR/scripts/bank_writes.py" preview --repo /path/to/repo \
-  --path activeContext.md --content /private/path/reviewed.md > /private/path/proposal.json
-python3 -I "$SKILL_DIR/scripts/bank_writes.py" apply --proposal /private/path/proposal.json
-```
+## Inputs and preconditions
+
+The files input is the complete canonical bank-relative Markdown map, including
+unchanged files. A session MUST preserve their observed bytes, conditions,
+evidence and provenance. The writer rechecks the whole bank under the lock,
+stores private base/intended recovery bytes, and exposes a content-free marker
+before sequential atomic file replacements and router-last readback. It MUST
+NOT claim global filesystem atomicity. Proposals/journals containing memory
+bytes MUST remain private and outside shared commits.
+
+## Observe
+
+A session MUST inspect the actual current bank, selected scope and pending operation/lock state before preparing a change. If a known operation may already have completed, it MUST inventory its actual journal/receipt and current files before retrying.
+
+## Plan
 
 Preview writes nothing and binds complete observed Markdown hashes, project,
 selected identity, exact replacement bytes and a random operation ID. Apply
@@ -33,7 +55,14 @@ memory, unrelated code, index bytes and HEAD. The lock coordinates cooperating
 processes in that worktree; it is not a cross-machine/global lock or protection
 from a manual editor ignoring the protocol.
 
-## Several canonical files
+## Apply
+
+```sh
+python3 -I "$SKILL_DIR/scripts/bank_writes.py" inspect --repo /path/to/repo
+python3 -I "$SKILL_DIR/scripts/bank_writes.py" preview --repo /path/to/repo \
+  --path activeContext.md --content /private/path/reviewed.md > /private/path/proposal.json
+python3 -I "$SKILL_DIR/scripts/bank_writes.py" apply --proposal /private/path/proposal.json
+```
 
 Adding/removing routes or records requires the recoverable multi-file protocol:
 
@@ -43,15 +72,31 @@ python3 -I "$SKILL_DIR/scripts/bank_transactions.py" preview --repo /path/to/rep
 python3 -I "$SKILL_DIR/scripts/bank_transactions.py" apply --proposal /private/path/transaction.json
 ```
 
-The files input is the complete canonical bank-relative Markdown map, including
-unchanged files. A session MUST preserve their observed bytes, conditions,
-evidence and provenance. The writer rechecks the whole bank under the lock,
-stores private base/intended recovery bytes, and exposes a content-free marker
-before sequential atomic file replacements and router-last readback. It MUST
-NOT claim global filesystem atomicity. Proposals/journals containing memory
-bytes MUST remain private and outside shared commits.
+## Read back
 
-## Interrupted or uncertain outcomes
+Private write/recovery receipts are separate from optional historical events.
+The [admission workflow](../admission/GUIDE.md) writes its admission event with
+the current record. Before verified completion, interrupted admission requires
+rollback and fresh comparison. An exact verified finished receipt instead allows
+finish to clean the recorded outcome without replay; ordinary finish MUST NOT
+bypass the pre-completion evidence checks. An event writer
+MUST use the stable event ID as its idempotency key and refuse that ID
+with different content. Historical events/projections MUST NOT replace the
+current bank, and terminal deletion MUST use only its content-free tombstone.
+Any owned view/cache/index MUST honor current invalidation before rebuild.
+
+## Verify
+
+A session MUST read back the actual verified/current transaction outcome and complete resulting bank state before claiming the intended local change. It MUST preserve external edits and distinguish private audit/recovery state from canonical knowledge.
+
+## Outcomes
+
+Exit 0 means the command completed; apply still requires its verified/current
+receipt. Exit 1 means refusal or uncertain outcome requiring inspection, and
+exit 2 means invalid arguments. Ordinary memory edits remain local/pending
+sharing until actual publication and refresh evidence establishes visibility.
+
+## Failure handling
 
 A failure after replacement can leave saved memory without a success receipt.
 A session MUST inspect and retry the **same original proposal**, keeping its
@@ -77,18 +122,6 @@ Initialization finish MUST revalidate original source evidence; identity-change
 transactions MUST resume through their original binding bundle. A session MUST
 preserve unknown markers or missing journals for explicit inspection.
 
-Private write/recovery receipts are separate from optional historical events.
-The [admission workflow](../admission/GUIDE.md) writes its admission event with
-the current record. Before verified completion, interrupted admission requires
-rollback and fresh comparison. An exact verified finished receipt instead allows
-finish to clean the recorded outcome without replay; ordinary finish MUST NOT
-bypass the pre-completion evidence checks. An event writer
-MUST use the stable event ID as its idempotency key and refuse that ID
-with different content. Historical events/projections MUST NOT replace the
-current bank, and terminal deletion MUST use only its content-free tombstone.
-Any owned view/cache/index MUST honor current invalidation before rebuild.
+## Diagnostic fallback
 
-Exit 0 means the command completed; apply still requires its verified/current
-receipt. Exit 1 means refusal or uncertain outcome requiring inspection, and
-exit 2 means invalid arguments. Ordinary memory edits remain local/pending
-sharing until actual publication and refresh evidence establishes visibility.
+If the ordinary protocol cannot establish safe completion or rollback, the session MUST retain original proposals, current bank bytes and recovery evidence for explicit inspection. It MAY inspect their bounded metadata and stronger source files, but MUST NOT steal unknown/live/foreign locks, delete a marker to force success or overwrite an unexpected external edit.

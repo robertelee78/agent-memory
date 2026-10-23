@@ -1,4 +1,11 @@
+---
+kind: operation
+domain: capture
+---
+
 # Capture and admit durable project learning
+
+## Use when
 
 At a natural turn boundary, a session MUST consider durable discoveries, verified
 fixes, useful failed approaches, user corrections and confirmed project decisions.
@@ -7,13 +14,17 @@ each routine record. It MUST keep the unit small enough to change a future
 session's behavior under explicit conditions. Current operator instructions and
 the [source authority rules](../authority/GUIDE.md) remain authoritative.
 
+## Required context
+
+A session using this leaf MUST first load and follow the [capture domain](../capture/GUIDE.md). It MUST open the [shared model](../model/GUIDE.md) only when an unresolved semantic question requires it.
+
 A session MUST NOT turn assistant proposals or unanswered recommendations into
 confirmed decisions. It MUST NOT accumulate raw transcripts, easily recovered
 source facts or copies of AWA/Vox work state. Transient observations without
 future utility SHOULD be discarded. Unknown applicability MUST stay unknown;
 evidence for a conditional lesson does not make it universally true.
 
-## Prepare a small capture
+## Inputs and preconditions
 
 The packaged `admit_learning.py` accepts a UTF8 JSON request with exactly:
 
@@ -65,6 +76,12 @@ result/report as its source; a bare assertion that a tool succeeded is insuffici
 The helper observes source bytes, not semantic truth or the identity of an author.
 The session MUST NOT claim that hashing a report verifies its assertions.
 
+## Observe
+
+A session MUST read relevant current memory and actual source evidence before storing new learning, resolving the project, source classification and applicability through the shared domains. It MUST preserve uncertainty and unmerged-code conditions instead of treating a candidate as universally confirmed.
+
+## Plan
+
 With `SKILL_DIR` resolved, save inputs/results outside the canonical bank and
 outside any sharing delta:
 
@@ -82,21 +99,11 @@ content-free policy audit, never a shared transcript or unsafe quarantine file.
 Procedural candidates MUST stay pending the separate explicit promotion workflow;
 routine admission MUST NOT promote them or create global/personal preferences.
 
-## Compare, then preview and apply
-
 A session MUST follow the [comparison guide](../comparison/GUIDE.md): use the
 exact captured `{metadata, body}` in the comparison request, search the concept
 and alternate wording, read plausible matches including their conditions,
 evidence and provenance, and classify every match. The capture response and
 comparison review response MAY be passed directly to the following commands:
-
-```sh
-python3 -I "$SKILL_DIR/scripts/admit_learning.py" preview --repo /path/to/repo \
-  --capture /private/path/captured.json --request /private/path/comparison-request.json \
-  --proof /private/path/comparison-review.json > /private/path/admission.json
-python3 -I "$SKILL_DIR/scripts/admit_learning.py" apply \
-  --proposal /private/path/admission.json
-```
 
 The preview MUST contain a non-null proposal before apply. Equivalent/refined
 learning returns `update-existing` or `consolidate-existing` instead of creating
@@ -109,6 +116,23 @@ comparison evidence. A session MUST retain other pending operations until
 governed correction or clarification resolves them. It MUST NOT label a match
 distinct merely to bypass an unavailable operation.
 
+The baseline appends bounded root routes. If the router has no capacity, the
+operation MUST stop before writing; a session MUST use the existing [topic-index
+layout](../layout/GUIDE.md) to organize the bank and compare again. It MUST NOT
+silently omit a route or drop an older lesson to make room.
+
+## Apply
+
+```sh
+python3 -I "$SKILL_DIR/scripts/admit_learning.py" preview --repo /path/to/repo \
+  --capture /private/path/captured.json --request /private/path/comparison-request.json \
+  --proof /private/path/comparison-review.json > /private/path/admission.json
+python3 -I "$SKILL_DIR/scripts/admit_learning.py" apply \
+  --proposal /private/path/admission.json
+```
+
+## Read back
+
 Admission rechecks capture, actual evidence, full-bank comparison and the exact
 planned delta under the common bank lock. A newly arrived memory invalidates the
 old proof. It creates one active, reviewed record with its stable identity,
@@ -118,12 +142,15 @@ review and a content hash reference for observed repository evidence. Trust is
 `reviewed`; source hashing does not promote it to `verified`. Related source
 facts, history and unrelated code MUST remain intact.
 
-The baseline appends bounded root routes. If the router has no capacity, the
-operation MUST stop before writing; a session MUST use the existing [topic-index
-layout](../layout/GUIDE.md) to organize the bank and compare again. It MUST NOT
-silently omit a route or drop an older lesson to make room.
+## Verify
 
-## Outcomes, interruptions and sharing
+An apply receipt requires `verified: true`, `outcome: finished` and
+`admission_verified: true`. A retry with the exact operation ID reads its existing
+outcome without replaying over newer edits. `still_current: false` means historical
+success only; the session MUST inspect current memory before further use. A
+different plan MUST use a new operation ID and fresh capture/comparison evidence.
+
+## Outcomes
 
 Known `governance-required` scope corrections and explicitly resolved stronger
 corrections MUST follow [governance](../governance/GUIDE.md) with the same eligible
@@ -133,11 +160,21 @@ reclassified as novel merely because its former text no longer matches a query.
 Revoked or deleted cached learning MUST NOT be relabeled under a new ID to bypass
 the canonical invalidation rules. Actual new evidence uses the governed workflow.
 
-An apply receipt requires `verified: true`, `outcome: finished` and
-`admission_verified: true`. A retry with the exact operation ID reads its existing
-outcome without replaying over newer edits. `still_current: false` means historical
-success only; the session MUST inspect current memory before further use. A
-different plan MUST use a new operation ID and fresh capture/comparison evidence.
+This operation does not commit, fetch, push, merge or establish latest-main
+freshness. It MUST NOT report local admission as shared publication. Actual
+publication MUST refresh and repeat comparison against latest landed memory,
+following repository permissions and branch rules. Until verified exchange is
+available, sharing MUST stay pending. Routine captures SHOULD remain quiet;
+conflicts, failures and consequential corrections MUST surface promptly at a
+boundary without interrupting foreground work.
+
+Exit 0 means the requested stage completed and MAY report pending/quarantined
+learning. Exit 1 means refused/unavailable/changed state or an uncertain outcome;
+the session MUST inspect and preserve sources before retrying. Exit 2 means invalid
+arguments. Captures and semantic judgments are agent assertions, not authentication
+or a proof that every possible paraphrase was found.
+
+## Failure handling
 
 An interrupted admission MUST remain unreadable behind its transaction marker.
 The session MUST follow [lock recovery](../writes/GUIDE.md). Before a verified
@@ -163,16 +200,6 @@ retrying the original admission reads its receipt and cleans its leftover
 journal without replacing newer memory. A session MUST still qualify current
 evidence before using the historical lesson as present truth.
 
-This operation does not commit, fetch, push, merge or establish latest-main
-freshness. It MUST NOT report local admission as shared publication. Actual
-publication MUST refresh and repeat comparison against latest landed memory,
-following repository permissions and branch rules. Until verified exchange is
-available, sharing MUST stay pending. Routine captures SHOULD remain quiet;
-conflicts, failures and consequential corrections MUST surface promptly at a
-boundary without interrupting foreground work.
+## Diagnostic fallback
 
-Exit 0 means the requested stage completed and MAY report pending/quarantined
-learning. Exit 1 means refused/unavailable/changed state or an uncertain outcome;
-the session MUST inspect and preserve sources before retrying. Exit 2 means invalid
-arguments. Captures and semantic judgments are agent assertions, not authentication
-or a proof that every possible paraphrase was found.
+If normal capture/comparison/admission cannot establish verified current learning, the session MUST preserve useful local evidence and pending state. It MAY inspect actual canonical matches and stronger sources to resolve the question, but MUST NOT force confirmed status, remint consumed capture identities or publish an unverified proposal.
