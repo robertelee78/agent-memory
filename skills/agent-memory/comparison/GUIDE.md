@@ -106,6 +106,10 @@ source hashes and complete required metadata. Multiple equivalent targets
 require reconciliation of those existing records rather than a third copy.
 A governed writer MUST preserve each retained source and useful correction
 history; a comparison proof does not itself combine, tighten or mutate files.
+For qualified typed duplicates, a session MUST follow the
+[consolidation guide](../consolidation/GUIDE.md) to reuse an existing identity
+and preserve every origin. Context prose needs its existing observed-write
+workflow; it MUST NOT be assigned fabricated typed provenance.
 The admitting/maintaining operation MUST perform its other evidence, lifecycle,
 security and observed-write checks before applying any planned action.
 

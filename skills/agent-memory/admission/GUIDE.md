@@ -103,8 +103,10 @@ learning returns `update-existing` or `consolidate-existing` instead of creating
 a duplicate identity. Inactive targets require lifecycle review. Contradictions
 return `clarification-required` to the detecting developer; another author's
 UUID prompts recommended clarification with that developer, never automatic
-messaging. A session MUST retain that pending operation until a governed
-consolidation/correction or clarification resolves it. It MUST NOT label a match
+messaging. Qualified typed duplicates MUST follow the
+[consolidation workflow](../consolidation/GUIDE.md) with that same capture and
+comparison evidence. A session MUST retain other pending operations until
+governed correction or clarification resolves them. It MUST NOT label a match
 distinct merely to bypass an unavailable operation.
 
 Admission rechecks capture, actual evidence, full-bank comparison and the exact
