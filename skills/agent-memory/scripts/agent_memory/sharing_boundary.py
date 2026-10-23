@@ -42,16 +42,16 @@ def prior_deletions(root, prefix, indexed, current):
     return proven
 
 
-def inspect(repo):
+def inspect(repo, *, owned_lock=None):
     root, bank = writes.bank_path(repo)
-    context = scope_binding.require(root)
+    context = scope_binding.require(root, owned_lock=owned_lock)
     configuration = repository_config.settings(root)
-    checked, observed = writes.snapshot(root)
+    checked, observed = writes.snapshot(root, owned_lock=owned_lock)
     prefix = configuration['bank_root'] + '/'
     canonical = [prefix + path for path in sorted(observed)]
     if len(encoded(canonical)) > 65536:
         raise ContractError('Sharing path inventory exceeds its bounded command manifest')
-    project = scope_binding.project.status(root)
+    project = scope_binding.project.status(root, owned_lock=owned_lock)
     remote = project['evidence']['authority_name']
     if remote:
         repository_config.safe_label(remote)
@@ -119,8 +119,8 @@ def inspect(repo):
         safety.extend(scan['reasons'])
     if safety:
         blockers.append('unsafe-or-unreviewable-memory-content')
-    scope_binding.require(root, checked['project_id'], expected=context)
-    if (writes.snapshot(root)[1] != observed or repository_config.settings(root) != configuration
+    scope_binding.require(root, checked['project_id'], expected=context, owned_lock=owned_lock)
+    if (writes.snapshot(root, owned_lock=owned_lock)[1] != observed or repository_config.settings(root) != configuration
             or git(root, 'ls-files', '--stage', '-z', '--', configuration['bank_root']) != indexed):
         raise ContractError('Canonical bank or boundary configuration changed; inspect again')
     return {'schema': 'agent-memory/sharing-boundary-v1', 'project_id': checked['project_id'],

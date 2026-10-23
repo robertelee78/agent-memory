@@ -128,12 +128,16 @@ A session MUST follow [sharing/publication/GUIDE.md](sharing/publication/GUIDE.m
 at natural turn boundaries to automatically prepare and land admitted memory
 independently of feature code, respecting actual repository review/check rules.
 
+A session MUST follow [sharing/refresh/GUIDE.md](sharing/refresh/GUIDE.md) at
+natural turn boundaries to import newly landed memory, preserve unpublished
+learning and read relevant imports with their conditions and provenance.
+
 A local edit, branch commit or successful validation MUST NOT be described as
 landed shared memory. Other sessions can rely on a change only after the
 repository's publication rules have landed it on `main` and they have refreshed
-that memory. Memory-only publication and turn-boundary refresh are required
-v0.0.1 capabilities; the initial offline workflow in this artifact does not yet
-implement that exchange. While offline or exchange is unavailable, a session
+that memory. Memory-only publication and turn-boundary refresh are implemented
+by the linked operation routes; the offline file workflow remains local.
+While offline or exchange is unavailable, a session
 MUST retain local work and report sharing as pending when freshness matters.
 
 ## Before governed memory use

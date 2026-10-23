@@ -125,9 +125,9 @@ approvals/checks; that separate action MUST supply its own landing readback.
 Success MUST be reported only from actual authority readback proving the whole
 intended delta. A successful command exit alone is not publication. Publication
 MUST NOT refresh/rebase the feature branch or imply its code is current. The
-session MUST follow the separate refresh operation when importing landed memory.
-Until that operation is implemented, it MUST report refresh as pending and MUST
-NOT substitute a whole-branch pull or snapshot overwrite.
+session MUST follow the separate [refresh operation](../refresh/GUIDE.md) when
+importing landed memory. If that import is not verified, it MUST report refresh
+as pending and MUST NOT substitute a whole-branch pull or snapshot overwrite.
 
 ## Results, interruption and recovery
 

@@ -48,7 +48,7 @@ def files_at(bank):
 def proposal_value(prepared):
     from .scope_binding import context_value
     p = prepared.get("proposal", prepared) if isinstance(prepared, dict) else prepared
-    if (not isinstance(p, dict) or set(p) not in (FIELDS, FIELDS | {"initialization_evidence"}, FIELDS | {"admission_evidence"}, FIELDS | {"consolidation_evidence"}, FIELDS | {"governance_evidence"}) or p["schema"] != SCHEMA
+    if (not isinstance(p, dict) or set(p) not in (FIELDS, FIELDS | {"initialization_evidence"}, FIELDS | {"admission_evidence"}, FIELDS | {"consolidation_evidence"}, FIELDS | {"governance_evidence"}, FIELDS | {"refresh_evidence"}) or p["schema"] != SCHEMA
             or not uuid_valid(p["operation_id"]) or not uuid_valid(p["project_id"])
             or p["operation"] not in writes.OPERATIONS or not isinstance(p["repo_root"], str)
             or not Path(p["repo_root"]).is_absolute() or str(Path(p["repo_root"]).resolve()) != p["repo_root"]):
@@ -61,6 +61,8 @@ def proposal_value(prepared):
         raise ContractError('Governance evidence belongs only to its explicit lifecycle operation')
     if 'consolidation_evidence' in p and p['operation'] != 'compact':
         raise ContractError('Consolidation evidence belongs only to governed maintenance')
+    if 'refresh_evidence' in p and p['operation'] != 'refresh':
+        raise ContractError('Landed memory evidence belongs only to its source-bound refresh')
     contract.validate_files(p["files"])
     first_bank = p['operation'] == 'initialize' and p['observed_hashes'] == {}
     context_value(p['scope_context'], initialize=first_bank)
@@ -234,7 +236,7 @@ def receipt_value(path, p):
 
 
 def admission_recovery(p, mode, known):
-    if (any(key in p for key in ('admission_evidence', 'consolidation_evidence', 'governance_evidence')) and mode == 'finish'
+    if (any(key in p for key in ('admission_evidence', 'consolidation_evidence', 'governance_evidence', 'refresh_evidence')) and mode == 'finish'
             and (known is None or known['outcome'] != 'finished')):
         raise ContractError('Unfinished governed learning requires rollback, then fresh evidence and comparison; preserve the journal')
 
@@ -358,6 +360,10 @@ def apply(prepared):
         from .consolidation import validate_transaction as validate_consolidation
         if not locations(*writes.bank_path(p['repo_root']), p['operation_id'])[1].exists():
             validate_consolidation(p)
+    if 'refresh_evidence' in p:
+        from .memory_refresh import validate_transaction as validate_refresh
+        if not locations(*writes.bank_path(p['repo_root']), p['operation_id'])[1].exists():
+            validate_refresh(p)
     first_bank = p['operation'] == 'initialize' and p['observed_hashes'] == {}
     initializing = first_bank and not (repository_config.bank_path(p['repo_root']) / 'MEMORY.md').exists()
     pinned = {**p['scope_context'], 'initialization_only': initializing}
@@ -397,6 +403,12 @@ def apply(prepared):
                 validate_consolidation(p, owned_lock=owner)
             security.guarded_start(p['repo_root'], p['operation_id'], context,
                 {path: p['files'][path] for path in changed(p) if path in p['files']}, classes, action='compact')
+        elif 'refresh_evidence' in p:
+            from .memory_refresh import validate_transaction as validate_refresh
+            if not locations(*writes.bank_path(p['repo_root']), p['operation_id'])[1].exists():
+                validate_refresh(p, owned_lock=owner)
+            security.guarded_start(p['repo_root'], p['operation_id'], context,
+                {path: p['files'][path] for path in changed(p) if path in p['files']}, classes, action='refresh')
         elif p['operation'] == 'initialize':
             validate_transaction(p)
             security.guarded_start(p['repo_root'], p['operation_id'], context,

@@ -188,10 +188,10 @@ def first_bank_history(repo, head):
             authority_bank_location(repo, snapshot, None)
 
 
-def observe(repo):
+def observe(repo, *, owned_lock=None):
     root, _ = writes.bank_path(repo)
-    context = scope_binding.require(root)
-    boundary = sharing_boundary.inspect(root)
+    context = scope_binding.require(root, owned_lock=owned_lock)
+    boundary = sharing_boundary.inspect(root, owned_lock=owned_lock)
     if set(boundary['blockers']) - {'canonical-memory-is-not-tracked'}:
         raise ContractError('Resolve the listed local sharing boundary blockers before exchange')
     local_head = git(root, 'rev-parse', '--verify', 'HEAD')
@@ -216,8 +216,8 @@ def observe(repo):
         if files and (bounded(files)['project_id'] != context['project_id'] or
                 shared_router.get('canonical-remote') != local_router.get('canonical-remote')):
             raise ContractError('Shared authority belongs to a different project')
-        scope_binding.require(root, context['project_id'], expected=context)
-        if sharing_boundary.inspect(root) != boundary or git(root, 'rev-parse', '--verify', 'HEAD') != local_head:
+        scope_binding.require(root, context['project_id'], expected=context, owned_lock=owned_lock)
+        if sharing_boundary.inspect(root, owned_lock=owned_lock) != boundary or git(root, 'rev-parse', '--verify', 'HEAD') != local_head:
             raise ContractError('Local memory or boundary changed during remote observation')
         return {'repo_root': str(root), 'project_id': context['project_id'], 'bank_root': boundary['bank_root'],
                 'authority_remote': remote, 'authority_branch': branch, 'authority_head': head,
@@ -282,6 +282,12 @@ def index_parts(path, text):
     return meta, {r['path']: r for r in layout.parse_index(path, meta, body)}, body.split('\n## Routes\n', 1)[0]
 
 
+def header_order(metadata, originals):
+    """Preserve source key layout without letting layout select field values."""
+    order = dict.fromkeys(key for original in originals for key in original)
+    return {key: metadata[key] for key in [*order, *metadata] if key in metadata}
+
+
 def merge_files(base, local, landed):
     checks = [bounded(x, allow_absent=True) for x in (base, local, landed)]
     if len({x['project_id'] for x in checks if x['project_id'] is not None}) != 1:
@@ -336,6 +342,7 @@ def merge_files(base, local, landed):
             parts = [index_parts(path, v) for v in values]
             meta = mapping(*[{k:v for k,v in p[0].items() if k != 'updated'} for p in parts])
             meta['updated'] = max(p[0]['updated'] for p in parts)
+            meta = header_order(meta, [p[0] for p in parts])
             routes = mapping(*[{k:v for k,v in p[1].items() if k not in drops} for p in parts]);prefix = choose(*[p[2] for p in parts])
         routes = {p:r for p,r in routes.items() if p in merged}
         if not routes:
@@ -345,9 +352,15 @@ def merge_files(base, local, landed):
                 raise ContractError('An empty custom index needs explicit preservation before removal')
             drops.add(path);continue
         merged[path] = write(meta) + prefix + '\n## Routes\n\n' + bank.route_table(list(routes.values()), path)
+        # Avoid gratuitous text conflicts at a later code merge. Reuse bytes
+        # only when every parsed header, route and prose component is equal.
+        for source in maps:
+            if path in source and index_parts(path, source[path]) == (meta, routes, prefix):
+                merged[path] = source[path]; break
     parts = [router_parts(f['MEMORY.md']) if f else ({}, {}, {}, MISSING) for f in maps]
     meta = mapping(*[{k:v for k,v in p[0].items() if k != 'router-updated'} for p in parts])
     meta['router-updated'] = max(p[0]['router-updated'] for p in parts if p[0])
+    meta = header_order(meta, [p[0] for p in parts])
     routes = mapping(*[{k:v for k,v in p[1].items() if k not in drops} for p in parts]);prefix = choose(*[p[3] for p in parts])
     routes = {p:r for p,r in routes.items() if p in merged}
     # Keep pre-existing tombstone routes even when a branch removed the marker.
@@ -365,6 +378,9 @@ def merge_files(base, local, landed):
             omissions[path] = reason
     merged['MEMORY.md'] = (write(meta) + prefix + '\n## Routes\n\n' + bank.route_table(list(routes.values()))
         + '\n## Omitted contexts\n\n' + (''.join('- `' + p + '`: ' + omissions[p] + '\n' for p in bank.CONTEXTS if p in omissions) or 'None.\n'))
+    for source, part in zip(maps, parts):
+        if source and part == (meta, routes, omissions, prefix):
+            merged['MEMORY.md'] = source['MEMORY.md']; break
     final = bounded(merged)
     inactive = {}
     for checked in checks:

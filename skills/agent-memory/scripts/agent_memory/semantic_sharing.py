@@ -34,9 +34,9 @@ def safe_text(value, bound=4096):
     return value
 
 
-def snapshots(repo, base=None):
+def snapshots(repo, base=None, *, owned_lock=None):
     from . import sharing_recovery as recovery
-    observation = recovery.observe(repo);root=Path(observation['repo_root']);head=observation['authority_head']
+    observation = recovery.observe(repo, owned_lock=owned_lock);root=Path(observation['repo_root']);head=observation['authority_head']
     if base is None:
         values=recovery.command(root,'merge-base','--all',observation['local_head'],head).splitlines()
         if len(values)!=1:raise ContractError('A lost cursor needs an unambiguous actual common base')
@@ -102,24 +102,24 @@ def pairs(rows):
     return [list(pair) for pair in itertools.combinations(sorted(rows),2)]
 
 
-def inspect(repo,base=None):
-    root,observation,binding,values,checked=snapshots(repo,base)
+def inspect(repo,base=None, *, owned_lock=None):
+    root,observation,binding,values,checked=snapshots(repo,base,owned_lock=owned_lock)
     rows=units(values,checked)
-    final_sources(root,observation,binding)
+    final_sources(root,observation,binding,owned_lock=owned_lock)
     audit=security.audit(root,str(uuid.uuid4()),'retrieval','checked',observation['scope_context'],['external'],
         record_ids=sorted({row['metadata']['id'] for row in rows.values() if row['metadata'] is not None}))
-    final_sources(root,observation,binding)
+    final_sources(root,observation,binding,owned_lock=owned_lock)
     return {'schema':'agent-memory/semantic-sharing-inspection-v1','binding':binding,
             'sources':list(rows.values()),'required_pairs':pairs(rows),'audit':audit,'audit_writes_performed':True,
             'detecting_developer_id':observation['scope_context']['developer_id'],
             'semantic_truth_verified':False,'publication_verified':False,'canonical_writes_performed':False}
 
 
-def final_sources(root,observation,binding):
+def final_sources(root,observation,binding, *, owned_lock=None):
     from . import sharing_recovery as recovery
-    scope_binding.require(root,observation['project_id'],expected=observation['scope_context'])
+    scope_binding.require(root,observation['project_id'],expected=observation['scope_context'],owned_lock=owned_lock)
     if (recovery.server(root,observation['authority_remote'],observation['authority_branch'])!=observation['authority_head']
-            or writes.snapshot(root)[1]!=binding['source_hashes']['local'] or git(root,'rev-parse','--verify','HEAD')!=observation['local_head']):
+            or writes.snapshot(root,owned_lock=owned_lock)[1]!=binding['source_hashes']['local'] or git(root,'rev-parse','--verify','HEAD')!=observation['local_head']):
         raise ContractError('Authority or local source/head changed; review the new source set')
 
 
@@ -373,10 +373,10 @@ def consolidate(files,groups,rows,decisions,context,operation_id,at,blocked):
     return current
 
 
-def review(repo,judgment):
+def review(repo,judgment, *, owned_lock=None):
     from . import sharing_recovery as recovery
     if not isinstance(judgment,dict) or not isinstance(judgment.get('binding'),dict):raise ContractError('Review requires an inspection binding')
-    base=judgment['binding'].get('base');root,observation,binding,values,checked=snapshots(repo,base)
+    base=judgment['binding'].get('base');root,observation,binding,values,checked=snapshots(repo,base,owned_lock=owned_lock)
     rows=units(values,checked);inspection={'binding':binding,'sources':list(rows.values()),'required_pairs':pairs(rows)}
     decisions=reviewed_value(judgment,inspection);held=set();blocked=set();conflicts=[];peer=set();equivalents=set()
     actor=observation['scope_context']['developer_id']
@@ -459,7 +459,7 @@ def review(repo,judgment):
     audit=security.audit(root,operation_id,'retrieval','checked',observation['scope_context'],['external'],
         record_ids=sorted({row['metadata']['id'] for row in rows.values() if row['metadata'] is not None}))
     preserve_invalidation(values,refresh);preserve_invalidation(values,publish)
-    final_sources(root,observation,binding)
+    final_sources(root,observation,binding,owned_lock=owned_lock)
     proof={'schema':'agent-memory/semantic-sharing-proof-v1','judgment':judgment,
            'refresh_hashes':tx.file_hashes(refresh),'publish_hashes':tx.file_hashes(publish),'blocked_paths':sorted(blocked),
            'blocked_components':[{'path':p,'component':c,'target_path':t} for p,c,t in sorted(held,key=lambda x:(x[0],x[1],x[2] or ''))]}
@@ -474,10 +474,10 @@ def review(repo,judgment):
             'git_metadata_writes_performed':True,'refresh_applied':False}
 
 
-def check(repo,proof):
+def check(repo,proof, *, owned_lock=None):
     if not isinstance(proof,dict) or set(proof)!={'schema','judgment','refresh_hashes','publish_hashes','blocked_paths','blocked_components'} or proof['schema']!='agent-memory/semantic-sharing-proof-v1':
         raise ContractError('Use the complete actual semantic proof')
-    value=review(repo,proof['judgment'])
+    value=review(repo,proof['judgment'],owned_lock=owned_lock)
     if encoded(value['proof'])!=encoded(proof):raise ContractError('Semantic proof does not describe current reviewed sources and outputs')
     return {**value,'operation':'check','source_observation_current':True}
 

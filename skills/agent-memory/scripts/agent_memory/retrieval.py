@@ -86,9 +86,15 @@ def match(request, candidate):
     return {'strategy': 'ordinary-text' if terms else 'current-inventory', 'score': score, 'matching_terms': terms}
 
 
-def retrieve(repo, request, *, owned_lock=None):
+def retrieve(repo, request, *, owned_lock=None, deferred_paths=()):
     started = time.perf_counter()
     request_value(request)
+    if not isinstance(deferred_paths, (list, tuple, set, frozenset)) or len(deferred_paths) > 256:
+        raise ContractError('Deferred recall paths require a complete bounded set')
+    for path in deferred_paths:
+        if path != 'MEMORY.md':
+            bank_contract.path_value(path)
+    deferred_paths = frozenset(deferred_paths)
     root, bank = writes.bank_path(repo)
     selected_scope = scope_binding.require(root, request['project_id'], owned_lock=owned_lock)
     context, observed_git = observed_context(root, request['context'])
@@ -181,6 +187,12 @@ def retrieve(repo, request, *, owned_lock=None):
                 excluded['memory-type'] += 1
                 continue
             candidate['selection'] = selection
+        # Discover every qualified superseder first, then defer disputed
+        # guidance before selectors/ranking/budgets. Held claims cannot occupy
+        # the result limit or cause older guidance to become current again.
+        if candidate['path'] in deferred_paths:
+            excluded['pending-semantic-conflict'] += 1
+            continue
         matching = match(request, candidate)
         if matching is None:
             excluded['selector-or-text-mismatch'] += 1
