@@ -8,8 +8,11 @@ The helper captures current focus, meaningful recent changes, open questions and
 the next concrete step. It preserves unrecognized sections, source conditions,
 provenance notes and fenced examples. A complete observed active hash and pinned
 scope bind the proposal. Valid ATX spacing, tabs and closing hashes normalize
-section identity; unknown sections remain intact and normalized duplicates
-refuse. Unsupported setext/Unicode boundaries stop before mutation. Multiline
+section identity; unknown ATX sections at every level remain intact and
+normalized duplicates refuse. Underline/setext, raw HTML, ambiguous nested-list
+headings and non-Markdown control/Unicode boundaries stop before mutation.
+Supplied fields use inline Markdown/lists/fenced examples rather than unfenced
+headings, so preservation does not duplicate field subsections on later saves. Multiline
 fenced list items remain nested and support repeated checkpointing. It validates that the intended replacement matches the
 reviewed input and base text, then delegates to the common lock, atomic
 single-file replacement, readback and private receipt mechanism.

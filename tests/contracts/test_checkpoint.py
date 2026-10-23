@@ -210,4 +210,59 @@ class CheckpointContract(unittest.TestCase):
             self.assertIn('identity changed',json.loads(out)['error']);self.assertEqual(self.files(bank),before)
 
 
+
+    def test_every_unknown_atx_heading_level_preserves_original_source_section_and_remains_idempotent(self):
+        for level in (1,3,4,5,6):
+            with self.subTest(level=level),World() as w:
+                repo,bank=self.fixture(w);legacy=LEGACY.replace('## Source notes','#'*level+' Source notes')
+                (bank/'activeContext.md').write_text(BASE.replace(LEGACY,legacy))
+                p=self.preview(w,repo,self.payload(self.inspect(w,repo)))
+                self.assertTrue(self.apply(w,p)[1]['verified']);self.assertIn(legacy,(bank/'activeContext.md').read_text())
+                again=self.preview(w,repo,self.payload(self.inspect(w,repo)));self.assertEqual(again['changed_memory_paths'],[])
+                self.assertIn(legacy,(bank/'activeContext.md').read_text())
+
+    def test_multiline_underlines_and_raw_html_refuse_without_deleting_source_memory(self):
+        boundaries=['Source notes\n'+indent+'continued heading\n'+underline for indent in ('    ','\t') for underline in ('---','===')]
+        boundaries+=['<h1>Source notes</h1>','<pre>\n## Current focus\n</pre>',
+                     '<!--\n## Current focus\n-->','text <!--\n## Current focus\n-->']
+        for boundary in boundaries:
+            with self.subTest(boundary=boundary),World() as w:
+                repo,bank=self.fixture(w);body=BASE.replace('## Source notes',boundary)
+                if '<' in boundary:body=body.replace('## Current focus\n\nOld focus.\n\n','',1)
+                (bank/'activeContext.md').write_text(body);before=self.files(bank)
+                r,value=self.command(w,'checkpoint','preview','--repo',repo,'--input',self.save(w,self.payload(self.inspect(w,repo))))
+                self.assertEqual(r.returncode,1,value);self.assertEqual(self.files(bank),before)
+                self.assertIn(b'original developer',before['activeContext.md'])
+
+    def test_non_markdown_control_separators_cannot_manufacture_root_sections(self):
+        for separator in ('\x0b','\x0c','\x1c','\x1d','\x1e'):
+            with self.subTest(code=ord(separator)),World() as w:
+                repo,bank=self.fixture(w)
+                body=BASE.replace('## Source notes','An inline continuation'+separator+'## Checkpoint evidence')
+                (bank/'activeContext.md').write_text(body);before=self.files(bank)
+                r,value=self.command(w,'checkpoint','preview','--repo',repo,'--input',self.save(w,self.payload(self.inspect(w,repo))))
+                self.assertEqual(r.returncode,1,value);self.assertIn('control',value['error']);self.assertEqual(self.files(bank),before)
+
+    def test_field_headings_are_explicitly_fenced_and_html_underline_examples_repeat_safely(self):
+        with World() as w:
+            repo,bank=self.fixture(w);before=self.files(bank)
+            for heading in ('# Field title','### Field title','###### Field title'):
+                payload=self.payload(self.inspect(w,repo));payload['focus']=heading
+                r,value=self.command(w,'checkpoint','preview','--repo',repo,'--input',self.save(w,payload))
+                self.assertEqual(r.returncode,1,value);self.assertEqual(self.files(bank),before)
+            payload=self.payload(self.inspect(w,repo));payload['recent_changes']=['```html\n<h1>Source notes</h1>\n## Current focus\n---\n```']
+            p=self.preview(w,repo,payload);self.assertTrue(self.apply(w,p)[1]['verified'])
+            self.assertIn(LEGACY,(bank/'activeContext.md').read_text())
+            payload['observed_active_sha256']=self.inspect(w,repo)['observed_active_sha256']
+            self.assertEqual(self.preview(w,repo,payload)['changed_memory_paths'],[])
+
+    def test_ambiguous_nested_heading_or_wrong_level_reserved_name_refuse_preserving_original(self):
+        for boundary in ('- An unrelated source note\n\n  ## Source notes', '# Current focus'):
+            with self.subTest(boundary=boundary),World() as w:
+                repo,bank=self.fixture(w);(bank/'activeContext.md').write_text(BASE.replace('## Source notes',boundary))
+                before=self.files(bank)
+                r,value=self.command(w,'checkpoint','preview','--repo',repo,'--input',self.save(w,self.payload(self.inspect(w,repo))))
+                self.assertEqual(r.returncode,1,value);self.assertEqual(self.files(bank),before)
+
+
 if __name__=='__main__':unittest.main()

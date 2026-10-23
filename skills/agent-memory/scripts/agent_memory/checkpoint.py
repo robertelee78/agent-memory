@@ -28,31 +28,42 @@ def result(operation, **values):
 
 
 def headings(body):
-    """Recognize stable H2 sections outside Markdown fences; never execute content."""
-    if any(c in body for c in '\x85\u2028\u2029'):
-        raise ContractError('Unsupported Unicode line separator; inspect context before checkpointing')
-    output, offset, fence, previous_plain = [], 0, None, False
+    """Conservative ATX/fenced profile; refuse unsupported ambiguous boundaries."""
+    if any((ord(c) < 32 and c not in '\n\r\t') or c in '\x7f\x85\u2028\u2029' for c in body):
+        raise ContractError('Unsupported control or Unicode line separator; inspect context before checkpointing')
+    output, offset, fence, list_seen = [], 0, None, False
+    reserved = {*FIELDS.values(), *EXTRA}
     for line in body.splitlines(keepends=True):
         raw = line.rstrip('\r\n')
         token = re.match(r' {0,3}(`{3,}|~{3,})(.*)', raw)
         if token:
-            previous_plain = False
             marker, rest = token.groups()
             if fence is None:
                 if marker[0] != '`' or '`' not in rest:
                     fence = marker
             elif marker[0] == fence[0] and len(marker) >= len(fence) and not rest.strip():
                 fence = None
-        elif fence is None:
-            if previous_plain and re.fullmatch(r' {0,3}(?:-+|=+)[ \t]*', raw):
-                raise ContractError('Setext heading boundary requires explicit inspection before checkpointing; preserve the original context')
-            match = re.fullmatch(r' {0,3}##(?:[ \t]+(.*))?[ \t]*', raw)
+        elif fence is None and not raw.expandtabs(4).startswith('    '):
+            # A setext underline can refer to several preceding paragraph lines,
+            # including indented continuation lines. Never guess its ownership.
+            if re.fullmatch(r' {0,3}(?:-+|=+)[ \t]*', raw):
+                raise ContractError('Setext/underline boundary requires explicit inspection before checkpointing; preserve the original context')
+            if re.search(r'<(?:!--|/?[A-Za-z]|[?!])', raw):
+                raise ContractError('Raw HTML requires explicit inspection or a complete fenced example before checkpointing')
+            match = re.fullmatch(r'( {0,3})(#{1,6})(?:[ \t]+(.*))?[ \t]*', raw)
             if match:
-                title = re.sub(r'(?:^|[ \t]+)#+[ \t]*$', '', match[1] or '').strip(' \t')
-                output.append((offset, title))
-                previous_plain = False
-            else:
-                previous_plain = bool(raw.strip()) and not raw.startswith(('    ', '\t'))
+                indent, hashes, content = match.groups()
+                if indent and list_seen:
+                    raise ContractError('Ambiguous nested-list heading requires explicit inspection before checkpointing')
+                title = re.sub(r'(?:^|[ \t]+)#+[ \t]*$', '', content or '').strip(' \t')
+                if len(hashes) != 2 and title in reserved:
+                    raise ContractError('Reserved checkpoint section names require level-two headings; clarify the existing structure')
+                # All ATX levels delimit preserved sections. Only the stable H2
+                # names are managed fields; other levels never become fields.
+                output.append((offset, title if len(hashes) == 2 else None))
+                list_seen = False
+            elif re.match(r' {0,3}(?:[-+*]|[0-9]{1,9}[.)])[ \t]+', raw):
+                list_seen = True
         offset += len(line)
     if fence is not None:
         raise ContractError('Active context/input has an unterminated Markdown fence; inspect it before checkpointing')
@@ -63,10 +74,10 @@ def headings(body):
 def text(value, limit=2048):
     if (not isinstance(value, str) or not value.strip() or len(value.encode()) > limit
             or any(ord(c) < 32 and c not in '\n\t' for c in value)):
-        raise ContractError('Checkpoint fields require bounded useful Markdown without new level-two sections')
+        raise ContractError('Checkpoint fields require bounded useful Markdown without new sections')
     normalized = value.strip()
     if headings(normalized):
-        raise ContractError('Checkpoint fields must not create new level-two sections after normalization')
+        raise ContractError('Checkpoint fields must not create unfenced headings after normalization')
     return normalized
 
 

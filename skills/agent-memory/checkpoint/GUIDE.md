@@ -47,18 +47,31 @@ the common resolver and is separate from harness and session; it is provenance,
 not authentication or a separate memory namespace.
 
 Each field/list item is bounded and the resulting context MUST fit 16 KiB.
-Level-two headings are reserved for stable sections; a session MAY use lower
-headings, lists or complete fenced examples within a field. Duplicate stable
-sections or unterminated fences require inspection/clarification rather than
-guessing which content to replace. Unrecognized sections and fenced examples
-remain intact. Space/tab-separated ATX level-two headings with up to three
-leading spaces and optional closing hashes identify the same section. The
-helper MUST stop on unsupported setext heading boundaries or Unicode line
-separators before editing; the session MUST preserve that context and inspect
-its structure explicitly. Multiline list continuations are indented so complete
-fenced examples remain checkpointable on the next turn. Known checkpoint sections are deliberately updated from the
-reviewed fields; the session MUST carry forward still-relevant information in
-those fields or retire it through the appropriate governed operation.
+Level-two headings are reserved for stable sections. A session MAY use inline
+Markdown, lists or complete fenced examples within a field; unfenced headings
+of any level MUST remain at file level rather than inside a supplied field.
+This keeps repeated saves from treating newly supplied field subsections as
+unrelated older memory. Duplicate stable sections, reserved names at another
+heading level or unterminated fences require inspection/clarification.
+
+The helper preserves unrecognized ATX heading sections at every level and
+complete fenced examples. It recognizes ATX space/tab separators, up to three
+leading spaces and optional closing hashes. It MUST stop before mutation on
+unsupported underline/setext boundaries, raw HTML, ambiguous nested-list
+headings or control/Unicode line separators. A session MUST preserve that
+context and inspect its structure explicitly; it MUST NOT interpret refusal as
+permission to delete or flatten the source note. This conservative editing
+profile is not a complete [CommonMark parser](https://spec.commonmark.org/0.30/).
+Use explicit Markdown links and fenced code examples for markup examples.
+Multiline list continuations are indented so fenced examples remain usable on
+the next turn. Indented code stays data.
+
+Known checkpoint sections are deliberately updated from the reviewed fields;
+the session MUST carry forward still-relevant information in those fields or
+retire it through the appropriate governed operation. Other heading sections
+remain byte-identical. When a helper refuses unsupported markup, the existing
+[manual checkpoint](../offline/GUIDE.md#manual-checkpoint) workflow remains available under its own
+reread, preservation and concurrency limits.
 
 ## Preview and apply one file
 
