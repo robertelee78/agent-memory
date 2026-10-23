@@ -41,6 +41,10 @@ lessons and source links rather than copies of those systems' changing state.
 A session SHOULD read [bank/GUIDE.md](bank/GUIDE.md) for the context-file model,
 state loss and local tracking/sharing interpretation.
 
+A session MUST read [writes/GUIDE.md](writes/GUIDE.md) before using the common
+observed-write primitives, and [projections/GUIDE.md](projections/GUIDE.md)
+before building or consuming optional derived references.
+
 ## Conflicting claims
 
 A session MUST read [authority/GUIDE.md](authority/GUIDE.md) when remembered
