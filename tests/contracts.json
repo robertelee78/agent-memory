@@ -28,10 +28,10 @@
     {"name": "retrieval-context", "layer": "bank", "scope": "v0.0.1", "path": "tests/contracts/test_retrieval.py"},
     {"name": "correction-erasure", "layer": "bank", "scope": "v0.0.1", "path": "tests/contracts/test_governance.py"},
     {"name": "initialize-evidence", "layer": "bank", "scope": "v0.0.1", "path": "tests/contracts/test_initialization.py"},
-    {"name": "cross-clone-sharing", "layer": "concurrency", "scope": "v0.0.1", "path": null, "reason": "Memory sharing has not shipped."},
-    {"name": "concurrent-sharing", "layer": "concurrency", "scope": "v0.0.1", "path": null, "reason": "Sharing reconciliation has not shipped."},
-    {"name": "offline-replay", "layer": "concurrency", "scope": "v0.0.1", "path": null, "reason": "Offline retry has not shipped."},
-    {"name": "later-code-merge", "layer": "concurrency", "scope": "v0.0.1", "path": null, "reason": "Memory integration has not shipped."},
+    {"name": "cross-clone-sharing", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_shared_learning_loop.py"},
+    {"name": "concurrent-sharing", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_refresh_conflicts.py"},
+    {"name": "offline-replay", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_refresh_recovery.py"},
+    {"name": "later-code-merge", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_refresh_integration.py"},
     {"name": "portable-lifecycle", "layer": "lifecycle", "scope": "v0.0.1", "path": null, "reason": "Install/update/uninstall have not shipped."},
     {"name": "security-canaries", "layer": "evaluation", "scope": "v0.0.1", "path": "tests/contracts/test_release_canaries.py"},
     {"name": "skill-routes", "layer": "pack", "scope": "v0.0.1", "path": null, "reason": "Portable skill guides have not shipped."},
@@ -53,6 +53,9 @@
     {"name": "publication-pending", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_publication_pending.py"},
     {"name": "publication-policy", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_publication_policy.py"},
     {"name": "publication-worktree", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_publication_worktree.py"},
-    {"name": "publication-admission", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_publication_admission.py"}
+    {"name": "publication-admission", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_publication_admission.py"},
+    {"name": "memory-refresh", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_memory_refresh.py"},
+    {"name": "refresh-pending", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_refresh_pending.py"},
+    {"name": "refresh-invalidation", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_refresh_invalidation.py"}
   ]
 }

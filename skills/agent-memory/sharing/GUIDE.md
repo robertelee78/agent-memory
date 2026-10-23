@@ -122,6 +122,11 @@ A session MUST follow [publication/GUIDE.md](publication/GUIDE.md) at a natural
 boundary to prepare and land admitted memory-only changes through actual
 repository rules. Publication does not refresh local memory or feature code.
 
+A session MUST follow [refresh/GUIDE.md](refresh/GUIDE.md) at a natural boundary
+to reconcile landed memory with its unpublished local learning, without changing
+feature code, the original index or branch history. It MUST read relevant imports
+with their actual provenance and applicability before using them as current.
+
 A session MUST follow [semantic/GUIDE.md](semantic/GUIDE.md) before treating
 local and landed memory as compatible, including textually clean cross-file
 claims, duplicates, source conditions and detecting-developer clarification.

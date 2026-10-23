@@ -67,7 +67,7 @@ for isolation rules, suite registration and receipt fields.
 
 The [bank router contract](docs/contracts/bank-router.md) defines the initial
 shared Markdown layout and its read-only render/validate helper. The full
-learning, sharing and installed lifecycle workflows remain under execution.
+installed lifecycle workflow remains under execution.
 
 The [shared lifecycle model](docs/contracts/lifecycle-model.md) supplies the
 read-only transition and current-selection decisions used by later operations.
@@ -107,12 +107,17 @@ markers content-free and guards stale projection rebuilds by stable record ID.
 The [memory publication contract](docs/contracts/memory-publication.md) prepares
 and lands reviewed memory independently of feature code, with current repository
 rules, first-publication support, original-index preservation and actual Git
-readback. Turn-boundary refresh and the full installed workflow remain under execution.
+readback. The full installed workflow remains under execution.
+
+The [landed-memory refresh contract](docs/contracts/memory-refresh.md) reconciles
+shared learning into a session without importing code, preserving unpublished
+memory, feature history and the original index. Its explicit boundary operation
+reads relevant qualified imports and retains honest pending/conflict/recovery states.
 
 The initial [portable skill](skills/agent-memory/SKILL.md) provides an
 [offline file workflow](skills/agent-memory/offline/GUIDE.md) for useful manual
-setup, inspection, checkpoint and clean resume. Automatic exchange, governed
-initialization and the complete installed workflow remain under execution.
+setup, inspection, checkpoint and clean resume. Governed initialization and memory exchange have dedicated operation routes; the
+complete installed workflow remains under execution.
 
 The [scope policy](skills/agent-memory/scope/GUIDE.md) defines shared repository
 knowledge and explicit component, branch, worktree, task and session conditions.
