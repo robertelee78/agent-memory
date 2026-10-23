@@ -1,4 +1,11 @@
-# Reconcile local and landed memory by meaning
+---
+kind: operation
+domain: sharing
+---
+
+# Review local and landed memory by meaning
+
+## Use when
 
 At a natural boundary, a session MUST inspect both current local memory and the
 actual landed authority bank before publishing or refreshing. It MUST follow
@@ -7,13 +14,58 @@ live in separate paths, and different words can express duplicate learning.
 The helper binds the agent's explicit judgments to actual source bytes; it does
 not prove meaning, truth, developer authentication or new permission.
 
+## Required context
+
+A session using this leaf MUST first load and follow the [sharing domain](../../sharing/GUIDE.md). It MUST open the [shared model](../../model/GUIDE.md) only when an unresolved semantic question requires it.
+
 The session MUST preserve every distinct applicability condition, evidence,
 source origin and useful correction history. It MUST NOT select truth by commit
 order, recency, developer identity or confidence alone. AWA remains the work and
 delivery authority; Vox remains live coordination. Neither is a prerequisite
 for inspecting canonical local memory. This operation never messages a person.
 
-## Inspect the complete source set
+## Inputs and preconditions
+
+Save a private JSON review with exactly these fields:
+
+| Field | Value |
+| --- | --- |
+| `binding` | The complete unchanged binding returned by inspection |
+| `pairs` | One decision for every exact `required_pairs` entry |
+| `dependencies` | Actual dependent bank paths mapped to prerequisite bank paths; `{}` when none |
+| `consolidations` | Explicit equivalent typed source groups; `[]` when none |
+| `rationale` | The overall source-based semantic explanation |
+| `recorded_at` | Actual timezone-qualified RFC3339 review time |
+
+Each pair decision contains exactly `left`, `right`, `classification`, `reason`.
+`left` and `right` MUST retain the order from the actual pair inventory. The
+reason MUST explain the source meaning, rather than repeat an empty label.
+
+| Classification | Required interpretation |
+| --- | --- |
+| `related` | Related orientation/history or independent claims; preserve both |
+| `compatible` | Claims coexist under their actual conditions; preserve their content |
+| `equivalent` | The same learning under the actual retained conditions |
+| `disjoint-conditions` | Actual known conditions or valid periods cannot overlap |
+| `contradiction` | Incompatible answers to the same question under overlapping conditions |
+| `uncertain` | Meaning, evidence or applicability requires clarification |
+| `lifecycle` | Actual retained correction/supersession version links explain the difference |
+
+Unknown conditions MUST NOT be called disjoint. The helper checks known branch,
+component and other constraints/periods for an actual non-overlap; it does not
+infer unstated conditions. A lifecycle judgment MUST name sources with actual
+version links. Inactive history MUST NOT be treated as current contradictory
+guidance or silently reactivated because its body resembles a new claim.
+
+Inspection is complete within 64 distinct source components and
+64 KiB total source disclosure. Inputs/proofs are bounded to 1 MiB; duplicate
+groups to eight groups of eight sources, tightened bodies to 4 KiB. The full
+three snapshots retain the recovery limits of 256 files, 16 KiB per file and
+1 MiB total. The session MUST review an exceeded source set explicitly rather
+than silently truncate it or claim no conflict. No large-bank recall-quality
+claim is made by this first-release helper.
+
+## Observe
 
 With `SKILL_DIR` resolved to this portable package:
 
@@ -62,52 +114,7 @@ content-free retrieval audit. It MUST NOT be reported as applied refresh,
 publication or a canonical memory mutation. Offline, changed, unbounded or unsafe
 sources MUST remain pending; local useful capture remains available.
 
-## Record the actual review
-
-Save a private JSON review with exactly these fields:
-
-| Field | Value |
-| --- | --- |
-| `binding` | The complete unchanged binding returned by inspection |
-| `pairs` | One decision for every exact `required_pairs` entry |
-| `dependencies` | Actual dependent bank paths mapped to prerequisite bank paths; `{}` when none |
-| `consolidations` | Explicit equivalent typed source groups; `[]` when none |
-| `rationale` | The overall source-based semantic explanation |
-| `recorded_at` | Actual timezone-qualified RFC3339 review time |
-
-Each pair decision contains exactly `left`, `right`, `classification`, `reason`.
-`left` and `right` MUST retain the order from the actual pair inventory. The
-reason MUST explain the source meaning, rather than repeat an empty label.
-
-| Classification | Required interpretation |
-| --- | --- |
-| `related` | Related orientation/history or independent claims; preserve both |
-| `compatible` | Claims coexist under their actual conditions; preserve their content |
-| `equivalent` | The same learning under the actual retained conditions |
-| `disjoint-conditions` | Actual known conditions or valid periods cannot overlap |
-| `contradiction` | Incompatible answers to the same question under overlapping conditions |
-| `uncertain` | Meaning, evidence or applicability requires clarification |
-| `lifecycle` | Actual retained correction/supersession version links explain the difference |
-
-Unknown conditions MUST NOT be called disjoint. The helper checks known branch,
-component and other constraints/periods for an actual non-overlap; it does not
-infer unstated conditions. A lifecycle judgment MUST name sources with actual
-version links. Inactive history MUST NOT be treated as current contradictory
-guidance or silently reactivated because its body resembles a new claim.
-
-```sh
-python3 -I "$SKILL_DIR/scripts/reconcile_memory.py" review --repo /path/to/repo --input /private/review.json
-python3 -I "$SKILL_DIR/scripts/reconcile_memory.py" check --repo /path/to/repo --input /private/proof.json
-```
-
-Review fetches and reads the actual current inputs again; stale or changed
-bindings refuse. `proof` includes the exact judgment, complete hashes of both
-output banks, disputed paths and exact `blocked_components`. Check repeats review and compares the entire
-proof. Edited outputs, changed source versions, another developer/scope/settings,
-a changed local HEAD or advanced authority require a new review. A saved JSON
-success flag MUST NOT establish current source or server freshness.
-
-## Compatible changes and duplicate learning
+## Plan
 
 For concurrent edits in the same ordinary context file or container introduction, the session MUST mark
 the actual two source versions compatible/equivalent only after reading their
@@ -139,7 +146,42 @@ record their relations/events. The session MUST read the resulting provenance;
 it MUST NOT flatten evidence into a synthetic unanimous author. Generated
 history and route bounds can refuse a group rather than discard its provenance.
 
-## Disputed claims and independent work
+When the detecting developer actually resolves a conflict, the session MUST
+record that direct decision and its evidence through
+[governance](../../governance/GUIDE.md), preserving still-valid older conditions.
+It MUST NOT treat a remembered approval, another agent's guess or a conflict
+label as the developer's answer. The existing correction/supersession operation
+keeps stable identities, older origins and safe correction history. A stronger
+automatically observed source can resolve a claim within the existing authority
+rules without adding a per-memory approval step.
+
+The `govern_memory.py` CLI requires a typed standalone target. For ordinary
+context prose or a router/index introduction, the session MUST instead use the
+[observed write protocol](../../writes/GUIDE.md) with the actual clarifying
+decision/evidence recorded in concise prose or a source link. A router/index
+change uses the recoverable multi-file transaction, even if only its prose
+changes. It MUST preserve routes, distinct applicability and unrelated text.
+The session MUST NOT invent a record identity merely to satisfy the typed CLI.
+Git and the observed operation retain the prior untyped source; an independently
+useful typed decision MAY be admitted through the usual fresh comparison and
+admission workflow. The same current-authority, secret and provenance rules
+apply to this untyped correction.
+
+## Apply
+
+```sh
+python3 -I "$SKILL_DIR/scripts/reconcile_memory.py" review --repo /path/to/repo --input /private/review.json
+python3 -I "$SKILL_DIR/scripts/reconcile_memory.py" check --repo /path/to/repo --input /private/proof.json
+```
+
+## Read back
+
+Review fetches and reads the actual current inputs again; stale or changed
+bindings refuse. `proof` includes the exact judgment, complete hashes of both
+output banks, disputed paths and exact `blocked_components`. Check repeats review and compares the entire
+proof. Edited outputs, changed source versions, another developer/scope/settings,
+a changed local HEAD or advanced authority require a new review. A saved JSON
+success flag MUST NOT establish current source or server freshness.
 
 For a contradiction or uncertainty, the result shows both actual claims, full
 metadata/evidence, their origin developer IDs, and the detecting developer. The
@@ -185,6 +227,8 @@ publication or use the publication candidate to overwrite unpublished learning.
 Tombstones and inactive-version guards from the recovery protocol still apply;
 this operation does not weaken erasure or make an unknown legacy identity novel.
 
+## Verify
+
 A disputed navigation caption MUST NOT discard or roll back a terminal guard,
 revocation or immutable history. Their canonical source bytes remain present;
 only the held caption is restored to its prior wording or generated neutral
@@ -201,29 +245,6 @@ helper itself has no apply command. The publication caller MUST follow current
 repository permissions/checks/review/branch rules and read back actual landing.
 An ordinary transaction receipt by itself is not semantic or publication proof.
 
-## Record clarification safely
-
-When the detecting developer actually resolves a conflict, the session MUST
-record that direct decision and its evidence through
-[governance](../../governance/GUIDE.md), preserving still-valid older conditions.
-It MUST NOT treat a remembered approval, another agent's guess or a conflict
-label as the developer's answer. The existing correction/supersession operation
-keeps stable identities, older origins and safe correction history. A stronger
-automatically observed source can resolve a claim within the existing authority
-rules without adding a per-memory approval step.
-
-The `govern_memory.py` CLI requires a typed standalone target. For ordinary
-context prose or a router/index introduction, the session MUST instead use the
-[observed write protocol](../../writes/GUIDE.md) with the actual clarifying
-decision/evidence recorded in concise prose or a source link. A router/index
-change uses the recoverable multi-file transaction, even if only its prose
-changes. It MUST preserve routes, distinct applicability and unrelated text.
-The session MUST NOT invent a record identity merely to satisfy the typed CLI.
-Git and the observed operation retain the prior untyped source; an independently
-useful typed decision MAY be admitted through the usual fresh comparison and
-admission workflow. The same current-authority, secret and provenance rules
-apply to this untyped correction.
-
 After that operation lands locally, the session MUST inspect again. The old
 proof is stale. If the clarified claim now duplicates landed learning, a new
 review MUST consolidate it with every distinct origin/evidence retained. The
@@ -231,15 +252,7 @@ new version/event MUST retain the clarifying decision's reference, and old
 incorrect versions remain history rather than current guidance. No automatic
 outreach or truth-by-last-writer is involved.
 
-## Bounds and result meanings
-
-Inspection is complete within 64 distinct source components and
-64 KiB total source disclosure. Inputs/proofs are bounded to 1 MiB; duplicate
-groups to eight groups of eight sources, tightened bodies to 4 KiB. The full
-three snapshots retain the recovery limits of 256 files, 16 KiB per file and
-1 MiB total. The session MUST review an exceeded source set explicitly rather
-than silently truncate it or claim no conflict. No large-bank recall-quality
-claim is made by this first-release helper.
+## Outcomes
 
 Exit 0 means a completed inspection/review/check, which MAY contain unresolved
 conflicts and independent candidate updates. Exit 1 means incomplete, changed,
@@ -248,3 +261,11 @@ before retrying. Canonical writes and publication are always false here. Fresh
 remote observation is scoped to the recorded head/time, never a perpetual lease.
 Routine successful review SHOULD remain quiet; conflicts, failures and
 consequential corrections MUST be surfaced promptly at the boundary.
+
+## Failure handling
+
+With changed sources, unresolved meaning, unknown applicability, unsafe content or exceeded complete-review bounds, the session MUST retain the actual evidence and held updates. It MUST NOT choose truth by text merge/landing order, omit a disputed side or treat incomplete review as absence; independent qualified work may continue.
+
+## Diagnostic fallback
+
+If normal semantic review cannot establish a usable proof, a session MAY inspect bounded actual source components and stronger project evidence to resolve the question with the detecting developer. It MUST preserve the held claims/conditions/provenance, obtain a fresh complete judgment, and apply only through the corresponding governed refresh/publication caller.

@@ -159,7 +159,8 @@ def guide():
               "Reactivation MUST create a higher active version with new evidence and a new event; the earlier version MUST remain historical with its previous state.",
               "Deletion MUST be terminal for that record ID and leave only the content-free tombstone contract. No operation MAY reactivate that deleted ID.",
               "The public evaluator is read-only and MUST NOT be reported as a committed mutation. Mediated callers MUST also enforce identity, admission, observed-write, provenance and tombstone rules.", ""]
-    return "\n".join(lines)
+    from .model_reference import render
+    return render("\n".join(lines))
 
 
 def main(argv=None):

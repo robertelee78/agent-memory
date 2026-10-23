@@ -1,4 +1,17 @@
-# Optional records and bounded topic indexes
+---
+kind: operation
+domain: maintain
+---
+
+# Inspect record layout and render bounded topic indexes
+
+## Use when
+
+A session SHOULD use this operation to inspect canonical record/index reachability or render a proposed topic index. It MUST NOT treat an index’s routing label as independent proof that a lesson is current, admitted or applicable.
+
+## Required context
+
+A session using this leaf MUST first load and follow the [maintain domain](../maintain/GUIDE.md). It MUST open the [shared model](../model/GUIDE.md) only when an unresolved semantic question requires it.
 
 The six context files remain ordinary concise prose. A standalone file in
 `topics/`, `episodes/`, `procedures/` or `history/` MUST use the shared
@@ -16,7 +29,7 @@ distinct source links, conditions and originating developer/harness/session
 information. Format validation checks structure; it does not perform semantic
 deduplication, admission, consolidation or publication.
 
-## Placement and meaning
+## Inputs and preconditions
 
 | Location | Intended content | Boundary |
 | --- | --- | --- |
@@ -44,7 +57,20 @@ artifact; the loader explicitly marks them as not current guidance. Duplicate
 event IDs, content-bearing event bodies and a `deleted` label on an event MUST
 be rejected. Deletion is represented by the safe tombstone, not that label.
 
-## Bounded reachability
+Render accepts exactly `path`, `project-id`, `updated` and `routes`. Each route
+has `path`, `purpose`, `scope`, `lifecycle` and `read-when`. It returns proposed
+content, not a write. Inspect returns descriptors and source hashes from the
+canonical bank; it preserves its Markdown, code, HEAD, index and runtime state.
+The existing `bank_contract.py validate` and transaction validator use the same
+layout algorithm. Exit 0 means valid layout/format or rendered index; exit 1
+means refusal. These results MUST NOT be treated as admission, source review,
+identity authentication, a current-guidance decision or a durable mutation.
+
+## Observe
+
+A session MUST inspect the actual router, current record metadata and existing index routes before proposing a layout. It MUST retain scope, lifecycle, conditions and all distinct evidence rather than reorganize from filenames alone.
+
+## Plan
 
 Every project Markdown file MUST have one unambiguous route from `MEMORY.md`,
 directly or through a bounded topic index. The root router keeps its 16 KiB and
@@ -80,7 +106,7 @@ A detecting session SHOULD use the [authority guide](../authority/GUIDE.md) and
 focused clarification when the files express a substantive disagreement.
 Missing evidence MUST NOT be filled with invented requirements.
 
-## Read-only operations
+## Apply
 
 With `SKILL_DIR` resolved to the packaged skill directory:
 
@@ -91,14 +117,19 @@ python3 -I "$SKILL_DIR/scripts/bank_layout.py" render-index --input /tmp/topic-i
 python3 -I "$SKILL_DIR/scripts/bank_layout.py" validate-index --file memory-bank/topics/index.md --path topics/index.md
 ```
 
-Render accepts exactly `path`, `project-id`, `updated` and `routes`. Each route
-has `path`, `purpose`, `scope`, `lifecycle` and `read-when`. It returns proposed
-content, not a write. Inspect returns descriptors and source hashes from the
-canonical bank; it preserves its Markdown, code, HEAD, index and runtime state.
-The existing `bank_contract.py validate` and transaction validator use the same
-layout algorithm. Exit 0 means valid layout/format or rendered index; exit 1
-means refusal. These results MUST NOT be treated as admission, source review,
-identity authentication, a current-guidance decision or a durable mutation.
+## Read back
+
+A session MUST read the actual inspected routes/records and any returned proposed index bytes. Rendering is a private plan; applying it requires the existing observed-write protocol and a fresh complete bank observation.
+
+## Verify
+
+A session MUST verify complete bounded reachability, project/scope consistency and preservation of each record’s conditions before using the result. It MUST NOT claim that successful structural validation admits a claim or proves its evidence.
+
+## Outcomes
+
+The operation returns structural inspection or a rendered index. The session MUST select a separate current-recall or governed write operation when that is its intent; no canonical write or shared publication follows from rendering alone.
+
+## Failure handling
 
 A visible bank lock or transaction marker MUST stop inspection. The session
 MUST route interruption to recovery rather than deleting state or regenerating
@@ -107,3 +138,7 @@ Removing a deliberately maintained historical artifact also requires updating
 its route; a dangling durable link is an invalid layout, not permission for the
 reader to silently discard it. A clean current bank MUST remain usable without
 memory-generated caches, runtime journals or auxiliary event history.
+
+## Diagnostic fallback
+
+If the normal helper cannot establish a valid layout, the session MAY inspect the bounded router, topic-index tables and record headers with ordinary file tools. It MUST preserve original files and unknown recovery evidence, plan the exact repair separately and verify the complete resulting bank before current use.

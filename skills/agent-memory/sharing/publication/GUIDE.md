@@ -1,12 +1,11 @@
-# Automatically publish memory independently of code
+---
+kind: operation
+domain: sharing
+---
 
-A session using this leaf MUST first load the [sharing domain](../GUIDE.md).
-It MUST also follow [semantic reconciliation](../semantic/GUIDE.md) and the
-root's security, admission, comparison and governance routes for their actual
-operations. Publication MUST NOT substitute format validity for admission or
-an agent's judgment for authenticated truth.
+# Publish admitted memory independently of feature code
 
-## When to use
+## Use when
 
 At a natural turn boundary after durable capture or maintained memory changes,
 a session MUST automatically prepare and attempt publication of the admitted,
@@ -19,13 +18,22 @@ require fresh review and an explicit continuation of the pending proposal.
 Routine success SHOULD remain quiet. Conflicts, failures and consequential
 corrections MUST reach the detecting developer promptly at the boundary.
 
+## Required context
+
+A session using this leaf MUST first load and follow the [sharing domain](../../sharing/GUIDE.md). It MUST open the [shared model](../../model/GUIDE.md) only when an unresolved semantic question requires it.
+
+It MUST also follow [semantic reconciliation](../semantic/GUIDE.md) and the
+root's security, admission, comparison and governance routes for their actual
+operations. Publication MUST NOT substitute format validity for admission or
+an agent's judgment for authenticated truth.
+
 Publication MUST use the configured repository's actual GitHub default branch.
 Local memory MUST remain useful when GitHub, credentials, `gh`, network access,
 permissions, review or supported rule evaluation are unavailable. The session
 MUST retain the delta and report pending sharing when that distinction matters;
 it MUST NOT initialize another bank or widen scope to get around a failure.
 
-## Prepare current sources
+## Inputs and preconditions
 
 1. The session MUST complete admission/maintenance using the existing governed
    routes. Explicit removal of typed learning MUST follow governance and retain
@@ -38,7 +46,37 @@ it MUST NOT initialize another bank or widen scope to get around a failure.
 3. The session MUST save the complete resulting semantic `proof` in private
    storage outside the checkout, then invoke the portable helper:
 
-   ```sh
+An initialized, explicitly bound local bank MAY be published when authority has
+never contained a canonical bank. Fresh discovery MUST inspect authority's
+other possible bank locations and mainline locator history, including a custom
+bank that was later removed. Looking only under the stale branch's configured
+prefix MUST NOT establish absence. Discarded side-branch proposals are not
+authority-tree ownership. Known hidden/independent repositories remain subject
+to the sharing domain's explicit inspection rules. The actual base/landed hash maps
+are empty; the observation reports `shared_bank_present: false`. The session
+MUST review the actual local bank rather than manufacture a shared starter.
+A removed previously occupied bank MUST require historical inspection, not be
+mistaken for first initialization. Another clone's different project ID MUST
+require explicit identity reconciliation; publication MUST NOT silently split
+one repository into two banks or merge unrelated identities.
+
+The shared snapshot/source bounds still apply. Policy and check collections
+allow at most four pages of 100 entries; exceeding them requires inspection.
+Authority location discovery allows 16 MiB of tree metadata, one million
+entries, 64 possible routers and 128 locator-changing mainline commits. This
+history bound concerns possible router changes, not the repository's total age.
+Incomplete discovery MUST NOT establish absence.
+No deterministic helper promises perfect semantic truth or a global transaction
+across local edits, GitHub policy and Git transport. The session MUST preserve
+source-specific applicability, use the fresh checks above and surface failures.
+
+## Observe
+
+A session MUST observe actual local memory, fresh authority and current repository policy before constructing a publication. It MUST inventory any previous candidate/request and actual landing evidence before deciding that another push or PR is needed.
+
+## Plan
+
+```sh
    python3 -I "$SKILL_DIR/scripts/publish_memory.py" prepare --repo /path/to/repo --input /private/semantic-proof.json
    ```
 
@@ -62,27 +100,22 @@ HEAD bank and matching ordinary index blob. It does not stage that deletion or
 accept an arbitrary missing tracked artifact. Unknown ownership, malformed prior
 banks and nonordinary/unmerged entries MUST remain for inspection.
 
-### First publication
-
-An initialized, explicitly bound local bank MAY be published when authority has
-never contained a canonical bank. Fresh discovery MUST inspect authority's
-other possible bank locations and mainline locator history, including a custom
-bank that was later removed. Looking only under the stale branch's configured
-prefix MUST NOT establish absence. Discarded side-branch proposals are not
-authority-tree ownership. Known hidden/independent repositories remain subject
-to the sharing domain's explicit inspection rules. The actual base/landed hash maps
-are empty; the observation reports `shared_bank_present: false`. The session
-MUST review the actual local bank rather than manufacture a shared starter.
-A removed previously occupied bank MUST require historical inspection, not be
-mistaken for first initialization. Another clone's different project ID MUST
-require explicit identity reconciliation; publication MUST NOT silently split
-one repository into two banks or merge unrelated identities.
-
-## Land and read back
+## Apply
 
 ```sh
 python3 -I "$SKILL_DIR/scripts/publish_memory.py" land --repo /path/to/repo --input /private/publication-request.json
 ```
+
+## Read back
+
+Success MUST be reported only from actual authority readback proving the whole
+intended delta. A successful command exit alone is not publication. Publication
+MUST NOT refresh/rebase the feature branch or imply its code is current. The
+session MUST follow the separate [refresh operation](../refresh/GUIDE.md) when
+importing landed memory. If that import is not verified, it MUST report refresh
+as pending and MUST NOT substitute a whole-branch pull or snapshot overwrite.
+
+## Verify
 
 The session MUST inventory a previous attempt before retrying. The helper first
 checks actual first-parent authority trees for the complete proposed memory
@@ -122,14 +155,7 @@ rather than claim they passed or attempt a privileged bypass. It MAY use the
 ordinary repository workflow only after fresh source review and actual required
 approvals/checks; that separate action MUST supply its own landing readback.
 
-Success MUST be reported only from actual authority readback proving the whole
-intended delta. A successful command exit alone is not publication. Publication
-MUST NOT refresh/rebase the feature branch or imply its code is current. The
-session MUST follow the separate [refresh operation](../refresh/GUIDE.md) when
-importing landed memory. If that import is not verified, it MUST report refresh
-as pending and MUST NOT substitute a whole-branch pull or snapshot overwrite.
-
-## Results, interruption and recovery
+## Outcomes
 
 - `landed` or `already-landed`, with `publication_verified: true`: the complete
   delta has a real authority-tree witness. The session MUST distinguish historical
@@ -143,6 +169,8 @@ as pending and MUST NOT substitute a whole-branch pull or snapshot overwrite.
   MUST NOT be reported as no writes. The original bank/index are never recovery
   scratch space.
 
+## Failure handling
+
 A lost push/PR-create response MUST be inventoried, not blindly repeated. The
 same candidate branch and exact PR head/base query recover an existing PR;
 actual Git tree readback recovers publication even after disposable state loss.
@@ -151,7 +179,7 @@ Prepared commits and transport observations are mechanical evidence, not an ACL.
 The repository and OS continue to control access. Local Git signing/credential
 configuration remains the operator's; the helper does not switch accounts.
 
-## Validation and limits
+## Diagnostic fallback
 
 The session SHOULD use the public copied-pack publication, policy, pending,
 linked-worktree and recovery suites for changes to this operation. Their GitHub
@@ -159,12 +187,4 @@ adapter is an offline protocol fixture; real local Git remotes and server hooks
 supply the write/readback and race evidence. Tests MUST NOT require real
 credentials or alter live client/repository policy.
 
-The shared snapshot/source bounds still apply. Policy and check collections
-allow at most four pages of 100 entries; exceeding them requires inspection.
-Authority location discovery allows 16 MiB of tree metadata, one million
-entries, 64 possible routers and 128 locator-changing mainline commits. This
-history bound concerns possible router changes, not the repository's total age.
-Incomplete discovery MUST NOT establish absence.
-No deterministic helper promises perfect semantic truth or a global transaction
-across local edits, GitHub policy and Git transport. The session MUST preserve
-source-specific applicability, use the fresh checks above and surface failures.
+If normal publication cannot establish verified authority readback, the session MUST keep the request, local memory and feature state intact. It MAY inspect bounded actual policy, first-parent trees and operation receipts, but MUST NOT force a push, bypass review/checks or infer success from candidate reachability alone.
