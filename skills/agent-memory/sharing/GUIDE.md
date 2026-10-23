@@ -117,3 +117,7 @@ sharing MUST remain pending while useful local learning stays readable.
 A session MUST read [recovery/GUIDE.md](recovery/GUIDE.md) for fresh remote
 observations, lost-response readback, cursor loss and deletion-aware merge plans.
 These recovery primitives do not themselves publish or refresh canonical memory.
+
+A session MUST follow [semantic/GUIDE.md](semantic/GUIDE.md) before treating
+local and landed memory as compatible, including textually clean cross-file
+claims, duplicates, source conditions and detecting-developer clarification.

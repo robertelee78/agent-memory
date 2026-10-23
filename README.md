@@ -128,3 +128,8 @@ Its read-only validator also handles optional history and the safe tombstone exc
 The [optional-record loader](skills/agent-memory/layout/GUIDE.md) checks typed
 records and bounded topic indexes through one shared algorithm, preserving
 provenance and conditions while refusing ambiguous routes or pending observations.
+
+The portable [semantic sharing guide](skills/agent-memory/sharing/semantic/GUIDE.md)
+reviews actual local and landed learning before exchange, preserving origins and
+conditions and isolating disputed updates. This source-bound review produces
+candidate banks; automatic publication and boundary refresh are separate work.

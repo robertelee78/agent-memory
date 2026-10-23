@@ -117,6 +117,10 @@ changes only `activeContext.md`; missing-context route preparation is separate.
 A session MUST read [sharing/GUIDE.md](sharing/GUIDE.md) before configuring the
 repository bank/default branch or inspecting eligible memory-only Git paths.
 
+A session MUST follow [sharing/semantic/GUIDE.md](sharing/semantic/GUIDE.md)
+when combining local and landed learning, to preserve source conditions and
+origins, isolate disputed updates and review meaning across files.
+
 A session MUST read [sharing/recovery/GUIDE.md](sharing/recovery/GUIDE.md)
 before recovering a lost sharing response or reconstructing a merge baseline.
 
