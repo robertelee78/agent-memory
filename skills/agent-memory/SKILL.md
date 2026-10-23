@@ -72,6 +72,12 @@ mismatched conditions MUST NOT be silently widened into current guidance.
 
 ## Standalone lessons
 
+A session MUST follow [admission/GUIDE.md](admission/GUIDE.md) at natural turn
+boundaries to capture useful durable learning, assess actual evidence and admit
+small qualified records after fresh comparison. Routine qualified capture MUST
+NOT require per-record approval; proposals and unanswered suggestions MUST remain
+unconfirmed, and unsafe content MUST be quarantined outside shared guidance.
+
 A session MUST read [records/GUIDE.md](records/GUIDE.md) when a lesson needs
 typed provenance, validity, correction or revocation. Ordinary context prose
 does not need metadata on every paragraph. Record format validation MUST NOT

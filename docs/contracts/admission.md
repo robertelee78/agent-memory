@@ -1,0 +1,35 @@
+# Source-bound capture and admission
+
+The [portable admission guide](../../skills/agent-memory/admission/GUIDE.md)
+separates small capture/classification artifacts from canonical admission.
+Routine qualified learning needs no new operator approval. Transient/redundant
+source or tracker state is discarded; unsafe content is withheld, never copied
+to shared quarantine or private audit. Unconfirmed proposals and weak sources
+without actual supporting evidence/review remain outside active guidance.
+
+The new-record writer consumes exact capture and comparison proofs. It repeats
+the comparison under the common lock, rejects a changed source or unrelated
+delta, and creates the active record, event and routes through the existing
+transaction protocol. Utility, evidence assessment, conditions and provenance
+remain visible. Source hashing proves an observed byte version, not semantic
+truth. Existing learning returns a pending consolidation/clarification outcome
+instead of a duplicate ID; this story does not implement consolidation itself.
+
+Public copied-pack fixtures cover user/repository and reviewed tool/assistant/
+external sources, uncertainty, instruction promotion, raw conversation, redundant
+work state, duplicate/conflict routing, actual unfinished-code conditions,
+arriving learning, tampered plans, changed evidence, replay and interruption.
+Before recorded completion, interrupted admission requires rollback followed by
+new evidence/comparison; finishing partial memory cannot establish novelty.
+After an exactly verified finished receipt exists, recovery cleans the recorded
+outcome only after validating all eleven receipt fields, their strict values and
+proposal/project/path/hash bindings, including a required RFC3339 timestamp.
+Missing fields, unknown content, altered project or path claims, invalid times
+and truthy non-boolean verification refuse cleanup and replay while preserving
+the receipt and interrupted state. Timestamp format is not evidence freshness.
+After validation, recovery cleans the recorded outcome without replaying bytes
+or requiring new source evidence. Public probes
+cover both receipt and marker-removal crash windows, with later evidence changes.
+Code, index and HEAD remain
+unchanged. Latest-main comparison/publication is separate exchange work and
+remains pending; local admission never claims cross-machine visibility.

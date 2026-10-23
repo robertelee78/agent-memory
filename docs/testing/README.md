@@ -38,6 +38,10 @@ The [learning comparison contract](../contracts/comparison.md) covers alternate
 wording, distinct conditions, source-bound judgment, newly arrived duplicates,
 unsafe/unavailable sources and terminal deletion before a durable learning change.
 
+The [admission contract](../contracts/admission.md) covers source classification,
+uncertainty and quarantine, qualified automatic admission, exact-delta/evidence
+checks, duplicate/conflict routing, replay and interrupted rollback.
+
 The [context assembly contract](../contracts/assembly.md) adds complete metadata,
 type diversity, duplicate provenance, byte and externally measured token budgets,
 and indivisible unresolved conflict groups through the copied portable CLI.

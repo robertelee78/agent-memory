@@ -111,7 +111,8 @@ event with a random `id`, project UUID, mutation kind, exact record reference,
 actor, recording time and evidence; its body is empty. The same render/validate
 helper handles it. The event ID is the idempotency key: a future writer MUST
 reject reuse with different content and MUST NOT append a duplicate after retry.
-This format helper is read-only; it does not implement a journal writer.
+This format helper is read-only. The [governed admission operation](../admission/GUIDE.md)
+writes a source-bound admission event alongside its current record.
 
 Events MAY describe capture, admission, correction, supersession, revocation,
 expiry, promotion or projection building. A session MUST keep a complete readable

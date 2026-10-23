@@ -16,12 +16,15 @@ from . import bank_writes as writes
 from . import local_registry as storage
 from .developer_identity import digest, encoded, load, uuid_valid
 from .frontmatter import ContractError
+from .lifecycle import time_value
 
 MARKER = ".agent-memory-transaction.md"
 SCHEMA = "agent-memory/transaction-proposal-v1"
 FIELDS = {"schema", "operation_id", "operation", "repo_root", "project_id", "observed_hashes", "files", "scope_context"}
 RECOVERY_SCHEMA = "agent-memory/transaction-recovery-v1"
 RECOVERY_FIELDS = {"schema", "operation_id", "repo_root", "mode", "journal_sha256", "marker_sha256", "observed_hashes"}
+RECEIPT_FIELDS = {"schema", "operation_id", "request_sha256", "bank_path", "project_id", "observed_hashes",
+                  "resulting_hashes", "outcome", "changed_memory_paths", "readback_at", "verified"}
 
 
 def result(operation, **fields):
@@ -44,13 +47,15 @@ def files_at(bank):
 def proposal_value(prepared):
     from .scope_binding import context_value
     p = prepared.get("proposal", prepared) if isinstance(prepared, dict) else prepared
-    if (not isinstance(p, dict) or set(p) not in (FIELDS, FIELDS | {"initialization_evidence"}) or p["schema"] != SCHEMA
+    if (not isinstance(p, dict) or set(p) not in (FIELDS, FIELDS | {"initialization_evidence"}, FIELDS | {"admission_evidence"}) or p["schema"] != SCHEMA
             or not uuid_valid(p["operation_id"]) or not uuid_valid(p["project_id"])
             or p["operation"] not in writes.OPERATIONS or not isinstance(p["repo_root"], str)
             or not Path(p["repo_root"]).is_absolute() or str(Path(p["repo_root"]).resolve()) != p["repo_root"]):
         raise ContractError("Invalid bank transaction proposal")
     if 'initialization_evidence' in p and p['operation'] != 'initialize':
         raise ContractError('Source initialization evidence belongs only to initialization')
+    if 'admission_evidence' in p and p['operation'] != 'capture':
+        raise ContractError('Admission evidence belongs only to its governed capture transaction')
     contract.validate_files(p["files"])
     first_bank = p['operation'] == 'initialize' and p['observed_hashes'] == {}
     context_value(p['scope_context'], initialize=first_bank)
@@ -205,14 +210,28 @@ def receipt_value(path, p):
         raise ContractError("Transaction receipt must not be a symlink")
     r = load(path.read_bytes())
     final = file_hashes(p["files"])
-    if (not isinstance(r, dict) or r.get("schema") != "agent-memory/transaction-receipt-v1"
+    if (not isinstance(r, dict) or set(r) != RECEIPT_FIELDS
+            or r.get("schema") != "agent-memory/transaction-receipt-v1"
             or r.get("operation_id") != p["operation_id"] or r.get("request_sha256") != digest(encoded(p))
             or r.get("bank_path") != str(Path(p["repo_root"]) / contract.SPEC["x-bank-path"])
-            or r.get("outcome") not in {"finished", "rolled-back"} or r.get("verified") is not True
+            or r.get("project_id") != p["project_id"]
+            or not isinstance(r.get("outcome"), str) or r["outcome"] not in {"finished", "rolled-back"}
+            or r.get("verified") is not True
             or r.get("observed_hashes") != p["observed_hashes"]
-            or r.get("resulting_hashes") != (final if r.get("outcome") == "finished" else p["observed_hashes"])):
+            or r.get("resulting_hashes") != (final if r.get("outcome") == "finished" else p["observed_hashes"])
+            or r.get("changed_memory_paths") != [contract.SPEC["x-bank-path"] + "/" + path for path in changed(p)]):
         raise ContractError("Unknown receipt or reused operation ID; preserve it")
+    # The complete schema/bindings above make every UUID, path and hash equal
+    # to an already validated proposal-derived string/map/list. Timestamp
+    # format does not prove source freshness or authenticate a past assertion.
+    time_value(r["readback_at"])
     return r
+
+
+def admission_recovery(p, mode, known):
+    if ('admission_evidence' in p and mode == 'finish'
+            and (known is None or known['outcome'] != 'finished')):
+        raise ContractError('Unfinished admission requires rollback, then fresh evidence and comparison; preserve the journal')
 
 
 def journal_value(raw, root, bank, operation_id, *, require_marker=True):
@@ -236,9 +255,14 @@ def allowed_partial(p, observed):
         raise ContractError("Interrupted bank contains an external edit; automatic recovery would overwrite it")
 
 
-def converge(root, bank, p, base_files, journal, raw, receipt_path, mode, observed, owner):
+def converge(root, bank, p, base_files, journal, raw, receipt_path, mode, observed, owner, *, recovery=False):
     marker = marker_bytes(p)
     known = receipt_value(receipt_path, p)
+    if recovery:
+        admission_recovery(p, mode, known)
+    # An exact verified outcome is already committed. Recovery may clean its
+    # marker, but cannot replay bytes or demand new semantic/source evidence.
+    historical = recovery and known is not None
     outcome = "finished" if mode == "finish" else "rolled-back"
     if known and known["outcome"] != outcome:
         raise ContractError("Transaction already has a different verified outcome; use a new reviewed operation")
@@ -260,12 +284,12 @@ def converge(root, bank, p, base_files, journal, raw, receipt_path, mode, observ
     check_marker(bank, marker)
     check_observed(bank, expected)
     check_layout(bank, participants, expected)
-    checked = validate_outcome(root, bank, desired, p, owner, marker)
+    checked = validate_outcome(root, bank, desired, p, owner, marker, admission_sources=not historical)
     writes.fault("transaction-before-receipt")
     check_marker(bank, marker)
     check_observed(bank, expected)
     check_layout(bank, participants, expected)
-    validate_outcome(root, bank, desired, p, owner, marker)
+    validate_outcome(root, bank, desired, p, owner, marker, admission_sources=not historical)
     if not known:
         known = {"schema": "agent-memory/transaction-receipt-v1", "operation_id": p["operation_id"],
                  "request_sha256": digest(encoded(p)), "bank_path": str(bank), "project_id": checked["project_id"],
@@ -277,7 +301,7 @@ def converge(root, bank, p, base_files, journal, raw, receipt_path, mode, observ
     check_marker(bank, marker)
     check_observed(bank, expected)
     check_layout(bank, participants, expected)
-    validate_outcome(root, bank, desired, p, owner, marker)
+    validate_outcome(root, bank, desired, p, owner, marker, admission_sources=not historical)
     (bank / MARKER).unlink()
     flush_directory(bank)
     writes.fault("transaction-after-marker-removal")
@@ -286,7 +310,10 @@ def converge(root, bank, p, base_files, journal, raw, receipt_path, mode, observ
                   already_applied=not paths, still_current=True, receipt_path=str(receipt_path), interrupted=False)
 
 
-def validate_outcome(root, bank, desired, p, owner, marker):
+def validate_outcome(root, bank, desired, p, owner, marker, *, admission_sources=True):
+    if admission_sources and 'admission_evidence' in p and desired == p['files']:
+        from .admission import check_sources
+        check_sources(p, owner=owner, marker=marker)
     if not desired and p['operation'] == 'initialize' and p['observed_hashes'] == {}:
         if contract.physical_paths(bank) or writes.hashes(bank):
             raise ContractError('Uninitialized rollback has an unexpected occupant; preserve it')
@@ -304,6 +331,11 @@ def apply(prepared):
     if p['operation'] == 'initialize':
         from .initialization import validate_transaction
         validate_transaction(p)
+    if 'admission_evidence' in p:
+        from .admission import validate_transaction
+        # A recorded outcome is read back by _apply; it never reapplies bytes.
+        if not locations(*writes.bank_path(p['repo_root']), p['operation_id'])[1].exists():
+            validate_transaction(p)
     first_bank = p['operation'] == 'initialize' and p['observed_hashes'] == {}
     initializing = first_bank and not (Path(p['repo_root']) / 'memory-bank/MEMORY.md').exists()
     pinned = {**p['scope_context'], 'initialization_only': initializing}
@@ -314,12 +346,20 @@ def apply(prepared):
         raise ContractError('Authority identity changes require explicit scope binding, including during initialization')
     from . import security
     classes = ['external']
+    if 'admission_evidence' in p:
+        classes = [p['admission_evidence']['capture']['request']['source_class']]
     if p['operation'] == 'initialize':
         evidence = p['initialization_evidence']['inventory']
         classes = ['assistant'] + (['verified-repository'] if evidence['sources'] else []) + (['tool'] if evidence['awa']['sources'] else [])
     def check(owner):
         require(p['repo_root'], p['project_id'], expected=context, owned_lock=owner, initialize=initializing)
-        if p['operation'] == 'initialize':
+        if 'admission_evidence' in p:
+            from .admission import validate_transaction
+            if not locations(*writes.bank_path(p['repo_root']), p['operation_id'])[1].exists():
+                validate_transaction(p, owned_lock=owner)
+            security.guarded_start(p['repo_root'], p['operation_id'], context,
+                {path: p['files'][path] for path in changed(p) if path in p['files']}, classes, action='capture')
+        elif p['operation'] == 'initialize':
             validate_transaction(p)
             security.guarded_start(p['repo_root'], p['operation_id'], context,
                 {path: p['files'][path] for path in changed(p) if path in p['files']}, classes, action='initialize')
@@ -387,8 +427,9 @@ def recover(repo, mode=None, prepared=None):
     operation_id = r.get('operation_id') if isinstance(r, dict) else None
     if not uuid_valid(operation_id):
         raise ContractError('Invalid transaction recovery operation')
-    journal, _ = locations(root, bank, operation_id)
+    journal, receipt_path = locations(root, bank, operation_id)
     _, p = journal_value(journal.read_bytes(), root, bank, operation_id)
+    admission_recovery(p, r['mode'], receipt_value(receipt_path, p))
     if p['operation'] == 'bind':
         raise ContractError('Resume identity binding through its original scope_binding bundle')
     marker = marker_bytes(p)
@@ -434,7 +475,7 @@ def _recover(repo, mode=None, prepared=None, *, check_identity=None):
                 raise ContractError("Bank changed after recovery preview; preserve the edit")
             allowed_partial(p, observed)
             preflight(bank, p, observed)
-            return converge(root, bank, p, j["base_files"], journal, raw, receipt_path, r["mode"], observed, owner)
+            return converge(root, bank, p, j["base_files"], journal, raw, receipt_path, r["mode"], observed, owner, recovery=True)
     if mode not in {"finish", "rollback"}:
         raise ContractError("Recovery preview requires an explicit finish or rollback choice")
     lock = bank / ".agent-memory.lock"
@@ -450,6 +491,7 @@ def _recover(repo, mode=None, prepared=None, *, check_identity=None):
     journal, receipt_path = locations(root, bank, m["transaction_id"])
     raw = journal.read_bytes()
     j, p = journal_value(raw, root, bank, m["transaction_id"])
+    admission_recovery(p, mode, receipt_value(receipt_path, p))
     if mode == 'finish' and p['operation'] == 'initialize':
         from .initialization import validate_transaction
         validate_transaction(p)
