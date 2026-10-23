@@ -34,6 +34,10 @@ The [baseline retrieval contract](../contracts/retrieval.md) adds public recall
 cases for hard filters before ranking, exact/text explanations, nested conditions,
 optional-index loss, safe source handling and independently bound local clones.
 
+The [sharing boundary contract](../contracts/sharing-boundary.md) exercises a
+configured bank through public identity, initialization, checkpoint, observed
+writes and interrupted recovery, plus Git path eligibility without exchange.
+
 The [independent local-bank contract](../contracts/independent-local-bank.md)
 proves initialization, checkpoint/resume, orientation lookup, validation, Git
 version/export and bounded local recovery without federation or optional stores.

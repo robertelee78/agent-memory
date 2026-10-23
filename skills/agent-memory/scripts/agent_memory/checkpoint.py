@@ -7,6 +7,7 @@ from pathlib import Path
 import re
 import sys
 
+from . import repository_config
 from . import bank_contract as bank
 from . import bank_transactions as transactions
 from . import bank_writes as writes
@@ -184,7 +185,7 @@ def preview(repo, value, *, prepare=False):
         raise ContractError('Bank or identity changed during checkpoint preparation; inspect again')
     return result('preview', proposal={'schema': 'agent-memory/checkpoint-proposal-v1', 'input': value,
                                       'base_text': current['active_context'], 'write': prepared},
-                  changed_memory_paths=['memory-bank/activeContext.md'] if body != current['active_context'] else [],
+                  changed_memory_paths=[repository_config.relative(repo) + '/activeContext.md'] if body != current['active_context'] else [],
                   writes_performed=False, verified=False)
 
 

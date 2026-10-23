@@ -1,5 +1,10 @@
 # Resolve and bind repository identity
 
+A session MUST use the actual repository root and the shared
+[bank configuration](../sharing/GUIDE.md). A custom bank location MUST be
+configured explicitly in each clone before binding; changing settings does not
+move memory or authorize replacing an existing bank.
+
 A session MUST use these common helpers before mediated memory writes. Clients
 MUST NOT derive project IDs from directory names, Git credentials, harnesses or
 their own algorithms. Local registries hold identity metadata, never personal

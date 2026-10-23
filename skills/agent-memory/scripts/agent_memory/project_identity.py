@@ -11,6 +11,7 @@ import subprocess
 import sys
 import uuid
 
+from . import repository_config
 from .bank_contract import parse_router
 from .developer_identity import digest, encoded, load, text, uuid_valid
 from .frontmatter import ContractError
@@ -70,7 +71,7 @@ def discover(repo, authority=None, *, owned_lock=None, owned_transaction=None):
             canonical = entry["identities"][0]
         else:
             issues.append("Authority fetch/push URLs do not identify one repository; repair or explicitly bind a consistent remote")
-    bank = root / "memory-bank"
+    bank = repository_config.bank_path(root)
     router = bank / "MEMORY.md"
     if bank.is_symlink() or router.is_symlink():
         raise ContractError("Bank/router must not be symlinks")
@@ -83,7 +84,7 @@ def discover(repo, authority=None, *, owned_lock=None, owned_transaction=None):
     return {"repo_root": str(root), "is_git": is_git, "common_git_dir": str(common) if is_git else None,
             "checkout_key": f"{stat.st_dev}:{stat.st_ino}", "location": str(common), "authority_name": selected,
             "canonical_remote": canonical, "configured_authority": configured_values, "remotes": remotes, "bank_project_id": metadata.get("project-id"),
-            "bank_canonical_remote": metadata.get("canonical-remote"), "router_sha256": digest(raw), "issues": issues}
+            "bank_canonical_remote": metadata.get("canonical-remote"), "repository_settings": repository_config.settings(root), "router_sha256": digest(raw), "issues": issues}
 
 
 def canonical(value):

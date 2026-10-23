@@ -9,6 +9,7 @@ import shutil
 import sys
 import uuid
 
+from . import repository_config
 from . import authority
 from . import bank_contract as bank
 from . import bank_transactions as transactions
@@ -51,6 +52,7 @@ def source_kind(path):
 
 def local_sources(root, selected=None):
     output, gaps, examined = [], [], 0
+    canonical_bank = repository_config.bank_path(root)
     listed = git(root, 'ls-files', '--cached', '--others', '--exclude-standard', '-z', optional=True)
     allowed = set(listed.split('\0')) if listed is not None else None
     if selected is not None:
@@ -61,7 +63,7 @@ def local_sources(root, selected=None):
             if allowed is not None and ref not in allowed:
                 raise ContractError('Explicit source is ignored or outside the Git source inventory; inspect it without publishing private context')
             source = read_source(root, ref)
-            if Path(ref).parts[0] == 'memory-bank':
+            if Path(ref).is_relative_to(repository_config.relative(root)):
                 raise ContractError('Existing memory is inventoried separately, never promoted into source authority')
             output.append({'ref': ref, 'kind': source_kind(Path(ref)) or 'documentation',
                            'sha256': source['sha256'], 'bytes': len(source['content'].encode())})
@@ -70,7 +72,8 @@ def local_sources(root, selected=None):
     # repo crawler or a substitute for inspecting the relevant implementation.
     for directory, names, files in os.walk(root, followlinks=False):
         names[:] = sorted(n for n in names if n not in EXCLUDED and not n.startswith('.')
-                          and not (Path(directory) / n).is_symlink())
+                          and not (Path(directory) / n).is_symlink()
+                          and (Path(directory) / n) != canonical_bank)
         for name in sorted(files):
             examined += 1
             if examined > 4096:
@@ -126,7 +129,7 @@ def awa_evidence(path, project_id):
 
 def inspect(repo, awa_path=None, selected=None):
     root = root_at(repo)
-    path = root / 'memory-bank'
+    path = repository_config.bank_path(root)
     bank.bank_root(path)
     if path.is_symlink():
         raise ContractError('Existing bank is a symlink; preserve it for explicit repair')
@@ -182,12 +185,12 @@ def read_source(repo, path):
                   content_is_untrusted_data=True, writes_performed=False)
 
 
-def link(ref):
+def link(ref, bank_root='memory-bank'):
     # JSON strings and percent-encoded hrefs preserve data without giving source
     # names control over headings, Markdown structure or executable commands.
     from urllib.parse import quote
     label = ref.replace('\\', '\\\\').replace('[', '\\[').replace(']', '\\]')
-    href = quote(ref, safe='/:#?=&%') if ref.startswith('https://') else quote('../' + ref, safe='/')
+    href = quote(ref, safe='/:#?=&%') if ref.startswith('https://') else quote('../' * len(Path(bank_root).parts) + ref, safe='/')
     return '[' + label + '](' + href + ')'
 
 
@@ -254,16 +257,17 @@ def review_value(review, observed, detecting_developer_id):
     return claims, questions, gaps
 
 
-def claim_lines(claim):
+def claim_lines(claim, bank_root='memory-bank'):
     condition = json.dumps({'scope': claim['scope'], 'conditions': claim['conditions']}, ensure_ascii=False, sort_keys=True)
     value = authority.comparable(claim['value'])
     return [claim['summary'], '', 'Applicability: `' + condition.replace('`', '\\u0060') + '`.',
             'Reviewed value: `' + value.replace('`', '\\u0060') + '`.',
-            'Evidence: ' + ', '.join(link(ref) for ref in claim['evidence']) + '.']
+            'Evidence: ' + ', '.join(link(ref, bank_root) for ref in claim['evidence']) + '.']
 
 
 def orientation(observed, claims, questions, gaps):
     sections = {}
+    bank_root = repository_config.relative(observed['repo_root'])
     def add(path, heading, lines):
         if lines:
             sections.setdefault(path, []).append('## ' + heading + '\n\n' + '\n'.join(lines))
@@ -271,13 +275,13 @@ def orientation(observed, claims, questions, gaps):
             ('planning', 'systemPatterns.md', 'Planning sources; approval and current applicability require review'),
             ('code', 'techContext.md', 'Implementation sources; existence does not prove behavior'),
             ('test', 'techContext.md', 'Executable tests; existence does not prove they pass')]:
-        add(path, heading, ['- ' + link(s['ref']) for s in observed['sources'] if s['kind'] == kind][:8])
+        add(path, heading, ['- ' + link(s['ref'], bank_root) for s in observed['sources'] if s['kind'] == kind][:8])
     add('progress.md', 'AWA projects, tasks and milestones; references do not prove delivery',
-        ['- ' + s['kind'] + ': ' + link(s['ref']) for s in observed['awa']['sources']][:16])
+        ['- ' + s['kind'] + ': ' + link(s['ref'], bank_root) for s in observed['awa']['sources']][:16])
     for claim in claims:
-        add(claim['context'], 'Reviewed ' + claim['fact'] + ': ' + claim['fact_key'], claim_lines(claim))
+        add(claim['context'], 'Reviewed ' + claim['fact'] + ': ' + claim['fact_key'], claim_lines(claim, bank_root))
     add('activeContext.md', 'Product questions for the detecting developer',
-        ['- ' + q['question'] + (' Evidence: ' + ', '.join(link(ref) for ref in q['evidence']) + '.' if q['evidence'] else '') for q in questions])
+        ['- ' + q['question'] + (' Evidence: ' + ', '.join(link(ref, bank_root) for ref in q['evidence']) + '.' if q['evidence'] else '') for q in questions])
     add('activeContext.md', 'Evidence gaps; no requirements inferred', ['- ' + gap for gap in [*observed['evidence_gaps'], *gaps]])
     result = {path: '# ' + path.removesuffix('.md') + '\n\n' + '\n\n'.join(body) + '\n' for path, body in sections.items()}
     if any(len(body.encode()) > 16384 for body in result.values()):
@@ -285,10 +289,10 @@ def orientation(observed, claims, questions, gaps):
     return result
 
 
-def new_claims(claims, files):
+def new_claims(claims, files, bank_root):
     existing = '\n\n'.join(body for path, body in files.items() if path != 'MEMORY.md')
     def represented(claim):
-        block = '## Reviewed ' + claim['fact'] + ': ' + claim['fact_key'] + '\n\n' + '\n'.join(claim_lines(claim))
+        block = '## Reviewed ' + claim['fact'] + ': ' + claim['fact_key'] + '\n\n' + '\n'.join(claim_lines(claim, bank_root))
         return block in existing
     return [claim for claim in claims if not represented(claim)]
 
@@ -306,8 +310,8 @@ def preview(repo, review):
     if not observed['sources'] and not observed['awa']['sources']:
         raise ContractError('No useful source evidence supplied; inspect documentation/code/tests/planning before creating a bank')
     root = Path(observed['repo_root'])
-    base = {} if empty else transactions.files_at(root / 'memory-bank')
-    claims = new_claims(claims, base)
+    base = {} if empty else transactions.files_at(repository_config.bank_path(root))
+    claims = new_claims(claims, base, repository_config.relative(root))
     bodies = orientation(observed, claims, questions, gaps)
     files = dict(base)
     if empty:
@@ -344,7 +348,7 @@ def preview(repo, review):
     security.ensure_safe({path: tx['files'][path] for path in transactions.changed(tx) if path in tx['files']})
     p = {'schema': SCHEMA, 'inventory': observed, 'review': review, 'transaction': tx, 'base_router': base.get('MEMORY.md')}
     return result('preview', proposal=p, questions=questions, evidence_gaps=[*observed['evidence_gaps'], *gaps],
-                  changed_memory_paths=['memory-bank/' + path for path in transactions.changed(tx)],
+                  changed_memory_paths=[repository_config.relative(root) + '/' + path for path in transactions.changed(tx)],
                   existing_memory_preserved=True, writes_performed=False, verified=False)
 
 
@@ -384,7 +388,7 @@ def validate_transaction(tx):
     for path, sha in original.items():
         if path != 'MEMORY.md' and digest(prior_files[path].encode()) != sha:
             raise ContractError('Initialization must preserve every existing memory file')
-    claims = new_claims(claims, prior_files)
+    claims = new_claims(claims, prior_files, repository_config.relative(tx['repo_root']))
     bodies = orientation(p['inventory'], claims, questions, gaps)
     if original:
         if not isinstance(p['base_router'], str) or digest(p['base_router'].encode()) != original['MEMORY.md']:
@@ -439,11 +443,11 @@ def apply(prepared):
     if authority.comparable(p) != authority.comparable(transaction_evidence(tx)):
         raise ContractError('Initialization wrapper differs from the original transaction evidence')
     claims, questions, gaps = validate_transaction(tx)
-    root, bank_path = Path(tx['repo_root']), Path(tx['repo_root']) / 'memory-bank'
+    root, bank_path = Path(tx['repo_root']), repository_config.bank_path(tx['repo_root'])
     bank.bank_root(bank_path)
     if bank_path.is_symlink() or (bank_path.exists() and not bank_path.is_dir()):
         raise ContractError('Bank location changed after preview; preserve it')
-    bank_path.mkdir(exist_ok=True)
+    bank_path.mkdir(parents=True, exist_ok=True)
     receipt = transactions.apply(tx)
     return result('apply', transaction=receipt, questions=questions, evidence_gaps=[*p['inventory']['evidence_gaps'], *gaps],
                   existing_memory_preserved=True, writes_performed=receipt['writes_performed'],
