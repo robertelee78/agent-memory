@@ -24,6 +24,12 @@ test. An enabled but missing, empty, skipped, timed-out or failing suite MUST
 fail both modes. Tests SHOULD invoke the shipped CLI, scripts and ordinary
 files; direct calls to internal algorithms alone are not acceptance evidence.
 
+The [first-release safety canaries](canaries.md) cover structural routes,
+lifecycle selection, project isolation, shared developer attribution,
+terminal deletion and poisoned imports through a copied portable skill.
+Their guide records the current public surfaces and required expansion as
+governed operations arrive.
+
 `tests/world.py` provides private temporary home, XDG, client, repository, bank,
 runtime, cache, credential and backup roots. It constructs an allowlisted
 subprocess environment instead of inheriting credentials or live config, and
