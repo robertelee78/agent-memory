@@ -39,6 +39,9 @@ record MUST explain correction, revocation or supersession where needed.
 
 ## Local current-file inspection
 
+A session SHOULD use [baseline recall](../retrieval/GUIDE.md) when selecting
+applicable current lessons rather than only inspecting structural bank state.
+
 With `SKILL_DIR` resolved to the packaged skill directory:
 
 ```sh
