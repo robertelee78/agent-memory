@@ -1,5 +1,9 @@
 # Recall current project memory
 
+A session preparing bounded harness context MUST continue to
+[assembly](../assembly/GUIDE.md) after recall. Recall's result limit is not a
+verified harness token budget and does not bundle known contradictions by itself.
+
 A session MUST resolve the actual repository/developer using
 [identity](../identity/GUIDE.md), read the [security policy](../security/GUIDE.md),
 and use the current Markdown bank. Optional projections, vector search, temporal
