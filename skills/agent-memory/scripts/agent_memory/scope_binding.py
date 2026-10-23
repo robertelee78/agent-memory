@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 import sys
 
+from . import repository_config
 from . import bank_contract as bank
 from . import bank_transactions as transactions
 from . import bank_writes as writes
@@ -72,7 +73,7 @@ def require(repo, project_id=None, *, expected=None, initialize=False, owned_loc
         raise ContractError('Operation project ID differs from the resolved repository')
     context = {'developer_id': dev['developer_id'], 'project_id': proj['project_id'],
                'developer_sha256': dev['observed_sha256'], 'project_sha256': proj['observed_sha256'],
-               'checkout_key': proj['evidence']['checkout_key'], 'initialization_only': initialize}
+               'checkout_key': proj['evidence']['checkout_key'], 'repository_settings_sha256': digest(encoded(proj['evidence']['repository_settings'])), 'initialization_only': initialize}
     if expected is not None and context != expected:
         raise ContractError('Resolved identity changed during the operation; retain original provenance and prepare again')
     return context
@@ -90,7 +91,7 @@ def context_value(context, *, initialize=False):
     if context is None:
         return
     if (not isinstance(context, dict) or set(context) != {'developer_id', 'project_id', 'developer_sha256',
-            'project_sha256', 'checkout_key', 'initialization_only'}
+            'project_sha256', 'checkout_key', 'repository_settings_sha256', 'initialization_only'}
             or not uuid_valid(context['developer_id']) or not uuid_valid(context['project_id'])
             or context['initialization_only'] is not initialize):
         raise ContractError('Invalid pinned scope context')
@@ -132,7 +133,7 @@ def preview(repo, action, target=None, reason=None, authority=None):
     base, transaction = None, None
     if prepared['evidence']['bank_project_id'] is not None:
         _, observed = writes.snapshot(root)
-        base = transactions.files_at(root / 'memory-bank')
+        base = transactions.files_at(repository_config.bank_path(root))
         if transactions.file_hashes(base) != observed:
             raise ContractError('Bank changed while preparing binding')
         desired = identity_files(base, prepared['bank_identity'])
@@ -142,7 +143,7 @@ def preview(repo, action, target=None, reason=None, authority=None):
               'developer_sha256': dev['observed_sha256'], 'project': prepared, 'base_files': base, 'transaction': transaction}
     return result('preview', proposal=bundle, project_id=prepared['project_id'], developer_id=dev['developer_id'],
                   registry_change=prepared, changed_memory_paths=[] if transaction is None else
-                  ['memory-bank/' + path for path in transactions.changed(transaction)],
+                  [repository_config.relative(root) + '/' + path for path in transactions.changed(transaction)],
                   initialization_pending=base is None, writes_performed=False, verified=False)
 
 
@@ -211,7 +212,7 @@ def apply(prepared):
     if tx is not None:
         # Persist the exact two-store decision before either step. There is no
         # cross-store atomicity claim; a registry-only success stays pending.
-        journal, receipt_path = transactions.locations(root, root / 'memory-bank', tx['operation_id'])
+        journal, receipt_path = transactions.locations(root, repository_config.bank_path(root), tx['operation_id'])
         bundle_path = journal.parent / 'binding.json'
         raw = encoded(p)
         if bundle_path.is_symlink() or (bundle_path.exists() and bundle_path.read_bytes() != raw):
@@ -222,7 +223,7 @@ def apply(prepared):
     # Existing operation replay never re-applies an old registry decision.
     registry = project.apply(p['project'])
     writes.fault('binding-after-registry')
-    marker_path = root / 'memory-bank' / transactions.MARKER
+    marker_path = repository_config.bank_path(root) / transactions.MARKER
     marker = transactions.marker_bytes(tx) if tx is not None and marker_path.exists() else None
     binding_guard(p, marker=marker)
     bank_result = None

@@ -87,6 +87,9 @@ changes only `activeContext.md`; missing-context route preparation is separate.
 
 ## Sharing boundary
 
+A session MUST read [sharing/GUIDE.md](sharing/GUIDE.md) before configuring the
+repository bank/default branch or inspecting eligible memory-only Git paths.
+
 A local edit, branch commit or successful validation MUST NOT be described as
 landed shared memory. Other sessions can rely on a change only after the
 repository's publication rules have landed it on `main` and they have refreshed

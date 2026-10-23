@@ -12,6 +12,7 @@ import tempfile
 import time
 import uuid
 
+from . import repository_config
 from . import bank_contract as contract
 from . import local_registry as storage
 from .developer_identity import digest, encoded, load, uuid_valid
@@ -23,7 +24,7 @@ PROPOSAL_FIELDS = {"schema", "operation_id", "operation", "repo_root", "project_
 
 def bank_path(repo):
     root = Path(repo).resolve()
-    bank = root / contract.SPEC["x-bank-path"]
+    bank = repository_config.bank_path(root)
     contract.bank_root(bank)
     if bank.is_symlink() or not bank.is_dir():
         raise ContractError("An existing canonical bank directory is required; initialization uses the multi-file protocol")
@@ -229,7 +230,7 @@ def _apply(prepared, *, check_identity):
             receipt = {"schema": "agent-memory/write-receipt-v1", "operation_id": proposal["operation_id"],
                        "project_id": proposal["project_id"], "bank_path": str(bank), "request_sha256": request_sha,
                        "observed_hashes": proposal["observed_hashes"], "resulting_hashes": expected,
-                       "changed_memory_paths": [contract.SPEC["x-bank-path"] + "/" + proposal["path"]] if expected != proposal["observed_hashes"] else [],
+                       "changed_memory_paths": [repository_config.relative(root) + "/" + proposal["path"]] if expected != proposal["observed_hashes"] else [],
                        "outcome": "replaced" if wrote else "already-present", "readback_at": datetime.now(timezone.utc).isoformat(), "verified": True}
             record(receipt_path, encoded(receipt))
             fault("after-receipt")
@@ -266,7 +267,7 @@ def main(argv=None):
         if args.command == "inspect":
             checked, observed = snapshot(args.repo)
             receipt = result("inspect", project_id=checked["project_id"], observed_hashes=observed,
-                             shared_memory_paths=[contract.SPEC["x-bank-path"] + "/" + p for p in observed], writes_performed=False)
+                             shared_memory_paths=[repository_config.relative(args.repo) + "/" + p for p in observed], writes_performed=False)
         elif args.command == "preview":
             receipt = preview(args.repo, args.path, Path(args.content).read_text(encoding="utf-8"))
         elif args.command == "apply":
