@@ -76,6 +76,15 @@ def request_value(value):
     if value['operation'] in {'revoke', 'expire', 'retention', 'delete'} and any(
             value[key] is not None for key in ('capture', 'comparison', 'replacement')):
         raise ContractError('Deactivation and deletion cannot smuggle replacement or admission evidence')
+    if value['operation'] in {'correct', 'reactivate'} and (value['capture'] is None or value['comparison'] is None or value['replacement'] is not None):
+        raise ContractError('A new corrected version requires qualified capture and exact comparison')
+    if value['operation'] == 'supersede':
+        if value['capture'] is not None or value['comparison'] is None:raise ContractError('Supersession reviews an existing replacement')
+        target_value(value['replacement'])
+    if value['comparison'] is not None:
+        if not isinstance(value['comparison'], dict) or set(value['comparison']) != {'request', 'proof'}:
+            raise ContractError('Supply the exact comparison request and proof')
+        comparison.request_value(value['comparison']['request'])
     if not isinstance(value['context_review'], dict) or not isinstance(value['context_edits'], dict):
         raise ContractError('Review ordinary context for copied guidance before invalidating its source')
     if not set(value['context_edits']).issubset(value['context_review']):
@@ -111,16 +120,85 @@ def observe(repo, request, *, owned_lock=None):
         if authority['repository_evidence']['path'] not in authority['evidence']:
             raise ContractError('Retain the observed repository source in governance evidence')
     context, git_context = retrieval.observed_context(root, request['context'])
+    captured = admission.capture_value(root, request['capture'], owned_lock=owned_lock) if request['capture'] is not None else None
+    compared = None
+    if request['comparison'] is not None:
+        c = request['comparison']
+        compared = comparison.check(root, c['request'], c['proof'], owned_lock=owned_lock)
+        if c['request']['project_id'] != request['project_id']:
+            raise ContractError('Review sources from this project only')
+    if captured is not None:
+        candidate = captured['request']['candidate']
+        if (candidate['metadata']['id'] != metadata['id'] or captured['request']['project_id'] != request['project_id']
+                or encoded(candidate) != encoded(request['comparison']['request']['candidate'])
+                or authority['source_class'] != captured['request']['source_class']
+                or encoded(authority['repository_evidence']) != encoded(captured['request']['repository_evidence'])):
+            raise ContractError('Correct the stable identity using exactly its qualified actual source capture')
     return {'root': root, 'bank': bank_path, 'base': base, 'checked': checked, 'observed': observed,
-            'scope': scope, 'metadata': metadata, 'body': body, 'context': context, 'git_context': git_context}
+            'scope': scope, 'metadata': metadata, 'body': body, 'context': context, 'git_context': git_context,
+            'capture': captured, 'comparison': compared}
 
 
 def pending(observation, disposition, **fields):
     peer = observation['metadata']['origin']['developer-id']
     developer = observation['scope']['developer_id']
-    return result('preview', disposition=disposition, proposal=None, canonical_writes_performed=False,
+    defaults = dict(disposition=disposition, proposal=None, canonical_writes_performed=False,
         detecting_developer_id=developer, other_developer_ids=[peer] if peer != developer else [],
-        recommend_other_developer_clarification=peer != developer, **fields)
+        recommend_other_developer_clarification=peer != developer)
+    defaults.update(fields)
+    return result('preview', **defaults)
+
+
+def narrower_conditions(old, new):
+    preserved = all(new['conditions'].get(key, object()) == value for key, value in old['conditions'].items())
+    return (old['kind'] == new['kind'] and old['scope'] == new['scope'] and old['applicability'] == new['applicability']
+            and preserved and set(old['conditions']) < set(new['conditions'])
+            and all(value is not None for value in new['conditions'].values()))
+
+
+def permitted_impact(observation, request):
+    if request['operation'] == 'delete' or request['authority']['impact'] == 'all-target-conditions':return True
+    return (request['operation'] == 'correct' and request['authority']['impact'] == 'narrower-contexts-remain'
+            and narrower_conditions(observation['metadata'], observation['capture']['request']['candidate']['metadata']))
+
+
+def review_deferral(observation, request):
+    compared = observation['comparison']
+    if compared is None:return None
+    rows = {row['path']: row for row in compared['matches']}
+    reviewed_target = rows.get(request['target']['path'])
+    if reviewed_target is None or reviewed_target['metadata'] != observation['metadata']:
+        raise ContractError('Read the exact existing target during semantic review')
+    if any(decision['classification'] == 'uncertain' for decision in compared['proof']['judgment']['decisions']):
+        return {'disposition': 'clarification-required'}
+    if any(rows[path]['metadata'] is None or rows[path]['metadata']['id'] != observation['metadata']['id']
+           for path in compared['disputed_paths']):
+        return {'disposition': 'clarification-required', 'other_developer_ids': compared['other_developer_ids'],
+                'recommend_other_developer_clarification': compared['recommend_other_developer_clarification']}
+    if request['operation'] in {'correct', 'reactivate'} and any(target['id'] != observation['metadata']['id']
+            for target in compared['proof']['targets']):
+        return {'disposition': 'consolidation-required'}
+    return None
+
+
+def next_version(observation, identity):
+    versions = []
+    for entry in observation['checked']['entries']:
+        if entry['format'] == 'standalone-record' and entry['id'] == identity:versions.append(entry['version'])
+    return max(versions) + 1
+
+
+def archive(files, additions, metadata, body, replacement, at, original_path, reason, *, reactivating=False):
+    path = 'history/versions/' + metadata['id'] + '/v' + str(metadata['version']) + '.md'
+    if path in files:raise ContractError('Do not overwrite an earlier exact source version')
+    old = copy.deepcopy(metadata)
+    if not reactivating:
+        old.update(status='superseded', updated=at, **{'superseded-by': [reference(replacement)],
+            'state-reason': reason + '. Original bank-relative link base: ' + original_path})
+    else:
+        old['state-reason'] += '. Original bank-relative link base: ' + original_path
+    files[path] = write(old) + body
+    additions.append(route(path, 'Historical version and original source', old['status']))
 
 
 def qualified_authority(request):
@@ -179,6 +257,8 @@ def desired(observation, request, operation_id, at):
     base = observation['base'];old = observation['metadata'];operation = request['operation'];a = request['authority']
     actor = observation['scope']['developer_id'];files = dict(base);removed = set();changed = {};additions = []
     event = {'id': operation_id, 'authority': actor, 'reason': a['reason'], 'evidence': a['evidence'], 'now': at}
+    deferred = review_deferral(observation, request)
+    if deferred:return None, deferred
     if operation == 'delete':
         if a['source_class'] != 'user' or a['basis'] != 'explicit-deletion':
             raise ContractError('Terminal deletion requires explicit operator authority, not automatic pruning')
@@ -221,8 +301,47 @@ def desired(observation, request, operation_id, at):
             'kind': 'memory-expired' if operation == 'expire' else 'memory-revoked', 'record': reference(old),
             'actor': actor, 'recorded-at': at, 'evidence': a['evidence']}
         records.event(event_metadata);files[history] = write(event_metadata);additions.append(route(history, 'Lifecycle decision evidence'))
+    elif operation in {'correct', 'reactivate'}:
+        captured = observation['capture'];candidate = captured['request']['candidate'];new = copy.deepcopy(candidate['metadata'])
+        if any(new[key] != old[key] for key in ('kind', 'scope', 'applicability')):
+            raise ContractError('Corrected versions preserve their type, scope and assessed applicability')
+        if any(key not in new['conditions'] or new['conditions'][key] != value for key, value in old['conditions'].items()):
+            raise ContractError('Do not widen or replace retained conditions while correcting guidance')
+        if operation == 'correct' and any(new[key] != old[key] for key in ('valid-from', 'valid-until')):
+            raise ContractError('A correction cannot silently widen its validity period')
+        if operation == 'reactivate':
+            now = lifecycle.time_value(at)
+            if (new['valid-from'] is None or lifecycle.time_value(new['valid-from']) > now
+                    or (new['valid-until'] is not None and lifecycle.time_value(new['valid-until']) <= now)):
+                raise ContractError('Reactivation requires an explicit newly evidenced currently valid period')
+        new.update(version=next_version(observation, old['id']), status='active', trust='reviewed', updated=at,
+            visibility='hidden' if 'hidden' in {old['visibility'], new['visibility']} else 'visible')
+        new['admission-reason'] = ('Explicit requalification: ' if operation == 'reactivate' else 'Stronger-evidence correction: ') + a['reason']
+        new.pop('state-reason', None);new.pop('superseded-by', None)
+        evidence = [*new['evidence'], *a['evidence']]
+        if a['repository_evidence'] is not None:
+            source = a['repository_evidence'];evidence.append('repo:' + source['path'] + '#sha256=' + source['sha256'])
+        event['evidence'] = union(evidence)
+        new['evidence'] = union([*old['evidence'], *evidence])
+        new['derived-from'] = union([*old['derived-from'], *new['derived-from'], reference(old)])
+        new['corrects'] = union([*old['corrects'], *([reference(old)] if operation == 'correct' else [])])
+        new['supersedes'] = union([*old['supersedes'], *([reference(old)] if operation == 'reactivate' else [])])
+        event['replacement'] = {**reference(new), 'status': 'active', 'replaces': reference(old), 'applicability-preserved': True}
+        if not lifecycle.transition(old, operation, event)['legal']:
+            raise ContractError('The new version lacks explicit new evidence or a legal common lifecycle transition')
+        records.validate(new, candidate['body'])
+        archive(files, additions, old, observation['body'], new, at, request['target']['path'], a['reason'],
+                reactivating=operation == 'reactivate')
+        files[request['target']['path']] = write(new) + candidate['body']
+        changed[request['target']['path']] = 'active'
+        history = 'history/events/' + operation_id + '.md'
+        if history in base:raise ContractError('Do not overwrite another lifecycle event')
+        event_metadata = {'schema': 'agent-memory/history-event-v1', 'id': operation_id, 'project-id': request['project_id'],
+            'kind': 'memory-corrected' if operation == 'correct' else 'memory-admitted', 'record': reference(new),
+            'actor': actor, 'recorded-at': at, 'evidence': event['evidence']}
+        records.event(event_metadata);files[history] = write(event_metadata);additions.append(route(history, 'New qualified version event'))
     else:
-        raise ContractError('Replacement governance is not implemented in this development prototype')
+        raise ContractError('Existing-replacement supersession is not implemented in this development prototype')
     routed = reroute(base, observation['checked'], changed, removed, additions, at)
     for path, body in files.items():
         if path not in removed and body != base.get(path):routed[path] = body
@@ -239,9 +358,13 @@ def desired(observation, request, operation_id, at):
 
 
 def preview(repo, request):
+    request = copy.deepcopy(request)
+    if isinstance(request.get('capture'), dict):request['capture'] = request['capture'].get('capture', request['capture'])
+    if isinstance(request.get('comparison'), dict) and isinstance(request['comparison'].get('proof'), dict):
+        request['comparison']['proof'] = request['comparison']['proof'].get('proof', request['comparison']['proof'])
     observation = observe(repo, request)
     if not qualified_authority(request):return pending(observation, 'clarification-required')
-    if request['authority']['impact'] != 'all-target-conditions' and request['operation'] != 'delete':
+    if not permitted_impact(observation, request):
         return pending(observation, 'narrowing-required')
     at = datetime.now(timezone.utc).isoformat();operation_id = str(uuid.uuid4())
     files, deferred = desired(observation, request, operation_id, at)
@@ -263,7 +386,7 @@ def validate_transaction(p, *, owned_lock=None):
     if (p['operation'] != WRITE_ACTION[request['operation']] or p['project_id'] != request['project_id']
             or not qualified_authority(request) or encoded(observation['git_context']) != encoded(evidence['git_context'])):
         raise ContractError('Governance evidence or actual Git context changed')
-    if request['authority']['impact'] != 'all-target-conditions' and request['operation'] != 'delete':
+    if not permitted_impact(observation, request):
         raise ContractError('Preserve narrower applicability before pruning')
     files, deferred = desired(observation, request, p['operation_id'], at)
     if deferred or observation['observed'] != p['observed_hashes'] or encoded(files) != encoded(p['files']):
@@ -277,6 +400,15 @@ def check_sources(p, *, owner=None, marker=None):
     if encoded(retrieval.git_context(root)) != encoded(evidence['git_context']):raise ContractError('Checkout changed during governance')
     source = request['authority']['repository_evidence']
     if source is not None:security.repository_source(root, source)
+    if request['capture'] is not None:
+        admission_evidence = {'capture': request['capture'], 'comparison_request': request['comparison']['request'],
+            'comparison_proof': request['comparison']['proof'], 'recorded_at': evidence['recorded_at']}
+        admission.check_sources({**p, 'admission_evidence': admission_evidence}, owner=owner, marker=marker)
+    if request['operation'] == 'reactivate':
+        _, metadata, _ = records.parse(p['files'][request['target']['path']]);now = lifecycle.time_value(datetime.now(timezone.utc).isoformat())
+        if (lifecycle.time_value(metadata['valid-from']) > now
+                or (metadata['valid-until'] is not None and lifecycle.time_value(metadata['valid-until']) <= now)):
+            raise ContractError('The newly requalified period ended during governance')
 
 
 def apply(prepared):

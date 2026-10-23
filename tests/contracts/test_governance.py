@@ -4,9 +4,11 @@ import hashlib
 import json
 import sys
 import unittest
+from datetime import datetime, timezone
 
 from world import World
 from contracts import test_comparison as fixtures
+from contracts import test_admission as admission
 
 
 class GovernanceContract(unittest.TestCase):
@@ -40,6 +42,46 @@ class GovernanceContract(unittest.TestCase):
     def projection(self, w, repo, metadata):
         request = {'project_id': self.pid, 'records': [{'id': metadata['id'], 'version': metadata['version']}]}
         return self.good(w, 'projection.py', 'build', '--repo', repo, '--input', self.save(w, request))['projection']
+
+    def replacement_capture(self, w, repo, bank, old, path, operation='correct', **metadata_changes):
+        helper = admission.AdmissionContract('test_user_correction_admits_small_record_and_history_automatically_without_git_changes')
+        helper.pack = self.pack;helper.pid = self.pid;helper.actor = self.actor
+        request = helper.request();request['candidate']['metadata'].update(id=old['id'], **metadata_changes)
+        request['candidate']['metadata']['origin']['session'] = 'correcting-session'
+        request['candidate']['metadata']['evidence'] = ['user:current-confirmed-correction']
+        request['candidate']['body'] = '# Retry policy\n\nUse at most three attempts for this fixture.\n'
+        captured = helper.capture(w, repo, request)['capture']
+        compared_request, proof = helper.compared(w, repo, captured, classification='contradiction')
+        value = self.request(bank, old, path, operation)
+        value['capture'] = captured;value['comparison'] = {'request': compared_request, 'proof': proof}
+        value['authority']['evidence'] = ['user:current-confirmed-correction']
+        return value
+
+    def test_stronger_correction_keeps_stable_identity_old_origin_and_useful_history(self):
+        with World() as w:
+            repo, bank = self.fixture(w);old, path = self.add(bank, 'incorrect', body='# Retry policy\n\nThe older fixture incorrectly said five attempts.\n')
+            value = self.replacement_capture(w, repo, bank, old, path);before = self.state(w, repo, bank)
+            r, plan = self.preview(w, repo, value);self.assertEqual(r.returncode, 0, plan)
+            self.assertEqual(before, self.state(w, repo, bank));r, done = self.apply(w, plan['proposal']);self.assertEqual(r.returncode, 0, done)
+            current, body = fixtures.unpack((bank / path).read_text());self.assertEqual(current['id'], old['id']);self.assertEqual(current['version'], 2)
+            self.assertEqual(current['origin']['session'], 'correcting-session');self.assertIn({'id': old['id'], 'version': 1}, current['corrects'])
+            archived, previous = fixtures.unpack((bank / 'history/versions' / old['id'] / 'v1.md').read_text())
+            self.assertEqual(archived['origin'], old['origin']);self.assertEqual(archived['status'], 'superseded')
+            self.assertIn('incorrectly said five attempts', previous);self.assertEqual(before[1:], self.state(w, repo, bank)[1:])
+            before = self.state(w, repo, bank);r, replay = self.apply(w, plan['proposal'])
+            self.assertEqual(r.returncode, 0, replay);self.assertTrue(replay['already_applied']);self.assertEqual(before, self.state(w, repo, bank))
+
+    def test_reactivation_needs_new_evidence_and_an_explicit_current_period(self):
+        with World() as w:
+            repo, bank = self.fixture(w);old, path = self.add(bank, 'revoked', status='revoked')
+            value = self.replacement_capture(w, repo, bank, old, path, 'reactivate', **{'valid-from': datetime.now(timezone.utc).isoformat()})
+            r, plan = self.preview(w, repo, value);self.assertEqual(r.returncode, 0, plan)
+            before = self.state(w, repo, bank);r, done = self.apply(w, plan['proposal']);self.assertEqual(r.returncode, 0, done)
+            current, _ = fixtures.unpack((bank / path).read_text());self.assertEqual(current['status'], 'active');self.assertEqual(current['version'], 2)
+            historical, _ = fixtures.unpack((bank / 'history/versions' / old['id'] / 'v1.md').read_text())
+            self.assertEqual(historical['status'], 'revoked');self.assertEqual(historical['origin'], old['origin'])
+            self.assertIn(path, historical['state-reason'])
+            self.assertEqual(before[1:], self.state(w, repo, bank)[1:])
 
     def test_revocation_removes_current_guidance_and_invalidates_projection_and_cached_payload(self):
         with World() as w:
