@@ -1,0 +1,90 @@
+{
+  "schema": "agent-memory/incident-catalog-v1",
+  "incidents": [
+    {
+      "id": "compacted-legacy-capture-reappears",
+      "symptom": "A compacted legacy consumed capture was re-admitted as active guidance after revocation.",
+      "work_key": "robertelee78/agent-memory:ADR-0005:forgetting",
+      "issue": "https://github.com/robertelee78/agent-memory/issues/31",
+      "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0005:forgetting",
+      "suite": "tests/contracts/test_governance.py",
+      "class": "GovernanceContract",
+      "tests": [
+        "test_legacy_flat_consumed_capture_stays_pending_after_revocation_and_compaction"
+      ],
+      "corrected_candidate": "https://github.com/robertelee78/agent-memory/commit/10ad213e9771d679a727a1a8905feb7480a1dce5",
+      "acceptance": {
+        "work_key": "robertelee78/agent-memory:ADR-0005:forgetting",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0005:forgetting",
+        "ref": "https://github.com/robertelee78/agent-memory/issues/31#issuecomment-6365093080",
+        "author": "codex-review-31",
+        "implementer": "codex-root",
+        "candidate": "https://github.com/robertelee78/agent-memory/commit/10ad213e9771d679a727a1a8905feb7480a1dce5"
+      },
+      "integration": {
+        "work_key": "robertelee78/agent-memory:ADR-0005:forgetting",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0005:forgetting",
+        "ref": "https://github.com/robertelee78/agent-memory/commit/688008f673d51e508d2ef1adc935076624a7db91",
+        "commit": "688008f673d51e508d2ef1adc935076624a7db91",
+        "candidate": "https://github.com/robertelee78/agent-memory/commit/10ad213e9771d679a727a1a8905feb7480a1dce5",
+        "pr": "https://github.com/robertelee78/agent-memory/pull/132"
+      },
+      "delivery": {
+        "kind": "merge",
+        "work_key": "robertelee78/agent-memory:ADR-0005:forgetting",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0005:forgetting",
+        "ref": "https://github.com/robertelee78/agent-memory/commit/688008f673d51e508d2ef1adc935076624a7db91",
+        "commit": "688008f673d51e508d2ef1adc935076624a7db91",
+        "candidate": "https://github.com/robertelee78/agent-memory/commit/10ad213e9771d679a727a1a8905feb7480a1dce5",
+        "pr": "https://github.com/robertelee78/agent-memory/pull/132"
+      },
+      "outcome": "The retained public workflow now refuses the unsafe replay and preserves readable canonical memory.",
+      "first_bad_candidate": "https://github.com/robertelee78/agent-memory/commit/cdd79f07ba7ed27d73f524f7f9a251640d31ae9f",
+      "observed_reproduction": "https://github.com/robertelee78/agent-memory/issues/31#issuecomment-6360109361",
+      "independent_review_mode": "runtime-instructions-first-before-source-and-criteria"
+    },
+    {
+      "id": "discarded-merge-side-claims-publication",
+      "symptom": "A discarded side-parent proposal was reported as a successful publication although no authority mainline tree retained it.",
+      "work_key": "robertelee78/agent-memory:ADR-0012:retry-and-merges",
+      "issue": "https://github.com/robertelee78/agent-memory/issues/95",
+      "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0012:retry-and-merges",
+      "suite": "tests/contracts/test_sharing_recovery.py",
+      "class": "SharingRecoveryContract",
+      "tests": [
+        "test_reachable_side_parent_discarded_by_main_is_not_a_publication_witness",
+        "test_actual_merge_tree_retaining_delta_is_a_witness_even_after_later_correction"
+      ],
+      "corrected_candidate": "https://github.com/robertelee78/agent-memory/commit/454062b7d6fbb54d17dabd43d7e5c1a2f09116f5",
+      "acceptance": {
+        "work_key": "robertelee78/agent-memory:ADR-0012:retry-and-merges",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0012:retry-and-merges",
+        "ref": "https://github.com/robertelee78/agent-memory/issues/95#issuecomment-6365433939",
+        "author": "codex-review-95",
+        "implementer": "codex-root",
+        "candidate": "https://github.com/robertelee78/agent-memory/commit/454062b7d6fbb54d17dabd43d7e5c1a2f09116f5"
+      },
+      "integration": {
+        "work_key": "robertelee78/agent-memory:ADR-0012:retry-and-merges",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0012:retry-and-merges",
+        "ref": "https://github.com/robertelee78/agent-memory/commit/56948f5496f3fb234d3d0e43be4b45758e97cc9d",
+        "commit": "56948f5496f3fb234d3d0e43be4b45758e97cc9d",
+        "candidate": "https://github.com/robertelee78/agent-memory/commit/454062b7d6fbb54d17dabd43d7e5c1a2f09116f5",
+        "pr": "https://github.com/robertelee78/agent-memory/pull/133"
+      },
+      "delivery": {
+        "kind": "merge",
+        "work_key": "robertelee78/agent-memory:ADR-0012:retry-and-merges",
+        "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0012:retry-and-merges",
+        "ref": "https://github.com/robertelee78/agent-memory/commit/56948f5496f3fb234d3d0e43be4b45758e97cc9d",
+        "commit": "56948f5496f3fb234d3d0e43be4b45758e97cc9d",
+        "candidate": "https://github.com/robertelee78/agent-memory/commit/454062b7d6fbb54d17dabd43d7e5c1a2f09116f5",
+        "pr": "https://github.com/robertelee78/agent-memory/pull/133"
+      },
+      "outcome": "The retained public workflow now refuses the unsafe replay and preserves readable canonical memory.",
+      "first_bad_candidate": "https://github.com/robertelee78/agent-memory/commit/e5593653101d210937150ccc4e763ba9831d8ae9",
+      "observed_reproduction": "https://github.com/robertelee78/agent-memory/issues/95#issuecomment-6360660714",
+      "independent_review_mode": "runtime-instructions-first-before-source-and-criteria"
+    }
+  ]
+}

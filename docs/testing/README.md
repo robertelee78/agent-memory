@@ -91,3 +91,10 @@ pending or failed. `passed` applies to the selected mode. Exit 0 means the mode
 passed, exit 1 means a failing/incomplete gate, and exit 2 means invalid command
 arguments. Diagnostics and unittest output go to stderr; `--json` stdout is one
 JSON document. Generated state is temporary and is not committed to the bank.
+
+The [incident and guide evidence workflow](incidents-and-guides.md) retains actual
+public-interface reproductions with work/acceptance/integration/delivery links,
+observes quoted CLI examples in isolated worlds, and verifies explicit normative
+rule maps and route preservation against preserved old sources. Meaning changes
+still require actual independent review; a mechanical checker does not prove
+English equivalence or replace AWA's delivery evidence.
