@@ -67,7 +67,9 @@ for isolation rules, suite registration and receipt fields.
 
 The [bank router contract](docs/contracts/bank-router.md) defines the initial
 shared Markdown layout and its read-only render/validate helper. The full
-installed lifecycle workflow remains under execution.
+installed lifecycle workflow remains under execution. The [portable installer](docs/contracts/installation.md)
+provides preview, owned activation, repeated installation and bootstrap recovery;
+update, uninstall and deeper diagnostics retain their separate tasks.
 
 The [shared lifecycle model](docs/contracts/lifecycle-model.md) supplies the
 read-only transition and current-selection decisions used by later operations.
