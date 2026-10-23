@@ -12,7 +12,7 @@ from world import World
 from identity_fixtures import bind
 from refresh_fixtures import RefreshFixture
 from contracts import test_admission as admission
-from contracts.test_retrieval import RetrievalContract
+from contracts import test_retrieval as retrieval_helpers
 
 
 class SharedLearningLoopContract(RefreshFixture):
@@ -63,7 +63,7 @@ class SharedLearningLoopContract(RefreshFixture):
             with self.actor_profile(w,'other-machine'):
                 status = self.good(w,'scope_binding.py','status','--repo',receiver)
                 self.assertEqual(status['developer_id'],actor_b); self.assertEqual(status['project_id'],teacher.pid)
-                recall = RetrievalContract().request(teacher.pid,ids=[identity],query='',context={'component':'code.py'})
+                recall = retrieval_helpers.RetrievalContract().request(teacher.pid,ids=[identity],query='',context={'component':'code.py'})
                 received = self.apply_refresh(w,self.prepared_refresh(w,receiver,recall=recall))
             self.assertTrue(received['remote_freshness_verified']); self.assertFalse(received['feature_code_freshness_verified'])
             self.assertEqual(received['recall']['scope_context']['developer_id'],actor_b)

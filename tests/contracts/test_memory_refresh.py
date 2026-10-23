@@ -1,13 +1,8 @@
 """Actual public refresh preserves stale feature code, index and unpublished learning."""
-import json
-from pathlib import Path
-import sys
 import unittest
 
 from world import World
-from publication_fixtures import PublicationFixture
-from contracts.test_semantic_sharing import SemanticSharingContract
-from contracts.test_retrieval import RetrievalContract
+from contracts import test_retrieval as retrieval_helpers
 
 
 from refresh_fixtures import RefreshFixture
@@ -22,7 +17,7 @@ class MemoryRefreshContract(RefreshFixture):
             w.git('add', 'code.py', cwd=peer)
             record, path = self.imported(w, peer, 'imported-lesson', '# Imported learning\n\nA relevant shared lesson with provenance.\n', component='code.py')
             before = self.state(w, repo, bank); unrelated = (repo/'unrelated.txt').read_bytes()
-            recall = RetrievalContract().request(record['project-id'], ids=[record['id']], query='', context={'component':'code.py'})
+            recall = retrieval_helpers.RetrievalContract().request(record['project-id'], ids=[record['id']], query='', context={'component':'code.py'})
             proposal = self.prepared_refresh(w, repo, recall=recall)
             self.assertEqual(before, self.state(w, repo, bank))
             done = self.apply_refresh(w, proposal)

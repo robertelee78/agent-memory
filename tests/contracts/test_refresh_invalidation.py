@@ -6,7 +6,7 @@ import uuid
 
 from world import World
 from refresh_fixtures import RefreshFixture
-from contracts.test_retrieval import RetrievalContract
+from contracts import test_retrieval as retrieval_helpers
 
 
 class RefreshInvalidationContract(RefreshFixture):
@@ -28,7 +28,7 @@ class RefreshInvalidationContract(RefreshFixture):
             router.write_text(text.replace('\n## Omitted contexts\n',row+'\n## Omitted contexts\n'))
             w.git('add','--all','--','memory-bank',cwd=peer); w.git('commit','-m','Explicit shared erasure',cwd=peer); w.git('push','origin','HEAD:main',cwd=peer)
             before = self.state(w,repo,bank)
-            recall = RetrievalContract().request(record['project-id'],ids=[record['id']],query='')
+            recall = retrieval_helpers.RetrievalContract().request(record['project-id'],ids=[record['id']],query='')
             proposal = self.prepared_refresh(w,repo,recall=recall); done = self.apply_refresh(w,proposal)
             self.assertTrue(done['remote_freshness_verified']); self.assertFalse((bank/path).exists())
             self.assertEqual((bank/tomb['path']).read_text(),tomb['content']); self.assertEqual(done['recall']['results'],[])
@@ -43,7 +43,7 @@ class RefreshInvalidationContract(RefreshFixture):
             unknown, one = self.imported(w,peer,'unknown','# Unknown applicability\n\nIts component conditions still need clarification.\n',component=None)
             other, two = self.imported(w,peer,'other-branch','# Other branch\n\nThis applies only to a different branch.\n',branch='another-feature')
             before = self.state(w,repo,bank)
-            recall = RetrievalContract().request(unknown['project-id'],ids=[unknown['id'],other['id']],query='')
+            recall = retrieval_helpers.RetrievalContract().request(unknown['project-id'],ids=[unknown['id'],other['id']],query='')
             done = self.apply_refresh(w,self.prepared_refresh(w,repo,recall=recall))
             self.assertTrue(done['remote_freshness_verified']); self.assertEqual(done['recall']['results'],[])
             self.assertEqual(done['recalled_import_paths'],[]); self.assertTrue((bank/one).exists()); self.assertTrue((bank/two).exists())

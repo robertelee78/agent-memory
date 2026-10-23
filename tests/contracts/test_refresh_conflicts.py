@@ -3,14 +3,14 @@ import unittest
 
 from world import World
 from refresh_fixtures import RefreshFixture
-from contracts.test_semantic_sharing import SemanticSharingContract
-from contracts.test_retrieval import RetrievalContract
+from contracts import test_semantic_sharing as semantic_helpers
+from contracts import test_retrieval as retrieval_helpers
 
 
 class RefreshConflictsContract(RefreshFixture):
     def test_conflict_and_real_dependency_are_preserved_but_not_returned_as_current_guidance(self):
         with World() as w:
-            repo, bank, peer, base = self.fixture(w); helper = SemanticSharingContract()
+            repo, bank, peer, base = self.fixture(w); helper = semantic_helpers.SemanticSharingContract()
             yellow, local = helper.add(bank, 'yellow', '# Wall\n\nThe room wall should be yellow.\n')
             dependent, child = helper.add(bank, 'paint-order', '# Order\n\nThis order depends on the local wall color.\n')
             blue, landed = helper.add(peer/'memory-bank', 'blue', '# Wall\n\nThe same room wall should be blue.\n')
@@ -20,7 +20,7 @@ class RefreshConflictsContract(RefreshFixture):
             before = self.state(w, repo, bank)
             def decide(a, b):
                 return 'contradiction' if {a['path'], b['path']} == {local, landed} else 'related'
-            recall = RetrievalContract().request(yellow['project-id'], query='', include_context=True)
+            recall = retrieval_helpers.RetrievalContract().request(yellow['project-id'], query='', include_context=True)
             proposal = self.prepared_refresh(w, repo, recall=recall, decide=decide, dependencies={child:[local]})
             self.assertEqual(len(self.last_preparation['conflicts']), 1)
             claims = self.last_preparation['conflicts'][0]['claims']
@@ -35,7 +35,7 @@ class RefreshConflictsContract(RefreshFixture):
 
     def test_held_claims_do_not_consume_a_small_budget_and_starve_an_independent_import(self):
         with World() as w:
-            repo, bank, peer, base = self.fixture(w); helper = SemanticSharingContract()
+            repo, bank, peer, base = self.fixture(w); helper = semantic_helpers.SemanticSharingContract()
             yellow, local = helper.add(bank, 'yellow', '# Wall\n\nThe wall should be yellow.\n')
             dependent, child = helper.add(bank, 'paint-order', '# Order\n\nThis depends on the wall decision.\n')
             blue, landed = helper.add(peer/'memory-bank', 'blue', '# Wall\n\nThe same wall should be blue.\n')
@@ -44,7 +44,7 @@ class RefreshConflictsContract(RefreshFixture):
             w.git('push','origin','HEAD:main',cwd=peer)
             def decide(a,b):
                 return 'contradiction' if {a['path'],b['path']} == {local,landed} else 'related'
-            recall = RetrievalContract().request(yellow['project-id'],query='',paths=[local,child,path],limit=1)
+            recall = retrieval_helpers.RetrievalContract().request(yellow['project-id'],query='',paths=[local,child,path],limit=1)
             before = self.state(w,repo,bank)
             done = self.apply_refresh(w,self.prepared_refresh(w,repo,recall=recall,decide=decide,dependencies={child:[local]}))
             self.assertTrue(done['conflicts_pending']); self.assertEqual([r['path'] for r in done['recall']['results']],[path])
