@@ -50,6 +50,10 @@ The [admission contract](../contracts/admission.md) covers source classification
 uncertainty and quarantine, qualified automatic admission, exact-delta/evidence
 checks, duplicate/conflict routing, replay and interrupted rollback.
 
+The [consolidation contract](../contracts/consolidation.md) covers stable-ID
+deduplication, complete source provenance, convergence, distinct conditions,
+conflict deferral, terminal invalidation, nested routing and crash recovery.
+
 The [context assembly contract](../contracts/assembly.md) adds complete metadata,
 type diversity, duplicate provenance, byte and externally measured token budgets,
 and indivisible unresolved conflict groups through the copied portable CLI.

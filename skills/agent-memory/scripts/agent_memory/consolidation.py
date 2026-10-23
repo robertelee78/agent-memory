@@ -210,12 +210,12 @@ def build(base, evidence, operation_id, plan, captured):
         elif source is provenance:
             path = 'history/sources/' + provenance['id'] + '.md'
             if path in base:raise ContractError('Do not replace existing captured-source provenance')
-            files[path] = (write(inactive) + '# Consolidated captured source\n\nThis inactive observation preserves qualified source provenance, not separate current guidance.\n\n'
-                + 'Observed capture request SHA256: ' + digest(encoded(captured['request'])) + '.\n')
+            files[path] = write(inactive) + captured['request']['candidate']['body']
             additions.append(route(path, 'Captured source provenance', inactive))
         else:
             path = ordered_targets[index]['path']
-            files[path] = write(inactive) + '# Consolidated duplicate\n\nUse the explicitly linked current replacement; retain these source conditions and provenance.\n'
+            _, _, source_body = records.parse(base[path])
+            files[path] = write(inactive) + source_body
             changes[path] = 'superseded'
         history = 'history/events/' + event_id + '.md'
         event_record = {'schema': 'agent-memory/history-event-v1', 'id': event_id, 'project-id': new['project-id'],
