@@ -29,7 +29,8 @@ def test_root():
 
 @contextmanager
 def operation(name, paths):
-    testing = bool(os.environ.get('AGENT_MEMORY_FAULT_STAGE') or os.environ.get('AGENT_MEMORY_FAULT_TRACE'))
+    testing = bool(os.environ.get('AGENT_MEMORY_FAULT_STAGE') or os.environ.get('AGENT_MEMORY_FAULT_TRACE')
+                   or os.environ.get('AGENT_MEMORY_FAULT_ERROR_STAGE'))
     root = test_root() if testing else None
     if testing and any(not Path(p).resolve().is_relative_to(root) or Path(p).resolve()==root for p in paths):
         raise ContractError('Lifecycle fault tests must not mutate paths outside their World')
@@ -65,7 +66,15 @@ def mutate(kind, action):
             with current['trace'].open('a', encoding='utf-8') as stream:
                 stream.write(json.dumps({'point':point, 'step':step, 'phase':phase, 'kind':kind})+'\n')
         fault(point)
+        if os.environ.get('AGENT_MEMORY_FAULT_ERROR_STAGE') == point:
+            raise ContractError('Injected logical write failure at ' + point)
     boundary('before')
     result = action()
     boundary('after')
     return result
+
+
+def response(name, result):
+    """Lose only the response, after real public-operation verification/commit."""
+    if result.get('verified') is True:
+        fault(name + '-response-lost')

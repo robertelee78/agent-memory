@@ -73,7 +73,7 @@ def main(argv=None):
                 with World() as world:
                     try:
                         result = world.run([sys.executable, "-I", ROOT / "scripts/run_contract_suite.py",
-                                            ROOT / entry["path"]], check=False, timeout=300)
+                                            ROOT / entry["path"]], check=False, timeout=300, group=True)
                         sys.stderr.write(result.stderr)
                         counts = json.loads(result.stdout)
                         item.update(counts)

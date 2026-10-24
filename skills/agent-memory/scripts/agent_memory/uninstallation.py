@@ -134,6 +134,7 @@ def execute(args):
     try:
         install.require(sys.version_info >= (3,11), 'Python 3.11 or later is required')
         result = run(args)
+        runtime_faults.response('uninstall', result)
     except (OSError, ValueError, TypeError, KeyError, UnicodeError, subprocess.SubprocessError) as exc:
         result = {'operation':'uninstall', 'verified':False, 'error':str(exc),
                   'repair':'Preserve the external receipt, backups and reported paths; use a trusted complete package to recover or reconcile ownership.'}
