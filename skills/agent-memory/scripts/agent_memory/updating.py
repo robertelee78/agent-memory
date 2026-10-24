@@ -42,7 +42,7 @@ def current(state, code):
     actual = install.source_info(root, 'managed', source['remote'], source['ref'])
     install.require(actual == source, 'Current source revision, version or artifact differs from its receipt')
     journal_path = state/'journal.json'
-    if journal_path.exists():
+    if os.path.lexists(journal_path):
         journal = install.load(journal_path)
         install.require(journal.get('status') in ('complete','rolled-back'),
                         'Incomplete lifecycle transaction; use the trusted recover helper before checking updates')

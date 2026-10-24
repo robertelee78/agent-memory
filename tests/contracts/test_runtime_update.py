@@ -11,6 +11,27 @@ from runtime_update_fixtures import ROOT, fixture, advance, call, snapshot, owne
 
 
 class RuntimeUpdateContract(unittest.TestCase):
+    def test_dangling_lifecycle_records_are_preserved_and_refuse_update(self):
+        for name in ('owner.json', 'journal.json'):
+            with self.subTest(record=name), World() as world:
+                channel, pack, receipt = fixture(world)
+                advance(world, channel, pack)
+                memory = bank(world, world.paths['repo']); bank_before = snapshot(memory)
+                path = receipt_path(world).parent / name
+                path.unlink(); path.symlink_to(world.inside('unrelated missing record'))
+                before = snapshot(path); targets = owned(receipt)
+                raw = receipt_path(world).read_bytes()
+                if name == 'journal.json':
+                    all_before = snapshot(world.root)
+                    call(world, receipt, '--check', expected=1)
+                    self.assertEqual(snapshot(world.root), all_before)
+                _, result = call(world, receipt, expected=1)
+                self.assertFalse(result['verified'])
+                self.assertEqual(snapshot(path), before)
+                self.assertEqual(owned(receipt), targets)
+                self.assertEqual(receipt_path(world).read_bytes(), raw)
+                self.assertEqual(snapshot(memory), bank_before)
+
     def test_read_only_check_valid_update_and_repeat_preserve_user_text_and_source_channel(self):
         for mode in ('link','copy'):
             with self.subTest(mode=mode), World() as world:

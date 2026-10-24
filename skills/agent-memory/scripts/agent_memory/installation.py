@@ -236,7 +236,7 @@ def locked(state):
                 and value.get('schema') == 'agent-memory/lifecycle-lock-v1',
                 'Unrelated lifecycle lock file; preserve it for reconciliation')
         owner_path = state/'owner.json'
-        if owner_path.exists():
+        if os.path.lexists(owner_path):
             owner = load(owner_path)
             require(isinstance(owner, dict) and owner.get('schema') == 'agent-memory/lifecycle-owner-v1',
                     'Unrelated lifecycle owner record; preserve it for reconciliation')
@@ -366,7 +366,7 @@ def preflight_layout(args, state, code, old):
     if old:
         sources.add(absolute(old['source']['path']).resolve())
     journal_path = state/'journal.json'
-    if journal_path.exists():
+    if os.path.lexists(journal_path):
         journal = load(journal_path)
         require(isinstance(journal, dict) and journal.get('schema') == JOURNAL_SCHEMA,
                 'Unsupported lifecycle journal')
@@ -571,7 +571,7 @@ def rollback(state, journal):
 
 def recover(state, *, for_install=False):
     path = state/'journal.json'
-    if not path.exists():
+    if not os.path.lexists(path):
         return {'operation': 'recover', 'verified': True, 'status': 'no-pending-transaction'}
     journal = load(path)
     require(isinstance(journal, dict) and journal.get('schema') == JOURNAL_SCHEMA
@@ -645,7 +645,7 @@ def install(plan, *, before_activate=None, after_activate=None):
                'rollback_available': True, 'atomicity': 'per target; journaled rollback across targets'}
     journal = {'schema': JOURNAL_SCHEMA, 'operation': operation, 'transaction': transaction, 'status': 'staging',
                'actions': [], 'receipt': receipt, 'receipt_identity': None, 'created_directories': []}
-    if (state/'journal.json').exists():
+    if os.path.lexists(state/'journal.json'):
         write_file(state/('journal-' + transaction + '.json'), (state/'journal.json').read_bytes())
     replace_record(state/'journal.json', journal)
     try:
@@ -762,7 +762,7 @@ def main(argv=None):
             result = {'operation':'recover', 'verified':True, 'status':'no-pending-transaction',
                       'writes_performed':False}
         elif args.command == 'install' and args.check:
-            require(not (state/'journal.json').exists() or load(state/'journal.json')['status'] in ('complete','rolled-back'),
+            require(not os.path.lexists(state/'journal.json') or load(state/'journal.json')['status'] in ('complete','rolled-back'),
                     'An interrupted transaction requires recover before a new install plan')
             with prepare(args, state, code, read_receipt(state)) as plan:
                 result = public_plan(plan)
