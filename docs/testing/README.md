@@ -22,6 +22,9 @@ copy/all-client and link/custom-only journeys. The CI workflow runs the same
 complete gate on Ubuntu/macOS and Python 3.11/3.15, retaining actual results,
 failures and checked-out commit/tree evidence for each cell.
 
+Each suite retains its 300-second worker deadline. The complete sequential
+gate has a separate 180-minute CI job budget.
+
 For expensive independent interruption cases, the gate requires every declared
 batch and aggregates actual fault proofs before reporting completeness. The
 proofs must describe the same runtime artifact and observed write inventory,
