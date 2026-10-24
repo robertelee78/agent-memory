@@ -31,6 +31,7 @@ BEGIN = '<!-- agent-memory:activation:begin -->'
 END = '<!-- agent-memory:activation:end -->'
 SHIM = (artifact.PACK/'templates/activation-markdown.example.txt').read_text()
 DEFAULT_REMOTE = 'https://github.com/robertelee78/agent-memory.git'
+COMMAND_NAMES = ('am', 'agent-memory')
 
 # Literal public routes also let pack validation inspect delegation without
 # importing or executing a candidate. These are the existing governed helpers.
@@ -441,7 +442,7 @@ def preflight_layout(args, state, code, old):
     paths = [state]
     if args.command == 'install':
         cfg = configuration(args, old)
-        paths.append(cfg['bin_dir']/'agent-memory')
+        paths.extend(cfg['bin_dir']/name for name in COMMAND_NAMES)
         for _, target, guidance in presets(cfg['presets']):
             paths.append(absolute(target/'agent-memory'))
             if guidance and not cfg['no_guidance']:
@@ -449,10 +450,12 @@ def preflight_layout(args, state, code, old):
         paths.extend(absolute(target)/'agent-memory' for target in cfg['custom_targets'])
         if args.development_source:
             sources.add(absolute(args.development_source).resolve(strict=True))
-        for path in paths[1:]:
-            preflight_path(path)
-            require_layout(not path.is_relative_to(state) and not state.is_relative_to(path),
-                           'Installation target overlaps the external receipt directory')
+    elif args.command == 'update' and old:
+        paths.extend(absolute(old['bin_dir'])/name for name in COMMAND_NAMES)
+    for path in paths[1:]:
+        preflight_path(path)
+        require_layout(not path.is_relative_to(state) and not state.is_relative_to(path),
+                       'Installation target overlaps the external receipt directory')
     for path in paths:
         for source in sources:
             require_layout(not path.is_relative_to(source) and not source.is_relative_to(path),
@@ -470,7 +473,7 @@ def lifecycle_paths(args, state, code, old):
             paths.extend(Path(action[key]) for key in ('path', 'stage'))
     if args.command == 'install':
         cfg = configuration(args, old)
-        paths.append(cfg['bin_dir'] / 'agent-memory')
+        paths.extend(cfg['bin_dir'] / name for name in COMMAND_NAMES)
         for _, target, guidance in presets(cfg['presets']):
             paths.append(absolute(target / 'agent-memory'))
             if guidance and not cfg['no_guidance']:
@@ -525,6 +528,10 @@ def prepare(args, state, code, old, *, candidate_root=None):
                                     env={**os.environ, 'GIT_TERMINAL_PROMPT': '0'})
             require(result.returncode == 0, 'Could not stage source: ' + result.stderr.strip())
             source = source_info(root, 'managed', remote, ref)
+        # source_info canonicalizes the trusted source. Keep root in that same
+        # namespace before relative paths/ownership checks (/var -> /private/var
+        # and symlinked TMPDIR are normal macOS layouts).
+        root = Path(source['path'])
         require(not state.is_relative_to(root) and not root.is_relative_to(state),
                 'Installation state must not overlap the selected source')
         pack_source = Path(source['pack'])
@@ -576,7 +583,8 @@ def prepare(args, state, code, old, *, candidate_root=None):
             add(absolute(target)/'agent-memory', mode, source_path=pack_source)
             adapter = 'custom:' + str(absolute(target))
             adapters.append(adapter); groups[adapter] = [str(absolute(target)/'agent-memory')]
-        add(bin_dir/'agent-memory', 'wrapper', raw=wrapper(active_pack), mode_bits=0o755)
+        for name in artifact.command_names(source['compatibility']):
+            add(bin_dir/name, 'wrapper', raw=wrapper(active_pack), mode_bits=0o755)
         paths = [Path(a['path']) for a in actions]
         for index, path in enumerate(paths):
             require(not path.is_relative_to(state) and not state.is_relative_to(path),
@@ -837,6 +845,22 @@ def install(plan, *, before_activate=None, after_activate=None):
         raise
 
 
+def failure_repair(exc):
+    if isinstance(exc, LayoutError):
+        return ('Choose separate writable XDG state/data and client targets outside Memory Banks and source trees; '
+                'rerun install --check. Do not run recovery under the refused layout.')
+    try:
+        state, _ = locations()
+        journal = read_journal(state)
+    except (OSError, ValueError, TypeError, KeyError, UnicodeError):
+        return ('Preserve reported paths and installation records; inspect diagnostics and reconcile '
+                'unreadable recovery metadata before retrying.')
+    if journal and journal['status'] not in ('complete', 'rolled-back'):
+        return 'Preserve reported paths; rerun this trusted helper with recover before retrying installation.'
+    return ('Preserve reported paths; resolve the reported planning or prerequisite error, then rerun '
+            'install --check before retrying. No pending activation requires recovery.')
+
+
 def main(argv=None):
     from . import cli
     argv = cli.arguments(sys.argv[1:] if argv is None else argv)
@@ -910,9 +934,6 @@ def main(argv=None):
                         result = install(plan)
         runtime_faults.response(args.command, result)
     except (OSError, ValueError, TypeError, KeyError, UnicodeError, subprocess.SubprocessError) as exc:
-        repair = ('Choose separate writable XDG state/data and client targets outside Memory Banks and source trees; '
-                  'rerun install --check. Do not run recovery under the refused layout.' if isinstance(exc, LayoutError)
-                  else 'Preserve reported paths; rerun this trusted helper with recover before retrying installation.')
-        result = {'operation': args.command, 'verified': False, 'error': str(exc), 'repair': repair}
+        result = {'operation': args.command, 'verified': False, 'error': str(exc), 'repair': failure_repair(exc)}
     print(json.dumps(result, indent=2))
     return 0 if result.get('verified') or result.get('schema') == 'agent-memory/install-plan-v1' else 1

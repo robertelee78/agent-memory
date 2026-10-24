@@ -164,7 +164,9 @@ class RuntimeDiagnosticsContract(unittest.TestCase):
             value = call(world, 'doctor', '--repo', world.paths['repo'], expected=1)
             failed = {v['component'] for v in value['failures']}
             self.assertIn('runtime.target.wrapper', failed); self.assertIn('runtime.target.copy', failed)
-            self.assertIn('0o644', component(value, 'runtime.target.wrapper')[0]['detail'])
+            changed_wrapper = next(v for v in component(value, 'runtime.target.wrapper')
+                                   if v.get('path') == str(wrapper))
+            self.assertIn('0o644', changed_wrapper['detail'])
             self.assertEqual(value['installation']['purge_transactions'], 'none_pending')
             self.assertTrue(all(v.get('repair') for v in value['failures']))
             self.assertEqual(snapshot(world.root), before)

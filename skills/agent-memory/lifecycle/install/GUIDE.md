@@ -85,7 +85,7 @@ The session MUST NOT describe separate filesystems as one globally atomic switch
 The session MUST require exit 0 and `verified: true`, then read `receipt_path`,
 `receipt.source`, target identities, backups, enabled adapters and data roots.
 Source identity reports revision or `unversioned`, dirty qualification, version,
-and artifact digest. The installed `agent-memory` wrapper exposes installation
+and artifact digest. The installed `am` and compatibility `agent-memory` wrappers expose installation
 and recovery; the [maintain domain](../../maintain/GUIDE.md) routes update,
 uninstall and diagnostics through their own operations.
 

@@ -42,12 +42,13 @@ Remove `--check` to apply. From an existing complete checkout,
 
 Defaults include generic Agent Skills, Codex, Claude and OpenCode discovery.
 Use `--presets none` and repeated `--target-dir` arguments for custom discovery.
-The command is installed in `~/.local/bin` by default. If your shell cannot find
-it, add that directory to `PATH` (and to your shell startup file to persist it):
+The primary command is `am`; `agent-memory` remains a compatibility command.
+Both are installed in `~/.local/bin` by default. If your shell cannot find them,
+add that directory to `PATH` (and to your shell startup file to persist it):
 
 ```sh
 export PATH="$HOME/.local/bin:$PATH"
-agent-memory version
+am version
 ```
 
 If you choose a custom `--bin-dir`, use the receipt's `bin_dir` instead.
@@ -71,8 +72,8 @@ worktree path. Both commands are read-only; missing identity or bank setup is
 reported separately from installation health:
 
 ```sh
-agent-memory status --repo /path/to/project
-agent-memory doctor --repo /path/to/project
+am status --repo /path/to/project
+am doctor --repo /path/to/project
 ```
 
 ### Update
@@ -80,13 +81,13 @@ agent-memory doctor --repo /path/to/project
 Update the managed runtime with one command:
 
 ```sh
-agent-memory update
+am update
 ```
 
 To preview first:
 
 ```sh
-agent-memory update --check
+am update --check
 ```
 
 The default channel follows `main`; installation does not pin `v0.0.1`.
@@ -94,18 +95,28 @@ The updater manages its own runtime checkout, independently of the checkout
 used to run `install.sh`. See the [update guide](skills/agent-memory/lifecycle/update/GUIDE.md)
 for source checks, retries and recovery.
 
+If you installed before `am` was introduced, run this one-time transition:
+
+```sh
+agent-memory update && agent-memory install
+```
+
+The shipped older updater upgrades the runtime first; the new installer then
+adds the owned `am` command. Afterward, use `am update`. An unrelated existing
+`am` is preserved and reported instead of replaced.
+
 ### Uninstall
 
 Uninstall the owned runtime and discovery entries with one command:
 
 ```sh
-agent-memory uninstall
+am uninstall
 ```
 
 To preview first:
 
 ```sh
-agent-memory uninstall --check
+am uninstall --check
 ```
 
 Ordinary uninstall preserves project memory and user edits; modified owned
@@ -114,9 +125,9 @@ confirmed purge operation. See the [uninstall guide](skills/agent-memory/lifecyc
 
 ### Diagnose and recover
 
-Use `agent-memory version`, `agent-memory status` and `agent-memory doctor`
+Use `am version`, `am status` and `am doctor`
 for diagnostics. If a runtime transaction was interrupted, use
-`agent-memory recover` and inspect its result before retrying the operation.
+`am recover` and inspect its result before retrying the operation.
 
 If the installed command is unavailable, run recovery from a trusted complete
 checkout kept outside the managed installation targets:
@@ -190,7 +201,7 @@ The [installed common CLI](skills/agent-memory/maintain/cli/GUIDE.md) exposes
 identity, initialization, qualified recall, capture/admission, checkpointing,
 governance, consolidation and memory-only publication/refresh through the same
 portable helpers. The skill performs the evidence and semantic judgments at
-natural turn boundaries; `agent-memory boundary` invokes the existing refresh
+natural turn boundaries; `am boundary` invokes the existing refresh
 protocol. The [file-only workflow](skills/agent-memory/offline/GUIDE.md) remains
 available when the command and helpers are absent.
 
@@ -280,7 +291,7 @@ Markdown contexts and local Git facts without generated application state;
 tracking is kept distinct from publication and refreshed shared memory.
 
 The [runtime diagnostics](docs/contracts/runtime-diagnostics.md) provide
-`agent-memory version`, `status --repo PATH`, and `doctor --repo PATH`.
+`am version`, `status --repo PATH`, and `doctor --repo PATH`.
 They report measured runtime identity, quick setup state and deeper ownership/
 bank checks without initializing or repairing data. The portable
 `scripts/diagnose.py` helper works when the installed wrapper is broken.

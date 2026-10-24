@@ -139,6 +139,7 @@ def staged(old):
                         and install.git(root,'symbolic-ref','--short','HEAD').stdout.strip()==source['ref'],
                         'Staged checkout differs from the recorded remote/ref')
         candidate = install.source_info(root,'managed',source['remote'],source['ref'])
+        root = Path(candidate['path'])
         install.require(install.git(root,'merge-base','--is-ancestor',source['revision'],candidate['revision'],check=False).returncode==0,
                         'Candidate is not a fast-forward of the installed revision')
         install.require(version_key(candidate['version'])>=version_key(source['version']), 'Runtime downgrade refused')
@@ -153,11 +154,14 @@ def staged(old):
         yield root, candidate
 
 
-def wrapper_readback(old):
-    wrapper = Path(old['bin_dir'])/'agent-memory'
-    for args in (('--help',), ('update','--help')):
-        result = subprocess.run([str(wrapper),*args], text=True, capture_output=True, timeout=30)
-        install.require(result.returncode==0, 'Updated command failed its public dispatch readback: '+result.stderr.strip())
+def wrapper_readback(old, targets=None):
+    for target in old['targets'] if targets is None else targets:
+        if target['kind'] != 'wrapper':
+            continue
+        for args in (('--help',), ('update','--help')):
+            result = subprocess.run([target['path'],*args], text=True, capture_output=True, timeout=30)
+            install.require(result.returncode==0,
+                            'Updated command failed its public dispatch readback: '+result.stderr.strip())
 
 
 def run(args):
@@ -166,7 +170,8 @@ def run(args):
     before = install.read_receipt(state)
     install.require(before is not None, 'No installation receipt; install the managed channel first')
     install.preflight_layout(args,state,code,before)
-    paths = [state, code, *(Path(t['path']) for t in before['targets'])]
+    paths = [state, code, *(Path(t['path']) for t in before['targets']),
+             *(Path(before['bin_dir'])/name for name in install.COMMAND_NAMES)]
     def work():
         old = current(state,code)
         with staged(old) as (root, candidate):
@@ -190,7 +195,7 @@ def run(args):
                 def compatible_now():
                     banks(args.repo,candidate['compatibility'])
                 def readback():
-                    compatible_now(); wrapper_readback(old)
+                    compatible_now(); wrapper_readback(old, plan['actions'])
                 result = install.install(plan,before_activate=compatible_now,after_activate=readback)
                 return {**summary,**result}
     if args.check:

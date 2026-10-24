@@ -47,7 +47,10 @@ paths, plus small bounded activation shims in the relevant client instruction
 files. `--presets` accepts `none` or a comma-separated selection of `agents`,
 `codex`, `claude`, `opencode`. Repeated `--target-dir` adds custom discovery
 roots. `--no-guidance` omits shims. The command wrapper defaults to
-`~/.local/bin/agent-memory`; `--bin-dir` overrides its directory. Every path
+`~/.local/bin/am`, with an owned `agent-memory` compatibility wrapper in the same
+directory; `--bin-dir` overrides it. A source without the additive
+`installed_commands` declaration retains only its legacy command so old planners
+are not stranded. Every path
 argument is absolute. Link and copy modes bind the same complete artifact digest.
 
 The public JSON plan reports every target's before/after identity, source
