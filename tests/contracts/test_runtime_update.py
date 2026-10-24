@@ -81,7 +81,7 @@ class RuntimeUpdateContract(unittest.TestCase):
                 self.assertEqual(snapshot(world.root),check_before)
 
     def test_downgrade_non_fast_forward_and_invalid_candidate_keep_the_previous_runtime(self):
-        for case in ('downgrade','non-ff','invalid','python','surface'):
+        for case in ('downgrade','non-ff','invalid','python','surface','uninstall-surface','purge-surface'):
             with self.subTest(case=case), World() as world:
                 channel,pack,receipt = fixture(world)
                 if case=='non-ff':
@@ -95,9 +95,10 @@ class RuntimeUpdateContract(unittest.TestCase):
                     if case=='invalid': (pack/'schemas/runtime-compatibility.json').unlink()
                     elif case=='python':
                         path=pack/'schemas/runtime-compatibility.json'; spec=json.loads(path.read_text()); spec['python_minimum']='99.0'; path.write_text(json.dumps(spec))
-                    elif case=='surface':
-                        path=pack/'scripts/agent_memory/installation.py'; path.write_text(path.read_text().replace("add_parser('update'", "add_parser('removed-update'"))
-                    if case in ('invalid','python','surface'):
+                    elif case in ('surface','uninstall-surface','purge-surface'):
+                        command={'surface':'update','uninstall-surface':'uninstall','purge-surface':'purge-data'}[case]
+                        path=pack/'scripts/agent_memory/installation.py'; path.write_text(path.read_text().replace("add_parser('"+command+"'", "add_parser('removed-"+command+"'"))
+                    if case in ('invalid','python','surface','uninstall-surface','purge-surface'):
                         world.git('add','.',cwd=channel); world.git('commit','-m','Candidate refusal fixture',cwd=channel)
                 before = owned(receipt); raw = receipt_path(world).read_bytes()
                 _, denied = call(world,receipt,expected=1)

@@ -125,3 +125,15 @@ class RuntimeUninstallContract(unittest.TestCase):
             result = uninstall(world, receipt, source=True, expected=1)
             self.assertFalse(result['verified'])
             self.assertEqual({p:snapshot(Path(p)) for p in targets}, targets)
+
+    def test_lost_uninstall_success_response_is_recovered_as_committed(self):
+        with World() as world:
+            _,_,receipt=fixture(world); memory=bank(world,world.paths['repo']); before=snapshot(memory)
+            killed=world.run([Path(receipt['bin_dir'])/'agent-memory','uninstall'],check=False,env={
+                'AGENT_MEMORY_FAULT_STAGE':'uninstall-after-receipt','AGENT_MEMORY_FAULT_MODE':'exit'})
+            self.assertEqual(killed.returncode,86)
+            recovered=world.run([sys.executable,'-I',ROOT/'scripts/installer.py','recover'])
+            self.assertTrue(json.loads(recovered.stdout)['verified'])
+            repeated=uninstall(world,receipt,source=True)
+            self.assertTrue(repeated['verified']); self.assertFalse(repeated['changed'])
+            self.assertEqual(snapshot(memory),before)

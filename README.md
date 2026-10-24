@@ -68,10 +68,13 @@ for isolation rules, suite registration and receipt fields.
 The [bank router contract](docs/contracts/bank-router.md) defines the initial
 shared Markdown layout and its read-only render/validate helper. The full
 installed lifecycle workflow remains under execution. The [portable installer](docs/contracts/installation.md)
-provides preview, owned activation, repeated installation and bootstrap recovery;
+provides preview, owned activation, repeated installation and bootstrap recovery.
 The [managed updater](docs/contracts/runtime-updates.md) provides read-only
-channel checks, staged fast-forward activation and recoverable retries. Uninstall,
-deeper diagnostics and the complete installed workflow retain their separate tasks.
+channel checks, staged fast-forward activation and recoverable retries. The
+[runtime uninstaller](docs/contracts/runtime-uninstall.md) preserves project
+memory and user edits; a separate inventory-bound, explicitly confirmed purge
+deletes only one selected local bank. Deeper diagnostics and the complete
+installed workflow retain their separate tasks.
 
 The [shared lifecycle model](docs/contracts/lifecycle-model.md) supplies the
 read-only transition and current-selection decisions used by later operations.

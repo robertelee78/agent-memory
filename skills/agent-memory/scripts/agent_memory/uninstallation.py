@@ -145,4 +145,14 @@ def main(argv=None):
     commands = parser.add_subparsers(dest='command', required=True)
     uninstall = commands.add_parser('uninstall')
     uninstall.add_argument('--check', '--dry-run', action='store_true')
-    return execute(parser.parse_args(argv))
+    purge = commands.add_parser('purge-data')
+    purge.add_argument('--repo', required=True)
+    purge.add_argument('--path', required=True)
+    consent = purge.add_mutually_exclusive_group(required=True)
+    consent.add_argument('--check', action='store_true')
+    consent.add_argument('--confirm')
+    args = parser.parse_args(argv)
+    if args.command == 'purge-data':
+        from .purging import execute as purge_execute
+        return purge_execute(args)
+    return execute(args)

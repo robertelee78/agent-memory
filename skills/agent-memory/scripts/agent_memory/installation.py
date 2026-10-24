@@ -766,6 +766,12 @@ def main(argv=None):
     update.add_argument('--repo', action='append', default=[])
     uninstall = commands.add_parser('uninstall', help='Remove only unchanged owned runtime targets; preserve project memory')
     uninstall.add_argument('--check', '--dry-run', action='store_true')
+    purge = commands.add_parser('purge-data', help='Explicitly preview or confirm deletion of one exact local project bank')
+    purge.add_argument('--repo', required=True)
+    purge.add_argument('--path', required=True)
+    consent = purge.add_mutually_exclusive_group(required=True)
+    consent.add_argument('--check', action='store_true')
+    consent.add_argument('--confirm')
     commands.add_parser('recover', help='Verify a committed transaction or roll back interrupted activation')
     args = parser.parse_args(argv)
     if args.command == 'update':
@@ -773,6 +779,9 @@ def main(argv=None):
         return execute(args)
     if args.command == 'uninstall':
         from .uninstallation import execute
+        return execute(args)
+    if args.command == 'purge-data':
+        from .purging import execute
         return execute(args)
     try:
         require(sys.version_info >= (3,11) and shutil.which('git'), 'Python 3.11+ and Git are required')
