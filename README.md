@@ -17,8 +17,17 @@ holds the release's source and validation evidence.
 
 ## Install and first use
 
-Start from a trusted complete checkout with Python 3.11+ and Git. Preview before
-activating the default managed `main` channel:
+### Install
+
+Prerequisites: Python 3.11+ and Git on macOS or Linux. Start with a trusted,
+complete checkout (skip the clone if you already have one):
+
+```sh
+git clone https://github.com/robertelee78/agent-memory.git
+cd agent-memory
+```
+
+Preview the installation before activating the default managed `main` channel:
 
 ```sh
 ./install.sh --check --mode copy
@@ -32,11 +41,21 @@ Inspect the source and every proposed target, then apply the same configuration:
 
 Defaults include generic Agent Skills, Codex, Claude and OpenCode discovery.
 Use `--presets none` and repeated `--target-dir` arguments for custom discovery.
-The receipt identifies `bin_dir`; add that directory to your shell's `PATH` if
-needed. Installation needs neither a developer identity nor an initialized bank.
+The command is installed in `~/.local/bin` by default. If your shell cannot find
+it, add that directory to `PATH` (and to your shell startup file to persist it):
+
+```sh
+export PATH="$HOME/.local/bin:$PATH"
+agent-memory version
+```
+
+If you choose a custom `--bin-dir`, use the receipt's `bin_dir` instead.
+Installation needs neither a developer identity nor an initialized bank.
 Follow the [installation guide](skills/agent-memory/lifecycle/install/GUIDE.md)
 for ownership, recovery and explicit local/development sources. Development
 sources are separate from the managed channel and are not updated by the updater.
+
+### First use in a repository
 
 Ask your coding agent to use the installed `agent-memory` skill in the target
 repository. It routes explicit developer/project setup, evidence-led bank
@@ -47,14 +66,68 @@ the skill in each session; v0.0.3 hooks are planned to cover forgotten invocatio
 The [common CLI guide](skills/agent-memory/maintain/cli/GUIDE.md) documents the
 same public helpers and installed aliases.
 
-For an existing managed installation, preview with `agent-memory update --check`
-before `agent-memory update`. Preview removal with `agent-memory uninstall --check`
-before `agent-memory uninstall`. Ordinary uninstall preserves project memory and
-user edits; explicit bank deletion has a separate confirmed purge operation.
-Keep a trusted complete package available for recovery after wrapper removal.
-See [update](skills/agent-memory/lifecycle/update/GUIDE.md),
-[uninstall](skills/agent-memory/lifecycle/uninstall/GUIDE.md) and
-[diagnostics](skills/agent-memory/lifecycle/diagnose/GUIDE.md).
+To inspect setup and health, replace `/path/to/project` with your repository or
+worktree path. Both commands are read-only; missing identity or bank setup is
+reported separately from installation health:
+
+```sh
+agent-memory status --repo /path/to/project
+agent-memory doctor --repo /path/to/project
+```
+
+### Update
+
+Preview an update from the managed channel:
+
+```sh
+agent-memory update --check
+```
+
+Review the proposed change, then apply it:
+
+```sh
+agent-memory update
+```
+
+The default channel follows `main`; installation does not pin `v0.0.1`.
+The updater manages its own runtime checkout, independently of the checkout
+used to run `install.sh`. See the [update guide](skills/agent-memory/lifecycle/update/GUIDE.md)
+for source checks, retries and recovery.
+
+### Uninstall
+
+Preview removal:
+
+```sh
+agent-memory uninstall --check
+```
+
+Review the targets, then remove the owned runtime and discovery entries:
+
+```sh
+agent-memory uninstall
+```
+
+Ordinary uninstall preserves project memory and user edits; modified owned
+targets are reported and preserved. Explicit bank deletion has a separate
+confirmed purge operation. See the [uninstall guide](skills/agent-memory/lifecycle/uninstall/GUIDE.md).
+
+### Diagnose and recover
+
+Use `agent-memory version`, `agent-memory status` and `agent-memory doctor`
+for diagnostics. If a runtime transaction was interrupted, use
+`agent-memory recover` and inspect its result before retrying the operation.
+
+If the installed command is unavailable, run recovery from a trusted complete
+checkout kept outside the managed installation targets:
+
+```sh
+cd /path/to/agent-memory
+python3 -I skills/agent-memory/scripts/installer.py recover
+```
+
+See the [diagnostics guide](skills/agent-memory/lifecycle/diagnose/GUIDE.md)
+for interpreting findings and choosing a repair.
 
 ## Mission
 
