@@ -107,6 +107,7 @@ unneeded siblings or interrupting an executing turn.
 | Check or update the managed runtime | [maintain](maintain/GUIDE.md) | [runtime update](lifecycle/update/GUIDE.md) |
 | Remove owned runtime while preserving project memory | [maintain](maintain/GUIDE.md) | [runtime uninstall](lifecycle/uninstall/GUIDE.md) |
 | Explicitly purge one confirmed local bank | [maintain](maintain/GUIDE.md) | [data purge](lifecycle/purge/GUIDE.md) |
+| Inspect version, quick status or diagnose installation/bank health | [maintain](maintain/GUIDE.md) | [diagnostics](lifecycle/diagnose/GUIDE.md) |
 | Inspect record/index layout | [maintain](maintain/GUIDE.md) | [layout](layout/GUIDE.md) |
 | Build/check derived references | [maintain](maintain/GUIDE.md) | [projections](projections/GUIDE.md) |
 | Use the file-only workflow | [bank](bank/GUIDE.md) | [offline](offline/GUIDE.md) |

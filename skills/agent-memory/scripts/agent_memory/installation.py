@@ -573,10 +573,11 @@ def rollback(state, journal):
                                   if p is not None and fingerprint(Path(p)) is not None]}
 
 
-def recover(state, *, for_install=False):
+def read_journal(state):
+    """Validate recovery metadata without changing runtime targets or records."""
     path = state/'journal.json'
     if not os.path.lexists(path):
-        return {'operation': 'recover', 'verified': True, 'status': 'no-pending-transaction'}
+        return None
     journal = load(path)
     require(isinstance(journal, dict) and journal.get('schema') == JOURNAL_SCHEMA
             and journal.get('status') in ('staging','activating','complete','rolled-back','rollback-conflict')
@@ -590,6 +591,14 @@ def recover(state, *, for_install=False):
                 and (action.get('backup') is None or Path(action['backup']) == Path(action['path']).parent/
                      ('.agent-memory-backup-' + journal['transaction'] + '-' + str(index))),
                 'Malformed lifecycle journal target or staging path')
+    return journal
+
+
+def recover(state, *, for_install=False):
+    path = state/'journal.json'
+    journal = read_journal(state)
+    if journal is None:
+        return {'operation': 'recover', 'verified': True, 'status': 'no-pending-transaction'}
     if journal['status'] == 'complete':
         require(journal.get('receipt_identity') is not None
                 and fingerprint(state/'receipt.json') == journal['receipt_identity'],
@@ -773,7 +782,17 @@ def main(argv=None):
     consent.add_argument('--check', action='store_true')
     consent.add_argument('--confirm')
     commands.add_parser('recover', help='Verify a committed transaction or roll back interrupted activation')
+    for name in ('version', 'status', 'doctor'):
+        diagnostic = commands.add_parser(name, help='Read-only runtime and bank diagnostics')
+        diagnostic.add_argument('--json', action='store_true')
+        if name != 'version':
+            diagnostic.add_argument('--repo', default='.')
+        if name == 'doctor':
+            diagnostic.add_argument('--projection')
     args = parser.parse_args(argv)
+    if args.command in ('version', 'status', 'doctor'):
+        from .diagnostics import execute
+        return execute(args)
     if args.command == 'update':
         from .updating import execute
         return execute(args)
