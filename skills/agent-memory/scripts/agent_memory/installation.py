@@ -21,7 +21,7 @@ import sys
 import tempfile
 import uuid
 
-from . import artifact
+from . import artifact, runtime_faults
 from .bank_writes import fault
 from .frontmatter import ContractError, unique_object
 
@@ -29,9 +29,7 @@ RECEIPT_SCHEMA = 'agent-memory/install-receipt-v1'
 JOURNAL_SCHEMA = 'agent-memory/install-journal-v1'
 BEGIN = '<!-- agent-memory:activation:begin -->'
 END = '<!-- agent-memory:activation:end -->'
-SHIM = (BEGIN + '\nWhen this repository contains memory-bank/MEMORY.md, or the user asks to initialize, '
-        'resume, checkpoint, remember, correct or forget project memory, load the agent-memory skill '
-        'and follow its selected operation.\n' + END)
+SHIM = (artifact.PACK/'templates/activation-markdown.example.txt').read_text()
 DEFAULT_REMOTE = 'https://github.com/robertelee78/agent-memory.git'
 
 
@@ -101,7 +99,7 @@ def fingerprint(path):
     return {'kind': 'directory', 'hash': sha(encoded(entries)), 'mode': stat.S_IMODE(mode)}
 
 
-def native_rename(source, target, *, exchange=False):
+def _native_rename(source, target, *, exchange=False):
     """Native no-replace / exchange. Unsupported filesystems fail closed.
 
     Darwin renamex_np flags: RENAME_SWAP=2, RENAME_EXCL=4 (XNU stdio.h).
@@ -124,6 +122,15 @@ def native_rename(source, target, *, exchange=False):
         raise OSError(code, os.strerror(code), str(target))
 
 
+def native_rename(source, target, *, exchange=False):
+    def perform():
+        _native_rename(source, target, exchange=exchange)
+        sync_dir(Path(target).parent)
+        if Path(source).parent != Path(target).parent:
+            sync_dir(Path(source).parent)
+    return runtime_faults.mutate('atomic-node-switch', perform)
+
+
 def sync_dir(path):
     fd = os.open(path, os.O_RDONLY)
     try:
@@ -137,7 +144,7 @@ def unchanged_parent(path):
             'Installation parent changed or became a symlink: ' + str(path.parent))
 
 
-def copy_node(source, target):
+def _copy_node(source, target):
     if source.is_symlink():
         target.symlink_to(os.readlink(source), target_is_directory=source.is_dir())
     elif source.is_dir():
@@ -145,6 +152,10 @@ def copy_node(source, target):
     else:
         shutil.copy2(source, target, follow_symlinks=False)
     sync_tree(target); sync_dir(target.parent)
+
+
+def copy_node(source, target):
+    return runtime_faults.mutate('payload-snapshot', lambda: _copy_node(source, target))
 
 
 def sync_tree(path):
@@ -163,18 +174,24 @@ def sync_tree(path):
         sync_dir(parent)
 
 
-def write_file(path, raw, mode=0o600):
+def _write_file(path, raw, mode=0o600):
     with path.open('xb') as stream:
         stream.write(raw); stream.flush(); os.fsync(stream.fileno())
     path.chmod(mode)
 
 
+def write_file(path, raw, mode=0o600):
+    return runtime_faults.mutate('file-stage', lambda: _write_file(path, raw, mode))
+
+
 def replace_record(path, value):
     stage = path.parent / ('.record-' + uuid.uuid4().hex)
-    write_file(stage, encoded(value))
     try:
-        os.replace(stage, path)
-        sync_dir(path.parent)
+        write_file(stage, encoded(value))
+        def publish():
+            os.replace(stage, path)
+            sync_dir(path.parent)
+        runtime_faults.mutate('record-publication', publish)
     finally:
         if stage.exists():
             stage.unlink()
@@ -195,7 +212,17 @@ def locked(state):
     state.mkdir(parents=True, exist_ok=True, mode=0o700)
     path = state/'lock'
     require(not path.is_symlink(), 'Lifecycle lock is a symlink: ' + str(path))
-    fd = os.open(path, os.O_RDWR | os.O_CREAT | getattr(os, 'O_NOFOLLOW', 0), 0o600)
+    if not os.path.lexists(path):
+        seed = state/('.lock-seed-' + uuid.uuid4().hex)
+        try:
+            write_file(seed, encoded({'schema':'agent-memory/lifecycle-lock-v1'}))
+            try:
+                native_rename(seed, path)
+            except FileExistsError:
+                pass
+        finally:
+            seed.unlink(missing_ok=True)
+    fd = os.open(path, os.O_RDWR | getattr(os, 'O_NOFOLLOW', 0))
     try:
         try:
             fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -204,14 +231,20 @@ def locked(state):
         require(stat.S_ISREG(os.fstat(fd).st_mode) and os.fstat(fd).st_nlink == 1,
                 'Lifecycle lock is not a private regular file')
         prior = os.read(fd, 65537)
-        if prior:
-            lock_value = json.loads(prior)
-            require(len(prior) <= 65536 and isinstance(lock_value, dict)
-                    and lock_value.get('schema') == 'agent-memory/lifecycle-lock-v1',
-                    'Unrelated lifecycle lock file; preserve it for reconciliation')
-        os.ftruncate(fd, 0); os.lseek(fd, 0, os.SEEK_SET)
-        os.write(fd, encoded({'schema':'agent-memory/lifecycle-lock-v1', 'pid': os.getpid(), 'started_at': datetime.now(timezone.utc).isoformat()}))
-        os.fsync(fd)
+        value = json.loads(prior)
+        require(len(prior) <= 65536 and isinstance(value, dict)
+                and value.get('schema') == 'agent-memory/lifecycle-lock-v1',
+                'Unrelated lifecycle lock file; preserve it for reconciliation')
+        owner_path = state/'owner.json'
+        if owner_path.exists():
+            owner = load(owner_path)
+            require(isinstance(owner, dict) and owner.get('schema') == 'agent-memory/lifecycle-owner-v1',
+                    'Unrelated lifecycle owner record; preserve it for reconciliation')
+        # Keep the flock inode stable. Diagnostic PID metadata is published
+        # separately and atomically, so a killed writer cannot tear the lock.
+        replace_record(owner_path, {'schema':'agent-memory/lifecycle-owner-v1',
+                                   'lock_path':str(path), 'pid':os.getpid(),
+                                   'started_at':datetime.now(timezone.utc).isoformat()})
         yield
     finally:
         os.close(fd)
@@ -259,7 +292,7 @@ def read_receipt(state):
     return value
 
 
-def activation(raw, expected=None):
+def activation(raw, expected=None, *, shim=SHIM):
     text = raw.decode('utf-8')
     require(text.count(BEGIN) == text.count(END) and text.count(BEGIN) <= 1,
             'Unbalanced/duplicate activation sentinels; preserve and reconcile manually')
@@ -267,9 +300,9 @@ def activation(raw, expected=None):
         start, finish = text.index(BEGIN), text.index(END) + len(END)
         require(text.index(BEGIN) < text.index(END) and expected is not None and sha(text[start:finish].encode()) == expected,
                 'Activation block is unrelated or modified; preserve and reconcile manually')
-        return (text[:start] + SHIM + text[finish:]).encode()
+        return (text[:start] + shim + text[finish:]).encode()
     require(expected is None, 'Owned activation block is missing; preserve and reconcile manually')
-    return raw + (b'' if not raw or raw.endswith(b'\n') else b'\n') + SHIM.encode() + b'\n'
+    return raw + (b'' if not raw or raw.endswith(b'\n') else b'\n') + shim.encode() + b'\n'
 
 
 def presets(names):
@@ -375,11 +408,15 @@ def public_plan(plan):
 
 
 @contextmanager
-def prepare(args, state, code, old):
+def prepare(args, state, code, old, *, candidate_root=None):
     with tempfile.TemporaryDirectory(prefix='agent-memory-install-source-') as scratch:
         scratch = Path(scratch)
         saved = old['source'] if old else None
-        if args.development_source:
+        if candidate_root is not None:
+            require(saved is not None and saved['kind']=='managed', 'Updates require managed ownership')
+            root = Path(candidate_root).resolve(strict=True)
+            source = source_info(root, 'managed', saved['remote'], saved['ref'])
+        elif args.development_source:
             require(not args.remote and not args.ref, 'Choose development source or managed remote/ref, not both')
             root = absolute(args.development_source).resolve(strict=True)
             source = source_info(root, 'development')
@@ -409,6 +446,11 @@ def prepare(args, state, code, old):
         require(not state.is_relative_to(root) and not root.is_relative_to(state),
                 'Installation state must not overlap the selected source')
         pack_source = Path(source['pack'])
+        shim_path = pack_source/'templates/activation-markdown.example.txt'
+        shim = shim_path.read_text() if shim_path.is_file() else SHIM
+        require(shim.startswith(BEGIN+'\n') and shim.endswith(END)
+                and shim.count(BEGIN)==shim.count(END)==1 and len(shim.encode())<=4096,
+                'Candidate activation shim must be one bounded invocation block')
         active_root = root if source['kind'] == 'development' else code
         active_pack = active_root / pack_source.relative_to(root)
         source = {**source, 'path': str(active_root), 'pack': str(active_pack)}
@@ -423,7 +465,7 @@ def prepare(args, state, code, old):
             if block:
                 require(before is None or before['kind'] == 'file', 'Activation file collision: ' + str(path))
                 raw = activation(path.read_bytes() if before else b'',
-                                 previous.get('block_hash') if previous and previous['kind']=='activation' else None)
+                                 previous.get('block_hash') if previous and previous['kind']=='activation' else None, shim=shim)
                 mode_bits = before['mode'] if before else 0o644
             elif before is not None:
                 require(previous is not None and previous['identity'] == before,
@@ -470,14 +512,14 @@ def prepare(args, state, code, old):
             if item['kind'] in ('copy','link'):
                 return previous is None or previous.get('artifact_digest') != source['artifact_digest']
             if item['kind'] == 'activation':
-                return previous is None or previous.get('block_hash') != sha(SHIM.encode())
+                return previous is None or previous.get('block_hash') != sha(shim.encode())
             return False
         restart = [a for a in adapters if any(item['path'] in groups[a] and loaded_change(item)
                                              for item in actions)]
         yield {'state': state, 'source': source, 'mode': mode, 'presets': selected,
                'custom_targets': [str(absolute(t)) for t in custom], 'no_guidance': no_guidance,
                'bin_dir': str(bin_dir), 'adapters': adapters, 'actions': actions, 'restart': restart,
-               'old': old, 'pack_source': pack_source}
+               'old': old, 'pack_source': pack_source, 'shim':shim}
 
 
 def make_parents(parent, journal, state):
@@ -487,7 +529,9 @@ def make_parents(parent, journal, state):
     make_parents(parent.parent, journal, state)
     journal['created_directories'].append(str(parent))
     replace_record(state/'journal.json', journal)
-    parent.mkdir(mode=0o700); sync_dir(parent.parent)
+    def create():
+        parent.mkdir(mode=0o700); sync_dir(parent.parent)
+    runtime_faults.mutate('target-parent-directory', create)
 
 
 def verify_targets(targets):
@@ -568,13 +612,14 @@ def recover(state, *, for_install=False):
     return rollback(state, journal)
 
 
-def install(plan):
+def install(plan, *, before_activate=None, after_activate=None):
+    operation = plan.get('operation', 'install')
     state = plan['state']; old = plan['old']; changed = [a for a in plan['actions'] if a['changed']]
     if (not changed and old and old['source'] == plan['source']
             and all(t['identity'] == next(a['after'] for a in plan['actions'] if a['path']==t['path'])
                     for t in old['targets'])):
         verify_targets(old['targets'])
-        return {'operation': 'install', 'verified': True, 'changed': False, 'receipt': old,
+        return {'operation': operation, 'verified': True, 'changed': False, 'receipt': old,
                 'restart_clients': [], 'receipt_path': str(state/'receipt.json')}
     transaction = uuid.uuid4().hex
     targets = []
@@ -584,7 +629,7 @@ def install(plan):
         if action['kind'] in ('copy','link'):
             target['artifact_digest'] = plan['source']['artifact_digest']
         if action['kind'] == 'activation':
-            target['block_hash'] = sha(SHIM.encode())
+            target['block_hash'] = sha(plan['shim'].encode())
             previous = next((t for t in (old['targets'] if old else []) if t['path']==action['path']), None)
             target['originally_absent'] = previous['originally_absent'] if previous else action['before'] is None
         targets.append(target)
@@ -598,7 +643,7 @@ def install(plan):
                'artifact_files': artifact.inspect(plan['pack_source'])['files'],
                'backups': list(old.get('backups', [])) if old else [], 'created_directories': [],
                'rollback_available': True, 'atomicity': 'per target; journaled rollback across targets'}
-    journal = {'schema': JOURNAL_SCHEMA, 'transaction': transaction, 'status': 'staging',
+    journal = {'schema': JOURNAL_SCHEMA, 'operation': operation, 'transaction': transaction, 'status': 'staging',
                'actions': [], 'receipt': receipt, 'receipt_identity': None, 'created_directories': []}
     if (state/'journal.json').exists():
         write_file(state/('journal-' + transaction + '.json'), (state/'journal.json').read_bytes())
@@ -616,7 +661,7 @@ def install(plan):
             journal['actions'].append(entry)
             replace_record(state/'journal.json', journal)
             if action['kind'] == 'link':
-                stage.symlink_to(plan['source']['pack'], target_is_directory=True)
+                runtime_faults.mutate('link-stage', lambda: stage.symlink_to(plan['source']['pack'], target_is_directory=True))
             elif action['kind'] in ('copy','source'):
                 copy_node(Path(action['source_path']), stage)
             else:
@@ -637,29 +682,33 @@ def install(plan):
                                            'identity': action['before'], 'available': True})
             replace_record(state/'journal.json', journal)
         # Exercise the actual parent filesystem before changing any target.
-        for parent in {Path(a['path']).parent for a in journal['actions']}:
-            with tempfile.TemporaryDirectory(prefix='.agent-memory-probe-', dir=parent) as probe:
+        for parent in sorted({Path(a['path']).parent for a in journal['actions']}):
+            with runtime_faults.temporary_probe(), tempfile.TemporaryDirectory(prefix='.agent-memory-probe-', dir=parent) as probe:
                 left, right = Path(probe)/'left', Path(probe)/'right'
                 left.mkdir(); (left/'payload').write_bytes(b'left'); right.mkdir()
-                native_rename(left, right, exchange=True)
-                native_rename(right, Path(probe)/'third')
+                _native_rename(left, right, exchange=True)
+                _native_rename(right, Path(probe)/'third')
         for action in changed:
             require(fingerprint(Path(action['path'])) == action['before'],
                     'Target changed after preflight: ' + action['path'])
+        if before_activate:
+            before_activate()
         journal['status'] = 'activating'; replace_record(state/'journal.json', journal)
         for index, action in enumerate(journal['actions']):
             path, stage = Path(action['path']), Path(action['stage'])
             unchanged_parent(path)
-            fault('install-before-activate-' + str(index))
+            fault(operation + '-before-activate-' + str(index))
             require(fingerprint(path) == action['before'] and fingerprint(stage) == action['after'],
                     'Target/stage changed immediately before activation: ' + str(path))
             native_rename(stage, path, exchange=action['before'] is not None)
             sync_dir(path.parent)
-            fault('install-after-activate-' + str(index))
+            fault(operation + '-after-activate-' + str(index))
             require(fingerprint(path) == action['after']
                     and fingerprint(stage) == action['before'], 'Activation identity readback failed')
             journal['activated'] = index + 1; replace_record(state/'journal.json', journal)
         verify_targets(targets)
+        if after_activate:
+            after_activate()
         receipt['created_directories'] = list(old.get('created_directories', [])) if old else []
         receipt['created_directories'] += journal['created_directories']
         receipt_path = state/'receipt.json'
@@ -671,12 +720,12 @@ def install(plan):
         journal['receipt'] = receipt
         journal['receipt_identity'] = {'kind':'file','hash':sha(encoded(receipt)),'mode':0o600}
         replace_record(state/'journal.json', journal)
-        fault('install-before-receipt')
+        fault(operation + '-before-receipt')
         replace_record(receipt_path, receipt)
         require(fingerprint(receipt_path) == journal['receipt_identity'], 'Receipt readback failed')
-        fault('install-after-receipt')
+        fault(operation + '-after-receipt')
         journal['status'] = 'complete'; replace_record(state/'journal.json', journal)
-        return {'operation': 'install', 'verified': True, 'changed': True, 'receipt': receipt,
+        return {'operation': operation, 'verified': True, 'changed': True, 'receipt': receipt,
                 'restart_clients': plan['restart'], 'receipt_path': str(receipt_path)}
     except Exception:
         # If the commit point landed, recovery verifies it; otherwise it restores old targets.
@@ -697,8 +746,14 @@ def main(argv=None):
     create.add_argument('--target-dir', action='append')
     create.add_argument('--bin-dir')
     create.add_argument('--no-guidance', action='store_true')
+    update = commands.add_parser('update', help='Check or activate a verified managed-channel update')
+    update.add_argument('--check', action='store_true')
+    update.add_argument('--repo', action='append', default=[])
     commands.add_parser('recover', help='Verify a committed transaction or roll back interrupted activation')
     args = parser.parse_args(argv)
+    if args.command == 'update':
+        from .updating import execute
+        return execute(args)
     try:
         require(sys.version_info >= (3,11) and shutil.which('git'), 'Python 3.11+ and Git are required')
         state, code = locations()

@@ -1,0 +1,3 @@
+<!-- agent-memory:activation:begin -->
+When this repository contains memory-bank/MEMORY.md, or the user asks to initialize, resume, checkpoint, remember, correct or forget project memory, load the agent-memory skill and follow its selected operation.
+<!-- agent-memory:activation:end -->
