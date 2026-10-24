@@ -39,6 +39,7 @@
     {"name": "runtime-uninstall", "layer": "lifecycle", "scope": "v0.0.1", "path": "tests/contracts/test_runtime_uninstall.py"},
     {"name": "runtime-purge", "layer": "lifecycle", "scope": "v0.0.1", "path": "tests/contracts/test_runtime_purge.py"},
     {"name": "runtime-diagnostics", "layer": "lifecycle", "scope": "v0.0.1", "path": "tests/contracts/test_runtime_diagnostics.py"},
+    {"name": "installed-layout", "layer": "lifecycle", "scope": "v0.0.1", "path": "tests/contracts/test_installed_layout.py"},
     {"name": "update-write-before", "layer": "lifecycle", "scope": "v0.0.1", "path": "tests/contracts/test_update_write_before.py"},
     {"name": "update-write-after", "layer": "lifecycle", "scope": "v0.0.1", "path": "tests/contracts/test_update_write_after.py"},
     {"name": "installer", "layer": "lifecycle", "scope": "v0.0.1", "path": "tests/contracts/test_installer.py"},

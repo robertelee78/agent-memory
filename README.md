@@ -144,6 +144,12 @@ They report measured runtime identity, quick setup state and deeper ownership/
 bank checks without initializing or repairing data. The portable
 `scripts/diagnose.py` helper works when the installed wrapper is broken.
 
+The [installed layout contract](docs/contracts/installed-layout.md) ties the
+lifecycle commands to all supported discovery targets and separates runtime,
+ownership evidence, canonical memory and disposable derived files. Integrated
+tests exercise link/copy, custom-only and no-client installations against real
+updates, uninstall and preserved project data.
+
 The [typed record contract](skills/agent-memory/records/GUIDE.md) preserves
 provenance, conditions, validity and explicit stale state in standalone Markdown.
 Its read-only validator also handles optional history and the safe tombstone exception.
