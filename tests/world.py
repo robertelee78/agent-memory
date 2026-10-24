@@ -16,6 +16,37 @@ import sys
 import tempfile
 
 
+# The supervisor remains the process-group leader until it signals its own
+# group. Worker exit/reaping therefore cannot release the group ID first.
+_GROUP_SUPERVISOR = r'''
+import json,os,signal,subprocess,sys,traceback
+from pathlib import Path
+directory=Path(sys.argv[1]);timeout=float(sys.argv[2]);argv=json.loads(sys.argv[3])
+status={'supervisor_pid':os.getpid(),'worker_pid':None,'returncode':None,'timed_out':False,'error':None}
+def record():
+ with (directory/'status.json').open('w') as stream:
+  json.dump(status,stream);stream.flush();os.fsync(stream.fileno())
+try:
+ if os.getpgrp()!=os.getpid():raise RuntimeError('Supervisor does not own its process group')
+ with (directory/'stdout').open('xb') as out,(directory/'stderr').open('xb') as err:
+  child=subprocess.Popen(argv,stdout=out,stderr=err,close_fds=True)
+  status['worker_pid']=child.pid
+  try:status['returncode']=child.wait(timeout=timeout)
+  except subprocess.TimeoutExpired:status['timed_out']=True
+except BaseException as exc:
+ status['error']={'type':type(exc).__name__,'message':str(exc),'errno':getattr(exc,'errno',None)}
+ traceback.print_exc()
+finally:
+ try:record()
+ finally:
+  if os.getpgrp()==os.getpid():
+   try:os.killpg(os.getpid(),signal.SIGKILL)
+   except OSError as exc:
+    status['cleanup_error']={'type':type(exc).__name__,'message':str(exc),'errno':exc.errno};record()
+    raise
+'''
+
+
 class World:
     def __init__(self):
         self._children = []
@@ -102,27 +133,40 @@ class World:
         if not group:
             return subprocess.run(argv, cwd=working, env=child_env,
                                   text=True, capture_output=True, check=check, timeout=timeout)
-        # Suite workers can have public-command descendants when they time out.
-        # Own their entire process group before removing the disposable World.
-        process = subprocess.Popen(argv, cwd=working, env=child_env, text=True,
-                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                   start_new_session=True)
-        try:
+        # Keep the owned supervisor alive until descendant collection. Calling
+        # killpg after communicate() reaped the leader could target a reused ID.
+        with tempfile.TemporaryDirectory(prefix='owned-command-', dir=self.root) as control:
+            directory = Path(control)
+            process = subprocess.Popen([sys.executable, '-I', '-c', _GROUP_SUPERVISOR,
+                                        control, str(timeout), json.dumps(argv)],
+                                       cwd=working, env=child_env, text=True,
+                                       stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                       start_new_session=True)
             try:
-                stdout, stderr = process.communicate(timeout=timeout)
+                _control_out, control_error = process.communicate(timeout=timeout + 30)
             except subprocess.TimeoutExpired:
-                try:
+                # communicate has not reaped this still-owned leader. The
+                # worker's own deadline is unchanged; this is a failed watchdog.
+                if process.returncode is None:
                     os.killpg(process.pid, signal.SIGKILL)
-                except ProcessLookupError:
-                    pass
-                stdout, stderr = process.communicate(timeout=10)
-                raise subprocess.TimeoutExpired(argv, timeout, output=stdout, stderr=stderr) from None
-        finally:
-            try:
-                os.killpg(process.pid, signal.SIGKILL)
-            except ProcessLookupError:
-                pass
-        result = subprocess.CompletedProcess(argv, process.returncode, stdout, stderr)
+                process.communicate(timeout=10)
+                raise OSError('Owned command supervisor exceeded its cleanup watchdog') from None
+            status_path = directory/'status.json'
+            if not status_path.is_file():
+                raise OSError('Owned command supervisor returned no completion record: ' + control_error)
+            status = json.loads(status_path.read_text())
+            if status.get('supervisor_pid') != process.pid or process.returncode != -signal.SIGKILL or status.get('cleanup_error'):
+                raise OSError('Owned process-group collection failed: ' + json.dumps(status) + control_error)
+            if status.get('error'):
+                error = status['error']
+                raise OSError(error.get('errno') or 5, error['message'])
+            stdout = (directory/'stdout').read_text(encoding='utf-8')
+            stderr = (directory/'stderr').read_text(encoding='utf-8')
+            if status.get('timed_out') is True:
+                raise subprocess.TimeoutExpired(argv, timeout, output=stdout, stderr=stderr)
+            if type(status.get('returncode')) is not int or type(status.get('worker_pid')) is not int:
+                raise OSError('Owned command completion record is incomplete')
+            result = subprocess.CompletedProcess(argv, status['returncode'], stdout, stderr)
         if check:
             result.check_returncode()
         return result

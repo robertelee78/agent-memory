@@ -9,7 +9,7 @@ from world import World
 
 class WorkerCollectionContract(unittest.TestCase):
     def test_completed_and_timed_out_worker_groups_do_not_leave_descendants(self):
-        for mode in ('complete', 'timeout'):
+        for mode in ('complete', 'timeout', 'record-failure'):
             with self.subTest(mode=mode), World() as world:
                 address = world.inside('child.sock')
                 marker = world.inside('child.pid')
@@ -24,7 +24,9 @@ class WorkerCollectionContract(unittest.TestCase):
                     + 'while not Path(sys.argv[2]).exists():\n'
                     + ' if time.monotonic()>deadline: raise RuntimeError("Child did not become ready")\n'
                     + ' time.sleep(0.01)\n'
-                    + ('time.sleep(30)\n' if mode == 'timeout' else ''))
+                    + ('time.sleep(30)\n' if mode == 'timeout' else
+                       'next(Path(sys.argv[1]).parent.glob("owned-command-*" )).joinpath("status.json").mkdir()\n'
+                       if mode == 'record-failure' else ''))
                 with socket.socket(socket.AF_UNIX) as server:
                     server.bind(str(address)); server.listen(1); server.settimeout(5)
                     closed = False
@@ -32,6 +34,9 @@ class WorkerCollectionContract(unittest.TestCase):
                         if mode == 'timeout':
                             with self.assertRaises(subprocess.TimeoutExpired):
                                 world.run([sys.executable, '-I', worker, address, marker], timeout=1, group=True)
+                        elif mode == 'record-failure':
+                            with self.assertRaises(OSError):
+                                world.run([sys.executable, '-I', worker, address, marker], group=True)
                         else:
                             self.assertEqual(world.run([sys.executable, '-I', worker, address, marker], group=True).returncode, 0)
                         connection, _ = server.accept()

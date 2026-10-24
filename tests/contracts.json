@@ -60,6 +60,8 @@
     {"name":"purge-write-after","layer":"lifecycle","scope":"v0.0.1","path":"tests/contracts/test_purge_write_after.py"},
     {"name":"lifecycle-lost-responses","layer":"lifecycle","scope":"v0.0.1","path":"tests/contracts/test_lifecycle_lost_responses.py"},
     {"name":"worker-collection","layer":"lifecycle","scope":"v0.0.1","path":"tests/contracts/test_worker_collection.py"},
+    {"name":"worker-ownership","layer":"lifecycle","scope":"v0.0.1","path":"tests/contracts/test_worker_ownership.py"},
+    {"name":"gate-diagnostics","layer":"lifecycle","scope":"v0.0.1","path":"tests/contracts/test_gate_diagnostics.py"},
     {"name":"lifecycle-cleanup-before","layer":"lifecycle","scope":"v0.0.1","path":"tests/contracts/test_lifecycle_cleanup_before.py"},
     {"name":"lifecycle-cleanup-after","layer":"lifecycle","scope":"v0.0.1","path":"tests/contracts/test_lifecycle_cleanup_after.py"},
     {"name":"purge-unlock-before","layer":"lifecycle","scope":"v0.0.1","path":"tests/contracts/test_purge_unlock_before.py"},

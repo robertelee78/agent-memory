@@ -570,6 +570,14 @@
         {
           "suite": "lifecycle-lost-responses",
           "test": "LifecycleLostResponses.test_fault_trace_itself_cannot_escape_into_another_world"
+        },
+        {
+          "suite": "worker-ownership",
+          "test": "WorkerOwnershipContract.test_normal_collection_never_signals_a_group_after_reaping_its_owner"
+        },
+        {
+          "suite": "gate-diagnostics",
+          "test": "GateDiagnosticsContract.test_actual_gate_retains_suite_stage_exception_chain_and_partial_timeout_output"
         }
       ]
     }

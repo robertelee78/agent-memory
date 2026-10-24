@@ -25,7 +25,12 @@ pending/optional substitutions. Its references include no-client modes,
 unrelated-target refusal, owned backups, sentinel edits, source/ref/downgrade
 guards, all twenty real before/after fault shards, committed lost responses,
 rollback/locks, modified-target preservation and confirmed purge. It also binds
-package validation and the isolation/worker-collection controls.
+package validation and the isolation/worker-collection controls. The collector
+uses a supervisor that retains ownership of its process group through descendant
+cleanup; it never signals a group after reaping its owner. Native ownership and
+socket EOF regressions cover normal completion and timeout cleanup.
+Failure to write the completion record also collects descendants and fails the
+command rather than reporting an unverifiable success.
 
 Bindings are coverage obligations, not additional executions or proof that an
 assertion is correct. The public gate executes each registered suite once;
@@ -47,6 +52,10 @@ unittest/fault stderr, the actual interpreter/platform and checked-out commit/tr
 as artifacts even when a check fails. Each matrix cell must actually complete
 successfully; creating a workflow, starting a run or passing a different Python
 version is not a pass for that cell. Timeouts and failed runs remain evidence.
+Gate failures identify the active suite and stage, retain exception chains and
+include partial worker output when a timeout is followed by a collection error.
+A disposable-copy negative test verifies that this combination remains a failure
+with its original diagnostic evidence.
 
 The workflow checks out code without persisting its repository credential and
 pins the official [checkout](https://github.com/actions/checkout),
