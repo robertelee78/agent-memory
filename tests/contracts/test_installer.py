@@ -28,6 +28,132 @@ def snapshot(root):
     return result
 
 
+class OneLineBootstrapContract(unittest.TestCase):
+    """Exercise the stdin entry point, not just the underlying Python helper."""
+
+    def channel(self, world):
+        channel = world.repository('bootstrap channel with spaces')
+        shutil.copytree(PACK, channel/'skills/agent-memory')
+        shutil.copy2(ROOT/'install.sh', channel/'install.sh')
+        world.git('add', '.', cwd=channel)
+        world.git('commit', '-m', 'Disposable bootstrap channel', cwd=channel)
+        return channel
+
+    def pipe(self, world, *args, expected=0, script=None):
+        result = world.run(['/bin/bash', '-c',
+                            'set -o pipefail; cat "$1" | /bin/bash -s -- "${@:2}"',
+                            'bootstrap-test', script or ROOT/'install.sh', *args], check=False)
+        self.assertEqual(result.returncode, expected, result.stdout + result.stderr)
+        self.assertEqual(list(world.paths['tmp'].glob('agent-memory-bootstrap.*')), [])
+        return result
+
+    def test_default_one_line_install_ignores_caller_checkout_and_keeps_runtime_after_cleanup(self):
+        with World() as world:
+            channel = self.channel(world)
+            # Redirect only the known public channel to a disposable offline repo.
+            world.env.update({'GIT_CONFIG_COUNT': '1',
+                              'GIT_CONFIG_KEY_0': 'url.'+channel.as_uri()+'.insteadOf',
+                              'GIT_CONFIG_VALUE_0': 'https://github.com/robertelee78/agent-memory.git'})
+            decoy = world.paths['repo']/'skills/agent-memory/scripts/installer.py'
+            decoy.parent.mkdir(parents=True)
+            decoy.write_text('raise SystemExit("must not load caller checkout")\n')
+            result = json.loads(self.pipe(world).stdout)
+            self.assertTrue(result['verified'])
+            receipt = result['receipt']
+            self.assertEqual(receipt['source']['kind'], 'managed')
+            self.assertEqual(receipt['source']['remote'],
+                             'https://github.com/robertelee78/agent-memory.git')
+            self.assertEqual(receipt['source']['ref'], 'main')
+            self.assertEqual(len(receipt['enabled_adapters']), 4)
+            source = Path(receipt['source']['path'])
+            self.assertEqual(source, world.paths['data']/'agent-memory/source')
+            self.assertTrue(source.is_dir())
+            for key in ('GIT_CONFIG_COUNT', 'GIT_CONFIG_KEY_0', 'GIT_CONFIG_VALUE_0'):
+                world.env.pop(key)
+            cli = Path(receipt['bin_dir'])/'agent-memory'
+            self.assertEqual(world.run([cli, 'version']).returncode, 0)
+            for target in receipt['targets']:
+                if target['kind'] == 'link':
+                    self.assertEqual(Path(target['path']).resolve(), source/'skills/agent-memory')
+
+    def test_pipe_preview_repeat_update_and_uninstall_preserve_memory_and_user_instructions(self):
+        with World() as world:
+            channel = self.channel(world)
+            options = ['--remote', channel.as_uri(), '--ref', 'main', '--mode', 'copy',
+                       '--presets', 'codex', '--target-dir', world.inside('custom skills with spaces')]
+            config = world.paths['codex']/'AGENTS.md'; config.write_text('User rules stay.\n')
+            bank = world.paths['repo']/'memory-bank'; bank.mkdir()
+            (bank/'my-note.md').write_text('Project memory stays.\n')
+            before = snapshot(world.paths['data'])
+            plan = json.loads(self.pipe(world, *options, '--check').stdout)
+            self.assertFalse(plan['installation_writes_performed'])
+            self.assertEqual(snapshot(world.paths['data']), before)
+            first = json.loads(self.pipe(world, *options).stdout)
+            self.assertTrue(first['verified'])
+            receipt = first['receipt']; cli = Path(receipt['bin_dir'])/'agent-memory'
+            second = json.loads(self.pipe(world, *options).stdout)
+            self.assertTrue(second['verified']); self.assertFalse(second['changed'])
+            self.assertEqual(second['receipt'], receipt)
+            (channel/'skills/agent-memory/templates/bootstrap-update.txt').write_text('New runtime asset.\n')
+            world.git('add', '.', cwd=channel)
+            world.git('commit', '-m', 'Disposable update', cwd=channel)
+            candidate = world.git('rev-parse', 'HEAD', cwd=channel).stdout.strip()
+            current = Path(receipt['source']['path'])
+            old_head = world.git('rev-parse', 'HEAD', cwd=current).stdout.strip()
+            world.run([cli, 'update', '--check'])
+            self.assertEqual(world.git('rev-parse', 'HEAD', cwd=current).stdout.strip(), old_head)
+            updated = json.loads(world.run([cli, 'update']).stdout)
+            self.assertTrue(updated['verified'])
+            self.assertEqual(world.git('rev-parse', 'HEAD', cwd=current).stdout.strip(), candidate)
+            world.run([cli, 'uninstall', '--check'])
+            self.assertTrue(cli.exists())
+            removed = json.loads(world.run([cli, 'uninstall']).stdout)
+            self.assertTrue(removed['verified']); self.assertFalse(cli.exists())
+            self.assertEqual(config.read_text(), 'User rules stay.\n')
+            self.assertEqual((bank/'my-note.md').read_text(), 'Project memory stays.\n')
+
+    def test_standalone_copy_forwards_equals_options_and_checkout_entry_still_works(self):
+        with World() as world:
+            channel = self.channel(world)
+            standalone = world.inside('standalone installer with spaces.sh')
+            shutil.copy2(ROOT/'install.sh', standalone)
+            args = ['--remote='+channel.as_uri(), '--ref=main', '--presets=none', '--check']
+            result = world.run(['/bin/bash', standalone, *args])
+            self.assertFalse(json.loads(result.stdout)['installation_writes_performed'])
+            self.assertEqual(list(world.paths['tmp'].glob('agent-memory-bootstrap.*')), [])
+            local = world.run(['/bin/bash', channel/'install.sh', '--development-source', channel,
+                               '--presets', 'none', '--check'])
+            self.assertEqual(json.loads(local.stdout)['source']['kind'], 'development')
+
+    def test_clone_and_install_failures_propagate_and_clean_scratch(self):
+        with World() as world:
+            missing = world.inside('missing channel').as_uri()
+            self.pipe(world, '--remote', missing, expected=128)
+            self.assertFalse((world.paths['state']/'agent-memory/install/receipt.json').exists())
+            channel = self.channel(world)
+            collision = world.paths['home']/'.local/bin/agent-memory'
+            collision.parent.mkdir(parents=True); collision.write_text('My unrelated command\n')
+            failed = self.pipe(world, '--remote', channel.as_uri(), expected=1)
+            self.assertFalse(json.loads(failed.stdout)['verified'])
+            self.assertEqual(collision.read_text(), 'My unrelated command\n')
+            self.assertFalse((world.paths['state']/'agent-memory/install/receipt.json').exists())
+
+    def test_help_and_invalid_options_need_no_download_and_old_python_is_rejected(self):
+        with World() as world:
+            before = snapshot(world.root)
+            self.assertIn('agent-memory update', self.pipe(world, '--help').stdout)
+            self.assertEqual(snapshot(world.root), before)
+            self.pipe(world, '--remote=', expected=2)
+            self.pipe(world, '--ref', expected=2)
+            self.pipe(world, '--unknown', expected=2)
+            tools = world.inside('old python tools'); tools.mkdir()
+            python = tools/'python3'; python.write_text('#!/bin/sh\nexit 1\n'); python.chmod(0o755)
+            world.env['PATH'] = str(tools)+os.pathsep+world.env['PATH']
+            result = self.pipe(world, expected=1)
+            self.assertIn('Python 3.11+', result.stderr)
+            self.assertFalse((world.paths['state']/'agent-memory').exists())
+
+
 class InstallerContract(unittest.TestCase):
     def source(self, world):
         target = world.inside('developer source with spaces')

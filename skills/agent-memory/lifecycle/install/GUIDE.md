@@ -20,8 +20,11 @@ semantics. Installation does not require a project bank or developer identity.
 
 ## Inputs and preconditions
 
-A session MUST use a trusted complete package with Python 3.11 or later, Git,
-and a supported local filesystem. The default managed channel is the repository's
+A session MUST use Python 3.11 or later, Git, and a supported local filesystem.
+A complete package is required to run the Python helper directly. The standalone
+`install.sh` bootstrap obtains a temporary complete checkout when invoked through
+curl-to-bash; it requires Bash 3.2+ and curl in addition to Python and Git. The
+default managed channel is the repository's
 HTTPS `main` branch. An explicit `--development-source` selects a local checkout
 or copied complete package; the installer MUST NOT mutate that source. The
 initial Git channel is unsigned: an artifact digest binds bytes and modes,
@@ -40,6 +43,15 @@ backups live under the XDG state root. Project memory stays in its repository.
 The session MUST preserve those separate ownership domains.
 
 ## Plan
+
+For installation without an existing checkout, the session MAY use the AWA-style
+one-line bootstrap documented in the
+[project README](https://github.com/robertelee78/agent-memory#install-and-first-use),
+including its optional preview and custom arguments.
+
+The bootstrap delegates the same installer and removes its temporary source on
+exit. The runtime and external receipt MUST remain in their separate durable
+owned locations. Bootstrap scratch MUST NOT become a development source.
 
 With `SKILL_DIR` resolved to a trusted complete package, the session MUST preview
 the intended source and target configuration before activation. For example:
