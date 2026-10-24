@@ -66,14 +66,14 @@ def main(argv=None):
     active = None; stage = 'registry'
     def diagnostic(exc):
         traceback.print_exc(file=sys.stderr)
-        seen = set()
+        seen = set(); displayed = set()
         while exc is not None and id(exc) not in seen:
             seen.add(id(exc))
-            if isinstance(exc, subprocess.TimeoutExpired):
-                for label, value in (('partial stdout', exc.output), ('partial stderr', exc.stderr)):
-                    if value:
-                        if isinstance(value, bytes): value = value.decode('utf-8', errors='replace')
-                        sys.stderr.write('\n' + label + ':\n' + value + '\n')
+            for label, value in (('partial stdout', getattr(exc, 'output', None)),
+                                 ('partial stderr', getattr(exc, 'stderr', None))):
+                if value and label not in displayed:
+                    if isinstance(value, bytes): value = value.decode('utf-8', errors='replace')
+                    sys.stderr.write('\n' + label + ':\n' + value + '\n'); displayed.add(label)
             exc = exc.__cause__ or exc.__context__
     try:
         entries = registry()

@@ -578,6 +578,10 @@
         {
           "suite": "gate-diagnostics",
           "test": "GateDiagnosticsContract.test_actual_gate_retains_suite_stage_exception_chain_and_partial_timeout_output"
+        },
+        {
+          "suite": "gate-diagnostics",
+          "test": "GateDiagnosticsContract.test_actual_timeout_and_failed_completion_record_preserve_both_worker_streams"
         }
       ]
     }

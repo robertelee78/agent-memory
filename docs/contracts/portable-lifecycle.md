@@ -31,6 +31,9 @@ cleanup; it never signals a group after reaping its owner. Native ownership and
 socket EOF regressions cover normal completion and timeout cleanup.
 Failure to write the completion record also collects descendants and fails the
 command rather than reporting an unverifiable success.
+If that failure follows a worker timeout, the actual producer and disposable
+gate regressions require both worker streams, the record exception and the
+original timeout to survive collection.
 
 Bindings are coverage obligations, not additional executions or proof that an
 assertion is correct. The public gate executes each registered suite once;

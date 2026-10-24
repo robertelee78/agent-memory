@@ -38,6 +38,11 @@ except BaseException as exc:
  traceback.print_exc()
 finally:
  try:record()
+ except BaseException:
+  # A failed file record must not hide the actual worker deadline/output or
+  # prevent owned-group cleanup. This pipe is diagnostic only, never success.
+  traceback.print_exc()
+  print(json.dumps(status),flush=True);sys.stderr.flush()
  finally:
   if os.getpgrp()==os.getpid():
    try:os.killpg(os.getpid(),signal.SIGKILL)
@@ -151,17 +156,30 @@ class World:
                     os.killpg(process.pid, signal.SIGKILL)
                 process.communicate(timeout=10)
                 raise OSError('Owned command supervisor exceeded its cleanup watchdog') from None
+            stdout = (directory/'stdout').read_text(encoding='utf-8') if (directory/'stdout').is_file() else ''
+            stderr = (directory/'stderr').read_text(encoding='utf-8') if (directory/'stderr').is_file() else ''
+            def collection_failure(message, state=None):
+                error = OSError(message)
+                error.output = stdout; error.stderr = stderr
+                if isinstance(state, dict) and state.get('supervisor_pid') == process.pid and state.get('timed_out') is True:
+                    raise error from subprocess.TimeoutExpired(argv, timeout, output=stdout, stderr=stderr)
+                raise error
+            if _control_out:
+                try: diagnostic_state = json.loads(_control_out)
+                except ValueError: diagnostic_state = None
+                collection_failure('Owned command completion record could not be persisted: ' + control_error,
+                                   diagnostic_state)
             status_path = directory/'status.json'
             if not status_path.is_file():
-                raise OSError('Owned command supervisor returned no completion record: ' + control_error)
-            status = json.loads(status_path.read_text())
+                collection_failure('Owned command supervisor returned no completion record: ' + control_error)
+            try: status = json.loads(status_path.read_text())
+            except ValueError:
+                collection_failure('Owned command supervisor returned an invalid completion record: ' + control_error)
             if status.get('supervisor_pid') != process.pid or process.returncode != -signal.SIGKILL or status.get('cleanup_error'):
-                raise OSError('Owned process-group collection failed: ' + json.dumps(status) + control_error)
+                collection_failure('Owned process-group collection failed: ' + json.dumps(status) + control_error, status)
             if status.get('error'):
                 error = status['error']
                 raise OSError(error.get('errno') or 5, error['message'])
-            stdout = (directory/'stdout').read_text(encoding='utf-8')
-            stderr = (directory/'stderr').read_text(encoding='utf-8')
             if status.get('timed_out') is True:
                 raise subprocess.TimeoutExpired(argv, timeout, output=stdout, stderr=stderr)
             if type(status.get('returncode')) is not int or type(status.get('worker_pid')) is not int:
