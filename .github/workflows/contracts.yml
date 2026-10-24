@@ -1,0 +1,43 @@
+name: Offline release contracts
+
+on:
+  push:
+    branches: ['**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  contracts:
+    name: Contracts (${{ matrix.os }}, Python ${{ matrix.python }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python: ['3.11', '3.15']
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Run the complete isolated contract gate
+        shell: bash
+        run: |
+          mkdir -p reports
+          python3 -I -c 'import json,platform,sys; print(json.dumps({"python":sys.version,"executable":sys.executable,"platform":platform.platform()}))' > reports/runtime.json
+          git rev-parse HEAD > reports/commit.txt
+          git rev-parse HEAD^{tree} > reports/tree.txt
+          scripts/test.sh --release --json > reports/test-gate.json 2> reports/test-gate.stderr
+      - name: Retain receipts and failures
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: contracts-${{ matrix.os }}-python-${{ matrix.python }}
+          path: reports/
+          if-no-files-found: error
+          retention-days: 14

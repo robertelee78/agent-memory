@@ -1,4 +1,5 @@
 """Bootstrap contract: exercise real subprocesses/files, not product internals."""
+import ast
 import json
 import os
 from pathlib import Path
@@ -8,6 +9,7 @@ import sys
 import unittest
 
 from world import World, require_world
+from fault_partitions import OWNERS
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -110,6 +112,24 @@ class HarnessContract(unittest.TestCase):
             "failure": "import unittest\nclass Contract(unittest.TestCase):\n def test_x(self): self.fail('real failure')\n",
             "passed": "import unittest\nclass Contract(unittest.TestCase):\n def test_x(self): self.assertTrue(True)\n",
         }
+        # Only the disposable gate's controlled positive fixture fabricates
+        # coverage metadata. These runs are gate-control tests, never product
+        # interruption evidence. The real suites emit actual replay results.
+        proof_fixture = '''
+import json,sys
+from fault_partitions import GROUPS,PARTITIONS
+observed=[{'step':i,'point':'controlled-'+str(i),'kind':'controlled-write'} for i in range(PARTITIONS)]
+for name,group in GROUPS.items():
+ for index in range(PARTITIONS):
+  proof={'group':name,'index':index,'count':PARTITIONS,'artifact_digest':'0'*64,
+         'observed':observed,'executed':[observed[index]['point']]}
+  print(json.dumps({'lifecycle_fault_partition':proof}),file=sys.stderr)
+'''
+        passed = samples['passed']
+        samples['passed'] += proof_fixture
+        samples['passed-without-interruption-proof'] = passed
+        samples['incomplete-interruption-proof'] = passed + proof_fixture.replace(
+            "'executed':[observed[index]['point']]", "'executed':[] if index==0 else [observed[index]['point']]")
         with World() as world:
             checkout = world.inside("checkout with spaces")
             (checkout / "scripts").mkdir(parents=True)
@@ -117,8 +137,18 @@ class HarnessContract(unittest.TestCase):
             for name in ("test.sh", "test_gate.py", "run_contract_suite.py"):
                 shutil.copy2(ROOT / "scripts" / name, checkout / "scripts" / name)
             shutil.copy2(ROOT / "tests/world.py", checkout / "tests/world.py")
+            shutil.copy2(ROOT / "tests/fault_partitions.py", checkout / "tests/fault_partitions.py")
             manifest = json.loads((ROOT / "tests/contracts.json").read_text())
+            # Every unrelated foundation would run the same disposable body.
+            # Retain the full required contract set and every fault partition;
+            # production gate runs still execute the complete real registry.
+            tree = ast.parse((ROOT/'scripts/test_gate.py').read_text())
+            required = ast.literal_eval(next(node.value for node in tree.body if isinstance(node,ast.Assign)
+                and any(isinstance(target,ast.Name) and target.id=='REQUIRED' for target in node.targets)))
+            required |= set(OWNERS) | {'harness','optional-stores','lifecycle-fault-partitions'}
+            manifest['suites'] = [entry for entry in manifest['suites'] if entry['name'] in required]
             for sample, body in samples.items():
+                print('gate-control-sample: '+sample, file=sys.stderr, flush=True)
                 (checkout / "tests/contracts/fixture.py").write_text(body)
                 for entry in manifest["suites"]:
                     if entry["scope"] == "v0.0.1":

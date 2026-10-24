@@ -1,8 +1,8 @@
-"""Interrupt after every observed install logical write (link)."""
+"""Replay partition 0/4 of all observed install-write-link-after interruptions."""
 import unittest
 from lifecycle_fault_fixtures import LifecycleWriteCases
 
 
 class LifecycleWriteContract(LifecycleWriteCases, unittest.TestCase):
-    def test_after_every_install_link_write(self):
-        self.replay('install', 'link', 'after')
+    def test_actual_logical_writes_in_partition_0(self):
+        self.replay('install', 'link', 'after', partition=0)

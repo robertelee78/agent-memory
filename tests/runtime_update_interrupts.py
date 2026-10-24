@@ -6,11 +6,12 @@ import sys
 import unittest
 
 from world import World
+from fault_partitions import select as partition_rows, emit as emit_partition
 from runtime_update_fixtures import ROOT,fixture,advance,call,snapshot,owned,receipt_path,bank
 
 
 class UpdateWriteInterruptCases:
-    def replay(self, phase):
+    def replay(self, phase, partition=None):
         with World() as world:
             channel,pack,receipt=fixture(world)
             memory=bank(world,world.paths['repo']); memory_before=snapshot(memory)
@@ -30,8 +31,9 @@ class UpdateWriteInterruptCases:
             self.assertEqual(len(events),2*len(steps))
             self.assertTrue({'file-stage','record-publication','payload-snapshot','atomic-node-switch'}
                             <= {event['kind'] for event in events})
-            selected=[event for event in events if event['phase']==phase]
-            self.assertEqual(len(selected),len(steps))
+            all_selected=[event for event in events if event['phase']==phase]
+            self.assertEqual(len(all_selected),len(steps))
+            selected=partition_rows(all_selected,partition)
             executed=[]
             for event in selected:
                 with self.subTest(point=event['point'],kind=event['kind']):
@@ -61,6 +63,9 @@ class UpdateWriteInterruptCases:
                          'recovery_verified':True,'committed_before_retry':committed,'retry_verified':True,
                          'source_revision':revision,'bank_unchanged':True}
                     sys.stderr.write(json.dumps(row)+'\n'); executed.append(event['point'])
-            self.assertEqual(len(executed),len(selected))
+            self.assertEqual(executed,[event['point'] for event in selected])
+            if partition is not None:
+                emit_partition('update-write-'+phase,partition,all_selected,executed,
+                               clean['receipt']['source']['artifact_digest'])
             sys.stderr.write(json.dumps({'phase':phase,'observed_points':len(selected),
                                          'actual_interruptions_and_retries':len(executed)})+'\n')

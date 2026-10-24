@@ -1,7 +1,8 @@
-"""Interrupt after each real logical update write, recover and retry."""
+"""Replay partition 0/4 of all observed update-write-after interruptions."""
 import unittest
 from runtime_update_interrupts import UpdateWriteInterruptCases
 
+
 class UpdateWriteAfterContract(UpdateWriteInterruptCases, unittest.TestCase):
-    def test_after_every_observed_logical_durable_update_write(self):
-        self.replay('after')
+    def test_actual_logical_writes_in_partition_0(self):
+        self.replay('after', partition=0)

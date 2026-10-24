@@ -7,17 +7,20 @@ import json
 from pathlib import Path
 import subprocess
 import sys
+import traceback
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(ROOT / "tests"))
 from world import World
+from fault_partitions import OWNERS, registered as registered_partitions, extract as partition_proof, coverage as partition_coverage
 
 REQUIRED = {
     "bank-roundtrip", "identity-isolation", "observed-writes", "learning-admission",
     "retrieval-context", "correction-erasure", "initialize-evidence", "cross-clone-sharing",
     "concurrent-sharing", "offline-replay", "later-code-merge", "portable-lifecycle",
     "security-canaries", "skill-routes",
+    "installed-bank-initialization", "installed-bank-qualified-recall", "installed-bank-governance",
 }
 LAYERS = {"pack", "lifecycle", "bank", "concurrency", "client", "optional", "evaluation"}
 
@@ -49,6 +52,7 @@ def registry():
             raise ValueError("Pending suites require an explicit reason")
     if not next(e for e in entries if e["name"] == "harness").get("path"):
         raise ValueError("Harness suite must be implemented")
+    registered_partitions(entries)
     return entries
 
 
@@ -62,9 +66,22 @@ def main(argv=None):
     args = parser.parse_args(argv)
     report = {"schema": "agent-memory/test-gate-v1", "mode": "release" if args.release else "incremental",
               "suites": [], "release_complete": False, "passed": False}
+    active = None; stage = 'registry'
+    def diagnostic(exc):
+        traceback.print_exc(file=sys.stderr)
+        seen = set(); displayed = set()
+        while exc is not None and id(exc) not in seen:
+            seen.add(id(exc))
+            for label, value in (('partial stdout', getattr(exc, 'output', None)),
+                                 ('partial stderr', getattr(exc, 'stderr', None))):
+                if value and label not in displayed:
+                    if isinstance(value, bytes): value = value.decode('utf-8', errors='replace')
+                    sys.stderr.write('\n' + label + ':\n' + value + '\n'); displayed.add(label)
+            exc = exc.__cause__ or exc.__context__
     try:
         entries = registry()
         for entry in entries:
+            active = entry['name']; stage = 'world-setup'
             item = {"name": entry["name"], "layer": entry["layer"]}
             if not entry.get("path"):
                 item.update(status="not-applicable" if entry["scope"] == "future" else "pending",
@@ -72,21 +89,32 @@ def main(argv=None):
             else:
                 with World() as world:
                     try:
+                        stage = 'suite-execution-and-collection'
                         result = world.run([sys.executable, "-I", ROOT / "scripts/run_contract_suite.py",
                                             ROOT / entry["path"]], check=False, timeout=300, group=True)
                         sys.stderr.write(result.stderr)
+                        stage = 'result-readback'
                         counts = json.loads(result.stdout)
                         item.update(counts)
                         item["status"] = "passed" if result.returncode == 0 and counts["passed"] else "failed"
+                        if item['status']=='passed' and entry['name'] in OWNERS:
+                            item['fault_partition'] = partition_proof(result.stderr, entry['name'])
                     except (subprocess.TimeoutExpired, ValueError, KeyError) as exc:
+                        diagnostic(exc)
                         item.update(status="failed", reason=str(exc), tests=0)
+                    stage = 'world-cleanup'
             report["suites"].append(item)
+        active = 'lifecycle-fault-partitions'; stage = 'coverage-aggregation'
+        report['fault_partition_coverage'] = partition_coverage(report['suites'])
         pending = any(s["status"] == "pending" for s in report["suites"])
         failed = any(s["status"] == "failed" for s in report["suites"])
         report["release_complete"] = not pending and not failed
         report["passed"] = not failed and (not args.release or report["release_complete"])
     except (OSError, ValueError, KeyError) as exc:
+        diagnostic(exc)
         report["error"] = str(exc)
+        report['error_suite'] = active
+        report['error_stage'] = stage
     if args.json:
         print(json.dumps(report, indent=2, sort_keys=True))
     else:
