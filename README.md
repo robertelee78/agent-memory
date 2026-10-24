@@ -138,6 +138,12 @@ The [canonical current-bank view](skills/agent-memory/bank/GUIDE.md) inspects
 Markdown contexts and local Git facts without generated application state;
 tracking is kept distinct from publication and refreshed shared memory.
 
+The [runtime diagnostics](docs/contracts/runtime-diagnostics.md) provide
+`agent-memory version`, `status --repo PATH`, and `doctor --repo PATH`.
+They report measured runtime identity, quick setup state and deeper ownership/
+bank checks without initializing or repairing data. The portable
+`scripts/diagnose.py` helper works when the installed wrapper is broken.
+
 The [typed record contract](skills/agent-memory/records/GUIDE.md) preserves
 provenance, conditions, validity and explicit stale state in standalone Markdown.
 Its read-only validator also handles optional history and the safe tombstone exception.
