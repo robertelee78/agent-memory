@@ -185,3 +185,30 @@ class RuntimeUpdateContract(unittest.TestCase):
             stdout,stderr=child.communicate(timeout=60)
             self.assertEqual(child.returncode,0,stdout+stderr)
             self.assertTrue(json.loads(stdout)['verified'])
+
+    def test_unchanged_revision_refreshes_allowed_outside_text_without_a_code_switch(self):
+        with World() as world:
+            _,_,receipt=fixture(world)
+            code=Path(receipt['source']['path']); before_code=snapshot(code)
+            target=world.paths['codex']/'AGENTS.md'
+            target.write_text('New outside user text.\n'+target.read_text())
+            before=target.read_bytes()
+            _,result=call(world,receipt)
+            self.assertTrue(result['verified']); self.assertFalse(result['update_available'])
+            self.assertEqual(result['restart_clients'],[]); self.assertEqual(target.read_bytes(),before)
+            self.assertEqual(snapshot(code),before_code)
+            recovered=world.run([sys.executable,'-I',ROOT/'scripts/installer.py','recover'])
+            self.assertTrue(json.loads(recovered.stdout)['verified'])
+            self.assertFalse(call(world,result['receipt'])[1]['changed'])
+
+    def test_unchanged_channel_does_not_derive_a_new_artifact_from_a_different_umask(self):
+        with World() as world:
+            _,_,receipt=fixture(world); before=owned(receipt); raw=receipt_path(world).read_bytes()
+            launcher=world.inside('private-umask-launch.py')
+            launcher.write_text("import os,runpy,sys\nos.umask(0o077)\nentry=sys.argv.pop(1)\nrunpy.run_path(entry,run_name='__main__')\n")
+            command=[sys.executable,'-I',launcher,Path(receipt['bin_dir'])/'agent-memory','update']
+            result=world.run(command)
+            value=json.loads(result.stdout)
+            self.assertTrue(value['verified']); self.assertFalse(value['changed'])
+            self.assertFalse(value['loaded_content_changes'])
+            self.assertEqual(owned(receipt),before); self.assertEqual(receipt_path(world).read_bytes(),raw)

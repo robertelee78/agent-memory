@@ -13,8 +13,10 @@ refuses dirty or changed ownership, unexpected origin/ref, downgrade,
 non-fast-forward history, invalid packages, an unsupported Python minimum and a
 candidate that removes the current wrapper's lifecycle entrypoint.
 
-The updater clones the recorded channel into temporary input rather than
-fetching or pulling inside the active source. It validates the complete package
+For a newer revision, the updater clones the recorded channel into temporary
+input rather than fetching or pulling inside the active source. An unchanged
+channel reuses the current verified artifact, independent of the caller's umask,
+and reconciles allowed outside-sentinel text snapshots without switching code. It validates the complete package
 and its declared schema ranges before activation. The current directory,
 registered local worktrees and explicit `--repo /absolute/root` selections use
 the established one-bank locator. Discovered banks outside the readable and

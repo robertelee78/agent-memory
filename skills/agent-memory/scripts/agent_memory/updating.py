@@ -120,11 +120,21 @@ def banks(extra, compatibility):
 def staged(old):
     source = old['source']
     with tempfile.TemporaryDirectory(prefix='agent-memory-update-candidate-') as temporary:
-        root = Path(temporary)/'source'
-        clone = subprocess.run(['git','clone','--branch',source['ref'],'--single-branch','--',source['remote'],str(root)],
-                               text=True, capture_output=True, timeout=120,
-                               env={**os.environ,'GIT_TERMINAL_PROMPT':'0'})
-        install.require(clone.returncode==0, 'Could not stage recorded channel: ' + clone.stderr.strip())
+        reference = 'refs/heads/' + source['ref']
+        listed = install.git(Path(source['path']), 'ls-remote', '--exit-code', '--refs', '--',
+                             source['remote'], reference).stdout.splitlines()
+        matches = [line.split() for line in listed if line.split()[-1:]==[reference]]
+        install.require(len(matches)==1 and len(matches[0])==2, 'Recorded channel does not resolve to one branch')
+        if matches[0][0]==source['revision']:
+            # Reuse the already validated artifact. Re-cloning the same commit
+            # under a different umask must not invent a new runtime payload.
+            root = Path(source['path'])
+        else:
+            root = Path(temporary)/'source'
+            clone = subprocess.run(['git','clone','--branch',source['ref'],'--single-branch','--',source['remote'],str(root)],
+                                   text=True, capture_output=True, timeout=120,
+                                   env={**os.environ,'GIT_TERMINAL_PROMPT':'0'})
+            install.require(clone.returncode==0, 'Could not stage recorded channel: ' + clone.stderr.strip())
         install.require(install.git(root,'remote','get-url','origin').stdout.strip()==source['remote']
                         and install.git(root,'symbolic-ref','--short','HEAD').stdout.strip()==source['ref'],
                         'Staged checkout differs from the recorded remote/ref')
@@ -165,14 +175,17 @@ def run(args):
                        'update_available':candidate['revision']!=old['source']['revision'],
                        'loaded_content_changes':candidate['artifact_digest']!=old['source']['artifact_digest'],
                        'compatibility':compatibility,'atomicity':'per target; journaled rollback across targets'}
-            with install.prepare(configuration(old),state,code,old,candidate_root=root) as plan:
+            same_revision = candidate['revision']==old['source']['revision']
+            with install.prepare(configuration(old),state,code,old,
+                                 candidate_root=None if same_revision else root) as plan:
                 plan['operation']='update'
                 if args.check:
                     return {**summary,'check_complete':True,'eligible':True,'verified':False,
                             'installation_writes_performed':False,'restart_clients':plan['restart']}
-                if candidate['revision']==old['source']['revision']:
+                if same_revision:
                     wrapper_readback(old)
-                    return {**summary,'verified':True,'changed':False,'receipt':old,'restart_clients':[]}
+                    # The shared planner refreshes a stale outside-text snapshot
+                    # without reactivating identical code or restarting clients.
                 def compatible_now():
                     banks(args.repo,candidate['compatibility'])
                 def readback():

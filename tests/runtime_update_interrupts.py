@@ -64,4 +64,3 @@ class UpdateWriteInterruptCases:
             self.assertEqual(len(executed),len(selected))
             sys.stderr.write(json.dumps({'phase':phase,'observed_points':len(selected),
                                          'actual_interruptions_and_retries':len(executed)})+'\n')
-
