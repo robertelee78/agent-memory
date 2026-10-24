@@ -16,6 +16,12 @@ also requires the story-specific independent verdicts and delivery evidence
 in the [execution contract](../design/v0.0.1-execution.md); this test receipt
 alone does not establish release readiness.
 
+The [portable lifecycle matrix](../contracts/portable-lifecycle.md) binds every
+approved lifecycle obligation to registered executable cases and adds installed
+copy/all-client and link/custom-only journeys. The CI workflow runs the same
+complete gate on Ubuntu/macOS and Python 3.11/3.15, retaining actual results,
+failures and checked-out commit/tree evidence for each cell.
+
 `tests/contracts.json` routes the pack, lifecycle, bank, concurrency, client,
 optional and evaluation layers. Each feature story MUST add public-interface
 cases to its applicable suite and replace its pending entry with a test path.

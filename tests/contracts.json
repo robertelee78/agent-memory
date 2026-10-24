@@ -34,7 +34,7 @@
     {"name": "concurrent-sharing", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_refresh_conflicts.py"},
     {"name": "offline-replay", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_refresh_recovery.py"},
     {"name": "later-code-merge", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_refresh_integration.py"},
-    {"name": "portable-lifecycle", "layer": "lifecycle", "scope": "v0.0.1", "path": null, "reason": "Complete portable lifecycle release matrix remains pending #52."},
+    {"name": "portable-lifecycle", "layer": "lifecycle", "scope": "v0.0.1", "path": "tests/contracts/test_portable_lifecycle.py"},
     {"name": "security-canaries", "layer": "evaluation", "scope": "v0.0.1", "path": "tests/contracts/test_release_canaries.py"},
     {"name": "skill-routes", "layer": "pack", "scope": "v0.0.1", "path": "tests/contracts/test_skill_routes.py"},
     {"name": "runtime-update", "layer": "lifecycle", "scope": "v0.0.1", "path": "tests/contracts/test_runtime_update.py"},

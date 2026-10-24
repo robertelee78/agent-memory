@@ -1,0 +1,577 @@
+{
+  "schema": "agent-memory/lifecycle-test-matrix-v1",
+  "authority": [
+    "docs/adr/0007-portable-pack-and-lifecycle.md",
+    "docs/design/lifecycle-blueprint.md#verification-matrix"
+  ],
+  "limits": "Bindings enforce registration and named executable coverage; they do not prove assertions correct or replace actual whole-matrix execution and independent acceptance. Final release also requires all milestone delivery evidence.",
+  "requirements": [
+    {
+      "requirement": "fresh-repeat",
+      "cases": [
+        {
+          "suite": "installer",
+          "test": "InstallerContract.test_fresh_plan_link_install_repeat_and_installed_command_preserve_source_and_user_config"
+        },
+        {
+          "suite": "portable-lifecycle",
+          "test": "PortableLifecycleContract.test_copy_all_clients_keep_qualified_memory_through_update_optional_state_loss_uninstall_and_reinstall"
+        }
+      ]
+    },
+    {
+      "requirement": "modes",
+      "cases": [
+        {
+          "suite": "installed-layout",
+          "test": "InstalledLayoutContract.test_all_clients_share_one_artifact_and_installed_lifecycle_preserves_distinct_data"
+        },
+        {
+          "suite": "installed-layout",
+          "test": "InstalledLayoutContract.test_custom_only_discovery_does_not_create_default_client_links_or_guidance"
+        },
+        {
+          "suite": "installed-layout",
+          "test": "InstalledLayoutContract.test_no_client_mode_still_exposes_installed_lifecycle_without_a_bank_or_identity"
+        },
+        {
+          "suite": "portable-lifecycle",
+          "test": "PortableLifecycleContract.test_copy_all_clients_keep_qualified_memory_through_update_optional_state_loss_uninstall_and_reinstall"
+        },
+        {
+          "suite": "portable-lifecycle",
+          "test": "PortableLifecycleContract.test_link_custom_only_updates_without_optional_clients_identity_or_a_bank"
+        }
+      ]
+    },
+    {
+      "requirement": "spaces-optional-clients",
+      "cases": [
+        {
+          "suite": "portable-lifecycle",
+          "test": "PortableLifecycleContract.test_copy_all_clients_keep_qualified_memory_through_update_optional_state_loss_uninstall_and_reinstall"
+        },
+        {
+          "suite": "portable-lifecycle",
+          "test": "PortableLifecycleContract.test_link_custom_only_updates_without_optional_clients_identity_or_a_bank"
+        },
+        {
+          "suite": "installed-layout",
+          "test": "InstalledLayoutContract.test_no_client_mode_still_exposes_installed_lifecycle_without_a_bank_or_identity"
+        }
+      ]
+    },
+    {
+      "requirement": "ownership-backups",
+      "cases": [
+        {
+          "suite": "installer",
+          "test": "InstallerContract.test_all_targets_preflight_before_activation_and_unrelated_types_are_preserved"
+        },
+        {
+          "suite": "installer",
+          "test": "InstallerContract.test_copy_replacement_backup_and_conversion_have_identical_artifact_identity"
+        },
+        {
+          "suite": "runtime-update",
+          "test": "RuntimeUpdateContract.test_changed_owned_copy_update_retains_prior_payload_and_receipt_backups"
+        }
+      ]
+    },
+    {
+      "requirement": "sentinel-edits",
+      "cases": [
+        {
+          "suite": "installer",
+          "test": "InstallerContract.test_activation_outside_edits_survive_and_inside_edits_refuse"
+        },
+        {
+          "suite": "runtime-uninstall",
+          "test": "RuntimeUninstallContract.test_modified_copy_and_block_are_preserved_and_source_is_retained"
+        },
+        {
+          "suite": "runtime-uninstall",
+          "test": "RuntimeUninstallContract.test_allowed_outside_edits_survive_uninstall_even_after_update_captures_them"
+        }
+      ]
+    },
+    {
+      "requirement": "update-guards",
+      "cases": [
+        {
+          "suite": "runtime-update",
+          "test": "RuntimeUpdateContract.test_read_only_check_valid_update_and_repeat_preserve_user_text_and_source_channel"
+        },
+        {
+          "suite": "runtime-update",
+          "test": "RuntimeUpdateContract.test_dirty_remote_ref_and_unowned_target_changes_refuse_without_activation"
+        },
+        {
+          "suite": "runtime-update",
+          "test": "RuntimeUpdateContract.test_downgrade_non_fast_forward_and_invalid_candidate_keep_the_previous_runtime"
+        },
+        {
+          "suite": "runtime-update",
+          "test": "RuntimeUpdateContract.test_development_sources_are_never_mutated_by_update"
+        },
+        {
+          "suite": "runtime-update",
+          "test": "RuntimeUpdateContract.test_discovered_and_explicit_banks_remain_unchanged_and_unsupported_schema_refuses"
+        }
+      ]
+    },
+    {
+      "requirement": "activation-interrupts",
+      "cases": [
+        {
+          "suite": "update-write-before",
+          "test": "UpdateWriteBeforeContract.test_before_every_observed_logical_durable_update_write"
+        },
+        {
+          "suite": "update-write-after",
+          "test": "UpdateWriteAfterContract.test_after_every_observed_logical_durable_update_write"
+        },
+        {
+          "suite": "install-write-copy-before",
+          "test": "InstallCopyBeforeContract.test_before_every_copy_install_write"
+        },
+        {
+          "suite": "install-write-copy-after",
+          "test": "LifecycleWriteContract.test_after_every_install_copy_write"
+        },
+        {
+          "suite": "install-write-link-before",
+          "test": "LifecycleWriteContract.test_before_every_install_link_write"
+        },
+        {
+          "suite": "install-write-link-after",
+          "test": "LifecycleWriteContract.test_after_every_install_link_write"
+        },
+        {
+          "suite": "uninstall-write-copy-before",
+          "test": "LifecycleWriteContract.test_before_every_uninstall_copy_write"
+        },
+        {
+          "suite": "uninstall-write-copy-after",
+          "test": "LifecycleWriteContract.test_after_every_uninstall_copy_write"
+        },
+        {
+          "suite": "uninstall-write-link-before",
+          "test": "LifecycleWriteContract.test_before_every_uninstall_link_write"
+        },
+        {
+          "suite": "uninstall-write-link-after",
+          "test": "LifecycleWriteContract.test_after_every_uninstall_link_write"
+        },
+        {
+          "suite": "recover-rollback-write-copy-before",
+          "test": "LifecycleWriteContract.test_before_every_recover_rollback_copy_write"
+        },
+        {
+          "suite": "recover-rollback-write-copy-after",
+          "test": "LifecycleWriteContract.test_after_every_recover_rollback_copy_write"
+        },
+        {
+          "suite": "recover-commit-write-copy-before",
+          "test": "LifecycleWriteContract.test_before_every_recover_commit_copy_write"
+        },
+        {
+          "suite": "recover-commit-write-copy-after",
+          "test": "LifecycleWriteContract.test_after_every_recover_commit_copy_write"
+        },
+        {
+          "suite": "purge-write-before",
+          "test": "PurgeWriteContract.test_before_every_purge_write"
+        },
+        {
+          "suite": "purge-write-after",
+          "test": "PurgeWriteContract.test_after_every_purge_write"
+        },
+        {
+          "suite": "lifecycle-cleanup-before",
+          "test": "CleanupBeforeContract.test_before_error_cleanup_write"
+        },
+        {
+          "suite": "lifecycle-cleanup-after",
+          "test": "CleanupAfterContract.test_after_error_cleanup_write"
+        },
+        {
+          "suite": "purge-unlock-before",
+          "test": "PurgeUnlockBeforeContract.test_before_refused_purge_unlock"
+        },
+        {
+          "suite": "purge-unlock-before",
+          "test": "PurgeUnlockBeforeContract.test_live_foreign_or_malformed_lock_is_not_released"
+        },
+        {
+          "suite": "purge-unlock-after",
+          "test": "PurgeUnlockAfterContract.test_after_refused_purge_unlock"
+        }
+      ]
+    },
+    {
+      "requirement": "lost-responses",
+      "cases": [
+        {
+          "suite": "lifecycle-lost-responses",
+          "test": "LifecycleLostResponses.test_install_response_is_lost_after_real_receipt_and_targets_commit"
+        },
+        {
+          "suite": "lifecycle-lost-responses",
+          "test": "LifecycleLostResponses.test_update_response_is_lost_after_real_new_revision_is_active"
+        },
+        {
+          "suite": "lifecycle-lost-responses",
+          "test": "LifecycleLostResponses.test_uninstall_response_is_lost_after_runtime_is_removed_and_data_retained"
+        },
+        {
+          "suite": "lifecycle-lost-responses",
+          "test": "LifecycleLostResponses.test_recovery_response_is_lost_after_real_rollback_is_durable"
+        },
+        {
+          "suite": "lifecycle-lost-responses",
+          "test": "LifecycleLostResponses.test_purge_response_loss_reuses_the_exact_original_confirmation"
+        },
+        {
+          "suite": "lifecycle-lost-responses",
+          "test": "LifecycleLostResponses.test_fault_trace_refuses_another_world_target_before_bootstrap_writes"
+        },
+        {
+          "suite": "lifecycle-lost-responses",
+          "test": "LifecycleLostResponses.test_fault_trace_itself_cannot_escape_into_another_world"
+        },
+        {
+          "suite": "runtime-update",
+          "test": "RuntimeUpdateContract.test_lost_response_and_partial_activation_recover_then_retry_without_duplicates"
+        }
+      ]
+    },
+    {
+      "requirement": "rollback-locks",
+      "cases": [
+        {
+          "suite": "installer",
+          "test": "InstallerContract.test_partial_activation_failure_rolls_back_and_retry_converges"
+        },
+        {
+          "suite": "installer",
+          "test": "InstallerContract.test_failed_replacement_restores_existing_copies_and_the_exact_prior_receipt"
+        },
+        {
+          "suite": "installer",
+          "test": "InstallerContract.test_unrelated_lock_and_linked_state_are_never_adopted"
+        },
+        {
+          "suite": "runtime-update",
+          "test": "RuntimeUpdateContract.test_competing_update_observes_the_live_lifecycle_lock"
+        },
+        {
+          "suite": "runtime-diagnostics",
+          "test": "RuntimeDiagnosticsContract.test_live_runtime_lock_is_not_stolen_or_treated_as_an_orphan"
+        }
+      ]
+    },
+    {
+      "requirement": "removal-purge",
+      "cases": [
+        {
+          "suite": "runtime-uninstall",
+          "test": "RuntimeUninstallContract.test_preview_refuses_a_receipt_that_conflicts_with_its_completed_journal"
+        },
+        {
+          "suite": "runtime-uninstall",
+          "test": "RuntimeUninstallContract.test_user_added_blank_lines_outside_the_owned_block_are_not_removed"
+        },
+        {
+          "suite": "runtime-uninstall",
+          "test": "RuntimeUninstallContract.test_preview_remove_repeat_and_reinstall_preserve_bank_original_settings_and_backups"
+        },
+        {
+          "suite": "runtime-uninstall",
+          "test": "RuntimeUninstallContract.test_modified_copy_and_block_are_preserved_and_source_is_retained"
+        },
+        {
+          "suite": "runtime-uninstall",
+          "test": "RuntimeUninstallContract.test_allowed_outside_edits_survive_uninstall_even_after_update_captures_them"
+        },
+        {
+          "suite": "runtime-uninstall",
+          "test": "RuntimeUninstallContract.test_missing_managed_source_is_removed_from_ownership_using_trusted_helper"
+        },
+        {
+          "suite": "runtime-uninstall",
+          "test": "RuntimeUninstallContract.test_interrupted_removal_recovers_and_retry_converges"
+        },
+        {
+          "suite": "runtime-uninstall",
+          "test": "RuntimeUninstallContract.test_development_source_is_preserved"
+        },
+        {
+          "suite": "runtime-uninstall",
+          "test": "RuntimeUninstallContract.test_missing_receipt_refuses_without_guessing_ownership"
+        },
+        {
+          "suite": "runtime-uninstall",
+          "test": "RuntimeUninstallContract.test_lost_uninstall_success_response_is_recovered_as_committed"
+        },
+        {
+          "suite": "runtime-purge",
+          "test": "RuntimePurgeContract.test_metadata_changed_after_alias_unlink_gap_is_not_adopted_as_self_mutation"
+        },
+        {
+          "suite": "runtime-purge",
+          "test": "RuntimePurgeContract.test_ordinary_hardlink_aliases_finish_and_recover_the_unlink_bookkeeping_gap"
+        },
+        {
+          "suite": "runtime-purge",
+          "test": "RuntimePurgeContract.test_same_inode_and_content_after_file_metadata_change_requires_fresh_consent"
+        },
+        {
+          "suite": "runtime-purge",
+          "test": "RuntimePurgeContract.test_exact_preview_confirmation_and_repeat_preserve_runtime_backups_code_and_git"
+        },
+        {
+          "suite": "runtime-purge",
+          "test": "RuntimePurgeContract.test_changed_content_and_recreated_identical_bank_require_new_confirmation"
+        },
+        {
+          "suite": "runtime-purge",
+          "test": "RuntimePurgeContract.test_broad_home_root_and_symlink_inputs_are_refused_without_writes"
+        },
+        {
+          "suite": "runtime-purge",
+          "test": "RuntimePurgeContract.test_interruptions_before_journal_detach_partial_delete_and_lost_response_converge"
+        },
+        {
+          "suite": "runtime-purge",
+          "test": "RuntimePurgeContract.test_retry_preserves_a_recreated_canonical_bank_and_purges_only_the_confirmed_quarantine"
+        },
+        {
+          "suite": "runtime-purge",
+          "test": "RuntimePurgeContract.test_unapproved_quarantine_data_is_preserved_on_retry"
+        },
+        {
+          "suite": "runtime-purge",
+          "test": "RuntimePurgeContract.test_foreign_bank_lock_record_is_preserved"
+        },
+        {
+          "suite": "runtime-purge",
+          "test": "RuntimePurgeContract.test_pending_memory_transaction_marker_is_preserved"
+        },
+        {
+          "suite": "runtime-purge",
+          "test": "RuntimePurgeContract.test_live_bank_writer_blocks_purge_until_the_process_releases_its_lock"
+        },
+        {
+          "suite": "portable-lifecycle",
+          "test": "PortableLifecycleContract.test_copy_all_clients_keep_qualified_memory_through_update_optional_state_loss_uninstall_and_reinstall"
+        }
+      ]
+    },
+    {
+      "requirement": "bank-preservation",
+      "cases": [
+        {
+          "suite": "portable-lifecycle",
+          "test": "PortableLifecycleContract.test_copy_all_clients_keep_qualified_memory_through_update_optional_state_loss_uninstall_and_reinstall"
+        },
+        {
+          "suite": "installed-layout",
+          "test": "InstalledLayoutContract.test_all_clients_share_one_artifact_and_installed_lifecycle_preserves_distinct_data"
+        },
+        {
+          "suite": "runtime-update",
+          "test": "RuntimeUpdateContract.test_discovered_and_explicit_banks_remain_unchanged_and_unsupported_schema_refuses"
+        }
+      ]
+    },
+    {
+      "requirement": "generated-state-loss",
+      "cases": [
+        {
+          "suite": "portable-lifecycle",
+          "test": "PortableLifecycleContract.test_copy_all_clients_keep_qualified_memory_through_update_optional_state_loss_uninstall_and_reinstall"
+        },
+        {
+          "suite": "bank-usability",
+          "test": "BankUsabilityContract.test_fresh_clone_resumes_from_bounded_current_markdown_without_any_generated_state"
+        }
+      ]
+    },
+    {
+      "requirement": "client-identity",
+      "cases": [
+        {
+          "suite": "installed-layout",
+          "test": "InstalledLayoutContract.test_all_clients_share_one_artifact_and_installed_lifecycle_preserves_distinct_data"
+        },
+        {
+          "suite": "runtime-diagnostics",
+          "test": "RuntimeDiagnosticsContract.test_installed_version_binds_actual_artifact_revision_mode_and_channel"
+        },
+        {
+          "suite": "portable-lifecycle",
+          "test": "PortableLifecycleContract.test_copy_all_clients_keep_qualified_memory_through_update_optional_state_loss_uninstall_and_reinstall"
+        },
+        {
+          "suite": "portable-lifecycle",
+          "test": "PortableLifecycleContract.test_link_custom_only_updates_without_optional_clients_identity_or_a_bank"
+        }
+      ]
+    },
+    {
+      "requirement": "pack-validation",
+      "cases": [
+        {
+          "suite": "portable-artifact",
+          "test": "PortableArtifactContract.test_complete_copy_outside_git_has_the_same_identity_and_explicit_optional_prerequisites"
+        },
+        {
+          "suite": "portable-artifact",
+          "test": "PortableArtifactContract.test_every_implemented_documented_helper_imports_and_dispatches_from_the_copy"
+        },
+        {
+          "suite": "portable-artifact",
+          "test": "PortableArtifactContract.test_core_python_imports_require_only_the_standard_library_and_bundled_package"
+        },
+        {
+          "suite": "portable-artifact",
+          "test": "PortableArtifactContract.test_copied_helpers_initialize_checkpoint_and_recall_while_preserving_unfinished_code"
+        },
+        {
+          "suite": "portable-artifact",
+          "test": "PortableArtifactContract.test_missing_or_false_runtime_declarations_are_refused_without_modifying_the_copy"
+        },
+        {
+          "suite": "portable-artifact",
+          "test": "PortableArtifactContract.test_inventory_digest_changes_for_actual_bytes_or_modes_without_claiming_a_signature"
+        },
+        {
+          "suite": "skill-routes",
+          "test": "SkillRouteContract.test_complete_copied_pack_validates_without_changing_pack_or_caller_state"
+        },
+        {
+          "suite": "skill-routes",
+          "test": "SkillRouteContract.test_every_documented_helper_dispatch_also_accepts_real_public_help"
+        },
+        {
+          "suite": "skill-routes",
+          "test": "SkillRouteContract.test_malformed_routes_links_frontmatter_and_leaf_contracts_are_refused"
+        },
+        {
+          "suite": "skill-routes",
+          "test": "SkillRouteContract.test_mandatory_loading_cycles_fail_but_conditional_navigation_remains_valid"
+        },
+        {
+          "suite": "skill-routes",
+          "test": "SkillRouteContract.test_fenced_project_examples_are_data_and_real_reference_and_duplicate_heading_anchors_work"
+        },
+        {
+          "suite": "skill-routes",
+          "test": "SkillRouteContract.test_purpose_clauses_cannot_hide_an_unconditional_loading_cycle"
+        },
+        {
+          "suite": "skill-routes",
+          "test": "SkillRouteContract.test_internal_symlink_is_refused_without_reading_its_target"
+        },
+        {
+          "suite": "skill-routes",
+          "test": "SkillRouteContract.test_unreadable_directory_cannot_hide_a_second_registered_skill"
+        },
+        {
+          "suite": "skill-routes",
+          "test": "SkillRouteContract.test_modifiers_and_purpose_words_cannot_hide_required_load_cycles"
+        },
+        {
+          "suite": "skill-routes",
+          "test": "SkillRouteContract.test_supported_reference_and_html_links_cannot_hide_a_required_load_cycle"
+        },
+        {
+          "suite": "skill-routes",
+          "test": "SkillRouteContract.test_coordinated_objects_and_later_conditions_preserve_the_initial_required_load"
+        },
+        {
+          "suite": "skill-routes",
+          "test": "SkillRouteContract.test_reference_forms_work_for_owner_bindings_and_root_routes_with_global_definitions"
+        },
+        {
+          "suite": "skill-routes",
+          "test": "SkillRouteContract.test_literal_marker_words_are_prose_and_cannot_index_internal_link_state"
+        },
+        {
+          "suite": "skill-routes",
+          "test": "SkillRouteContract.test_empty_literal_argument_is_data_not_a_hidden_shell_operator"
+        },
+        {
+          "suite": "skill-routes",
+          "test": "SkillRouteContract.test_candidate_code_is_never_imported_or_executed_by_static_validation"
+        },
+        {
+          "suite": "skill-routes",
+          "test": "SkillRouteContract.test_installed_delegation_checks_real_child_operations_and_flags_without_execution"
+        },
+        {
+          "suite": "skill-routes",
+          "test": "SkillRouteContract.test_missing_delegated_helper_cannot_be_hidden_behind_the_installed_command"
+        },
+        {
+          "suite": "skill-routes",
+          "test": "SkillRouteContract.test_working_delegated_help_commands_are_valid_documented_commands"
+        },
+        {
+          "suite": "runtime-update",
+          "test": "RuntimeUpdateContract.test_downgrade_non_fast_forward_and_invalid_candidate_keep_the_previous_runtime"
+        }
+      ]
+    },
+    {
+      "requirement": "isolation",
+      "cases": [
+        {
+          "suite": "harness",
+          "test": "HarnessContract.test_worker_is_isolated_and_credentials_are_absent"
+        },
+        {
+          "suite": "harness",
+          "test": "HarnessContract.test_public_command_runs_with_spaces_and_clean_environment"
+        },
+        {
+          "suite": "harness",
+          "test": "HarnessContract.test_real_git_bare_remote_clones_and_worktree"
+        },
+        {
+          "suite": "harness",
+          "test": "HarnessContract.test_escape_and_live_root_overrides_are_refused"
+        },
+        {
+          "suite": "harness",
+          "test": "HarnessContract.test_command_failure_and_timeout_are_not_success"
+        },
+        {
+          "suite": "harness",
+          "test": "HarnessContract.test_world_cleanup_does_not_follow_escape_symlink"
+        },
+        {
+          "suite": "harness",
+          "test": "HarnessContract.test_worker_rejects_a_live_home_before_importing_suite"
+        },
+        {
+          "suite": "harness",
+          "test": "HarnessContract.test_actual_gate_rejects_empty_skipped_and_failing_suites"
+        },
+        {
+          "suite": "worker-collection",
+          "test": "WorkerCollectionContract.test_completed_and_timed_out_worker_groups_do_not_leave_descendants"
+        },
+        {
+          "suite": "lifecycle-lost-responses",
+          "test": "LifecycleLostResponses.test_fault_trace_refuses_another_world_target_before_bootstrap_writes"
+        },
+        {
+          "suite": "lifecycle-lost-responses",
+          "test": "LifecycleLostResponses.test_fault_trace_itself_cannot_escape_into_another_world"
+        }
+      ]
+    }
+  ]
+}
