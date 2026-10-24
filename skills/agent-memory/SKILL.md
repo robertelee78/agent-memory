@@ -87,6 +87,7 @@ unneeded siblings or interrupting an executing turn.
 
 | Current intent | Primary domain | Operation |
 | --- | --- | --- |
+| Discover the installed common CLI or map a public helper to it | [maintain](maintain/GUIDE.md) | [CLI](maintain/cli/GUIDE.md) |
 | Resolve/bind identity | [access](access/GUIDE.md) | [identity](identity/GUIDE.md) |
 | Decide applicability | [access](access/GUIDE.md) | [scope](scope/GUIDE.md) |
 | Triage conflicting sources | [access](access/GUIDE.md) | [authority](authority/GUIDE.md) |

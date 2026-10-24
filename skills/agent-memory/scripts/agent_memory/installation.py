@@ -32,6 +32,40 @@ END = '<!-- agent-memory:activation:end -->'
 SHIM = (artifact.PACK/'templates/activation-markdown.example.txt').read_text()
 DEFAULT_REMOTE = 'https://github.com/robertelee78/agent-memory.git'
 
+# Literal public routes also let pack validation inspect delegation without
+# importing or executing a candidate. These are the existing governed helpers.
+MEMORY_ROUTES = {
+    'developer': ('developer_identity.py', ()),
+    'project': ('project_identity.py', ()),
+    'identity': ('scope_binding.py', ()),
+    'init': ('initialize.py', ()),
+    'inspect': ('bank_state.py', ('inspect',)),
+    'bank': ('bank_contract.py', ()),
+    'search': ('retrieve.py', ()),
+    'get': ('retrieve.py', ()),
+    'explain': ('retrieve.py', ()),
+    'context': ('assemble_context.py', ()),
+    'capture': ('admit_learning.py', ('capture',)),
+    'admission': ('admit_learning.py', ()),
+    'compare': ('compare_learning.py', ()),
+    'compact': ('consolidate_learning.py', ()),
+    'checkpoint': ('checkpoint.py', ()),
+    'govern': ('govern_memory.py', ()),
+    'correct': ('govern_memory.py', ()),
+    'supersede': ('govern_memory.py', ()),
+    'revoke': ('govern_memory.py', ()),
+    'forget': ('govern_memory.py', ()),
+    'publish': ('publish_memory.py', ()),
+    'refresh': ('refresh_memory.py', ()),
+    'boundary': ('refresh_memory.py', ()),
+    'semantic': ('reconcile_memory.py', ()),
+    'sharing': ('sharing_boundary.py', ()),
+    'exchange': ('sharing_recovery.py', ()),
+    'projection': ('projection.py', ()),
+    'writes': ('bank_writes.py', ()),
+    'transaction': ('bank_transactions.py', ()),
+}
+
 
 class LayoutError(ContractError):
     """Unsafe storage layout; recovery must not be suggested under that layout."""
@@ -804,8 +838,14 @@ def install(plan, *, before_activate=None, after_activate=None):
 
 
 def main(argv=None):
+    from . import cli
+    argv = cli.arguments(sys.argv[1:] if argv is None else argv)
+    if argv and argv[0] in MEMORY_ROUTES:
+        return cli.execute(argv[0], argv[1:], MEMORY_ROUTES[argv[0]])
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest='command', required=True)
+    for name in MEMORY_ROUTES:
+        commands.add_parser(name, help='Shared memory operation; use ' + name + ' --help')
     create = commands.add_parser('install', help='Plan or install owned portable runtime targets')
     create.add_argument('--check', '--dry-run', action='store_true')
     create.add_argument('--development-source')

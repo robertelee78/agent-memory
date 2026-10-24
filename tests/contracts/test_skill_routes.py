@@ -264,6 +264,27 @@ class SkillRouteContract(unittest.TestCase):
             self.assertFalse(marker.exists())
             self.assertIn('behavioral correctness', ' '.join(value['limits']))
 
+    def test_installed_delegation_checks_real_child_operations_and_flags_without_execution(self):
+        cases = (
+            'python3 -I "$SKILL_DIR/scripts/installer.py" checkpoint nonexistent',
+            'python3 -I "$SKILL_DIR/scripts/installer.py" search --imaginary argument',
+            'python3 -I "$SKILL_DIR/scripts/installer.py" boundary nonexistent',
+        )
+        for command in cases:
+            with self.subTest(command=command), World() as world:
+                pack = self.copy(world)
+                self.append(pack/'maintain/cli/GUIDE.md', '\n```sh\n' + command + '\n```\n')
+                before = observed(pack); value = self.check(world, pack)
+                self.assertFalse(value['valid']); self.assertEqual(value['issues'][0]['code'], 'dispatch')
+                self.assertEqual(observed(pack), before)
+
+    def test_missing_delegated_helper_cannot_be_hidden_behind_the_installed_command(self):
+        with World() as world:
+            pack = self.copy(world)
+            (pack/'scripts/retrieve.py').unlink()
+            value = self.check(world, pack)
+            self.assertFalse(value['valid']); self.assertEqual(value['issues'][0]['code'], 'dispatch')
+
     @staticmethod
     def append(path, text):
         path.write_text(path.read_text() + text)

@@ -27,6 +27,7 @@ inconsistent routes. Index routing MUST preserve each lesson's own conditions.
 
 | Intent | Operation |
 | --- | --- |
+| Discover installed commands or map a public helper to the common CLI | [CLI](cli/GUIDE.md) |
 | Validate a portable instruction package before publishing or activation | [pack validation](pack/GUIDE.md) |
 | Inspect the complete artifact identity and declared compatibility | [artifact](artifact/GUIDE.md) |
 | Preview, install or recover owned runtime targets | [installation](../lifecycle/install/GUIDE.md) |
