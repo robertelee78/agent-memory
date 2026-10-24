@@ -1,0 +1,283 @@
+{
+  "schema": "agent-memory/shared-learning-test-matrix-v1",
+  "authority": [
+    "docs/adr/0009-contract-tests-and-fault-injection.md",
+    "docs/design/v0.0.1-execution.md#acceptance-fixture-groups"
+  ],
+  "limits": "References bind approved obligations to registered executable cases. They are not additional executions or substitute assertions, actual full-matrix runs, independent verdicts or release delivery evidence.",
+  "requirements": [
+    {
+      "requirement": "actors-and-repository-scope",
+      "cases": [
+        {
+          "suite": "multi-machine-compatible",
+          "test": "MultiMachineCompatible.test_two_developers_three_clones_and_a_worktree_reconcile_without_importing_feature_code"
+        },
+        {
+          "suite": "multi-machine-conflicts",
+          "test": "MultiMachineConflicts.test_detecting_developer_sees_both_origins_without_pausing_independent_memory_or_code"
+        },
+        {
+          "suite": "multi-machine-race",
+          "test": "MultiMachineRace.test_simultaneous_public_publishers_consolidate_duplicate_learning_before_retry_lands"
+        }
+      ]
+    },
+    {
+      "requirement": "automatic-durable-capture",
+      "cases": [
+        {
+          "suite": "cross-clone-sharing",
+          "test": "SharedLearningLoopContract.test_automatic_durable_capture_lands_and_another_actor_recalls_it_without_feature_code"
+        },
+        {
+          "suite": "learning-admission",
+          "test": "AdmissionContract.test_user_correction_admits_small_record_and_history_automatically_without_git_changes"
+        }
+      ]
+    },
+    {
+      "requirement": "memory-only-publication",
+      "cases": [
+        {
+          "suite": "multi-machine-compatible",
+          "test": "MultiMachineCompatible.test_two_developers_three_clones_and_a_worktree_reconcile_without_importing_feature_code"
+        },
+        {
+          "suite": "multi-machine-conflicts",
+          "test": "MultiMachineConflicts.test_detecting_developer_sees_both_origins_without_pausing_independent_memory_or_code"
+        },
+        {
+          "suite": "multi-machine-race",
+          "test": "MultiMachineRace.test_simultaneous_public_publishers_consolidate_duplicate_learning_before_retry_lands"
+        },
+        {
+          "suite": "publication-admission",
+          "test": "PublicationAdmissionContract.test_admitted_unmerged_discovery_keeps_exact_conditions_evidence_origin_and_history"
+        }
+      ]
+    },
+    {
+      "requirement": "next-boundary-recall",
+      "cases": [
+        {
+          "suite": "multi-machine-compatible",
+          "test": "MultiMachineCompatible.test_two_developers_three_clones_and_a_worktree_reconcile_without_importing_feature_code"
+        },
+        {
+          "suite": "cross-clone-sharing",
+          "test": "SharedLearningLoopContract.test_automatic_durable_capture_lands_and_another_actor_recalls_it_without_feature_code"
+        },
+        {
+          "suite": "later-code-merge",
+          "test": "RefreshIntegrationContract.test_linked_worktree_import_does_not_touch_sibling_bank_index_or_feature_heads"
+        }
+      ]
+    },
+    {
+      "requirement": "simultaneous-publication",
+      "cases": [
+        {
+          "suite": "multi-machine-race",
+          "test": "MultiMachineRace.test_simultaneous_public_publishers_consolidate_duplicate_learning_before_retry_lands"
+        },
+        {
+          "suite": "publication-recovery",
+          "test": "PublicationRecoveryContract.test_competing_main_during_push_is_rejected_then_fresh_reconciliation_preserves_authority_code"
+        }
+      ]
+    },
+    {
+      "requirement": "compatible-same-file-edits",
+      "cases": [
+        {
+          "suite": "multi-machine-compatible",
+          "test": "MultiMachineCompatible.test_two_developers_three_clones_and_a_worktree_reconcile_without_importing_feature_code"
+        },
+        {
+          "suite": "semantic-sharing",
+          "test": "SemanticSharingContract.test_same_file_nonoverlapping_compatible_changes_combine_without_landing_order"
+        }
+      ]
+    },
+    {
+      "requirement": "deduplicate-before-write",
+      "cases": [
+        {
+          "suite": "learning-admission",
+          "test": "AdmissionContract.test_duplicate_learning_defers_to_existing_identity_and_peer_conflict_to_detecting_developer"
+        },
+        {
+          "suite": "learning-admission",
+          "test": "AdmissionContract.test_arrived_learning_tampered_delta_and_changed_evidence_refuse_before_writing"
+        },
+        {
+          "suite": "learning-comparison",
+          "test": "ComparisonContract.test_newly_arrived_duplicate_invalidates_earlier_judgment_and_requires_recomparison"
+        },
+        {
+          "suite": "learning-consolidation",
+          "test": "ConsolidationContract.test_qualified_duplicate_capture_retains_new_session_origin_without_new_active_identity"
+        }
+      ]
+    },
+    {
+      "requirement": "deduplicate-before-landing",
+      "cases": [
+        {
+          "suite": "multi-machine-race",
+          "test": "MultiMachineRace.test_simultaneous_public_publishers_consolidate_duplicate_learning_before_retry_lands"
+        },
+        {
+          "suite": "semantic-sharing",
+          "test": "SemanticSharingContract.test_differently_worded_duplicate_combines_stable_identity_all_evidence_and_origins"
+        }
+      ]
+    },
+    {
+      "requirement": "contradictions-and-provenance",
+      "cases": [
+        {
+          "suite": "multi-machine-conflicts",
+          "test": "MultiMachineConflicts.test_detecting_developer_sees_both_origins_without_pausing_independent_memory_or_code"
+        },
+        {
+          "suite": "semantic-sharing",
+          "test": "SemanticSharingContract.test_textually_clean_cross_file_yellow_blue_conflict_shows_both_origins_and_keeps_independent_work"
+        }
+      ]
+    },
+    {
+      "requirement": "dependent-work-only-holds",
+      "cases": [
+        {
+          "suite": "multi-machine-conflicts",
+          "test": "MultiMachineConflicts.test_detecting_developer_sees_both_origins_without_pausing_independent_memory_or_code"
+        },
+        {
+          "suite": "semantic-sharing",
+          "test": "SemanticSharingContract.test_only_explicit_dependent_updates_pause_with_conflict"
+        }
+      ]
+    },
+    {
+      "requirement": "conditional-learning-and-stale-code",
+      "cases": [
+        {
+          "suite": "multi-machine-compatible",
+          "test": "MultiMachineCompatible.test_two_developers_three_clones_and_a_worktree_reconcile_without_importing_feature_code"
+        },
+        {
+          "suite": "publication-admission",
+          "test": "PublicationAdmissionContract.test_admitted_unmerged_discovery_keeps_exact_conditions_evidence_origin_and_history"
+        },
+        {
+          "suite": "refresh-invalidation",
+          "test": "RefreshInvalidationContract.test_imported_unknown_or_other_branch_conditions_stay_out_of_current_recall"
+        },
+        {
+          "suite": "semantic-sharing",
+          "test": "SemanticSharingContract.test_disjoint_conditions_stay_distinct_unknown_conditions_cannot_claim_disjointness"
+        }
+      ]
+    },
+    {
+      "requirement": "evidence-pruning-and-older-branches",
+      "cases": [
+        {
+          "suite": "correction-erasure",
+          "test": "GovernanceContract.test_scope_correction_retains_older_branch_guidance_without_applying_it_on_main"
+        },
+        {
+          "suite": "correction-erasure",
+          "test": "GovernanceContract.test_narrowing_cannot_replace_the_old_claim_that_still_applies_in_older_contexts"
+        },
+        {
+          "suite": "correction-erasure",
+          "test": "GovernanceContract.test_changed_actual_repository_evidence_refuses_automatic_pruning"
+        }
+      ]
+    },
+    {
+      "requirement": "initialization-code-docs-and-awa",
+      "cases": [
+        {
+          "suite": "initialize-evidence",
+          "test": "InitializationContract.test_empty_initialization_builds_useful_source_map_distinguishes_domains_and_preserves_code_index_head"
+        },
+        {
+          "suite": "initialize-evidence",
+          "test": "InitializationContract.test_actual_peer_intent_conflict_prompts_detecting_developer_and_never_chooses_landing_order"
+        },
+        {
+          "suite": "initialize-evidence",
+          "test": "InitializationContract.test_awa_skill_handoff_keeps_work_planned_and_wrong_project_or_unavailable_evidence_honest"
+        },
+        {
+          "suite": "initialize-evidence",
+          "test": "InitializationContract.test_existing_memory_is_read_first_preserved_byte_for_byte_and_only_missing_context_is_created"
+        }
+      ]
+    },
+    {
+      "requirement": "offline-retry",
+      "cases": [
+        {
+          "suite": "offline-replay",
+          "test": "RefreshRecoveryContract.test_lost_completed_response_recovers_without_duplicates_and_remains_honest_while_offline"
+        },
+        {
+          "suite": "publication-pending",
+          "test": "PublicationPendingContract.test_offline_permission_source_and_unsupported_policy_failures_keep_local_memory_pending"
+        }
+      ]
+    },
+    {
+      "requirement": "lost-success-response",
+      "cases": [
+        {
+          "suite": "publication-recovery",
+          "test": "PublicationRecoveryContract.test_lost_response_inventory_does_not_duplicate_or_reverse_a_later_correction"
+        },
+        {
+          "suite": "offline-replay",
+          "test": "RefreshRecoveryContract.test_lost_completed_response_recovers_without_duplicates_and_remains_honest_while_offline"
+        }
+      ]
+    },
+    {
+      "requirement": "later-ordinary-code-merge",
+      "cases": [
+        {
+          "suite": "later-code-merge",
+          "test": "RefreshIntegrationContract.test_cursor_loss_recovers_from_git_and_later_normal_code_merge_does_not_duplicate_memory"
+        },
+        {
+          "suite": "multi-machine-merge-replay",
+          "test": "MultiMachineMergeReplay.test_erasure_survives_an_ordinary_code_merge_and_pre_erasure_proposal_replay"
+        }
+      ]
+    },
+    {
+      "requirement": "terminal-deletion-without-resurrection",
+      "cases": [
+        {
+          "suite": "correction-erasure",
+          "test": "GovernanceContract.test_deleted_independent_duplicates_cannot_return_from_cached_consolidation_output"
+        },
+        {
+          "suite": "correction-erasure",
+          "test": "GovernanceContract.test_erasure_includes_consolidated_capture_identity_so_a_saved_capture_cannot_be_admitted_again"
+        },
+        {
+          "suite": "multi-machine-merge-replay",
+          "test": "MultiMachineMergeReplay.test_erasure_survives_an_ordinary_code_merge_and_pre_erasure_proposal_replay"
+        },
+        {
+          "suite": "refresh-invalidation",
+          "test": "RefreshInvalidationContract.test_landed_tombstone_removes_a_locally_edited_old_record_without_staging_or_resurrection"
+        }
+      ]
+    }
+  ]
+}

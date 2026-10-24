@@ -29,6 +29,13 @@ with no missing or duplicate interruption/recovery/retry. Controlled gate
 fixtures exercise rejection of absent/incomplete proofs; their simulated
 metadata is not production interruption evidence.
 
+The [shared-learning matrix](../contracts/multi-machine-learning.md) retains all
+approved multi-machine obligations and adds installed-command journeys for
+compatible edits, simultaneous publication with duplicate consolidation, and
+cross-developer contradictions. It preserves feature state across independent
+clones and a linked worktree, alongside the existing capture, initialization,
+pruning, offline recovery and later-code-merge contracts.
+
 `tests/contracts.json` routes the pack, lifecycle, bank, concurrency, client,
 optional and evaluation layers. Each feature story MUST add public-interface
 cases to its applicable suite and replace its pending entry with a test path.
