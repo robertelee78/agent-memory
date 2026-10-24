@@ -19,6 +19,29 @@ def uninstall(world, receipt, *args, source=False, expected=0, env=None):
 
 
 class RuntimeUninstallContract(unittest.TestCase):
+    def test_preview_refuses_a_receipt_that_conflicts_with_its_completed_journal(self):
+        for case in ('inactive-flag','active-receipt'):
+            with self.subTest(case=case), World() as world:
+                _,_,receipt=fixture(world)
+                path=receipt_path(world); value=json.loads(path.read_text())
+                if case=='inactive-flag': value.update(uninstalled=True,preserved=[],reinstall={'argv':['example']})
+                else: value['installed_at']='externally changed'
+                path.write_text(json.dumps(value)); before=snapshot(world.root)
+                denied=uninstall(world,receipt,'--check',source=True,expected=1)
+                self.assertFalse(denied['verified']); self.assertEqual(snapshot(world.root),before)
+
+    def test_user_added_blank_lines_outside_the_owned_block_are_not_removed(self):
+        for position in ('before','after'):
+            with self.subTest(position=position), World() as world:
+                _,_,receipt=fixture(world)
+                path=world.paths['codex']/'AGENTS.md'; raw=path.read_bytes()
+                begin=b'<!-- agent-memory:activation:begin -->'; end=b'<!-- agent-memory:activation:end -->'
+                raw=raw.replace(begin,b'\n'+begin,1) if position=='before' else raw+b'\n'
+                path.write_bytes(raw); start=raw.index(begin); stop=raw.index(end)+len(end)
+                expected=raw[:start]+raw[stop:]
+                result=uninstall(world,receipt)
+                self.assertTrue(result['verified']); self.assertEqual(path.read_bytes(),expected)
+
     def test_preview_remove_repeat_and_reinstall_preserve_bank_original_settings_and_backups(self):
         for mode in ('link', 'copy'):
             with self.subTest(mode=mode), World() as world:

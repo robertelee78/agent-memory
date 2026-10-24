@@ -26,6 +26,19 @@ def journal(world, confirmation):
 
 
 class RuntimePurgeContract(unittest.TestCase):
+    def test_ordinary_hardlink_aliases_finish_and_recover_the_unlink_bookkeeping_gap(self):
+        for point in (None,'purge-after-alias-unlink'):
+            with self.subTest(point=point), World() as world:
+                memory=bank(world,world.paths['repo'])
+                (memory/'alias.md').hardlink_to(memory/'projectbrief.md')
+                token=purge(world,memory,'--check')['preview']['confirmation']
+                if point is not None:
+                    purge(world,memory,'--confirm',token,expected=86,env={
+                        'AGENT_MEMORY_FAULT_STAGE':point,'AGENT_MEMORY_FAULT_MODE':'exit'})
+                completed=purge(world,memory,'--confirm',token)
+                self.assertTrue(completed['verified']); self.assertFalse(memory.exists())
+                self.assertFalse(purge(world,memory,'--confirm',token)['changed'])
+
     def test_same_inode_and_content_after_file_metadata_change_requires_fresh_consent(self):
         with World() as world:
             memory=bank(world,world.paths['repo']); path=memory/'projectbrief.md'

@@ -38,13 +38,6 @@ def without_block(path, target, old):
         return None
     # Restore exact original bytes only when current surrounding content proves
     # that no later outside edit would be lost. Backups are never deleted.
-    variants = {outside}
-    if suffix.startswith(b'\n'):
-        variants.add(prefix + suffix[1:])
-    if prefix.endswith(b'\n'):
-        variants.add(prefix[:-1] + suffix)
-        if suffix.startswith(b'\n'):
-            variants.add(prefix[:-1] + suffix[1:])
     for backup in old.get('backups', []):
         if backup.get('original_path') != str(path) or backup.get('kind') != 'pre-activation-snapshot':
             continue
@@ -52,7 +45,9 @@ def without_block(path, target, old):
         if (backup['identity'].get('kind') == 'file'
                 and install.fingerprint(saved) == backup['identity']):
             original = saved.read_bytes()
-            if install.BEGIN.encode() not in original and original in variants:
+            expected_prefix = original + (b'' if not original or original.endswith(b'\n') else b'\n')
+            if (install.BEGIN.encode() not in original and prefix == expected_prefix
+                    and suffix == b'\n'):
                 return original
         break  # A later update's snapshot is not the original user file.
     return outside
@@ -110,9 +105,6 @@ def run(args):
                     'preserved':historical['preserved'], 'reinstall':historical['reinstall']}
         plan = prepare(current, state, code)
         if args.check:
-            journal = state/'journal.json'
-            install.require(not os.path.lexists(journal) or install.load(journal)['status'] in ('complete','rolled-back'),
-                            'Recover the interrupted lifecycle transaction before planning uninstall')
             return {'operation':'uninstall', 'verified':False, 'check_complete':True,
                     'installation_writes_performed':False,
                     'targets':[{k:v for k,v in a.items() if k not in ('raw','mode_bits')} for a in plan['actions']],
@@ -122,6 +114,15 @@ def run(args):
         return {**result, 'uninstalled':True, 'preserved':plan['preserved'], 'reinstall':plan['reinstall'],
                 'project_memory_writes_performed':False, 'purge_performed':False}
     if args.check:
+        journal = state/'journal.json'
+        if os.path.lexists(journal):
+            recorded = install.load(journal)
+            install.require(recorded['status'] in ('complete','rolled-back'),
+                            'Recover the interrupted lifecycle transaction before planning uninstall')
+            if recorded['status']=='complete':
+                install.require(recorded.get('receipt_identity') is not None
+                                and install.fingerprint(state/'receipt.json')==recorded['receipt_identity'],
+                                'Completed installation receipt differs from its journal; preserve and reconcile ownership')
         return work()
     paths = [state, code, *(Path(t['path']) for t in (old['targets'] if old else []))]
     with runtime_faults.operation('uninstall', paths), install.locked(state):

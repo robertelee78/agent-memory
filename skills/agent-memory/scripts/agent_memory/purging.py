@@ -148,21 +148,73 @@ def bank_lock(bank, expected_hash=None):
         os.close(fd)
 
 
+def inode_key(item):
+    return str(item['device'])+':'+str(item['inode'])
+
+
+def effective_entry(record, name):
+    entry = record['preview']['entries'][name]
+    override = record.get('ctime_overrides',{}).get(inode_key(entry))
+    return {**entry,'change_time_ns':override} if entry['kind']=='file' and override is not None else entry
+
+
+def unchanged_data(actual, expected):
+    return ({k:v for k,v in actual.items() if k!='change_time_ns'}
+            == {k:v for k,v in expected.items() if k!='change_time_ns'})
+
+
 def finish(record, record_path, bank, stage, owner):
     root, remaining = inventory(stage, owner=owner)
     approved = record['preview']
     install.require(root==approved['root_identity'], 'Purge quarantine root identity changed')
-    install.require(all(name in approved['entries'] and item==approved['entries'][name]
+    groups = {}; original_groups = {}
+    for name,item in approved['entries'].items():
+        if item['kind']=='file':
+            original_groups.setdefault(inode_key(item),set()).add(name)
+    for name,item in remaining.items():
+        if item['kind']=='file':
+            groups.setdefault(inode_key(item),set()).add(name)
+    install.require(all(key in original_groups and len(original_groups[key])>1
+                        and type(value) is int and value>0
+                        for key,value in record.get('ctime_overrides',{}).items()),
+                    'Purge self-mutation bookkeeping is invalid')
+    pending = record.get('pending_unlink')
+    if pending is not None:
+        install.require(pending in approved['entries'] and approved['entries'][pending]['kind']=='file',
+                        'Purge unlink intent is invalid')
+        key = inode_key(approved['entries'][pending])
+        install.require(len(original_groups[key])>1, 'Purge unlink intent has no approved hardlink aliases')
+        if pending not in remaining:
+            aliases = groups.get(key,set())
+            install.require(all(unchanged_data(remaining[n],effective_entry(record,n)) for n in aliases),
+                            'Purge alias data changed after an interrupted unlink')
+            if aliases:
+                record.setdefault('ctime_overrides',{})[key]=remaining[next(iter(aliases))]['change_time_ns']
+        record['pending_unlink']=None; save(record_path,record)
+    install.require(all(name in approved['entries'] and item==effective_entry(record,name)
                         for name,item in remaining.items()), 'Purge quarantine contains new or changed data; preserve it')
     record['status']='detached'; save(record_path,record)
     for index,(name,item) in enumerate(sorted(remaining.items(), key=lambda pair:(pair[1]['kind']=='directory',-len(Path(pair[0]).parts),pair[0]))):
         path = stage/name
         install.unchanged_parent(path)
-        install.require(identity(path)==item, 'Purge entry changed immediately before removal: '+name)
+        install.require(identity(path)==effective_entry(record,name), 'Purge entry changed immediately before removal: '+name)
+        key = inode_key(item); aliases = groups.get(key,set())
+        account_aliases = item['kind']=='file' and len(aliases)>1
+        if account_aliases:
+            record['pending_unlink']=name; save(record_path,record)
         def remove():
             path.rmdir() if item['kind']=='directory' else path.unlink()
             install.sync_dir(path.parent)
         runtime_faults.mutate('purge-entry-remove',remove)
+        if item['kind']=='file':
+            aliases.discard(name)
+        if account_aliases:
+            fault('purge-after-alias-unlink')
+            other = next(iter(aliases)); actual = identity(stage/other)
+            install.require(unchanged_data(actual,effective_entry(record,other)),
+                            'Purge alias data changed during removal')
+            record.setdefault('ctime_overrides',{})[key]=actual['change_time_ns']
+            record['pending_unlink']=None; save(record_path,record)
         fault('purge-after-entry-'+str(index))
     lock = stage/'.agent-memory.lock'
     if os.path.lexists(lock):

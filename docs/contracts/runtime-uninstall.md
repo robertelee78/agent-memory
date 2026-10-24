@@ -64,6 +64,11 @@ interrupted partial deletion or lost response. New or changed quarantine data is
 preserved. A newly recreated canonical bank remains untouched and is reported by
 `replacement_bank_present`; old consent does not authorize deleting it.
 
+Approved hardlink aliases retain the same consent boundary. Write-ahead unlink
+intent and recorded self-induced timestamp changes let recovery account for an
+alias removed immediately before interruption, without accepting changed file
+contents or modes under the original approval.
+
 The result concerns only the confirmed local bank. Runtime code, installation
 state, unrelated projects, staged code/index, external backups, remote copies and
 Git history are retained. This is not secure erasure or a globally atomic deletion.
