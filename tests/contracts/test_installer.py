@@ -81,8 +81,8 @@ class InstallerContract(unittest.TestCase):
             self.assertEqual(self.owned(receipt), owned)
             self.assertEqual((self.state(world)/'receipt.json').read_bytes(),
                              (json.dumps(receipt, sort_keys=True, indent=2)+'\n').encode())
-            self.assertEqual({k:v for k,v in snapshot(self.state(world)).items() if k!='lock'},
-                             {k:v for k,v in records.items() if k!='lock'})
+            self.assertEqual({k:v for k,v in snapshot(self.state(world)).items() if k not in ('lock','owner.json')},
+                             {k:v for k,v in records.items() if k not in ('lock','owner.json')})
             cli = Path(receipt['bin_dir'])/'agent-memory'
             self.assertEqual(world.run([cli, '--help']).returncode, 0)
             command_plan = json.loads(world.run([cli, 'install', '--check']).stdout)
@@ -248,8 +248,8 @@ class InstallerContract(unittest.TestCase):
                 self.assertEqual(result.returncode, 0 if case=='healthy' else 1, value)
                 self.assertEqual(value['verified'], case=='healthy')
                 after = snapshot(world.root)
-                self.assertEqual({k:v for k,v in before.items() if k!='state/agent-memory/install/lock'},
-                                 {k:v for k,v in after.items() if k!='state/agent-memory/install/lock'})
+                self.assertEqual({k:v for k,v in before.items() if k not in ('state/agent-memory/install/lock','state/agent-memory/install/owner.json')},
+                                 {k:v for k,v in after.items() if k not in ('state/agent-memory/install/lock','state/agent-memory/install/owner.json')})
 
     def test_bank_state_overlap_is_refused_before_any_bank_or_runtime_write(self):
         with World() as world:

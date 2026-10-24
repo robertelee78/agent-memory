@@ -104,6 +104,7 @@ unneeded siblings or interrupting an executing turn.
 | Validate a portable instruction package | [maintain](maintain/GUIDE.md) | [pack validation](maintain/pack/GUIDE.md) |
 | Inspect artifact identity and declared compatibility | [maintain](maintain/GUIDE.md) | [artifact](maintain/artifact/GUIDE.md) |
 | Install or recover owned runtime targets | [maintain](maintain/GUIDE.md) | [installation](lifecycle/install/GUIDE.md) |
+| Check or update the managed runtime | [maintain](maintain/GUIDE.md) | [runtime update](lifecycle/update/GUIDE.md) |
 | Inspect record/index layout | [maintain](maintain/GUIDE.md) | [layout](layout/GUIDE.md) |
 | Build/check derived references | [maintain](maintain/GUIDE.md) | [projections](projections/GUIDE.md) |
 | Use the file-only workflow | [bank](bank/GUIDE.md) | [offline](offline/GUIDE.md) |
