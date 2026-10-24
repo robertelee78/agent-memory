@@ -157,12 +157,15 @@ class RuntimeDiagnosticsContract(unittest.TestCase):
             _, _, receipt = fixture(world)
             wrapper = Path(receipt['bin_dir']) / 'agent-memory'
             wrapper.write_text('Do not execute this replacement.\n')
+            wrapper.chmod(0o644)
             copy = world.paths['codex'] / 'skills/agent-memory/templates/activation-markdown.example.txt'
             copy.write_text('User replacement.\n')
             before = snapshot(world.root)
             value = call(world, 'doctor', '--repo', world.paths['repo'], expected=1)
             failed = {v['component'] for v in value['failures']}
             self.assertIn('runtime.target.wrapper', failed); self.assertIn('runtime.target.copy', failed)
+            self.assertIn('0o644', component(value, 'runtime.target.wrapper')[0]['detail'])
+            self.assertEqual(value['installation']['purge_transactions'], 'none_pending')
             self.assertTrue(all(v.get('repair') for v in value['failures']))
             self.assertEqual(snapshot(world.root), before)
 

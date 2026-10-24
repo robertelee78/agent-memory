@@ -25,6 +25,10 @@ SCHEMA = 'agent-memory/diagnostic-result-v1'
 RECOVER = 'Use a trusted complete package outside the affected targets: python3 -I "$SKILL_DIR/scripts/installer.py" recover; inspect its result before retrying.'
 
 
+class DiagnosticFailure(ContractError):
+    """Only fixed diagnostic text and validated numeric metadata may be exposed."""
+
+
 def read(path, maximum=2**20):
     """Never follow a redirected diagnostic record or load an unlimited file."""
     path = Path(path)
@@ -79,6 +83,9 @@ class Report:
     def attempt(self, component, function, repair, path=None):
         try:
             return function()
+        except DiagnosticFailure as exc:
+            self.add(component, 'failure', str(exc), repair, path)
+            return None
         except ERRORS:
             # Exceptions may contain remote URLs, private record bodies, or keys.
             # Keep source data at its original path; report a bounded component.
@@ -99,7 +106,7 @@ def receipt_view(report):
     report.value['installation'] = {'state': 'not_installed', 'receipt_path': str(path),
                                     'receipt_schema': None, 'mode': None, 'enabled_adapters': [],
                                     'health': 'not_audited', 'update_availability': 'not_cached_or_fetched',
-                                    'purge_transactions': 'not_scanned_use_doctor'}
+                                    'purge_transactions': 'not_scanned'}
     if os.path.lexists(path):
         raw = record(path)
         installation.require(isinstance(raw, dict), 'Invalid receipt')
@@ -272,11 +279,23 @@ def runtime_doctor(report, active):
                 path = Path(target['path'])
                 def check_target():
                     if target['kind'] == 'activation':
-                        installation.activation(read(path), target['block_hash'])
+                        raw = read(path)
+                        try:
+                            installation.activation(raw, target['block_hash'])
+                        except (ContractError, UnicodeError):
+                            raise DiagnosticFailure('Activation block is missing, malformed, duplicated or differs from its recorded block hash; outside text is preserved.') from None
                     else:
-                        installation.require(installation.fingerprint(path) == target['identity'], 'Owned target changed')
+                        observed = installation.fingerprint(path)
+                        if observed != target['identity']:
+                            expected_mode = (target['identity'] or {}).get('mode')
+                            if (target['kind'] == 'wrapper' and observed and observed.get('kind') == 'file'
+                                    and type(expected_mode) is int and 0 <= expected_mode <= 0o7777
+                                    and observed.get('mode') != expected_mode):
+                                raise DiagnosticFailure('Wrapper mode is ' + oct(observed['mode']) + '; recorded mode is ' + oct(expected_mode) + '.')
+                            raise DiagnosticFailure('Owned ' + target['kind'] + ' target is missing, redirected, or has different bytes or modes than its recorded identity.')
                         if target['kind'] in {'link', 'copy'}:
-                            installation.require(artifact.inspect(path)['artifact_digest'] == target['artifact_digest'], 'Client artifact differs')
+                            if artifact.inspect(path)['artifact_digest'] != target['artifact_digest']:
+                                raise DiagnosticFailure('Client artifact digest differs from the installation receipt.')
                         if target['kind'] == 'wrapper':
                             installation.require(read(path) == installation.wrapper(Path(active['source']['pack'])) and
                                                  os.access(path, os.X_OK), 'Wrapper is not the owned executable entrypoint')
@@ -316,6 +335,9 @@ def runtime_doctor(report, active):
                     else:
                         report.add('data.purge', 'pass', 'Historical purge journal is complete; no data deletion performed.', path=path)
                 report.attempt('data.purge', check_purge, 'Preserve this purge record and quarantine. Review the original confirmation before resuming; do not remove or reset it.', path)
+        purge_failed = any(c['component'] == 'data.purge' and c['state'] == 'failure' for c in report.value['checks'])
+        report.value['installation']['purge_transactions'] = ('inspection_failed' if purge_failed else
+            ('pending' if report.value['pending_purges'] else 'none_pending'))
         installation.require(before == {name: installation.fingerprint(state / name) for name in before},
                              'Lifecycle records changed during inspection')
     finally:
