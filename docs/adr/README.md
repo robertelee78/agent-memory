@@ -32,6 +32,12 @@ MUST NOT be treated as evidence that a guide is semantically complete.
 | [0010](0010-memory-bank-file-contract.md) | Concrete Memory Bank file and scope contract | Accepted (v0.0.1) |
 | [0011](0011-principal-and-project-identity.md) | Stable developer attribution and project identity | Accepted (v0.0.1) |
 | [0012](0012-git-shared-memory.md) | Git-shared memory across worktrees, machines, and developers | Accepted (v0.0.1) |
+| [0013](0013-public-cli-and-corrective-releases.md) | AWA-style public CLI and corrective release tracking | Accepted (v0.0.2) |
+
+[ADR-0013](0013-public-cli-and-corrective-releases.md) defines the corrective
+`v0.0.2` public command contract and the current future-release mapping. Older
+future-version labels in earlier ADRs remain historical; their underlying
+reliability, hook and federation scopes are preserved by that mapping.
 
 ## Status values
 
