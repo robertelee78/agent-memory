@@ -103,6 +103,9 @@ preserving older content and surfacing unresolved product questions.
 
 The [observed write contract](docs/contracts/observed-writes.md) defines the
 common bank lock, single-file replacement, readback, retry and recovery mechanism.
+The [concurrent-writer contract](docs/contracts/concurrent-bank-writers.md) tests
+actual competing processes, stale observations, atomic visibility and recovery,
+with distinct-worktree locks and memory-only publication kept separate.
 
 The [access and remembered-authority contract](docs/contracts/security-authority.md)
 explains shared-bank access, developer attribution and the treatment of memory as untrusted data.

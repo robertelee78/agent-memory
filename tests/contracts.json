@@ -8,6 +8,7 @@
     {"name": "project-identity", "layer": "client", "scope": "v0.0.1", "path": "tests/contracts/test_project_identity.py"},
     {"name": "scope-binding", "layer": "client", "scope": "v0.0.1", "path": "tests/contracts/test_scope_binding.py"},
     {"name": "single-file-writes", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_bank_writes.py"},
+    {"name": "concurrent-bank-writers", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_concurrent_bank_writers.py"},
     {"name": "authority-boundaries", "layer": "evaluation", "scope": "v0.0.1", "path": "tests/contracts/test_authority_boundary.py"},
     {"name": "manual-checkpoint", "layer": "bank", "scope": "v0.0.1", "path": "tests/contracts/test_manual_checkpoint.py"},
     {"name": "checkpoint", "layer": "bank", "scope": "v0.0.1", "path": "tests/contracts/test_checkpoint.py"},
