@@ -1,9 +1,23 @@
 # Portable runtime installation
 
 `scripts/installer.py` invokes the installer carried inside the portable package.
-`install.sh` is a checkout bootstrap for that same `install` operation. This
+`install.sh` is a local-checkout and standalone/stdin bootstrap for that same `install` operation. This
 contract covers #46; update, uninstall, diagnostics and the complete installed
 command surface retain separate execution tasks.
+
+The AWA-style fresh-machine entry point (#153) requires no existing checkout:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/robertelee78/agent-memory/main/install.sh | bash
+```
+
+The Bash 3.2+ bootstrap checks Python 3.11+ and Git, stages a temporary checkout
+of the selected managed remote/branch, and forwards installation arguments to
+the existing Python installer. The temporary loader is removed on normal exit,
+failure and handled interruption; the owned runtime never points into it.
+`--help` requires no source download. Explicit `--remote`/`--ref` options select
+the same channel for bootstrap and installation. A complete local checkout is
+resolved from the script's location, independently of the caller's directory.
 
 ```sh
 ./install.sh --check

@@ -19,25 +19,26 @@ holds the release's source and validation evidence.
 
 ### Install
 
-Prerequisites: Python 3.11+ and Git on macOS or Linux. Start with a trusted,
-complete checkout (skip the clone if you already have one):
+Install on macOS or Linux with one command, just like AWA:
 
 ```sh
-git clone https://github.com/robertelee78/agent-memory.git
-cd agent-memory
+curl -fsSL https://raw.githubusercontent.com/robertelee78/agent-memory/main/install.sh | bash
 ```
 
-Preview the installation before activating the default managed `main` channel:
+Requires Bash 3.2+, Python 3.11+, Git and curl. No checkout, GitHub authentication,
+developer identity or initialized memory bank is needed. The bootstrap creates
+a temporary source checkout, runs the same owned installer, and removes the
+temporary checkout; the installed runtime lives in its own managed location.
+Restart running agent sessions after installation so they load the skill.
+
+For an optional preview or custom install options, pass arguments to Bash:
 
 ```sh
-./install.sh --check --mode copy
+curl -fsSL https://raw.githubusercontent.com/robertelee78/agent-memory/main/install.sh | bash -s -- --check
 ```
 
-Inspect the source and every proposed target, then apply the same configuration:
-
-```sh
-./install.sh --mode copy
-```
+Remove `--check` to apply. From an existing complete checkout,
+`./install.sh` invokes the same installer.
 
 Defaults include generic Agent Skills, Codex, Claude and OpenCode discovery.
 Use `--presets none` and repeated `--target-dir` arguments for custom discovery.
@@ -50,7 +51,6 @@ agent-memory version
 ```
 
 If you choose a custom `--bin-dir`, use the receipt's `bin_dir` instead.
-Installation needs neither a developer identity nor an initialized bank.
 Follow the [installation guide](skills/agent-memory/lifecycle/install/GUIDE.md)
 for ownership, recovery and explicit local/development sources. Development
 sources are separate from the managed channel and are not updated by the updater.
@@ -77,16 +77,16 @@ agent-memory doctor --repo /path/to/project
 
 ### Update
 
-Preview an update from the managed channel:
-
-```sh
-agent-memory update --check
-```
-
-Review the proposed change, then apply it:
+Update the managed runtime with one command:
 
 ```sh
 agent-memory update
+```
+
+To preview first:
+
+```sh
+agent-memory update --check
 ```
 
 The default channel follows `main`; installation does not pin `v0.0.1`.
@@ -96,16 +96,16 @@ for source checks, retries and recovery.
 
 ### Uninstall
 
-Preview removal:
-
-```sh
-agent-memory uninstall --check
-```
-
-Review the targets, then remove the owned runtime and discovery entries:
+Uninstall the owned runtime and discovery entries with one command:
 
 ```sh
 agent-memory uninstall
+```
+
+To preview first:
+
+```sh
+agent-memory uninstall --check
 ```
 
 Ordinary uninstall preserves project memory and user edits; modified owned
