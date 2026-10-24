@@ -73,11 +73,11 @@ class SkillRouteContract(unittest.TestCase):
             'orphan': ('reachability', lambda p: (p/'orphan.md').write_text('# Unreachable\n')),
             'unused-reference-is-not-route': ('reachability', lambda p:
                 (p/'orphan.md').write_text('# Unreachable\n') and self.append(p/'SKILL.md', '\n[unused]: orphan.md\n')),
-            'version': ('frontmatter', lambda p: self.replace(p/'SKILL.md', '0.0.1-dev', 'broken-version')),
+            'version': ('frontmatter', lambda p: self.replace_version(p, 'broken-version')),
             'duplicate-metadata': ('frontmatter', lambda p: self.replace(p/'SKILL.md', 'name: agent-memory', 'name: agent-memory\nname: agent-memory')),
-            'empty-prerelease': ('frontmatter', lambda p: self.replace(p/'SKILL.md', '0.0.1-dev', '0.0.1-..dev')),
-            'leading-zero-prerelease': ('frontmatter', lambda p: self.replace(p/'SKILL.md', '0.0.1-dev', '0.0.1-01')),
-            'unicode-core-version': ('frontmatter', lambda p: self.replace(p/'SKILL.md', '0.0.1-dev', '1\u0662.0.0')),
+            'empty-prerelease': ('frontmatter', lambda p: self.replace_version(p, '0.0.1-..dev')),
+            'leading-zero-prerelease': ('frontmatter', lambda p: self.replace_version(p, '0.0.1-01')),
+            'unicode-core-version': ('frontmatter', lambda p: self.replace_version(p, '1\u0662.0.0')),
             'missing-section': ('leaf-contract', lambda p: self.replace(p/'checkpoint/GUIDE.md', '## Observe', '## Missing')),
             'duplicate-section': ('leaf-contract', lambda p: self.append(p/'checkpoint/GUIDE.md', '\n## Observe\nAgain.\n')),
             'wrong-order': ('leaf-contract', lambda p: self.replace(p/'checkpoint/GUIDE.md', '## Observe', '## Verify')),
@@ -308,6 +308,18 @@ class SkillRouteContract(unittest.TestCase):
         if before not in text:
             raise AssertionError('Fixture replacement does not match real source')
         path.write_text(text.replace(before, after))
+
+    @staticmethod
+    def replace_version(pack, version):
+        path = pack/'SKILL.md'
+        lines = [line for line in path.read_text().splitlines() if line.startswith('metadata: ')]
+        if len(lines) != 1:
+            raise AssertionError('Fixture requires one actual root metadata declaration')
+        metadata = json.loads(lines[0].removeprefix('metadata: '))
+        if not isinstance(metadata.get('version'), str) or not metadata['version']:
+            raise AssertionError('Fixture requires the actual source version')
+        metadata['version'] = version
+        SkillRouteContract.replace(path, lines[0], 'metadata: ' + json.dumps(metadata, ensure_ascii=False))
 
     @staticmethod
     def script_without_execute(pack):
