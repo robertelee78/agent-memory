@@ -238,6 +238,14 @@ def runtime_doctor(report, active):
         # Never combine ownership from a receipt that changed across this inspection.
         before = {name: installation.fingerprint(state / name) for name in ('receipt.json', 'journal.json')}
         active = receipt_view(report)
+        owner_path = state / 'owner.json'
+        if os.path.lexists(owner_path):
+            def check_owner():
+                read(owner_path)
+                installation.read_owner(state)
+                report.add('runtime.owner', 'pass', 'Existing lifecycle owner metadata is readable and accepted by the lifecycle lock protocol; PID and age do not grant lock ownership.', path=owner_path)
+            report.attempt('runtime.owner', check_owner,
+                           'Preserve this owner record and the lifecycle lock. Reconcile the malformed or redirected metadata before retrying a lifecycle operation; do not reset or steal ownership based on PID or age.', owner_path)
         if active:
             def check_source():
                 observed = source(active['source']['pack'])

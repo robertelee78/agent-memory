@@ -204,6 +204,17 @@ def locations():
     return state, code
 
 
+def read_owner(state):
+    """Read existing lock metadata without creating, replacing or stealing it."""
+    path = state/'owner.json'
+    if not os.path.lexists(path):
+        return None
+    owner = load(path)
+    require(isinstance(owner, dict) and owner.get('schema') == 'agent-memory/lifecycle-owner-v1',
+            'Unrelated lifecycle owner record; preserve it for reconciliation')
+    return owner
+
+
 @contextmanager
 def locked(state):
     preflight_path(state)
@@ -236,10 +247,7 @@ def locked(state):
                 and value.get('schema') == 'agent-memory/lifecycle-lock-v1',
                 'Unrelated lifecycle lock file; preserve it for reconciliation')
         owner_path = state/'owner.json'
-        if os.path.lexists(owner_path):
-            owner = load(owner_path)
-            require(isinstance(owner, dict) and owner.get('schema') == 'agent-memory/lifecycle-owner-v1',
-                    'Unrelated lifecycle owner record; preserve it for reconciliation')
+        read_owner(state)
         # Keep the flock inode stable. Diagnostic PID metadata is published
         # separately and atomically, so a killed writer cannot tear the lock.
         replace_record(owner_path, {'schema':'agent-memory/lifecycle-owner-v1',

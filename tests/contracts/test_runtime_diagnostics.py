@@ -28,6 +28,27 @@ def component(value, name):
 
 
 class RuntimeDiagnosticsContract(unittest.TestCase):
+    def test_owner_record_diagnostics_agree_with_actual_recovery_and_preserve_bad_metadata(self):
+        for case in ('healthy', 'malformed', 'dangling-symlink'):
+            with self.subTest(case=case), World() as world:
+                _, _, receipt = fixture(world)
+                owner = receipt_path(world).parent / 'owner.json'
+                if case == 'malformed':
+                    owner.write_text('{"schema":"unrelated-owner-record","operator_note":"preserve"}\n')
+                elif case == 'dangling-symlink':
+                    owner.unlink(); owner.symlink_to(world.inside('missing-owner-target'))
+                before = snapshot(world.root)
+                expected = 0 if case == 'healthy' else 1
+                value = call(world, 'doctor', '--repo', world.paths['repo'], expected=expected)
+                owner_check = component(value, 'runtime.owner')
+                self.assertEqual(owner_check[0]['state'], 'pass' if case == 'healthy' else 'failure')
+                self.assertEqual(owner_check[0]['path'], str(owner))
+                self.assertEqual(snapshot(world.root), before)
+                recovered = world.run([sys.executable, '-I', ROOT / 'scripts/installer.py', 'recover'], check=False)
+                self.assertEqual(recovered.returncode, expected, recovered.stdout)
+                if case != 'healthy':
+                    self.assertEqual(snapshot(world.root), before)
+
     def test_resolved_identity_and_custom_bank_follow_the_selected_worktree(self):
         from identity_fixtures import bind
         with World() as world:

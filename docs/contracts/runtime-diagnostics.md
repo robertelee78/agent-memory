@@ -32,6 +32,8 @@ established by the lifecycle operation's verified activation.
 
 The existing lifecycle lock is inspected with a nonblocking shared flock; no
 lock file or owner metadata is created. A live writer defers ownership checks.
+The same pure owner-record validator used by lifecycle recovery checks any
+existing `owner.json`; malformed or redirected metadata is reported and retained.
 Bank writer/transaction markers defer stable content validation; they are never
 stolen or removed by doctor. Source, target and receipt failures include bounded
 repairs, and command exceptions do not echo private record contents or credential
