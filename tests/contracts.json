@@ -35,6 +35,7 @@
     {"name": "multi-machine-conflicts", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_multi_machine_conflicts.py"},
     {"name": "multi-machine-race", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_multi_machine_race.py"},
     {"name": "multi-machine-matrix", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_multi_machine_matrix.py"},
+    {"name": "multi-machine-merge-replay", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_multi_machine_merge_replay.py"},
     {"name": "concurrent-sharing", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_refresh_conflicts.py"},
     {"name": "offline-replay", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_refresh_recovery.py"},
     {"name": "later-code-merge", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_refresh_integration.py"},

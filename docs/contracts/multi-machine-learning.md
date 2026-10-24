@@ -36,6 +36,12 @@ sharing leaves these states intact. Typed lessons in these journeys are existing
 fixture data; automatic admission is separately exercised by the registered
 capture/publish/refresh loop, including its installed CLI variant.
 
+An additional installed-command journey combines erasure with an actual later
+ordinary code merge. It retains the terminal deletion marker across that merge,
+replays a pre-erasure completed refresh proposal without restoring the old body,
+and verifies an empty recall at a fresh boundary. Memory-only refresh snapshots
+and explicit ordinary code-integration assertions keep these operations distinct.
+
 `tests/shared-learning-matrix.json` binds all seventeen approved obligations to
 mandatory registered methods. Besides the new journeys, it retains automatic
 durable capture, comparison before writes, deduplication before landing,

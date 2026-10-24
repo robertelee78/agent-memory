@@ -251,6 +251,10 @@
         {
           "suite": "later-code-merge",
           "test": "RefreshIntegrationContract.test_cursor_loss_recovers_from_git_and_later_normal_code_merge_does_not_duplicate_memory"
+        },
+        {
+          "suite": "multi-machine-merge-replay",
+          "test": "MultiMachineMergeReplay.test_erasure_survives_an_ordinary_code_merge_and_pre_erasure_proposal_replay"
         }
       ]
     },
@@ -264,6 +268,14 @@
         {
           "suite": "correction-erasure",
           "test": "GovernanceContract.test_erasure_includes_consolidated_capture_identity_so_a_saved_capture_cannot_be_admitted_again"
+        },
+        {
+          "suite": "multi-machine-merge-replay",
+          "test": "MultiMachineMergeReplay.test_erasure_survives_an_ordinary_code_merge_and_pre_erasure_proposal_replay"
+        },
+        {
+          "suite": "refresh-invalidation",
+          "test": "RefreshInvalidationContract.test_landed_tombstone_removes_a_locally_edited_old_record_without_staging_or_resurrection"
         }
       ]
     }
