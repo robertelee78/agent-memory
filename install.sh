@@ -20,7 +20,8 @@ Usage: install.sh [options]
   --remote URL --ref NAME  Select a managed Git source (default: HTTPS main)
   --development-source PATH  Select a complete local development package
 
-After installation: agent-memory update, agent-memory uninstall
+After installation: am update, am uninstall
+The agent-memory command remains available for compatibility.
 HELP
         exit 0
         ;;

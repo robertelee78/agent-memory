@@ -39,6 +39,15 @@ def strings(value, *, allow_empty=False):
             and len(set(value)) == len(value))
 
 
+def command_names(compatibility):
+    # Older runtimes know only the original name. Never add ownership that an
+    # old source's planner would strand on its next install/update.
+    names = compatibility.get('installed_commands', ['agent-memory'])
+    require(strings(names) and set(names) <= {'am', 'agent-memory'}
+            and 'agent-memory' in names, 'Unsupported installed command declaration')
+    return tuple(names)
+
+
 def inspect(pack):
     root = Path(pack).resolve(strict=True)
     validation = pack_validation.validate(root)
@@ -55,6 +64,7 @@ def inspect(pack):
             and spec.get('required_python_packages') == []
             and spec.get('required_agent_clients') == [],
             'Compatibility must declare bounded schema/tool lists and a client-neutral standard-library core')
+    command_names(spec)
     router = declaration(root, 'schemas/bank-router.json', files)
     require(router['properties']['schema']['const'] in spec['readable_bank_schemas'],
             'Native bank schema is absent from its readability declaration')

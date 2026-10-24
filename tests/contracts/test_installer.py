@@ -8,6 +8,7 @@ import sys
 import unittest
 
 from world import World
+from cli_alias_fixtures import channel as alias_channel, install as alias_install, alias_tmpdir, advance_to_current
 
 ROOT = Path(__file__).resolve().parents[2]
 PACK = ROOT/'skills/agent-memory'
@@ -141,7 +142,7 @@ class OneLineBootstrapContract(unittest.TestCase):
     def test_help_and_invalid_options_need_no_download_and_old_python_is_rejected(self):
         with World() as world:
             before = snapshot(world.root)
-            self.assertIn('agent-memory update', self.pipe(world, '--help').stdout)
+            self.assertIn('am update', self.pipe(world, '--help').stdout)
             self.assertEqual(snapshot(world.root), before)
             self.pipe(world, '--remote=', expected=2)
             self.pipe(world, '--ref', expected=2)
@@ -152,6 +153,163 @@ class OneLineBootstrapContract(unittest.TestCase):
             result = self.pipe(world, expected=1)
             self.assertIn('Python 3.11+', result.stderr)
             self.assertFalse((world.paths['state']/'agent-memory').exists())
+
+
+class MacOSCommandContract(unittest.TestCase):
+    def test_aliased_tmpdir_pipe_preview_install_update_and_both_commands(self):
+        with World() as world:
+            channel, pack = alias_channel(world); alias_tmpdir(world)
+            args = ['--remote', channel.as_uri(), '--presets', 'none', '--mode', 'copy']
+            def pipe(*tail):
+                return json.loads(world.run(['/bin/bash', '-c',
+                    'set -o pipefail; cat "$1" | /bin/bash -s -- "${@:2}"',
+                    'bootstrap-test', ROOT/'install.sh', *args, *tail], timeout=120).stdout)
+            before = snapshot(world.root)
+            self.assertFalse(pipe('--check')['installation_writes_performed'])
+            self.assertEqual(snapshot(world.root), before)
+            installed = pipe(); self.assertTrue(installed['verified'])
+            receipt = installed['receipt']; directory = Path(receipt['bin_dir'])
+            wrappers = {Path(t['path']).name for t in receipt['targets'] if t['kind'] == 'wrapper'}
+            self.assertEqual(wrappers, {'am', 'agent-memory'})
+            self.assertEqual((directory/'am').read_bytes(), (directory/'agent-memory').read_bytes())
+            for name in wrappers:
+                world.run([directory/name, 'version', '--json'])
+                world.run([directory/name, 'doctor', '--repo', world.paths['repo']])
+            (pack/'templates/native-path-update.txt').write_text('An updated artifact.\n')
+            world.git('add', '.', cwd=channel); world.git('commit', '-m', 'Update fixture', cwd=channel)
+            old_head = world.git('rev-parse', 'HEAD', cwd=Path(receipt['source']['path'])).stdout
+            world.run([directory/'am', 'update', '--check'])
+            self.assertEqual(world.git('rev-parse', 'HEAD', cwd=Path(receipt['source']['path'])).stdout, old_head)
+            updated = json.loads(world.run([directory/'am', 'update']).stdout)
+            self.assertTrue(updated['verified'])
+            for name in wrappers:
+                world.run([directory/name, 'version'])
+            world.run([directory/'am', 'uninstall'])
+            self.assertTrue(all(not (directory/name).exists() for name in wrappers))
+            self.assertEqual(list(world.paths['tmp'].glob('agent-memory-bootstrap.*')), [])
+
+    def test_actual_shipped_old_updater_then_install_migrates_without_stranding_ownership(self):
+        with World() as world:
+            channel, _ = alias_channel(world, legacy=True)
+            first = alias_install(world, channel, legacy=True)
+            self.assertTrue(first['verified'])
+            self.assertEqual(first['receipt']['source']['artifact_digest'],
+                             'e1f31421edb8a8bc47c359b2dc87ea6e448a2baf939068250ac3ff32e8bf5e5f')
+            directory = Path(first['receipt']['bin_dir']); original = directory/'agent-memory'
+            self.assertFalse((directory/'am').exists())
+            # A new outside installer must not add an alias to the still-old
+            # runtime: its actual old updater cannot preserve such a target.
+            still_old = alias_install(world, channel)
+            self.assertFalse(still_old['changed']); self.assertFalse((directory/'am').exists())
+            candidate = advance_to_current(world, channel); alias_tmpdir(world)
+            # This process imports the OLD installed updater before activation.
+            updated = json.loads(world.run([original, 'update'], timeout=120).stdout)
+            self.assertTrue(updated['verified'])
+            self.assertEqual(updated['receipt']['source']['revision'], candidate)
+            self.assertFalse((directory/'am').exists())
+            receipt_path = world.paths['state']/'agent-memory/install/receipt.json'
+            previous = receipt_path.read_bytes(); original_bytes = original.read_bytes()
+            unrelated = directory/'am'; unrelated.write_text('My unrelated am command.\n')
+            refused = world.run([original, 'install'], check=False)
+            self.assertEqual(refused.returncode, 1)
+            self.assertEqual(unrelated.read_text(), 'My unrelated am command.\n')
+            self.assertEqual(receipt_path.read_bytes(), previous)
+            self.assertEqual(original.read_bytes(), original_bytes)
+            self.assertNotIn('with recover before', json.loads(refused.stdout)['repair'])
+            unrelated.unlink()
+            ready = json.loads(world.run([original, 'install']).stdout)
+            self.assertTrue(ready['verified']); self.assertTrue((directory/'am').exists())
+            self.assertFalse(json.loads(world.run([directory/'am', 'update']).stdout)['changed'])
+            bank = world.paths['repo']/'memory-bank'; bank.mkdir()
+            (bank/'lesson.md').write_text('Keep shared memory.\n')
+            self.assertTrue(json.loads(world.run([directory/'am', 'uninstall']).stdout)['verified'])
+            self.assertFalse(original.exists()); self.assertFalse((directory/'am').exists())
+            self.assertEqual((bank/'lesson.md').read_text(), 'Keep shared memory.\n')
+
+    def test_unrelated_am_file_directory_or_link_refuses_without_activating_other_targets(self):
+        for kind in ('file', 'directory', 'link'):
+            with self.subTest(kind=kind), World() as world:
+                channel, _ = alias_channel(world); alias_tmpdir(world)
+                directory = world.paths['home']/'.local/bin'; directory.mkdir(parents=True)
+                target = directory/'am'
+                if kind == 'file': target.write_text('Unrelated am.\n')
+                elif kind == 'directory': target.mkdir(); (target/'mine').write_text('Keep.\n')
+                else: target.symlink_to(world.paths['repo'], target_is_directory=True)
+                before = snapshot(directory)
+                value = alias_install(world, channel, expected=1)
+                self.assertFalse(value['verified']); self.assertEqual(snapshot(directory), before)
+                self.assertFalse((world.paths['data']/'agent-memory/source').exists())
+                self.assertFalse((world.paths['state']/'agent-memory/install/receipt.json').exists())
+                self.assertNotIn('with recover before', value['repair'])
+
+    def test_interrupted_activation_recovers_both_owned_command_names(self):
+        for stage in ('install-after-activate-1', 'install-before-receipt'):
+            with self.subTest(stage=stage), World() as world:
+                channel, _ = alias_channel(world); alias_tmpdir(world)
+                result = world.run([sys.executable, '-I', HELPER, 'install', '--remote', channel.as_uri(),
+                                    '--presets', 'none'], check=False,
+                                   env={'AGENT_MEMORY_FAULT_STAGE': stage, 'AGENT_MEMORY_FAULT_MODE': 'exit'})
+                self.assertEqual(result.returncode, 86)
+                directory = world.paths['home']/'.local/bin'
+                self.assertTrue((directory/'am').exists())
+                self.assertEqual((directory/'agent-memory').exists(), stage == 'install-before-receipt')
+                recovery = json.loads(world.run([sys.executable, '-I', HELPER, 'recover']).stdout)
+                self.assertTrue(recovery['verified']); self.assertEqual(recovery['status'], 'rolled-back')
+                self.assertFalse((directory/'am').exists()); self.assertFalse((directory/'agent-memory').exists())
+                self.assertTrue(alias_install(world, channel)['verified'])
+
+    def test_uninstall_preserves_modified_am_and_runtime_while_removing_unchanged_compatibility_wrapper(self):
+        with World() as world:
+            channel, _ = alias_channel(world)
+            receipt = alias_install(world, channel)['receipt']
+            directory = Path(receipt['bin_dir']); target = directory/'am'
+            target.write_text('My modified am wrapper.\n')
+            value = json.loads(world.run([directory/'agent-memory', 'uninstall']).stdout)
+            self.assertTrue(value['verified'])
+            self.assertEqual(target.read_text(), 'My modified am wrapper.\n')
+            self.assertFalse((directory/'agent-memory').exists())
+            self.assertTrue(Path(receipt['source']['path']).exists())
+            self.assertIn(str(target), {p['path'] for p in value['preserved']})
+
+    def test_current_and_shipped_recovery_read_each_others_wrapper_journals(self):
+        for writer in ('current', 'legacy'):
+            with self.subTest(writer=writer), World() as world:
+                current, _ = alias_channel(world)
+                legacy, _ = alias_channel(world, legacy=True)
+                old_helper = legacy/'skills/agent-memory/scripts/installer.py'
+                source = current if writer == 'current' else legacy
+                entry = HELPER if writer == 'current' else old_helper
+                result = world.run([sys.executable, '-I', entry, 'install', '--remote', source.as_uri(),
+                                    '--presets', 'none'], check=False,
+                                   env={'AGENT_MEMORY_FAULT_STAGE': 'install-after-activate-1',
+                                        'AGENT_MEMORY_FAULT_MODE': 'exit'})
+                self.assertEqual(result.returncode, 86)
+                alias_tmpdir(world)
+                recover_entry = old_helper if writer == 'current' else HELPER
+                recovered = json.loads(world.run([sys.executable, '-I', recover_entry, 'recover']).stdout)
+                self.assertTrue(recovered['verified']); self.assertEqual(recovered['status'], 'rolled-back')
+                directory = world.paths['home']/'.local/bin'
+                self.assertFalse((directory/'am').exists()); self.assertFalse((directory/'agent-memory').exists())
+
+    def test_shipped_uninstaller_can_remove_new_wrappers_with_aliased_xdg_and_target_paths(self):
+        with World() as world:
+            current, _ = alias_channel(world)
+            legacy, _ = alias_channel(world, legacy=True)
+            alias_tmpdir(world)
+            alias = world.root/'home-path-alias'; alias.symlink_to(world.root, target_is_directory=True)
+            world.env['XDG_STATE_HOME'] = str(alias/'state')
+            world.env['XDG_DATA_HOME'] = str(alias/'data')
+            custom = alias/'custom skills'
+            value = alias_install(world, current, '--bin-dir', alias/'home/.local/bin',
+                                  '--target-dir', custom)
+            self.assertTrue(value['verified']); receipt = value['receipt']
+            self.assertEqual(Path(receipt['bin_dir']), world.paths['home']/'.local/bin')
+            outside = legacy/'skills/agent-memory/scripts/installer.py'
+            removed = json.loads(world.run([sys.executable, '-I', outside, 'uninstall']).stdout)
+            self.assertTrue(removed['verified'])
+            directory = Path(receipt['bin_dir'])
+            self.assertFalse((directory/'am').exists()); self.assertFalse((directory/'agent-memory').exists())
+            self.assertFalse((world.root/'custom skills/agent-memory').exists())
 
 
 class InstallerContract(unittest.TestCase):

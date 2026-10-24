@@ -33,7 +33,8 @@ requirements when using its installed alias.
 
 ## Apply
 
-Installation creates `agent-memory` in the receipt's `bin_dir`. Every command
+Installation creates `am` and the compatibility command `agent-memory` in the
+receipt's `bin_dir`. Both wrappers are separately owned targets. Every command
 uses the same packaged public helper and outputs JSON; `--json` is an optional
 explicit selector. The trusted source entry point remains usable before
 installation or when repairing a missing wrapper:
@@ -47,7 +48,7 @@ python3 -I "$SKILL_DIR/scripts/installer.py" checkpoint inspect --repo REPO
 python3 -I "$SKILL_DIR/scripts/installer.py" boundary inspect --repo REPO
 ```
 
-The installed equivalents start with `agent-memory`, followed by the same
+The installed equivalents start with `am` (or `agent-memory`), followed by the same
 arguments after `installer.py`. A session SHOULD use `--help` on the selected
 command to discover its exact request/proposal arguments. Paths with spaces
 MUST remain one quoted argument. Invalid arguments exit 2; a refused operation

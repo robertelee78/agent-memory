@@ -1,7 +1,7 @@
 # Installed command and storage integration
 
-The lifecycle components ship as one runtime. The installed `agent-memory`
-wrapper exposes `install`, `uninstall`, `update --check`, `update`, `version`,
+The lifecycle components ship as one runtime. The installed `am` command and
+compatibility `agent-memory` wrapper expose `install`, `uninstall`, `update --check`, `update`, `version`,
 `doctor` and `status`. Install/update/uninstall use verified receipts;
 `version`, `status`, `doctor` and lifecycle previews return machine-readable
 observations with their qualifications. The trusted portable helpers remain
@@ -12,7 +12,7 @@ ADR-0004 integration story; these lifecycle checks do not claim that release gat
 | Responsibility | Location and ownership |
 | --- | --- |
 | Managed runtime | `${XDG_DATA_HOME:-$HOME/.local/share}/agent-memory/source`; one clean recorded Git channel, with `skills/agent-memory/` as its portable artifact. |
-| Installed command | `$HOME/.local/bin/agent-memory` by default, or the explicit `--bin-dir`; its wrapper resolves to the recorded portable runtime. |
+| Installed commands | `$HOME/.local/bin/am` and compatibility `$HOME/.local/bin/agent-memory` by default, or the explicit `--bin-dir`; both owned wrappers resolve to the same recorded portable runtime. |
 | Lifecycle state | `${XDG_STATE_HOME:-$HOME/.local/state}/agent-memory/install/`; receipt, journal, stable lock, owner metadata and receipt history survive source removal. |
 | Replacement backups | Exact paths recorded in the receipt, beside affected targets or in installer state. They stay outside the active managed checkout and survive uninstall. |
 | Durable project memory | One repository/worktree-local bank, selected by the established locator and optional `agent-memory.bankRoot` setting. It is not installer-owned data. |
@@ -42,6 +42,16 @@ for custom harnesses. `--presets none` with custom roots creates only those
 discovery targets. With no custom roots it creates no client links or activation
 blocks while retaining a functional command wrapper and managed source. Neither
 mode requires a client executable, developer bootstrap or initialized bank.
+
+New artifacts declare `installed_commands: ["am", "agent-memory"]` in runtime
+compatibility metadata. Absent declarations retain the legacy `agent-memory`
+name only. Reinstalling through newer source helpers does not add aliases to an
+older selected runtime whose planner cannot preserve them. The actual pre-alias
+updater upgrades source using its already-loaded old planner; existing users
+therefore run `agent-memory update` followed once by `agent-memory install` to
+activate `am`. Subsequent `am update` operations plan and verify both wrappers.
+Receipts remain the authority for which command paths are actually owned;
+declarations do not imply that an unowned path exists.
 
 Link mode resolves every client to the same portable artifact. Copy mode keeps
 separate physical copies bound to the same complete byte/mode digest; guarded
