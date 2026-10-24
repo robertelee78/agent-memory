@@ -2,6 +2,60 @@
 
 A portable, local-first Memory Bank for coding agents.
 
+## v0.0.1
+
+One repository owns one shared Markdown memory bank. The skill captures durable
+learning, reads existing memory before adding it, combines duplicates without
+losing conditions or evidence, and recalls relevant knowledge. Memory can land
+independently of unfinished feature code and refresh into other sessions,
+worktrees and clones through the repository's existing Git rules. Contradictions
+go to the detecting developer for clarification.
+
+See the [v0.0.1 release guide](docs/releases/v0.0.1.md) for the supported workflow,
+compatibility and known limits. The [published release](https://github.com/robertelee78/agent-memory/releases/tag/v0.0.1)
+holds the release's source and validation evidence.
+
+## Install and first use
+
+Start from a trusted complete checkout with Python 3.11+ and Git. Preview before
+activating the default managed `main` channel:
+
+```sh
+./install.sh --check --mode copy
+```
+
+Inspect the source and every proposed target, then apply the same configuration:
+
+```sh
+./install.sh --mode copy
+```
+
+Defaults include generic Agent Skills, Codex, Claude and OpenCode discovery.
+Use `--presets none` and repeated `--target-dir` arguments for custom discovery.
+The receipt identifies `bin_dir`; add that directory to your shell's `PATH` if
+needed. Installation needs neither a developer identity nor an initialized bank.
+Follow the [installation guide](skills/agent-memory/lifecycle/install/GUIDE.md)
+for ownership, recovery and explicit local/development sources. Development
+sources are separate from the managed channel and are not updated by the updater.
+
+Ask your coding agent to use the installed `agent-memory` skill in the target
+repository. It routes explicit developer/project setup, evidence-led bank
+initialization, qualified recall and the learning loop. At natural turn
+boundaries it refreshes landed memory, compares new learning with existing
+memory, and publishes eligible memory through current repository rules. Load
+the skill in each session; v0.0.3 hooks are planned to cover forgotten invocation.
+The [common CLI guide](skills/agent-memory/maintain/cli/GUIDE.md) documents the
+same public helpers and installed aliases.
+
+For an existing managed installation, preview with `agent-memory update --check`
+before `agent-memory update`. Preview removal with `agent-memory uninstall --check`
+before `agent-memory uninstall`. Ordinary uninstall preserves project memory and
+user edits; explicit bank deletion has a separate confirmed purge operation.
+Keep a trusted complete package available for recovery after wrapper removal.
+See [update](skills/agent-memory/lifecycle/update/GUIDE.md),
+[uninstall](skills/agent-memory/lifecycle/uninstall/GUIDE.md) and
+[diagnostics](skills/agent-memory/lifecycle/diagnose/GUIDE.md).
+
 ## Mission
 
 Take what is good about
@@ -22,7 +76,7 @@ project memory that helps a fresh agent understand what the project is, what
 matters now, what has changed, what remains uncertain, and where stronger
 evidence lives.
 
-The design is being developed from primary research, current production systems,
+The design draws on primary research, current production systems,
 and the progressive-disclosure architecture used by
 `agent-work-accountability`.
 
@@ -45,8 +99,8 @@ Implementation planning is tracked in the repository's
 [GitHub Projects](https://github.com/robertelee78/agent-memory/projects) and
 [release milestones](https://github.com/robertelee78/agent-memory/milestones),
 starting with `v0.0.1`. Each ADR has its own Project; release milestones span
-Projects. The v0.0.1 tasks have recorded design approval; GitHub tracks their
-execution, with predecessor dependencies governing when each can start. Their
+Projects. GitHub records the v0.0.1 tasks' design approval, execution, independent
+acceptance and delivery. Their
 [ordered queue](docs/design/v0.0.1-work.json)
 preserves the existing task identities. Prerequisite delivery is reviewed merge
 to main, with the complete release tracked by its final publication gate.
@@ -68,9 +122,9 @@ protocol. The [file-only workflow](skills/agent-memory/offline/GUIDE.md) remains
 available when the command and helpers are absent.
 
 Run `scripts/test.sh` from a checkout with Python 3.11+ and Git. It runs the
-implemented offline public-interface suites in disposable test worlds and
-reports remaining contracts as pending. `scripts/test.sh --release` rejects
-incomplete release coverage. See the [test gate guide](docs/testing/README.md)
+offline public-interface suites in disposable test worlds. The registry declares
+116 mandatory suites and explicitly excludes optional future stores.
+`scripts/test.sh --release` rejects incomplete release coverage. See the [test gate guide](docs/testing/README.md)
 for isolation rules, suite registration and receipt fields.
 The [portable lifecycle matrix](docs/contracts/portable-lifecycle.md) connects
 the complete lifecycle requirements to real installed-command and fault cases.
@@ -84,13 +138,14 @@ channel checks, staged fast-forward activation and recoverable retries. The
 memory and user edits; a separate inventory-bound, explicitly confirmed purge
 deletes only one selected local bank. Read-only `version`, `status` and `doctor`
 commands expose runtime identity and bank health. The complete portable lifecycle
-release matrix retains its separate acceptance gate.
+matrix is included in the mandatory release gate.
 
 The [shared lifecycle model](docs/contracts/lifecycle-model.md) supplies the
 read-only transition and current-selection decisions used by later operations.
 
 The [developer attribution initializer](docs/contracts/developer-attribution.md)
-supports explicit stable-ID creation, adoption and selection before installation.
+supports explicit stable-ID creation, adoption and selection for governed memory
+operations; runtime installation is independent of identity setup.
 
 The [project identity contract](docs/contracts/project-identity.md) describes
 stable bank IDs, worktree/clone evidence, remote normalization and explicit binding decisions.
@@ -127,7 +182,7 @@ markers content-free and guards stale projection rebuilds by stable record ID.
 The [memory publication contract](docs/contracts/memory-publication.md) prepares
 and lands reviewed memory independently of feature code, with current repository
 rules, first-publication support, original-index preservation and actual Git
-readback. The full installed workflow remains under execution.
+readback through the installed common CLI.
 
 The [landed-memory refresh contract](docs/contracts/memory-refresh.md) reconciles
 shared learning into a session without importing code, preserving unpublished
@@ -136,8 +191,8 @@ reads relevant qualified imports and retains honest pending/conflict/recovery st
 
 The initial [portable skill](skills/agent-memory/SKILL.md) provides an
 [offline file workflow](skills/agent-memory/offline/GUIDE.md) for useful manual
-setup, inspection, checkpoint and clean resume. Governed initialization and memory exchange have dedicated operation routes; the
-complete installed workflow remains under execution.
+setup, inspection, checkpoint and clean resume. Governed initialization and
+memory exchange have dedicated operation routes in the installed workflow.
 
 The [scope policy](skills/agent-memory/scope/GUIDE.md) defines shared repository
 knowledge and explicit component, branch, worktree, task and session conditions.
@@ -166,7 +221,8 @@ updates, uninstall and preserved project data.
 The [lifecycle fault harness](docs/contracts/lifecycle-faults.md) enumerates real
 before/after write interruptions, verified commits with lost responses, and
 recovery/retry checks. Its isolated suite workers collect their process groups
-before cleanup; the complete release gate retains its separate pending contracts.
+before cleanup; the complete release gate requires every registered mandatory
+suite and complete interruption/recovery/retry proofs.
 
 The [typed record contract](skills/agent-memory/records/GUIDE.md) preserves
 provenance, conditions, validity and explicit stale state in standalone Markdown.
@@ -179,4 +235,5 @@ provenance and conditions while refusing ambiguous routes or pending observation
 The portable [semantic sharing guide](skills/agent-memory/sharing/semantic/GUIDE.md)
 reviews actual local and landed learning before exchange, preserving origins and
 conditions and isolating disputed updates. This source-bound review produces
-candidate banks; automatic publication and boundary refresh are separate work.
+candidate banks; the publication and boundary refresh operations consume that
+review under their own validation and readback requirements.
