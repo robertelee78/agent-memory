@@ -147,7 +147,8 @@ def staged(old):
         # The current owned wrapper resolves this stable public entrypoint.
         files = inventory(Path(candidate['pack']))
         _, commands, _ = dispatch('scripts/installer.py', files)
-        install.require('update' in commands and 'install' in commands and 'recover' in commands,
+        _, existing, _ = dispatch('scripts/installer.py', inventory(Path(source['pack'])))
+        install.require({'update','install','recover'} | set(existing) <= set(commands),
                         'Candidate would remove the owned lifecycle command surface')
         yield root, candidate
 

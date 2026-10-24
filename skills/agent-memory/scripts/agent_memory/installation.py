@@ -285,6 +285,8 @@ def read_receipt(state):
             and value.get('verified') is True and isinstance(value.get('installation_id'), str)
             and isinstance(value.get('targets'), list) and isinstance(value.get('source'), dict),
             'Invalid installation ownership receipt: ' + str(path))
+    if value.get('uninstalled') is True:
+        return None
     for item in value['targets']:
         require(isinstance(item, dict) and item.get('kind') in {'copy', 'link', 'wrapper', 'activation', 'source'}
                 and absolute(item['path']) == Path(item['path']) and 'identity' in item,
@@ -538,7 +540,7 @@ def verify_targets(targets):
     for target in targets:
         path = Path(target['path'])
         require(fingerprint(path) == target['identity'], 'Installed target readback failed: ' + str(path))
-        if target['kind'] in ('copy', 'link'):
+        if target['identity'] is not None and target['kind'] in ('copy', 'link'):
             require(artifact.inspect(path)['artifact_digest'] == target['artifact_digest'],
                     'Client-visible artifact readback failed: ' + str(path))
 
@@ -553,7 +555,9 @@ def rollback(state, journal):
             continue
         if current != action['after'] or (action['before'] is not None and staged != action['before']):
             conflicts.append(str(path)); continue
-        if action['before'] is None:
+        if action['after'] is None:
+            native_rename(stage, path)
+        elif action['before'] is None:
             require(staged is None, 'Fresh activation rollback stage collision')
             native_rename(path, stage)
         else:
@@ -594,7 +598,8 @@ def recover(state, *, for_install=False):
             # Installation will re-plan ownership, including allowed surrounding
             # edits and explicit development-source changes, before any activation.
             return {'operation': 'recover', 'verified': False, 'status': 'install-validation-pending'}
-        verify_targets(journal['receipt']['targets'])
+        if not journal['receipt'].get('uninstalled'):
+            verify_targets(journal['receipt']['targets'])
         return {'operation': 'recover', 'verified': True, 'status': 'complete'}
     if journal['status'] == 'rolled-back':
         if for_install:
@@ -615,7 +620,7 @@ def recover(state, *, for_install=False):
 def install(plan, *, before_activate=None, after_activate=None):
     operation = plan.get('operation', 'install')
     state = plan['state']; old = plan['old']; changed = [a for a in plan['actions'] if a['changed']]
-    if (not changed and old and old['source'] == plan['source']
+    if (operation != 'uninstall' and not changed and old and old['source'] == plan['source']
             and all(t['identity'] == next(a['after'] for a in plan['actions'] if a['path']==t['path'])
                     for t in old['targets'])):
         verify_targets(old['targets'])
@@ -628,7 +633,7 @@ def install(plan, *, before_activate=None, after_activate=None):
                   'pre_change_identity': action['before']}
         if action['kind'] in ('copy','link'):
             target['artifact_digest'] = plan['source']['artifact_digest']
-        if action['kind'] == 'activation':
+        if action['kind'] == 'activation' and operation != 'uninstall':
             target['block_hash'] = sha(plan['shim'].encode())
             previous = next((t for t in (old['targets'] if old else []) if t['path']==action['path']), None)
             target['originally_absent'] = previous['originally_absent'] if previous else action['before'] is None
@@ -640,9 +645,12 @@ def install(plan, *, before_activate=None, after_activate=None):
                'bin_dir': plan['bin_dir'], 'enabled_adapters': plan['adapters'], 'data_roots': [],
                'memory_data_location': 'repository-local memory-bank/; not installer-owned',
                'runtime_state': str(state.parent), 'targets': targets,
-               'artifact_files': artifact.inspect(plan['pack_source'])['files'],
+               'artifact_files': {} if operation == 'uninstall' else artifact.inspect(plan['pack_source'])['files'],
                'backups': list(old.get('backups', [])) if old else [], 'created_directories': [],
                'rollback_available': True, 'atomicity': 'per target; journaled rollback across targets'}
+    if operation == 'uninstall':
+        receipt.update(uninstalled=True, uninstalled_at=receipt['installed_at'],
+                       preserved=plan['preserved'], reinstall=plan['reinstall'])
     journal = {'schema': JOURNAL_SCHEMA, 'operation': operation, 'transaction': transaction, 'status': 'staging',
                'actions': [], 'receipt': receipt, 'receipt_identity': None, 'created_directories': []}
     if os.path.lexists(state/'journal.json'):
@@ -660,13 +668,17 @@ def install(plan, *, before_activate=None, after_activate=None):
                 if action['before'] is not None else None
             journal['actions'].append(entry)
             replace_record(state/'journal.json', journal)
-            if action['kind'] == 'link':
+            if action['after'] is None:
+                pass  # The old node moves to its rollback stage during removal.
+            elif action['kind'] == 'link':
                 runtime_faults.mutate('link-stage', lambda: stage.symlink_to(plan['source']['pack'], target_is_directory=True))
             elif action['kind'] in ('copy','source'):
                 copy_node(Path(action['source_path']), stage)
             else:
                 write_file(stage, action['raw'], action['mode_bits'])
-            sync_tree(stage); sync_dir(stage.parent)
+            if action['after'] is not None:
+                sync_tree(stage)
+            sync_dir(stage.parent)
             require(fingerprint(stage) == action['after'], 'Staged target differs from preflight source')
             if action['before'] is not None:
                 backup = Path(entry['backup'])
@@ -700,7 +712,10 @@ def install(plan, *, before_activate=None, after_activate=None):
             fault(operation + '-before-activate-' + str(index))
             require(fingerprint(path) == action['before'] and fingerprint(stage) == action['after'],
                     'Target/stage changed immediately before activation: ' + str(path))
-            native_rename(stage, path, exchange=action['before'] is not None)
+            if action['after'] is None:
+                native_rename(path, stage)
+            else:
+                native_rename(stage, path, exchange=action['before'] is not None)
             sync_dir(path.parent)
             fault(operation + '-after-activate-' + str(index))
             require(fingerprint(path) == action['after']
@@ -749,10 +764,24 @@ def main(argv=None):
     update = commands.add_parser('update', help='Check or activate a verified managed-channel update')
     update.add_argument('--check', action='store_true')
     update.add_argument('--repo', action='append', default=[])
+    uninstall = commands.add_parser('uninstall', help='Remove only unchanged owned runtime targets; preserve project memory')
+    uninstall.add_argument('--check', '--dry-run', action='store_true')
+    purge = commands.add_parser('purge-data', help='Explicitly preview or confirm deletion of one exact local project bank')
+    purge.add_argument('--repo', required=True)
+    purge.add_argument('--path', required=True)
+    consent = purge.add_mutually_exclusive_group(required=True)
+    consent.add_argument('--check', action='store_true')
+    consent.add_argument('--confirm')
     commands.add_parser('recover', help='Verify a committed transaction or roll back interrupted activation')
     args = parser.parse_args(argv)
     if args.command == 'update':
         from .updating import execute
+        return execute(args)
+    if args.command == 'uninstall':
+        from .uninstallation import execute
+        return execute(args)
+    if args.command == 'purge-data':
+        from .purging import execute
         return execute(args)
     try:
         require(sys.version_info >= (3,11) and shutil.which('git'), 'Python 3.11+ and Git are required')
