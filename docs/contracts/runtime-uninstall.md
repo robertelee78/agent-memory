@@ -67,7 +67,7 @@ preserved. A newly recreated canonical bank remains untouched and is reported by
 Approved hardlink aliases retain the same consent boundary. Write-ahead unlink
 intent and recorded self-induced timestamp changes let recovery account for an
 alias removed immediately before interruption, without accepting changed file
-contents or modes under the original approval.
+contents, modes, modification times or inode identities under the original approval.
 
 The result concerns only the confirmed local bank. Runtime code, installation
 state, unrelated projects, staged code/index, external backups, remote copies and

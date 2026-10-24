@@ -26,6 +26,19 @@ def journal(world, confirmation):
 
 
 class RuntimePurgeContract(unittest.TestCase):
+    def test_metadata_changed_after_alias_unlink_gap_is_not_adopted_as_self_mutation(self):
+        with World() as world:
+            memory=bank(world,world.paths['repo']); (memory/'alias.md').hardlink_to(memory/'projectbrief.md')
+            token=purge(world,memory,'--check')['preview']['confirmation']
+            purge(world,memory,'--confirm',token,expected=86,env={
+                'AGENT_MEMORY_FAULT_STAGE':'purge-after-alias-unlink','AGENT_MEMORY_FAULT_MODE':'exit'})
+            stage=Path(json.loads(journal(world,token).read_text())['stage'])
+            path=stage/'projectbrief.md'; observed=path.stat()
+            os.utime(path,ns=(observed.st_atime_ns,observed.st_mtime_ns+1_000_000_000))
+            before=snapshot(stage)
+            denied=purge(world,memory,'--confirm',token,expected=1)
+            self.assertFalse(denied['verified']); self.assertEqual(snapshot(stage),before)
+
     def test_ordinary_hardlink_aliases_finish_and_recover_the_unlink_bookkeeping_gap(self):
         for point in (None,'purge-after-alias-unlink'):
             with self.subTest(point=point), World() as world:

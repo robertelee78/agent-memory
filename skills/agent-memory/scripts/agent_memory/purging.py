@@ -53,6 +53,7 @@ def identity(path):
     install.require(stat.S_ISREG(value.st_mode) and value.st_size <= 64*2**20,
                     'Purge inventory requires bounded ordinary files and directories')
     return {**result, 'kind':'file', 'bytes':value.st_size, 'change_time_ns':value.st_ctime_ns,
+            'modification_time_ns':value.st_mtime_ns,
             'sha256':install.sha(path.read_bytes())}
 
 
