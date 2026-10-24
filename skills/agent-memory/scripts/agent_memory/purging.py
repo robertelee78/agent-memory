@@ -126,6 +126,15 @@ def bank_lock(bank, expected_hash=None):
     install.require(not lock.is_symlink() and lock.is_file() and lock.stat().st_size<=65536,
                     'Purge lock must be an ordinary bounded file')
     owner = lock.read_bytes(); metadata = json.loads(owner, object_pairs_hook=unique_object)
+    install.require(isinstance(metadata, dict)
+                    and set(metadata)=={'operation_id','operation','host','pid','start'}
+                    and local_registry.uuid_valid(metadata['operation_id'])
+                    and type(metadata['pid']) is int and 0 < metadata['pid'] < 2**31,
+                    'Existing purge lock has unknown ownership metadata; preserve it')
+    try:
+        local_registry.time_value(metadata['start'])
+    except (ContractError, ValueError, TypeError):
+        raise ContractError('Existing purge lock timestamp is invalid; preserve it') from None
     install.require(metadata.get('operation')=='bank-purge' and metadata.get('host')==socket.gethostname(),
                     'Existing lock belongs to another operation or host; preserve it')
     if expected_hash is not None:
@@ -137,6 +146,7 @@ def bank_lock(bank, expected_hash=None):
     else:
         raise ContractError('Recorded purge process is still live; do not steal its lock')
     fd = os.open(lock, os.O_RDWR | getattr(os,'O_NOFOLLOW',0))
+    owned = False
     try:
         try:
             fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -144,9 +154,22 @@ def bank_lock(bank, expected_hash=None):
             raise ContractError('Another process still holds the purge lock') from None
         install.require(os.fstat(fd).st_ino==lock.lstat().st_ino and os.fstat(fd).st_nlink==1
                         and lock.read_bytes()==owner, 'Purge lock changed during recovery')
+        owned = True
         yield owner
     finally:
-        os.close(fd)
+        try:
+            # A detached quarantine retains its journal-bound lock on refusal.
+            # Only a pre-detachment bank lock can be released after a refused
+            # request without consuming pending deletion/recovery evidence.
+            if owned and expected_hash is None and os.path.lexists(lock):
+                install.require(not lock.is_symlink() and lock.is_file()
+                                and lock.stat().st_size <= 65536
+                                and os.fstat(fd).st_ino==lock.lstat().st_ino
+                                and os.fstat(fd).st_nlink==1 and lock.read_bytes()==owner,
+                                'Purge lock changed before release; preserve it')
+                runtime_faults.mutate('purge-bank-unlock', lambda: (lock.unlink(), install.sync_dir(bank)))
+        finally:
+            os.close(fd)
 
 
 def inode_key(item):
@@ -307,6 +330,7 @@ def execute(args):
     try:
         install.require(sys.version_info >= (3,11), 'Python 3.11 or later is required')
         result = run(args)
+        runtime_faults.response('purge', result)
     except (OSError, ValueError, TypeError, KeyError, UnicodeError, subprocess.SubprocessError) as exc:
         result = {'operation':'purge-data','verified':False,'error':str(exc),
                   'repair':'Preserve the bank, quarantine and external purge journal. Inspect the exact reported path; retry the same confirmed operation only after its writer has ended, or obtain a fresh preview for changed data.'}

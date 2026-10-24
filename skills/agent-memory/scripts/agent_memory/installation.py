@@ -184,6 +184,14 @@ def write_file(path, raw, mode=0o600):
     return runtime_faults.mutate('file-stage', lambda: _write_file(path, raw, mode))
 
 
+def cleanup_file(path):
+    if os.path.lexists(path):
+        def remove():
+            path.unlink()
+            sync_dir(path.parent)
+        runtime_faults.mutate('stage-cleanup', remove)
+
+
 def replace_record(path, value):
     stage = path.parent / ('.record-' + uuid.uuid4().hex)
     try:
@@ -193,8 +201,7 @@ def replace_record(path, value):
             sync_dir(path.parent)
         runtime_faults.mutate('record-publication', publish)
     finally:
-        if stage.exists():
-            stage.unlink()
+        cleanup_file(stage)
 
 
 def locations():
@@ -215,12 +222,23 @@ def read_owner(state):
     return owner
 
 
+def make_state_directory(path, *, leaf=True):
+    if path.exists():
+        require(path.is_dir() and not path.is_symlink(), 'State parent must be an ordinary directory')
+        return
+    make_state_directory(path.parent, leaf=False)
+    def create():
+        path.mkdir(mode=0o700 if leaf else 0o777)
+        sync_dir(path.parent)
+    runtime_faults.mutate('state-parent-directory', create)
+
+
 @contextmanager
 def locked(state):
     preflight_path(state)
     unchanged_parent(state)
     require(not state.is_symlink(), 'Installation state directory is a symlink')
-    state.mkdir(parents=True, exist_ok=True, mode=0o700)
+    make_state_directory(state)
     path = state/'lock'
     require(not path.is_symlink(), 'Lifecycle lock is a symlink: ' + str(path))
     if not os.path.lexists(path):
@@ -232,7 +250,7 @@ def locked(state):
             except FileExistsError:
                 pass
         finally:
-            seed.unlink(missing_ok=True)
+            cleanup_file(seed)
     fd = os.open(path, os.O_RDWR | getattr(os, 'O_NOFOLLOW', 0))
     try:
         try:
@@ -405,6 +423,26 @@ def preflight_layout(args, state, code, old):
         for source in sources:
             require_layout(not path.is_relative_to(source) and not source.is_relative_to(path),
                            'Installer must not mutate a source package or development source: ' + str(path))
+
+
+def lifecycle_paths(args, state, code, old):
+    """Validate the complete possible write set before enabling test faults."""
+    paths = [state, code]
+    if old:
+        paths.extend(Path(t['path']) for t in old['targets'])
+    journal = read_journal(state)
+    if journal:
+        for action in journal['actions']:
+            paths.extend(Path(action[key]) for key in ('path', 'stage'))
+    if args.command == 'install':
+        cfg = configuration(args, old)
+        paths.append(cfg['bin_dir'] / 'agent-memory')
+        for _, target, guidance in presets(cfg['presets']):
+            paths.append(absolute(target / 'agent-memory'))
+            if guidance and not cfg['no_guidance']:
+                paths.append(absolute(guidance))
+        paths.extend(absolute(target) / 'agent-memory' for target in cfg['custom_targets'])
+    return paths
 
 
 def public_plan(plan):
@@ -823,13 +861,14 @@ def main(argv=None):
             with prepare(args, state, code, read_receipt(state)) as plan:
                 result = public_plan(plan)
         else:
-            with locked(state):
+            with runtime_faults.operation(args.command, lifecycle_paths(args, state, code, read_receipt(state))), locked(state):
                 recovered = recover(state, for_install=args.command == 'install')
                 if args.command == 'recover':
                     result = recovered
                 else:
                     with prepare(args, state, code, read_receipt(state)) as plan:
                         result = install(plan)
+        runtime_faults.response(args.command, result)
     except (OSError, ValueError, TypeError, KeyError, UnicodeError, subprocess.SubprocessError) as exc:
         repair = ('Choose separate writable XDG state/data and client targets outside Memory Banks and source trees; '
                   'rerun install --check. Do not run recovery under the refused layout.' if isinstance(exc, LayoutError)

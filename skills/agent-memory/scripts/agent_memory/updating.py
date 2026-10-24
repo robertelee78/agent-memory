@@ -205,6 +205,7 @@ def run(args):
 def execute(args):
     try:
         result = run(args)
+        runtime_faults.response('update', result)
     except (OSError, ValueError, TypeError, KeyError, UnicodeError, SyntaxError, RecursionError, subprocess.SubprocessError) as exc:
         result = {'operation':'update','verified':False,'error':str(exc),
                   'repair':'Preserve the receipt, source and bank; correct the reported channel/ownership/compatibility issue. '

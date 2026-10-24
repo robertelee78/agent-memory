@@ -9,6 +9,7 @@ import json
 import os
 from pathlib import Path
 import secrets
+import signal
 import shutil
 import subprocess
 import sys
@@ -87,7 +88,7 @@ class World:
             raise ValueError("Test path escapes its disposable world")
         return path
 
-    def run(self, args, *, cwd=None, env=None, check=True, timeout=60):
+    def run(self, args, *, cwd=None, env=None, check=True, timeout=60, group=False):
         if isinstance(args, (str, bytes)):
             raise ValueError("Commands require an argument list; shell execution is disabled")
         working = self.inside(cwd or self.paths["repo"])
@@ -97,8 +98,34 @@ class World:
             if any(not key.startswith("AGENT_MEMORY_FAULT_") for key in env):
                 raise ValueError("Only explicit fault-injection overrides are accepted")
             child_env.update(env)
-        return subprocess.run([str(a) for a in args], cwd=working, env=child_env,
-                              text=True, capture_output=True, check=check, timeout=timeout)
+        argv = [str(a) for a in args]
+        if not group:
+            return subprocess.run(argv, cwd=working, env=child_env,
+                                  text=True, capture_output=True, check=check, timeout=timeout)
+        # Suite workers can have public-command descendants when they time out.
+        # Own their entire process group before removing the disposable World.
+        process = subprocess.Popen(argv, cwd=working, env=child_env, text=True,
+                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                   start_new_session=True)
+        try:
+            try:
+                stdout, stderr = process.communicate(timeout=timeout)
+            except subprocess.TimeoutExpired:
+                try:
+                    os.killpg(process.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+                stdout, stderr = process.communicate(timeout=10)
+                raise subprocess.TimeoutExpired(argv, timeout, output=stdout, stderr=stderr) from None
+        finally:
+            try:
+                os.killpg(process.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+        result = subprocess.CompletedProcess(argv, process.returncode, stdout, stderr)
+        if check:
+            result.check_returncode()
+        return result
 
     def git(self, *args, cwd=None, **kwargs):
         return self.run(["git", *args], cwd=cwd, **kwargs)

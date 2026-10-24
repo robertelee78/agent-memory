@@ -150,6 +150,11 @@ ownership evidence, canonical memory and disposable derived files. Integrated
 tests exercise link/copy, custom-only and no-client installations against real
 updates, uninstall and preserved project data.
 
+The [lifecycle fault harness](docs/contracts/lifecycle-faults.md) enumerates real
+before/after write interruptions, verified commits with lost responses, and
+recovery/retry checks. Its isolated suite workers collect their process groups
+before cleanup; the complete release gate retains its separate pending contracts.
+
 The [typed record contract](skills/agent-memory/records/GUIDE.md) preserves
 provenance, conditions, validity and explicit stale state in standalone Markdown.
 Its read-only validator also handles optional history and the safe tombstone exception.
