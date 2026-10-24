@@ -71,7 +71,10 @@ def discover(repo, authority=None, *, owned_lock=None, owned_transaction=None):
             canonical = entry["identities"][0]
         else:
             issues.append("Authority fetch/push URLs do not identify one repository; repair or explicitly bind a consistent remote")
-    bank = repository_config.bank_path(root)
+    # Keep one coherent settings observation with the router read below.
+    # Callers still rediscover at their final source/lock boundaries.
+    repo_settings = repository_config.settings(root)
+    bank = root / repo_settings['bank_root']
     router = bank / "MEMORY.md"
     if bank.is_symlink() or router.is_symlink():
         raise ContractError("Bank/router must not be symlinks")
@@ -84,7 +87,7 @@ def discover(repo, authority=None, *, owned_lock=None, owned_transaction=None):
     return {"repo_root": str(root), "is_git": is_git, "common_git_dir": str(common) if is_git else None,
             "checkout_key": f"{stat.st_dev}:{stat.st_ino}", "location": str(common), "authority_name": selected,
             "canonical_remote": canonical, "configured_authority": configured_values, "remotes": remotes, "bank_project_id": metadata.get("project-id"),
-            "bank_canonical_remote": metadata.get("canonical-remote"), "repository_settings": repository_config.settings(root), "router_sha256": digest(raw), "issues": issues}
+            "bank_canonical_remote": metadata.get("canonical-remote"), "repository_settings": repo_settings, "router_sha256": digest(raw), "issues": issues}
 
 
 def canonical(value):
@@ -159,8 +162,9 @@ def evidence(repo, data, authority=None, **owned):
     # A saved explicit authority decision remains effective for this checkout.
     initial = discover(repo, authority, **owned)
     known = data["checkouts"].get(initial["checkout_key"])
-    configured = git(initial["repo_root"], "config", "--get-all", "agent-memory.authorityRemote", optional=True) if initial["is_git"] else None
-    if authority is None and not configured and known and known["authority_name"] is not None:
+    if authority is None and not initial['configured_authority'] and known and known["authority_name"] is not None:
+        if initial['authority_name'] == known['authority_name']:
+            return initial
         return discover(repo, known["authority_name"], **owned)
     return initial
 

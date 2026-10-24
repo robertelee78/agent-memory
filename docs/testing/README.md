@@ -22,6 +22,13 @@ copy/all-client and link/custom-only journeys. The CI workflow runs the same
 complete gate on Ubuntu/macOS and Python 3.11/3.15, retaining actual results,
 failures and checked-out commit/tree evidence for each cell.
 
+For expensive independent interruption cases, the gate requires every declared
+batch and aggregates actual fault proofs before reporting completeness. The
+proofs must describe the same runtime artifact and observed write inventory,
+with no missing or duplicate interruption/recovery/retry. Controlled gate
+fixtures exercise rejection of absent/incomplete proofs; their simulated
+metadata is not production interruption evidence.
+
 `tests/contracts.json` routes the pack, lifecycle, bank, concurrency, client,
 optional and evaluation layers. Each feature story MUST add public-interface
 cases to its applicable suite and replace its pending entry with a test path.

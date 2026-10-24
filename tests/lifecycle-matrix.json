@@ -125,27 +125,27 @@
       "cases": [
         {
           "suite": "update-write-before",
-          "test": "UpdateWriteBeforeContract.test_before_every_observed_logical_durable_update_write"
+          "test": "UpdateWriteBeforeContract.test_actual_logical_writes_in_partition_0"
         },
         {
           "suite": "update-write-after",
-          "test": "UpdateWriteAfterContract.test_after_every_observed_logical_durable_update_write"
+          "test": "UpdateWriteAfterContract.test_actual_logical_writes_in_partition_0"
         },
         {
           "suite": "install-write-copy-before",
-          "test": "InstallCopyBeforeContract.test_before_every_copy_install_write"
+          "test": "InstallCopyBeforeContract.test_actual_logical_writes_in_partition_0"
         },
         {
           "suite": "install-write-copy-after",
-          "test": "LifecycleWriteContract.test_after_every_install_copy_write"
+          "test": "LifecycleWriteContract.test_actual_logical_writes_in_partition_0"
         },
         {
           "suite": "install-write-link-before",
-          "test": "LifecycleWriteContract.test_before_every_install_link_write"
+          "test": "LifecycleWriteContract.test_actual_logical_writes_in_partition_0"
         },
         {
           "suite": "install-write-link-after",
-          "test": "LifecycleWriteContract.test_after_every_install_link_write"
+          "test": "LifecycleWriteContract.test_actual_logical_writes_in_partition_0"
         },
         {
           "suite": "uninstall-write-copy-before",
@@ -206,6 +206,78 @@
         {
           "suite": "purge-unlock-after",
           "test": "PurgeUnlockAfterContract.test_after_refused_purge_unlock"
+        },
+        {
+          "suite": "update-write-before-part-1",
+          "test": "UpdateWriteBeforePart1Contract.test_actual_logical_writes_in_partition_1"
+        },
+        {
+          "suite": "update-write-before-part-2",
+          "test": "UpdateWriteBeforePart2Contract.test_actual_logical_writes_in_partition_2"
+        },
+        {
+          "suite": "update-write-before-part-3",
+          "test": "UpdateWriteBeforePart3Contract.test_actual_logical_writes_in_partition_3"
+        },
+        {
+          "suite": "update-write-after-part-1",
+          "test": "UpdateWriteAfterPart1Contract.test_actual_logical_writes_in_partition_1"
+        },
+        {
+          "suite": "update-write-after-part-2",
+          "test": "UpdateWriteAfterPart2Contract.test_actual_logical_writes_in_partition_2"
+        },
+        {
+          "suite": "update-write-after-part-3",
+          "test": "UpdateWriteAfterPart3Contract.test_actual_logical_writes_in_partition_3"
+        },
+        {
+          "suite": "install-write-copy-before-part-1",
+          "test": "InstallCopyBeforePart1Contract.test_actual_logical_writes_in_partition_1"
+        },
+        {
+          "suite": "install-write-copy-before-part-2",
+          "test": "InstallCopyBeforePart2Contract.test_actual_logical_writes_in_partition_2"
+        },
+        {
+          "suite": "install-write-copy-before-part-3",
+          "test": "InstallCopyBeforePart3Contract.test_actual_logical_writes_in_partition_3"
+        },
+        {
+          "suite": "install-write-copy-after-part-1",
+          "test": "LifecycleWritePart1Contract.test_actual_logical_writes_in_partition_1"
+        },
+        {
+          "suite": "install-write-copy-after-part-2",
+          "test": "LifecycleWritePart2Contract.test_actual_logical_writes_in_partition_2"
+        },
+        {
+          "suite": "install-write-copy-after-part-3",
+          "test": "LifecycleWritePart3Contract.test_actual_logical_writes_in_partition_3"
+        },
+        {
+          "suite": "install-write-link-before-part-1",
+          "test": "LifecycleWritePart1Contract.test_actual_logical_writes_in_partition_1"
+        },
+        {
+          "suite": "install-write-link-before-part-2",
+          "test": "LifecycleWritePart2Contract.test_actual_logical_writes_in_partition_2"
+        },
+        {
+          "suite": "install-write-link-before-part-3",
+          "test": "LifecycleWritePart3Contract.test_actual_logical_writes_in_partition_3"
+        },
+        {
+          "suite": "install-write-link-after-part-1",
+          "test": "LifecycleWritePart1Contract.test_actual_logical_writes_in_partition_1"
+        },
+        {
+          "suite": "install-write-link-after-part-2",
+          "test": "LifecycleWritePart2Contract.test_actual_logical_writes_in_partition_2"
+        },
+        {
+          "suite": "install-write-link-after-part-3",
+          "test": "LifecycleWritePart3Contract.test_actual_logical_writes_in_partition_3"
         }
       ]
     },
@@ -582,6 +654,10 @@
         {
           "suite": "gate-diagnostics",
           "test": "GateDiagnosticsContract.test_actual_timeout_and_failed_completion_record_preserve_both_worker_streams"
+        },
+        {
+          "suite": "lifecycle-fault-partitions",
+          "test": "LifecyclePartitionContract.test_every_observed_interruption_partition_is_mandatory_and_correctly_routed"
         }
       ]
     }

@@ -49,6 +49,7 @@ class World(_ActualWorld):
         return super().run(args, **kwargs)
 '''
             (checkout/'tests/world.py').write_text(source)
+            shutil.copy2(ROOT/'tests/fault_partitions.py',checkout/'tests/fault_partitions.py')
             manifest = json.loads((ROOT/'tests/contracts.json').read_text())
             for entry in manifest['suites']:
                 if entry['scope'] == 'v0.0.1':

@@ -23,7 +23,7 @@ and client roots, actual installed commands and preserved source/index/history:
 registered test methods. The binding check rejects missing suites/methods or
 pending/optional substitutions. Its references include no-client modes,
 unrelated-target refusal, owned backups, sentinel edits, source/ref/downgrade
-guards, all twenty real before/after fault shards, committed lost responses,
+guards, all thirty-eight real before/after fault workers, committed lost responses,
 rollback/locks, modified-target preservation and confirmed purge. It also binds
 package validation and the isolation/worker-collection controls. The collector
 uses a supervisor that retains ownership of its process group through descendant
@@ -34,6 +34,26 @@ command rather than reporting an unverifiable success.
 If that failure follows a worker timeout, the actual producer and disposable
 gate regressions require both worker streams, the record exception and the
 original timeout to survive collection.
+
+The six expensive update/install phase-and-mode inventories run as four
+mandatory disjoint batches each. Every batch observes the complete clean write
+inventory, interrupts its selected real writes, recovers, retries and retains
+the original preservation/ownership checks. The gate compares their actual
+artifact identities and complete observed inventories, then requires every
+point exactly once across all four batches. A missing batch, proof, interruption
+or retry fails the gate. The other fourteen fault workers retain their complete
+inventories. No fault point or public 300-second worker limit is removed.
+
+Project identity discovery uses one coherent repository-settings observation
+per discovery and reuses it when the saved authority already matches the
+observed selection. Each final source/lock boundary still obtains a fresh
+observation; there is no cache across operations or sessions.
+
+The three independent installed-bank cases have separate mandatory workers for
+cold initialization/checkpoint, qualified recall and governance intent guards.
+Their method bodies and assertions are preserved. The complete automatic
+capture/publish/refresh journey remains one indivisible case; independent case
+separation does not replace or split that workflow.
 
 Bindings are coverage obligations, not additional executions or proof that an
 assertion is correct. The public gate executes each registered suite once;

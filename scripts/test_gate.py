@@ -13,12 +13,14 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(ROOT / "tests"))
 from world import World
+from fault_partitions import OWNERS, registered as registered_partitions, extract as partition_proof, coverage as partition_coverage
 
 REQUIRED = {
     "bank-roundtrip", "identity-isolation", "observed-writes", "learning-admission",
     "retrieval-context", "correction-erasure", "initialize-evidence", "cross-clone-sharing",
     "concurrent-sharing", "offline-replay", "later-code-merge", "portable-lifecycle",
     "security-canaries", "skill-routes",
+    "installed-bank-initialization", "installed-bank-qualified-recall", "installed-bank-governance",
 }
 LAYERS = {"pack", "lifecycle", "bank", "concurrency", "client", "optional", "evaluation"}
 
@@ -50,6 +52,7 @@ def registry():
             raise ValueError("Pending suites require an explicit reason")
     if not next(e for e in entries if e["name"] == "harness").get("path"):
         raise ValueError("Harness suite must be implemented")
+    registered_partitions(entries)
     return entries
 
 
@@ -94,11 +97,15 @@ def main(argv=None):
                         counts = json.loads(result.stdout)
                         item.update(counts)
                         item["status"] = "passed" if result.returncode == 0 and counts["passed"] else "failed"
+                        if item['status']=='passed' and entry['name'] in OWNERS:
+                            item['fault_partition'] = partition_proof(result.stderr, entry['name'])
                     except (subprocess.TimeoutExpired, ValueError, KeyError) as exc:
                         diagnostic(exc)
                         item.update(status="failed", reason=str(exc), tests=0)
                     stage = 'world-cleanup'
             report["suites"].append(item)
+        active = 'lifecycle-fault-partitions'; stage = 'coverage-aggregation'
+        report['fault_partition_coverage'] = partition_coverage(report['suites'])
         pending = any(s["status"] == "pending" for s in report["suites"])
         failed = any(s["status"] == "failed" for s in report["suites"])
         report["release_complete"] = not pending and not failed
