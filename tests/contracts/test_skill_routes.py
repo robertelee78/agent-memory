@@ -285,6 +285,19 @@ class SkillRouteContract(unittest.TestCase):
             value = self.check(world, pack)
             self.assertFalse(value['valid']); self.assertEqual(value['issues'][0]['code'], 'dispatch')
 
+    def test_working_delegated_help_commands_are_valid_documented_commands(self):
+        # Actual independent #17 preflight false refusals on d32a0f4:
+        # checkpoint/boundary help exit 0 but static delegation rejected them.
+        for group in ('checkpoint', 'boundary', 'capture', 'identity'):
+            with self.subTest(group=group), World() as world:
+                pack = self.copy(world); before = observed(pack)
+                result = world.run([sys.executable, '-I', pack/'scripts/installer.py', group, '--help'], check=False)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertIn('usage:', result.stdout); self.assertEqual(observed(pack), before)
+                self.append(pack/'maintain/cli/GUIDE.md',
+                            '\n```sh\npython3 -I "$SKILL_DIR/scripts/installer.py" ' + group + ' --help\n```\n')
+                self.assertTrue(self.check(world, pack)['valid'], group)
+
     @staticmethod
     def append(path, text):
         path.write_text(path.read_text() + text)

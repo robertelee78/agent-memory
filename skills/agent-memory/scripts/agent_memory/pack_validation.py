@@ -469,7 +469,8 @@ def validate(pack):
                     delegated = [*prefix, *argv[4:]]
                     module, child_commands, flags = dispatch('scripts/' + helper, files)
                     child_verb = delegated[0] if delegated and not delegated[0].startswith('-') else None
-                    require((child_verb in child_commands) if child_commands else child_verb is None,
+                    child_help_only = delegated in (['--help'], ['-h'])
+                    require(child_help_only or ((child_verb in child_commands) if child_commands else child_verb is None),
                             'dispatch', path, 'Unknown documented delegated operation for ' + script)
                     tail = delegated
                     flags = flags | {'--json'}
