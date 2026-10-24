@@ -529,14 +529,20 @@ def apply(prepared):
         governance_verified=receipt.get('verified') is True and receipt.get('outcome') == 'finished')
 
 
-def main(argv=None):
+def main(argv=None, *, required_operations=None):
     parser = argparse.ArgumentParser(description=__doc__);commands = parser.add_subparsers(dest='command', required=True)
     sub = commands.add_parser('preview');sub.add_argument('--repo', required=True);sub.add_argument('--request', required=True)
     sub = commands.add_parser('apply');sub.add_argument('--proposal', required=True)
     args = parser.parse_args(argv)
     try:
-        value = (preview(args.repo, admission.read_input(args.request, 262144)) if args.command == 'preview'
-                 else apply(admission.read_input(args.proposal, 33554432)))
+        prepared = admission.read_input(args.request if args.command == 'preview' else args.proposal,
+                                        262144 if args.command == 'preview' else 33554432)
+        if required_operations is not None:
+            request = (prepared if args.command == 'preview' else
+                       tx.proposal_value(prepared)['governance_evidence']['request'])
+            if request['operation'] not in required_operations:
+                raise ContractError('The requested operation differs from the CLI intent')
+        value = preview(args.repo, prepared) if args.command == 'preview' else apply(prepared)
         print(json.dumps(value, indent=2, ensure_ascii=False));return 0
     except (ContractError, OSError, ValueError, TypeError, KeyError, AttributeError, RecursionError):
         print(json.dumps(result(args.command, verified=False, canonical_writes_performed=False if args.command == 'preview' else None,

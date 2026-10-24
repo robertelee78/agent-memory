@@ -265,8 +265,9 @@ def command_argv(line, path):
     return argv
 
 
-def dispatch(script, files):
+def dispatch(script, files, *, details=False, seen=()):
     """Resolve a literal main import and static argparse commands, without import."""
+    require(script not in seen and len(seen) < 8, 'dispatch', script, 'Cyclic or excessive helper delegation')
     tree = ast.parse(files[script][0].decode('utf-8'), filename=script)
     imports = [n for n in ast.walk(tree) if isinstance(n, ast.ImportFrom)
                and n.module and n.module.startswith('agent_memory.')
@@ -275,6 +276,13 @@ def dispatch(script, files):
     module = 'scripts/' + imports[0].module.replace('.', '/') + '.py'
     require(module in files, 'dispatch', script, 'Dispatch implementation is missing')
     tree = ast.parse(files[module][0].decode('utf-8'), filename=module)
+    literals = {}
+    for node in tree.body:
+        if isinstance(node, ast.Assign) and len(node.targets) == 1 and isinstance(node.targets[0], ast.Name):
+            try:
+                literals[node.targets[0].id] = ast.literal_eval(node.value)
+            except (ValueError, TypeError):
+                pass
     mains = [n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == 'main']
     require(len(mains) == 1, 'dispatch', script, 'Implementation needs one main function')
     commands = set(); flags = {'--help', '-h'}; subparsers = False
@@ -292,11 +300,13 @@ def dispatch(script, files):
         nonlocal subparsers
         if isinstance(node, ast.For) and isinstance(node.target, ast.Name):
             try:
-                values = ast.literal_eval(node.iter)
+                values = (literals.get(node.iter.id) if isinstance(node.iter, ast.Name)
+                          else ast.literal_eval(node.iter))
             except (ValueError, TypeError):
                 values = None
-            if isinstance(values, (tuple, list)) and all(isinstance(v, str) for v in values):
-                names = {**names, node.target.id: values}
+            if isinstance(values, (tuple, list, dict)) and all(isinstance(v, str) for v in values):
+                require(len(values) <= 64, 'dispatch', script, 'Literal command expansion exceeds bound')
+                names = {**names, node.target.id: list(values)}
         if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
             method = node.func.attr
             if method == 'add_subparsers':
@@ -324,7 +334,21 @@ def dispatch(script, files):
             visit(child, names)
     visit(mains[0], {})
     require(not subparsers or commands, 'dispatch', script, 'No supported static dispatch found')
-    return module, commands, flags
+    routes = literals.get('MEMORY_ROUTES', {})
+    require(isinstance(routes, dict) and len(routes) <= 64, 'dispatch', script, 'Invalid literal delegated routes')
+    for name, route in routes.items():
+        require(isinstance(name, str) and re.fullmatch('[a-z][a-z0-9-]*', name)
+                and name in commands and isinstance(route, tuple) and len(route) == 2,
+                'dispatch', script, 'Invalid delegated operation')
+        helper, prefix = route
+        require(isinstance(helper, str) and re.fullmatch('[a-z][a-z0-9_]*\\.py', helper)
+                and isinstance(prefix, tuple) and len(prefix) <= 1
+                and all(isinstance(v, str) for v in prefix), 'dispatch', script, 'Invalid delegated helper')
+        child = 'scripts/' + helper
+        require(child in files, 'dispatch', script, 'Delegated helper is missing: ' + child)
+        _, child_commands, _ = dispatch(child, files, seen=(*seen, script))
+        require(not prefix or prefix[0] in child_commands, 'dispatch', script, 'Unknown delegated operation')
+    return (module, commands, flags, routes) if details else (module, commands, flags)
 
 
 def validate(pack):
@@ -433,11 +457,24 @@ def validate(pack):
                 script = argv[2].removeprefix('$SKILL_DIR/')
                 require(script in files, 'dispatch', path, 'Documented helper is missing: ' + script)
                 if script not in dispatches:
-                    dispatches[script] = dispatch(script, files)
-                module, commands, flags = dispatches[script]
+                    dispatches[script] = dispatch(script, files, details=True)
+                module, commands, flags, routes = dispatches[script]
                 verb = argv[3] if len(argv) > 3 and not argv[3].startswith('-') else None
-                require((verb in commands) if commands else verb is None, 'dispatch', path, 'Unknown documented operation for ' + script)
-                used_flags = {a.split('=')[0] for a in argv[3:] if a.startswith('--')}
+                help_only = argv[3:] in (['--help'], ['-h'])
+                require(help_only or ((verb in commands) if commands else verb is None),
+                        'dispatch', path, 'Unknown documented operation for ' + script)
+                tail = argv[3:]
+                if verb in routes:
+                    helper, prefix = routes[verb]
+                    delegated = [*prefix, *argv[4:]]
+                    module, child_commands, flags = dispatch('scripts/' + helper, files)
+                    child_verb = delegated[0] if delegated and not delegated[0].startswith('-') else None
+                    child_help_only = delegated in (['--help'], ['-h'])
+                    require(child_help_only or ((child_verb in child_commands) if child_commands else child_verb is None),
+                            'dispatch', path, 'Unknown documented delegated operation for ' + script)
+                    tail = delegated
+                    flags = flags | {'--json'}
+                used_flags = {a.split('=')[0] for a in tail if a.startswith('--')}
                 require(used_flags <= flags, 'dispatch', path, 'Unknown documented option for ' + script)
                 mappings.append({'guide': path, 'script': script, 'module': module, 'operation': verb})
                 count += 1

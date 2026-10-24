@@ -59,6 +59,14 @@ workflow. Later release milestones remain planning proposals for refinement.
 
 ## Development checks
 
+The [installed common CLI](skills/agent-memory/maintain/cli/GUIDE.md) exposes
+identity, initialization, qualified recall, capture/admission, checkpointing,
+governance, consolidation and memory-only publication/refresh through the same
+portable helpers. The skill performs the evidence and semantic judgments at
+natural turn boundaries; `agent-memory boundary` invokes the existing refresh
+protocol. The [file-only workflow](skills/agent-memory/offline/GUIDE.md) remains
+available when the command and helpers are absent.
+
 Run `scripts/test.sh` from a checkout with Python 3.11+ and Git. It runs the
 implemented offline public-interface suites in disposable test worlds and
 reports remaining contracts as pending. `scripts/test.sh --release` rejects
@@ -66,15 +74,15 @@ incomplete release coverage. See the [test gate guide](docs/testing/README.md)
 for isolation rules, suite registration and receipt fields.
 
 The [bank router contract](docs/contracts/bank-router.md) defines the initial
-shared Markdown layout and its read-only render/validate helper. The full
-installed lifecycle workflow remains under execution. The [portable installer](docs/contracts/installation.md)
+shared Markdown layout and its read-only render/validate helper. The [portable installer](docs/contracts/installation.md)
 provides preview, owned activation, repeated installation and bootstrap recovery.
 The [managed updater](docs/contracts/runtime-updates.md) provides read-only
 channel checks, staged fast-forward activation and recoverable retries. The
 [runtime uninstaller](docs/contracts/runtime-uninstall.md) preserves project
 memory and user edits; a separate inventory-bound, explicitly confirmed purge
-deletes only one selected local bank. Deeper diagnostics and the complete
-installed workflow retain their separate tasks.
+deletes only one selected local bank. Read-only `version`, `status` and `doctor`
+commands expose runtime identity and bank health. The complete portable lifecycle
+release matrix retains its separate acceptance gate.
 
 The [shared lifecycle model](docs/contracts/lifecycle-model.md) supplies the
 read-only transition and current-selection decisions used by later operations.
