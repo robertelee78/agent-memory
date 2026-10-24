@@ -16,6 +16,13 @@ also requires the story-specific independent verdicts and delivery evidence
 in the [execution contract](../design/v0.0.1-execution.md); this test receipt
 alone does not establish release readiness.
 
+The [shared-learning matrix](../contracts/multi-machine-learning.md) retains all
+approved multi-machine obligations and adds installed-command journeys for
+compatible edits, simultaneous publication with duplicate consolidation, and
+cross-developer contradictions. It preserves feature state across independent
+clones and a linked worktree, alongside the existing capture, initialization,
+pruning, offline recovery and later-code-merge contracts.
+
 `tests/contracts.json` routes the pack, lifecycle, bank, concurrency, client,
 optional and evaluation layers. Each feature story MUST add public-interface
 cases to its applicable suite and replace its pending entry with a test path.

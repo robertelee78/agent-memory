@@ -53,10 +53,15 @@ for line in sys.stdin:
 
 
 SERVER = r'''
-import json, os, subprocess, sys
+import fcntl, json, os, subprocess, sys
 from datetime import datetime, timezone
 from pathlib import Path
 state=Path(os.environ['AGENT_MEMORY_TEST_ROOT'])/'github-policy.json'
+# Concurrent clients model one provider, not racing read/modify/write copies
+# of its metadata. Git ref updates still run independently against the real
+# bare remote. Readers (including the receive hook) see complete JSON only.
+state_lock=state.with_suffix('.lock').open('a')
+fcntl.flock(state_lock,fcntl.LOCK_EX)
 d=json.loads(state.read_text());args=sys.argv[1:]
 # Endpoint is the argument following the version header, before optional --input.
 endpoint=args[args.index('X-GitHub-Api-Version: 2026-03-10')+1]
@@ -66,7 +71,8 @@ assert args[:3]==['api','--hostname','github.com']
 d['events'].append({'endpoint':endpoint,'method':method,'body':body})
 def git(*a):return subprocess.run(['git','-C',d['remote'],*a],check=True,text=True,capture_output=True).stdout.strip()
 def response(status,value,extra=''):
- state.write_text(json.dumps(d));print('HTTP/2.0 '+str(status)+' Fixture\nContent-Type: application/json\n'+extra+'\n'+json.dumps(value));sys.exit(0 if status<400 else 1)
+ pending=state.with_suffix('.next');pending.write_text(json.dumps(d));os.replace(pending,state)
+ print('HTTP/2.0 '+str(status)+' Fixture\nContent-Type: application/json\n'+extra+'\n'+json.dumps(value));sys.exit(0 if status<400 else 1)
 repo={'full_name':'fixture/memory','default_branch':'main','permissions':{'push':d['push'],'admin':True},'archived':False,'disabled':False,'allow_merge_commit':True,'pushed_at':len(d['events'])}
 if d.get('unavailable'):response(403,{'message':'Fixture permission failure'})
 if endpoint=='repos/fixture/memory':response(200,repo)
