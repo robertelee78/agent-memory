@@ -18,6 +18,15 @@ MAX_FILE = 64 * 2**20
 MAX_OBJECT = 2 * 2**20
 
 
+class PayloadMismatch(ContractError):
+    """Observed source data differs; diagnostics may label it dirty, never use it."""
+
+
+def payload_require(ok, message):
+    if not ok:
+        raise PayloadMismatch('Legacy managed source: ' + message)
+
+
 def git(root, *args, check=True, binary=False, maximum=None):
     """Local ownership evidence cannot be redirected by ambient Git settings."""
     env = {k: v for k, v in os.environ.items() if not k.startswith('GIT_')}
@@ -153,20 +162,20 @@ def verify_payload(root, revision):
             info = node.lstat()
             require(len(actual_files) + len(actual_directories) < MAX_FILES, 'source inventory exceeds its bound')
             if stat.S_ISDIR(info.st_mode):
-                require(relative in directories, 'extra source directory: ' + relative)
+                payload_require(relative in directories, 'extra source directory: ' + relative)
                 actual_directories.add(relative)
                 continue
-            require(relative in files and stat.S_ISREG(info.st_mode) and info.st_nlink == 1,
+            payload_require(relative in files and stat.S_ISREG(info.st_mode) and info.st_nlink == 1,
                     'extra, linked or special source file: ' + relative)
             require(info.st_size <= MAX_FILE, 'source file exceeds its bound')
             total += info.st_size
             require(total <= MAX_BYTES, 'source bytes exceed their bound')
             oid = blob_identity(node, info, algorithm)
             expected_oid, executable = files[relative]
-            require(oid == expected_oid and bool(info.st_mode & stat.S_IXUSR) == executable,
+            payload_require(oid == expected_oid and bool(info.st_mode & stat.S_IXUSR) == executable,
                     'source bytes or executable intent differ: ' + relative)
             actual_files.add(relative)
-    require(actual_files == set(files) and actual_directories == directories, 'source entries are missing')
+    payload_require(actual_files == set(files) and actual_directories == directories, 'source entries are missing')
     return {'qualification': 'legacy-git-payload-equivalent', 'files': len(files), 'bytes': total,
             'revision': revision}
 

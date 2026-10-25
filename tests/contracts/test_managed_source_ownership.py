@@ -59,7 +59,11 @@ class ManagedSourceOwnershipContract(unittest.TestCase):
                         target.chmod(0o755 if member.mode & 0o111 else 0o644)
             world.git('add', '.', cwd=channel); world.git('commit', '-m', 'Frozen v0.0.2', cwd=channel)
             old_helper = channel/'skills/agent-memory/scripts/installer.py'
-            result = world.run([sys.executable, '-I', old_helper, 'install', '--remote', channel.as_uri(),
+            # Reproduce the published checkout's exact modes on either platform,
+            # independently of the Linux user's usual collaborative umask.
+            result = world.run([sys.executable, '-I', '-c',
+                                'import os,subprocess,sys;os.umask(0o022);sys.exit(subprocess.call(sys.argv[1:]))',
+                                sys.executable, '-I', old_helper, 'install', '--remote', channel.as_uri(),
                                 '--presets', 'none'])
             receipt = json.loads(result.stdout)['receipt']
             self.assertEqual(receipt['source']['artifact_digest'], provenance['checkout_artifact_digest'])
