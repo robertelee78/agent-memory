@@ -5,6 +5,7 @@ import argparse
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import sys
 import uuid
@@ -206,13 +207,17 @@ def review_value(review, observed, detecting_developer_id):
     questions, claims, groups, gaps = [], [], {}, []
     for claim in review['claims']:
         fields = {'context', 'fact', 'fact_key', 'summary', 'value', 'scope', 'conditions', 'evidence', 'current', 'applicable', 'qualified', 'authority_kind'}
-        if (not isinstance(claim, dict) or set(claim) != fields or claim['context'] not in bank.CONTEXTS
+        if (not isinstance(claim, dict) or set(claim) not in (fields, fields | {'applicability_review'}) or claim['context'] not in bank.CONTEXTS
                 or claim['fact'] not in authority.DOMAINS or not authority.text(claim['fact_key']) or not authority.text(claim['summary'])
                 or len(claim['summary']) > 512 or not isinstance(claim['evidence'], list) or not claim['evidence']
                 or len(set(claim['evidence'])) != len(claim['evidence']) or any(ref not in known for ref in claim['evidence'])
                 or any(type(claim[k]) is not bool for k in ('current', 'applicable', 'qualified'))
                 or claim['authority_kind'] not in authority.DOMAINS[claim['fact']]['source-kinds']):
             raise ContractError('Claims require explicit same-question authority, conditions and inspected source references')
+        if 'applicability_review' in claim and (claim['fact'] != 'implementation'
+                or not authority.text(claim['applicability_review']) or len(claim['applicability_review']) > 512
+                or any(ord(c) < 32 for c in claim['applicability_review'])):
+            raise ContractError('Implementation applicability review requires a bounded explicit semantic explanation')
         scopes.parse_scope(claim['scope'])
         scopes.conditions(claim['conditions'], allow_unknown=True)
         authority.comparable(claim['value'])
@@ -222,8 +227,9 @@ def review_value(review, observed, detecting_developer_id):
         scope_kind, scope_value = scopes.parse_scope(claim['scope']) or (None, None)
         if claim['fact'] == 'implementation':
             branch = observed['local_git_context']['branch']
-            if not (scope_kind == 'branch' or any(key in claim['conditions'] for key in ('branch', 'revision'))):
-                raise ContractError('Local implementation observations need explicit branch/revision conditions; initialization does not prove main publication')
+            if not (scope_kind == 'branch' or any(key in claim['conditions'] for key in ('branch', 'revision'))
+                    or claim.get('applicability_review')):
+                raise ContractError('Local implementation observations need branch/revision conditions or an explicit semantic applicability review; initialization does not prove main publication')
             if ((scope_kind == 'branch' and (branch is None or scope_value != branch))
                     or ('branch' in claim['conditions'] and (branch is None or claim['conditions']['branch'] != branch))):
                 raise ContractError('Implementation branch condition must match the known inspected source branch')
@@ -257,12 +263,28 @@ def review_value(review, observed, detecting_developer_id):
     return claims, questions, gaps
 
 
-def claim_lines(claim, bank_root='memory-bank'):
+def implementation_observation(claim, observed):
+    sources = {item['ref']: item for item in observed['sources']}
+    return {'sources': {ref: {'sha256': sources[ref]['sha256'], 'bytes': sources[ref]['bytes']}
+                        for ref in claim['evidence'] if ref in sources},
+            'observed_checkout': {'branch': observed['local_git_context']['branch'],
+                                  'head': observed['local_git_context']['head']},
+            'checkout_context_only': True, 'publication_verified': False}
+
+
+def claim_lines(claim, bank_root='memory-bank', observed=None):
     condition = json.dumps({'scope': claim['scope'], 'conditions': claim['conditions']}, ensure_ascii=False, sort_keys=True)
     value = authority.comparable(claim['value'])
-    return [claim['summary'], '', 'Applicability: `' + condition.replace('`', '\\u0060') + '`.',
+    lines = [claim['summary'], '', 'Applicability: `' + condition.replace('`', '\\u0060') + '`.',
             'Reviewed value: `' + value.replace('`', '\\u0060') + '`.',
             'Evidence: ' + ', '.join(link(ref, bank_root) for ref in claim['evidence']) + '.']
+    if observed is not None and claim['fact'] == 'implementation':
+        provenance = json.dumps(implementation_observation(claim, observed), ensure_ascii=False, sort_keys=True)
+        lines += ['', 'Observation provenance: `' + provenance.replace('`', '\\u0060') + '`.']
+        if claim.get('applicability_review'):
+            reason = json.dumps(claim['applicability_review'], ensure_ascii=False).replace('`', '\\u0060')
+            lines += ['Applicability review: `' + reason + '`.']
+    return lines
 
 
 def orientation(observed, claims, questions, gaps):
@@ -279,7 +301,7 @@ def orientation(observed, claims, questions, gaps):
     add('progress.md', 'AWA projects, tasks and milestones; references do not prove delivery',
         ['- ' + s['kind'] + ': ' + link(s['ref'], bank_root) for s in observed['awa']['sources']][:16])
     for claim in claims:
-        add(claim['context'], 'Reviewed ' + claim['fact'] + ': ' + claim['fact_key'], claim_lines(claim, bank_root))
+        add(claim['context'], 'Reviewed ' + claim['fact'] + ': ' + claim['fact_key'], claim_lines(claim, bank_root, observed))
     add('activeContext.md', 'Product questions for the detecting developer',
         ['- ' + q['question'] + (' Evidence: ' + ', '.join(link(ref, bank_root) for ref in q['evidence']) + '.' if q['evidence'] else '') for q in questions])
     add('activeContext.md', 'Evidence gaps; no requirements inferred', ['- ' + gap for gap in [*observed['evidence_gaps'], *gaps]])
@@ -289,12 +311,28 @@ def orientation(observed, claims, questions, gaps):
     return result
 
 
-def new_claims(claims, files, bank_root):
+def new_claims(claims, files, bank_root, observed):
     existing = '\n\n'.join(body for path, body in files.items() if path != 'MEMORY.md')
-    def represented(claim):
+    fresh, gaps = [], []
+    for claim in claims:
         block = '## Reviewed ' + claim['fact'] + ': ' + claim['fact_key'] + '\n\n' + '\n'.join(claim_lines(claim, bank_root))
-        return block in existing
-    return [claim for claim in claims if not represented(claim)]
+        if block not in existing:
+            fresh.append(claim)
+            continue
+        if claim['fact'] != 'implementation':
+            continue
+        tail = existing.split(block, 1)[1].split('\n## ', 1)[0]
+        match = re.search(r'(?m)^Observation provenance: `(.+)`\.$', tail)
+        try:
+            previous = load(match[1].encode()) if match else None
+            known = previous.get('sources') if isinstance(previous, dict) else None
+        except (ContractError, ValueError, TypeError, UnicodeError):
+            known = None
+        current = implementation_observation(claim, observed)['sources']
+        if known != current:
+            detail = 'recorded byte binding is unknown' if known is None else 'inspected source bytes differ'
+            gaps.append('Existing implementation observation needs evidence review: ' + claim['fact_key'] + '; ' + detail)
+    return fresh, gaps
 
 
 def preview(repo, review):
@@ -311,7 +349,8 @@ def preview(repo, review):
         raise ContractError('No useful source evidence supplied; inspect documentation/code/tests/planning before creating a bank')
     root = Path(observed['repo_root'])
     base = {} if empty else transactions.files_at(repository_config.bank_path(root))
-    claims = new_claims(claims, base, repository_config.relative(root))
+    claims, comparison_gaps = new_claims(claims, base, repository_config.relative(root), observed)
+    gaps += comparison_gaps
     bodies = orientation(observed, claims, questions, gaps)
     files = dict(base)
     if empty:
@@ -383,7 +422,8 @@ def validate_transaction(tx):
     for path, sha in original.items():
         if path != 'MEMORY.md' and digest(prior_files[path].encode()) != sha:
             raise ContractError('Initialization must preserve every existing memory file')
-    claims = new_claims(claims, prior_files, repository_config.relative(tx['repo_root']))
+    claims, comparison_gaps = new_claims(claims, prior_files, repository_config.relative(tx['repo_root']), p['inventory'])
+    gaps += comparison_gaps
     bodies = orientation(p['inventory'], claims, questions, gaps)
     if original:
         if not isinstance(p['base_router'], str) or digest(p['base_router'].encode()) != original['MEMORY.md']:
