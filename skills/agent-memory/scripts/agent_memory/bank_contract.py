@@ -37,7 +37,7 @@ def header(metadata):
         if not isinstance(remote, str) or normalize(remote) != remote:
             raise ContractError("canonical-remote must be a sanitized canonical repository identifier")
     if metadata["schema"] != SPEC["properties"]["schema"]["const"]:
-        raise ContractError("Unsupported bank schema; no mutation or implicit migration is allowed")
+        raise ContractError("Unsupported bank schema; no mutation or implicit migration is allowed. Inspect am migrate preview for an explicitly bundled chain.")
     try:
         identity = uuid.UUID(metadata["project-id"])
         if str(identity) != metadata["project-id"] or identity.version != 4:

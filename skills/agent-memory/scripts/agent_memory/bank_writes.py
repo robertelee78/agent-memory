@@ -93,7 +93,7 @@ def preview(repo, path, content, operation="replace"):
 def proposal_value(prepared):
     from .scope_binding import context_value
     proposal = prepared.get("proposal", prepared) if isinstance(prepared, dict) else prepared
-    if (not isinstance(proposal, dict) or set(proposal) != PROPOSAL_FIELDS or proposal["schema"] != "agent-memory/write-proposal-v1"
+    if (not isinstance(proposal, dict) or set(proposal) not in (PROPOSAL_FIELDS, PROPOSAL_FIELDS | {'checkpoint_evidence'}) or proposal["schema"] != "agent-memory/write-proposal-v1"
             or not uuid_valid(proposal["operation_id"]) or not uuid_valid(proposal["project_id"])
             or proposal["operation"] not in OPERATIONS or not isinstance(proposal["repo_root"], str)
             or not Path(proposal["repo_root"]).is_absolute() or str(Path(proposal["repo_root"]).resolve()) != proposal["repo_root"]):
@@ -113,6 +113,9 @@ def proposal_value(prepared):
             contract.path_value(path)
         if not isinstance(sha, str) or not re.fullmatch("[0-9a-f]{64}", sha):
             raise ContractError("Observed hashes must be SHA256 values")
+    if 'checkpoint_evidence' in proposal:
+        from .checkpoint import validate_write
+        validate_write(proposal, sources=False)
     return proposal
 
 
@@ -158,9 +161,17 @@ def apply(prepared):
     if proposal['scope_context'] is None:
         raise ContractError('Proposal has no resolved scope; finish identity setup and preview again')
     context = require(proposal['repo_root'], proposal['project_id'], expected=proposal['scope_context'])
+    if 'checkpoint_evidence' in proposal:
+        from .checkpoint import validate_write
+        root, bank = bank_path(proposal['repo_root'])
+        validate_write(proposal, sources=not state_paths(root, bank, proposal['operation_id'])[1].exists())
     from . import security
     def check(owner):
         require(proposal['repo_root'], proposal['project_id'], expected=context, owned_lock=owner)
+        if 'checkpoint_evidence' in proposal:
+            from .checkpoint import validate_write
+            root, bank = bank_path(proposal['repo_root'])
+            validate_write(proposal, sources=not state_paths(root, bank, proposal['operation_id'])[1].exists())
         if proposal['operation'] == 'checkpoint':
             security.guarded_start(proposal['repo_root'], proposal['operation_id'], context,
                 {proposal['path']: proposal['content']}, ['assistant'], action='checkpoint')
@@ -209,6 +220,8 @@ def _apply(prepared, *, check_identity):
                     os.chmod(temporary, target.stat().st_mode & 0o777)
                     stream.write(proposal["content"].encode("utf-8")); stream.flush(); os.fsync(stream.fileno())
                 fault("before-recheck")
+                if 'checkpoint_evidence' in proposal:
+                    check_identity(owner)
                 if snapshot(root, owner)[1] != proposal["observed_hashes"]:
                     raise ContractError("External edit observed immediately before replacement; preserve it")
                 os.replace(temporary, target)

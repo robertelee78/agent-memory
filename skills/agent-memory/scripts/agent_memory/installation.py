@@ -65,6 +65,7 @@ MEMORY_ROUTES = {
     'projection': ('projection.py', ()),
     'writes': ('bank_writes.py', ()),
     'transaction': ('bank_transactions.py', ()),
+    'migrate': ('migrate_bank.py', ()),
 }
 
 
@@ -665,8 +666,37 @@ def verify_targets(targets):
                     'Client-visible artifact readback failed: ' + str(path))
 
 
+def rollback_compatibility(state, journal):
+    """No executable restoration until the old runtime can read current banks."""
+    restoring = [a for a in journal['actions'] if a['kind'] in {'source', 'copy', 'link', 'wrapper'}
+                 and a['before'] is not None and fingerprint(Path(a['path'])) != a['before']]
+    if not restoring:
+        return
+    compatibility = journal.get('previous_compatibility')
+    if compatibility is None:
+        # Legacy incomplete journals predate this field. Their uncommitted
+        # receipt is still the prior installation, and must identify these
+        # exact targets before it can supply the old readability declaration.
+        previous = read_receipt(state)
+        require(previous is not None and all(any(t['path'] == a['path'] and t['identity'] == a['before']
+                for t in previous['targets']) for a in restoring),
+                'Cannot establish prior runtime compatibility; preserve targets and use a trusted outside helper')
+        compatibility = previous['source'].get('compatibility')
+    require(isinstance(compatibility, dict)
+            and artifact.strings(compatibility.get('readable_bank_schemas'))
+            and artifact.strings(compatibility.get('migrator_source_schemas'), allow_empty=True),
+            'Prior runtime readability metadata is missing; preserve the lifecycle transaction')
+    repositories = journal.get('rollback_repositories', [])
+    require(isinstance(repositories, list) and len(repositories) <= 1024
+            and all(isinstance(p, str) and absolute(p) == Path(p) for p in repositories),
+            'Malformed rollback repository inventory')
+    from . import updating
+    updating.banks(repositories, compatibility, require_readable=True)
+
+
 def rollback(state, journal):
     trust_paths.state(state)
+    rollback_compatibility(state, journal)
     conflicts = []
     for action in reversed(journal['actions']):
         path, stage = Path(action['path']), Path(action['stage'])
@@ -678,6 +708,8 @@ def rollback(state, journal):
             continue
         if current != action['after'] or (action['before'] is not None and staged != action['before']):
             conflicts.append(str(path)); continue
+        if action['kind'] in {'source', 'copy', 'link', 'wrapper'} and action['before'] is not None:
+            rollback_compatibility(state, journal)
         if action['after'] is None:
             native_rename(stage, path)
         elif action['before'] is None:
@@ -754,6 +786,11 @@ def install(plan, *, before_activate=None, after_activate=None):
     operation = plan.get('operation', 'install')
     state = plan['state']; old = plan['old']; changed = [a for a in plan['actions'] if a['changed']]
     trust_paths.state(state)
+    compatibility = None
+    if operation != 'uninstall':
+        from . import updating
+        compatibility = updating.banks(plan.get('rollback_repositories', []), plan['source']['compatibility'])
+        plan['rollback_repositories'] = compatibility['observed_repositories']
     if (operation != 'uninstall' and not changed and old and old['source'] == plan['source']
             and all(t['identity'] == next(a['after'] for a in plan['actions'] if a['path']==t['path'])
                     for t in old['targets'])):
@@ -786,7 +823,9 @@ def install(plan, *, before_activate=None, after_activate=None):
         receipt.update(uninstalled=True, uninstalled_at=receipt['installed_at'],
                        preserved=plan['preserved'], reinstall=plan['reinstall'])
     journal = {'schema': JOURNAL_SCHEMA, 'operation': operation, 'transaction': transaction, 'status': 'staging',
-               'actions': [], 'receipt': receipt, 'receipt_identity': None, 'created_directories': []}
+               'actions': [], 'receipt': receipt, 'receipt_identity': None, 'created_directories': [],
+               'previous_compatibility': old['source']['compatibility'] if old else None,
+               'rollback_repositories': plan.get('rollback_repositories', [])}
     if os.path.lexists(state/'journal.json'):
         write_file(state/('journal-' + transaction + '.json'), (state/'journal.json').read_bytes())
     replace_record(state/'journal.json', journal)
@@ -839,6 +878,8 @@ def install(plan, *, before_activate=None, after_activate=None):
                     'Target changed after preflight: ' + action['path'])
         if before_activate:
             before_activate()
+        if compatibility is not None:
+            updating.banks(plan['rollback_repositories'], plan['source']['compatibility'])
         journal['status'] = 'activating'; replace_record(state/'journal.json', journal)
         for index, action in enumerate(journal['actions']):
             path, stage = Path(action['path']), Path(action['stage'])
@@ -861,6 +902,8 @@ def install(plan, *, before_activate=None, after_activate=None):
         verify_targets(targets)
         if after_activate:
             after_activate()
+        if compatibility is not None:
+            updating.banks(plan['rollback_repositories'], plan['source']['compatibility'])
         receipt['created_directories'] = list(old.get('created_directories', [])) if old else []
         receipt['created_directories'] += journal['created_directories']
         receipt_path = state/'receipt.json'
@@ -968,6 +1011,8 @@ def main(argv=None):
                     'An interrupted transaction requires recover before a new install plan')
             with prepare(args, state, code, read_receipt(state)) as plan:
                 result = public_plan(plan)
+                from . import updating
+                result['compatibility'] = updating.banks([], plan['source']['compatibility'])
         else:
             with runtime_faults.operation(args.command, lifecycle_paths(args, state, code, read_receipt(state))), locked(state):
                 recovered = recover(state, for_install=args.command == 'install')

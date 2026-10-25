@@ -61,9 +61,11 @@ def git_context(root, observed):
         return {'status': 'unavailable', 'reason': 'Local Git inspection unavailable; current Markdown remains the source'}
 
 
-def inspect(repo):
+def inspect(repo, path=None):
     root, bank = writes.bank_path(repo)
     checked, observed = writes.snapshot(root)
+    if path is not None:
+        return inspect_context(root, bank, checked, observed, path)
     git = git_context(root, observed)
     latest, hashes = writes.snapshot(root)
     if latest != checked or hashes != observed or git_context(root, hashes) != git:
@@ -79,14 +81,46 @@ def inspect(repo):
             'validation_scope': 'current-file-inventory-and-local-git-context'}
 
 
+def inspect_context(root, bank, checked, observed, path):
+    from . import scope_binding, security, handoff
+    from .retrieval import observed_context
+    from .developer_identity import digest
+    if path not in contract.CONTEXTS or path not in observed:
+        raise ContractError('Explicit historical inspection selects an existing ordinary context file only')
+    scope = scope_binding.require(root, checked['project_id'])
+    context, _ = observed_context(root, {})
+    with (bank / path).open('rb') as stream:
+        raw = stream.read(16385)
+    if len(raw) > 16384 or digest(raw) != observed[path]:
+        raise ContractError('Context is oversized or changed during inspection')
+    body = raw.decode('utf-8')
+    scanned = security.scan(body)
+    value = {'schema': 'agent-memory/context-inspection-v1', 'operation': 'inspect',
+             'project_id': checked['project_id'], 'inspection_class': 'historical-orientation',
+             'assignment': False, 'usable_as_current_guidance': False,
+             'source_assertions_verified': False, 'identity_authenticated': False,
+             'publication_verified': False, 'writes_performed': False}
+    if scanned['reasons']:
+        value.update(withheld=True, reasons=scanned['reasons'])
+    else:
+        assessment = handoff.assess(body, checked['project_id'], context, root, bank, inspect_only=True) if path == 'activeContext.md' else None
+        value.update(path=path, body=body, source_sha256=observed[path],
+                     untrusted_data=True, trust=None, context_assessment=assessment)
+    if writes.snapshot(root)[1] != observed or observed_context(root, {})[0] != context:
+        raise ContractError('Bank or checkout changed during historical inspection')
+    scope_binding.require(root, checked['project_id'], expected=scope)
+    return value
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest='command', required=True)
     current = sub.add_parser('inspect')
     current.add_argument('--repo', default='.')
+    current.add_argument('--path')
     args = parser.parse_args(argv)
     try:
-        print(json.dumps(inspect(args.repo), indent=2))
+        print(json.dumps(inspect(args.repo, args.path), indent=2))
         return 0
     except (ContractError, OSError, UnicodeError, ValueError, TypeError, KeyError, AttributeError) as exc:
         print(json.dumps({'schema': 'agent-memory/current-bank-view-v1', 'valid': False,

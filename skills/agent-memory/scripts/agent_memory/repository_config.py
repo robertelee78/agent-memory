@@ -72,7 +72,7 @@ def router_kind(raw):
         if metadata.get('schema') != 'agent-memory/v1':
             raise ContractError('Unknown existing memory schema')
     except (ContractError, UnicodeError):
-        raise ContractError('Possible existing memory needs repair or explicit inspection, not another bank')
+        raise ContractError('Possible existing memory needs repair or explicit inspection, not another bank; use am migrate preview to inspect an explicitly bundled chain')
     return True
 
 
@@ -112,7 +112,7 @@ def object_router_bytes(root, expression, cache):
     return raw
 
 
-def git_roots(root):
+def git_roots(root, *, router_reader=None):
     listed = git(root, 'ls-files', '--cached', '--others', '--exclude-standard', '-z', optional=True)
     indexed = git(root, 'ls-files', '--cached', '-z', optional=True)
     if listed is None or indexed is None:
@@ -138,12 +138,12 @@ def git_roots(root):
             versions.append(object_router_bytes(root, head + ':' + path.as_posix(), cache))
         if not versions:
             raise ContractError('Possible memory disappeared during discovery; do not infer absence')
-        if any(router_kind(version) for version in versions):
+        if any((router_reader or router_kind)(version) for version in versions):
             roots.add(path.parent.as_posix())
     return roots
 
 
-def physical_others(root, selected):
+def physical_others(root, selected, *, router_reader=None):
     """Only when no selected router is present: include ignored/untracked banks."""
     from .bank_contract import CONTEXTS
     examined, routers = 0, 0
@@ -175,11 +175,11 @@ def physical_others(root, selected):
                 raise ContractError('A possible existing memory locator is a symlink; inspect it explicitly')
             with target.open('rb') as stream:
                 raw = stream.read(16385)
-            if router_kind(raw) and directory != selected:
+            if (router_reader or router_kind)(raw) and directory != selected:
                 raise ContractError('Existing memory lies outside the selected bank; configure its location before initialization')
 
 
-def settings(repo):
+def settings(repo, *, router_reader=None):
     root = Path(repo).resolve()
     top = git(root, 'rev-parse', '--show-toplevel', optional=True)
     if top is None and (root / '.git').exists():
@@ -189,7 +189,7 @@ def settings(repo):
     explicit = local_value(root, 'agent-memory.bankRoot')
     if explicit is not None:
         validate_root(explicit)
-    roots = git_roots(root) if top is not None else set()
+    roots = git_roots(root, router_reader=router_reader) if top is not None else set()
     if len(roots) > 1 or (explicit is not None and any(value != explicit for value in roots)):
         raise ContractError('Competing memory bank locations require explicit reconciliation; preserve every source')
     relative = explicit or (next(iter(roots)) if roots else 'memory-bank')
@@ -205,7 +205,7 @@ def settings(repo):
         if current.is_symlink() or (current.exists() and not current.is_dir()):
             raise ContractError('Configured bank directory cannot follow symlinks or occupied files')
     if not (current / 'MEMORY.md').is_file():
-        physical_others(root, current)
+        physical_others(root, current, router_reader=router_reader)
     branch = local_value(root, 'agent-memory.authorityBranch')
     if branch is not None:
         validate_branch(branch)

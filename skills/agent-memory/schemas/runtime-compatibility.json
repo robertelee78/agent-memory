@@ -2,6 +2,7 @@
   "schema": "agent-memory/runtime-compatibility-v1",
   "readable_bank_schemas": ["agent-memory/v1"],
   "migrator_source_schemas": [],
+  "migration_catalog": "schemas/migrations.json",
   "python_minimum": "3.11",
   "installed_commands": ["am", "agent-memory"],
   "git_required_for": ["governed-repository-operations", "git-sharing"],

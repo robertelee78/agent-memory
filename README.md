@@ -260,6 +260,10 @@ with distinct-worktree locks and memory-only publication kept separate.
 The [access and remembered-authority contract](docs/contracts/security-authority.md)
 explains shared-bank access, developer attribution and the treatment of memory as untrusted data.
 
+The [lifecycle security contract](docs/contracts/lifecycle-security.md) separates
+publisher authentication from integrity, ownership, compatibility and recovery.
+Current managed Git is unsigned; a digest or verified receipt is not a signature.
+
 The [manual checkpoint workflow](docs/contracts/manual-checkpoint.md) covers
 single-file edits, resume, and subsequent validation of external changes.
 
