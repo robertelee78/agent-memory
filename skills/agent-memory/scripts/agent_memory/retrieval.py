@@ -12,6 +12,7 @@ import uuid
 
 from . import bank_contract as bank_contract
 from . import bank_writes as writes
+from . import bank_observation
 from . import lifecycle, records, scope_binding, scopes, security, handoff
 from .developer_identity import digest, encoded, load, uuid_valid
 from .frontmatter import ContractError
@@ -98,7 +99,8 @@ def retrieve(repo, request, *, owned_lock=None, deferred_paths=()):
     root, bank = writes.bank_path(repo)
     selected_scope = scope_binding.require(root, request['project_id'], owned_lock=owned_lock)
     context, observed_git = observed_context(root, request['context'])
-    checked, observed = writes.snapshot(root, owned_lock)
+    observation=bank_observation.observe(root,owned_lock)
+    checked,observed=observation.checked,observation.hashes
     project = checked['project_id']
     if project != request['project_id']:
         raise ContractError('Canonical project changed after scope resolution')
@@ -122,8 +124,7 @@ def retrieve(repo, request, *, owned_lock=None, deferred_paths=()):
         if reasons:
             excluded.update(reasons)
             continue
-        with (bank / path).open('rb') as stream:
-            raw = stream.read(MAX_FILE + 1)
+        raw=observation.sources[path][:MAX_FILE+1]
         canonical_bytes += len(raw)
         if len(raw) > MAX_FILE:
             if kind == 'standalone-record':
@@ -137,7 +138,7 @@ def retrieve(repo, request, *, owned_lock=None, deferred_paths=()):
         text = raw.decode('utf-8')
         metadata = None
         if kind == 'standalone-record':
-            _, metadata, body = records.parse(text)
+            _, metadata, body = observation.parsed[path]
             applicable = records.applicability(metadata, {'bank_project_id': project, 'context': context})
             selection = lifecycle.current(metadata, {'authorized-scope': True, 'applicable': applicable['applicable'],
                 'now': now, 'minimum-trust': request['minimum_trust'], 'active-superseders': []})
@@ -219,7 +220,8 @@ def retrieve(repo, request, *, owned_lock=None, deferred_paths=()):
     record_ids = sorted({item['record']['id'] for item in results if 'record' in item})
     audit = security.audit(root, str(uuid.uuid4()), 'retrieval', 'checked', selected_scope,
                            ['external'], record_ids=record_ids)
-    if writes.snapshot(root, owned_lock)[1] != observed or git_context(root) != observed_git:
+    observation.recheck()
+    if git_context(root) != observed_git:
         raise ContractError('Bank or checkout context changed during recall; reread before use')
     scope_binding.require(root, project, expected=selected_scope, owned_lock=owned_lock)
     return {'schema': 'agent-memory/retrieval-result-v1', 'project_id': project, 'results': results,
