@@ -57,7 +57,9 @@ update MUST NOT initialize, bind or recall development memory as consumer memory
 The public one-line install, `am update`, `am --version` and `am uninstall`
 journey SHALL remain simple. One publisher command SHALL own packaging, signing,
 publication and remote readback. Signed assets MUST be publicly available and
-verified before the default bootstrap requires them. Qualification SHALL use
+verified before the default bootstrap or release-only updater is activated.
+The publisher MUST refuse replacing any existing tag/release. Repository-enforced
+immutability MUST NOT be claimed without observing it. Qualification SHALL use
 local isolated macOS/Linux journeys rather than qualification releases or
 expensive recurring hosted CI gates.
 
