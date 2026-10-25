@@ -9,6 +9,7 @@ import unittest
 
 from world import World
 from contracts import test_retrieval as recall
+from contracts import test_consolidation as maintenance
 
 
 class RecallObservationContract(unittest.TestCase):
@@ -68,3 +69,32 @@ class RecallObservationContract(unittest.TestCase):
                 self.refused(child,directory,stage)
                 self.assertTrue(stat.S_ISFIFO(target.lstat().st_mode));self.assertEqual(helper.code(w,repo),code)
                 target.unlink()  # Explicit owner of this disposable injected FIFO.
+
+    def test_owned_lock_disappearance_or_replacement_refuses_public_maintenance_before_write(self):
+        stage='recall-owned-final-source-recheck'
+        for change in ('disappeared','changed'):
+            with self.subTest(change=change),World() as w:
+                helper=maintenance.ConsolidationContract();repo,bank=helper.fixture(w)
+                first,p1=helper.add(bank,'first',body='# Retry policy\n\nUse three attempts for the authored case.\n')
+                _,p2=helper.add(bank,'second',body='# Attempt cap\n\nThe authored case permits three attempts.\n')
+                value=helper.compared(w,repo,first,'# Retry policy\n\nUse three attempts.\n',[p1,p2])
+                result,prepared=helper.preview(w,repo,value);self.assertEqual(result.returncode,0,prepared)
+                self.assertIsNotNone(prepared['proposal']);before=helper.state(w,repo,bank)
+                proposal=helper.save(w,prepared['proposal'],'maintenance.json')
+                directory=w.inside('owned-rendezvous');directory.mkdir()
+                w.env.update({'AGENT_MEMORY_FAULT_STAGE':stage,'AGENT_MEMORY_FAULT_MODE':'pause','AGENT_MEMORY_FAULT_DIR':str(directory)})
+                child=w.spawn([sys.executable,'-I',helper.pack/'scripts/consolidate_learning.py','apply','--proposal',proposal])
+                deadline=time.monotonic()+8
+                while not (directory/(stage+'.ready')).exists():
+                    if child.poll() is not None or time.monotonic()>deadline:
+                        self.fail('Public maintenance did not reach recall under its actual owned lock')
+                    time.sleep(.02)
+                lock=bank/'.agent-memory.lock';self.assertTrue(lock.is_file())
+                if change=='disappeared':lock.unlink()
+                else:lock.write_text('Foreign replacement injected by the disposable fixture owner.\n')
+                (directory/(stage+'.release')).touch();stdout,stderr=child.communicate(timeout=5)
+                self.assertEqual(child.returncode,1,(stdout,stderr));self.assertFalse(json.loads(stdout)['verified'])
+                if change=='changed':
+                    self.assertEqual(lock.read_text(),'Foreign replacement injected by the disposable fixture owner.\n')
+                    lock.unlink()  # Explicit owner of this injected foreign record.
+                self.assertEqual(helper.state(w,repo,bank),before)

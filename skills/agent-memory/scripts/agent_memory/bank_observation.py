@@ -83,6 +83,8 @@ class Observation:
 
     def recheck(self,stage='recall-final-source-recheck'):
         writes.fault(stage)
+        if self.owner is not None and stage=='recall-final-source-recheck':
+            writes.fault('recall-owned-final-source-recheck')
         root,bank=writes.bank_path(self.root)
         if root!=self.root or bank!=self.bank:raise ContractError('Canonical repository/bank location changed')
         markers(bank,self.owner)
