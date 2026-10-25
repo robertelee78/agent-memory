@@ -77,6 +77,12 @@ as missing setup, an active writer, pending recovery or the initial unsigned
 distribution channel. Each failure names its component/path and a bounded repair.
 The initial channel's digest establishes artifact identity, not publisher trust.
 
+A session MUST distinguish `runtime.path_trust` from ordinary access/readability.
+The Unix ownership/mode checks neither authenticate already-loaded verifier code
+nor audit every platform ACL. An installation that may have been attacker-writable
+MUST be inspected or recovered using a trusted complete outside helper; its own
+reported checks MUST NOT be treated as self-authentication.
+
 ## Verify
 
 Doctor checks actual source revision/channel/digest, the portable route graph,

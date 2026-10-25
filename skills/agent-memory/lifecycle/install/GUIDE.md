@@ -30,6 +30,25 @@ or copied complete package; the installer MUST NOT mutate that source. The
 initial Git channel is unsigned: an artifact digest binds bytes and modes,
 not publisher authenticity.
 
+The executing verifier MUST already be trusted. In-package checks cannot
+authenticate Python code that has already loaded from an attacker-writable
+runtime. If that exposure is possible, the session MUST use a trusted complete
+outside helper for inspection and recovery.
+
+Lifecycle state MUST be current-user-owned and private (0700); sensitive records
+MUST be ordinary, single-link, current-user-owned and not group/other writable.
+Runtime paths MUST pass the Unix ownership and ancestor-replacement policy before
+use. An established private ancestor can protect descendant payload permissions;
+it cannot rescue its own entry through an earlier writable non-sticky parent.
+Root-owned sticky temporary parents permit only trusted-owned direct entries.
+New owned copies stage behind a private root. These checks do not audit all OS
+ACLs or grant trust to a different project Memory Bank.
+
+An unsafe existing layout MUST be preserved and refused. The session MUST offer
+owner review or private per-user XDG/client paths, not silently chmod user paths,
+ignore hardlinks, or add a trusted-group exception. Shared repository-bank
+permissions remain a separate policy from runtime and receipt ownership.
+
 ## Observe
 
 The session MUST inspect the source, target plan and any external receipt at

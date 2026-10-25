@@ -60,6 +60,7 @@ def prepare(old, state, code):
         preserved.append({'path': target['path'], 'kind': target['kind'], 'reason': reason})
     def inspect(target):
         path = Path(target['path']); install.preflight_path(path)
+        install.trust_paths.tree(path)
         before = install.fingerprint(path); raw = None
         after = None
         if before is not None and target['kind'] == 'activation':
