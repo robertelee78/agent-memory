@@ -45,16 +45,30 @@ def record(path, maximum=2**20):
     return developer_identity.load(read(path, maximum))
 
 
-def source(pack):
+def source(pack, *, managed=False):
     pack = Path(pack).resolve(strict=True)
     inspected = artifact.inspect(pack)
     root = pack.parents[1] if pack.parent.name == 'skills' else pack
     installation.trust_paths.source(root)
-    top = git(root, 'rev-parse', '--show-toplevel', optional=True)
+    if managed:
+        from . import managed_source
+        def local(*args, optional=False):
+            result = managed_source.git(root, *args, check=not optional)
+            return result.stdout.strip() if result.returncode == 0 else None
+    else:
+        local = lambda *args, optional=False: git(root, *args, optional=optional)
+    top = local('rev-parse', '--show-toplevel', optional=True)
     versioned = top is not None and Path(top).resolve() == root
     unavailable = top is None and os.path.lexists(root / '.git')
-    revision = git(root, 'rev-parse', '--verify', 'HEAD') if versioned else None
-    dirty = bool(git(root, 'status', '--porcelain', '--untracked-files=all')) if versioned else None
+    revision = local('rev-parse', '--verify', 'HEAD') if versioned else None
+    if versioned and managed:
+        try:
+            managed_source.verify_payload(root, revision)
+            dirty = False
+        except managed_source.PayloadMismatch:
+            dirty = True
+    else:
+        dirty = bool(local('status', '--porcelain', '--untracked-files=all')) if versioned else None
     return {'path': str(root), 'pack': str(pack), 'version': inspected['version'],
             'revision': revision, 'dirty': dirty,
             'cleanliness': 'unavailable' if unavailable else ('dirty' if dirty else ('clean' if versioned else 'unversioned')),
@@ -336,23 +350,27 @@ def runtime_doctor(report, active):
                            'Preserve this owner record and the lifecycle lock. Reconcile the malformed or redirected metadata before retrying a lifecycle operation; do not reset or steal ownership based on PID or age.', owner_path)
         if active:
             def check_source():
-                observed = source(active['source']['pack'])
-                report.value['installed_source'] = observed
                 expected = active['source']
+                observed = source(expected['pack'], managed=expected['kind'] == 'managed')
+                report.value['installed_source'] = observed
                 matches = all(observed[k] == expected.get(k) for k in ('path', 'pack', 'version', 'revision', 'dirty', 'artifact_digest'))
                 # Unversioned source uses the install receipt's explicit marker.
                 if observed['revision'] is None and expected.get('revision') == 'unversioned':
                     matches = all(observed[k] == expected.get(k) for k in ('path', 'pack', 'version', 'dirty', 'artifact_digest'))
                 if expected['kind'] == 'managed':
-                    installation.require(git(expected['path'], 'remote', 'get-url', 'origin') == expected['remote'] and
-                                         git(expected['path'], 'symbolic-ref', '--short', 'HEAD') == expected['ref'],
+                    installation.require(installation.git(expected['path'], 'remote', 'get-url', 'origin').stdout.strip() == expected['remote'] and
+                                         installation.git(expected['path'], 'symbolic-ref', '--short', 'HEAD').stdout.strip() == expected['ref'],
                                          'Managed source channel differs')
                 if not matches:
                     report.add('runtime.source', 'warning' if expected['kind'] == 'development' else 'failure',
                                'Source differs from its recorded installation.',
                                'For a developer source, inspect edits and preview reinstall; for managed source, preserve edits and reconcile the recorded channel before update.', expected['path'])
                 else:
-                    report.add('runtime.source', 'pass', 'Source revision, artifact and recorded channel match.', path=expected['path'])
+                    owned = [t for t in active['targets'] if t['kind'] == 'source']
+                    qualified = installation.verify_targets(owned, source=expected)
+                    detail = ('Legacy Git payload and package modes match; raw directory identity differs.'
+                              if qualified else 'Source revision, artifact and recorded channel match.')
+                    report.add('runtime.source', 'pass', detail, path=expected['path'])
             report.attempt('runtime.source', check_source, 'Use a trusted outside source helper; preserve the source and receipt and preview reinstall after reconciling the exact channel.', active['source'].get('path'))
             for target in active['targets']:
                 if target['kind'] == 'source':
@@ -549,7 +567,9 @@ def run(operation, repo='.', projection=None):
     active = report.attempt('runtime.receipt', lambda: receipt_view(report),
                             'Preserve installation state and backups. Inspect the external receipt/journal from a trusted package; do not guess or reset ownership.')
     if operation in {'version', 'doctor'}:
-        current = report.attempt('runtime.executing_artifact', lambda: source(artifact.PACK),
+        managed = bool(active and active['source']['kind'] == 'managed'
+                       and Path(active['source']['pack']) == artifact.PACK.resolve())
+        current = report.attempt('runtime.executing_artifact', lambda: source(artifact.PACK, managed=managed),
                                  'Obtain a complete trusted portable package and run its diagnostic helper; preserve the affected installation.', artifact.PACK)
         report.value['executing_source'] = current
         if current is not None:
