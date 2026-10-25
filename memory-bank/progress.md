@@ -26,8 +26,8 @@ Evidence: [docs/releases/v0.0.2.md](../docs/releases/v0.0.2.md), [https://github
 
 ## Reviewed intent: current-roadmap-authority
 
-ADR-0013 supersedes earlier future-version labels: reliability/recall/migration target v0.0.3, invocation hooks/evaluation/signed distribution target v0.0.4, and deferred federation proposals target v0.0.5. These targets do not grant execution approval or imply shipped behavior.
+ADR-0013 supersedes earlier future-version labels. The operator’s subsequent ADR-0014 scope amendment brings existing signing work into v0.0.3 alongside reliability, recall, migration and the proposed quality corrections. Invocation hooks/evaluation remain v0.0.4; deferred federation proposals remain v0.0.5. Release targets do not grant execution or implementation-design approval and do not imply shipped behavior.
 
 Applicability: `{"conditions": {}, "scope": "repository"}`.
-Reviewed value: `"Use ADR-0013 amendment and current AWA records for release scope"`.
-Evidence: [docs/adr/0013-public-cli-and-corrective-releases.md](../docs/adr/0013-public-cli-and-corrective-releases.md).
+Reviewed value: `"Use ADR-0013/0014 amendments and current AWA records for release scope"`.
+Evidence: [ADR-0013](../docs/adr/0013-public-cli-and-corrective-releases.md), [ADR-0014](../docs/adr/0014-useful-shared-memory-quality.md).
