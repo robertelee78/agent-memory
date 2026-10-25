@@ -98,6 +98,46 @@ class LifecycleSecurityContract(unittest.TestCase):
                 self.assertFalse(value['security']['platform_acls_audited'])
                 self.assertEqual(snapshot(w.root), before)
 
+    def test_receipt_changed_before_shared_lock_has_one_coherent_final_selection_and_warning(self):
+        import time
+        for change in ('uninstall', 'development-source', 'malformed'):
+            with self.subTest(change=change), World() as w:
+                _, _, receipt = fixture(w); cli = Path(receipt['bin_dir'])/'am'
+                replacement = w.inside('replacement explicit source')
+                if change == 'development-source':
+                    shutil.copytree(ROOT/'skills/agent-memory', replacement)
+                rendezvous = w.inside('diagnostic-rendezvous'); stage = 'diagnostic-before-runtime-lock'
+                w.env.update(AGENT_MEMORY_FAULT_STAGE=stage, AGENT_MEMORY_FAULT_MODE='pause', AGENT_MEMORY_FAULT_DIR=str(rendezvous))
+                child = w.spawn([cli, '--json', 'doctor', '--repo', w.paths['repo']])
+                ready = rendezvous/(stage+'.ready'); release = rendezvous/(stage+'.release')
+                deadline = time.monotonic()+8
+                while not ready.exists() and time.monotonic() < deadline:
+                    if child.poll() is not None: break
+                    time.sleep(0.01)
+                self.assertTrue(ready.exists(), 'Doctor did not reach its isolated receipt/lock rendezvous')
+                if change == 'malformed':
+                    receipt_path(w).write_text('{"schema":"malformed-receipt"}\n')
+                else:
+                    # Real lifecycle operations, rather than a mocked receipt
+                    # reader, finish between doctor's two observations.
+                    removed = w.run([sys.executable, '-I', ROOT/'scripts/installer.py', 'uninstall'], check=False)
+                    self.assertEqual(removed.returncode, 0, removed.stdout+removed.stderr)
+                    if change == 'development-source':
+                        installed = w.run([sys.executable, '-I', ROOT/'scripts/installer.py', 'install',
+                                           '--development-source', replacement, '--presets', 'none'], check=False)
+                        self.assertEqual(installed.returncode, 0, installed.stdout+installed.stderr)
+                release.touch(); before = snapshot(w.root)
+                out, err = child.communicate(timeout=30); self.assertEqual(child.returncode, 1 if change == 'malformed' else 0, out+err)
+                value = json.loads(out); expected = 'operator_selected_development' if change == 'development-source' else 'unavailable'
+                self.assertEqual(value['security']['recorded_source_selection'], expected)
+                self.assertFalse(value['security']['signature_verification_performed'])
+                warning = next(c for c in value['checks'] if c['component'] == 'distribution.trust')
+                self.assertNotIn('unsigned managed Git', warning['detail'])
+                if change == 'development-source': self.assertIn('operator-selected development/custom', warning['detail'])
+                else: self.assertIn('available installation evidence', warning['detail'])
+                if change == 'uninstall': self.assertEqual(value['installation']['state'], 'uninstalled')
+                self.assertEqual(snapshot(w.root), before)
+
 
 if __name__ == '__main__':
     unittest.main()

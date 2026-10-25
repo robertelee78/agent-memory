@@ -126,6 +126,9 @@ class Report:
 
 
 def receipt_view(report):
+    # Doctor observes again under the shared lifecycle lock. Never carry a
+    # formerly applicable selection through uninstall or a failed reread.
+    report.value['security'] = security_summary()
     state, _ = installation.locations()
     installation.trust_paths.state(state)
     path = state / 'receipt.json'
@@ -576,11 +579,12 @@ def run(operation, repo='.', projection=None):
         report.add('filesystem.native_api', 'pass' if native else 'failure',
                    'Native no-replace/exchange API is available; actual per-filesystem support is established by lifecycle activation, not a diagnostic write probe.' if native else 'Required native no-replace/exchange API is unavailable.',
                    'Use a supported macOS/Linux runtime and filesystem; preserve receipt and backups. Do not replace activation with a rename-away fallback.')
+        bank_writes.fault('diagnostic-before-runtime-lock')
+        report.attempt('runtime.inspection', lambda: runtime_doctor(report, active), RECOVER)
         report.add('distribution.trust', 'warning',
                    distribution_notice(report.value['security']['recorded_source_selection']),
                    'Use an operator-trusted source. A verified lifecycle receipt is not a publisher signature; '
                    'diagnostics cannot authenticate already-loaded verifier code.')
-        report.attempt('runtime.inspection', lambda: runtime_doctor(report, active), RECOVER)
         report.attempt('bank.inspection', lambda: bank_doctor(report, root, projection),
                        'Preserve canonical files, markers and operation receipts. Follow the bank inspection/writes operation; rebuild a selected stale projection from current canonical sources instead of repairing cached content.', bank.get('path'))
         if report.value['bank'].get('state') == 'validated':

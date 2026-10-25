@@ -45,7 +45,9 @@ source authenticity. `executing_source` identifies the package actually running;
 read back its targets/channel.
 
 Default version/status output stays concise. Doctor's existing distribution
-warning distinguishes managed Git, explicit source and unavailable evidence.
+warning distinguishes managed Git, explicit source and unavailable evidence. Its
+summary and warning use the same final applicable receipt observation; an uninstall
+or failed receipt reread does not inherit an earlier source selection.
 Read each component's warnings/failures: status and version are not full ownership
 audits, and a live lifecycle writer can defer deeper target checks. Exit 0 does
 not mean that every security dimension was tested. Diagnostics do not fetch,
