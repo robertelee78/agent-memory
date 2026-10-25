@@ -31,7 +31,7 @@ The session SHOULD start with the installed `am version --json` or
 the trusted source helper:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/diagnose.py" version --json
+python3 -B -I "$SKILL_DIR/scripts/diagnose.py" version --json
 ```
 
 The session MUST distinguish `executing_source` from the installation's
@@ -44,7 +44,7 @@ is receipt history until doctor verifies ownership. An inactive receipt is
 For a quick current view, the session SHOULD run:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/diagnose.py" status --repo /absolute/repository --json
+python3 -B -I "$SKILL_DIR/scripts/diagnose.py" status --repo /absolute/repository --json
 ```
 
 Status reads selected/default and indexed router candidates, local identity
@@ -59,10 +59,29 @@ Counts and freshness that were not inspected remain explicitly unassessed.
 The session SHOULD run the deeper read-only audit when setup or health is unclear:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/diagnose.py" doctor --repo /absolute/repository --json
+python3 -B -I "$SKILL_DIR/scripts/diagnose.py" doctor --repo /absolute/repository --json
 ```
 
 The installed machine equivalents are `am status --json` and `am doctor --json`.
+Packaged public entrypoints disable Python bytecode before importing product
+modules. A session MUST use these entrypoints for supported audits. For custom
+Python inspection, it MUST pass `-B` or set `sys.dont_write_bytecode = True`
+before the first product import; setting it after imports is too late. `-I`
+alone does not disable bytecode. A session MUST NOT call a bare product import
+read-only unless bytecode suppression is already established.
+
+Supported runtime audits preserve the complete artifact file bytes and modes;
+they MUST NOT filter executable caches out of an integrity comparison. Unexpected
+`__pycache__` or `.pyc` files remain drift, even if all receipt-owned source bytes
+match. A session MUST preserve them and use a trusted outside helper to inspect
+the receipt and changed targets. Diagnostics grant no permission to clean caches,
+rewrite receipts or force an update. A source hash identifies bytes, not the
+process that wrote an unexpected file.
+
+Runtime-artifact immutability is distinct from a declared private audit outside
+the package: governed recall may write such an audit while preserving canonical
+memory and runtime. Version, status, doctor, artifact inspection and package
+validation perform no setup or private audit writes.
 Without `--json`, these commands print a human-readable view of the same result.
 A session MAY add `--projection /absolute/reference-projection.json` to doctor
 when an optional derived reference file is actually in use. Doctor MUST NOT
