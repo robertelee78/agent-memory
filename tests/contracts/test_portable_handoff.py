@@ -183,6 +183,36 @@ class PortableHandoff(unittest.TestCase):
             row = self.good(w, cli, 'get', '--repo', repo, '--request', h.save(w, request))['results'][0]
             self.assertFalse(row['context_assessment']['managed_checkpoint']); self.assertFalse(row['assignment'])
 
+    def test_wrong_heading_levels_cannot_turn_managed_checkpoint_into_manual_orientation(self):
+        with World() as w:
+            cli = installed.install(w)
+            h = self.helper(cli)
+            repo, bank = h.fixture(w)
+            value = h.payload(h.inspect(w, repo)); value['conditions'] = {'task': 'other-task'}
+            self.assertTrue(h.apply(w, h.preview(w, repo, value))[1]['verified'])
+            project = self.good(w, cli, 'identity', 'status', '--repo', repo)['project_id']
+            request = self.request(project, task='actual-task')
+            target = bank / 'activeContext.md'; original = target.read_text()
+            for level in (1, 3, 6):
+                with self.subTest(level=level):
+                    target.write_text(original.replace('## ', '#' * level + ' '))
+                    self.assertEqual(self.good(w, cli, 'get', '--repo', repo, '--request', h.save(w, request))['results'], [])
+                    assemble = {'recall': request, 'max_bytes': 16384, 'token_budget': 16384, 'conflicts': []}
+                    result = self.good(w, cli, 'context', 'preview', '--repo', repo, '--request', h.save(w, assemble))
+                    self.assertNotIn(value['focus'], result['context_text'])
+                    history = self.good(w, cli, 'inspect', '--repo', repo, '--path', 'activeContext.md')
+                    self.assertFalse(history['context_assessment']['applicable'])
+                    self.assertIn('unqualified-checkpoint-framing', history['context_assessment']['reasons'])
+                    self.assertEqual(history['body'], target.read_text())
+                    assemble['conflicts'] = [{'sources': [
+                        {'path': p, 'sha256': hashlib.sha256((bank / p).read_bytes()).hexdigest()}
+                        for p in ('activeContext.md', 'projectbrief.md')], 'rationale': 'Both historical and current context require qualification.'}]
+                    self.assertNotEqual(installed.command(w, cli, 'context', 'preview', '--repo', repo,
+                        '--request', h.save(w, assemble))[0].returncode, 0)
+            target.write_text('# Manual orientation\n\nA literal example, not a handoff:\n\n```markdown\n### Checkpoint conditions\n```\n')
+            row = self.good(w, cli, 'get', '--repo', repo, '--request', h.save(w, request))['results'][0]
+            self.assertFalse(row['context_assessment']['managed_checkpoint'])
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -170,7 +170,7 @@ def check_pins(repo, bank, references, expected):
 def sections(body):
     from .checkpoint import headings, FIELDS, EXTRA
     expected = {*FIELDS.values(), *EXTRA, SECTION}
-    if not re.search(r'(?m)^ {0,3}##[ \t]+(?:Current focus|Recent changes|Open questions|Next step|Checkpoint )', body):
+    if not re.search(r'(?m)^ {0,3}#{1,6}[ \t]+(?:Current focus|Recent changes|Open questions|Next step|Checkpoint )', body):
         return {}
     found = {}
     for start, end, title in headings(body):
