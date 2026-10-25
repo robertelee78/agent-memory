@@ -18,6 +18,7 @@ from . import local_registry as storage
 from .developer_identity import digest, encoded, load, uuid_valid
 from .frontmatter import ContractError
 from .lifecycle import time_value
+from . import sharing_limits as limits
 
 MARKER = ".agent-memory-transaction.md"
 SCHEMA = "agent-memory/transaction-proposal-v1"
@@ -48,6 +49,7 @@ def files_at(bank):
 def proposal_value(prepared):
     from .scope_binding import context_value
     p = prepared.get("proposal", prepared) if isinstance(prepared, dict) else prepared
+    limits.private_bytes(p)
     if (not isinstance(p, dict) or set(p) not in (FIELDS, FIELDS | {"initialization_evidence"}, FIELDS | {"admission_evidence"}, FIELDS | {"consolidation_evidence"}, FIELDS | {"governance_evidence"}, FIELDS | {"refresh_evidence"}, FIELDS | {'checkpoint_evidence'}) or p["schema"] != SCHEMA
             or not uuid_valid(p["operation_id"]) or not uuid_valid(p["project_id"])
             or p["operation"] not in writes.OPERATIONS or not isinstance(p["repo_root"], str)
@@ -209,7 +211,7 @@ def replace_file(bank, path, body, expected, marker, participants, *, mode_bits=
 
 def cleanup(journal, raw):
     if journal.exists():
-        if journal.is_symlink() or journal.read_bytes() != raw:
+        if journal.is_symlink() or limits.read_bytes(journal) != raw:
             raise ContractError("Recovery journal changed; do not discard unknown recovery data")
         journal.unlink()
         flush_directory(journal.parent)
@@ -223,7 +225,7 @@ def receipt_value(path, p):
         return None
     if path.is_symlink():
         raise ContractError("Transaction receipt must not be a symlink")
-    r = load(path.read_bytes())
+    r = limits.read_json(path)
     final = file_hashes(p["files"])
     if (not isinstance(r, dict) or set(r) != RECEIPT_FIELDS
             or r.get("schema") != "agent-memory/transaction-receipt-v1"
@@ -314,7 +316,7 @@ def converge(root, bank, p, base_files, journal, raw, receipt_path, mode, observ
                  "observed_hashes": p["observed_hashes"], "resulting_hashes": expected, "outcome": outcome,
                  "changed_memory_paths": [repository_config.relative(root) + "/" + path for path in changed(p)],
                  "readback_at": datetime.now(timezone.utc).isoformat(), "verified": True}
-        writes.record(receipt_path, encoded(known))
+        writes.record(receipt_path, limits.private_bytes(known))
     writes.fault("transaction-after-receipt")
     check_marker(bank, marker)
     check_observed(bank, expected)
@@ -462,7 +464,7 @@ def _apply(prepared, *, check_identity):
         if known:
             # A completed or rolled-back operation never reapplies over a correction.
             if journal.exists():
-                raw = journal.read_bytes()
+                raw = limits.read_bytes(journal)
                 _, recorded = journal_value(raw, root, bank, p["operation_id"], require_marker=False)
                 if recorded != p:
                     raise ContractError("Unknown leftover journal; preserve it")
@@ -477,10 +479,10 @@ def _apply(prepared, *, check_identity):
         if file_hashes(base_files) != observed:
             raise ContractError("Bank changed before journaling")
         preflight(bank, p)
-        raw = encoded({"schema": "agent-memory/transaction-journal-v1", "proposal": p, "base_files": base_files})
+        raw = limits.private_bytes({"schema": "agent-memory/transaction-journal-v1", "proposal": p, "base_files": base_files})
         journal.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
         if journal.exists():
-            if journal.read_bytes() != raw:
+            if limits.read_bytes(journal) != raw:
                 raise ContractError("Unknown journal or reused transaction ID; preserve it")
         else:
             storage.replace(journal, raw, None)
@@ -501,7 +503,7 @@ def recover(repo, mode=None, prepared=None):
     if not uuid_valid(operation_id):
         raise ContractError('Invalid transaction recovery operation')
     journal, receipt_path = locations(root, bank, operation_id)
-    _, p = journal_value(journal.read_bytes(), root, bank, operation_id)
+    _, p = journal_value(limits.read_bytes(journal), root, bank, operation_id)
     admission_recovery(p, r['mode'], receipt_value(receipt_path, p))
     if p['operation'] == 'bind':
         raise ContractError('Resume identity binding through its original scope_binding bundle')
@@ -540,7 +542,7 @@ def _recover(repo, mode=None, prepared=None, *, check_identity=None):
         with storage.exclusive(bank / ".agent-memory.lock", r["operation_id"], "bank-recover") as owner:
             marker = bank / MARKER
             journal, receipt_path = locations(root, bank, r["operation_id"])
-            raw = journal.read_bytes()
+            raw = limits.read_bytes(journal)
             if digest(raw) != r["journal_sha256"] or digest(marker.read_bytes()) != r["marker_sha256"]:
                 raise ContractError("Recovery evidence changed after preview; inspect again")
             j, p = journal_value(raw, root, bank, r["operation_id"])
@@ -567,7 +569,7 @@ def _recover(repo, mode=None, prepared=None, *, check_identity=None):
     if not isinstance(m, dict) or not uuid_valid(m.get("transaction_id")):
         raise ContractError("Unknown transaction marker; operator inspection required")
     journal, receipt_path = locations(root, bank, m["transaction_id"])
-    raw = journal.read_bytes()
+    raw = limits.read_bytes(journal)
     j, p = journal_value(raw, root, bank, m["transaction_id"])
     admission_recovery(p, mode, receipt_value(receipt_path, p))
     if mode == 'finish' and 'checkpoint_evidence' in p:
@@ -583,7 +585,7 @@ def _recover(repo, mode=None, prepared=None, *, check_identity=None):
     if known and known["outcome"] != ("finished" if mode == "finish" else "rolled-back"):
         raise ContractError("Transaction already has a different verified outcome")
     # Preview writes no locks, receipts, journals or temporary projections.
-    if lock.exists() or lock.is_symlink() or marker.read_bytes() != mraw or journal.read_bytes() != raw or writes.hashes(bank) != observed:
+    if lock.exists() or lock.is_symlink() or marker.read_bytes() != mraw or limits.read_bytes(journal) != raw or writes.hashes(bank) != observed:
         raise ContractError("Recovery evidence changed during inspection")
     return result("recover-preview", proposal={"schema": RECOVERY_SCHEMA, "operation_id": p["operation_id"],
                   "repo_root": str(root), "mode": mode, "journal_sha256": digest(raw), "marker_sha256": digest(mraw),
@@ -606,11 +608,11 @@ def main(argv=None):
     args = parser.parse_args(argv)
     try:
         if args.command == "preview":
-            output = preview(args.repo, load(Path(args.files).read_bytes()), args.operation)
+            output = preview(args.repo, limits.read_json(args.files), args.operation)
         elif args.command == "apply":
-            output = apply(load(Path(args.proposal).read_bytes()))
+            output = apply(limits.read_json(args.proposal))
         else:
-            output = recover(args.repo, args.mode, load(Path(args.proposal).read_bytes()) if args.proposal else None)
+            output = recover(args.repo, args.mode, limits.read_json(args.proposal) if args.proposal else None)
         print(json.dumps(output, indent=2, ensure_ascii=False))
         return 0
     except (ContractError, OSError, UnicodeError, ValueError, TypeError, KeyError, AttributeError) as exc:

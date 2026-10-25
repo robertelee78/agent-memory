@@ -22,6 +22,7 @@ from . import retrieval, scope_binding, security, scopes
 from .developer_identity import digest, encoded, load
 from .frontmatter import ContractError, read, write
 from .identity_git import git
+from . import sharing_limits as limits
 
 LIMIT = 1048576
 CLASSES = {'compatible', 'equivalent', 'contradiction', 'disjoint-conditions', 'related', 'uncertain', 'lifecycle'}
@@ -376,9 +377,26 @@ def consolidate(files,groups,rows,decisions,context,operation_id,at,blocked):
 def review(repo,judgment, *, owned_lock=None):
     from . import sharing_recovery as recovery
     if not isinstance(judgment,dict) or not isinstance(judgment.get('binding'),dict):raise ContractError('Review requires an inspection binding')
-    base=judgment['binding'].get('base');root,observation,binding,values,checked=snapshots(repo,base,owned_lock=owned_lock)
-    rows=units(values,checked);inspection={'binding':binding,'sources':list(rows.values()),'required_pairs':pairs(rows)}
-    decisions=reviewed_value(judgment,inspection);held=set();blocked=set();conflicts=[];peer=set();equivalents=set()
+    version2=judgment.get('schema')=='agent-memory/semantic-sharing-judgment-v2'
+    if version2:
+        from . import sharing_frontier as frontier
+        snapshot,rows,inspection=frontier.prepare_review(repo,judgment,owned_lock=owned_lock)
+        root,observation,binding,values,checked=snapshot
+        plain={k:v for k,v in judgment.items() if k in {'binding','pairs','dependencies','consolidations','rationale','recorded_at'}}
+    else:
+        base=judgment['binding'].get('base');root,observation,binding,values,checked=snapshots(repo,base,owned_lock=owned_lock)
+        rows=units(values,checked);inspection={'binding':binding,'sources':list(rows.values()),'required_pairs':pairs(rows)}
+        plain=judgment
+    decisions=reviewed_value(plain,inspection);held=set();blocked=set();conflicts=[];peer=set();equivalents=set()
+    if version2:
+        unresolved=set(inspection['withheld_sources'])
+        unresolved.update(k for k,s in inspection['selections'].items() if s.get('uncertain'))
+        for key in unresolved:
+            row=rows[key];held.add((row['path'],row['component'],row['target_path']));blocked.add(row['path'])
+        # A hidden selected source cannot silently license affected changed work.
+        for key,selection in inspection['selections'].items():
+            if set(selection['matched'])&unresolved:
+                row=rows[key];held.add((row['path'],row['component'],row['target_path']));blocked.add(row['path'])
     actor=observation['scope_context']['developer_id']
     for pair,decision in decisions.items():
         left,right=(rows[key] for key in pair);classification=decision['classification']
@@ -387,7 +405,8 @@ def review(repo,judgment, *, owned_lock=None):
         if classification=='contradiction' and disjoint(left,right):raise ContractError('Disjoint claims need their distinct conditions preserved')
         if classification=='lifecycle':
             a,b=left['metadata'],right['metadata']
-            if (a is None or b is None or not any(
+            terminal=version2 and frontier.terminal_relation(left,right)
+            if not terminal and (a is None or b is None or not any(
                     {'id':old['id'],'version':old['version']} in new.get('supersedes',[])+new.get('corrects',[])
                     or {'id':new['id'],'version':new['version']} in old.get('superseded-by',[])
                     for old,new in ((a,b),(b,a)))):
@@ -431,7 +450,7 @@ def review(repo,judgment, *, owned_lock=None):
     local,landed=values['local'],values['landed'];baseline=values['base']
     for path in set(local)&set(landed)&set(baseline)&set(bank.CONTEXTS)-blocked:
         if local[path]!=landed[path] and local[path]!=baseline[path] and landed[path]!=baseline[path]:
-            pair=tuple(sorted([digest(encoded({'path':path,'sha256':digest(side[path].encode())})) for side in (local,landed)]))
+            pair=tuple(sorted(next(key for key,row in rows.items() if row['path']==path and row['component']=='body' and side in row['sides']) for side in ('local','landed')))
             if decisions[pair]['classification'] not in {'compatible','equivalent'}:
                 raise ContractError('Concurrent same-file prose needs explicit compatible meaning review')
             body=compatible_prose(baseline[path],local[path],landed[path])
@@ -460,22 +479,22 @@ def review(repo,judgment, *, owned_lock=None):
         record_ids=sorted({row['metadata']['id'] for row in rows.values() if row['metadata'] is not None}))
     preserve_invalidation(values,refresh);preserve_invalidation(values,publish)
     final_sources(root,observation,binding,owned_lock=owned_lock)
-    proof={'schema':'agent-memory/semantic-sharing-proof-v1','judgment':judgment,
+    proof={'schema':'agent-memory/semantic-sharing-proof-v2' if version2 else 'agent-memory/semantic-sharing-proof-v1','judgment':judgment,
            'refresh_hashes':tx.file_hashes(refresh),'publish_hashes':tx.file_hashes(publish),'blocked_paths':sorted(blocked),
            'blocked_components':[{'path':p,'component':c,'target_path':t} for p,c,t in sorted(held,key=lambda x:(x[0],x[1],x[2] or ''))]}
-    if len(encoded(proof))>LIMIT:raise ContractError('Complete semantic proof exceeds bound; no truncation')
+    if len(encoded(proof))>(limits.MAX_PRIVATE if version2 else LIMIT):raise ContractError('Complete semantic proof exceeds bound; no truncation')
     return {'schema':'agent-memory/semantic-sharing-result-v1','operation':'review','proof':proof,
             'proof_sha256':digest(encoded(proof)),'audit':audit,'audit_writes_performed':True,'refresh_files':refresh,'publish_files':publish,
             'conflicts':conflicts,'blocked_paths':sorted(blocked),
             'blocked_introduction_paths':sorted({p for p,c,t in held if c=='introduction'}),'detecting_developer_id':actor,
             'other_developer_ids':sorted(peer),'recommend_other_developer_clarification':bool(peer),'messages_sent':False,
-            'independent_updates_may_continue':True,'semantic_truth_verified':False,'judgment_is_agent_assertion':True,
+            'independent_updates_may_continue':True,'semantic_truth_verified':False,'semantic_completeness_verified':False,'judgment_is_agent_assertion':True,
             'remote_freshness_verified':True,'publication_verified':False,'canonical_writes_performed':False,
             'git_metadata_writes_performed':True,'refresh_applied':False}
 
 
 def check(repo,proof, *, owned_lock=None):
-    if not isinstance(proof,dict) or set(proof)!={'schema','judgment','refresh_hashes','publish_hashes','blocked_paths','blocked_components'} or proof['schema']!='agent-memory/semantic-sharing-proof-v1':
+    if not isinstance(proof,dict) or set(proof)!={'schema','judgment','refresh_hashes','publish_hashes','blocked_paths','blocked_components'} or proof['schema'] not in {'agent-memory/semantic-sharing-proof-v1','agent-memory/semantic-sharing-proof-v2'}:
         raise ContractError('Use the complete actual semantic proof')
     value=review(repo,proof['judgment'],owned_lock=owned_lock)
     if encoded(value['proof'])!=encoded(proof):raise ContractError('Semantic proof does not describe current reviewed sources and outputs')
@@ -483,9 +502,14 @@ def check(repo,proof, *, owned_lock=None):
 
 
 def read_input(path):
-    with Path(path).open('rb') as stream:raw=stream.read(LIMIT+1)
-    if len(raw)>LIMIT:raise ContractError('Semantic request exceeds complete reader budget')
-    return load(raw)
+    value=limits.read_json(path)
+    # Exact schema dispatch keeps legacy proof limits and unknown formats fail
+    # in their actual consumers; a larger envelope never changes v1 semantics.
+    candidate=value.get('proof',value) if isinstance(value,dict) else value
+    if isinstance(candidate,dict) and candidate.get('schema') in {'agent-memory/semantic-sharing-proof-v2','agent-memory/semantic-sharing-judgment-v2','agent-memory/semantic-sharing-request-v2','agent-memory/semantic-sharing-inspection-v2'}:
+        return value
+    if len(encoded(value))>LIMIT:raise ContractError('Legacy semantic request exceeds its complete reader budget')
+    return value
 
 
 def main(argv=None):
@@ -494,11 +518,21 @@ def main(argv=None):
         p=sub.add_parser(name);p.add_argument('--repo',required=True)
         if name=='inspect':p.add_argument('--base')
         else:p.add_argument('--input',required=True)
+        p.add_argument('--output')
+    p=sub.add_parser('inspect-v2');p.add_argument('--repo',required=True);p.add_argument('--input');p.add_argument('--output',required=True)
+    p=sub.add_parser('page-v2');p.add_argument('--repo',required=True);p.add_argument('--input',required=True);p.add_argument('--page',type=int,required=True)
+    p=sub.add_parser('review-v2');p.add_argument('--repo',required=True);p.add_argument('--input',required=True);p.add_argument('--output',required=True)
     args=parser.parse_args(argv)
     try:
-        if args.command=='inspect':value=inspect(args.repo,args.base)
+        if args.command in {'inspect-v2','page-v2','review-v2'}:
+            from . import sharing_frontier as frontier
+            if args.command=='inspect-v2':value=frontier.inspect(args.repo,read_input(args.input) if args.input else None)
+            elif args.command=='page-v2':value=frontier.page(args.repo,read_input(args.input),args.page)
+            else:value=review(args.repo,read_input(args.input))
+        elif args.command=='inspect':value=inspect(args.repo,args.base)
         elif args.command=='review':value=review(args.repo,read_input(args.input))
         else:value=check(args.repo,read_input(args.input))
+        if getattr(args,'output',None):value=limits.write_private(args.output,value,args.repo)
         print(json.dumps(value,indent=2));return 0
     except (ContractError,OSError,ValueError,TypeError,KeyError,AttributeError,UnicodeError,RecursionError):
         print(json.dumps({'schema':'agent-memory/semantic-sharing-result-v1','operation':args.command,

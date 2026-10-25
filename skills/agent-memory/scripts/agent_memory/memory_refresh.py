@@ -12,6 +12,7 @@ from . import retrieval, scope_binding, semantic_sharing as semantic, sharing_re
 from .developer_identity import digest, encoded, load, uuid_valid
 from .frontmatter import ContractError
 from .identity_git import git
+from . import sharing_limits as limits
 
 LIMIT = 4 * 1048576
 CURSOR = 'agent-memory/refresh-cursor-v1'
@@ -48,10 +49,10 @@ def cursor(root):
     if not target.exists():
         return None, None, 'absent'
     with target.open('rb') as stream:
-        raw = stream.read(65537)
+        raw = stream.read(limits.MAX_PRIVATE+1)
     sha = digest(raw)
     try:
-        if len(raw) > 65536:
+        if len(raw) > limits.MAX_PRIVATE:
             raise ContractError('Oversized cursor')
         value = load(raw)
         if (not isinstance(value, dict) or set(value) != CURSOR_FIELDS or value['schema'] != CURSOR
@@ -64,8 +65,8 @@ def cursor(root):
         if receipt.is_symlink() or not receipt.is_file():
             raise ContractError('Cursor does not bind its actual completed receipt')
         with receipt.open('rb') as stream:
-            receipt_raw = stream.read(65537)
-        if len(receipt_raw) > 65536 or digest(receipt_raw) != value['receipt_sha256']:
+            receipt_raw = stream.read(limits.MAX_PRIVATE+1)
+        if len(receipt_raw) > limits.MAX_PRIVATE or digest(receipt_raw) != value['receipt_sha256']:
             raise ContractError('Cursor receipt is changed or exceeds the bounded reader')
         r = load(receipt_raw)
         if (set(r) != tx.RECEIPT_FIELDS or r['schema'] != 'agent-memory/transaction-receipt-v1'
@@ -141,13 +142,15 @@ def prepare(repo, request):
 
 def save_cursor(root, p, observation, receipt, expected):
     value = {'schema': CURSOR, 'repo_root': str(root), 'project_id': p['project_id'],
-             'authority_head': observation['authority_head'], 'operation_id': p['operation_id'],
+             'authority_head': (p['refresh_evidence']['proof']['judgment']['binding']['base']
+                 if p['refresh_evidence']['proof']['blocked_paths'] or p['refresh_evidence']['proof']['blocked_components']
+                 else observation['authority_head']), 'operation_id': p['operation_id'],
              'receipt_sha256': digest(Path(receipt['receipt_path']).read_bytes()),
              'resulting_hashes': receipt['resulting_hashes'],
              'git_context': p['refresh_evidence']['git_context']}
     value['checksum'] = digest(encoded(value))
     path = cursor_path(root); path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
-    storage.replace(path, encoded(value), expected)
+    storage.replace(path, limits.private_bytes(value), expected)
     return {'stored': True, 'authority_head': observation['authority_head'], 'content_free': True}
 
 
@@ -202,11 +205,12 @@ def apply(prepared):
 
 
 def read_input(path):
-    with Path(path).open('rb') as stream:
-        raw = stream.read(LIMIT + 1)
-    if len(raw) > LIMIT:
-        raise ContractError('Complete refresh request exceeds its bounded reader; no truncation')
-    return load(raw)
+    value=limits.read_json(path)
+    body=value.get('proposal',value) if isinstance(value,dict) else value
+    proof=(body.get('proof') or body.get('refresh_evidence',{}).get('proof')) if isinstance(body,dict) else None
+    if isinstance(proof,dict) and proof.get('schema')=='agent-memory/semantic-sharing-proof-v2':return value
+    if len(encoded(value))>LIMIT:raise ContractError('Complete legacy refresh request exceeds its bounded reader; no truncation')
+    return value
 
 
 def main(argv=None):
@@ -215,11 +219,15 @@ def main(argv=None):
     check = sub.add_parser('inspect'); check.add_argument('--repo', required=True); check.add_argument('--base')
     preview = sub.add_parser('prepare'); preview.add_argument('--repo', required=True); preview.add_argument('--input', required=True)
     writer = sub.add_parser('apply'); writer.add_argument('--input', required=True)
+    for command in (check,preview,writer):command.add_argument('--output')
     args = parser.parse_args(argv)
     try:
         if args.operation == 'inspect': value = inspect(args.repo, args.base)
         elif args.operation == 'prepare': value = prepare(args.repo, read_input(args.input))
         else: value = apply(read_input(args.input))
+        if args.output:
+            repo=args.repo if hasattr(args,'repo') else tx.proposal_value(read_input(args.input))['repo_root']
+            value=limits.write_private(args.output,value,repo)
         print(json.dumps(value, indent=2)); return 0
     except (ContractError, OSError, ValueError, UnicodeError, TypeError, KeyError, AttributeError, RecursionError):
         print(json.dumps(result(args.operation, 'pending-inspection', canonical_writes_performed=None,
