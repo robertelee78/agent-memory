@@ -65,3 +65,23 @@ repeat update, diagnostic consistency, actual interruption/rollback, real frozen
 v0.0.2 transition and refusal controls are executable in
 `tests/contracts/test_managed_source_ownership.py`. Source-bound validation
 results belong on #99; existence of the tests alone is not a pass claim.
+
+## Follow-up: deleted worktrees became explicit rollback inputs
+
+After the ownership correction landed, the actual public one-line preview
+succeeded and inspected 74 available banks. Apply then refused a deleted
+registered worktree before changing targets. The compatibility observer correctly
+reported missing registry/Git worktree locations as discovery gaps, but also put
+them in `observed_repositories`. Activation reused that list as explicit
+compatibility/rollback inputs, whose contract requires existing directories.
+Thus preview and apply disagreed despite the same filesystem state.
+
+The replay list now contains every repository directory actually observed,
+including existing repositories without a bank. Missing discovered locations
+remain reported gaps. An explicitly requested missing `--repo` still refuses;
+an observed repository that disappears during a later check also refuses. No
+registry entry or Git worktree metadata is pruned to repair an update. The
+actual failed apply retained the previous completed journal and changed no
+installed target. `test_update_discovery_gaps.py` exercises real stale Git
+worktrees through check, update, repeat and recovery in link and copy modes,
+alongside the explicit-missing and existing-bankless boundaries.
