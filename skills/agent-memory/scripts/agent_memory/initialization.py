@@ -321,25 +321,20 @@ def preview(repo, review):
             proposal['canonical-remote'] = proof['canonical_remote']
         for path in bank.CONTEXTS:
             if path in bodies:
-                proposal['contexts'][path] = {'body': bodies[path], 'purpose': 'Source-linked initialization orientation',
-                    'scope': 'repository', 'lifecycle': 'active', 'read-when': 'When starting or resolving project context'}
+                proposal['contexts'][path] = {'body': bodies[path],
+                    **{key: value for key, value in bank.context_route(path).items() if key != 'path'}}
             else:
                 proposal['omitted'][path] = 'No distinct useful source context was established during initialization'
         files = bank.render(proposal)['files']
     else:
-        metadata, routes, omitted = bank.parse_router(base['MEMORY.md'])
-        added = False
+        added = []
         for path, body in bodies.items():
             if path in base:
                 continue  # Existing prose, conditions, sources and provenance stay byte-identical.
             files[path] = body
-            routes.append({'path': path, 'purpose': 'Source-linked initialization orientation', 'scope': 'repository',
-                           'lifecycle': 'active', 'read-when': 'When starting or resolving project context'})
-            omitted.pop(path, None)
-            added = True
+            added.append(path)
         if added:
-            metadata['router-updated'] = storage.now()
-            files['MEMORY.md'] = bank.router_text(metadata, routes, omitted)
+            files['MEMORY.md'] = bank.add_context_routes(base['MEMORY.md'], added, storage.now())
     tx = transactions.proposal_value({'schema': transactions.SCHEMA, 'operation_id': str(uuid.uuid4()), 'operation': 'initialize',
         'repo_root': str(root), 'project_id': context['project_id'], 'observed_hashes': observed['existing_hashes'],
         'files': files, 'scope_context': context, 'initialization_evidence': {
@@ -393,18 +388,11 @@ def validate_transaction(tx):
     if original:
         if not isinstance(p['base_router'], str) or digest(p['base_router'].encode()) != original['MEMORY.md']:
             raise ContractError('Existing router differs from the inspected initialization base')
-        metadata, routes, omitted = bank.parse_router(p['base_router'])
-        added = False
-        for path in bodies:
-            if path not in original:
-                routes.append({'path': path, 'purpose': 'Source-linked initialization orientation', 'scope': 'repository',
-                               'lifecycle': 'active', 'read-when': 'When starting or resolving project context'})
-                omitted.pop(path, None)
-                added = True
+        added = [path for path in bodies if path not in original]
         expected_router = p['base_router']
         if added:
-            metadata['router-updated'] = bank.parse_router(tx['files']['MEMORY.md'])[0]['router-updated']
-            expected_router = bank.router_text(metadata, routes, omitted)
+            updated = bank.parse_router(tx['files']['MEMORY.md'])[0]['router-updated']
+            expected_router = bank.add_context_routes(p['base_router'], added, updated)
         if tx['files']['MEMORY.md'] != expected_router:
             raise ContractError('Initialization may add missing context routes, never rewrite existing routes or identity')
     elif p['base_router'] is not None:
@@ -416,9 +404,7 @@ def validate_transaction(tx):
         remote = data['projects'][tx['project_id']]['canonical_remote']
         if remote is not None:
             metadata['canonical-remote'] = remote
-        routes = [{'path': path, 'purpose': 'Source-linked initialization orientation', 'scope': 'repository',
-                   'lifecycle': 'active', 'read-when': 'When starting or resolving project context'}
-                  for path in bank.CONTEXTS if path in bodies]
+        routes = [bank.context_route(path) for path in bank.CONTEXTS if path in bodies]
         omitted = {path: 'No distinct useful source context was established during initialization'
                    for path in bank.CONTEXTS if path not in bodies}
         if tx['files']['MEMORY.md'] != bank.router_text(metadata, routes, omitted):
