@@ -13,7 +13,7 @@ from runtime_update_fixtures import ROOT, PACK, fixture, bank, snapshot, receipt
 
 
 def call(world, operation, *options, receipt=None, expected=0):
-    command = ([Path(receipt['bin_dir']) / 'agent-memory'] if receipt else
+    command = ([Path(receipt['bin_dir']) / 'agent-memory', '--json'] if receipt else
                [sys.executable, '-I', ROOT / 'scripts/diagnose.py'])
     result = world.run([*command, operation, '--json', *options], check=False, timeout=120)
     if result.returncode != expected:

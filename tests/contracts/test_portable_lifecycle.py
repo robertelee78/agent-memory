@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parents[2]
 
 class PortableLifecycleContract(unittest.TestCase):
     def command(self, world, cli, *args):
-        return layout.command(world, [cli, *args])
+        return layout.command(world, [cli, '--json', *args])
 
     def git_state(self, world, repo):
         index = Path(world.git('rev-parse', '--path-format=absolute', '--git-path', 'index', cwd=repo).stdout.strip())

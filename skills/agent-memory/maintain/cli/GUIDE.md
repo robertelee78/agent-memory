@@ -34,9 +34,11 @@ requirements when using its installed alias.
 ## Apply
 
 Installation creates `am` and the compatibility command `agent-memory` in the
-receipt's `bin_dir`. Both wrappers are separately owned targets. Every command
-uses the same packaged public helper and outputs JSON; `--json` is an optional
-explicit selector. The trusted source entry point remains usable before
+receipt's `bin_dir`. Both wrappers are separately owned targets. Lifecycle and
+diagnostic commands print concise human-readable results by default. A session
+MUST pass `--json` when it needs the complete machine result, qualifications or
+receipt. Memory operations retain their structured proposals/results. Packaged
+Python helpers still emit JSON by default. The trusted source entry point remains usable before
 installation or when repairing a missing wrapper:
 
 ```sh
@@ -54,6 +56,14 @@ command to discover its exact request/proposal arguments. Paths with spaces
 MUST remain one quoted argument. Invalid arguments exit 2; a refused operation
 exits nonzero and retains the helper's evidence/recovery instructions. A
 successful preview is not an applied mutation or verified publication.
+
+Bare `am`, `am help`, `am --help` and `am -h` show public help. `am --version`,
+`am -V` and `am version` show the executing version, revision/cleanliness and
+source without memory setup. `--verbose` adds diagnostic detail. A session MUST
+retain operation exit codes and MUST NOT infer success merely from readable
+formatting. The default repeated one-line installer follows the guarded updater
+for an existing managed installation; explicit target-reconfiguration options
+retain the separately previewed installation operation.
 
 | CLI group | Existing public helper | Meaning |
 | --- | --- | --- |

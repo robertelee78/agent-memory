@@ -16,6 +16,7 @@ from world import World
 from fault_partitions import OWNERS, registered as registered_partitions, extract as partition_proof, coverage as partition_coverage
 
 REQUIRED = {
+    "public-cli-user-journey",
     "bank-roundtrip", "identity-isolation", "observed-writes", "learning-admission",
     "retrieval-context", "correction-erasure", "initialize-evidence", "cross-clone-sharing",
     "concurrent-sharing", "offline-replay", "later-code-merge", "portable-lifecycle",
@@ -32,7 +33,7 @@ def registry():
     entries = data["suites"]
     names = [entry["name"] for entry in entries]
     if len(names) != len(set(names)) or not (REQUIRED | {"harness", "optional-stores"}).issubset(names):
-        raise ValueError("Registry must declare every v0.0.1 contract exactly once")
+        raise ValueError("Registry must declare every mandatory contract exactly once")
     if set(entry["layer"] for entry in entries) != LAYERS:
         raise ValueError("Registry must route every contract layer")
     for entry in entries:
@@ -41,7 +42,7 @@ def registry():
         if entry["name"] == "optional-stores":
             if entry.get("scope") != "future" or not entry.get("reason") or entry.get("path"):
                 raise ValueError("Optional stores must be explicitly outside v0.0.1")
-        elif entry.get("scope") != "v0.0.1":
+        elif entry.get("scope") not in {"v0.0.1", "v0.0.2"}:
             raise ValueError("Required contracts cannot be marked optional")
         if entry.get("path"):
             raw = ROOT / entry["path"]

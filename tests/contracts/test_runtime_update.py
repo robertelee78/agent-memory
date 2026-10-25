@@ -174,7 +174,7 @@ class RuntimeUpdateContract(unittest.TestCase):
     def test_trusted_source_helper_updates_when_the_installed_command_does_not_yet_dispatch_update(self):
         with World() as world:
             channel,pack,receipt=fixture(world,bootstrap=True)
-            unavailable=world.run([Path(receipt['bin_dir'])/'agent-memory','update','--check'],check=False)
+            unavailable=world.run([Path(receipt['bin_dir'])/'agent-memory', '--json','update','--check'],check=False)
             self.assertEqual(unavailable.returncode,2)
             # The new trusted package is separate from the older managed runtime.
             module=pack/'scripts/agent_memory/installation.py'
@@ -191,7 +191,7 @@ class RuntimeUpdateContract(unittest.TestCase):
             stage='update-write-0-before'
             world.env.update({'AGENT_MEMORY_FAULT_STAGE':stage,'AGENT_MEMORY_FAULT_MODE':'pause',
                               'AGENT_MEMORY_FAULT_DIR':str(rendezvous)})
-            child=world.spawn([Path(receipt['bin_dir'])/'agent-memory','update'])
+            child=world.spawn([Path(receipt['bin_dir'])/'agent-memory', '--json','update'])
             for key in ('AGENT_MEMORY_FAULT_STAGE','AGENT_MEMORY_FAULT_MODE','AGENT_MEMORY_FAULT_DIR'):
                 del world.env[key]
             deadline=time.monotonic()+8

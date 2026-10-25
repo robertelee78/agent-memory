@@ -12,7 +12,7 @@ from runtime_update_fixtures import ROOT, fixture, bank, snapshot, receipt_path
 
 
 def purge(world, memory, *args, expected=0, env=None, repo=None, installed=None):
-    command = ([Path(installed['bin_dir'])/'agent-memory', 'purge-data'] if installed else
+    command = ([Path(installed['bin_dir'])/'agent-memory', '--json', 'purge-data'] if installed else
                [sys.executable, '-I', ROOT/'scripts/uninstall_runtime.py', 'purge-data'])
     result = world.run([*command, '--repo', repo or world.paths['repo'], '--path', memory, *args],
                        check=False, env=env, timeout=120)

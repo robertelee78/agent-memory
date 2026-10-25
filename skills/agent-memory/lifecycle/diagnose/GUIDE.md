@@ -27,7 +27,7 @@ one bank is inspected. A session MUST retain original journals and user edits.
 
 ## Observe
 
-The session SHOULD start with the installed `agent-memory version --json` or
+The session SHOULD start with the installed `am version --json` or
 the trusted source helper:
 
 ```sh
@@ -62,7 +62,8 @@ The session SHOULD run the deeper read-only audit when setup or health is unclea
 python3 -I "$SKILL_DIR/scripts/diagnose.py" doctor --repo /absolute/repository --json
 ```
 
-The installed equivalents are `agent-memory status` and `agent-memory doctor`.
+The installed machine equivalents are `am status --json` and `am doctor --json`.
+Without `--json`, these commands print a human-readable view of the same result.
 A session MAY add `--projection /absolute/reference-projection.json` to doctor
 when an optional derived reference file is actually in use. Doctor MUST NOT
 initialize missing state, rebuild caches, acquire a new writer lock, migrate,

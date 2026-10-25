@@ -65,7 +65,7 @@ def advance(world, channel, pack, value='1.0.1', *, shim=False):
 
 
 def call(world, receipt, *args, expected=0, env=None, source=False):
-    command = [sys.executable,'-I',ROOT/'scripts/update_runtime.py','update'] if source else [Path(receipt['bin_dir'])/'agent-memory','update']
+    command = [sys.executable,'-I',ROOT/'scripts/update_runtime.py','update'] if source else [Path(receipt['bin_dir'])/'agent-memory', '--json','update']
     result = world.run([*command,*args],check=False,env=env,timeout=120)
     if result.returncode != expected: raise AssertionError((result.returncode,result.stdout,result.stderr))
     return result, json.loads(result.stdout) if result.stdout else None

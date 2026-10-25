@@ -17,6 +17,8 @@ Usage: install.sh [options]
   --target-dir PATH        Add a custom skills directory; may be repeated
   --bin-dir PATH           Command directory (default: ~/.local/bin)
   --no-guidance            Omit client activation guidance
+  --json                   Print the complete machine result
+  --verbose                Include detailed diagnostic output
   --remote URL --ref NAME  Select a managed Git source (default: HTTPS main)
   --development-source PATH  Select a complete local development package
 
@@ -45,7 +47,9 @@ HELP
   if [[ -n "$script_path" && -f "$script_path" ]]; then
     script_dir=$(CDPATH='' cd -- "$(dirname -- "$script_path")" && pwd)
     if [[ -f "$script_dir/skills/agent-memory/scripts/installer.py" ]]; then
-      exec python3 -I "$script_dir/skills/agent-memory/scripts/installer.py" install "$@"
+      entry="$script_dir/skills/agent-memory/scripts/am_console.py"
+      [[ -f "$entry" ]] || entry="$script_dir/skills/agent-memory/scripts/installer.py"
+      exec python3 -I "$entry" install "$@"
     fi
   fi
 
@@ -69,7 +73,7 @@ HELP
         --remote=*) bootstrap_remote="${1#*=}"; shift ;;
         --ref=*) bootstrap_ref="${1#*=}"; shift ;;
         --development-source=*|--mode=*|--presets=*|--target-dir=*|--bin-dir=*) shift ;;
-        --check|--dry-run|--no-guidance) shift ;;
+        --check|--dry-run|--no-guidance|--json|--verbose|-v) shift ;;
         *) echo "Unknown install option: $1 (use --help)" >&2; exit 2 ;;
       esac
     done
@@ -88,8 +92,9 @@ HELP
   GIT_TERMINAL_PROMPT=0 git clone --quiet --depth 1 --single-branch \
     --branch "$bootstrap_ref" -- "$bootstrap_remote" "$bootstrap_dir/source" </dev/null
   # Do not exec here: the EXIT trap must remove scratch after success or failure.
-  python3 -I "$bootstrap_dir/source/skills/agent-memory/scripts/installer.py" \
-    install "$@" </dev/null
+  entry="$bootstrap_dir/source/skills/agent-memory/scripts/am_console.py"
+  [[ -f "$entry" ]] || entry="$bootstrap_dir/source/skills/agent-memory/scripts/installer.py"
+  python3 -I "$entry" install "$@" </dev/null
 )
 
 main "$@"

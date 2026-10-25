@@ -116,24 +116,24 @@ class InstalledLayoutContract(unittest.TestCase):
                 self.assertEqual(len(set(receipt['enabled_adapters'])), 5)
                 cli = Path(receipt['bin_dir']) / 'agent-memory'
                 for name in ('install', 'uninstall', 'update', 'version', 'doctor', 'status'):
-                    help_result = world.run([cli, name, '--help'])
+                    help_result = world.run([cli, '--json', name, '--help'])
                     self.assertEqual(help_result.returncode, 0)
-                for argv in ([cli, 'install', '--check'], [cli, 'update', '--check'],
-                             [cli, 'uninstall', '--check'], [cli, 'version', '--json'],
+                for argv in ([cli, '--json', 'install', '--check'], [cli, '--json', 'update', '--check'],
+                             [cli, '--json', 'uninstall', '--check'], [cli, 'version', '--json'],
                              [cli, 'status', '--repo', repo, '--json'],
                              [cli, 'doctor', '--repo', repo, '--projection', projection, '--json']):
                     prior = snapshot(world.root); command(world, argv)
                     self.assertEqual(snapshot(world.root), prior)
-                self.assertFalse(command(world, [cli, 'install'])['changed'])
-                self.assertFalse(command(world, [cli, 'update'])['changed'])
+                self.assertFalse(command(world, [cli, '--json', 'install'])['changed'])
+                self.assertFalse(command(world, [cli, '--json', 'update'])['changed'])
                 revision = advance(world, root, pack)
-                updated = command(world, [cli, 'update']); self.assertTrue(updated['verified'])
+                updated = command(world, [cli, '--json', 'update']); self.assertTrue(updated['verified'])
                 receipt = updated['receipt']; self.assertEqual(receipt['source']['revision'], revision)
                 self.assert_layout(world, receipt)
                 self.assertTrue(receipt['backups'])
                 retained_backups = {p['path']: snapshot(Path(p['path'])) for p in receipt['backups']}
                 self.assertEqual({str(p): snapshot(p) for p in protected}, before)
-                removed = command(world, [cli, 'uninstall']); self.assertTrue(removed['verified'])
+                removed = command(world, [cli, '--json', 'uninstall']); self.assertTrue(removed['verified'])
                 self.assertFalse(removed['preserved']); self.assertFalse(cli.exists())
                 self.assertFalse(Path(receipt['source']['path']).exists())
                 self.assertTrue(receipt_path(world).is_file()); self.assertTrue(receipt_path(world).parent.joinpath('journal.json').is_file())
@@ -162,7 +162,7 @@ class InstalledLayoutContract(unittest.TestCase):
                 self.assertEqual({t['path'] for t in targets}, {str(p / 'agent-memory') for p in custom})
                 self.assertFalse(any(t['kind'] == 'activation' for t in receipt['targets']))
                 self.assertEqual({str(p): snapshot(p) for p in discovery(world).values()}, defaults)
-                value = command(world, [Path(receipt['bin_dir']) / 'agent-memory', 'version'])
+                value = command(world, [Path(receipt['bin_dir']) / 'agent-memory', '--json', 'version'])
                 self.assertEqual(value['installation']['enabled_adapters'], receipt['enabled_adapters'])
                 self.assertEqual(len(set(value['installation']['enabled_adapters'])), 2)
 
@@ -174,11 +174,11 @@ class InstalledLayoutContract(unittest.TestCase):
                 self.assertEqual(receipt['enabled_adapters'], [])
                 self.assertFalse(any(t['kind'] in {'link', 'copy', 'activation'} for t in receipt['targets']))
                 cli = Path(receipt['bin_dir']) / 'agent-memory'
-                self.assertEqual(command(world, [cli, 'status'])['bank']['state'], 'not_located')
-                self.assertTrue(command(world, [cli, 'doctor'])['ok'])
-                self.assertFalse(command(world, [cli, 'update'])['changed'])
+                self.assertEqual(command(world, [cli, '--json', 'status'])['bank']['state'], 'not_located')
+                self.assertTrue(command(world, [cli, '--json', 'doctor'])['ok'])
+                self.assertFalse(command(world, [cli, '--json', 'update'])['changed'])
                 self.assertEqual({str(p): snapshot(p) for p in discovery(world).values()}, before)
                 self.assertFalse((world.paths['repo'] / 'memory-bank').exists())
                 self.assertFalse(Path(world.env['AGENT_MEMORY_CONFIG_HOME']).exists())
-                self.assertTrue(command(world, [cli, 'uninstall'])['verified'])
+                self.assertTrue(command(world, [cli, '--json', 'uninstall'])['verified'])
                 self.assertTrue(receipt_path(world).exists())
