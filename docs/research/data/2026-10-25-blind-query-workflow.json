@@ -1,0 +1,299 @@
+{
+  "generation": {
+    "queries": [
+      "retry transient network error",
+      "max retries backoff",
+      "retry limit attempts"
+    ],
+    "question": "How often may a temporary network error be attempted again?",
+    "generation_request_sha256": "3710902f91122df6b46b588b7b2194c7a548851758b1bbe2174042b6dc9f3495",
+    "generation_response_sha256": "39f3370b504ceaf5afce6407fe3f5160396581dc92cc89d90e99c2630290e569",
+    "queries_changed_after_recall": false,
+    "provider_reported_usage": {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 720,
+      "cache_read_input_tokens": 0,
+      "output_tokens": 35,
+      "output_tokens_details": {
+        "thinking_tokens": 0
+      },
+      "server_tool_use": {
+        "web_search_requests": 0,
+        "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 720,
+        "ephemeral_5m_input_tokens": 0
+      },
+      "inference_geo": "global",
+      "iterations": [
+        {
+          "input_tokens": 2,
+          "output_tokens": 35,
+          "cache_read_input_tokens": 0,
+          "cache_creation_input_tokens": 720,
+          "cache_creation": {
+            "ephemeral_5m_input_tokens": 0,
+            "ephemeral_1h_input_tokens": 720
+          },
+          "type": "message"
+        }
+      ],
+      "speed": "standard",
+      "fallback_credit": null
+    },
+    "provider_reported_models": {
+      "claude-opus-5-5": {
+        "inputTokens": 2,
+        "outputTokens": 35,
+        "cacheReadInputTokens": 0,
+        "cacheCreationInputTokens": 720,
+        "webSearchRequests": 0,
+        "costUSD": 0.006468,
+        "contextWindow": 1000000,
+        "maxOutputTokens": 128000,
+        "thinkingTokens": 0,
+        "canonicalModel": "claude-opus-5-5",
+        "provider": "firstParty",
+        "costBasis": "list"
+      }
+    },
+    "question_only_prompt": "Convert the supplied question into 2 or 3 short alternative keyword queries for a project memory reader. The reader matches all whitespace-separated terms literally, case-insensitively, in source paths or bodies. You have no bank contents, expected record IDs, labels, or example answers. Use ordinary domain concepts and alternative wording. Return exactly a JSON object with one field queries containing an array of strings. Do not answer the question, invent project facts, or access tools.",
+    "model_tools_available": [],
+    "source_bank_or_labels_supplied_to_model": false,
+    "raw_generation_response_sha256": "39f3370b504ceaf5afce6407fe3f5160396581dc92cc89d90e99c2630290e569"
+  },
+  "observations": [
+    {
+      "distinct_lessons": 1000,
+      "source_commit": "f29f4a5022d5c9aaf14862b552ca5ee4fa441eb4",
+      "artifact_digest": "be7e2abe8ce4893178331fcfdaa943c0fefc6157b548abd3c9342c0e86625261",
+      "queries": [
+        {
+          "query": "retry transient network error",
+          "selected_paths": [],
+          "metrics": {
+            "inventory_files": 1020,
+            "entries": 1019,
+            "qualified_candidates": 664,
+            "ranked": 0,
+            "selected": 0,
+            "bounded_candidate_bytes_read": 1013872,
+            "operation_local_observation_used": true,
+            "canonical_observation_payload_bytes_read": 3555411,
+            "canonical_observation_file_reads": 3060,
+            "parsed_records": 1001,
+            "result_bytes": 0,
+            "elapsed_seconds": 0.8167962080333382
+          },
+          "actual_source_hashes_checked": true
+        },
+        {
+          "query": "max retries backoff",
+          "selected_paths": [],
+          "metrics": {
+            "inventory_files": 1020,
+            "entries": 1019,
+            "qualified_candidates": 664,
+            "ranked": 0,
+            "selected": 0,
+            "bounded_candidate_bytes_read": 1013872,
+            "operation_local_observation_used": true,
+            "canonical_observation_payload_bytes_read": 3555411,
+            "canonical_observation_file_reads": 3060,
+            "parsed_records": 1001,
+            "result_bytes": 0,
+            "elapsed_seconds": 0.8193503340007737
+          },
+          "actual_source_hashes_checked": true
+        },
+        {
+          "query": "retry limit attempts",
+          "selected_paths": [
+            "topics/records/retry-limit.md"
+          ],
+          "metrics": {
+            "inventory_files": 1020,
+            "entries": 1019,
+            "qualified_candidates": 664,
+            "ranked": 1,
+            "selected": 1,
+            "bounded_candidate_bytes_read": 1013872,
+            "operation_local_observation_used": true,
+            "canonical_observation_payload_bytes_read": 3555411,
+            "canonical_observation_file_reads": 3060,
+            "parsed_records": 1001,
+            "result_bytes": 2076,
+            "elapsed_seconds": 0.7986844159895554
+          },
+          "actual_source_hashes_checked": true
+        }
+      ],
+      "union_selected_paths": [
+        "topics/records/retry-limit.md"
+      ],
+      "expected_paths": [
+        "topics/records/retry-limit.md"
+      ],
+      "feature_index_head_bank_preserved": true,
+      "workflow": "actual-blind-agent-query-generation-followed-by-fixed-public-reader-queries",
+      "semantic_truth_verified": false,
+      "autonomous_answer_quality_claimed": false
+    },
+    {
+      "distinct_lessons": 10000,
+      "source_commit": "f29f4a5022d5c9aaf14862b552ca5ee4fa441eb4",
+      "artifact_digest": "be7e2abe8ce4893178331fcfdaa943c0fefc6157b548abd3c9342c0e86625261",
+      "queries": [
+        {
+          "query": "retry transient network error",
+          "selected_paths": [],
+          "metrics": {
+            "inventory_files": 10163,
+            "entries": 10162,
+            "qualified_candidates": 6664,
+            "ranked": 0,
+            "selected": 0,
+            "bounded_candidate_bytes_read": 10200275,
+            "operation_local_observation_used": true,
+            "canonical_observation_payload_bytes_read": 35598510,
+            "canonical_observation_file_reads": 30489,
+            "parsed_records": 10001,
+            "result_bytes": 0,
+            "elapsed_seconds": 3.9670808339724317
+          },
+          "actual_source_hashes_checked": true
+        },
+        {
+          "query": "max retries backoff",
+          "selected_paths": [],
+          "metrics": {
+            "inventory_files": 10163,
+            "entries": 10162,
+            "qualified_candidates": 6664,
+            "ranked": 0,
+            "selected": 0,
+            "bounded_candidate_bytes_read": 10200275,
+            "operation_local_observation_used": true,
+            "canonical_observation_payload_bytes_read": 35598510,
+            "canonical_observation_file_reads": 30489,
+            "parsed_records": 10001,
+            "result_bytes": 0,
+            "elapsed_seconds": 3.859658458037302
+          },
+          "actual_source_hashes_checked": true
+        },
+        {
+          "query": "retry limit attempts",
+          "selected_paths": [
+            "topics/records/retry-limit.md"
+          ],
+          "metrics": {
+            "inventory_files": 10163,
+            "entries": 10162,
+            "qualified_candidates": 6664,
+            "ranked": 1,
+            "selected": 1,
+            "bounded_candidate_bytes_read": 10200275,
+            "operation_local_observation_used": true,
+            "canonical_observation_payload_bytes_read": 35598510,
+            "canonical_observation_file_reads": 30489,
+            "parsed_records": 10001,
+            "result_bytes": 2076,
+            "elapsed_seconds": 3.935276750009507
+          },
+          "actual_source_hashes_checked": true
+        }
+      ],
+      "union_selected_paths": [
+        "topics/records/retry-limit.md"
+      ],
+      "expected_paths": [
+        "topics/records/retry-limit.md"
+      ],
+      "feature_index_head_bank_preserved": true,
+      "workflow": "actual-blind-agent-query-generation-followed-by-fixed-public-reader-queries",
+      "semantic_truth_verified": false,
+      "autonomous_answer_quality_claimed": false
+    },
+    {
+      "distinct_lessons": 50000,
+      "source_commit": "f29f4a5022d5c9aaf14862b552ca5ee4fa441eb4",
+      "artifact_digest": "be7e2abe8ce4893178331fcfdaa943c0fefc6157b548abd3c9342c0e86625261",
+      "queries": [
+        {
+          "query": "retry transient network error",
+          "selected_paths": [],
+          "metrics": {
+            "inventory_files": 50798,
+            "entries": 50797,
+            "qualified_candidates": 33331,
+            "ranked": 0,
+            "selected": 0,
+            "bounded_candidate_bytes_read": 51108869,
+            "operation_local_observation_used": true,
+            "canonical_observation_payload_bytes_read": 178252062,
+            "canonical_observation_file_reads": 152394,
+            "parsed_records": 50001,
+            "result_bytes": 0,
+            "elapsed_seconds": 18.177589916973375
+          },
+          "actual_source_hashes_checked": true
+        },
+        {
+          "query": "max retries backoff",
+          "selected_paths": [],
+          "metrics": {
+            "inventory_files": 50798,
+            "entries": 50797,
+            "qualified_candidates": 33331,
+            "ranked": 0,
+            "selected": 0,
+            "bounded_candidate_bytes_read": 51108869,
+            "operation_local_observation_used": true,
+            "canonical_observation_payload_bytes_read": 178252062,
+            "canonical_observation_file_reads": 152394,
+            "parsed_records": 50001,
+            "result_bytes": 0,
+            "elapsed_seconds": 18.18024241598323
+          },
+          "actual_source_hashes_checked": true
+        },
+        {
+          "query": "retry limit attempts",
+          "selected_paths": [
+            "topics/records/retry-limit.md"
+          ],
+          "metrics": {
+            "inventory_files": 50798,
+            "entries": 50797,
+            "qualified_candidates": 33331,
+            "ranked": 1,
+            "selected": 1,
+            "bounded_candidate_bytes_read": 51108869,
+            "operation_local_observation_used": true,
+            "canonical_observation_payload_bytes_read": 178252062,
+            "canonical_observation_file_reads": 152394,
+            "parsed_records": 50001,
+            "result_bytes": 2076,
+            "elapsed_seconds": 17.97388545796275
+          },
+          "actual_source_hashes_checked": true
+        }
+      ],
+      "union_selected_paths": [
+        "topics/records/retry-limit.md"
+      ],
+      "expected_paths": [
+        "topics/records/retry-limit.md"
+      ],
+      "feature_index_head_bank_preserved": true,
+      "workflow": "actual-blind-agent-query-generation-followed-by-fixed-public-reader-queries",
+      "semantic_truth_verified": false,
+      "autonomous_answer_quality_claimed": false
+    }
+  ],
+  "reader_source_commit": "f29f4a5022d5c9aaf14862b552ca5ee4fa441eb4",
+  "reader_sources_unchanged": true
+}
