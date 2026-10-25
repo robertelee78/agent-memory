@@ -18,6 +18,56 @@ class SignedReleaseLifecycle(unittest.TestCase):
         self.assertEqual(result.returncode,expected,(result.stdout+result.stderr)[:2500])
         return json.loads(result.stdout)
 
+    def test_actual_v002_index_refresh_and_deleted_worktree_upgrade_through_signed_one_liner(self):
+        import shutil
+        from identity_fixtures import bind
+        from runtime_update_fixtures import bank
+        with World() as w:
+            channel = w.repository('old official runtime')
+            frozen = ROOT/'tests/fixtures/v0.0.2-runtime/portable-pack.tar.gz'
+            proof = json.loads((frozen.parent/'provenance.json').read_text())
+            self.assertEqual(hashlib.sha256(frozen.read_bytes()).hexdigest(), proof['sha256'])
+            with tarfile.open(frozen) as archive:
+                for member in archive:
+                    relative = Path(member.name)
+                    self.assertFalse(relative.is_absolute()); self.assertNotIn('..', relative.parts)
+                    path = channel/relative
+                    if member.isdir(): path.mkdir(parents=True, exist_ok=True)
+                    else:
+                        self.assertTrue(member.isfile()); path.parent.mkdir(parents=True, exist_ok=True)
+                        path.write_bytes(archive.extractfile(member).read())
+                        path.chmod(0o755 if member.mode & 0o111 else 0o644)
+            w.git('add', '.', cwd=channel); w.git('commit', '-m', 'Released old runtime', cwd=channel)
+            old = w.run(['bash', '-c', 'umask 022; exec "$@"', 'fixture', sys.executable, '-I',
+                         channel/'skills/agent-memory/scripts/installer.py', 'install', '--remote', channel,
+                         '--ref', 'main', '--presets', 'none'])
+            receipt = json.loads(old.stdout)['receipt']; source = Path(receipt['source']['path'])
+            self.assertEqual(receipt['source']['artifact_digest'], proof['checkout_artifact_digest'])
+            old_index = (source/'.git/index').read_bytes()
+            self.assertEqual(w.git('status', '--porcelain', cwd=source).stdout, '')
+            self.assertNotEqual((source/'.git/index').read_bytes(), old_index)
+            prior_source = snapshot(source)
+            repo = w.repository('registered consumer'); memory = bank(w, repo); bind(w, repo)
+            w.git('add', '.', cwd=repo); w.git('commit', '-m', 'Consumer bank', cwd=repo)
+            missing = w.inside('removed consumer session')
+            w.git('worktree', 'add', '-b', 'removed-session', missing, cwd=repo); shutil.rmtree(missing)
+            before = snapshot(repo)
+            with SignedRelease(w, channel) as release:
+                release.prepare()
+                installed = release.install()
+                self.assertEqual(installed.returncode, 0, installed.stdout + installed.stderr)
+                result = json.loads(installed.stdout); self.assertTrue(result['verified'])
+                adopted = result['receipt']; self.assertEqual(adopted['source']['kind'], 'release')
+                self.assertFalse((source/'.git').exists()); self.assertFalse((source/'memory-bank').exists())
+                backups = [Path(b['path']) for b in adopted['backups'] if b['original_path'] == str(source)
+                           and b.get('kind') == 'pre-activation-snapshot']
+                self.assertTrue(backups); self.assertEqual(snapshot(backups[-1]), prior_source)
+                cli = Path(adopted['bin_dir'])/'am'
+                version = self.value(w, cli, 'version')
+                self.assertEqual(version['security']['publisher_authentication'], 'verified')
+                self.assertFalse(self.value(w, cli, 'update')['changed'])
+                self.assertEqual(snapshot(repo), before); self.assertTrue(memory.is_dir())
+
     def test_one_line_install_update_failures_recovery_and_preservation(self):
         with World() as w, SignedRelease(w) as release:
             release.prepare()
