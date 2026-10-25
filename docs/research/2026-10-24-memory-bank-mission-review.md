@@ -152,16 +152,17 @@ not publisher authenticity. Neither bootstrap nor updater verifies a pinned rele
 signature. The bootstrap executes source obtained through its selected Git channel;
 it is not an independent trusted verifier of that source. ADR-0007 explicitly
 allowed the initial HTTPS fast-forward channel, and doctor warns about unsigned
-distribution. Signed immutable distribution is already tracked by #49, currently
-v0.0.4 under ADR-0013. This is not a newly discovered violation of the approved
+distribution. Signed immutable distribution was targeted at v0.0.4 under ADR-0013
+when this review started. The operator subsequently approved bringing existing
+story #49 forward to v0.0.3, as recorded in ADR-0014. This is not a newly discovered violation of the approved
 v0.0.2 signing scope. However, a lifecycle `verified` receipt can be mistaken for
 a stronger trust guarantee unless the public documentation makes the boundary clear.
 
 **Correction and prevention.** Publish a concise trust/control matrix distinguishing
 source authentication, integrity, ownership, compatibility and recovery; verify the
 public refusal/preservation paths locally. Do not describe checksums or a verified
-receipt as signature verification. Whether to bring #49 into v0.0.3 is an operator
-decision, not an implicit consequence of this review.
+receipt as signature verification. Bringing #49 into v0.0.3 follows the operator's
+explicit scope decision, not an inference from this review or design approval.
 
 ## F7: Existing local state permissions are not security-gated
 
@@ -200,9 +201,10 @@ client roots. No new expensive hosted matrix is justified by this review.
 
 The agent-memory bank is prepared in draft PR #164, outside `skills/agent-memory`.
 The managed installer clones a full source checkout, so a root bank would exist
-there after landing, although it is outside the client skill. Whether consumer
-managed checkouts must physically omit that bank remains an operator question;
-it is not reported as a proven leak or an approved sparse-checkout redesign.
-Task #163 remains pending that distribution decision. This review changed none
+there after landing, although it is outside the client skill. The operator
+clarified that clones may contain it, while consumer installations must never
+inherit it as another project's memory. Task #163 requires an installation-isolation
+proof before landing; this is not an approved sparse-checkout redesign.
+This review changed none
 of the three audited repositories and does not certify automatic capture or the
 full cross-machine learning loop from static bank inspection.
