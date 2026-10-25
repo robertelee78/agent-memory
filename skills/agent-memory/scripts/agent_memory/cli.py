@@ -1,6 +1,7 @@
 """One installed entry point delegating to the packaged public operations."""
 from pathlib import Path
 import runpy
+import sys
 
 
 def arguments(argv):
@@ -26,4 +27,12 @@ def execute(command, argv, route):
     intent = {'correct': ('correct',), 'supersede': ('supersede',),
               'revoke': ('revoke',), 'forget': ('expire', 'retention', 'delete')}
     kwargs = {'required_operations': intent[command]} if command in intent else {}
-    return delegate([*prefix, *argv], **kwargs)
+    previous = sys.argv[0]
+    try:
+        if previous in ('am', 'agent-memory'):
+            # Hidden helper prefixes already create the public subcommand in
+            # argparse; do not render "am capture capture" or "am inspect inspect".
+            sys.argv[0] = previous if prefix else previous + ' ' + command
+        return delegate([*prefix, *argv], **kwargs)
+    finally:
+        sys.argv[0] = previous

@@ -151,7 +151,7 @@ for name,group in GROUPS.items():
                 print('gate-control-sample: '+sample, file=sys.stderr, flush=True)
                 (checkout / "tests/contracts/fixture.py").write_text(body)
                 for entry in manifest["suites"]:
-                    if entry["scope"] == "v0.0.1":
+                    if entry["scope"] in {"v0.0.1", "v0.0.2"}:
                         entry["path"] = "tests/contracts/fixture.py"
                 (checkout / "tests/contracts.json").write_text(json.dumps(manifest))
                 result = world.run(["sh", checkout / "scripts/test.sh", "--release", "--json"], check=False)
@@ -165,7 +165,7 @@ for name,group in GROUPS.items():
             (checkout / "tests/contracts.json").write_text(json.dumps(manifest))
             result = world.run(["sh", checkout / "scripts/test.sh", "--release", "--json"], check=False)
             self.assertNotEqual(result.returncode, 0)
-            self.assertIn("every v0.0.1 contract", json.loads(result.stdout)["error"])
+            self.assertIn("every mandatory contract", json.loads(result.stdout)["error"])
 
 
 if __name__ == "__main__":

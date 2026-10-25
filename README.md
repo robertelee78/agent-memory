@@ -2,7 +2,7 @@
 
 A portable, local-first Memory Bank for coding agents.
 
-## v0.0.1
+## v0.0.2
 
 One repository owns one shared Markdown memory bank. The skill captures durable
 learning, reads existing memory before adding it, combines duplicates without
@@ -11,9 +11,9 @@ independently of unfinished feature code and refresh into other sessions,
 worktrees and clones through the repository's existing Git rules. Contradictions
 go to the detecting developer for clarification.
 
-See the [v0.0.1 release guide](docs/releases/v0.0.1.md) for the supported workflow,
-compatibility and known limits. The [published release](https://github.com/robertelee78/agent-memory/releases/tag/v0.0.1)
-holds the release's source and validation evidence.
+The [v0.0.2 release guide](docs/releases/v0.0.2.md) covers the corrected AWA-style
+CLI and lifecycle. [Published releases](https://github.com/robertelee78/agent-memory/releases)
+hold the immutable source and actual qualification evidence for each version.
 
 ## Install and first use
 
@@ -30,6 +30,8 @@ developer identity or initialized memory bank is needed. The bootstrap creates
 a temporary source checkout, runs the same owned installer, and removes the
 temporary checkout; the installed runtime lives in its own managed location.
 Restart running agent sessions after installation so they load the skill.
+Re-run the default one-line command to update an existing managed installation,
+or use `am update`.
 
 For an optional preview or custom install options, pass arguments to Bash:
 
@@ -48,7 +50,7 @@ add that directory to `PATH` (and to your shell startup file to persist it):
 
 ```sh
 export PATH="$HOME/.local/bin:$PATH"
-am version
+am --version
 ```
 
 If you choose a custom `--bin-dir`, use the receipt's `bin_dir` instead.
@@ -104,6 +106,12 @@ agent-memory update && agent-memory install
 The shipped older updater upgrades the runtime first; the new installer then
 adds the owned `am` command. Afterward, use `am update`. An unrelated existing
 `am` is preserved and reported instead of replaced.
+
+The repeated default one-line installer also performs the guarded update and
+refreshes owned commands. Default install/update/uninstall and diagnostic output
+is readable; add `--json` for complete machine results or `--verbose` for detail.
+Use `am`, `am help` or `am --help` for help. `am --version`, `am -V` and
+`am version` report the same executing version, revision and source.
 
 ### Uninstall
 
@@ -207,7 +215,7 @@ available when the command and helpers are absent.
 
 Run `scripts/test.sh` from a checkout with Python 3.11+ and Git. It runs the
 offline public-interface suites in disposable test worlds. The registry declares
-116 mandatory suites and explicitly excludes optional future stores.
+117 mandatory suites and explicitly excludes optional future stores.
 `scripts/test.sh --release` rejects incomplete release coverage. See the [test gate guide](docs/testing/README.md)
 for isolation rules, suite registration and receipt fields.
 The [portable lifecycle matrix](docs/contracts/portable-lifecycle.md) connects

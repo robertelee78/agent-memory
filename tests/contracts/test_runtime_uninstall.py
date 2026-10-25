@@ -11,7 +11,7 @@ from runtime_update_fixtures import ROOT, PACK, fixture, bank, snapshot, receipt
 
 def uninstall(world, receipt, *args, source=False, expected=0, env=None):
     command = ([sys.executable, '-I', ROOT/'scripts/uninstall_runtime.py', 'uninstall']
-               if source else [Path(receipt['bin_dir'])/'agent-memory', 'uninstall'])
+               if source else [Path(receipt['bin_dir'])/'agent-memory', '--json', 'uninstall'])
     result = world.run([*command, *args], check=False, env=env, timeout=120)
     if result.returncode != expected:
         raise AssertionError((result.returncode, result.stdout, result.stderr))
@@ -91,7 +91,7 @@ class RuntimeUninstallContract(unittest.TestCase):
             _, _, receipt = fixture(world)
             settings = world.paths['codex']/'AGENTS.md'
             settings.write_text('Additional prefix.\n'+settings.read_text()+'Additional suffix.\n')
-            updated = world.run([Path(receipt['bin_dir'])/'agent-memory', 'update'])
+            updated = world.run([Path(receipt['bin_dir'])/'agent-memory', '--json', 'update'])
             self.assertTrue(json.loads(updated.stdout)['verified'])
             result = uninstall(world, receipt)
             self.assertTrue(result['verified'])
@@ -113,7 +113,7 @@ class RuntimeUninstallContract(unittest.TestCase):
             _, _, receipt = fixture(world)
             memory = bank(world, world.paths['repo']); before_bank = snapshot(memory)
             before = {t['path']:snapshot(Path(t['path'])) for t in receipt['targets']}
-            command = [Path(receipt['bin_dir'])/'agent-memory', 'uninstall']
+            command = [Path(receipt['bin_dir'])/'agent-memory', '--json', 'uninstall']
             killed = world.run(command, check=False, env={'AGENT_MEMORY_FAULT_STAGE':'uninstall-after-activate-0',
                                                         'AGENT_MEMORY_FAULT_MODE':'exit'})
             self.assertEqual(killed.returncode, 86)
@@ -152,7 +152,7 @@ class RuntimeUninstallContract(unittest.TestCase):
     def test_lost_uninstall_success_response_is_recovered_as_committed(self):
         with World() as world:
             _,_,receipt=fixture(world); memory=bank(world,world.paths['repo']); before=snapshot(memory)
-            killed=world.run([Path(receipt['bin_dir'])/'agent-memory','uninstall'],check=False,env={
+            killed=world.run([Path(receipt['bin_dir'])/'agent-memory', '--json','uninstall'],check=False,env={
                 'AGENT_MEMORY_FAULT_STAGE':'uninstall-after-receipt','AGENT_MEMORY_FAULT_MODE':'exit'})
             self.assertEqual(killed.returncode,86)
             recovered=world.run([sys.executable,'-I',ROOT/'scripts/installer.py','recover'])

@@ -1,6 +1,7 @@
 {
   "schema": "agent-memory/test-contracts-v1",
   "suites": [
+    {"name": "public-cli-user-journey", "layer": "client", "scope": "v0.0.2", "path": "tests/contracts/test_public_cli.py"},
     {"name": "harness", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_harness.py"},
     {"name": "router-contract", "layer": "bank", "scope": "v0.0.1", "path": "tests/contracts/test_router.py"},
     {"name": "lifecycle-model", "layer": "bank", "scope": "v0.0.1", "path": "tests/contracts/test_lifecycle_model.py"},

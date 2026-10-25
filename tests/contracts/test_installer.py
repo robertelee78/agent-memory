@@ -43,7 +43,7 @@ class OneLineBootstrapContract(unittest.TestCase):
     def pipe(self, world, *args, expected=0, script=None):
         result = world.run(['/bin/bash', '-c',
                             'set -o pipefail; cat "$1" | /bin/bash -s -- "${@:2}"',
-                            'bootstrap-test', script or ROOT/'install.sh', *args], check=False)
+                            'bootstrap-test', script or ROOT/'install.sh', '--json', *args], check=False)
         self.assertEqual(result.returncode, expected, result.stdout + result.stderr)
         self.assertEqual(list(world.paths['tmp'].glob('agent-memory-bootstrap.*')), [])
         return result
@@ -72,7 +72,7 @@ class OneLineBootstrapContract(unittest.TestCase):
             for key in ('GIT_CONFIG_COUNT', 'GIT_CONFIG_KEY_0', 'GIT_CONFIG_VALUE_0'):
                 world.env.pop(key)
             cli = Path(receipt['bin_dir'])/'agent-memory'
-            self.assertEqual(world.run([cli, 'version']).returncode, 0)
+            self.assertEqual(world.run([cli, '--json', 'version']).returncode, 0)
             for target in receipt['targets']:
                 if target['kind'] == 'link':
                     self.assertEqual(Path(target['path']).resolve(), source/'skills/agent-memory')
@@ -101,14 +101,14 @@ class OneLineBootstrapContract(unittest.TestCase):
             candidate = world.git('rev-parse', 'HEAD', cwd=channel).stdout.strip()
             current = Path(receipt['source']['path'])
             old_head = world.git('rev-parse', 'HEAD', cwd=current).stdout.strip()
-            world.run([cli, 'update', '--check'])
+            world.run([cli, '--json', 'update', '--check'])
             self.assertEqual(world.git('rev-parse', 'HEAD', cwd=current).stdout.strip(), old_head)
-            updated = json.loads(world.run([cli, 'update']).stdout)
+            updated = json.loads(world.run([cli, '--json', 'update']).stdout)
             self.assertTrue(updated['verified'])
             self.assertEqual(world.git('rev-parse', 'HEAD', cwd=current).stdout.strip(), candidate)
-            world.run([cli, 'uninstall', '--check'])
+            world.run([cli, '--json', 'uninstall', '--check'])
             self.assertTrue(cli.exists())
-            removed = json.loads(world.run([cli, 'uninstall']).stdout)
+            removed = json.loads(world.run([cli, '--json', 'uninstall']).stdout)
             self.assertTrue(removed['verified']); self.assertFalse(cli.exists())
             self.assertEqual(config.read_text(), 'User rules stay.\n')
             self.assertEqual((bank/'my-note.md').read_text(), 'Project memory stays.\n')
@@ -118,11 +118,11 @@ class OneLineBootstrapContract(unittest.TestCase):
             channel = self.channel(world)
             standalone = world.inside('standalone installer with spaces.sh')
             shutil.copy2(ROOT/'install.sh', standalone)
-            args = ['--remote='+channel.as_uri(), '--ref=main', '--presets=none', '--check']
+            args = ['--json', '--remote='+channel.as_uri(), '--ref=main', '--presets=none', '--check']
             result = world.run(['/bin/bash', standalone, *args])
             self.assertFalse(json.loads(result.stdout)['installation_writes_performed'])
             self.assertEqual(list(world.paths['tmp'].glob('agent-memory-bootstrap.*')), [])
-            local = world.run(['/bin/bash', channel/'install.sh', '--development-source', channel,
+            local = world.run(['/bin/bash', channel/'install.sh', '--json', '--development-source', channel,
                                '--presets', 'none', '--check'])
             self.assertEqual(json.loads(local.stdout)['source']['kind'], 'development')
 
@@ -163,7 +163,7 @@ class MacOSCommandContract(unittest.TestCase):
             def pipe(*tail):
                 return json.loads(world.run(['/bin/bash', '-c',
                     'set -o pipefail; cat "$1" | /bin/bash -s -- "${@:2}"',
-                    'bootstrap-test', ROOT/'install.sh', *args, *tail], timeout=120).stdout)
+                    'bootstrap-test', ROOT/'install.sh', '--json', *args, *tail], timeout=120).stdout)
             before = snapshot(world.root)
             self.assertFalse(pipe('--check')['installation_writes_performed'])
             self.assertEqual(snapshot(world.root), before)
@@ -178,13 +178,13 @@ class MacOSCommandContract(unittest.TestCase):
             (pack/'templates/native-path-update.txt').write_text('An updated artifact.\n')
             world.git('add', '.', cwd=channel); world.git('commit', '-m', 'Update fixture', cwd=channel)
             old_head = world.git('rev-parse', 'HEAD', cwd=Path(receipt['source']['path'])).stdout
-            world.run([directory/'am', 'update', '--check'])
+            world.run([directory/'am', '--json', 'update', '--check'])
             self.assertEqual(world.git('rev-parse', 'HEAD', cwd=Path(receipt['source']['path'])).stdout, old_head)
-            updated = json.loads(world.run([directory/'am', 'update']).stdout)
+            updated = json.loads(world.run([directory/'am', '--json', 'update']).stdout)
             self.assertTrue(updated['verified'])
             for name in wrappers:
                 world.run([directory/name, 'version'])
-            world.run([directory/'am', 'uninstall'])
+            world.run([directory/'am', '--json', 'uninstall'])
             self.assertTrue(all(not (directory/name).exists() for name in wrappers))
             self.assertEqual(list(world.paths['tmp'].glob('agent-memory-bootstrap.*')), [])
 
@@ -203,26 +203,26 @@ class MacOSCommandContract(unittest.TestCase):
             self.assertFalse(still_old['changed']); self.assertFalse((directory/'am').exists())
             candidate = advance_to_current(world, channel); alias_tmpdir(world)
             # This process imports the OLD installed updater before activation.
-            updated = json.loads(world.run([original, 'update'], timeout=120).stdout)
+            updated = json.loads(world.run([original, '--json', 'update'], timeout=120).stdout)
             self.assertTrue(updated['verified'])
             self.assertEqual(updated['receipt']['source']['revision'], candidate)
             self.assertFalse((directory/'am').exists())
             receipt_path = world.paths['state']/'agent-memory/install/receipt.json'
             previous = receipt_path.read_bytes(); original_bytes = original.read_bytes()
             unrelated = directory/'am'; unrelated.write_text('My unrelated am command.\n')
-            refused = world.run([original, 'install'], check=False)
+            refused = world.run([original, '--json', 'install'], check=False)
             self.assertEqual(refused.returncode, 1)
             self.assertEqual(unrelated.read_text(), 'My unrelated am command.\n')
             self.assertEqual(receipt_path.read_bytes(), previous)
             self.assertEqual(original.read_bytes(), original_bytes)
             self.assertNotIn('with recover before', json.loads(refused.stdout)['repair'])
             unrelated.unlink()
-            ready = json.loads(world.run([original, 'install']).stdout)
+            ready = json.loads(world.run([original, '--json', 'install']).stdout)
             self.assertTrue(ready['verified']); self.assertTrue((directory/'am').exists())
-            self.assertFalse(json.loads(world.run([directory/'am', 'update']).stdout)['changed'])
+            self.assertFalse(json.loads(world.run([directory/'am', '--json', 'update']).stdout)['changed'])
             bank = world.paths['repo']/'memory-bank'; bank.mkdir()
             (bank/'lesson.md').write_text('Keep shared memory.\n')
-            self.assertTrue(json.loads(world.run([directory/'am', 'uninstall']).stdout)['verified'])
+            self.assertTrue(json.loads(world.run([directory/'am', '--json', 'uninstall']).stdout)['verified'])
             self.assertFalse(original.exists()); self.assertFalse((directory/'am').exists())
             self.assertEqual((bank/'lesson.md').read_text(), 'Keep shared memory.\n')
 
@@ -264,7 +264,7 @@ class MacOSCommandContract(unittest.TestCase):
             receipt = alias_install(world, channel)['receipt']
             directory = Path(receipt['bin_dir']); target = directory/'am'
             target.write_text('My modified am wrapper.\n')
-            value = json.loads(world.run([directory/'agent-memory', 'uninstall']).stdout)
+            value = json.loads(world.run([directory/'agent-memory', '--json', 'uninstall']).stdout)
             self.assertTrue(value['verified'])
             self.assertEqual(target.read_text(), 'My modified am wrapper.\n')
             self.assertFalse((directory/'agent-memory').exists())
@@ -368,8 +368,8 @@ class InstallerContract(unittest.TestCase):
             self.assertEqual({k:v for k,v in snapshot(self.state(world)).items() if k not in ('lock','owner.json')},
                              {k:v for k,v in records.items() if k not in ('lock','owner.json')})
             cli = Path(receipt['bin_dir'])/'agent-memory'
-            self.assertEqual(world.run([cli, '--help']).returncode, 0)
-            command_plan = json.loads(world.run([cli, 'install', '--check']).stdout)
+            self.assertEqual(world.run([cli, '--json', '--help']).returncode, 0)
+            command_plan = json.loads(world.run([cli, '--json', 'install', '--check']).stdout)
             self.assertFalse(any(t['changed'] for t in command_plan['targets']))
 
     def test_all_targets_preflight_before_activation_and_unrelated_types_are_preserved(self):

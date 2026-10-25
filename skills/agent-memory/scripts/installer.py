@@ -6,4 +6,6 @@ sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from agent_memory.installation import main
 if __name__ == '__main__':
-    sys.exit(main())
+    from agent_memory import console
+    name = console.installed_name()
+    sys.exit(console.main(prog=name) if name else main())

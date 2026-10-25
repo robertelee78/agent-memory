@@ -36,5 +36,5 @@ def invoke(world, cli, helper, *args, env=None):
 
 
 def command(world, cli, *args, env=None):
-    output = world.run([cli, *args], check=False, env=env, timeout=120)
+    output = world.run([cli, '--json', *args], check=False, env=env, timeout=120)
     return output, json.loads(output.stdout) if output.stdout else None
