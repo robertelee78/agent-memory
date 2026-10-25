@@ -36,6 +36,20 @@ With `SKILL_DIR` resolved to the packaged skill directory:
 python3 -I "$SKILL_DIR/scripts/bank_state.py" inspect --repo /path/to/project
 ```
 
+For deliberate inspection of one existing ordinary context file:
+
+```sh
+python3 -I "$SKILL_DIR/scripts/bank_state.py" inspect --repo /path/to/project --path activeContext.md
+```
+
+This selector MUST require the same-project identity and current safety/source
+checks. It accepts ordinary context paths only, never typed records or arbitrary
+paths. The bounded body and hash describe `historical-orientation`, with
+`assignment: false` and `usable_as_current_guidance: false`. A session MUST retain
+conditions, developer/session provenance and evidence availability qualifications;
+inspection cannot assign the remembered task or bypass record invalidation.
+Unsafe content MUST remain withheld and interruption markers MUST stop the read.
+
 ## Read back
 
 A session MUST read the actual returned contexts, omissions, routes and source hashes before describing the result.

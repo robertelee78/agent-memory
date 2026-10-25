@@ -52,6 +52,31 @@ unique explicit source references. The current stable developer ID comes from
 the common resolver and is separate from harness and session; it is provenance,
 not authentication or a separate memory namespace.
 
+New checkpoints retain a managed `Checkpoint evidence observations` section.
+The helper MAY inspect only bounded ordinary, nonignored repository files,
+without following symlinks. Relative references resolve from the bank directory.
+Absolute/outside paths, hidden paths and external links remain uninspected or
+unverified; the reference grants no permission to read or hash private files.
+Matching actual HEAD blob bytes establish a committed source revision, not
+publication. Changed or untracked evidence remains local/unpublished. The
+session MUST retain missing evidence and its qualifications across clones.
+
+Preview pins these source observations. Apply MUST recheck them before mutation
+and under the bank lock, preserving a stale proposal for fresh review. Route
+preparation recovery MUST retain the original observations: changed sources
+refuse finish while the original rollback remains available. Completed receipts
+remain historical write evidence, not a renewed source-freshness assertion.
+Unchanged evidence SHOULD retain its original provenance across memory-only
+HEAD changes rather than churn the bank.
+
+Ordinary recall MUST exclude managed checkpoints with unknown or mismatched
+conditions before ranking or budgeting, including exact path lookup. Matching
+checkpoints remain orientation with `assignment: false`; no next step assigns
+work to the receiving session. Explicit `am inspect --path activeContext.md`
+MAY inspect unrelated historical context with its source qualifications, never
+as current guidance. Missing observations or an old writer's changed evidence
+list MUST remain historical/unqualified, not acquire fabricated provenance.
+
 Each field/list item is bounded and the resulting context MUST fit 16 KiB.
 Level-two headings are reserved for stable sections. A session MAY use inline
 Markdown, lists or complete fenced examples within a field; unfenced headings
