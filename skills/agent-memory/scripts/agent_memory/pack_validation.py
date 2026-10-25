@@ -452,6 +452,10 @@ def validate(pack):
                 if argv[0] == 'git':
                     mappings.append({'guide': path, 'external': 'git', 'operation': git_operation(argv, path)})
                     continue
+                # Explicit bytecode suppression is a supported inspection
+                # prefix. Keep isolated execution and all helper checks below.
+                if argv[:3] == ['python3', '-B', '-I']:
+                    argv = [argv[0], *argv[2:]]
                 require(argv[:2] == ['python3', '-I'] and len(argv) >= 3
                         and argv[2].startswith('$SKILL_DIR/scripts/'), 'dispatch', path, 'Undeclared shell command form')
                 script = argv[2].removeprefix('$SKILL_DIR/')
