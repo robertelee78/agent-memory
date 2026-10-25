@@ -49,6 +49,7 @@ def cases(rows):
         item("known-prerequisite", "delta resumption", ["conditional-resume"], context={"prerequisite": "receipt-verified"}, reason="Actual request supplies the declared non-Git prerequisite."),
         item("working-vs-head", "dispatch limit", ["head-dispatch"], reason="Record explicitly concerns main HEAD and remains labeled; reader must not assert working bytes verified. The apparatus stages a different source value."),
         item("stronger-correction", "legacytimeout", [], reason="Version 2 corrects version 1 even though replacement wording misses this query."),
+        item("corrected-exact-id", "irrelevant words", ["timeout-v2"], ids=[by["timeout-v1"]["metadata"]["id"]], reason="Exact stable identity must choose its qualified corrected version 2 and exclude version 1."),
         item("hidden-replacement", "legacycache", [], reason="Hidden qualified replacement still invalidates visible obsolete guidance."),
         item("unsafe-replacement", "legacyquota", [], reason="Unsafe replacement remains withheld and cannot resurrect its old claim."),
         item("expired", "sunset endpoint", [], reason="Active metadata with an expired valid-until is not current."),
