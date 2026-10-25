@@ -188,7 +188,9 @@ def page_payloads(binding,rows,edges):
         items.append(item)
         if len(encoded(payload(items)))>limits.MAX_PAGE:raise ContractError('One complete source exceeds its page budget')
     if items:pages.append(payload(items))
-    for page in pages:security.ensure_safe({'review-page':encoded(page).decode('utf-8')})
+    for page in pages:
+        if security.scan(encoded(page).decode('utf-8'),maximum=limits.MAX_PAGE)['reasons']:
+            raise ContractError('Composed review page requires safety clarification; no body is disclosed')
     return pages
 
 
