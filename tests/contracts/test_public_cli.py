@@ -18,6 +18,19 @@ def pipe(world, source, *args):
 
 
 class PublicCLIContract(unittest.TestCase):
+    def test_unsupported_runtime_python_refuses_before_loading_operations(self):
+        with World() as w:
+            before = snapshot(w.root)
+            for entry in ('installer.py', 'am_console.py'):
+                result = w.run([sys.executable, '-I', '-c',
+                    'import runpy,sys; sys.version_info=(3,9); '
+                    'runpy.run_path(sys.argv[1],run_name="__main__")', PACK/'scripts'/entry], check=False)
+                self.assertEqual(result.returncode, 1)
+                self.assertIn('Python 3.11+', result.stderr)
+                self.assertNotIn('Traceback', result.stderr)
+                self.assertEqual(result.stdout, '')
+            self.assertEqual(snapshot(w.root), before)
+
     def test_default_help_version_flags_and_public_parser_names_are_read_only(self):
         with World() as w:
             _, _, receipt = fixture(w); cli = Path(receipt['bin_dir'])/'am'

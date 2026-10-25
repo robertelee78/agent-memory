@@ -30,6 +30,7 @@ developer identity or initialized memory bank is needed. The bootstrap creates
 a temporary source checkout, runs the same owned installer, and removes the
 temporary checkout; the installed runtime lives in its own managed location.
 Restart running agent sessions after installation so they load the skill.
+Keep Python 3.11+ available as `python3` on `PATH` when running `am`.
 Re-run the default one-line command to update an existing managed installation,
 or use `am update`.
 
