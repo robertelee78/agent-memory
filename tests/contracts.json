@@ -127,6 +127,7 @@
     {"name": "refresh-cursor", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_refresh_cursor.py"},
     {"name": "explicit-migration", "layer": "lifecycle", "scope": "v0.0.3", "path": "tests/contracts/test_explicit_migration.py"},
     {"name": "migration-catalog", "layer": "lifecycle", "scope": "v0.0.3", "path": "tests/contracts/test_migration_catalog.py"},
-    {"name": "migration-runtime-rollback", "layer": "lifecycle", "scope": "v0.0.3", "path": "tests/contracts/test_migration_runtime_rollback.py"}
+    {"name": "migration-runtime-rollback", "layer": "lifecycle", "scope": "v0.0.3", "path": "tests/contracts/test_migration_runtime_rollback.py"},
+    {"name": "lifecycle-security-contract", "layer": "lifecycle", "scope": "v0.0.3", "path": "tests/contracts/test_lifecycle_security_contract.py"}
   ]
 }

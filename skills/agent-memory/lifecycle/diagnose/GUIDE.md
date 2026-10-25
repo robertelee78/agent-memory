@@ -114,6 +114,17 @@ as missing setup, an active writer, pending recovery or the initial unsigned
 distribution channel. Each failure names its component/path and a bounded repair.
 The initial channel's digest establishes artifact identity, not publisher trust.
 
+The machine `security` summary reports `publisher_authentication`,
+`signature_verification_performed` and the `recorded_source_selection` separately.
+This build does not verify publisher signatures. A recorded managed Git source is
+unsigned; explicit development/custom source is operator-selected trust. Missing,
+malformed or inapplicable active receipt evidence leaves selection unavailable.
+A session MUST preserve the negative already-loaded-verifier and platform-ACL
+qualifications, including on failure results, and MUST NOT interpret these fields
+as a full ownership/compatibility/recovery pass. A future signing verifier MUST
+supply actual activated-source evidence; a digest or extra receipt claim cannot
+stand in for it. Old-process unsigned transitions remain unsigned observations.
+
 A session MUST distinguish `runtime.path_trust` from ordinary access/readability.
 The Unix ownership/mode checks neither authenticate already-loaded verifier code
 nor audit every platform ACL. An installation that may have been attacker-writable
@@ -138,7 +149,8 @@ and a busy bank separately from a validated bank. Native filesystem API detectio
 and permission inspection perform no write probe; actual per-filesystem atomic
 switch support is established during lifecycle activation. There is no global
 projection registry, vector service, authoritative event-log store, cross-repo
-federation or bundled migrator in the native v1 baseline; the session MUST NOT
+federation or production format conversion chain in the native v1 baseline;
+the session MUST NOT
 describe `not_enabled` checks as tested integrations or demand their setup.
 
 ## Failure handling
