@@ -28,6 +28,8 @@ class InitializationRoutes(unittest.TestCase):
         text = text.replace(original, custom).replace('# Project memory\n', '# Our reviewed project map\n\nRetain this custom introduction.\n')
         # Valid noncanonical metadata spelling must survive a missing-route add.
         text = text.replace('schema: "agent-memory/v1"', "schema: 'agent-memory/v1'")
+        # Valid compact table: the next heading supplies the row's only LF.
+        text = text.replace('\n\n## Omitted contexts\n', '\n## Omitted contexts\n')
         target.write_text(text)
         return text, custom
 

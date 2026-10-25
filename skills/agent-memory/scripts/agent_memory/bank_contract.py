@@ -207,7 +207,12 @@ def add_context_routes(text, paths, updated):
     insertion = len(lines)
     while insertion and not lines[insertion - 1].strip():
         insertion -= 1
-    table = (''.join(lines[:insertion]) +
+    existing = ''.join(lines[:insertion])
+    # The section separator may supply the final row's only LF. Keep that
+    # supported compact spelling valid when inserting another table row.
+    if existing and not existing.endswith('\n'):
+        existing += '\n'
+    table = (existing +
              ''.join(route_table(new_routes).splitlines(keepends=True)[2:]) +
              ''.join(lines[insertion:]))
     remaining = [line for line in omissions.splitlines(keepends=True)
