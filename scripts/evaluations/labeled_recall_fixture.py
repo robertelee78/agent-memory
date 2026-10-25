@@ -77,6 +77,7 @@ def corpus(template, count):
     add("head-dispatch", "# Dispatch limit at inspected HEAD\n\nOn the inspected main revision, dispatch limit is three. This observation does not certify staged or working code. Inspect current source before changing dispatch behavior.\n", conditions={"branch": "main"})
     old = add("timeout-v1", "# Legacytimeout\n\nLegacytimeout is thirty seconds. This historical assertion has a newer exact correction.\n")
     new = add("timeout-v2", "# Revised deadline\n\nThe confirmed request deadline is sixty seconds after the revised acceptance probe.\n", version=2, corrects=[{"id": old["metadata"]["id"], "version": 1}]); new["metadata"]["id"] = old["metadata"]["id"]
+    old["metadata"].update({"status": "superseded", "state-reason": "Retained original version of the corrected assertion", "superseded-by": [{"id": new["metadata"]["id"], "version": 2}]})
     old = add("cache-v1", "# Legacycache\n\nLegacycache persists every stale response. A qualified hidden replacement invalidates this assertion.\n")
     add("cache-replacement", "# Cache policy revision\n\nDiscard stale responses under the current cache policy.\n", visibility="hidden", supersedes=[{"id": old["metadata"]["id"], "version": 1}])
     old = add("quota-v1", "# Legacyquota\n\nLegacyquota is unlimited. A qualified replacement invalidates this assertion.\n")
