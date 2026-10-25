@@ -1,0 +1,93 @@
+#!/usr/bin/env bash
+# Generated from the same reviewed verifier shipped in the portable artifact.
+# A truncated pipe cannot execute a complete prefix of this compound command.
+if :; then
+set -euo pipefail
+for argument in "$@"; do
+  case "$argument" in
+    --help|-h)
+      printf '%s\n' 'Install Agent Memory: install.sh [--check] [--json] [--mode link|copy] [--presets all|none|CLIENTS]' \
+        'Custom discovery: --target-dir PATH, --bin-dir PATH, --no-guidance' \
+        'Explicit sources: --development-source PATH or --remote URL --ref BRANCH' \
+        'After installation: am --version; am update; am uninstall'
+      exit 0 ;;
+  esac
+done
+command -v python3 >/dev/null 2>&1 || { echo 'am: Python 3.11+ is required' >&2; exit 1; }
+python3 -I -c 'import sys; sys.exit(0 if sys.version_info >= (3,11) else 1)' || {
+  echo 'am: Python 3.11+ must be available as python3 on PATH' >&2; exit 1;
+}
+python3 -I - "$@" <<'AM_VERIFIED_INSTALLER'
+__VERIFIER__
+
+import sys
+sys.dont_write_bytecode = True
+
+class UsageError(ValueError):
+    pass
+
+def usage(condition, message):
+    if not condition: raise UsageError(message)
+
+def bootstrap():
+    require(sys.version_info >= (3, 11), 'Python 3.11+ is required')
+    args = sys.argv[1:]
+    choices = {}; index = 0
+    while index < len(args):
+        word = args[index]
+        option, separator, value = word.partition('=')
+        if option in ('--remote', '--ref', '--development-source', '--mode', '--presets', '--target-dir', '--bin-dir'):
+            if not separator:
+                index += 1
+                usage(index < len(args), option + ' requires a value')
+                value = args[index]
+            usage(value and not value.startswith('--'), option + ' requires a value')
+            if option in ('--remote', '--ref', '--development-source'): choices[option] = value
+        else:
+            usage(word in ('--check','--dry-run','--no-guidance','--json','--verbose','-v'),
+                  'Unknown install option: '+word+' (use --help)')
+        index += 1
+    usage(not ('--development-source' in choices and ('--remote' in choices or '--ref' in choices)),
+          'Choose development source or managed remote/ref, not both')
+    with tempfile.TemporaryDirectory(prefix='am-bootstrap-') as temporary:
+        root = Path(temporary)/'source'
+        explicit = bool(choices)
+        if '--development-source' in choices:
+            root = Path(choices['--development-source']).expanduser().resolve(strict=True)
+        elif explicit:
+            remote = choices.get('--remote', 'https://github.com/robertelee78/agent-memory.git')
+            ref = choices.get('--ref', 'main')
+            usage(ref and not ref.startswith('-'), 'Invalid explicit source branch')
+            result = subprocess.run(['git', 'clone', '--quiet', '--depth', '1', '--single-branch',
+                                     '--branch', ref, '--', remote, str(root)], capture_output=True,
+                                    timeout=120, env={**os.environ, 'GIT_TERMINAL_PROMPT': '0'})
+            if result.returncode:
+                print('am: Could not stage the operator-selected source',file=sys.stderr)
+                raise SystemExit(result.returncode)
+        else:
+            acquire(root)
+        pack = root/'skills/agent-memory' if (root/'skills/agent-memory').is_dir() else root
+        sys.path.insert(0, str(pack/'scripts'))
+        if not explicit:
+            from agent_memory import installation, console
+            installation.BOOTSTRAP_SOURCE = root
+            return console.main(['install', *args])
+        # Explicit custom/development selection is its own trust decision, as in
+        # the existing installer; it is never labeled publisher-authenticated.
+        import runpy
+        entry = pack/'scripts/am_console.py'
+        if not entry.is_file(): entry = pack/'scripts/installer.py'
+        sys.argv = [str(entry), 'install', *args]
+        runpy.run_path(str(entry), run_name='__main__')
+        return 0
+
+try:
+    raise SystemExit(bootstrap())
+except (OSError, ValueError, KeyError, TypeError, RecursionError, subprocess.SubprocessError) as error:
+    if '--json' in sys.argv:
+        print(json.dumps({'operation': 'install', 'verified': False, 'error': str(error)}))
+    else:
+        print('am: ' + str(error), file=sys.stderr)
+    raise SystemExit(2 if isinstance(error, UsageError) else 1)
+AM_VERIFIED_INSTALLER
+fi

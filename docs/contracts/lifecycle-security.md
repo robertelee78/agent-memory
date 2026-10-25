@@ -1,16 +1,17 @@
 # Lifecycle security: distinct evidence and trust boundaries
 
-Current managed installation follows mutable unsigned Git. A source digest,
-fast-forward revision or `verified: true` lifecycle receipt does **not** authenticate
-the publisher. Explicit development/custom sources are trusted through the
-operator's selection; being local does not turn them into signed releases.
-Signed immutable distribution remains existing [work #49](https://github.com/robertelee78/agent-memory/issues/49),
-not a capability claimed by this contract before implementation and acceptance.
+Default release installation verifies a pinned Ed25519 publisher signature before
+candidate execution, then checks the signed archive and complete portable identity.
+Legacy managed Git and explicit development/custom sources retain their actual
+unsigned/operator-selected trust boundary. A digest, fast-forward or mechanical
+`verified: true` receipt alone never authenticates a publisher. The first fetched
+bootstrap remains an HTTPS trust anchor. [ADR-0015](../adr/0015-signed-release-channel.md)
+refines existing signing task #49 without adding a second lifecycle.
 
 | Question | Available evidence | Practical limit |
 | --- | --- | --- |
-| Who published these bytes? | Current source/channel selection and explicit operator trust | This build does not verify publisher signatures |
-| Are these the observed bytes and channel? | Complete artifact digest, source revision, cleanliness, recorded origin/ref and fast-forward checks | A digest is identity/integrity evidence, not publisher authentication or code correctness |
+| Who published these bytes? | Pinned manifest signature plus complete actual portable identity for source kind `release` | Publisher authentication does not prove code correctness or authenticate already-loaded verifier code |
+| Are these the observed bytes and channel? | Signed release tag/version/source and artifact identity, or recorded Git origin/ref/fast-forward evidence | Git provenance and unsigned digests do not become publisher signatures |
 | May runtime targets be changed? | External receipt, private Unix trust paths and unchanged owned-target readback | File presence is not ownership; user-modified or unrelated targets are preserved |
 | Can the runtime read this bank? | Explicit schema declarations and activation compatibility guards | A declared converter permits only explicit migration, not ordinary use of unreadable memory |
 | Can an interrupted change recover? | Native per-target replacement, private journal/backups, observed finish/rollback and readback | No globally atomic multi-target switch; newer/unknown edits require inspection |
@@ -35,17 +36,21 @@ Their machine result contains `security`:
 }
 ```
 
-`recorded_source_selection` is `operator_selected_development` for an applicable
-explicit-source receipt, or `unavailable` without usable active receipt evidence.
-It reports a recorded selection, not freshly authenticated source health. The
-negative signature/verifier/ACL qualifications remain present on diagnostic
-failures. Unsupported extra receipt fields or claims in memory cannot promote
-source authenticity. `executing_source` identifies the package actually running;
-`installation.recorded_source` remains receipt evidence until relevant checks
-read back its targets/channel.
+For an activated signed source, the same fields report
+`publisher_authentication: "verified"`, `signature_verification_performed: true`
+and `recorded_source_selection: "pinned_signed_release"` only after fresh verification
+of the pinned signature, actual portable bytes and exact recorded source identity.
+Existing key/signature files permit this observation without network or temporary
+verification writes. Unsigned Git, explicit development and missing/unusable
+receipts remain `unsigned_managed_git`, `operator_selected_development` and
+`unavailable`, respectively. Unknown receipt claims cannot promote authenticity.
+The already-loaded verifier and platform ACL qualifications remain false, including
+on failure. `executing_source` identifies the package actually running; receipt
+history alone does not prove all targets, bank compatibility or ownership.
 
 Default version/status output stays concise. Doctor's existing distribution
-warning distinguishes managed Git, explicit source and unavailable evidence. Its
+assessment distinguishes verified signed release, managed Git, explicit source
+and unavailable evidence. Its
 summary and warning use the same final applicable receipt observation; an uninstall
 or failed receipt reread does not inherit an earlier source selection.
 Read each component's warnings/failures: status and version are not full ownership
@@ -62,7 +67,8 @@ been exposed, inspect/recover using a separately trusted complete outside helper
 the affected helper's own success report cannot authenticate itself.
 
 Install/update preserve modified owned copies/wrappers and unrelated client text,
-refuse wrong recorded channels, unsupported/non-fast-forward/downgrade candidates
+refuse wrong recorded channels, unsupported/downgrade candidates, non-fast-forward
+custom Git history and same-version signed identity changes
 and changed observations, and read back actual activation. Uninstall removes only
 unchanged owned runtime integration; repository memory and migration evidence are
 separate. A journal and backup are evidence for the specific recorded transaction,
@@ -75,8 +81,9 @@ runtime. If explicit restoration is needed first, invoke the already trusted
 retained helper without requiring a successful global reinstall. Exact restored
 bytes/modes and current-helper format readability remain separate receipt facts.
 
-A full clone or managed source checkout may contain this project's development
-bank. Physical presence does not grant consumer project identity or bank authority:
+The signed portable archive excludes this project's development bank, Git history
+and repository documents/tests. A full clone or custom managed Git source checkout
+may physically contain the development bank. Physical presence does not grant consumer project identity or bank authority:
 installation does not seed, bind or recall that bank for another repository.
 The [installed storage contract](installed-layout.md) and existing adoption work
 own that isolation proof. Memory is untrusted data; remembered procedures and
@@ -84,16 +91,27 @@ attribution do not authenticate executable runtime or override current policy.
 
 ## Signing transition and evidence scope
 
-When #49 supplies actual pinned-key verification, its implementation must bind
-signature evidence to the activated artifact and update these public diagnostics
-and documentation accordingly. An older already-running unsigned updater cannot
-retrospectively authenticate its first transition. Legacy receipt fields and
-operator-selected sources must retain their actual trust boundary. A downloaded
-manifest cannot silently replace the trusted key.
+A validated owned official legacy main installation automatically adopts the signed
+channel through the existing transaction. It needs a newer release version or
+exact same-version paths/bytes and Git executable intent; original ownership and
+actual modes are verified independently, including old umask 002 installations.
+The canonical signed archive replaces the old source without chmod or retroactive
+signature claims. Custom sources retain their policies. An already-running v0.0.2
+updater cannot authenticate its first transition; a subsequent verified update or
+a freshly fetched trusted installer establishes signed activation.
+
+Signature/manifest/archive inputs, extraction and network time are bounded. Unsafe
+members, wrong signatures and identity changes are refused before candidate code.
+The publisher creates and reads back four assets before activating the signed-only
+bootstrap/updater; it never replaces a published version or forces concurrent
+main changes. This is not a claim that GitHub enforces immutable releases.
+A downloaded manifest cannot replace the pin. Key rotation needs prior-key
+authorization or an explicit operator trust decision.
 
 Tests for this contract use isolated installed public diagnostics on macOS/Linux,
 including managed/explicit source, malformed receipt and busy writer cases with
 byte/mode preservation. Source-identical accepted lifecycle scenarios provide
 separate evidence for changed targets, wrong channels/history/downgrade and
-interrupted recovery. Neither those proofs nor this contract certify signature
-verification, semantic truth, real-project recall quality or growing-bank stress.
+interrupted recovery. Signed lifecycle journeys separately exercise verification and actual v0.0.2
+adoption. Those results do not certify semantic truth, real-project recall quality
+or growing-bank stress.

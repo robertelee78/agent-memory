@@ -25,10 +25,15 @@ Install on macOS or Linux with one command, just like AWA:
 curl -fsSL https://raw.githubusercontent.com/robertelee78/agent-memory/main/install.sh | bash
 ```
 
-Requires Bash 3.2+, Python 3.11+, Git and curl. No checkout, GitHub authentication,
-developer identity or initialized memory bank is needed. The bootstrap creates
-a temporary source checkout, runs the same owned installer, and removes the
-temporary checkout; the installed runtime lives in its own managed location.
+The v0.0.3 release branch adds pinned-key signed delivery to this same command.
+Requires Bash 3.2+, Python 3.11+, Git, curl and OpenSSH `ssh-keygen` with SSH
+signature support. No checkout, GitHub authentication, developer identity or
+initialized memory bank is needed. The bootstrap verifies the signed release
+manifest and portable archive before
+running candidate code, delegates to the owned installer, and removes private
+staging. The installed runtime lives in its own managed location; the archive
+contains no development memory from this repository. The fetched bootstrap itself
+remains the initial HTTPS trust anchor.
 Restart running agent sessions after installation so they load the skill.
 Keep Python 3.11+ available as `python3` on `PATH` when running `am`.
 Re-run the default one-line command to update an existing managed installation,
@@ -93,9 +98,11 @@ To preview first:
 am update --check
 ```
 
-The default channel follows `main`; installation does not pin `v0.0.1`.
-The updater manages its own runtime checkout, independently of the checkout
-used to run `install.sh`. See the [update guide](skills/agent-memory/lifecycle/update/GUIDE.md)
+The signed default follows the latest stable GitHub Release. It verifies the
+pinned publisher signature and complete artifact identity before activation;
+unsigned downloads are refused. The managed runtime is independent of your
+project checkouts. Explicit custom Git sources retain their recorded branch and
+fast-forward policy; development sources remain operator-selected. See the [update guide](skills/agent-memory/lifecycle/update/GUIDE.md)
 for source checks, retries and recovery.
 
 If you installed before `am` was introduced, run this one-time transition:
@@ -107,6 +114,11 @@ agent-memory update && agent-memory install
 The shipped older updater upgrades the runtime first; the new installer then
 adds the owned `am` command. Afterward, use `am update`. An unrelated existing
 `am` is preserved and reported instead of replaced.
+
+An already-running v0.0.2 updater cannot authenticate its first transition.
+The new updater reports that activation as legacy unsigned; the next verified
+update adopts the signed release. Re-running the trusted one-line installer
+verifies its candidate before activation.
 
 The repeated default one-line installer also performs the guarded update and
 refreshes owned commands. Default install/update/uninstall and diagnostic output

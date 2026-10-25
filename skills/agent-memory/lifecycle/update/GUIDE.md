@@ -21,10 +21,11 @@ remains. An interrupted installation or update MUST be recovered through the
 ## Inputs and preconditions
 
 The session MUST identify the external installation receipt and the recorded
-managed source, origin and branch. Python 3.11 or later and Git are required.
-An explicit development source MUST NOT be updated by this operation. The
-initial Git channel is unsigned; a valid digest or fast-forward does not prove
-publisher authenticity. Optional agent client executables are not prerequisites.
+source kind and channel. Python 3.11 or later and Git are required; signed
+acquisition additionally requires curl and OpenSSH SSH-signature support.
+An explicit development source MUST NOT be updated by this operation. The signed default requires the pinned publisher signature before candidate
+execution. Explicit Git channels and old-process first activations remain
+unsigned; a digest or fast-forward alone does not authenticate the publisher. Optional agent client executables are not prerequisites.
 
 ## Observe
 
@@ -72,19 +73,28 @@ checkout to bootstrap that command.
 The session MUST read the actual result and distinguish `current`, `available`,
 `update_available`, `loaded_content_changes`, compatibility, receipt and restart
 list. Check mode is read-only for targets, receipts, registries, banks and active
-Git metadata; a temporary candidate clone is removed after inspection.
+Git metadata; temporary signed staging or a custom-channel clone is removed
+after inspection. This does not claim zero temporary filesystem writes.
 
 ## Verify
 
 The session MUST require exit 0 and `verified: true` after activation, or
 `check_complete: true` for a successful preview. The updater stages a complete
-candidate without fetching into the active checkout, proves fast-forward/version
-and Python compatibility, validates the package, then uses the owned per-target
+candidate without changing active source. It proves signed-release version/identity
+and Python compatibility, or fast-forward/version for an explicit Git channel,
+validates the package, then uses the owned per-target
 transaction. It verifies client-visible packages and the actual installed
 command before publishing the new external receipt. Native exchange and the
 journal MUST NOT be described as a single global atomic switch.
 
 ## Outcomes
+
+A validated owned official legacy main installation automatically adopts signed
+releases. A newer version is required unless portable paths/bytes and Git executable
+intent match exactly; old receipt/modes are verified separately and never altered.
+An already-signed version cannot be replaced with different identity. The old
+process first activation remains unsigned; custom channels never silently change.
+
 
 A successful update preserves project Memory Banks and reports their inspection
 separately from code activation. The session MUST NOT infer that runtime update

@@ -46,36 +46,30 @@ class OneLineBootstrapContract(unittest.TestCase):
                             'bootstrap-test', script or ROOT/'install.sh', '--json', *args], check=False)
         self.assertEqual(result.returncode, expected, result.stdout + result.stderr)
         self.assertEqual(list(world.paths['tmp'].glob('agent-memory-bootstrap.*')), [])
+        self.assertEqual(list(world.paths['tmp'].glob('am-bootstrap-*')), [])
         return result
 
     def test_default_one_line_install_ignores_caller_checkout_and_keeps_runtime_after_cleanup(self):
-        with World() as world:
-            channel = self.channel(world)
-            # Redirect only the known public channel to a disposable offline repo.
-            world.env.update({'GIT_CONFIG_COUNT': '1',
-                              'GIT_CONFIG_KEY_0': 'url.'+channel.as_uri()+'.insteadOf',
-                              'GIT_CONFIG_VALUE_0': 'https://github.com/robertelee78/agent-memory.git'})
+        from signed_release_fixtures import SignedRelease
+        with World() as world, SignedRelease(world) as release:
+            release.prepare()
             decoy = world.paths['repo']/'skills/agent-memory/scripts/installer.py'
             decoy.parent.mkdir(parents=True)
             decoy.write_text('raise SystemExit("must not load caller checkout")\n')
-            result = json.loads(self.pipe(world).stdout)
-            self.assertTrue(result['verified'])
-            receipt = result['receipt']
-            self.assertEqual(receipt['source']['kind'], 'managed')
-            self.assertEqual(receipt['source']['remote'],
-                             'https://github.com/robertelee78/agent-memory.git')
-            self.assertEqual(receipt['source']['ref'], 'main')
-            self.assertEqual(len(receipt['enabled_adapters']), 4)
+            result = release.install(presets='all')
+            self.assertEqual(result.returncode,0,result.stdout+result.stderr)
+            receipt = json.loads(result.stdout)['receipt']
+            self.assertEqual(receipt['source']['kind'],'release')
+            self.assertEqual(receipt['source']['ref'],'releases/latest')
+            self.assertEqual(len(receipt['enabled_adapters']),4)
             source = Path(receipt['source']['path'])
-            self.assertEqual(source, world.paths['data']/'agent-memory/source')
-            self.assertTrue(source.is_dir())
-            for key in ('GIT_CONFIG_COUNT', 'GIT_CONFIG_KEY_0', 'GIT_CONFIG_VALUE_0'):
-                world.env.pop(key)
+            self.assertEqual(source,world.paths['data']/'agent-memory/source')
+            self.assertTrue(source.is_dir()); self.assertFalse((source/'.git').exists())
             cli = Path(receipt['bin_dir'])/'agent-memory'
-            self.assertEqual(world.run([cli, '--json', 'version']).returncode, 0)
+            self.assertEqual(world.run([cli,'--json','version']).returncode,0)
             for target in receipt['targets']:
                 if target['kind'] == 'link':
-                    self.assertEqual(Path(target['path']).resolve(), source/'skills/agent-memory')
+                    self.assertEqual(Path(target['path']).resolve(),source/'skills/agent-memory')
 
     def test_pipe_preview_repeat_update_and_uninstall_preserve_memory_and_user_instructions(self):
         with World() as world:
