@@ -68,10 +68,35 @@ def channel(value):
             'remote': normalize(remote) if remote is not None else None}
 
 
+def security_summary(active=None):
+    """This unsigned build performs no publisher signature verification.
+
+    Recorded source selection is not a fresh source-health or authentication
+    result. #49 must replace these negative facts with actual verified evidence
+    when a signing verifier exists; unrecognized receipt claims cannot do so.
+    """
+    selection = {'managed': 'unsigned_managed_git', 'development': 'operator_selected_development'}
+    return {'publisher_authentication': 'not_established', 'signature_verification_performed': False,
+            'recorded_source_selection': selection.get(active['source']['kind'], 'unavailable') if active else 'unavailable',
+            'executing_verifier_authenticated': False, 'platform_acls_audited': False}
+
+
+def distribution_notice(selection):
+    if selection == 'unsigned_managed_git':
+        return ('The receipt records unsigned managed Git. Artifact digests establish byte identity, '
+                'not publisher authentication.')
+    if selection == 'operator_selected_development':
+        return ('The receipt records an operator-selected development/custom source. '
+                'Local selection and a digest do not establish publisher authentication.')
+    return ('Publisher authentication is not established from the available installation evidence. '
+            'The executing helper must be trusted separately.')
+
+
 class Report:
     def __init__(self, operation):
         self.value = {'schema': SCHEMA, 'operation': operation, 'writes_performed': False,
-                      'network_performed': False, 'repairs_performed': False, 'checks': []}
+                      'network_performed': False, 'repairs_performed': False, 'checks': [],
+                      'security': security_summary()}
 
     def add(self, component, state, detail, repair=None, path=None):
         item = {'component': component, 'state': state, 'detail': detail}
@@ -101,6 +126,9 @@ class Report:
 
 
 def receipt_view(report):
+    # Doctor observes again under the shared lifecycle lock. Never carry a
+    # formerly applicable selection through uninstall or a failed reread.
+    report.value['security'] = security_summary()
     state, _ = installation.locations()
     installation.trust_paths.state(state)
     path = state / 'receipt.json'
@@ -131,6 +159,9 @@ def receipt_view(report):
         elif data['status'] == 'complete' and installation.fingerprint(path) != data.get('receipt_identity'):
             report.add('runtime.receipt', 'failure', 'Receipt differs from its completed transaction.',
                        'Preserve the receipt, journal and backups; reconcile ownership before install/update/removal.', path)
+    if active and not any(c['component'] == 'runtime.receipt' and c['state'] == 'failure'
+                          for c in report.value['checks']):
+        report.value['security'] = security_summary(active)
     return active
 
 
@@ -548,9 +579,12 @@ def run(operation, repo='.', projection=None):
         report.add('filesystem.native_api', 'pass' if native else 'failure',
                    'Native no-replace/exchange API is available; actual per-filesystem support is established by lifecycle activation, not a diagnostic write probe.' if native else 'Required native no-replace/exchange API is unavailable.',
                    'Use a supported macOS/Linux runtime and filesystem; preserve receipt and backups. Do not replace activation with a rename-away fallback.')
-        report.add('distribution.trust', 'warning', 'The initial Git channel has no pinned signature verification; an artifact digest establishes identity, not publisher authenticity.',
-                   'Use an operator-trusted source and review the recorded remote/ref; signed immutable distribution is a later channel capability.')
+        bank_writes.fault('diagnostic-before-runtime-lock')
         report.attempt('runtime.inspection', lambda: runtime_doctor(report, active), RECOVER)
+        report.add('distribution.trust', 'warning',
+                   distribution_notice(report.value['security']['recorded_source_selection']),
+                   'Use an operator-trusted source. A verified lifecycle receipt is not a publisher signature; '
+                   'diagnostics cannot authenticate already-loaded verifier code.')
         report.attempt('bank.inspection', lambda: bank_doctor(report, root, projection),
                        'Preserve canonical files, markers and operation receipts. Follow the bank inspection/writes operation; rebuild a selected stale projection from current canonical sources instead of repairing cached content.', bank.get('path'))
         if report.value['bank'].get('state') == 'validated':
@@ -566,7 +600,7 @@ def run(operation, repo='.', projection=None):
         for name, detail in (
             ('authoritative_event_log', 'Markdown/Git is authoritative; optional historical records are validated with the bank.'),
             ('vector_index', 'Native recall reads canonical Markdown; no vector service is enabled.'),
-            ('migration', 'Native v1 is directly readable; no bank migrator is bundled or implicitly run.'),
+            ('migration', 'Native v1 is directly readable; the production catalog has no conversion steps. Runtime operations never migrate memory.'),
             ('optional_services', 'GitHub publication is opt-in per operation; diagnostics perform no authentication, API calls, or provider availability claim.')):
             report.add(name, 'not_enabled', detail)
     setup_assessment(report)
