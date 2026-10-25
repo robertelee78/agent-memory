@@ -134,6 +134,31 @@ def receipt_view(report):
     return active
 
 
+def tracked_bank_roots(root):
+    """Positive history only: an untracked current file is not tracked history."""
+    indexed = git(root, 'ls-files', '--cached', '-z')
+    head = git(root, 'rev-parse', '--verify', 'HEAD', optional=True)
+    if head is None:
+        symbolic = git(root, 'symbolic-ref', '--quiet', 'HEAD', optional=True)
+        installation.require(symbolic is not None and not git(root, 'for-each-ref', '--format=%(refname)', symbolic),
+                             'HEAD is unavailable rather than an unborn branch')
+    committed = git(root, 'ls-tree', '-r', '--name-only', '-z', head) if head else ''
+    sides = [(None, set(indexed.split('\0'))), (head, set(committed.split('\0')))]
+    paths = {path for _, names in sides for path in names if path and Path(path).name == 'MEMORY.md'
+             and not any(part.startswith('.') for part in Path(path).parts)}
+    installation.require(len(paths) <= repository_config.MAX_ROUTERS, 'Tracked bank locator bound exceeded')
+    roots, cache = set(), {}
+    for path in sorted(paths):
+        installation.require(not Path(path).is_absolute() and '..' not in Path(path).parts, 'Unsafe tracked bank path')
+        for revision, names in sides:
+            if path in names:
+                expression = (revision or '') + ':' + path
+                raw = repository_config.object_router_bytes(root, expression, cache)
+                if repository_config.router_kind(raw):
+                    roots.add(Path(path).parent.as_posix())
+    return roots
+
+
 def lightweight_bank(root):
     """Observe candidate locators, not full-bank validity or proof of absence.
 
@@ -146,6 +171,10 @@ def lightweight_bank(root):
     candidates = {explicit or 'memory-bank'}
     if explicit:
         repository_config.validate_root(explicit)
+    known = tracked_bank_roots(root) if top else set()
+    installation.require(len(known) <= 1 and (not explicit or not known or known == {explicit}),
+                         'Competing tracked bank locators')
+    candidates.update(known)
     listed = git(root, 'ls-files', '--cached', '-z', '--', '*/MEMORY.md', 'MEMORY.md') if top else ''
     paths = [p for p in listed.split('\0') if p]
     installation.require(len(paths) <= repository_config.MAX_ROUTERS, 'Too many possible bank locators')
@@ -164,7 +193,10 @@ def lightweight_bank(root):
             found.append((relative, metadata, routes))
     installation.require(len(found) <= 1 and (not explicit or not found or found[0][0] == explicit),
                          'Competing bank locators')
-    bank = {'state': 'not_located', 'path': str(root / (explicit or 'memory-bank')),
+    selected = explicit or (next(iter(known)) if known else 'memory-bank')
+    repository_config.validate_root(selected)
+    bank = {'state': 'missing_known_bank' if known and not found else 'not_located',
+            'path': str(root / selected), 'known_tracked_router': bool(known),
             'schema': None, 'project_id': None, 'counts_by_lifecycle': None,
             'counts_scope': 'not_scanned', 'discovery': 'configured/default-and-indexed-routers-only',
             'absence_verified': False, 'uniqueness_verified': False,
@@ -202,10 +234,15 @@ def identities(report, root, bank):
         project_id = bank.get('project_id') or (entry['project_id'] if entry else None)
         matches = entry is not None and project_id == entry['project_id'] and project_id in data['projects']
         report.value['project'] = {'id': project_id, 'checkout_binding_matches': matches,
+                                   'binding_state': 'matches' if matches else ('missing' if entry is None else 'mismatch'),
                                    'authority_verified': False, 'pending_operation': os.path.lexists(lock)}
         if not matches:
-            report.add('identity.project', 'warning', 'Project binding is missing or differs; no identity is inferred or created.',
-                       'Inspect the identity operation and explicitly bind/link/fork only after reviewing the repository evidence.')
+            if entry is not None:
+                report.add('identity.project', 'warning', 'Project binding differs from the observed bank; both identities are preserved.',
+                           'Use am identity status and review repository evidence before explicit binding reconciliation.')
+            elif bank.get('project_id'):
+                report.add('identity.project', 'warning', 'This bank has no local checkout binding; its identity has not been adopted.',
+                           'Use am identity status and review repository evidence before explicit link/bind/fork.')
     report.attempt('identity.project', project, 'Preserve the project registry and bank; use the identity operation for explicit reconciliation.')
 
 
@@ -369,11 +406,18 @@ def bank_doctor(report, root, projection_path):
     report.value['bank']['path'] = str(bank)
     report.value['bank']['uniqueness_verified'] = True
     permission_check(report, bank, 'bank.permissions')
-    if not bank.exists():
-        report.value['bank'].update(state='not_initialized', absence_verified=True)
+    if not (bank / 'MEMORY.md').exists() and not bank.exists():
+        known = report.value['bank'].get('known_tracked_router', False)
+        report.value['bank'].update(state='missing_known_bank' if known else 'not_initialized', absence_verified=True)
         report.add('bank.setup', 'warning', 'No bank was found by the established repository locator.',
-                   'Use the initialization operation only when useful project evidence is available; diagnostics do not require a bank.')
+                   'Inspect Git state and restore/reconcile the known bank; do not initialize a replacement.' if known else
+                   'Inspect useful project evidence, then use am init; diagnostics do not create identity or memory.')
         installation.require(projection_path is None, 'A selected projection has no canonical bank to verify against')
+        return
+    if not os.path.lexists(bank / 'MEMORY.md') and report.value['bank'].get('known_tracked_router'):
+        report.value['bank'].update(state='missing_known_bank', absence_verified=False)
+        report.add('bank.setup', 'warning', 'A tracked router is missing from this existing bank directory.',
+                   'Inspect Git state and restore/reconcile the known bank; preserve remaining files and do not initialize a replacement.')
         return
     transaction = bank / '.agent-memory-transaction.md'
     lock = bank / '.agent-memory.lock'
@@ -405,6 +449,70 @@ def bank_doctor(report, root, projection_path):
     report.value['bank'].update(state='validated', source_stability_verified=True)
 
 
+def setup_assessment(report):
+    """Explain bank setup evidence without certifying runtime or semantic truth."""
+    bank = report.value['bank']
+    state = bank['state']
+    binding = report.value.get('project', {}).get('binding_state')
+    failures = [c for c in report.value['checks'] if c['state'] == 'failure'
+                and (c['component'].startswith(('bank.', 'identity.')) or c['component'] == 'data.purge')]
+    evidence = []
+    if failures or state == 'unresolved':
+        assessment, action = 'inspection_required', 'Preserve bank/configuration evidence and inspect the failed component with am doctor.'
+    elif state == 'purge_pending':
+        assessment, action = state, 'Preserve quarantine and journal; follow only the original explicitly authorized purge operation.'
+    elif state == 'busy_or_interrupted' or bank.get('pending_transaction') or bank.get('writer_marker_present'):
+        assessment, action = 'busy_or_interrupted', 'Wait for a live writer; preserve unknown markers and use the writes recovery operation for an interrupted write.'
+    elif state == 'missing_known_bank':
+        assessment, action = state, 'Inspect Git state and restore/reconcile the known bank; do not initialize a replacement.'
+        evidence.append('recognized-router-in-index-or-HEAD')
+    elif state in {'not_initialized', 'not_located'}:
+        assessment = 'not_initialized' if bank.get('absence_verified') else 'setup_needed'
+        action = ('Inspect useful project evidence, then use am init; identity and memory are not created by diagnostics.'
+                  if bank.get('absence_verified') else
+                  'Run am doctor to inspect existing bank locations before initialization; review useful project evidence.')
+    elif binding == 'mismatch':
+        assessment, action = 'binding_mismatch', 'Use am identity status; preserve both identities and review evidence before explicit reconciliation.'
+    elif binding == 'missing':
+        assessment, action = 'binding_required', 'Use am identity status; review repository evidence before explicit link/bind/fork.'
+    elif binding == 'matches':
+        verified = state == 'validated' and report.value.get('project', {}).get('authority_verified')
+        assessment = 'ready' if verified else 'bound_not_audited'
+        action = ('Bank and project authority verified; qualify task applicability before using memory.' if verified else
+                  'Run am doctor for complete bank and project-authority checks.')
+    else:
+        assessment, action = 'inspection_required', 'Use am doctor to inspect project identity and bank evidence.'
+    report.value['setup'] = {'state': assessment, 'evidence': evidence,
+                             'absence_verified': bank.get('absence_verified', False),
+                             'scope': 'bank-and-project-setup; runtime health and semantic truth are separate',
+                             'next_step': action}
+
+
+def shallow_purge_state(report, root):
+    """Read only bounded existing purge metadata; never resume a deletion."""
+    state, _ = installation.locations()
+    installation.trust_paths.state(state)
+    directory = state / 'purges'
+    if not os.path.lexists(directory):
+        return
+    installation.require(directory.is_dir() and not directory.is_symlink(), 'Unsafe purge journal directory')
+    from .purging import SCHEMA as PURGE_SCHEMA, MAX_RECORD
+    paths = []
+    for path in directory.iterdir():
+        paths.append(path)
+        installation.require(len(paths) <= 1024, 'Purge inventory exceeds its bound')
+    for path in sorted(paths):
+        if path.suffix != '.json':
+            continue
+        value = record(path, MAX_RECORD)
+        installation.require(value.get('schema') == PURGE_SCHEMA and
+                             value.get('status') in {'staging', 'detached', 'complete'}, 'Unknown purge journal')
+        if value['status'] != 'complete' and value['preview']['repository'] == str(root):
+            report.value['bank']['state'] = 'purge_pending'
+            report.add('data.purge', 'warning', 'This repository has an unfinished separately authorized purge.',
+                       'Preserve the original journal/quarantine; follow only the original explicitly authorized purge operation.', path)
+
+
 def run(operation, repo='.', projection=None):
     report = Report(operation)
     active = report.attempt('runtime.receipt', lambda: receipt_view(report),
@@ -427,6 +535,9 @@ def run(operation, repo='.', projection=None):
         bank = {'state': 'unresolved', 'path': None, 'project_id': None, 'counts_by_lifecycle': None}
     report.value.update(repository=str(root), bank=bank)
     identities(report, root, bank)
+    if operation == 'status':
+        report.attempt('data.purge', lambda: shallow_purge_state(report, root),
+                       'Preserve purge metadata and quarantine; inspect through am doctor without resuming deletion.')
     if operation == 'doctor':
         report.add('prerequisite.python', 'pass' if sys.version_info >= (3, 11) else 'failure',
                    'Python ' + '.'.join(map(str, sys.version_info[:3])), 'Use Python 3.11 or newer.')
@@ -458,6 +569,7 @@ def run(operation, repo='.', projection=None):
             ('migration', 'Native v1 is directly readable; no bank migrator is bundled or implicitly run.'),
             ('optional_services', 'GitHub publication is opt-in per operation; diagnostics perform no authentication, API calls, or provider availability claim.')):
             report.add(name, 'not_enabled', detail)
+    setup_assessment(report)
     result = report.finish()
     if operation == 'doctor':
         result['installation']['health'] = 'failures_detected' if result['failures'] else 'inspected_with_qualifications'
