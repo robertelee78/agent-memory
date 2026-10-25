@@ -1,6 +1,7 @@
 ---
 id: ADR-0014
-status: proposed
+status: accepted
+approval-scope: v0.0.3
 date: 2026-10-24
 amends: [ADR-0003, ADR-0005, ADR-0006, ADR-0007, ADR-0009, ADR-0010, ADR-0012, ADR-0013]
 ---
@@ -16,11 +17,15 @@ identified first-use diagnostic confusion, a bytecode drift mechanism whose
 originating process remains unknown, and an existing-directory permission gap.
 Lifecycle integrity and recovery controls do not provide release authenticity.
 
-This forward amendment proposes corrective scope for `v0.0.3`, alongside the
+This forward amendment defines agreed corrective outcomes for `v0.0.3`, alongside the
 reliability, recall and migration work preserved by ADR-0013. It does not rewrite
-historical release evidence or imply that every bank is faulty. Proposed status
-does not approve execution. Existing work #99 owns extended daily-use evaluation
-and #98 owns growing-bank recall; their outcomes remain distinct from the fixes
+historical release evidence or imply that every bank is faulty. The operator
+selected this release scope and authorized proceeding with its execution after
+reviewing its eleven open tasks. Acceptance approves these product outcomes;
+each task still requires its own independently reviewed technical design before
+Ready, and separate implementation/acceptance/delivery evidence. Existing work
+#99 owns extended daily-use evaluation and #98 owns growing-bank recall; their
+outcomes remain distinct from the fixes
 below. Each requirement below has one corresponding story, directly under this
 ADR's root epic. The shared validation requirements apply to all seven stories.
 The operator approved bringing existing signing story #49 forward to v0.0.3
