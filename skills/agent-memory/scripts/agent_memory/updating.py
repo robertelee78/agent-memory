@@ -57,7 +57,7 @@ def current(state, code):
             install.require(path.is_file() and not path.is_symlink(), 'Activation target is missing or linked')
             install.activation(path.read_bytes(), target['block_hash'])
         else:
-            install.verify_targets([target])
+            install.verify_targets([target], source=source)
     return old
 
 
@@ -88,11 +88,12 @@ def banks(extra, compatibility, *, require_readable=False):
                 continue
             roots.update(Path(line[9:]).resolve() for line in listed.stdout.splitlines() if line.startswith('worktree '))
     install.require(len(roots)<=1024, 'Discovered repository inventory exceeds its bound')
-    result = []; seen = set()
+    result = []; seen = set(); observed_roots = []
     for root in sorted(roots):
         if not root.is_dir():
             gaps.append({'location':str(root), 'reason':'worktree no longer available; not inspected'})
             continue
+        observed_roots.append(str(root))
         settings = repository_config.settings(root, router_reader=migration.router_metadata)
         bank = root / settings['bank_root']
         router = bank/'MEMORY.md'
@@ -127,7 +128,7 @@ def banks(extra, compatibility, *, require_readable=False):
         result.append({'repository':str(root), 'bank':str(bank), 'schema':schema,
                        'directly_readable':readable, 'explicit_migration_required':not readable,
                        'router_sha256':install.sha(raw)})
-    return {'banks':result, 'discovery_gaps':gaps, 'observed_repositories':[str(p) for p in sorted(roots)],
+    return {'banks':result, 'discovery_gaps':gaps, 'observed_repositories':observed_roots,
             'bank_writes_performed':False,
             'implicit_migration_performed':False}
 
@@ -286,8 +287,7 @@ def execute(args):
         runtime_faults.response('update', result)
     except (OSError, ValueError, TypeError, KeyError, UnicodeError, SyntaxError, RecursionError, subprocess.SubprocessError) as exc:
         result = {'operation':'update','verified':False,'error':str(exc),
-                  'repair':'Preserve the receipt, source and bank; correct the reported channel/ownership/compatibility issue. '
-                           'For an interrupted activation, use the trusted installer helper recover before retrying.'}
+                  'repair':install.failure_repair(exc)}
     print(json.dumps(result,indent=2))
     return 0 if result.get('verified') or result.get('check_complete') else 1
 

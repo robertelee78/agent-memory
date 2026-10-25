@@ -331,6 +331,9 @@ def locked(state):
 
 
 def git(root, *args, check=True):
+    if args and args[0] != 'ls-remote':
+        from .managed_source import git as local_git
+        return local_git(root, *args, check=check)
     result = subprocess.run(['git', '-C', str(root), *args], text=True, capture_output=True,
                             env={**os.environ, 'GIT_OPTIONAL_LOCKS': '0', 'GIT_TERMINAL_PROMPT': '0'},
                             timeout=120)
@@ -359,7 +362,12 @@ def source_info(root, kind, remote=None, ref=None):
     # An arbitrary copied package inside an unrelated Git parent is unversioned.
     if result.returncode == 0 and Path(result.stdout.strip()).resolve() == root:
         revision = git(root, 'rev-parse', 'HEAD').stdout.strip()
-        dirty = bool(git(root, 'status', '--porcelain', '--untracked-files=all').stdout.strip())
+        if kind == 'managed':
+            from .managed_source import verify_payload
+            verify_payload(root, revision)
+            dirty = False
+        else:
+            dirty = bool(git(root, 'status', '--porcelain', '--untracked-files=all').stdout.strip())
     require(kind != 'managed' or (revision != 'unversioned' and not dirty),
             'Managed source must be a clean versioned checkout')
     return {'kind': kind, 'path': str(root), 'pack': str(pack), 'remote': remote, 'ref': ref,
@@ -617,8 +625,12 @@ def prepare(args, state, code, old, *, candidate_root=None, candidate_kind=None)
                                  previous.get('block_hash') if previous and previous['kind']=='activation' else None, shim=shim)
                 mode_bits = before['mode'] if before else 0o644
             elif before is not None:
-                require(previous is not None and previous['identity'] == before,
-                        'Unrelated or user-modified target; preserve: ' + str(path))
+                if previous and kind == 'source' and before != previous['identity']:
+                    verify_targets([previous], source=saved)
+                    require(fingerprint(path) == before, 'Managed source changed during ownership verification')
+                else:
+                    require(previous is not None and previous['identity'] == before,
+                            'Unrelated or user-modified target; preserve: ' + str(path))
             if kind == 'link':
                 after = {'kind': 'link', 'target': str(active_pack)}
             elif kind in ('copy', 'source'):
@@ -688,14 +700,25 @@ def make_parents(parent, journal, state):
     runtime_faults.mutate('target-parent-directory', create)
 
 
-def verify_targets(targets):
+def verify_targets(targets, *, source=None):
+    qualifications = []
     for target in targets:
         path = Path(target['path'])
         trust_paths.tree(path)
-        require(fingerprint(path) == target['identity'], 'Installed target readback failed: ' + str(path))
+        observed = fingerprint(path)
+        if observed != target['identity']:
+            require(target['kind'] == 'source' and source and source.get('kind') == 'managed'
+                    and observed and target['identity']
+                    and observed.get('kind') == target['identity'].get('kind') == 'directory'
+                    and observed.get('mode') == target['identity'].get('mode'),
+                    'Installed target readback failed: ' + str(path))
+            from .managed_source import verify
+            qualifications.append(verify(path, source))
+            require(fingerprint(path) == observed, 'Managed source changed during ownership verification')
         if target['identity'] is not None and target['kind'] in ('copy', 'link'):
             require(artifact.inspect(path)['artifact_digest'] == target['artifact_digest'],
                     'Client-visible artifact readback failed: ' + str(path))
+    return qualifications
 
 
 def rollback_compatibility(state, journal):
@@ -796,7 +819,7 @@ def recover(state, *, for_install=False):
             # edits and explicit development-source changes, before any activation.
             return {'operation': 'recover', 'verified': False, 'status': 'install-validation-pending'}
         if not journal['receipt'].get('uninstalled'):
-            verify_targets(journal['receipt']['targets'])
+            verify_targets(journal['receipt']['targets'], source=journal['receipt']['source'])
         return {'operation': 'recover', 'verified': True, 'status': 'complete'}
     if journal['status'] == 'rolled-back':
         if for_install:
@@ -826,7 +849,7 @@ def install(plan, *, before_activate=None, after_activate=None):
     if (operation != 'uninstall' and not changed and old and old['source'] == plan['source']
             and all(t['identity'] == next(a['after'] for a in plan['actions'] if a['path']==t['path'])
                     for t in old['targets'])):
-        verify_targets(old['targets'])
+        verify_targets(old['targets'], source=old['source'])
         return {'operation': operation, 'verified': True, 'changed': False, 'receipt': old,
                 'restart_clients': [], 'receipt_path': str(state/'receipt.json')}
     transaction = uuid.uuid4().hex
