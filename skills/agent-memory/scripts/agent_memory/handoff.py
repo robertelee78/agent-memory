@@ -167,10 +167,37 @@ def check_pins(repo, bank, references, expected):
         raise ContractError('Checkpoint source evidence changed; preserve the proposal and inspect/review again')
 
 
+def managed_cue(body, names):
+    """Recognize reserved labels, including malformed headings, outside examples."""
+    names = {name.casefold() for name in names}
+    fence = None
+    for raw in body.splitlines():
+        token = re.match(r' {0,3}(`{3,}|~{3,})(.*)', raw)
+        if token:
+            marker, rest = token.groups()
+            if fence is None:
+                if marker[0] != '`' or '`' not in rest:
+                    fence = marker
+            elif marker[0] == fence[0] and len(marker) >= len(fence) and not rest.strip():
+                fence = None
+            continue
+        if fence is not None or raw.expandtabs(4).startswith('    '):
+            continue
+        # These adornments detect a cue only; they never validate a section.
+        # Bare reserved labels include setext titles. The strict shared parser
+        # below refuses unsupported/ambiguous managed formatting.
+        title = re.sub(r'<[^<>]*>', '', raw).strip(' \t')
+        title = re.sub(r'^#+[ \t]*', '', title)
+        title = re.sub(r'[ \t]+#+[ \t]*$', '', title).strip(' \t*_~')
+        if title.casefold() in names:
+            return True
+    return False
+
+
 def sections(body):
     from .checkpoint import headings, FIELDS, EXTRA
     expected = {*FIELDS.values(), *EXTRA, SECTION}
-    if not re.search(r'(?m)^ {0,3}#{1,6}[ \t]+(?:Current focus|Recent changes|Open questions|Next step|Checkpoint )', body):
+    if not managed_cue(body, expected):
         return {}
     found = {}
     for start, end, title in headings(body):
@@ -178,6 +205,8 @@ def sections(body):
             if title in found:
                 raise ContractError('Duplicate checkpoint section')
             found[title] = body[start:end].split('\n', 1)[1].strip()
+    if not found:
+        raise ContractError('Reserved checkpoint labels have unsupported managed framing')
     return found
 
 

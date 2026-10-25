@@ -2,6 +2,7 @@
 import hashlib
 import json
 import os
+import re
 from pathlib import Path
 import sys
 import time
@@ -193,9 +194,18 @@ class PortableHandoff(unittest.TestCase):
             project = self.good(w, cli, 'identity', 'status', '--repo', repo)['project_id']
             request = self.request(project, task='actual-task')
             target = bank / 'activeContext.md'; original = target.read_text()
-            for level in (1, 3, 6):
+            for level in (1, 3, 6, 7, "setext", "lowercase", "html", "bold"):
                 with self.subTest(level=level):
-                    target.write_text(original.replace('## ', '#' * level + ' '))
+                    if type(level) is int:
+                        altered = original.replace('## ', '#' * level + ' ')
+                    else:
+                        def heading(match):
+                            title = match[1]
+                            return (title + '\n--------------------' if level == 'setext' else
+                                    '## ' + title.lower() if level == 'lowercase' else
+                                    '<h2>' + title + '</h2>' if level == 'html' else '**' + title + '**')
+                        altered = re.sub(r'(?m)^## (.*)$', heading, original)
+                    target.write_text(altered)
                     self.assertEqual(self.good(w, cli, 'get', '--repo', repo, '--request', h.save(w, request))['results'], [])
                     assemble = {'recall': request, 'max_bytes': 16384, 'token_budget': 16384, 'conflicts': []}
                     result = self.good(w, cli, 'context', 'preview', '--repo', repo, '--request', h.save(w, assemble))
@@ -209,7 +219,11 @@ class PortableHandoff(unittest.TestCase):
                         for p in ('activeContext.md', 'projectbrief.md')], 'rationale': 'Both historical and current context require qualification.'}]
                     self.assertNotEqual(installed.command(w, cli, 'context', 'preview', '--repo', repo,
                         '--request', h.save(w, assemble))[0].returncode, 0)
-            target.write_text('# Manual orientation\n\nA literal example, not a handoff:\n\n```markdown\n### Checkpoint conditions\n```\n')
+            target.write_text('# Manual orientation\n\nA literal example, not a handoff:\n\n```markdown\n### Checkpoint conditions\nCheckpoint conditions\n--------------------\n```\n')
+            row = self.good(w, cli, 'get', '--repo', repo, '--request', h.save(w, request))['results'][0]
+            self.assertFalse(row['context_assessment']['managed_checkpoint'])
+
+            target.write_text('# Manual project notes\n\nGeneral observations\n--------------------\n\nNo checkpoint or task assignment.\n')
             row = self.good(w, cli, 'get', '--repo', repo, '--request', h.save(w, request))['results'][0]
             self.assertFalse(row['context_assessment']['managed_checkpoint'])
 
