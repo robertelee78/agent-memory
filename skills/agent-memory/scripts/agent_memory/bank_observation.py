@@ -17,11 +17,19 @@ CHUNK=65536
 def markers(bank,owner):
     for name,expected in (('.agent-memory.lock',owner),('.agent-memory-transaction.md',None)):
         target=bank/name
-        if target.is_symlink():raise ContractError('Bank marker is redirected; preserve it for inspection')
-        if target.exists():
-            with target.open('rb') as stream:raw=stream.read(4097)
-            if expected is None or len(raw)>4096 or raw!=expected:
-                raise ContractError('Bank is busy/interrupted; preserve the operation and retry after recovery')
+        try:mode=target.lstat().st_mode
+        except FileNotFoundError:
+            if expected is not None:raise ContractError('Owned bank lock disappeared; preserve work and retry with actual ownership')
+            continue
+        if expected is None:
+            raise ContractError('Bank is busy/interrupted; preserve the operation and retry after recovery')
+        if not stat.S_ISREG(mode):raise ContractError('Owned bank marker is not an ordinary record')
+        fd=os.open(target,os.O_RDONLY|getattr(os,'O_NOFOLLOW',0)|getattr(os,'O_NONBLOCK',0))
+        with os.fdopen(fd,'rb') as stream:
+            if not stat.S_ISREG(os.fstat(stream.fileno()).st_mode):raise ContractError('Owned marker type changed')
+            raw=stream.read(4097)
+        if len(raw)>4096 or raw!=expected:
+            raise ContractError('Bank ownership changed; preserve work and retry with actual ownership')
 
 
 def scan(bank,*,read_sources):
@@ -70,6 +78,8 @@ class Observation:
         self.root,self.bank,self.owner=root,bank,owner
         self.physical,self.hashes,self.sources=physical,hashes,sources
         self.checked,self.parsed=checked,parsed
+        self.payload_bytes_read=sum(len(raw) for raw in sources.values())
+        self.payload_file_reads=len(hashes)
 
     def recheck(self,stage='recall-final-source-recheck'):
         writes.fault(stage)
@@ -79,6 +89,8 @@ class Observation:
         physical,hashes,_=scan(bank,read_sources=False)
         if physical!=self.physical or hashes!=self.hashes:
             raise ContractError('Canonical sources/topology changed; reread before using recall')
+        self.payload_bytes_read+=sum(len(raw) for raw in self.sources.values())
+        self.payload_file_reads+=len(hashes)
         markers(bank,self.owner)
 
 
@@ -90,6 +102,10 @@ def observe(repo,owner=None):
     writes.fault('recall-after-source-read')
     parsed={}
     checked=contract.validate_files({path:raw.decode('utf-8') for path,raw in sources.items()},parsed_records=parsed)
+    for path in checked['omitted']:
+        target=bank/path
+        if target.exists() or target.is_symlink():
+            raise ContractError('An omitted context path is physically occupied; inspect it instead of inferring absence')
     observed=Observation(root,bank,owner,physical,hashes,sources,checked,parsed)
     observed.recheck('recall-initial-source-recheck')
     return observed

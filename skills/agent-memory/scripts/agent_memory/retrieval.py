@@ -230,6 +230,8 @@ def retrieve(repo, request, *, owned_lock=None, deferred_paths=()):
         'excluded_counts': dict(sorted(excluded.items())),
         'metrics': {'inventory_files': len(observed), 'entries': len(checked['entries']), 'qualified_candidates': len(pool),
             'ranked': len(ranked), 'selected': len(results), 'bounded_candidate_bytes_read': canonical_bytes,
+            'operation_local_observation_used':True,'canonical_observation_payload_bytes_read':observation.payload_bytes_read,
+            'canonical_observation_file_reads':observation.payload_file_reads,'parsed_records':len(observation.parsed),
             'result_bytes': used, 'elapsed_seconds': time.perf_counter() - started},
         'audit': audit, 'canonical_writes_performed': False, 'audit_writes_performed': True,
         'optional_indexes_used': False, 'source_assertions_verified': False, 'publication_verified': False,

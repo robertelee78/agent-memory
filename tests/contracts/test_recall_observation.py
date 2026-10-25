@@ -1,0 +1,70 @@
+"""Actual public recall source/topology and marker races in disposable worlds."""
+import json
+import os
+from pathlib import Path
+import stat
+import sys
+import time
+import unittest
+
+from world import World
+from contracts import test_retrieval as recall
+
+
+class RecallObservationContract(unittest.TestCase):
+    def fixture(self,w):
+        helper=recall.RetrievalContract();repo,bank,project=helper.fixture(w)
+        metadata,path=helper.add(bank,project,'observed',body='# Authored count\n\nThe authored count is three.\n')
+        return helper,repo,bank,project,path
+
+    def paused(self,w,helper,repo,project,stage):
+        directory=w.inside('rendezvous');directory.mkdir()
+        w.env.update({'AGENT_MEMORY_FAULT_STAGE':stage,'AGENT_MEMORY_FAULT_MODE':'pause','AGENT_MEMORY_FAULT_DIR':str(directory)})
+        request=helper.save(w,helper.request(project,query='authored count'))
+        child=w.spawn([sys.executable,'-I',helper.pack/'scripts/retrieve.py','--repo',repo,'--request',request])
+        deadline=time.monotonic()+5
+        while not (directory/(stage+'.ready')).exists():
+            if child.poll() is not None or time.monotonic()>deadline:
+                self.fail('Public reader did not reach its owned source-recheck rendezvous')
+            time.sleep(.02)
+        return child,directory
+
+    def refused(self,child,directory,stage):
+        (directory/(stage+'.release')).touch()
+        stdout,stderr=child.communicate(timeout=5)
+        self.assertEqual(child.returncode,1,(stdout,stderr))
+        value=json.loads(stdout);self.assertFalse(value['verified']);self.assertNotIn('results',value)
+
+    def test_omitted_context_occupied_by_directory_or_fifo_is_not_absence(self):
+        for kind in ('directory','fifo'):
+            with self.subTest(kind=kind),World() as w:
+                helper,repo,bank,project,path=self.fixture(w);code=helper.code(w,repo)
+                target=bank/'productContext.md'
+                if kind=='directory':target.mkdir()
+                else:os.mkfifo(target)
+                result,value=helper.retrieve(w,repo,project,query='authored count')
+                self.assertEqual(result.returncode,1,value);self.assertNotIn('results',value)
+                self.assertTrue(target.exists());self.assertEqual(helper.code(w,repo),code)
+                if kind=='directory':target.rmdir()
+                else:target.unlink()
+                self.assertEqual(helper.retrieve(w,repo,project,query='authored count')[0].returncode,0)
+
+    def test_changed_source_after_read_or_at_final_recheck_is_unavailable(self):
+        for stage in ('recall-after-source-read','recall-final-source-recheck'):
+            with self.subTest(stage=stage),World() as w:
+                helper,repo,bank,project,path=self.fixture(w);code=helper.code(w,repo)
+                child,directory=self.paused(w,helper,repo,project,stage)
+                target=bank/path;target.write_text(target.read_text().replace('count is three.','count is four.'))
+                self.refused(child,directory,stage)
+                self.assertIn('count is four.',target.read_text());self.assertEqual(helper.code(w,repo),code)
+
+    def test_fifo_marker_arriving_at_final_recheck_refuses_without_blocking_or_removal(self):
+        stage='recall-final-source-recheck'
+        for name in ('.agent-memory.lock','.agent-memory-transaction.md'):
+            with self.subTest(marker=name),World() as w:
+                helper,repo,bank,project,path=self.fixture(w);code=helper.code(w,repo)
+                child,directory=self.paused(w,helper,repo,project,stage)
+                target=bank/name;os.mkfifo(target)
+                self.refused(child,directory,stage)
+                self.assertTrue(stat.S_ISFIFO(target.lstat().st_mode));self.assertEqual(helper.code(w,repo),code)
+                target.unlink()  # Explicit owner of this disposable injected FIFO.
