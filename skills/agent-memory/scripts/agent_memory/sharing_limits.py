@@ -61,4 +61,7 @@ def write_private(path, value, repo):
     return {'schema':'agent-memory/private-review-artifact-v2','path':str(target),
             'sha256':digest(raw),'bytes':len(raw),
             **{key:value[key] for key in ('operation','sharing_state','refresh_applied','publication_verified','remote_freshness_verified','conflicts_pending') if key in value},
+            **({'changed_components':len(value['changed']),'review_pages':len(value['pages']),
+                'selection_required':len(value['pending_selections']),'conflicts_pending':bool(value['known_causes'] or value['withheld_sources'])}
+               if value.get('schema')=='agent-memory/semantic-sharing-inspection-v2' else {}),
             'canonical_writes_performed':value.get('canonical_writes_performed',False)}

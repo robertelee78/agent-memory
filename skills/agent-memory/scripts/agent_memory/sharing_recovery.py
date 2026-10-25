@@ -51,7 +51,9 @@ def raw_command(repo, *args, network=False, limit=MAX_BYTES, glob_pathspecs=Fals
         # legitimate Git pack/ref writes, not just this stdout spool.
         reader = bool(args) and args[0] in {'ls-tree','cat-file'}
         def bound_reader():
-            resource.setrlimit(resource.RLIMIT_FSIZE,(limit+1,limit+1))
+            previous=resource.getrlimit(resource.RLIMIT_FSIZE)
+            cap=min([limit+1,*[value for value in previous if value!=resource.RLIM_INFINITY]])
+            resource.setrlimit(resource.RLIMIT_FSIZE,(cap,cap))
         try:
             result = subprocess.run(argv, env=env, input=payload, stdout=output, stderr=subprocess.DEVNULL,
                                     timeout=30 if network else 10, preexec_fn=bound_reader if reader else None)

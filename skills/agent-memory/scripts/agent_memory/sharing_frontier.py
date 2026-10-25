@@ -178,10 +178,10 @@ def selected(rows,changed,request):
     return {key:rows[key] for key in sorted(selected_keys)},entries,[list(p) for p in sorted(edges)],pending
 
 
-def page_payloads(binding,rows,edges):
+def page_payloads(binding,rows,edges,known=()):
     binding_sha=digest(encoded(binding));pages=[];items=[]
     def payload(values):return {'schema':'agent-memory/semantic-sharing-page-v2','binding_sha256':binding_sha,'index':len(pages),'items':values}
-    for item in [*({'source':row} for row in rows.values()),*({'edge':edge} for edge in edges)]:
+    for item in [*({'source':row} for row in rows.values()),*({'known_hold':cause} for cause in known),*({'edge':edge} for edge in edges)]:
         if len(encoded(payload([*items,item])))>limits.MAX_PAGE:
             if not items:raise ContractError('One complete source/framing exceeds a disclosure page; split/review explicitly without truncation')
             pages.append(payload(items));items=[]
@@ -233,7 +233,7 @@ def build(repo,request=None,*,owned_lock=None,skip_judgment=None):
     for key in hidden:
         chosen[key]=copy.deepcopy(chosen[key]);chosen[key]['body']='';chosen[key]['metadata']=None
         chosen[key]['content_withheld']=True
-    pages=page_payloads(binding,chosen,edges)
+    pages=page_payloads(binding,chosen,edges,known)
     manifest={'schema':INSPECTION,'request':request,'binding':binding,'inventory_digests':{side:digest(encoded(hashes)) for side,hashes in binding['source_hashes'].items()},
         'changed':sorted(changed),'sources':list(chosen.values()),'selections':selections,'required_pairs':edges,'pending_selections':pending,'withheld_sources':hidden,
         'known_causes':known,
