@@ -13,6 +13,14 @@ REQUEST = 'agent-memory/semantic-sharing-request-v2'
 INSPECTION = 'agent-memory/semantic-sharing-inspection-v2'
 JUDGMENT = 'agent-memory/semantic-sharing-judgment-v2'
 PROOF = 'agent-memory/semantic-sharing-proof-v2'
+MAX_EDGES=262144
+
+
+def add_edges(edges,values):
+    for edge in values:
+        if edge not in edges and len(edges)>=MAX_EDGES:
+            raise ContractError('Complete review exceeds 262,144 interactions; preserve the frontier without truncation')
+        edges.add(edge)
 
 
 def semantic_metadata(value):
@@ -113,7 +121,7 @@ def request_value(request):
         raise ContractError('Review requires unique actual audit paths and per-change selectors')
     for path in request['audit_paths']:
         if path!='MEMORY.md':bank.path_value(path)
-    if not isinstance(request['dependencies'],dict) or not isinstance(request['consolidation_sources'],list):
+    if not isinstance(request['dependencies'],dict) or not isinstance(request['consolidation_sources'],list) or len(request['consolidation_sources'])>8:
         raise ContractError('Declare actual dependency paths and consolidation source groups')
     limits.private_bytes(request)
     return request
@@ -155,18 +163,18 @@ def selected(rows,changed,request):
             entries[key]={**selection,'matched':sorted(matches)}
             if not selection['complete']:pending.append(key)
         selected_keys.update(matches)
-        edges.update(tuple(sorted((key,other))) for other in matches if other!=key)
+        add_edges(edges,(tuple(sorted((key,other))) for other in matches if other!=key))
     actual_paths={r['path'] for r in rows.values()}
     for path,required in request['dependencies'].items():
         if path not in actual_paths or not isinstance(required,list) or len(set(required))!=len(required) or any(v not in actual_paths for v in required):
             raise ContractError('Dependencies require actual complete unique source paths')
         left=[k for k,r in rows.items() if r['path']==path]
         right=[k for k,r in rows.items() if r['path'] in required]
-        selected_keys.update(left+right);edges.update(tuple(sorted((a,b))) for a,b in itertools.product(left,right) if a!=b)
+        selected_keys.update(left+right);add_edges(edges,(tuple(sorted((a,b))) for a,b in itertools.product(left,right) if a!=b))
     for group in request['consolidation_sources']:
         if not isinstance(group,list) or not 2<=len(group)<=8 or len(set(group))!=len(group) or any(k not in rows for k in group):
             raise ContractError('Consolidation requires actual distinct complete component references')
-        selected_keys.update(group);edges.update(itertools.combinations(sorted(group),2))
+        selected_keys.update(group);add_edges(edges,itertools.combinations(sorted(group),2))
     return {key:rows[key] for key in sorted(selected_keys)},entries,[list(p) for p in sorted(edges)],pending
 
 
@@ -180,17 +188,37 @@ def page_payloads(binding,rows,edges):
         items.append(item)
         if len(encoded(payload(items)))>limits.MAX_PAGE:raise ContractError('One complete source exceeds its page budget')
     if items:pages.append(payload(items))
+    for page in pages:security.ensure_safe({'review-page':encoded(page).decode('utf-8')})
     return pages
 
 
-def build(repo,request=None,*,owned_lock=None):
+def build(repo,request=None,*,owned_lock=None,skip_judgment=None):
     from . import semantic_sharing as semantic
-    request=request_value(request)
+    request=copy.deepcopy(request_value(request))
     root,observation,binding,values,checked=semantic.snapshots(repo,request['base'],owned_lock=owned_lock)
     rows=components(values,checked)
+    from . import sharing_holds
+    current={key for key,row in rows.items() if set(row['sides'])&{'local','landed'}}
+    known=[]
+    actual_paths={r['path'] for r in rows.values()}
+    for record in sharing_holds.load(root,observation['project_id'],skip_judgment=skip_judgment):
+        cause=record['cause']
+        if not set(cause['sources']).issubset(current):continue
+        semantic.safe_text(cause['reason']);known.append(cause)
+        request['audit_paths']=sorted(set(request['audit_paths'])|{rows[key]['path'] for key in cause['sources']})
+        for path,required in record['dependencies'].items():
+            if path in actual_paths and all(v in actual_paths for v in required):
+                request['dependencies'][path]=sorted(set(request['dependencies'].get(path,[]))|set(required))
     if any(path not in set().union(*(set(f) for f in values.values())) for path in request['audit_paths']):raise ContractError('Audit paths must name actual observed source')
     changed=changed_components(rows,set(request['audit_paths']))
     chosen,selections,edges,pending=selected(rows,changed,request)
+    for cause in known:
+        if len(cause['sources'])==2:
+            pair=sorted(cause['sources'])
+            if pair not in edges:
+                if len(edges)>=MAX_EDGES:raise ContractError('Complete known-dispute frontier exceeds its finite interaction budget')
+                edges.append(pair)
+    edges.sort()
     deleted={entry['id'] for side in ('local','landed') for entry in checked[side]['entries'] if entry['format']=='tombstone'}
     for key,row in list(chosen.items()):
         if row['metadata'] and row['metadata']['id'] in deleted:
@@ -206,6 +234,7 @@ def build(repo,request=None,*,owned_lock=None):
     pages=page_payloads(binding,chosen,edges)
     manifest={'schema':INSPECTION,'request':request,'binding':binding,'inventory_digests':{side:digest(encoded(hashes)) for side,hashes in binding['source_hashes'].items()},
         'changed':sorted(changed),'sources':list(chosen.values()),'selections':selections,'required_pairs':edges,'pending_selections':pending,'withheld_sources':hidden,
+        'known_causes':known,
         'pages':[{'index':page['index'],'sha256':digest(encoded(page)),'bytes':len(encoded(page)),'source_keys':[item['source']['key'] for item in page['items'] if 'source' in item],'edges':[item['edge'] for item in page['items'] if 'edge' in item]} for page in pages],
         'semantic_completeness_verified':False,'publication_verified':False}
     manifest['manifest_sha256']=digest(limits.private_bytes(manifest))
@@ -227,7 +256,7 @@ def page(repo,manifest,index,*,owned_lock=None):
 def prepare_review(repo,judgment,*,owned_lock=None):
     if not isinstance(judgment,dict) or set(judgment)!={'schema','request','binding','manifest_sha256','pages','pairs','dependencies','consolidations','rationale','recorded_at'} or judgment['schema']!=JUDGMENT:
         raise ContractError('Use the complete explicit v2 source-bound judgment')
-    snapshot,rows,manifest,_=build(repo,judgment['request'],owned_lock=owned_lock)
+    snapshot,rows,manifest,_=build(repo,judgment['request'],owned_lock=owned_lock,skip_judgment=digest(encoded(judgment)))
     if judgment['binding']!=manifest['binding'] or judgment['manifest_sha256']!=manifest['manifest_sha256'] or manifest['pending_selections']:
         raise ContractError('Complete all actual changed-learning selections against current sources')
     if judgment['pages']!=[p['sha256'] for p in manifest['pages']]:raise ContractError('Acknowledge all exact pages once, in manifest order')

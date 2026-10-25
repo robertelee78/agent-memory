@@ -388,16 +388,33 @@ def review(repo,judgment, *, owned_lock=None):
         rows=units(values,checked);inspection={'binding':binding,'sources':list(rows.values()),'required_pairs':pairs(rows)}
         plain=judgment
     decisions=reviewed_value(plain,inspection);held=set();blocked=set();conflicts=[];peer=set();equivalents=set()
+    causes={}
+    origin=digest(encoded(judgment))
+    actor=observation['scope_context']['developer_id']
+    def remember(keys,classification,reason,source_origin=origin):
+        from . import sharing_holds
+        cause={'sources':sorted(keys),'classification':classification,'reason':reason,'origin':source_origin}
+        causes.setdefault(sharing_holds.cause_id(cause),cause)
     if version2:
+        for cause in inspection['known_causes']:
+            remember(cause['sources'],cause['classification'],cause['reason'],cause['origin'])
+            for key in cause['sources']:
+                row=rows[key];held.add((row['path'],row['component'],row['target_path']));blocked.add(row['path'])
+            claims=[rows[key] for key in cause['sources']]
+            others={row['metadata']['origin']['developer-id'] for row in claims if row['metadata'] is not None}-{actor}
+            peer.update(others)
+            conflicts.append({'classification':cause['classification'],'claims':claims,'reason':cause['reason'],
+                              'other_developer_ids':sorted(others),'detecting_developer_id':actor,'retained_prior_review':True})
         unresolved=set(inspection['withheld_sources'])
         unresolved.update(k for k,s in inspection['selections'].items() if s.get('uncertain'))
         for key in unresolved:
             row=rows[key];held.add((row['path'],row['component'],row['target_path']));blocked.add(row['path'])
+            remember([key],'withheld' if key in inspection['withheld_sources'] else 'uncertain-selection',
+                     'Selected evidence remains withheld or plausible-match selection remains uncertain; clarify before relying on it')
         # A hidden selected source cannot silently license affected changed work.
         for key,selection in inspection['selections'].items():
             if set(selection['matched'])&unresolved:
                 row=rows[key];held.add((row['path'],row['component'],row['target_path']));blocked.add(row['path'])
-    actor=observation['scope_context']['developer_id']
     for pair,decision in decisions.items():
         left,right=(rows[key] for key in pair);classification=decision['classification']
         if classification=='disjoint-conditions' and not disjoint(left,right):
@@ -413,6 +430,7 @@ def review(repo,judgment, *, owned_lock=None):
                 raise ContractError('A lifecycle distinction needs actual retained version links')
         if classification=='equivalent':equivalents.add(pair)
         if classification in {'contradiction','uncertain'}:
+            if version2:remember(pair,classification,decision['reason'])
             for row in (left,right):held.add((row['path'],row['component'],row['target_path']))
             blocked.update((left['path'],right['path']))
             other={row['metadata']['origin']['developer-id'] for row in (left,right) if row['metadata'] is not None}- {actor}
@@ -482,19 +500,26 @@ def review(repo,judgment, *, owned_lock=None):
     proof={'schema':'agent-memory/semantic-sharing-proof-v2' if version2 else 'agent-memory/semantic-sharing-proof-v1','judgment':judgment,
            'refresh_hashes':tx.file_hashes(refresh),'publish_hashes':tx.file_hashes(publish),'blocked_paths':sorted(blocked),
            'blocked_components':[{'path':p,'component':c,'target_path':t} for p,c,t in sorted(held,key=lambda x:(x[0],x[1],x[2] or ''))]}
+    if version2:
+        proof['held_causes']=[causes[key] for key in sorted(causes)]
+        from . import sharing_holds
+        references={key:{name:row[name] for name in ('path','component','target_path','source_sha256_by_side')} for key,row in rows.items()}
+        sharing_holds.record(root,observation['project_id'],proof,references)
     if len(encoded(proof))>(limits.MAX_PRIVATE if version2 else LIMIT):raise ContractError('Complete semantic proof exceeds bound; no truncation')
     return {'schema':'agent-memory/semantic-sharing-result-v1','operation':'review','proof':proof,
             'proof_sha256':digest(encoded(proof)),'audit':audit,'audit_writes_performed':True,'refresh_files':refresh,'publish_files':publish,
             'conflicts':conflicts,'blocked_paths':sorted(blocked),
             'blocked_introduction_paths':sorted({p for p,c,t in held if c=='introduction'}),'detecting_developer_id':actor,
             'other_developer_ids':sorted(peer),'recommend_other_developer_clarification':bool(peer),'messages_sent':False,
-            'independent_updates_may_continue':True,'semantic_truth_verified':False,'semantic_completeness_verified':False,'judgment_is_agent_assertion':True,
+            'independent_updates_may_continue':True,'conflicts_pending':bool(held),'semantic_truth_verified':False,'semantic_completeness_verified':False,'judgment_is_agent_assertion':True,
             'remote_freshness_verified':True,'publication_verified':False,'canonical_writes_performed':False,
             'git_metadata_writes_performed':True,'refresh_applied':False}
 
 
 def check(repo,proof, *, owned_lock=None):
-    if not isinstance(proof,dict) or set(proof)!={'schema','judgment','refresh_hashes','publish_hashes','blocked_paths','blocked_components'} or proof['schema'] not in {'agent-memory/semantic-sharing-proof-v1','agent-memory/semantic-sharing-proof-v2'}:
+    fields={'schema','judgment','refresh_hashes','publish_hashes','blocked_paths','blocked_components'}
+    if isinstance(proof,dict) and proof.get('schema')=='agent-memory/semantic-sharing-proof-v2':fields.add('held_causes')
+    if not isinstance(proof,dict) or set(proof)!=fields or proof['schema'] not in {'agent-memory/semantic-sharing-proof-v1','agent-memory/semantic-sharing-proof-v2'}:
         raise ContractError('Use the complete actual semantic proof')
     value=review(repo,proof['judgment'],owned_lock=owned_lock)
     if encoded(value['proof'])!=encoded(proof):raise ContractError('Semantic proof does not describe current reviewed sources and outputs')
