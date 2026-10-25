@@ -35,6 +35,7 @@ MUST NOT be treated as evidence that a guide is semantically complete.
 | [0013](0013-public-cli-and-corrective-releases.md) | AWA-style public CLI and corrective release tracking | Accepted (v0.0.2) |
 | [0014](0014-useful-shared-memory-quality.md) | Useful shared memory and lifecycle assurance | Accepted scope (v0.0.3) |
 | [0015](0015-signed-release-channel.md) | Signed release channel refinement for existing task #49 | Accepted scope (v0.0.3 #49) |
+| [0016](0016-incremental-sharing-review.md) | Changed-learning sharing review for existing task #99 | Proposed |
 
 [ADR-0013](0013-public-cli-and-corrective-releases.md) defines the corrective
 `v0.0.2` public command contract and the current future-release mapping. Older
