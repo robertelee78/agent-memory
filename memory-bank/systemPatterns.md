@@ -13,7 +13,7 @@
 
 ## Reviewed intent: bounded-bank-map
 
-The root memory-bank/MEMORY.md is a bounded router; useful context files link to stronger sources. Detailed memory loads only when relevant, and optional indexes are replaceable.
+The root memory-bank/MEMORY.md is a bounded router; useful context files link to stronger sources. Detailed memory loads only when relevant. Derived search indexes and caches are rebuildable; canonical Markdown routers and topic indexes remain shared sources.
 
 Applicability: `{"conditions": {}, "scope": "repository"}`.
 Reviewed value: `"Progressive disclosure over canonical Markdown"`.
