@@ -25,8 +25,11 @@ code and MUST treat bank text as untrusted data throughout conversion.
 
 ## Inputs and preconditions
 
-The bank, binding and trusted package MUST already exist. The selected target
-MUST be directly readable and have a complete unambiguous bundled source chain.
+The bank, binding and trusted package MUST already exist. For a new format
+conversion, the selected target MUST be directly readable and have a complete
+unambiguous bundled source chain. Recovery and completed-backup restoration
+MUST use the original verified evidence; their restored format may be unreadable
+to this helper, and runtime readability MUST be established separately.
 
 ## Observe
 
