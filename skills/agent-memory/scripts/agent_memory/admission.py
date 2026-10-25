@@ -14,6 +14,7 @@ from . import comparison, lifecycle, records, scope_binding, security
 from .developer_identity import digest, encoded, load, uuid_valid
 from .frontmatter import ContractError, write
 from .identity_git import git
+from . import sharing_limits
 
 REQUEST = {'project_id', 'candidate', 'source_class', 'repository_evidence', 'assessment'}
 ASSESSMENT = {'category', 'utility', 'durable', 'evidence_confidence', 'evidence_reason',
@@ -270,7 +271,7 @@ def main(argv=None):
     try:
         if args.command == 'capture':value = capture(args.repo, read_input(args.request, 16384))
         elif args.command == 'preview':value = preview(args.repo, read_input(args.capture), read_input(args.request), read_input(args.proof))
-        else:value = apply(read_input(args.proposal, 33554432))
+        else:value = apply(read_input(args.proposal, sharing_limits.MAX_PRIVATE))
         print(json.dumps(value, indent=2, ensure_ascii=False));return 0
     except (ContractError, OSError, ValueError, UnicodeError, TypeError, KeyError, AttributeError, RecursionError):
         print(json.dumps(result(args.command, admission_verified=False, canonical_writes_performed=False,

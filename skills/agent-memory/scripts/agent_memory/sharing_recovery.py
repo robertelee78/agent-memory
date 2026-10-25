@@ -49,7 +49,7 @@ def raw_command(repo, *args, network=False, limit=MAX_BYTES, glob_pathspecs=Fals
         # These commands are read-only, with lazy fetch/hooks disabled above.
         # Never apply a file-size limit to fetch/ref writers: it would also cap
         # legitimate Git pack/ref writes, not just this stdout spool.
-        reader = bool(args) and args[0] in {'ls-tree','cat-file'}
+        reader = bool(args) and args[0] in {'ls-tree','cat-file','ls-files'}
         def bound_reader():
             previous=resource.getrlimit(resource.RLIMIT_FSIZE)
             cap=min([limit+1,*[value for value in previous if value!=resource.RLIM_INFINITY]])
