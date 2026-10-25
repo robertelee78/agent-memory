@@ -165,6 +165,10 @@ def desired(base, evidence, operation_id):
         'actor': capture['scope_context']['developer_id'], 'recorded-at': evidence['recorded_at'],
         'evidence': metadata['evidence']}
     records.event(history_metadata)
+    if 'navigation' in evidence:
+        from . import admission_navigation
+        mapped=admission_navigation.apply(base,evidence['navigation'],path,history,metadata,evidence['recorded_at'])
+        return {**mapped,path:write(metadata)+candidate['body'],history:write(history_metadata)}
     router, routes, omitted = bank_contract.parse_router(base['MEMORY.md'])
     router['router-updated'] = evidence['recorded_at']
     routes += [dict(path=path, purpose='Evidenced durable project learning', scope=metadata['scope'], lifecycle='active',
@@ -176,8 +180,13 @@ def desired(base, evidence, operation_id):
 
 
 def evidence_value(value):
-    if not isinstance(value, dict) or set(value) != EVIDENCE:
+    if not isinstance(value, dict) or not EVIDENCE.issubset(value) or set(value)-EVIDENCE-{'navigation'}:
         raise ContractError('Admission needs exact capture, comparison and event evidence')
+    if 'navigation' in value:
+        from . import admission_navigation
+        admission_navigation.navigation_value(value['navigation'])
+        if 'discovery' not in value['comparison_request']:
+            raise ContractError('Supported semantic admission requires its completed source-bound discovery trace')
     lifecycle.time_value(value['recorded_at'])
     if lifecycle.time_value(value['recorded_at']) > lifecycle.time_value(datetime.now(timezone.utc).isoformat()):
         raise ContractError('Admission event time cannot be in the future')
@@ -186,7 +195,7 @@ def evidence_value(value):
     return value
 
 
-def preview(repo, captured, request, proof):
+def preview(repo, captured, request, proof, navigation=None):
     captured = capture_value(repo, captured)
     proof = proof.get('proof', proof) if isinstance(proof, dict) else proof
     if encoded(request['candidate']) != encoded(captured['request']['candidate']):
@@ -201,6 +210,9 @@ def preview(repo, captured, request, proof):
     root, bank = writes.bank_path(repo)
     evidence = evidence_value({'capture': captured, 'comparison_request': request, 'comparison_proof': proof,
                               'recorded_at': datetime.now(timezone.utc).isoformat()})
+    if navigation is not None:
+        evidence['navigation']=navigation
+        evidence_value(evidence)
     operation_id = str(uuid.uuid4())
     base = tx.files_at(bank)
     p = tx.preview(root, desired(base, evidence, operation_id), 'capture')['proposal']
@@ -265,11 +277,12 @@ def main(argv=None):
     c = commands.add_parser('capture');c.add_argument('--repo', required=True);c.add_argument('--request', required=True)
     p = commands.add_parser('preview');p.add_argument('--repo', required=True)
     for flag in ('capture', 'request', 'proof'):p.add_argument('--' + flag, required=True)
+    p.add_argument('--navigation')
     a = commands.add_parser('apply');a.add_argument('--proposal', required=True)
     args = parser.parse_args(argv)
     try:
         if args.command == 'capture':value = capture(args.repo, read_input(args.request, 16384))
-        elif args.command == 'preview':value = preview(args.repo, read_input(args.capture), read_input(args.request), read_input(args.proof))
+        elif args.command == 'preview':value = preview(args.repo, read_input(args.capture), read_input(args.request), read_input(args.proof),read_input(args.navigation,16384) if args.navigation else None)
         else:value = apply(read_input(args.proposal, 33554432))
         print(json.dumps(value, indent=2, ensure_ascii=False));return 0
     except (ContractError, OSError, ValueError, UnicodeError, TypeError, KeyError, AttributeError, RecursionError):

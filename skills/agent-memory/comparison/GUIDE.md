@@ -18,7 +18,10 @@ A session MUST resolve [identity](../identity/GUIDE.md), follow
 creating, updating, consolidating or landing durable learning. It MUST search
 same-concept wording and plausible alternatives and read the matching bodies,
 evidence, conditions and provenance. Exact text mismatch is not novelty.
-Ordinary search plus agent judgment is sufficient; no vector index is required.
+The invoking agent MUST perform meaning-based [discovery](../discovery/GUIDE.md)
+through the actual topic map and retain its completed source-bound trace.
+Supporting ordinary search and agent judgments require no vector index; literal
+matching alone MUST NOT establish plausible-match coverage.
 
 This comparison is distinct from [current recall](../retrieval/GUIDE.md).
 Novelty review MUST consider learning that applies to other branches or times,
@@ -28,7 +31,9 @@ MUST NOT be treated as verified source assertions or admission.
 
 ## Inputs and preconditions
 
-The request MUST contain exactly:
+The legacy mechanical request MUST contain these fields. The supported semantic
+workflow MUST additionally contain `discovery`, the completed exact trace from
+the [discovery operation](../discovery/GUIDE.md). No other extra fields are allowed.
 
 | Field | Required value |
 | --- | --- |

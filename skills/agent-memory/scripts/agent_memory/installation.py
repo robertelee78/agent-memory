@@ -44,6 +44,7 @@ MEMORY_ROUTES = {
     'inspect': ('bank_state.py', ('inspect',)),
     'bank': ('bank_contract.py', ()),
     'search': ('retrieve.py', ()),
+    'discover': ('discover_memory.py', ()),
     'get': ('retrieve.py', ()),
     'explain': ('retrieve.py', ()),
     'context': ('assemble_context.py', ()),

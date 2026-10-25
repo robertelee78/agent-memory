@@ -203,3 +203,21 @@ evidence before using the historical lesson as present truth.
 ## Diagnostic fallback
 
 If normal capture/comparison/admission cannot establish verified current learning, the session MUST preserve useful local evidence and pending state. It MAY inspect actual canonical matches and stronger sources to resolve the question, but MUST NOT force confirmed status, remint consumed capture identities or publish an unverified proposal.
+
+
+For the supported semantic workflow, a session MUST use the completed comparison
+`discovery` trace and supply `--navigation FILE` to preview. This small object
+MUST contain exactly `learning`, `history` and `indexes`. Learning/history MUST
+each specify `parent`, meaningful `purpose` and `read-when`; indexes MUST list
+at most eight new nodes with `path`, `parent`, `scope`, `purpose` and `read-when`.
+A parent MUST be `MEMORY.md`, an existing native topic index, or another declared
+new index. New index paths MUST remain under `topics/`. The writer derives actual
+record/event routes and metadata; the plan MUST NOT supply replacement payloads.
+
+A session MUST choose durable concept/component/workflow grouping by inspecting
+the existing map and sources. It MUST preserve source identities, conditions,
+evidence and provenance and keep history navigation distinct. It MUST NOT repeat
+generic captions that hide the subject of learning. A full/generic node requires
+a separate governed meaningful split/organization and fresh discovery before
+retry, preserving native size/depth limits. Legacy inputs remain compatible but
+MUST NOT be presented as the supported semantic navigation/capture workflow.

@@ -17,18 +17,23 @@ question cannot be resolved by this domain and the selected operation.
 | Intent | Operation |
 | --- | --- |
 | Resume a session | [resume](../resume/GUIDE.md) |
+| Discover knowledge by meaning | [discovery](../discovery/GUIDE.md) |
 | Recall current records | [retrieval](../retrieval/GUIDE.md) |
 | Assemble bounded context | [assembly](../assembly/GUIDE.md) |
 
 ## Shared current-recall inputs
 
-A session MUST resolve the actual repository/developer and follow the shared identity/source rules in the [access domain](../access/GUIDE.md), and use the current Markdown bank. Optional projections, vector search, temporal
-ranking and graph services are unnecessary for this baseline. Removing them MUST
+A session MUST resolve the actual repository/developer and follow the shared identity/source rules in the [access domain](../access/GUIDE.md), and use the current Markdown bank. The invoking harness MUST interpret subjects and navigate meaningful routes
+through [discovery](../discovery/GUIDE.md) for the supported semantic workflow.
+Optional projections, vector search, temporal ranking and graph services are
+unnecessary for the mechanical qualification baseline. Removing them MUST
 NOT remove file, exact record-ID or ordinary-text lookup.
 
 The following is the base recall object, including when nested inside a context-assembly or landed-memory refresh request. It is not the outer request shape of those operations.
 
-The request MUST contain exactly these fields. Replace the sample project UUID
+The legacy mechanical request MUST contain these fields. The supported semantic
+workflow MUST additionally supply the completed `discovery` object from the
+[discovery operation](../discovery/GUIDE.md); no other extra fields are allowed. Replace the sample project UUID
 with the resolved bank's ID; it is not an alternative project selector.
 
 ```json

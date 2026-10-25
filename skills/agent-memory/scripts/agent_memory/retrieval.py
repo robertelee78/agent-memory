@@ -25,7 +25,7 @@ MAX_RESULT = 65536
 
 
 def request_value(request):
-    if (not isinstance(request, dict) or set(request) != FIELDS or not uuid_valid(request['project_id'])
+    if (not isinstance(request, dict) or not FIELDS.issubset(request) or set(request)-FIELDS-{'discovery'} or not uuid_valid(request['project_id'])
             or not isinstance(request['query'], str) or len(request['query'].encode()) > 1024
             or any(ord(c) < 32 or ord(c) == 127 for c in request['query'])
             or type(request['limit']) is not int or not 1 <= request['limit'] <= 64
@@ -102,6 +102,12 @@ def retrieve(repo, request, *, owned_lock=None, deferred_paths=()):
     observation=bank_observation.observe(root,owned_lock)
     checked,observed=observation.checked,observation.hashes
     project = checked['project_id']
+    discovery_result=None
+    if 'discovery' in request:
+        from . import discovery
+        selected=set(request['paths'])|{entry['path'] for entry in checked['entries'] if entry.get('id') in request['ids']}
+        discovery_result=discovery.check_trace(root,request['discovery'],checked,observed,selected_scope,
+            intent='recall',selected_paths=selected,owned_lock=owned_lock,context=request['context'])
     if project != request['project_id']:
         raise ContractError('Canonical project changed after scope resolution')
     now = datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')
@@ -233,6 +239,7 @@ def retrieve(repo, request, *, owned_lock=None, deferred_paths=()):
             'operation_local_observation_used':True,'canonical_observation_payload_bytes_read':observation.payload_bytes_read,
             'canonical_observation_file_reads':observation.payload_file_reads,'parsed_records':len(observation.parsed),
             'result_bytes': used, 'elapsed_seconds': time.perf_counter() - started},
+        **({'discovery':discovery_result} if discovery_result is not None else {}),
         'audit': audit, 'canonical_writes_performed': False, 'audit_writes_performed': True,
         'optional_indexes_used': False, 'source_assertions_verified': False, 'publication_verified': False,
         'code_working_bytes_verified': False, 'validation_scope': 'metadata-currentness-and-bounded-file-recall'}

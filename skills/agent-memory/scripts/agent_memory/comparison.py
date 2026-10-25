@@ -27,7 +27,7 @@ def safe_text(value, maximum=2048):
 
 
 def request_value(request):
-    if (not isinstance(request, dict) or set(request) != REQUEST or not uuid_valid(request['project_id'])
+    if (not isinstance(request, dict) or not REQUEST.issubset(request) or set(request)-REQUEST-{'discovery'} or not uuid_valid(request['project_id'])
             or not isinstance(request['candidate'], dict) or set(request['candidate']) != {'metadata', 'body'}
             or not isinstance(request['searches'], list) or not 2 <= len(request['searches']) <= 8
             or not isinstance(request['read_paths'], list) or len(request['read_paths']) > 64
@@ -52,6 +52,10 @@ def inspect(repo, request, *, owned_lock=None):
     root, bank = writes.bank_path(repo)
     context = scope_binding.require(root, request['project_id'], owned_lock=owned_lock)
     checked, observed = writes.snapshot(root, owned_lock=owned_lock)
+    if 'discovery' in request:
+        from . import discovery
+        discovery.check_trace(root,request['discovery'],checked,observed,context,
+            intent='comparison',selected_paths=request['read_paths'],owned_lock=owned_lock)
     if checked['project_id'] != request['project_id']:
         raise ContractError('Bank identity changed during comparison')
     deleted = {entry['id'] for entry in checked['entries'] if entry['format'] == 'tombstone'}

@@ -15,6 +15,13 @@ A session using this leaf MUST first load and follow the [recall domain](../reca
 
 The recall domain owns the complete shared request, source/selection gates and bounded-observation contract. The session MUST apply those rules, not a separate client policy.
 
+A session performing semantic recall MUST first follow the
+[discovery operation](../discovery/GUIDE.md), interpret the actual topic map and
+retain its completed source-bound trace. It MUST select plausible exact sources
+through that trace and read their qualified current bodies here. Literal matching
+is a supplementary mechanical selector; it MUST NOT replace meaning-based
+navigation or establish absence when wording differs.
+
 ## Inputs and preconditions
 
 A session MUST prepare the exact shared nine-field recall request from this domain using the actual selected project and truthful current selectors/context. It MUST keep the request private and preserve unknown conditions as unknown.
