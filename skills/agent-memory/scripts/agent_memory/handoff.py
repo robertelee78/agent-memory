@@ -167,11 +167,14 @@ def check_pins(repo, bank, references, expected):
         raise ContractError('Checkpoint source evidence changed; preserve the proposal and inspect/review again')
 
 
-def managed_cue(body, names):
+def managed_cues(body, names):
     """Recognize reserved labels, including malformed headings, outside examples."""
     names = {name.casefold() for name in names}
-    fence = None
-    for raw in body.splitlines():
+    fence, offset, cues = None, 0, set()
+    for line in body.splitlines(keepends=True):
+        start = offset
+        offset += len(line)
+        raw = line.rstrip('\r\n')
         token = re.match(r' {0,3}(`{3,}|~{3,})(.*)', raw)
         if token:
             marker, rest = token.groups()
@@ -190,23 +193,25 @@ def managed_cue(body, names):
         title = re.sub(r'^#+[ \t]*', '', title)
         title = re.sub(r'[ \t]+#+[ \t]*$', '', title).strip(' \t*_~')
         if title.casefold() in names:
-            return True
-    return False
+            cues.add(start)
+    return cues
 
 
 def sections(body):
     from .checkpoint import headings, FIELDS, EXTRA
     expected = {*FIELDS.values(), *EXTRA, SECTION}
-    if not managed_cue(body, expected):
+    cues = managed_cues(body, expected)
+    if not cues:
         return {}
+    parsed = headings(body)
+    if cues != {start for start, _, title in parsed if title in expected}:
+        raise ContractError('Every reserved checkpoint label requires exact managed heading framing')
     found = {}
-    for start, end, title in headings(body):
+    for start, end, title in parsed:
         if title in expected:
             if title in found:
                 raise ContractError('Duplicate checkpoint section')
             found[title] = body[start:end].split('\n', 1)[1].strip()
-    if not found:
-        raise ContractError('Reserved checkpoint labels have unsupported managed framing')
     return found
 
 

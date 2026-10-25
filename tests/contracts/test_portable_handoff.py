@@ -228,5 +228,30 @@ class PortableHandoff(unittest.TestCase):
             self.assertFalse(row['context_assessment']['managed_checkpoint'])
 
 
+    def test_mixed_valid_and_malformed_reserved_sections_cannot_hide_duplicate_conditions(self):
+        with World() as w:
+            cli = installed.install(w)
+            h = self.helper(cli)
+            repo, bank = h.fixture(w)
+            value = h.payload(h.inspect(w, repo)); value.update(conditions={'task': 'actual-task'}, focus='Matching task handoff must remain qualified.')
+            self.assertTrue(h.apply(w, h.preview(w, repo, value))[1]['verified'])
+            project = self.good(w, cli, 'identity', 'status', '--repo', repo)['project_id']
+            request = self.request(project, task='actual-task')
+            self.assertEqual(len(self.good(w, cli, 'get', '--repo', repo, '--request', h.save(w, request))['results']), 1)
+            target = bank / 'activeContext.md'; original = target.read_text()
+            for heading in ('## checkpoint conditions', '####### Checkpoint conditions', '**Checkpoint conditions**',
+                            '## **Checkpoint conditions**', '<h2>Checkpoint conditions</h2>', 'Checkpoint conditions\n--------------------'):
+                with self.subTest(heading=heading):
+                    target.write_text(original + '\n' + heading + '\n\n```json\n{"task":"other-task"}\n```\n')
+                    self.assertEqual(self.good(w, cli, 'get', '--repo', repo, '--request', h.save(w, request))['results'], [])
+                    assembled = self.good(w, cli, 'context', 'preview', '--repo', repo, '--request', h.save(w, {
+                        'recall': request, 'max_bytes': 16384, 'token_budget': 16384, 'conflicts': []}))
+                    self.assertNotIn(value['focus'], assembled['context_text'])
+                    history = self.good(w, cli, 'inspect', '--repo', repo, '--path', 'activeContext.md')
+                    self.assertFalse(history['context_assessment']['applicable'])
+                    self.assertIn('unqualified-checkpoint-framing', history['context_assessment']['reasons'])
+                    self.assertEqual(history['body'], target.read_text())
+
+
 if __name__ == '__main__':
     unittest.main()
