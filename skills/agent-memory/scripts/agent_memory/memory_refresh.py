@@ -204,12 +204,13 @@ def apply(prepared):
                   feature_history_changed=False, unrelated_working_files_changed=False)
 
 
-def read_input(path):
-    value=limits.read_json(path)
+def read_input(path, *, version2=False):
+    raw=limits.read_bytes(path,limits.MAX_PRIVATE if version2 else LIMIT)
+    value=load(raw)
     body=value.get('proposal',value) if isinstance(value,dict) else value
     proof=(body.get('proof') or body.get('refresh_evidence',{}).get('proof')) if isinstance(body,dict) else None
     if isinstance(proof,dict) and proof.get('schema')=='agent-memory/semantic-sharing-proof-v2':return value
-    if len(encoded(value))>LIMIT:raise ContractError('Complete legacy refresh request exceeds its bounded reader; no truncation')
+    if version2:raise ContractError('Explicit v2 refresh reader requires the actual v2 source-bound proof')
     return value
 
 
@@ -219,14 +220,15 @@ def main(argv=None):
     check = sub.add_parser('inspect'); check.add_argument('--repo', required=True); check.add_argument('--base')
     preview = sub.add_parser('prepare'); preview.add_argument('--repo', required=True); preview.add_argument('--input', required=True)
     writer = sub.add_parser('apply'); writer.add_argument('--input', required=True)
-    for command in (check,preview,writer):command.add_argument('--output')
+    for command in (check,preview,writer):
+        command.add_argument('--output');command.add_argument('--v2',action='store_true')
     args = parser.parse_args(argv)
     try:
         if args.operation == 'inspect': value = inspect(args.repo, args.base)
-        elif args.operation == 'prepare': value = prepare(args.repo, read_input(args.input))
-        else: value = apply(read_input(args.input))
+        elif args.operation == 'prepare': value = prepare(args.repo, read_input(args.input,version2=args.v2))
+        else: value = apply(read_input(args.input,version2=args.v2))
         if args.output:
-            repo=args.repo if hasattr(args,'repo') else tx.proposal_value(read_input(args.input))['repo_root']
+            repo=args.repo if hasattr(args,'repo') else tx.proposal_value(read_input(args.input,version2=args.v2))['repo_root']
             value=limits.write_private(args.output,value,repo)
         print(json.dumps(value, indent=2)); return 0
     except (ContractError, OSError, ValueError, UnicodeError, TypeError, KeyError, AttributeError, RecursionError):

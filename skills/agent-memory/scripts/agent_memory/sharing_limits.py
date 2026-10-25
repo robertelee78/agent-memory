@@ -48,8 +48,10 @@ def write_private(path, value, repo):
     trust_paths.state(parent)
     target = parent / supplied.name
     trust_paths.record(target)
-    if target.is_relative_to(Path(repo).resolve()):
-        raise ContractError('Private review output must stay outside the repository')
+    pack=Path(__file__).resolve().parents[2]
+    source=pack.parent.parent if pack.parent.name=='skills' else pack
+    if any(target.is_relative_to(root) for root in (Path(repo).resolve(),source,pack)):
+        raise ContractError('Private review output must stay outside the repository and executing runtime/source')
     raw = private_bytes(value)
     if target.exists():
         if target.stat().st_mode & 0o077 or read_bytes(target) != raw:
@@ -57,4 +59,6 @@ def write_private(path, value, repo):
     else:
         storage.replace(target, raw, None)
     return {'schema':'agent-memory/private-review-artifact-v2','path':str(target),
-            'sha256':digest(raw),'bytes':len(raw),'canonical_writes_performed':False}
+            'sha256':digest(raw),'bytes':len(raw),
+            **{key:value[key] for key in ('operation','sharing_state','refresh_applied','publication_verified','remote_freshness_verified','conflicts_pending') if key in value},
+            'canonical_writes_performed':value.get('canonical_writes_performed',False)}

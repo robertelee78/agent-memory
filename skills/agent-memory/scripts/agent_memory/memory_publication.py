@@ -436,9 +436,10 @@ def main(argv=None):
     parser.add_argument('--repo', required=True)
     parser.add_argument('--input', required=True)
     parser.add_argument('--output')
+    parser.add_argument('--v2',action='store_true',help='Read an explicitly v2 proof/request with the complete private-operation budget')
     args = parser.parse_args(argv)
     try:
-        value = semantic.read_input(args.input)
+        value = semantic.read_input(args.input,version2=args.v2)
         outcome = prepare(args.repo, value) if args.operation == 'prepare' else land(args.repo, value)
         if args.output:
             from . import sharing_limits as limits

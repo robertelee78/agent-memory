@@ -501,14 +501,15 @@ def check(repo,proof, *, owned_lock=None):
     return {**value,'operation':'check','source_observation_current':True}
 
 
-def read_input(path):
-    value=limits.read_json(path)
+def read_input(path, *, version2=False):
+    raw=limits.read_bytes(path,limits.MAX_PRIVATE if version2 else LIMIT)
+    value=load(raw)
     # Exact schema dispatch keeps legacy proof limits and unknown formats fail
     # in their actual consumers; a larger envelope never changes v1 semantics.
     candidate=value.get('proof',value) if isinstance(value,dict) else value
     if isinstance(candidate,dict) and candidate.get('schema') in {'agent-memory/semantic-sharing-proof-v2','agent-memory/semantic-sharing-judgment-v2','agent-memory/semantic-sharing-request-v2','agent-memory/semantic-sharing-inspection-v2'}:
         return value
-    if len(encoded(value))>LIMIT:raise ContractError('Legacy semantic request exceeds its complete reader budget')
+    if version2:raise ContractError('Explicit v2 reader requires an actual v2 source-bound format')
     return value
 
 
@@ -526,9 +527,9 @@ def main(argv=None):
     try:
         if args.command in {'inspect-v2','page-v2','review-v2'}:
             from . import sharing_frontier as frontier
-            if args.command=='inspect-v2':value=frontier.inspect(args.repo,read_input(args.input) if args.input else None)
-            elif args.command=='page-v2':value=frontier.page(args.repo,read_input(args.input),args.page)
-            else:value=review(args.repo,read_input(args.input))
+            if args.command=='inspect-v2':value=frontier.inspect(args.repo,read_input(args.input,version2=True) if args.input else None)
+            elif args.command=='page-v2':value=frontier.page(args.repo,read_input(args.input,version2=True),args.page)
+            else:value=review(args.repo,read_input(args.input,version2=True))
         elif args.command=='inspect':value=inspect(args.repo,args.base)
         elif args.command=='review':value=review(args.repo,read_input(args.input))
         else:value=check(args.repo,read_input(args.input))

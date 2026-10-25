@@ -12,6 +12,7 @@ import json
 import os
 from pathlib import Path, PurePosixPath
 import re
+import resource
 import subprocess
 import sys
 import tempfile
@@ -45,9 +46,15 @@ def raw_command(repo, *args, network=False, limit=MAX_BYTES, glob_pathspecs=Fals
             '-c', 'core.hooksPath=/dev/null', '-C', str(repo), *args]
     # Spool output instead of allocating an unbounded remote/tree response.
     with tempfile.TemporaryFile() as output:
+        # These commands are read-only, with lazy fetch/hooks disabled above.
+        # Never apply a file-size limit to fetch/ref writers: it would also cap
+        # legitimate Git pack/ref writes, not just this stdout spool.
+        reader = bool(args) and args[0] in {'ls-tree','cat-file'}
+        def bound_reader():
+            resource.setrlimit(resource.RLIMIT_FSIZE,(limit+1,limit+1))
         try:
             result = subprocess.run(argv, env=env, input=payload, stdout=output, stderr=subprocess.DEVNULL,
-                                    timeout=30 if network else 10)
+                                    timeout=30 if network else 10, preexec_fn=bound_reader if reader else None)
         except (OSError, subprocess.TimeoutExpired) as exc:
             raise ContractError('Git sharing observation failed; retain local memory and retry') from exc
         output.seek(0); raw = output.read(limit + 1)
@@ -106,8 +113,19 @@ def tree(repo, revision, prefix):
     unique = sorted(set(objects.values()))
     blobs = {}
     if unique:
+        metadata=raw_command(repo,'cat-file','--batch-check',payload=('\n'.join(unique)+'\n').encode(),limit=len(unique)*128)
+        lines=metadata.decode('ascii').splitlines()
+        if len(lines)!=len(unique):raise ContractError('Incomplete batch object size inventory')
+        sizes={};total=0
+        for expected,line in zip(unique,lines):
+            fields=line.split()
+            if len(fields)!=3 or fields[:2]!=[expected,'blob'] or not fields[2].isdigit():
+                raise ContractError('Batch size inventory must name exact requested blobs')
+            size=int(fields[2]);total+=size
+            if size>MAX_FILE or total>MAX_BYTES:raise ContractError('Shared objects exceed bounded review before payload read')
+            sizes[expected]=size
         raw = raw_command(repo, 'cat-file', '--batch', payload=('\n'.join(unique)+'\n').encode(),
-                          limit=MAX_BYTES + len(unique) * 128)
+                          limit=total + len(unique) * 128)
         offset = total = 0
         for expected in unique:
             end = raw.find(b'\n', offset, offset + 128)
@@ -117,7 +135,7 @@ def tree(repo, revision, prefix):
             if len(fields) != 3 or fields[:2] != [expected, 'blob'] or not fields[2].isdigit():
                 raise ContractError('Batch object identity/type is not the requested blob')
             size = int(fields[2]); offset = end + 1; total += size
-            if size > MAX_FILE or total > MAX_BYTES or offset + size >= len(raw) or raw[offset+size:offset+size+1] != b'\n':
+            if size != sizes[expected] or size > MAX_FILE or total > MAX_BYTES or offset + size >= len(raw) or raw[offset+size:offset+size+1] != b'\n':
                 raise ContractError('Shared object exceeds bounds or has incomplete framing')
             body = raw[offset:offset+size]; offset += size + 1
             algorithm = hashlib.sha1 if len(expected) == 40 else hashlib.sha256
