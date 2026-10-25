@@ -247,3 +247,28 @@ Codex, Claude, and OpenCode roots. They SHALL cover:
 No lifecycle test SHALL use real credentials, mutate a live client
 configuration, alter a developer checkout, or depend on network access unless
 it is an explicitly isolated channel contract test.
+
+## Proposed first signed channel adoption
+
+This forward v0.0.3 proposal is limited to existing #49 and remains outside current
+v0.0.1 policy until the [ADR amendment](../adr/0007-portable-pack-and-lifecycle.md#proposed-first-signed-channel-adoption)
+receives approval. Ordinary update MUST continue to refuse non-fast-forward
+history, and current rollback rules remain separate.
+
+A first authenticated channel-adoption plan MAY select a signed ancestor of an
+owned official legacy installation only with exact complete portable bytes/modes
+and declared-version equality. It MUST first prove every old target against its
+original ownership/sentinel contract, separately validate the signed candidate and
+expected client/wrapper semantics, preserve the full legacy source/receipt, and
+record the new actually signed revision. A Git merge descendant MUST NOT be
+retroactively authenticated by an ancestor's signature. Different/unreleased
+payloads, noncanonical mode mismatches, dirty/unrelated sources and custom-channel
+changes MUST refuse this automatic case. No chmod or receipt reinterpretation
+shortcut is permitted. A separately explicit trusted signed-install route or
+later ordinary forward release MUST preserve otherwise ineligible installations.
+
+The [proposed transition design](v0.0.3-signed-distribution.md#first-signed-release-and-legacy-ancestry-proposed-clarification)
+requires real old-process tests, complete source/mode/ownership readback, bounded
+interrupted-adoption recovery, unchanged project memory and actual selected public
+release asset availability before default activation. It grants no key, channel,
+implementation, policy-change or release-publication approval on its own.

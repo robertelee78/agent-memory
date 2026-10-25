@@ -192,3 +192,38 @@ configuration or memory store.
   and user-data destruction are different decisions.
 - **In-place updates without verification or rollback:** rejected because a
   memory layer must remain recoverable when distribution fails.
+
+## Proposed first signed channel adoption
+
+This forward v0.0.3 proposal belongs to existing story #49. It is outside the
+accepted v0.0.1 approval and MUST NOT change current update policy until product
+and independent technical approval are recorded. Ordinary updates SHALL retain
+their recorded-channel, clean-source, nondecreasing-version and forward-ancestry
+requirements. Exact transaction rollback remains separately governed above.
+
+A distinct first adoption from the official legacy unsigned channel to an
+actually verified signed release MAY replace a legacy descendant with its signed
+ancestor only when the complete portable runtime files, modes and declared version
+are exactly equal. The candidate MUST pass actual pinned-key signature, bundle,
+source/version/artifact and compatibility checks before activation. Unrelated or
+diverged history, another channel, changed source or a different runtime payload
+MUST refuse this automatic first-adoption case. It MUST NOT become a generic
+non-fast-forward update exception or silently change custom-source policy.
+
+The session MUST separately prove ownership of each old target under the original
+legacy receipt, including complete managed-source/Git identity and the existing
+sentinel/outside-text preservation rules. Old-source ownership MUST NOT be confused
+with equality to the signed source tree. Signed-payload equality MUST cover all
+portable paths/bytes/modes and expected wrapper/link/copy/activation semantics.
+The adoption MUST preserve the complete old source and legacy receipt/backups,
+activate and record the actually signed source revision, and MUST NOT describe
+the old descendant revision as signed. Check mode MUST remain read-only; journal,
+recovery, bank-readability and no-implicit-migration requirements remain in force.
+
+Legacy noncanonical modes MUST NOT be normalized in place or treated as signed
+mode equality. If this narrow case is ineligible, the installation MUST remain
+preserved with an actionable separately explicit trusted signed-install route or
+an eligible later forward release. The release MUST qualify actual legacy forward
+and descendant paths, mode mismatch/refusal/repair, and first public signed asset
+availability before default activation. Proposed detail and unresolved channel/key
+choices remain in [the signed-distribution design](../design/v0.0.3-signed-distribution.md).
