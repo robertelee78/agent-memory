@@ -56,7 +56,7 @@ def current(state, code):
             install.require(path.is_file() and not path.is_symlink(), 'Activation target is missing or linked')
             install.activation(path.read_bytes(), target['block_hash'])
         else:
-            install.verify_targets([target])
+            install.verify_targets([target], source=source)
     return old
 
 
@@ -229,8 +229,7 @@ def execute(args):
         runtime_faults.response('update', result)
     except (OSError, ValueError, TypeError, KeyError, UnicodeError, SyntaxError, RecursionError, subprocess.SubprocessError) as exc:
         result = {'operation':'update','verified':False,'error':str(exc),
-                  'repair':'Preserve the receipt, source and bank; correct the reported channel/ownership/compatibility issue. '
-                           'For an interrupted activation, use the trusted installer helper recover before retrying.'}
+                  'repair':install.failure_repair(exc)}
     print(json.dumps(result,indent=2))
     return 0 if result.get('verified') or result.get('check_complete') else 1
 

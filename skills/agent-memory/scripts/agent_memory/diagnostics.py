@@ -336,9 +336,14 @@ def runtime_doctor(report, active):
                            'Preserve this owner record and the lifecycle lock. Reconcile the malformed or redirected metadata before retrying a lifecycle operation; do not reset or steal ownership based on PID or age.', owner_path)
         if active:
             def check_source():
-                observed = source(active['source']['pack'])
-                report.value['installed_source'] = observed
                 expected = active['source']
+                if expected['kind'] == 'managed':
+                    observed = installation.source_info(Path(expected['path']), 'managed',
+                                                        expected['remote'], expected['ref'])
+                    observed['cleanliness'] = 'clean'
+                else:
+                    observed = source(expected['pack'])
+                report.value['installed_source'] = observed
                 matches = all(observed[k] == expected.get(k) for k in ('path', 'pack', 'version', 'revision', 'dirty', 'artifact_digest'))
                 # Unversioned source uses the install receipt's explicit marker.
                 if observed['revision'] is None and expected.get('revision') == 'unversioned':
@@ -352,7 +357,11 @@ def runtime_doctor(report, active):
                                'Source differs from its recorded installation.',
                                'For a developer source, inspect edits and preview reinstall; for managed source, preserve edits and reconcile the recorded channel before update.', expected['path'])
                 else:
-                    report.add('runtime.source', 'pass', 'Source revision, artifact and recorded channel match.', path=expected['path'])
+                    owned = [t for t in active['targets'] if t['kind'] == 'source']
+                    qualified = installation.verify_targets(owned, source=expected)
+                    detail = ('Legacy Git payload and package modes match; raw directory identity differs.'
+                              if qualified else 'Source revision, artifact and recorded channel match.')
+                    report.add('runtime.source', 'pass', detail, path=expected['path'])
             report.attempt('runtime.source', check_source, 'Use a trusted outside source helper; preserve the source and receipt and preview reinstall after reconciling the exact channel.', active['source'].get('path'))
             for target in active['targets']:
                 if target['kind'] == 'source':
