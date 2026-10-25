@@ -51,6 +51,11 @@ The [technical design](../design/v0.0.3-daily-use-repair.md) and agreed #99 work
 qualification define the implementation/acceptance boundary. Old proof formats
 retain explicit handling; unknown formats MUST refuse rather than be reinterpreted.
 
+The technical design fixes the exact interaction frontier, transitive framing
+closure, source-bound page acknowledgment, baseline/dispute recovery, finite
+whole-operation budgets and required workload schedule. These contracts MUST be
+reviewed together; a raw capacity increase alone is insufficient.
+
 ## Consequences
 
 - Review work follows the new learning and its plausible existing relationships.
