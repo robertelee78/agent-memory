@@ -13,6 +13,11 @@ reread existing applicable memory and preserve compatible evidence, distinct
 conditions, source attribution and unrelated context. It MUST NOT paste a raw
 conversation, invent answers or turn a planned task into proof of completion.
 
+Missing-context preparation MUST use the matching-task handoff route profile and
+preserve existing map prose and route rows. A session MUST qualify whether that
+task matches its own work before adopting the checkpoint. An ordinary checkpoint
+MUST leave the router unchanged.
+
 ## Required context
 
 A session using this leaf MUST first load and follow the [capture domain](../capture/GUIDE.md). It MUST open the [shared model](../model/GUIDE.md) only when an unresolved semantic question requires it.

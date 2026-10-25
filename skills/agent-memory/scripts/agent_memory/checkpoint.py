@@ -165,12 +165,7 @@ def preview(repo, value, *, prepare=False):
         files = transactions.files_at(bank_path)
         files['activeContext.md'] = render('# Active context\n', value, context['developer_id'])
         security.ensure_safe({'activeContext.md': files['activeContext.md']})
-        metadata, routes, omitted = bank.parse_router(files['MEMORY.md'])
-        routes.append({'path': 'activeContext.md', 'purpose': 'Current focus, changes, questions and next step',
-                       'scope': 'repository', 'lifecycle': 'active', 'read-when': 'When starting or resuming work'})
-        omitted.pop('activeContext.md', None)
-        metadata['router-updated'] = storage.now()
-        files['MEMORY.md'] = bank.router_text(metadata, routes, omitted)
+        files['MEMORY.md'] = bank.add_context_routes(files['MEMORY.md'], ['activeContext.md'], storage.now())
         proposal = transactions.preview(root, files, 'replace')
         if (proposal['proposal']['observed_hashes'] != current['source_hashes']
                 or proposal['proposal']['scope_context'] != context):

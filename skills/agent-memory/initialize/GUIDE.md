@@ -15,6 +15,14 @@ memory, distinguish approved intent from observed behavior and planned work,
 and ask the detecting developer focused product questions for genuine conflicts
 or missing decisions. It MUST NOT invent requirements or copy whole documents.
 
+New context routes describe distinct information needs: project identity,
+product scope, matching-task handoff, architecture, implementation evidence and
+delivery evidence. A session MUST use that map to select bounded relevant
+context and independently qualify its statements. These navigation defaults
+MUST NOT turn orientation into admitted guidance or a handoff into an assignment.
+Initialization MUST preserve existing context files, custom route rows and map
+prose; it MAY add useful missing contexts and remove only their omission reasons.
+
 ## Required context
 
 A session using this leaf MUST first load and follow the [capture domain](../capture/GUIDE.md). It MUST open the [shared model](../model/GUIDE.md) only when an unresolved semantic question requires it.

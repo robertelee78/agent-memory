@@ -165,6 +165,67 @@ def parse_router(text):
     return metadata, routes, omitted
 
 
+def context_route(path):
+    """Navigation defaults for a newly created ordinary context, not authority."""
+    profiles = {
+        'projectbrief.md': ('Project purpose and authority boundaries',
+                            'At session start to identify the project'),
+        'productContext.md': ('Users, workflow and scope exclusions',
+                              'When deciding product scope or comparing requirements'),
+        'activeContext.md': ('Scoped handoff, unresolved questions and next step',
+                             'When resuming the matching task or investigating its questions'),
+        'systemPatterns.md': ('Architecture and established project patterns',
+                              'When changing design, integration or project conventions'),
+        'techContext.md': ('Qualified implementation and technical source evidence',
+                           'When working on the relevant implementation or tooling'),
+        'progress.md': ('Delivery evidence and work-source references',
+                        'When checking delivery claims or release scope'),
+    }
+    if path not in profiles:
+        raise ContractError('Navigation defaults require a known ordinary context')
+    purpose, trigger = profiles[path]
+    return {'path': path, 'purpose': purpose, 'scope': 'repository',
+            'lifecycle': 'active', 'read-when': trigger}
+
+
+def add_context_routes(text, paths, updated):
+    """Add missing contexts without re-rendering existing map prose or rows."""
+    _, routes, omitted = parse_router(text)
+    timestamp(updated)
+    paths = list(paths)
+    if len(set(paths)) != len(paths) or any(path not in omitted for path in paths):
+        raise ContractError('Only missing ordinary context routes may be added')
+    if not paths:
+        return text
+    new_routes = [context_route(path) for path in paths]
+    end = text.index('\n---\n', 4)
+    prefix = re.sub(r'(?m)^router-updated:.*$',
+                    lambda _: 'router-updated: ' + json.dumps(updated), text[:end])
+    intro, rest = text[end:].split('\n## Routes\n')
+    table, omissions = rest.split('\n## Omitted contexts\n')
+    lines = table.splitlines(keepends=True)
+    insertion = len(lines)
+    while insertion and not lines[insertion - 1].strip():
+        insertion -= 1
+    existing = ''.join(lines[:insertion])
+    # The section separator may supply the final row's only LF. Keep that
+    # supported compact spelling valid when inserting another table row.
+    if existing and not existing.endswith('\n'):
+        existing += '\n'
+    table = (existing +
+             ''.join(route_table(new_routes).splitlines(keepends=True)[2:]) +
+             ''.join(lines[insertion:]))
+    remaining = [line for line in omissions.splitlines(keepends=True)
+                 if not any(line.strip().startswith('- `' + path + '`: ') for path in paths)]
+    omissions = ''.join(remaining) if set(omitted) - set(paths) else '\n\nNone.\n'
+    result = prefix + intro + '\n## Routes\n' + table + '\n## Omitted contexts\n' + omissions
+    # Recheck route count, byte bounds, identity and complete omission accounting.
+    _, final_routes, _ = parse_router(result)
+    if final_routes != routes + new_routes:
+        raise ContractError('Existing route metadata must be preserved')
+    return result
+
+
 def render(proposal):
     required = {"project-id", "router-updated", "contexts", "omitted"}
     if not isinstance(proposal, dict) or not required.issubset(proposal) or not set(proposal).issubset(required | {"canonical-remote"}):
