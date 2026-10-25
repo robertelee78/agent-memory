@@ -1,6 +1,7 @@
 {
   "schema": "agent-memory/test-contracts-v1",
   "suites": [
+    {"name": "observation-applicability", "layer": "bank", "scope": "v0.0.3", "path": "tests/contracts/test_observation_applicability.py"},
     {"name": "actionable-setup-diagnostics", "layer": "lifecycle", "scope": "v0.0.3", "path": "tests/contracts/test_setup_diagnostics.py"},
     {"name": "selective-initialization-routes", "layer": "bank", "scope": "v0.0.3", "path": "tests/contracts/test_initialization_routes.py"},
     {"name": "read-only-runtime-audits", "layer": "lifecycle", "scope": "v0.0.3", "path": "tests/contracts/test_read_only_audits.py"},

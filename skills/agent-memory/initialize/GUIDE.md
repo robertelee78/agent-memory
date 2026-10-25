@@ -109,19 +109,36 @@ authority matrix; implementation requires code/test evidence, intent requires
 reviewed planning authority, and delivery requires actual relevant work proof.
 Each evidence reference MUST name a selected local source or AWA handoff source.
 Each claim MUST answer one comparable question under explicit scope/conditions.
-Local implementation observations MUST retain an explicit branch or revision
-condition matching the inspected source context. Every supplied branch condition
+By default local implementation observations MUST retain an explicit branch or
+revision condition matching the inspected source context. A reviewed implementation
+claim MAY instead include a bounded `applicability_review` string explaining why
+its actual semantic conditions are independent of its capture checkout. A session
+MUST inspect that meaning and retain every genuine branch, task or environment
+dependency; the explanation MUST NOT silently broaden existing memory. Old claim
+inputs remain conservative when this optional explanation is absent.
+Every supplied branch condition
 MUST match a known current branch, and every supplied revision MUST match the
 exact known inspected HEAD; a detached or unborn checkout MUST NOT supply an
 invented branch or revision. Initialization does not prove
 that local code is committed, on remote `main`, or universally applicable.
+New implementation prose separately records actual inspected source SHA256/bytes
+and observed checkout branch/HEAD. That provenance binds an observation, not its
+semantic applicability or publication. Uncommitted bytes MUST NOT acquire a
+fabricated commit permalink. A memory-only HEAD change alone does not invalidate
+an otherwise unchanged observation; unchanged bytes alone do not certify truth.
 Unknown or unqualified interpretations remain evidence gaps and MUST NOT become
 current guidance. Conditions MUST survive in the resulting prose. A session
 MUST exclude redundant assertions already in applicable memory, preserving
 distinct conditions, source references and provenance; it MUST NOT clone old
 records into a new context file. The helper additionally suppresses exact
-claim blocks already present verbatim in the bank, including their distinct
-conditions, comparable value and evidence references.
+claim blocks already present verbatim in the bank, including fact key, distinct
+conditions, comparable value and evidence references, independently of the new
+provenance footer. Different inspected source hashes produce an evidence-review
+gap rather than another copy of the old fact. Legacy prose without a footer has
+unknown historical byte binding, not invented current proof. Existing files stay
+byte-identical; a session MUST use the appropriate reviewed observed-file workflow
+for untyped corrections or the typed-record governance workflow for typed records.
+Ordinary context remains orientation-only and requires statement qualification.
 
 ## Observe
 
