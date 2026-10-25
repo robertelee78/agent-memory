@@ -139,6 +139,11 @@ class ManagedSourceOwnershipContract(unittest.TestCase):
             before = snapshot(world.root)
             _, preview = call(world, receipt, '--check', source=True)
             self.assertTrue(preview['check_complete']); self.assertFalse(marker.exists())
+            cli = Path(receipt['bin_dir'])/'am'
+            version = json.loads(world.run([cli, '--json', 'version']).stdout)
+            self.assertEqual(version['executing_source']['cleanliness'], 'clean')
+            doctor = json.loads(world.run([cli, '--json', 'doctor', '--repo', world.paths['repo']]).stdout)
+            self.assertTrue(doctor['ok']); self.assertFalse(marker.exists())
             self.assertEqual(snapshot(world.root), before)
 
     def test_interrupted_switch_restores_exact_drifted_source_and_retries(self):
