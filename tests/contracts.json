@@ -52,6 +52,7 @@
     {"name": "skill-routes", "layer": "pack", "scope": "v0.0.1", "path": "tests/contracts/test_skill_routes.py"},
     {"name": "managed-source-bounds", "layer": "lifecycle", "scope": "v0.0.3", "path": "tests/contracts/test_managed_source_bounds.py"},
     {"name": "managed-source-ownership", "layer": "lifecycle", "scope": "v0.0.3", "path": "tests/contracts/test_managed_source_ownership.py"},
+    {"name": "update-discovery-gaps", "layer": "lifecycle", "scope": "v0.0.3", "path": "tests/contracts/test_update_discovery_gaps.py"},
     {"name": "runtime-update", "layer": "lifecycle", "scope": "v0.0.1", "path": "tests/contracts/test_runtime_update.py"},
     {"name": "runtime-uninstall", "layer": "lifecycle", "scope": "v0.0.1", "path": "tests/contracts/test_runtime_uninstall.py"},
     {"name": "runtime-purge", "layer": "lifecycle", "scope": "v0.0.1", "path": "tests/contracts/test_runtime_purge.py"},
