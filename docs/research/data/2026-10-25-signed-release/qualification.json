@@ -1,0 +1,233 @@
+{
+  "candidate": "b068486990d1b05a9f731347d7db08281b13b484",
+  "actual_package_version": "0.0.2",
+  "portable_files": 150,
+  "artifact_digest": "45f3bac2fc8a2ec7deeb3ab335d5e86a23806b788b2e85e18afea02e14f743dc",
+  "tracked_source_files_checked": 450,
+  "registered_methods": {
+    "mac": [
+      {
+        "name": "signed-release-lifecycle",
+        "path": "tests/contracts/test_signed_release_lifecycle.py",
+        "exit": 0,
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 3,
+        "unexpected_successes": 0
+      },
+      {
+        "name": "signed-release-publisher",
+        "path": "tests/contracts/test_signed_release_publisher.py",
+        "exit": 0,
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 3,
+        "unexpected_successes": 0
+      }
+    ],
+    "linux": [
+      {
+        "name": "signed-release-lifecycle",
+        "path": "tests/contracts/test_signed_release_lifecycle.py",
+        "exit": 0,
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 3,
+        "unexpected_successes": 0
+      },
+      {
+        "name": "signed-release-publisher",
+        "path": "tests/contracts/test_signed_release_publisher.py",
+        "exit": 0,
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 3,
+        "unexpected_successes": 0
+      }
+    ]
+  },
+  "registered_source_bindings": {
+    "mac": {
+      "before": {
+        "source_commit": "b068486990d1b05a9f731347d7db08281b13b484",
+        "phase": "before",
+        "checked_files": 450,
+        "mismatches": [],
+        "platform": "Darwin",
+        "python": "3.15.0",
+        "artifact_digest": "45f3bac2fc8a2ec7deeb3ab335d5e86a23806b788b2e85e18afea02e14f743dc",
+        "portable_file_count": 150,
+        "canonical_portable_identity_matches": true,
+        "verified": true
+      },
+      "after": {
+        "source_commit": "b068486990d1b05a9f731347d7db08281b13b484",
+        "phase": "after",
+        "checked_files": 450,
+        "mismatches": [],
+        "platform": "Darwin",
+        "python": "3.15.0",
+        "artifact_digest": "45f3bac2fc8a2ec7deeb3ab335d5e86a23806b788b2e85e18afea02e14f743dc",
+        "portable_file_count": 150,
+        "canonical_portable_identity_matches": true,
+        "verified": true
+      }
+    },
+    "linux": {
+      "before": {
+        "source_commit": "b068486990d1b05a9f731347d7db08281b13b484",
+        "phase": "before",
+        "checked_files": 450,
+        "mismatches": [],
+        "platform": "Linux",
+        "python": "3.13.7",
+        "artifact_digest": "45f3bac2fc8a2ec7deeb3ab335d5e86a23806b788b2e85e18afea02e14f743dc",
+        "portable_file_count": 150,
+        "canonical_portable_identity_matches": true,
+        "verified": true
+      },
+      "after": {
+        "source_commit": "b068486990d1b05a9f731347d7db08281b13b484",
+        "phase": "after",
+        "checked_files": 450,
+        "mismatches": [],
+        "platform": "Linux",
+        "python": "3.13.7",
+        "artifact_digest": "45f3bac2fc8a2ec7deeb3ab335d5e86a23806b788b2e85e18afea02e14f743dc",
+        "portable_file_count": 150,
+        "canonical_portable_identity_matches": true,
+        "verified": true
+      }
+    }
+  },
+  "supplemental_boundary_cases": {
+    "mac": {
+      "candidate": "b068486990d1b05a9f731347d7db08281b13b484",
+      "base_artifact_digest": "45f3bac2fc8a2ec7deeb3ab335d5e86a23806b788b2e85e18afea02e14f743dc",
+      "portable_files": 150,
+      "supplemental_cases": [
+        {
+          "case": "truncated-http-body",
+          "exit": 1,
+          "error": "Signed release download failed (curl exit 18); check release availability and network access",
+          "passed": true,
+          "active_targets_receipt_state_bank_feature_index_head_preserved": true,
+          "before_state_sha256": "7cef4d1813a3c80d0cc2196ed503cae07c7193c6736d9eb21839ab7dd38ea730",
+          "after_state_sha256": "7cef4d1813a3c80d0cc2196ed503cae07c7193c6736d9eb21839ab7dd38ea730"
+        },
+        {
+          "case": "oversize-metadata",
+          "exit": 1,
+          "error": "Signed release download failed (curl exit 63); check release availability and network access",
+          "passed": true,
+          "active_targets_receipt_state_bank_feature_index_head_preserved": true,
+          "before_state_sha256": "7cef4d1813a3c80d0cc2196ed503cae07c7193c6736d9eb21839ab7dd38ea730",
+          "after_state_sha256": "7cef4d1813a3c80d0cc2196ed503cae07c7193c6736d9eb21839ab7dd38ea730"
+        },
+        {
+          "case": "oversize-archive",
+          "exit": 1,
+          "error": "Signed release download failed (curl exit 63); check release availability and network access",
+          "passed": true,
+          "active_targets_receipt_state_bank_feature_index_head_preserved": true,
+          "before_state_sha256": "7cef4d1813a3c80d0cc2196ed503cae07c7193c6736d9eb21839ab7dd38ea730",
+          "after_state_sha256": "7cef4d1813a3c80d0cc2196ed503cae07c7193c6736d9eb21839ab7dd38ea730"
+        },
+        {
+          "case": "oversize-chunked-archive",
+          "exit": 1,
+          "error": "Signed release download failed (curl exit 63); check release availability and network access",
+          "passed": true,
+          "active_targets_receipt_state_bank_feature_index_head_preserved": true,
+          "before_state_sha256": "7cef4d1813a3c80d0cc2196ed503cae07c7193c6736d9eb21839ab7dd38ea730",
+          "after_state_sha256": "7cef4d1813a3c80d0cc2196ed503cae07c7193c6736d9eb21839ab7dd38ea730"
+        },
+        {
+          "case": "oversize-expanded-archive",
+          "exit": 1,
+          "error": "Release expansion exceeds its bound",
+          "passed": true,
+          "active_targets_receipt_state_bank_feature_index_head_preserved": true,
+          "before_state_sha256": "7cef4d1813a3c80d0cc2196ed503cae07c7193c6736d9eb21839ab7dd38ea730",
+          "after_state_sha256": "7cef4d1813a3c80d0cc2196ed503cae07c7193c6736d9eb21839ab7dd38ea730"
+        }
+      ],
+      "passed": true,
+      "registered_method_counts_unchanged": true,
+      "production_private_key_used": false,
+      "public_release_mutated": false
+    },
+    "linux": {
+      "candidate": "b068486990d1b05a9f731347d7db08281b13b484",
+      "base_artifact_digest": "45f3bac2fc8a2ec7deeb3ab335d5e86a23806b788b2e85e18afea02e14f743dc",
+      "portable_files": 150,
+      "supplemental_cases": [
+        {
+          "case": "truncated-http-body",
+          "exit": 1,
+          "error": "Signed release download failed (curl exit 56); check release availability and network access",
+          "passed": true,
+          "active_targets_receipt_state_bank_feature_index_head_preserved": true,
+          "before_state_sha256": "add54dc919661f0f3776a0a4fe5c85d0bed98eedbd07d3b8e322371dafe8c431",
+          "after_state_sha256": "add54dc919661f0f3776a0a4fe5c85d0bed98eedbd07d3b8e322371dafe8c431"
+        },
+        {
+          "case": "oversize-metadata",
+          "exit": 1,
+          "error": "Signed release download failed (curl exit 63); check release availability and network access",
+          "passed": true,
+          "active_targets_receipt_state_bank_feature_index_head_preserved": true,
+          "before_state_sha256": "add54dc919661f0f3776a0a4fe5c85d0bed98eedbd07d3b8e322371dafe8c431",
+          "after_state_sha256": "add54dc919661f0f3776a0a4fe5c85d0bed98eedbd07d3b8e322371dafe8c431"
+        },
+        {
+          "case": "oversize-archive",
+          "exit": 1,
+          "error": "Signed release download failed (curl exit 63); check release availability and network access",
+          "passed": true,
+          "active_targets_receipt_state_bank_feature_index_head_preserved": true,
+          "before_state_sha256": "add54dc919661f0f3776a0a4fe5c85d0bed98eedbd07d3b8e322371dafe8c431",
+          "after_state_sha256": "add54dc919661f0f3776a0a4fe5c85d0bed98eedbd07d3b8e322371dafe8c431"
+        },
+        {
+          "case": "oversize-chunked-archive",
+          "exit": 1,
+          "error": "Signed release download failed (curl exit 63); check release availability and network access",
+          "passed": true,
+          "active_targets_receipt_state_bank_feature_index_head_preserved": true,
+          "before_state_sha256": "add54dc919661f0f3776a0a4fe5c85d0bed98eedbd07d3b8e322371dafe8c431",
+          "after_state_sha256": "add54dc919661f0f3776a0a4fe5c85d0bed98eedbd07d3b8e322371dafe8c431"
+        },
+        {
+          "case": "oversize-expanded-archive",
+          "exit": 1,
+          "error": "Release expansion exceeds its bound",
+          "passed": true,
+          "active_targets_receipt_state_bank_feature_index_head_preserved": true,
+          "before_state_sha256": "add54dc919661f0f3776a0a4fe5c85d0bed98eedbd07d3b8e322371dafe8c431",
+          "after_state_sha256": "add54dc919661f0f3776a0a4fe5c85d0bed98eedbd07d3b8e322371dafe8c431"
+        }
+      ],
+      "passed": true,
+      "registered_method_counts_unchanged": true,
+      "production_private_key_used": false,
+      "public_release_mutated": false
+    }
+  },
+  "supplemental_producer_sha256": "ae987dd00f1ef7c2acb74d56ea0190e54a0349f86969f9ee70278a45d2db320c",
+  "actual_public_release_verified": false,
+  "production_private_key_used_for_qualification": false,
+  "independent_verdict": "https://github.com/robertelee78/agent-memory/issues/49#issuecomment-6400662844"
+}
