@@ -65,6 +65,8 @@ def inspect(pack):
             and spec.get('required_agent_clients') == [],
             'Compatibility must declare bounded schema/tool lists and a client-neutral standard-library core')
     command_names(spec)
+    from . import migration_contract
+    migrations = migration_contract.inspect(root, spec, files)
     router = declaration(root, 'schemas/bank-router.json', files)
     require(router['properties']['schema']['const'] in spec['readable_bank_schemas'],
             'Native bank schema is absent from its readability declaration')
@@ -90,7 +92,7 @@ def inspect(pack):
     digest = hashlib.sha256(json.dumps(files, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
     return {'schema': 'agent-memory/artifact-inspection-v1', 'operation': 'inspect', 'valid': True,
             'version': validation['version'], 'artifact_digest': digest, 'files': files,
-            'file_count': len(files), 'compatibility': spec, 'optional_adapters': adapters,
+            'file_count': len(files), 'compatibility': spec, 'optional_adapters': adapters, 'migration_catalog': migrations,
             'guides': validation['guides'], 'documented_commands': validation['documented_commands'],
             'file_operations': validation['file_operations'], 'writes_performed': False,
             'candidate_code_executed': False, 'source_origin_authenticated': False,

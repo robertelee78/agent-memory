@@ -60,8 +60,9 @@ def current(state, code):
     return old
 
 
-def banks(extra, compatibility):
+def banks(extra, compatibility, *, require_readable=False):
     """Use the established one-bank locator; never invent another bank path."""
+    from . import migration, bank_transactions
     roots = set(); gaps = []
     cwd = Path.cwd().resolve()
     top = install.git(cwd, 'rev-parse', '--show-toplevel', check=False)
@@ -91,7 +92,8 @@ def banks(extra, compatibility):
         if not root.is_dir():
             gaps.append({'location':str(root), 'reason':'worktree no longer available; not inspected'})
             continue
-        bank = repository_config.bank_path(root)
+        settings = repository_config.settings(root, router_reader=migration.router_metadata)
+        bank = root / settings['bank_root']
         router = bank/'MEMORY.md'
         if not os.path.lexists(router):
             continue
@@ -101,19 +103,31 @@ def banks(extra, compatibility):
         if path in seen:
             continue
         seen.add(path)
-        with router.open('rb') as stream:
-            raw = stream.read(16385)
-        install.require(len(raw)<=16384, 'Discovered bank router exceeds its reader bound')
-        metadata = parse_router(raw.decode('utf-8'))[0]
+        def idle():
+            install.require(not any(os.path.lexists(bank/name) for name in
+                            ('.agent-memory.lock', bank_transactions.MARKER)),
+                            'Compatibility requires an idle bank; preserve its pending operation: ' + str(bank))
+        idle()
+        raw, _ = migration.read_regular(bank, 'MEMORY.md', 16384)
+        metadata = migration.router_metadata(raw)
+        install.require(metadata is not None, 'Discovered bank needs an explicit format header')
         schema = metadata['schema']
+        if schema == 'agent-memory/v1':
+            parse_router(raw.decode('utf-8'))
         readable = schema in compatibility['readable_bank_schemas']
         migratable = schema in compatibility['migrator_source_schemas']
-        install.require(readable or migratable,
-                        'Candidate cannot read or explicitly migrate discovered bank: ' + str(bank))
+        install.require(readable or (migratable and not require_readable),
+                        ('Rollback runtime cannot directly read current bank; explicitly restore/migrate memory first: '
+                         if require_readable else 'Candidate cannot read or explicitly migrate discovered bank: ') + str(bank))
+        idle()
+        install.require(migration.read_regular(bank, 'MEMORY.md', 16384)[0] == raw
+                        and repository_config.settings(root, router_reader=migration.router_metadata) == settings,
+                        'Discovered bank changed during compatibility observation')
         result.append({'repository':str(root), 'bank':str(bank), 'schema':schema,
                        'directly_readable':readable, 'explicit_migration_required':not readable,
                        'router_sha256':install.sha(raw)})
-    return {'banks':result, 'discovery_gaps':gaps, 'bank_writes_performed':False,
+    return {'banks':result, 'discovery_gaps':gaps, 'observed_repositories':[str(p) for p in sorted(roots)],
+            'bank_writes_performed':False,
             'implicit_migration_performed':False}
 
 
@@ -186,6 +200,7 @@ def run(args):
             with install.prepare(configuration(old),state,code,old,
                                  candidate_root=None if same_revision else root) as plan:
                 plan['operation']='update'
+                plan['rollback_repositories'] = compatibility['observed_repositories']
                 if args.check:
                     return {**summary,'check_complete':True,'eligible':True,'verified':False,
                             'installation_writes_performed':False,'restart_clients':plan['restart']}

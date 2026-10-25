@@ -21,7 +21,8 @@ from .identity_git import git
 
 CLASSES = {'user', 'assistant', 'tool', 'external', 'verified-repository'}
 CATEGORIES = {'admission', 'mutation', 'retrieval', 'promotion'}
-ACTIONS = {'policy-check', 'initialize', 'checkpoint', 'recover-finish', 'recover-rollback'} | writes.OPERATIONS
+MIGRATION_ACTIONS = {'migrate', 'migration-restore', 'migration-finish', 'migration-rollback'}
+ACTIONS = {'policy-check', 'initialize', 'checkpoint', 'recover-finish', 'recover-rollback'} | writes.OPERATIONS | MIGRATION_ACTIONS
 LIMIT = 16384
 REQUEST = {'project_id', 'category', 'source_class', 'content_kind', 'text',
            'record_ids', 'automatic', 'repository_evidence'}
@@ -59,7 +60,7 @@ def scan(content):
             'content_is_untrusted_data': True, 'exhaustive_detection_claimed': False}
 
 
-def audit(repo, operation_id, category, phase, context, source_classes, reasons=(), record_ids=(), *, action='policy-check'):
+def audit(repo, operation_id, category, phase, context, source_classes, reasons=(), record_ids=(), *, action='policy-check', bank_location=None):
     """Private metadata only. A policy check is never a successful-write receipt."""
     if (not uuid_valid(operation_id) or category not in CATEGORIES or action not in ACTIONS
             or phase not in {'checked', 'started', 'completed', 'refused'}
@@ -72,7 +73,14 @@ def audit(repo, operation_id, category, phase, context, source_classes, reasons=
             or not uuid_valid(context.get('project_id'))):
         raise ContractError('Audit requires checked attribution and project identifiers')
     root = Path(repo).resolve()
-    operations, _ = writes.state_paths(root, repository_config.bank_path(root), operation_id)
+    if bank_location is not None:
+        from .migration import locate, locations
+        if action not in MIGRATION_ACTIONS or locate(root) != (root, Path(bank_location)):
+            raise ContractError('Migration audit must use the actual existing bank locator')
+        locations(root, Path(bank_location), operation_id)
+    else:
+        bank_location = repository_config.bank_path(root)
+    operations, _ = writes.state_paths(root, Path(bank_location), operation_id)
     directory = operations.parent / 'security-audit'
     if directory.is_symlink() or (directory.exists() and not directory.is_dir()):
         raise ContractError('Security audit location must remain a canonical private directory')

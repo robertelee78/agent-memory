@@ -6,7 +6,7 @@ from pathlib import Path
 import sys
 
 NAMES = ('am', 'agent-memory')
-HUMAN = {'install', 'update', 'uninstall', 'version', 'status', 'doctor', 'recover'}
+HUMAN = {'install', 'update', 'uninstall', 'version', 'status', 'doctor', 'recover', 'migrate'}
 
 
 def installed_name(original=None):
@@ -53,6 +53,10 @@ Usage:
   {prog} status [--repo PATH]
   {prog} doctor [--repo PATH]
   {prog} recover
+  {prog} migrate preview --repo PATH --to SCHEMA
+  {prog} migrate apply --proposal FILE
+  {prog} migrate recover --repo PATH --mode finish|rollback
+  {prog} migrate restore --repo PATH --operation FINISHED_OPERATION
   {prog} help [COMMAND]
 
 Lifecycle and diagnostics print readable results by default.
@@ -168,6 +172,23 @@ def render(data, command, prog, code):
         if data.get('setup'):
             print('setup ' + safe(data['setup']['state']))
             print('next ' + safe(data['setup']['next_step']))
+    elif command == 'migrate' and not code:
+        print(f"{prog} migrate: {safe(data.get('state', 'inspected'))}")
+        if data.get('source_schema'):
+            print('format ' + safe(data['source_schema']) + ' -> ' + safe(data['target_schema']))
+        if data.get('state') == 'already-current':
+            print('No format change or backup needed.')
+        elif data.get('proposal'):
+            print('Preview only; save --json output privately and review before applying.')
+        elif data.get('receipt'):
+            print('Bank bytes unchanged by this readback.' if data.get('already_applied') else 'Verified local outcome; Git publication remains separate.')
+        if data.get('available_modes'):
+            print('Choose finish or rollback and review its recovery preview.')
+        if data.get('backup_path'):
+            print(('planned backup ' if data.get('backup_created') is False else 'recorded backup ') + safe(data['backup_path']))
+        if (data.get('target_directly_readable') is False or (data.get('receipt') and not data.get('receipt_is_historical')
+                and data['receipt'].get('outcome_directly_readable') is False)):
+            print('The outcome format is not declared directly readable by this runtime; use a compatible runtime.')
     elif command == 'recover' and not code:
         print({'no-pending-transaction': 'No pending runtime transaction.',
                'complete': 'Verified committed runtime transaction.',

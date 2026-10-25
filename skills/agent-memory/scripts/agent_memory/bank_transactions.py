@@ -173,7 +173,7 @@ def check_observed(bank, expected):
         raise ContractError("External edit observed; preserve it and inspect the interrupted transaction")
 
 
-def replace_file(bank, path, body, expected, marker, participants):
+def replace_file(bank, path, body, expected, marker, participants, *, mode_bits=None, before_replace=None):
     target = bank / path
     temporary = None
     try:
@@ -184,9 +184,14 @@ def replace_file(bank, path, body, expected, marker, participants):
             target.parent.mkdir(parents=True, exist_ok=True)
             with tempfile.NamedTemporaryFile(prefix=".agent-memory-transaction-", suffix=".tmp", dir=target.parent, delete=False) as stream:
                 temporary = Path(stream.name)
-                os.chmod(temporary, target.stat().st_mode & 0o777 if target.exists() else 0o644)
+                selected_mode = mode_bits if mode_bits is not None else (target.stat().st_mode & 0o777 if target.exists() else 0o644)
+                if type(selected_mode) is not int or not 0 <= selected_mode <= 0o777:
+                    raise ContractError('Explicit replacement modes must be ordinary permission bits')
+                os.chmod(temporary, selected_mode)
                 stream.write(body.encode("utf-8")); stream.flush(); os.fsync(stream.fileno())
         writes.fault("transaction-before-recheck:" + path)
+        if before_replace is not None:
+            before_replace()
         # Check the entire read set immediately before every individual change.
         check_marker(bank, marker)
         check_observed(bank, expected)
