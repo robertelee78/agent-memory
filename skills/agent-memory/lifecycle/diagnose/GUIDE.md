@@ -54,6 +54,24 @@ treat `not_located` as proven bank absence, `root_routes_by_lifecycle` as the
 complete record inventory, or a cached receipt as verified installation health.
 Counts and freshness that were not inspected remain explicitly unassessed.
 
+The additive `setup` assessment supplies an actionable `next_step`. `setup_needed`
+is a shallow first-use candidate, not proof of exhaustive absence; use doctor
+before initialization. `binding_required` and `binding_mismatch` distinguish an
+unadopted bank from conflicting identities. A recognized router in the Git index
+or HEAD that is absent on disk yields `missing_known_bank`: a session MUST inspect
+Git state and preserve remaining files instead of initializing a replacement.
+A configured directory or reserved project UUID alone is not evidence that a
+bank previously existed. Staged deletion does not establish an accidental loss
+or permission to restore/delete data.
+
+Doctor alone may establish `not_initialized` after complete discovery, or `ready`
+after bank validation and current project-authority checks. These assessments
+describe bank setup, not semantic truth or overall runtime health. A healthy
+bank can coexist with failed runtime checks, which remain failures. Busy writes,
+pending separately authorized purges and unreadable/malformed evidence take
+precedence over generic initialization guidance. Diagnostics MUST NOT bind,
+initialize, restore a bank, clean markers or resume a purge automatically.
+
 ## Apply
 
 The session SHOULD run the deeper read-only audit when setup or health is unclear:
