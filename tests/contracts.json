@@ -1,6 +1,8 @@
 {
   "schema": "agent-memory/test-contracts-v1",
   "suites": [
+    {"name": "signed-release-lifecycle", "layer": "lifecycle", "scope": "v0.0.3", "path": "tests/contracts/test_signed_release_lifecycle.py"},
+    {"name": "signed-release-publisher", "layer": "lifecycle", "scope": "v0.0.3", "path": "tests/contracts/test_signed_release_publisher.py"},
     {"name": "observation-applicability", "layer": "bank", "scope": "v0.0.3", "path": "tests/contracts/test_observation_applicability.py"},
     {"name": "actionable-setup-diagnostics", "layer": "lifecycle", "scope": "v0.0.3", "path": "tests/contracts/test_setup_diagnostics.py"},
     {"name": "selective-initialization-routes", "layer": "bank", "scope": "v0.0.3", "path": "tests/contracts/test_initialization_routes.py"},

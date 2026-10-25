@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 import shutil
 import ssl
+import subprocess
 import sys
 import threading
 
@@ -32,6 +33,25 @@ class SignedRelease:
             def do_GET(self):
                 if self.path == '/api/latest' and self.headers.get('Accept') != 'application/vnd.github+json':
                     self.send_error(415); return
+                authority = getattr(owner,'publisher_state',None)
+                if authority is not None:
+                    state = json.loads(authority.read_text())
+                    if self.path == '/raw/main/install.sh':
+                        result = subprocess.run([state['git'],'--git-dir',state['bare'],'show','main:install.sh'],
+                                                env=owner.w.env,capture_output=True,timeout=10)
+                        value = result.stdout if result.returncode == 0 else None
+                    elif not state.get('release') or state['release']['draft']:
+                        value = None
+                    elif self.path == '/api/latest':
+                        value = json.dumps({'tag_name':state['tag'],'draft':False,'prerelease':False}).encode()
+                    elif self.path.startswith('/download/'+state['tag']+'/'):
+                        name = self.path.rsplit('/',1)[1]
+                        asset = state['assets'].get(name)
+                        value = Path(asset['path']).read_bytes() if asset else None
+                    else: value = None
+                    if value is None: self.send_error(404); return
+                    self.send_response(200); self.send_header('Content-Length',str(len(value)))
+                    self.end_headers(); self.wfile.write(value); return
                 value = owner.responses.get(self.path)
                 if value is None:
                     self.send_error(404); return
