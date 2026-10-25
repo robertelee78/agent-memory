@@ -16,6 +16,7 @@ MAX_FILES = 40000
 MAX_BYTES = 512 * 2**20
 MAX_FILE = 64 * 2**20
 MAX_OBJECT = 2 * 2**20
+MAX_INDEX = 64 * 2**20
 
 
 class PayloadMismatch(ContractError):
@@ -143,6 +144,26 @@ def blob_identity(node, observed, algorithm):
         os.close(fd)
 
 
+def verify_index(root, files):
+    """Staged work vetoes clean ownership; it never proves disk-byte identity."""
+    raw = git(root, 'ls-files', '--stage', '--full-name', '-z', binary=True, maximum=MAX_INDEX).stdout
+    seen = set()
+    for row in raw.split(b'\0'):
+        if not row:
+            continue
+        header, name = row.split(b'\t', 1)
+        mode, oid, stage = header.split(b' ')
+        path = name.decode('utf-8')
+        expected = files.get(path)
+        payload_require(expected is not None and path not in seen and len(seen) < MAX_FILES,
+                        'index contains unexpected staged paths')
+        payload_require(stage == b'0' and oid.decode('ascii') == expected[0]
+                        and mode == (b'100755' if expected[1] else b'100644'),
+                        'index contains staged source changes')
+        seen.add(path)
+    payload_require(seen == set(files), 'index contains staged source removals')
+
+
 def verify_payload(root, revision):
     """No index flags, status shortcuts, checkout filters, or replace refs."""
     require((root / '.git').is_dir() and not (root / '.git').is_symlink(),
@@ -176,6 +197,7 @@ def verify_payload(root, revision):
                     'source bytes or executable intent differ: ' + relative)
             actual_files.add(relative)
     payload_require(actual_files == set(files) and actual_directories == directories, 'source entries are missing')
+    verify_index(root, files)
     return {'qualification': 'legacy-git-payload-equivalent', 'files': len(files), 'bytes': total,
             'revision': revision}
 

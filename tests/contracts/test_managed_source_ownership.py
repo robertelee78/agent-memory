@@ -80,7 +80,7 @@ class ManagedSourceOwnershipContract(unittest.TestCase):
             self.assertFalse(call(world, repaired['receipt'])[1]['changed'])
 
     def test_hidden_tracked_changes_extra_ignored_files_modes_and_channel_are_preserved_and_refused(self):
-        for case in ('hidden-by-index', 'skip-worktree', 'ignored-extra', 'empty-directory',
+        for case in ('hidden-by-index', 'skip-worktree', 'staged-only', 'staged-deletion', 'ignored-extra', 'empty-directory',
                      'executable', 'package-mode', 'root-mode', 'origin', 'head', 'wrapper',
                      'forged-commit', 'forged-tree', 'alternate-objects'):
             with self.subTest(case=case), World() as world:
@@ -91,6 +91,13 @@ class ManagedSourceOwnershipContract(unittest.TestCase):
                     flag = '--assume-unchanged' if case == 'hidden-by-index' else '--skip-worktree'
                     world.git('update-index', flag, str(target.relative_to(code)), cwd=code)
                     target.write_text(target.read_text() + '\nChanged local instructions.\n')
+                elif case == 'staged-only':
+                    raw = target.read_bytes()
+                    target.write_bytes(raw + b'\nStaged local instructions.\n')
+                    world.git('add', str(target.relative_to(code)), cwd=code)
+                    target.write_bytes(raw)
+                elif case == 'staged-deletion':
+                    world.git('rm', '--cached', str(target.relative_to(code)), cwd=code)
                 elif case == 'ignored-extra':
                     (code/'.git/info/exclude').write_text('local-kept-note\n')
                     (code/'local-kept-note').write_text('User data must survive.\n')
