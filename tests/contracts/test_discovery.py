@@ -117,6 +117,56 @@ class DiscoveryContract(unittest.TestCase):
             altered=copy.deepcopy(value['proposal']);altered['admission_evidence']['navigation']['learning']['purpose']='An unreviewed different caption'
             r,value=self.h.apply(w,altered);self.assertEqual(r.returncode,1);self.assertEqual(before,self.h.state(w,repo,bank))
 
+    def test_discovered_equivalent_cannot_be_omitted_from_comparison_to_admit_duplicate(self):
+        with World() as w:
+            repo,bank=self.fixture(w);meta,path=self.h.add(bank,'retained-lesson')
+            captured=self.h.capture(w,repo,self.h.request())['capture']
+            trace=self.trace(w,repo,bank,[path],intent='comparison')
+            request={'project_id':self.h.pid,'candidate':captured['request']['candidate'],
+                'searches':['unrelatedquasar','unrelatednebula'],'read_paths':[],'discovery':trace}
+            before=self.h.state(w,repo,bank)
+            view=self.good(w,'compare_learning.py','inspect','--repo',repo,'--request',self.save(w,request))
+            self.assertEqual([row['path'] for row in view['matches']],[path])
+            judgment={'observation':view['observation'],'decisions':[{'path':path,'classification':'equivalent',
+                'rationale':'The fixture retains one bounded retry cap with the same actual conditions.'}],
+                'rationale':'All discovered plausible learning must enter the duplicate decision despite unrelated queries.'}
+            proof=self.good(w,'compare_learning.py','review','--repo',repo,'--request',self.save(w,request),
+                '--judgment',self.save(w,judgment,'judgment.json'))['proof']
+            r,value=self.preview(w,repo,captured,request,proof,self.navigation())
+            self.assertEqual(r.returncode,0,value);self.assertEqual(value['disposition'],'update-existing')
+            self.assertIsNone(value['proposal']);self.assertEqual(before,self.h.state(w,repo,bank))
+
+    def test_traced_empty_selection_never_falls_back_to_literal_or_full_inventory(self):
+        with World() as w:
+            repo,bank=self.fixture(w);meta,path=self.h.add(bank,'retained-lesson')
+            trace=self.trace(w,repo,bank,[]);request=self.recall(trace,path);request['paths']=[]
+            for query in ('','attempt'):
+                request['query']=query
+                value=self.good(w,'retrieve.py','--repo',repo,'--request',self.save(w,request))
+                self.assertEqual(value['results'],[])
+            # With observed sources and no explicit selectors, use those exact
+            # sources rather than interpreting a literal query as a new frontier.
+            trace=self.trace(w,repo,bank,[path]);request['discovery']=trace;request['query']='unrelatedquasar'
+            value=self.good(w,'retrieve.py','--repo',repo,'--request',self.save(w,request))
+            self.assertEqual([row['path'] for row in value['results']],[path])
+            request.pop('discovery');request['query']=''
+            value=self.good(w,'retrieve.py','--repo',repo,'--request',self.save(w,request))
+            self.assertEqual([row['path'] for row in value['results']],[path])
+
+    def test_traced_stable_id_resolves_current_discovered_version_without_historical_trace(self):
+        with World() as w:
+            repo,bank=self.fixture(w);old,path=self.h.add(bank,'older-version',status='superseded',
+                **{'state-reason':'The actual fixture correction retains this historical version.'})
+            new,new_path=self.h.add(bank,'current-version',id=old['id'],version=2,
+                body='# Revised retry policy\n\nThe corrected fixture allows four attempts.\n',
+                corrects=[{'id':old['id'],'version':old['version']}])
+            trace=self.trace(w,repo,bank,[new_path]);request=self.recall(trace,new_path)
+            request['paths']=[];request['ids']=[old['id']]
+            before=self.h.state(w,repo,bank)
+            value=self.good(w,'retrieve.py','--repo',repo,'--request',self.save(w,request))
+            self.assertEqual([(row['path'],row['record']['version']) for row in value['results']],[(new_path,2)])
+            self.assertEqual(before,self.h.state(w,repo,bank))
+
     def test_source_version_uncertainty_and_missing_parent_never_become_novelty(self):
         with World() as w:
             repo,bank=self.fixture(w);meta,path=self.h.add(bank,'retained-lesson');trace=self.trace(w,repo,bank,[path])

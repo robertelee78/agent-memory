@@ -96,7 +96,13 @@ semantic coverage is consequential; it MUST NOT invent a navigation transcript.
 A changed inventory, map, selected source, scope or Git context MUST trigger new
 discovery. Preview/locked apply MUST recheck the trace through the original
 comparison evidence. A fresh comparison alone MUST NOT bless a stale selected
-path decision. A trace MUST NOT suppress supplementary or mandatory identity,
+path decision. Every discovered plausible source MUST enter comparison and its judgment even
+when omitted from read_paths or missed by supplementary searches. A traced
+recall with no explicit selector MUST use only the observed discovered sources;
+an empty discovered set MUST yield no guidance, never a legacy inventory/search
+fallback. Stable-ID recall MUST retain the discovered current version without
+requiring its superseded history as current guidance. A trace MUST NOT suppress
+supplementary or mandatory identity,
 lifecycle, provenance or dispute matches.
 
 The session MUST measure whole-bank validation I/O separately from the bounded

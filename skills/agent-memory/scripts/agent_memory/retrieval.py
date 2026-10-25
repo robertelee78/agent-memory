@@ -103,11 +103,23 @@ def retrieve(repo, request, *, owned_lock=None, deferred_paths=()):
     checked,observed=observation.checked,observation.hashes
     project = checked['project_id']
     discovery_result=None
+    selection_request=request
+    discovered_selection=None
     if 'discovery' in request:
         from . import discovery
-        selected=set(request['paths'])|{entry['path'] for entry in checked['entries'] if entry.get('id') in request['ids']}
+        discovery.trace_value(request['discovery'])
+        discovered={row['path'] for row in request['discovery']['sources']}
+        discovered_entries=[entry for entry in checked['entries'] if entry['path'] in discovered]
+        if not set(request['ids']).issubset({entry.get('id') for entry in discovered_entries}):
+            raise ContractError('Traced stable-ID lookup must name an actual discovered source version')
+        selected=set(request['paths'])|{entry['path'] for entry in discovered_entries if entry.get('id') in request['ids']}
+        if not request['paths'] and not request['ids']:selected=discovered
         discovery_result=discovery.check_trace(root,request['discovery'],checked,observed,selected_scope,
             intent='recall',selected_paths=selected,owned_lock=owned_lock,context=request['context'])
+        # Semantic navigation supplies exact observed sources. A successful empty
+        # discovery never falls through to the legacy full-inventory selector.
+        discovered_selection=selected
+        selection_request={**request,'ids':[],'paths':sorted(selected)}
     if project != request['project_id']:
         raise ContractError('Canonical project changed after scope resolution')
     now = datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')
@@ -207,7 +219,10 @@ def retrieve(repo, request, *, owned_lock=None, deferred_paths=()):
         if candidate['path'] in deferred_paths:
             excluded['pending-semantic-conflict'] += 1
             continue
-        matching = match(request, candidate)
+        if discovered_selection is not None and candidate['path'] not in discovered_selection:
+            excluded['outside-semantic-selection']+=1
+            continue
+        matching = match(selection_request, candidate)
         if matching is None:
             excluded['selector-or-text-mismatch'] += 1
             continue
