@@ -1,6 +1,7 @@
 ---
 id: ADR-0016
-status: proposed
+status: accepted
+approval-scope: v0.0.3 daily-use task #99
 date: 2026-10-25
 amends: [ADR-0012]
 related: [ADR-0005, ADR-0009, ADR-0014]
@@ -8,7 +9,10 @@ related: [ADR-0005, ADR-0009, ADR-0014]
 
 # ADR-0016: Changed-learning sharing review
 
-Proposed technical refinement for existing task #99; not implementation approval.
+Accepted technical refinement for existing task #99. The operator selected this
+release outcome. [Independent technical approval](https://github.com/robertelee78/agent-memory/issues/99#issuecomment-6401166481)
+binds the normative design at `d423c4c9f6b8d11a8ffcb178b07f94a9661a289d`.
+Implementation, independent acceptance and delivery remain separate evidence.
 It preserves ADR-0012's product obligations and does not add a duplicate outcome.
 
 ## Context
