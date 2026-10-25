@@ -54,10 +54,12 @@ def status(repo, observations=(), harness=None, session=None):
                   resolved=not issues, issues=issues, developer=dev, project=proj, writes_performed=False)
 
 
-def require(repo, project_id=None, *, expected=None, initialize=False, owned_lock=None, owned_transaction=None):
+def require(repo, project_id=None, *, expected=None, initialize=False, owned_lock=None, owned_transaction=None, migration_reader=None):
     """Common guard for every mediated writer; raw file inspection stays independent."""
     dev = principal(repo)
-    proj = project.status(repo, owned_lock=owned_lock, owned_transaction=owned_transaction)
+    if initialize and migration_reader is not None:
+        raise ContractError('Migration cannot initialize or rebind project identity')
+    proj = project.status(repo, owned_lock=owned_lock, owned_transaction=owned_transaction, migration_reader=migration_reader)
     if storage.paths('projects')[2].exists():
         raise ContractError('Project registry is locked; inspect/recover before a write')
     if initialize:

@@ -78,6 +78,7 @@ retain the separately previewed installation operation.
 | `semantic`, `publish` | `reconcile_memory.py`, `publish_memory.py` | Review shared meaning and land memory independently of feature code |
 | `refresh`, `boundary` | `refresh_memory.py` | Inspect/prepare/apply newly landed same-repository memory and qualified imported recall |
 | `sharing`, `exchange` | `sharing_boundary.py`, `sharing_recovery.py` | Git boundary inspection and exchange recovery/replay |
+| `migrate` | `migrate_bank.py` | Explicit bundled format migration, recovery or verified completed-bank restoration |
 | `projection`, `writes`, `transaction` | `projection.py`, `bank_writes.py`, `bank_transactions.py` | Derived references and common observed-write primitives |
 
 `correct`, `supersede` and `revoke` MUST carry the matching explicit governance

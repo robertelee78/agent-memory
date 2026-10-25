@@ -32,6 +32,7 @@ inconsistent routes. Index routing MUST preserve each lesson's own conditions.
 | Inspect the complete artifact identity and declared compatibility | [artifact](artifact/GUIDE.md) |
 | Preview, install or recover owned runtime targets | [installation](../lifecycle/install/GUIDE.md) |
 | Check or update the managed runtime | [runtime update](../lifecycle/update/GUIDE.md) |
+| Explicit format conversion, migration recovery or completed-bank restoration | [migration](../lifecycle/migrate/GUIDE.md) |
 | Remove owned runtime while preserving project memory | [runtime uninstall](../lifecycle/uninstall/GUIDE.md) |
 | Explicitly purge one confirmed local bank | [data purge](../lifecycle/purge/GUIDE.md) |
 | Inspect runtime identity, quick status or deeper bank health | [diagnostics](../lifecycle/diagnose/GUIDE.md) |

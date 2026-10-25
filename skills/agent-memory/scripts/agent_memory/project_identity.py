@@ -23,7 +23,7 @@ PACK = Path(__file__).resolve().parents[2]
 SPEC = json.loads((PACK / "schemas/projects.json").read_text())
 
 
-def discover(repo, authority=None, *, owned_lock=None, owned_transaction=None):
+def discover(repo, authority=None, *, owned_lock=None, owned_transaction=None, migration_reader=None):
     repo = Path(repo).resolve()
     if not repo.is_dir():
         raise ContractError("Repository location must be an existing directory")
@@ -73,7 +73,7 @@ def discover(repo, authority=None, *, owned_lock=None, owned_transaction=None):
             issues.append("Authority fetch/push URLs do not identify one repository; repair or explicitly bind a consistent remote")
     # Keep one coherent settings observation with the router read below.
     # Callers still rediscover at their final source/lock boundaries.
-    repo_settings = repository_config.settings(root)
+    repo_settings = repository_config.settings(root, router_reader=migration_reader)
     bank = root / repo_settings['bank_root']
     router = bank / "MEMORY.md"
     if bank.is_symlink() or router.is_symlink():
@@ -83,7 +83,10 @@ def discover(repo, authority=None, *, owned_lock=None, owned_transaction=None):
         if path.is_symlink() or (path.exists() and (owned is None or path.read_bytes() != owned)):
             raise ContractError("Bank busy or interrupted; inspect/recover before resolving identity")
     raw = router.read_bytes() if router.exists() else None
-    metadata = parse_router(raw.decode("utf-8"))[0] if raw is not None else {}
+    metadata = ((migration_reader(raw) if migration_reader else parse_router(raw.decode("utf-8"))[0])
+                if raw is not None else {})
+    if metadata is None:
+        raise ContractError('Existing bank router is not a supported migration source')
     return {"repo_root": str(root), "is_git": is_git, "common_git_dir": str(common) if is_git else None,
             "checkout_key": f"{stat.st_dev}:{stat.st_ino}", "location": str(common), "authority_name": selected,
             "canonical_remote": canonical, "configured_authority": configured_values, "remotes": remotes, "bank_project_id": metadata.get("project-id"),
