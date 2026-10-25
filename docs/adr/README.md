@@ -33,11 +33,15 @@ MUST NOT be treated as evidence that a guide is semantically complete.
 | [0011](0011-principal-and-project-identity.md) | Stable developer attribution and project identity | Accepted (v0.0.1) |
 | [0012](0012-git-shared-memory.md) | Git-shared memory across worktrees, machines, and developers | Accepted (v0.0.1) |
 | [0013](0013-public-cli-and-corrective-releases.md) | AWA-style public CLI and corrective release tracking | Accepted (v0.0.2) |
+| [0014](0014-useful-shared-memory-quality.md) | Useful shared memory and lifecycle assurance | Proposed (v0.0.3) |
 
 [ADR-0013](0013-public-cli-and-corrective-releases.md) defines the corrective
 `v0.0.2` public command contract and the current future-release mapping. Older
 future-version labels in earlier ADRs remain historical; their underlying
 reliability, hook and federation scopes are preserved by that mapping.
+
+[ADR-0014](0014-useful-shared-memory-quality.md) proposes v0.0.3 quality corrections
+from the real-bank mission review. Its proposed status grants no design approval.
 
 ## Status values
 
