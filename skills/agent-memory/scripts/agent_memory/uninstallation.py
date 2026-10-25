@@ -15,7 +15,9 @@ from .frontmatter import ContractError
 def reinstall(old):
     source = old['source']
     command = ['python3', '-I', '${SKILL_DIR}/scripts/installer.py', 'install']
-    if source['kind'] == 'managed':
+    if source['kind'] == 'release':
+        pass  # The trusted installer defaults to the signed release channel.
+    elif source['kind'] == 'managed':
         command += ['--remote', source['remote'], '--ref', source['ref']]
     else:
         command += ['--development-source', source['path']]

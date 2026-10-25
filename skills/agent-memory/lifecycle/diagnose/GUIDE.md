@@ -22,7 +22,9 @@ to that package rather than a deleted or incomplete managed checkout.
 
 Python 3.11 or newer is required. Git enables local revision and repository
 evidence; no provider credentials, agent-client executable, network connection
-or identity bootstrap is needed. `--repo` selects the repository/worktree whose
+or identity bootstrap is needed. Signed-source authentication requires OpenSSH
+SSH-signature support; its absence remains a runtime failure, not bank corruption.
+`--repo` selects the repository/worktree whose
 one bank is inspected. A session MUST retain original journals and user edits.
 
 ## Observe
@@ -116,12 +118,15 @@ The initial channel's digest establishes artifact identity, not publisher trust.
 
 The machine `security` summary reports `publisher_authentication`,
 `signature_verification_performed` and the `recorded_source_selection` separately.
-This build does not verify publisher signatures. A recorded managed Git source is
-unsigned; explicit development/custom source is operator-selected trust. Missing,
+A signed `release` source requires fresh pinned-key verification of its manifest
+and actual portable bytes, agreeing with the recorded activation. Diagnostics
+use existing signature/key files without network or verification scratch writes.
+A recorded managed Git source remains unsigned; explicit development/custom
+source is operator-selected trust. Missing,
 malformed or inapplicable active receipt evidence leaves selection unavailable.
 A session MUST preserve the negative already-loaded-verifier and platform-ACL
 qualifications, including on failure results, and MUST NOT interpret these fields
-as a full ownership/compatibility/recovery pass. A future signing verifier MUST
+as a full ownership/compatibility/recovery pass. Signature verification MUST
 supply actual activated-source evidence; a digest or extra receipt claim cannot
 stand in for it. Old-process unsigned transitions remain unsigned observations.
 

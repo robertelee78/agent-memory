@@ -11,14 +11,20 @@ ADR-0004 integration story; these lifecycle checks do not claim that release gat
 
 | Responsibility | Location and ownership |
 | --- | --- |
-| Managed runtime | `${XDG_DATA_HOME:-$HOME/.local/share}/agent-memory/source`; one clean recorded Git channel, with `skills/agent-memory/` as its portable artifact. |
+| Managed runtime | `${XDG_DATA_HOME:-$HOME/.local/share}/agent-memory/source`; a verified signed release, or an explicitly recorded custom Git channel, with `skills/agent-memory/` as its portable artifact. |
 | Installed commands | `$HOME/.local/bin/am` and compatibility `$HOME/.local/bin/agent-memory` by default, or the explicit `--bin-dir`; both owned wrappers resolve to the same recorded portable runtime. |
 | Lifecycle state | `${XDG_STATE_HOME:-$HOME/.local/state}/agent-memory/install/`; receipt, journal, stable lock, owner metadata and receipt history survive source removal. |
-| Replacement backups | Exact paths recorded in the receipt, beside affected targets or in installer state. They stay outside the active managed checkout and survive uninstall. |
+| Replacement backups | Exact paths recorded in the receipt, beside affected targets or in installer state. They stay outside the active managed source and survive uninstall. |
 | Durable project memory | One repository/worktree-local bank, selected by the established locator and optional `agent-memory.bankRoot` setting. It is not installer-owned data. |
 | Local identity metadata | `AGENT_MEMORY_CONFIG_HOME`, otherwise `${XDG_CONFIG_HOME:-$HOME/.config}/agent-memory`; developer/project selection is independent of runtime installation. |
 | Governed write/audit evidence | `AGENT_MEMORY_STATE_HOME`, otherwise `${XDG_STATE_HOME:-$HOME/.local/state}/agent-memory`, with per-bank write/operation and private audit subdirectories separate from `install/`. |
 | Disposable references and caches | Explicit caller-selected private files/directories, such as separate cache and reference-index directories under XDG cache. Native v1 has no global cache or generated-index service registry; lifecycle does not adopt these files. |
+
+The default signed source has kind `release` and stores only the portable skill
+plus verified release metadata/signature. It has no Git checkout or development
+bank. An explicit custom managed Git installation keeps its recorded origin/ref;
+a source clone may physically include development memory without granting it
+consumer identity. Runtime removal never owns a consumer repository bank.
 
 The durable bank includes its Markdown router, context, typed records, topic
 indices, history and content-free deletion markers. Canonical topic-index

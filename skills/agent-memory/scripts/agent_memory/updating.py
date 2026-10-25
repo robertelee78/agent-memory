@@ -30,17 +30,18 @@ def configuration(old):
 
 def current(state, code):
     old = install.read_receipt(state)
-    install.require(old is not None and old['source'].get('kind')=='managed',
+    install.require(old is not None and old['source'].get('kind') in ('managed', 'release'),
                     'Updates require a recorded managed installation; development sources are never modified')
     source = old['source']; root = Path(source['path'])
     install.trust_paths.source(root)
     install.require(root == code and source.get('pack') == str(code/'skills/agent-memory'),
                     'Managed source/pack location differs from the recorded layout')
-    install.require(install.git(root, 'remote', 'get-url', 'origin').stdout.strip() == source['remote'],
-                    'Managed origin differs from its recorded remote')
-    install.require(install.git(root, 'symbolic-ref', '--short', 'HEAD').stdout.strip() == source['ref'],
-                    'Managed branch/ref differs from its recorded channel')
-    actual = install.source_info(root, 'managed', source['remote'], source['ref'])
+    if source['kind'] == 'managed':
+        install.require(install.git(root, 'remote', 'get-url', 'origin').stdout.strip() == source['remote'],
+                        'Managed origin differs from its recorded remote')
+        install.require(install.git(root, 'symbolic-ref', '--short', 'HEAD').stdout.strip() == source['ref'],
+                        'Managed branch/ref differs from its recorded channel')
+    actual = install.source_info(root, source['kind'], source['remote'], source['ref'])
     install.require(actual == source, 'Current source revision, version or artifact differs from its receipt')
     journal_path = state/'journal.json'
     if os.path.lexists(journal_path):
@@ -131,9 +132,57 @@ def banks(extra, compatibility, *, require_readable=False):
             'implicit_migration_performed':False}
 
 
+def release_transition(source, candidate, root):
+    """Old ownership is checked separately; a signed version never changes identity."""
+    install.require(candidate['kind'] == 'release', 'Expected verified release acquisition')
+    order = (version_key(candidate['version']) > version_key(source['version'])) - (
+        version_key(candidate['version']) < version_key(source['version']))
+    install.require(order >= 0, 'Runtime downgrade refused')
+    if order == 0 and source['kind'] == 'release':
+        install.require(all(source.get(k) == candidate.get(k) for k in
+                        ('artifact_digest', 'revision', 'release_manifest_sha256')),
+                        'Published release version changed identity')
+    elif order == 0:
+        old_files = artifact.inspect(Path(source['pack']))['files']
+        new_files = artifact.inspect(Path(candidate['pack']))['files']
+        modes = {}
+        for entry in install.git(Path(source['path']), 'ls-tree', '-rz', 'HEAD', '--', 'skills/agent-memory/').stdout.split('\0'):
+            if not entry: continue
+            metadata, path = entry.split('\t', 1)
+            mode, kind, _ = metadata.split()
+            install.require(kind == 'blob' and path.startswith('skills/agent-memory/'), 'Legacy portable Git entry differs')
+            modes[path[len('skills/agent-memory/'):]] = mode
+        install.require(set(old_files) == set(new_files) == set(modes)
+                        and all(old_files[p]['sha256'] == new_files[p]['sha256']
+                                and modes[p] == ('100755' if new_files[p]['mode'] == '0o755' else '100644')
+                                for p in new_files),
+                        'Same-version legacy source differs from signed portable paths, bytes or executable intent')
+    minimum = tuple(int(v) for v in candidate['compatibility']['python_minimum'].split('.'))
+    install.require(sys.version_info[:2] >= minimum, 'Candidate requires a newer Python interpreter')
+
+
+def compatible_surface(source, candidate):
+    _, commands, _ = dispatch('scripts/installer.py', inventory(Path(candidate['pack'])))
+    _, existing, _ = dispatch('scripts/installer.py', inventory(Path(source['pack'])))
+    install.require({'update','install','recover'} | set(existing) <= set(commands),
+                    'Candidate would remove the owned lifecycle command surface')
+
+
 @contextmanager
 def staged(old):
     source = old['source']
+    if source['kind'] == 'release' or (source['remote'] == install.DEFAULT_REMOTE and source['ref'] == 'main'):
+        from . import release_distribution as release
+        with tempfile.TemporaryDirectory(prefix='agent-memory-release-candidate-') as temporary:
+            root = install.BOOTSTRAP_SOURCE
+            if root is None:
+                root = Path(temporary)/'source'
+                release.acquire(root)
+            candidate = install.source_info(root, 'release')
+            release_transition(source, candidate, root)
+            compatible_surface(source, candidate)
+            yield root, candidate
+        return
     with tempfile.TemporaryDirectory(prefix='agent-memory-update-candidate-') as temporary:
         reference = 'refs/heads/' + source['ref']
         listed = install.git(Path(source['path']), 'ls-remote', '--exit-code', '--refs', '--',
@@ -161,11 +210,7 @@ def staged(old):
         minimum = tuple(int(v) for v in candidate['compatibility']['python_minimum'].split('.'))
         install.require(sys.version_info[:2]>=minimum, 'Candidate requires a newer Python interpreter')
         # The current owned wrapper resolves this stable public entrypoint.
-        files = inventory(Path(candidate['pack']))
-        _, commands, _ = dispatch('scripts/installer.py', files)
-        _, existing, _ = dispatch('scripts/installer.py', inventory(Path(source['pack'])))
-        install.require({'update','install','recover'} | set(existing) <= set(commands),
-                        'Candidate would remove the owned lifecycle command surface')
+        compatible_surface(source, candidate)
         yield root, candidate
 
 
@@ -185,6 +230,17 @@ def run(args):
     before = install.read_receipt(state)
     install.require(before is not None, 'No installation receipt; install the managed channel first')
     install.preflight_layout(args,state,code,before)
+    source = before['source']
+    if install.BOOTSTRAP_SOURCE is None and (source['kind'] == 'release'
+            or (source['kind'] == 'managed' and source['remote'] == install.DEFAULT_REMOTE and source['ref'] == 'main')):
+        from . import release_distribution as release
+        with tempfile.TemporaryDirectory(prefix='am-preverified-update-') as temporary:
+            root = Path(temporary)/'source'; release.acquire(root)
+            install.BOOTSTRAP_SOURCE = root
+            try:
+                return run(args)
+            finally:
+                install.BOOTSTRAP_SOURCE = None
     paths = [state, code, *(Path(t['path']) for t in before['targets']),
              *(Path(before['bin_dir'])/name for name in install.COMMAND_NAMES)]
     def work():
@@ -193,12 +249,13 @@ def run(args):
             compatibility = banks(args.repo,candidate['compatibility'])
             summary = {'operation':'update','current':old['source'],'available':{k:v for k,v in candidate.items() if k not in ('path','pack')},
                        'channel':{'remote':old['source']['remote'],'ref':old['source']['ref']},
-                       'update_available':candidate['revision']!=old['source']['revision'],
+                       'update_available':any(candidate.get(k) != old['source'].get(k) for k in
+                                              ('kind', 'revision', 'artifact_digest', 'release_manifest_sha256')),
                        'loaded_content_changes':candidate['artifact_digest']!=old['source']['artifact_digest'],
                        'compatibility':compatibility,'atomicity':'per target; journaled rollback across targets'}
-            same_revision = candidate['revision']==old['source']['revision']
+            same_revision = not summary['update_available']
             with install.prepare(configuration(old),state,code,old,
-                                 candidate_root=None if same_revision else root) as plan:
+                                 candidate_root=None if same_revision else root, candidate_kind=candidate['kind']) as plan:
                 plan['operation']='update'
                 plan['rollback_repositories'] = compatibility['observed_repositories']
                 if args.check:

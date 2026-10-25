@@ -50,6 +50,8 @@ def source(pack):
     inspected = artifact.inspect(pack)
     root = pack.parents[1] if pack.parent.name == 'skills' else pack
     installation.trust_paths.source(root)
+    if not os.path.lexists(root/'.git') and os.path.lexists(root/'release-manifest.json'):
+        return {**installation.source_info(root, 'release'), 'cleanliness': 'verified_release'}
     top = git(root, 'rev-parse', '--show-toplevel', optional=True)
     versioned = top is not None and Path(top).resolve() == root
     unavailable = top is None and os.path.lexists(root / '.git')
@@ -69,19 +71,24 @@ def channel(value):
 
 
 def security_summary(active=None):
-    """This unsigned build performs no publisher signature verification.
-
-    Recorded source selection is not a fresh source-health or authentication
-    result. #49 must replace these negative facts with actual verified evidence
-    when a signing verifier exists; unrecognized receipt claims cannot do so.
-    """
+    """Do not promote receipt claims: verify the pinned signature and actual bytes."""
     selection = {'managed': 'unsigned_managed_git', 'development': 'operator_selected_development'}
+    if active and active['source'].get('kind') == 'release':
+        expected = active['source']
+        observed = installation.source_info(Path(expected['path']), 'release')
+        installation.require(observed == expected, 'Signed source differs from its recorded activation')
+        return {'publisher_authentication': 'verified', 'signature_verification_performed': True,
+                'recorded_source_selection': 'pinned_signed_release',
+                'executing_verifier_authenticated': False, 'platform_acls_audited': False}
     return {'publisher_authentication': 'not_established', 'signature_verification_performed': False,
             'recorded_source_selection': selection.get(active['source']['kind'], 'unavailable') if active else 'unavailable',
             'executing_verifier_authenticated': False, 'platform_acls_audited': False}
 
 
 def distribution_notice(selection):
+    if selection == 'pinned_signed_release':
+        return ('The pinned publisher signature and installed portable bytes verify. '
+                'Already-loaded verifier code and platform ACLs are not authenticated by this observation.')
     if selection == 'unsigned_managed_git':
         return ('The receipt records unsigned managed Git. Artifact digests establish byte identity, '
                 'not publisher authentication.')
@@ -581,7 +588,7 @@ def run(operation, repo='.', projection=None):
                    'Use a supported macOS/Linux runtime and filesystem; preserve receipt and backups. Do not replace activation with a rename-away fallback.')
         bank_writes.fault('diagnostic-before-runtime-lock')
         report.attempt('runtime.inspection', lambda: runtime_doctor(report, active), RECOVER)
-        report.add('distribution.trust', 'warning',
+        report.add('distribution.trust', 'pass' if report.value['security']['publisher_authentication'] == 'verified' else 'warning',
                    distribution_notice(report.value['security']['recorded_source_selection']),
                    'Use an operator-trusted source. A verified lifecycle receipt is not a publisher signature; '
                    'diagnostics cannot authenticate already-loaded verifier code.')

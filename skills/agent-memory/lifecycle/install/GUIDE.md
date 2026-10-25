@@ -22,13 +22,16 @@ semantics. Installation does not require a project bank or developer identity.
 
 A session MUST use Python 3.11 or later, Git, and a supported local filesystem.
 A complete package is required to run the Python helper directly. The standalone
-`install.sh` bootstrap obtains a temporary complete checkout when invoked through
-curl-to-bash; it requires Bash 3.2+ and curl in addition to Python and Git. The
-default managed channel is the repository's
-HTTPS `main` branch. An explicit `--development-source` selects a local checkout
-or copied complete package; the installer MUST NOT mutate that source. The
-initial Git channel is unsigned: an artifact digest binds bytes and modes,
-not publisher authenticity.
+`install.sh` bootstrap obtains a temporary verified portable release when invoked
+through curl-to-bash; it requires Bash 3.2+, curl and OpenSSH SSH-signature support
+in addition to Python and Git. The default managed channel is the latest stable
+GitHub Release with the pinned AM key. An explicit `--development-source` selects
+a local checkout or copied complete package; the installer MUST NOT mutate that
+source. Explicit Git sources and legacy old-process activations remain unsigned:
+a digest alone binds bytes and modes, not publisher authenticity. Signed release
+verification authenticates publisher bytes before candidate execution; the fetched
+bootstrap itself remains the initial HTTPS trust anchor. The portable archive
+contains no repository development memory, Git history or consumer bank binding.
 
 The executing verifier MUST already be trusted. In-package checks cannot
 authenticate Python code that has already loaded from an attacker-writable
@@ -81,7 +84,10 @@ python3 -I "$SKILL_DIR/scripts/installer.py" install --check --development-sourc
 
 The session MUST compare each target's current and planned identity. Check mode
 leaves installation targets and records unchanged; a fresh managed-source check
-uses a temporary clone and removes it after inspection. Changing enabled targets
+uses private signed staging (or a clone for an explicit Git channel) and removes
+it after inspection. Verification prerequisites are exercised before lifecycle
+lock/owner changes; temporary verification files are separate from owned runtime
+and bank writes. Changing enabled targets
 would strand ownership and MUST be handled through a separately authorized
 uninstall/reinstall when that operation is available.
 

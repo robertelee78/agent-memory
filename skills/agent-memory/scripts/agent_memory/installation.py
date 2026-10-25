@@ -31,6 +31,7 @@ BEGIN = '<!-- agent-memory:activation:begin -->'
 END = '<!-- agent-memory:activation:end -->'
 SHIM = (artifact.PACK/'templates/activation-markdown.example.txt').read_text()
 DEFAULT_REMOTE = 'https://github.com/robertelee78/agent-memory.git'
+BOOTSTRAP_SOURCE = None  # In-process handoff from the already-verified bootstrap.
 COMMAND_NAMES = ('am', 'agent-memory')
 
 # Literal public routes also let pack validation inspect delegation without
@@ -343,6 +344,16 @@ def source_info(root, kind, remote=None, ref=None):
     trust_paths.source(root)
     pack = root/'skills/agent-memory' if (root/'skills/agent-memory').is_dir() else root
     package = artifact.inspect(pack)
+    if kind == 'release':
+        from . import release_distribution as release
+        manifest = release.installed(root)
+        require(package['artifact_digest'] == manifest['artifact_digest'], 'Signed artifact inspection differs')
+        return {'kind': kind, 'path': str(root), 'pack': str(pack), 'remote': DEFAULT_REMOTE,
+                'ref': 'releases/latest', 'revision': manifest['source_commit'], 'dirty': False,
+                'version': package['version'], 'artifact_digest': package['artifact_digest'],
+                'compatibility': package['compatibility'],
+                'release_manifest_sha256': release.digest((root/release.MANIFEST).read_bytes()),
+                'signature_namespace': release.NAMESPACE, 'signature_principal': release.PRINCIPAL}
     result = git(root, 'rev-parse', '--show-toplevel', check=False)
     revision = 'unversioned'; dirty = None
     # An arbitrary copied package inside an unrelated Git parent is unversioned.
@@ -520,14 +531,14 @@ def public_plan(plan):
 
 
 @contextmanager
-def prepare(args, state, code, old, *, candidate_root=None):
+def prepare(args, state, code, old, *, candidate_root=None, candidate_kind=None):
     with tempfile.TemporaryDirectory(prefix='agent-memory-install-source-') as scratch:
         scratch = Path(scratch)
         saved = old['source'] if old else None
         if candidate_root is not None:
-            require(saved is not None and saved['kind']=='managed', 'Updates require managed ownership')
+            require(saved is not None and saved['kind'] in ('managed', 'release'), 'Updates require managed ownership')
             root = Path(candidate_root).resolve(strict=True)
-            source = source_info(root, 'managed', saved['remote'], saved['ref'])
+            source = source_info(root, candidate_kind or saved['kind'], saved['remote'], saved['ref'])
         elif args.development_source:
             require(not args.remote and not args.ref, 'Choose development source or managed remote/ref, not both')
             root = absolute(args.development_source).resolve(strict=True)
@@ -535,6 +546,27 @@ def prepare(args, state, code, old, *, candidate_root=None):
         elif saved and saved['kind'] == 'development':
             require(not args.remote and not args.ref, 'Changing source channel requires a separate installation')
             root = Path(saved['path']); source = source_info(root, 'development')
+        elif (not args.remote and not args.ref and
+              (saved is None or saved['kind'] == 'release'
+               or (saved['kind'] == 'managed' and saved['remote'] == DEFAULT_REMOTE and saved['ref'] == 'main'))):
+            from . import release_distribution as release, updating
+            if saved:
+                updating.current(state, code)
+            else:
+                require(not os.path.lexists(code), 'Unrelated managed-source collision: ' + str(code))
+            if saved and saved['kind'] == 'release' and BOOTSTRAP_SOURCE is None:
+                root = Path(saved['path'])
+            elif BOOTSTRAP_SOURCE is not None:
+                root = Path(BOOTSTRAP_SOURCE).resolve(strict=True)
+            else:
+                root = scratch/'source'
+                release.acquire(root)
+            source = source_info(root, 'release')
+            if saved:
+                updating.release_transition(saved, source, root)
+                updating.compatible_surface(saved, source)
+        elif saved and saved['kind'] == 'release':
+            require(False, 'Git remote/ref options cannot change a signed release installation; preview an explicit uninstall/reinstall instead')
         elif saved:
             require((not args.remote or args.remote == saved['remote'])
                     and (not args.ref or args.ref == saved['ref']), 'Managed channel differs from ownership receipt')
@@ -600,7 +632,7 @@ def prepare(args, state, code, old, *, candidate_root=None):
             actions.append({'path': str(path), 'kind': kind, 'before': before, 'after': after,
                             'raw': raw, 'source_path': str(source_path) if source_path else None,
                             'mode_bits': mode_bits, 'changed': before != after})
-        if source['kind'] == 'managed':
+        if source['kind'] in ('managed', 'release'):
             add(code, 'source', source_path=root)
         groups = {}
         for name, target, guidance in presets(selected):
@@ -929,6 +961,10 @@ def install(plan, *, before_activate=None, after_activate=None):
 
 
 def failure_repair(exc):
+    from .release_distribution import DistributionError
+    if isinstance(exc, DistributionError):
+        return ('Preserve the active runtime and receipts. Check the trusted release, curl and OpenSSH '
+                'signature support from an operator-trusted installer; never fall back to unsigned bytes.')
     if isinstance(exc, trust_paths.TrustPathError):
         return ('Preserve this path and its contents. Use a trusted outside helper if the installed runtime '
                 'may have been exposed. Review ownership and permissions yourself or choose private per-user '
@@ -949,6 +985,7 @@ def failure_repair(exc):
 
 
 def main(argv=None):
+    global BOOTSTRAP_SOURCE
     from . import cli
     argv = cli.arguments(sys.argv[1:] if argv is None else argv)
     if argv and argv[0] in MEMORY_ROUTES:
@@ -1002,7 +1039,26 @@ def main(argv=None):
     try:
         require(sys.version_info >= (3,11) and shutil.which('git'), 'Python 3.11+ and Git are required')
         state, code = locations()
-        preflight_layout(args, state, code, read_receipt(state))
+        old = read_receipt(state)
+        preflight_layout(args, state, code, old)
+        default_release = (args.command == 'install' and not args.development_source and not args.remote and not args.ref
+                           and (old is None or old['source']['kind'] == 'release'
+                                or (old['source']['kind'] == 'managed' and old['source']['remote'] == DEFAULT_REMOTE
+                                    and old['source']['ref'] == 'main')))
+        if default_release and BOOTSTRAP_SOURCE is None:
+            # Prove the actual verification prerequisite before even creating
+            # lifecycle lock/owner records; revalidate this staged source under lock.
+            if old and old['source']['kind'] == 'release':
+                source_info(Path(old['source']['path']), 'release')
+            else:
+                from . import release_distribution as release
+                with tempfile.TemporaryDirectory(prefix='am-preverified-install-') as temporary:
+                    root = Path(temporary)/'source'; release.acquire(root)
+                    BOOTSTRAP_SOURCE = root
+                    try:
+                        return main(argv)
+                    finally:
+                        BOOTSTRAP_SOURCE = None
         if args.command == 'recover' and not os.path.lexists(state/'journal.json'):
             result = {'operation':'recover', 'verified':True, 'status':'no-pending-transaction',
                       'writes_performed':False}
