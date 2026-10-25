@@ -40,6 +40,16 @@ python3 -I "$SKILL_DIR/scripts/retrieve.py" --repo /path/to/repo \
 
 A session MUST read the actual selected items, their matching explanations, metadata/conditions/source hashes and exclusion counts. It MUST preserve full source labels and distinguish orientation-only prose from admitted typed records.
 
+Managed active-context checkpoints MUST match their explicit conditions against
+actual branch/HEAD and truthful supplied task/component context before ranking.
+Unknown, missing, malformed or mismatched conditions exclude the checkpoint,
+including exact current lookup. Matching context retains `assignment: false`
+and evidence availability qualifications; matching bytes do not prove a claim
+true or remotely published. Ordinary manual prose remains unassessed orientation;
+this helper does not infer arbitrary statement-level conditions. A session MAY
+use explicit [historical inspection](../bank/inspect/GUIDE.md) to inspect an
+unrelated checkpoint without weakening current recall gates.
+
 ## Verify
 
 A session MUST verify its complete current observation under the shared domain rules before relying on a result. It MUST re-evaluate changed evidence and time/applicability for consequential use, and revalidate under the write lock before a governed mutation.

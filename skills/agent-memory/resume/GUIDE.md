@@ -28,6 +28,13 @@ uncertain, it SHOULD keep the router as the map and defer detailed loading until
 the relevant work is known. No consent or per-record approval is needed for
 ordinary same-project memory, but supplied task/session conditions MUST be true.
 
+Managed checkpoint conditions MUST qualify before current recall or assembly;
+unknown/mismatched conditions remain excluded even for exact lookup. A session
+MAY deliberately inspect historical context through `am inspect --path
+activeContext.md`, retaining its evidence/conditions and no-assignment labels.
+Unavailable machine-local evidence MUST remain qualified, not become a result
+the receiving clone claims to possess or have verified.
+
 ## Observe
 
 The session MUST read `MEMORY.md` as a bounded router (at most 16 KiB), not as

@@ -48,7 +48,7 @@ def files_at(bank):
 def proposal_value(prepared):
     from .scope_binding import context_value
     p = prepared.get("proposal", prepared) if isinstance(prepared, dict) else prepared
-    if (not isinstance(p, dict) or set(p) not in (FIELDS, FIELDS | {"initialization_evidence"}, FIELDS | {"admission_evidence"}, FIELDS | {"consolidation_evidence"}, FIELDS | {"governance_evidence"}, FIELDS | {"refresh_evidence"}) or p["schema"] != SCHEMA
+    if (not isinstance(p, dict) or set(p) not in (FIELDS, FIELDS | {"initialization_evidence"}, FIELDS | {"admission_evidence"}, FIELDS | {"consolidation_evidence"}, FIELDS | {"governance_evidence"}, FIELDS | {"refresh_evidence"}, FIELDS | {'checkpoint_evidence'}) or p["schema"] != SCHEMA
             or not uuid_valid(p["operation_id"]) or not uuid_valid(p["project_id"])
             or p["operation"] not in writes.OPERATIONS or not isinstance(p["repo_root"], str)
             or not Path(p["repo_root"]).is_absolute() or str(Path(p["repo_root"]).resolve()) != p["repo_root"]):
@@ -80,6 +80,9 @@ def proposal_value(prepared):
     after_id = contract.validate_files(p["files"])["project_id"]
     if after_id != p["project_id"] and p["operation"] != "bind":
         raise ContractError("Project identity changes require an explicit binding operation")
+    if 'checkpoint_evidence' in p:
+        from .checkpoint import validate_preparation
+        validate_preparation(p, sources=False)
     return p
 
 
@@ -321,6 +324,9 @@ def converge(root, bank, p, base_files, journal, raw, receipt_path, mode, observ
 
 
 def validate_outcome(root, bank, desired, p, owner, marker, *, admission_sources=True):
+    if admission_sources and 'checkpoint_evidence' in p and desired == p['files']:
+        from .checkpoint import validate_preparation
+        validate_preparation(p)
     if admission_sources and 'admission_evidence' in p and desired == p['files']:
         from .admission import check_sources
         check_sources(p, owner=owner, marker=marker)
@@ -347,6 +353,9 @@ def apply(prepared):
     if p['operation'] == 'initialize':
         from .initialization import validate_transaction
         validate_transaction(p)
+    if 'checkpoint_evidence' in p:
+        from .checkpoint import validate_preparation
+        validate_preparation(p, sources=False)
     if 'admission_evidence' in p:
         from .admission import validate_transaction as validate_admission
         # A recorded outcome is read back by _apply; it never reapplies bytes.
@@ -368,6 +377,8 @@ def apply(prepared):
     initializing = first_bank and not (repository_config.bank_path(p['repo_root']) / 'MEMORY.md').exists()
     pinned = {**p['scope_context'], 'initialization_only': initializing}
     context = require(p['repo_root'], p['project_id'], expected=pinned, initialize=initializing)
+    if 'checkpoint_evidence' in p:
+        validate_preparation(p, sources=not locations(*writes.bank_path(p['repo_root']), p['operation_id'])[1].exists())
     from .project_identity import status as project_status
     proposed_remote = contract.parse_router(p['files']['MEMORY.md'])[0].get('canonical-remote')
     if proposed_remote != project_status(p['repo_root'])['evidence']['canonical_remote']:
@@ -383,6 +394,8 @@ def apply(prepared):
     if p['operation'] == 'initialize':
         evidence = p['initialization_evidence']['inventory']
         classes = ['assistant'] + (['verified-repository'] if evidence['sources'] else []) + (['tool'] if evidence['awa']['sources'] else [])
+    if 'checkpoint_evidence' in p:
+        classes = ['assistant']
     def check(owner):
         require(p['repo_root'], p['project_id'], expected=context, owned_lock=owner, initialize=initializing)
         if 'governance_evidence' in p:
@@ -413,6 +426,11 @@ def apply(prepared):
             validate_transaction(p)
             security.guarded_start(p['repo_root'], p['operation_id'], context,
                 {path: p['files'][path] for path in changed(p) if path in p['files']}, classes, action='initialize')
+        elif 'checkpoint_evidence' in p:
+            from .checkpoint import validate_preparation
+            validate_preparation(p, sources=not locations(*writes.bank_path(p['repo_root']), p['operation_id'])[1].exists())
+            security.guarded_start(p['repo_root'], p['operation_id'], context,
+                {path: p['files'][path] for path in changed(p) if path in p['files']}, classes, action='checkpoint')
         else:
             security.audit(p['repo_root'], p['operation_id'], 'mutation', 'started', context, classes, action=p['operation'])
     receipt = _apply(p, check_identity=check)
@@ -489,7 +507,12 @@ def recover(repo, mode=None, prepared=None):
     action = 'recover-' + r['mode']
     def check(owner, marker):
         require(root, p['project_id'], expected=context, owned_lock=owner, owned_transaction=marker, initialize=initializing)
-        if r['mode'] == 'finish' and p['operation'] == 'initialize':
+        if r['mode'] == 'finish' and 'checkpoint_evidence' in p:
+            from .checkpoint import validate_preparation
+            validate_preparation(p, sources=receipt_value(receipt_path, p) is None)
+            security.guarded_start(root, p['operation_id'], context,
+                {path: p['files'][path] for path in changed(p) if path in p['files']}, ['tool'], action=action)
+        elif r['mode'] == 'finish' and p['operation'] == 'initialize':
             from .initialization import validate_transaction
             validate_transaction(p)
             security.guarded_start(root, p['operation_id'], context,
@@ -542,6 +565,9 @@ def _recover(repo, mode=None, prepared=None, *, check_identity=None):
     raw = journal.read_bytes()
     j, p = journal_value(raw, root, bank, m["transaction_id"])
     admission_recovery(p, mode, receipt_value(receipt_path, p))
+    if mode == 'finish' and 'checkpoint_evidence' in p:
+        from .checkpoint import validate_preparation
+        validate_preparation(p, sources=receipt_value(receipt_path, p) is None)
     if mode == 'finish' and p['operation'] == 'initialize':
         from .initialization import validate_transaction
         validate_transaction(p)

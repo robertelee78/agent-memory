@@ -12,7 +12,7 @@ import uuid
 
 from . import bank_contract as bank_contract
 from . import bank_writes as writes
-from . import lifecycle, records, scope_binding, scopes, security
+from . import lifecycle, records, scope_binding, scopes, security, handoff
 from .developer_identity import digest, encoded, load, uuid_valid
 from .frontmatter import ContractError
 from .identity_git import git
@@ -163,6 +163,12 @@ def retrieve(repo, request, *, owned_lock=None, deferred_paths=()):
         if inspected['reasons']:
             excluded.update('security:' + reason for reason in inspected['reasons'])
             continue
+        assessment = None
+        if kind == 'context-prose' and path == 'activeContext.md':
+            assessment = handoff.assess(body, project, context, root, bank)
+            if assessment['managed_checkpoint'] and assessment['applicable'] is not True:
+                excluded.update('handoff:' + reason for reason in assessment['reasons'])
+                continue
         candidate = {'path': path, 'format': kind, 'body': body,
             'source_sha256': observed[path], 'scope_chain': entry['scope_chain'],
             'source_class': 'external', 'untrusted_data': True, 'source_assertions_verified': False,
@@ -171,7 +177,8 @@ def retrieve(repo, request, *, owned_lock=None, deferred_paths=()):
             candidate.update(record=metadata, selection_class='current-record', selection=selection)
         else:
             candidate.update(selection_class='orientation-only', trust=None,
-                explanation='Active applicable context file; independently qualify its statements before use')
+                assignment=False, context_assessment=assessment,
+                explanation='Active route with qualified checkpoint conditions when present; independently qualify prose statements before use')
         pool.append(candidate)
     ranked = []
     for candidate in pool:

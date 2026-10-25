@@ -17,6 +17,12 @@ Assembly retains
 its project, applicability, lifecycle, visibility and security gates. It MUST
 NOT turn an excluded source into guidance to fill a budget.
 
+Managed checkpoint conditions MUST pass the same current recall gates before
+assembly, including exact disputed-source lookup. Explicit historical inspection
+MUST NOT reintroduce an excluded checkpoint into current context. A missing
+qualified side of a conflict still refuses the whole assembly. Matching handoffs
+retain evidence qualifications and `assignment: false` as orientation.
+
 ## Inputs and preconditions
 
 The request MUST contain exactly `recall`, `max_bytes`, `token_budget` and

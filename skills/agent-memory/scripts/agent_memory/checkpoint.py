@@ -14,19 +14,20 @@ from . import bank_writes as writes
 from . import scope_binding as identity
 from . import scopes
 from . import security
+from . import handoff
 from . import local_registry as storage
 from .developer_identity import digest, load
 from .frontmatter import ContractError
 
 FIELDS = {'focus': 'Current focus', 'recent_changes': 'Recent changes', 'open_questions': 'Open questions', 'next_step': 'Next step'}
 INPUT = {*FIELDS, 'conditions', 'evidence', 'harness', 'session', 'observed_active_sha256'}
-EXTRA = ('Checkpoint conditions', 'Checkpoint evidence', 'Checkpoint provenance')
+EXTRA = ('Checkpoint conditions', 'Checkpoint evidence', 'Checkpoint provenance', handoff.SECTION)
 LIMIT = 16384
 
 
 def result(operation, **values):
     return {'schema': 'agent-memory/checkpoint-result-v1', 'operation': operation,
-            'publication_verified': False, 'identity_authenticated': False, **values}
+            'publication_verified': False, 'identity_authenticated': False, 'source_assertions_verified': False, **values}
 
 
 def headings(body):
@@ -108,7 +109,7 @@ def input_value(value):
     return value
 
 
-def render(base, value, developer_id):
+def render(base, value, developer_id, observation=None):
     value = input_value(value)
     desired = {FIELDS[field]: text(value[field]) if field in {'focus', 'next_step'} else
                list_text(value[field]) or 'None supplied.' for field in FIELDS}
@@ -116,6 +117,9 @@ def render(base, value, developer_id):
     desired['Checkpoint evidence'] = list_text(value['evidence'])
     desired['Checkpoint provenance'] = '```json\n' + json.dumps({'developer_id': developer_id, 'harness': value['harness'],
         'session': value['session'], 'identity_authenticated': False}, ensure_ascii=True, sort_keys=True, indent=2) + '\n```'
+    if observation is not None:
+        observation = handoff.reusable(base, handoff.validate_observation(observation))
+        desired[handoff.SECTION] = '```json\n' + json.dumps(observation, ensure_ascii=True, sort_keys=True, indent=2) + '\n```'
     seen, edits = set(), []
     for start, end, title in headings(base):
         if title in desired:
@@ -158,24 +162,30 @@ def preview(repo, value, *, prepare=False):
     current = inspect(repo)
     if current['observed_active_sha256'] != value['observed_active_sha256']:
         raise ContractError('Active context changed or was not read; inspect it and preserve compatible evidence before a fresh proposal')
+    root, bank_path = writes.bank_path(repo)
+    observation = handoff.observe(root, bank_path, value['evidence'])
     if prepare:
         if not current['preparation_required']:
             raise ContractError('Active context already exists; use the single-file checkpoint')
         root, bank_path = writes.bank_path(repo)
         files = transactions.files_at(bank_path)
-        files['activeContext.md'] = render('# Active context\n', value, context['developer_id'])
+        files['activeContext.md'] = render('# Active context\n', value, context['developer_id'], observation)
         security.ensure_safe({'activeContext.md': files['activeContext.md']})
         files['MEMORY.md'] = bank.add_context_routes(files['MEMORY.md'], ['activeContext.md'], storage.now())
         proposal = transactions.preview(root, files, 'replace')
+        proposal['proposal']['checkpoint_evidence'] = {'input': value, 'observation': observation,
+            'base_text': '# Active context\n', 'base_router': current_router(current)}
         if (proposal['proposal']['observed_hashes'] != current['source_hashes']
                 or proposal['proposal']['scope_context'] != context):
             raise ContractError('Bank or identity changed during context preparation; reread')
+        validate_preparation(proposal['proposal'])
         return result('prepare', separate_router_operation=True, transaction=proposal['proposal'], writes_performed=False, verified=False)
     if current['preparation_required']:
         raise ContractError('Active context is omitted; prepare its useful content and route as a separate observed transaction first')
-    body = render(current['active_context'], value, context['developer_id'])
+    body = render(current['active_context'], value, context['developer_id'], observation)
     security.ensure_safe({'activeContext.md': body})
     prepared = writes.preview(repo, 'activeContext.md', body, 'checkpoint')['proposal']
+    prepared['checkpoint_evidence'] = {'input': value, 'base_text': current['active_context'], 'observation': observation}
     if prepared['observed_hashes'] != current['source_hashes'] or prepared['scope_context'] != context:
         raise ContractError('Bank or identity changed during checkpoint preparation; inspect again')
     return result('preview', proposal={'schema': 'agent-memory/checkpoint-proposal-v1', 'input': value,
@@ -190,17 +200,67 @@ def apply(prepared):
         raise ContractError('Invalid checkpoint proposal; router preparation is a separate transaction')
     value = input_value(p['input'])
     write = writes.proposal_value(p['write'])
+    proof = write.get('checkpoint_evidence')
+    if proof is not None and (proof['input'] != value or proof['base_text'] != p['base_text']):
+        raise ContractError('Checkpoint wrapper differs from its source-bound write')
     if (write['path'] != 'activeContext.md' or write['operation'] != 'checkpoint'
             or write['observed_hashes'].get('activeContext.md') != value['observed_active_sha256']):
         raise ContractError('Checkpoint may replace only the observed activeContext.md')
     if (not isinstance(p['base_text'], str) or digest(p['base_text'].encode()) != value['observed_active_sha256']
             or not isinstance(write['scope_context'], dict)
-            or render(p['base_text'], value, write['scope_context']['developer_id']) != write['content']):
+            or render(p['base_text'], value, write['scope_context']['developer_id'], proof['observation'] if proof else None) != write['content']):
         raise ContractError('Checkpoint content must match the reviewed fields and preserve unrelated existing sections')
     receipt = writes.apply(write)
     return result('apply', write=receipt, verified=receipt['verified'] and receipt['still_current'],
                   writes_performed=receipt['writes_performed'], changed_memory_paths=receipt['changed_memory_paths'],
                   sharing='local-or-pending-sharing')
+
+
+def current_router(current):
+    # Preparation is separate from ordinary checkpoint writes. Read the actual
+    # original router rather than reconstruct or normalize its existing rows.
+    root, bank_path = writes.bank_path(current['repo_root'])
+    text = (bank_path / 'MEMORY.md').read_text()
+    if digest(text.encode()) != current['source_hashes']['MEMORY.md']:
+        raise ContractError('Router changed during checkpoint preparation')
+    return text
+
+
+def validate_write(write, *, sources=True):
+    proof = write.get('checkpoint_evidence')
+    if (not isinstance(proof, dict) or set(proof) != {'input', 'base_text', 'observation'}
+            or write['operation'] != 'checkpoint' or write['path'] != 'activeContext.md'):
+        raise ContractError('Invalid source-bound checkpoint write')
+    value = input_value(proof['input'])
+    if (not isinstance(proof['base_text'], str) or digest(proof['base_text'].encode()) != value['observed_active_sha256']
+            or value['observed_active_sha256'] != write['observed_hashes']['activeContext.md']
+            or render(proof['base_text'], value, write['scope_context']['developer_id'], proof['observation']) != write['content']):
+        raise ContractError('Checkpoint write differs from reviewed fields and source observation')
+    if sources:
+        root, bank_path = writes.bank_path(write['repo_root'])
+        handoff.check_pins(root, bank_path, value['evidence'], proof['observation'])
+
+
+def validate_preparation(tx, *, sources=True):
+    proof = tx.get('checkpoint_evidence')
+    if (not isinstance(proof, dict) or set(proof) != {'input', 'base_text', 'base_router', 'observation'}
+            or tx['operation'] != 'replace' or 'activeContext.md' in tx['observed_hashes']):
+        raise ContractError('Checkpoint preparation may only add missing active context and its route')
+    value = input_value(proof['input'])
+    if (value['observed_active_sha256'] is not None or proof['base_text'] != '# Active context\n'
+            or not isinstance(proof['base_router'], str)
+            or digest(proof['base_router'].encode()) != tx['observed_hashes']['MEMORY.md']):
+        raise ContractError('Checkpoint preparation base differs from its inspected bank')
+    expected = render(proof['base_text'], value, tx['scope_context']['developer_id'], proof['observation'])
+    updated = bank.parse_router(tx['files']['MEMORY.md'])[0]['router-updated']
+    router = bank.add_context_routes(proof['base_router'], ['activeContext.md'], updated)
+    if (tx['files'].get('activeContext.md') != expected or tx['files']['MEMORY.md'] != router
+            or set(tx['files']) != {*tx['observed_hashes'], 'activeContext.md'}
+            or any(digest(tx['files'][p].encode()) != sha for p, sha in tx['observed_hashes'].items() if p != 'MEMORY.md')):
+        raise ContractError('Checkpoint preparation must preserve other files and existing routing')
+    if sources:
+        root, bank_path = writes.bank_path(tx['repo_root'])
+        handoff.check_pins(root, bank_path, value['evidence'], proof['observation'])
 
 
 def main(argv=None):
