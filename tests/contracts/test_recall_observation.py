@@ -71,7 +71,7 @@ class RecallObservationContract(unittest.TestCase):
                 target.unlink()  # Explicit owner of this disposable injected FIFO.
 
     def test_owned_lock_disappearance_or_replacement_refuses_public_maintenance_before_write(self):
-        stage='recall-owned-final-source-recheck'
+        stage='transaction-locked-before-inventory'
         for change in ('disappeared','changed'):
             with self.subTest(change=change),World() as w:
                 helper=maintenance.ConsolidationContract();repo,bank=helper.fixture(w)
@@ -87,7 +87,7 @@ class RecallObservationContract(unittest.TestCase):
                 deadline=time.monotonic()+8
                 while not (directory/(stage+'.ready')).exists():
                     if child.poll() is not None or time.monotonic()>deadline:
-                        self.fail('Public maintenance did not reach recall under its actual owned lock')
+                        self.fail('Public maintenance did not reach its actual owned transaction preflight')
                     time.sleep(.02)
                 lock=bank/'.agent-memory.lock';self.assertTrue(lock.is_file())
                 if change=='disappeared':lock.unlink()
