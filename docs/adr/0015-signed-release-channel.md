@@ -1,6 +1,7 @@
 ---
 id: ADR-0015
-status: proposed
+status: accepted
+approval-scope: v0.0.3 signing task #49
 date: 2026-10-25
 amends: [ADR-0007]
 related: [ADR-0013, ADR-0014]
@@ -8,10 +9,11 @@ related: [ADR-0013, ADR-0014]
 
 # ADR-0015: Signed release channel
 
-Proposed technical refinement of existing signing task #49. The operator selected
+Accepted technical refinement of existing signing task #49. The operator selected
 signed releases and established lifecycle patterns, then authorized a dedicated
-AM signing key. Independent technical approval is still required. Implementation,
-acceptance and delivery remain separate evidence.
+AM signing key. [Independent technical approval](https://github.com/robertelee78/agent-memory/issues/49#issuecomment-6399116126)
+binds the normative bytes at `428c4b2135dec52ebd40d2e1d9b5bb0fe4e1cbcb`.
+Implementation, acceptance and delivery remain separate evidence.
 
 ## Context
 
