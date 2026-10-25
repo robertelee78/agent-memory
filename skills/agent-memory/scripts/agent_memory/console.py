@@ -165,6 +165,9 @@ def render(data, command, prog, code):
         print('repository ' + safe(data.get('repository', 'unavailable')))
         bank = data.get('bank', {})
         print('memory ' + safe(bank.get('state', 'not inspected')) + (' — ' + safe(bank['path']) if bank.get('path') else ''))
+        if data.get('setup'):
+            print('setup ' + safe(data['setup']['state']))
+            print('next ' + safe(data['setup']['next_step']))
     elif command == 'recover' and not code:
         print({'no-pending-transaction': 'No pending runtime transaction.',
                'complete': 'Verified committed runtime transaction.',
