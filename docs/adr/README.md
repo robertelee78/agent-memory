@@ -42,6 +42,9 @@ reliability, hook and federation scopes are preserved by that mapping.
 
 [ADR-0014](0014-useful-shared-memory-quality.md) proposes v0.0.3 quality corrections
 from the real-bank mission review. Its proposed status grants no design approval.
+The operator's later scope decision, recorded there, brings existing signing task
+#49 into v0.0.3 and defines consumer-memory isolation while allowing source clones
+to contain this repository's development bank.
 
 ## Status values
 

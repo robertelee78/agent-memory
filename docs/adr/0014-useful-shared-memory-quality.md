@@ -2,8 +2,7 @@
 id: ADR-0014
 status: proposed
 date: 2026-10-24
-amends: [ADR-0003, ADR-0005, ADR-0006, ADR-0007, ADR-0009, ADR-0010, ADR-0012]
-related: [ADR-0013]
+amends: [ADR-0003, ADR-0005, ADR-0006, ADR-0007, ADR-0009, ADR-0010, ADR-0012, ADR-0013]
 ---
 
 # ADR-0014: Useful shared memory and lifecycle assurance
@@ -24,6 +23,10 @@ does not approve execution. Existing work #99 owns extended daily-use evaluation
 and #98 owns growing-bank recall; their outcomes remain distinct from the fixes
 below. Each requirement below has one corresponding story, directly under this
 ADR's root epic. The shared validation requirements apply to all seven stories.
+The operator approved bringing existing signing story #49 forward to v0.0.3
+after the lifecycle review. This amends ADR-0013's release target for #49 only;
+the task keeps its ADR-0007 work key and Project. Release scope approval does not
+approve an implementation design or certify signature verification already exists.
 
 ## Distinct initialization routes
 
@@ -86,14 +89,15 @@ unrelated data.
 
 Public lifecycle documentation and diagnostics MUST distinguish publisher
 authentication from integrity, ownership, compatibility and recovery. They MUST
-describe the unsigned mutable Git channel and custom-source trust boundary without
-presenting a digest or verified receipt as a signature. Validation MUST exercise
+describe the currently unsigned mutable Git channel, its transition to the
+planned signed channel and the custom-source trust boundary without presenting a
+digest or verified receipt as a signature. Validation MUST exercise
 public commands against modified targets, wrong channels, non-fast-forward or
 downgrade candidates and interrupted operations, proving refusal/preservation or
 bounded recovery rather than merely finding guard code in source.
 
-Signed immutable distribution remains existing story #49 targeted at v0.0.4 until
-an explicit operator decision changes that target. This ADR MUST NOT duplicate #49
+Signed immutable distribution is existing story #49, now targeted at v0.0.3 by
+explicit operator decision. This ADR MUST NOT duplicate #49
 or imply release signing exists before it is implemented and independently verified.
 
 ## Shared validation and exclusions
@@ -110,6 +114,10 @@ Existing memory MUST be compared before correction; distinct conditions, evidenc
 and provenance MUST survive deduplication or pruning. Contradictions MUST reach
 the detecting developer. No new expensive hosted qualification matrix is required.
 
-Whether the root development bank must be absent from a consumer's entire managed
-source checkout remains unresolved under #163. These stories MUST NOT silently
-choose that distribution policy or claim the pending adoption has landed.
+The operator clarified that explicit repository clones may contain this project's
+development bank. Consumer installation MUST NOT seed, bind, expose through skill
+discovery, or recall that bank as another repository's memory. A managed source
+checkout is not itself a consumer project bank; mere source-file presence MUST
+NOT grant project identity or memory authority. Existing adoption story #163 owns
+the installation-isolation proof before its memory-only landing. These stories
+MUST NOT duplicate #163 or claim its adoption has landed before readback.
