@@ -1,0 +1,358 @@
+{
+  "intent": "Design-only literal-growth observations; not the labeled quality suite or stress gate.",
+  "platform": "Darwin",
+  "python": "3.15.0",
+  "producer_sha256": "6034aef1fc4dc6164fc3ca7ef6ca05e4afc05b0cbc90562607d20314281f6b80",
+  "labeled_quality_pass": false,
+  "stress_pass": false,
+  "observations": [
+    {
+      "label": "published-v0.0.1",
+      "source_commit": "63d3a64c0e535148cc1b5deb9d67169dbbc7c525",
+      "declared_installed_version": "0.0.1",
+      "portable_files": 138,
+      "artifact_digest": "5e57375c046062b268f7e19d84dd0edd67de46279789ac38d02710bc63d7995c",
+      "fixture_sha256": "6d72575ce866d2908a8448d4dbd136ae508cf6e828c10f5e73276c24c74bb4ad",
+      "distinct_lessons": 1000,
+      "canonical_files": 1019,
+      "canonical_bytes": 984251,
+      "validation_exit": 0,
+      "validation_seconds": 0.28300145792309195,
+      "literal_queries": [
+        {
+          "exit": 0,
+          "seconds": 1.2126900419825688,
+          "result_count": 1,
+          "selected_paths": [
+            "topics/records/lesson-000000.md"
+          ],
+          "json_bytes": 4118,
+          "metrics": {
+            "inventory_files": 1019,
+            "entries": 1018,
+            "qualified_candidates": 1000,
+            "ranked": 1,
+            "selected": 1,
+            "bounded_candidate_bytes_read": 826030,
+            "result_bytes": 1956,
+            "elapsed_seconds": 1.1290403339080513
+          },
+          "diagnostic": null
+        },
+        {
+          "exit": 0,
+          "seconds": 1.2081070829881355,
+          "result_count": 1,
+          "selected_paths": [
+            "topics/records/lesson-000000.md"
+          ],
+          "json_bytes": 4118,
+          "metrics": {
+            "inventory_files": 1019,
+            "entries": 1018,
+            "qualified_candidates": 1000,
+            "ranked": 1,
+            "selected": 1,
+            "bounded_candidate_bytes_read": 826030,
+            "result_bytes": 1956,
+            "elapsed_seconds": 1.1259406249737367
+          },
+          "diagnostic": null
+        }
+      ],
+      "canonical_code_index_head_preserved": true,
+      "true_cold_cache_claimed": false,
+      "token_measurement": null
+    },
+    {
+      "label": "pre-scale-repair-candidate",
+      "source_commit": "f07402c7f60ebbca488d8863fa14be7b8b8627da",
+      "declared_installed_version": "0.0.2",
+      "portable_files": 148,
+      "artifact_digest": "c4dc52db8dd2d6a089f88b93226751ffe68def494eccd378829b4cee9c7939de",
+      "fixture_sha256": "6d72575ce866d2908a8448d4dbd136ae508cf6e828c10f5e73276c24c74bb4ad",
+      "distinct_lessons": 1000,
+      "canonical_files": 1019,
+      "canonical_bytes": 984251,
+      "validation_exit": 0,
+      "validation_seconds": 0.2935281250393018,
+      "literal_queries": [
+        {
+          "exit": 0,
+          "seconds": 1.2206593330483884,
+          "result_count": 1,
+          "selected_paths": [
+            "topics/records/lesson-000000.md"
+          ],
+          "json_bytes": 4118,
+          "metrics": {
+            "inventory_files": 1019,
+            "entries": 1018,
+            "qualified_candidates": 1000,
+            "ranked": 1,
+            "selected": 1,
+            "bounded_candidate_bytes_read": 826030,
+            "result_bytes": 1956,
+            "elapsed_seconds": 1.1350432090694085
+          },
+          "diagnostic": null
+        },
+        {
+          "exit": 0,
+          "seconds": 1.2213773329276592,
+          "result_count": 1,
+          "selected_paths": [
+            "topics/records/lesson-000000.md"
+          ],
+          "json_bytes": 4118,
+          "metrics": {
+            "inventory_files": 1019,
+            "entries": 1018,
+            "qualified_candidates": 1000,
+            "ranked": 1,
+            "selected": 1,
+            "bounded_candidate_bytes_read": 826030,
+            "result_bytes": 1956,
+            "elapsed_seconds": 1.1334935830673203
+          },
+          "diagnostic": null
+        }
+      ],
+      "canonical_code_index_head_preserved": true,
+      "true_cold_cache_claimed": false,
+      "token_measurement": null
+    },
+    {
+      "label": "published-v0.0.1",
+      "source_commit": "63d3a64c0e535148cc1b5deb9d67169dbbc7c525",
+      "declared_installed_version": "0.0.1",
+      "portable_files": 138,
+      "artifact_digest": "5e57375c046062b268f7e19d84dd0edd67de46279789ac38d02710bc63d7995c",
+      "fixture_sha256": "0cfaf8b007090292c9ac01d438cbd0feeb8d55388b6e4fe5f2fa141d2dc21916",
+      "distinct_lessons": 10000,
+      "canonical_files": 10162,
+      "canonical_bytes": 9831738,
+      "validation_exit": 0,
+      "validation_seconds": 1.740857333992608,
+      "literal_queries": [
+        {
+          "exit": 0,
+          "seconds": 7.357977417064831,
+          "result_count": 1,
+          "selected_paths": [
+            "topics/records/lesson-000000.md"
+          ],
+          "json_bytes": 4124,
+          "metrics": {
+            "inventory_files": 10162,
+            "entries": 10161,
+            "qualified_candidates": 10000,
+            "ranked": 1,
+            "selected": 1,
+            "bounded_candidate_bytes_read": 8260030,
+            "result_bytes": 1956,
+            "elapsed_seconds": 7.2510438750032336
+          },
+          "diagnostic": null
+        },
+        {
+          "exit": 0,
+          "seconds": 7.317799000069499,
+          "result_count": 1,
+          "selected_paths": [
+            "topics/records/lesson-000000.md"
+          ],
+          "json_bytes": 4124,
+          "metrics": {
+            "inventory_files": 10162,
+            "entries": 10161,
+            "qualified_candidates": 10000,
+            "ranked": 1,
+            "selected": 1,
+            "bounded_candidate_bytes_read": 8260030,
+            "result_bytes": 1956,
+            "elapsed_seconds": 7.2115509590366855
+          },
+          "diagnostic": null
+        }
+      ],
+      "canonical_code_index_head_preserved": true,
+      "true_cold_cache_claimed": false,
+      "token_measurement": null
+    },
+    {
+      "label": "pre-scale-repair-candidate",
+      "source_commit": "f07402c7f60ebbca488d8863fa14be7b8b8627da",
+      "declared_installed_version": "0.0.2",
+      "portable_files": 148,
+      "artifact_digest": "c4dc52db8dd2d6a089f88b93226751ffe68def494eccd378829b4cee9c7939de",
+      "fixture_sha256": "0cfaf8b007090292c9ac01d438cbd0feeb8d55388b6e4fe5f2fa141d2dc21916",
+      "distinct_lessons": 10000,
+      "canonical_files": 10162,
+      "canonical_bytes": 9831738,
+      "validation_exit": 0,
+      "validation_seconds": 1.7391473329626024,
+      "literal_queries": [
+        {
+          "exit": 0,
+          "seconds": 7.343220374896191,
+          "result_count": 1,
+          "selected_paths": [
+            "topics/records/lesson-000000.md"
+          ],
+          "json_bytes": 4124,
+          "metrics": {
+            "inventory_files": 10162,
+            "entries": 10161,
+            "qualified_candidates": 10000,
+            "ranked": 1,
+            "selected": 1,
+            "bounded_candidate_bytes_read": 8260030,
+            "result_bytes": 1956,
+            "elapsed_seconds": 7.2362841659924015
+          },
+          "diagnostic": null
+        },
+        {
+          "exit": 0,
+          "seconds": 7.334762000013143,
+          "result_count": 1,
+          "selected_paths": [
+            "topics/records/lesson-000000.md"
+          ],
+          "json_bytes": 4123,
+          "metrics": {
+            "inventory_files": 10162,
+            "entries": 10161,
+            "qualified_candidates": 10000,
+            "ranked": 1,
+            "selected": 1,
+            "bounded_candidate_bytes_read": 8260030,
+            "result_bytes": 1956,
+            "elapsed_seconds": 7.228075582999736
+          },
+          "diagnostic": null
+        }
+      ],
+      "canonical_code_index_head_preserved": true,
+      "true_cold_cache_claimed": false,
+      "token_measurement": null
+    },
+    {
+      "label": "published-v0.0.1",
+      "source_commit": "63d3a64c0e535148cc1b5deb9d67169dbbc7c525",
+      "declared_installed_version": "0.0.1",
+      "portable_files": 138,
+      "artifact_digest": "5e57375c046062b268f7e19d84dd0edd67de46279789ac38d02710bc63d7995c",
+      "fixture_sha256": "7f6731333baa00c613e17266cf91de1ab23a29ce1089f66fe094e1900576dab4",
+      "distinct_lessons": 50000,
+      "canonical_files": 50797,
+      "canonical_bytes": 49153693,
+      "validation_exit": 0,
+      "validation_seconds": 8.365475542028435,
+      "literal_queries": [
+        {
+          "exit": 0,
+          "seconds": 35.743624125025235,
+          "result_count": 1,
+          "selected_paths": [
+            "topics/records/lesson-000000.md"
+          ],
+          "json_bytes": 4125,
+          "metrics": {
+            "inventory_files": 50797,
+            "entries": 50796,
+            "qualified_candidates": 50000,
+            "ranked": 1,
+            "selected": 1,
+            "bounded_candidate_bytes_read": 41300030,
+            "result_bytes": 1956,
+            "elapsed_seconds": 35.54350700008217
+          },
+          "diagnostic": null
+        },
+        {
+          "exit": 0,
+          "seconds": 35.75945120898541,
+          "result_count": 1,
+          "selected_paths": [
+            "topics/records/lesson-000000.md"
+          ],
+          "json_bytes": 4126,
+          "metrics": {
+            "inventory_files": 50797,
+            "entries": 50796,
+            "qualified_candidates": 50000,
+            "ranked": 1,
+            "selected": 1,
+            "bounded_candidate_bytes_read": 41300030,
+            "result_bytes": 1956,
+            "elapsed_seconds": 35.563081125030294
+          },
+          "diagnostic": null
+        }
+      ],
+      "canonical_code_index_head_preserved": true,
+      "true_cold_cache_claimed": false,
+      "token_measurement": null
+    },
+    {
+      "label": "pre-scale-repair-candidate",
+      "source_commit": "f07402c7f60ebbca488d8863fa14be7b8b8627da",
+      "declared_installed_version": "0.0.2",
+      "portable_files": 148,
+      "artifact_digest": "c4dc52db8dd2d6a089f88b93226751ffe68def494eccd378829b4cee9c7939de",
+      "fixture_sha256": "7f6731333baa00c613e17266cf91de1ab23a29ce1089f66fe094e1900576dab4",
+      "distinct_lessons": 50000,
+      "canonical_files": 50797,
+      "canonical_bytes": 49153693,
+      "validation_exit": 0,
+      "validation_seconds": 8.387142542051151,
+      "literal_queries": [
+        {
+          "exit": 0,
+          "seconds": 36.12975304201245,
+          "result_count": 1,
+          "selected_paths": [
+            "topics/records/lesson-000000.md"
+          ],
+          "json_bytes": 4125,
+          "metrics": {
+            "inventory_files": 50797,
+            "entries": 50796,
+            "qualified_candidates": 50000,
+            "ranked": 1,
+            "selected": 1,
+            "bounded_candidate_bytes_read": 41300030,
+            "result_bytes": 1956,
+            "elapsed_seconds": 35.92144950001966
+          },
+          "diagnostic": null
+        },
+        {
+          "exit": 0,
+          "seconds": 36.1834721659543,
+          "result_count": 1,
+          "selected_paths": [
+            "topics/records/lesson-000000.md"
+          ],
+          "json_bytes": 4125,
+          "metrics": {
+            "inventory_files": 50797,
+            "entries": 50796,
+            "qualified_candidates": 50000,
+            "ranked": 1,
+            "selected": 1,
+            "bounded_candidate_bytes_read": 41300030,
+            "result_bytes": 1956,
+            "elapsed_seconds": 35.97491666697897
+          },
+          "diagnostic": null
+        }
+      ],
+      "canonical_code_index_head_preserved": true,
+      "true_cold_cache_claimed": false,
+      "token_measurement": null
+    }
+  ]
+}
