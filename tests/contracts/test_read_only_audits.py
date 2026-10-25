@@ -47,6 +47,8 @@ class ReadOnlyAudits(unittest.TestCase):
                     ([cli, 'status', '--repo', repo, '--json'], True),
                     ([cli, 'doctor', '--repo', repo], False),
                     ([cli, 'doctor', '--repo', repo, '--json'], True),
+                    ([sys.executable, '-I', pack / 'scripts/diagnose.py',
+                      'doctor', '--repo', repo, '--json'], True),
                     ([sys.executable, '-B', '-I', pack / 'scripts/diagnose.py',
                       'doctor', '--repo', repo, '--json'], True),
                     ([sys.executable, '-B', '-I', pack / 'scripts/artifact.py',
