@@ -1,0 +1,8 @@
+{
+  "source_commit": "90dbf6559a026f180bd93eb460d08827fea240b2",
+  "version": "0.0.2",
+  "archive": "portable-pack.tar.gz",
+  "sha256": "dc55a62d0ceb2a9fa8eff1332c94a09ba9f00f3ebf6fe6d131163eb83553ba50",
+  "checkout_artifact_digest": "92851691acc3447a676c54160375cef9e05d8e2c75c9803bd33855a460ff44be",
+  "purpose": "Frozen actually released v0.0.2 runtime for real old-process upgrade qualification; extract recorded Git executable/non-executable modes."
+}

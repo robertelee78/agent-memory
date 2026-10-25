@@ -49,6 +49,7 @@ def source(pack):
     pack = Path(pack).resolve(strict=True)
     inspected = artifact.inspect(pack)
     root = pack.parents[1] if pack.parent.name == 'skills' else pack
+    installation.trust_paths.source(root)
     top = git(root, 'rev-parse', '--show-toplevel', optional=True)
     versioned = top is not None and Path(top).resolve() == root
     unavailable = top is None and os.path.lexists(root / '.git')
@@ -101,6 +102,7 @@ class Report:
 
 def receipt_view(report):
     state, _ = installation.locations()
+    installation.trust_paths.state(state)
     path = state / 'receipt.json'
     active = None
     report.value['installation'] = {'state': 'not_installed', 'receipt_path': str(path),
@@ -108,6 +110,7 @@ def receipt_view(report):
                                     'health': 'not_audited', 'update_availability': 'not_cached_or_fetched',
                                     'purge_transactions': 'not_scanned'}
     if os.path.lexists(path):
+        installation.trust_paths.record(path)
         raw = record(path)
         installation.require(isinstance(raw, dict), 'Invalid receipt')
         active = installation.read_receipt(state)
@@ -222,6 +225,15 @@ def permission_check(report, path, component):
 
 def runtime_doctor(report, active):
     state, _ = installation.locations()
+    trusted = report.attempt('runtime.path_trust', lambda: installation.trust_paths.state(state),
+                   'Use a trusted outside helper; preserve the state and choose private current-user-owned paths. '
+                   'Unix ownership/mode checks do not authenticate already-loaded code or audit platform ACLs.', state)
+    if trusted is None:
+        return
+    report.add('runtime.path_trust', 'pass',
+               ('Installation state satisfies the Unix owner/ancestor/private-directory policy. '
+                if trusted['present'] else 'Existing ancestors permit private installation state; no state was created. ')
+               + 'Platform ACLs and already-loaded verifier code are not authenticated.', path=state)
     permission_check(report, state, 'runtime.permissions')
     lock = state / 'lock'
     descriptor = None
@@ -229,6 +241,7 @@ def runtime_doctor(report, active):
     try:
         installation.require(active is None or os.path.lexists(lock), 'An active installation is missing its lifecycle lock')
         if os.path.lexists(lock):
+            installation.trust_paths.record(lock)
             read(lock, 65536)
             descriptor = os.open(lock, os.O_RDONLY | getattr(os, 'O_NOFOLLOW', 0))
             installation.require(stat.S_ISREG(os.fstat(descriptor).st_mode) and os.fstat(descriptor).st_nlink == 1,
@@ -248,8 +261,8 @@ def runtime_doctor(report, active):
         owner_path = state / 'owner.json'
         if os.path.lexists(owner_path):
             def check_owner():
-                read(owner_path)
                 installation.read_owner(state)
+                read(owner_path)
                 report.add('runtime.owner', 'pass', 'Existing lifecycle owner metadata is readable and accepted by the lifecycle lock protocol; PID and age do not grant lock ownership.', path=owner_path)
             report.attempt('runtime.owner', check_owner,
                            'Preserve this owner record and the lifecycle lock. Reconcile the malformed or redirected metadata before retrying a lifecycle operation; do not reset or steal ownership based on PID or age.', owner_path)
@@ -278,6 +291,7 @@ def runtime_doctor(report, active):
                     continue  # Source identity and channel are checked above, without copying Git metadata.
                 path = Path(target['path'])
                 def check_target():
+                    installation.trust_paths.tree(path)
                     if target['kind'] == 'activation':
                         raw = read(path)
                         try:

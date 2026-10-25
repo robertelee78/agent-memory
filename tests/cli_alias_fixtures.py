@@ -46,8 +46,15 @@ def channel(world, *, legacy=False):
 
 def install(world, root, *options, legacy=False, expected=0, env=None):
     helper = root/'skills/agent-memory/scripts/installer.py' if legacy else PACK/'scripts/installer.py'
-    result = world.run([sys.executable, '-I', helper, 'install', '--remote', root.as_uri(),
-                        '--ref', 'main', '--presets', 'none', *options],
+    command = [sys.executable, '-I', helper, 'install', '--remote', root.as_uri(),
+               '--ref', 'main', '--presets', 'none', *options]
+    if legacy:
+        # This fixture identifies an exact historical checkout digest. Fix only
+        # its initial checkout modes; upgrade processes retain the caller umask.
+        command = [sys.executable, '-I', '-c',
+                   'import os,subprocess,sys;os.umask(0o022);sys.exit(subprocess.call(sys.argv[1:]))',
+                   *command]
+    result = world.run(command,
                        check=False, env=env, timeout=120)
     assert result.returncode == expected, (result.returncode, result.stdout, result.stderr)
     return json.loads(result.stdout)

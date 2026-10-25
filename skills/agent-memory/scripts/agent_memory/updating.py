@@ -33,6 +33,7 @@ def current(state, code):
     install.require(old is not None and old['source'].get('kind')=='managed',
                     'Updates require a recorded managed installation; development sources are never modified')
     source = old['source']; root = Path(source['path'])
+    install.trust_paths.source(root)
     install.require(root == code and source.get('pack') == str(code/'skills/agent-memory'),
                     'Managed source/pack location differs from the recorded layout')
     install.require(install.git(root, 'remote', 'get-url', 'origin').stdout.strip() == source['remote'],

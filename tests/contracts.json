@@ -95,6 +95,7 @@
     {"name":"purge-unlock-before","layer":"lifecycle","scope":"v0.0.1","path":"tests/contracts/test_purge_unlock_before.py"},
     {"name":"purge-unlock-after","layer":"lifecycle","scope":"v0.0.1","path":"tests/contracts/test_purge_unlock_after.py"},
     {"name": "installer", "layer": "lifecycle", "scope": "v0.0.1", "path": "tests/contracts/test_installer.py"},
+    {"name": "lifecycle-trust-paths", "layer": "lifecycle", "scope": "v0.0.3", "path": "tests/contracts/test_lifecycle_trust.py"},
     {"name": "portable-artifact", "layer": "pack", "scope": "v0.0.1", "path": "tests/contracts/test_portable_artifact.py"},
     {"name": "optional-stores", "layer": "optional", "scope": "future", "path": null, "reason": "Cross-repository federation and optional stores are outside v0.0.1."},
     {"name": "mediated-security", "layer": "evaluation", "scope": "v0.0.1", "path": "tests/contracts/test_security_policy.py"},

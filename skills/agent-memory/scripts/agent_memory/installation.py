@@ -21,7 +21,7 @@ import sys
 import tempfile
 import uuid
 
-from . import artifact, runtime_faults
+from . import artifact, runtime_faults, trust_paths
 from .bank_writes import fault
 from .frontmatter import ContractError, unique_object
 
@@ -91,6 +91,7 @@ def encoded(value):
 
 
 def load(path):
+    trust_paths.record(path)
     require(path.is_file() and not path.is_symlink() and path.stat().st_size <= 2**20,
             'Missing, linked or oversized installation record: ' + str(path))
     return json.loads(path.read_bytes(), object_pairs_hook=unique_object)
@@ -179,18 +180,29 @@ def unchanged_parent(path):
             'Installation parent changed or became a symlink: ' + str(path.parent))
 
 
-def _copy_node(source, target):
+def _copy_payload(source, target, *, private_root=False):
     if source.is_symlink():
         target.symlink_to(os.readlink(source), target_is_directory=source.is_dir())
     elif source.is_dir():
-        shutil.copytree(source, target, symlinks=True)
+        # Keep the new top-level staging entry private throughout the copy.
+        # copytree's final copystat must not briefly expose group-write payloads.
+        target.mkdir(mode=0o700)
+        for child in source.iterdir():
+            _copy_payload(child, target / child.name)
+        if not private_root:
+            shutil.copystat(source, target, follow_symlinks=False)
     else:
-        shutil.copy2(source, target, follow_symlinks=False)
+        _write_file(target, source.read_bytes(), stat.S_IMODE(source.lstat().st_mode))
+        shutil.copystat(source, target, follow_symlinks=False)
+
+
+def _copy_node(source, target, *, private_root=False):
+    _copy_payload(source, target, private_root=private_root)
     sync_tree(target); sync_dir(target.parent)
 
 
-def copy_node(source, target):
-    return runtime_faults.mutate('payload-snapshot', lambda: _copy_node(source, target))
+def copy_node(source, target, *, private_root=False):
+    return runtime_faults.mutate('payload-snapshot', lambda: _copy_node(source, target, private_root=private_root))
 
 
 def sync_tree(path):
@@ -210,7 +222,8 @@ def sync_tree(path):
 
 
 def _write_file(path, raw, mode=0o600):
-    with path.open('xb') as stream:
+    descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, 'O_NOFOLLOW', 0), 0o600)
+    with os.fdopen(descriptor, 'wb') as stream:
         stream.write(raw); stream.flush(); os.fsync(stream.fileno())
     path.chmod(mode)
 
@@ -263,13 +276,14 @@ def make_state_directory(path, *, leaf=True):
         return
     make_state_directory(path.parent, leaf=False)
     def create():
-        path.mkdir(mode=0o700 if leaf else 0o777)
+        path.mkdir(mode=0o700)
         sync_dir(path.parent)
     runtime_faults.mutate('state-parent-directory', create)
 
 
 @contextmanager
 def locked(state):
+    trust_paths.state(state)
     preflight_path(state)
     unchanged_parent(state)
     require(not state.is_symlink(), 'Installation state directory is a symlink')
@@ -286,6 +300,7 @@ def locked(state):
                 pass
         finally:
             cleanup_file(seed)
+    trust_paths.record(path)
     fd = os.open(path, os.O_RDWR | getattr(os, 'O_NOFOLLOW', 0))
     try:
         try:
@@ -306,6 +321,8 @@ def locked(state):
         replace_record(owner_path, {'schema':'agent-memory/lifecycle-owner-v1',
                                    'lock_path':str(path), 'pid':os.getpid(),
                                    'started_at':datetime.now(timezone.utc).isoformat()})
+        trust_paths.state(state)
+        trust_paths.record(path)
         yield
     finally:
         os.close(fd)
@@ -322,6 +339,7 @@ def git(root, *args, check=True):
 
 def source_info(root, kind, remote=None, ref=None):
     root = root.resolve(strict=True)
+    trust_paths.source(root)
     pack = root/'skills/agent-memory' if (root/'skills/agent-memory').is_dir() else root
     package = artifact.inspect(pack)
     result = git(root, 'rev-parse', '--show-toplevel', check=False)
@@ -338,6 +356,7 @@ def source_info(root, kind, remote=None, ref=None):
 
 
 def read_receipt(state):
+    trust_paths.state(state)
     path = state/'receipt.json'
     if not os.path.lexists(path):
         return None
@@ -395,6 +414,7 @@ def wrapper(pack):
 
 
 def preflight_path(path):
+    trust_paths.inspect(path, allow_final_link=True)
     require(path != Path.home().resolve() and path != Path('/'), 'Unsafe installation target: ' + str(path))
     unchanged_parent(path)
     parent = path.parent
@@ -427,6 +447,12 @@ def preflight_layout(args, state, code, old):
     if pack.parent.name == 'skills' and (pack.parents[1]/'.git').exists():
         sources.add(pack.parents[1])
     if old:
+        for target in old['targets']:
+            owned = Path(target['path'])
+            if target['kind'] == 'source':
+                trust_paths.source(owned)
+            else:
+                trust_paths.tree(owned)
         sources.add(absolute(old['source']['path']).resolve())
     journal_path = state/'journal.json'
     if os.path.lexists(journal_path):
@@ -512,6 +538,7 @@ def prepare(args, state, code, old, *, candidate_root=None):
             require((not args.remote or args.remote == saved['remote'])
                     and (not args.ref or args.ref == saved['ref']), 'Managed channel differs from ownership receipt')
             root = Path(saved['path'])
+            trust_paths.source(root)
             require(root == code and git(root, 'remote', 'get-url', 'origin').stdout.strip() == saved['remote']
                     and git(root, 'symbolic-ref', '--short', 'HEAD').stdout.strip() == saved['ref'],
                     'Managed source path, remote or branch differs from receipt')
@@ -563,6 +590,10 @@ def prepare(args, state, code, old, *, candidate_root=None):
                 after = {'kind': 'link', 'target': str(active_pack)}
             elif kind in ('copy', 'source'):
                 after = fingerprint(source_path)
+                # An unchanged, already-trusted legacy copy needs no permission
+                # churn or new receipt. New/replaced copies activate privately.
+                same_payload = before and before.get('kind') == 'directory' and before.get('hash') == after['hash']
+                after = {**after, 'mode': before['mode'] if same_payload else 0o700}
             else:
                 after = {'kind': 'file', 'hash': sha(raw), 'mode': mode_bits}
             actions.append({'path': str(path), 'kind': kind, 'before': before, 'after': after,
@@ -627,6 +658,7 @@ def make_parents(parent, journal, state):
 def verify_targets(targets):
     for target in targets:
         path = Path(target['path'])
+        trust_paths.tree(path)
         require(fingerprint(path) == target['identity'], 'Installed target readback failed: ' + str(path))
         if target['identity'] is not None and target['kind'] in ('copy', 'link'):
             require(artifact.inspect(path)['artifact_digest'] == target['artifact_digest'],
@@ -634,10 +666,13 @@ def verify_targets(targets):
 
 
 def rollback(state, journal):
+    trust_paths.state(state)
     conflicts = []
     for action in reversed(journal['actions']):
         path, stage = Path(action['path']), Path(action['stage'])
         unchanged_parent(path)
+        trust_paths.tree(path)
+        trust_paths.tree(stage)
         current, staged = fingerprint(path), fingerprint(stage)
         if current == action['before']:
             continue
@@ -663,6 +698,7 @@ def rollback(state, journal):
 
 def read_journal(state):
     """Validate recovery metadata without changing runtime targets or records."""
+    trust_paths.state(state)
     path = state/'journal.json'
     if not os.path.lexists(path):
         return None
@@ -717,6 +753,7 @@ def recover(state, *, for_install=False):
 def install(plan, *, before_activate=None, after_activate=None):
     operation = plan.get('operation', 'install')
     state = plan['state']; old = plan['old']; changed = [a for a in plan['actions'] if a['changed']]
+    trust_paths.state(state)
     if (operation != 'uninstall' and not changed and old and old['source'] == plan['source']
             and all(t['identity'] == next(a['after'] for a in plan['actions'] if a['path']==t['path'])
                     for t in old['targets'])):
@@ -770,7 +807,7 @@ def install(plan, *, before_activate=None, after_activate=None):
             elif action['kind'] == 'link':
                 runtime_faults.mutate('link-stage', lambda: stage.symlink_to(plan['source']['pack'], target_is_directory=True))
             elif action['kind'] in ('copy','source'):
-                copy_node(Path(action['source_path']), stage)
+                copy_node(Path(action['source_path']), stage, private_root=True)
             else:
                 write_file(stage, action['raw'], action['mode_bits'])
             if action['after'] is not None:
@@ -805,8 +842,11 @@ def install(plan, *, before_activate=None, after_activate=None):
         journal['status'] = 'activating'; replace_record(state/'journal.json', journal)
         for index, action in enumerate(journal['actions']):
             path, stage = Path(action['path']), Path(action['stage'])
-            unchanged_parent(path)
             fault(operation + '-before-activate-' + str(index))
+            unchanged_parent(path)
+            trust_paths.state(state)
+            trust_paths.tree(path)
+            trust_paths.tree(stage)
             require(fingerprint(path) == action['before'] and fingerprint(stage) == action['after'],
                     'Target/stage changed immediately before activation: ' + str(path))
             if action['after'] is None:
@@ -846,6 +886,10 @@ def install(plan, *, before_activate=None, after_activate=None):
 
 
 def failure_repair(exc):
+    if isinstance(exc, trust_paths.TrustPathError):
+        return ('Preserve this path and its contents. Use a trusted outside helper if the installed runtime '
+                'may have been exposed. Review ownership and permissions yourself or choose private per-user '
+                'XDG/client paths; the installer does not chmod or adopt an untrusted layout.')
     if isinstance(exc, LayoutError):
         return ('Choose separate writable XDG state/data and client targets outside Memory Banks and source trees; '
                 'rerun install --check. Do not run recovery under the refused layout.')
