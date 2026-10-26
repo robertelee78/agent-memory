@@ -1,0 +1,10 @@
+{
+  "complete_compatible_rounds": false,
+  "full_daily_use_v1_acceptance": false,
+  "required_fault_matrix_complete": false,
+  "failure": {
+    "type": "KeyboardInterrupt",
+    "message": ""
+  },
+  "seconds": 6373.23234844394
+}

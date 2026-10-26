@@ -1,0 +1,12 @@
+{
+  "reason": "Agent-controlled stop after independent discovery of two wrong-kind/vacuous seed recall assertions; not a product failure or qualification pass.",
+  "controller": {
+    "pid": 2587807,
+    "state": "S",
+    "parent": 2587805,
+    "start": "714258692"
+  },
+  "action": "all observed descendant commands terminal; sent SIGINT and resumed parent for its ordinary exception/finally cleanup",
+  "live_descendants": 0,
+  "wait_seconds": 46.35731981974095
+}

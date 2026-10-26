@@ -56,3 +56,11 @@ removed after source verification. [Results and raw bindings](data/2026-10-26-da
 retain exact source, receipts and outcomes. The smaller pilot is development
 qualification only; full 12/1,000, 24/10,000 and independent variations still
 require their own fresh results and independent acceptance.
+
+Subsequent raw-evidence review of the required12 workload finds two additional
+[wrong-kind negative seed recall controls](2026-10-26-seed-recall-kind-qualification.md).
+The earlier pilots' event completion and functional evidence stay retained,
+but they do not establish those two semantic exclusions. The corrected controller
+uses actual semantic-fact kinds with matched positive-before/negative-after
+requests. Fresh full semantic qualification is required; independent core-only
+variation paths and unchanged native runtime/tests retain their original scope.

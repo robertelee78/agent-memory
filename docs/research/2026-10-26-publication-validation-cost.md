@@ -83,14 +83,21 @@ different changed-learning frontier, not a paired equivalent of the failed
 twelve/24-session admission workload or a whole-workload pass.
 
 A fresh unchanged-controller six-session/128-lesson pilot at the frozen repair
-also passes all 25 required events in 688.44s, including exact all-bank seed/admitted
+completes its 25 declared events in 688.44s, including exact all-bank seed/admitted
 learning preservation, positive holds, disclosure checks and expected feature
-state. Independent code review approves the bounded static repair; it does not
-adopt execution/latency or whole-story claims.
+state. Later independent review of the required12 run identifies two inherited
+[wrong-kind negative recall assertions](2026-10-26-seed-recall-kind-qualification.md).
+The pilot's execution remains useful functional evidence, but event completion
+does not validate those two semantic outcomes. Corrected full-schedule
+qualification remains required. Independent code review approves the bounded
+static runtime repair; it does not adopt execution/latency or whole-story claims.
 
 [Results, original failures, instrumented counts and independent reviews](data/2026-10-26-publication-validation/bindings.json)
-retain their exact identities and qualifications. Fresh required-size schedules,
-independent variations and complete platform gates are running at integrated
-`81fec82c1619d20c12473d23e3fdf6706d52b641`. Reader-cost recheck and independent
-whole acceptance remain necessary. No timeout is padded and no smaller/control
+retain their exact identities and qualifications. Independent variations and
+complete platform gates remain bound to integrated
+`81fec82c1619d20c12473d23e3fdf6706d52b641`. Required semantic schedules are being
+repeated with corrected controller `c3e82e9`, whose portable runtime is identical.
+The [reader-cost recheck and revised seven-second target](2026-10-25-recall-final-evaluation.md)
+are retained separately; independent whole acceptance remains necessary.
+No timeout is padded and no smaller/control
 run establishes whole #99 acceptance or delivery.

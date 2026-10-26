@@ -1,0 +1,80 @@
+{
+  "reviewer": "codex-review-59",
+  "implementer": "codex-root",
+  "scope": "bounded static controller nonvacuity repair; not whole99/workload/native execution acceptance",
+  "candidate": "c3e82e963d6fd317b2072ca0af36aa0368e8f99b",
+  "tree": "fc918a8f913ad16019553592be6fc5165c69aaa9",
+  "reviewed_initial_candidate": "22aa98e9c0494bbdae9d05df3c28e7fb5c8352b4",
+  "initial_candidate_disposition": "CHANGES REQUIRED before execution: retrieval rows use record, not metadata; two positive controls would KeyError",
+  "followup_changes": "Two metadata field accesses corrected to record; no workloads started at initial candidate",
+  "comparison_base": "9ecc726f031dc60311d8128114f90f72069c1221",
+  "frozen_runtime_test_registry_reference": "81fec82c1619d20c12473d23e3fdf6706d52b641",
+  "runtime_tests_registry_bytes_modes_identical": true,
+  "changed_controller_functions": [
+    "typed_recall",
+    "prune_and_older_branch",
+    "withheld_replacement_independent_path"
+  ],
+  "all_other_controller_functions_exactly_preserved": true,
+  "files_read": [
+    {
+      "path": "scripts/evaluations/daily_use.py",
+      "sha256": "988c819ec4635a12357cbb1a4f7d272b44248aae3df6f25b191344b81ac8944d",
+      "bytes": 65322,
+      "git_mode": "100644",
+      "git_blob": "75c77ee4335ee933fffcc0d0e8b09a01e7799bb9"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/retrieval.py",
+      "sha256": "2096be570bbfa6cf8804f8cfe137049ca1e07b4904c1bfe0b6d0f3219f8c27aa",
+      "bytes": 18067,
+      "git_mode": "100644",
+      "git_blob": "9dd054560fb4c8113af887f41a21c4c4198c3755"
+    },
+    {
+      "path": "docs/design/v0.0.3-daily-use-repair.md",
+      "sha256": "34fd34d02026706aed85f5807c4a824071e179099b6faa4c5b7aaa860e88167c",
+      "bytes": 25897,
+      "git_mode": "100644",
+      "git_blob": "85b485501746b33e4d084668ab643dcb676db2ff"
+    },
+    {
+      "path": "docs/research/2026-10-26-seed-recall-kind-qualification.md",
+      "sha256": "f9aa2a49d2daff337929c4a69812e1c247a0de7f60a6744b997ade27c4bfd52e",
+      "bytes": 3633,
+      "git_mode": "100644",
+      "git_blob": "dcef6b77402ae10c1b58e49433b878e898ddeaff"
+    },
+    {
+      "path": "docs/research/data/2026-10-26-daily-use-final/required12/summary.json",
+      "sha256": "88ff6c570e2d2545217f91f379c49df80fb0d043dfcf0308b5cb5fc26bf028a0",
+      "bytes": 2540,
+      "git_mode": "100644",
+      "git_blob": "358d03ba06bd7147902b28a880f968e0784ad97f"
+    },
+    {
+      "path": "docs/research/data/2026-10-26-daily-use-final/required12/bindings.json",
+      "sha256": "b972ac5734ce4e52e6a59f10756389dae4b51174e122ec8d51bd665c46fdd68b",
+      "bytes": 4406,
+      "git_mode": "100644",
+      "git_blob": "abfd095da342268612293aecf6bb393ef65cdcbf"
+    },
+    {
+      "path": "docs/research/data/2026-10-26-daily-use-final/required12/qualification-status.json",
+      "sha256": "dee3931361295ca31879f21399d48208d3670f850cec2be7a7aa8dd3f44052f1",
+      "bytes": 500,
+      "git_mode": "100644",
+      "git_blob": "d25f921fdff9400f467dddb1f790e78497c0736a"
+    }
+  ],
+  "core_variation_carry_forward": "Supported for default user-feedback requests and core-only paths; no new semantic-scenario claim. Source binding remains original.",
+  "native_gate_carry_forward": "Supported based on unchanged product, contract tests, fixtures and registry; reported native totals not independently audited here.",
+  "disposition": "APPROVED corrected c3e82e9 bounded static controller repair; fresh full semantic preflight and both full required schedules necessary",
+  "new_product_or_test_executions": 0,
+  "new_model_calls": 0,
+  "jobs": "terminal and collected",
+  "worlds": 0,
+  "source_holds": "RELEASED",
+  "external_writer_grant": "NONE / RELEASED",
+  "report_sha256": "7047f5eb392dd01006c1d529403b5bc89bc1d515b8dd5f86163479f5b921303e"
+}

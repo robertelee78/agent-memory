@@ -1,0 +1,53 @@
+{
+  "classification": "Agent-controlled qualification abort after independent wrong-kind recall finding; no product failure or pass inferred.",
+  "retained_directory": "/tmp/agent-memory-v003/daily-use-v1-required-24-10000-81fec82/linux",
+  "remote_workspace_retained": true,
+  "raw_files": {
+    "seed-reference.json": {
+      "sha256": "2691f2a4793f5a560a1bc6e25d9562aeb749f598674fd3349c6430b253046238",
+      "bytes": 1708893
+    },
+    "source-binding.json": {
+      "sha256": "7e773ce64bced3dd9d20f39ccfccd8f0326e01e6912d11fcaf3842acb18953cd",
+      "bytes": 153231
+    },
+    "controller.py": {
+      "sha256": "f48fe78daf796a8cfcc1527280b62d82d6c2988a7a995cbf0d4c83730cf73a76",
+      "bytes": 64770
+    },
+    "outcome.json": {
+      "sha256": "c043bae4bf0e98d73c476099263712fb37ab9a180f69cbd2c30699b065e22e99",
+      "bytes": 228
+    },
+    "events.json": {
+      "sha256": "a4cd2241014c8079cc1cfe86bfc2fb5ba5fed94607c393d773e66e923aba304a",
+      "bytes": 8167
+    },
+    "source-before.json": {
+      "sha256": "e8238df25612323733d91d02c6d9bc6a08e547e37ae72fdeae774bec3625bc28",
+      "bytes": 123
+    },
+    "source-after.json": {
+      "sha256": "e8238df25612323733d91d02c6d9bc6a08e547e37ae72fdeae774bec3625bc28",
+      "bytes": 123
+    },
+    "commands.json": {
+      "sha256": "366e01a3301c8d5ec818a4b3c40a06f0491b562f3e4facaf27aed21ca7bcf858",
+      "bytes": 855984
+    },
+    "failure.txt": {
+      "sha256": "2e31f10e496539d33a493284412f22585b9af501be03894d591cffde657fb8d4",
+      "bytes": 1312
+    },
+    "feature-state-history.jsonl": {
+      "sha256": "58786a6033c3796f436cba3aa0f4a899975780c8294b1d3b165f24f80f7902a1",
+      "bytes": 20093
+    },
+    "qualification-gap-interruption.json": {
+      "sha256": "bbb260bd66b8f463f08c3111a4510a24781e0c06e0a0d6b652a27be9be8ad0e3",
+      "bytes": 466
+    }
+  },
+  "post_abort_bank_preservation_claimed": false,
+  "product_timeout_claimed": false
+}

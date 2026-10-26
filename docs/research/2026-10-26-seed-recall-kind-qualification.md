@@ -22,6 +22,11 @@ the same receiving session positively recalls exact seed1 metadata/version/body
 under `src/seed/1`. The later negatives use the same record kind/ID/component.
 No selector or product safety/applicability gate is relaxed.
 
+The first unexecuted patch (`22aa98e`) accessed a nonexistent positive-result
+`metadata` field. Static review caught it before qualification; `c3e82e9` uses
+the public `record` field. This pre-execution apparatus correction is retained,
+rather than reported as a product failure or successful test run.
+
 The original exit0 run, all974 calls and independently verified functional/source
 and preservation evidence remain retained with the two gaps plainly marked in
 [its qualification status](data/2026-10-26-daily-use-final/required12/qualification-status.json).
