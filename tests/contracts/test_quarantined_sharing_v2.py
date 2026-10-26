@@ -65,9 +65,19 @@ class QuarantinedSharingVersionTwoContract(PublicationFixture):
             project=result['proof']['judgment']['binding']['project_id']
             request={'proof':result['proof'],'recall':{'project_id':project,'query':'','paths':['projectbrief.md'],
                 'ids':[],'context':{},'kinds':[],'minimum_trust':'reviewed','limit':8,'include_context':True}}
+            request_path=self.private(w,'refresh-request',request)
+            private_before={str(p):p.read_bytes() for p in w.paths['state'].rglob('*') if p.is_file()}
+            # Actual schema is authoritative even if the small v2 input fits
+            # the legacy input budget and --v2 was not supplied.
+            for flags in ([],['--v2']):
+                failed,value=self.call(w,'refresh_memory.py','prepare',*flags,'--repo',repo,'--input',request_path)
+                self.assertEqual(failed.returncode,1,value);self.assertEqual(value['failure_code'],'private-output-required')
+                self.assertIn('--output',value['repair']);self.assertNotIn(self.marker,failed.stdout+failed.stderr)
+                self.assertEqual(before,self.state(w,repo,bank))
+                self.assertEqual(private_before,{str(p):p.read_bytes() for p in w.paths['state'].rglob('*') if p.is_file()})
             prepared_path=w.inside('refresh.json')
             self.good(w,'refresh_memory.py','prepare','--v2','--repo',repo,
-                '--input',self.private(w,'refresh-request',request),'--output',prepared_path)
+                '--input',request_path,'--output',prepared_path)
             output=w.inside('refreshed.json')
             self.good(w,'refresh_memory.py','apply','--v2','--input',prepared_path,'--output',output)
             applied=json.loads(output.read_text())

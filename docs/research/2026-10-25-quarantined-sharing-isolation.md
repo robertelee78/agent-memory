@@ -42,6 +42,14 @@ check without an explicit private output omits complete candidate banks from
 stdout; ordinary page/summary output must not disclose retained raw originals.
 Existing transaction, audit, repository-rule and source-freshness checks remain.
 
+Independent static review of `67b1d47` found one additional stdout path: refresh
+preparation could return the complete retained-body proposal without `--output`.
+The repair requires private output based on the **actual nested v2 proof schema**,
+including small v2 inputs accepted without the `--v2` flag. It refuses before
+preparation, returns an actionable `private-output-required` diagnostic, and
+preserves canonical, feature and private state. The public control exercises
+both flag variants before completing the same useful private-output refresh.
+
 ## Controls and remaining work
 
 `quarantined-sharing-v2` exercises actual public inspection, pages, review,

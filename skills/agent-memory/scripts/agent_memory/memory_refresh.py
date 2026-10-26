@@ -231,7 +231,16 @@ def main(argv=None):
     args = parser.parse_args(argv)
     try:
         if args.operation == 'inspect': value = inspect(args.repo, args.base,version2=args.v2)
-        elif args.operation == 'prepare': value = prepare(args.repo, read_input(args.input,version2=args.v2))
+        elif args.operation == 'prepare':
+            request=read_input(args.input,version2=args.v2)
+            proof=request.get('proof') if isinstance(request,dict) else None
+            if isinstance(proof,dict) and proof.get('schema')=='agent-memory/semantic-sharing-proof-v2' and not args.output:
+                print(json.dumps(result('prepare','pending-private-output',failure_component='prepare',
+                    failure_code='private-output-required',
+                    reason='A v2 refresh proposal may retain quarantined local originals and requires private output.',
+                    repair='Rerun am refresh prepare with the original --repo and --input plus --v2 --output /private/path/refresh.json; select an owner-only location outside the repository.'),indent=2))
+                return 1
+            value = prepare(args.repo, request)
         else: value = apply(read_input(args.input,version2=args.v2))
         if args.output:
             repo=args.repo if hasattr(args,'repo') else tx.proposal_value(read_input(args.input,version2=args.v2))['repo_root']
