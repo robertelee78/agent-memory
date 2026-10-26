@@ -1,0 +1,131 @@
+{
+  "schema": "agent-memory/retrieval-result-v1",
+  "project_id": "f9bd2cac-5869-439d-83cd-3c97ecf3d215",
+  "results": [
+    {
+      "path": "topics/seed/records/1.md",
+      "format": "standalone-record",
+      "body": "# Seed partition 1\n\nThis authored seed partition retains 3 verified work units.\n",
+      "source_sha256": "54318c434b3a89529831b9f8a411c8643bc8387b77cf8c8ea42d033810bd96be",
+      "scope_chain": [
+        "component:src/seed",
+        "component:src/seed",
+        "component:src/seed/1"
+      ],
+      "source_class": "external",
+      "untrusted_data": true,
+      "source_assertions_verified": false,
+      "admission_verified": false,
+      "procedural_guidance": false,
+      "record": {
+        "schema": "agent-memory/record-v1",
+        "id": "017358c6-6f3b-46c2-8f19-152c5f68800e",
+        "version": 1,
+        "project-id": "f9bd2cac-5869-439d-83cd-3c97ecf3d215",
+        "kind": "semantic-fact",
+        "status": "active",
+        "scope": "component:src/seed/1",
+        "applicability": "known",
+        "conditions": {
+          "component": "src/seed/1"
+        },
+        "source": {
+          "actor": "fixture-observer",
+          "kind": "executable-test"
+        },
+        "evidence": [
+          "fixture://daily-use-v1/seed/1"
+        ],
+        "origin": {
+          "developer-id": "068cf323-b85e-42dc-b325-97f8b9e4f8be",
+          "harness": "custom-harness",
+          "session": "example-session",
+          "code-state": "not-code"
+        },
+        "recorded-at": "2026-10-22T21:00:00Z",
+        "updated": "2026-10-22T21:00:00Z",
+        "valid-from": null,
+        "valid-until": null,
+        "derived-from": [],
+        "corrects": [],
+        "supersedes": [],
+        "trust": "reviewed",
+        "visibility": "visible",
+        "admission-reason": "Authored seed fixture, not real admission evidence"
+      },
+      "selection_class": "current-record",
+      "selection": {
+        "current": true,
+        "gates": {
+          "authorized-scope": true,
+          "applicable": true,
+          "active": true,
+          "valid-time": true,
+          "sufficient-trust": true,
+          "visible": true,
+          "no-active-superseder": true
+        },
+        "reasons": []
+      },
+      "match": {
+        "strategy": "exact-id",
+        "score": 10000,
+        "matching_terms": []
+      }
+    }
+  ],
+  "evaluated_at": "2026-10-26T18:59:54.120379Z",
+  "context": {
+    "component": "src/seed/1",
+    "branch": "session-2",
+    "revision": "32a88b7057fcea6841983bdb7cf3a5ab327ff4f1"
+  },
+  "scope_context": {
+    "developer_id": "068cf323-b85e-42dc-b325-97f8b9e4f8be",
+    "project_id": "f9bd2cac-5869-439d-83cd-3c97ecf3d215",
+    "developer_sha256": "1d23594c28c006dfa9624a66b99e56f1ecac4ec2dd155aba4dfd450bf144d72a",
+    "project_sha256": "70fa9344251a2544a784214ded1bfab325b5cfcff2049155d8243a492a7b511e",
+    "checkout_key": "38:13101735",
+    "repository_settings_sha256": "61482cfa0612c62576281d77915cd7cbfca4be3643fcce3031bffa237e4a310c",
+    "initialization_only": false
+  },
+  "bank_observation_sha256": "704102b480ad5d6f589dabc3e8d4313f1d781862ce40795ae9d97e581c79f3a4",
+  "excluded_counts": {
+    "applicable": 2,
+    "different-context:component": 127,
+    "memory-type": 13,
+    "missing-context:environment": 2,
+    "non-guidance-format": 28,
+    "orientation-not-requested": 2
+  },
+  "metrics": {
+    "inventory_files": 174,
+    "entries": 173,
+    "qualified_candidates": 14,
+    "ranked": 1,
+    "selected": 1,
+    "bounded_candidate_bytes_read": 16070,
+    "operation_local_observation_used": true,
+    "canonical_observation_payload_bytes_read": 502569,
+    "canonical_observation_file_reads": 522,
+    "parsed_records": 159,
+    "catalog_updated": false,
+    "inspected_entries": 173,
+    "candidate_count_scope": "complete-bank",
+    "result_bytes": 1960,
+    "elapsed_seconds": 0.21979873068630695
+  },
+  "audit": {
+    "path": "/tmp/agent-memory-test-4wotk_c8/state/agent-memory/writes/82106106e17792cea408b52f4d068858c6e95e57c6d151d0449eb301bb680370/security-audit/2daf39e2-ad14-40ce-b4cb-3292141061eb.policy-check.checked.068cf323-b85e-42dc-b325-97f8b9e4f8be.json",
+    "verified": true,
+    "phase": "checked"
+  },
+  "canonical_writes_performed": false,
+  "audit_writes_performed": true,
+  "derived_cache_writes_performed": false,
+  "optional_indexes_used": false,
+  "source_assertions_verified": false,
+  "publication_verified": false,
+  "code_working_bytes_verified": false,
+  "validation_scope": "metadata-currentness-and-bounded-file-recall"
+}

@@ -1,0 +1,62 @@
+{
+  "controller_sha256": "988c819ec4635a12357cbb1a4f7d272b44248aae3df6f25b191344b81ac8944d",
+  "controls": [
+    {
+      "command": 464,
+      "requested_kind": [
+        "semantic-fact"
+      ],
+      "context": {
+        "component": "src/seed/0"
+      },
+      "results": 1,
+      "exit": 0
+    },
+    {
+      "command": 465,
+      "requested_kind": [
+        "semantic-fact"
+      ],
+      "context": {
+        "component": "src/seed/0"
+      },
+      "results": 1,
+      "exit": 0
+    },
+    {
+      "command": 500,
+      "requested_kind": [
+        "semantic-fact"
+      ],
+      "context": {
+        "component": "src/seed/0"
+      },
+      "results": 0,
+      "exit": 0
+    },
+    {
+      "command": 510,
+      "requested_kind": [
+        "semantic-fact"
+      ],
+      "context": {
+        "component": "src/seed/1"
+      },
+      "results": 1,
+      "exit": 0
+    },
+    {
+      "command": 545,
+      "requested_kind": [
+        "semantic-fact"
+      ],
+      "context": {
+        "component": "src/seed/1"
+      },
+      "results": 0,
+      "exit": 0
+    }
+  ],
+  "full_pilot_only": true,
+  "whole_99_acceptance_claimed": false
+}

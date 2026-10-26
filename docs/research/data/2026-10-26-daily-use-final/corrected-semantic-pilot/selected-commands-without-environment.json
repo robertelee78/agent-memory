@@ -1,0 +1,107 @@
+[
+  {
+    "number": 464,
+    "argv": [
+      "/usr/bin/python3",
+      "-I",
+      "/tmp/agent-memory-test-hdpk1fs2/portable pack/scripts/retrieve.py",
+      "--repo",
+      "/tmp/agent-memory-test-hdpk1fs2/sessions/session-0",
+      "--request",
+      "/tmp/agent-memory-test-hdpk1fs2/inputs/session-0-typed-recall.json"
+    ],
+    "inputs": {
+      "/tmp/agent-memory-test-hdpk1fs2/inputs/session-0-typed-recall.json": "15dba8e6d6a3ff00daeca73b47746e808b5157dd990158beacc8a831a6281b20"
+    },
+    "exit": 0,
+    "timed_out": false,
+    "seconds": 0.28036054503172636,
+    "stdout_sha256": "ac92e563af5cc5bcb4663e04a7373bc7a5244d26c651e597c9ab3519128f4bcf",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "public_forbidden_marker_absent": true
+  },
+  {
+    "number": 465,
+    "argv": [
+      "/usr/bin/python3",
+      "-I",
+      "/tmp/agent-memory-test-4wotk_c8/portable pack/scripts/retrieve.py",
+      "--repo",
+      "/tmp/agent-memory-test-4wotk_c8/sessions/session-5",
+      "--request",
+      "/tmp/agent-memory-test-4wotk_c8/inputs/session-5-typed-recall.json"
+    ],
+    "inputs": {
+      "/tmp/agent-memory-test-4wotk_c8/inputs/session-5-typed-recall.json": "15dba8e6d6a3ff00daeca73b47746e808b5157dd990158beacc8a831a6281b20"
+    },
+    "exit": 0,
+    "timed_out": false,
+    "seconds": 0.2800291534513235,
+    "stdout_sha256": "3e17d0706f62bf032b8b59e77ec2e24e04558395255715c6fb7dcb0741c862d5",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "public_forbidden_marker_absent": true
+  },
+  {
+    "number": 500,
+    "argv": [
+      "/usr/bin/python3",
+      "-I",
+      "/tmp/agent-memory-test-4wotk_c8/portable pack/scripts/retrieve.py",
+      "--repo",
+      "/tmp/agent-memory-test-4wotk_c8/sessions/session-5",
+      "--request",
+      "/tmp/agent-memory-test-4wotk_c8/inputs/session-5-typed-recall.json"
+    ],
+    "inputs": {
+      "/tmp/agent-memory-test-4wotk_c8/inputs/session-5-typed-recall.json": "15dba8e6d6a3ff00daeca73b47746e808b5157dd990158beacc8a831a6281b20"
+    },
+    "exit": 0,
+    "timed_out": false,
+    "seconds": 0.38760701287537813,
+    "stdout_sha256": "909b51fa8c8c5ec24a0a8e4cef026d7ff211e24eceafb208269309bc2990f2e6",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "public_forbidden_marker_absent": true
+  },
+  {
+    "number": 510,
+    "argv": [
+      "/usr/bin/python3",
+      "-I",
+      "/tmp/agent-memory-test-4wotk_c8/portable pack/scripts/retrieve.py",
+      "--repo",
+      "/tmp/agent-memory-test-4wotk_c8/sessions/session-2",
+      "--request",
+      "/tmp/agent-memory-test-4wotk_c8/inputs/session-2-typed-recall.json"
+    ],
+    "inputs": {
+      "/tmp/agent-memory-test-4wotk_c8/inputs/session-2-typed-recall.json": "42c86520745ac8661eb36a03477e4befd2a9b0e1b1084a8e3e7598a4644da9f8"
+    },
+    "exit": 0,
+    "timed_out": false,
+    "seconds": 0.33079010155051947,
+    "stdout_sha256": "5ecaca8000d05bc2900df253bff02d2578cf6fcd6c5a0acccdaa14667e33af36",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "public_forbidden_marker_absent": true
+  },
+  {
+    "number": 545,
+    "argv": [
+      "/usr/bin/python3",
+      "-I",
+      "/tmp/agent-memory-test-4wotk_c8/portable pack/scripts/retrieve.py",
+      "--repo",
+      "/tmp/agent-memory-test-4wotk_c8/sessions/session-2",
+      "--request",
+      "/tmp/agent-memory-test-4wotk_c8/inputs/session-2-typed-recall.json"
+    ],
+    "inputs": {
+      "/tmp/agent-memory-test-4wotk_c8/inputs/session-2-typed-recall.json": "42c86520745ac8661eb36a03477e4befd2a9b0e1b1084a8e3e7598a4644da9f8"
+    },
+    "exit": 0,
+    "timed_out": false,
+    "seconds": 0.331113837659359,
+    "stdout_sha256": "8d1e51da447485a82a4ecb0309b53632f39d23b32973f57c081d1aca163ad058",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "public_forbidden_marker_absent": true
+  }
+]

@@ -1,0 +1,46 @@
+{
+  "source": "c3e82e963d6fd317b2072ca0af36aa0368e8f99b",
+  "full_schedule_pilot_only": true,
+  "whole_99_acceptance_claimed": false,
+  "required_size_acceptance_claimed": false,
+  "original_directory": "/tmp/agent-memory-v003/daily-use-v1-semantic-pilot-6-128-c3e82e9/linux",
+  "private_originals": {
+    "commands.json": {
+      "sha256": "d5979cc3a20ec4893f7406573f80b46a990648ba027eef2683475d3e7cea06e3",
+      "bytes": 1438933
+    },
+    "controller.py": {
+      "sha256": "988c819ec4635a12357cbb1a4f7d272b44248aae3df6f25b191344b81ac8944d",
+      "bytes": 65322
+    },
+    "events.json": {
+      "sha256": "287968af8e1507652474caafc7f3364ba95734dbb399b9a78873e70f0040efea",
+      "bytes": 21604
+    },
+    "feature-state-history.jsonl": {
+      "sha256": "05c2ababfae7c74d9187a68efe466f50548cee286c0503ed426cdd9b7e739946",
+      "bytes": 36316
+    },
+    "outcome.json": {
+      "sha256": "6f11f0dcb1e3adb1411f0a0155676ee57cc7f94e78268c906f82c2438de6103c",
+      "bytes": 420
+    },
+    "seed-reference.json": {
+      "sha256": "a3ef0c5f6edc9fd48b905e6b278ae8bad357259e53817811b41d840d9db27bf0",
+      "bytes": 21653
+    },
+    "source-after.json": {
+      "sha256": "bfcedc8eab13360c512f474c5c39d410d774c3b9111e7e5a4f1ceb6e34c65b47",
+      "bytes": 123
+    },
+    "source-before.json": {
+      "sha256": "bfcedc8eab13360c512f474c5c39d410d774c3b9111e7e5a4f1ceb6e34c65b47",
+      "bytes": 123
+    },
+    "source-binding.json": {
+      "sha256": "116c1741e9ef0371ab27529b1121d3bac3e552b9ba526860545bc3a04735bb86",
+      "bytes": 169204
+    }
+  },
+  "environment_omitted": true
+}

@@ -1,0 +1,60 @@
+{
+  "schema": "agent-memory/retrieval-result-v1",
+  "project_id": "f9bd2cac-5869-439d-83cd-3c97ecf3d215",
+  "results": [],
+  "evaluated_at": "2026-10-26T18:59:31.397754Z",
+  "context": {
+    "component": "src/seed/0",
+    "branch": "session-5",
+    "revision": "df043ec569fad1ba4434f94f4930928c779f0725"
+  },
+  "scope_context": {
+    "developer_id": "068cf323-b85e-42dc-b325-97f8b9e4f8be",
+    "project_id": "f9bd2cac-5869-439d-83cd-3c97ecf3d215",
+    "developer_sha256": "1d23594c28c006dfa9624a66b99e56f1ecac4ec2dd155aba4dfd450bf144d72a",
+    "project_sha256": "70fa9344251a2544a784214ded1bfab325b5cfcff2049155d8243a492a7b511e",
+    "checkout_key": "38:13101735",
+    "repository_settings_sha256": "61482cfa0612c62576281d77915cd7cbfca4be3643fcce3031bffa237e4a310c",
+    "initialization_only": false
+  },
+  "bank_observation_sha256": "530dcee19fa450f68bbfb791193b9b5d6b6018f509a9ebf718619f6b349f28c6",
+  "excluded_counts": {
+    "active": 3,
+    "applicable": 2,
+    "different-context:component": 127,
+    "memory-type": 15,
+    "missing-context:environment": 2,
+    "non-guidance-format": 35,
+    "orientation-not-requested": 2
+  },
+  "metrics": {
+    "inventory_files": 185,
+    "entries": 184,
+    "qualified_candidates": 15,
+    "ranked": 0,
+    "selected": 0,
+    "bounded_candidate_bytes_read": 17832,
+    "operation_local_observation_used": true,
+    "canonical_observation_payload_bytes_read": 535344,
+    "canonical_observation_file_reads": 555,
+    "parsed_records": 170,
+    "catalog_updated": false,
+    "inspected_entries": 184,
+    "candidate_count_scope": "complete-bank",
+    "result_bytes": 0,
+    "elapsed_seconds": 0.27004338148981333
+  },
+  "audit": {
+    "path": "/tmp/agent-memory-test-4wotk_c8/state/agent-memory/writes/2159c91d5d007486d41e1517c0eaf99172789b5370d10625fde5aee7aceba8cd/security-audit/65b298d2-23e6-4da6-bd38-c5b0240ba274.policy-check.checked.068cf323-b85e-42dc-b325-97f8b9e4f8be.json",
+    "verified": true,
+    "phase": "checked"
+  },
+  "canonical_writes_performed": false,
+  "audit_writes_performed": true,
+  "derived_cache_writes_performed": false,
+  "optional_indexes_used": false,
+  "source_assertions_verified": false,
+  "publication_verified": false,
+  "code_working_bytes_verified": false,
+  "validation_scope": "metadata-currentness-and-bounded-file-recall"
+}

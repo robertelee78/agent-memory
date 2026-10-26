@@ -1,0 +1,132 @@
+{
+  "schema": "agent-memory/retrieval-result-v1",
+  "project_id": "f9bd2cac-5869-439d-83cd-3c97ecf3d215",
+  "results": [
+    {
+      "path": "topics/seed/records/0.md",
+      "format": "standalone-record",
+      "body": "# Seed partition 0\n\nThis authored seed partition retains 2 verified work units.\n",
+      "source_sha256": "781321bd4c3fd82d792c4ce3a7420282a7d05d77232486b89287536cac0979a6",
+      "scope_chain": [
+        "component:src/seed",
+        "component:src/seed",
+        "component:src/seed/0"
+      ],
+      "source_class": "external",
+      "untrusted_data": true,
+      "source_assertions_verified": false,
+      "admission_verified": false,
+      "procedural_guidance": false,
+      "record": {
+        "schema": "agent-memory/record-v1",
+        "id": "277a31f3-6ceb-4706-ba39-a15b4910f97a",
+        "version": 1,
+        "project-id": "f9bd2cac-5869-439d-83cd-3c97ecf3d215",
+        "kind": "semantic-fact",
+        "status": "active",
+        "scope": "component:src/seed/0",
+        "applicability": "known",
+        "conditions": {
+          "component": "src/seed/0"
+        },
+        "source": {
+          "actor": "fixture-observer",
+          "kind": "executable-test"
+        },
+        "evidence": [
+          "fixture://daily-use-v1/seed/0"
+        ],
+        "origin": {
+          "developer-id": "068cf323-b85e-42dc-b325-97f8b9e4f8be",
+          "harness": "custom-harness",
+          "session": "example-session",
+          "code-state": "not-code"
+        },
+        "recorded-at": "2026-10-22T21:00:00Z",
+        "updated": "2026-10-22T21:00:00Z",
+        "valid-from": null,
+        "valid-until": null,
+        "derived-from": [],
+        "corrects": [],
+        "supersedes": [],
+        "trust": "reviewed",
+        "visibility": "visible",
+        "admission-reason": "Authored seed fixture, not real admission evidence"
+      },
+      "selection_class": "current-record",
+      "selection": {
+        "current": true,
+        "gates": {
+          "authorized-scope": true,
+          "applicable": true,
+          "active": true,
+          "valid-time": true,
+          "sufficient-trust": true,
+          "visible": true,
+          "no-active-superseder": true
+        },
+        "reasons": []
+      },
+      "match": {
+        "strategy": "exact-id",
+        "score": 10000,
+        "matching_terms": []
+      }
+    }
+  ],
+  "evaluated_at": "2026-10-26T18:58:27.997700Z",
+  "context": {
+    "component": "src/seed/0",
+    "branch": "session-0",
+    "revision": "cfdc9937b133ba71dbc5928332f3167f668a2f8c"
+  },
+  "scope_context": {
+    "developer_id": "068cf323-b85e-42dc-b325-97f8b9e4f8be",
+    "project_id": "f9bd2cac-5869-439d-83cd-3c97ecf3d215",
+    "developer_sha256": "64615f50088063ffe62cf8f008b7107f13974a94282fc88f75c9647dafafaeb7",
+    "project_sha256": "9e9ba4331efc14279a18697cb998e7530e793112522035f64d8d3b3f4213d146",
+    "checkout_key": "38:13100385",
+    "repository_settings_sha256": "61482cfa0612c62576281d77915cd7cbfca4be3643fcce3031bffa237e4a310c",
+    "initialization_only": false
+  },
+  "bank_observation_sha256": "f291953986a1f6e0d1e6c5df7863c01f6e1d346bf4be9dd6ecca11ccaf2ca9c3",
+  "excluded_counts": {
+    "active": 3,
+    "applicable": 2,
+    "different-context:component": 127,
+    "memory-type": 14,
+    "missing-context:environment": 2,
+    "non-guidance-format": 33,
+    "orientation-not-requested": 2
+  },
+  "metrics": {
+    "inventory_files": 183,
+    "entries": 182,
+    "qualified_candidates": 15,
+    "ranked": 1,
+    "selected": 1,
+    "bounded_candidate_bytes_read": 17693,
+    "operation_local_observation_used": true,
+    "canonical_observation_payload_bytes_read": 531483,
+    "canonical_observation_file_reads": 549,
+    "parsed_records": 168,
+    "catalog_updated": false,
+    "inspected_entries": 182,
+    "candidate_count_scope": "complete-bank",
+    "result_bytes": 1960,
+    "elapsed_seconds": 0.19123309571295977
+  },
+  "audit": {
+    "path": "/tmp/agent-memory-test-hdpk1fs2/state/agent-memory/writes/fc820a26bdb944bbe2fa44911a5d887d0e775f6f2e05eb2f2ebf45ea59e07a63/security-audit/f1dd5d01-f185-4da9-931f-9a172848202a.policy-check.checked.068cf323-b85e-42dc-b325-97f8b9e4f8be.json",
+    "verified": true,
+    "phase": "checked"
+  },
+  "canonical_writes_performed": false,
+  "audit_writes_performed": true,
+  "derived_cache_writes_performed": false,
+  "optional_indexes_used": false,
+  "source_assertions_verified": false,
+  "publication_verified": false,
+  "code_working_bytes_verified": false,
+  "validation_scope": "metadata-currentness-and-bounded-file-recall"
+}

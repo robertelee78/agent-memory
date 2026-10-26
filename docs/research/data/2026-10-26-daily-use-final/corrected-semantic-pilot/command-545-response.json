@@ -1,0 +1,62 @@
+{
+  "schema": "agent-memory/retrieval-result-v1",
+  "project_id": "f9bd2cac-5869-439d-83cd-3c97ecf3d215",
+  "results": [],
+  "evaluated_at": "2026-10-26T19:01:17.110588Z",
+  "context": {
+    "component": "src/seed/1",
+    "branch": "session-2",
+    "revision": "32a88b7057fcea6841983bdb7cf3a5ab327ff4f1"
+  },
+  "scope_context": {
+    "developer_id": "068cf323-b85e-42dc-b325-97f8b9e4f8be",
+    "project_id": "f9bd2cac-5869-439d-83cd-3c97ecf3d215",
+    "developer_sha256": "1d23594c28c006dfa9624a66b99e56f1ecac4ec2dd155aba4dfd450bf144d72a",
+    "project_sha256": "70fa9344251a2544a784214ded1bfab325b5cfcff2049155d8243a492a7b511e",
+    "checkout_key": "38:13101735",
+    "repository_settings_sha256": "61482cfa0612c62576281d77915cd7cbfca4be3643fcce3031bffa237e4a310c",
+    "initialization_only": false
+  },
+  "bank_observation_sha256": "4b5d86c0045d66d2498d101b322788c8837b3ef7e3fd8420f10c5bb65cf7c651",
+  "excluded_counts": {
+    "active": 3,
+    "applicable": 2,
+    "different-context:component": 126,
+    "memory-type": 16,
+    "missing-context:environment": 2,
+    "no-active-superseder": 1,
+    "non-guidance-format": 36,
+    "orientation-not-requested": 2,
+    "security:token": 1
+  },
+  "metrics": {
+    "inventory_files": 188,
+    "entries": 187,
+    "qualified_candidates": 17,
+    "ranked": 0,
+    "selected": 0,
+    "bounded_candidate_bytes_read": 20628,
+    "operation_local_observation_used": true,
+    "canonical_observation_payload_bytes_read": 544167,
+    "canonical_observation_file_reads": 564,
+    "parsed_records": 173,
+    "catalog_updated": false,
+    "inspected_entries": 187,
+    "candidate_count_scope": "complete-bank",
+    "result_bytes": 0,
+    "elapsed_seconds": 0.2366600912064314
+  },
+  "audit": {
+    "path": "/tmp/agent-memory-test-4wotk_c8/state/agent-memory/writes/82106106e17792cea408b52f4d068858c6e95e57c6d151d0449eb301bb680370/security-audit/b9e8ff9a-dc8a-46df-8eee-c1774c120dc3.policy-check.checked.068cf323-b85e-42dc-b325-97f8b9e4f8be.json",
+    "verified": true,
+    "phase": "checked"
+  },
+  "canonical_writes_performed": false,
+  "audit_writes_performed": true,
+  "derived_cache_writes_performed": false,
+  "optional_indexes_used": false,
+  "source_assertions_verified": false,
+  "publication_verified": false,
+  "code_working_bytes_verified": false,
+  "validation_scope": "metadata-currentness-and-bounded-file-recall"
+}
