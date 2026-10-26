@@ -1,0 +1,42 @@
+{
+  "baselines": {
+    "macos-one-line": {
+      "prepared": true,
+      "legacy_version": "0.0.2",
+      "source_revision": "31f10a29fcd2e03c668cdc9fc5f163ea45dc8cb5",
+      "world_retained": true,
+      "actual_public_default_install": true,
+      "platform": "macOS-27.2-arm64-arm-64bit-Mach-O",
+      "seconds": 8.413954209070653
+    },
+    "macos-cli": {
+      "prepared": true,
+      "legacy_version": "0.0.2",
+      "source_revision": "31f10a29fcd2e03c668cdc9fc5f163ea45dc8cb5",
+      "world_retained": true,
+      "actual_public_default_install": true,
+      "platform": "macOS-27.2-arm64-arm-64bit-Mach-O",
+      "seconds": 8.031508208019659
+    },
+    "linux-one-line": {
+      "prepared": true,
+      "legacy_version": "0.0.2",
+      "source_revision": "31f10a29fcd2e03c668cdc9fc5f163ea45dc8cb5",
+      "world_retained": true,
+      "actual_public_default_install": true,
+      "platform": "Linux-6.17.0-41-generic-x86_64-with-glibc2.42",
+      "seconds": 5.9500396847724915
+    },
+    "linux-cli": {
+      "prepared": true,
+      "legacy_version": "0.0.2",
+      "source_revision": "31f10a29fcd2e03c668cdc9fc5f163ea45dc8cb5",
+      "world_retained": true,
+      "actual_public_default_install": true,
+      "platform": "Linux-6.17.0-41-generic-x86_64-with-glibc2.42",
+      "seconds": 6.263385460712016
+    }
+  },
+  "public_v003_execution": "pending",
+  "delivery_claimed": false
+}

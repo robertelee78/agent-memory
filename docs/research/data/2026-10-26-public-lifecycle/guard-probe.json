@@ -1,0 +1,26 @@
+{
+  "manual_canary_sha256": "48b255c16578b3e2fc12341980560cd8a1454026af4fd21a28b306ac5698dd7b",
+  "first_review": "public-canary-review-e816844/review.md",
+  "second_review": "public-canary-review-e816844-v2/review.md",
+  "disposition": "APPROVED FOR STATIC SCOPE by final Opus follow-up; actual public post-publication journeys remain pending",
+  "guard_probe": {
+    "argv": [
+      "/opt/homebrew/opt/python@3.15/bin/python3.15",
+      "-O",
+      "-B",
+      "/tmp/agent-memory-v003/public-release-journey.py",
+      "--help"
+    ],
+    "exit": 1,
+    "stderr": "Public canary requires assertions; rerun without Python optimization\n",
+    "product_commands": 0
+  },
+  "post_publication_execution": "pending",
+  "prepared_baselines": [
+    "public-journey-macos-legacy",
+    "public-journey-macos-legacy-cli",
+    "io.loveathome.us:/tmp/am-public-v003-legacy-D2C334nc/legacy",
+    "io.loveathome.us:/tmp/am-public-v003-legacy-D2C334nc/legacy-cli"
+  ],
+  "final_review": "final-review.md"
+}

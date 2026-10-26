@@ -1,0 +1,9 @@
+{
+  "exit": 0,
+  "seconds": 13.109307000064291,
+  "manual_canary_sha256": "48b255c16578b3e2fc12341980560cd8a1454026af4fd21a28b306ac5698dd7b",
+  "source_unchanged": true,
+  "models": [
+    "claude-opus-5-5"
+  ]
+}

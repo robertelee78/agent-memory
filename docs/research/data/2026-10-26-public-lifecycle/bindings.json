@@ -1,0 +1,15 @@
+{
+  "runtime_source": "e816844c4395858f3e1279f3847aafe557c84ac5",
+  "manual_canary_sha256": "48b255c16578b3e2fc12341980560cd8a1454026af4fd21a28b306ac5698dd7b",
+  "files": {
+    "first-review.md": "a3722afb2bc39b3e5d44844114942e4a88a77fce4a61f31d1adbe26cdf8ea4ea",
+    "first-result.json": "e7095568f29d780f1b035107f1ffd50e6c88bb641e0bc1fd29ff1c45a1294f6d",
+    "second-review.md": "0173bce16c2f5adffdd46681917b168e804b7b6a3af1a0fe7a7a70cde1481ccc",
+    "second-result.json": "c2e905286926b5c13c1dc931794a812444358ca5b6bfcc0fa01808d0ce4e1f66",
+    "final-review.md": "602c326bb87fc89dd0b3fc895b6af4f6687bed521d32117d9a29970c77471901",
+    "final-result.json": "c291bcb578ee8c448cbe6fa83754f86a89e989cf3e798a0c9e325c2e09973a3d",
+    "first-canary.py": "387288be0c8639d7d532f90886d9915d4f003af2dc99db8c5025a7efe6941d8e",
+    "second-canary.py": "f97cb8b7aad4e9d882e9459ee88d9874466c2086e87c10cc1b74c4ef35f30371"
+  },
+  "claims": "Static apparatus review and successful public v0.0.2 preparation only; not v0.0.3 activation or delivery."
+}
