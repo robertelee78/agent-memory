@@ -121,9 +121,14 @@ def git_roots(root, *, router_reader=None):
     committed = git(root, 'ls-tree', '-r', '--name-only', '-z', head) if head else ''
     indexed_paths = set(indexed.split('\0'))
     committed_paths = set(committed.split('\0'))
-    paths = sorted({PurePosixPath(path) for path in [*listed.split('\0'), *committed_paths] if path
-                    and PurePosixPath(path).name.casefold() == 'memory.md'
-                    and not any(part.startswith('.') for part in PurePosixPath(path).parts)})
+    # Examine every inventory spelling, but construct path objects only for
+    # possible locators. Ordinary source/record filenames cannot be routers.
+    # A final dot component still needs PurePosixPath normalization before the
+    # exact same locator/hidden-component checks used below.
+    candidates = (path for path in [*listed.split('\0'), *committed_paths] if path
+                  and path.rstrip('/').rsplit('/', 1)[-1].casefold() in {'memory.md', '.'})
+    paths = sorted({parsed for path in candidates if (parsed := PurePosixPath(path)).name.casefold() == 'memory.md'
+                    and not any(part.startswith('.') for part in parsed.parts)})
     if len(paths) > MAX_ROUTERS:
         raise ContractError('Memory locator inventory exceeds its bound; incomplete discovery cannot prove absence')
     roots, cache = set(), {}

@@ -3,8 +3,8 @@
 The fixed reader suite preserves the actual v0.0.1 outcomes at all three agreed
 sizes, and its isolated median latency improves by 27.0%, 46.5% and 49.9%.
 Two warm native qualification samples at 50,000 lessons take 4.439 and 4.448
-seconds. These observations meet the operator's reviewed numeric targets within
-those measurement boundaries. They do not establish universal semantic recall,
+seconds. These observations meet the earlier fixed-reader reduction target. They do
+not meet the later five-second target when complete native navigation counts. They do not establish universal semantic recall,
 a complete workflow under five seconds, or a v0.0.3 release.
 
 The [measured data directory](data/2026-10-25-recall-final/summary.json) preserves
@@ -21,9 +21,14 @@ baseline is exactly `63d3a64c0e535148cc1b5deb9d67169dbbc7c525`.
 The [operator-reviewed target](https://github.com/robertelee78/agent-memory/issues/98#issuecomment-6402351109)
 requires at least a 25% median reduction at each size, preserving every passing
 fixed case and zero unsafe, stale or incorrectly applicable reader returns.
-The later operator clarification accepts warm native recall below five seconds
-at 50,000 lessons, excluding harness reasoning. No new semantic precision target
-has been inferred.
+The operator's later statement accepts 50,000-lesson recall below five seconds
+and subsequently confirms that AI thinking time is excluded. For execution, the
+complete native navigation/read path counts; a 4.44-second final read cannot stand
+in for that whole path. The measured 7.77-second path remains above target. The
+operator explicitly permits v0.0.3 harness semantic recall with plain terminal
+semantic search tracked for later delivery. No semantic precision threshold has
+been inferred. The original unsupported native-only approval wording was rejected
+in independent review and is corrected here; prior candidate/history stays visible.
 
 | Distinct lessons | Canonical bytes | v0.0.1 median seconds | Candidate median seconds | Reduction |
 | --- | --- | --- | --- | --- |
