@@ -58,8 +58,17 @@ def registry_value(value,root,project_id):
             or len(encoded(value))>MAX_STORE):
         raise ContractError('Known review inventory is changed/oversized; preserve it for recovery')
     for key,record in value['records'].items():
-        if (not isinstance(record,dict) or set(record)!={'binding','cause','references','dependencies','judgment_sha256','proof_sha256','resolution'}):
+        fields={'binding','cause','references','dependencies','judgment_sha256','proof_sha256','resolution'}
+        if (not isinstance(record,dict) or not fields.issubset(record) or set(record)-fields-{'resolution_history'}):
             raise ContractError('Known review evidence has an unknown format')
+        if 'resolution_history' in record:
+            history=record['resolution_history']
+            if (not isinstance(history,list) or not 1<=len(history)<=MAX_RECORDS
+                    or not isinstance(record['resolution'],dict)
+                    or any(not isinstance(previous,dict) or set(previous)!={
+                        'basis','evidence','reason','endpoint_sources','judgment_sha256','proof_sha256'}
+                        for previous in history)):
+                raise ContractError('Known resolution history is incomplete; preserve it for recovery')
         cause=record['cause']
         if (not isinstance(cause,dict) or set(cause)!={'sources','classification','reason','origin'}
                 or cause['classification'] not in {'contradiction','uncertain','withheld','uncertain-selection'}
@@ -166,7 +175,10 @@ def filtered_records(value,skip_judgment=None):
         if record['judgment_sha256']==skip_judgment:continue
         current=copy.deepcopy(record)
         if current['resolution'] and current['resolution'].get('judgment_sha256')==skip_judgment:
-            current['resolution']=None
+            history=current.get('resolution_history',[])
+            current['resolution']=history[-1] if history else None
+            if len(history)>1:current['resolution_history']=history[:-1]
+            else:current.pop('resolution_history',None)
         records.append(current)
     return records
 
@@ -238,7 +250,16 @@ def record(root,project_id,proof,references,*,resolutions=None,owned_lock=None,v
                     'proof_sha256':digest(proof_raw),'resolution':None}
             for key,value in resolutions.items():
                 if key not in records:raise ContractError('Resolution must retain its actual first-detection evidence')
-                records[key]['resolution']={**value,'judgment_sha256':judgment_sha,'proof_sha256':digest(proof_raw)}
+                renewed={**value,'judgment_sha256':judgment_sha,'proof_sha256':digest(proof_raw)}
+                previous=records[key]['resolution']
+                if previous and previous.get('judgment_sha256')==judgment_sha:
+                    if previous!=renewed:raise ContractError('The same resolution judgment cannot replace different proof evidence')
+                elif previous:
+                    # Proof rechecks reconstruct the registry as observed before
+                    # this review. A renewed resolution must restore its exact
+                    # predecessor, not pretend that no earlier resolution existed.
+                    records[key].setdefault('resolution_history',[]).append(copy.deepcopy(previous))
+                records[key]['resolution']=renewed
             desired=seal({'schema':SCHEMA,'repo_root':str(root),'project_id':project_id,'records':records})
             registry_value(desired,root,project_id)
             if desired!=current:commit_store(root,project_id,desired,observed_sha,directory,anchor)
