@@ -1,0 +1,57 @@
+{
+  "controls": [
+    {
+      "command": 882,
+      "context": {
+        "component": "src/seed/0"
+      },
+      "record_ids": [
+        "9c3e8fe3-3b83-4275-9451-45c3d4bba5c8"
+      ],
+      "results": 1
+    },
+    {
+      "command": 883,
+      "context": {
+        "component": "src/seed/0"
+      },
+      "record_ids": [
+        "9c3e8fe3-3b83-4275-9451-45c3d4bba5c8"
+      ],
+      "results": 1
+    },
+    {
+      "command": 918,
+      "context": {
+        "component": "src/seed/0"
+      },
+      "record_ids": [
+        "9c3e8fe3-3b83-4275-9451-45c3d4bba5c8"
+      ],
+      "results": 0
+    },
+    {
+      "command": 928,
+      "context": {
+        "component": "src/seed/1"
+      },
+      "record_ids": [
+        "53ad227f-48c3-48f2-b2be-3e96af58ad8b"
+      ],
+      "results": 1
+    },
+    {
+      "command": 976,
+      "context": {
+        "component": "src/seed/1"
+      },
+      "record_ids": [
+        "53ad227f-48c3-48f2-b2be-3e96af58ad8b"
+      ],
+      "results": 0
+    }
+  ],
+  "request_kind": "semantic-fact",
+  "matched_positive_negative_verified": true,
+  "whole_99_acceptance_claimed": false
+}

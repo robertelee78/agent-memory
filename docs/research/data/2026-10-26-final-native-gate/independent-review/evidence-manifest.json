@@ -1,0 +1,74 @@
+{
+  "/tmp/agent-memory-v003/full-macos-gate-81fec82/source-binding.json": {
+    "sha256": "7e773ce64bced3dd9d20f39ccfccd8f0326e01e6912d11fcaf3842acb18953cd",
+    "bytes": 153231
+  },
+  "/tmp/agent-memory-v003/full-macos-gate-81fec82/source-before.json": {
+    "sha256": "247b80c5ff595d2f099f08f4ace361ed10db13a7d0b85738fd3c727ffe3bdbfa",
+    "bytes": 261
+  },
+  "/tmp/agent-memory-v003/full-macos-gate-81fec82/source-after.json": {
+    "sha256": "247b80c5ff595d2f099f08f4ace361ed10db13a7d0b85738fd3c727ffe3bdbfa",
+    "bytes": 261
+  },
+  "/tmp/agent-memory-v003/full-macos-gate-81fec82/completion.json": {
+    "sha256": "5d9fa6cbd289d77d87eeaeaaaa7b053d881dea993ae6acb5e7b77874d254f62a",
+    "bytes": 79
+  },
+  "/tmp/agent-memory-v003/full-macos-gate-81fec82/gate.stdout": {
+    "sha256": "4190326735f6ec91d3cb3f36ef20efe931b49d5bd705dcc4bafff27640b0bda2",
+    "bytes": 250843
+  },
+  "/tmp/agent-memory-v003/full-macos-gate-81fec82/gate.stderr": {
+    "sha256": "dde4ef8f0b2b8a42ad3a6de7bbec2df661a863d35e4cba57cafd6a691ff592d2",
+    "bytes": 491868
+  },
+  "/tmp/agent-memory-v003/full-macos-gate-81fec82/source.tar": {
+    "sha256": "19af6f970d6c57b02aead487d4e71cbfb99573fcb0e17cd2c2418da44b599107",
+    "bytes": 9185280
+  },
+  "/tmp/agent-memory-v003/full-linux-gate-81fec82/source-binding.json": {
+    "sha256": "7e773ce64bced3dd9d20f39ccfccd8f0326e01e6912d11fcaf3842acb18953cd",
+    "bytes": 153231
+  },
+  "/tmp/agent-memory-v003/full-linux-gate-81fec82/linux/source-before.json": {
+    "sha256": "f1aa8fe4355f888ceae0c352e3d35612c96e01cf79409469d138dd87a740235f",
+    "bytes": 251
+  },
+  "/tmp/agent-memory-v003/full-linux-gate-81fec82/linux/source-after.json": {
+    "sha256": "f1aa8fe4355f888ceae0c352e3d35612c96e01cf79409469d138dd87a740235f",
+    "bytes": 251
+  },
+  "/tmp/agent-memory-v003/full-linux-gate-81fec82/linux/completion.json": {
+    "sha256": "5d9fa6cbd289d77d87eeaeaaaa7b053d881dea993ae6acb5e7b77874d254f62a",
+    "bytes": 79
+  },
+  "/tmp/agent-memory-v003/full-linux-gate-81fec82/linux/gate.stdout": {
+    "sha256": "730e95e5442f0b588cddbfee2b7da5723af7232706fbc8383ba433907e0ea125",
+    "bytes": 250843
+  },
+  "/tmp/agent-memory-v003/full-linux-gate-81fec82/linux/gate.stderr": {
+    "sha256": "2edc4c11cfa82295bd1d0c4637224609590071a374e2e1fcbdcb1793834c737f",
+    "bytes": 491873
+  },
+  "/tmp/agent-memory-v003/full-linux-gate-81fec82/source.tar": {
+    "sha256": "19af6f970d6c57b02aead487d4e71cbfb99573fcb0e17cd2c2418da44b599107",
+    "bytes": 9185280
+  },
+  "/tmp/agent-memory-v003/full-linux-gate-81fec82/completion.json": {
+    "sha256": "daf91dc2df72f168eb3017cbe16f7bc351ac5afc4ff46e51be13defa5c857ea7",
+    "bytes": 103
+  },
+  "/tmp/agent-memory-v003/full-linux-gate-81fec82/worker.py": {
+    "sha256": "7423ec748013a722721284870e09c97526c1f9036d9086a6519ea2e5d1dd0df3",
+    "bytes": 1464
+  },
+  "/tmp/agent-memory-v003/full-linux-gate-81fec82/driver.stdout": {
+    "sha256": "63acc7f4a6292f215b21987bc997e5a291e31a20ad92eeeda5f631eb3d2a8145",
+    "bytes": 211
+  },
+  "/tmp/agent-memory-v003/full-linux-gate-81fec82/driver.stderr": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  }
+}

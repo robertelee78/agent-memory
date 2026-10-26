@@ -1,0 +1,355 @@
+{
+  "reviewer": "codex-review-59",
+  "scope": "bounded frozen-source native gate/source carry-forward audit; not whole #99 or release acceptance",
+  "evidence_commit": "07176dcddc10b9c6e1da84ad38e9f454791cbcb4",
+  "evidence_tree": "c1d0b183274e516b4e89fc1b91ae877f0cbdbcd1",
+  "executed_commit": "81fec82c1619d20c12473d23e3fdf6706d52b641",
+  "static_reported_classes_checked": 144,
+  "tracked_files": 758,
+  "portable_files": 162,
+  "source_bridge_changed_paths": [
+    "docs/adr/0005-admission-consolidation-retrieval.md",
+    "docs/adr/0016-incremental-sharing-review.md",
+    "docs/design/v0.0.3-daily-use-repair.md",
+    "docs/design/v0.0.3-recall-catalog.md",
+    "docs/releases/v0.0.3.md",
+    "docs/research/2026-10-25-recall-final-evaluation.md",
+    "docs/research/2026-10-26-daily-controller-coverage.md",
+    "docs/research/2026-10-26-publication-validation-cost.md",
+    "docs/research/2026-10-26-seed-recall-kind-qualification.md",
+    "docs/research/data/2026-10-26-daily-use-final/corrected-semantic-pilot/command-464-request.json",
+    "docs/research/data/2026-10-26-daily-use-final/corrected-semantic-pilot/command-464-response.json",
+    "docs/research/data/2026-10-26-daily-use-final/corrected-semantic-pilot/command-465-request.json",
+    "docs/research/data/2026-10-26-daily-use-final/corrected-semantic-pilot/command-465-response.json",
+    "docs/research/data/2026-10-26-daily-use-final/corrected-semantic-pilot/command-500-request.json",
+    "docs/research/data/2026-10-26-daily-use-final/corrected-semantic-pilot/command-500-response.json",
+    "docs/research/data/2026-10-26-daily-use-final/corrected-semantic-pilot/command-510-request.json",
+    "docs/research/data/2026-10-26-daily-use-final/corrected-semantic-pilot/command-510-response.json",
+    "docs/research/data/2026-10-26-daily-use-final/corrected-semantic-pilot/command-545-request.json",
+    "docs/research/data/2026-10-26-daily-use-final/corrected-semantic-pilot/command-545-response.json",
+    "docs/research/data/2026-10-26-daily-use-final/corrected-semantic-pilot/completion.json",
+    "docs/research/data/2026-10-26-daily-use-final/corrected-semantic-pilot/events.json",
+    "docs/research/data/2026-10-26-daily-use-final/corrected-semantic-pilot/matched-seed-controls.json",
+    "docs/research/data/2026-10-26-daily-use-final/corrected-semantic-pilot/outcome.json",
+    "docs/research/data/2026-10-26-daily-use-final/corrected-semantic-pilot/retention.json",
+    "docs/research/data/2026-10-26-daily-use-final/corrected-semantic-pilot/selected-commands-without-environment.json",
+    "docs/research/data/2026-10-26-daily-use-final/corrected-semantic-pilot/source-after.json",
+    "docs/research/data/2026-10-26-daily-use-final/corrected-semantic-pilot/source-before.json",
+    "docs/research/data/2026-10-26-daily-use-final/required12/bindings.json",
+    "docs/research/data/2026-10-26-daily-use-final/required12/commands-without-environment.json",
+    "docs/research/data/2026-10-26-daily-use-final/required12/driver-completion.json",
+    "docs/research/data/2026-10-26-daily-use-final/required12/events.json",
+    "docs/research/data/2026-10-26-daily-use-final/required12/feature-state-history.jsonl",
+    "docs/research/data/2026-10-26-daily-use-final/required12/independent-review/audit.py",
+    "docs/research/data/2026-10-26-daily-use-final/required12/independent-review/audit.stdout",
+    "docs/research/data/2026-10-26-daily-use-final/required12/independent-review/evidence-manifest.json",
+    "docs/research/data/2026-10-26-daily-use-final/required12/independent-review/review.md",
+    "docs/research/data/2026-10-26-daily-use-final/required12/independent-review/source.json",
+    "docs/research/data/2026-10-26-daily-use-final/required12/outcome.json",
+    "docs/research/data/2026-10-26-daily-use-final/required12/private-raw-blob-manifest.json",
+    "docs/research/data/2026-10-26-daily-use-final/required12/qualification-status.json",
+    "docs/research/data/2026-10-26-daily-use-final/required12/seed-reference.json",
+    "docs/research/data/2026-10-26-daily-use-final/required12/source-after.json",
+    "docs/research/data/2026-10-26-daily-use-final/required12/source-before.json",
+    "docs/research/data/2026-10-26-daily-use-final/required12/source-binding.json",
+    "docs/research/data/2026-10-26-daily-use-final/required12/summary.json",
+    "docs/research/data/2026-10-26-daily-use-final/seed-kind-controller-review/review.md",
+    "docs/research/data/2026-10-26-daily-use-final/seed-kind-controller-review/source.json",
+    "docs/research/data/2026-10-26-daily-use-final/superseded-required24/driver-completion.json",
+    "docs/research/data/2026-10-26-daily-use-final/superseded-required24/outcome.json",
+    "docs/research/data/2026-10-26-daily-use-final/superseded-required24/qualification-gap-interruption.json",
+    "docs/research/data/2026-10-26-daily-use-final/superseded-required24/retention.json",
+    "docs/research/data/2026-10-26-daily-use-final/superseded-required24/source-after.json",
+    "docs/research/data/2026-10-26-daily-use-final/superseded-required24/source-before.json",
+    "docs/research/data/2026-10-26-daily-use-final/variation24/bindings.json",
+    "docs/research/data/2026-10-26-daily-use-final/variation24/commands-without-environment.json",
+    "docs/research/data/2026-10-26-daily-use-final/variation24/driver-completion.json",
+    "docs/research/data/2026-10-26-daily-use-final/variation24/events.json",
+    "docs/research/data/2026-10-26-daily-use-final/variation24/feature-state-history.jsonl",
+    "docs/research/data/2026-10-26-daily-use-final/variation24/independent-review/audit.py",
+    "docs/research/data/2026-10-26-daily-use-final/variation24/independent-review/audit.stdout",
+    "docs/research/data/2026-10-26-daily-use-final/variation24/independent-review/evidence-manifest.json",
+    "docs/research/data/2026-10-26-daily-use-final/variation24/independent-review/review.md",
+    "docs/research/data/2026-10-26-daily-use-final/variation24/independent-review/source.json",
+    "docs/research/data/2026-10-26-daily-use-final/variation24/outcome.json",
+    "docs/research/data/2026-10-26-daily-use-final/variation24/private-raw-blob-manifest.json",
+    "docs/research/data/2026-10-26-daily-use-final/variation24/seed-reference.json",
+    "docs/research/data/2026-10-26-daily-use-final/variation24/source-after.json",
+    "docs/research/data/2026-10-26-daily-use-final/variation24/source-before.json",
+    "docs/research/data/2026-10-26-daily-use-final/variation24/source-binding.json",
+    "docs/research/data/2026-10-26-daily-use-final/variation24/summary.json",
+    "docs/research/data/2026-10-26-final-native-gate/linux/completion.json",
+    "docs/research/data/2026-10-26-final-native-gate/linux/driver-completion.json",
+    "docs/research/data/2026-10-26-final-native-gate/linux/gate.stderr",
+    "docs/research/data/2026-10-26-final-native-gate/linux/gate.stdout",
+    "docs/research/data/2026-10-26-final-native-gate/linux/source-after.json",
+    "docs/research/data/2026-10-26-final-native-gate/linux/source-before.json",
+    "docs/research/data/2026-10-26-final-native-gate/linux/source-binding.json",
+    "docs/research/data/2026-10-26-final-native-gate/linux/summary.json",
+    "docs/research/data/2026-10-26-final-native-gate/macos/completion.json",
+    "docs/research/data/2026-10-26-final-native-gate/macos/gate.stderr",
+    "docs/research/data/2026-10-26-final-native-gate/macos/gate.stdout",
+    "docs/research/data/2026-10-26-final-native-gate/macos/source-after.json",
+    "docs/research/data/2026-10-26-final-native-gate/macos/source-before.json",
+    "docs/research/data/2026-10-26-final-native-gate/macos/source-binding.json",
+    "docs/research/data/2026-10-26-final-native-gate/macos/summary.json",
+    "docs/research/data/2026-10-26-publication-validation/bindings.json",
+    "docs/research/data/2026-10-26-publication-validation/budget-linux-results.json",
+    "docs/research/data/2026-10-26-publication-validation/budget-linux-source-after.json",
+    "docs/research/data/2026-10-26-publication-validation/budget-linux-source-before.json",
+    "docs/research/data/2026-10-26-publication-validation/budget-macos-results.json",
+    "docs/research/data/2026-10-26-publication-validation/budget-macos-source-after.json",
+    "docs/research/data/2026-10-26-publication-validation/budget-macos-source-before.json",
+    "docs/research/data/2026-10-26-publication-validation/code-review.md",
+    "docs/research/data/2026-10-26-publication-validation/code-source.json",
+    "docs/research/data/2026-10-26-publication-validation/continued-control-commands.json",
+    "docs/research/data/2026-10-26-publication-validation/continued-control-result.json",
+    "docs/research/data/2026-10-26-publication-validation/continued-control-source-bindings.json",
+    "docs/research/data/2026-10-26-publication-validation/design-review.md",
+    "docs/research/data/2026-10-26-publication-validation/design-source.json",
+    "docs/research/data/2026-10-26-publication-validation/focused-linux-results.json",
+    "docs/research/data/2026-10-26-publication-validation/focused-linux-source-after.json",
+    "docs/research/data/2026-10-26-publication-validation/focused-linux-source-before.json",
+    "docs/research/data/2026-10-26-publication-validation/focused-macos-results.json",
+    "docs/research/data/2026-10-26-publication-validation/focused-macos-source-after.json",
+    "docs/research/data/2026-10-26-publication-validation/focused-macos-source-before.json",
+    "docs/research/data/2026-10-26-publication-validation/instrumented-call-counts.json",
+    "docs/research/data/2026-10-26-publication-validation/linux24-failed-command.json",
+    "docs/research/data/2026-10-26-publication-validation/linux24-failure.txt",
+    "docs/research/data/2026-10-26-publication-validation/linux24-outcome.json",
+    "docs/research/data/2026-10-26-publication-validation/linux24-source-after.json",
+    "docs/research/data/2026-10-26-publication-validation/linux24-source-before.json",
+    "docs/research/data/2026-10-26-publication-validation/macos12-failed-command.json",
+    "docs/research/data/2026-10-26-publication-validation/macos12-failure.txt",
+    "docs/research/data/2026-10-26-publication-validation/macos12-outcome.json",
+    "docs/research/data/2026-10-26-publication-validation/macos12-source-after.json",
+    "docs/research/data/2026-10-26-publication-validation/macos12-source-before.json",
+    "docs/research/data/2026-10-26-publication-validation/opus-result.json",
+    "docs/research/data/2026-10-26-publication-validation/opus-review.md",
+    "docs/research/data/2026-10-26-publication-validation/opus-source-binding.json",
+    "docs/research/data/2026-10-26-publication-validation/pilot-events.json",
+    "docs/research/data/2026-10-26-publication-validation/pilot-outcome.json",
+    "docs/research/data/2026-10-26-publication-validation/pilot-seed-reference.json",
+    "docs/research/data/2026-10-26-publication-validation/pilot-source-after.json",
+    "docs/research/data/2026-10-26-publication-validation/pilot-source-before.json",
+    "docs/research/data/2026-10-26-recall-target/independent-review/audit.py",
+    "docs/research/data/2026-10-26-recall-target/independent-review/audit.stdout",
+    "docs/research/data/2026-10-26-recall-target/independent-review/evidence-manifest.json",
+    "docs/research/data/2026-10-26-recall-target/independent-review/review.md",
+    "docs/research/data/2026-10-26-recall-target/independent-review/source.json",
+    "docs/research/data/2026-10-26-recall-target/operator-decision-receipt.json",
+    "docs/research/data/2026-10-26-recall-target/previously-accepted-runtime/commands.json",
+    "docs/research/data/2026-10-26-recall-target/previously-accepted-runtime/observations.json",
+    "docs/research/data/2026-10-26-recall-target/previously-accepted-runtime/producer.py",
+    "docs/research/data/2026-10-26-recall-target/previously-accepted-runtime/raw-evidence-manifest.json",
+    "docs/research/data/2026-10-26-recall-target/previously-accepted-runtime/result.json",
+    "docs/research/data/2026-10-26-recall-target/previously-accepted-runtime/source-after.json",
+    "docs/research/data/2026-10-26-recall-target/previously-accepted-runtime/source-before.json",
+    "docs/research/data/2026-10-26-recall-target/repaired-runtime/commands.json",
+    "docs/research/data/2026-10-26-recall-target/repaired-runtime/observations.json",
+    "docs/research/data/2026-10-26-recall-target/repaired-runtime/producer.py",
+    "docs/research/data/2026-10-26-recall-target/repaired-runtime/raw-evidence-manifest.json",
+    "docs/research/data/2026-10-26-recall-target/repaired-runtime/result.json",
+    "docs/research/data/2026-10-26-recall-target/repaired-runtime/source-after.json",
+    "docs/research/data/2026-10-26-recall-target/repaired-runtime/source-before.json",
+    "docs/research/data/2026-10-26-recall-target/source-extraction-validation.json",
+    "docs/research/data/2026-10-26-recall-target/source-reconciliation-receipt.json",
+    "docs/research/data/2026-10-26-recall-target/summary.json",
+    "scripts/evaluations/daily_use.py"
+  ],
+  "executable_bridge_changed_paths": [
+    "scripts/evaluations/daily_use.py"
+  ],
+  "approved_controller_commit": "c3e82e963d6fd317b2072ca0af36aa0368e8f99b",
+  "results": {
+    "macos": {
+      "source_commit": "81fec82c1619d20c12473d23e3fdf6706d52b641",
+      "runtime": {
+        "commit": "81fec82c1619d20c12473d23e3fdf6706d52b641",
+        "all_tracked_bytes_and_modes_verified": true,
+        "files": 758,
+        "platform": "macOS-27.2-arm64-arm-64bit-Mach-O",
+        "python": "3.15.0 (main, Oct  9 2026, 11:16:41) [Clang 21.0.0 (clang-2100.3.34.2)]"
+      },
+      "gate": {
+        "registered_rows": 143,
+        "executable_suites": 142,
+        "method_executions": 715,
+        "optional_not_applicable_rows": 1,
+        "bad_counts": 0,
+        "raw_unittest_seconds": 10373.356,
+        "longest_raw_unittest_seconds": 297.399
+      },
+      "fault_partitions": [
+        {
+          "group": "update-write-before",
+          "partitions": 4,
+          "observed_points": 41,
+          "actual_interruptions_and_retries": 41,
+          "artifact_digest": "fcd39b4db1fff5a59f2343559726dc3da487b9ac4039e6279a79f8aac20eb19a"
+        },
+        {
+          "group": "update-write-after",
+          "partitions": 4,
+          "observed_points": 41,
+          "actual_interruptions_and_retries": 41,
+          "artifact_digest": "fcd39b4db1fff5a59f2343559726dc3da487b9ac4039e6279a79f8aac20eb19a"
+        },
+        {
+          "group": "install-write-copy-before",
+          "partitions": 4,
+          "observed_points": 69,
+          "actual_interruptions_and_retries": 69,
+          "artifact_digest": "0959788ec0fe2746429a03211fe60c7094b765ec45020f91a537745eeec5d511"
+        },
+        {
+          "group": "install-write-copy-after",
+          "partitions": 4,
+          "observed_points": 69,
+          "actual_interruptions_and_retries": 69,
+          "artifact_digest": "0959788ec0fe2746429a03211fe60c7094b765ec45020f91a537745eeec5d511"
+        },
+        {
+          "group": "install-write-link-before",
+          "partitions": 4,
+          "observed_points": 69,
+          "actual_interruptions_and_retries": 69,
+          "artifact_digest": "0959788ec0fe2746429a03211fe60c7094b765ec45020f91a537745eeec5d511"
+        },
+        {
+          "group": "install-write-link-after",
+          "partitions": 4,
+          "observed_points": 69,
+          "actual_interruptions_and_retries": 69,
+          "artifact_digest": "0959788ec0fe2746429a03211fe60c7094b765ec45020f91a537745eeec5d511"
+        }
+      ],
+      "partitioned_subset_events": 358,
+      "original_exports_match": true,
+      "archive_matches_git_bytes_and_modes": true,
+      "public_files": {
+        "completion.json": {
+          "sha256": "5d9fa6cbd289d77d87eeaeaaaa7b053d881dea993ae6acb5e7b77874d254f62a",
+          "mode": 420
+        },
+        "gate.stderr": {
+          "sha256": "dde4ef8f0b2b8a42ad3a6de7bbec2df661a863d35e4cba57cafd6a691ff592d2",
+          "mode": 420
+        },
+        "gate.stdout": {
+          "sha256": "4190326735f6ec91d3cb3f36ef20efe931b49d5bd705dcc4bafff27640b0bda2",
+          "mode": 420
+        },
+        "source-before.json": {
+          "sha256": "247b80c5ff595d2f099f08f4ace361ed10db13a7d0b85738fd3c727ffe3bdbfa",
+          "mode": 420
+        },
+        "source-after.json": {
+          "sha256": "247b80c5ff595d2f099f08f4ace361ed10db13a7d0b85738fd3c727ffe3bdbfa",
+          "mode": 420
+        },
+        "source-binding.json": {
+          "sha256": "7e773ce64bced3dd9d20f39ccfccd8f0326e01e6912d11fcaf3842acb18953cd",
+          "mode": 420
+        }
+      }
+    },
+    "linux": {
+      "source_commit": "81fec82c1619d20c12473d23e3fdf6706d52b641",
+      "runtime": {
+        "commit": "81fec82c1619d20c12473d23e3fdf6706d52b641",
+        "all_tracked_bytes_and_modes_verified": true,
+        "files": 758,
+        "platform": "Linux-6.17.0-41-generic-x86_64-with-glibc2.42",
+        "python": "3.13.7 (main, Mar  3 2026, 12:19:54) [GCC 15.2.0]"
+      },
+      "gate": {
+        "registered_rows": 143,
+        "executable_suites": 142,
+        "method_executions": 715,
+        "optional_not_applicable_rows": 1,
+        "bad_counts": 0,
+        "raw_unittest_seconds": 6168.516,
+        "longest_raw_unittest_seconds": 272.905
+      },
+      "fault_partitions": [
+        {
+          "group": "update-write-before",
+          "partitions": 4,
+          "observed_points": 41,
+          "actual_interruptions_and_retries": 41,
+          "artifact_digest": "ed3b4f5c48f811aaba88b90f21180d23159d015d5988b131f3f20d7f3a16e624"
+        },
+        {
+          "group": "update-write-after",
+          "partitions": 4,
+          "observed_points": 41,
+          "actual_interruptions_and_retries": 41,
+          "artifact_digest": "ed3b4f5c48f811aaba88b90f21180d23159d015d5988b131f3f20d7f3a16e624"
+        },
+        {
+          "group": "install-write-copy-before",
+          "partitions": 4,
+          "observed_points": 69,
+          "actual_interruptions_and_retries": 69,
+          "artifact_digest": "8a55ebe1dd0cfa1ca06f8e992b8cb40acf428146b8c2eeae10bb4c86883e26e8"
+        },
+        {
+          "group": "install-write-copy-after",
+          "partitions": 4,
+          "observed_points": 69,
+          "actual_interruptions_and_retries": 69,
+          "artifact_digest": "8a55ebe1dd0cfa1ca06f8e992b8cb40acf428146b8c2eeae10bb4c86883e26e8"
+        },
+        {
+          "group": "install-write-link-before",
+          "partitions": 4,
+          "observed_points": 69,
+          "actual_interruptions_and_retries": 69,
+          "artifact_digest": "8a55ebe1dd0cfa1ca06f8e992b8cb40acf428146b8c2eeae10bb4c86883e26e8"
+        },
+        {
+          "group": "install-write-link-after",
+          "partitions": 4,
+          "observed_points": 69,
+          "actual_interruptions_and_retries": 69,
+          "artifact_digest": "8a55ebe1dd0cfa1ca06f8e992b8cb40acf428146b8c2eeae10bb4c86883e26e8"
+        }
+      ],
+      "partitioned_subset_events": 358,
+      "original_exports_match": true,
+      "archive_matches_git_bytes_and_modes": true,
+      "public_files": {
+        "completion.json": {
+          "sha256": "5d9fa6cbd289d77d87eeaeaaaa7b053d881dea993ae6acb5e7b77874d254f62a",
+          "mode": 420
+        },
+        "gate.stderr": {
+          "sha256": "2edc4c11cfa82295bd1d0c4637224609590071a374e2e1fcbdcb1793834c737f",
+          "mode": 420
+        },
+        "gate.stdout": {
+          "sha256": "730e95e5442f0b588cddbfee2b7da5723af7232706fbc8383ba433907e0ea125",
+          "mode": 420
+        },
+        "source-before.json": {
+          "sha256": "f1aa8fe4355f888ceae0c352e3d35612c96e01cf79409469d138dd87a740235f",
+          "mode": 420
+        },
+        "source-after.json": {
+          "sha256": "f1aa8fe4355f888ceae0c352e3d35612c96e01cf79409469d138dd87a740235f",
+          "mode": 420
+        },
+        "source-binding.json": {
+          "sha256": "7e773ce64bced3dd9d20f39ccfccd8f0326e01e6912d11fcaf3842acb18953cd",
+          "mode": 420
+        }
+      }
+    }
+  },
+  "errors": [],
+  "all_checks_passed": true,
+  "jobs": "No product/test execution or World created by this audit. All read-only subprocesses synchronous/collected.",
+  "holds": "RELEASED",
+  "external_writer_grant": "NONE"
+}

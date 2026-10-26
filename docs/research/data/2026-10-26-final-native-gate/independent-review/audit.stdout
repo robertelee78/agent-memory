@@ -1,0 +1,33 @@
+{
+  "errors": [],
+  "hosts": {
+    "macos": {
+      "gate": {
+        "registered_rows": 143,
+        "executable_suites": 142,
+        "method_executions": 715,
+        "optional_not_applicable_rows": 1,
+        "bad_counts": 0,
+        "raw_unittest_seconds": 10373.356,
+        "longest_raw_unittest_seconds": 297.399
+      },
+      "partitioned_subset_events": 358
+    },
+    "linux": {
+      "gate": {
+        "registered_rows": 143,
+        "executable_suites": 142,
+        "method_executions": 715,
+        "optional_not_applicable_rows": 1,
+        "bad_counts": 0,
+        "raw_unittest_seconds": 6168.516,
+        "longest_raw_unittest_seconds": 272.905
+      },
+      "partitioned_subset_events": 358
+    }
+  },
+  "bridge_paths": 148,
+  "files": 758,
+  "portable": 162,
+  "raw_files_hashed": 18
+}

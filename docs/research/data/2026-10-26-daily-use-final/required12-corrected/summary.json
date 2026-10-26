@@ -1,0 +1,85 @@
+{
+  "case": "required12",
+  "passed": true,
+  "source_commit": "f92be620065d0565a936782c924e183605026026",
+  "sessions": 12,
+  "lessons": 1000,
+  "semantic_schedule": true,
+  "required_scenario_events": 25,
+  "seconds": 4129.384333337657,
+  "public_commands": 977,
+  "command_exit_counts": {
+    "0": 969,
+    "1": 7,
+    "86": 1
+  },
+  "command_median_seconds": 6.044720864854753,
+  "command_max_seconds": 39.68562151584774,
+  "helper_costs": {
+    "admit_learning.py": {
+      "calls": 94,
+      "median_seconds": 7.696184735745192,
+      "max_seconds": 16.36545855179429
+    },
+    "bank_transactions.py": {
+      "calls": 4,
+      "median_seconds": 2.6866689729504287,
+      "max_seconds": 4.192845232784748
+    },
+    "bank_writes.py": {
+      "calls": 6,
+      "median_seconds": 0.4803681652992964,
+      "max_seconds": 1.5822534188628197
+    },
+    "compare_learning.py": {
+      "calls": 33,
+      "median_seconds": 1.839514679275453,
+      "max_seconds": 2.6750711780041456
+    },
+    "developer_identity.py": {
+      "calls": 4,
+      "median_seconds": 0.08658685395494103,
+      "max_seconds": 0.08675218280404806
+    },
+    "discover_memory.py": {
+      "calls": 82,
+      "median_seconds": 0.4904930805787444,
+      "max_seconds": 2.6536086183041334
+    },
+    "govern_memory.py": {
+      "calls": 4,
+      "median_seconds": 5.989811114035547,
+      "max_seconds": 9.545123289339244
+    },
+    "publish_memory.py": {
+      "calls": 103,
+      "median_seconds": 11.973685249686241,
+      "max_seconds": 39.68562151584774
+    },
+    "reconcile_memory.py": {
+      "calls": 461,
+      "median_seconds": 6.319536065682769,
+      "max_seconds": 13.44894015789032
+    },
+    "refresh_memory.py": {
+      "calls": 149,
+      "median_seconds": 6.2669660253450274,
+      "max_seconds": 31.0303385714069
+    },
+    "retrieve.py": {
+      "calls": 35,
+      "median_seconds": 0.5308973202481866,
+      "max_seconds": 1.782335627824068
+    },
+    "sharing_recovery.py": {
+      "calls": 2,
+      "median_seconds": 4.861314158886671,
+      "max_seconds": 4.936688979156315
+    }
+  },
+  "seed_checks": 48,
+  "all_round_learning_verified": true,
+  "feature_state_verified": true,
+  "source_preserved": true,
+  "whole_acceptance_claimed": false
+}

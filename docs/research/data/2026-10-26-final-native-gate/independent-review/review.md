@@ -1,0 +1,28 @@
+APPROVED — bounded native-gate evidence and source carry-forward audit. This is not whole-story #99 acceptance or a release verdict.
+
+Reviewer: codex-review-59. Implementer: codex-root.
+Executed source: `81fec82c1619d20c12473d23e3fdf6706d52b641`.
+Evidence commit: `07176dcddc10b9c6e1da84ad38e9f454791cbcb4`, tree `c1d0b183274e516b4e89fc1b91ae877f0cbdbcd1`.
+
+I independently read the two complete gate JSON receipts, raw verbose stderr, completion receipts, source bindings, retained source archives and frozen registry/gate/worker sources. I compared the public exports with the retained originals byte for byte; I did not use the implementer's public summary as the test authority. The audit ran only reviewer-owned standard-library inspection code and read-only Git commands, with no product imports, test reruns or new Worlds.
+
+| Actual execution | Registered rows | Executable suites | Method executions | Bad outcomes | Raw unittest sum | Longest suite summary |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| macOS 27.2 ARM64 / Python 3.15.0 | 143 | 142 | 715 | 0 | 10,373.356s | 297.399s |
+| Linux 6.17 / glibc 2.42 / Python 3.13.7 | 143 | 142 | 715 | 0 | 6,168.516s | 272.905s |
+
+Both actual release-mode JSON receipts report passed/release_complete, with no gate error. Every executable row has a positive test count and zero failures, errors, skips, expected failures and unexpected successes. The sole remaining row is the registry's explicit future optional-stores N/A, not an empty required suite or a skipped test. Each raw log contains exactly 142 successful unittest summaries and 715 method starts. I paired these with the registry in order, checked every suite's count, compared both hosts' method identities, and statically resolved the reported classes and inherited test methods against frozen source (144 reported class occurrences). This includes the eight operation-validation-reuse methods; the later small-budget coverage control is present.
+
+The gate's actual per-suite boundary remains `timeout=300, group=True`. All retained unittest summaries are below that boundary. These figures are raw unittest durations, not end-to-end gate wall times or a margin guarantee; macOS's 297.399s maximum is close to the deadline. The outer Linux driver allowance for the complete sequential gate is a separate boundary and does not relax individual suite limits.
+
+For each host I independently matched all 24 raw lifecycle partition proofs to their exact suite JSON records. The six groups each contain four distinct required partitions, the same complete contiguous observed inventory and fixture-artifact digest within that group, and the exact modulo-selected executed point list. Their union contains each observed point exactly once, with no omission or duplicate. Current counts are update-before/after 41 each and copy/link install-before/after 69 each: **358 actual partitioned interruptions/recoveries/retries per host**. The computed aggregates equal the retained gate aggregates. This is the six-family subset; I do not relabel it as the total across every other fault family or reuse historical 326/588 totals. Fixture-artifact digests are coherent within each host/group; I do not claim that host-specific fixture digests identify one common published release artifact.
+
+Both complete 758-file tracked bindings, including Unix modes, and their 162 portable-file subinventories match immutable Git `81fec82`. I independently hashed every regular source-archive member and checked its mode/path set against Git; both archives match exactly. The retained macOS physical tracked files also match. Source-before/after receipts are identical on both hosts and bind the actual runtime versions above. Linux's outer driver reports exit zero and its disposable workspace removed. These checks establish tracked source identity and the retained producer's before/after observations; they do not claim an independently monitored continuous filesystem history or an inventory of every untracked temporary file.
+
+Carry-forward to evidence commit `07176dc` is justified for the tested runtime, test definitions, registry, fixtures, gate and other executable files: the complete Git comparison changes only documentation/evidence plus `scripts/evaluations/daily_use.py`. That controller equals the separately statically approved `c3e82e963d6fd317b2072ca0af36aa0368e8f99b` controller byte for byte. It is not part of the executed native gate. Thus these remain **actual runs at frozen `81fec82`**, supported by an unchanged tested-code bridge; they are not freshly executed current-head gates. The corrected controller's required semantic workloads need their own completed evidence. The earlier vacuous seed-recall qualification and superseded/aborted cohorts are not repaired by these native passes.
+
+No concrete blocker remains in this bounded evidence/source audit. It does not certify all supported interpreter versions, hosted CI, native harness/model quality, the unfinished required daily-use cohorts, actual GitHub publication/default installation, whole #99 acceptance or v0.0.3 delivery. Those retain their separate acceptance/delivery gates.
+
+Reproduction: `python3 -B /tmp/agent-memory-v003/final-native-81fec82-review/audit.py`. The retained `audit.stdout` reports no failed audit checks. `source.json`, `actual-suite-identities.json` and `evidence-manifest.json` retain the exact source bridge, full method identities, per-group proofs and raw file hashes.
+
+All reviewer read-only subprocesses are terminal and collected. No product/test process or World was created. All reviewer source holds are RELEASED. No external writer grant was held or used; no tracker or other external mutation occurred.
