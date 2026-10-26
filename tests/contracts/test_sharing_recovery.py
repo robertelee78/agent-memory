@@ -1,6 +1,7 @@
 """Actual local-remote retry/readback, cursor loss and deletion-aware Git merges."""
 import hashlib
 import json
+import shutil
 from pathlib import Path
 import shutil
 import sys
@@ -9,6 +10,7 @@ import unittest
 import uuid
 
 from world import World
+from identity_fixtures import bind
 from record_fixtures import record_text, project_id
 from contracts import test_sharing_boundary as boundary
 
@@ -325,6 +327,47 @@ class SharingRecoveryContract(unittest.TestCase):
             replay=self.good(w,'replay','--repo',repo,'--request',self.save(w,{'base':base,'candidate':candidate}))
             self.assertTrue(replay['publication_verified']);self.assertFalse((repo/'memory-bank').exists())
             self.assertEqual(before,self.state(w,repo,bank))
+
+
+
+    def test_parallel_worktree_observers_leave_remote_tracking_refs_unchanged(self):
+        with World() as w:
+            repo,bank,peer,base=self.fixture(w)
+            other=w.inside('parallel observer')
+            w.git('worktree','add','-b','parallel-observer',other,'HEAD',cwd=repo)
+            bind(w,other)
+            (other/'code.py').write_text('VALUE = 3  # separate staged observer work\n')
+            w.git('add','code.py',cwd=other)
+            def state(checkout):
+                index=Path(w.git('rev-parse','--path-format=absolute','--git-path','index',cwd=checkout).stdout.strip())
+                return ((checkout/'code.py').read_bytes(),index.read_bytes(),
+                        w.git('rev-parse','HEAD',cwd=checkout).stdout,
+                        {p.relative_to(checkout/'memory-bank').as_posix():p.read_bytes() for p in (checkout/'memory-bank').rglob('*') if p.is_file()})
+            before=[state(checkout) for checkout in (repo,other)]
+            tracking=w.git('for-each-ref','--format=%(refname) %(objectname)','refs/remotes',cwd=repo).stdout
+            content=(peer/'memory-bank/projectbrief.md').read_text()+'\nIndependent landed peer policy.\n'
+            landed=self.publish(w,peer,'memory-bank/projectbrief.md',content)
+            # Preserve actual Git stderr only inside this disposable fixture;
+            # production still discloses no remote/body/credential stderr.
+            log=w.inside('private-git-observation-errors.txt');log.write_text('');log.chmod(0o600)
+            binary=w.inside('observation-bin');binary.mkdir()
+            real=shutil.which('git',path=w.env['PATH'])
+            wrapper=binary/'git'
+            wrapper.write_text('#!'+sys.executable+'\nimport os,sys\nfd=os.open('+repr(str(log))+',os.O_WRONLY|os.O_APPEND)\nos.dup2(fd,2);os.close(fd)\nos.execv('+repr(real)+',['+repr(real)+',*sys.argv[1:]])\n')
+            wrapper.chmod(0o755);w.env['PATH']=str(binary)+':'+w.env['PATH']
+            children=[w.spawn([sys.executable,'-I',self.pack/'scripts/sharing_recovery.py','inspect','--fetch','--repo',checkout]) for checkout in (repo,other)]
+            observations=[]
+            for process in children:
+                stdout,stderr=process.communicate(timeout=90)
+                observations.append((process.returncode,stdout,stderr))
+            self.assertTrue(all(row[0]==0 for row in observations),(observations,log.read_text()))
+            for _,stdout,_ in observations:
+                value=json.loads(stdout)
+                self.assertTrue(value['remote_freshness_verified'],value)
+                self.assertEqual(value['observation']['authority_head'],landed)
+            self.assertEqual(w.git('for-each-ref','--format=%(refname) %(objectname)','refs/remotes',cwd=repo).stdout,tracking,log.read_text())
+            self.assertEqual([state(checkout) for checkout in (repo,other)],before)
+            self.assertEqual(w.git('for-each-ref','--format=%(refname)','refs/agent-memory/observations',cwd=repo).stdout,'')
 
 
 if __name__=='__main__':unittest.main()
