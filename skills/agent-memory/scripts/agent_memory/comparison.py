@@ -27,7 +27,7 @@ def safe_text(value, maximum=2048):
 
 
 def request_value(request):
-    if (not isinstance(request, dict) or set(request) != REQUEST or not uuid_valid(request['project_id'])
+    if (not isinstance(request, dict) or not REQUEST.issubset(request) or set(request)-REQUEST-{'discovery'} or not uuid_valid(request['project_id'])
             or not isinstance(request['candidate'], dict) or set(request['candidate']) != {'metadata', 'body'}
             or not isinstance(request['searches'], list) or not 2 <= len(request['searches']) <= 8
             or not isinstance(request['read_paths'], list) or len(request['read_paths']) > 64
@@ -52,6 +52,12 @@ def inspect(repo, request, *, owned_lock=None):
     root, bank = writes.bank_path(repo)
     context = scope_binding.require(root, request['project_id'], owned_lock=owned_lock)
     checked, observed = writes.snapshot(root, owned_lock=owned_lock)
+    discovered_paths=set()
+    if 'discovery' in request:
+        from . import discovery
+        discovered_paths={row['path'] for row in request['discovery'].get('sources',[])}
+        discovery.check_trace(root,request['discovery'],checked,observed,context,
+            intent='comparison',selected_paths=request['read_paths'],owned_lock=owned_lock)
     if checked['project_id'] != request['project_id']:
         raise ContractError('Bank identity changed during comparison')
     deleted = {entry['id'] for entry in checked['entries'] if entry['format'] == 'tombstone'}
@@ -106,7 +112,7 @@ def inspect(repo, request, *, owned_lock=None):
         query_hits = [query for query in request['searches'] if retrieval.match(
             {'ids': [], 'paths': [], 'query': query}, {'path': path, 'body': body}) is not None]
         same_id = existing is not None and existing['id'] in {metadata['id'], *capture_owners}
-        if not query_hits and path not in request['read_paths'] and path not in capture_identity_review_paths and not same_id:
+        if not query_hits and path not in request['read_paths'] and path not in discovered_paths and path not in capture_identity_review_paths and not same_id:
             continue
         security.ensure_safe({path: text + '\n' + json.dumps(entry['scope_chain'], ensure_ascii=False)})
         if existing is not None and existing.get('visibility') == 'hidden':

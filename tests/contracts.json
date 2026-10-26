@@ -1,6 +1,7 @@
 {
   "schema": "agent-memory/test-contracts-v1",
   "suites": [
+    {"name": "recall-observation", "layer": "bank", "scope": "v0.0.3", "path": "tests/contracts/test_recall_observation.py"},
     {"name": "signed-release-lifecycle", "layer": "lifecycle", "scope": "v0.0.3", "path": "tests/contracts/test_signed_release_lifecycle.py"},
     {"name": "signed-release-publisher", "layer": "lifecycle", "scope": "v0.0.3", "path": "tests/contracts/test_signed_release_publisher.py"},
     {"name": "observation-applicability", "layer": "bank", "scope": "v0.0.3", "path": "tests/contracts/test_observation_applicability.py"},
@@ -133,6 +134,9 @@
     {"name": "explicit-migration", "layer": "lifecycle", "scope": "v0.0.3", "path": "tests/contracts/test_explicit_migration.py"},
     {"name": "migration-catalog", "layer": "lifecycle", "scope": "v0.0.3", "path": "tests/contracts/test_migration_catalog.py"},
     {"name": "migration-runtime-rollback", "layer": "lifecycle", "scope": "v0.0.3", "path": "tests/contracts/test_migration_runtime_rollback.py"},
-    {"name": "lifecycle-security-contract", "layer": "lifecycle", "scope": "v0.0.3", "path": "tests/contracts/test_lifecycle_security_contract.py"}
+    {"name": "lifecycle-security-contract", "layer": "lifecycle", "scope": "v0.0.3", "path": "tests/contracts/test_lifecycle_security_contract.py"},
+    {"name": "recall-catalog", "layer": "bank", "scope": "v0.0.3", "path": "tests/contracts/test_recall_catalog.py"},
+    {"name": "semantic-discovery-workflow", "layer": "bank", "scope": "v0.0.3", "path": "tests/contracts/test_discovery_workflow.py"},
+    {"name": "semantic-discovery", "layer": "bank", "scope": "v0.0.3", "path": "tests/contracts/test_discovery.py"}
   ]
 }

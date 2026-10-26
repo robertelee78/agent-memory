@@ -17,18 +17,23 @@ question cannot be resolved by this domain and the selected operation.
 | Intent | Operation |
 | --- | --- |
 | Resume a session | [resume](../resume/GUIDE.md) |
+| Discover knowledge by meaning | [discovery](../discovery/GUIDE.md) |
 | Recall current records | [retrieval](../retrieval/GUIDE.md) |
 | Assemble bounded context | [assembly](../assembly/GUIDE.md) |
 
 ## Shared current-recall inputs
 
-A session MUST resolve the actual repository/developer and follow the shared identity/source rules in the [access domain](../access/GUIDE.md), and use the current Markdown bank. Optional projections, vector search, temporal
-ranking and graph services are unnecessary for this baseline. Removing them MUST
+A session MUST resolve the actual repository/developer and follow the shared identity/source rules in the [access domain](../access/GUIDE.md), and use the current Markdown bank. The invoking harness MUST interpret subjects and navigate meaningful routes
+through [discovery](../discovery/GUIDE.md) for the supported semantic workflow.
+Optional projections, vector search, temporal ranking and graph services are
+unnecessary for the mechanical qualification baseline. Removing them MUST
 NOT remove file, exact record-ID or ordinary-text lookup.
 
 The following is the base recall object, including when nested inside a context-assembly or landed-memory refresh request. It is not the outer request shape of those operations.
 
-The request MUST contain exactly these fields. Replace the sample project UUID
+The legacy mechanical request MUST contain these fields. The supported semantic
+workflow MUST additionally supply the completed `discovery` object from the
+[discovery operation](../discovery/GUIDE.md); no other extra fields are allowed. Replace the sample project UUID
 with the resolved bank's ID; it is not an alternative project selector.
 
 ```json
@@ -115,6 +120,26 @@ envelope and its metrics are additional bytes. The helper validates/hashes the
 complete canonical bank, so bounded candidate reads do not imply bounded total
 disk I/O or a constant latency guarantee. Metrics expose inventory size, selected
 payload bytes, bounded candidate bytes and elapsed time for later measurement.
+
+The operation keeps one invocation-local observation of exact source bytes and
+validated metadata; it does not consume a persistent index or caller-provided
+validation cache. A session MUST distinguish logical candidate bytes inspected
+from that in-memory observation (`bounded_candidate_bytes_read`) from the three
+complete canonical payload reads reported by
+`canonical_observation_payload_bytes_read` and `canonical_observation_file_reads`.
+Those counters exclude repository-discovery/Git reads, filesystem metadata,
+private audit writes and provider context; they are not total OS I/O or tokens.
+`parsed_records` counts validated optional record-like versions/history, not
+distinct durable lessons.
+
+The complete canonical observation has finite limits of 65,536 files and 64 MiB,
+separate from per-candidate and returned-context bounds. Physical topology also
+has a finite inventory budget. A capacity refusal MUST remain unavailable and
+preserve canonical data; the session MUST NOT truncate sources, remove unknown
+markers or report an empty successful bank to bypass it. An omitted context path
+occupied by a directory/FIFO is unresolved state. Unknown present markers are
+refused without consuming their content; an owned lock MUST remain present with
+its exact owner record while recall governs a mutation.
 
 The result records `evaluated_at`, actual context and an aggregate observation
 of the complete bank. It rechecks bank hashes, Git context and scope after

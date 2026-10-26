@@ -15,6 +15,13 @@ A session using this leaf MUST first load and follow the [recall domain](../reca
 
 The recall domain owns the complete shared request, source/selection gates and bounded-observation contract. The session MUST apply those rules, not a separate client policy.
 
+A session performing semantic recall MUST first follow the
+[discovery operation](../discovery/GUIDE.md), interpret the actual topic map and
+retain its completed source-bound trace. It MUST select plausible exact sources
+through that trace and read their qualified current bodies here. Literal matching
+is a supplementary mechanical selector; it MUST NOT replace meaning-based
+navigation or establish absence when wording differs.
+
 ## Inputs and preconditions
 
 A session MUST prepare the exact shared nine-field recall request from this domain using the actual selected project and truthful current selectors/context. It MUST keep the request private and preserve unknown conditions as unknown.
@@ -26,6 +33,20 @@ A session MUST resolve current repository/developer context and inspect the actu
 ## Plan
 
 The session MUST select relevant IDs/files/query and explicit trust/kinds/limits without broadening applicability. This operation plans no canonical changes; private content-free audit writes remain distinct from memory/code changes.
+
+Ordinary text matches all supplied whitespace-separated terms literally; a full
+natural-language question can miss a useful paraphrased lesson. The session
+SHOULD translate its actual task into short alternative concept queries and
+simplify an overconstrained query when needed. It MUST preserve the same project,
+scope, trust, lifecycle and safety gates for every alternative, inspect the actual
+returned sources, and retain unresolved contradictions. Query reformulation does
+not certify meaning or make remembered claims stronger than current evidence.
+
+An empty literal result MUST NOT establish semantic absence or novelty. Before
+storing learning, the session MUST use the separate
+[comparison workflow](../comparison/GUIDE.md), read plausible existing matches and
+retain any remaining uncertainty. A scripted synonym expansion or fixture answer
+MUST NOT be represented as an independent agent's understanding.
 
 ## Apply
 

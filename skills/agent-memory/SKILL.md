@@ -44,7 +44,10 @@ optional service. Packaged Python helpers provide mechanical validation; they
 do not grant authority or establish that a lesson is true.
 
 A session MUST read existing applicable memory before proposing new durable
-learning. It MUST read [retrieval/GUIDE.md](retrieval/GUIDE.md) for project-bound
+learning. It MUST follow [discovery/GUIDE.md](discovery/GUIDE.md) for meaning-based
+navigation through the bounded topic map, using the current harness and a fresh
+source-bound trace. Literal search alone MUST NOT establish semantic absence or
+novelty. It MUST read [retrieval/GUIDE.md](retrieval/GUIDE.md) for project-bound
 file, record-ID and ordinary-text recall, including its hard selection gates.
 A session MUST read [assembly/GUIDE.md](assembly/GUIDE.md) when preparing bounded
 context for a harness, to preserve source labels and unresolved contradictions
@@ -93,6 +96,7 @@ unneeded siblings or interrupting an executing turn.
 | Triage conflicting sources | [access](access/GUIDE.md) | [authority](authority/GUIDE.md) |
 | Classify sources and check safety | [access](access/GUIDE.md) | [security](security/GUIDE.md) |
 | Resume a session | [recall](recall/GUIDE.md) | [resume](resume/GUIDE.md) |
+| Discover relevant knowledge by meaning | [recall](recall/GUIDE.md) | [discovery](discovery/GUIDE.md) |
 | Recall current records | [recall](recall/GUIDE.md) | [retrieval](retrieval/GUIDE.md) |
 | Assemble bounded context | [recall](recall/GUIDE.md) | [assembly](assembly/GUIDE.md) |
 | Initialize from evidence | [capture](capture/GUIDE.md) | [initialize](initialize/GUIDE.md) |

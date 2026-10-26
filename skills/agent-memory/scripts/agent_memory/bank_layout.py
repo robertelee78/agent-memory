@@ -79,7 +79,7 @@ def inherited(metadata, ancestors, project_id):
             raise ContractError('Record must retain inherited index conditions in its own metadata')
 
 
-def inventory(files, root_metadata, root_routes):
+def inventory(files, root_metadata, root_routes, *, parsed_records=None):
     project_id = root_metadata['project-id']
     entries, visited, versions, active, deleted, events = [], set(), set(), set(), set(), set()
     allowed = (set(records.MODEL['properties']) | set(records.EVENT['properties'])
@@ -154,6 +154,8 @@ def inventory(files, root_metadata, root_routes):
             entry.update(id=metadata['id'], version=metadata['version'], kind=metadata['kind'],
                          applicability=metadata['applicability'], conditions=metadata['conditions'],
                          binding_procedure=False)
+        if parsed_records is not None:
+            parsed_records[path]=(kind,metadata,body)
         entries.append(entry)
 
     for route in root_routes:

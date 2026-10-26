@@ -264,8 +264,13 @@ def portable_aliases(paths):
     seen = {}
     for path in paths:
         parts = PurePosixPath(path).parts
-        for size in range(1, len(parts) + 1):
-            spelling = PurePosixPath(*parts[:size]).as_posix()
+        spelling = ''
+        for part in parts:
+            # Parts already carry PurePosixPath normalization and its root
+            # anchor. Rebuilding a Path for every shared prefix is unnecessary.
+            spelling += ('' if not spelling or spelling.endswith('/') else '/') + part
+            if seen.get(spelling) == spelling:
+                continue
             key = portable_key(spelling)
             if key in seen and seen[key] != spelling:
                 raise ContractError("Bank paths have case or Unicode component aliases; preserve the physical entries")
@@ -304,10 +309,12 @@ def file_topology(paths):
             raise ContractError("A canonical file cannot also be a parent directory")
 
 
-def validate_files(files):
+def validate_files(files, *, parsed_records=None):
     """Validate a proposed complete canonical map without temporary file writes."""
     if not isinstance(files, dict) or "MEMORY.md" not in files:
         raise ContractError("A complete bank requires MEMORY.md")
+    if parsed_records is not None and (not isinstance(parsed_records,dict) or parsed_records):
+        raise ContractError('Parsed-record output must start empty and cannot supply validation authority')
     for path, body in files.items():
         if path != "MEMORY.md":
             path_value(path)
@@ -323,7 +330,7 @@ def validate_files(files):
         if path in files:
             raise ContractError(f"Context exists but is marked omitted: {path}")
     from .bank_layout import inventory
-    entries = inventory(files, metadata, routes)
+    entries = inventory(files, metadata, routes, parsed_records=parsed_records)
     return {"schema": "agent-memory/bank-contract-result-v1", "operation": "validate",
             "valid": True, "validation_scope": "router-layout-and-record-format", "project_id": metadata["project-id"],
             "router_updated": metadata["router-updated"], "routes": routes, "omitted": omitted, "entries": entries,
