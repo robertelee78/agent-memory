@@ -1,0 +1,77 @@
+{
+  "reviewer": "codex-review-59",
+  "candidate": "d5b4f59621cd90cc0552e44734f4e018d5fbf0f3",
+  "tree": "473f3be89cd9816c55d748f252da75bf3ad439d5",
+  "comparison_base": "5669e4fb94bcbeafdd0c1834d66ebff1ed5ced1f",
+  "scope": "bounded static controller repair; no full #99 acceptance",
+  "changed_paths": [
+    "scripts/evaluations/daily_use.py"
+  ],
+  "files_read": [
+    {
+      "path": "scripts/evaluations/daily_use.py",
+      "sha256": "f48fe78daf796a8cfcc1527280b62d82d6c2988a7a995cbf0d4c83730cf73a76",
+      "bytes": 64770,
+      "git_mode": "100644",
+      "git_blob": "2e41046a31e4bc1e48ade21c47743dad25af00c2"
+    },
+    {
+      "path": "tests/world.py",
+      "sha256": "6f4e78d202505872132ef4c8a5070cf550ac8993079bd79396f8b2d4614d0c5b",
+      "bytes": 12210,
+      "git_mode": "100644",
+      "git_blob": "27d7ccd9d224edb454a162b804e6a739cb604a68"
+    },
+    {
+      "path": "tests/publication_github.py",
+      "sha256": "512c517d7fe9b5f17b413553fe7bef23a5e92e67d18cbb1d5ad66995fca90b52",
+      "bytes": 6445,
+      "git_mode": "100644",
+      "git_blob": "db6035cecfebf1287f2d1a522ab96bd13096118f"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/sharing_recovery.py",
+      "sha256": "4900740978ca33ee430e451e45b2d5b248e79a8000b525d0bf8684ebd1c6e480",
+      "bytes": 34110,
+      "git_mode": "100644",
+      "git_blob": "19b5e11b9572503aa3346d0f14d60b4fe12d0dd4"
+    }
+  ],
+  "portable_runtime_bytes_modes_unchanged": true,
+  "preserved_functions": {
+    "public": true,
+    "review": true,
+    "require_scenario_events": true,
+    "capture": true
+  },
+  "adapter_inert_AST_valid": true,
+  "adapter_inert_sha256": "3611ab836baa79a90ecadfccb92e6cd51b7ccfe03017597c0ca569dabc33f125",
+  "retained_probe_files_read": [
+    {
+      "path": "/tmp/agent-memory-v003/offline-adapter-d5b4f59/results.json",
+      "sha256": "b8843fbb3c6235181462d52422c6a7689176650e91720805a8d646125ef152e3",
+      "bytes": 478
+    },
+    {
+      "path": "/tmp/agent-memory-v003/controller-retention-5669e4f/metaprobe.json",
+      "sha256": "d8fd4d8115d9ec0753ca7e5f2420c940fcc0d7d9b8d8b1ab9ecf3d1923877b9e",
+      "bytes": 298
+    },
+    {
+      "path": "/tmp/agent-memory-v003/controller-retention-5669e4f/commands.json",
+      "sha256": "02b0c27e393fb42ba4788f3d6fbe6cabce081d585473a2a4bf4db3cb7d10c06a",
+      "bytes": 2258
+    }
+  ],
+  "adapter_probe_controller_binding_matches": true,
+  "probe_claims_not_adopted_as_product_or_workload_qualification": true,
+  "disposition": "APPROVED bounded static apparatus repair; all five prior coverage blockers addressed",
+  "product_executions": 0,
+  "test_or_metaprobe_executions": 0,
+  "model_calls": 0,
+  "jobs": "terminal and collected",
+  "worlds": 0,
+  "source_holds": "RELEASED",
+  "external_writer_grant": "NONE / RELEASED",
+  "report_sha256": "c54ad11b94e271725aaeb45f111c45582fcad66a50b54b1518d241c15d84efdf"
+}

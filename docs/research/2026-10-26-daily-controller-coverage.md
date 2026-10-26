@@ -36,3 +36,23 @@ scenarios and 300-second public-command deadlines unchanged:
 Fresh source-bound controller qualification and the full required schedules
 remain necessary. Static agreement, an aborted old cohort, a continued diagnostic
 or a smaller smoke cannot by itself establish the complete #99 gate.
+
+## Corrected pilot
+
+Candidate `d5b4f59621cd90cc0552e44734f4e018d5fbf0f3` receives independent
+bounded static approval after the adapter was corrected to honor the actual
+leading Git `-C` target, including relative chains. The adapter records actual
+denials; the rejoin check requires a new denial after all peer landings. Six
+isolated real-Git transport controls verify targeting, peer availability, local
+Git access and restored connectivity. Two simulated apparatus controls verify
+partial-stream/error receipt retention and the disclosure assertion; they are
+not native product or workload qualification.
+
+A fresh, unmodified six-session/128-lesson pilot then completes all 25 declared
+scenario controls in 951.30 seconds, with seed identity/byte/mode checks at all
+four phases, positive holds/attribution, no fixture markers in public helper
+streams and expected feature state preserved. Its owned remote workspace is
+removed after source verification. [Results and raw bindings](data/2026-10-26-daily-controller/bindings.json)
+retain exact source, receipts and outcomes. The smaller pilot is development
+qualification only; full 12/1,000, 24/10,000 and independent variations still
+require their own fresh results and independent acceptance.
