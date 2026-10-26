@@ -35,9 +35,9 @@ def safe_text(value, bound=4096):
     return value
 
 
-def snapshots(repo, base=None, *, owned_lock=None):
+def snapshots(repo, base=None, *, owned_lock=None, quarantine_records=False):
     from . import sharing_recovery as recovery
-    observation = recovery.observe(repo, owned_lock=owned_lock);root=Path(observation['repo_root']);head=observation['authority_head']
+    observation = recovery.observe(repo, owned_lock=owned_lock,quarantine_records=quarantine_records);root=Path(observation['repo_root']);head=observation['authority_head']
     if base is None:
         values=recovery.command(root,'merge-base','--all',observation['local_head'],head).splitlines()
         if len(values)!=1:raise ContractError('A lost cursor needs an unambiguous actual common base')
@@ -45,9 +45,9 @@ def snapshots(repo, base=None, *, owned_lock=None):
     recovery.commit(root,base)
     if not recovery.ancestor(root,base,head):raise ContractError('The reviewed baseline must remain in authority history')
     local=tx.files_at(root/observation['bank_root'])
-    values={'base':recovery.tree(root,base,observation['bank_root']), 'local':local,
-            'landed':recovery.tree(root,head,observation['bank_root'])}
-    checked={side:recovery.bounded(files,allow_absent=True) for side,files in values.items()}
+    values={'base':recovery.tree(root,base,observation['bank_root'],quarantine_records=quarantine_records), 'local':local,
+            'landed':recovery.tree(root,head,observation['bank_root'],quarantine_records=quarantine_records)}
+    checked={side:recovery.bounded(files,allow_absent=True,quarantine_records=quarantine_records) for side,files in values.items()}
     if any(v['project_id'] not in {None,observation['project_id']} for v in checked.values()):
         raise ContractError('Sharing review cannot transfer knowledge between projects')
     binding={key:value for key,value in observation.items() if key not in {'observed_at'}}
@@ -508,8 +508,15 @@ def review(repo,judgment, *, owned_lock=None):
             for files in (baseline,local,landed):files[path]=replace_introduction(files[path],prefix)
     refresh_land=mask(landed,baseline,held) if held else landed
     publish_local=mask(local,baseline,held) if held else local
-    refresh=recovery.merge_files(baseline,local,refresh_land)
-    publish=recovery.merge_files(baseline,publish_local,landed)
+    refresh=recovery.merge_files(baseline,local,refresh_land,quarantine_records=version2)
+    publish=recovery.merge_files(baseline,publish_local,landed,quarantine_records=version2)
+    if version2:
+        # Held raw bytes may already exist on a side. They are retained there,
+        # never transported as a new/changed payload to its peer.
+        for before,after in ((values['local'],refresh),(values['landed'],publish)):
+            for path,text in after.items():
+                if text!=before.get(path) and security.scan(path+'\n'+text)['reasons']:
+                    raise ContractError('Unsafe changed payload remains held; resolve it before exchange')
     operation_id=str(uuid.UUID(hex=digest(encoded(judgment))[:32],version=4))
     refresh=consolidate(refresh,judgment['consolidations'],rows,decisions,observation,operation_id,judgment['recorded_at'],blocked)
     publish=consolidate(publish,judgment['consolidations'],rows,decisions,observation,operation_id,judgment['recorded_at'],blocked)
@@ -529,8 +536,9 @@ def review(repo,judgment, *, owned_lock=None):
         references={}
         for key,row in rows.items():
             reference={name:row[name] for name in ('path','component','target_path','source_sha256_by_side')}
-            if row.get('metadata') is not None:
-                reference['record']={name:row['metadata'][name] for name in ('id','version')}
+            metadata=row.get('metadata') or (row.get('witness_metadata') if row['format']=='standalone-record' else None)
+            if metadata is not None:
+                reference['record']={name:metadata[name] for name in ('id','version')}
             references[key]=reference
         for known in inspection['known_causes']:references.update(known['references'])
         sharing_holds.record(root,observation['project_id'],proof,references,resolutions=resolutions,owned_lock=owned_lock,
@@ -595,6 +603,10 @@ def main(argv=None):
         elif args.command=='review':value=review(args.repo,read_input(args.input))
         else:value=check(args.repo,read_input(args.input,version2=args.v2))
         if getattr(args,'output',None):value=limits.write_private(args.output,value,args.repo)
+        elif isinstance(value,dict) and value.get('proof',{}).get('schema')=='agent-memory/semantic-sharing-proof-v2':
+            # Complete candidate banks can retain quarantined local originals.
+            # They belong only in explicitly selected private artifacts.
+            value={k:v for k,v in value.items() if k not in {'refresh_files','publish_files'}}
         print(json.dumps(value,indent=2));return 0
     except (ContractError,OSError,ValueError,TypeError,KeyError,AttributeError,UnicodeError,RecursionError) as exc:
         from .sharing_holds import HoldFailure

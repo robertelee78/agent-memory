@@ -82,18 +82,26 @@ def commit(repo, value):
     return value
 
 
-def bounded(files, *, allow_absent=False):
+def bounded(files, *, allow_absent=False, quarantine_records=False):
     limits.bank_size(files)
     if files == {} and allow_absent:
         return {'project_id': None, 'entries': [], 'routes': []}
     checked = bank.validate_files(files)
+    formats={entry['path']:entry['format'] for entry in checked['entries']}
     for path, body in files.items():
         if security.scan(path + '\n' + body)['reasons']:
+            if quarantine_records and formats.get(path)=='standalone-record':
+                # Only the opaque body may be quarantined. Unsafe topology,
+                # metadata and inherited navigation still refuse the snapshot.
+                from . import records
+                _,metadata,_=records.parse(body)
+                if not security.scan(path+'\n'+encoded(metadata).decode())['reasons']:
+                    continue
             raise ContractError('Unsafe or unreviewable shared memory; inspect without echoing content')
     return checked
 
 
-def tree(repo, revision, prefix):
+def tree(repo, revision, prefix, *, quarantine_records=False):
     commit(repo, revision)
     output = command(repo, 'ls-tree', '-rz', '--full-tree', revision, '--', prefix, limit=MAX_LOCATOR_TREE_BYTES)
     objects = {}
@@ -153,7 +161,7 @@ def tree(repo, revision, prefix):
         if command(repo, 'rev-list', '--max-count=1', revision, '--', prefix).strip():
             raise ContractError('Previously occupied shared bank is absent; inspect its history before initialization')
         return files
-    bounded(files)
+    bounded(files,quarantine_records=quarantine_records)
     return files
 
 
@@ -234,11 +242,17 @@ def first_bank_history(repo, head):
             authority_bank_location(repo, snapshot, None)
 
 
-def observe(repo, *, owned_lock=None):
+def observe(repo, *, owned_lock=None, quarantine_records=False):
     root, _ = writes.bank_path(repo)
     context = scope_binding.require(root, owned_lock=owned_lock)
     boundary = sharing_boundary.inspect(root, owned_lock=owned_lock)
-    if set(boundary['blockers']) - {'canonical-memory-is-not-tracked'}:
+    allowed={'canonical-memory-is-not-tracked'}
+    if quarantine_records and 'unadmitted-content' not in boundary['safety_reasons']:
+        # Revalidate complete local structure and safe record metadata before
+        # relaxing this one boundary blocker for the versioned review path.
+        bounded(transactions.files_at(root/boundary['bank_root']),quarantine_records=True)
+        allowed.add('unsafe-or-unreviewable-memory-content')
+    if set(boundary['blockers']) - allowed:
         raise ContractError('Resolve the listed local sharing boundary blockers before exchange')
     local_head = git(root, 'rev-parse', '--verify', 'HEAD')
     remote, branch = boundary['authority_remote'], boundary['authority_branch']
@@ -254,12 +268,12 @@ def observe(repo, *, owned_lock=None):
         if fetched != head or server(root, remote, branch) != head:
             raise ContractError('Authority advanced during observation; reconcile against a new observation')
         authority_bank_location(root, head, boundary['bank_root'])
-        files = tree(root, head, boundary['bank_root'])
+        files = tree(root, head, boundary['bank_root'],quarantine_records=quarantine_records)
         if not files:
             first_bank_history(root, head)
         local_router = bank.parse_router((root / boundary['bank_root'] / 'MEMORY.md').read_text())[0]
         shared_router = bank.parse_router(files['MEMORY.md'])[0] if files else None
-        if files and (bounded(files)['project_id'] != context['project_id'] or
+        if files and (bounded(files,quarantine_records=quarantine_records)['project_id'] != context['project_id'] or
                 shared_router.get('canonical-remote') != local_router.get('canonical-remote')):
             raise ContractError('Shared authority belongs to a different project')
         scope_binding.require(root, context['project_id'], expected=context, owned_lock=owned_lock)
@@ -334,8 +348,8 @@ def header_order(metadata, originals):
     return {key: metadata[key] for key in [*order, *metadata] if key in metadata}
 
 
-def merge_files(base, local, landed):
-    checks = [bounded(x, allow_absent=True) for x in (base, local, landed)]
+def merge_files(base, local, landed, *, quarantine_records=False):
+    checks = [bounded(x, allow_absent=True,quarantine_records=quarantine_records) for x in (base, local, landed)]
     if len({x['project_id'] for x in checks if x['project_id'] is not None}) != 1:
         raise ContractError('A reconciliation cannot transfer memory between projects')
     # Deletion guards are monotonic even if a branch deletes an older marker.
@@ -427,7 +441,7 @@ def merge_files(base, local, landed):
     for source, part in zip(maps, parts):
         if source and part == (meta, routes, omissions, prefix):
             merged['MEMORY.md'] = source['MEMORY.md']; break
-    final = bounded(merged)
+    final = bounded(merged,quarantine_records=quarantine_records)
     inactive = {}
     for checked in checks:
         for entry in checked['entries']:
@@ -473,10 +487,10 @@ def reconcile(repo, base=None):
                   remote_freshness_verified=True, local_memory_available=True)
 
 
-def replay(repo, request):
+def replay(repo, request, *, quarantine_records=False):
     if not isinstance(request, dict) or set(request) != {'base', 'candidate'}:
         raise ContractError('Replay requires exact base and memory-only candidate commit IDs')
-    observation = observe(repo);root = Path(observation['repo_root']);prefix = observation['bank_root']
+    observation = observe(repo,quarantine_records=quarantine_records);root = Path(observation['repo_root']);prefix = observation['bank_root']
     base, candidate = (commit(root, request[k]) for k in ('base', 'candidate'))
     parents = command(root, 'rev-list', '--parents', '-n', '1', candidate).strip().split()[1:]
     if parents != [base]:
@@ -485,10 +499,12 @@ def replay(repo, request):
     changed = [p for p in changed if p]
     if not changed or any(not p.startswith(prefix + '/') for p in changed):
         raise ContractError('Replay candidate contains no memory delta or imports unrelated code')
-    before, after = tree(root, base, prefix), tree(root, candidate, prefix)
-    if any(bounded(f)['project_id'] != observation['project_id'] for f in (before, after) if f):
+    before, after = (tree(root,revision,prefix,quarantine_records=quarantine_records) for revision in (base,candidate))
+    if any(bounded(f,quarantine_records=quarantine_records)['project_id'] != observation['project_id'] for f in (before, after) if f):
         raise ContractError('Replay cannot change project identity')
     delta = {p: after.get(p) for p in set(before) | set(after) if before.get(p) != after.get(p)}
+    if quarantine_records and any(security.scan(path+'\n'+body)['reasons'] for path,body in delta.items() if body is not None):
+        raise ContractError('Publication readback cannot authorize a new unsafe payload')
     head = observation['authority_head']
     if not ancestor(root, base, head):
         raise ContractError('Authority history changed; preserve candidate and reconcile instead of retrying')
@@ -505,10 +521,10 @@ def replay(repo, request):
         raise ContractError('Publication history exceeds bounded replay inventory; explicit readback required')
     witnessed = None
     for revision in history:
-        files = tree(root, revision, prefix)
+        files = tree(root, revision, prefix,quarantine_records=quarantine_records)
         if all(files.get(p) == body for p, body in delta.items()):
             witnessed = revision;break
-    current = tree(root, head, prefix)
+    current = tree(root, head, prefix,quarantine_records=quarantine_records)
     if server(root, observation['authority_remote'], observation['authority_branch']) != head:
         raise ContractError('Authority advanced during replay readback; inventory again')
     return result('replay', writes_performed=True, git_metadata_writes_performed=True, observation=observation, publication_verified=witnessed is not None,

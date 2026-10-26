@@ -197,7 +197,7 @@ def page_payloads(binding,rows,edges,known=()):
 def build(repo,request=None,*,owned_lock=None,skip_judgment=None):
     from . import semantic_sharing as semantic
     request=copy.deepcopy(request_value(request))
-    root,observation,binding,values,checked=semantic.snapshots(repo,request['base'],owned_lock=owned_lock)
+    root,observation,binding,values,checked=semantic.snapshots(repo,request['base'],owned_lock=owned_lock,quarantine_records=True)
     rows=components(values,checked)
     from . import sharing_holds
     from . import sharing_hold_mapping as hold_mapping
@@ -234,9 +234,22 @@ def build(repo,request=None,*,owned_lock=None,skip_judgment=None):
             chosen[key]['witness_metadata']={'id':row['metadata']['id'],'version':row['metadata']['version']}
             chosen[key]['terminal_body_withheld']=True
     # Hidden plausible evidence remains a hold, never absence or a disclosed body.
-    hidden=[key for key,row in chosen.items() if row['metadata'] and row['metadata'].get('visibility')=='hidden']
+    hidden={key for key,row in chosen.items() if row['metadata'] and (
+        row['metadata'].get('visibility')=='hidden' or security.scan(row['body'])['reasons'])}
+    # Withholding a replacement must not make its older claim usable on a
+    # branch which has not imported that replacement. Retain its exact linked
+    # identity closure as pending, including otherwise unchanged old sources.
+    while True:
+        linked=set().union(*(identities(chosen[key]) for key in hidden))
+        expanded=hidden|{key for key,row in chosen.items() if identities(row)&linked}
+        if expanded==hidden:break
+        hidden=expanded
+    hidden=sorted(hidden)
     for key in hidden:
-        chosen[key]=copy.deepcopy(chosen[key]);chosen[key]['body']='';chosen[key]['metadata']=None
+        chosen[key]=copy.deepcopy(chosen[key])
+        if chosen[key]['metadata'] is not None:
+            chosen[key]['witness_metadata']={name:chosen[key]['metadata'][name] for name in ('id','version')}
+        chosen[key]['body']='';chosen[key]['metadata']=None
         chosen[key]['content_withheld']=True
     pages=page_payloads(binding,chosen,edges,known)
     manifest={'schema':INSPECTION,'request':request,'binding':binding,'inventory_digests':{side:digest(encoded(hashes)) for side,hashes in binding['source_hashes'].items()},
