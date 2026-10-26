@@ -225,10 +225,11 @@ def retrieve(repo, request, *, owned_lock=None, deferred_paths=()):
         except Exception:
             cached=None
     engine=None
-    try:
-        engine=recall_catalog.generation()
-    except Exception:
-        pass
+    if 'discovery' in request:
+        try:
+            engine=recall_catalog.generation()
+        except Exception:
+            pass
     return _retrieve(repo,request,owned_lock,deferred_paths,started,cache_engine=engine)
 
 
@@ -301,7 +302,7 @@ def _retrieve(repo,request,owned_lock,deferred_paths,started,*,cached=None,cache
             'result_bytes': used, 'elapsed_seconds': time.perf_counter() - started},
         **({'discovery':discovery_result} if discovery_result is not None else {}),
         'audit': audit, 'canonical_writes_performed': False, 'audit_writes_performed': True,
-        'derived_cache_writes_performed':True if catalog_updated else False if cached is not None else None,
+        'derived_cache_writes_performed':True if catalog_updated else False if cached is not None or 'discovery' not in request else None,
         'optional_indexes_used': cached is not None, 'source_assertions_verified': False, 'publication_verified': False,
         'code_working_bytes_verified': False, 'validation_scope': 'metadata-currentness-and-bounded-file-recall'}
 

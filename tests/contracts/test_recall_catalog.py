@@ -55,6 +55,19 @@ class RecallCatalogContract(unittest.TestCase):
             self.assertTrue(self.good(w,'retrieve.py','--repo',repo,'--request',self.save(w,request))['optional_indexes_used'])
             self.assertEqual(before,self.h.state(w,repo,bank))
 
+    def test_ordinary_recall_preserves_optional_navigation_catalog_without_republishing_it(self):
+        with World() as w:
+            repo,bank,meta,request,pointer,before=self.ready(w)
+            directory=pointer.parent
+            snapshot={p.name:(p.read_bytes(),p.stat().st_mtime_ns) for p in directory.iterdir() if p.is_file()}
+            ordinary={key:value for key,value in request.items() if key!='discovery'}
+            result=self.good(w,'retrieve.py','--repo',repo,'--request',self.save(w,ordinary))
+            self.assertEqual([row['record']['id'] for row in result['results']],[meta['id']])
+            self.assertFalse(result['optional_indexes_used']);self.assertFalse(result['metrics']['catalog_updated'])
+            self.assertFalse(result['derived_cache_writes_performed'])
+            self.assertEqual(snapshot,{p.name:(p.read_bytes(),p.stat().st_mtime_ns) for p in directory.iterdir() if p.is_file()})
+            self.assertEqual(before,self.h.state(w,repo,bank))
+
     def test_caller_modified_metadata_cannot_forge_a_successful_empty_selection(self):
         with World() as w:
             repo,bank,meta,request,pointer,before=self.ready(w)
