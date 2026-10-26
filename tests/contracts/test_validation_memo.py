@@ -94,6 +94,34 @@ class ValidationMemoContract(PublicationFixture):
             with self.assertRaises(recall_catalog.CacheMiss):recall_catalog.generation()
         self.assertEqual(cold,recall_catalog.generation())
 
+    def test_small_retained_budgets_evict_and_oversized_results_fall_back_without_truncation(self):
+        with World() as w:
+            files=self.files(w);saved=(memo.MAX_ENTRIES,memo.MAX_MAPS,memo.MAX_BYTES)
+            try:
+                memo.MAX_ENTRIES=2;memo.MAX_MAPS=1;memo.MAX_BYTES=65536
+                with memo.operation() as active:
+                    for number in range(3):
+                        variant={**files,'projectbrief.md':files['projectbrief.md']+'\nDistinct fixture note '+str(number)+'.\n'}
+                        self.assertTrue(bank.validate_files(variant)['valid'])
+                        self.assertEqual(sum(namespace=='bank-format' for namespace,key in active.values),1)
+                    for text in ('First independent observation.','Second independent observation.','Third independent observation.'):
+                        self.assertEqual(security.scan(text)['redacted_text'],text)
+                        self.assertLessEqual(len(active.values),2)
+                    self.assertTrue(bank.validate_files(files)['valid'])
+                memo.MAX_BYTES=500
+                with memo.operation() as active:
+                    for text in ('Small source one.','Small source two.'):
+                        self.assertEqual(security.scan(text)['redacted_text'],text)
+                        self.assertEqual(len(active.values),1)
+                        self.assertLessEqual(active.bytes,500)
+                    retained=tuple(active.values)
+                    large='Complete useful source text. '*100
+                    self.assertEqual(security.scan(large)['redacted_text'],large)
+                    self.assertEqual(tuple(active.values),retained)
+                    with self.assertRaises(ContractError):security.scan('')
+            finally:memo.MAX_ENTRIES,memo.MAX_MAPS,memo.MAX_BYTES=saved
+            self.assertIsNone(memo.current())
+
     def test_public_land_rechecks_source_authority_index_and_policy_after_first_check(self):
         program='''import json,subprocess,sys
 from pathlib import Path
