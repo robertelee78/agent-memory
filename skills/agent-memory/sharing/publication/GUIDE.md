@@ -40,7 +40,7 @@ it MUST NOT initialize another bank or widen scope to get around a failure.
    safe invalidation. It MUST NOT stage unrelated work or use `git add -A`.
 2. The session MUST search/read plausible existing local and landed matches
    through [comparison](../../comparison/GUIDE.md), then inspect and read the
-   complete actual source set through semantic reconciliation. It MUST supply
+   complete selected changed-learning frontier through v2 semantic reconciliation. It MUST supply
    explicit meaning judgments, provenance-preserving duplicate groups and real
    dependencies. A clean text merge MUST NOT stand in for this review.
 3. The session MUST save the complete resulting semantic `proof` in private
@@ -77,7 +77,7 @@ A session MUST observe actual local memory, fresh authority and current reposito
 ## Plan
 
 ```sh
-   python3 -I "$SKILL_DIR/scripts/publish_memory.py" prepare --repo /path/to/repo --input /private/semantic-proof.json
+   python3 -I "$SKILL_DIR/scripts/publish_memory.py" prepare --v2 --repo /path/to/repo --input /private/semantic-proof.json --output /private/prepared-publication.json
    ```
 
 4. The session MUST inspect `sharing_state`. Only `prepared` contains a `request`;
@@ -103,7 +103,7 @@ banks and nonordinary/unmerged entries MUST remain for inspection.
 ## Apply
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/publish_memory.py" land --repo /path/to/repo --input /private/publication-request.json
+python3 -I "$SKILL_DIR/scripts/publish_memory.py" land --v2 --repo /path/to/repo --input /private/publication-request.json --output /private/landed-publication.json
 ```
 
 ## Read back

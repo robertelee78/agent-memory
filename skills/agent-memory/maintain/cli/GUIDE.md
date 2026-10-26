@@ -70,6 +70,7 @@ retain the separately previewed installation operation.
 | `developer`, `project`, `identity` | `developer_identity.py`, `project_identity.py`, `scope_binding.py` | Explicit developer setup and repository binding |
 | `init`, `inspect`, `bank` | `initialize.py`, `bank_state.py inspect`, `bank_contract.py` | Evidence-based initialization and file contract inspection |
 | `search`, `get`, `explain` | `retrieve.py` | The same qualified recall engine; request text, IDs or paths and inspect inclusion/exclusion evidence |
+| `discover` | `discover_memory.py` | Bounded meaning-based navigation and source qualification by the invoking harness |
 | `context` | `assemble_context.py` | Bounded, source-labeled context preview/check |
 | `capture` | `admit_learning.py capture` | Private durable-learning candidate, not admission |
 | `admission`, `compare` | `admit_learning.py`, `compare_learning.py` | Search/read existing memory, semantic judgment and governed admission |
@@ -85,6 +86,11 @@ retain the separately previewed installation operation.
 operation in both request and proposal. `forget` accepts explicit expiration,
 retention or deletion requests; it MUST NOT infer deletion consent. The generic
 `govern` group also exposes reactivation under the existing governance rules.
+
+For new shared-memory work, the owning semantic/refresh/publication guides MUST
+use their explicit v2 interfaces and private output artifacts. Legacy v1 proof
+entry points remain supported for existing bounded callers. A stdout artifact
+summary is not the stored complete manifest, judgment, proof or proposal.
 
 ### Natural turn boundaries
 

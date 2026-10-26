@@ -28,7 +28,7 @@ exactly `{ "base": "FULL_SHA", "candidate": "FULL_SHA" }`. Both MUST name actual
 locally available commits. The candidate MUST have exactly the previous observed
 authority base as its sole parent and change only canonical memory paths.
 
-The complete three snapshots are bounded: 256 files, 16 KiB per file and 1 MiB
+The complete three snapshots are bounded: 65,536 files, 16 KiB per file and 64 MiB
 total. Publication readback inspects at most 128 intervening commits. Exceeded
 bounds MUST require review, never silently truncate evidence or claim absence.
 This foundation does not bypass publication checks or implement automatic

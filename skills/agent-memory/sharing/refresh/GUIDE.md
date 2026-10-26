@@ -39,13 +39,20 @@ trust and conditions. Unknown applicability MUST remain unknown. The session
 MUST NOT substitute another branch/revision or invent context to make a lesson
 appear current. Relevant returned knowledge MUST retain its provenance,
 conditions, validity and source labels; a new arrival is not universally true.
+For this tri-side workflow, semantic selection MUST come from the actual v2
+review. Its recall request SHOULD name relevant paths/IDs from that review and
+MUST NOT reuse a single-view discovery trace from the pre-import bank: importing
+new memory changes that trace's inventory. A later new recall question MUST use
+fresh local semantic discovery against the actual resulting bank.
 
 The session SHOULD use copied-pack public refresh, pending/conflict, recovery,
 linked-worktree and normal-integration workflows for changes here. Tests MUST
 use isolated repositories, homes and credentials with no live client changes.
 The existing source/snapshot, recall, lock and transaction bounds still apply.
-The complete refresh JSON reader allows 4 MiB; cursor and receipt hint readers
-allow 64 KiB. Exceeded/unverified inventories MUST require inspection, never
+New work MUST use explicit v2 source-bound review and `--v2` for large private
+inputs. Complete private artifacts/cursors/receipts are bounded separately to
+512MiB; agent disclosure pages remain64KiB and canonical sources16KiB. Legacy
+v1 raw refresh input retains its4MiB intake limit. Exceeded/unverified inventories MUST require inspection, never
 truncate knowledge or establish absence. Cursors and proofs are private aids,
 not a second canonical memory or an authenticated source of truth.
 
@@ -54,11 +61,14 @@ not a second canonical memory or an authenticated source of truth.
 With `SKILL_DIR` resolved to this package:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/refresh_memory.py" inspect --repo /path/to/repo
-python3 -I "$SKILL_DIR/scripts/refresh_memory.py" inspect --repo /path/to/repo --base FULL_SHARED_COMMIT
+python3 -I "$SKILL_DIR/scripts/refresh_memory.py" inspect --v2 --repo /path/to/repo --output /private/refresh-inspection.json
+python3 -I "$SKILL_DIR/scripts/refresh_memory.py" inspect --v2 --repo /path/to/repo --base FULL_SHARED_COMMIT --output /private/explicit-refresh-inspection.json
 ```
 
-The session MUST inspect the nested `inspection`, read actual sources and supply
+The session MUST retain the stored complete result and extract its nested
+`inspection` unchanged into a private manifest for semantic page/review operations.
+The stdout artifact summary MUST NOT be substituted for that manifest. It MUST
+read actual selected sources and supply
 the complete semantic judgment through the semantic reconciliation route. It
 MUST distinguish the last observed shared bank, current local bank and newly
 landed bank, retaining every distinct condition, evidence source and origin.
@@ -81,7 +91,7 @@ canonical knowledge. Local state MUST remain outside Git and the bank.
 ## Plan
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/refresh_memory.py" prepare --repo /path/to/repo --input /private/refresh-input.json
+python3 -I "$SKILL_DIR/scripts/refresh_memory.py" prepare --v2 --repo /path/to/repo --input /private/refresh-input.json --output /private/prepared-refresh.json
 ```
 
 Only `prepared` contains a `proposal`. The session MUST save that exact proposal
@@ -99,7 +109,7 @@ The session MUST retain the conflict packet while independent imports proceed.
 ## Apply
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/refresh_memory.py" apply --input /private/refresh-proposal.json
+python3 -I "$SKILL_DIR/scripts/refresh_memory.py" apply --v2 --input /private/refresh-proposal.json --output /private/applied-refresh.json
 ```
 
 ## Read back
@@ -124,6 +134,8 @@ storage. A repeat MAY return a historical receipt without reapplying bytes. A
 later local correction/import MUST survive an older retry; historical or changed
 local results MUST NOT supply old guidance as current. Code freshness is always
 a separate fact, even when the session performed a normal code merge elsewhere.
+With `--output`, it MUST inspect the stored complete result as well as the concise
+stdout summary; the latter MUST retain the actual mutation/status facts.
 
 ## Outcomes
 
@@ -150,6 +162,10 @@ The session MUST retain the exact private proposal and inventory existing locks,
 markers, journals and receipts before retrying. Unknown locks/markers MUST remain
 for explicit inspection; age alone is not permission to steal them. It MUST use
 the existing write-lock recovery and transaction recovery interfaces.
+When the reported failing component is known-dispute state, it SHOULD follow the
+specific `recover-holds` instruction from semantic reconciliation and then obtain
+a fresh v2 inspection. Lost pages/cursors MUST NOT clear a known disagreement or
+make an incomplete source history look empty.
 
 An unfinished source-bound import MUST be rolled back from its verified journal,
 then freshly reviewed and prepared; its old `finish` is not permission to continue
