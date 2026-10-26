@@ -10,7 +10,7 @@ import sys
 import unicodedata
 import uuid
 
-from . import repository_config
+from . import repository_config, validation_memo
 from .frontmatter import ContractError, read, unique_object, write
 from .lifecycle import MODEL, time_value
 from .remote_identity import normalize
@@ -310,6 +310,18 @@ def file_topology(paths):
 
 
 def validate_files(files, *, parsed_records=None):
+    memo = validation_memo.current()
+    captured = validation_memo.map_input(files) if memo is not None and parsed_records is None else None
+    if captured is None:
+        return _validate_files(files, parsed_records=parsed_records)
+    key, stable = captured
+    # canonical-remote normalization can resolve file:// symlinks. This ambient
+    # authority observation must run afresh even for otherwise identical bytes.
+    return memo.checked('bank-format', key, lambda: _validate_files(stable),
+                        fresh_guard=lambda: parse_router(stable['MEMORY.md']))
+
+
+def _validate_files(files, *, parsed_records=None):
     """Validate a proposed complete canonical map without temporary file writes."""
     if not isinstance(files, dict) or "MEMORY.md" not in files:
         raise ContractError("A complete bank requires MEMORY.md")

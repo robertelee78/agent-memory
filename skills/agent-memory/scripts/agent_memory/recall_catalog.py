@@ -22,7 +22,7 @@ from contextlib import contextmanager
 import fcntl
 
 from . import _ENGINE_SOURCE_ROOT, _INITIAL_ENGINE_SOURCES, _engine_sources
-from . import bank_contract, bank_observation, bank_writes as writes, local_registry as storage, trust_paths, records, repository_config
+from . import bank_contract, bank_observation, bank_writes as writes, local_registry as storage, trust_paths, records, repository_config, validation_memo
 from .frontmatter import read as read_frontmatter
 from .developer_identity import digest
 from .frontmatter import ContractError
@@ -34,7 +34,7 @@ MAX_NAMESPACE=256
 ENGINE_ROOTS=('frontmatter','developer_identity','scopes','lifecycle','records','bank_contract','bank_layout',
     'bank_observation','bank_writes','repository_config','scope_binding','project_identity','local_registry',
     'security','handoff','discovery','retrieval','recall_catalog','bank_transactions','tombstones',
-    'identity_git','remote_identity','trust_paths','checkpoint','sharing_limits')
+    'identity_git','remote_identity','trust_paths','checkpoint','sharing_limits','validation_memo')
 
 
 class CacheMiss(Exception):
@@ -104,6 +104,8 @@ def code_identity(code):
 
 def generation_details():
     """Audited eager native-v1 closure; ambiguity disables reuse/publication."""
+    if validation_memo.current() is not None:
+        raise CacheMiss('native catalog reuse is separate from active operation validation reuse')
     if _INITIAL_ENGINE_SOURCES is None or _engine_sources()!=_INITIAL_ENGINE_SOURCES:
         raise CacheMiss('executing package generation changed')
     for name in ENGINE_ROOTS:importlib.import_module('agent_memory.'+name)
