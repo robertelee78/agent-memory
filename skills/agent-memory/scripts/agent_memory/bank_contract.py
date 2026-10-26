@@ -264,8 +264,13 @@ def portable_aliases(paths):
     seen = {}
     for path in paths:
         parts = PurePosixPath(path).parts
-        for size in range(1, len(parts) + 1):
-            spelling = PurePosixPath(*parts[:size]).as_posix()
+        spelling = ''
+        for part in parts:
+            # Parts already carry PurePosixPath normalization and its root
+            # anchor. Rebuilding a Path for every shared prefix is unnecessary.
+            spelling += ('' if not spelling or spelling.endswith('/') else '/') + part
+            if seen.get(spelling) == spelling:
+                continue
             key = portable_key(spelling)
             if key in seen and seen[key] != spelling:
                 raise ContractError("Bank paths have case or Unicode component aliases; preserve the physical entries")

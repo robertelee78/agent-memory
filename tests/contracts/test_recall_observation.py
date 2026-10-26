@@ -13,6 +13,27 @@ from contracts import test_consolidation as maintenance
 
 
 class RecallObservationContract(unittest.TestCase):
+    def test_portable_alias_guard_preserves_component_unicode_and_root_anchor_collisions(self):
+        with World() as w:
+            helper,repo,bank,project,path=self.fixture(w)
+            program='''import sys
+sys.path.insert(0,sys.argv[1])
+from agent_memory.bank_contract import portable_aliases
+from agent_memory.frontmatter import ContractError
+for values in (['topics/Name/a.md','topics/name/b.md'],['topics/caf\\u00e9.md','topics/cafe\\u0301.md'],
+               ['/Topic/a','/topic/b'],['//Topic/a','//topic/b'],['topics/Stra\\u00dfe/a','topics/STRASSE/b']):
+ try:portable_aliases(values)
+ except ContractError:pass
+ else:raise AssertionError('A portable component alias was accepted')
+for values in (['topics/shared/a.md','topics/shared/b.md','topics/shared/a.md'],
+               ['/topics/a','/topics/b'],['//topics/a','//topics/b'],['a//b','a/./b'],['.','/','//']):
+ portable_aliases(values)
+print('portable alias and root-anchor controls passed')
+'''
+            result=w.run([sys.executable,'-I','-c',program,helper.pack/'scripts'],check=False)
+            self.assertEqual(result.returncode,0,result.stderr)
+            self.assertIn('portable alias and root-anchor controls passed',result.stdout)
+
     def fixture(self,w):
         helper=recall.RetrievalContract();repo,bank,project=helper.fixture(w)
         metadata,path=helper.add(bank,project,'observed',body='# Authored count\n\nThe authored count is three.\n')
