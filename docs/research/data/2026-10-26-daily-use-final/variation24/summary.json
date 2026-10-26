@@ -1,0 +1,80 @@
+{
+  "case": "variation24",
+  "passed": true,
+  "source_commit": "81fec82c1619d20c12473d23e3fdf6706d52b641",
+  "sessions": 24,
+  "lessons": 1000,
+  "semantic_schedule": false,
+  "required_scenario_events": 10,
+  "seconds": 8776.590710052289,
+  "public_commands": 1708,
+  "command_exit_counts": {
+    "0": 1706,
+    "1": 1,
+    "86": 1
+  },
+  "command_median_seconds": 9.447252471931279,
+  "command_max_seconds": 87.03301008511335,
+  "helper_costs": {
+    "admit_learning.py": {
+      "calls": 144,
+      "median_seconds": 9.248278013896197,
+      "max_seconds": 24.131842330098152
+    },
+    "bank_transactions.py": {
+      "calls": 2,
+      "median_seconds": 5.309417630080134,
+      "max_seconds": 6.668639766983688
+    },
+    "bank_writes.py": {
+      "calls": 2,
+      "median_seconds": 0.13788434257730842,
+      "max_seconds": 0.1384158032014966
+    },
+    "compare_learning.py": {
+      "calls": 48,
+      "median_seconds": 2.430045587476343,
+      "max_seconds": 4.4007454086095095
+    },
+    "developer_identity.py": {
+      "calls": 4,
+      "median_seconds": 0.08662282954901457,
+      "max_seconds": 0.08676325902342796
+    },
+    "discover_memory.py": {
+      "calls": 120,
+      "median_seconds": 0.6177729708142579,
+      "max_seconds": 4.321271283552051
+    },
+    "publish_memory.py": {
+      "calls": 189,
+      "median_seconds": 13.815730536356568,
+      "max_seconds": 41.6373847424984
+    },
+    "reconcile_memory.py": {
+      "calls": 955,
+      "median_seconds": 9.697755727916956,
+      "max_seconds": 23.552092706784606
+    },
+    "refresh_memory.py": {
+      "calls": 241,
+      "median_seconds": 8.104317729361355,
+      "max_seconds": 87.03301008511335
+    },
+    "retrieve.py": {
+      "calls": 1,
+      "median_seconds": 1.7821228234097362,
+      "max_seconds": 1.7821228234097362
+    },
+    "sharing_recovery.py": {
+      "calls": 2,
+      "median_seconds": 4.962368329521269,
+      "max_seconds": 4.988213828764856
+    }
+  },
+  "seed_checks": 96,
+  "all_round_learning_verified": true,
+  "feature_state_verified": true,
+  "source_preserved": true,
+  "whole_acceptance_claimed": false
+}

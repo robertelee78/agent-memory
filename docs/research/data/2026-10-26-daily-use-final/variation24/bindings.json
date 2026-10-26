@@ -1,0 +1,111 @@
+{
+  "cohort_pass_only": true,
+  "whole_story_acceptance_claimed": false,
+  "source": "81fec82c1619d20c12473d23e3fdf6706d52b641",
+  "files": {
+    "source-binding.json": {
+      "retained_path": "/tmp/agent-memory-v003/daily-use-v1-variation-24-1000-81fec82/linux/source-binding.json",
+      "original": {
+        "sha256": "7e773ce64bced3dd9d20f39ccfccd8f0326e01e6912d11fcaf3842acb18953cd",
+        "bytes": 153231
+      },
+      "export": {
+        "sha256": "7e773ce64bced3dd9d20f39ccfccd8f0326e01e6912d11fcaf3842acb18953cd",
+        "bytes": 153231
+      },
+      "transformation": null
+    },
+    "source-before.json": {
+      "retained_path": "/tmp/agent-memory-v003/daily-use-v1-variation-24-1000-81fec82/linux/source-before.json",
+      "original": {
+        "sha256": "e8238df25612323733d91d02c6d9bc6a08e547e37ae72fdeae774bec3625bc28",
+        "bytes": 123
+      },
+      "export": {
+        "sha256": "e8238df25612323733d91d02c6d9bc6a08e547e37ae72fdeae774bec3625bc28",
+        "bytes": 123
+      },
+      "transformation": null
+    },
+    "source-after.json": {
+      "retained_path": "/tmp/agent-memory-v003/daily-use-v1-variation-24-1000-81fec82/linux/source-after.json",
+      "original": {
+        "sha256": "e8238df25612323733d91d02c6d9bc6a08e547e37ae72fdeae774bec3625bc28",
+        "bytes": 123
+      },
+      "export": {
+        "sha256": "e8238df25612323733d91d02c6d9bc6a08e547e37ae72fdeae774bec3625bc28",
+        "bytes": 123
+      },
+      "transformation": null
+    },
+    "seed-reference.json": {
+      "retained_path": "/tmp/agent-memory-v003/daily-use-v1-variation-24-1000-81fec82/linux/seed-reference.json",
+      "original": {
+        "sha256": "d4c12ff315acad0829f17d2f63cf0ea141db2ba547a026bfe1ef3f28a9ae2d97",
+        "bytes": 169893
+      },
+      "export": {
+        "sha256": "d4c12ff315acad0829f17d2f63cf0ea141db2ba547a026bfe1ef3f28a9ae2d97",
+        "bytes": 169893
+      },
+      "transformation": null
+    },
+    "outcome.json": {
+      "retained_path": "/tmp/agent-memory-v003/daily-use-v1-variation-24-1000-81fec82/linux/outcome.json",
+      "original": {
+        "sha256": "d953ba0e9fb8f91090b60ac41fe3a9cb1027822655b8d1e78cb87ff94e214390",
+        "bytes": 424
+      },
+      "export": {
+        "sha256": "d953ba0e9fb8f91090b60ac41fe3a9cb1027822655b8d1e78cb87ff94e214390",
+        "bytes": 424
+      },
+      "transformation": null
+    },
+    "events.json": {
+      "retained_path": "/tmp/agent-memory-v003/daily-use-v1-variation-24-1000-81fec82/linux/events.json",
+      "original": {
+        "sha256": "e158176e0a0a0d272a9932b3fedc2e0ed38dee0a91f5d3abf38fa417104f414e",
+        "bytes": 44023
+      },
+      "export": {
+        "sha256": "e158176e0a0a0d272a9932b3fedc2e0ed38dee0a91f5d3abf38fa417104f414e",
+        "bytes": 44023
+      },
+      "transformation": null
+    },
+    "feature-state-history.jsonl": {
+      "retained_path": "/tmp/agent-memory-v003/daily-use-v1-variation-24-1000-81fec82/linux/feature-state-history.jsonl",
+      "original": {
+        "sha256": "b89629d8f800c5d739ab2c79726f239cb43c46064af689893acfc3c53a8af78f",
+        "bytes": 89989
+      },
+      "export": {
+        "sha256": "b89629d8f800c5d739ab2c79726f239cb43c46064af689893acfc3c53a8af78f",
+        "bytes": 89989
+      },
+      "transformation": null
+    },
+    "controller.py": {
+      "retained_path": "/tmp/agent-memory-v003/daily-use-v1-variation-24-1000-81fec82/linux/controller.py",
+      "original": {
+        "sha256": "f48fe78daf796a8cfcc1527280b62d82d6c2988a7a995cbf0d4c83730cf73a76",
+        "bytes": 64770
+      },
+      "committed_source": "81fec82c1619d20c12473d23e3fdf6706d52b641:scripts/evaluations/daily_use.py"
+    },
+    "commands-without-environment.json": {
+      "retained_path": "/tmp/agent-memory-v003/daily-use-v1-variation-24-1000-81fec82/linux/commands.json",
+      "original": {
+        "sha256": "1dc77ad98afdb496d1921daea9c45904e440e0be077c372496fa6d6bbe6d1f90",
+        "bytes": 4495309
+      },
+      "export": {
+        "sha256": "35da98d989f34a7ed98ed469f78d1e5cf36c38d72913b33f030f5dd30b3785fa",
+        "bytes": 1531825
+      },
+      "transformation": "Private isolated-World environment omitted from each command, including its cleanup capability token. Other command/input-hash/result fields unchanged."
+    }
+  }
+}
