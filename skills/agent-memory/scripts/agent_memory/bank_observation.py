@@ -87,11 +87,11 @@ class Observation:
         root,bank=writes.bank_path(self.root)
         if root!=self.root or bank!=self.bank:raise ContractError('Canonical repository/bank location changed')
         markers(bank,self.owner)
-        physical,hashes,_=scan(bank,read_sources=False)
+        metrics={};physical,hashes,_=scan(bank,read_sources=False,metrics=metrics)
         if physical!=self.physical or hashes!=self.hashes:
             raise ContractError('Canonical sources/topology changed; reread before using recall')
-        self.payload_bytes_read+=sum(len(raw) for raw in self.sources.values())
-        self.payload_file_reads+=len(hashes)
+        self.payload_bytes_read+=metrics['payload_bytes']
+        self.payload_file_reads+=metrics['file_reads']
         markers(bank,self.owner)
 
 

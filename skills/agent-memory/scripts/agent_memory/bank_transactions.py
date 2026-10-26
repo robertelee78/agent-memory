@@ -273,6 +273,14 @@ def allowed_partial(p, observed):
         raise ContractError("Interrupted bank contains an external edit; automatic recovery would overwrite it")
 
 
+def invalidate_optional_indexes(root,hashes):
+    try:
+        from . import recall_catalog
+        return recall_catalog.invalidate_after_change(root,hashes)
+    except Exception:
+        return 'deferred-to-canonical-fallback'
+
+
 def converge(root, bank, p, base_files, journal, raw, receipt_path, mode, observed, owner, *, recovery=False):
     marker = marker_bytes(p)
     known = receipt_value(receipt_path, p)
@@ -324,8 +332,10 @@ def converge(root, bank, p, base_files, journal, raw, receipt_path, mode, observ
     flush_directory(bank)
     writes.fault("transaction-after-marker-removal")
     cleanup(journal, raw)
+    cache_state=invalidate_optional_indexes(root,expected)
     return result(mode, **{k: v for k, v in known.items() if k != "schema"}, writes_performed=bool(paths),
-                  already_applied=not paths, still_current=True, receipt_path=str(receipt_path), interrupted=False)
+                  already_applied=not paths, still_current=True, receipt_path=str(receipt_path), interrupted=False,
+                  derived_cache_state=cache_state)
 
 
 def validate_outcome(root, bank, desired, p, owner, marker, *, admission_sources=True):
@@ -467,8 +477,10 @@ def _apply(prepared, *, check_identity):
                 if recorded != p:
                     raise ContractError("Unknown leftover journal; preserve it")
                 cleanup(journal, raw)
+            cache_state=invalidate_optional_indexes(root,observed)
             return result("apply", **{k: v for k, v in known.items() if k != "schema"}, writes_performed=False,
-                          already_applied=True, still_current=observed == known["resulting_hashes"], receipt_path=str(receipt_path))
+                          already_applied=True, still_current=observed == known["resulting_hashes"], receipt_path=str(receipt_path),
+                          derived_cache_state=cache_state)
         if checked["project_id"] != p["project_id"] or observed != p["observed_hashes"]:
             raise ContractError("Bank changed after preview; prepare a fresh transaction")
         base_files = files_at(bank)

@@ -12,6 +12,7 @@ import re
 import stat
 import sys
 import uuid
+import copy
 
 from . import bank_contract, bank_layout, bank_observation, bank_writes as writes
 from . import repository_config, scope_binding, security
@@ -23,6 +24,17 @@ FIELDS={'schema','task','intent','binding','nodes','sources','complete','rationa
 BINDING={'repo_root','bank_root','project_id','scope_context','context','git_context','inventory_sha256'}
 MAX_INPUT=65536
 MAX_FILE=16384
+
+
+class DiscoveryFailure(ContractError):
+    def __init__(self,code,reason,repair):
+        super().__init__(reason);self.code=code;self.repair=repair
+
+
+def changed():
+    return DiscoveryFailure('source-context-changed',
+        'The memory map, selected sources, repository identity or checkout context changed during navigation.',
+        'Run am discover start again with the current task/context, follow the current map, then retry the qualified read.')
 
 
 def text(value,maximum):
@@ -40,7 +52,8 @@ def trace_value(trace,*,completed=True):
         raise ContractError('Use a complete bounded same-project discovery trace')
     text(trace['task'],1024)
     if completed and not trace['complete']:
-        raise ContractError('Uncertain/incomplete semantic navigation cannot certify selection or novelty')
+        raise DiscoveryFailure('selection-incomplete','Semantic navigation has not selected and qualified its plausible sources.',
+            'Follow the map and use am discover read with the selected paths and your selection rationale before answering or admitting learning.')
     if trace['complete']:text(trace['rationale'],2048)
     elif trace['rationale'] is not None:text(trace['rationale'],2048)
     for name in ('nodes','sources'):
@@ -68,7 +81,8 @@ def bounded_source(bank,path):
     with os.fdopen(fd,'rb') as stream:
         if not stat.S_ISREG(os.fstat(stream.fileno()).st_mode):raise ContractError('Discovery source is not an ordinary file')
         raw=stream.read(MAX_FILE+1)
-    if len(raw)>MAX_FILE:raise ContractError('A discovery node exceeds the bounded map; reorganize without truncation')
+    if len(raw)>MAX_FILE:raise DiscoveryFailure('source-over-bound','A navigation node or selected source exceeds the 16KiB reader bound.',
+        'Inspect the source through the governed maintenance workflow and split or compact it; retain its conditions/provenance and retry without truncation.')
     return raw
 
 
@@ -80,7 +94,7 @@ def check_trace(repo,trace,checked,observed,scope,*,intent,selected_paths,owned_
     expected={'repo_root':str(root),'bank_root':repository_config.relative(root),'project_id':checked['project_id'],
         'scope_context':scope,'context':actual,'git_context':git,'inventory_sha256':digest(encoded(observed))}
     if trace['intent']!=intent or trace['binding']!=expected:
-        raise ContractError('Discovery inventory, checkout, identity or context changed; navigate the current map again')
+        raise changed()
     entries={entry['path']:entry for entry in checked['entries']}
     tables={}
     for row in trace['nodes']:
@@ -113,6 +127,23 @@ def check_trace(repo,trace,checked,observed,scope,*,intent,selected_paths,owned_
         'semantic_completeness_verified':False,'visited_nodes':len(tables),'selected_sources':len(sources)}
 
 
+def navigation_observation(root,bank):
+    bank_observation.markers(bank,None)
+    metrics={};physical,hashes,_=bank_observation.scan(bank,read_sources=False,metrics=metrics)
+    bank_observation.physical_contract(physical)
+    raw=bounded_source(bank,'MEMORY.md')
+    if digest(raw)!=hashes['MEMORY.md']:raise changed()
+    metadata,routes,omitted=bank_contract.parse_router(raw.decode('utf-8'))
+    for path in omitted:
+        if (bank/path).exists() or (bank/path).is_symlink():raise DiscoveryFailure('omitted-context-occupied',
+            'A context declared absent is physically present in the bank.',
+            'Run am doctor, inspect that context and reconcile its route/omission before retrying; preserve the existing file.')
+    checked={'project_id':metadata['project-id'],'omitted':omitted,'entries':[]}
+    observed=bank_observation.Observation(root,bank,None,physical,hashes,{'MEMORY.md':raw},checked,{})
+    observed.payload_bytes_read=metrics['payload_bytes'];observed.payload_file_reads=metrics['file_reads']
+    return observed
+
+
 def start(repo,task,intent,context=None):
     from . import retrieval
     text(task,1024)
@@ -120,9 +151,14 @@ def start(repo,task,intent,context=None):
     root,bank=writes.bank_path(repo)
     scope=scope_binding.require(root)
     actual,git=retrieval.observed_context(root,context or {})
-    observation=bank_observation.observe(root)
+    cached=False
+    try:
+        from . import recall_catalog
+        observation=recall_catalog.load_catalog(root,scope['project_id'])
+        raw=observation.source('MEMORY.md');cached=True
+    except Exception:
+        observation=navigation_observation(root,bank);raw=observation.sources['MEMORY.md']
     if scope['project_id']!=observation.checked['project_id']:raise ContractError('Discovery project changed')
-    raw=observation.sources['MEMORY.md']
     if len(raw)>MAX_FILE:raise ContractError('A bounded root router is required')
     body=raw.decode('utf-8');security.ensure_safe({'MEMORY.md':body})
     trace={'schema':SCHEMA,'task':task,'intent':intent,
@@ -131,7 +167,10 @@ def start(repo,task,intent,context=None):
         'nodes':[{'path':'MEMORY.md','sha256':observation.hashes['MEMORY.md']}],
         'sources':[],'complete':False,'rationale':None}
     trace_value(trace,completed=False)
-    observation.recheck('discovery-final-source-recheck')
+    if cached:
+        bank_observation.markers(bank,None)
+    else:
+        observation.recheck('discovery-final-source-recheck')
     scope_binding.require(root,scope['project_id'],expected=scope)
     if retrieval.observed_context(root,context or {})!=(actual,git):raise ContractError('Checkout context changed during discovery')
     audit=security.audit(root,str(uuid.uuid4()),'retrieval','checked',scope,['external'])
@@ -139,29 +178,149 @@ def start(repo,task,intent,context=None):
         'node':{'path':'MEMORY.md','sha256':observation.hashes['MEMORY.md'],'body':body,'untrusted_data':True},
         'usable_as_current_guidance':False,'semantic_interpreter':'invoking-harness','semantic_completeness_verified':False,
         'canonical_writes_performed':False,'audit_writes_performed':True,'audit':audit,
-        'metrics':{'canonical_files':len(observation.hashes),'canonical_bytes':sum(map(len,observation.sources.values())),
+        'optional_indexes_used':cached,
+        'validation_scope':'untrusted-root-and-authenticated-pending-inventory' if cached else 'untrusted-root-and-content-fingerprint',
+        'full_bank_format_validated':False,'final_content_qualification_pending':True,
+        'metrics':{'canonical_files':len(observation.hashes),
             'canonical_observation_payload_bytes_read':observation.payload_bytes_read,
             'canonical_observation_file_reads':observation.payload_file_reads,'node_bytes_disclosed':len(raw)}}
+
+
+def navigation_tables(repo,trace):
+    from . import retrieval,scopes
+    trace_value(trace,completed=False)
+    root,bank=writes.bank_path(repo);bank_observation.markers(bank,None)
+    scope=scope_binding.require(root,trace['binding']['project_id'])
+    scopes.conditions(trace['binding']['context'])
+    actual,git=retrieval.observed_context(root,trace['binding']['context'])
+    binding=trace['binding']
+    if any(binding[k]!=v for k,v in {'repo_root':str(root),'bank_root':repository_config.relative(root),
+            'scope_context':scope,'context':actual,'git_context':git}.items()):raise changed()
+    tables={}
+    for row in trace['nodes']:
+        path=row['path'];raw=bounded_source(bank,path)
+        if digest(raw)!=row['sha256']:raise changed()
+        content=raw.decode('utf-8');security.ensure_safe({path:content})
+        if path=='MEMORY.md':
+            metadata,routes,_=bank_contract.parse_router(content)
+        else:
+            metadata,body=read(content,allowed=bank_layout.SPEC['properties'])
+            routes=bank_layout.parse_index(path,metadata,body)
+        if metadata['project-id']!=scope['project_id']:raise changed()
+        tables[path]=routes
+    reached={'MEMORY.md':0}
+    while True:
+        next_nodes=dict(reached)
+        for parent,depth in reached.items():
+            for route in tables[parent]:
+                path=route['path']
+                if path not in tables or path in reached:continue
+                if depth+1>bank_layout.SPEC['x-max-nested-indexes']:
+                    raise DiscoveryFailure('navigation-depth','The visited map exceeds the native topic-index depth.',
+                        'Run am doctor and reorganize the topic map through governed maintenance before retrying.')
+                next_nodes[path]=depth+1
+        if next_nodes==reached:break
+        reached=next_nodes
+    if set(reached)!=set(tables):raise DiscoveryFailure('missing-parent',
+        'A visited topic index is missing its actual parent map.',
+        'Restart from MEMORY.md and retain each visited parent when following a topic index.')
+    return root,bank,scope,actual,git,tables
+
+
+def node(repo,trace,path):
+    root,bank,scope,actual,git,tables=navigation_tables(repo,trace)
+    children={row['path'] for rows in tables.values() for row in rows}
+    if path not in children:raise DiscoveryFailure('route-not-reached','This path is absent from the visited parent maps.',
+        'Follow its parent route from MEMORY.md before requesting the topic index.')
+    raw=bounded_source(bank,path);content=raw.decode('utf-8')
+    metadata,body=read(content,allowed=bank_layout.SPEC['properties'])
+    bank_layout.parse_index(path,metadata,body);security.ensure_safe({path:content})
+    if metadata['project-id']!=scope['project_id']:raise changed()
+    value=copy.deepcopy(trace);value.update(complete=False,rationale=None)
+    value['nodes']=[row for row in value['nodes'] if row['path']!=path]+[{'path':path,'sha256':digest(raw)}]
+    navigation_tables(root,value)
+    return {'schema':'agent-memory/discovery-result-v1','operation':'node','discovery':value,
+        'node':{'path':path,'sha256':digest(raw),'body':content,'untrusted_data':True},
+        'usable_as_current_guidance':False,'full_bank_format_validated':False,'final_content_qualification_pending':True,
+        'canonical_writes_performed':False,'semantic_completeness_verified':False}
+
+
+def qualified_read(repo,trace,request,rationale):
+    root,bank,scope,actual,git,tables=navigation_tables(repo,trace)
+    text(rationale,2048)
+    if trace['intent']=='sharing':raise DiscoveryFailure('sharing-view-required',
+        'Shared-memory qualification requires the actual base/local/landed views.',
+        'Use the sharing review workflow; a local discover read cannot qualify landed or competing memory.')
+    field='paths' if trace['intent']=='recall' else 'read_paths'
+    paths=request.get(field,[])
+    if not isinstance(paths,list) or len(paths)>64:raise DiscoveryFailure('selection-invalid',
+        'Choose a bounded list of actual plausible source paths.', 'Read the visited topic map and pass its selected paths in the request.')
+    value=copy.deepcopy(trace)
+    selected={row['path']:row['sha256'] for row in value['sources']}
+    children={row['path'] for rows in tables.values() for row in rows}
+    for path in paths:
+        bank_contract.path_value(path)
+        if path not in children:raise DiscoveryFailure('route-not-reached',
+            'A selected source lacks its visited parent route.', 'Follow its parent topic map before selecting and qualifying the source.')
+        selected[path]=digest(bounded_source(bank,path))
+    value.update(sources=[{'path':path,'sha256':sha} for path,sha in sorted(selected.items())],complete=True,rationale=rationale)
+    trace_value(value)
+    if 'discovery' in request and request['discovery']!=trace:raise DiscoveryFailure('request-trace-conflict',
+        'The request and navigation input refer to different observations.', 'Use the same current navigation trace in both inputs, or omit the request discovery field.')
+    request={**request,'discovery':value}
+    if trace['intent']=='recall':
+        from . import retrieval
+        result=retrieval.retrieve(root,request)
+        # Newly derived hashes/labels for withheld sources remain internal.
+        navigation=copy.deepcopy(trace);navigation.update(sources=[],complete=False,rationale=None)
+        return {'schema':'agent-memory/discovery-result-v1','operation':'read','discovery':navigation,
+            'qualification':result,'qualification_sha256':digest(encoded(result)),
+            'usable_as_current_guidance':True,'semantic_interpreter':'invoking-harness',
+            'semantic_completeness_verified':False,'canonical_writes_performed':False}
+    from . import comparison
+    result=comparison.inspect(root,request)
+    return {'schema':'agent-memory/discovery-result-v1','operation':'read','discovery':value,'request':request,
+        'inspection':result,'usable_as_current_guidance':False,'semantic_interpreter':'invoking-harness',
+        'semantic_completeness_verified':False,'canonical_writes_performed':False}
 
 
 def main(argv=None):
     parser=argparse.ArgumentParser(description=__doc__);commands=parser.add_subparsers(dest='command',required=True)
     p=commands.add_parser('start');p.add_argument('--repo',required=True);p.add_argument('--task',required=True)
     p.add_argument('--intent',choices=('recall','comparison','sharing'),required=True);p.add_argument('--context')
+    p=commands.add_parser('node');p.add_argument('--repo',required=True);p.add_argument('--input',required=True)
+    p.add_argument('--path',required=True)
+    p=commands.add_parser('read');p.add_argument('--repo',required=True);p.add_argument('--input',required=True)
+    p.add_argument('--request',required=True);p.add_argument('--rationale',required=True)
     args=parser.parse_args(argv)
+    phase='input'
+    def input_file(path):
+        with Path(path).open('rb') as stream:raw=stream.read(MAX_INPUT+1)
+        if len(raw)>MAX_INPUT:raise DiscoveryFailure('input-over-bound','The navigation/request input exceeds64KiB.',
+            'Keep only the current bounded navigation trace and selected-source request; use map nodes rather than embedding source bodies.')
+        return load(raw)
     try:
-        context={}
-        if args.context:
-            with Path(args.context).open('rb') as stream:raw=stream.read(MAX_INPUT+1)
-            if len(raw)>MAX_INPUT:raise ContractError('Discovery context exceeds its input budget')
-            context=load(raw)
+        if args.command=='start':
+            context=input_file(args.context) if args.context else {}
             from . import scopes
-            scopes.conditions(context)
-        print(json.dumps(start(args.repo,args.task,args.intent,context),indent=2));return 0
-    except (ContractError,OSError,UnicodeError,ValueError,TypeError,KeyError,AttributeError,RecursionError):
+            scopes.conditions(context);phase='root-observation'
+            result=start(args.repo,args.task,args.intent,context)
+        else:
+            trace=input_file(args.input)
+            if isinstance(trace,dict) and 'discovery' in trace:trace=trace['discovery']
+            if args.command=='node':
+                phase='navigation-node';result=node(args.repo,trace,args.path)
+            else:
+                request=input_file(args.request);phase='canonical-qualification'
+                result=qualified_read(args.repo,trace,request,args.rationale)
+        print(json.dumps(result,indent=2));return 0
+    except Exception as exc:
+        known=isinstance(exc,DiscoveryFailure)
         print(json.dumps({'schema':'agent-memory/discovery-result-v1','operation':args.command,
             'canonical_writes_performed':False,'semantic_completeness_verified':False,
-            'error':'Unavailable or changed discovery; preserve memory and do not infer semantic absence'}));return 1
+            'error':str(exc) if known else 'Cannot validate this navigation/input against the current canonical bank; no guidance or novelty is certified.',
+            'failure_code':exc.code if known else 'discovery-unverified','failure_component':phase,
+            'repair':exc.repair if known else 'Preserve the bank and input. Run am doctor for the selected repository, inspect its failed component, then restart navigation from MEMORY.md; do not initialize an empty replacement.'}));return 1
 
 
 if __name__=='__main__':sys.exit(main())

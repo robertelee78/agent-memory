@@ -22,7 +22,7 @@ from contextlib import contextmanager
 import fcntl
 
 from . import _ENGINE_SOURCE_ROOT, _INITIAL_ENGINE_SOURCES, _engine_sources
-from . import bank_contract, bank_observation, bank_writes as writes, local_registry as storage, trust_paths, records
+from . import bank_contract, bank_observation, bank_writes as writes, local_registry as storage, trust_paths, records, repository_config
 from .frontmatter import read as read_frontmatter
 from .developer_identity import digest
 from .frontmatter import ContractError
@@ -30,6 +30,7 @@ from .frontmatter import ContractError
 SCHEMA='agent-memory/recall-catalog-v1'
 MAX_CACHE=256*1024*1024
 MAX_HEADER=16384
+MAX_NAMESPACE=256
 ENGINE_ROOTS=('frontmatter','developer_identity','scopes','lifecycle','records','bank_contract','bank_layout',
     'bank_observation','bank_writes','repository_config','scope_binding','project_identity','local_registry',
     'security','handoff','discovery','retrieval','recall_catalog','bank_transactions','tombstones',
@@ -157,11 +158,13 @@ def coherent(engine):
 
 def physical_inventory(bank):
     """Cheap change hint only; no byte-currentness claim is made here."""
-    physical={};stamps={};pending=[(str(bank),'')]
+    physical={};stamps={};pending=[(str(bank),'')];visited=0
     while pending:
         directory,prefix=pending.pop()
         with os.scandir(directory) as entries:
             for entry in entries:
+                visited+=1
+                if visited>bank_observation.MAX_FILES*2:raise CacheMiss('bank physical bound')
                 info=entry.stat(follow_symlinks=False);path=prefix+entry.name;mode=info.st_mode
                 if stat.S_ISLNK(mode):raise CacheMiss('bank path alias')
                 kind='directory' if stat.S_ISDIR(mode) else 'file' if stat.S_ISREG(mode) else 'other'
@@ -227,7 +230,8 @@ def key(directory,*,create=False):
 
 
 def binding(root,bank,project):
-    return {'repo_root':str(root),'bank_root':str(bank),'project_id':project}
+    return {'repo_root':str(root),'bank_root':str(bank),'project_id':project,
+            'repository_settings_sha256':digest(compact(repository_config.settings(root)))}
 
 
 def pointer(directory):
@@ -243,6 +247,7 @@ def pointer(directory):
 def publication_lock(directory):
     """Optional, nonblocking OS lock; no PID marker or stale-lock recovery."""
     path=directory/'publication.lock';trust_paths.record(path)
+    if not path.exists() and len(namespace(directory))>=MAX_NAMESPACE:raise CacheMiss('cache namespace capacity')
     fd=os.open(path,os.O_RDWR|os.O_CREAT|getattr(os,'O_NOFOLLOW',0),0o600)
     try:
         info=os.fstat(fd)
@@ -254,12 +259,23 @@ def publication_lock(directory):
     finally:os.close(fd)
 
 
-def authenticate(raw,root,bank,project,secret):
+def namespace(directory):
+    values=[]
+    with os.scandir(directory) as entries:
+        for entry in entries:
+            if len(values)>=MAX_NAMESPACE:raise CacheMiss('cache namespace needs bounded maintenance')
+            values.append(Path(entry.path))
+    return values
+
+
+def authenticate(raw,root,bank,project,secret,*,strict_settings=True):
     first,separator,payload=raw.partition(b'\n')
     if not separator or len(first)>MAX_HEADER:raise CacheMiss('catalog header bound')
     header=json.loads(first);fields={'schema','binding','engine','payload_bytes','payload_sha256','mac'}
+    expected=binding(root,bank,project) if strict_settings else {'repo_root':str(root),'bank_root':str(bank),'project_id':project}
     if (not isinstance(header,dict) or set(header)!=fields or header['schema']!=SCHEMA
-            or header['binding']!=binding(root,bank,project)
+            or not isinstance(header['binding'],dict)
+            or (header['binding']!=expected if strict_settings else any(header['binding'].get(k)!=v for k,v in expected.items()))
             or type(header['payload_bytes']) is not int or not 0<header['payload_bytes']<=MAX_CACHE
             or len(payload)!=header['payload_bytes'] or digest(payload)!=header['payload_sha256']):raise CacheMiss('catalog binding/digest')
     unsigned={k:v for k,v in header.items() if k!='mac'}
@@ -269,17 +285,21 @@ def authenticate(raw,root,bank,project,secret):
 
 
 def collect_owned(directory,root,bank,project,secret,keep=None):
-    names=list(directory.iterdir())
-    if len(names)>256:raise CacheMiss('cache namespace needs bounded maintenance')
+    names=namespace(directory)
     budget=0
     for path in names:
         if path.name==keep or not re.fullmatch(r'g-[0-9a-f]{32}\.catalog',path.name):continue
         try:
-            raw=read_private(path,MAX_CACHE+MAX_HEADER+1)
+            remaining=2*MAX_CACHE-budget
+            if remaining<=0:break
+            allowance=min(MAX_CACHE+MAX_HEADER+1,remaining)
+            # Charge the attempted bounded read even when its oversized input
+            # is rejected. Corrupt records must not reset the aggregate budget.
+            budget+=allowance+1
+            raw=read_private(path,allowance)
             if raw is None:continue
-            budget+=len(raw)
-            if budget>2*MAX_CACHE:break
-            authenticate(raw,root,bank,project,secret)
+            budget-=allowance+1-len(raw)
+            authenticate(raw,root,bank,project,secret,strict_settings=False)
         except Exception:
             continue  # Preserve unknown, corrupted or foreign recovery evidence.
         path.unlink()
@@ -299,6 +319,27 @@ def invalidate(repo,project,expected_pointer):
             collect_owned(directory,root,bank,project,secret)
     except Exception:
         pass  # An unusable cache never blocks the full canonical reader.
+
+
+def invalidate_after_change(repo,current_hashes):
+    """Forget/correction/recovery removes stale owned metadata after commit."""
+    try:
+        root,bank,directory=locations(repo)
+        if not directory.exists():return 'not-present'
+        with publication_lock(directory):
+            value,_=pointer(directory);secret=key(directory)
+            raw=read_private(directory/value['file'],MAX_CACHE+MAX_HEADER+1)
+            if raw is None:return 'not-present'
+            first=raw.partition(b'\n')[0]
+            project=json.loads(first)['binding']['project_id']
+            header,payload=authenticate(raw,root,bank,project,secret,strict_settings=False)
+            data=json.loads(payload)
+            if data['hashes']==current_hashes:return 'current'
+            (directory/'current.json').unlink()
+            collect_owned(directory,root,bank,project,secret)
+            return 'invalidated'
+    except Exception:
+        return 'deferred-to-canonical-fallback'
 
 
 class Catalog:
@@ -384,6 +425,9 @@ def publish(observation,engine):
         trust_paths.inspect(path);path.mkdir(parents=True,exist_ok=True,mode=0o700)
     trust_paths.state(directory)
     with publication_lock(directory):
+        # Capacity is established before creating any key/generation/pointer.
+        # Unknown evidence is preserved; cache exhaustion never fails recall.
+        if len(namespace(directory))>MAX_NAMESPACE-4:raise CacheMiss('cache namespace capacity')
         observation.recheck('catalog-seal-source-recheck')
         physical,stamps=physical_inventory(bank)
         if physical!=normalized_physical(observation.physical) or set(stamps)!=set(observation.hashes):
