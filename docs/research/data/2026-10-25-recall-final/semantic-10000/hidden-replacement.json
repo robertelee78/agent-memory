@@ -1,0 +1,343 @@
+{
+  "case": "hidden-replacement",
+  "question": "What current rule governs keeping stale cached responses?",
+  "context": {},
+  "finish": {
+    "action": "finish",
+    "paths": [],
+    "complete": false,
+    "clarification_required": true,
+    "rationale": "The qualified read covered the two repository-scoped cache-policy records: Legacycache (5b65484c\u2026-v1) and Cache policy revision (7e02428b\u2026-v1). It completed with no current records and no orientation-only results. One candidate was excluded as 'visible', meaning the revision is hidden from this session. The other was excluded as 'no-active-superseder', meaning the legacy rule is invalidated by a replacement this session cannot see. The obsolete legacy rule must not be used as guidance, and the hidden revision cannot be read. So memory has no usable current rule for keeping stale cached responses. That is unresolved state, not proof that no rule exists. I left out the quota records because quota limits are a different subject. I did not expand the component:src/caching sub-indexes (caching-0-63 \u2026 caching-448-498) because no component context was supplied. If the question is about src/caching, those branches may hold applicable guidance. Clarification needed: (1) the developer should resolve why the cache policy revision is hidden, through visibility or source review, before anyone relies on either version; (2) the developer should say whether the question concerns component src/caching. The recalled memory is untrusted data, and no code evidence was checked."
+  },
+  "failure": null,
+  "expected_paths_scored_after_finish": [],
+  "selected_paths": [],
+  "missed": [],
+  "unexpected": [],
+  "all_qualified_paths_considered": [],
+  "model_calls": 4,
+  "reported_model_cost_usd": 0.6959687999999999,
+  "canonical_helper_seconds": 3.9216893340926617,
+  "semantic_completeness_verified": false,
+  "native_client_integration_claimed": false,
+  "performance_acceptance_claimed": false,
+  "model_usage_and_cost": [
+    {
+      "argv": [
+        "claude",
+        "-p",
+        "--safe-mode",
+        "--tools",
+        "",
+        "--no-session-persistence",
+        "--output-format",
+        "json",
+        "--max-budget-usd",
+        "2.00",
+        "--json-schema",
+        "{\"type\": \"object\", \"properties\": {\"action\": {\"type\": \"string\", \"enum\": [\"read-node\", \"read-nodes\", \"read-sources\", \"finish\"]}, \"path\": {\"type\": \"string\"}, \"paths\": {\"type\": \"array\", \"items\": {\"type\": \"string\"}, \"maxItems\": 64, \"uniqueItems\": true}, \"complete\": {\"type\": \"boolean\"}, \"clarification_required\": {\"type\": \"boolean\"}, \"rationale\": {\"type\": \"string\"}}, \"required\": [\"action\"], \"additionalProperties\": false}"
+      ],
+      "exit": 0,
+      "seconds": 5.678483541007154,
+      "input_bytes": 41153,
+      "request_sha256": "2dc44acfaeac4def1611b7c7e2cd64bfa1048f2a8807098e089f17e9f650b111",
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 16176,
+        "cache_read_input_tokens": 2126,
+        "output_tokens": 395,
+        "output_tokens_details": {
+          "thinking_tokens": 143
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 16176,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 395,
+            "cache_read_input_tokens": 2126,
+            "cache_creation_input_tokens": 16176,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 16176
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "model_usage": {
+        "claude-opus-5-5": {
+          "inputTokens": 2,
+          "outputTokens": 395,
+          "cacheReadInputTokens": 2126,
+          "cacheCreationInputTokens": 16176,
+          "webSearchRequests": 0,
+          "costUSD": 0.1377412,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "thinkingTokens": 143,
+          "canonicalModel": "claude-opus-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "reported_cost_usd": 0.1377412
+    },
+    {
+      "argv": [
+        "claude",
+        "-p",
+        "--safe-mode",
+        "--tools",
+        "",
+        "--no-session-persistence",
+        "--output-format",
+        "json",
+        "--max-budget-usd",
+        "2.00",
+        "--json-schema",
+        "{\"type\": \"object\", \"properties\": {\"action\": {\"type\": \"string\", \"enum\": [\"read-node\", \"read-nodes\", \"read-sources\", \"finish\"]}, \"path\": {\"type\": \"string\"}, \"paths\": {\"type\": \"array\", \"items\": {\"type\": \"string\"}, \"maxItems\": 64, \"uniqueItems\": true}, \"complete\": {\"type\": \"boolean\"}, \"clarification_required\": {\"type\": \"boolean\"}, \"rationale\": {\"type\": \"string\"}}, \"required\": [\"action\"], \"additionalProperties\": false}"
+      ],
+      "exit": 0,
+      "seconds": 5.25366229203064,
+      "input_bytes": 47378,
+      "request_sha256": "3392c7525567ac841d44aeb789a759f29310371c002d8ab5aac9d5ce550be96c",
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 19152,
+        "cache_read_input_tokens": 2126,
+        "output_tokens": 336,
+        "output_tokens_details": {
+          "thinking_tokens": 101
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 19152,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 336,
+            "cache_read_input_tokens": 2126,
+            "cache_creation_input_tokens": 19152,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 19152
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "model_usage": {
+        "claude-opus-5-5": {
+          "inputTokens": 2,
+          "outputTokens": 336,
+          "cacheReadInputTokens": 2126,
+          "cacheCreationInputTokens": 19152,
+          "webSearchRequests": 0,
+          "costUSD": 0.1603692,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "thinkingTokens": 101,
+          "canonicalModel": "claude-opus-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "reported_cost_usd": 0.1603692
+    },
+    {
+      "argv": [
+        "claude",
+        "-p",
+        "--safe-mode",
+        "--tools",
+        "",
+        "--no-session-persistence",
+        "--output-format",
+        "json",
+        "--max-budget-usd",
+        "2.00",
+        "--json-schema",
+        "{\"type\": \"object\", \"properties\": {\"action\": {\"type\": \"string\", \"enum\": [\"read-node\", \"read-nodes\", \"read-sources\", \"finish\"]}, \"path\": {\"type\": \"string\"}, \"paths\": {\"type\": \"array\", \"items\": {\"type\": \"string\"}, \"maxItems\": 64, \"uniqueItems\": true}, \"complete\": {\"type\": \"boolean\"}, \"clarification_required\": {\"type\": \"boolean\"}, \"rationale\": {\"type\": \"string\"}}, \"required\": [\"action\"], \"additionalProperties\": false}"
+      ],
+      "exit": 0,
+      "seconds": 6.843157000024803,
+      "input_bytes": 50989,
+      "request_sha256": "811971acd8df093f9515e0b345c114b2af277428b86ec58205e08c7fba40fd3a",
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 20990,
+        "cache_read_input_tokens": 2126,
+        "output_tokens": 477,
+        "output_tokens_details": {
+          "thinking_tokens": 118
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 20990,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 477,
+            "cache_read_input_tokens": 2126,
+            "cache_creation_input_tokens": 20990,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 20990
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "model_usage": {
+        "claude-opus-5-5": {
+          "inputTokens": 2,
+          "outputTokens": 477,
+          "cacheReadInputTokens": 2126,
+          "cacheCreationInputTokens": 20990,
+          "webSearchRequests": 0,
+          "costUSD": 0.1778932,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "thinkingTokens": 118,
+          "canonicalModel": "claude-opus-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "reported_cost_usd": 0.1778932
+    },
+    {
+      "argv": [
+        "claude",
+        "-p",
+        "--safe-mode",
+        "--tools",
+        "",
+        "--no-session-persistence",
+        "--output-format",
+        "json",
+        "--max-budget-usd",
+        "2.00",
+        "--json-schema",
+        "{\"type\": \"object\", \"properties\": {\"action\": {\"type\": \"string\", \"enum\": [\"read-node\", \"read-nodes\", \"read-sources\", \"finish\"]}, \"path\": {\"type\": \"string\"}, \"paths\": {\"type\": \"array\", \"items\": {\"type\": \"string\"}, \"maxItems\": 64, \"uniqueItems\": true}, \"complete\": {\"type\": \"boolean\"}, \"clarification_required\": {\"type\": \"boolean\"}, \"rationale\": {\"type\": \"string\"}}, \"required\": [\"action\"], \"additionalProperties\": false}"
+      ],
+      "exit": 0,
+      "seconds": 10.001909333979711,
+      "input_bytes": 61513,
+      "request_sha256": "37c47e8c3baabc5e96e1f0778d24b4627c1301af090560f7741cf9c5ee0d8f93",
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 25289,
+        "cache_read_input_tokens": 2126,
+        "output_tokens": 861,
+        "output_tokens_details": {
+          "thinking_tokens": 325
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 25289,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 861,
+            "cache_read_input_tokens": 2126,
+            "cache_creation_input_tokens": 25289,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 25289
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "model_usage": {
+        "claude-opus-5-5": {
+          "inputTokens": 2,
+          "outputTokens": 861,
+          "cacheReadInputTokens": 2126,
+          "cacheCreationInputTokens": 25289,
+          "webSearchRequests": 0,
+          "costUSD": 0.2199652,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "thinkingTokens": 325,
+          "canonicalModel": "claude-opus-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "reported_cost_usd": 0.2199652
+    }
+  ],
+  "raw_evidence_hashes": {
+    "3-model-request.json": "811971acd8df093f9515e0b345c114b2af277428b86ec58205e08c7fba40fd3a",
+    "2-model.stdout": "5f5c9e0faa3d08eb4bddae81ce93ff21510e712c046cd865190b259751b4bae6",
+    "3-public.stdout": "73bd9033a8b251125f25090ec6b9874f5f8ba9ef0bc38028d7f2fc43da3e37a4",
+    "4-model.stdout": "9c3af36b4072128c797f859d8c0c4d7fd22f160ec60330d8f1524207ff3761b5",
+    "result.json": "faf6bcb72bf54a0543746dada76e727fa2aea3d7d095f2af628e5376bcbd1f16",
+    "3-model.stdout": "a43d0a01242aba6aa39b17d996e0740b2ba3fcdb322c14b6680ed7176339d5ad",
+    "4-public.stdout": "fd9ea585405b16ccdd8391fa313baddac1289153f2b86da4c5ae39a2b56e2a2e",
+    "5-input-navigation.json": "76821a56fc8e58772af78c8b7b09daf832c951a6eedb93d0ec59398b54dcbcc3",
+    "1-input-context.json": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+    "4-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "3-input-navigation.json": "f49b30e42ffddda8f718559586b013e3b20a1048bb0d3616b8b260c059e62204",
+    "5-input-recall.json": "14e78c81336b77abaed48cf70fb1fe488e225e3f614e3d4d65d0fa853ca1696e",
+    "4-model.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "3-model.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "model-calls.json": "170bbfecacf183e58d0cdea2d2f52481281ab4502d8cb0424c9bb67aa06a696f",
+    "2-model.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "3-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands.json": "ca88f2ac029085e485640868f1e5256e4be5fc17f2eb4097189617e07752e9da",
+    "2-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "4-model-request.json": "37c47e8c3baabc5e96e1f0778d24b4627c1301af090560f7741cf9c5ee0d8f93",
+    "4-input-navigation.json": "e12a99be67e05361eeb027d4ac802ab7b258157fea64847c54e103bc090ec98b",
+    "1-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "5-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "1-model.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "1-model.stdout": "02e58e97e7f7b7970ee5e15bed92fd8eaef360d5fd21d919aa99205da185e7ef",
+    "1-public.stdout": "a60329990fb3721e74de128dae09dae0c866ef8055080f455d08056f6d4c9f91",
+    "1-model-request.json": "2dc44acfaeac4def1611b7c7e2cd64bfa1048f2a8807098e089f17e9f650b111",
+    "2-input-navigation.json": "f49b30e42ffddda8f718559586b013e3b20a1048bb0d3616b8b260c059e62204",
+    "5-public.stdout": "11ecb024576b2cc5848456de314f9e67f55d0fcf5e8c01b025b98906a2d46480",
+    "2-public.stdout": "59af02c49391b5c4dbaeac7193eca648ecab82116384792f48af46749e39354e",
+    "2-model-request.json": "3392c7525567ac841d44aeb789a759f29310371c002d8ab5aac9d5ce550be96c"
+  }
+}

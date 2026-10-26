@@ -1,0 +1,343 @@
+{
+  "case": "unsafe-source",
+  "question": "What does sensitivefixture store?",
+  "context": {},
+  "finish": {
+    "action": "finish",
+    "paths": [],
+    "complete": false,
+    "clarification_required": true,
+    "rationale": "Path followed: MEMORY.md -> topics/g/source-review.md -> topics/n/source-review-0-0.md. That leaf has one route whose subject is \"Sensitivefixture\" (topics/r/166e47fa-43fb-4892-91cc-32db01038dd7-v1.md, repository scope, active). The qualified read finished but returned no records: the source was excluded for security:credential. The whole source was withheld, so its content isn't usable as current guidance and nothing was qualified. No other router topic covers this subject by meaning. projectbrief.md (orientation only) couldn't be read as a navigation node and wasn't inspected as a source. What sensitivefixture stores is unknown. A developer has to resolve the quarantined, credential-bearing source through the governed write and review process before it can be answered. The empty result must not be read as \"no such knowledge exists\"."
+  },
+  "failure": null,
+  "expected_paths_scored_after_finish": [],
+  "selected_paths": [],
+  "missed": [],
+  "unexpected": [],
+  "all_qualified_paths_considered": [],
+  "model_calls": 4,
+  "reported_model_cost_usd": 0.6447847999999999,
+  "canonical_helper_seconds": 2.7721076669404283,
+  "semantic_completeness_verified": false,
+  "native_client_integration_claimed": false,
+  "performance_acceptance_claimed": false,
+  "model_usage_and_cost": [
+    {
+      "argv": [
+        "claude",
+        "-p",
+        "--safe-mode",
+        "--tools",
+        "",
+        "--no-session-persistence",
+        "--output-format",
+        "json",
+        "--max-budget-usd",
+        "2.00",
+        "--json-schema",
+        "{\"type\": \"object\", \"properties\": {\"action\": {\"type\": \"string\", \"enum\": [\"read-node\", \"read-nodes\", \"read-sources\", \"finish\"]}, \"path\": {\"type\": \"string\"}, \"paths\": {\"type\": \"array\", \"items\": {\"type\": \"string\"}, \"maxItems\": 64, \"uniqueItems\": true}, \"complete\": {\"type\": \"boolean\"}, \"clarification_required\": {\"type\": \"boolean\"}, \"rationale\": {\"type\": \"string\"}}, \"required\": [\"action\"], \"additionalProperties\": false}"
+      ],
+      "exit": 0,
+      "seconds": 5.937199083040468,
+      "input_bytes": 41104,
+      "request_sha256": "9a7d9ff7985ad796cb7a3724f2d3ff26c6717f2647c7360606eb7889c1fb8cac",
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 16159,
+        "cache_read_input_tokens": 2126,
+        "output_tokens": 287,
+        "output_tokens_details": {
+          "thinking_tokens": 80
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 16159,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 287,
+            "cache_read_input_tokens": 2126,
+            "cache_creation_input_tokens": 16159,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 16159
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "model_usage": {
+        "claude-opus-5-5": {
+          "inputTokens": 2,
+          "outputTokens": 287,
+          "cacheReadInputTokens": 2126,
+          "cacheCreationInputTokens": 16159,
+          "webSearchRequests": 0,
+          "costUSD": 0.1354452,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "thinkingTokens": 80,
+          "canonicalModel": "claude-opus-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "reported_cost_usd": 0.1354452
+    },
+    {
+      "argv": [
+        "claude",
+        "-p",
+        "--safe-mode",
+        "--tools",
+        "",
+        "--no-session-persistence",
+        "--output-format",
+        "json",
+        "--max-budget-usd",
+        "2.00",
+        "--json-schema",
+        "{\"type\": \"object\", \"properties\": {\"action\": {\"type\": \"string\", \"enum\": [\"read-node\", \"read-nodes\", \"read-sources\", \"finish\"]}, \"path\": {\"type\": \"string\"}, \"paths\": {\"type\": \"array\", \"items\": {\"type\": \"string\"}, \"maxItems\": 64, \"uniqueItems\": true}, \"complete\": {\"type\": \"boolean\"}, \"clarification_required\": {\"type\": \"boolean\"}, \"rationale\": {\"type\": \"string\"}}, \"required\": [\"action\"], \"additionalProperties\": false}"
+      ],
+      "exit": 0,
+      "seconds": 5.294745082966983,
+      "input_bytes": 44368,
+      "request_sha256": "15e57cfca2a8c87e12e4c7f30e42c291bc919ab05d375f095000c4d0975c1f81",
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 17632,
+        "cache_read_input_tokens": 2126,
+        "output_tokens": 248,
+        "output_tokens_details": {
+          "thinking_tokens": 49
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 17632,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 248,
+            "cache_read_input_tokens": 2126,
+            "cache_creation_input_tokens": 17632,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 17632
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "model_usage": {
+        "claude-opus-5-5": {
+          "inputTokens": 2,
+          "outputTokens": 248,
+          "cacheReadInputTokens": 2126,
+          "cacheCreationInputTokens": 17632,
+          "webSearchRequests": 0,
+          "costUSD": 0.14644919999999997,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "thinkingTokens": 49,
+          "canonicalModel": "claude-opus-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "reported_cost_usd": 0.14644919999999997
+    },
+    {
+      "argv": [
+        "claude",
+        "-p",
+        "--safe-mode",
+        "--tools",
+        "",
+        "--no-session-persistence",
+        "--output-format",
+        "json",
+        "--max-budget-usd",
+        "2.00",
+        "--json-schema",
+        "{\"type\": \"object\", \"properties\": {\"action\": {\"type\": \"string\", \"enum\": [\"read-node\", \"read-nodes\", \"read-sources\", \"finish\"]}, \"path\": {\"type\": \"string\"}, \"paths\": {\"type\": \"array\", \"items\": {\"type\": \"string\"}, \"maxItems\": 64, \"uniqueItems\": true}, \"complete\": {\"type\": \"boolean\"}, \"clarification_required\": {\"type\": \"boolean\"}, \"rationale\": {\"type\": \"string\"}}, \"required\": [\"action\"], \"additionalProperties\": false}"
+      ],
+      "exit": 0,
+      "seconds": 6.467834042035975,
+      "input_bytes": 47228,
+      "request_sha256": "f812e09556f8816987d925b73cff214119a771b91e8a081ca73fa33ba024a3bc",
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 19021,
+        "cache_read_input_tokens": 2126,
+        "output_tokens": 315,
+        "output_tokens_details": {
+          "thinking_tokens": 49
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 19021,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 315,
+            "cache_read_input_tokens": 2126,
+            "cache_creation_input_tokens": 19021,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 19021
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "model_usage": {
+        "claude-opus-5-5": {
+          "inputTokens": 2,
+          "outputTokens": 315,
+          "cacheReadInputTokens": 2126,
+          "cacheCreationInputTokens": 19021,
+          "webSearchRequests": 0,
+          "costUSD": 0.1589012,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "thinkingTokens": 49,
+          "canonicalModel": "claude-opus-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "reported_cost_usd": 0.1589012
+    },
+    {
+      "argv": [
+        "claude",
+        "-p",
+        "--safe-mode",
+        "--tools",
+        "",
+        "--no-session-persistence",
+        "--output-format",
+        "json",
+        "--max-budget-usd",
+        "2.00",
+        "--json-schema",
+        "{\"type\": \"object\", \"properties\": {\"action\": {\"type\": \"string\", \"enum\": [\"read-node\", \"read-nodes\", \"read-sources\", \"finish\"]}, \"path\": {\"type\": \"string\"}, \"paths\": {\"type\": \"array\", \"items\": {\"type\": \"string\"}, \"maxItems\": 64, \"uniqueItems\": true}, \"complete\": {\"type\": \"boolean\"}, \"clarification_required\": {\"type\": \"boolean\"}, \"rationale\": {\"type\": \"string\"}}, \"required\": [\"action\"], \"additionalProperties\": false}"
+      ],
+      "exit": 0,
+      "seconds": 10.799746333970688,
+      "input_bytes": 57351,
+      "request_sha256": "6e48530827cf276c196370e2e3cdc46ae5df8c74e95a2651378fd535403a1291",
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 23112,
+        "cache_read_input_tokens": 2126,
+        "output_tokens": 933,
+        "output_tokens_details": {
+          "thinking_tokens": 269
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 23112,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 933,
+            "cache_read_input_tokens": 2126,
+            "cache_creation_input_tokens": 23112,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 23112
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "model_usage": {
+        "claude-opus-5-5": {
+          "inputTokens": 2,
+          "outputTokens": 933,
+          "cacheReadInputTokens": 2126,
+          "cacheCreationInputTokens": 23112,
+          "webSearchRequests": 0,
+          "costUSD": 0.2039892,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "thinkingTokens": 269,
+          "canonicalModel": "claude-opus-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "reported_cost_usd": 0.2039892
+    }
+  ],
+  "raw_evidence_hashes": {
+    "3-model-request.json": "f812e09556f8816987d925b73cff214119a771b91e8a081ca73fa33ba024a3bc",
+    "2-model.stdout": "f8977e55579dc2683ae8c4924a68c571c8f68b3c9e605104d53b0f238a11a145",
+    "3-public.stdout": "3fbdb5a16928de0cd270d0ad517a635567172ea5b4aef6a58c1792ba7c8634b5",
+    "4-model.stdout": "e6d363d0ff8ef632fbb09f5608f2741541f9a2bf90643c3e51dd2f8ef9ac19a3",
+    "result.json": "0d8880d1c5073484bdb45aff8eaaddc0a488b1eb56e71521511a21cd6f4d8ba4",
+    "3-model.stdout": "4964be825caa79d18a0008bf696d346312eeb9644fb0a91d157b2ac6386d1dc3",
+    "4-public.stdout": "167ad95922070537af460f1dbc2df1aaa8665488443c70ea60d516359339ba2b",
+    "5-input-navigation.json": "e631c35dd7cfe7bd3976dbbe1bde1202efdb981ab2f4282677d6008994b2b430",
+    "1-input-context.json": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+    "4-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "3-input-navigation.json": "5907206626d8ca5503ad4479975f468b0c4ccd7d4149f521f8f09fb0e58bbe1d",
+    "5-input-recall.json": "e58ad0d26e0b533021af18e4102c4b5e7d25e29c1ab56c9b1fca568e64319f37",
+    "4-model.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "3-model.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "model-calls.json": "a34563f68c21fb0ab356bae2bc1f1ee0ba325378c8985b838ea7508e2766a9d4",
+    "2-model.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "3-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands.json": "d3e52f1114596f1301adb8e0899b075ba16b4d863c1a54827266fc5d9cd317be",
+    "2-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "4-model-request.json": "6e48530827cf276c196370e2e3cdc46ae5df8c74e95a2651378fd535403a1291",
+    "4-input-navigation.json": "2c86652bd55b300a5429a8d47fab6c28681273f801f8619d16f43c3e88afc3be",
+    "1-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "5-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "1-model.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "1-model.stdout": "58179a687ba50ed2a72a601323fb08c803b5ef071e6ee4cf1c74f6b6f8abc6d6",
+    "1-public.stdout": "1a13d37da0a950f603a8c5ea106ac7552d93e2e3dfb02873ae7b7bf412d77468",
+    "1-model-request.json": "9a7d9ff7985ad796cb7a3724f2d3ff26c6717f2647c7360606eb7889c1fb8cac",
+    "2-input-navigation.json": "5907206626d8ca5503ad4479975f468b0c4ccd7d4149f521f8f09fb0e58bbe1d",
+    "5-public.stdout": "fc694c9fbaee3a2bc72e86f6eb41c0aa4a81186a170b6ee981fc3c7cdca604e3",
+    "2-public.stdout": "5cf5b7d9225e1119c2026c2c0e7c019a617f2b420d4bace384ac55beb1e8e389",
+    "2-model-request.json": "15e57cfca2a8c87e12e4c7f30e42c291bc919ab05d375f095000c4d0975c1f81"
+  }
+}
