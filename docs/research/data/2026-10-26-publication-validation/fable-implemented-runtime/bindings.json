@@ -1,0 +1,50 @@
+{
+  "actual_model": "claude-opus-5-5",
+  "runtime_source": "81fec82c1619d20c12473d23e3fdf6706d52b641",
+  "prior_source": "e816844c4395858f3e1279f3847aafe557c84ac5",
+  "review_scope": "static implementation review only; no whole-story acceptance or timed benchmark",
+  "raw_response_retained": "/tmp/agent-memory-v003/publication-implementation-fable-81fec82/stdout.json",
+  "raw_response_sha256": "c2f069caf4542db1f7a796a82c879044d5030db9e1f7c8a99832ff45875a3e78",
+  "raw_response_bytes": 7146,
+  "raw_response_not_exported": "Session identifiers and provider usage remain private; the verbatim review and non-secret model result are exported.",
+  "correctness_qualification": "SHA-256 keys rely on the ordinary cryptographic collision-resistance assumption; the raw reviewer phrase cannot collide is not an absolute guarantee.",
+  "checks": "Two local diagnostic runs are retained. The initial result field static_review_of_freshness_still_required was imprecise; the clarified run states freshness_proved_by_this_check=false. Neither run proves whole acceptance.",
+  "files": {
+    "clarified-check-result.json": {
+      "sha256": "aeaf9836b1b8cd94b955b00b740f24fe57741a8df687ee735062470fda2e1382",
+      "bytes": 587
+    },
+    "clarified-check.py": {
+      "sha256": "a0631a077d564d908d2ac794fd142408b28917da56ff6294f280f0c589000eda",
+      "bytes": 2445
+    },
+    "initial-check-result.json": {
+      "sha256": "f20d304e4a7e8f84b1b2f383d2f93faf53a91bf2eaffed0744c73d7548edaf34",
+      "bytes": 598
+    },
+    "initial-check.py": {
+      "sha256": "644e76c2d68e002fd006e06c3a774cd38dc900277baeb727c10deb30c63e99d9",
+      "bytes": 2453
+    },
+    "prompt.txt": {
+      "sha256": "28e2480e5d62f26c1d4c6426cfef7e928c6d261c1695b14f7c60d5e46eb8e68a",
+      "bytes": 2160
+    },
+    "result.json": {
+      "sha256": "dd36890e61273f247247b81c716d57c630bf0f7a88c0911dd2231895f7490927",
+      "bytes": 307
+    },
+    "review.md": {
+      "sha256": "8d05ef1e4d96345bfbcc2214815a0cd071fe4062a279d6f75c64c80f2a45aa89",
+      "bytes": 5264
+    },
+    "source-after.json": {
+      "sha256": "c686a1f4ddf54e44b1a68cc3d51a383ca1859ca80342d37a583f56bb9db8aa8f",
+      "bytes": 29940
+    },
+    "source-before.json": {
+      "sha256": "c686a1f4ddf54e44b1a68cc3d51a383ca1859ca80342d37a583f56bb9db8aa8f",
+      "bytes": 29940
+    }
+  }
+}

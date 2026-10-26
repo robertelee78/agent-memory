@@ -1,0 +1,15 @@
+{
+  "source_commit": "81fec82c1619d20c12473d23e3fdf6706d52b641",
+  "platform": "darwin",
+  "python": "3.15.0 (main, Oct  9 2026, 11:16:41) [Clang 21.0.0 (clang-2100.3.34.2)]",
+  "map_order_changed_but_equal": true,
+  "same_map_cache_hit_confirmed": true,
+  "oversized_context_bytes": 20773,
+  "oversized_map_not_cache_eligible": true,
+  "oversized_fallback_equals_full_validation": true,
+  "operation_state_cleared": true,
+  "source_bytes_and_modes_preserved": true,
+  "static_review_of_freshness_still_required": false,
+  "whole_story_acceptance_claimed": false,
+  "seconds": 1.9629854169907048
+}

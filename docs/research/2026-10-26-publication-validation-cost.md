@@ -58,6 +58,34 @@ Parsed-record output bypasses the memo. The optional recall catalog eagerly bind
 the added validator module and conservatively falls back during an active operation
 memo; ordinary cold/warm catalog operation remains separately tested.
 
+Fable independently reviewed the implemented `81fec82` runtime and found no
+concrete blocker. Its [source-bound static report](data/2026-10-26-publication-validation/fable-implemented-runtime/review.md)
+also identifies limits: the encoded-value budget is not resident-memory usage;
+eviction can discard useful scanner entries; and one source over 16 KiB disables
+format-map reuse for that map. Those cases fall back to full validation rather
+than truncate or discard source text. A local macOS diagnostic at the exact
+runtime confirms that different insertion orders produce the same validated
+result through a cache hit and that a 20,773-byte context file falls back to
+full validation with the same result. It does not establish freshness or whole
+workload acceptance. Digest keys rely on the usual SHA-256 collision-resistance
+assumption, not a mathematical guarantee of distinct hashes.
+
+The validator's static scope-inheritance consistency check is part of the
+byte-bound format result that can be reused; it evaluates declared constraints,
+not the invoking session's actual applicability. Current project, context,
+trust, time, authority and source observations remain independently checked.
+The raw module docstring's broad phrase “scope decisions” should be read with
+that distinction. This clarification does not change the runtime or the ADR's
+prohibition on caching actual current applicability decisions.
+
+When a public refresh operation performs discovery-qualified recall inside its
+operation-local memo, catalog generation is unavailable and retrieval falls back
+to the complete reader. A base recall request without discovery already uses
+the full reader. Neither case proves a refresh timing; in particular, the
+measured warm 50k lookup is not a speed guarantee for refresh. Safe acceleration
+of that path is a later optimization, subject to the same complete freshness and
+quality checks. Fable's static review did not execute the refresh-discovery path.
+
 ## Qualification status
 
 Development checks pass the 17 existing catalog methods and seven added validation
