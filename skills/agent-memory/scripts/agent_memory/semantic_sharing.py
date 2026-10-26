@@ -596,10 +596,15 @@ def main(argv=None):
         else:value=check(args.repo,read_input(args.input,version2=args.v2))
         if getattr(args,'output',None):value=limits.write_private(args.output,value,args.repo)
         print(json.dumps(value,indent=2));return 0
-    except (ContractError,OSError,ValueError,TypeError,KeyError,AttributeError,UnicodeError,RecursionError):
+    except (ContractError,OSError,ValueError,TypeError,KeyError,AttributeError,UnicodeError,RecursionError) as exc:
+        from .sharing_holds import HoldFailure
+        known=isinstance(exc,HoldFailure)
         print(json.dumps({'schema':'agent-memory/semantic-sharing-result-v1','operation':args.command,
             'publication_verified':False,'canonical_writes_performed':False,'remote_freshness_verified':False,
-            'error':'Incomplete, changed or unsafe semantic review; retain local work and inspect actual sources'}));return 1
+            'failure_component':'known-dispute-state' if known else args.command,
+            'failure_code':exc.code if known else 'semantic-review-unverified',
+            'error':str(exc) if known else 'Incomplete, changed or unsafe semantic review; retain local work and inspect actual sources',
+            'repair':exc.repair if known else 'Preserve the bank, original request and pending evidence. Run am doctor for this repository, inspect the failed component, then repeat source inspection and review; do not substitute an empty bank or a compatibility judgment.'}));return 1
 
 
 if __name__=='__main__':sys.exit(main())

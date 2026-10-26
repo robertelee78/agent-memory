@@ -21,6 +21,16 @@ MAX_STORE=16*1024*1024
 MAX_JOURNAL=2*MAX_STORE+65536
 
 
+class HoldFailure(ContractError):
+    def __init__(self,code,reason,repair):
+        super().__init__(reason);self.code=code;self.repair=repair
+
+
+def recovery_needed(code,reason):
+    return HoldFailure(code,reason,
+        'Preserve the bank, registry, recovery copy and journal. Run am semantic recover-holds with the same --repo and verified --project-id, then repeat inspect-v2 and the source review. Recovery verifies ownership and will not overwrite unknown later evidence.')
+
+
 def cause_id(cause):
     return digest(encoded({'sources':sorted(cause['sources']),'classification':cause['classification']}))
 
@@ -90,19 +100,24 @@ def read_store(root,project_id,*,owner=None,allow_journal=False):
     root,bank,directory,anchor=locations(root,project_id);trust_paths.state(directory)
     lock=directory/'lock';journal=directory/'journal.json'
     lock_raw=trusted_read(lock,4096)
-    if lock_raw is not None and lock_raw!=owner:raise ContractError('Known hold writer is active/stale; inspect recovery before current review')
-    if journal.exists() and not allow_journal:raise ContractError('Interrupted known-hold transaction; recover before review')
+    if lock_raw is not None and lock_raw!=owner:raise HoldFailure('known-holds-busy',
+        'A known-dispute writer is active or its ownership has not been cleared after interruption.',
+        'Allow an active review to finish. If interrupted, use am semantic recover-holds with the same --repo and verified --project-id; preserve unknown lock evidence and do not remove it manually.')
+    if journal.exists() and not allow_journal:raise recovery_needed('known-holds-interrupted',
+        'A known-dispute transaction has an unfinished recovery journal; its claims cannot be treated as resolved.')
     raw=trusted_read(directory/'registry.json',MAX_STORE)
     backup=trusted_read(directory/'recovery.json',MAX_STORE)
     anchored=trusted_read(anchor,4096)
     if anchored is not None:anchor_value(anchored,root,project_id)
     if raw is None:
         if anchored is not None or backup is not None or journal.exists():
-            raise ContractError('Known review inventory is missing; restore its retained recovery evidence')
+            raise recovery_needed('known-holds-registry-missing',
+                'The known-dispute registry is missing, but its anchor or retained recovery evidence proves prior review state existed.')
         return seal({'schema':SCHEMA,'repo_root':str(root),'project_id':project_id,'records':{}}),None
     value=registry_value(json_load(raw),root,project_id)
     if anchored is None or backup!=raw:
-        raise ContractError('Known review inventory lacks its complete recovery anchor; recover without discarding records')
+        raise recovery_needed('known-holds-recovery-incomplete',
+            'The known-dispute registry and its recovery anchor/copy do not form one complete verified state.')
     return value,digest(raw)
 
 
