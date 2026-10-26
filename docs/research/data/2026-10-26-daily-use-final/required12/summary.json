@@ -1,0 +1,85 @@
+{
+  "case": "required12",
+  "passed": true,
+  "source_commit": "81fec82c1619d20c12473d23e3fdf6706d52b641",
+  "sessions": 12,
+  "lessons": 1000,
+  "semantic_schedule": true,
+  "required_scenario_events": 25,
+  "seconds": 5319.442660984583,
+  "public_commands": 974,
+  "command_exit_counts": {
+    "0": 966,
+    "1": 7,
+    "86": 1
+  },
+  "command_median_seconds": 8.65828538313508,
+  "command_max_seconds": 54.69959587790072,
+  "helper_costs": {
+    "admit_learning.py": {
+      "calls": 94,
+      "median_seconds": 11.74496156675741,
+      "max_seconds": 19.95946231018752
+    },
+    "bank_transactions.py": {
+      "calls": 4,
+      "median_seconds": 4.235813670326024,
+      "max_seconds": 8.056472584605217
+    },
+    "bank_writes.py": {
+      "calls": 6,
+      "median_seconds": 0.7624135627411306,
+      "max_seconds": 2.442945654504001
+    },
+    "compare_learning.py": {
+      "calls": 33,
+      "median_seconds": 2.774988261051476,
+      "max_seconds": 3.342907043173909
+    },
+    "developer_identity.py": {
+      "calls": 4,
+      "median_seconds": 0.08555542677640915,
+      "max_seconds": 0.08653947059065104
+    },
+    "discover_memory.py": {
+      "calls": 82,
+      "median_seconds": 0.6042793244123459,
+      "max_seconds": 3.5445432337000966
+    },
+    "govern_memory.py": {
+      "calls": 4,
+      "median_seconds": 8.346919754054397,
+      "max_seconds": 11.702822895720601
+    },
+    "publish_memory.py": {
+      "calls": 103,
+      "median_seconds": 13.442030468955636,
+      "max_seconds": 49.40373931732029
+    },
+    "reconcile_memory.py": {
+      "calls": 461,
+      "median_seconds": 8.821623393334448,
+      "max_seconds": 17.505260452628136
+    },
+    "refresh_memory.py": {
+      "calls": 149,
+      "median_seconds": 8.99135421961546,
+      "max_seconds": 54.69959587790072
+    },
+    "retrieve.py": {
+      "calls": 32,
+      "median_seconds": 0.6370034641586244,
+      "max_seconds": 2.3413570672273636
+    },
+    "sharing_recovery.py": {
+      "calls": 2,
+      "median_seconds": 5.944261837285012,
+      "max_seconds": 6.951867111027241
+    }
+  },
+  "seed_checks": 48,
+  "all_round_learning_verified": true,
+  "feature_state_verified": true,
+  "source_preserved": true,
+  "whole_acceptance_claimed": false
+}
