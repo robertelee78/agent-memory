@@ -1,5 +1,5 @@
 {
-  "cohort_pass_only": true,
+  "cohort_pass_only": false,
   "whole_story_acceptance_claimed": false,
   "source": "81fec82c1619d20c12473d23e3fdf6706d52b641",
   "files": {
@@ -107,5 +107,8 @@
       },
       "transformation": "Private isolated-World environment omitted from each command, including its cleanup capability token. Other command/input-hash/result fields unchanged."
     }
-  }
+  },
+  "controller_completed": true,
+  "required_semantic_cohort_accepted": false,
+  "qualification_status": "qualification-status.json"
 }

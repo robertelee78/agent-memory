@@ -81,5 +81,8 @@
   "all_round_learning_verified": true,
   "feature_state_verified": true,
   "source_preserved": true,
-  "whole_acceptance_claimed": false
+  "whole_acceptance_claimed": false,
+  "required_semantic_cohort_accepted": false,
+  "qualification_status": "qualification-status.json",
+  "passed_field_means": "Controller exited successfully and local report assertions passed; independent review found two nonvacuity gaps, so this is not a complete required semantic-cohort pass."
 }

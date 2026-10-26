@@ -1,0 +1,14 @@
+{
+  "controller_exit": 0,
+  "functional_evidence_retained": true,
+  "required_semantic_cohort_accepted": false,
+  "reason": "Two negative seed recalls requested user-feedback while the actual targets are semantic-fact; empty results did not exercise the intended exclusion.",
+  "affected_commands": [
+    916,
+    973
+  ],
+  "product_failure_inferred": false,
+  "review": "independent-review/review.md",
+  "fresh_corrected_full_required_runs_needed": true,
+  "core_only_variations_affected": false
+}

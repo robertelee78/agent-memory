@@ -365,8 +365,8 @@ def semantic_judgment(s,label,view,judgment):
   assert evidence
   judgment['resolutions']={known['id']:{'basis':'operator-clarification','evidence':[evidence[-1]],'reason':'The predeclared synthetic detecting-developer clarification confirms blue; this real qualified correction preserves the prior yellow evidence.'} for known in view['known_causes'] if not known['resolved']}
 
-def typed_recall(s,ids,context=None):
- request={'project_id':s['project'],'query':'','ids':ids,'paths':[],'context':context or {},'kinds':['user-feedback'],'minimum_trust':'reviewed','limit':8,'include_context':False}
+def typed_recall(s,ids,context=None,*,kinds=('user-feedback',)):
+ request={'project_id':s['project'],'query':'','ids':ids,'paths':[],'context':context or {},'kinds':list(kinds),'minimum_trust':'reviewed','limit':8,'include_context':False}
  return public(s['world'],s['pack'],'retrieve.py','--repo',s['repo'],'--request',save(s['world'],request,s['name']+'-typed-recall'))
 
 def post_round_semantics(all_sessions):
@@ -445,6 +445,10 @@ def prune_and_older_branch(all_sessions):
  from contracts.test_governance import GovernanceContract
  s=all_sessions[0];w=s['world'];bank=s['repo']/'memory-bank';path='topics/seed/records/0.md'
  metadata,body=unpack((bank/path).read_text());identity=metadata['id']
+ assert metadata['kind']=='semantic-fact'
+ for target in (s,all_sessions[-1]):
+  before=typed_recall(target,[identity],{'component':'src/seed/0'},kinds=['semantic-fact'])['results']
+  assert len(before)==1 and before[0]['metadata']==metadata and before[0]['body']==body
  gov=GovernanceContract();gov.pid=s['project'];gov.actor=s['actor'];value=gov.request(bank,metadata,path,'delete')
  value['authority'].update(basis='explicit-deletion',reason_class='obsolete',reason='Predeclared synthetic fixture confirms this seed policy obsolete under every retained condition; remove its stable identity.')
  value['delete_ids']=[identity]
@@ -457,7 +461,7 @@ def prune_and_older_branch(all_sessions):
  new_id,new_row=capture(old,3);lessons[new_id]=new_row
  result=land(old,prepare_publication(old,'old-branch-new-audit'),'old-branch-new-audit');assert result['publication_verified']
  refresh(old,30,(new_id,new_row))
- assert not (old['repo']/'memory-bank'/path).exists() and not typed_recall(old,[identity],{'component':'src/seed/0'})['results']
+ assert not (old['repo']/'memory-bank'/path).exists() and not typed_recall(old,[identity],{'component':'src/seed/0'},kinds=['semantic-fact'])['results']
  assert typed_recall(old,[new_id])['results'][0]['body']==new_row['body'] and state(old)==old['feature']
  event('prune-and-older-branch-nonresurrection',pruned_id=identity,older_session=old['number'],new_independent_lesson=new_id,feature_preserved=True)
 
@@ -536,6 +540,9 @@ def baseline_faults(s):
 
 def withheld_replacement_independent_path(all_sessions):
  s=all_sessions[2];w=s['world'];bank=s['repo']/'memory-bank';old_path='topics/seed/records/1.md';old,body=unpack((bank/old_path).read_text())
+ assert old['kind']=='semantic-fact'
+ before=typed_recall(s,[old['id']],{'component':'src/seed/1'},kinds=['semantic-fact'])['results']
+ assert len(before)==1 and before[0]['metadata']==old and before[0]['body']==body
  new_id,new_row=capture(s,3);lessons[new_id]=new_row
  replacement=copy.deepcopy(old);identity=str(uuid.uuid4());replacement.update(id=identity,visibility='hidden',supersedes=[{'id':old['id'],'version':old['version']}])
  path='topics/withheld-replacement-'+str(s['number'])+'.md';marker='sk-'+('Q'*24)
@@ -551,7 +558,7 @@ def withheld_replacement_independent_path(all_sessions):
  result=land(s,public(w,s['pack'],'publish_memory.py','prepare','--v2','--repo',s['repo'],'--input',save(w,proof,'withheld-publication-proof'))['request'],'withheld-independent-publication')
  assert result['publication_verified']
  refresh(s,50,(new_id,new_row))
- assert (bank/path).read_bytes()==raw and not typed_recall(s,[old['id']],{'component':'src/seed/1'})['results']
+ assert (bank/path).read_bytes()==raw and not typed_recall(s,[old['id']],{'component':'src/seed/1'},kinds=['semantic-fact'])['results']
  assert typed_recall(s,[new_id])['results'][0]['body']==new_row['body'] and state(s)==s['feature']
  event('withheld-replacement-held-independent-learning-converged',session=2,old_claim_not_reactivated=True,raw_body_stays_private=True,new_independent_id=new_id,feature_preserved=True)
 

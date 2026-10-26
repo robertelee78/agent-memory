@@ -1,0 +1,220 @@
+{
+  "reviewer": "codex-review-59",
+  "evidence_commit": "9ecc726f031dc60311d8128114f90f72069c1221",
+  "tree": "642da427cefb26a4bfff576adbcbcc8262132fb7",
+  "runtime_commit": "81fec82c1619d20c12473d23e3fdf6706d52b641",
+  "source_snapshots_checked": [
+    {
+      "label": "cohort frozen source",
+      "commit": "81fec82c1619d20c12473d23e3fdf6706d52b641",
+      "tracked_files": 758,
+      "portable_files": 162,
+      "Git_bytes_modes_match": true
+    }
+  ],
+  "controller_sha256": "f48fe78daf796a8cfcc1527280b62d82d6c2988a7a995cbf0d4c83730cf73a76",
+  "raw_gzip_files_verified": 1699,
+  "compressed_bytes_verified": 117083186,
+  "decompressed_bytes_verified": 404750040,
+  "public_commands": 974,
+  "exit_counts": {
+    "0": 966,
+    "1": 7,
+    "86": 1
+  },
+  "expected_refusals_and_interruption": [
+    {
+      "number": 249,
+      "helper": "reconcile_memory.py",
+      "operation": "page-v2",
+      "exit": 1,
+      "input_names": [],
+      "code": "semantic-review-unverified"
+    },
+    {
+      "number": 276,
+      "helper": "refresh_memory.py",
+      "operation": "apply",
+      "exit": 86,
+      "kind": "declared after-receipt interruption"
+    },
+    {
+      "number": 649,
+      "helper": "reconcile_memory.py",
+      "operation": "review-v2",
+      "exit": 1,
+      "input_names": [
+        "/tmp/agent-memory-test-gtmizcxb/inputs/missing-edge-judgment.json"
+      ],
+      "code": "semantic-review-unverified"
+    },
+    {
+      "number": 650,
+      "helper": "reconcile_memory.py",
+      "operation": "review-v2",
+      "exit": 1,
+      "input_names": [
+        "/tmp/agent-memory-test-gtmizcxb/inputs/duplicated-page-judgment.json"
+      ],
+      "code": "semantic-review-unverified"
+    },
+    {
+      "number": 652,
+      "helper": "reconcile_memory.py",
+      "operation": "review-v2",
+      "exit": 1,
+      "input_names": [
+        "/tmp/agent-memory-test-gtmizcxb/inputs/stale-pages-judgment.json"
+      ],
+      "code": "semantic-review-unverified"
+    },
+    {
+      "number": 846,
+      "helper": "reconcile_memory.py",
+      "operation": "check",
+      "exit": 1,
+      "input_names": [
+        "/tmp/agent-memory-test-gtmizcxb/inputs/old-v1-actual-v2-proof.json"
+      ],
+      "code": null
+    },
+    {
+      "number": 847,
+      "helper": "refresh_memory.py",
+      "operation": "inspect",
+      "exit": 1,
+      "input_names": [],
+      "code": "refresh-unverified"
+    },
+    {
+      "number": 848,
+      "helper": "refresh_memory.py",
+      "operation": "inspect",
+      "exit": 1,
+      "input_names": [],
+      "code": "refresh-unverified"
+    }
+  ],
+  "unique_input_blobs": 716,
+  "valid_review_page_ack_checks": 82,
+  "retained_actual_page_bodies": 289,
+  "admitted_records": 31,
+  "ordinary_records": 27,
+  "role_records": 4,
+  "actual_ordinary_refresh_plan_checks": 444,
+  "complete_refreshed_banks_rounds": 24,
+  "seed_inventory_events_verified": 48,
+  "seed_initial_IDs": 1000,
+  "required_scenarios": 25,
+  "feature_observations": [
+    {
+      "session": 0,
+      "observations": 26,
+      "distinct_states": 2
+    },
+    {
+      "session": 1,
+      "observations": 12,
+      "distinct_states": 1
+    },
+    {
+      "session": 2,
+      "observations": 15,
+      "distinct_states": 1
+    },
+    {
+      "session": 3,
+      "observations": 12,
+      "distinct_states": 1
+    },
+    {
+      "session": 4,
+      "observations": 16,
+      "distinct_states": 1
+    },
+    {
+      "session": 5,
+      "observations": 12,
+      "distinct_states": 1
+    },
+    {
+      "session": 6,
+      "observations": 11,
+      "distinct_states": 1
+    },
+    {
+      "session": 7,
+      "observations": 11,
+      "distinct_states": 1
+    },
+    {
+      "session": 8,
+      "observations": 11,
+      "distinct_states": 1
+    },
+    {
+      "session": 9,
+      "observations": 11,
+      "distinct_states": 1
+    },
+    {
+      "session": 10,
+      "observations": 11,
+      "distinct_states": 1
+    },
+    {
+      "session": 11,
+      "observations": 14,
+      "distinct_states": 1
+    }
+  ],
+  "negative_recall_findings": [
+    {
+      "command": 916,
+      "target": "topics/seed/records/0.md",
+      "actual_kind": "semantic-fact",
+      "requested_kinds": [
+        "user-feedback"
+      ],
+      "result_count": 0,
+      "problem": "Wrong kind filters target before intended deletion/withholding gate; empty result is not proof of that gate."
+    },
+    {
+      "command": 973,
+      "target": "topics/seed/records/1.md",
+      "actual_kind": "semantic-fact",
+      "requested_kinds": [
+        "user-feedback"
+      ],
+      "result_count": 0,
+      "problem": "Wrong kind filters target before intended deletion/withholding gate; empty result is not proof of that gate."
+    }
+  ],
+  "publication_states": {
+    "('prepare', 'prepared')": 51,
+    "('land', 'landed')": 29,
+    "('land', 'already-landed')": 1,
+    "('land', 'pending-reconciliation')": 22
+  },
+  "private_apply_readback_bodies_retained": 0,
+  "private_apply_readback_bodies_not_retained": 31,
+  "seconds": 5319.442660984583,
+  "driver_exit": 0,
+  "errors": [],
+  "new_product_or_test_executions": 0,
+  "new_model_calls": 0,
+  "whole99_or_release_accepted": false,
+  "jobs": "terminal and collected",
+  "worlds": 0,
+  "source_holds": "RELEASED",
+  "external_writer_grant": "NONE / RELEASED",
+  "disposition": "CHANGES REQUIRED for two vacuous negative recall controls; successful controller/core evidence preserved; not product failure",
+  "cohort_controller_execution_completed": true,
+  "all_required_semantic_negatives_qualified": false,
+  "report_scope": "bounded prerequisite evidence audit, not whole #99 acceptance",
+  "core_only_variation_carry_forward": "Narrow default-preserving semantic-fact selector repair affects only post_round_semantics paths; core-only variation evidence remains source-qualified if no other changes.",
+  "report_sha256": "267f929778541825addd81ba78ee10db89e925ef17774aa1593c4f0c44ed276e",
+  "audit_script_sha256": "3d75d5729871a1740f0d8f2ead7e1d0f05059bd659487295277657138d22abc6",
+  "feature_observation_total": 164,
+  "ambiguity_probe_feature_observations": 2
+}
