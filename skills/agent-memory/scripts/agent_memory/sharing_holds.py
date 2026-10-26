@@ -1,75 +1,233 @@
-"""Small immutable evidence of known unresolved review causes, not memory truth."""
-from pathlib import Path
-import itertools
-import re
+"""Repository/worktree-bound unresolved review evidence with atomic recovery.
 
-from . import bank_writes as writes, local_registry as storage, sharing_limits as limits, trust_paths
-from .developer_identity import digest, encoded
+This private registry can constrain a review; it never admits a lesson or
+certifies semantic truth. Canonical learning remains Markdown in Git.
+"""
+from contextlib import contextmanager
+import copy
+from pathlib import Path
+import re
+import uuid
+
+from . import bank_contract, bank_writes as writes, local_registry as storage
+from .bank_transactions import flush_directory
+from . import sharing_limits as limits, trust_paths
+from .developer_identity import digest, encoded, load as json_load, uuid_valid
 from .frontmatter import ContractError
 
-SCHEMA='agent-memory/known-semantic-hold-v1'
-
-
-def directory(root):
-    _,bank=writes.bank_path(root)
-    operations,_=writes.state_paths(Path(root).resolve(),bank,'00000000-0000-4000-8000-000000000000')
-    return operations.parent/'semantic-holds'
+SCHEMA='agent-memory/known-semantic-holds-v2'
+MAX_RECORDS=4096
+MAX_STORE=16*1024*1024
+MAX_JOURNAL=2*MAX_STORE+65536
 
 
 def cause_id(cause):
     return digest(encoded({'sources':sorted(cause['sources']),'classification':cause['classification']}))
 
 
-def load(root,project_id,*,skip_judgment=None):
-    target=directory(root);trust_paths.state(target)
-    if not target.exists():return []
-    values=[];total=0
-    paths=list(itertools.islice(target.iterdir(),4097))
-    if len(paths)>4096:raise ContractError('Known review evidence requires bounded explicit recovery; preserve it')
-    for path in sorted(paths):
-        if not re.fullmatch('[0-9a-f]{64}\\.json',path.name):
-            raise ContractError('Known review evidence requires bounded explicit recovery; preserve it')
-        trust_paths.record(path);raw=limits.read_bytes(path,65536);total+=len(raw)
-        if total>16*1024*1024:raise ContractError('Known hold evidence exceeds its finite inventory budget')
-        from .developer_identity import load as json_load
-        value=json_load(raw)
-        if (not isinstance(value,dict) or set(value)!={'schema','repo_root','project_id','binding','cause','references','dependencies','judgment_sha256','proof_sha256','checksum'}
-                or value['schema']!=SCHEMA or value['repo_root']!=str(Path(root).resolve()) or value['project_id']!=project_id
-                or value['checksum']!=digest(encoded({k:v for k,v in value.items() if k!='checksum'}))):
-            raise ContractError('Known review evidence is changed; preserve it and reconstruct the affected review')
-        cause=value['cause']
+def locations(root,project_id):
+    if not uuid_valid(project_id):raise ContractError('Known holds require the actual canonical project UUID')
+    root,bank=writes.bank_path(root)
+    operations,_=writes.state_paths(root,bank,str(uuid.uuid4()))
+    base=operations.parent/'semantic-holds';directory=base/project_id
+    pack=Path(__file__).resolve().parents[2];source=pack.parent.parent if pack.parent.name=='skills' else pack
+    if directory.resolve().is_relative_to(source):raise ContractError('Known hold state must stay outside the executing runtime/source')
+    return root,bank,directory,base/(project_id+'.present.json')
+
+
+def seal(value):
+    return {**value,'checksum':digest(encoded(value))}
+
+
+def registry_value(value,root,project_id):
+    if (not isinstance(value,dict) or set(value)!={'schema','repo_root','project_id','records','checksum'}
+            or value['schema']!=SCHEMA or value['repo_root']!=str(root) or value['project_id']!=project_id
+            or value['checksum']!=digest(encoded({k:v for k,v in value.items() if k!='checksum'}))
+            or not isinstance(value['records'],dict) or len(value['records'])>MAX_RECORDS
+            or len(encoded(value))>MAX_STORE):
+        raise ContractError('Known review inventory is changed/oversized; preserve it for recovery')
+    for key,record in value['records'].items():
+        if (not isinstance(record,dict) or set(record)!={'binding','cause','references','dependencies','judgment_sha256','proof_sha256','resolution'}):
+            raise ContractError('Known review evidence has an unknown format')
+        cause=record['cause']
         if (not isinstance(cause,dict) or set(cause)!={'sources','classification','reason','origin'}
                 or cause['classification'] not in {'contradiction','uncertain','withheld','uncertain-selection'}
                 or not isinstance(cause['sources'],list) or not 1<=len(cause['sources'])<=2
                 or len(set(cause['sources']))!=len(cause['sources'])
                 or any(not isinstance(k,str) or not re.fullmatch('[0-9a-f]{64}',k) for k in cause['sources'])
-                or path.stem!=cause_id(cause) or not isinstance(value['references'],dict)
-                or set(value['references'])!=set(cause['sources']) or not isinstance(value['dependencies'],dict)
+                or key!=cause_id(cause) or not isinstance(record['references'],dict)
+                or set(record['references'])!=set(cause['sources']) or not isinstance(record['dependencies'],dict)
                 or not isinstance(cause['reason'],str) or not cause['reason'].strip() or len(cause['reason'].encode())>4096
-                or any(not isinstance(value[k],str) or not re.fullmatch('[0-9a-f]{64}',value[k]) for k in ('judgment_sha256','proof_sha256'))
+                or any(not isinstance(record[k],str) or not re.fullmatch('[0-9a-f]{64}',record[k]) for k in ('judgment_sha256','proof_sha256'))
                 or not isinstance(cause['origin'],str) or not re.fullmatch('[0-9a-f]{64}',cause['origin'])):
-            raise ContractError('Known hold references are incomplete; no absence or resolution is inferred')
-        if value['judgment_sha256']!=skip_judgment:values.append(value)
-    return values
+            raise ContractError('Known hold references are incomplete; no resolution is inferred')
+        for reference in record['references'].values():
+            if (not isinstance(reference,dict) or not {'path','component','target_path','source_sha256_by_side'}.issubset(reference)
+                    or set(reference)-{'path','component','target_path','source_sha256_by_side','record'}):
+                raise ContractError('Known logical/source reference is incomplete')
+            if reference['path']!='MEMORY.md':bank_contract.path_value(reference['path'])
+            if reference.get('record') is not None:
+                from .records import reference as record_reference
+                record_reference(reference['record'])
+    return value
 
 
-def record(root,project_id,proof,references):
-    causes=proof.get('held_causes',[])
-    if not causes:return
-    target=directory(root);trust_paths.inspect(target)
-    target.mkdir(parents=True,exist_ok=True,mode=0o700);trust_paths.state(target)
-    binding=proof['judgment']['binding'];judgment_sha=digest(encoded(proof['judgment']))
-    for cause in causes:
-        path=target/(cause_id(cause)+'.json');trust_paths.record(path)
-        if path.exists():
-            # Existing first-detection provenance is immutable; a repeated turn
-            # cannot generate another full-bank proof copy for the same cause.
-            load(root,project_id)
-            continue
-        value={'schema':SCHEMA,'repo_root':str(Path(root).resolve()),'project_id':project_id,
-            'binding':{k:binding[k] for k in ('bank_root','base','authority_head','scope_context')},
-            'cause':cause,'references':{key:references[key] for key in cause['sources']},'dependencies':proof['judgment']['dependencies'],
-            'judgment_sha256':judgment_sha,'proof_sha256':digest(encoded(proof))}
-        value['checksum']=digest(encoded(value));raw=encoded(value)
-        if len(raw)>65536:raise ContractError('One complete hold evidence record exceeds 64KiB; preserve the original review')
-        storage.replace(path,raw,None)
+def trusted_read(path,maximum):
+    trust_paths.record(path)
+    return limits.read_bytes(path,maximum) if path.exists() else None
+
+
+def anchor_value(raw,root,project_id):
+    value=json_load(raw)
+    if (not isinstance(value,dict) or set(value)!={'schema','repo_root','project_id','checksum'}
+            or value['schema']!='agent-memory/known-holds-anchor-v1' or value['repo_root']!=str(root)
+            or value['project_id']!=project_id or value['checksum']!=digest(encoded({k:v for k,v in value.items() if k!='checksum'}))):
+        raise ContractError('Known hold history anchor changed; preserve it for explicit recovery')
+    return value
+
+
+def read_store(root,project_id,*,owner=None,allow_journal=False):
+    root,bank,directory,anchor=locations(root,project_id);trust_paths.state(directory)
+    lock=directory/'lock';journal=directory/'journal.json'
+    lock_raw=trusted_read(lock,4096)
+    if lock_raw is not None and lock_raw!=owner:raise ContractError('Known hold writer is active/stale; inspect recovery before current review')
+    if journal.exists() and not allow_journal:raise ContractError('Interrupted known-hold transaction; recover before review')
+    raw=trusted_read(directory/'registry.json',MAX_STORE)
+    backup=trusted_read(directory/'recovery.json',MAX_STORE)
+    anchored=trusted_read(anchor,4096)
+    if anchored is not None:anchor_value(anchored,root,project_id)
+    if raw is None:
+        if anchored is not None or backup is not None or journal.exists():
+            raise ContractError('Known review inventory is missing; restore its retained recovery evidence')
+        return seal({'schema':SCHEMA,'repo_root':str(root),'project_id':project_id,'records':{}}),None
+    value=registry_value(json_load(raw),root,project_id)
+    if anchored is None or backup!=raw:
+        raise ContractError('Known review inventory lacks its complete recovery anchor; recover without discarding records')
+    return value,digest(raw)
+
+
+def filtered_records(value,skip_judgment=None):
+    records=[]
+    for key in sorted(value['records']):
+        record=value['records'][key]
+        if record['judgment_sha256']==skip_judgment:continue
+        current=copy.deepcopy(record)
+        if current['resolution'] and current['resolution'].get('judgment_sha256')==skip_judgment:
+            current['resolution']=None
+        records.append(current)
+    return records
+
+
+def load(root,project_id,*,skip_judgment=None):
+    value,_=read_store(root,project_id)
+    return filtered_records(value,skip_judgment)
+
+
+def prepare_directory(directory):
+    for path in (directory.parent,directory):
+        trust_paths.inspect(path);path.mkdir(parents=True,exist_ok=True,mode=0o700);trust_paths.state(path)
+
+
+def commit_store(root,project_id,desired,observed_sha,directory,anchor):
+    # All count/encoded-size validation precedes any durable registry mutation.
+    registry_value(desired,root,project_id);raw=encoded(desired)
+    anchored=seal({'schema':'agent-memory/known-holds-anchor-v1','repo_root':str(root),'project_id':project_id})
+    journal=seal({'schema':'agent-memory/known-holds-journal-v1','repo_root':str(root),'project_id':project_id,
+                  'observed_sha256':observed_sha,'desired':desired,'desired_sha256':digest(raw)})
+    jraw=encoded(journal)
+    if len(jraw)>MAX_JOURNAL:raise ContractError('Complete known-hold recovery journal exceeds its finite budget')
+    target=directory/'journal.json'
+    if target.exists():raise ContractError('Known-hold recovery is pending; preserve the original journal')
+    storage.replace(target,jraw,None);writes.fault('holds-after-journal')
+    storage.replace(directory/'registry.json',raw,observed_sha);writes.fault('holds-after-registry')
+    backup=trusted_read(directory/'recovery.json',MAX_STORE)
+    storage.replace(directory/'recovery.json',raw,digest(backup))
+    previous=trusted_read(anchor,4096)
+    if previous is not None:anchor_value(previous,root,project_id)
+    else:storage.replace(anchor,encoded(anchored),None)
+    writes.fault('holds-before-journal-cleanup')
+    if trusted_read(target,MAX_JOURNAL)!=jraw or trusted_read(directory/'registry.json',MAX_STORE)!=raw or trusted_read(directory/'recovery.json',MAX_STORE)!=raw:
+        raise ContractError('Known-hold transaction changed; preserve its recovery journal')
+    target.unlink();flush_directory(directory)
+
+
+@contextmanager
+def bank_owner(root,operation_id,owned_lock):
+    _,bank=writes.bank_path(root)
+    if owned_lock is not None:
+        path=bank/'.agent-memory.lock'
+        if path.is_symlink() or limits.read_bytes(path,4096)!=owned_lock:
+            raise ContractError('Actual bank ownership is required for known-hold state changes')
+        yield owned_lock
+    else:
+        with storage.exclusive(bank/'.agent-memory.lock',operation_id,'semantic-review-holds') as owner:yield owner
+
+
+def record(root,project_id,proof,references,*,resolutions=None,owned_lock=None,verify=None,expected_inventory=None):
+    proof_raw=limits.private_bytes(proof)
+    causes=proof.get('held_causes',[]);resolutions=resolutions or {}
+    root,bank,directory,anchor=locations(root,project_id);prepare_directory(directory)
+    judgment_sha=digest(encoded(proof['judgment']));operation_id=str(uuid.UUID(hex=judgment_sha[:32],version=4))
+    with bank_owner(root,operation_id,owned_lock) as bank_token:
+        if verify is not None:verify(bank_token)
+        with storage.exclusive(directory/'lock',operation_id,'semantic-holds') as owner:
+            current,observed_sha=read_store(root,project_id,owner=owner)
+            if expected_inventory is not None and digest(encoded(filtered_records(current,judgment_sha)))!=expected_inventory:
+                raise ContractError('Known dispute inventory changed; repeat the actual current review')
+            records=copy.deepcopy(current['records'])
+            binding=proof['judgment']['binding']
+            for cause in causes:
+                key=cause_id(cause)
+                if key in records:continue
+                records[key]={'binding':{k:binding[k] for k in ('bank_root','base','authority_head','scope_context')},
+                    'cause':cause,'references':{key:references[key] for key in cause['sources']},
+                    'dependencies':proof['judgment']['dependencies'],'judgment_sha256':judgment_sha,
+                    'proof_sha256':digest(proof_raw),'resolution':None}
+            for key,value in resolutions.items():
+                if key not in records:raise ContractError('Resolution must retain its actual first-detection evidence')
+                records[key]['resolution']={**value,'judgment_sha256':judgment_sha,'proof_sha256':digest(proof_raw)}
+            desired=seal({'schema':SCHEMA,'repo_root':str(root),'project_id':project_id,'records':records})
+            registry_value(desired,root,project_id)
+            if desired!=current:commit_store(root,project_id,desired,observed_sha,directory,anchor)
+        if verify is not None:verify(bank_token)
+
+
+def recover(root,project_id):
+    root,bank,directory,anchor=locations(root,project_id);prepare_directory(directory)
+    for registry,lock,operations in ((bank/'MEMORY.md',bank/'.agent-memory.lock',{'semantic-review-holds'}),
+                                     (directory/'registry.json',directory/'lock',{'semantic-holds'})):
+        if lock.exists() or lock.is_symlink():
+            trusted_read(lock,4096)
+            preview=storage.recover(registry,lock,operations)
+            storage.recover(registry,lock,operations,preview)
+    operation_id=str(uuid.uuid4())
+    with bank_owner(root,operation_id,None) as bank_token:
+        from . import scope_binding
+        scope_binding.require(root,project_id,owned_lock=bank_token)
+        with storage.exclusive(directory/'lock',operation_id,'semantic-holds') as owner:
+            target=directory/'journal.json';jraw=trusted_read(target,MAX_JOURNAL)
+            if jraw is not None:
+                j=json_load(jraw)
+                if (not isinstance(j,dict) or set(j)!={'schema','repo_root','project_id','observed_sha256','desired','desired_sha256','checksum'}
+                        or j['schema']!='agent-memory/known-holds-journal-v1' or j['repo_root']!=str(root) or j['project_id']!=project_id
+                        or j['checksum']!=digest(encoded({k:v for k,v in j.items() if k!='checksum'}))):
+                    raise ContractError('Unknown hold journal; preserve it for explicit inspection')
+                desired=registry_value(j['desired'],root,project_id);raw=encoded(desired)
+                if digest(raw)!=j['desired_sha256']:raise ContractError('Changed hold recovery content')
+                current=trusted_read(directory/'registry.json',MAX_STORE)
+                if digest(current) not in {j['observed_sha256'],j['desired_sha256']}:raise ContractError('Later hold evidence is preserved; do not replay over it')
+                if current!=raw:storage.replace(directory/'registry.json',raw,digest(current))
+                backup=trusted_read(directory/'recovery.json',MAX_STORE);storage.replace(directory/'recovery.json',raw,digest(backup))
+                previous=trusted_read(anchor,4096)
+                if previous is not None:anchor_value(previous,root,project_id)
+                else:storage.replace(anchor,encoded(seal({'schema':'agent-memory/known-holds-anchor-v1','repo_root':str(root),'project_id':project_id})),None)
+                if trusted_read(target,MAX_JOURNAL)!=jraw:raise ContractError('Hold journal changed during recovery')
+                target.unlink();flush_directory(directory)
+            elif not (directory/'registry.json').exists():
+                backup=trusted_read(directory/'recovery.json',MAX_STORE);anchored=trusted_read(anchor,4096)
+                if backup is None or anchored is None:raise ContractError('Missing hold evidence cannot be treated as resolution; inspect canonical/source evidence')
+                anchor_value(anchored,root,project_id);registry_value(json_load(backup),root,project_id)
+                storage.replace(directory/'registry.json',backup,None)
+            read_store(root,project_id,owner=owner)
+    return {'schema':'agent-memory/known-holds-recovery-v1','verified':True,'canonical_writes_performed':False,
+            'private_state_writes_performed':True,'source_observation_current':False,'requires_fresh_review':True}

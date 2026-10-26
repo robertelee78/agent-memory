@@ -91,12 +91,18 @@ def cursor(root):
         return None, sha, 'unverified-preserved'
 
 
-def inspect(repo, base=None):
+def inspect(repo, base=None, *, version2=False):
     root, _ = writes.bank_path(repo)
     observed_context = retrieval.git_context(root)
     previous, _, state = cursor(root)
     chosen = base if base is not None else previous['authority_head'] if previous else None
-    value = semantic.inspect(root, chosen)
+    if version2:
+        from . import sharing_frontier
+        request=sharing_frontier.request_value(None)
+        request['base']=chosen
+        value=sharing_frontier.inspect(root,request)
+    else:
+        value = semantic.inspect(root, chosen)
     if (retrieval.git_context(root) != observed_context
             or value['binding']['local_head'] != observed_context.get('revision')):
         raise ContractError('Checkout changed during cursor/base inspection; inspect again')
@@ -224,7 +230,7 @@ def main(argv=None):
         command.add_argument('--output');command.add_argument('--v2',action='store_true')
     args = parser.parse_args(argv)
     try:
-        if args.operation == 'inspect': value = inspect(args.repo, args.base)
+        if args.operation == 'inspect': value = inspect(args.repo, args.base,version2=args.v2)
         elif args.operation == 'prepare': value = prepare(args.repo, read_input(args.input,version2=args.v2))
         else: value = apply(read_input(args.input,version2=args.v2))
         if args.output:

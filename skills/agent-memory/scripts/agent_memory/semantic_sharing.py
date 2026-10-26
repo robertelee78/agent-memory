@@ -395,15 +395,35 @@ def review(repo,judgment, *, owned_lock=None):
         from . import sharing_holds
         cause={'sources':sorted(keys),'classification':classification,'reason':reason,'origin':source_origin}
         causes.setdefault(sharing_holds.cause_id(cause),cause)
+    resolutions={}
     if version2:
-        for cause in inspection['known_causes']:
+        from . import sharing_hold_mapping as hold_mapping
+        proposed=judgment.get('resolutions',{})
+        if not isinstance(proposed,dict) or set(proposed)-{known['id'] for known in inspection['known_causes']}:
+            raise ContractError('Resolve only actual retained detected disputes')
+        qualified=hold_mapping.qualified_current(rows,values,root,observation['project_id'])
+        for known in inspection['known_causes']:
+            cause=known['cause']
+            if known['id'] in proposed:
+                resolutions[known['id']]=hold_mapping.validate_resolution(proposed[known['id']],known,rows,qualified)
+                involved=set(known['sources'])|set(resolutions[known['id']]['evidence'])
+                if any(key not in rows for key in involved) or any(
+                        decisions.get(tuple(sorted(pair)),{}).get('classification') in {None,'uncertain','contradiction'}
+                        for pair in itertools.combinations(sorted(involved),2)):
+                    raise ContractError('Resolution must read and review all actual claims and stronger evidence without unresolved interactions')
+                continue
+            if known['resolved']:continue
             remember(cause['sources'],cause['classification'],cause['reason'],cause['origin'])
-            for key in cause['sources']:
+            for key in known['sources']:
                 row=rows[key];held.add((row['path'],row['component'],row['target_path']));blocked.add(row['path'])
-            claims=[rows[key] for key in cause['sources']]
+            for key in known['missing_sources']:
+                reference=known['references'][key]
+                held.add((reference['path'],reference['component'],reference['target_path']));blocked.add(reference['path'])
+            claims=[rows[key] for key in known['sources']]
             others={row['metadata']['origin']['developer-id'] for row in claims if row['metadata'] is not None}-{actor}
             peer.update(others)
             conflicts.append({'classification':cause['classification'],'claims':claims,'reason':cause['reason'],
+                              'missing_source_references':[known['references'][key] for key in known['missing_sources']],
                               'other_developer_ids':sorted(others),'detecting_developer_id':actor,'retained_prior_review':True})
         unresolved=set(inspection['withheld_sources'])
         unresolved.update(k for k,s in inspection['selections'].items() if s.get('uncertain'))
@@ -502,10 +522,20 @@ def review(repo,judgment, *, owned_lock=None):
            'blocked_components':[{'path':p,'component':c,'target_path':t} for p,c,t in sorted(held,key=lambda x:(x[0],x[1],x[2] or ''))]}
     if version2:
         proof['held_causes']=[causes[key] for key in sorted(causes)]
-        from . import sharing_holds
-        references={key:{name:row[name] for name in ('path','component','target_path','source_sha256_by_side')} for key,row in rows.items()}
-        sharing_holds.record(root,observation['project_id'],proof,references)
+        proof['known_resolutions']=resolutions
     if len(encoded(proof))>(limits.MAX_PRIVATE if version2 else LIMIT):raise ContractError('Complete semantic proof exceeds bound; no truncation')
+    if version2:
+        from . import sharing_holds
+        references={}
+        for key,row in rows.items():
+            reference={name:row[name] for name in ('path','component','target_path','source_sha256_by_side')}
+            if row.get('metadata') is not None:
+                reference['record']={name:row['metadata'][name] for name in ('id','version')}
+            references[key]=reference
+        for known in inspection['known_causes']:references.update(known['references'])
+        sharing_holds.record(root,observation['project_id'],proof,references,resolutions=resolutions,owned_lock=owned_lock,
+            verify=lambda owner:final_sources(root,observation,binding,owned_lock=owner),
+            expected_inventory=inspection['known_inventory_sha256'])
     return {'schema':'agent-memory/semantic-sharing-result-v1','operation':'review','proof':proof,
             'proof_sha256':digest(encoded(proof)),'audit':audit,'audit_writes_performed':True,'refresh_files':refresh,'publish_files':publish,
             'conflicts':conflicts,'blocked_paths':sorted(blocked),
@@ -518,7 +548,7 @@ def review(repo,judgment, *, owned_lock=None):
 
 def check(repo,proof, *, owned_lock=None):
     fields={'schema','judgment','refresh_hashes','publish_hashes','blocked_paths','blocked_components'}
-    if isinstance(proof,dict) and proof.get('schema')=='agent-memory/semantic-sharing-proof-v2':fields.add('held_causes')
+    if isinstance(proof,dict) and proof.get('schema')=='agent-memory/semantic-sharing-proof-v2':fields.update({'held_causes','known_resolutions'})
     if not isinstance(proof,dict) or set(proof)!=fields or proof['schema'] not in {'agent-memory/semantic-sharing-proof-v1','agent-memory/semantic-sharing-proof-v2'}:
         raise ContractError('Use the complete actual semantic proof')
     value=review(repo,proof['judgment'],owned_lock=owned_lock)
@@ -543,21 +573,27 @@ def main(argv=None):
     for name in ('inspect','review','check'):
         p=sub.add_parser(name);p.add_argument('--repo',required=True)
         if name=='inspect':p.add_argument('--base')
+        if name=='check':p.add_argument('--v2',action='store_true')
         else:p.add_argument('--input',required=True)
         p.add_argument('--output')
     p=sub.add_parser('inspect-v2');p.add_argument('--repo',required=True);p.add_argument('--input');p.add_argument('--output',required=True)
     p=sub.add_parser('page-v2');p.add_argument('--repo',required=True);p.add_argument('--input',required=True);p.add_argument('--page',type=int,required=True)
     p=sub.add_parser('review-v2');p.add_argument('--repo',required=True);p.add_argument('--input',required=True);p.add_argument('--output',required=True)
+    p=sub.add_parser('recover-holds');p.add_argument('--repo',required=True);p.add_argument('--project-id',required=True)
     args=parser.parse_args(argv)
     try:
-        if args.command in {'inspect-v2','page-v2','review-v2'}:
+        if args.command=='recover-holds':
+            from . import sharing_holds
+            # Recovery operates only on this explicitly selected project, never on authority refs or canonical memory.
+            value=sharing_holds.recover(args.repo,args.project_id)
+        elif args.command in {'inspect-v2','page-v2','review-v2'}:
             from . import sharing_frontier as frontier
             if args.command=='inspect-v2':value=frontier.inspect(args.repo,read_input(args.input,version2=True) if args.input else None)
             elif args.command=='page-v2':value=frontier.page(args.repo,read_input(args.input,version2=True),args.page)
             else:value=review(args.repo,read_input(args.input,version2=True))
         elif args.command=='inspect':value=inspect(args.repo,args.base)
         elif args.command=='review':value=review(args.repo,read_input(args.input))
-        else:value=check(args.repo,read_input(args.input))
+        else:value=check(args.repo,read_input(args.input,version2=args.v2))
         if getattr(args,'output',None):value=limits.write_private(args.output,value,args.repo)
         print(json.dumps(value,indent=2));return 0
     except (ContractError,OSError,ValueError,TypeError,KeyError,AttributeError,UnicodeError,RecursionError):

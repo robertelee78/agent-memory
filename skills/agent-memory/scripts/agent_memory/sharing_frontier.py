@@ -200,27 +200,32 @@ def build(repo,request=None,*,owned_lock=None,skip_judgment=None):
     root,observation,binding,values,checked=semantic.snapshots(repo,request['base'],owned_lock=owned_lock)
     rows=components(values,checked)
     from . import sharing_holds
-    current={key for key,row in rows.items() if set(row['sides'])&{'local','landed'}}
+    from . import sharing_hold_mapping as hold_mapping
+    known_records=sharing_holds.load(root,observation['project_id'],skip_judgment=skip_judgment)
     known=[]
     actual_paths={r['path'] for r in rows.values()}
-    for record in sharing_holds.load(root,observation['project_id'],skip_judgment=skip_judgment):
-        cause=record['cause']
-        if not set(cause['sources']).issubset(current):continue
-        semantic.safe_text(cause['reason']);known.append(cause)
-        request['audit_paths']=sorted(set(request['audit_paths'])|{rows[key]['path'] for key in cause['sources']})
+    qualified=hold_mapping.qualified_current(rows,values,root,observation['project_id'])
+    logical_index=hold_mapping.source_index(rows)
+    for record in known_records:
+        cause=record['cause'];semantic.safe_text(cause['reason'])
+        descriptor=hold_mapping.describe(record,rows,index=logical_index)
+        descriptor['resolved']=hold_mapping.cached(descriptor,rows,qualified)
+        known.append(descriptor)
+        # A vanished exact hash is a changed/unknown claim, never a resolution.
+        request['audit_paths']=sorted(set(request['audit_paths'])|{rows[key]['path'] for key in descriptor['sources']})
         for path,required in record['dependencies'].items():
             if path in actual_paths and all(v in actual_paths for v in required):
                 request['dependencies'][path]=sorted(set(request['dependencies'].get(path,[]))|set(required))
     if any(path not in set().union(*(set(f) for f in values.values())) for path in request['audit_paths']):raise ContractError('Audit paths must name actual observed source')
     changed=changed_components(rows,set(request['audit_paths']))
     chosen,selections,edges,pending=selected(rows,changed,request)
-    for cause in known:
-        if len(cause['sources'])==2:
-            pair=sorted(cause['sources'])
-            if pair not in edges:
-                if len(edges)>=MAX_EDGES:raise ContractError('Complete known-dispute frontier exceeds its finite interaction budget')
-                edges.append(pair)
-    edges.sort()
+    all_edges={tuple(pair) for pair in edges}
+    for descriptor in known:
+        evidence=(descriptor['resolution'] or {}).get('evidence',[])
+        keys=set(descriptor['sources'])|{key for key in evidence if key in rows}
+        chosen.update({key:rows[key] for key in sorted(keys)})
+        add_edges(all_edges,itertools.combinations(sorted(keys),2))
+    edges=[list(pair) for pair in sorted(all_edges)]
     deleted={entry['id'] for side in ('local','landed') for entry in checked[side]['entries'] if entry['format']=='tombstone'}
     for key,row in list(chosen.items()):
         if row['metadata'] and row['metadata']['id'] in deleted:
@@ -236,7 +241,7 @@ def build(repo,request=None,*,owned_lock=None,skip_judgment=None):
     pages=page_payloads(binding,chosen,edges,known)
     manifest={'schema':INSPECTION,'request':request,'binding':binding,'inventory_digests':{side:digest(encoded(hashes)) for side,hashes in binding['source_hashes'].items()},
         'changed':sorted(changed),'sources':list(chosen.values()),'selections':selections,'required_pairs':edges,'pending_selections':pending,'withheld_sources':hidden,
-        'known_causes':known,
+        'known_causes':known,'known_inventory_sha256':digest(encoded(known_records)),
         'pages':[{'index':page['index'],'sha256':digest(encoded(page)),'bytes':len(encoded(page)),'source_keys':[item['source']['key'] for item in page['items'] if 'source' in item],'edges':[item['edge'] for item in page['items'] if 'edge' in item]} for page in pages],
         'semantic_completeness_verified':False,'publication_verified':False}
     manifest['manifest_sha256']=digest(limits.private_bytes(manifest))
@@ -256,7 +261,8 @@ def page(repo,manifest,index,*,owned_lock=None):
 
 
 def prepare_review(repo,judgment,*,owned_lock=None):
-    if not isinstance(judgment,dict) or set(judgment)!={'schema','request','binding','manifest_sha256','pages','pairs','dependencies','consolidations','rationale','recorded_at'} or judgment['schema']!=JUDGMENT:
+    fields={'schema','request','binding','manifest_sha256','pages','pairs','dependencies','consolidations','rationale','recorded_at'}
+    if not isinstance(judgment,dict) or not fields.issubset(judgment) or set(judgment)-fields-{'resolutions'} or judgment['schema']!=JUDGMENT:
         raise ContractError('Use the complete explicit v2 source-bound judgment')
     snapshot,rows,manifest,_=build(repo,judgment['request'],owned_lock=owned_lock,skip_judgment=digest(encoded(judgment)))
     if judgment['binding']!=manifest['binding'] or judgment['manifest_sha256']!=manifest['manifest_sha256'] or manifest['pending_selections']:

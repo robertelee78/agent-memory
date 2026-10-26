@@ -124,6 +124,7 @@
     {"name": "publication-worktree", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_publication_worktree.py"},
     {"name": "publication-admission", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_publication_admission.py"},
     {"name": "memory-refresh", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_memory_refresh.py"},
+    {"name": "refresh-v2", "layer": "concurrency", "scope": "v0.0.3", "path": "tests/contracts/test_refresh_v2.py"},
     {"name": "refresh-pending", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_refresh_pending.py"},
     {"name": "refresh-invalidation", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_refresh_invalidation.py"},
     {"name": "refresh-cursor", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_refresh_cursor.py"},
