@@ -1,0 +1,11 @@
+test_all_six_tracked_contexts_retain_git_evidence_without_claiming_uncommitted_bytes_are_shared (contract_suite.CurrentBankContract.test_all_six_tracked_contexts_retain_git_evidence_without_claiming_uncommitted_bytes_are_shared) ... ok
+test_busy_or_interrupted_bank_is_not_repaired_by_state_loss (contract_suite.CurrentBankContract.test_busy_or_interrupted_bank_is_not_repaired_by_state_loss) ... ok
+test_git_inspection_ignores_ambient_repo_redirection_and_does_not_execute_fsmonitor_or_write_trace (contract_suite.CurrentBankContract.test_git_inspection_ignores_ambient_repo_redirection_and_does_not_execute_fsmonitor_or_write_trace) ... ok
+test_git_root_spelling_preserves_trailing_spaces (contract_suite.CurrentBankContract.test_git_root_spelling_preserves_trailing_spaces) ... ok
+test_minimal_untracked_bank_survives_poisoned_then_removed_application_state (contract_suite.CurrentBankContract.test_minimal_untracked_bank_survives_poisoned_then_removed_application_state) ... ok
+test_missing_git_still_reads_the_copied_portable_markdown_bank (contract_suite.CurrentBankContract.test_missing_git_still_reads_the_copied_portable_markdown_bank) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 3.504s
+
+OK

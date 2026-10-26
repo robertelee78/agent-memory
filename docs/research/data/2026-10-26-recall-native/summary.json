@@ -1,0 +1,770 @@
+{
+  "schema": "agent-memory/recall-native-followup-v1",
+  "runtime_commit": "785ae413146103902f4742e3a59fd3aad950a1cf",
+  "runtime_artifact_digest": "686092757a8d69732db33c2c34baac42d051b49e4261393dc0f173afb33feca9",
+  "semantic_quality_runtime_commit": "6a983d05a94ef9431a7ab24ad7f55ef469a0d660",
+  "earlier_semantic_failures_preserved": true,
+  "operator_scope": {
+    "exclude_ai_thinking_time": true,
+    "include_complete_native_navigation_and_qualified_read": true,
+    "v003_semantic_recall": "portable skill plus CLI under Claude, Codex, OpenCode and custom harnesses",
+    "standalone_terminal_semantic_followup": "https://github.com/robertelee78/agent-memory/issues/200"
+  },
+  "curves": [
+    {
+      "distinct_lessons": 1000,
+      "fixture": {
+        "distinct_lessons": 1000,
+        "record_versions": 1001,
+        "canonical_files": 1020,
+        "canonical_bytes": 1185137,
+        "fixture_sha256": "5631c1ce3e80f1983e03aee568c0efd8fb09cf51b42356b6c24ddf3f2973ba42",
+        "labels_sha256": "14c173c70dde0ba0ea9feea1e70f3d4ad6d69f178adcb93bbe97a68f1f255edf",
+        "body_utf8_bytes": {
+          "min": 53,
+          "median": 173,
+          "p95": 206,
+          "max": 1733
+        }
+      },
+      "baseline_median_seconds": 1.2506928954971954,
+      "candidate_median_seconds": 0.7565025624935515,
+      "reduction_fraction": 0.3951332375700315,
+      "warm_whole_navigation_seconds": [
+        1.7448188329581171,
+        1.8700597089482471
+      ],
+      "cold_rebuild_whole_navigation_seconds": 2.2026047919644043,
+      "quality_cases": 24,
+      "relevance_hits": 16,
+      "known_literal_miss": 1,
+      "unexpected": 0,
+      "safety_contract_failures": 0
+    },
+    {
+      "distinct_lessons": 10000,
+      "fixture": {
+        "distinct_lessons": 10000,
+        "record_versions": 10001,
+        "canonical_files": 10163,
+        "canonical_bytes": 11866170,
+        "fixture_sha256": "77e88b89495bf3a08998aff7cc5a7d8b5a85e92d01e5fd7ed67cd067d8e086f7",
+        "labels_sha256": "14c173c70dde0ba0ea9feea1e70f3d4ad6d69f178adcb93bbe97a68f1f255edf",
+        "body_utf8_bytes": {
+          "min": 53,
+          "median": 176,
+          "p95": 208,
+          "max": 1736
+        }
+      },
+      "baseline_median_seconds": 7.376232583483215,
+      "candidate_median_seconds": 3.4548081459943205,
+      "reduction_fraction": 0.5316297165398103,
+      "warm_whole_navigation_seconds": [
+        2.469890333013609,
+        2.3464657079894096
+      ],
+      "cold_rebuild_whole_navigation_seconds": 5.15987633401528,
+      "quality_cases": 24,
+      "relevance_hits": 16,
+      "known_literal_miss": 1,
+      "unexpected": 0,
+      "safety_contract_failures": 0
+    },
+    {
+      "distinct_lessons": 50000,
+      "fixture": {
+        "distinct_lessons": 50000,
+        "record_versions": 50001,
+        "canonical_files": 50798,
+        "canonical_bytes": 59417354,
+        "fixture_sha256": "450e5a55b43dd3424952090f53ed8c178dff2d51eadddba5e4a4fccd40b7d29a",
+        "labels_sha256": "14c173c70dde0ba0ea9feea1e70f3d4ad6d69f178adcb93bbe97a68f1f255edf",
+        "body_utf8_bytes": {
+          "min": 53,
+          "median": 177,
+          "p95": 210,
+          "max": 1738
+        }
+      },
+      "baseline_median_seconds": 35.78859941649716,
+      "candidate_median_seconds": 16.228329208039213,
+      "reduction_fraction": 0.5465503128753739,
+      "warm_whole_navigation_seconds": [
+        4.835990582942031,
+        4.868993542040698
+      ],
+      "cold_rebuild_whole_navigation_seconds": 18.85899720794987,
+      "quality_cases": 24,
+      "relevance_hits": 16,
+      "known_literal_miss": 1,
+      "unexpected": 0,
+      "safety_contract_failures": 0
+    }
+  ],
+  "native_method_counts": {
+    "macos": 70,
+    "linux": 70
+  },
+  "cold_filesystem_cache_claimed": false,
+  "every_possible_navigation_under_five_seconds_claimed": false,
+  "native_client_semantic_execution_claimed": false,
+  "whole_story_acceptance_claimed": false,
+  "artifact_bindings": [
+    {
+      "path": "literal-quality/observations.json",
+      "sha256": "419fb171e531504a3f68cba68ac7edd87ebed40df6a545a2c1703140af805700",
+      "original_retained_path": "/tmp/agent-memory-v003/fixed-quality-785ae41/observations.json"
+    },
+    {
+      "path": "literal-quality/source-bindings.json",
+      "sha256": "7956c35674c0bbac2b74fa70098e75adf2660ed210eb33b9f2b519dc7c927242",
+      "original_retained_path": "/tmp/agent-memory-v003/fixed-quality-785ae41/source-bindings.json"
+    },
+    {
+      "path": "literal-quality/1000-labels.json",
+      "sha256": "cb946e645532aaf4ee24fec4b77b20e760b9bc6b95c706771626af6ff29dd254",
+      "original_retained_path": "/tmp/agent-memory-v003/fixed-quality-785ae41/1000-labels.json"
+    },
+    {
+      "path": "literal-quality/10000-labels.json",
+      "sha256": "edbe3fa1059e79b5ec806b2ea1f807057aebc2cf8475cbcd98009dd5ca2644f0",
+      "original_retained_path": "/tmp/agent-memory-v003/fixed-quality-785ae41/10000-labels.json"
+    },
+    {
+      "path": "literal-quality/50000-labels.json",
+      "sha256": "fce47b868f320328636806089bf4949baab2ab82a4444d92b32d411a701cc949",
+      "original_retained_path": "/tmp/agent-memory-v003/fixed-quality-785ae41/50000-labels.json"
+    },
+    {
+      "path": "literal-timing/observations.json",
+      "sha256": "2e7f7f9bb17ea08c8b6c865cf9aa649c6c401692855323ce222e2cbfd079b546",
+      "original_retained_path": "/tmp/agent-memory-v003/fixed-timing-785ae41/observations.json"
+    },
+    {
+      "path": "literal-timing/source-bindings.json",
+      "sha256": "7956c35674c0bbac2b74fa70098e75adf2660ed210eb33b9f2b519dc7c927242",
+      "original_retained_path": "/tmp/agent-memory-v003/fixed-timing-785ae41/source-bindings.json"
+    },
+    {
+      "path": "literal-timing/1000-labels.json",
+      "sha256": "cb946e645532aaf4ee24fec4b77b20e760b9bc6b95c706771626af6ff29dd254",
+      "original_retained_path": "/tmp/agent-memory-v003/fixed-timing-785ae41/1000-labels.json"
+    },
+    {
+      "path": "literal-timing/10000-labels.json",
+      "sha256": "edbe3fa1059e79b5ec806b2ea1f807057aebc2cf8475cbcd98009dd5ca2644f0",
+      "original_retained_path": "/tmp/agent-memory-v003/fixed-timing-785ae41/10000-labels.json"
+    },
+    {
+      "path": "literal-timing/50000-labels.json",
+      "sha256": "fce47b868f320328636806089bf4949baab2ab82a4444d92b32d411a701cc949",
+      "original_retained_path": "/tmp/agent-memory-v003/fixed-timing-785ae41/50000-labels.json"
+    },
+    {
+      "path": "navigation-1000/1.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-1000/1.stderr"
+    },
+    {
+      "path": "navigation-1000/1.stdout",
+      "sha256": "cc62c02a0fb0b0cf3a9be85c933636f33bc980173bd908fa332b291b0de20fc7",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-1000/1.stdout"
+    },
+    {
+      "path": "navigation-1000/10.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-1000/10.stderr"
+    },
+    {
+      "path": "navigation-1000/10.stdout",
+      "sha256": "29868987ae48c7f91ec452e7b13c32acbf0f0c83bc8a0a71ae1f327b9f4fe318",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-1000/10.stdout"
+    },
+    {
+      "path": "navigation-1000/11.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-1000/11.stderr"
+    },
+    {
+      "path": "navigation-1000/11.stdout",
+      "sha256": "52c362b92f2f84280eb7dff32b25d6bfc054cbb5dcc1ab168e8ac012900edf82",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-1000/11.stdout"
+    },
+    {
+      "path": "navigation-1000/12.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-1000/12.stderr"
+    },
+    {
+      "path": "navigation-1000/12.stdout",
+      "sha256": "251a50853f53f8d32a1aac3aefc9cf5504ad49c819019e8743ee228d3604bbb6",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-1000/12.stdout"
+    },
+    {
+      "path": "navigation-1000/2.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-1000/2.stderr"
+    },
+    {
+      "path": "navigation-1000/2.stdout",
+      "sha256": "29868987ae48c7f91ec452e7b13c32acbf0f0c83bc8a0a71ae1f327b9f4fe318",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-1000/2.stdout"
+    },
+    {
+      "path": "navigation-1000/3.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-1000/3.stderr"
+    },
+    {
+      "path": "navigation-1000/3.stdout",
+      "sha256": "52c362b92f2f84280eb7dff32b25d6bfc054cbb5dcc1ab168e8ac012900edf82",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-1000/3.stdout"
+    },
+    {
+      "path": "navigation-1000/4.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-1000/4.stderr"
+    },
+    {
+      "path": "navigation-1000/4.stdout",
+      "sha256": "8286075c07cd05c25467d11b0cd2a1634bf7464f189232dc03ba780dc032c1bb",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-1000/4.stdout"
+    },
+    {
+      "path": "navigation-1000/5.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-1000/5.stderr"
+    },
+    {
+      "path": "navigation-1000/5.stdout",
+      "sha256": "6aca0c55608906e22900c4aa3646a24e74ea40a8d92d42b5bd78f2f0eb593a8e",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-1000/5.stdout"
+    },
+    {
+      "path": "navigation-1000/6.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-1000/6.stderr"
+    },
+    {
+      "path": "navigation-1000/6.stdout",
+      "sha256": "29868987ae48c7f91ec452e7b13c32acbf0f0c83bc8a0a71ae1f327b9f4fe318",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-1000/6.stdout"
+    },
+    {
+      "path": "navigation-1000/7.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-1000/7.stderr"
+    },
+    {
+      "path": "navigation-1000/7.stdout",
+      "sha256": "52c362b92f2f84280eb7dff32b25d6bfc054cbb5dcc1ab168e8ac012900edf82",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-1000/7.stdout"
+    },
+    {
+      "path": "navigation-1000/8.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-1000/8.stderr"
+    },
+    {
+      "path": "navigation-1000/8.stdout",
+      "sha256": "b5b167151aa05ba28769e7f30c8c3fce3ba84e3f20b9aef035523464f0efce26",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-1000/8.stdout"
+    },
+    {
+      "path": "navigation-1000/9.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-1000/9.stderr"
+    },
+    {
+      "path": "navigation-1000/9.stdout",
+      "sha256": "62f48d2922e72aac55ffcdbb1ffefd0164bbbd4ea540967a28e4bc5cf4d16d76",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-1000/9.stdout"
+    },
+    {
+      "path": "navigation-1000/commands.json",
+      "sha256": "49727fc5d385a4f922b3f868a97a39a6651ca912f8ff7883db67f4f8ff53bc97",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-1000/commands.json"
+    },
+    {
+      "path": "navigation-1000/observations.json",
+      "sha256": "04416cf6a05cfee143d7aaaa0602cee36e47380853cc41bba8743e5b97376cb5",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-1000/observations.json"
+    },
+    {
+      "path": "navigation-1000/result.json",
+      "sha256": "fd07dded8dcead91c5335ea0f0716075a484a0be5a94483dc2ccfa47502dbdbb",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-1000/result.json"
+    },
+    {
+      "path": "navigation-1000/source-after.json",
+      "sha256": "f476d94e0ac8a001afa614e3904544b1a4eacf6efe4c47777f3d76e12d8bf858",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-1000/source-after.json"
+    },
+    {
+      "path": "navigation-1000/source-before.json",
+      "sha256": "f476d94e0ac8a001afa614e3904544b1a4eacf6efe4c47777f3d76e12d8bf858",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-1000/source-before.json"
+    },
+    {
+      "path": "navigation-10000/1.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-10000/1.stderr"
+    },
+    {
+      "path": "navigation-10000/1.stdout",
+      "sha256": "14de3bf28cdcee65d7d99d7e53f6af4cb6fefd440eb59ab969aec3a1750a7eae",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-10000/1.stdout"
+    },
+    {
+      "path": "navigation-10000/10.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-10000/10.stderr"
+    },
+    {
+      "path": "navigation-10000/10.stdout",
+      "sha256": "3ca200b539a721ef2ec457e9c9e75a6e56be370efb4d10ec372b53d35e7607a4",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-10000/10.stdout"
+    },
+    {
+      "path": "navigation-10000/11.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-10000/11.stderr"
+    },
+    {
+      "path": "navigation-10000/11.stdout",
+      "sha256": "841544712e39c2e065762ad0b6a207a481c36f0f56a64cbd98420cb9d545fe3a",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-10000/11.stdout"
+    },
+    {
+      "path": "navigation-10000/12.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-10000/12.stderr"
+    },
+    {
+      "path": "navigation-10000/12.stdout",
+      "sha256": "7194250f5f0e32d92ff83ddfc20e83ad4bfda82e2a5b8f0a1e300707c653806c",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-10000/12.stdout"
+    },
+    {
+      "path": "navigation-10000/2.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-10000/2.stderr"
+    },
+    {
+      "path": "navigation-10000/2.stdout",
+      "sha256": "3ca200b539a721ef2ec457e9c9e75a6e56be370efb4d10ec372b53d35e7607a4",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-10000/2.stdout"
+    },
+    {
+      "path": "navigation-10000/3.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-10000/3.stderr"
+    },
+    {
+      "path": "navigation-10000/3.stdout",
+      "sha256": "841544712e39c2e065762ad0b6a207a481c36f0f56a64cbd98420cb9d545fe3a",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-10000/3.stdout"
+    },
+    {
+      "path": "navigation-10000/4.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-10000/4.stderr"
+    },
+    {
+      "path": "navigation-10000/4.stdout",
+      "sha256": "e76c4de8e5fae94cd8391f0524d903957180876ce7de7a6b158a93273ac16084",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-10000/4.stdout"
+    },
+    {
+      "path": "navigation-10000/5.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-10000/5.stderr"
+    },
+    {
+      "path": "navigation-10000/5.stdout",
+      "sha256": "9b7a71bfef377a716779ad46a6131cd2f8c4c269501525c8a6f516395f3565d7",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-10000/5.stdout"
+    },
+    {
+      "path": "navigation-10000/6.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-10000/6.stderr"
+    },
+    {
+      "path": "navigation-10000/6.stdout",
+      "sha256": "3ca200b539a721ef2ec457e9c9e75a6e56be370efb4d10ec372b53d35e7607a4",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-10000/6.stdout"
+    },
+    {
+      "path": "navigation-10000/7.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-10000/7.stderr"
+    },
+    {
+      "path": "navigation-10000/7.stdout",
+      "sha256": "841544712e39c2e065762ad0b6a207a481c36f0f56a64cbd98420cb9d545fe3a",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-10000/7.stdout"
+    },
+    {
+      "path": "navigation-10000/8.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-10000/8.stderr"
+    },
+    {
+      "path": "navigation-10000/8.stdout",
+      "sha256": "8022c085528a3bfc8038935605cdbec4dc2927e70b0207654c0cadd2d22e5bae",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-10000/8.stdout"
+    },
+    {
+      "path": "navigation-10000/9.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-10000/9.stderr"
+    },
+    {
+      "path": "navigation-10000/9.stdout",
+      "sha256": "0077b2664a94d22021809e4846d1c931691234bbed4fd94ad861fbc4452c49cb",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-10000/9.stdout"
+    },
+    {
+      "path": "navigation-10000/commands.json",
+      "sha256": "1ba643b717f85e05fda4720f8725905aad4655eb55c6a944dfa161d67dd75db7",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-10000/commands.json"
+    },
+    {
+      "path": "navigation-10000/observations.json",
+      "sha256": "16c29a7cd97a5b1f1c57417b9a0345471ce3f199ed919e370ca448b25ba89833",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-10000/observations.json"
+    },
+    {
+      "path": "navigation-10000/result.json",
+      "sha256": "71ec47ec785f67b9cb7b67c1a42032c3a8ce955b5e87e3f55a46e9a7c7ce0aca",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-10000/result.json"
+    },
+    {
+      "path": "navigation-10000/source-after.json",
+      "sha256": "f476d94e0ac8a001afa614e3904544b1a4eacf6efe4c47777f3d76e12d8bf858",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-10000/source-after.json"
+    },
+    {
+      "path": "navigation-10000/source-before.json",
+      "sha256": "f476d94e0ac8a001afa614e3904544b1a4eacf6efe4c47777f3d76e12d8bf858",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-10000/source-before.json"
+    },
+    {
+      "path": "navigation-50000/1.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-50000/1.stderr"
+    },
+    {
+      "path": "navigation-50000/1.stdout",
+      "sha256": "3d0f028018a735b58f39d616277510c8afd1ab930c34b88b6e181483469e6d25",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-50000/1.stdout"
+    },
+    {
+      "path": "navigation-50000/10.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-50000/10.stderr"
+    },
+    {
+      "path": "navigation-50000/10.stdout",
+      "sha256": "e0e72895fab7e3406a971183c6351ff23213fe3bd96e1b93454d63571aced018",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-50000/10.stdout"
+    },
+    {
+      "path": "navigation-50000/11.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-50000/11.stderr"
+    },
+    {
+      "path": "navigation-50000/11.stdout",
+      "sha256": "b82677669a6b7b9999ca0156ad3bd551f65f384b63a278e824e753fd99be71a2",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-50000/11.stdout"
+    },
+    {
+      "path": "navigation-50000/12.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-50000/12.stderr"
+    },
+    {
+      "path": "navigation-50000/12.stdout",
+      "sha256": "2354dfc83afff97d523d41ce5d0bd8ef0b2b740d057680a2b79e5300ecbbdcc5",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-50000/12.stdout"
+    },
+    {
+      "path": "navigation-50000/2.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-50000/2.stderr"
+    },
+    {
+      "path": "navigation-50000/2.stdout",
+      "sha256": "e0e72895fab7e3406a971183c6351ff23213fe3bd96e1b93454d63571aced018",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-50000/2.stdout"
+    },
+    {
+      "path": "navigation-50000/3.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-50000/3.stderr"
+    },
+    {
+      "path": "navigation-50000/3.stdout",
+      "sha256": "b82677669a6b7b9999ca0156ad3bd551f65f384b63a278e824e753fd99be71a2",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-50000/3.stdout"
+    },
+    {
+      "path": "navigation-50000/4.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-50000/4.stderr"
+    },
+    {
+      "path": "navigation-50000/4.stdout",
+      "sha256": "2da6a61dd15bda668f83db417e7fc376e8397739d87c467ea37da8e47c1dee4b",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-50000/4.stdout"
+    },
+    {
+      "path": "navigation-50000/5.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-50000/5.stderr"
+    },
+    {
+      "path": "navigation-50000/5.stdout",
+      "sha256": "e78ad43f02e5ebb0a6ff386054ebdda823f16e8163bcb6d9d6beb27ca7b331dd",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-50000/5.stdout"
+    },
+    {
+      "path": "navigation-50000/6.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-50000/6.stderr"
+    },
+    {
+      "path": "navigation-50000/6.stdout",
+      "sha256": "e0e72895fab7e3406a971183c6351ff23213fe3bd96e1b93454d63571aced018",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-50000/6.stdout"
+    },
+    {
+      "path": "navigation-50000/7.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-50000/7.stderr"
+    },
+    {
+      "path": "navigation-50000/7.stdout",
+      "sha256": "b82677669a6b7b9999ca0156ad3bd551f65f384b63a278e824e753fd99be71a2",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-50000/7.stdout"
+    },
+    {
+      "path": "navigation-50000/8.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-50000/8.stderr"
+    },
+    {
+      "path": "navigation-50000/8.stdout",
+      "sha256": "1a2f5392f19b9b022e8db5b46c1cfc6d6987d1322b477f17bf039492a8097826",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-50000/8.stdout"
+    },
+    {
+      "path": "navigation-50000/9.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-50000/9.stderr"
+    },
+    {
+      "path": "navigation-50000/9.stdout",
+      "sha256": "8fecfb1b2c1b5eccd7ea328e21ad2ca238a9d000b9eeb7d0a0fe3ad3f2db8a08",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-50000/9.stdout"
+    },
+    {
+      "path": "navigation-50000/commands.json",
+      "sha256": "2bab8b5cda111d65b8a05e5391c0822edd735fbcd34a8b8ca9d64b6b9bf25136",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-50000/commands.json"
+    },
+    {
+      "path": "navigation-50000/observations.json",
+      "sha256": "d10efcf1c2d59afc5cb90eec0798bbad2b0037fa4d7ef284c8bd2bf0e5460483",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-50000/observations.json"
+    },
+    {
+      "path": "navigation-50000/result.json",
+      "sha256": "e4a9cf1d99ea2de2702e29c207e42337906a158caf52d1478bede49bf3bd1e39",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-50000/result.json"
+    },
+    {
+      "path": "navigation-50000/source-after.json",
+      "sha256": "f476d94e0ac8a001afa614e3904544b1a4eacf6efe4c47777f3d76e12d8bf858",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-50000/source-after.json"
+    },
+    {
+      "path": "navigation-50000/source-before.json",
+      "sha256": "f476d94e0ac8a001afa614e3904544b1a4eacf6efe4c47777f3d76e12d8bf858",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-cost-50000/source-before.json"
+    },
+    {
+      "path": "native-macos/actionable-setup-diagnostics.stderr",
+      "sha256": "92db690e75ae7fbf279e30b27c40596943b9dcbbb6c8dc74e535dcf116dd6156",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-v2/macos/actionable-setup-diagnostics.stderr"
+    },
+    {
+      "path": "native-macos/actionable-setup-diagnostics.stdout",
+      "sha256": "83b584d7268106c18b9acf65f0b22d7dd1e9eb697c3f401dd4fc450e46bc6cb0",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-v2/macos/actionable-setup-diagnostics.stdout"
+    },
+    {
+      "path": "native-macos/current-bank.stderr",
+      "sha256": "9aad4d8a8673878d33baeaa7ed9f012b1a339ad001e1dc47120cad6640ebc58a",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-v2/macos/current-bank.stderr"
+    },
+    {
+      "path": "native-macos/current-bank.stdout",
+      "sha256": "83b584d7268106c18b9acf65f0b22d7dd1e9eb697c3f401dd4fc450e46bc6cb0",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-v2/macos/current-bank.stdout"
+    },
+    {
+      "path": "native-macos/recall-catalog.stderr",
+      "sha256": "d72deaa40c26192c1c9b5f5ee8f4df33dfac89e91661354ef6a207befa8ec39a",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-v2/macos/recall-catalog.stderr"
+    },
+    {
+      "path": "native-macos/recall-catalog.stdout",
+      "sha256": "92d4fca775887cb52e76d5017b7cc86983089be6efa465525a0ddf381a3a1538",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-v2/macos/recall-catalog.stdout"
+    },
+    {
+      "path": "native-macos/results.json",
+      "sha256": "2077122d53622737eb0d162097f5949f8d6627bb1368d13adf8bd40be09a2acc",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-v2/macos/results.json"
+    },
+    {
+      "path": "native-macos/retrieval-context.stderr",
+      "sha256": "e151cba322b27ef4ee980058d9df6de15cd470c8adecb58bac0e9450d35a0800",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-v2/macos/retrieval-context.stderr"
+    },
+    {
+      "path": "native-macos/retrieval-context.stdout",
+      "sha256": "ad2e95b9d62994ffe9c924f1cc555362e2537c399a2ee6a51ccfad606bf68e73",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-v2/macos/retrieval-context.stdout"
+    },
+    {
+      "path": "native-macos/semantic-discovery.stderr",
+      "sha256": "123fc95832510c317949f08a653564b887335aa7220543cf82e8f3f2b847e428",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-v2/macos/semantic-discovery.stderr"
+    },
+    {
+      "path": "native-macos/semantic-discovery.stdout",
+      "sha256": "f3eb1c165df1df13075da1ea52a8dca0bfa3f859cc1850eaa2e8d36afcece590",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-v2/macos/semantic-discovery.stdout"
+    },
+    {
+      "path": "native-macos/sharing-boundary.stderr",
+      "sha256": "29eab41e83691603e0692ff86c5e2f92bb5aa4be88a44b1229f58726469c5086",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-v2/macos/sharing-boundary.stderr"
+    },
+    {
+      "path": "native-macos/sharing-boundary.stdout",
+      "sha256": "83ca5cec3488f110578a8d61698afc79a54e1e0d7dfb07908883931e35524b54",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-v2/macos/sharing-boundary.stdout"
+    },
+    {
+      "path": "native-macos/source-after.json",
+      "sha256": "174362b1676a7fcad623e8b1aad715e688cba20ea5f20a77fe86a5357bb3f6c0",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-v2/macos/source-after.json"
+    },
+    {
+      "path": "native-macos/source-before.json",
+      "sha256": "174362b1676a7fcad623e8b1aad715e688cba20ea5f20a77fe86a5357bb3f6c0",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-v2/macos/source-before.json"
+    },
+    {
+      "path": "native-linux/actionable-setup-diagnostics.stderr",
+      "sha256": "1edda03f690dbf028564a6616905c1e2408650be6893f3d66d63b6655a0a019d",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-v2/linux/actionable-setup-diagnostics.stderr"
+    },
+    {
+      "path": "native-linux/actionable-setup-diagnostics.stdout",
+      "sha256": "83b584d7268106c18b9acf65f0b22d7dd1e9eb697c3f401dd4fc450e46bc6cb0",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-v2/linux/actionable-setup-diagnostics.stdout"
+    },
+    {
+      "path": "native-linux/current-bank.stderr",
+      "sha256": "0d37df6ed3d74ee1edad0c67222e8348f94e0d5c55711982cda428d2339ebecd",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-v2/linux/current-bank.stderr"
+    },
+    {
+      "path": "native-linux/current-bank.stdout",
+      "sha256": "83b584d7268106c18b9acf65f0b22d7dd1e9eb697c3f401dd4fc450e46bc6cb0",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-v2/linux/current-bank.stdout"
+    },
+    {
+      "path": "native-linux/recall-catalog.stderr",
+      "sha256": "d43efc1f32158a96360f2444651f8efeb1993287a6b7971bfd906e74d9e3fbee",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-v2/linux/recall-catalog.stderr"
+    },
+    {
+      "path": "native-linux/recall-catalog.stdout",
+      "sha256": "92d4fca775887cb52e76d5017b7cc86983089be6efa465525a0ddf381a3a1538",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-v2/linux/recall-catalog.stdout"
+    },
+    {
+      "path": "native-linux/results.json",
+      "sha256": "2077122d53622737eb0d162097f5949f8d6627bb1368d13adf8bd40be09a2acc",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-v2/linux/results.json"
+    },
+    {
+      "path": "native-linux/retrieval-context.stderr",
+      "sha256": "fd16d9b5281e898cca9570bdaefa119565987eb8998ee08588364a59f9d3debd",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-v2/linux/retrieval-context.stderr"
+    },
+    {
+      "path": "native-linux/retrieval-context.stdout",
+      "sha256": "ad2e95b9d62994ffe9c924f1cc555362e2537c399a2ee6a51ccfad606bf68e73",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-v2/linux/retrieval-context.stdout"
+    },
+    {
+      "path": "native-linux/semantic-discovery.stderr",
+      "sha256": "97aafecc7f95f739951003875b215a8b0c8d81b7635ee617a420a41535188792",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-v2/linux/semantic-discovery.stderr"
+    },
+    {
+      "path": "native-linux/semantic-discovery.stdout",
+      "sha256": "f3eb1c165df1df13075da1ea52a8dca0bfa3f859cc1850eaa2e8d36afcece590",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-v2/linux/semantic-discovery.stdout"
+    },
+    {
+      "path": "native-linux/sharing-boundary.stderr",
+      "sha256": "82b8fdf918e9672f9a6eff0e32cdb5c222440b659678a42bf83422b77acaaf27",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-v2/linux/sharing-boundary.stderr"
+    },
+    {
+      "path": "native-linux/sharing-boundary.stdout",
+      "sha256": "83ca5cec3488f110578a8d61698afc79a54e1e0d7dfb07908883931e35524b54",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-v2/linux/sharing-boundary.stdout"
+    },
+    {
+      "path": "native-linux/source-after.json",
+      "sha256": "9203fbf5f8bf696bf013b4517b399c3c83457e0f88fd920bc99f814fc3ad2ac1",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-v2/linux/source-after.json"
+    },
+    {
+      "path": "native-linux/source-before.json",
+      "sha256": "9203fbf5f8bf696bf013b4517b399c3c83457e0f88fd920bc99f814fc3ad2ac1",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-v2/linux/source-before.json"
+    },
+    {
+      "path": "navigation-controller.py",
+      "sha256": "4bfe8c5ac0730d4c78673a295bf612e7d9c0e3a674808d39f7b5466026373223",
+      "original_retained_path": "/tmp/agent-memory-v003/measure-full-navigation-785ae41.py"
+    },
+    {
+      "path": "literal-timing-controller.py",
+      "sha256": "426ea77f6aea3026f17743322c68809b54e7ce9940181063e17eee08a14202e6",
+      "original_retained_path": "/tmp/agent-memory-v003/fixed-literal-timing-only.py"
+    },
+    {
+      "path": "static-review.md",
+      "sha256": "af749b75e80df8934f9359caf7db2b8bfa0dbc0c5d551af054be967b8da968e5",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-v2/static-review.md"
+    },
+    {
+      "path": "static-review.source.json",
+      "sha256": "9546942fd09dac90b67debb1357e520d2bfb210c791c7030240e959bb4b87426",
+      "original_retained_path": "/tmp/agent-memory-v003/complete-native-785ae41-v2/static-review.source.json"
+    }
+  ]
+}

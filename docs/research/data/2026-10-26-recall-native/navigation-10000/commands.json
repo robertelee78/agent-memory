@@ -1,0 +1,200 @@
+[
+  {
+    "argv": [
+      "/opt/homebrew/opt/python@3.15/bin/python3.15",
+      "-I",
+      "/private/tmp/agent-memory-test-y3whm8pd/portable semantic pack/scripts/discover_memory.py",
+      "start",
+      "--repo",
+      "/private/tmp/agent-memory-test-y3whm8pd/repo",
+      "--intent",
+      "recall",
+      "--task",
+      "How often may a temporary network error be attempted again?"
+    ],
+    "exit": 0,
+    "seconds": 0.8703942919382825
+  },
+  {
+    "argv": [
+      "/opt/homebrew/opt/python@3.15/bin/python3.15",
+      "-I",
+      "/private/tmp/agent-memory-test-y3whm8pd/portable semantic pack/scripts/discover_memory.py",
+      "node",
+      "--repo",
+      "/private/tmp/agent-memory-test-y3whm8pd/repo",
+      "--input",
+      "/private/tmp/agent-memory-test-y3whm8pd/navigation.json",
+      "--path",
+      "topics/g/request-reliability.md"
+    ],
+    "exit": 0,
+    "seconds": 0.328257333021611
+  },
+  {
+    "argv": [
+      "/opt/homebrew/opt/python@3.15/bin/python3.15",
+      "-I",
+      "/private/tmp/agent-memory-test-y3whm8pd/portable semantic pack/scripts/discover_memory.py",
+      "node",
+      "--repo",
+      "/private/tmp/agent-memory-test-y3whm8pd/repo",
+      "--input",
+      "/private/tmp/agent-memory-test-y3whm8pd/navigation.json",
+      "--path",
+      "topics/n/request-reliability-0-5.md"
+    ],
+    "exit": 0,
+    "seconds": 0.3296071250224486
+  },
+  {
+    "argv": [
+      "/opt/homebrew/opt/python@3.15/bin/python3.15",
+      "-I",
+      "/private/tmp/agent-memory-test-y3whm8pd/portable semantic pack/scripts/discover_memory.py",
+      "read",
+      "--repo",
+      "/private/tmp/agent-memory-test-y3whm8pd/repo",
+      "--input",
+      "/private/tmp/agent-memory-test-y3whm8pd/navigation.json",
+      "--request",
+      "/private/tmp/agent-memory-test-y3whm8pd/request.json",
+      "--rationale",
+      "Fixture-known source selection for operation-cost measurement; this is not a blind semantic quality evaluation."
+    ],
+    "exit": 0,
+    "seconds": 3.6299122920027003
+  },
+  {
+    "argv": [
+      "/opt/homebrew/opt/python@3.15/bin/python3.15",
+      "-I",
+      "/private/tmp/agent-memory-test-y3whm8pd/portable semantic pack/scripts/discover_memory.py",
+      "start",
+      "--repo",
+      "/private/tmp/agent-memory-test-y3whm8pd/repo",
+      "--intent",
+      "recall",
+      "--task",
+      "How often may a temporary network error be attempted again?"
+    ],
+    "exit": 0,
+    "seconds": 0.5504987499443814
+  },
+  {
+    "argv": [
+      "/opt/homebrew/opt/python@3.15/bin/python3.15",
+      "-I",
+      "/private/tmp/agent-memory-test-y3whm8pd/portable semantic pack/scripts/discover_memory.py",
+      "node",
+      "--repo",
+      "/private/tmp/agent-memory-test-y3whm8pd/repo",
+      "--input",
+      "/private/tmp/agent-memory-test-y3whm8pd/navigation.json",
+      "--path",
+      "topics/g/request-reliability.md"
+    ],
+    "exit": 0,
+    "seconds": 0.3630560409510508
+  },
+  {
+    "argv": [
+      "/opt/homebrew/opt/python@3.15/bin/python3.15",
+      "-I",
+      "/private/tmp/agent-memory-test-y3whm8pd/portable semantic pack/scripts/discover_memory.py",
+      "node",
+      "--repo",
+      "/private/tmp/agent-memory-test-y3whm8pd/repo",
+      "--input",
+      "/private/tmp/agent-memory-test-y3whm8pd/navigation.json",
+      "--path",
+      "topics/n/request-reliability-0-5.md"
+    ],
+    "exit": 0,
+    "seconds": 0.3757284589810297
+  },
+  {
+    "argv": [
+      "/opt/homebrew/opt/python@3.15/bin/python3.15",
+      "-I",
+      "/private/tmp/agent-memory-test-y3whm8pd/portable semantic pack/scripts/discover_memory.py",
+      "read",
+      "--repo",
+      "/private/tmp/agent-memory-test-y3whm8pd/repo",
+      "--input",
+      "/private/tmp/agent-memory-test-y3whm8pd/navigation.json",
+      "--request",
+      "/private/tmp/agent-memory-test-y3whm8pd/request.json",
+      "--rationale",
+      "Fixture-known source selection for operation-cost measurement; this is not a blind semantic quality evaluation."
+    ],
+    "exit": 0,
+    "seconds": 1.1783529170788825
+  },
+  {
+    "argv": [
+      "/opt/homebrew/opt/python@3.15/bin/python3.15",
+      "-I",
+      "/private/tmp/agent-memory-test-y3whm8pd/portable semantic pack/scripts/discover_memory.py",
+      "start",
+      "--repo",
+      "/private/tmp/agent-memory-test-y3whm8pd/repo",
+      "--intent",
+      "recall",
+      "--task",
+      "How often may a temporary network error be attempted again?"
+    ],
+    "exit": 0,
+    "seconds": 0.4917792089981958
+  },
+  {
+    "argv": [
+      "/opt/homebrew/opt/python@3.15/bin/python3.15",
+      "-I",
+      "/private/tmp/agent-memory-test-y3whm8pd/portable semantic pack/scripts/discover_memory.py",
+      "node",
+      "--repo",
+      "/private/tmp/agent-memory-test-y3whm8pd/repo",
+      "--input",
+      "/private/tmp/agent-memory-test-y3whm8pd/navigation.json",
+      "--path",
+      "topics/g/request-reliability.md"
+    ],
+    "exit": 0,
+    "seconds": 0.3366356670157984
+  },
+  {
+    "argv": [
+      "/opt/homebrew/opt/python@3.15/bin/python3.15",
+      "-I",
+      "/private/tmp/agent-memory-test-y3whm8pd/portable semantic pack/scripts/discover_memory.py",
+      "node",
+      "--repo",
+      "/private/tmp/agent-memory-test-y3whm8pd/repo",
+      "--input",
+      "/private/tmp/agent-memory-test-y3whm8pd/navigation.json",
+      "--path",
+      "topics/n/request-reliability-0-5.md"
+    ],
+    "exit": 0,
+    "seconds": 0.3258927500573918
+  },
+  {
+    "argv": [
+      "/opt/homebrew/opt/python@3.15/bin/python3.15",
+      "-I",
+      "/private/tmp/agent-memory-test-y3whm8pd/portable semantic pack/scripts/discover_memory.py",
+      "read",
+      "--repo",
+      "/private/tmp/agent-memory-test-y3whm8pd/repo",
+      "--input",
+      "/private/tmp/agent-memory-test-y3whm8pd/navigation.json",
+      "--request",
+      "/private/tmp/agent-memory-test-y3whm8pd/request.json",
+      "--rationale",
+      "Fixture-known source selection for operation-cost measurement; this is not a blind semantic quality evaluation."
+    ],
+    "exit": 0,
+    "seconds": 1.1903846670174971
+  }
+]

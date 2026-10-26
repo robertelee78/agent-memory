@@ -1,0 +1,67 @@
+{
+  "schema": "agent-memory/discovery-result-v1",
+  "operation": "start",
+  "discovery": {
+    "schema": "agent-memory/discovery-v1",
+    "task": "How often may a temporary network error be attempted again?",
+    "intent": "recall",
+    "binding": {
+      "repo_root": "/private/tmp/agent-memory-test-y3whm8pd/repo",
+      "bank_root": "memory-bank",
+      "project_id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+      "scope_context": {
+        "developer_id": "27f87e34-3c89-4d28-9a91-30ddcdf23f27",
+        "project_id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+        "developer_sha256": "820c0017f3d848427e5d25395a3f8064937da3160b8318975b1587da53eb1b64",
+        "project_sha256": "f5eeb16dc1c7cc3afec37779930f669acd7a108e1e16978a55ef931ba2b9208c",
+        "checkout_key": "16777234:455334576",
+        "repository_settings_sha256": "769e694ba050d41b06716fee04472ab3a44a5f1d29a88d8b397bf2fd397688ba",
+        "initialization_only": false
+      },
+      "context": {
+        "branch": "main",
+        "revision": "606e91957cd520ba1d1b65e4124a4ca177205561"
+      },
+      "git_context": {
+        "branch": "main",
+        "revision": "606e91957cd520ba1d1b65e4124a4ca177205561"
+      },
+      "inventory_sha256": "5dbf87d4bfa72f853901600b3a5a453f69667a62a60a649f16edeb8ca1e20816"
+    },
+    "nodes": [
+      {
+        "path": "MEMORY.md",
+        "sha256": "ec683d28c0d1ce5b816d28ddd08fe074b8206158485791dd35f4e6121a8c55e0"
+      }
+    ],
+    "sources": [],
+    "complete": false,
+    "rationale": null
+  },
+  "node": {
+    "path": "MEMORY.md",
+    "sha256": "ec683d28c0d1ce5b816d28ddd08fe074b8206158485791dd35f4e6121a8c55e0",
+    "body": "---\nschema: \"agent-memory/v1\"\nproject-id: \"7eea1199-8123-4989-8cde-012d3361c8ee\"\nrouter-updated: \"2026-10-25T08:00:00Z\"\n---\n# Project memory\n\n## Routes\n\n| Path | Purpose | Scope | Lifecycle | Read when |\n| --- | --- | --- | --- | --- |\n| [projectbrief.md](<projectbrief.md>) | Project purpose and source boundaries | repository | active | At session start |\n| [topics/g/artifacts.md](<topics/g/artifacts.md>) | Artifact manifests and generations | component:src/artifacts | active | When investigating artifacts |\n| [topics/g/authorization.md](<topics/g/authorization.md>) | Access grants and resource scope | component:src/authorization | active | When investigating authorization |\n| [topics/g/cache-policy.md](<topics/g/cache-policy.md>) | Cache and quota policy corrections with retained prior versions | repository | active | When investigating cache policy |\n| [topics/g/caching.md](<topics/g/caching.md>) | Cache generations and invalidation | component:src/caching | active | When investigating caching |\n| [topics/g/certificates.md](<topics/g/certificates.md>) | Certificate rotation and trust anchors | component:src/certificates | active | When investigating certificates |\n| [topics/g/compression.md](<topics/g/compression.md>) | Compression framing and block recovery | component:src/compression | active | When investigating compression |\n| [topics/g/deployment.md](<topics/g/deployment.md>) | Deployment cohorts and rollback evidence | component:src/deployment | active | When investigating deployment |\n| [topics/g/dns.md](<topics/g/dns.md>) | Name resolution and authoritative responses | component:src/dns | active | When investigating dns |\n| [topics/g/encoding.md](<topics/g/encoding.md>) | Encoding blocks and final checksum | component:src/encoding | active | When investigating encoding |\n| [topics/g/filesystem.md](<topics/g/filesystem.md>) | Filesystem links and ordinary file identity | component:src/filesystem | active | When investigating filesystem |\n| [topics/g/financial-reconciliation.md](<topics/g/financial-reconciliation.md>) | Idempotency receipts and repeated financial requests | repository | active | When investigating financial reconciliation |\n| [topics/g/journaling.md](<topics/g/journaling.md>) | Journal sealing and footer recovery | component:src/journaling | active | When investigating journaling |\n| [topics/g/leases.md](<topics/g/leases.md>) | Lease renewal and ownership expiry | component:src/leases | active | When investigating leases |\n| [topics/g/pagination.md](<topics/g/pagination.md>) | Pagination continuation and repeated cursor protection | repository | active | When investigating pagination |\n| [topics/g/parsing.md](<topics/g/parsing.md>) | Parser bounds and diagnostics | component:src/parsing | active | When investigating parsing |\n| [topics/g/request-identity.md](<topics/g/request-identity.md>) | Repeated request identities and preservation of first outcomes | repository | active | When investigating request identity |\n| [topics/g/request-reliability.md](<topics/g/request-reliability.md>) | Request retries, failure handling and confirmed deadlines | repository | active | When investigating request reliability |\n| [topics/g/retention.md](<topics/g/retention.md>) | Ledger and environment-specific retention requirements | repository | active | When investigating retention |\n| [topics/g/scheduling.md](<topics/g/scheduling.md>) | Queue weights and accepted ordering | component:src/scheduling | active | When investigating scheduling |\n| [topics/g/session-recovery.md](<topics/g/session-recovery.md>) | Operation resumption, recovery prerequisites and session-specific context | repository | active | When investigating session recovery |\n| [topics/g/snapshots.md](<topics/g/snapshots.md>) | Snapshot retention and dependent readers | component:src/snapshots | active | When investigating snapshots |\n| [topics/g/sockets.md](<topics/g/sockets.md>) | Connection pools and peer closure | component:src/sockets | active | When investigating sockets |\n| [topics/g/source-review.md](<topics/g/source-review.md>) | Sources awaiting safety or authority review | repository | active | When investigating source review |\n| [topics/g/storage.md](<topics/g/storage.md>) | Storage allocation and committed blocks | component:src/storage | active | When investigating storage |\n| [topics/g/telemetry.md](<topics/g/telemetry.md>) | Telemetry buffering and dropped samples | component:src/telemetry | active | When investigating telemetry |\n| [topics/g/timekeeping.md](<topics/g/timekeeping.md>) | Clock skew and observation windows | component:src/timekeeping | active | When investigating timekeeping |\n| [topics/g/transactions.md](<topics/g/transactions.md>) | Transaction journals and replay identity | component:src/transactions | active | When investigating transactions |\n| [topics/g/work-admission.md](<topics/g/work-admission.md>) | Deployment queues and worker dispatch limits | repository | active | When investigating work admission |\n| [topics/g/workers.md](<topics/g/workers.md>) | Worker admission and drain behavior | component:src/workers | active | When investigating workers |\n| [topics/g/workspace-configuration.md](<topics/g/workspace-configuration.md>) | Workspace appearance decisions and unresolved room claims | repository | active | When investigating workspace configuration |\n\n## Omitted contexts\n\n- `productContext.md`: No separate evidence in this synthetic fixture\n- `activeContext.md`: No separate evidence in this synthetic fixture\n- `systemPatterns.md`: No separate evidence in this synthetic fixture\n- `techContext.md`: No separate evidence in this synthetic fixture\n- `progress.md`: No separate evidence in this synthetic fixture\n",
+    "untrusted_data": true
+  },
+  "usable_as_current_guidance": false,
+  "semantic_interpreter": "invoking-harness",
+  "semantic_completeness_verified": false,
+  "canonical_writes_performed": false,
+  "audit_writes_performed": true,
+  "audit": {
+    "path": "/private/tmp/agent-memory-test-y3whm8pd/state/agent-memory/writes/c81c11804e78834403afe47e97cd61a44f378370aad925a6a71dec95f5b46683/security-audit/537d3d61-d812-4172-a09d-1abe95c52cdd.policy-check.checked.27f87e34-3c89-4d28-9a91-30ddcdf23f27.json",
+    "verified": true,
+    "phase": "checked"
+  },
+  "optional_indexes_used": true,
+  "validation_scope": "untrusted-root-and-authenticated-pending-inventory",
+  "full_bank_format_validated": false,
+  "final_content_qualification_pending": true,
+  "metrics": {
+    "canonical_files": 10203,
+    "canonical_observation_payload_bytes_read": 5728,
+    "canonical_observation_file_reads": 1,
+    "node_bytes_disclosed": 5728
+  }
+}

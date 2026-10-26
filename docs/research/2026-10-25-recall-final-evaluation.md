@@ -1,5 +1,55 @@
 # Growing-bank recall: final evaluation for #98
 
+## Current candidate: 26 October follow-up
+
+The complete warm native lookup at 50,000 lessons now takes **4.836 and 4.869
+seconds**, including start, two navigation steps and the qualified read. AI
+thinking time is excluded, as the operator requested. This is a measured local
+warm path, not a guarantee for every question, machine or first use: rebuilding
+the derived catalog on that same path takes **18.859 seconds**. The cost fixture
+uses a known path to isolate native work; it is not another blind semantic test.
+
+Runtime `785ae413146103902f4742e3a59fd3aad950a1cf`, artifact digest
+`686092757a8d69732db33c2c34baac42d051b49e4261393dc0f173afb33feca9`, preserves
+all 72 fixed quality-case outcomes, with zero recorded safety-contract failures.
+The separately measured literal-reader median improves by **39.5%, 53.2% and
+54.7%** against the actual published v0.0.1 baseline. Literal search still has
+its known full-question paraphrase miss. Semantic interpretation remains the
+invoking agent's work through the portable skill and public CLI; the operator
+approved that scope for Claude, Codex, OpenCode and custom harnesses.
+[Standalone terminal semantic search is tracked for a later release](https://github.com/robertelee78/agent-memory/issues/200).
+
+| Lessons | Literal-reader median seconds | Reduction from v0.0.1 | Warm complete native lookup seconds | Catalog rebuild complete lookup seconds |
+| --- | --- | --- | --- | --- |
+| 1,000 | 0.757 | 39.5% | 1.745, 1.870 | 2.203 |
+| 10,000 | 3.455 | 53.2% | 2.470, 2.346 | 5.160 |
+| 50,000 | 16.228 | 54.7% | 4.836, 4.869 | 18.859 |
+
+The literal request examines the complete qualified inventory; semantic navigation
+uses a selected path plus the invalidation and oversized-record guards. These are
+different requests, so the 16.228-second literal median does not describe the
+4.836-second selected navigation workflow. Both retain canonical source hashing
+and current applicability checks. The optimization changes locator discovery,
+configuration observation and directory-prefix construction, rather than weakening
+those checks. It introduces no required vector service, provider or bank migration.
+
+The [current data and source bindings](data/2026-10-26-recall-native/summary.json)
+retain the quality cases, isolated timing samples, complete navigation outputs,
+controllers and raw-evidence hashes. Both platforms pass the focused 70-method
+native checks at this exact runtime, including the corrected, actually discovered
+filename/competing-locator test. Earlier undiscovered and failed controls remain
+recorded in the locator RCA. Independent bounded static review approves the latest
+optimization; whole-story acceptance still requires a fresh independent verdict.
+
+The model-mediated quality observations below remain bound to `6a983d0`, rather
+than being relabeled as executions of `785ae41` or native-client integrations.
+Their irrelevant extras, original expired-source selection failure and separate
+two-case rerun remain visible. The current changes affect filesystem/configuration
+mechanics, not the model's semantic judgment. No new semantic-precision pass or
+universal completeness claim follows from the faster timings.
+
+## Retained earlier candidate and observations
+
 The fixed reader suite preserves the actual v0.0.1 outcomes at all three agreed
 sizes, and its isolated median latency improves by 27.0%, 46.5% and 49.9%.
 Two warm native qualification samples at 50,000 lessons take 4.439 and 4.448

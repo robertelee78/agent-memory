@@ -1,0 +1,11 @@
+test_bank_binding_required_matching_and_actual_mismatch_are_distinct (contract_suite.SetupDiagnostics.test_bank_binding_required_matching_and_actual_mismatch_are_distinct) ... ok
+test_busy_bank_and_pending_purge_never_advise_first_use (contract_suite.SetupDiagnostics.test_busy_bank_and_pending_purge_never_advise_first_use) ... ok
+test_damaged_runtime_and_malformed_or_ignored_bank_evidence_remain_independent (contract_suite.SetupDiagnostics.test_damaged_runtime_and_malformed_or_ignored_bank_evidence_remain_independent) ... ok
+test_index_head_custom_location_and_worktree_prove_known_missing_without_replacement (contract_suite.SetupDiagnostics.test_index_head_custom_location_and_worktree_prove_known_missing_without_replacement) ... ok
+test_new_repository_and_precreated_identity_need_setup_without_invented_mismatch (contract_suite.SetupDiagnostics.test_new_repository_and_precreated_identity_need_setup_without_invented_mismatch) ... ok
+test_tag_like_filenames_and_mixed_case_competing_router_preserve_real_locator_evidence (contract_suite.SetupDiagnostics.test_tag_like_filenames_and_mixed_case_competing_router_preserve_real_locator_evidence) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 113.219s
+
+OK

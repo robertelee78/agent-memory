@@ -1,0 +1,56 @@
+{
+  "schema": "agent-memory/discovery-result-v1",
+  "operation": "node",
+  "discovery": {
+    "schema": "agent-memory/discovery-v1",
+    "task": "How often may a temporary network error be attempted again?",
+    "intent": "recall",
+    "binding": {
+      "repo_root": "/private/tmp/agent-memory-test-0yjolgrg/repo",
+      "bank_root": "memory-bank",
+      "project_id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+      "scope_context": {
+        "developer_id": "efba2f9d-d88f-4dd4-9407-2ff564b0fbce",
+        "project_id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+        "developer_sha256": "8e918d67e7f8864a98ec2ba71dc64896783458a9185cb7abfe480372ba431749",
+        "project_sha256": "331d581daaf64787f929bc9ca26fa5b7eeaf451e48d061bd0dcaeac0f32b713a",
+        "checkout_key": "16777234:455332155",
+        "repository_settings_sha256": "769e694ba050d41b06716fee04472ab3a44a5f1d29a88d8b397bf2fd397688ba",
+        "initialization_only": false
+      },
+      "context": {
+        "branch": "main",
+        "revision": "7e2eb188d00192f216c7f12076e15d734dfa69b7"
+      },
+      "git_context": {
+        "branch": "main",
+        "revision": "7e2eb188d00192f216c7f12076e15d734dfa69b7"
+      },
+      "inventory_sha256": "8c1f3023a950678cd9d57057fff2b839598138eadfea6074c00eb8abadc2f2fd"
+    },
+    "nodes": [
+      {
+        "path": "MEMORY.md",
+        "sha256": "ec683d28c0d1ce5b816d28ddd08fe074b8206158485791dd35f4e6121a8c55e0"
+      },
+      {
+        "path": "topics/g/request-reliability.md",
+        "sha256": "72e7d3b9784d94552b34d7ffbc20ec97211b4f20156b858a86742840e3f1e13e"
+      }
+    ],
+    "sources": [],
+    "complete": false,
+    "rationale": null
+  },
+  "node": {
+    "path": "topics/g/request-reliability.md",
+    "sha256": "72e7d3b9784d94552b34d7ffbc20ec97211b4f20156b858a86742840e3f1e13e",
+    "body": "---\nschema: \"agent-memory/topic-index-v1\"\nproject-id: \"7eea1199-8123-4989-8cde-012d3361c8ee\"\nupdated: \"2026-10-25T08:00:00Z\"\n---\n# Topic index\n\n## Routes\n\n| Path | Purpose | Scope | Lifecycle | Read when |\n| --- | --- | --- | --- | --- |\n| [topics/n/request-reliability-0-5.md](<../n/request-reliability-0-5.md>) | Request retries, failure handling and confirmed deadlines | repository | active | When investigating request reliability |\n",
+    "untrusted_data": true
+  },
+  "usable_as_current_guidance": false,
+  "full_bank_format_validated": false,
+  "final_content_qualification_pending": true,
+  "canonical_writes_performed": false,
+  "semantic_completeness_verified": false
+}
