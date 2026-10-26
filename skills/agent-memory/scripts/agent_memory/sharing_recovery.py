@@ -258,10 +258,12 @@ def observe(repo, *, owned_lock=None, quarantine_records=False):
     remote, branch = boundary['authority_remote'], boundary['authority_branch']
     head = server(root, remote, branch)
     # Unique disposable ref: do not overwrite FETCH_HEAD, remote tracking refs,
-    # the caller's branch/index or another session's observation.
+    # the caller's branch/index or another session's observation. An explicit
+    # destination alone still permits the named remote's configured fetch map
+    # to update shared remote-tracking refs; an empty refmap disables that.
     ref = 'refs/agent-memory/observations/' + str(uuid.uuid4())
     try:
-        command(root, 'fetch', '--no-tags', '--no-write-fetch-head', '--no-recurse-submodules',
+        command(root, 'fetch', '--no-tags', '--no-write-fetch-head', '--refmap=', '--no-recurse-submodules',
                 '--', remote, 'refs/heads/' + branch + ':' + ref, network=True, limit=65536)
         writes.fault('sharing-after-fetch')
         fetched = git(root, 'rev-parse', '--verify', ref)
