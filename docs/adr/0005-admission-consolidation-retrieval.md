@@ -148,6 +148,21 @@ Scope, trust, validity, provenance, and applicability filters MUST remain intact
 A larger bank MUST NOT imply loading everything into every turn or introducing
 a required vector store. Lessons from actual v0.0.1 use MAY add further scope.
 
+**v0.0.3 target clarification, 26 October 2026.** The operator prioritizes
+precision and recall over speed while retaining all three as product objectives.
+For the existing growing-bank recall story (#98), the complete warm native
+navigation and qualified-read workflow at 50,000 lessons SHALL take under seven
+seconds in the recorded local qualification workload, excluding AI thinking
+time. This replaces the earlier operator-approved five-second release target;
+under five seconds remains a later optimization goal. Cold catalog rebuild cost
+and execution conditions SHALL be reported separately, alongside every retained
+timing attempt. This is not an every-query or every-machine latency guarantee.
+Speed work MUST NOT narrow semantic discovery, weaken source/safety/applicability
+validation, discard missed or irrelevant results, or regress the agreed fixed
+quality cases to meet the latency target. Existing independent acceptance and
+delivery evidence remain separate from this product decision. This clarification
+does not change the accepted v0.0.1 pipeline or authorize new release scope.
+
 ### Assembly
 
 Context assembly SHALL enforce a token budget, preserve source and status

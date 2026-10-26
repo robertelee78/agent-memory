@@ -2,7 +2,21 @@
 
 ## Current candidate: 26 October follow-up
 
-The complete warm native lookup at 50,000 lessons now takes **4.836 and 4.869
+The operator subsequently set **under seven seconds** as the v0.0.3 complete warm
+native 50,000-lesson target, excluding AI thinking time, and explicitly prioritized
+precision and recall over speed. Under five seconds remains a later optimization
+goal. This changes the release budget, not the recorded measurements or quality
+criteria. The latest runtime's two samples under concurrent local qualification
+load are **6.169 and 5.994 seconds**; the previously accepted runtime measured
+**6.284 and 6.391 seconds** in a separate run while the same heavy jobs remained
+active. These sequential observations show no measured slowdown from the repair;
+they do not isolate load as a proven cause or establish a universal timing bound.
+Cold catalog rebuild paths take 24.765 and 25.698 seconds respectively.
+[Both runs, source bindings and retained raw-output hashes](data/2026-10-26-recall-target/summary.json)
+remain available. Known-path timing does not prove semantic precision or recall.
+The concurrency/recovery program and final release verification remain separate.
+
+The earlier complete warm native lookup at 50,000 lessons took **4.836 and 4.869
 seconds**, including start, two navigation steps and the qualified read. AI
 thinking time is excluded, as the operator requested. This is a measured local
 warm path, not a guarantee for every question, machine or first use: rebuilding
@@ -71,10 +85,11 @@ baseline is exactly `63d3a64c0e535148cc1b5deb9d67169dbbc7c525`.
 The [operator-reviewed target](https://github.com/robertelee78/agent-memory/issues/98#issuecomment-6402351109)
 requires at least a 25% median reduction at each size, preserving every passing
 fixed case and zero unsafe, stale or incorrectly applicable reader returns.
-The operator's later statement accepts 50,000-lesson recall below five seconds
-and subsequently confirms that AI thinking time is excluded. For execution, the
+The operator's earlier statement accepted 50,000-lesson recall below five seconds
+and subsequently confirmed that AI thinking time is excluded; the 26 October
+decision above replaces that release budget with under seven seconds. For execution, the
 complete native navigation/read path counts; a 4.44-second final read cannot stand
-in for that whole path. The measured 7.77-second path remains above target. The
+in for that whole path. The measured 7.77-second path exceeds either target. The
 operator explicitly permits v0.0.3 harness semantic recall with plain terminal
 semantic search tracked for later delivery. No semantic precision threshold has
 been inferred. The original unsupported native-only approval wording was rejected

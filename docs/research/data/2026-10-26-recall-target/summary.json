@@ -1,0 +1,38 @@
+{
+  "operator_decision_date": "2026-10-26",
+  "operator_priority": "Precision and recall take priority over speed; all three remain product objectives.",
+  "warm_native_target_seconds_exclusive": 7,
+  "ai_thinking_time_included": false,
+  "five_seconds": "Later optimization goal; superseded release budget.",
+  "measurement": "Complete start, two navigation calls, qualified read; fixture-known paths, not blind semantic quality.",
+  "conditions": "Sequential runs while the same heavy local qualification jobs remained active; load was not experimentally controlled.",
+  "quality_criteria_waived": false,
+  "universal_latency_guarantee": false,
+  "whole_story_acceptance_claimed": false,
+  "runs": [
+    {
+      "label": "repaired-runtime",
+      "source_commit": "e6ad11c6ccc5bd2a67c0f6dfe49557dcfa4b4346",
+      "source_preserved": true,
+      "cold_rebuild_seconds": 24.765108624938875,
+      "warm_complete_workflow_seconds": [
+        6.168920167023316,
+        5.993992708041333
+      ],
+      "result": "repaired-runtime/result.json",
+      "raw_manifest": "repaired-runtime/raw-evidence-manifest.json"
+    },
+    {
+      "label": "previously-accepted-runtime",
+      "source_commit": "d01ce2eb98b2669fee44d7c171239a183ceaf742",
+      "source_preserved": true,
+      "cold_rebuild_seconds": 25.69789141707588,
+      "warm_complete_workflow_seconds": [
+        6.283692292054184,
+        6.391442833933979
+      ],
+      "result": "previously-accepted-runtime/result.json",
+      "raw_manifest": "previously-accepted-runtime/raw-evidence-manifest.json"
+    }
+  ]
+}
