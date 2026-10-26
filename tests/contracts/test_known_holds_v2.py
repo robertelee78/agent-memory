@@ -1,8 +1,11 @@
 """Actual detected disagreements survive wording changes and private-state loss."""
 from datetime import datetime,timezone
 import json
+import hashlib
+import shutil
 import sys
 import unittest
+import uuid
 
 from world import World
 from contracts import test_semantic_sharing as fixtures
@@ -46,6 +49,9 @@ class KnownHoldsVersionTwoContract(unittest.TestCase):
             self.claims={local,landed};self.h.publish(w,peer);code=self.h.state(w,repo,bank)[1:]
             _,initial=self.inspect(w,repo,'initial');path,view=self.inspect(w,repo,'selected',self.select(initial))
             first=self.review(w,repo,path,view,True);self.assertTrue(self.claims.issubset(first['blocked_paths']))
+            proof=w.inside('first-proof.json');proof.write_text(json.dumps(first['proof']))
+            checked=self.invoke(w,'check','--v2','--repo',repo,'--input',proof)
+            self.assertTrue(checked['source_observation_current'])
             # These are still the same contradictory claims; only their exact
             # source/semantic variant and inherited route wording have changed.
             (bank/local).write_text((bank/local).read_text().replace('should be yellow','should use a yellow finish'))
@@ -62,7 +68,48 @@ class KnownHoldsVersionTwoContract(unittest.TestCase):
             failed=self.invoke(w,'inspect-v2','--repo',repo,'--output',pending,expected=1);self.assertFalse(pending.exists())
             self.assertEqual(failed['failure_code'],'known-holds-registry-missing')
             self.assertEqual(failed['failure_component'],'known-dispute-state');self.assertIn('recover-holds',failed['repair'])
+            command=w.run([sys.executable,'-I',self.h.pack/'scripts/refresh_memory.py','inspect','--v2','--repo',repo],check=False)
+            refresh=json.loads(command.stdout);self.assertEqual(command.returncode,1,refresh)
+            self.assertEqual(refresh['failure_code'],'known-holds-registry-missing');self.assertIn('recover-holds',refresh['repair'])
             recovery=self.invoke(w,'recover-holds','--repo',repo,'--project-id',current['binding']['project_id'])
             self.assertTrue(recovery['verified']);self.assertEqual(registry.read_bytes(),before)
             _,healed=self.inspect(w,repo,'healed');self.assertTrue(healed['known_causes'])
+            command=w.run([sys.executable,'-I',self.h.pack/'scripts/refresh_memory.py','inspect','--v2','--repo',repo],check=False)
+            self.assertEqual(command.returncode,0,command.stdout);self.assertTrue(json.loads(command.stdout)['inspection']['known_causes'])
+            # Materialize the actual predecessor per-cause format. It lacks
+            # stable record references, but its original logical references and
+            # first-detection evidence must survive supported recovery/import.
+            native=json.loads(registry.read_text());legacy={}
+            for key,record in native['records'].items():
+                value={'schema':'agent-memory/known-semantic-hold-v1','repo_root':str(repo),
+                    'project_id':current['binding']['project_id'],**{k:v for k,v in record.items() if k!='resolution'}}
+                value['references']={k:{n:v for n,v in ref.items() if n!='record'} for k,ref in value['references'].items()}
+                value['checksum']=hashlib.sha256((json.dumps(value,sort_keys=True,indent=2,ensure_ascii=False)+'\n').encode()).hexdigest()
+                target=registry.parent.parent/(key+'.json');target.write_text(json.dumps(value));target.chmod(0o600);legacy[target]=target.read_bytes()
+            (registry.parent.parent/(current['binding']['project_id']+'.present.json')).unlink();shutil.rmtree(registry.parent)
+            failed=self.invoke(w,'inspect-v2','--repo',repo,'--output',w.inside('legacy-pending.json'),expected=1)
+            self.assertEqual(failed['failure_code'],'known-holds-legacy-state');self.assertIn('recover-holds',failed['repair'])
+            recovery=self.invoke(w,'recover-holds','--repo',repo,'--project-id',current['binding']['project_id'])
+            self.assertTrue(recovery['verified']);self.assertEqual(legacy,{p:p.read_bytes() for p in legacy})
+            _,migrated=self.inspect(w,repo,'legacy-imported');self.assertTrue(migrated['known_causes'])
             self.assertEqual(code,self.h.state(w,repo,bank)[1:])
+
+    def test_wrong_project_recovery_preserves_private_state_and_stale_bank_marker(self):
+        with World() as w:
+            self.h=fixtures.SemanticSharingContract();repo,bank,peer,base=self.h.fixture(w)
+            project=json.loads((bank/'MEMORY.md').read_text().split('project-id: ',1)[1].splitlines()[0])
+            program='''import os,sys,uuid
+from pathlib import Path
+sys.path.insert(0,sys.argv[1])
+from agent_memory import local_registry as storage
+with storage.exclusive(Path(sys.argv[2])/'.agent-memory.lock',str(uuid.uuid4()),'semantic-review-holds'):
+ os._exit(86)
+'''
+            result=w.run([sys.executable,'-I','-c',program,self.h.pack/'scripts',bank],check=False)
+            self.assertEqual(result.returncode,86)
+            def snapshot():return {str(p.relative_to(w.root)):(p.read_bytes(),p.stat().st_mode) for p in w.root.rglob('*') if p.is_file()}
+            before=snapshot()
+            self.invoke(w,'recover-holds','--repo',repo,'--project-id',str(uuid.uuid4()),expected=1)
+            self.assertEqual(before,snapshot());self.assertTrue((bank/'.agent-memory.lock').exists())
+            recovered=self.invoke(w,'recover-holds','--repo',repo,'--project-id',project)
+            self.assertTrue(recovered['verified']);self.assertFalse((bank/'.agent-memory.lock').exists())

@@ -5,6 +5,7 @@ certifies semantic truth. Canonical learning remains Markdown in Git.
 """
 from contextlib import contextmanager
 import copy
+import os
 from pathlib import Path
 import re
 import uuid
@@ -96,7 +97,39 @@ def anchor_value(raw,root,project_id):
     return value
 
 
-def read_store(root,project_id,*,owner=None,allow_journal=False):
+def legacy_paths(directory):
+    base=directory.parent;trust_paths.state(base)
+    if not base.exists():return {}
+    paths={};count=0
+    with os.scandir(base) as entries:
+        for entry in entries:
+            count+=1
+            if count>MAX_RECORDS+64:raise recovery_needed('known-holds-legacy-capacity',
+                'The retained dispute-state namespace exceeds its bounded compatibility inventory.')
+            if re.fullmatch('[0-9a-f]{64}\\.json',entry.name):paths[entry.name[:-5]]=Path(entry.path)
+    return paths
+
+
+def import_legacy(root,project_id,directory,existing):
+    added={};total=0
+    for key,path in sorted(legacy_paths(directory).items()):
+        if key in existing:continue
+        raw=trusted_read(path,65536);total+=len(raw)
+        if total>MAX_STORE:raise ContractError('Legacy dispute evidence exceeds its bounded migration budget; preserve it')
+        value=json_load(raw)
+        fields={'schema','repo_root','project_id','binding','cause','references','dependencies','judgment_sha256','proof_sha256','checksum'}
+        if (not isinstance(value,dict) or set(value)!=fields or value['schema']!='agent-memory/known-semantic-hold-v1'
+                or value['repo_root']!=str(root) or value['project_id']!=project_id
+                or value['checksum']!=digest(encoded({k:v for k,v in value.items() if k!='checksum'}))):
+            raise ContractError('Legacy dispute evidence is changed or belongs to another project; preserve it for inspection')
+        added[key]={k:v for k,v in value.items() if k not in {'schema','repo_root','project_id','checksum'}}
+        added[key]['resolution']=None
+    desired=seal({'schema':SCHEMA,'repo_root':str(root),'project_id':project_id,'records':{**existing,**added}})
+    registry_value(desired,root,project_id)
+    return desired
+
+
+def read_store(root,project_id,*,owner=None,allow_journal=False,allow_legacy=False):
     root,bank,directory,anchor=locations(root,project_id);trust_paths.state(directory)
     lock=directory/'lock';journal=directory/'journal.json'
     lock_raw=trusted_read(lock,4096)
@@ -113,11 +146,16 @@ def read_store(root,project_id,*,owner=None,allow_journal=False):
         if anchored is not None or backup is not None or journal.exists():
             raise recovery_needed('known-holds-registry-missing',
                 'The known-dispute registry is missing, but its anchor or retained recovery evidence proves prior review state existed.')
-        return seal({'schema':SCHEMA,'repo_root':str(root),'project_id':project_id,'records':{}}),None
+        value=seal({'schema':SCHEMA,'repo_root':str(root),'project_id':project_id,'records':{}})
+        if not allow_legacy and legacy_paths(directory):raise recovery_needed('known-holds-legacy-state',
+            'Earlier per-cause dispute evidence exists; absence of the new registry does not establish an empty history.')
+        return value,None
     value=registry_value(json_load(raw),root,project_id)
     if anchored is None or backup!=raw:
         raise recovery_needed('known-holds-recovery-incomplete',
             'The known-dispute registry and its recovery anchor/copy do not form one complete verified state.')
+    if not allow_legacy and set(legacy_paths(directory))-set(value['records']):raise recovery_needed('known-holds-legacy-state',
+        'Additional earlier per-cause dispute evidence has not yet been imported into the anchored registry.')
     return value,digest(raw)
 
 
@@ -208,7 +246,18 @@ def record(root,project_id,proof,references,*,resolutions=None,owned_lock=None,v
 
 
 def recover(root,project_id):
-    root,bank,directory,anchor=locations(root,project_id);prepare_directory(directory)
+    root,bank,directory,anchor=locations(root,project_id)
+    from . import scope_binding
+    # Establish canonical project/scope before mkdir or clearing any marker.
+    # A stale bank marker is read only after the common recovery preview has
+    # established its supported ownership; its bytes permit read-only identity
+    # inspection, never mutation. Clearing still uses the common checked apply.
+    bank_lock=bank/'.agent-memory.lock';stale=None
+    if bank_lock.exists() or bank_lock.is_symlink():
+        storage.recover(bank/'MEMORY.md',bank_lock,{'semantic-review-holds'})
+        stale=trusted_read(bank_lock,4096)
+    expected_scope=scope_binding.require(root,project_id,owned_lock=stale)
+    prepare_directory(directory)
     for registry,lock,operations in ((bank/'MEMORY.md',bank/'.agent-memory.lock',{'semantic-review-holds'}),
                                      (directory/'registry.json',directory/'lock',{'semantic-holds'})):
         if lock.exists() or lock.is_symlink():
@@ -217,8 +266,7 @@ def recover(root,project_id):
             storage.recover(registry,lock,operations,preview)
     operation_id=str(uuid.uuid4())
     with bank_owner(root,operation_id,None) as bank_token:
-        from . import scope_binding
-        scope_binding.require(root,project_id,owned_lock=bank_token)
+        scope_binding.require(root,project_id,expected=expected_scope,owned_lock=bank_token)
         with storage.exclusive(directory/'lock',operation_id,'semantic-holds') as owner:
             target=directory/'journal.json';jraw=trusted_read(target,MAX_JOURNAL)
             if jraw is not None:
@@ -240,9 +288,14 @@ def recover(root,project_id):
                 target.unlink();flush_directory(directory)
             elif not (directory/'registry.json').exists():
                 backup=trusted_read(directory/'recovery.json',MAX_STORE);anchored=trusted_read(anchor,4096)
-                if backup is None or anchored is None:raise ContractError('Missing hold evidence cannot be treated as resolution; inspect canonical/source evidence')
-                anchor_value(anchored,root,project_id);registry_value(json_load(backup),root,project_id)
-                storage.replace(directory/'registry.json',backup,None)
+                if backup is not None and anchored is not None:
+                    anchor_value(anchored,root,project_id);registry_value(json_load(backup),root,project_id)
+                    storage.replace(directory/'registry.json',backup,None)
+                elif backup is not None or anchored is not None:
+                    raise ContractError('Missing hold evidence cannot be treated as resolution; inspect canonical/source evidence')
+            current,observed=read_store(root,project_id,owner=owner,allow_legacy=True)
+            desired=import_legacy(root,project_id,directory,current['records'])
+            if desired!=current:commit_store(root,project_id,desired,observed,directory,anchor)
             read_store(root,project_id,owner=owner)
     return {'schema':'agent-memory/known-holds-recovery-v1','verified':True,'canonical_writes_performed':False,
             'private_state_writes_performed':True,'source_observation_current':False,'requires_fresh_review':True}

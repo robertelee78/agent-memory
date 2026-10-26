@@ -237,10 +237,15 @@ def main(argv=None):
             repo=args.repo if hasattr(args,'repo') else tx.proposal_value(read_input(args.input,version2=args.v2))['repo_root']
             value=limits.write_private(args.output,value,repo)
         print(json.dumps(value, indent=2)); return 0
-    except (ContractError, OSError, ValueError, UnicodeError, TypeError, KeyError, AttributeError, RecursionError):
+    except (ContractError, OSError, ValueError, UnicodeError, TypeError, KeyError, AttributeError, RecursionError) as exc:
+        from .sharing_holds import HoldFailure
+        known=isinstance(exc,HoldFailure)
         print(json.dumps(result(args.operation, 'pending-inspection', canonical_writes_performed=None,
                                 git_metadata_writes_performed=None,
-                                reason='Unresolved, offline, unsafe, interrupted or changed refresh; retain the original proposal and local memory, inspect/recover before retry')))
+                                failure_component='known-dispute-state' if known else args.operation,
+                                failure_code=exc.code if known else 'refresh-unverified',
+                                reason=str(exc) if known else 'Unresolved, offline, unsafe, interrupted or changed refresh; retain the original proposal and local memory, inspect/recover before retry',
+                                repair=exc.repair if known else 'Preserve the proposal, bank and pending evidence. Run am doctor for this repository and inspect the failed component before repeating refresh inspection; do not reset or replace the bank.')))
         return 1
 
 

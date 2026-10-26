@@ -573,8 +573,8 @@ def main(argv=None):
     for name in ('inspect','review','check'):
         p=sub.add_parser(name);p.add_argument('--repo',required=True)
         if name=='inspect':p.add_argument('--base')
-        if name=='check':p.add_argument('--v2',action='store_true')
         else:p.add_argument('--input',required=True)
+        if name=='check':p.add_argument('--v2',action='store_true')
         p.add_argument('--output')
     p=sub.add_parser('inspect-v2');p.add_argument('--repo',required=True);p.add_argument('--input');p.add_argument('--output',required=True)
     p=sub.add_parser('page-v2');p.add_argument('--repo',required=True);p.add_argument('--input',required=True);p.add_argument('--page',type=int,required=True)

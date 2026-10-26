@@ -1,9 +1,19 @@
 """The explicit large-bank refresh entry point uses its versioned review path."""
 from world import World
 from refresh_fixtures import RefreshFixture
+from contracts import test_semantic_sharing as semantic_fixtures
 
 
 class RefreshVersionTwoContract(RefreshFixture):
+    def test_legacy_semantic_inspect_and_check_keep_their_required_input_contract(self):
+        with World() as w:
+            h=semantic_fixtures.SemanticSharingContract();repo,bank,peer,base=h.fixture(w)
+            view=h.good(w,'inspect','--repo',repo)
+            self.assertEqual(view['schema'],'agent-memory/semantic-sharing-inspection-v1')
+            result,reviewed=h.review(w,repo,h.judgment(view));self.assertEqual(result.returncode,0,reviewed)
+            checked=h.good(w,'check','--repo',repo,'--input',h.save(w,reviewed['proof']))
+            self.assertTrue(checked['source_observation_current'])
+
     def test_explicit_v2_inspection_uses_changed_learning_frontier_and_retains_the_actual_base(self):
         with World() as w:
             repo,bank,peer,base=self.fixture(w)
