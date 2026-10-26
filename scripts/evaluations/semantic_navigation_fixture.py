@@ -71,6 +71,20 @@ def index(path,children):
  return header({'schema':'agent-memory/topic-index-v1','project-id':PID,'updated':STAMP})+'# Topic index\n\n## Routes\n\n'+route_table(children,path)
 
 
+def common_scope(values):
+ # Derive a redundant parent constraint from every actual child scope. This
+ # advertises existing applicability before a harness expands irrelevant
+ # component headings; it does not add a condition or inspect query labels.
+ scopes=[row['metadata']['scope'] for row in values]
+ if not scopes or any(not scope.startswith('component:') for scope in scopes):return 'repository'
+ parts=[scope.removeprefix('component:').split('/') for scope in scopes]
+ prefix=[]
+ for components in zip(*parts):
+  if len(set(components))!=1:break
+  prefix.append(components[0])
+ return 'component:'+'/'.join(prefix) if prefix else 'repository'
+
+
 def corpus(template,count):
  _,base,_=original_corpus(template,64)
  rows=[copy.deepcopy(row) for row in base if not row['label'].startswith('distractor-')]
@@ -101,7 +115,7 @@ def corpus(template,count):
    body=index(path,rows_for(values));assert len(body.encode())<=16384
    files[path]=body
    purpose=subjects[group] if group in SUBJECTS else group.title()+' components '+str(start)+' to '+str(start+len(values)-1)
-   return (path,purpose,'repository','active','When investigating '+group.replace('-',' '))
+   return (path,purpose,common_scope(values),'active','When investigating '+group.replace('-',' '))
   for row in values:
    probe='topics/n/'+group+'-'+str(start)+'-'+str(start+len(pending))+'.md'
    if pending and (len(pending)>=64 or len(index(probe,rows_for([*pending,row])).encode())>16384):
@@ -110,12 +124,12 @@ def corpus(template,count):
   if pending:leaves.append(finish(pending,start))
   assert len(leaves)<=64,(group,len(leaves))
   path='topics/g/'+group+'.md';files[path]=index(path,leaves);assert len(files[path].encode())<=16384
-  root.append((path,subjects[group],'repository','active','When investigating '+group.replace('-',' ')))
+  root.append((path,subjects[group],common_scope(values),'active','When investigating '+group.replace('-',' ')))
  root.insert(0,('projectbrief.md','Project purpose and source boundaries','repository','active','At session start'))
  files['MEMORY.md']=header({'schema':'agent-memory/v1','project-id':PID,'router-updated':STAMP})+'# Project memory\n\n## Routes\n\n'+route_table(root,'MEMORY.md')+'\n## Omitted contexts\n\n'+''.join('- `'+path+'`: No separate evidence in this synthetic fixture\n' for path in CONTEXTS[1:])
  assert len(files['MEMORY.md'].encode())<=16384 and len(root)<=64
  assert len({row['metadata']['id'] for row in rows})==count
- return files,rows,{'fixture':'semantic-navigation-v2-map-correction','distinct_lessons':count,'canonical_files':len(files),
+ return files,rows,{'fixture':'semantic-navigation-v3-parent-scopes','distinct_lessons':count,'canonical_files':len(files),
   'canonical_bytes':sum(len(value.encode()) for value in files.values()),'root_routes':len(root),
   'layout_basis':'authored source subjects and actual component identities, independent of held-out questions',
   'frozen_literal_baseline_modified':False}

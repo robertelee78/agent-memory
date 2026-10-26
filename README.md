@@ -71,7 +71,7 @@ repository. It routes explicit developer/project setup, evidence-led bank
 initialization, qualified recall and the learning loop. At natural turn
 boundaries it refreshes landed memory, compares new learning with existing
 memory, and publishes eligible memory through current repository rules. Load
-the skill in each session; v0.0.3 hooks are planned to cover forgotten invocation.
+the skill in each session; v0.0.4 hooks are planned to cover forgotten invocation.
 The [common CLI guide](skills/agent-memory/maintain/cli/GUIDE.md) documents the
 same public helpers and installed aliases.
 
@@ -172,7 +172,7 @@ improve it without losing that simplicity.
 
 The common path MUST remain useful with files, Git, and the installed skill
 alone, with a deterministic CLI for governed operations. MCP is outside planned
-scope. v0.0.3 hooks will invoke the shared capture/refresh operation at turn
+scope. v0.0.4 hooks will invoke the shared capture/refresh operation at turn
 boundaries. Any optional search projection must
 remain disposable; it cannot become the authority for project memory.
 
