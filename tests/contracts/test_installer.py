@@ -461,8 +461,13 @@ class InstallerContract(unittest.TestCase):
             self.assertEqual(snapshot(channel), before)
             self.assertFalse(self.run_install(world, None)['changed'])
             (Path(source['path'])/'unexpected-user-note').write_text('Keep local edits\n')
+            owned_before = snapshot(Path(source['path']))
+            receipt_before = (self.state(world)/'receipt.json').read_bytes()
             refused = self.run_install(world, None, expected=1)
-            self.assertIn('clean', refused['error'])
+            self.assertFalse(refused['verified'])
+            self.assertIn('unexpected-user-note', refused['error'])
+            self.assertEqual(snapshot(Path(source['path'])), owned_before)
+            self.assertEqual((self.state(world)/'receipt.json').read_bytes(), receipt_before)
 
     def test_failed_replacement_restores_existing_copies_and_the_exact_prior_receipt(self):
         with World() as world:
