@@ -1,0 +1,377 @@
+{
+  "reviewer": "codex-review-59",
+  "evidence_commit": "c7aa380d2ea664ae627aafd31b508d4956cb48cb",
+  "tree": "4107d2626eae6f672f4324a22642a6bb3c60beff",
+  "runtime_commit": "f92be620065d0565a936782c924e183605026026",
+  "source_snapshots_checked": [
+    {
+      "label": "cohort frozen source",
+      "commit": "f92be620065d0565a936782c924e183605026026",
+      "tracked_files": 855,
+      "portable_files": 162,
+      "Git_bytes_modes_match": true
+    }
+  ],
+  "controller_sha256": "988c819ec4635a12357cbb1a4f7d272b44248aae3df6f25b191344b81ac8944d",
+  "raw_gzip_files_verified": 1702,
+  "compressed_bytes_verified": 117145327,
+  "decompressed_bytes_verified": 404788639,
+  "public_commands": 977,
+  "exit_counts": {
+    "0": 969,
+    "1": 7,
+    "86": 1
+  },
+  "expected_refusals_and_interruption": [
+    {
+      "number": 247,
+      "helper": "reconcile_memory.py",
+      "operation": "page-v2",
+      "exit": 1,
+      "input_names": [],
+      "code": "semantic-review-unverified"
+    },
+    {
+      "number": 276,
+      "helper": "refresh_memory.py",
+      "operation": "apply",
+      "exit": 86,
+      "kind": "declared after-receipt interruption"
+    },
+    {
+      "number": 649,
+      "helper": "reconcile_memory.py",
+      "operation": "review-v2",
+      "exit": 1,
+      "input_names": [
+        "/tmp/agent-memory-test-kjksm53r/inputs/missing-edge-judgment.json"
+      ],
+      "code": "semantic-review-unverified"
+    },
+    {
+      "number": 650,
+      "helper": "reconcile_memory.py",
+      "operation": "review-v2",
+      "exit": 1,
+      "input_names": [
+        "/tmp/agent-memory-test-kjksm53r/inputs/duplicated-page-judgment.json"
+      ],
+      "code": "semantic-review-unverified"
+    },
+    {
+      "number": 652,
+      "helper": "reconcile_memory.py",
+      "operation": "review-v2",
+      "exit": 1,
+      "input_names": [
+        "/tmp/agent-memory-test-kjksm53r/inputs/stale-pages-judgment.json"
+      ],
+      "code": "semantic-review-unverified"
+    },
+    {
+      "number": 846,
+      "helper": "reconcile_memory.py",
+      "operation": "check",
+      "exit": 1,
+      "input_names": [
+        "/tmp/agent-memory-test-kjksm53r/inputs/old-v1-actual-v2-proof.json"
+      ],
+      "code": null
+    },
+    {
+      "number": 847,
+      "helper": "refresh_memory.py",
+      "operation": "inspect",
+      "exit": 1,
+      "input_names": [],
+      "code": "refresh-unverified"
+    },
+    {
+      "number": 848,
+      "helper": "refresh_memory.py",
+      "operation": "inspect",
+      "exit": 1,
+      "input_names": [],
+      "code": "refresh-unverified"
+    }
+  ],
+  "unique_input_blobs": 716,
+  "valid_review_page_ack_checks": 82,
+  "retained_actual_page_bodies": 289,
+  "admitted_records": 31,
+  "ordinary_records": 27,
+  "role_records": 4,
+  "actual_ordinary_refresh_plan_checks": 444,
+  "complete_refreshed_banks_rounds": 24,
+  "seed_inventory_events_verified": 48,
+  "seed_initial_IDs": 1000,
+  "required_scenarios": 25,
+  "feature_observations": [
+    {
+      "session": 0,
+      "observations": 26,
+      "distinct_states": 2
+    },
+    {
+      "session": 1,
+      "observations": 12,
+      "distinct_states": 1
+    },
+    {
+      "session": 2,
+      "observations": 15,
+      "distinct_states": 1
+    },
+    {
+      "session": 3,
+      "observations": 12,
+      "distinct_states": 1
+    },
+    {
+      "session": 4,
+      "observations": 16,
+      "distinct_states": 1
+    },
+    {
+      "session": 5,
+      "observations": 12,
+      "distinct_states": 1
+    },
+    {
+      "session": 6,
+      "observations": 11,
+      "distinct_states": 1
+    },
+    {
+      "session": 7,
+      "observations": 11,
+      "distinct_states": 1
+    },
+    {
+      "session": 8,
+      "observations": 11,
+      "distinct_states": 1
+    },
+    {
+      "session": 9,
+      "observations": 11,
+      "distinct_states": 1
+    },
+    {
+      "session": 10,
+      "observations": 11,
+      "distinct_states": 1
+    },
+    {
+      "session": 11,
+      "observations": 14,
+      "distinct_states": 1
+    }
+  ],
+  "negative_recall_findings": [],
+  "matched_seed_controls": [
+    {
+      "command": 882,
+      "path": "topics/seed/records/0.md",
+      "session": 0,
+      "requested_kind": [
+        "semantic-fact"
+      ],
+      "context": {
+        "component": "src/seed/0"
+      },
+      "exact_seed_id": "9c3e8fe3-3b83-4275-9451-45c3d4bba5c8",
+      "result_count": 1,
+      "positive_record_and_body_equal_seed": true
+    },
+    {
+      "command": 883,
+      "path": "topics/seed/records/0.md",
+      "session": 11,
+      "requested_kind": [
+        "semantic-fact"
+      ],
+      "context": {
+        "component": "src/seed/0"
+      },
+      "exact_seed_id": "9c3e8fe3-3b83-4275-9451-45c3d4bba5c8",
+      "result_count": 1,
+      "positive_record_and_body_equal_seed": true
+    },
+    {
+      "command": 918,
+      "path": "topics/seed/records/0.md",
+      "session": 11,
+      "requested_kind": [
+        "semantic-fact"
+      ],
+      "context": {
+        "component": "src/seed/0"
+      },
+      "exact_seed_id": "9c3e8fe3-3b83-4275-9451-45c3d4bba5c8",
+      "result_count": 0,
+      "positive_record_and_body_equal_seed": null
+    },
+    {
+      "command": 928,
+      "path": "topics/seed/records/1.md",
+      "session": 2,
+      "requested_kind": [
+        "semantic-fact"
+      ],
+      "context": {
+        "component": "src/seed/1"
+      },
+      "exact_seed_id": "53ad227f-48c3-48f2-b2be-3e96af58ad8b",
+      "result_count": 1,
+      "positive_record_and_body_equal_seed": true
+    },
+    {
+      "command": 976,
+      "path": "topics/seed/records/1.md",
+      "session": 2,
+      "requested_kind": [
+        "semantic-fact"
+      ],
+      "context": {
+        "component": "src/seed/1"
+      },
+      "exact_seed_id": "53ad227f-48c3-48f2-b2be-3e96af58ad8b",
+      "result_count": 0,
+      "positive_record_and_body_equal_seed": null
+    }
+  ],
+  "condition_recall_checks": 24,
+  "semantic_content_checks": {
+    "wall_v3_and_two_origins_history": true,
+    "prune_tombstone_and_absence": true,
+    "withheld_identity_closure_and_private_payload": true,
+    "paired_independent_useful_recall": true
+  },
+  "source_bridge_from_81_changed_paths": [
+    "docs/adr/0005-admission-consolidation-retrieval.md",
+    "docs/adr/0016-incremental-sharing-review.md",
+    "docs/design/v0.0.3-daily-use-repair.md",
+    "docs/design/v0.0.3-recall-catalog.md",
+    "docs/releases/v0.0.3.md",
+    "docs/research/2026-10-25-recall-final-evaluation.md",
+    "docs/research/2026-10-26-daily-controller-coverage.md",
+    "docs/research/2026-10-26-publication-validation-cost.md",
+    "docs/research/2026-10-26-seed-recall-kind-qualification.md",
+    "docs/research/data/2026-10-26-daily-use-final/required12/bindings.json",
+    "docs/research/data/2026-10-26-daily-use-final/required12/commands-without-environment.json",
+    "docs/research/data/2026-10-26-daily-use-final/required12/driver-completion.json",
+    "docs/research/data/2026-10-26-daily-use-final/required12/events.json",
+    "docs/research/data/2026-10-26-daily-use-final/required12/feature-state-history.jsonl",
+    "docs/research/data/2026-10-26-daily-use-final/required12/independent-review/audit.py",
+    "docs/research/data/2026-10-26-daily-use-final/required12/independent-review/audit.stdout",
+    "docs/research/data/2026-10-26-daily-use-final/required12/independent-review/evidence-manifest.json",
+    "docs/research/data/2026-10-26-daily-use-final/required12/independent-review/review.md",
+    "docs/research/data/2026-10-26-daily-use-final/required12/independent-review/source.json",
+    "docs/research/data/2026-10-26-daily-use-final/required12/outcome.json",
+    "docs/research/data/2026-10-26-daily-use-final/required12/private-raw-blob-manifest.json",
+    "docs/research/data/2026-10-26-daily-use-final/required12/qualification-status.json",
+    "docs/research/data/2026-10-26-daily-use-final/required12/seed-reference.json",
+    "docs/research/data/2026-10-26-daily-use-final/required12/source-after.json",
+    "docs/research/data/2026-10-26-daily-use-final/required12/source-before.json",
+    "docs/research/data/2026-10-26-daily-use-final/required12/source-binding.json",
+    "docs/research/data/2026-10-26-daily-use-final/required12/summary.json",
+    "docs/research/data/2026-10-26-daily-use-final/seed-kind-controller-review/review.md",
+    "docs/research/data/2026-10-26-daily-use-final/seed-kind-controller-review/source.json",
+    "docs/research/data/2026-10-26-daily-use-final/superseded-required24/driver-completion.json",
+    "docs/research/data/2026-10-26-daily-use-final/superseded-required24/outcome.json",
+    "docs/research/data/2026-10-26-daily-use-final/superseded-required24/qualification-gap-interruption.json",
+    "docs/research/data/2026-10-26-daily-use-final/superseded-required24/retention.json",
+    "docs/research/data/2026-10-26-daily-use-final/superseded-required24/source-after.json",
+    "docs/research/data/2026-10-26-daily-use-final/superseded-required24/source-before.json",
+    "docs/research/data/2026-10-26-final-native-gate/linux/completion.json",
+    "docs/research/data/2026-10-26-final-native-gate/linux/driver-completion.json",
+    "docs/research/data/2026-10-26-final-native-gate/linux/gate.stderr",
+    "docs/research/data/2026-10-26-final-native-gate/linux/gate.stdout",
+    "docs/research/data/2026-10-26-final-native-gate/linux/source-after.json",
+    "docs/research/data/2026-10-26-final-native-gate/linux/source-before.json",
+    "docs/research/data/2026-10-26-final-native-gate/linux/source-binding.json",
+    "docs/research/data/2026-10-26-final-native-gate/linux/summary.json",
+    "docs/research/data/2026-10-26-publication-validation/bindings.json",
+    "docs/research/data/2026-10-26-publication-validation/budget-linux-results.json",
+    "docs/research/data/2026-10-26-publication-validation/budget-linux-source-after.json",
+    "docs/research/data/2026-10-26-publication-validation/budget-linux-source-before.json",
+    "docs/research/data/2026-10-26-publication-validation/budget-macos-results.json",
+    "docs/research/data/2026-10-26-publication-validation/budget-macos-source-after.json",
+    "docs/research/data/2026-10-26-publication-validation/budget-macos-source-before.json",
+    "docs/research/data/2026-10-26-publication-validation/code-review.md",
+    "docs/research/data/2026-10-26-publication-validation/code-source.json",
+    "docs/research/data/2026-10-26-publication-validation/continued-control-commands.json",
+    "docs/research/data/2026-10-26-publication-validation/continued-control-result.json",
+    "docs/research/data/2026-10-26-publication-validation/continued-control-source-bindings.json",
+    "docs/research/data/2026-10-26-publication-validation/design-review.md",
+    "docs/research/data/2026-10-26-publication-validation/design-source.json",
+    "docs/research/data/2026-10-26-publication-validation/focused-linux-results.json",
+    "docs/research/data/2026-10-26-publication-validation/focused-linux-source-after.json",
+    "docs/research/data/2026-10-26-publication-validation/focused-linux-source-before.json",
+    "docs/research/data/2026-10-26-publication-validation/focused-macos-results.json",
+    "docs/research/data/2026-10-26-publication-validation/focused-macos-source-after.json",
+    "docs/research/data/2026-10-26-publication-validation/focused-macos-source-before.json",
+    "docs/research/data/2026-10-26-publication-validation/instrumented-call-counts.json",
+    "docs/research/data/2026-10-26-publication-validation/linux24-failed-command.json",
+    "docs/research/data/2026-10-26-publication-validation/linux24-failure.txt",
+    "docs/research/data/2026-10-26-publication-validation/linux24-outcome.json",
+    "docs/research/data/2026-10-26-publication-validation/linux24-source-after.json",
+    "docs/research/data/2026-10-26-publication-validation/linux24-source-before.json",
+    "docs/research/data/2026-10-26-publication-validation/macos12-failed-command.json",
+    "docs/research/data/2026-10-26-publication-validation/macos12-failure.txt",
+    "docs/research/data/2026-10-26-publication-validation/macos12-outcome.json",
+    "docs/research/data/2026-10-26-publication-validation/macos12-source-after.json",
+    "docs/research/data/2026-10-26-publication-validation/macos12-source-before.json",
+    "docs/research/data/2026-10-26-publication-validation/opus-result.json",
+    "docs/research/data/2026-10-26-publication-validation/opus-review.md",
+    "docs/research/data/2026-10-26-publication-validation/opus-source-binding.json",
+    "docs/research/data/2026-10-26-publication-validation/pilot-events.json",
+    "docs/research/data/2026-10-26-publication-validation/pilot-outcome.json",
+    "docs/research/data/2026-10-26-publication-validation/pilot-seed-reference.json",
+    "docs/research/data/2026-10-26-publication-validation/pilot-source-after.json",
+    "docs/research/data/2026-10-26-publication-validation/pilot-source-before.json",
+    "docs/research/data/2026-10-26-recall-target/independent-review/audit.py",
+    "docs/research/data/2026-10-26-recall-target/independent-review/audit.stdout",
+    "docs/research/data/2026-10-26-recall-target/independent-review/evidence-manifest.json",
+    "docs/research/data/2026-10-26-recall-target/independent-review/review.md",
+    "docs/research/data/2026-10-26-recall-target/independent-review/source.json",
+    "docs/research/data/2026-10-26-recall-target/operator-decision-receipt.json",
+    "docs/research/data/2026-10-26-recall-target/previously-accepted-runtime/commands.json",
+    "docs/research/data/2026-10-26-recall-target/previously-accepted-runtime/observations.json",
+    "docs/research/data/2026-10-26-recall-target/previously-accepted-runtime/producer.py",
+    "docs/research/data/2026-10-26-recall-target/previously-accepted-runtime/raw-evidence-manifest.json",
+    "docs/research/data/2026-10-26-recall-target/previously-accepted-runtime/result.json",
+    "docs/research/data/2026-10-26-recall-target/previously-accepted-runtime/source-after.json",
+    "docs/research/data/2026-10-26-recall-target/previously-accepted-runtime/source-before.json",
+    "docs/research/data/2026-10-26-recall-target/repaired-runtime/commands.json",
+    "docs/research/data/2026-10-26-recall-target/repaired-runtime/observations.json",
+    "docs/research/data/2026-10-26-recall-target/repaired-runtime/producer.py",
+    "docs/research/data/2026-10-26-recall-target/repaired-runtime/raw-evidence-manifest.json",
+    "docs/research/data/2026-10-26-recall-target/repaired-runtime/result.json",
+    "docs/research/data/2026-10-26-recall-target/repaired-runtime/source-after.json",
+    "docs/research/data/2026-10-26-recall-target/repaired-runtime/source-before.json",
+    "docs/research/data/2026-10-26-recall-target/source-extraction-validation.json",
+    "docs/research/data/2026-10-26-recall-target/source-reconciliation-receipt.json",
+    "docs/research/data/2026-10-26-recall-target/summary.json",
+    "scripts/evaluations/daily_use.py"
+  ],
+  "publication_states": {
+    "('prepare', 'prepared')": 51,
+    "('land', 'landed')": 29,
+    "('land', 'already-landed')": 1,
+    "('land', 'pending-reconciliation')": 22
+  },
+  "private_apply_readback_bodies_retained": 0,
+  "private_apply_readback_bodies_not_retained": 31,
+  "seconds": 4129.384333337657,
+  "driver_exit": 0,
+  "errors": [],
+  "new_product_or_test_executions": 0,
+  "new_model_calls": 0,
+  "whole99_or_release_accepted": false,
+  "jobs": "terminal and collected",
+  "worlds": 0,
+  "source_holds": "RELEASED",
+  "external_writer_grant": "NONE / RELEASED"
+}
