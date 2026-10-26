@@ -1,0 +1,394 @@
+{
+  "case": "expired-source",
+  "question": "Is the sunset endpoint covered by any currently valid project lesson?",
+  "context": {},
+  "finish": {
+    "action": "finish",
+    "paths": [],
+    "complete": true,
+    "clarification_required": false,
+    "rationale": "No currently valid project lesson covers the sunset endpoint. The one direct match is topics/r/612fc506-2490-4e5c-a38a-b318780b8260-v1.md ('Sunset endpoint', repository scope). I found it through MEMORY.md, then topics/g/request-reliability.md, then topics/n/request-reliability-0-5.md. The index labels it active, but that label is untrusted. When the real qualifier checked the whole bank (inventory 5dbf87d4\u2026, main @ 6dd815b8, evaluated 2026-10-26T05:24:04Z), it returned 0 results and 0 qualified current records for this selected source (selection_state: empty), so the record is not usable current guidance. The exclusion counts don't say which reason applied to this record. They do include one 'valid-time' exclusion, so the lesson has most likely expired, but that is an inference, not something the qualifier stated. I didn't select the other entries in that index: 'Retired protocol' and 'Legacytimeout' are marked superseded, 'Withdrawn fallback' is revoked, and none of them is about the endpoint. The other repository-scoped leaf indexes cover unrelated subjects: source review, cache/quota, retention, work admission, pagination, session recovery and request identity. So do the financial-reconciliation and workspace-configuration topics. Component-scoped topics (for example src/deployment) were left unexpanded because no component context was supplied. Lessons scoped that way can't qualify without a component, and missing-context:component exclusions are common in this bank. If the question is about a specific component, a recall with that component supplied could still turn up a lesson. projectbrief.md couldn't be read as a navigation node, since it is a context file. It is only orientation material and can't count as a typed lesson. This is a fallible coverage assertion based on reading the topics by meaning, not a verified proof that nothing relevant exists. No canonical memory was changed."
+  },
+  "failure": null,
+  "expected_paths_scored_after_finish": [],
+  "selected_paths": [],
+  "missed": [],
+  "unexpected": [],
+  "all_qualified_paths_considered": [],
+  "model_calls": 4,
+  "reported_model_cost_usd": 1.2246328,
+  "canonical_helper_seconds": 16.7254414599156,
+  "semantic_completeness_verified": false,
+  "native_client_integration_claimed": false,
+  "performance_acceptance_claimed": false,
+  "model_usage_and_cost": [
+    {
+      "argv": [
+        "claude",
+        "-p",
+        "--safe-mode",
+        "--tools",
+        "",
+        "--no-session-persistence",
+        "--output-format",
+        "json",
+        "--max-budget-usd",
+        "2.00",
+        "--json-schema",
+        "{\"type\": \"object\", \"properties\": {\"action\": {\"type\": \"string\", \"enum\": [\"read-node\", \"read-nodes\", \"read-sources\", \"finish\"]}, \"path\": {\"type\": \"string\"}, \"paths\": {\"type\": \"array\", \"items\": {\"type\": \"string\"}, \"maxItems\": 64, \"uniqueItems\": true}, \"complete\": {\"type\": \"boolean\"}, \"clarification_required\": {\"type\": \"boolean\"}, \"rationale\": {\"type\": \"string\"}}, \"required\": [\"action\"], \"additionalProperties\": false}"
+      ],
+      "exit": 0,
+      "seconds": 6.56303099996876,
+      "input_bytes": 41174,
+      "request_sha256": "b637898506d229dddc9a41dfadffe45881110d1c84863ff7dc8a8df55c0b8dbb",
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 16187,
+        "cache_read_input_tokens": 2126,
+        "output_tokens": 523,
+        "output_tokens_details": {
+          "thinking_tokens": 186
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 16187,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 523,
+            "cache_read_input_tokens": 2126,
+            "cache_creation_input_tokens": 16187,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 16187
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "model_usage": {
+        "claude-opus-5-5": {
+          "inputTokens": 2,
+          "outputTokens": 523,
+          "cacheReadInputTokens": 2126,
+          "cacheCreationInputTokens": 16187,
+          "webSearchRequests": 0,
+          "costUSD": 0.1403892,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "thinkingTokens": 186,
+          "canonicalModel": "claude-opus-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "reported_cost_usd": 0.1403892
+    },
+    {
+      "argv": [
+        "claude",
+        "-p",
+        "--safe-mode",
+        "--tools",
+        "",
+        "--no-session-persistence",
+        "--output-format",
+        "json",
+        "--max-budget-usd",
+        "2.00",
+        "--json-schema",
+        "{\"type\": \"object\", \"properties\": {\"action\": {\"type\": \"string\", \"enum\": [\"read-node\", \"read-nodes\", \"read-sources\", \"finish\"]}, \"path\": {\"type\": \"string\"}, \"paths\": {\"type\": \"array\", \"items\": {\"type\": \"string\"}, \"maxItems\": 64, \"uniqueItems\": true}, \"complete\": {\"type\": \"boolean\"}, \"clarification_required\": {\"type\": \"boolean\"}, \"rationale\": {\"type\": \"string\"}}, \"required\": [\"action\"], \"additionalProperties\": false}"
+      ],
+      "exit": 0,
+      "seconds": 15.543042125063948,
+      "input_bytes": 64455,
+      "request_sha256": "f522132da788c0d9dcf5575519710588c280a954117d980cbf4bb690bc43521e",
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 27612,
+        "cache_read_input_tokens": 2126,
+        "output_tokens": 810,
+        "output_tokens_details": {
+          "thinking_tokens": 314
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 27612,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 810,
+            "cache_read_input_tokens": 2126,
+            "cache_creation_input_tokens": 27612,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 27612
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "model_usage": {
+        "claude-opus-5-5": {
+          "inputTokens": 2,
+          "outputTokens": 810,
+          "cacheReadInputTokens": 2126,
+          "cacheCreationInputTokens": 27612,
+          "webSearchRequests": 0,
+          "costUSD": 0.2375292,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "thinkingTokens": 314,
+          "canonicalModel": "claude-opus-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "reported_cost_usd": 0.2375292
+    },
+    {
+      "argv": [
+        "claude",
+        "-p",
+        "--safe-mode",
+        "--tools",
+        "",
+        "--no-session-persistence",
+        "--output-format",
+        "json",
+        "--max-budget-usd",
+        "2.00",
+        "--json-schema",
+        "{\"type\": \"object\", \"properties\": {\"action\": {\"type\": \"string\", \"enum\": [\"read-node\", \"read-nodes\", \"read-sources\", \"finish\"]}, \"path\": {\"type\": \"string\"}, \"paths\": {\"type\": \"array\", \"items\": {\"type\": \"string\"}, \"maxItems\": 64, \"uniqueItems\": true}, \"complete\": {\"type\": \"boolean\"}, \"clarification_required\": {\"type\": \"boolean\"}, \"rationale\": {\"type\": \"string\"}}, \"required\": [\"action\"], \"additionalProperties\": false}"
+      ],
+      "exit": 0,
+      "seconds": 13.514325708965771,
+      "input_bytes": 101902,
+      "request_sha256": "949159782abb9728d8f07b39ba19ef0987b07a73691922b40d6a25683af7713c",
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 47588,
+        "cache_read_input_tokens": 2126,
+        "output_tokens": 833,
+        "output_tokens_details": {
+          "thinking_tokens": 353
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 47588,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 833,
+            "cache_read_input_tokens": 2126,
+            "cache_creation_input_tokens": 47588,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 47588
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "model_usage": {
+        "claude-opus-5-5": {
+          "inputTokens": 2,
+          "outputTokens": 833,
+          "cacheReadInputTokens": 2126,
+          "cacheCreationInputTokens": 47588,
+          "webSearchRequests": 0,
+          "costUSD": 0.39779719999999996,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "thinkingTokens": 353,
+          "canonicalModel": "claude-opus-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "reported_cost_usd": 0.39779719999999996
+    },
+    {
+      "argv": [
+        "claude",
+        "-p",
+        "--safe-mode",
+        "--tools",
+        "",
+        "--no-session-persistence",
+        "--output-format",
+        "json",
+        "--max-budget-usd",
+        "2.00",
+        "--json-schema",
+        "{\"type\": \"object\", \"properties\": {\"action\": {\"type\": \"string\", \"enum\": [\"read-node\", \"read-nodes\", \"read-sources\", \"finish\"]}, \"path\": {\"type\": \"string\"}, \"paths\": {\"type\": \"array\", \"items\": {\"type\": \"string\"}, \"maxItems\": 64, \"uniqueItems\": true}, \"complete\": {\"type\": \"boolean\"}, \"clarification_required\": {\"type\": \"boolean\"}, \"rationale\": {\"type\": \"string\"}}, \"required\": [\"action\"], \"additionalProperties\": false}"
+      ],
+      "exit": 0,
+      "seconds": 14.134319583070464,
+      "input_bytes": 115007,
+      "request_sha256": "abc813fbf2c9ae7740b37b7ff7d44b131be0932756cce77995fd5afbce2ecc50",
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 53233,
+        "cache_read_input_tokens": 2126,
+        "output_tokens": 1131,
+        "output_tokens_details": {
+          "thinking_tokens": 348
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 53233,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 1131,
+            "cache_read_input_tokens": 2126,
+            "cache_creation_input_tokens": 53233,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 53233
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "model_usage": {
+        "claude-opus-5-5": {
+          "inputTokens": 2,
+          "outputTokens": 1131,
+          "cacheReadInputTokens": 2126,
+          "cacheCreationInputTokens": 53233,
+          "webSearchRequests": 0,
+          "costUSD": 0.4489172,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "thinkingTokens": 348,
+          "canonicalModel": "claude-opus-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "reported_cost_usd": 0.4489172
+    }
+  ],
+  "raw_evidence_hashes": {
+    "3-model-request.json": "949159782abb9728d8f07b39ba19ef0987b07a73691922b40d6a25683af7713c",
+    "9-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "2-model.stdout": "eb5eea489e792441d16b650e52cc0b83ee243c387e9693d5550703365949c315",
+    "7-public.stdout": "72d04f7a4c97b903f64405c0242110f50e550b5ea0507a709b22c87fd9e15d3e",
+    "14-input-navigation.json": "6ff3276c0ac732a3f6e047e3bb3ac87d3cc7ce1d7a8663fb5449822031a94e3e",
+    "3-public.stdout": "a7110395c03153e092c876ebb336536016d8ab665f58cb96cac95d6e341c6784",
+    "11-public.stdout": "3fbdb5a16928de0cd270d0ad517a635567172ea5b4aef6a58c1792ba7c8634b5",
+    "15-public.stdout": "e238ca2c8d421ee5ace86f82dbf5a8a8d509779e8f44b52b77ba18589cf65ad9",
+    "22-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "7-input-navigation.json": "d3920cd8e98ef54f4bbd7fc05236be58afebedb346b066f76cefc578eba7d4a2",
+    "12-public.stdout": "8ca337661171704dcade951d14b638ee823c6c18969853b644d4693502e4b54f",
+    "18-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "4-model.stdout": "ed030376b53224d2cc3203406db96031aefc3683bef0a50e597fb7292c8dd5df",
+    "21-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "result.json": "11b847c3041eb9fa2cde9221a8f561cdd4042532a2972265f43cfb02662dc27c",
+    "16-input-navigation.json": "6ff3276c0ac732a3f6e047e3bb3ac87d3cc7ce1d7a8663fb5449822031a94e3e",
+    "3-model.stdout": "ba3b7db5ed258daba094f9905e8ecab490b2e15316454750d602fec6f33e3134",
+    "16-public.stdout": "52437bd16fa87ce79efd6f619a08445c56afd3c8693f01c1c1c0e7db876ac660",
+    "4-public.stdout": "4e626472a8a03c0742829dafe19eed6c4f7aa900aeff7c0235e0f81970d76a9f",
+    "5-input-navigation.json": "d3920cd8e98ef54f4bbd7fc05236be58afebedb346b066f76cefc578eba7d4a2",
+    "1-input-context.json": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+    "4-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "18-input-navigation.json": "6ff3276c0ac732a3f6e047e3bb3ac87d3cc7ce1d7a8663fb5449822031a94e3e",
+    "22-input-navigation.json": "8e6c61bc7e6e99225fa3489397408d87e63db71f161b1588aa55d1ee81c29a34",
+    "3-input-navigation.json": "d3920cd8e98ef54f4bbd7fc05236be58afebedb346b066f76cefc578eba7d4a2",
+    "12-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "10-input-navigation.json": "d3920cd8e98ef54f4bbd7fc05236be58afebedb346b066f76cefc578eba7d4a2",
+    "4-model.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "16-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "3-model.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "21-public.stdout": "11355877d8bbef814ab300d607ace6bf46b7212cc0a05aa1e2b843f337025812",
+    "18-public.stdout": "d004968c1bb85734b863b3508aec2e3a5a6c0d04473542df47f843679cb013d9",
+    "11-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "20-input-navigation.json": "6ff3276c0ac732a3f6e047e3bb3ac87d3cc7ce1d7a8663fb5449822031a94e3e",
+    "model-calls.json": "6680071b409c7ded3b510244519a055ec36d22b39cf3d7e1b8eb22868c5a6039",
+    "22-public.stdout": "6f689a3723f8e94a6a56b50efc280450c5a461fb0af00fe915eb62a2532e973a",
+    "15-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "2-model.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "7-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "9-input-navigation.json": "d3920cd8e98ef54f4bbd7fc05236be58afebedb346b066f76cefc578eba7d4a2",
+    "9-public.stdout": "40f8852b9ed704b51db2a2b8b3c6c3346b740311f96ba6ba1036dcd8de48384b",
+    "3-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "12-input-navigation.json": "6ff3276c0ac732a3f6e047e3bb3ac87d3cc7ce1d7a8663fb5449822031a94e3e",
+    "commands.json": "e21283a3c5feda71a9318ba326c21937c51ec5c840679af0621476496075e73e",
+    "14-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "6-input-navigation.json": "d3920cd8e98ef54f4bbd7fc05236be58afebedb346b066f76cefc578eba7d4a2",
+    "10-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "15-input-navigation.json": "6ff3276c0ac732a3f6e047e3bb3ac87d3cc7ce1d7a8663fb5449822031a94e3e",
+    "2-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "8-public.stdout": "1d16964b56ee14e4fb31c2c96213d3fb49d6745b715e67b37531508de647c29c",
+    "6-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "4-model-request.json": "abc813fbf2c9ae7740b37b7ff7d44b131be0932756cce77995fd5afbce2ecc50",
+    "4-input-navigation.json": "d3920cd8e98ef54f4bbd7fc05236be58afebedb346b066f76cefc578eba7d4a2",
+    "1-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "5-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "19-public.stdout": "730be7dea5d921de80bf216e7139b26a795d06c809c80eeba061ba61ef7e6f32",
+    "17-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "20-public.stdout": "0001da051acaf9c4d93d1be667603c886e8a908399cd2ee85fdc8237bce594c4",
+    "17-input-navigation.json": "6ff3276c0ac732a3f6e047e3bb3ac87d3cc7ce1d7a8663fb5449822031a94e3e",
+    "1-model.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "13-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "22-input-recall.json": "68dbe5f9bdc274d0add1a1ee062bf9b2d9730d6ae81199d87236c0fb9d4ff947",
+    "20-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "11-input-navigation.json": "d3920cd8e98ef54f4bbd7fc05236be58afebedb346b066f76cefc578eba7d4a2",
+    "17-public.stdout": "b55e2cc131ae7355fb9a7ee2db5d4c3297b0a2a1038b0303b7cc53427dfd9d5f",
+    "19-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "1-model.stdout": "428df2db4cb99b6e93db8f17df14e1ea7b94946e630bcf23ccd35e106be22551",
+    "13-public.stdout": "7e587f78515a733f15fa98c0a7f420cb6394c62a535f77bc1cceaf92c97059d6",
+    "1-public.stdout": "453dd09f5dbc08f168ffcc7a0c19e5ce37e48dea6f67d1c0f0c82fbf48b38339",
+    "1-model-request.json": "b637898506d229dddc9a41dfadffe45881110d1c84863ff7dc8a8df55c0b8dbb",
+    "19-input-navigation.json": "6ff3276c0ac732a3f6e047e3bb3ac87d3cc7ce1d7a8663fb5449822031a94e3e",
+    "2-input-navigation.json": "d3920cd8e98ef54f4bbd7fc05236be58afebedb346b066f76cefc578eba7d4a2",
+    "5-public.stdout": "bbbcf734e66f26a1477cbd8aa148661fb609321917427db1016d2c951bf8111a",
+    "2-public.stdout": "d6d68a35c3ed1405666614c7e81dd2c2712bdb4e9fe343598675d3b6864f0082",
+    "8-input-navigation.json": "d3920cd8e98ef54f4bbd7fc05236be58afebedb346b066f76cefc578eba7d4a2",
+    "6-public.stdout": "b565234f0c8b385d892da852c299e85e7dbc81a314d367f5f5b34d2f13b0e1fb",
+    "13-input-navigation.json": "6ff3276c0ac732a3f6e047e3bb3ac87d3cc7ce1d7a8663fb5449822031a94e3e",
+    "2-model-request.json": "f522132da788c0d9dcf5575519710588c280a954117d980cbf4bb690bc43521e",
+    "8-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "14-public.stdout": "79244c1f3ea2a39c66a23ed2474f837154f3856a06bcf54d1fa03a18c586178b",
+    "21-input-navigation.json": "6ff3276c0ac732a3f6e047e3bb3ac87d3cc7ce1d7a8663fb5449822031a94e3e",
+    "10-public.stdout": "9527e0bd50824d46db9cb39ded04761f6e403f65ee10491d143433a90ce31586"
+  }
+}

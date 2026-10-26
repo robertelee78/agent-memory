@@ -1,0 +1,9 @@
+{
+  "fixture": "semantic-navigation-v3-parent-scopes",
+  "distinct_lessons": 10000,
+  "canonical_files": 10203,
+  "canonical_bytes": 11768179,
+  "root_routes": 31,
+  "layout_basis": "authored source subjects and actual component identities, independent of held-out questions",
+  "frozen_literal_baseline_modified": false
+}

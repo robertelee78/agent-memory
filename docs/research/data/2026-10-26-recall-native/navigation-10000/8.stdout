@@ -1,0 +1,186 @@
+{
+  "schema": "agent-memory/discovery-result-v1",
+  "operation": "read",
+  "discovery": {
+    "schema": "agent-memory/discovery-v1",
+    "task": "How often may a temporary network error be attempted again?",
+    "intent": "recall",
+    "binding": {
+      "repo_root": "/private/tmp/agent-memory-test-y3whm8pd/repo",
+      "bank_root": "memory-bank",
+      "project_id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+      "scope_context": {
+        "developer_id": "27f87e34-3c89-4d28-9a91-30ddcdf23f27",
+        "project_id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+        "developer_sha256": "820c0017f3d848427e5d25395a3f8064937da3160b8318975b1587da53eb1b64",
+        "project_sha256": "f5eeb16dc1c7cc3afec37779930f669acd7a108e1e16978a55ef931ba2b9208c",
+        "checkout_key": "16777234:455334576",
+        "repository_settings_sha256": "769e694ba050d41b06716fee04472ab3a44a5f1d29a88d8b397bf2fd397688ba",
+        "initialization_only": false
+      },
+      "context": {
+        "branch": "main",
+        "revision": "606e91957cd520ba1d1b65e4124a4ca177205561"
+      },
+      "git_context": {
+        "branch": "main",
+        "revision": "606e91957cd520ba1d1b65e4124a4ca177205561"
+      },
+      "inventory_sha256": "5dbf87d4bfa72f853901600b3a5a453f69667a62a60a649f16edeb8ca1e20816"
+    },
+    "nodes": [
+      {
+        "path": "MEMORY.md",
+        "sha256": "ec683d28c0d1ce5b816d28ddd08fe074b8206158485791dd35f4e6121a8c55e0"
+      },
+      {
+        "path": "topics/g/request-reliability.md",
+        "sha256": "72e7d3b9784d94552b34d7ffbc20ec97211b4f20156b858a86742840e3f1e13e"
+      },
+      {
+        "path": "topics/n/request-reliability-0-5.md",
+        "sha256": "dad949a74f2a1869f4de9f88ca59080e8777ce3a80d29bf0d66aef7495fa88d5"
+      }
+    ],
+    "sources": [],
+    "complete": false,
+    "rationale": null
+  },
+  "qualification": {
+    "schema": "agent-memory/retrieval-result-v1",
+    "project_id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+    "results": [
+      {
+        "path": "topics/r/9a2b24a7-3464-4ce4-b488-28e5c6de71d3-v1.md",
+        "format": "standalone-record",
+        "body": "# Bounded retries\n\nRetry transient requests three times with exponential backoff. Preserve the request identifier across attempts; a permanent validation failure is returned immediately.\n",
+        "source_sha256": "1b70a9dff4a2bcbc7cfa9400330c3661b2bf8a6db19e08d254d1a52b7cc8e601",
+        "scope_chain": [
+          "repository",
+          "repository",
+          "repository"
+        ],
+        "source_class": "external",
+        "untrusted_data": true,
+        "source_assertions_verified": false,
+        "admission_verified": false,
+        "procedural_guidance": false,
+        "record": {
+          "schema": "agent-memory/record-v1",
+          "id": "9a2b24a7-3464-4ce4-b488-28e5c6de71d3",
+          "version": 1,
+          "project-id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+          "kind": "semantic-fact",
+          "status": "active",
+          "scope": "repository",
+          "applicability": "known",
+          "conditions": {},
+          "source": {
+            "actor": "fixture-observer",
+            "kind": "executable-test"
+          },
+          "evidence": [
+            "fixture://quality/retry-limit"
+          ],
+          "origin": {
+            "developer-id": "aa5e6be7-6e22-4e31-b653-9d855486b8a2",
+            "harness": "custom-fixture",
+            "session": "fixed-quality-labels",
+            "code-state": "not-code"
+          },
+          "recorded-at": "2026-10-25T08:00:00Z",
+          "updated": "2026-10-25T08:00:00Z",
+          "valid-from": null,
+          "valid-until": null,
+          "derived-from": [],
+          "corrects": [],
+          "supersedes": [],
+          "trust": "reviewed",
+          "visibility": "visible",
+          "admission-reason": "Authored synthetic evaluation assertion; not real admission evidence"
+        },
+        "selection_class": "current-record",
+        "selection": {
+          "current": true,
+          "gates": {
+            "authorized-scope": true,
+            "applicable": true,
+            "active": true,
+            "valid-time": true,
+            "sufficient-trust": true,
+            "visible": true,
+            "no-active-superseder": true
+          },
+          "reasons": []
+        },
+        "match": {
+          "strategy": "exact-path",
+          "score": 9000,
+          "matching_terms": []
+        }
+      }
+    ],
+    "evaluated_at": "2026-10-26T06:49:53.609158Z",
+    "context": {
+      "branch": "main",
+      "revision": "606e91957cd520ba1d1b65e4124a4ca177205561"
+    },
+    "scope_context": {
+      "developer_id": "27f87e34-3c89-4d28-9a91-30ddcdf23f27",
+      "project_id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+      "developer_sha256": "820c0017f3d848427e5d25395a3f8064937da3160b8318975b1587da53eb1b64",
+      "project_sha256": "f5eeb16dc1c7cc3afec37779930f669acd7a108e1e16978a55ef931ba2b9208c",
+      "checkout_key": "16777234:455334576",
+      "repository_settings_sha256": "769e694ba050d41b06716fee04472ab3a44a5f1d29a88d8b397bf2fd397688ba",
+      "initialization_only": false
+    },
+    "bank_observation_sha256": "5abed1e452fe4a0998cb324df8d9e40c11fb9aab490a2e5349e55f1cfab98221",
+    "excluded_counts": {},
+    "metrics": {
+      "inventory_files": 10203,
+      "entries": 10202,
+      "qualified_candidates": 1,
+      "ranked": 1,
+      "selected": 1,
+      "bounded_candidate_bytes_read": 971,
+      "operation_local_observation_used": false,
+      "canonical_observation_payload_bytes_read": 11769150,
+      "canonical_observation_file_reads": 10204,
+      "parsed_records": 1,
+      "catalog_updated": false,
+      "inspected_entries": 1,
+      "candidate_count_scope": "semantic-selection-invalidation-and-oversize-guards",
+      "result_bytes": 2045,
+      "elapsed_seconds": 0.956747250049375
+    },
+    "discovery": {
+      "trace_sha256": "f5f66f0b86cd7bbffe7eac8ec3bd946a9ca7b79df3080a43cc2cabeb2d7dc350",
+      "semantic_interpreter": "invoking-harness",
+      "semantic_completeness_verified": false,
+      "visited_nodes": 3,
+      "selected_sources": 1
+    },
+    "audit": {
+      "path": "/private/tmp/agent-memory-test-y3whm8pd/state/agent-memory/writes/c81c11804e78834403afe47e97cd61a44f378370aad925a6a71dec95f5b46683/security-audit/65b4d451-43ef-438d-bf72-9accdaa849d1.policy-check.checked.27f87e34-3c89-4d28-9a91-30ddcdf23f27.json",
+      "verified": true,
+      "phase": "checked"
+    },
+    "canonical_writes_performed": false,
+    "audit_writes_performed": true,
+    "derived_cache_writes_performed": false,
+    "optional_indexes_used": true,
+    "source_assertions_verified": false,
+    "publication_verified": false,
+    "code_working_bytes_verified": false,
+    "validation_scope": "metadata-currentness-and-bounded-file-recall"
+  },
+  "qualification_sha256": "2250d0d6c014f74b1623cd3313a88c7671bd07d4bacd43ba55de0244f34ddc6e",
+  "qualification_completed": true,
+  "usable_as_current_guidance": true,
+  "qualified_current_records": 1,
+  "orientation_only_results": 0,
+  "selection_state": "current-records-available",
+  "semantic_interpreter": "invoking-harness",
+  "semantic_completeness_verified": false,
+  "canonical_writes_performed": false
+}

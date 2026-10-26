@@ -1,0 +1,453 @@
+{
+  "schema": "agent-memory/labeled-recall-research-v1",
+  "intent": "Public-reader observations against fixed labels; not an acceptance threshold.\n\nQuality cases may run concurrently against an immutable disposable bank; their\nlatencies are marked contended. Isolated latency samples are separate. No cache\nflush is attempted and no cold-cache claim is made.\n",
+  "platform": "macOS-27.2-arm64-arm-64bit-Mach-O",
+  "python": "3.15.0",
+  "processor": "arm",
+  "producer_commit": "785ae413146103902f4742e3a59fd3aad950a1cf",
+  "producer_files": {
+    "scripts/evaluations/labeled_recall_probe.py": {
+      "sha256": "b6e321e2d29db18cbb1962014be71348a5c75c5e6feb8ffac24cf481528cf66a",
+      "mode": 420
+    },
+    "scripts/evaluations/labeled_recall_fixture.py": {
+      "sha256": "dded27f037c0770edbf3127eb8f8b944ce29d05b331d4cf0782c2389e627e2a9",
+      "mode": 420
+    }
+  },
+  "argv": [
+    "/tmp/agent-memory-v003/fixed-literal-timing-only.py",
+    "--root",
+    "/opt/agent-memory-worktrees/v003-recall-acceptance",
+    "--baseline",
+    "/opt/agent-memory-worktrees/v001-evaluation-baseline",
+    "--out",
+    "/tmp/agent-memory-v003/fixed-timing-785ae41",
+    "--counts",
+    "1000",
+    "10000",
+    "50000",
+    "--sources",
+    "candidate",
+    "--quality-workers",
+    "1",
+    "--latency-samples",
+    "2"
+  ],
+  "quality_workers": 1,
+  "cold_cache_claimed": false,
+  "tokenizer": null,
+  "token_measurements": null,
+  "quality_cases_executed": false,
+  "timing_only_controller_sha256": "426ea77f6aea3026f17743322c68809b54e7ce9940181063e17eee08a14202e6",
+  "performance_pass": false,
+  "quality_acceptance_pass": false,
+  "observations": [
+    {
+      "source_label": "candidate",
+      "source_commit": "785ae413146103902f4742e3a59fd3aad950a1cf",
+      "artifact_digest": "686092757a8d69732db33c2c34baac42d051b49e4261393dc0f173afb33feca9",
+      "declared_installed_version": "0.0.2",
+      "fixture": {
+        "distinct_lessons": 1000,
+        "record_versions": 1001,
+        "canonical_files": 1020,
+        "canonical_bytes": 1185137,
+        "fixture_sha256": "5631c1ce3e80f1983e03aee568c0efd8fb09cf51b42356b6c24ddf3f2973ba42",
+        "labels_sha256": "14c173c70dde0ba0ea9feea1e70f3d4ad6d69f178adcb93bbe97a68f1f255edf",
+        "body_utf8_bytes": {
+          "min": 53,
+          "median": 173,
+          "p95": 206,
+          "max": 1733
+        }
+      },
+      "structural_validation": {
+        "exit": 0,
+        "valid": true,
+        "seconds": 0.2696718330262229,
+        "parse_error": null,
+        "timed_out": false
+      },
+      "observed_head": "7d01074f94aee0bb9a4199f62f292d8613d23409",
+      "feature_index_head_bank_preserved": true,
+      "latency_samples": [
+        {
+          "case": "literal-multiple-terms",
+          "mode": "latency-0",
+          "latency_regime": "isolated-sequential",
+          "seconds": 0.7798603749834001,
+          "exit": 0,
+          "available": true,
+          "parse_error": null,
+          "timed_out": false,
+          "execution_failure": null,
+          "expected_paths": [
+            "topics/records/retry-limit.md"
+          ],
+          "selected_paths": [
+            "topics/records/retry-limit.md"
+          ],
+          "found_relevant": [
+            "topics/records/retry-limit.md"
+          ],
+          "missed_relevant": [],
+          "unexpected_paths": [],
+          "metrics": {
+            "inventory_files": 1020,
+            "entries": 1019,
+            "qualified_candidates": 664,
+            "ranked": 1,
+            "selected": 1,
+            "bounded_candidate_bytes_read": 1013872,
+            "operation_local_observation_used": true,
+            "canonical_observation_payload_bytes_read": 3555411,
+            "canonical_observation_file_reads": 3060,
+            "parsed_records": 1001,
+            "catalog_updated": false,
+            "inspected_entries": 1019,
+            "candidate_count_scope": "complete-bank",
+            "result_bytes": 2062,
+            "elapsed_seconds": 0.6868056670064107
+          },
+          "encoded_response_bytes": 4840,
+          "checks": {
+            "canonical_source_hashes": true,
+            "exact_source_metadata_body_and_version": true,
+            "excluded_current_guidance_withheld": true,
+            "actual_checkout_context": true,
+            "unsafe_body_and_path_not_disclosed": true
+          },
+          "safety_contract_failures": [],
+          "error": null
+        },
+        {
+          "case": "literal-multiple-terms",
+          "mode": "latency-1",
+          "latency_regime": "isolated-sequential",
+          "seconds": 0.7331447500037029,
+          "exit": 0,
+          "available": true,
+          "parse_error": null,
+          "timed_out": false,
+          "execution_failure": null,
+          "expected_paths": [
+            "topics/records/retry-limit.md"
+          ],
+          "selected_paths": [
+            "topics/records/retry-limit.md"
+          ],
+          "found_relevant": [
+            "topics/records/retry-limit.md"
+          ],
+          "missed_relevant": [],
+          "unexpected_paths": [],
+          "metrics": {
+            "inventory_files": 1020,
+            "entries": 1019,
+            "qualified_candidates": 664,
+            "ranked": 1,
+            "selected": 1,
+            "bounded_candidate_bytes_read": 1013872,
+            "operation_local_observation_used": true,
+            "canonical_observation_payload_bytes_read": 3555411,
+            "canonical_observation_file_reads": 3060,
+            "parsed_records": 1001,
+            "catalog_updated": false,
+            "inspected_entries": 1019,
+            "candidate_count_scope": "complete-bank",
+            "result_bytes": 2062,
+            "elapsed_seconds": 0.6379947919631377
+          },
+          "encoded_response_bytes": 4840,
+          "checks": {
+            "canonical_source_hashes": true,
+            "exact_source_metadata_body_and_version": true,
+            "excluded_current_guidance_withheld": true,
+            "actual_checkout_context": true,
+            "unsafe_body_and_path_not_disclosed": true
+          },
+          "safety_contract_failures": [],
+          "error": null
+        }
+      ],
+      "quality_cases": [],
+      "available_cases": 0,
+      "relevant_found": 0,
+      "relevant_missed": 0,
+      "unexpected_returned": 0,
+      "safety_contract_failure_count": 0
+    },
+    {
+      "source_label": "candidate",
+      "source_commit": "785ae413146103902f4742e3a59fd3aad950a1cf",
+      "artifact_digest": "686092757a8d69732db33c2c34baac42d051b49e4261393dc0f173afb33feca9",
+      "declared_installed_version": "0.0.2",
+      "fixture": {
+        "distinct_lessons": 10000,
+        "record_versions": 10001,
+        "canonical_files": 10163,
+        "canonical_bytes": 11866170,
+        "fixture_sha256": "77e88b89495bf3a08998aff7cc5a7d8b5a85e92d01e5fd7ed67cd067d8e086f7",
+        "labels_sha256": "14c173c70dde0ba0ea9feea1e70f3d4ad6d69f178adcb93bbe97a68f1f255edf",
+        "body_utf8_bytes": {
+          "min": 53,
+          "median": 176,
+          "p95": 208,
+          "max": 1736
+        }
+      },
+      "structural_validation": {
+        "exit": 0,
+        "valid": true,
+        "seconds": 1.6512090410105884,
+        "parse_error": null,
+        "timed_out": false
+      },
+      "observed_head": "7d01074f94aee0bb9a4199f62f292d8613d23409",
+      "feature_index_head_bank_preserved": true,
+      "latency_samples": [
+        {
+          "case": "literal-multiple-terms",
+          "mode": "latency-0",
+          "latency_regime": "isolated-sequential",
+          "seconds": 3.4475682500051335,
+          "exit": 0,
+          "available": true,
+          "parse_error": null,
+          "timed_out": false,
+          "execution_failure": null,
+          "expected_paths": [
+            "topics/records/retry-limit.md"
+          ],
+          "selected_paths": [
+            "topics/records/retry-limit.md"
+          ],
+          "found_relevant": [
+            "topics/records/retry-limit.md"
+          ],
+          "missed_relevant": [],
+          "unexpected_paths": [],
+          "metrics": {
+            "inventory_files": 10163,
+            "entries": 10162,
+            "qualified_candidates": 6664,
+            "ranked": 1,
+            "selected": 1,
+            "bounded_candidate_bytes_read": 10200275,
+            "operation_local_observation_used": true,
+            "canonical_observation_payload_bytes_read": 35598510,
+            "canonical_observation_file_reads": 30489,
+            "parsed_records": 10001,
+            "catalog_updated": false,
+            "inspected_entries": 10162,
+            "candidate_count_scope": "complete-bank",
+            "result_bytes": 2062,
+            "elapsed_seconds": 3.320149000035599
+          },
+          "encoded_response_bytes": 4851,
+          "checks": {
+            "canonical_source_hashes": true,
+            "exact_source_metadata_body_and_version": true,
+            "excluded_current_guidance_withheld": true,
+            "actual_checkout_context": true,
+            "unsafe_body_and_path_not_disclosed": true
+          },
+          "safety_contract_failures": [],
+          "error": null
+        },
+        {
+          "case": "literal-multiple-terms",
+          "mode": "latency-1",
+          "latency_regime": "isolated-sequential",
+          "seconds": 3.4620480419835076,
+          "exit": 0,
+          "available": true,
+          "parse_error": null,
+          "timed_out": false,
+          "execution_failure": null,
+          "expected_paths": [
+            "topics/records/retry-limit.md"
+          ],
+          "selected_paths": [
+            "topics/records/retry-limit.md"
+          ],
+          "found_relevant": [
+            "topics/records/retry-limit.md"
+          ],
+          "missed_relevant": [],
+          "unexpected_paths": [],
+          "metrics": {
+            "inventory_files": 10163,
+            "entries": 10162,
+            "qualified_candidates": 6664,
+            "ranked": 1,
+            "selected": 1,
+            "bounded_candidate_bytes_read": 10200275,
+            "operation_local_observation_used": true,
+            "canonical_observation_payload_bytes_read": 35598510,
+            "canonical_observation_file_reads": 30489,
+            "parsed_records": 10001,
+            "catalog_updated": false,
+            "inspected_entries": 10162,
+            "candidate_count_scope": "complete-bank",
+            "result_bytes": 2062,
+            "elapsed_seconds": 3.3360055000521243
+          },
+          "encoded_response_bytes": 4852,
+          "checks": {
+            "canonical_source_hashes": true,
+            "exact_source_metadata_body_and_version": true,
+            "excluded_current_guidance_withheld": true,
+            "actual_checkout_context": true,
+            "unsafe_body_and_path_not_disclosed": true
+          },
+          "safety_contract_failures": [],
+          "error": null
+        }
+      ],
+      "quality_cases": [],
+      "available_cases": 0,
+      "relevant_found": 0,
+      "relevant_missed": 0,
+      "unexpected_returned": 0,
+      "safety_contract_failure_count": 0
+    },
+    {
+      "source_label": "candidate",
+      "source_commit": "785ae413146103902f4742e3a59fd3aad950a1cf",
+      "artifact_digest": "686092757a8d69732db33c2c34baac42d051b49e4261393dc0f173afb33feca9",
+      "declared_installed_version": "0.0.2",
+      "fixture": {
+        "distinct_lessons": 50000,
+        "record_versions": 50001,
+        "canonical_files": 50798,
+        "canonical_bytes": 59417354,
+        "fixture_sha256": "450e5a55b43dd3424952090f53ed8c178dff2d51eadddba5e4a4fccd40b7d29a",
+        "labels_sha256": "14c173c70dde0ba0ea9feea1e70f3d4ad6d69f178adcb93bbe97a68f1f255edf",
+        "body_utf8_bytes": {
+          "min": 53,
+          "median": 177,
+          "p95": 210,
+          "max": 1738
+        }
+      },
+      "structural_validation": {
+        "exit": 0,
+        "valid": true,
+        "seconds": 7.812012042035349,
+        "parse_error": null,
+        "timed_out": false
+      },
+      "observed_head": "7d01074f94aee0bb9a4199f62f292d8613d23409",
+      "feature_index_head_bank_preserved": true,
+      "latency_samples": [
+        {
+          "case": "literal-multiple-terms",
+          "mode": "latency-0",
+          "latency_regime": "isolated-sequential",
+          "seconds": 16.169258458074182,
+          "exit": 0,
+          "available": true,
+          "parse_error": null,
+          "timed_out": false,
+          "execution_failure": null,
+          "expected_paths": [
+            "topics/records/retry-limit.md"
+          ],
+          "selected_paths": [
+            "topics/records/retry-limit.md"
+          ],
+          "found_relevant": [
+            "topics/records/retry-limit.md"
+          ],
+          "missed_relevant": [],
+          "unexpected_paths": [],
+          "metrics": {
+            "inventory_files": 50798,
+            "entries": 50797,
+            "qualified_candidates": 33331,
+            "ranked": 1,
+            "selected": 1,
+            "bounded_candidate_bytes_read": 51108869,
+            "operation_local_observation_used": true,
+            "canonical_observation_payload_bytes_read": 178252062,
+            "canonical_observation_file_reads": 152394,
+            "parsed_records": 50001,
+            "catalog_updated": false,
+            "inspected_entries": 50797,
+            "candidate_count_scope": "complete-bank",
+            "result_bytes": 2062,
+            "elapsed_seconds": 15.857969625038095
+          },
+          "encoded_response_bytes": 4858,
+          "checks": {
+            "canonical_source_hashes": true,
+            "exact_source_metadata_body_and_version": true,
+            "excluded_current_guidance_withheld": true,
+            "actual_checkout_context": true,
+            "unsafe_body_and_path_not_disclosed": true
+          },
+          "safety_contract_failures": [],
+          "error": null
+        },
+        {
+          "case": "literal-multiple-terms",
+          "mode": "latency-1",
+          "latency_regime": "isolated-sequential",
+          "seconds": 16.287399958004244,
+          "exit": 0,
+          "available": true,
+          "parse_error": null,
+          "timed_out": false,
+          "execution_failure": null,
+          "expected_paths": [
+            "topics/records/retry-limit.md"
+          ],
+          "selected_paths": [
+            "topics/records/retry-limit.md"
+          ],
+          "found_relevant": [
+            "topics/records/retry-limit.md"
+          ],
+          "missed_relevant": [],
+          "unexpected_paths": [],
+          "metrics": {
+            "inventory_files": 50798,
+            "entries": 50797,
+            "qualified_candidates": 33331,
+            "ranked": 1,
+            "selected": 1,
+            "bounded_candidate_bytes_read": 51108869,
+            "operation_local_observation_used": true,
+            "canonical_observation_payload_bytes_read": 178252062,
+            "canonical_observation_file_reads": 152394,
+            "parsed_records": 50001,
+            "catalog_updated": false,
+            "inspected_entries": 50797,
+            "candidate_count_scope": "complete-bank",
+            "result_bytes": 2062,
+            "elapsed_seconds": 15.957404959015548
+          },
+          "encoded_response_bytes": 4858,
+          "checks": {
+            "canonical_source_hashes": true,
+            "exact_source_metadata_body_and_version": true,
+            "excluded_current_guidance_withheld": true,
+            "actual_checkout_context": true,
+            "unsafe_body_and_path_not_disclosed": true
+          },
+          "safety_contract_failures": [],
+          "error": null
+        }
+      ],
+      "quality_cases": [],
+      "available_cases": 0,
+      "relevant_found": 0,
+      "relevant_missed": 0,
+      "unexpected_returned": 0,
+      "safety_contract_failure_count": 0
+    }
+  ],
+  "sources_unchanged": true
+}

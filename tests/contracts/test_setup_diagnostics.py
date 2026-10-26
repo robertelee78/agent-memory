@@ -137,6 +137,28 @@ class SetupDiagnostics(unittest.TestCase):
             for op in ('status', 'doctor'):
                 self.check(w, cli, repo, op, 'purge_pending')
 
+    def test_tag_like_filenames_and_mixed_case_competing_router_preserve_real_locator_evidence(self):
+        with World() as w:
+            _, _, receipt = fixture(w)
+            cli = Path(receipt['bin_dir']) / 'am'
+            repo = w.repository()
+            directory = bank(w, repo)
+            bind(w, repo)
+            custom = repo / ' Ω repository notes '
+            directory.rename(custom)
+            w.git('config', 'agent-memory.bankRoot', custom.name, cwd=repo)
+            for name in ('H MEMORY.md', '? MEMORY.md', '100644 metadata\tMEMORY.md', 'ordinary\nMEMORY.md'):
+                (repo / name).write_text('Unrelated authored source, not a memory router.\n')
+            w.git('add', '.', cwd=repo)
+            w.git('commit', '-m', 'Known custom bank with unusual unrelated filenames', cwd=repo)
+            self.check(w, cli, repo, 'doctor', 'ready')
+            # A differently cased locator in an actual second directory must
+            # still prevent guessing/initializing another repository bank.
+            competing = repo / 'H other notes'
+            competing.mkdir()
+            (competing / 'mEmOrY.Md').write_bytes((custom / 'MEMORY.md').read_bytes())
+            self.check(w, cli, repo, 'status', 'bound_not_audited')
+            self.check(w, cli, repo, 'doctor', 'inspection_required', 1)
 
 if __name__ == '__main__':
     unittest.main()

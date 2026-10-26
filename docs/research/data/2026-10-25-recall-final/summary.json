@@ -1,0 +1,757 @@
+{
+  "schema": "agent-memory/recall-final-observations-v1",
+  "measured_runtime_commits": {
+    "literal_and_cost": "15c49754f7698b3c32f9198015da0541b924655b",
+    "semantic": "6a983d05a94ef9431a7ab24ad7f55ef469a0d660",
+    "actual_published_v001": "63d3a64c0e535148cc1b5deb9d67169dbbc7c525"
+  },
+  "literal_curves": [
+    {
+      "distinct_lessons": 1000,
+      "fixture": {
+        "distinct_lessons": 1000,
+        "record_versions": 1001,
+        "canonical_files": 1020,
+        "canonical_bytes": 1185137,
+        "fixture_sha256": "5631c1ce3e80f1983e03aee568c0efd8fb09cf51b42356b6c24ddf3f2973ba42",
+        "labels_sha256": "14c173c70dde0ba0ea9feea1e70f3d4ad6d69f178adcb93bbe97a68f1f255edf",
+        "body_utf8_bytes": {
+          "min": 53,
+          "median": 173,
+          "p95": 206,
+          "max": 1733
+        }
+      },
+      "baseline_retrieve_median_seconds": 1.2506928954971954,
+      "candidate_retrieve_median_seconds": 0.9128384165233001,
+      "reduction_fraction": 0.270133843560042,
+      "fixed_cases_available": 24,
+      "relevant_found": 16,
+      "relevant_missed_known_literal_paraphrase": 1,
+      "unexpected": 0,
+      "safety_contract_failures": 0,
+      "warm_native_qualification_seconds": [
+        0.9647814580239356,
+        0.9541622920660302
+      ],
+      "warm_whole_navigation_workflow_seconds": [
+        2.338234332972206,
+        2.313422874896787
+      ],
+      "cold_rebuild_native_seconds": 1.4025469169719145
+    },
+    {
+      "distinct_lessons": 10000,
+      "fixture": {
+        "distinct_lessons": 10000,
+        "record_versions": 10001,
+        "canonical_files": 10163,
+        "canonical_bytes": 11866170,
+        "fixture_sha256": "77e88b89495bf3a08998aff7cc5a7d8b5a85e92d01e5fd7ed67cd067d8e086f7",
+        "labels_sha256": "14c173c70dde0ba0ea9feea1e70f3d4ad6d69f178adcb93bbe97a68f1f255edf",
+        "body_utf8_bytes": {
+          "min": 53,
+          "median": 176,
+          "p95": 208,
+          "max": 1736
+        }
+      },
+      "baseline_retrieve_median_seconds": 7.376232583483215,
+      "candidate_retrieve_median_seconds": 3.942709271039348,
+      "reduction_fraction": 0.46548468660440256,
+      "fixed_cases_available": 24,
+      "relevant_found": 16,
+      "relevant_missed_known_literal_paraphrase": 1,
+      "unexpected": 0,
+      "safety_contract_failures": 0,
+      "warm_native_qualification_seconds": [
+        1.5999509579269215,
+        1.5601013749837875
+      ],
+      "warm_whole_navigation_workflow_seconds": [
+        3.355546792037785,
+        3.26921283302363
+      ],
+      "cold_rebuild_native_seconds": 4.297016915981658
+    },
+    {
+      "distinct_lessons": 50000,
+      "fixture": {
+        "distinct_lessons": 50000,
+        "record_versions": 50001,
+        "canonical_files": 50798,
+        "canonical_bytes": 59417354,
+        "fixture_sha256": "450e5a55b43dd3424952090f53ed8c178dff2d51eadddba5e4a4fccd40b7d29a",
+        "labels_sha256": "14c173c70dde0ba0ea9feea1e70f3d4ad6d69f178adcb93bbe97a68f1f255edf",
+        "body_utf8_bytes": {
+          "min": 53,
+          "median": 177,
+          "p95": 210,
+          "max": 1738
+        }
+      },
+      "baseline_retrieve_median_seconds": 35.78859941649716,
+      "candidate_retrieve_median_seconds": 17.92755910399137,
+      "reduction_fraction": 0.49907067065252464,
+      "fixed_cases_available": 24,
+      "relevant_found": 16,
+      "relevant_missed_known_literal_paraphrase": 1,
+      "unexpected": 0,
+      "safety_contract_failures": 0,
+      "warm_native_qualification_seconds": [
+        4.438915709033608,
+        4.448001957964152
+      ],
+      "warm_whole_navigation_workflow_seconds": [
+        7.768100208020769,
+        7.774290750036016
+      ],
+      "cold_rebuild_native_seconds": 18.108583207940683
+    }
+  ],
+  "semantic_observations": [
+    {
+      "size": 1000,
+      "cohort": "original",
+      "case": "corrected-deadline",
+      "failure": null,
+      "missed": [],
+      "unexpected": [],
+      "complete": true,
+      "clarification_required": false,
+      "cost_usd": 0.7110648,
+      "model_calls": 4
+    },
+    {
+      "size": 1000,
+      "cohort": "original",
+      "case": "development-retention",
+      "failure": null,
+      "missed": [],
+      "unexpected": [],
+      "complete": true,
+      "clarification_required": false,
+      "cost_usd": 0.7106408,
+      "model_calls": 4
+    },
+    {
+      "size": 1000,
+      "cohort": "original",
+      "case": "duplicate-evidence",
+      "failure": null,
+      "missed": [],
+      "unexpected": [],
+      "complete": true,
+      "clarification_required": false,
+      "cost_usd": 1.0068048,
+      "model_calls": 4
+    },
+    {
+      "size": 1000,
+      "cohort": "original",
+      "case": "expired-source",
+      "failure": null,
+      "missed": [],
+      "unexpected": [],
+      "complete": true,
+      "clarification_required": false,
+      "cost_usd": 1.2890008,
+      "model_calls": 4
+    },
+    {
+      "size": 1000,
+      "cohort": "original",
+      "case": "head-vs-staged",
+      "failure": null,
+      "missed": [],
+      "unexpected": [],
+      "complete": true,
+      "clarification_required": false,
+      "cost_usd": 0.9294408000000001,
+      "model_calls": 4
+    },
+    {
+      "size": 1000,
+      "cohort": "original",
+      "case": "hidden-replacement",
+      "failure": null,
+      "missed": [],
+      "unexpected": [],
+      "complete": false,
+      "clarification_required": true,
+      "cost_usd": 0.7905568000000001,
+      "model_calls": 4
+    },
+    {
+      "size": 1000,
+      "cohort": "original",
+      "case": "known-prerequisite",
+      "failure": null,
+      "missed": [],
+      "unexpected": [],
+      "complete": true,
+      "clarification_required": false,
+      "cost_usd": 0.9920047999999999,
+      "model_calls": 4
+    },
+    {
+      "size": 1000,
+      "cohort": "original",
+      "case": "no-match",
+      "failure": null,
+      "missed": [],
+      "unexpected": [],
+      "complete": false,
+      "clarification_required": false,
+      "cost_usd": 0.9399568,
+      "model_calls": 4
+    },
+    {
+      "size": 1000,
+      "cohort": "original",
+      "case": "pagination",
+      "failure": null,
+      "missed": [],
+      "unexpected": [],
+      "complete": true,
+      "clarification_required": false,
+      "cost_usd": 0.6448928,
+      "model_calls": 4
+    },
+    {
+      "size": 1000,
+      "cohort": "original",
+      "case": "production-retention",
+      "failure": null,
+      "missed": [],
+      "unexpected": [],
+      "complete": true,
+      "clarification_required": false,
+      "cost_usd": 0.6952328,
+      "model_calls": 4
+    },
+    {
+      "size": 1000,
+      "cohort": "original",
+      "case": "retry-paraphrase",
+      "failure": null,
+      "missed": [],
+      "unexpected": [],
+      "complete": false,
+      "clarification_required": false,
+      "cost_usd": 1.0603408,
+      "model_calls": 4
+    },
+    {
+      "size": 1000,
+      "cohort": "original",
+      "case": "unknown-prerequisite",
+      "failure": null,
+      "missed": [],
+      "unexpected": [
+        "topics/r/429ebfbe-7713-40be-bca4-c3b904f82517-v1.md",
+        "topics/r/5c53ca49-b171-41cb-ba2c-ff574c5ebd5b-v1.md"
+      ],
+      "complete": false,
+      "clarification_required": true,
+      "cost_usd": 0.9380768,
+      "model_calls": 4
+    },
+    {
+      "size": 1000,
+      "cohort": "original",
+      "case": "unknown-session",
+      "failure": null,
+      "missed": [],
+      "unexpected": [],
+      "complete": true,
+      "clarification_required": true,
+      "cost_usd": 0.6387967999999999,
+      "model_calls": 4
+    },
+    {
+      "size": 1000,
+      "cohort": "original",
+      "case": "unsafe-source",
+      "failure": null,
+      "missed": [],
+      "unexpected": [],
+      "complete": false,
+      "clarification_required": true,
+      "cost_usd": 0.6447847999999999,
+      "model_calls": 4
+    },
+    {
+      "size": 1000,
+      "cohort": "original",
+      "case": "wall-disagreement",
+      "failure": null,
+      "missed": [],
+      "unexpected": [],
+      "complete": true,
+      "clarification_required": true,
+      "cost_usd": 0.7009928,
+      "model_calls": 4
+    },
+    {
+      "size": 1000,
+      "cohort": "original",
+      "case": "wrong-component",
+      "failure": null,
+      "missed": [],
+      "unexpected": [],
+      "complete": true,
+      "clarification_required": true,
+      "cost_usd": 0.6643528000000001,
+      "model_calls": 4
+    },
+    {
+      "size": 10000,
+      "cohort": "original",
+      "case": "corrected-deadline",
+      "failure": null,
+      "missed": [],
+      "unexpected": [],
+      "complete": true,
+      "clarification_required": false,
+      "cost_usd": 0.7084248000000001,
+      "model_calls": 4
+    },
+    {
+      "size": 10000,
+      "cohort": "original",
+      "case": "development-retention",
+      "failure": null,
+      "missed": [],
+      "unexpected": [],
+      "complete": true,
+      "clarification_required": false,
+      "cost_usd": 0.6524248,
+      "model_calls": 4
+    },
+    {
+      "size": 10000,
+      "cohort": "original",
+      "case": "duplicate-evidence",
+      "failure": null,
+      "missed": [],
+      "unexpected": [
+        "topics/r/9a2b24a7-3464-4ce4-b488-28e5c6de71d3-v1.md"
+      ],
+      "complete": true,
+      "clarification_required": false,
+      "cost_usd": 0.9832168,
+      "model_calls": 4
+    },
+    {
+      "size": 10000,
+      "cohort": "original",
+      "case": "hidden-replacement",
+      "failure": null,
+      "missed": [],
+      "unexpected": [],
+      "complete": false,
+      "clarification_required": true,
+      "cost_usd": 0.6959687999999999,
+      "model_calls": 4
+    },
+    {
+      "size": 10000,
+      "cohort": "original",
+      "case": "known-prerequisite",
+      "failure": null,
+      "missed": [],
+      "unexpected": [],
+      "complete": true,
+      "clarification_required": false,
+      "cost_usd": 1.3227019999999998,
+      "model_calls": 5
+    },
+    {
+      "size": 10000,
+      "cohort": "original",
+      "case": "no-match",
+      "failure": null,
+      "missed": [],
+      "unexpected": [],
+      "complete": false,
+      "clarification_required": false,
+      "cost_usd": 2.8734448,
+      "model_calls": 4
+    },
+    {
+      "size": 10000,
+      "cohort": "original",
+      "case": "pagination",
+      "failure": null,
+      "missed": [],
+      "unexpected": [],
+      "complete": true,
+      "clarification_required": false,
+      "cost_usd": 0.6438088,
+      "model_calls": 4
+    },
+    {
+      "size": 10000,
+      "cohort": "original",
+      "case": "production-retention",
+      "failure": null,
+      "missed": [],
+      "unexpected": [],
+      "complete": true,
+      "clarification_required": false,
+      "cost_usd": 0.7131327999999999,
+      "model_calls": 4
+    },
+    {
+      "size": 10000,
+      "cohort": "original",
+      "case": "retry-paraphrase",
+      "failure": null,
+      "missed": [],
+      "unexpected": [
+        "topics/r/b14eec5a-7ad6-4ac8-bd3b-6950aae11602-v2.md"
+      ],
+      "complete": true,
+      "clarification_required": false,
+      "cost_usd": 0.9793767999999999,
+      "model_calls": 4
+    },
+    {
+      "size": 10000,
+      "cohort": "original",
+      "case": "unknown-prerequisite",
+      "failure": null,
+      "missed": [],
+      "unexpected": [],
+      "complete": false,
+      "clarification_required": true,
+      "cost_usd": 0.8949928,
+      "model_calls": 4
+    },
+    {
+      "size": 10000,
+      "cohort": "original",
+      "case": "unknown-session",
+      "failure": null,
+      "missed": [],
+      "unexpected": [],
+      "complete": true,
+      "clarification_required": true,
+      "cost_usd": 0.6500648,
+      "model_calls": 4
+    },
+    {
+      "size": 10000,
+      "cohort": "original",
+      "case": "unsafe-source",
+      "failure": null,
+      "missed": [],
+      "unexpected": [],
+      "complete": false,
+      "clarification_required": true,
+      "cost_usd": 0.6848408,
+      "model_calls": 4
+    },
+    {
+      "size": 10000,
+      "cohort": "original",
+      "case": "wall-disagreement",
+      "failure": null,
+      "missed": [],
+      "unexpected": [],
+      "complete": true,
+      "clarification_required": true,
+      "cost_usd": 0.7109567999999999,
+      "model_calls": 4
+    },
+    {
+      "size": 10000,
+      "cohort": "original",
+      "case": "wrong-component",
+      "failure": null,
+      "missed": [],
+      "unexpected": [],
+      "complete": true,
+      "clarification_required": false,
+      "cost_usd": 0.6678088,
+      "model_calls": 4
+    },
+    {
+      "size": 50000,
+      "cohort": "original",
+      "case": "corrected-deadline",
+      "failure": null,
+      "missed": [],
+      "unexpected": [],
+      "complete": true,
+      "clarification_required": false,
+      "cost_usd": 0.7753248,
+      "model_calls": 4
+    },
+    {
+      "size": 50000,
+      "cohort": "original",
+      "case": "development-retention",
+      "failure": null,
+      "missed": [],
+      "unexpected": [],
+      "complete": true,
+      "clarification_required": false,
+      "cost_usd": 0.7079728,
+      "model_calls": 4
+    },
+    {
+      "size": 50000,
+      "cohort": "original",
+      "case": "duplicate-evidence",
+      "failure": null,
+      "missed": [],
+      "unexpected": [],
+      "complete": true,
+      "clarification_required": false,
+      "cost_usd": 1.0340568,
+      "model_calls": 4
+    },
+    {
+      "size": 50000,
+      "cohort": "original",
+      "case": "expired-source",
+      "failure": null,
+      "missed": [],
+      "unexpected": [],
+      "complete": true,
+      "clarification_required": false,
+      "cost_usd": 1.3770968,
+      "model_calls": 4
+    },
+    {
+      "size": 50000,
+      "cohort": "original",
+      "case": "head-vs-staged",
+      "failure": null,
+      "missed": [],
+      "unexpected": [],
+      "complete": true,
+      "clarification_required": false,
+      "cost_usd": 0.9551368,
+      "model_calls": 4
+    },
+    {
+      "size": 50000,
+      "cohort": "original",
+      "case": "hidden-replacement",
+      "failure": null,
+      "missed": [],
+      "unexpected": [],
+      "complete": false,
+      "clarification_required": true,
+      "cost_usd": 0.7385688,
+      "model_calls": 4
+    },
+    {
+      "size": 50000,
+      "cohort": "original",
+      "case": "known-prerequisite",
+      "failure": null,
+      "missed": [],
+      "unexpected": [],
+      "complete": true,
+      "clarification_required": false,
+      "cost_usd": 0.9067968,
+      "model_calls": 4
+    },
+    {
+      "size": 50000,
+      "cohort": "original",
+      "case": "no-match",
+      "failure": null,
+      "missed": [],
+      "unexpected": [],
+      "complete": false,
+      "clarification_required": false,
+      "cost_usd": 0.9199368000000001,
+      "model_calls": 4
+    },
+    {
+      "size": 50000,
+      "cohort": "original",
+      "case": "pagination",
+      "failure": null,
+      "missed": [],
+      "unexpected": [],
+      "complete": true,
+      "clarification_required": false,
+      "cost_usd": 0.6462768,
+      "model_calls": 4
+    },
+    {
+      "size": 50000,
+      "cohort": "original",
+      "case": "production-retention",
+      "failure": null,
+      "missed": [],
+      "unexpected": [],
+      "complete": true,
+      "clarification_required": false,
+      "cost_usd": 0.6417328,
+      "model_calls": 4
+    },
+    {
+      "size": 50000,
+      "cohort": "original",
+      "case": "retry-paraphrase",
+      "failure": null,
+      "missed": [],
+      "unexpected": [
+        "topics/r/5c53ca49-b171-41cb-ba2c-ff574c5ebd5b-v1.md",
+        "topics/r/b14eec5a-7ad6-4ac8-bd3b-6950aae11602-v2.md"
+      ],
+      "complete": true,
+      "clarification_required": false,
+      "cost_usd": 0.8530128,
+      "model_calls": 4
+    },
+    {
+      "size": 50000,
+      "cohort": "original",
+      "case": "unknown-prerequisite",
+      "failure": null,
+      "missed": [],
+      "unexpected": [
+        "topics/r/429ebfbe-7713-40be-bca4-c3b904f82517-v1.md",
+        "topics/r/5c53ca49-b171-41cb-ba2c-ff574c5ebd5b-v1.md"
+      ],
+      "complete": false,
+      "clarification_required": true,
+      "cost_usd": 1.0113328,
+      "model_calls": 4
+    },
+    {
+      "size": 50000,
+      "cohort": "original",
+      "case": "unknown-session",
+      "failure": null,
+      "missed": [],
+      "unexpected": [],
+      "complete": false,
+      "clarification_required": true,
+      "cost_usd": 0.6400528,
+      "model_calls": 4
+    },
+    {
+      "size": 50000,
+      "cohort": "original",
+      "case": "unsafe-source",
+      "failure": null,
+      "missed": [],
+      "unexpected": [],
+      "complete": true,
+      "clarification_required": false,
+      "cost_usd": 0.6436328,
+      "model_calls": 4
+    },
+    {
+      "size": 50000,
+      "cohort": "original",
+      "case": "wall-disagreement",
+      "failure": null,
+      "missed": [],
+      "unexpected": [],
+      "complete": true,
+      "clarification_required": true,
+      "cost_usd": 0.7095208,
+      "model_calls": 4
+    },
+    {
+      "size": 50000,
+      "cohort": "original",
+      "case": "wrong-component",
+      "failure": null,
+      "missed": [],
+      "unexpected": [],
+      "complete": true,
+      "clarification_required": false,
+      "cost_usd": 0.7351608000000001,
+      "model_calls": 4
+    },
+    {
+      "size": 10000,
+      "cohort": "remaining-two-separate-rerun",
+      "case": "head-vs-staged",
+      "failure": null,
+      "missed": [],
+      "unexpected": [],
+      "complete": true,
+      "clarification_required": false,
+      "cost_usd": 0.7042368,
+      "model_calls": 4
+    },
+    {
+      "size": 10000,
+      "cohort": "remaining-two-separate-rerun",
+      "case": "expired-source",
+      "failure": null,
+      "missed": [],
+      "unexpected": [],
+      "complete": true,
+      "clarification_required": false,
+      "cost_usd": 1.2246328,
+      "model_calls": 4
+    }
+  ],
+  "original_10000_cohort_aborted_before_final_two_results": true,
+  "semantic_general_completeness_claimed": false,
+  "full_workflow_under_five_seconds_claimed": false,
+  "native_client_integration_claimed": false,
+  "tokenizer_based_fixture_tokens": null,
+  "tokenizer_unavailable": true,
+  "artifact_bindings": [
+    {
+      "path": "literal-baseline.json",
+      "sha256": "9e8d9bf35d01d26c3477be5b245693cbdf8067735336fa0a6b807207c9d381fc",
+      "original_retained_path": "/tmp/agent-memory-v003/labeled-recall-baseline-macos/observations.json"
+    },
+    {
+      "path": "literal-candidate.json",
+      "sha256": "77fdd60081ddff6f63b4bbb9e6517df90dac7b32c8707233090c999a201b7a10",
+      "original_retained_path": "/tmp/agent-memory-v003/isolated-15c4975-literal-regression/observations.json"
+    },
+    {
+      "path": "operator-targets.md",
+      "sha256": "69af90c98f26932b341554cf009f979c3f4467766771f677c6264f624fae6aca",
+      "original_retained_path": "/tmp/agent-memory-v003/recall-targets-operator-approved.md"
+    },
+    {
+      "path": "semantic-controller-v4.py",
+      "sha256": "e1928d809791d5658132e7413fc65e64abbf8c3c50a0ecc1b01b400b9a4ca43a",
+      "original_retained_path": "/tmp/agent-memory-v003/blind-qualified-navigation-structured-v4.py"
+    },
+    {
+      "path": "semantic-controller-v5.py",
+      "sha256": "a80779a561f2cc3a6006eabfa58a48ac85452a5afc12e8443d8b5cdb88c7a2e2",
+      "original_retained_path": "/tmp/agent-memory-v003/blind-qualified-navigation-structured-v5.py"
+    },
+    {
+      "path": "navigation-cost-controller.py",
+      "sha256": "50fc91a630d559a3839dcab4f53781666673f8f967100a6b39455ec7bd444848",
+      "original_retained_path": "/tmp/agent-memory-v003/measure-qualified-navigation-integration.py"
+    },
+    {
+      "path": "navigation-cost-1000.json",
+      "sha256": "b15ce2358392ab27a6b5b66eaecbf53750de2fa67a5fd768eeac8bf4406aaa3e",
+      "original_retained_path": "/tmp/agent-memory-v003/isolated-15c4975-cost-1000/result.json"
+    },
+    {
+      "path": "navigation-cost-10000.json",
+      "sha256": "2f27fe1194f7daa78d0a29f8f53e8b5203b0a0117267e3417bafcc5b600a6c16",
+      "original_retained_path": "/tmp/agent-memory-v003/isolated-15c4975-cost-10000/result.json"
+    },
+    {
+      "path": "navigation-cost-50000.json",
+      "sha256": "3de99a6eee1d6507a308b3ab764a932f3c9ce8da853f5ae70c8221068cad3fdf",
+      "original_retained_path": "/tmp/agent-memory-v003/isolated-15c4975-cost-50000/result.json"
+    }
+  ],
+  "raw_evidence_root": "/tmp/agent-memory-v003"
+}

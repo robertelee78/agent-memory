@@ -1,0 +1,1137 @@
+{
+  "source_commit": "6a983d05a94ef9431a7ab24ad7f55ef469a0d660",
+  "profiling_only_not_latency_qualification": true,
+  "runs": [
+    {
+      "number": 5,
+      "phase": "start",
+      "top_cumulative_functions": [
+        {
+          "file": "~",
+          "line": 0,
+          "function": "<built-in method builtins.exec>",
+          "primitive_calls": 1,
+          "total_calls": 68,
+          "internal_seconds": 0.000136754,
+          "cumulative_seconds": 2.41669
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/discover_memory.py",
+          "line": 1,
+          "function": "<module>",
+          "primitive_calls": 1,
+          "total_calls": 1,
+          "internal_seconds": 2.5751e-05,
+          "cumulative_seconds": 2.416682083
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/discovery.py",
+          "line": 293,
+          "function": "main",
+          "primitive_calls": 1,
+          "total_calls": 1,
+          "internal_seconds": 0.013296332000000001,
+          "cumulative_seconds": 2.3650761670000002
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/discovery.py",
+          "line": 147,
+          "function": "start",
+          "primitive_calls": 1,
+          "total_calls": 1,
+          "internal_seconds": 0.002661001,
+          "cumulative_seconds": 2.350874666
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/repository_config.py",
+          "line": 182,
+          "function": "settings",
+          "primitive_calls": 7,
+          "total_calls": 7,
+          "internal_seconds": 0.000520115,
+          "cumulative_seconds": 1.441432918
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/repository_config.py",
+          "line": 115,
+          "function": "git_roots",
+          "primitive_calls": 7,
+          "total_calls": 7,
+          "internal_seconds": 0.13958252200000001,
+          "cumulative_seconds": 1.303831833
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/recall_catalog.py",
+          "line": 400,
+          "function": "load_catalog",
+          "primitive_calls": 1,
+          "total_calls": 1,
+          "internal_seconds": 0.016383877,
+          "cumulative_seconds": 1.15955875
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/identity_git.py",
+          "line": 8,
+          "function": "git",
+          "primitive_calls": 65,
+          "total_calls": 65,
+          "internal_seconds": 0.0026589870000000002,
+          "cumulative_seconds": 0.693863714
+        },
+        {
+          "file": "/opt/homebrew/Cellar/python@3.15/3.15.0/Frameworks/Python.framework/Versions/3.15/lib/python3.15/subprocess.py",
+          "line": 627,
+          "function": "run",
+          "primitive_calls": 65,
+          "total_calls": 65,
+          "internal_seconds": 0.0012328220000000002,
+          "cumulative_seconds": 0.6841272140000001
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/repository_config.py",
+          "line": 215,
+          "function": "bank_path",
+          "primitive_calls": 3,
+          "total_calls": 3,
+          "internal_seconds": 5.8708e-05,
+          "cumulative_seconds": 0.6306531670000001
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/recall_catalog.py",
+          "line": 159,
+          "function": "physical_inventory",
+          "primitive_calls": 1,
+          "total_calls": 1,
+          "internal_seconds": 0.072029574,
+          "cumulative_seconds": 0.591700083
+        },
+        {
+          "file": "/opt/homebrew/Cellar/python@3.15/3.15.0/Frameworks/Python.framework/Versions/3.15/lib/python3.15/subprocess.py",
+          "line": 1351,
+          "function": "communicate",
+          "primitive_calls": 65,
+          "total_calls": 65,
+          "internal_seconds": 0.001232168,
+          "cumulative_seconds": 0.547981713
+        },
+        {
+          "file": "/opt/homebrew/Cellar/python@3.15/3.15.0/Frameworks/Python.framework/Versions/3.15/lib/python3.15/subprocess.py",
+          "line": 2367,
+          "function": "_communicate",
+          "primitive_calls": 65,
+          "total_calls": 65,
+          "internal_seconds": 0.002028343,
+          "cumulative_seconds": 0.546640872
+        },
+        {
+          "file": "/opt/homebrew/Cellar/python@3.15/3.15.0/Frameworks/Python.framework/Versions/3.15/lib/python3.15/subprocess.py",
+          "line": 253,
+          "function": "_communicate_io_posix",
+          "primitive_calls": 65,
+          "total_calls": 65,
+          "internal_seconds": 0.002258997,
+          "cumulative_seconds": 0.539088667
+        },
+        {
+          "file": "/opt/homebrew/Cellar/python@3.15/3.15.0/Frameworks/Python.framework/Versions/3.15/lib/python3.15/selectors.py",
+          "line": 385,
+          "function": "select",
+          "primitive_calls": 1455,
+          "total_calls": 1455,
+          "internal_seconds": 0.0019392430000000002,
+          "cumulative_seconds": 0.5266026140000001
+        },
+        {
+          "file": "~",
+          "line": 0,
+          "function": "<method 'poll' of 'select.poll' objects>",
+          "primitive_calls": 1455,
+          "total_calls": 1455,
+          "internal_seconds": 0.524268786,
+          "cumulative_seconds": 0.524268786
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/scope_binding.py",
+          "line": 57,
+          "function": "require",
+          "primitive_calls": 2,
+          "total_calls": 2,
+          "internal_seconds": 3.0501e-05,
+          "cumulative_seconds": 0.49529025000000004
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/project_identity.py",
+          "line": 180,
+          "function": "status",
+          "primitive_calls": 2,
+          "total_calls": 2,
+          "internal_seconds": 1.9750000000000002e-05,
+          "cumulative_seconds": 0.46897279100000006
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/project_identity.py",
+          "line": 164,
+          "function": "evidence",
+          "primitive_calls": 2,
+          "total_calls": 2,
+          "internal_seconds": 2.4375000000000003e-05,
+          "cumulative_seconds": 0.46783870800000005
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/project_identity.py",
+          "line": 26,
+          "function": "discover",
+          "primitive_calls": 2,
+          "total_calls": 2,
+          "internal_seconds": 0.00030866600000000003,
+          "cumulative_seconds": 0.46781391600000005
+        },
+        {
+          "file": "/opt/homebrew/Cellar/python@3.15/3.15.0/Frameworks/Python.framework/Versions/3.15/lib/python3.15/pathlib/__init__.py",
+          "line": 401,
+          "function": "name",
+          "primitive_calls": 356555,
+          "total_calls": 356555,
+          "internal_seconds": 0.037719175,
+          "cumulative_seconds": 0.445444414
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/bank_writes.py",
+          "line": 25,
+          "function": "bank_path",
+          "primitive_calls": 2,
+          "total_calls": 2,
+          "internal_seconds": 4.2207000000000004e-05,
+          "cumulative_seconds": 0.42231120800000005
+        },
+        {
+          "file": "/opt/homebrew/Cellar/python@3.15/3.15.0/Frameworks/Python.framework/Versions/3.15/lib/python3.15/pathlib/__init__.py",
+          "line": 362,
+          "function": "_tail",
+          "primitive_calls": 460084,
+          "total_calls": 460084,
+          "internal_seconds": 0.153676438,
+          "cumulative_seconds": 0.41225268600000003
+        },
+        {
+          "file": "/opt/homebrew/Cellar/python@3.15/3.15.0/Frameworks/Python.framework/Versions/3.15/lib/python3.15/pathlib/__init__.py",
+          "line": 284,
+          "function": "_parse_path",
+          "primitive_calls": 458747,
+          "total_calls": 458747,
+          "internal_seconds": 0.178740684,
+          "cumulative_seconds": 0.303235751
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/recall_catalog.py",
+          "line": 271,
+          "function": "authenticate",
+          "primitive_calls": 1,
+          "total_calls": 1,
+          "internal_seconds": 0.003227208,
+          "cumulative_seconds": 0.227987875
+        },
+        {
+          "file": "/opt/homebrew/Cellar/python@3.15/3.15.0/Frameworks/Python.framework/Versions/3.15/lib/python3.15/pathlib/__init__.py",
+          "line": 138,
+          "function": "__init__",
+          "primitive_calls": 459176,
+          "total_calls": 459176,
+          "internal_seconds": 0.13832608700000001,
+          "cumulative_seconds": 0.22730186900000002
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/security.py",
+          "line": 64,
+          "function": "audit",
+          "primitive_calls": 1,
+          "total_calls": 1,
+          "internal_seconds": 0.000146211,
+          "cumulative_seconds": 0.21027345800000002
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/bank_observation.py",
+          "line": 66,
+          "function": "physical_contract",
+          "primitive_calls": 1,
+          "total_calls": 1,
+          "internal_seconds": 0.0033978190000000003,
+          "cumulative_seconds": 0.208954417
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/repository_config.py",
+          "line": 219,
+          "function": "relative",
+          "primitive_calls": 1,
+          "total_calls": 1,
+          "internal_seconds": 3.9749e-05,
+          "cumulative_seconds": 0.206540791
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/bank_contract.py",
+          "line": 280,
+          "function": "runtime_path",
+          "primitive_calls": 50847,
+          "total_calls": 50847,
+          "internal_seconds": 0.034454424000000004,
+          "cumulative_seconds": 0.205537447
+        }
+      ]
+    },
+    {
+      "number": 6,
+      "phase": "first-node",
+      "top_cumulative_functions": [
+        {
+          "file": "~",
+          "line": 0,
+          "function": "<built-in method builtins.exec>",
+          "primitive_calls": 1,
+          "total_calls": 62,
+          "internal_seconds": 0.000153582,
+          "cumulative_seconds": 1.4412689170000001
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/discover_memory.py",
+          "line": 1,
+          "function": "<module>",
+          "primitive_calls": 1,
+          "total_calls": 1,
+          "internal_seconds": 2.1040000000000002e-05,
+          "cumulative_seconds": 1.441261291
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/discovery.py",
+          "line": 293,
+          "function": "main",
+          "primitive_calls": 1,
+          "total_calls": 1,
+          "internal_seconds": 2.8667000000000002e-05,
+          "cumulative_seconds": 1.3847928330000001
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/discovery.py",
+          "line": 230,
+          "function": "node",
+          "primitive_calls": 1,
+          "total_calls": 1,
+          "internal_seconds": 3.5917e-05,
+          "cumulative_seconds": 1.3838676250000002
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/discovery.py",
+          "line": 189,
+          "function": "navigation_tables",
+          "primitive_calls": 2,
+          "total_calls": 2,
+          "internal_seconds": 0.00026937900000000004,
+          "cumulative_seconds": 1.383157833
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/repository_config.py",
+          "line": 182,
+          "function": "settings",
+          "primitive_calls": 6,
+          "total_calls": 6,
+          "internal_seconds": 0.000515117,
+          "cumulative_seconds": 1.237182166
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/repository_config.py",
+          "line": 115,
+          "function": "git_roots",
+          "primitive_calls": 6,
+          "total_calls": 6,
+          "internal_seconds": 0.121487989,
+          "cumulative_seconds": 1.1168978740000002
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/identity_git.py",
+          "line": 8,
+          "function": "git",
+          "primitive_calls": 58,
+          "total_calls": 58,
+          "internal_seconds": 0.002284298,
+          "cumulative_seconds": 0.601787044
+        },
+        {
+          "file": "/opt/homebrew/Cellar/python@3.15/3.15.0/Frameworks/Python.framework/Versions/3.15/lib/python3.15/subprocess.py",
+          "line": 627,
+          "function": "run",
+          "primitive_calls": 58,
+          "total_calls": 58,
+          "internal_seconds": 0.000800872,
+          "cumulative_seconds": 0.593098632
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/scope_binding.py",
+          "line": 57,
+          "function": "require",
+          "primitive_calls": 2,
+          "total_calls": 2,
+          "internal_seconds": 3.6373000000000006e-05,
+          "cumulative_seconds": 0.510418208
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/project_identity.py",
+          "line": 180,
+          "function": "status",
+          "primitive_calls": 2,
+          "total_calls": 2,
+          "internal_seconds": 2.2793e-05,
+          "cumulative_seconds": 0.48362033400000004
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/project_identity.py",
+          "line": 164,
+          "function": "evidence",
+          "primitive_calls": 2,
+          "total_calls": 2,
+          "internal_seconds": 2.0875000000000003e-05,
+          "cumulative_seconds": 0.482447
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/project_identity.py",
+          "line": 26,
+          "function": "discover",
+          "primitive_calls": 2,
+          "total_calls": 2,
+          "internal_seconds": 0.000327206,
+          "cumulative_seconds": 0.482425708
+        },
+        {
+          "file": "/opt/homebrew/Cellar/python@3.15/3.15.0/Frameworks/Python.framework/Versions/3.15/lib/python3.15/subprocess.py",
+          "line": 1351,
+          "function": "communicate",
+          "primitive_calls": 58,
+          "total_calls": 58,
+          "internal_seconds": 0.001113082,
+          "cumulative_seconds": 0.47475195800000003
+        },
+        {
+          "file": "/opt/homebrew/Cellar/python@3.15/3.15.0/Frameworks/Python.framework/Versions/3.15/lib/python3.15/subprocess.py",
+          "line": 2367,
+          "function": "_communicate",
+          "primitive_calls": 58,
+          "total_calls": 58,
+          "internal_seconds": 0.002331618,
+          "cumulative_seconds": 0.47358450300000005
+        },
+        {
+          "file": "/opt/homebrew/Cellar/python@3.15/3.15.0/Frameworks/Python.framework/Versions/3.15/lib/python3.15/subprocess.py",
+          "line": 253,
+          "function": "_communicate_io_posix",
+          "primitive_calls": 58,
+          "total_calls": 58,
+          "internal_seconds": 0.0022955510000000003,
+          "cumulative_seconds": 0.466356284
+        },
+        {
+          "file": "/opt/homebrew/Cellar/python@3.15/3.15.0/Frameworks/Python.framework/Versions/3.15/lib/python3.15/selectors.py",
+          "line": 385,
+          "function": "select",
+          "primitive_calls": 1236,
+          "total_calls": 1236,
+          "internal_seconds": 0.001987506,
+          "cumulative_seconds": 0.45609709600000004
+        },
+        {
+          "file": "~",
+          "line": 0,
+          "function": "<method 'poll' of 'select.poll' objects>",
+          "primitive_calls": 1236,
+          "total_calls": 1236,
+          "internal_seconds": 0.453699968,
+          "cumulative_seconds": 0.453699968
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/bank_writes.py",
+          "line": 25,
+          "function": "bank_path",
+          "primitive_calls": 2,
+          "total_calls": 2,
+          "internal_seconds": 3.1875e-05,
+          "cumulative_seconds": 0.413109416
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/repository_config.py",
+          "line": 215,
+          "function": "bank_path",
+          "primitive_calls": 2,
+          "total_calls": 2,
+          "internal_seconds": 3.5375e-05,
+          "cumulative_seconds": 0.41273854200000004
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/repository_config.py",
+          "line": 219,
+          "function": "relative",
+          "primitive_calls": 2,
+          "total_calls": 2,
+          "internal_seconds": 2.2499000000000003e-05,
+          "cumulative_seconds": 0.40725187500000004
+        },
+        {
+          "file": "/opt/homebrew/Cellar/python@3.15/3.15.0/Frameworks/Python.framework/Versions/3.15/lib/python3.15/pathlib/__init__.py",
+          "line": 401,
+          "function": "name",
+          "primitive_calls": 305774,
+          "total_calls": 305774,
+          "internal_seconds": 0.032787991,
+          "cumulative_seconds": 0.38785264500000005
+        },
+        {
+          "file": "/opt/homebrew/Cellar/python@3.15/3.15.0/Frameworks/Python.framework/Versions/3.15/lib/python3.15/pathlib/__init__.py",
+          "line": 362,
+          "function": "_tail",
+          "primitive_calls": 308717,
+          "total_calls": 308717,
+          "internal_seconds": 0.130258591,
+          "cumulative_seconds": 0.35524531000000004
+        },
+        {
+          "file": "/opt/homebrew/Cellar/python@3.15/3.15.0/Frameworks/Python.framework/Versions/3.15/lib/python3.15/pathlib/__init__.py",
+          "line": 284,
+          "function": "_parse_path",
+          "primitive_calls": 306425,
+          "total_calls": 306425,
+          "internal_seconds": 0.10085832500000001,
+          "cumulative_seconds": 0.183706123
+        },
+        {
+          "file": "/opt/homebrew/Cellar/python@3.15/3.15.0/Frameworks/Python.framework/Versions/3.15/lib/python3.15/pathlib/__init__.py",
+          "line": 138,
+          "function": "__init__",
+          "primitive_calls": 306779,
+          "total_calls": 306779,
+          "internal_seconds": 0.089959891,
+          "cumulative_seconds": 0.14793619500000002
+        },
+        {
+          "file": "/opt/homebrew/Cellar/python@3.15/3.15.0/Frameworks/Python.framework/Versions/3.15/lib/python3.15/subprocess.py",
+          "line": 991,
+          "function": "__init__",
+          "primitive_calls": 58,
+          "total_calls": 58,
+          "internal_seconds": 0.003841123,
+          "cumulative_seconds": 0.117411624
+        },
+        {
+          "file": "/opt/homebrew/Cellar/python@3.15/3.15.0/Frameworks/Python.framework/Versions/3.15/lib/python3.15/subprocess.py",
+          "line": 1992,
+          "function": "_execute_child",
+          "primitive_calls": 58,
+          "total_calls": 58,
+          "internal_seconds": 0.004735082000000001,
+          "cumulative_seconds": 0.11172124900000001
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/repository_config.py",
+          "line": 15,
+          "function": "local_value",
+          "primitive_calls": 12,
+          "total_calls": 12,
+          "internal_seconds": 0.000300584,
+          "cumulative_seconds": 0.079692833
+        },
+        {
+          "file": "~",
+          "line": 0,
+          "function": "<built-in method _posixsubprocess.fork_exec>",
+          "primitive_calls": 58,
+          "total_calls": 58,
+          "internal_seconds": 0.06241462800000001,
+          "cumulative_seconds": 0.06241462800000001
+        },
+        {
+          "file": "<frozen importlib._bootstrap>",
+          "line": 1333,
+          "function": "_find_and_load",
+          "primitive_calls": 3,
+          "total_calls": 92,
+          "internal_seconds": 0.000193327,
+          "cumulative_seconds": 0.059769918000000005
+        }
+      ]
+    },
+    {
+      "number": 7,
+      "phase": "second-node",
+      "top_cumulative_functions": [
+        {
+          "file": "~",
+          "line": 0,
+          "function": "<built-in method builtins.exec>",
+          "primitive_calls": 1,
+          "total_calls": 62,
+          "internal_seconds": 0.00012263400000000002,
+          "cumulative_seconds": 1.402546458
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/discover_memory.py",
+          "line": 1,
+          "function": "<module>",
+          "primitive_calls": 1,
+          "total_calls": 1,
+          "internal_seconds": 2.4083000000000003e-05,
+          "cumulative_seconds": 1.4025378750000002
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/discovery.py",
+          "line": 293,
+          "function": "main",
+          "primitive_calls": 1,
+          "total_calls": 1,
+          "internal_seconds": 2.8085000000000003e-05,
+          "cumulative_seconds": 1.350798042
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/discovery.py",
+          "line": 230,
+          "function": "node",
+          "primitive_calls": 1,
+          "total_calls": 1,
+          "internal_seconds": 2.6748000000000002e-05,
+          "cumulative_seconds": 1.349871083
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/discovery.py",
+          "line": 189,
+          "function": "navigation_tables",
+          "primitive_calls": 2,
+          "total_calls": 2,
+          "internal_seconds": 0.00025312500000000004,
+          "cumulative_seconds": 1.3486035840000001
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/repository_config.py",
+          "line": 182,
+          "function": "settings",
+          "primitive_calls": 6,
+          "total_calls": 6,
+          "internal_seconds": 0.00047567800000000005,
+          "cumulative_seconds": 1.207142418
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/repository_config.py",
+          "line": 115,
+          "function": "git_roots",
+          "primitive_calls": 6,
+          "total_calls": 6,
+          "internal_seconds": 0.120740436,
+          "cumulative_seconds": 1.0940002070000001
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/identity_git.py",
+          "line": 8,
+          "function": "git",
+          "primitive_calls": 58,
+          "total_calls": 58,
+          "internal_seconds": 0.0020706640000000003,
+          "cumulative_seconds": 0.574154123
+        },
+        {
+          "file": "/opt/homebrew/Cellar/python@3.15/3.15.0/Frameworks/Python.framework/Versions/3.15/lib/python3.15/subprocess.py",
+          "line": 627,
+          "function": "run",
+          "primitive_calls": 58,
+          "total_calls": 58,
+          "internal_seconds": 0.000778162,
+          "cumulative_seconds": 0.565706213
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/scope_binding.py",
+          "line": 57,
+          "function": "require",
+          "primitive_calls": 2,
+          "total_calls": 2,
+          "internal_seconds": 3.2916e-05,
+          "cumulative_seconds": 0.48575487500000003
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/project_identity.py",
+          "line": 180,
+          "function": "status",
+          "primitive_calls": 2,
+          "total_calls": 2,
+          "internal_seconds": 1.9377e-05,
+          "cumulative_seconds": 0.46205545800000003
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/project_identity.py",
+          "line": 164,
+          "function": "evidence",
+          "primitive_calls": 2,
+          "total_calls": 2,
+          "internal_seconds": 1.7834000000000002e-05,
+          "cumulative_seconds": 0.46094325
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/project_identity.py",
+          "line": 26,
+          "function": "discover",
+          "primitive_calls": 2,
+          "total_calls": 2,
+          "internal_seconds": 0.000299836,
+          "cumulative_seconds": 0.46092495800000005
+        },
+        {
+          "file": "/opt/homebrew/Cellar/python@3.15/3.15.0/Frameworks/Python.framework/Versions/3.15/lib/python3.15/subprocess.py",
+          "line": 1351,
+          "function": "communicate",
+          "primitive_calls": 58,
+          "total_calls": 58,
+          "internal_seconds": 0.001043469,
+          "cumulative_seconds": 0.455392302
+        },
+        {
+          "file": "/opt/homebrew/Cellar/python@3.15/3.15.0/Frameworks/Python.framework/Versions/3.15/lib/python3.15/subprocess.py",
+          "line": 2367,
+          "function": "_communicate",
+          "primitive_calls": 58,
+          "total_calls": 58,
+          "internal_seconds": 0.002212096,
+          "cumulative_seconds": 0.45428996200000005
+        },
+        {
+          "file": "/opt/homebrew/Cellar/python@3.15/3.15.0/Frameworks/Python.framework/Versions/3.15/lib/python3.15/subprocess.py",
+          "line": 253,
+          "function": "_communicate_io_posix",
+          "primitive_calls": 58,
+          "total_calls": 58,
+          "internal_seconds": 0.0020433490000000003,
+          "cumulative_seconds": 0.444548957
+        },
+        {
+          "file": "/opt/homebrew/Cellar/python@3.15/3.15.0/Frameworks/Python.framework/Versions/3.15/lib/python3.15/selectors.py",
+          "line": 385,
+          "function": "select",
+          "primitive_calls": 1237,
+          "total_calls": 1237,
+          "internal_seconds": 0.00171096,
+          "cumulative_seconds": 0.435107783
+        },
+        {
+          "file": "~",
+          "line": 0,
+          "function": "<method 'poll' of 'select.poll' objects>",
+          "primitive_calls": 1237,
+          "total_calls": 1237,
+          "internal_seconds": 0.43304594700000004,
+          "cumulative_seconds": 0.43304594700000004
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/bank_writes.py",
+          "line": 25,
+          "function": "bank_path",
+          "primitive_calls": 2,
+          "total_calls": 2,
+          "internal_seconds": 1.967e-05,
+          "cumulative_seconds": 0.405197792
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/repository_config.py",
+          "line": 215,
+          "function": "bank_path",
+          "primitive_calls": 2,
+          "total_calls": 2,
+          "internal_seconds": 3.8166e-05,
+          "cumulative_seconds": 0.40485962400000003
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/repository_config.py",
+          "line": 219,
+          "function": "relative",
+          "primitive_calls": 2,
+          "total_calls": 2,
+          "internal_seconds": 2.3084e-05,
+          "cumulative_seconds": 0.403881584
+        },
+        {
+          "file": "/opt/homebrew/Cellar/python@3.15/3.15.0/Frameworks/Python.framework/Versions/3.15/lib/python3.15/pathlib/__init__.py",
+          "line": 401,
+          "function": "name",
+          "primitive_calls": 305802,
+          "total_calls": 305802,
+          "internal_seconds": 0.032374968000000004,
+          "cumulative_seconds": 0.38379750500000004
+        },
+        {
+          "file": "/opt/homebrew/Cellar/python@3.15/3.15.0/Frameworks/Python.framework/Versions/3.15/lib/python3.15/pathlib/__init__.py",
+          "line": 362,
+          "function": "_tail",
+          "primitive_calls": 308879,
+          "total_calls": 308879,
+          "internal_seconds": 0.13018647,
+          "cumulative_seconds": 0.351578702
+        },
+        {
+          "file": "/opt/homebrew/Cellar/python@3.15/3.15.0/Frameworks/Python.framework/Versions/3.15/lib/python3.15/pathlib/__init__.py",
+          "line": 284,
+          "function": "_parse_path",
+          "primitive_calls": 306471,
+          "total_calls": 306471,
+          "internal_seconds": 0.099286603,
+          "cumulative_seconds": 0.180739535
+        },
+        {
+          "file": "/opt/homebrew/Cellar/python@3.15/3.15.0/Frameworks/Python.framework/Versions/3.15/lib/python3.15/pathlib/__init__.py",
+          "line": 138,
+          "function": "__init__",
+          "primitive_calls": 306859,
+          "total_calls": 306859,
+          "internal_seconds": 0.088998878,
+          "cumulative_seconds": 0.146278068
+        },
+        {
+          "file": "/opt/homebrew/Cellar/python@3.15/3.15.0/Frameworks/Python.framework/Versions/3.15/lib/python3.15/subprocess.py",
+          "line": 991,
+          "function": "__init__",
+          "primitive_calls": 58,
+          "total_calls": 58,
+          "internal_seconds": 0.0034892820000000002,
+          "cumulative_seconds": 0.109405502
+        },
+        {
+          "file": "/opt/homebrew/Cellar/python@3.15/3.15.0/Frameworks/Python.framework/Versions/3.15/lib/python3.15/subprocess.py",
+          "line": 1992,
+          "function": "_execute_child",
+          "primitive_calls": 58,
+          "total_calls": 58,
+          "internal_seconds": 0.00445335,
+          "cumulative_seconds": 0.10418658300000001
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/repository_config.py",
+          "line": 15,
+          "function": "local_value",
+          "primitive_calls": 12,
+          "total_calls": 12,
+          "internal_seconds": 0.00026141500000000003,
+          "cumulative_seconds": 0.074692833
+        },
+        {
+          "file": "~",
+          "line": 0,
+          "function": "<built-in method _posixsubprocess.fork_exec>",
+          "primitive_calls": 58,
+          "total_calls": 58,
+          "internal_seconds": 0.058127997,
+          "cumulative_seconds": 0.058127997
+        },
+        {
+          "file": "<frozen importlib._bootstrap>",
+          "line": 1333,
+          "function": "_find_and_load",
+          "primitive_calls": 3,
+          "total_calls": 92,
+          "internal_seconds": 0.000158195,
+          "cumulative_seconds": 0.054842917000000005
+        }
+      ]
+    },
+    {
+      "number": 8,
+      "phase": "qualified-read",
+      "top_cumulative_functions": [
+        {
+          "file": "~",
+          "line": 0,
+          "function": "<built-in method builtins.exec>",
+          "primitive_calls": 1,
+          "total_calls": 68,
+          "internal_seconds": 0.00013603900000000002,
+          "cumulative_seconds": 8.252433708
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/discover_memory.py",
+          "line": 1,
+          "function": "<module>",
+          "primitive_calls": 1,
+          "total_calls": 1,
+          "internal_seconds": 7.7749e-05,
+          "cumulative_seconds": 8.252423291000001
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/discovery.py",
+          "line": 293,
+          "function": "main",
+          "primitive_calls": 1,
+          "total_calls": 1,
+          "internal_seconds": 3.2041e-05,
+          "cumulative_seconds": 8.20098725
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/discovery.py",
+          "line": 248,
+          "function": "qualified_read",
+          "primitive_calls": 1,
+          "total_calls": 1,
+          "internal_seconds": 0.01158175,
+          "cumulative_seconds": 8.200000000000001
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/retrieval.py",
+          "line": 209,
+          "function": "retrieve",
+          "primitive_calls": 1,
+          "total_calls": 1,
+          "internal_seconds": 0.002542501,
+          "cumulative_seconds": 7.5069659170000005
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/retrieval.py",
+          "line": 236,
+          "function": "_retrieve",
+          "primitive_calls": 1,
+          "total_calls": 1,
+          "internal_seconds": 0.010445497000000002,
+          "cumulative_seconds": 6.275597583000001
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/recall_catalog.py",
+          "line": 380,
+          "function": "recheck",
+          "primitive_calls": 1,
+          "total_calls": 1,
+          "internal_seconds": 0.025492084,
+          "cumulative_seconds": 4.27864075
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/bank_observation.py",
+          "line": 35,
+          "function": "scan",
+          "primitive_calls": 1,
+          "total_calls": 1,
+          "internal_seconds": 0.22609753000000002,
+          "cumulative_seconds": 3.026343375
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/repository_config.py",
+          "line": 182,
+          "function": "settings",
+          "primitive_calls": 14,
+          "total_calls": 14,
+          "internal_seconds": 0.001240556,
+          "cumulative_seconds": 2.9257019150000003
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/repository_config.py",
+          "line": 115,
+          "function": "git_roots",
+          "primitive_calls": 14,
+          "total_calls": 14,
+          "internal_seconds": 0.291975875,
+          "cumulative_seconds": 2.631893501
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/identity_git.py",
+          "line": 8,
+          "function": "git",
+          "primitive_calls": 136,
+          "total_calls": 136,
+          "internal_seconds": 0.005784883,
+          "cumulative_seconds": 1.4282117490000001
+        },
+        {
+          "file": "/opt/homebrew/Cellar/python@3.15/3.15.0/Frameworks/Python.framework/Versions/3.15/lib/python3.15/subprocess.py",
+          "line": 627,
+          "function": "run",
+          "primitive_calls": 136,
+          "total_calls": 136,
+          "internal_seconds": 0.0021981170000000003,
+          "cumulative_seconds": 1.4075874240000001
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/scope_binding.py",
+          "line": 57,
+          "function": "require",
+          "primitive_calls": 5,
+          "total_calls": 5,
+          "internal_seconds": 9.0164e-05,
+          "cumulative_seconds": 1.275546875
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/repository_config.py",
+          "line": 215,
+          "function": "bank_path",
+          "primitive_calls": 6,
+          "total_calls": 6,
+          "internal_seconds": 0.00014691700000000002,
+          "cumulative_seconds": 1.269064792
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/recall_catalog.py",
+          "line": 400,
+          "function": "load_catalog",
+          "primitive_calls": 1,
+          "total_calls": 1,
+          "internal_seconds": 0.017433375,
+          "cumulative_seconds": 1.221656375
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/recall_catalog.py",
+          "line": 159,
+          "function": "physical_inventory",
+          "primitive_calls": 2,
+          "total_calls": 2,
+          "internal_seconds": 0.15697618100000002,
+          "cumulative_seconds": 1.21445825
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/project_identity.py",
+          "line": 180,
+          "function": "status",
+          "primitive_calls": 5,
+          "total_calls": 5,
+          "internal_seconds": 5.5790000000000006e-05,
+          "cumulative_seconds": 1.205703666
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/project_identity.py",
+          "line": 164,
+          "function": "evidence",
+          "primitive_calls": 5,
+          "total_calls": 5,
+          "internal_seconds": 5.4668000000000006e-05,
+          "cumulative_seconds": 1.203216668
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/project_identity.py",
+          "line": 26,
+          "function": "discover",
+          "primitive_calls": 5,
+          "total_calls": 5,
+          "internal_seconds": 0.00086625,
+          "cumulative_seconds": 1.2031610830000001
+        },
+        {
+          "file": "/opt/homebrew/Cellar/python@3.15/3.15.0/Frameworks/Python.framework/Versions/3.15/lib/python3.15/pathlib/__init__.py",
+          "line": 479,
+          "function": "relative_to",
+          "primitive_calls": 50897,
+          "total_calls": 50897,
+          "internal_seconds": 0.070682727,
+          "cumulative_seconds": 1.136434655
+        },
+        {
+          "file": "/opt/homebrew/Cellar/python@3.15/3.15.0/Frameworks/Python.framework/Versions/3.15/lib/python3.15/subprocess.py",
+          "line": 1351,
+          "function": "communicate",
+          "primitive_calls": 136,
+          "total_calls": 136,
+          "internal_seconds": 0.00263138,
+          "cumulative_seconds": 1.0976838740000001
+        },
+        {
+          "file": "/opt/homebrew/Cellar/python@3.15/3.15.0/Frameworks/Python.framework/Versions/3.15/lib/python3.15/subprocess.py",
+          "line": 2367,
+          "function": "_communicate",
+          "primitive_calls": 136,
+          "total_calls": 136,
+          "internal_seconds": 0.004526789000000001,
+          "cumulative_seconds": 1.0947932
+        },
+        {
+          "file": "/opt/homebrew/Cellar/python@3.15/3.15.0/Frameworks/Python.framework/Versions/3.15/lib/python3.15/subprocess.py",
+          "line": 253,
+          "function": "_communicate_io_posix",
+          "primitive_calls": 136,
+          "total_calls": 136,
+          "internal_seconds": 0.005155869,
+          "cumulative_seconds": 1.078156831
+        },
+        {
+          "file": "/opt/homebrew/Cellar/python@3.15/3.15.0/Frameworks/Python.framework/Versions/3.15/lib/python3.15/selectors.py",
+          "line": 385,
+          "function": "select",
+          "primitive_calls": 2866,
+          "total_calls": 2866,
+          "internal_seconds": 0.004352222,
+          "cumulative_seconds": 1.0531068350000001
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/bank_writes.py",
+          "line": 25,
+          "function": "bank_path",
+          "primitive_calls": 5,
+          "total_calls": 5,
+          "internal_seconds": 6.7335e-05,
+          "cumulative_seconds": 1.048681916
+        },
+        {
+          "file": "~",
+          "line": 0,
+          "function": "<method 'poll' of 'select.poll' objects>",
+          "primitive_calls": 2866,
+          "total_calls": 2866,
+          "internal_seconds": 1.047882621,
+          "cumulative_seconds": 1.047882621
+        },
+        {
+          "file": "/opt/homebrew/Cellar/python@3.15/3.15.0/Frameworks/Python.framework/Versions/3.15/lib/python3.15/pathlib/__init__.py",
+          "line": 401,
+          "function": "name",
+          "primitive_calls": 764216,
+          "total_calls": 764216,
+          "internal_seconds": 0.087746372,
+          "cumulative_seconds": 0.9333171130000001
+        },
+        {
+          "file": "/opt/homebrew/Cellar/python@3.15/3.15.0/Frameworks/Python.framework/Versions/3.15/lib/python3.15/pathlib/__init__.py",
+          "line": 362,
+          "function": "_tail",
+          "primitive_calls": 1380216,
+          "total_calls": 1380216,
+          "internal_seconds": 0.343243854,
+          "cumulative_seconds": 0.876096442
+        },
+        {
+          "file": "/private/tmp/agent-memory-test-es_vpfv4/portable semantic pack/scripts/agent_memory/bank_contract.py",
+          "line": 280,
+          "function": "runtime_path",
+          "primitive_calls": 203384,
+          "total_calls": 203384,
+          "internal_seconds": 0.152709164,
+          "cumulative_seconds": 0.8155518300000001
+        },
+        {
+          "file": "/opt/homebrew/Cellar/python@3.15/3.15.0/Frameworks/Python.framework/Versions/3.15/lib/python3.15/pathlib/__init__.py",
+          "line": 284,
+          "function": "_parse_path",
+          "primitive_calls": 1121482,
+          "total_calls": 1121482,
+          "internal_seconds": 0.43256086000000005,
+          "cumulative_seconds": 0.751840986
+        }
+      ]
+    }
+  ],
+  "evidence_hashes": {
+    "4.stdout": "2258cc527be36ee5858aa324bd73781d09ae8f088f4a93f7419755e7a81c8ffa",
+    "7.pstats": "d071a05869bcd55a8f2256b021b5ff418d8f56d5d3ac5288f85517859eef797b",
+    "8.stdout": "2d7646d74b8a09ae149133a8689ed25d92a719a8b98df2c853ef4aa00ca9cf27",
+    "6.stdout": "4f2472fdf7a4a160fca073eafa8ffb54330eec871dde442963fc8e04c854b7a8",
+    "5.pstats": "55aa81d67568d1eacd284fe8e110a8a697ca20dade21789dc7e10864e2f77eab",
+    "result.json": "641553fd0a069e6e65051bd42eb4769953c9fa8c5af7156f06134073063f8f58",
+    "2.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source-before.json": "8c49d1c75f8d7aee548b2414829cbc136ac54f00ec860da14a15466bac361a52",
+    "source-after.json": "8c49d1c75f8d7aee548b2414829cbc136ac54f00ec860da14a15466bac361a52",
+    "2.stdout": "4f2472fdf7a4a160fca073eafa8ffb54330eec871dde442963fc8e04c854b7a8",
+    "6.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "8.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "4.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands.json": "996c2806e0103cc1b6ae2ee3c2a5d28ab43daece79aed07e70564c38c1b8597e",
+    "6.pstats": "77964c00ce2ec0a68cf192523bfdc3a7ed376e313617dea697c9c1bde51db2e6",
+    "5.stdout": "a2324cbe5c71ae7917dcd66f394fe9235cc386270e62c3a162786603f354b553",
+    "1.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "3.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "observations.json": "595f21daab8ff86ab2881daf4b1295e6be15a455b4a3b58a06be8eafb6bc58eb",
+    "8.pstats": "c8e180e3e3a0c3c9b31a6a6fdbf268ae3e1f649b8a91dbd808b9e9eec2ae3efe",
+    "7.stdout": "e491d6f2eb4ec5f73bc9bfdd0c3e72391fd3b3514b036515f36b9e1f95a206e4",
+    "7.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "3.stdout": "e491d6f2eb4ec5f73bc9bfdd0c3e72391fd3b3514b036515f36b9e1f95a206e4",
+    "1.stdout": "a3cb8b0edf5df2f4dd7dbe30ff1d5aeb3ecfcc97887d067451251793caf32e9f",
+    "5.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

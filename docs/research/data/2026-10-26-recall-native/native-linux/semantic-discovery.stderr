@@ -1,0 +1,13 @@
+test_changed_unvisited_source_rejects_old_navigation_before_recall_or_comparison (contract_suite.DiscoveryContract.test_changed_unvisited_source_rejects_old_navigation_before_recall_or_comparison) ... ok
+test_discovered_equivalent_cannot_be_omitted_from_comparison_to_admit_duplicate (contract_suite.DiscoveryContract.test_discovered_equivalent_cannot_be_omitted_from_comparison_to_admit_duplicate) ... ok
+test_exact_source_after_semantic_navigation_has_no_literal_overlap_requirement (contract_suite.DiscoveryContract.test_exact_source_after_semantic_navigation_has_no_literal_overlap_requirement) ... ok
+test_meaningful_admission_creates_native_topics_preserves_payloads_and_replays (contract_suite.DiscoveryContract.test_meaningful_admission_creates_native_topics_preserves_payloads_and_replays) ... ok
+test_navigation_without_trace_collision_or_substituted_proposal_refuses (contract_suite.DiscoveryContract.test_navigation_without_trace_collision_or_substituted_proposal_refuses) ... ok
+test_source_version_uncertainty_and_missing_parent_never_become_novelty (contract_suite.DiscoveryContract.test_source_version_uncertainty_and_missing_parent_never_become_novelty) ... ok
+test_traced_empty_selection_never_falls_back_to_literal_or_full_inventory (contract_suite.DiscoveryContract.test_traced_empty_selection_never_falls_back_to_literal_or_full_inventory) ... ok
+test_traced_stable_id_resolves_current_discovered_version_without_historical_trace (contract_suite.DiscoveryContract.test_traced_stable_id_resolves_current_discovered_version_without_historical_trace) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 11.098s
+
+OK

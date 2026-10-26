@@ -1,0 +1,6 @@
+{
+  "source_before_equal_current_after_failure": true,
+  "commit": "6a983d05a94ef9431a7ab24ad7f55ef469a0d660",
+  "canonical_fixture_preservation_not_collected": true,
+  "failure": "controller assertion stopped on model final path excluded by the native valid-time gate; no rejected source admitted"
+}

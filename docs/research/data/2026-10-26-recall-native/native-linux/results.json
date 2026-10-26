@@ -1,0 +1,74 @@
+[
+  {
+    "name": "actionable-setup-diagnostics",
+    "path": "tests/contracts/test_setup_diagnostics.py",
+    "exit": 0,
+    "errors": 0,
+    "expected_failures": 0,
+    "failures": 0,
+    "passed": true,
+    "skipped": 0,
+    "tests": 6,
+    "unexpected_successes": 0
+  },
+  {
+    "name": "current-bank",
+    "path": "tests/contracts/test_current_bank.py",
+    "exit": 0,
+    "errors": 0,
+    "expected_failures": 0,
+    "failures": 0,
+    "passed": true,
+    "skipped": 0,
+    "tests": 6,
+    "unexpected_successes": 0
+  },
+  {
+    "name": "retrieval-context",
+    "path": "tests/contracts/test_retrieval.py",
+    "exit": 0,
+    "errors": 0,
+    "expected_failures": 0,
+    "failures": 0,
+    "passed": true,
+    "skipped": 0,
+    "tests": 13,
+    "unexpected_successes": 0
+  },
+  {
+    "name": "sharing-boundary",
+    "path": "tests/contracts/test_sharing_boundary.py",
+    "exit": 0,
+    "errors": 0,
+    "expected_failures": 0,
+    "failures": 0,
+    "passed": true,
+    "skipped": 0,
+    "tests": 20,
+    "unexpected_successes": 0
+  },
+  {
+    "name": "recall-catalog",
+    "path": "tests/contracts/test_recall_catalog.py",
+    "exit": 0,
+    "errors": 0,
+    "expected_failures": 0,
+    "failures": 0,
+    "passed": true,
+    "skipped": 0,
+    "tests": 17,
+    "unexpected_successes": 0
+  },
+  {
+    "name": "semantic-discovery",
+    "path": "tests/contracts/test_discovery.py",
+    "exit": 0,
+    "errors": 0,
+    "expected_failures": 0,
+    "failures": 0,
+    "passed": true,
+    "skipped": 0,
+    "tests": 8,
+    "unexpected_successes": 0
+  }
+]

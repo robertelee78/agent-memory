@@ -1,0 +1,92 @@
+[
+  {
+    "attempt": 0,
+    "kind": "cold-rebuild",
+    "whole_workflow_seconds": 2.2026047919644043,
+    "public_operation_seconds": [
+      0.4281656250823289,
+      0.3037075409665704,
+      0.3186736670322716,
+      1.1504205000819638
+    ],
+    "qualifier_metrics": {
+      "inventory_files": 1063,
+      "entries": 1062,
+      "qualified_candidates": 13,
+      "ranked": 1,
+      "selected": 1,
+      "bounded_candidate_bytes_read": 18663,
+      "operation_local_observation_used": true,
+      "canonical_observation_payload_bytes_read": 4748436,
+      "canonical_observation_file_reads": 4252,
+      "parsed_records": 1001,
+      "catalog_updated": true,
+      "inspected_entries": 1062,
+      "candidate_count_scope": "complete-bank",
+      "result_bytes": 2045,
+      "elapsed_seconds": 0.9218860419932753
+    },
+    "optional_indexes_used": false,
+    "qualified_context_bytes": 1766
+  },
+  {
+    "attempt": 1,
+    "kind": "repeated-warm",
+    "whole_workflow_seconds": 1.7448188329581171,
+    "public_operation_seconds": [
+      0.3893751250579953,
+      0.30509170901495963,
+      0.3097894580569118,
+      0.7390040839090943
+    ],
+    "qualifier_metrics": {
+      "inventory_files": 1063,
+      "entries": 1062,
+      "qualified_candidates": 1,
+      "ranked": 1,
+      "selected": 1,
+      "bounded_candidate_bytes_read": 971,
+      "operation_local_observation_used": false,
+      "canonical_observation_payload_bytes_read": 1188080,
+      "canonical_observation_file_reads": 1064,
+      "parsed_records": 1,
+      "catalog_updated": false,
+      "inspected_entries": 1,
+      "candidate_count_scope": "semantic-selection-invalidation-and-oversize-guards",
+      "result_bytes": 2045,
+      "elapsed_seconds": 0.5377366249449551
+    },
+    "optional_indexes_used": true,
+    "qualified_context_bytes": 1766
+  },
+  {
+    "attempt": 2,
+    "kind": "repeated-warm",
+    "whole_workflow_seconds": 1.8700597089482471,
+    "public_operation_seconds": [
+      0.4330327499192208,
+      0.3370518749579787,
+      0.3424585419707,
+      0.7554184170439839
+    ],
+    "qualifier_metrics": {
+      "inventory_files": 1063,
+      "entries": 1062,
+      "qualified_candidates": 1,
+      "ranked": 1,
+      "selected": 1,
+      "bounded_candidate_bytes_read": 971,
+      "operation_local_observation_used": false,
+      "canonical_observation_payload_bytes_read": 1188080,
+      "canonical_observation_file_reads": 1064,
+      "parsed_records": 1,
+      "catalog_updated": false,
+      "inspected_entries": 1,
+      "candidate_count_scope": "semantic-selection-invalidation-and-oversize-guards",
+      "result_bytes": 2045,
+      "elapsed_seconds": 0.5424912500893697
+    },
+    "optional_indexes_used": true,
+    "qualified_context_bytes": 1766
+  }
+]

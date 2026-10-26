@@ -1,0 +1,510 @@
+{
+  "retained_root": "/tmp/agent-memory-v003/fixed-timing-785ae41",
+  "files": [
+    {
+      "path": "1000-candidate/latency-0-literal-multiple-terms.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "1000-candidate/latency-0-literal-multiple-terms.stdout.json",
+      "sha256": "f7b74673f22d411d437ceaf163ccb71eb9e2eef5a9c93e9266031a1ef54099b5",
+      "bytes": 4840
+    },
+    {
+      "path": "1000-candidate/latency-1-literal-multiple-terms.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "1000-candidate/latency-1-literal-multiple-terms.stdout.json",
+      "sha256": "e526c9c20943bcb9c9de9d81c0e2eb8006330f530b33df5abdbc640cb1e60bf5",
+      "bytes": 4840
+    },
+    {
+      "path": "1000-candidate/structural-validation.json",
+      "sha256": "ce6d073535322fbc54fd4ad2ccf3cf79d531be2fb198f40086138defd07dd137",
+      "bytes": 111
+    },
+    {
+      "path": "1000-labels.json",
+      "sha256": "cb946e645532aaf4ee24fec4b77b20e760b9bc6b95c706771626af6ff29dd254",
+      "bytes": 48242
+    },
+    {
+      "path": "10000-candidate/latency-0-literal-multiple-terms.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "10000-candidate/latency-0-literal-multiple-terms.stdout.json",
+      "sha256": "abf80643230e2e1b6fbc906c278c09bf927fc499c3f415ad079a03976da9754e",
+      "bytes": 4851
+    },
+    {
+      "path": "10000-candidate/latency-1-literal-multiple-terms.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "10000-candidate/latency-1-literal-multiple-terms.stdout.json",
+      "sha256": "47c4910c674b6e5e559dba5d6c359ad22b6cb6da4d2412253c33b635db43a833",
+      "bytes": 4852
+    },
+    {
+      "path": "10000-candidate/structural-validation.json",
+      "sha256": "8a31614a09688498649d385f1f7daff4fa4ad159e970510dd7e3848b82d387a1",
+      "bytes": 111
+    },
+    {
+      "path": "10000-labels.json",
+      "sha256": "edbe3fa1059e79b5ec806b2ea1f807057aebc2cf8475cbcd98009dd5ca2644f0",
+      "bytes": 48246
+    },
+    {
+      "path": "50000-candidate/latency-0-literal-multiple-terms.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "50000-candidate/latency-0-literal-multiple-terms.stdout.json",
+      "sha256": "87b467f80791c02a16ae1f923633d826a7a63c3cfdf6c4e5a4f3b20783788059",
+      "bytes": 4858
+    },
+    {
+      "path": "50000-candidate/latency-1-literal-multiple-terms.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "50000-candidate/latency-1-literal-multiple-terms.stdout.json",
+      "sha256": "86236d4bc22c5a06ea38865af9f9ce2a46ec43bc97772e99d0bbb693d3c0ebf7",
+      "bytes": 4858
+    },
+    {
+      "path": "50000-candidate/structural-validation.json",
+      "sha256": "7a5fcd03637236f49aec41b850a67745b826c3692e04594369054e9b5f0cc17c",
+      "bytes": 110
+    },
+    {
+      "path": "50000-labels.json",
+      "sha256": "fce47b868f320328636806089bf4949baab2ab82a4444d92b32d411a701cc949",
+      "bytes": 48246
+    },
+    {
+      "path": "commands/00001-installer.py.execution.json",
+      "sha256": "c588b775205c96a686c4ed9bbbfd43572791caed0a76d7c524e92876c1c62f07",
+      "bytes": 425
+    },
+    {
+      "path": "commands/00001-installer.py.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "commands/00001-installer.py.stdout",
+      "sha256": "8a836d97891743493d56e190571b9f7b4b924619af7fec56f636452d4e95488b",
+      "bytes": 28453
+    },
+    {
+      "path": "commands/00002-developer_identity.py.execution.json",
+      "sha256": "8b1b9f51d122e2c7ef83251b899e8f09b197da18b82773fdcda1565a2913eed3",
+      "bytes": 361
+    },
+    {
+      "path": "commands/00002-developer_identity.py.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "commands/00002-developer_identity.py.stdout",
+      "sha256": "61c1d15a3b7f7d94c0c703678adc50b9cd90e7449146121ed0c07eb81623cfcb",
+      "bytes": 691
+    },
+    {
+      "path": "commands/00003-developer_identity.py.execution.json",
+      "sha256": "12c80bb09bd3b8782e7e5d56dd881852366c2206235ee3c796c133bc244f0bbf",
+      "bytes": 366
+    },
+    {
+      "path": "commands/00003-developer_identity.py.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "commands/00003-developer_identity.py.stdout",
+      "sha256": "034d4e637982374e859c688527890237668209c0a0d91bb38c5721696a37497b",
+      "bytes": 810
+    },
+    {
+      "path": "commands/00004-developer_identity.py.execution.json",
+      "sha256": "a8685bff4a898061271134b1c0953170cfd741e3f706490d6052c7172be201cb",
+      "bytes": 374
+    },
+    {
+      "path": "commands/00004-developer_identity.py.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "commands/00004-developer_identity.py.stdout",
+      "sha256": "6823e22eaa2c65457e83fe093796d180013b51c1ff71a73fb71293f7a16e22b3",
+      "bytes": 680
+    },
+    {
+      "path": "commands/00005-scope_binding.py.execution.json",
+      "sha256": "8f908b70a5f0fedb221499398e1389e18818ef6d31fdfd0ba906b6d8d98809b9",
+      "bytes": 442
+    },
+    {
+      "path": "commands/00005-scope_binding.py.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "commands/00005-scope_binding.py.stdout",
+      "sha256": "e6d17e78b6c86ac26a029b4c6c4dd080839c7fb21add6f2bda5a2caf77592dc0",
+      "bytes": 1318126
+    },
+    {
+      "path": "commands/00006-scope_binding.py.execution.json",
+      "sha256": "9ee322d8c60c83c0e8dc2cfd6ac3d222e339b33451cd6bbde592c1b58130922a",
+      "bytes": 362
+    },
+    {
+      "path": "commands/00006-scope_binding.py.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "commands/00006-scope_binding.py.stdout",
+      "sha256": "03d463054178477ca9fcf89101c8243a38517e126147e934da362c4c1a6c58b2",
+      "bytes": 8385
+    },
+    {
+      "path": "commands/00007-bank_contract.py.execution.json",
+      "sha256": "d0c42c406dce824cc262c61c4fc6f9669fa4b58a0665051bc8ac7663fff06438",
+      "bytes": 358
+    },
+    {
+      "path": "commands/00007-bank_contract.py.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "commands/00007-bank_contract.py.stdout",
+      "sha256": "ff213f2e8fad95e970656c92712c57034cab6c9466296588263a3a2bbceaca9d",
+      "bytes": 440676
+    },
+    {
+      "path": "commands/00008-retrieve.py.execution.json",
+      "sha256": "1ccd85b46afcc8d26a583bc66a112bf0a4c37fd5d53d38a34e0e35656b8ecbaa",
+      "bytes": 438
+    },
+    {
+      "path": "commands/00008-retrieve.py.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "commands/00008-retrieve.py.stdout",
+      "sha256": "f7b74673f22d411d437ceaf163ccb71eb9e2eef5a9c93e9266031a1ef54099b5",
+      "bytes": 4840
+    },
+    {
+      "path": "commands/00009-retrieve.py.execution.json",
+      "sha256": "9f5314f43f4fb50b7803fb5f4664932e1f4c77511ef5b22a6a0e89f7c2fc4730",
+      "bytes": 438
+    },
+    {
+      "path": "commands/00009-retrieve.py.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "commands/00009-retrieve.py.stdout",
+      "sha256": "e526c9c20943bcb9c9de9d81c0e2eb8006330f530b33df5abdbc640cb1e60bf5",
+      "bytes": 4840
+    },
+    {
+      "path": "commands/00010-installer.py.execution.json",
+      "sha256": "419e0f78ce6e6c6d6d5e37182fcc34c19ccc4bfcf48c041998dd3cda7c0deaef",
+      "bytes": 425
+    },
+    {
+      "path": "commands/00010-installer.py.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "commands/00010-installer.py.stdout",
+      "sha256": "75a48216d94e3fd8e54cb061268d80e5ff9a7e2d1ecee572dfc289f31953ccd3",
+      "bytes": 28453
+    },
+    {
+      "path": "commands/00011-developer_identity.py.execution.json",
+      "sha256": "48ce514060bc88517b5b65518ec277705ffb3a48a2f0830311e73628c650dc90",
+      "bytes": 361
+    },
+    {
+      "path": "commands/00011-developer_identity.py.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "commands/00011-developer_identity.py.stdout",
+      "sha256": "a1b1495c7ac2057a5a4b6628af4d0830cb91802ce45649d405cd30d399f3686e",
+      "bytes": 691
+    },
+    {
+      "path": "commands/00012-developer_identity.py.execution.json",
+      "sha256": "425be64335de83837c8a514d6b6e53d787a264543f408dbd6fe4b28259939b93",
+      "bytes": 365
+    },
+    {
+      "path": "commands/00012-developer_identity.py.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "commands/00012-developer_identity.py.stdout",
+      "sha256": "3921c40ebf1c11582c0346d8b74732f9c0f5991370d1fbc49daa709b82cd71f3",
+      "bytes": 810
+    },
+    {
+      "path": "commands/00013-developer_identity.py.execution.json",
+      "sha256": "c1fc9b8bdd1b8827cc5791276fb9fe46b451dd149b6c266bf48b6af779292d29",
+      "bytes": 374
+    },
+    {
+      "path": "commands/00013-developer_identity.py.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "commands/00013-developer_identity.py.stdout",
+      "sha256": "7008bd485f5de6a01414b7e69fad6105511e3d9666f626f5dab13aae2384b09b",
+      "bytes": 680
+    },
+    {
+      "path": "commands/00014-scope_binding.py.execution.json",
+      "sha256": "5237ba1d7aaaf12f835d4f72979e0e5ba2de0485439680ad8e71a3f7c5a09b2d",
+      "bytes": 441
+    },
+    {
+      "path": "commands/00014-scope_binding.py.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "commands/00014-scope_binding.py.stdout",
+      "sha256": "0fda08840221e13adeacacd9abd0e980ad4676a2aef66f77fc95a2fd8c98f4b1",
+      "bytes": 13163494
+    },
+    {
+      "path": "commands/00015-scope_binding.py.execution.json",
+      "sha256": "38b9a2852cbfe67e348be7857030678acf6358da1cd2e54540244cf0f14c4ca1",
+      "bytes": 362
+    },
+    {
+      "path": "commands/00015-scope_binding.py.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "commands/00015-scope_binding.py.stdout",
+      "sha256": "77e22d928571eae8dfdbb04b556880b7dd9220cb01c853252b4286fc30448c64",
+      "bytes": 8385
+    },
+    {
+      "path": "commands/00016-bank_contract.py.execution.json",
+      "sha256": "b45b5acb14f32fa75c3484b8ecb8d8be38234c4d491f96d637da2f83dc3471b9",
+      "bytes": 357
+    },
+    {
+      "path": "commands/00016-bank_contract.py.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "commands/00016-bank_contract.py.stdout",
+      "sha256": "65019acd46e220c1da5fc89c6dd512be99aff8b67e7cf3c204b76fca85416e2f",
+      "bytes": 4391920
+    },
+    {
+      "path": "commands/00017-retrieve.py.execution.json",
+      "sha256": "c25b6bff743aeaa24fada40a4cd2d8aa9c98868c2feae5caf50f697863a4d3c9",
+      "bytes": 438
+    },
+    {
+      "path": "commands/00017-retrieve.py.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "commands/00017-retrieve.py.stdout",
+      "sha256": "abf80643230e2e1b6fbc906c278c09bf927fc499c3f415ad079a03976da9754e",
+      "bytes": 4851
+    },
+    {
+      "path": "commands/00018-retrieve.py.execution.json",
+      "sha256": "99cdfc115c3739e548356919dcb9f7d3612e1d7004d01411c2959244a7650ac8",
+      "bytes": 438
+    },
+    {
+      "path": "commands/00018-retrieve.py.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "commands/00018-retrieve.py.stdout",
+      "sha256": "47c4910c674b6e5e559dba5d6c359ad22b6cb6da4d2412253c33b635db43a833",
+      "bytes": 4852
+    },
+    {
+      "path": "commands/00019-installer.py.execution.json",
+      "sha256": "efe29365d4d87e1d8556cda889f22e33f168b0108409cf088721eb70e3973d07",
+      "bytes": 425
+    },
+    {
+      "path": "commands/00019-installer.py.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "commands/00019-installer.py.stdout",
+      "sha256": "b30cdd930c605ee6120e1172cce6ec92b5775a3197a7fd86a7faad97c8070804",
+      "bytes": 28453
+    },
+    {
+      "path": "commands/00020-developer_identity.py.execution.json",
+      "sha256": "0e8178e957e69cc9371ecf59713474268b4bcf5b4818aef3cd23d9834a21cff2",
+      "bytes": 360
+    },
+    {
+      "path": "commands/00020-developer_identity.py.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "commands/00020-developer_identity.py.stdout",
+      "sha256": "0041bcf8a39769bcd5be667626472e9977a22bc679ce6151b98bd213c9201d5a",
+      "bytes": 691
+    },
+    {
+      "path": "commands/00021-developer_identity.py.execution.json",
+      "sha256": "ddeffb44f975eebeb1d9ae1cb977f224332ea238962306a0b892bb70e0a0fb5a",
+      "bytes": 366
+    },
+    {
+      "path": "commands/00021-developer_identity.py.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "commands/00021-developer_identity.py.stdout",
+      "sha256": "3b707dc5dead04167605ae58c331ca3634f13887127091419a677538474e33e8",
+      "bytes": 810
+    },
+    {
+      "path": "commands/00022-developer_identity.py.execution.json",
+      "sha256": "f14843f7cf2d233f11a9d006044f61a3bca2fbd505a855a37dd470164a0b23a6",
+      "bytes": 374
+    },
+    {
+      "path": "commands/00022-developer_identity.py.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "commands/00022-developer_identity.py.stdout",
+      "sha256": "ab764e43752d84d81dac8c3f05b2cefe633b0ddc64c475ea005871ea8545c835",
+      "bytes": 680
+    },
+    {
+      "path": "commands/00023-scope_binding.py.execution.json",
+      "sha256": "2649d07166fd1bb592c561544907c24e8edf2d613260a7e5ef66f360dc743dce",
+      "bytes": 442
+    },
+    {
+      "path": "commands/00023-scope_binding.py.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "commands/00023-scope_binding.py.stdout",
+      "sha256": "474d818b186afc05e9d5d02e5fffc7ade96008a1a06a993401b41f5e4f037047",
+      "bytes": 65889465
+    },
+    {
+      "path": "commands/00024-scope_binding.py.execution.json",
+      "sha256": "2273fae04320eb1953297d5a7c39534f5f7eed22bd3073f1bfc7fd1b87c341f9",
+      "bytes": 362
+    },
+    {
+      "path": "commands/00024-scope_binding.py.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "commands/00024-scope_binding.py.stdout",
+      "sha256": "37175ee692a3cd4ec1fceb6b0848166882f89d2db6587654451a77ed1ba47a6e",
+      "bytes": 8385
+    },
+    {
+      "path": "commands/00025-bank_contract.py.execution.json",
+      "sha256": "70372725bcc5d7585a80110ba16d9fcd8afe5fd2ff80046ac662e7793a5f85fe",
+      "bytes": 357
+    },
+    {
+      "path": "commands/00025-bank_contract.py.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "commands/00025-bank_contract.py.stdout",
+      "sha256": "579e6f5af8fd847c2c3b1aa4b6b15570b08891fc1d5810b5a1dfc01fdbfbdaa1",
+      "bytes": 21953093
+    },
+    {
+      "path": "commands/00026-retrieve.py.execution.json",
+      "sha256": "a0fde85aaba0b4a769d768e4816ea9b3715cfe0b08082706a00b5fd75eb28ed5",
+      "bytes": 438
+    },
+    {
+      "path": "commands/00026-retrieve.py.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "commands/00026-retrieve.py.stdout",
+      "sha256": "87b467f80791c02a16ae1f923633d826a7a63c3cfdf6c4e5a4f3b20783788059",
+      "bytes": 4858
+    },
+    {
+      "path": "commands/00027-retrieve.py.execution.json",
+      "sha256": "6d0bfabde27ae1bf778ff90db58bf00dbded306f47f7e7ca63a95e455fbe3f38",
+      "bytes": 437
+    },
+    {
+      "path": "commands/00027-retrieve.py.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "commands/00027-retrieve.py.stdout",
+      "sha256": "86236d4bc22c5a06ea38865af9f9ce2a46ec43bc97772e99d0bbb693d3c0ebf7",
+      "bytes": 4858
+    },
+    {
+      "path": "observations.json",
+      "sha256": "2e7f7f9bb17ea08c8b6c865cf9aa649c6c401692855323ce222e2cbfd079b546",
+      "bytes": 15910
+    },
+    {
+      "path": "source-bindings.json",
+      "sha256": "7956c35674c0bbac2b74fa70098e75adf2660ed210eb33b9f2b519dc7c927242",
+      "bytes": 255443
+    }
+  ]
+}

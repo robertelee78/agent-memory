@@ -24,6 +24,24 @@ def local_value(root, key):
     return values[0]
 
 
+def local_settings(root):
+    # One local-config read keeps these two fields coherent. Git normalizes
+    # section/key spelling in --get-regexp output; values remain verbatim.
+    raw = git(root, 'config', '--local', '--null', '--get-regexp',
+              r'^agent-memory\.(bankroot|authoritybranch)$', optional=True)
+    if raw is None:
+        return {}
+    if not raw.endswith('\0'):
+        raise ContractError('Repository memory configuration inventory is incomplete')
+    result = {}
+    for entry in raw.split('\0')[:-1]:
+        key, separator, value = entry.partition('\n')
+        if key not in {'agent-memory.bankroot', 'agent-memory.authoritybranch'} or not separator or not value or key in result:
+            raise ContractError('Repository memory configuration needs one explicit value per key')
+        result[key] = value
+    return result
+
+
 def safe_label(value):
     # Import at operation time: the security module consumes the shared writer.
     from .security import scan
@@ -113,17 +131,34 @@ def object_router_bytes(root, expression, cache):
 
 
 def git_roots(root, *, router_reader=None):
-    listed = git(root, 'ls-files', '--cached', '--others', '--exclude-standard', '-z', optional=True)
-    indexed = git(root, 'ls-files', '--cached', '-z', optional=True)
-    if listed is None or indexed is None:
+    # Git's fixed glob covers this one basename at every depth, including
+    # case variants. Status tags distinguish indexed versus untracked names
+    # without a second listing or parsing filename whitespace as metadata.
+    listed = git(root, 'ls-files', '--cached', '--others', '--exclude-standard', '-t', '-z',
+                 '--', ':(icase,glob)**/MEMORY.md', optional=True, glob_pathspecs=True)
+    if listed is None or (listed and not listed.endswith('\0')):
         raise ContractError('Repository memory inventory is unavailable; do not infer absence')
+    listed_paths, indexed_paths = set(), set()
+    for entry in listed.split('\0'):
+        if not entry:
+            continue
+        if len(entry) < 3 or entry[1] != ' ' or entry[0] not in 'HSMRCK?U':
+            raise ContractError('Repository memory inventory has an unknown status; do not infer absence')
+        path = entry[2:]
+        listed_paths.add(path)
+        if entry[0] != '?':
+            indexed_paths.add(path)
     head = git(root, 'rev-parse', '--verify', 'HEAD', optional=True)
     committed = git(root, 'ls-tree', '-r', '--name-only', '-z', head) if head else ''
-    indexed_paths = set(indexed.split('\0'))
     committed_paths = set(committed.split('\0'))
-    paths = sorted({PurePosixPath(path) for path in [*listed.split('\0'), *committed_paths] if path
-                    and PurePosixPath(path).name.casefold() == 'memory.md'
-                    and not any(part.startswith('.') for part in PurePosixPath(path).parts)})
+    # Examine every inventory spelling, but construct path objects only for
+    # possible locators. Ordinary source/record filenames cannot be routers.
+    # A final dot component still needs PurePosixPath normalization before the
+    # exact same locator/hidden-component checks used below.
+    candidates = (path for path in [*listed_paths, *committed_paths] if path
+                  and path.rstrip('/').rsplit('/', 1)[-1].casefold() in {'memory.md', '.'})
+    paths = sorted({parsed for path in candidates if (parsed := PurePosixPath(path)).name.casefold() == 'memory.md'
+                    and not any(part.startswith('.') for part in parsed.parts)})
     if len(paths) > MAX_ROUTERS:
         raise ContractError('Memory locator inventory exceeds its bound; incomplete discovery cannot prove absence')
     roots, cache = set(), {}
@@ -186,7 +221,8 @@ def settings(repo, *, router_reader=None):
         raise ContractError('Existing Git metadata/configuration cannot be inspected; do not guess the bank root')
     if top is not None and Path(top).resolve() != root:
         raise ContractError('Select the actual repository root for its one memory bank')
-    explicit = local_value(root, 'agent-memory.bankRoot')
+    configured = local_settings(root)
+    explicit = configured.get('agent-memory.bankroot')
     if explicit is not None:
         validate_root(explicit)
     roots = git_roots(root, router_reader=router_reader) if top is not None else set()
@@ -206,7 +242,7 @@ def settings(repo, *, router_reader=None):
             raise ContractError('Configured bank directory cannot follow symlinks or occupied files')
     if not (current / 'MEMORY.md').is_file():
         physical_others(root, current, router_reader=router_reader)
-    branch = local_value(root, 'agent-memory.authorityBranch')
+    branch = configured.get('agent-memory.authoritybranch')
     if branch is not None:
         validate_branch(branch)
     return {'bank_root': relative, 'authority_branch': branch}

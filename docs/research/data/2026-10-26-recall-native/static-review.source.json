@@ -1,0 +1,47 @@
+{
+  "reviewer": "codex-review-59",
+  "candidate": "785ae413146103902f4742e3a59fd3aad950a1cf",
+  "tree": "3f2b8dba9b04a27198bfa74d56e4fae74673b8a9",
+  "comparison_base": "adf5852b98c2a297e767f556bae4718c1d7c41f9",
+  "files": [
+    {
+      "path": "docs/research/2026-10-25-native-lookup-locator-cost.md",
+      "sha256": "896ca18441ac301bd40239644c10eca5ba72dc04f0fafe43ea29c02b8ccda5c8",
+      "bytes": 4661,
+      "git_mode": "100644",
+      "git_blob": "3c3acd17b037377ea0b23498e20b445299a13c60"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/bank_observation.py",
+      "sha256": "ec4f34e695efb69a25b73b5a2fe10bd21d0bb98ba3b6454796d0f2a2dbe8c368",
+      "bytes": 6181,
+      "git_mode": "100644",
+      "git_blob": "1553ecf6519fca5685195313d97785bc377eef63"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/repository_config.py",
+      "sha256": "34f96c83c648a27b99bbdc97e3dfaf7d50f6235a494ba6e9503513dcfe520cc3",
+      "bytes": 13142,
+      "git_mode": "100644",
+      "git_blob": "40fe050739f48f04caebcce158439c970e03e3d1"
+    },
+    {
+      "path": "tests/contracts/test_setup_diagnostics.py",
+      "sha256": "93a52ecb9ee4bd5a192426ee78d44d24ab93410d4d1514ffeadab9425ca98867",
+      "bytes": 8852,
+      "git_mode": "100644",
+      "git_blob": "7af7a571e29b2fb1c65abb22f3631b46dece3a08"
+    }
+  ],
+  "test_registration_matches_reviewed_1f53ae4": true,
+  "official_documentation": [
+    "https://git-scm.com/docs/git-config"
+  ],
+  "review_mode": "immutable Git static source/AST and official documentation; no product execution",
+  "parent_results_adopted": false,
+  "disposition": "APPROVED bounded config/directory-prefix optimization",
+  "jobs": "terminal and collected",
+  "worlds": 0,
+  "holds": "RELEASED",
+  "external_writer_grant": "NONE / RELEASED"
+}

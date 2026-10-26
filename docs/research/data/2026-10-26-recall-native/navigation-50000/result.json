@@ -1,0 +1,110 @@
+{
+  "commit": "785ae413146103902f4742e3a59fd3aad950a1cf",
+  "fixture": {
+    "fixture": "semantic-navigation-v3-parent-scopes",
+    "distinct_lessons": 50000,
+    "canonical_files": 50843,
+    "canonical_bytes": 59047173,
+    "root_routes": 31,
+    "layout_basis": "authored source subjects and actual component identities, independent of held-out questions",
+    "frozen_literal_baseline_modified": false
+  },
+  "setup_seconds": 104.14808158297092,
+  "observations": [
+    {
+      "attempt": 0,
+      "kind": "cold-rebuild",
+      "whole_workflow_seconds": 18.85899720794987,
+      "public_operation_seconds": [
+        3.0849143330706283,
+        0.40821566607337445,
+        0.4151487499475479,
+        14.949053500080481
+      ],
+      "qualifier_metrics": {
+        "inventory_files": 50843,
+        "entries": 50842,
+        "qualified_candidates": 13,
+        "ranked": 1,
+        "selected": 1,
+        "bounded_candidate_bytes_read": 18663,
+        "operation_local_observation_used": true,
+        "canonical_observation_payload_bytes_read": 236188692,
+        "canonical_observation_file_reads": 203372,
+        "parsed_records": 50001,
+        "catalog_updated": true,
+        "inspected_entries": 50842,
+        "candidate_count_scope": "complete-bank",
+        "result_bytes": 2045,
+        "elapsed_seconds": 14.472473333007656
+      },
+      "optional_indexes_used": false,
+      "qualified_context_bytes": 1766
+    },
+    {
+      "attempt": 1,
+      "kind": "repeated-warm",
+      "whole_workflow_seconds": 4.835990582942031,
+      "public_operation_seconds": [
+        0.9519463329343125,
+        0.40743812499567866,
+        0.41014724993146956,
+        3.0647962919902056
+      ],
+      "qualifier_metrics": {
+        "inventory_files": 50843,
+        "entries": 50842,
+        "qualified_candidates": 1,
+        "ranked": 1,
+        "selected": 1,
+        "bounded_candidate_bytes_read": 971,
+        "operation_local_observation_used": false,
+        "canonical_observation_payload_bytes_read": 59048144,
+        "canonical_observation_file_reads": 50844,
+        "parsed_records": 1,
+        "catalog_updated": false,
+        "inspected_entries": 1,
+        "candidate_count_scope": "semantic-selection-invalidation-and-oversize-guards",
+        "result_bytes": 2045,
+        "elapsed_seconds": 2.7969421671004966
+      },
+      "optional_indexes_used": true,
+      "qualified_context_bytes": 1766
+    },
+    {
+      "attempt": 2,
+      "kind": "repeated-warm",
+      "whole_workflow_seconds": 4.868993542040698,
+      "public_operation_seconds": [
+        0.9526550840819255,
+        0.4375104169594124,
+        0.41815287503413856,
+        3.0589745410252362
+      ],
+      "qualifier_metrics": {
+        "inventory_files": 50843,
+        "entries": 50842,
+        "qualified_candidates": 1,
+        "ranked": 1,
+        "selected": 1,
+        "bounded_candidate_bytes_read": 971,
+        "operation_local_observation_used": false,
+        "canonical_observation_payload_bytes_read": 59048144,
+        "canonical_observation_file_reads": 50844,
+        "parsed_records": 1,
+        "catalog_updated": false,
+        "inspected_entries": 1,
+        "candidate_count_scope": "semantic-selection-invalidation-and-oversize-guards",
+        "result_bytes": 2045,
+        "elapsed_seconds": 2.7945151660824195
+      },
+      "optional_indexes_used": true,
+      "qualified_context_bytes": 1766
+    }
+  ],
+  "bank_feature_index_head_preserved": true,
+  "semantic_quality_claimed": false,
+  "performance_acceptance_claimed": false,
+  "cold_filesystem_cache_claimed": false,
+  "model_reasoning_included": false
+}

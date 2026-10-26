@@ -1,0 +1,380 @@
+{
+  "case": "unknown-prerequisite",
+  "question": "Can we resume an incremental import using its old receipt?",
+  "context": {},
+  "finish": {
+    "action": "finish",
+    "paths": [
+      "topics/r/429ebfbe-7713-40be-bca4-c3b904f82517-v1.md",
+      "topics/r/5c53ca49-b171-41cb-ba2c-ff574c5ebd5b-v1.md"
+    ],
+    "complete": false,
+    "clarification_required": true,
+    "rationale": "The qualified read returned three current records. None of them says whether an incremental import can be resumed from its old receipt. The two idempotency-receipt records (429ebfbe from a queue probe, 5c53ca49 from an HTTP acceptance probe) agree that a repeated request key returns the first successful response stored in its receipt. Both are reviewed semantic facts with external-class sources, and the records state they are synthetic fixtures rather than real admission evidence. They cover replaying a request, not resuming an import, so they are related context only. The pagination repeated-token record (c7b17274) also qualified, but it is about stopping on a repeated cursor and does not touch receipts, so I left it out of the answer set. The two records most likely to answer the question are Delta resumption (5e84b6ba) and Resumable checkpoint (5d3439a6), both under session recovery. The reader excluded both because of conditions it could not check: one needs an unknown prerequisite and one needs an unknown session. No prerequisite or session context was supplied, and unknown conditions exclude a lesson rather than count as met. So I can't say from memory whether resuming with the old receipt is allowed, or what has to be true first. That also doesn't mean the question necessarily depends on those conditions. The transactions branch (component:src/transactions, about replay identity) was not expanded because no component context was given, so coverage is incomplete. To settle this, the user needs to supply the actual import session and any prerequisite state, such as whether the earlier checkpoint or base is still valid, and which component is involved, so those excluded records can be qualified again. Any answer should also be checked against the current code before relying on it."
+  },
+  "failure": null,
+  "expected_paths_scored_after_finish": [],
+  "selected_paths": [
+    "topics/r/429ebfbe-7713-40be-bca4-c3b904f82517-v1.md",
+    "topics/r/5c53ca49-b171-41cb-ba2c-ff574c5ebd5b-v1.md"
+  ],
+  "missed": [],
+  "unexpected": [
+    "topics/r/429ebfbe-7713-40be-bca4-c3b904f82517-v1.md",
+    "topics/r/5c53ca49-b171-41cb-ba2c-ff574c5ebd5b-v1.md"
+  ],
+  "all_qualified_paths_considered": [
+    "topics/r/429ebfbe-7713-40be-bca4-c3b904f82517-v1.md",
+    "topics/r/5c53ca49-b171-41cb-ba2c-ff574c5ebd5b-v1.md",
+    "topics/r/c7b17274-e5ae-433f-a9f9-a0a2198a1c67-v1.md"
+  ],
+  "model_calls": 4,
+  "reported_model_cost_usd": 0.9380768,
+  "canonical_helper_seconds": 6.840863666962832,
+  "semantic_completeness_verified": false,
+  "native_client_integration_claimed": false,
+  "performance_acceptance_claimed": false,
+  "model_usage_and_cost": [
+    {
+      "argv": [
+        "claude",
+        "-p",
+        "--safe-mode",
+        "--tools",
+        "",
+        "--no-session-persistence",
+        "--output-format",
+        "json",
+        "--max-budget-usd",
+        "2.00",
+        "--json-schema",
+        "{\"type\": \"object\", \"properties\": {\"action\": {\"type\": \"string\", \"enum\": [\"read-node\", \"read-nodes\", \"read-sources\", \"finish\"]}, \"path\": {\"type\": \"string\"}, \"paths\": {\"type\": \"array\", \"items\": {\"type\": \"string\"}, \"maxItems\": 64, \"uniqueItems\": true}, \"complete\": {\"type\": \"boolean\"}, \"clarification_required\": {\"type\": \"boolean\"}, \"rationale\": {\"type\": \"string\"}}, \"required\": [\"action\"], \"additionalProperties\": false}"
+      ],
+      "exit": 0,
+      "seconds": 4.69481050001923,
+      "input_bytes": 41154,
+      "request_sha256": "5adf8b52841f133c14982a46722b1177c880d0ec1a7e5449b13d27159cc8cd0d",
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 16172,
+        "cache_read_input_tokens": 2126,
+        "output_tokens": 278,
+        "output_tokens_details": {
+          "thinking_tokens": 120
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 16172,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 278,
+            "cache_read_input_tokens": 2126,
+            "cache_creation_input_tokens": 16172,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 16172
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "model_usage": {
+        "claude-opus-5-5": {
+          "inputTokens": 2,
+          "outputTokens": 278,
+          "cacheReadInputTokens": 2126,
+          "cacheCreationInputTokens": 16172,
+          "webSearchRequests": 0,
+          "costUSD": 0.1353692,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "thinkingTokens": 120,
+          "canonicalModel": "claude-opus-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "reported_cost_usd": 0.1353692
+    },
+    {
+      "argv": [
+        "claude",
+        "-p",
+        "--safe-mode",
+        "--tools",
+        "",
+        "--no-session-persistence",
+        "--output-format",
+        "json",
+        "--max-budget-usd",
+        "2.00",
+        "--json-schema",
+        "{\"type\": \"object\", \"properties\": {\"action\": {\"type\": \"string\", \"enum\": [\"read-node\", \"read-nodes\", \"read-sources\", \"finish\"]}, \"path\": {\"type\": \"string\"}, \"paths\": {\"type\": \"array\", \"items\": {\"type\": \"string\"}, \"maxItems\": 64, \"uniqueItems\": true}, \"complete\": {\"type\": \"boolean\"}, \"clarification_required\": {\"type\": \"boolean\"}, \"rationale\": {\"type\": \"string\"}}, \"required\": [\"action\"], \"additionalProperties\": false}"
+      ],
+      "exit": 0,
+      "seconds": 8.814179291017354,
+      "input_bytes": 55306,
+      "request_sha256": "c3f455948f9699bb4d92d5c1d4015368dd58cdb1600c057f66bdb8f4c08d3b7c",
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 23240,
+        "cache_read_input_tokens": 2126,
+        "output_tokens": 508,
+        "output_tokens_details": {
+          "thinking_tokens": 158
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 23240,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 508,
+            "cache_read_input_tokens": 2126,
+            "cache_creation_input_tokens": 23240,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 23240
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "model_usage": {
+        "claude-opus-5-5": {
+          "inputTokens": 2,
+          "outputTokens": 508,
+          "cacheReadInputTokens": 2126,
+          "cacheCreationInputTokens": 23240,
+          "webSearchRequests": 0,
+          "costUSD": 0.1965132,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "thinkingTokens": 158,
+          "canonicalModel": "claude-opus-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "reported_cost_usd": 0.1965132
+    },
+    {
+      "argv": [
+        "claude",
+        "-p",
+        "--safe-mode",
+        "--tools",
+        "",
+        "--no-session-persistence",
+        "--output-format",
+        "json",
+        "--max-budget-usd",
+        "2.00",
+        "--json-schema",
+        "{\"type\": \"object\", \"properties\": {\"action\": {\"type\": \"string\", \"enum\": [\"read-node\", \"read-nodes\", \"read-sources\", \"finish\"]}, \"path\": {\"type\": \"string\"}, \"paths\": {\"type\": \"array\", \"items\": {\"type\": \"string\"}, \"maxItems\": 64, \"uniqueItems\": true}, \"complete\": {\"type\": \"boolean\"}, \"clarification_required\": {\"type\": \"boolean\"}, \"rationale\": {\"type\": \"string\"}}, \"required\": [\"action\"], \"additionalProperties\": false}"
+      ],
+      "exit": 0,
+      "seconds": 10.613604416023009,
+      "input_bytes": 71695,
+      "request_sha256": "ea32b1ad543e621925e63c6b7a9d761d5da351f3375a5656cdb4b37daddc224b",
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 31773,
+        "cache_read_input_tokens": 2126,
+        "output_tokens": 839,
+        "output_tokens_details": {
+          "thinking_tokens": 257
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 31773,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 839,
+            "cache_read_input_tokens": 2126,
+            "cache_creation_input_tokens": 31773,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 31773
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "model_usage": {
+        "claude-opus-5-5": {
+          "inputTokens": 2,
+          "outputTokens": 839,
+          "cacheReadInputTokens": 2126,
+          "cacheCreationInputTokens": 31773,
+          "webSearchRequests": 0,
+          "costUSD": 0.2713972,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "thinkingTokens": 257,
+          "canonicalModel": "claude-opus-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "reported_cost_usd": 0.2713972
+    },
+    {
+      "argv": [
+        "claude",
+        "-p",
+        "--safe-mode",
+        "--tools",
+        "",
+        "--no-session-persistence",
+        "--output-format",
+        "json",
+        "--max-budget-usd",
+        "2.00",
+        "--json-schema",
+        "{\"type\": \"object\", \"properties\": {\"action\": {\"type\": \"string\", \"enum\": [\"read-node\", \"read-nodes\", \"read-sources\", \"finish\"]}, \"path\": {\"type\": \"string\"}, \"paths\": {\"type\": \"array\", \"items\": {\"type\": \"string\"}, \"maxItems\": 64, \"uniqueItems\": true}, \"complete\": {\"type\": \"boolean\"}, \"clarification_required\": {\"type\": \"boolean\"}, \"rationale\": {\"type\": \"string\"}}, \"required\": [\"action\"], \"additionalProperties\": false}"
+      ],
+      "exit": 0,
+      "seconds": 15.045106208068319,
+      "input_bytes": 88986,
+      "request_sha256": "d00e1ac69dba6ecab797ac92486d7f2aaa8bcd48af1cd5d272c4745471b7d5b1",
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 39138,
+        "cache_read_input_tokens": 2126,
+        "output_tokens": 1063,
+        "output_tokens_details": {
+          "thinking_tokens": 307
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 39138,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 1063,
+            "cache_read_input_tokens": 2126,
+            "cache_creation_input_tokens": 39138,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 39138
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "model_usage": {
+        "claude-opus-5-5": {
+          "inputTokens": 2,
+          "outputTokens": 1063,
+          "cacheReadInputTokens": 2126,
+          "cacheCreationInputTokens": 39138,
+          "webSearchRequests": 0,
+          "costUSD": 0.3347972,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "thinkingTokens": 307,
+          "canonicalModel": "claude-opus-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "reported_cost_usd": 0.3347972
+    }
+  ],
+  "raw_evidence_hashes": {
+    "3-model-request.json": "ea32b1ad543e621925e63c6b7a9d761d5da351f3375a5656cdb4b37daddc224b",
+    "9-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "2-model.stdout": "e46845911ee462493cfb53cac5444ee1d22fbceae06d2fadd793598251f9c9af",
+    "7-public.stdout": "9b3c891cdbb5e1e9b908ab9ac5aa3f0559c4046d8e0fcde4809083329e141382",
+    "3-public.stdout": "dc0f4a5704991635bb2708fec064e3253b81d9d81812ac58e40156bcb1ddd425",
+    "11-public.stdout": "3f5f5dc1c95d681955e201640cbe99b8006164799b786a6e68a59cc16895560e",
+    "7-input-navigation.json": "25b3820151562541a2c51ab452545ce220af674d6e6cd1f55401cdea5e9b8ed4",
+    "12-public.stdout": "c8cd9aa7155524af801afc20d02a2e9013ee45fed266090a336a9083ded76a0d",
+    "4-model.stdout": "f21d16cf8bf9de5bbf7e01e13e576ec2ab44a58d8d1386a8d577f1891c1d7616",
+    "result.json": "925dc5fcbc9d249937128758e09a3ab8e3d26b67a00b4d1e4620f7cbfceeb3e2",
+    "3-model.stdout": "bd800db05836e6c36703b45b1530c73368bdc26a7da4483578eae91aff44ed9c",
+    "4-public.stdout": "05f66adc0a4d6119b1138dcb9a8352b54e88f7736e457f11197352a491e746d3",
+    "5-input-navigation.json": "25b3820151562541a2c51ab452545ce220af674d6e6cd1f55401cdea5e9b8ed4",
+    "1-input-context.json": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+    "4-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "3-input-navigation.json": "25b3820151562541a2c51ab452545ce220af674d6e6cd1f55401cdea5e9b8ed4",
+    "12-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "10-input-navigation.json": "0b92aad49db8b49ed113b874b64fd3cb51b3e2e223932d7b9950688a73e1593a",
+    "4-model.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "3-model.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "11-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "model-calls.json": "0842bd82ebec3974542a5988183a9ce03baf34596bdde479d1e29ce49157aebd",
+    "2-model.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "7-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "9-input-navigation.json": "0b92aad49db8b49ed113b874b64fd3cb51b3e2e223932d7b9950688a73e1593a",
+    "9-public.stdout": "22bf54c74f01c1f5e03848885d8a9c7cd0e2adee02c14c1c65f2495f360ef075",
+    "3-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "12-input-navigation.json": "0b92aad49db8b49ed113b874b64fd3cb51b3e2e223932d7b9950688a73e1593a",
+    "commands.json": "bd2e77c284cbdb265535e31bd00dea34f15cd28446a2a584565952d6489b918b",
+    "6-input-navigation.json": "25b3820151562541a2c51ab452545ce220af674d6e6cd1f55401cdea5e9b8ed4",
+    "10-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "2-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "8-public.stdout": "378d7048b7f31e1abbcbf3b296957fc05a4a5625441e1c9710703f6cc4df9536",
+    "6-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "4-model-request.json": "d00e1ac69dba6ecab797ac92486d7f2aaa8bcd48af1cd5d272c4745471b7d5b1",
+    "4-input-navigation.json": "25b3820151562541a2c51ab452545ce220af674d6e6cd1f55401cdea5e9b8ed4",
+    "1-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "5-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "1-model.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "13-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "11-input-navigation.json": "0b92aad49db8b49ed113b874b64fd3cb51b3e2e223932d7b9950688a73e1593a",
+    "1-model.stdout": "db93f57783081c7c978a37fbe8c2bcc4e2bb5969cb5d86bfca083514d3077de5",
+    "13-public.stdout": "1313ac50660d56f11d405defa6650b34f30682d8972c6a18e9bc16aeba555d24",
+    "1-public.stdout": "4e6e4f287bebb2391361039002ac163900dfed1bc11322f49a3338964b78f98f",
+    "1-model-request.json": "5adf8b52841f133c14982a46722b1177c880d0ec1a7e5449b13d27159cc8cd0d",
+    "2-input-navigation.json": "25b3820151562541a2c51ab452545ce220af674d6e6cd1f55401cdea5e9b8ed4",
+    "13-input-recall.json": "7f9b1e9c02bcc982b22fa8f7c91121ee9acd51f9cbb67f95c4407404a54d3502",
+    "5-public.stdout": "6374dd174b8dc1efb6a38a16da76421938b0890df86bd46f13802839d4f09cb4",
+    "2-public.stdout": "881b0cd4aecbd3732b40841ac87e94d24292fa5c59800d3f6f13485cfeb346b8",
+    "8-input-navigation.json": "0b92aad49db8b49ed113b874b64fd3cb51b3e2e223932d7b9950688a73e1593a",
+    "6-public.stdout": "ce2f6db7ce3fced5e71f7be4f4722c247fdc76cf9c2178a91bbea5e6bdde20da",
+    "13-input-navigation.json": "52beba6bcd043c4b8d2c934f7f4d7002bb0f2b7c46a3edffacc968ce4457f0aa",
+    "2-model-request.json": "c3f455948f9699bb4d92d5c1d4015368dd58cdb1600c057f66bdb8f4c08d3b7c",
+    "8-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "10-public.stdout": "096bee390e52c6aff3726bdd1ada96486fe290469f3701d8ef679cef97bf8b58"
+  }
+}

@@ -1,0 +1,358 @@
+{
+  "case": "wall-disagreement",
+  "question": "What color should the atrium wall be? Identify unresolved disagreement instead of choosing a winner.",
+  "context": {},
+  "finish": {
+    "action": "finish",
+    "paths": [
+      "topics/r/247b9b9c-8843-4ca3-9003-171c4f67a0e9-v1.md",
+      "topics/r/845fcced-7acc-4247-81dd-c3c35d1575c2-v1.md"
+    ],
+    "complete": true,
+    "clarification_required": true,
+    "rationale": "Two current records about the atrium wall passed every check (scope, applicability, active status, valid time, trust 'reviewed', visibility, and no active replacement), and they disagree. Record 247b9b9c v1 (source sha256 8f35729e\u2026, evidence fixture://quality/wall-yellow, from the prototype review, origin developer aa5e6be7\u2026) says the wall should be yellow. Record 845fcced v1 (source sha256 833a090e\u2026, evidence fixture://quality/wall-blue, from the design meeting, origin developer 54648754\u2026) says it should be blue. Both are repository-scoped semantic-fact records with no extra conditions, and both were recorded and last updated at 2026-10-25T08:00:00Z. Neither one corrects or replaces the other, and each text says it should be checked against the other claim. Nothing in memory decides between them, so this is an open disagreement, not an answer. I haven't picked a color; someone with design authority needs to settle it. Caveats: both records are untrusted external data, their claims haven't been verified, and their admission reasons say they are synthetic evaluation assertions. On coverage: I followed the workspace-configuration topic ('Workspace appearance decisions and unresolved room claims') down to its only leaf, and both records there were read. I also opened the source-review branch, but its only record is labelled 'Sensitivefixture' and is about sources awaiting safety review, not wall color, so I didn't read it. None of the other topics in the main map are about room appearance. I'm treating coverage as complete, but that is my judgement, not a verified result."
+  },
+  "failure": null,
+  "expected_paths_scored_after_finish": [
+    "topics/r/247b9b9c-8843-4ca3-9003-171c4f67a0e9-v1.md",
+    "topics/r/845fcced-7acc-4247-81dd-c3c35d1575c2-v1.md"
+  ],
+  "selected_paths": [
+    "topics/r/247b9b9c-8843-4ca3-9003-171c4f67a0e9-v1.md",
+    "topics/r/845fcced-7acc-4247-81dd-c3c35d1575c2-v1.md"
+  ],
+  "missed": [],
+  "unexpected": [],
+  "all_qualified_paths_considered": [
+    "topics/r/247b9b9c-8843-4ca3-9003-171c4f67a0e9-v1.md",
+    "topics/r/845fcced-7acc-4247-81dd-c3c35d1575c2-v1.md"
+  ],
+  "model_calls": 4,
+  "reported_model_cost_usd": 0.7009928,
+  "canonical_helper_seconds": 3.4973012069240212,
+  "semantic_completeness_verified": false,
+  "native_client_integration_claimed": false,
+  "performance_acceptance_claimed": false,
+  "model_usage_and_cost": [
+    {
+      "argv": [
+        "claude",
+        "-p",
+        "--safe-mode",
+        "--tools",
+        "",
+        "--no-session-persistence",
+        "--output-format",
+        "json",
+        "--max-budget-usd",
+        "2.00",
+        "--json-schema",
+        "{\"type\": \"object\", \"properties\": {\"action\": {\"type\": \"string\", \"enum\": [\"read-node\", \"read-nodes\", \"read-sources\", \"finish\"]}, \"path\": {\"type\": \"string\"}, \"paths\": {\"type\": \"array\", \"items\": {\"type\": \"string\"}, \"maxItems\": 64, \"uniqueItems\": true}, \"complete\": {\"type\": \"boolean\"}, \"clarification_required\": {\"type\": \"boolean\"}, \"rationale\": {\"type\": \"string\"}}, \"required\": [\"action\"], \"additionalProperties\": false}"
+      ],
+      "exit": 0,
+      "seconds": 4.550836791982874,
+      "input_bytes": 41238,
+      "request_sha256": "68347ea17a75b45ce64d07d87872acfb62affaf36096bd5e28342c86747e159c",
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 16202,
+        "cache_read_input_tokens": 2126,
+        "output_tokens": 223,
+        "output_tokens_details": {
+          "thinking_tokens": 56
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 16202,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 223,
+            "cache_read_input_tokens": 2126,
+            "cache_creation_input_tokens": 16202,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 16202
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "model_usage": {
+        "claude-opus-5-5": {
+          "inputTokens": 2,
+          "outputTokens": 223,
+          "cacheReadInputTokens": 2126,
+          "cacheCreationInputTokens": 16202,
+          "webSearchRequests": 0,
+          "costUSD": 0.1345092,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "thinkingTokens": 56,
+          "canonicalModel": "claude-opus-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "reported_cost_usd": 0.1345092
+    },
+    {
+      "argv": [
+        "claude",
+        "-p",
+        "--safe-mode",
+        "--tools",
+        "",
+        "--no-session-persistence",
+        "--output-format",
+        "json",
+        "--max-budget-usd",
+        "2.00",
+        "--json-schema",
+        "{\"type\": \"object\", \"properties\": {\"action\": {\"type\": \"string\", \"enum\": [\"read-node\", \"read-nodes\", \"read-sources\", \"finish\"]}, \"path\": {\"type\": \"string\"}, \"paths\": {\"type\": \"array\", \"items\": {\"type\": \"string\"}, \"maxItems\": 64, \"uniqueItems\": true}, \"complete\": {\"type\": \"boolean\"}, \"clarification_required\": {\"type\": \"boolean\"}, \"rationale\": {\"type\": \"string\"}}, \"required\": [\"action\"], \"additionalProperties\": false}"
+      ],
+      "exit": 0,
+      "seconds": 2.970368708949536,
+      "input_bytes": 46136,
+      "request_sha256": "18c3527074bf08e7c7c70f7b490aa97959939eac2c296a6d34f6fa333c7b1c07",
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 18611,
+        "cache_read_input_tokens": 2126,
+        "output_tokens": 137,
+        "output_tokens_details": {
+          "thinking_tokens": 0
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 18611,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 137,
+            "cache_read_input_tokens": 2126,
+            "cache_creation_input_tokens": 18611,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 18611
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "model_usage": {
+        "claude-opus-5-5": {
+          "inputTokens": 2,
+          "outputTokens": 137,
+          "cacheReadInputTokens": 2126,
+          "cacheCreationInputTokens": 18611,
+          "webSearchRequests": 0,
+          "costUSD": 0.15206119999999998,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "thinkingTokens": 0,
+          "canonicalModel": "claude-opus-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "reported_cost_usd": 0.15206119999999998
+    },
+    {
+      "argv": [
+        "claude",
+        "-p",
+        "--safe-mode",
+        "--tools",
+        "",
+        "--no-session-persistence",
+        "--output-format",
+        "json",
+        "--max-budget-usd",
+        "2.00",
+        "--json-schema",
+        "{\"type\": \"object\", \"properties\": {\"action\": {\"type\": \"string\", \"enum\": [\"read-node\", \"read-nodes\", \"read-sources\", \"finish\"]}, \"path\": {\"type\": \"string\"}, \"paths\": {\"type\": \"array\", \"items\": {\"type\": \"string\"}, \"maxItems\": 64, \"uniqueItems\": true}, \"complete\": {\"type\": \"boolean\"}, \"clarification_required\": {\"type\": \"boolean\"}, \"rationale\": {\"type\": \"string\"}}, \"required\": [\"action\"], \"additionalProperties\": false}"
+      ],
+      "exit": 0,
+      "seconds": 6.557245958014391,
+      "input_bytes": 51699,
+      "request_sha256": "ab6ac0888525b67da04db45c788922b5e9112c3e3cf1f1ae04367bbcb7a0c9c7",
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 21490,
+        "cache_read_input_tokens": 2126,
+        "output_tokens": 347,
+        "output_tokens_details": {
+          "thinking_tokens": 40
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 21490,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 347,
+            "cache_read_input_tokens": 2126,
+            "cache_creation_input_tokens": 21490,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 21490
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "model_usage": {
+        "claude-opus-5-5": {
+          "inputTokens": 2,
+          "outputTokens": 347,
+          "cacheReadInputTokens": 2126,
+          "cacheCreationInputTokens": 21490,
+          "webSearchRequests": 0,
+          "costUSD": 0.17929319999999999,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "thinkingTokens": 40,
+          "canonicalModel": "claude-opus-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "reported_cost_usd": 0.17929319999999999
+    },
+    {
+      "argv": [
+        "claude",
+        "-p",
+        "--safe-mode",
+        "--tools",
+        "",
+        "--no-session-persistence",
+        "--output-format",
+        "json",
+        "--max-budget-usd",
+        "2.00",
+        "--json-schema",
+        "{\"type\": \"object\", \"properties\": {\"action\": {\"type\": \"string\", \"enum\": [\"read-node\", \"read-nodes\", \"read-sources\", \"finish\"]}, \"path\": {\"type\": \"string\"}, \"paths\": {\"type\": \"array\", \"items\": {\"type\": \"string\"}, \"maxItems\": 64, \"uniqueItems\": true}, \"complete\": {\"type\": \"boolean\"}, \"clarification_required\": {\"type\": \"boolean\"}, \"rationale\": {\"type\": \"string\"}}, \"required\": [\"action\"], \"additionalProperties\": false}"
+      ],
+      "exit": 0,
+      "seconds": 9.27500945806969,
+      "input_bytes": 65617,
+      "request_sha256": "e24ca4fbe75862cfc82e1fb06df5dceb0aa77bec9e967b5e3acde42329be7a54",
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 27287,
+        "cache_read_input_tokens": 2126,
+        "output_tokens": 820,
+        "output_tokens_details": {
+          "thinking_tokens": 81
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 27287,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 820,
+            "cache_read_input_tokens": 2126,
+            "cache_creation_input_tokens": 27287,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 27287
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "model_usage": {
+        "claude-opus-5-5": {
+          "inputTokens": 2,
+          "outputTokens": 820,
+          "cacheReadInputTokens": 2126,
+          "cacheCreationInputTokens": 27287,
+          "webSearchRequests": 0,
+          "costUSD": 0.23512919999999998,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "thinkingTokens": 81,
+          "canonicalModel": "claude-opus-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "reported_cost_usd": 0.23512919999999998
+    }
+  ],
+  "raw_evidence_hashes": {
+    "3-model-request.json": "ab6ac0888525b67da04db45c788922b5e9112c3e3cf1f1ae04367bbcb7a0c9c7",
+    "2-model.stdout": "8c6949a654a20ae4d1b474d8f9358159418e056bb90de0f32c6d58a46cfea83f",
+    "3-public.stdout": "3d5613100bf7a508764d8ec4884f5ab5485b0e19342709fccdeeccfd25a3af4b",
+    "4-model.stdout": "5d8a402885f55c12f6953e7cb5d32ccafb6ea89cdadb8bc40121ae20e29e498f",
+    "result.json": "cac881c27d074838249755341cde0dc003e87c221a9e9820d7cdd1e0ac14ca04",
+    "3-model.stdout": "d8e01b495e3e0d1485bb1f121598bdae024fdcb06a5303f4c2f583a92b3c8bfb",
+    "6-input-recall.json": "413fae6cc56717a46ed659f09270d6a30639803e6ebd7f6e5a97de28a0a15bbc",
+    "4-public.stdout": "fe8b1f8add88dbce056303fa68817822a4b184356f8c8cf4e165aef36ab7ad81",
+    "5-input-navigation.json": "d1e7673827b3c7eb34e5afc5ec6bbd772a80f7175535c93cc6a2ce20589e1bf1",
+    "1-input-context.json": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+    "4-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "3-input-navigation.json": "a25320c327815b796f230bf829b8a8669217a40a4924ea490a797f1653419117",
+    "4-model.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "3-model.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "model-calls.json": "67baf8ef900d198357588e13fd05204dbc5659e7b899799eab936c9553d3d5b2",
+    "2-model.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "3-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "commands.json": "0a622530801a0a99fa63e912adec0b32880c04888f9817de23e49b7776ccaf66",
+    "6-input-navigation.json": "c232ec354980f69b643c4243f9b522bbc2726fce936cf7ca9b1b07f34f166059",
+    "2-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "6-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "4-model-request.json": "e24ca4fbe75862cfc82e1fb06df5dceb0aa77bec9e967b5e3acde42329be7a54",
+    "4-input-navigation.json": "d1e7673827b3c7eb34e5afc5ec6bbd772a80f7175535c93cc6a2ce20589e1bf1",
+    "1-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "5-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "1-model.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "1-model.stdout": "4969a37bddd5b267def106538820414a18511b49ee87998d07266546899596d0",
+    "1-public.stdout": "83ab791bd465354601c4174e7f28cb4d868def327c921fa627e81f8dc91bacba",
+    "1-model-request.json": "68347ea17a75b45ce64d07d87872acfb62affaf36096bd5e28342c86747e159c",
+    "2-input-navigation.json": "a25320c327815b796f230bf829b8a8669217a40a4924ea490a797f1653419117",
+    "5-public.stdout": "575263f66e657ae7b0e433ad4338cef88912459b5aa287f1f826bc84bf2f9321",
+    "2-public.stdout": "0e3755549560c1e932e1fa683ce23d472a4e056fe9397038d855667c0122a51c",
+    "6-public.stdout": "8cdbccdb3db2ca2b35163a335d27d1cb2b72ae1614b708585bc8c0a50f5b1887",
+    "2-model-request.json": "18c3527074bf08e7c7c70f7b490aa97959939eac2c296a6d34f6fa333c7b1c07"
+  }
+}

@@ -1,0 +1,381 @@
+{
+  "case": "duplicate-evidence",
+  "question": "What happens when we process the same request key again after it succeeded? Retain all relevant independent evidence.",
+  "context": {},
+  "finish": {
+    "action": "finish",
+    "paths": [
+      "topics/r/5c53ca49-b171-41cb-ba2c-ff574c5ebd5b-v1.md",
+      "topics/r/429ebfbe-7713-40be-bca4-c3b904f82517-v1.md"
+    ],
+    "complete": true,
+    "clarification_required": false,
+    "rationale": "Two records answer the question, and they agree. When a request key that already succeeded is processed again, the stored idempotency receipt returns the first successful response. The request is not run a second time. The two records give independent evidence, so I'm keeping both. 5c53ca49 v1 (sha256 7e7e192d\u2026) was reached through the request-identity topic, and its evidence is fixture://quality/receipt-a, from the HTTP acceptance probe. 429ebfbe v1 (sha256 70c40c63\u2026) was reached through the financial-reconciliation topic, and its evidence is fixture://quality/receipt-b, from the independent queue probe. Both passed every current-guidance check: active, repository scope, no conditions, no validity window, trust 'reviewed', visible, and nothing newer replaces them. Both still have source_assertions_verified=false and admission_verified=false. Their admission reasons say they are authored synthetic assertions, so they are untrusted memory data, not proof of how the current code behaves. I read two other records and left them out. 9a2b24a7 'Bounded retries' covers retrying transient failures while keeping the same request identifier. It says nothing about replaying a key that already succeeded. c7b17274 is about repeated pagination cursors, not request keys. I didn't open the session-recovery records (delta resumption, resumable checkpoint) because they cover resuming operations. I also skipped the timeout, deadline and protocol records in request reliability, including the superseded and revoked ones. One gap remains: the transactions subtree ('replay identity') is limited to component:src/transactions. No component context was supplied, so I didn't expand it. Under that missing context it can't count as current guidance, and there may be component-specific replay rules there. I'm only claiming complete coverage for guidance that applies to the whole repository."
+  },
+  "failure": null,
+  "expected_paths_scored_after_finish": [
+    "topics/r/429ebfbe-7713-40be-bca4-c3b904f82517-v1.md",
+    "topics/r/5c53ca49-b171-41cb-ba2c-ff574c5ebd5b-v1.md"
+  ],
+  "selected_paths": [
+    "topics/r/429ebfbe-7713-40be-bca4-c3b904f82517-v1.md",
+    "topics/r/5c53ca49-b171-41cb-ba2c-ff574c5ebd5b-v1.md"
+  ],
+  "missed": [],
+  "unexpected": [],
+  "all_qualified_paths_considered": [
+    "topics/r/429ebfbe-7713-40be-bca4-c3b904f82517-v1.md",
+    "topics/r/5c53ca49-b171-41cb-ba2c-ff574c5ebd5b-v1.md",
+    "topics/r/9a2b24a7-3464-4ce4-b488-28e5c6de71d3-v1.md",
+    "topics/r/c7b17274-e5ae-433f-a9f9-a0a2198a1c67-v1.md"
+  ],
+  "model_calls": 4,
+  "reported_model_cost_usd": 1.0340568,
+  "canonical_helper_seconds": 15.864877417334355,
+  "semantic_completeness_verified": false,
+  "native_client_integration_claimed": false,
+  "performance_acceptance_claimed": false,
+  "model_usage_and_cost": [
+    {
+      "argv": [
+        "claude",
+        "-p",
+        "--safe-mode",
+        "--tools",
+        "",
+        "--no-session-persistence",
+        "--output-format",
+        "json",
+        "--max-budget-usd",
+        "2.00",
+        "--json-schema",
+        "{\"type\": \"object\", \"properties\": {\"action\": {\"type\": \"string\", \"enum\": [\"read-node\", \"read-nodes\", \"read-sources\", \"finish\"]}, \"path\": {\"type\": \"string\"}, \"paths\": {\"type\": \"array\", \"items\": {\"type\": \"string\"}, \"maxItems\": 64, \"uniqueItems\": true}, \"complete\": {\"type\": \"boolean\"}, \"clarification_required\": {\"type\": \"boolean\"}, \"rationale\": {\"type\": \"string\"}}, \"required\": [\"action\"], \"additionalProperties\": false}"
+      ],
+      "exit": 0,
+      "seconds": 7.5655285000102594,
+      "input_bytes": 41273,
+      "request_sha256": "0d8e87b384dc0eb9aa12de8a7b4bea592c043ba9ca8f37288ba9db7a27cf88bc",
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 16192,
+        "cache_read_input_tokens": 2126,
+        "output_tokens": 553,
+        "output_tokens_details": {
+          "thinking_tokens": 204
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 16192,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 553,
+            "cache_read_input_tokens": 2126,
+            "cache_creation_input_tokens": 16192,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 16192
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "model_usage": {
+        "claude-opus-5-5": {
+          "inputTokens": 2,
+          "outputTokens": 553,
+          "cacheReadInputTokens": 2126,
+          "cacheCreationInputTokens": 16192,
+          "webSearchRequests": 0,
+          "costUSD": 0.14102920000000002,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "thinkingTokens": 204,
+          "canonicalModel": "claude-opus-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "reported_cost_usd": 0.14102920000000002
+    },
+    {
+      "argv": [
+        "claude",
+        "-p",
+        "--safe-mode",
+        "--tools",
+        "",
+        "--no-session-persistence",
+        "--output-format",
+        "json",
+        "--max-budget-usd",
+        "2.00",
+        "--json-schema",
+        "{\"type\": \"object\", \"properties\": {\"action\": {\"type\": \"string\", \"enum\": [\"read-node\", \"read-nodes\", \"read-sources\", \"finish\"]}, \"path\": {\"type\": \"string\"}, \"paths\": {\"type\": \"array\", \"items\": {\"type\": \"string\"}, \"maxItems\": 64, \"uniqueItems\": true}, \"complete\": {\"type\": \"boolean\"}, \"clarification_required\": {\"type\": \"boolean\"}, \"rationale\": {\"type\": \"string\"}}, \"required\": [\"action\"], \"additionalProperties\": false}"
+      ],
+      "exit": 0,
+      "seconds": 6.574245790950954,
+      "input_bytes": 63641,
+      "request_sha256": "a106fbc6f05dd1ddfabac207cfcd90e676819913b63dda67e7d5c15f9dbfc6fa",
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 26230,
+        "cache_read_input_tokens": 2126,
+        "output_tokens": 559,
+        "output_tokens_details": {
+          "thinking_tokens": 162
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 26230,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 559,
+            "cache_read_input_tokens": 2126,
+            "cache_creation_input_tokens": 26230,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 26230
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "model_usage": {
+        "claude-opus-5-5": {
+          "inputTokens": 2,
+          "outputTokens": 559,
+          "cacheReadInputTokens": 2126,
+          "cacheCreationInputTokens": 26230,
+          "webSearchRequests": 0,
+          "costUSD": 0.2214532,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "thinkingTokens": 162,
+          "canonicalModel": "claude-opus-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "reported_cost_usd": 0.2214532
+    },
+    {
+      "argv": [
+        "claude",
+        "-p",
+        "--safe-mode",
+        "--tools",
+        "",
+        "--no-session-persistence",
+        "--output-format",
+        "json",
+        "--max-budget-usd",
+        "2.00",
+        "--json-schema",
+        "{\"type\": \"object\", \"properties\": {\"action\": {\"type\": \"string\", \"enum\": [\"read-node\", \"read-nodes\", \"read-sources\", \"finish\"]}, \"path\": {\"type\": \"string\"}, \"paths\": {\"type\": \"array\", \"items\": {\"type\": \"string\"}, \"maxItems\": 64, \"uniqueItems\": true}, \"complete\": {\"type\": \"boolean\"}, \"clarification_required\": {\"type\": \"boolean\"}, \"rationale\": {\"type\": \"string\"}}, \"required\": [\"action\"], \"additionalProperties\": false}"
+      ],
+      "exit": 0,
+      "seconds": 10.74955858301837,
+      "input_bytes": 81421,
+      "request_sha256": "ee69de1bf76bd1fe730434a8f3de5626f4e259917841c4bbb101caf74774b2e2",
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 35394,
+        "cache_read_input_tokens": 2126,
+        "output_tokens": 890,
+        "output_tokens_details": {
+          "thinking_tokens": 311
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 35394,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 890,
+            "cache_read_input_tokens": 2126,
+            "cache_creation_input_tokens": 35394,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 35394
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "model_usage": {
+        "claude-opus-5-5": {
+          "inputTokens": 2,
+          "outputTokens": 890,
+          "cacheReadInputTokens": 2126,
+          "cacheCreationInputTokens": 35394,
+          "webSearchRequests": 0,
+          "costUSD": 0.3013852,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "thinkingTokens": 311,
+          "canonicalModel": "claude-opus-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "reported_cost_usd": 0.3013852
+    },
+    {
+      "argv": [
+        "claude",
+        "-p",
+        "--safe-mode",
+        "--tools",
+        "",
+        "--no-session-persistence",
+        "--output-format",
+        "json",
+        "--max-budget-usd",
+        "2.00",
+        "--json-schema",
+        "{\"type\": \"object\", \"properties\": {\"action\": {\"type\": \"string\", \"enum\": [\"read-node\", \"read-nodes\", \"read-sources\", \"finish\"]}, \"path\": {\"type\": \"string\"}, \"paths\": {\"type\": \"array\", \"items\": {\"type\": \"string\"}, \"maxItems\": 64, \"uniqueItems\": true}, \"complete\": {\"type\": \"boolean\"}, \"clarification_required\": {\"type\": \"boolean\"}, \"rationale\": {\"type\": \"string\"}}, \"required\": [\"action\"], \"additionalProperties\": false}"
+      ],
+      "exit": 0,
+      "seconds": 14.755563665996306,
+      "input_bytes": 100558,
+      "request_sha256": "e5566b4bc782bb43596bf68376a0d5f69d19d2b2fc0621ae3564789be16d95da",
+      "usage": {
+        "input_tokens": 2,
+        "cache_creation_input_tokens": 43487,
+        "cache_read_input_tokens": 2126,
+        "output_tokens": 1093,
+        "output_tokens_details": {
+          "thinking_tokens": 279
+        },
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 43487,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "global",
+        "iterations": [
+          {
+            "input_tokens": 2,
+            "output_tokens": 1093,
+            "cache_read_input_tokens": 2126,
+            "cache_creation_input_tokens": 43487,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 43487
+            },
+            "type": "message"
+          }
+        ],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "model_usage": {
+        "claude-opus-5-5": {
+          "inputTokens": 2,
+          "outputTokens": 1093,
+          "cacheReadInputTokens": 2126,
+          "cacheCreationInputTokens": 43487,
+          "webSearchRequests": 0,
+          "costUSD": 0.3701892,
+          "contextWindow": 1000000,
+          "maxOutputTokens": 128000,
+          "thinkingTokens": 279,
+          "canonicalModel": "claude-opus-5-5",
+          "provider": "firstParty",
+          "costBasis": "list"
+        }
+      },
+      "reported_cost_usd": 0.3701892
+    }
+  ],
+  "raw_evidence_hashes": {
+    "3-model-request.json": "ee69de1bf76bd1fe730434a8f3de5626f4e259917841c4bbb101caf74774b2e2",
+    "9-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "2-model.stdout": "2142fb7e431ff2c3db46c3683ae87230e22c9c586eb3ee3bfaa7fa8a43499fd6",
+    "7-public.stdout": "b95e9766ff4063e7ee9efe010ce71e7c09da66d91948786818156a17865c5a1e",
+    "3-public.stdout": "36687733a814fed33f8746161beac70d15f1609d87135a832cc2b33b1b4e4730",
+    "11-public.stdout": "1fe18dfd02c6e351040e34a08875e4d603bf7785b46233597bb6cb549fdc35d4",
+    "7-input-navigation.json": "97b7036392b9607083570e3aeb411dfc90603eac21498c46c9dcccc59f5cd88a",
+    "12-public.stdout": "7fdf6f79de86f7efba44a496ee2bf29f5a36af629bc97224de2235d05ce5d92c",
+    "4-model.stdout": "1b6fbcde148085ec520c2ebea62e38ec6fd8816079dbdcc5f50803d12af03c2f",
+    "result.json": "a884465822d9a042c3ef8a2d95874c228ed8ebc16a3996bcb4d7b6620cd683cc",
+    "3-model.stdout": "0286c4cdfe426909de066a225b1f637cf4b4f899e2d77ace0f4a6a8dfebd583e",
+    "4-public.stdout": "4fa9050a808ab7fc5227f53d70478f794234d8df0f47a6dc7ec545fe4b3a87e7",
+    "5-input-navigation.json": "97b7036392b9607083570e3aeb411dfc90603eac21498c46c9dcccc59f5cd88a",
+    "1-input-context.json": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+    "4-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "3-input-navigation.json": "97b7036392b9607083570e3aeb411dfc90603eac21498c46c9dcccc59f5cd88a",
+    "12-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "10-input-navigation.json": "9351e058f6974b3c3aeb1783a9fff4a3cbe3bf9f2d2a496a55331bdfcb1edf18",
+    "4-model.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "3-model.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "11-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "model-calls.json": "3e333b0a26b2a64e2cf592f3a97c9072e4c5c34170cb41c24b71e9f620dd7836",
+    "2-model.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "7-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "9-input-navigation.json": "9351e058f6974b3c3aeb1783a9fff4a3cbe3bf9f2d2a496a55331bdfcb1edf18",
+    "9-public.stdout": "53cee03fe7f3d4e1173b6b077abb930345624b0f78249ebf7a3137d98c336f48",
+    "3-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "12-input-navigation.json": "9351e058f6974b3c3aeb1783a9fff4a3cbe3bf9f2d2a496a55331bdfcb1edf18",
+    "commands.json": "170f5f18490bf112cb4462f73a985123f4597454ad6847f76e167fecf15e6f4f",
+    "6-input-navigation.json": "97b7036392b9607083570e3aeb411dfc90603eac21498c46c9dcccc59f5cd88a",
+    "10-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "2-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "8-public.stdout": "2d3ea98f1c5943a5694dd91f6aa015f784ae1b75260abb49754f0f959f9b4de4",
+    "6-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "4-model-request.json": "e5566b4bc782bb43596bf68376a0d5f69d19d2b2fc0621ae3564789be16d95da",
+    "4-input-navigation.json": "97b7036392b9607083570e3aeb411dfc90603eac21498c46c9dcccc59f5cd88a",
+    "1-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "5-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "1-model.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "13-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "11-input-navigation.json": "9351e058f6974b3c3aeb1783a9fff4a3cbe3bf9f2d2a496a55331bdfcb1edf18",
+    "1-model.stdout": "132743eef644403a264fff7533c6602b5096cf9bc9e321839a05b3f030439958",
+    "13-public.stdout": "c9d1891326063d3382cec7e78bd7d8e4954c217fec1f18f21106384288408066",
+    "1-public.stdout": "bae5e2fcfb60f62d034b7ea5143f83529aa7757c8e0f61bff10143773475d521",
+    "1-model-request.json": "0d8e87b384dc0eb9aa12de8a7b4bea592c043ba9ca8f37288ba9db7a27cf88bc",
+    "2-input-navigation.json": "97b7036392b9607083570e3aeb411dfc90603eac21498c46c9dcccc59f5cd88a",
+    "13-input-recall.json": "51d9796bfedd7b3e72e8205b62c300b73509491d46ecf81e1817d6d0f1f39155",
+    "5-public.stdout": "6f55851b8acc30936d62ed805ad554d3de646a9c5a5914b6ef43ac43a29d74d5",
+    "2-public.stdout": "319ed6751679bb11baebeed0422c8ab65e32f1048d1271f082b3a41d2d1a3229",
+    "8-input-navigation.json": "9351e058f6974b3c3aeb1783a9fff4a3cbe3bf9f2d2a496a55331bdfcb1edf18",
+    "6-public.stdout": "de8e4607f905ca0594ce13a02b739e22ee827ab99c03640770bf062a504f0f26",
+    "13-input-navigation.json": "617d9defba02dd39c1d184f4f9b646a75ac8df8f6205c5688764881434e18b85",
+    "2-model-request.json": "a106fbc6f05dd1ddfabac207cfcd90e676819913b63dda67e7d5c15f9dbfc6fa",
+    "8-public.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "10-public.stdout": "6dcbc17db097a00945c0ec0ec994ffbce421b6ea8dd15094e47b5e007fb78c83"
+  }
+}

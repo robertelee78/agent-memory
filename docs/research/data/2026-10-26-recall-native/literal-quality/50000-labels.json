@@ -1,0 +1,1470 @@
+{
+  "fixture": {
+    "distinct_lessons": 50000,
+    "record_versions": 50001,
+    "canonical_files": 50798,
+    "canonical_bytes": 59417354,
+    "fixture_sha256": "450e5a55b43dd3424952090f53ed8c178dff2d51eadddba5e4a4fccd40b7d29a",
+    "labels_sha256": "14c173c70dde0ba0ea9feea1e70f3d4ad6d69f178adcb93bbe97a68f1f255edf",
+    "body_utf8_bytes": {
+      "min": 53,
+      "median": 177,
+      "p95": 210,
+      "max": 1738
+    }
+  },
+  "queries": [
+    {
+      "case": "exact-id",
+      "request": {
+        "project_id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+        "query": "irrelevant words",
+        "ids": [
+          "9a2b24a7-3464-4ce4-b488-28e5c6de71d3"
+        ],
+        "paths": [],
+        "context": {},
+        "kinds": [
+          "semantic-fact"
+        ],
+        "minimum_trust": "reviewed",
+        "limit": 16,
+        "include_context": false
+      },
+      "relevant_paths": [
+        "topics/records/retry-limit.md"
+      ],
+      "rationale": "Exact stable identity still receives all applicability/currentness gates."
+    },
+    {
+      "case": "exact-path",
+      "request": {
+        "project_id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+        "query": "",
+        "ids": [],
+        "paths": [
+          "topics/records/retry-limit.md"
+        ],
+        "context": {},
+        "kinds": [
+          "semantic-fact"
+        ],
+        "minimum_trust": "reviewed",
+        "limit": 16,
+        "include_context": false
+      },
+      "relevant_paths": [
+        "topics/records/retry-limit.md"
+      ],
+      "rationale": "Exact canonical path returns current qualified source."
+    },
+    {
+      "case": "literal-multiple-terms",
+      "request": {
+        "project_id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+        "query": "retry transient",
+        "ids": [],
+        "paths": [],
+        "context": {},
+        "kinds": [
+          "semantic-fact"
+        ],
+        "minimum_trust": "reviewed",
+        "limit": 16,
+        "include_context": false
+      },
+      "relevant_paths": [
+        "topics/records/retry-limit.md"
+      ],
+      "rationale": "Both literal terms distinguish the retry observation from realistic distractors."
+    },
+    {
+      "case": "shared-terms-paraphrase",
+      "request": {
+        "project_id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+        "query": "retry requests",
+        "ids": [],
+        "paths": [],
+        "context": {},
+        "kinds": [
+          "semantic-fact"
+        ],
+        "minimum_trust": "reviewed",
+        "limit": 16,
+        "include_context": false
+      },
+      "relevant_paths": [
+        "topics/records/retry-limit.md"
+      ],
+      "rationale": "An ordinary reworded question retains shared domain words."
+    },
+    {
+      "case": "no-shared-terms-paraphrase",
+      "request": {
+        "project_id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+        "query": "How often may a temporary network error be attempted again?",
+        "ids": [],
+        "paths": [],
+        "context": {},
+        "kinds": [
+          "semantic-fact"
+        ],
+        "minimum_trust": "reviewed",
+        "limit": 16,
+        "include_context": false
+      },
+      "relevant_paths": [
+        "topics/records/retry-limit.md"
+      ],
+      "rationale": "Known natural-language lexical gap, retained as a miss; no fixture-aware expansion is fed to the reader."
+    },
+    {
+      "case": "two-relevant",
+      "request": {
+        "project_id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+        "query": "pagination cursor",
+        "ids": [],
+        "paths": [],
+        "context": {},
+        "kinds": [
+          "semantic-fact"
+        ],
+        "minimum_trust": "reviewed",
+        "limit": 16,
+        "include_context": false
+      },
+      "relevant_paths": [
+        "topics/records/cursor-empty.md",
+        "topics/records/cursor-repeated.md"
+      ],
+      "rationale": "Both separately evidenced edge cases are relevant."
+    },
+    {
+      "case": "inapplicable-component",
+      "request": {
+        "project_id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+        "query": "ledger retention",
+        "ids": [],
+        "paths": [],
+        "context": {
+          "component": "src/api"
+        },
+        "kinds": [
+          "semantic-fact"
+        ],
+        "minimum_trust": "reviewed",
+        "limit": 16,
+        "include_context": false
+      },
+      "relevant_paths": [],
+      "rationale": "Ledger-only guidance cannot become API guidance."
+    },
+    {
+      "case": "unknown-prerequisite",
+      "request": {
+        "project_id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+        "query": "delta resumption",
+        "ids": [],
+        "paths": [],
+        "context": {},
+        "kinds": [
+          "semantic-fact"
+        ],
+        "minimum_trust": "reviewed",
+        "limit": 16,
+        "include_context": false
+      },
+      "relevant_paths": [],
+      "rationale": "Prerequisite not observed; do not infer it from the query."
+    },
+    {
+      "case": "known-prerequisite",
+      "request": {
+        "project_id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+        "query": "delta resumption",
+        "ids": [],
+        "paths": [],
+        "context": {
+          "prerequisite": "receipt-verified"
+        },
+        "kinds": [
+          "semantic-fact"
+        ],
+        "minimum_trust": "reviewed",
+        "limit": 16,
+        "include_context": false
+      },
+      "relevant_paths": [
+        "topics/records/conditional-resume.md"
+      ],
+      "rationale": "Actual request supplies the declared non-Git prerequisite."
+    },
+    {
+      "case": "working-vs-head",
+      "request": {
+        "project_id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+        "query": "dispatch limit",
+        "ids": [],
+        "paths": [],
+        "context": {},
+        "kinds": [
+          "semantic-fact"
+        ],
+        "minimum_trust": "reviewed",
+        "limit": 16,
+        "include_context": false
+      },
+      "relevant_paths": [
+        "topics/records/head-dispatch.md"
+      ],
+      "rationale": "Record explicitly concerns main HEAD and remains labeled; reader must not assert working bytes verified. The apparatus stages a different source value."
+    },
+    {
+      "case": "stronger-correction",
+      "request": {
+        "project_id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+        "query": "legacytimeout",
+        "ids": [],
+        "paths": [],
+        "context": {},
+        "kinds": [
+          "semantic-fact"
+        ],
+        "minimum_trust": "reviewed",
+        "limit": 16,
+        "include_context": false
+      },
+      "relevant_paths": [],
+      "rationale": "Version 2 corrects version 1 even though replacement wording misses this query."
+    },
+    {
+      "case": "corrected-exact-id",
+      "request": {
+        "project_id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+        "query": "irrelevant words",
+        "ids": [
+          "b14eec5a-7ad6-4ac8-bd3b-6950aae11602"
+        ],
+        "paths": [],
+        "context": {},
+        "kinds": [
+          "semantic-fact"
+        ],
+        "minimum_trust": "reviewed",
+        "limit": 16,
+        "include_context": false
+      },
+      "relevant_paths": [
+        "topics/records/timeout-v2.md"
+      ],
+      "rationale": "Exact stable identity must choose its qualified corrected version 2 and exclude version 1."
+    },
+    {
+      "case": "hidden-replacement",
+      "request": {
+        "project_id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+        "query": "legacycache",
+        "ids": [],
+        "paths": [],
+        "context": {},
+        "kinds": [
+          "semantic-fact"
+        ],
+        "minimum_trust": "reviewed",
+        "limit": 16,
+        "include_context": false
+      },
+      "relevant_paths": [],
+      "rationale": "Hidden qualified replacement still invalidates visible obsolete guidance."
+    },
+    {
+      "case": "unsafe-replacement",
+      "request": {
+        "project_id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+        "query": "legacyquota",
+        "ids": [],
+        "paths": [],
+        "context": {},
+        "kinds": [
+          "semantic-fact"
+        ],
+        "minimum_trust": "reviewed",
+        "limit": 16,
+        "include_context": false
+      },
+      "relevant_paths": [],
+      "rationale": "Unsafe replacement remains withheld and cannot resurrect its old claim."
+    },
+    {
+      "case": "expired",
+      "request": {
+        "project_id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+        "query": "sunset endpoint",
+        "ids": [],
+        "paths": [],
+        "context": {},
+        "kinds": [
+          "semantic-fact"
+        ],
+        "minimum_trust": "reviewed",
+        "limit": 16,
+        "include_context": false
+      },
+      "relevant_paths": [],
+      "rationale": "Active metadata with an expired valid-until is not current."
+    },
+    {
+      "case": "revoked",
+      "request": {
+        "project_id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+        "query": "withdrawn fallback",
+        "ids": [],
+        "paths": [],
+        "context": {},
+        "kinds": [
+          "semantic-fact"
+        ],
+        "minimum_trust": "reviewed",
+        "limit": 16,
+        "include_context": false
+      },
+      "relevant_paths": [],
+      "rationale": "Revoked metadata and route are not current."
+    },
+    {
+      "case": "superseded-state",
+      "request": {
+        "project_id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+        "query": "retired protocol",
+        "ids": [],
+        "paths": [],
+        "context": {},
+        "kinds": [
+          "semantic-fact"
+        ],
+        "minimum_trust": "reviewed",
+        "limit": 16,
+        "include_context": false
+      },
+      "relevant_paths": [],
+      "rationale": "Explicit superseded state remains historical."
+    },
+    {
+      "case": "distinct-conditions",
+      "request": {
+        "project_id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+        "query": "sandbox retention",
+        "ids": [],
+        "paths": [],
+        "context": {
+          "environment": "development"
+        },
+        "kinds": [
+          "semantic-fact"
+        ],
+        "minimum_trust": "reviewed",
+        "limit": 16,
+        "include_context": false
+      },
+      "relevant_paths": [
+        "topics/records/retention-dev.md"
+      ],
+      "rationale": "Development and production conditions must stay distinct; only the development claim qualifies."
+    },
+    {
+      "case": "duplicate-evidence",
+      "request": {
+        "project_id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+        "query": "idempotency receipt",
+        "ids": [],
+        "paths": [],
+        "context": {},
+        "kinds": [
+          "semantic-fact"
+        ],
+        "minimum_trust": "reviewed",
+        "limit": 16,
+        "include_context": false
+      },
+      "relevant_paths": [
+        "topics/records/receipt-a.md",
+        "topics/records/receipt-b.md"
+      ],
+      "rationale": "Both candidates carry different provenance; query recall must not erase either. Semantic deduplication is separately governed."
+    },
+    {
+      "case": "cross-file-contradiction",
+      "request": {
+        "project_id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+        "query": "atrium wall",
+        "ids": [],
+        "paths": [],
+        "context": {},
+        "kinds": [
+          "semantic-fact"
+        ],
+        "minimum_trust": "reviewed",
+        "limit": 16,
+        "include_context": false
+      },
+      "relevant_paths": [
+        "topics/records/wall-blue.md",
+        "topics/records/wall-yellow.md"
+      ],
+      "rationale": "Both claims must remain available for detecting-agent clarification, with source labels. Reader is not a semantic conflict detector."
+    },
+    {
+      "case": "orientation-and-typed",
+      "request": {
+        "project_id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+        "query": "deployment queue",
+        "ids": [],
+        "paths": [],
+        "context": {},
+        "kinds": [
+          "semantic-fact"
+        ],
+        "minimum_trust": "reviewed",
+        "limit": 16,
+        "include_context": true
+      },
+      "relevant_paths": [
+        "topics/records/deployment-queue.md",
+        "projectbrief.md"
+      ],
+      "rationale": "Orientation is separate, trust null; typed source retains current-record label."
+    },
+    {
+      "case": "unsafe-source",
+      "request": {
+        "project_id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+        "query": "sensitivefixture",
+        "ids": [],
+        "paths": [],
+        "context": {},
+        "kinds": [
+          "semantic-fact"
+        ],
+        "minimum_trust": "reviewed",
+        "limit": 16,
+        "include_context": false
+      },
+      "relevant_paths": [],
+      "rationale": "Entire secret-bearing source is withheld without leaking its body or path."
+    },
+    {
+      "case": "no-match",
+      "request": {
+        "project_id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+        "query": "nonexistentquasar",
+        "ids": [],
+        "paths": [],
+        "context": {},
+        "kinds": [
+          "semantic-fact"
+        ],
+        "minimum_trust": "reviewed",
+        "limit": 16,
+        "include_context": false
+      },
+      "relevant_paths": [],
+      "rationale": "Valid bank with no relevant current source returns successful empty selection."
+    },
+    {
+      "case": "unknown-session",
+      "request": {
+        "project_id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+        "query": "resumable checkpoint",
+        "ids": [],
+        "paths": [],
+        "context": {},
+        "kinds": [
+          "semantic-fact"
+        ],
+        "minimum_trust": "reviewed",
+        "limit": 16,
+        "include_context": false
+      },
+      "relevant_paths": [],
+      "rationale": "Unknown required session must not qualify."
+    }
+  ],
+  "fixed_record_sources": [
+    {
+      "label": "retry-limit",
+      "metadata": {
+        "schema": "agent-memory/record-v1",
+        "id": "9a2b24a7-3464-4ce4-b488-28e5c6de71d3",
+        "version": 1,
+        "project-id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+        "kind": "semantic-fact",
+        "status": "active",
+        "scope": "repository",
+        "applicability": "known",
+        "conditions": {},
+        "source": {
+          "actor": "fixture-observer",
+          "kind": "executable-test"
+        },
+        "evidence": [
+          "fixture://quality/retry-limit"
+        ],
+        "origin": {
+          "developer-id": "aa5e6be7-6e22-4e31-b653-9d855486b8a2",
+          "harness": "custom-fixture",
+          "session": "fixed-quality-labels",
+          "code-state": "not-code"
+        },
+        "recorded-at": "2026-10-25T08:00:00Z",
+        "updated": "2026-10-25T08:00:00Z",
+        "valid-from": null,
+        "valid-until": null,
+        "derived-from": [],
+        "corrects": [],
+        "supersedes": [],
+        "trust": "reviewed",
+        "visibility": "visible",
+        "admission-reason": "Authored synthetic evaluation assertion; not real admission evidence"
+      },
+      "body": "# Bounded retries\n\nRetry transient requests three times with exponential backoff. Preserve the request identifier across attempts; a permanent validation failure is returned immediately.\n",
+      "path": "topics/records/retry-limit.md"
+    },
+    {
+      "label": "cursor-empty",
+      "metadata": {
+        "schema": "agent-memory/record-v1",
+        "id": "6993a696-6d7b-49ea-a918-2d815377ce45",
+        "version": 1,
+        "project-id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+        "kind": "semantic-fact",
+        "status": "active",
+        "scope": "repository",
+        "applicability": "known",
+        "conditions": {},
+        "source": {
+          "actor": "fixture-observer",
+          "kind": "executable-test"
+        },
+        "evidence": [
+          "fixture://quality/cursor-empty"
+        ],
+        "origin": {
+          "developer-id": "aa5e6be7-6e22-4e31-b653-9d855486b8a2",
+          "harness": "custom-fixture",
+          "session": "fixed-quality-labels",
+          "code-state": "not-code"
+        },
+        "recorded-at": "2026-10-25T08:00:00Z",
+        "updated": "2026-10-25T08:00:00Z",
+        "valid-from": null,
+        "valid-until": null,
+        "derived-from": [],
+        "corrects": [],
+        "supersedes": [],
+        "trust": "reviewed",
+        "visibility": "visible",
+        "admission-reason": "Authored synthetic evaluation assertion; not real admission evidence"
+      },
+      "body": "# Pagination cursor: empty page\n\nAn empty page with a nonempty pagination cursor is not the end of the scan. Continue using the returned cursor until the server omits it.\n",
+      "path": "topics/records/cursor-empty.md"
+    },
+    {
+      "label": "cursor-repeated",
+      "metadata": {
+        "schema": "agent-memory/record-v1",
+        "id": "c7b17274-e5ae-433f-a9f9-a0a2198a1c67",
+        "version": 1,
+        "project-id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+        "kind": "semantic-fact",
+        "status": "active",
+        "scope": "repository",
+        "applicability": "known",
+        "conditions": {},
+        "source": {
+          "actor": "fixture-observer",
+          "kind": "executable-test"
+        },
+        "evidence": [
+          "fixture://quality/cursor-repeated"
+        ],
+        "origin": {
+          "developer-id": "aa5e6be7-6e22-4e31-b653-9d855486b8a2",
+          "harness": "custom-fixture",
+          "session": "fixed-quality-labels",
+          "code-state": "not-code"
+        },
+        "recorded-at": "2026-10-25T08:00:00Z",
+        "updated": "2026-10-25T08:00:00Z",
+        "valid-from": null,
+        "valid-until": null,
+        "derived-from": [],
+        "corrects": [],
+        "supersedes": [],
+        "trust": "reviewed",
+        "visibility": "visible",
+        "admission-reason": "Authored synthetic evaluation assertion; not real admission evidence"
+      },
+      "body": "# Pagination cursor: repeated token\n\nDetect a repeated pagination cursor and stop the scan with a diagnostic, preserving the last completed page. This avoids a loop while retaining evidence.\n",
+      "path": "topics/records/cursor-repeated.md"
+    },
+    {
+      "label": "ledger-only",
+      "metadata": {
+        "schema": "agent-memory/record-v1",
+        "id": "63a9c482-eebd-450d-a075-deb5c416a7d7",
+        "version": 1,
+        "project-id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+        "kind": "semantic-fact",
+        "status": "active",
+        "scope": "component:src/ledger",
+        "applicability": "known",
+        "conditions": {},
+        "source": {
+          "actor": "fixture-observer",
+          "kind": "executable-test"
+        },
+        "evidence": [
+          "fixture://quality/ledger-only"
+        ],
+        "origin": {
+          "developer-id": "aa5e6be7-6e22-4e31-b653-9d855486b8a2",
+          "harness": "custom-fixture",
+          "session": "fixed-quality-labels",
+          "code-state": "not-code"
+        },
+        "recorded-at": "2026-10-25T08:00:00Z",
+        "updated": "2026-10-25T08:00:00Z",
+        "valid-from": null,
+        "valid-until": null,
+        "derived-from": [],
+        "corrects": [],
+        "supersedes": [],
+        "trust": "reviewed",
+        "visibility": "visible",
+        "admission-reason": "Authored synthetic evaluation assertion; not real admission evidence"
+      },
+      "body": "# Ledger retention\n\nLedger retention is seven years under the ledger component's reconciliation policy. The API component has a separate lifecycle.\n",
+      "path": "topics/records/ledger-only.md"
+    },
+    {
+      "label": "conditional-resume",
+      "metadata": {
+        "schema": "agent-memory/record-v1",
+        "id": "5e84b6ba-4fa3-4ee8-a2e8-7014c5fd53c4",
+        "version": 1,
+        "project-id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+        "kind": "semantic-fact",
+        "status": "active",
+        "scope": "repository",
+        "applicability": "known",
+        "conditions": {
+          "prerequisite": "receipt-verified"
+        },
+        "source": {
+          "actor": "fixture-observer",
+          "kind": "executable-test"
+        },
+        "evidence": [
+          "fixture://quality/conditional-resume"
+        ],
+        "origin": {
+          "developer-id": "54648754-2ff2-476e-9edc-836965e90a55",
+          "harness": "custom-fixture",
+          "session": "fixed-quality-labels",
+          "code-state": "not-code"
+        },
+        "recorded-at": "2026-10-25T08:00:00Z",
+        "updated": "2026-10-25T08:00:00Z",
+        "valid-from": null,
+        "valid-until": null,
+        "derived-from": [],
+        "corrects": [],
+        "supersedes": [],
+        "trust": "reviewed",
+        "visibility": "visible",
+        "admission-reason": "Authored synthetic evaluation assertion; not real admission evidence"
+      },
+      "body": "# Delta resumption\n\nDelta resumption may reuse a verified receipt after the source inventory agrees. An unverified receipt supplies no recovery authority.\n",
+      "path": "topics/records/conditional-resume.md"
+    },
+    {
+      "label": "head-dispatch",
+      "metadata": {
+        "schema": "agent-memory/record-v1",
+        "id": "b4e28e97-60cb-48ba-bf14-55c60de3f7f7",
+        "version": 1,
+        "project-id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+        "kind": "semantic-fact",
+        "status": "active",
+        "scope": "repository",
+        "applicability": "known",
+        "conditions": {
+          "branch": "main"
+        },
+        "source": {
+          "actor": "fixture-observer",
+          "kind": "executable-test"
+        },
+        "evidence": [
+          "fixture://quality/head-dispatch"
+        ],
+        "origin": {
+          "developer-id": "aa5e6be7-6e22-4e31-b653-9d855486b8a2",
+          "harness": "custom-fixture",
+          "session": "fixed-quality-labels",
+          "code-state": "not-code"
+        },
+        "recorded-at": "2026-10-25T08:00:00Z",
+        "updated": "2026-10-25T08:00:00Z",
+        "valid-from": null,
+        "valid-until": null,
+        "derived-from": [],
+        "corrects": [],
+        "supersedes": [],
+        "trust": "reviewed",
+        "visibility": "visible",
+        "admission-reason": "Authored synthetic evaluation assertion; not real admission evidence"
+      },
+      "body": "# Dispatch limit at inspected HEAD\n\nOn the inspected main revision, dispatch limit is three. This observation does not certify staged or working code. Inspect current source before changing dispatch behavior.\n",
+      "path": "topics/records/head-dispatch.md"
+    },
+    {
+      "label": "timeout-v1",
+      "metadata": {
+        "schema": "agent-memory/record-v1",
+        "id": "b14eec5a-7ad6-4ac8-bd3b-6950aae11602",
+        "version": 1,
+        "project-id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+        "kind": "semantic-fact",
+        "status": "superseded",
+        "scope": "repository",
+        "applicability": "known",
+        "conditions": {},
+        "source": {
+          "actor": "fixture-observer",
+          "kind": "executable-test"
+        },
+        "evidence": [
+          "fixture://quality/timeout-v1"
+        ],
+        "origin": {
+          "developer-id": "54648754-2ff2-476e-9edc-836965e90a55",
+          "harness": "custom-fixture",
+          "session": "fixed-quality-labels",
+          "code-state": "not-code"
+        },
+        "recorded-at": "2026-10-25T08:00:00Z",
+        "updated": "2026-10-25T08:00:00Z",
+        "valid-from": null,
+        "valid-until": null,
+        "derived-from": [],
+        "corrects": [],
+        "supersedes": [],
+        "trust": "reviewed",
+        "visibility": "visible",
+        "admission-reason": "Authored synthetic evaluation assertion; not real admission evidence",
+        "state-reason": "Retained original version of the corrected assertion",
+        "superseded-by": [
+          {
+            "id": "b14eec5a-7ad6-4ac8-bd3b-6950aae11602",
+            "version": 2
+          }
+        ]
+      },
+      "body": "# Legacytimeout\n\nLegacytimeout is thirty seconds. This historical assertion has a newer exact correction.\n",
+      "path": "topics/records/timeout-v1.md"
+    },
+    {
+      "label": "timeout-v2",
+      "metadata": {
+        "schema": "agent-memory/record-v1",
+        "id": "b14eec5a-7ad6-4ac8-bd3b-6950aae11602",
+        "version": 2,
+        "project-id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+        "kind": "semantic-fact",
+        "status": "active",
+        "scope": "repository",
+        "applicability": "known",
+        "conditions": {},
+        "source": {
+          "actor": "fixture-observer",
+          "kind": "executable-test"
+        },
+        "evidence": [
+          "fixture://quality/timeout-v2"
+        ],
+        "origin": {
+          "developer-id": "aa5e6be7-6e22-4e31-b653-9d855486b8a2",
+          "harness": "custom-fixture",
+          "session": "fixed-quality-labels",
+          "code-state": "not-code"
+        },
+        "recorded-at": "2026-10-25T08:00:00Z",
+        "updated": "2026-10-25T08:00:00Z",
+        "valid-from": null,
+        "valid-until": null,
+        "derived-from": [],
+        "corrects": [
+          {
+            "id": "b14eec5a-7ad6-4ac8-bd3b-6950aae11602",
+            "version": 1
+          }
+        ],
+        "supersedes": [],
+        "trust": "reviewed",
+        "visibility": "visible",
+        "admission-reason": "Authored synthetic evaluation assertion; not real admission evidence"
+      },
+      "body": "# Revised deadline\n\nThe confirmed request deadline is sixty seconds after the revised acceptance probe.\n",
+      "path": "topics/records/timeout-v2.md"
+    },
+    {
+      "label": "cache-v1",
+      "metadata": {
+        "schema": "agent-memory/record-v1",
+        "id": "5b65484c-5b54-45da-90f2-c045f228d76e",
+        "version": 1,
+        "project-id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+        "kind": "semantic-fact",
+        "status": "active",
+        "scope": "repository",
+        "applicability": "known",
+        "conditions": {},
+        "source": {
+          "actor": "fixture-observer",
+          "kind": "executable-test"
+        },
+        "evidence": [
+          "fixture://quality/cache-v1"
+        ],
+        "origin": {
+          "developer-id": "54648754-2ff2-476e-9edc-836965e90a55",
+          "harness": "custom-fixture",
+          "session": "fixed-quality-labels",
+          "code-state": "not-code"
+        },
+        "recorded-at": "2026-10-25T08:00:00Z",
+        "updated": "2026-10-25T08:00:00Z",
+        "valid-from": null,
+        "valid-until": null,
+        "derived-from": [],
+        "corrects": [],
+        "supersedes": [],
+        "trust": "reviewed",
+        "visibility": "visible",
+        "admission-reason": "Authored synthetic evaluation assertion; not real admission evidence"
+      },
+      "body": "# Legacycache\n\nLegacycache persists every stale response. A qualified hidden replacement invalidates this assertion.\n",
+      "path": "topics/records/cache-v1.md"
+    },
+    {
+      "label": "cache-replacement",
+      "metadata": {
+        "schema": "agent-memory/record-v1",
+        "id": "7e02428b-37b7-44fe-9fd8-12d2635fabd8",
+        "version": 1,
+        "project-id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+        "kind": "semantic-fact",
+        "status": "active",
+        "scope": "repository",
+        "applicability": "known",
+        "conditions": {},
+        "source": {
+          "actor": "fixture-observer",
+          "kind": "executable-test"
+        },
+        "evidence": [
+          "fixture://quality/cache-replacement"
+        ],
+        "origin": {
+          "developer-id": "54648754-2ff2-476e-9edc-836965e90a55",
+          "harness": "custom-fixture",
+          "session": "fixed-quality-labels",
+          "code-state": "not-code"
+        },
+        "recorded-at": "2026-10-25T08:00:00Z",
+        "updated": "2026-10-25T08:00:00Z",
+        "valid-from": null,
+        "valid-until": null,
+        "derived-from": [],
+        "corrects": [],
+        "supersedes": [
+          {
+            "id": "5b65484c-5b54-45da-90f2-c045f228d76e",
+            "version": 1
+          }
+        ],
+        "trust": "reviewed",
+        "visibility": "hidden",
+        "admission-reason": "Authored synthetic evaluation assertion; not real admission evidence"
+      },
+      "body": "# Cache policy revision\n\nDiscard stale responses under the current cache policy.\n",
+      "path": "topics/records/cache-replacement.md"
+    },
+    {
+      "label": "quota-v1",
+      "metadata": {
+        "schema": "agent-memory/record-v1",
+        "id": "28dbf45e-d339-452b-bfcc-c95a4c1bbb7f",
+        "version": 1,
+        "project-id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+        "kind": "semantic-fact",
+        "status": "active",
+        "scope": "repository",
+        "applicability": "known",
+        "conditions": {},
+        "source": {
+          "actor": "fixture-observer",
+          "kind": "executable-test"
+        },
+        "evidence": [
+          "fixture://quality/quota-v1"
+        ],
+        "origin": {
+          "developer-id": "aa5e6be7-6e22-4e31-b653-9d855486b8a2",
+          "harness": "custom-fixture",
+          "session": "fixed-quality-labels",
+          "code-state": "not-code"
+        },
+        "recorded-at": "2026-10-25T08:00:00Z",
+        "updated": "2026-10-25T08:00:00Z",
+        "valid-from": null,
+        "valid-until": null,
+        "derived-from": [],
+        "corrects": [],
+        "supersedes": [],
+        "trust": "reviewed",
+        "visibility": "visible",
+        "admission-reason": "Authored synthetic evaluation assertion; not real admission evidence"
+      },
+      "body": "# Legacyquota\n\nLegacyquota is unlimited. A qualified replacement invalidates this assertion.\n",
+      "path": "topics/records/quota-v1.md"
+    },
+    {
+      "label": "quota-replacement",
+      "metadata": {
+        "schema": "agent-memory/record-v1",
+        "id": "9e205ff1-9e5e-4b87-9937-11144172e762",
+        "version": 1,
+        "project-id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+        "kind": "semantic-fact",
+        "status": "active",
+        "scope": "repository",
+        "applicability": "known",
+        "conditions": {},
+        "source": {
+          "actor": "fixture-observer",
+          "kind": "executable-test"
+        },
+        "evidence": [
+          "fixture://quality/quota-replacement"
+        ],
+        "origin": {
+          "developer-id": "54648754-2ff2-476e-9edc-836965e90a55",
+          "harness": "custom-fixture",
+          "session": "fixed-quality-labels",
+          "code-state": "not-code"
+        },
+        "recorded-at": "2026-10-25T08:00:00Z",
+        "updated": "2026-10-25T08:00:00Z",
+        "valid-from": null,
+        "valid-until": null,
+        "derived-from": [],
+        "corrects": [],
+        "supersedes": [
+          {
+            "id": "28dbf45e-d339-452b-bfcc-c95a4c1bbb7f",
+            "version": 1
+          }
+        ],
+        "trust": "reviewed",
+        "visibility": "visible",
+        "admission-reason": "Authored synthetic evaluation assertion; not real admission evidence"
+      },
+      "body": "# Quota policy revision\n\nThe confirmed quota is finite.\npassword=WITHHELD_REPLACEMENT_FIXTURE\n",
+      "path": "topics/records/quota-replacement.md"
+    },
+    {
+      "label": "expired-endpoint",
+      "metadata": {
+        "schema": "agent-memory/record-v1",
+        "id": "612fc506-2490-4e5c-a38a-b318780b8260",
+        "version": 1,
+        "project-id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+        "kind": "semantic-fact",
+        "status": "active",
+        "scope": "repository",
+        "applicability": "known",
+        "conditions": {},
+        "source": {
+          "actor": "fixture-observer",
+          "kind": "executable-test"
+        },
+        "evidence": [
+          "fixture://quality/expired-endpoint"
+        ],
+        "origin": {
+          "developer-id": "54648754-2ff2-476e-9edc-836965e90a55",
+          "harness": "custom-fixture",
+          "session": "fixed-quality-labels",
+          "code-state": "not-code"
+        },
+        "recorded-at": "2026-10-25T08:00:00Z",
+        "updated": "2026-10-25T08:00:00Z",
+        "valid-from": null,
+        "valid-until": "2026-01-01T00:00:00Z",
+        "derived-from": [],
+        "corrects": [],
+        "supersedes": [],
+        "trust": "reviewed",
+        "visibility": "visible",
+        "admission-reason": "Authored synthetic evaluation assertion; not real admission evidence"
+      },
+      "body": "# Sunset endpoint\n\nThe sunset endpoint was reachable only during the retired compatibility window.\n",
+      "path": "topics/records/expired-endpoint.md"
+    },
+    {
+      "label": "revoked-fallback",
+      "metadata": {
+        "schema": "agent-memory/record-v1",
+        "id": "b79c487b-034b-42ef-b971-613fe7073691",
+        "version": 1,
+        "project-id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+        "kind": "semantic-fact",
+        "status": "revoked",
+        "scope": "repository",
+        "applicability": "known",
+        "conditions": {},
+        "source": {
+          "actor": "fixture-observer",
+          "kind": "executable-test"
+        },
+        "evidence": [
+          "fixture://quality/revoked-fallback"
+        ],
+        "origin": {
+          "developer-id": "aa5e6be7-6e22-4e31-b653-9d855486b8a2",
+          "harness": "custom-fixture",
+          "session": "fixed-quality-labels",
+          "code-state": "not-code"
+        },
+        "recorded-at": "2026-10-25T08:00:00Z",
+        "updated": "2026-10-25T08:00:00Z",
+        "valid-from": null,
+        "valid-until": null,
+        "derived-from": [],
+        "corrects": [],
+        "supersedes": [],
+        "trust": "reviewed",
+        "visibility": "visible",
+        "admission-reason": "Authored synthetic evaluation assertion; not real admission evidence",
+        "state-reason": "Fixed fixture records an explicit revocation"
+      },
+      "body": "# Withdrawn fallback\n\nThe withdrawn fallback returned inconsistent identifiers.\n",
+      "path": "topics/records/revoked-fallback.md"
+    },
+    {
+      "label": "superseded-protocol",
+      "metadata": {
+        "schema": "agent-memory/record-v1",
+        "id": "2faa3d63-9d7d-487c-8250-a5532f5da65e",
+        "version": 1,
+        "project-id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+        "kind": "semantic-fact",
+        "status": "superseded",
+        "scope": "repository",
+        "applicability": "known",
+        "conditions": {},
+        "source": {
+          "actor": "fixture-observer",
+          "kind": "executable-test"
+        },
+        "evidence": [
+          "fixture://quality/superseded-protocol"
+        ],
+        "origin": {
+          "developer-id": "54648754-2ff2-476e-9edc-836965e90a55",
+          "harness": "custom-fixture",
+          "session": "fixed-quality-labels",
+          "code-state": "not-code"
+        },
+        "recorded-at": "2026-10-25T08:00:00Z",
+        "updated": "2026-10-25T08:00:00Z",
+        "valid-from": null,
+        "valid-until": null,
+        "derived-from": [],
+        "corrects": [],
+        "supersedes": [],
+        "trust": "reviewed",
+        "visibility": "visible",
+        "admission-reason": "Authored synthetic evaluation assertion; not real admission evidence",
+        "state-reason": "Fixed fixture records a replacement",
+        "superseded-by": [
+          {
+            "id": "2faa3d63-9d7d-487c-8250-a5532f5da65e",
+            "version": 2
+          }
+        ]
+      },
+      "body": "# Retired protocol\n\nRetired protocol details are historical.\n",
+      "path": "topics/records/superseded-protocol.md"
+    },
+    {
+      "label": "retention-dev",
+      "metadata": {
+        "schema": "agent-memory/record-v1",
+        "id": "9f9cda10-fa6d-48f1-a6e0-ad7260adb02f",
+        "version": 1,
+        "project-id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+        "kind": "semantic-fact",
+        "status": "active",
+        "scope": "repository",
+        "applicability": "known",
+        "conditions": {
+          "environment": "development"
+        },
+        "source": {
+          "actor": "fixture-observer",
+          "kind": "executable-test"
+        },
+        "evidence": [
+          "fixture://quality/retention-dev"
+        ],
+        "origin": {
+          "developer-id": "aa5e6be7-6e22-4e31-b653-9d855486b8a2",
+          "harness": "custom-fixture",
+          "session": "fixed-quality-labels",
+          "code-state": "not-code"
+        },
+        "recorded-at": "2026-10-25T08:00:00Z",
+        "updated": "2026-10-25T08:00:00Z",
+        "valid-from": null,
+        "valid-until": null,
+        "derived-from": [],
+        "corrects": [],
+        "supersedes": [],
+        "trust": "reviewed",
+        "visibility": "visible",
+        "admission-reason": "Authored synthetic evaluation assertion; not real admission evidence"
+      },
+      "body": "# Sandbox retention\n\nSandbox retention in development is one day to reduce fixture buildup.\n",
+      "path": "topics/records/retention-dev.md"
+    },
+    {
+      "label": "retention-prod",
+      "metadata": {
+        "schema": "agent-memory/record-v1",
+        "id": "6e174a9a-a99d-41ce-bc87-d6381849536c",
+        "version": 1,
+        "project-id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+        "kind": "semantic-fact",
+        "status": "active",
+        "scope": "repository",
+        "applicability": "known",
+        "conditions": {
+          "environment": "production"
+        },
+        "source": {
+          "actor": "fixture-observer",
+          "kind": "executable-test"
+        },
+        "evidence": [
+          "fixture://quality/retention-prod"
+        ],
+        "origin": {
+          "developer-id": "54648754-2ff2-476e-9edc-836965e90a55",
+          "harness": "custom-fixture",
+          "session": "fixed-quality-labels",
+          "code-state": "not-code"
+        },
+        "recorded-at": "2026-10-25T08:00:00Z",
+        "updated": "2026-10-25T08:00:00Z",
+        "valid-from": null,
+        "valid-until": null,
+        "derived-from": [],
+        "corrects": [],
+        "supersedes": [],
+        "trust": "reviewed",
+        "visibility": "visible",
+        "admission-reason": "Authored synthetic evaluation assertion; not real admission evidence"
+      },
+      "body": "# Sandbox retention\n\nSandbox retention in production is thirty days under the audit contract.\n",
+      "path": "topics/records/retention-prod.md"
+    },
+    {
+      "label": "receipt-a",
+      "metadata": {
+        "schema": "agent-memory/record-v1",
+        "id": "5c53ca49-b171-41cb-ba2c-ff574c5ebd5b",
+        "version": 1,
+        "project-id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+        "kind": "semantic-fact",
+        "status": "active",
+        "scope": "repository",
+        "applicability": "known",
+        "conditions": {},
+        "source": {
+          "actor": "fixture-observer",
+          "kind": "executable-test"
+        },
+        "evidence": [
+          "fixture://quality/receipt-a"
+        ],
+        "origin": {
+          "developer-id": "aa5e6be7-6e22-4e31-b653-9d855486b8a2",
+          "harness": "custom-fixture",
+          "session": "fixed-quality-labels",
+          "code-state": "not-code"
+        },
+        "recorded-at": "2026-10-25T08:00:00Z",
+        "updated": "2026-10-25T08:00:00Z",
+        "valid-from": null,
+        "valid-until": null,
+        "derived-from": [],
+        "corrects": [],
+        "supersedes": [],
+        "trust": "reviewed",
+        "visibility": "visible",
+        "admission-reason": "Authored synthetic evaluation assertion; not real admission evidence"
+      },
+      "body": "# Idempotency receipt\n\nThe idempotency receipt keeps the first successful response for a repeated request key. Evidence comes from the HTTP acceptance probe.\n",
+      "path": "topics/records/receipt-a.md"
+    },
+    {
+      "label": "receipt-b",
+      "metadata": {
+        "schema": "agent-memory/record-v1",
+        "id": "429ebfbe-7713-40be-bca4-c3b904f82517",
+        "version": 1,
+        "project-id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+        "kind": "semantic-fact",
+        "status": "active",
+        "scope": "repository",
+        "applicability": "known",
+        "conditions": {},
+        "source": {
+          "actor": "fixture-observer",
+          "kind": "executable-test"
+        },
+        "evidence": [
+          "fixture://quality/receipt-b"
+        ],
+        "origin": {
+          "developer-id": "aa5e6be7-6e22-4e31-b653-9d855486b8a2",
+          "harness": "custom-fixture",
+          "session": "fixed-quality-labels",
+          "code-state": "not-code"
+        },
+        "recorded-at": "2026-10-25T08:00:00Z",
+        "updated": "2026-10-25T08:00:00Z",
+        "valid-from": null,
+        "valid-until": null,
+        "derived-from": [],
+        "corrects": [],
+        "supersedes": [],
+        "trust": "reviewed",
+        "visibility": "visible",
+        "admission-reason": "Authored synthetic evaluation assertion; not real admission evidence"
+      },
+      "body": "# Idempotency receipt\n\nA repeated request key returns the first successful response recorded in its idempotency receipt. Evidence comes from the independent queue probe.\n",
+      "path": "topics/records/receipt-b.md"
+    },
+    {
+      "label": "wall-blue",
+      "metadata": {
+        "schema": "agent-memory/record-v1",
+        "id": "845fcced-7acc-4247-81dd-c3c35d1575c2",
+        "version": 1,
+        "project-id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+        "kind": "semantic-fact",
+        "status": "active",
+        "scope": "repository",
+        "applicability": "known",
+        "conditions": {},
+        "source": {
+          "actor": "fixture-observer",
+          "kind": "executable-test"
+        },
+        "evidence": [
+          "fixture://quality/wall-blue"
+        ],
+        "origin": {
+          "developer-id": "54648754-2ff2-476e-9edc-836965e90a55",
+          "harness": "custom-fixture",
+          "session": "fixed-quality-labels",
+          "code-state": "not-code"
+        },
+        "recorded-at": "2026-10-25T08:00:00Z",
+        "updated": "2026-10-25T08:00:00Z",
+        "valid-from": null,
+        "valid-until": null,
+        "derived-from": [],
+        "corrects": [],
+        "supersedes": [],
+        "trust": "reviewed",
+        "visibility": "visible",
+        "admission-reason": "Authored synthetic evaluation assertion; not real admission evidence"
+      },
+      "body": "# Atrium wall\n\nThe atrium wall color should be blue. The current design meeting supplied this claim; clarify it against the separate yellow claim.\n",
+      "path": "topics/records/wall-blue.md"
+    },
+    {
+      "label": "wall-yellow",
+      "metadata": {
+        "schema": "agent-memory/record-v1",
+        "id": "247b9b9c-8843-4ca3-9003-171c4f67a0e9",
+        "version": 1,
+        "project-id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+        "kind": "semantic-fact",
+        "status": "active",
+        "scope": "repository",
+        "applicability": "known",
+        "conditions": {},
+        "source": {
+          "actor": "fixture-observer",
+          "kind": "executable-test"
+        },
+        "evidence": [
+          "fixture://quality/wall-yellow"
+        ],
+        "origin": {
+          "developer-id": "aa5e6be7-6e22-4e31-b653-9d855486b8a2",
+          "harness": "custom-fixture",
+          "session": "fixed-quality-labels",
+          "code-state": "not-code"
+        },
+        "recorded-at": "2026-10-25T08:00:00Z",
+        "updated": "2026-10-25T08:00:00Z",
+        "valid-from": null,
+        "valid-until": null,
+        "derived-from": [],
+        "corrects": [],
+        "supersedes": [],
+        "trust": "reviewed",
+        "visibility": "visible",
+        "admission-reason": "Authored synthetic evaluation assertion; not real admission evidence"
+      },
+      "body": "# Atrium wall\n\nThe atrium wall color should be yellow. The current prototype review supplied this claim; clarify it against the separate blue claim.\n",
+      "path": "topics/records/wall-yellow.md"
+    },
+    {
+      "label": "deployment-queue",
+      "metadata": {
+        "schema": "agent-memory/record-v1",
+        "id": "c0df2f68-7867-447c-885c-6b0ba7e36866",
+        "version": 1,
+        "project-id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+        "kind": "semantic-fact",
+        "status": "active",
+        "scope": "repository",
+        "applicability": "known",
+        "conditions": {},
+        "source": {
+          "actor": "fixture-observer",
+          "kind": "executable-test"
+        },
+        "evidence": [
+          "fixture://quality/deployment-queue"
+        ],
+        "origin": {
+          "developer-id": "54648754-2ff2-476e-9edc-836965e90a55",
+          "harness": "custom-fixture",
+          "session": "fixed-quality-labels",
+          "code-state": "not-code"
+        },
+        "recorded-at": "2026-10-25T08:00:00Z",
+        "updated": "2026-10-25T08:00:00Z",
+        "valid-from": null,
+        "valid-until": null,
+        "derived-from": [],
+        "corrects": [],
+        "supersedes": [],
+        "trust": "reviewed",
+        "visibility": "visible",
+        "admission-reason": "Authored synthetic evaluation assertion; not real admission evidence"
+      },
+      "body": "# Deployment queue\n\nThe deployment queue preserves arrival order while a worker is unavailable. Retry a failed deployment using its original identifier.\n",
+      "path": "topics/records/deployment-queue.md"
+    },
+    {
+      "label": "unsafe-secret",
+      "metadata": {
+        "schema": "agent-memory/record-v1",
+        "id": "166e47fa-43fb-4892-91cc-32db01038dd7",
+        "version": 1,
+        "project-id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+        "kind": "semantic-fact",
+        "status": "active",
+        "scope": "repository",
+        "applicability": "known",
+        "conditions": {},
+        "source": {
+          "actor": "fixture-observer",
+          "kind": "executable-test"
+        },
+        "evidence": [
+          "fixture://quality/unsafe-secret"
+        ],
+        "origin": {
+          "developer-id": "aa5e6be7-6e22-4e31-b653-9d855486b8a2",
+          "harness": "custom-fixture",
+          "session": "fixed-quality-labels",
+          "code-state": "not-code"
+        },
+        "recorded-at": "2026-10-25T08:00:00Z",
+        "updated": "2026-10-25T08:00:00Z",
+        "valid-from": null,
+        "valid-until": null,
+        "derived-from": [],
+        "corrects": [],
+        "supersedes": [],
+        "trust": "reviewed",
+        "visibility": "visible",
+        "admission-reason": "Authored synthetic evaluation assertion; not real admission evidence"
+      },
+      "body": "# Sensitivefixture\n\npassword=WITHHELD_SOURCE_FIXTURE\n",
+      "path": "topics/records/unsafe-secret.md"
+    },
+    {
+      "label": "session-bound",
+      "metadata": {
+        "schema": "agent-memory/record-v1",
+        "id": "5d3439a6-aaae-4ac1-8aa2-1e6bdebdc07a",
+        "version": 1,
+        "project-id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+        "kind": "semantic-fact",
+        "status": "active",
+        "scope": "repository",
+        "applicability": "known",
+        "conditions": {
+          "session": "another-session"
+        },
+        "source": {
+          "actor": "fixture-observer",
+          "kind": "executable-test"
+        },
+        "evidence": [
+          "fixture://quality/session-bound"
+        ],
+        "origin": {
+          "developer-id": "54648754-2ff2-476e-9edc-836965e90a55",
+          "harness": "custom-fixture",
+          "session": "fixed-quality-labels",
+          "code-state": "not-code"
+        },
+        "recorded-at": "2026-10-25T08:00:00Z",
+        "updated": "2026-10-25T08:00:00Z",
+        "valid-from": null,
+        "valid-until": null,
+        "derived-from": [],
+        "corrects": [],
+        "supersedes": [],
+        "trust": "reviewed",
+        "visibility": "visible",
+        "admission-reason": "Authored synthetic evaluation assertion; not real admission evidence"
+      },
+      "body": "# Resumable checkpoint\n\nA resumable checkpoint describes only the named session's unfinished operation.\n",
+      "path": "topics/records/session-bound.md"
+    }
+  ]
+}
