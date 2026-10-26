@@ -34,7 +34,7 @@ def verify_source(phase):
  (out/('source-'+phase+'.json')).write_text(json.dumps({'commit':expected['commit'],'tracked':len(expected['tracked']),'portable':len(expected['portable']),'all_bytes_and_modes_match':True})+'\n')
 verify_source('before');(out/'source-binding.json').write_text(json.dumps(expected,indent=2)+'\n')
 shutil.copyfile(Path(__file__),out/'controller.py')
-lock=threading.Lock();counter=0;commands=[];events=[];sessions=[];lessons={};started=time.perf_counter()
+lock=threading.Lock();counter=0;commands=[];events=[];sessions=[];lessons={};forbidden_public=set();seed_reference={};seed_prune=None;started=time.perf_counter()
 blobs=out/'blobs';blobs.mkdir(mode=0o700)
 def retain(raw):
  sha=hashlib.sha256(raw).hexdigest();path=blobs/(sha+'.gz')
@@ -53,18 +53,29 @@ def public(w,pack,helper,*args,expected_exit=0,fault_stage=None):
  argv=[str(x) for x in [sys.executable,'-I',pack/'scripts'/helper,*args]]
  inputs={str(x):retain(x.read_bytes()) for x in args if isinstance(x,Path) and x.is_file()}
  overrides={'AGENT_MEMORY_FAULT_STAGE':fault_stage,'AGENT_MEMORY_FAULT_MODE':'exit'} if fault_stage else {}
- before=time.perf_counter();r=w.run(argv,check=False,timeout=300,group=True,env=overrides)
- row={'number':number,'argv':argv,'inputs':inputs,'environment':{**w.env,**overrides},'exit':r.returncode,
-  'seconds':time.perf_counter()-before,'stdout_sha256':retain(r.stdout.encode()),'stderr_sha256':retain(r.stderr.encode())}
- with lock:
-  commands.append(row);(out/'commands.json').write_text(json.dumps(sorted(commands,key=lambda x:x['number']),indent=2)+'\n')
+ row={'number':number,'argv':argv,'inputs':inputs,'environment':{**w.env,**overrides},'exit':None}
+ before=time.perf_counter()
+ def store(stdout,stderr):
+  row.update(seconds=time.perf_counter()-before,stdout_sha256=retain(stdout.encode()),stderr_sha256=retain(stderr.encode()))
+  row['public_forbidden_marker_absent']=all(value not in stdout+stderr for value in forbidden_public)
+  with lock:
+   commands.append(row);(out/'commands.json').write_text(json.dumps(sorted(commands,key=lambda x:x['number']),indent=2)+'\n')
+ try:r=w.run(argv,check=False,timeout=300,group=True,env=overrides)
+ except BaseException as exc:
+  chain=[];seen=set();current=exc;stdout='';stderr=''
+  def stream(value):return value.decode('utf-8',errors='replace') if isinstance(value,bytes) else value if isinstance(value,str) else ''
+  while current is not None and id(current) not in seen:
+   seen.add(id(current));partial_out=stream(getattr(current,'output',None) or getattr(current,'stdout',None));partial_err=stream(getattr(current,'stderr',None))
+   stdout=stdout or partial_out;stderr=stderr or partial_err
+   chain.append({'type':type(current).__name__,'message':str(current),'stdout_sha256':retain(partial_out.encode()),'stderr_sha256':retain(partial_err.encode())})
+   current=current.__cause__ or current.__context__
+  row.update(execution_error=chain,timed_out=any(value['type']=='TimeoutExpired' for value in chain));store(stdout,stderr)
+  raise
+ row['exit']=r.returncode;row['timed_out']=False;store(r.stdout,r.stderr)
+ assert row['public_forbidden_marker_absent'],(number,'public withheld-fixture disclosure; private raw evidence retained')
  if r.returncode==expected_exit==86 and not r.stdout.strip():return {'process_exit':86,'injected_interruption':True,'operation_completed':False}
  try:value=json.loads(r.stdout)
  except ValueError:raise AssertionError((number,'non-json-response',r.returncode,r.stderr[-1500:]))
- if r.returncode!=expected_exit and helper=='reconcile_memory.py' and args[0]=='review-v2':
-  diagnostic='import json,sys;sys.path.insert(0,sys.argv[1]);from agent_memory import semantic_sharing;semantic_sharing.review(sys.argv[2],json.load(open(sys.argv[3])))'
-  debugging=w.run([sys.executable,'-I','-c',diagnostic,pack/'scripts',args[args.index('--repo')+1],args[args.index('--input')+1]],check=False,timeout=300,group=True)
-  (out/('diagnostic-'+str(number)+'.txt')).write_text('Diagnostic internal call only; not qualification.\n'+debugging.stdout+debugging.stderr)
  assert r.returncode==expected_exit,(number,helper,args[:2],r.returncode,value,r.stderr[-1000:])
  return value
 
@@ -139,6 +150,25 @@ def review(s,label):
    assert all(component['component'] in {'route-prose','introduction'} and component['target_path'] in expected_withheld for component in result['proof']['blocked_components'] if component['path']==path)
   allowed.update(held_route_dependencies)
   assert set(result['blocked_paths']).issubset(allowed),result['blocked_paths']
+  components={(value['path'],value['component'],value['target_path']) for value in result['proof']['blocked_components']}
+  assert expected_withheld.issubset(set(result['blocked_paths']))
+  assert all((path,'body',None) in components for path in expected_withheld)
+  for target in s.get('expected_withheld_root_routes',[]):
+   assert any(path=='MEMORY.md' and component in {'route-prose','introduction'} and destination==target for path,component,destination in components)
+  expected_contradictions=[pair for pair in judgment['pairs'] if pair['classification']=='contradiction']
+  selected_rows={row['key']:row for row in view['sources']}
+  for pair in expected_contradictions:
+   claims=[selected_rows[pair[key]] for key in ('left','right')]
+   assert {claim['path'] for claim in claims}.issubset(set(result['blocked_paths'])) and result['conflicts_pending']
+   assert all((claim['path'],claim['component'],claim['target_path']) in components for claim in claims)
+   peers={claim['metadata']['origin']['developer-id'] for claim in claims if claim['metadata'] is not None}-{s['actor']}
+   assert peers.issubset(set(result['other_developer_ids'])) and result['detecting_developer_id']==s['actor'] and result['messages_sent'] is False
+  if s['number']==0 and label.startswith('round-2-reconciled') and not s.get('clarified'):
+   wall_paths={row['path'] for row in lessons.values() if (row.get('role') or '').startswith('wall-')};assert len(wall_paths)==2
+   assert wall_paths.issubset(set(result['blocked_paths'])) and all((path,'body',None) in components for path in wall_paths)
+   assert result['conflicts_pending'] and result['other_developer_ids'] and result['detecting_developer_id']==s['actor']
+   event('yellow-blue-held-before-clarification',session=0,claim_paths=sorted(wall_paths),other_developer_ids=result['other_developer_ids'])
+  if expected_withheld:event('withheld-required-closure-confirmed',session=s['number'],phase=label,required_paths=sorted(expected_withheld),dependent_parent_paths=sorted(held_route_dependencies))
   if result['conflicts_pending']:
    assert result['messages_sent'] is False
    if set(result['blocked_paths'])-expected_withheld-held_route_dependencies:assert result['other_developer_ids']
@@ -196,7 +226,7 @@ def capture(s,round_number,role=None):
  assert done['admission_verified'] and state(s)==s['feature'],done
  path='topics/'+identity+'.md';meta,actual=unpack((repo/'memory-bank'/path).read_text())
  assert actual==body and meta['origin']['developer-id']==s['actor'] and meta['origin']['harness']==s['harness'] and meta['evidence']==metadata['evidence']
- return identity,{'path':path,'body':body,'metadata':meta,'session':s['number'],'round':round_number,'role':role}
+ return identity,{'path':path,'body':body,'metadata':meta,'session':s['number'],'round':round_number,'role':role,'mode_bits':stat.S_IMODE((repo/'memory-bank'/path).stat().st_mode)}
 
 def prepare_publication(s,label):
  proof=review(s,label)
@@ -411,6 +441,7 @@ def correction_and_consolidation(all_sessions):
 
 
 def prune_and_older_branch(all_sessions):
+ global seed_prune
  from contracts.test_governance import GovernanceContract
  s=all_sessions[0];w=s['world'];bank=s['repo']/'memory-bank';path='topics/seed/records/0.md'
  metadata,body=unpack((bank/path).read_text());identity=metadata['id']
@@ -420,6 +451,7 @@ def prune_and_older_branch(all_sessions):
  prepared=public(w,s['pack'],'govern_memory.py','preview','--repo',s['repo'],'--request',save(w,value,'obsolete-seed-delete'))
  done=public(w,s['pack'],'govern_memory.py','apply','--proposal',save(w,prepared['proposal'],'obsolete-seed-delete-proposal'))
  assert not (bank/path).exists() and (bank/'history/tombstones'/(identity+'.md')).is_file() and state(s)==s['feature']
+ seed_prune={'record_path':path,'tombstone_path':'history/tombstones/'+identity+'.md','tombstone_bytes':(bank/'history/tombstones'/(identity+'.md')).read_bytes()}
  result=land(s,prepare_publication(s,'prune-seed-publication'),'prune-seed-publication');assert result['publication_verified']
  old=all_sessions[-1];assert (old['repo']/'memory-bank'/path).is_file()
  new_id,new_row=capture(old,3);lessons[new_id]=new_row
@@ -512,7 +544,8 @@ def withheld_replacement_independent_path(all_sessions):
  (bank/path).write_text(render(replacement,'# Withheld policy\n\n'+marker+'\n'))
  meta,routes,omitted=bank_contract.parse_router((bank/'MEMORY.md').read_text());routes.append({'path':path,'purpose':'Seed partition replacement evidence','scope':replacement['scope'],'lifecycle':'active','read-when':'When inspecting the seed partition policy'})
  (bank/'MEMORY.md').write_text(bank_contract.router_text(meta,routes,omitted))
- s['expected_withheld']=[path,old_path];raw=(bank/path).read_bytes()
+ s['expected_withheld']=[path,old_path];s['expected_withheld_root_routes']=[path];raw=(bank/path).read_bytes()
+ forbidden_public.update({marker,'# Withheld policy'})
  proof=review(s,'selected-withheld-replacement')
  assert marker not in json.dumps(proof)
  result=land(s,public(w,s['pack'],'publish_memory.py','prepare','--v2','--repo',s['repo'],'--input',save(w,proof,'withheld-publication-proof'))['request'],'withheld-independent-publication')
@@ -521,6 +554,58 @@ def withheld_replacement_independent_path(all_sessions):
  assert (bank/path).read_bytes()==raw and not typed_recall(s,[old['id']],{'component':'src/seed/1'})['results']
  assert typed_recall(s,[new_id])['results'][0]['body']==new_row['body'] and state(s)==s['feature']
  event('withheld-replacement-held-independent-learning-converged',session=2,old_claim_not_reactivated=True,raw_body_stays_private=True,new_independent_id=new_id,feature_preserved=True)
+
+def seed_check(s,phase,*,allow_designated_prune=False):
+ expected=set(seed_reference);deleted=set()
+ if allow_designated_prune and seed_prune is not None and s['number'] in {0,2,a.sessions-1}:
+  deleted={seed_prune['record_path']};expected-=deleted
+  assert not (s['repo']/'memory-bank'/seed_prune['record_path']).exists()
+  assert (s['repo']/'memory-bank'/seed_prune['tombstone_path']).read_bytes()==seed_prune['tombstone_bytes']
+ bank=s['repo']/'memory-bank';actual_paths={p.relative_to(bank).as_posix() for p in (bank/'topics/seed/records').glob('*.md')};assert actual_paths==expected
+ actual={}
+ for path in sorted(expected):
+  target=bank/path;assert target.is_file() and not target.is_symlink()
+  value={'sha256':hashlib.sha256(target.read_bytes()).hexdigest(),'mode_bits':stat.S_IMODE(target.stat().st_mode),'id':seed_reference[path]['id']}
+  assert value['sha256']==seed_reference[path]['sha256'] and value['mode_bits']==s['seed_modes'][path],(s['number'],path,'seed-changed')
+  actual[path]=value
+ event('seed-learning-preserved',session=s['number'],phase=phase,records=len(actual),expected_initial_ids=a.lessons,designated_pruned_paths=sorted(deleted),inventory_sha256=retain(json.dumps(actual,sort_keys=True).encode()))
+
+
+def offline_start(s):
+ w=s['world'];wrapper=w.inside('fixture-bin/git');original=wrapper.read_bytes();mode=stat.S_IMODE(wrapper.stat().st_mode)
+ online=w.inside('fixture-bin/daily-online-git');online.write_bytes(original);online.chmod(mode)
+ flag=w.inside('daily-offline-session.json');flag.write_text(json.dumps({'repo':str(s['repo'])}));flag.chmod(0o600)
+ adapter='#!'+sys.executable+'\nimport json,os,sys\nfrom pathlib import Path\nflag=Path('+repr(str(flag))+')\nif flag.exists() and str(Path.cwd().resolve())==json.loads(flag.read_text())["repo"] and any(arg in {"fetch","push","ls-remote"} for arg in sys.argv[1:]):\n sys.stderr.write("Owned session transport is offline.\\n");sys.exit(1)\nos.execv("/bin/sh",["/bin/sh",'+repr(str(online))+',*sys.argv[1:]])\n'
+ compile(adapter,str(wrapper),'exec')
+ wrapper.write_text(adapter);wrapper.chmod(mode);s['offline_adapter']={'wrapper':wrapper,'original':original,'mode':mode,'flag':flag}
+ event('session-specific-outage-started',session=s['number'],scope=str(s['repo']),adapter_sha256=retain(adapter.encode()),original_adapter_sha256=retain(original))
+ before=inventory(s['repo']/'memory-bank');pending=public(w,s['pack'],'sharing_recovery.py','inspect','--fetch','--repo',s['repo'])
+ assert pending['sharing_state']=='pending-stale' and not pending['remote_freshness_verified']
+ own=next((identity,row) for identity,row in lessons.items() if row['session']==0 and row['round']==2 and row.get('role') is None)
+ assert typed_recall(s,[own[0]])['results'][0]['body']==own[1]['body'] and before==inventory(s['repo']/'memory-bank') and state(s)==s['feature']
+ event('offline-session-preserved-local-learning',session=0,peer_publications_so_far=0)
+
+
+def offline_rejoin(s,landed_peers):
+ assert set(landed_peers)==set(range(1,a.sessions));adapter=s['offline_adapter'];assert adapter['flag'].is_file()
+ pending=public(s['world'],s['pack'],'sharing_recovery.py','inspect','--fetch','--repo',s['repo'])
+ assert pending['sharing_state']=='pending-stale' and not pending['remote_freshness_verified'] and state(s)==s['feature']
+ event('offline-session-still-offline-after-peer-publications',session=0,verified_peer_landings=list(landed_peers))
+ adapter['flag'].unlink();adapter['wrapper'].write_bytes(adapter['original']);adapter['wrapper'].chmod(adapter['mode'])
+ assert adapter['wrapper'].read_bytes()==adapter['original']
+ event('offline-session-rejoined-after-peer-publications',session=0,verified_peer_landings=list(landed_peers),transport_restored=True)
+
+
+def require_scenario_events():
+ required={'all-round-learning-preserved','seed-learning-preserved'}
+ if a.recovery_controls:required.update({'lost-publication-response-read-back','lost-refresh-response-read-back','interrupted-completed-import-recovered','lost-page-state-reconstructed','lost-cursor-reconstructed','offline-session-preserved-local-learning','offline-session-still-offline-after-peer-publications','offline-session-rejoined-after-peer-publications'})
+ if a.semantic_scenarios:required.update({'same-file-compatible-edits-observed','missing-edge-duplicate-page-refused','independent-ground-truth-detected-selection-failure','authority-change-after-pages-refused','yellow-blue-held-before-clarification','same-file-and-disjoint-condition-peer-recall','changed-framing-derived-child-closure','changed-framing-and-independent-learning-converged','actual-old-v1-consumer-refused-v2','ambiguous-and-rewritten-bases-refused','explicit-correction-consolidation-landed','prune-and-older-branch-nonresurrection','ordinary-feature-integration-preserved-memory','withheld-required-closure-confirmed','withheld-replacement-held-independent-learning-converged'})
+ actual={row['event'] for row in events};assert required.issubset(actual),sorted(required-actual)
+ assert {row['round'] for row in events if row['event']=='all-round-learning-preserved'}=={1,2}
+ for phase in ('initial','round-1','round-2','final'):
+  assert {row['session'] for row in events if row['event']=='seed-learning-preserved' and row['phase']==phase}==set(range(a.sessions)),phase
+ event('declared-scenario-events-complete',required=sorted(required),global_acceptance_claimed=False)
+
 
 outcome={'complete_compatible_rounds':False,'full_daily_use_v1_acceptance':False,'required_fault_matrix_complete':False}
 try:
@@ -532,7 +617,7 @@ try:
   project=json.loads(next(line.split(': ',1)[1] for line in (bank/'MEMORY.md').read_text().splitlines() if line.startswith('project-id: ')))
   status=bind(w,repo);actor_a=status['developer_id'];actor_b=str(uuid.uuid4())
   stamp='2026-10-25T00:00:00Z';header=lambda value:'---\n'+''.join(key+': '+json.dumps(value)+'\n' for key,value in value.items())+'---\n'
-  seed={};leaf_routes=[]
+  seed={};leaf_routes=[];seed_reference={}
   for start in range(0,a.lessons,48):
    routes=[]
    for n in range(start,min(start+48,a.lessons)):
@@ -541,6 +626,7 @@ try:
      'trust':'reviewed','visibility':'visible','admission-reason':'Authored seed fixture, not real admission evidence','evidence':['fixture://daily-use-v1/seed/'+str(n)]})
     metadata['origin'].update({'developer-id':actor_a,'code-state':'not-code'})
     path='topics/seed/records/'+str(n)+'.md';seed[path]=header(metadata)+'# Seed partition '+str(n)+'\n\nThis authored seed partition retains '+str(2+n%113)+' verified work units.\n'
+    seed_reference[path]={'id':metadata['id'],'sha256':hashlib.sha256(seed[path].encode()).hexdigest()}
     routes.append({'path':path,'purpose':'Seed partition '+str(n)+' policy','scope':metadata['scope'],'lifecycle':'active','read-when':'When inspecting this source partition'})
    path='topics/seed/leaves/'+str(start)+'.md';seed[path]=bank_layout.index_text(path,{'schema':'agent-memory/topic-index-v1','project-id':project,'updated':stamp},routes)
    leaf_routes.append({'path':path,'purpose':'Seed partitions '+str(start)+' to '+str(min(start+47,a.lessons-1)),'scope':'component:src/seed','lifecycle':'active','read-when':'When inspecting seed partition policies'})
@@ -552,6 +638,8 @@ try:
   (bank/'MEMORY.md').write_text(bank_contract.router_text(meta,routes,omitted))
   for name,text in seed.items():
    target=bank/name;target.parent.mkdir(parents=True,exist_ok=True);target.write_text(text)
+  assert len(seed_reference)==a.lessons and len({value['id'] for value in seed_reference.values()})==a.lessons
+  (out/'seed-reference.json').write_text(json.dumps(seed_reference,indent=2)+'\n')
   from agent_memory import records
   for name,text in seed.items():
    if '/records/' in name:
@@ -580,7 +668,9 @@ try:
    (checkout/'code.py').write_text('VALUE = '+str(number+100)+'  # staged session feature\n');current.git('add','code.py',cwd=checkout)
    session={'world':current,'repo':checkout,'pack':pack if machine==0 else current.inside('portable pack'),
     'machine':machine,'number':number,'name':'session-'+str(number),'actor':status['developer_id'],'project':project,'harness':('claude','codex','opencode','custom')[number%4]}
+   session['seed_modes']={path:stat.S_IMODE((checkout/'memory-bank'/path).stat().st_mode) for path in seed_reference}
    session['feature']=state(session);session['initial_feature']=copy.deepcopy(session['feature']);sessions.append(session)
+   seed_check(session,'initial')
   assert len({s['actor'] for s in sessions})==2 and len({str(s['repo']) for s in sessions})==a.sessions
   event('sessions-created',sessions=a.sessions,seed_lessons=a.lessons,independent_clones=3,developers=2,harness_labels=sorted({s['harness'] for s in sessions}),all_own_worktrees=True)
   for round_number in (1,2):
@@ -597,26 +687,19 @@ try:
    authority={request['base'] for request in prepared};assert len(authority)==1
    event('all-pending-writers-prepared',round=round_number,count=len(prepared),authority=next(iter(authority)))
    order=list(range(a.sessions));order=order if round_number==1 else list(reversed(order));retries=0
-   if a.recovery_controls and round_number==2:
-    offline=sessions[0];remote_path=Path(remote);away=remote_path.with_name('offline-authority.git')
-    previous=inventory(offline['repo']/'memory-bank');remote_path.rename(away)
-    try:
-     pending=public(offline['world'],offline['pack'],'sharing_recovery.py','inspect','--fetch','--repo',offline['repo'])
-     assert pending['sharing_state']=='pending-stale' and not pending['remote_freshness_verified']
-     own=next((identity,row) for identity,row in lessons.items() if row['session']==0 and row['round']==2)
-     req={'project_id':project,'query':'','ids':[own[0]],'paths':[],'context':{},'kinds':['user-feedback'],'minimum_trust':'reviewed','limit':8,'include_context':False}
-     local=public(offline['world'],offline['pack'],'retrieve.py','--repo',offline['repo'],'--request',save(offline['world'],req,'offline-local-recall'))
-     assert local['results'][0]['body']==own[1]['body'] and previous==inventory(offline['repo']/'memory-bank')
-    finally:away.rename(remote_path)
-    event('offline-session-preserved-local-learning',session=0,other_sessions_publish_before_rejoin=True)
+   landed_peers=[]
+   if a.recovery_controls and round_number==2:offline_start(sessions[0])
 
    for index in order:
-    s=sessions[index];result=land(s,prepared[index],'round-'+str(round_number)+'-original')
+    s=sessions[index]
+    if a.recovery_controls and round_number==2 and index==0:offline_rejoin(s,landed_peers)
+    result=land(s,prepared[index],'round-'+str(round_number)+'-original')
     if not result['publication_verified']:
      assert result['sharing_state']=='pending-reconciliation',result
      retries+=1;request=prepare_publication(s,'round-'+str(round_number)+'-reconciled')
      result=land(s,request,'round-'+str(round_number)+'-reconciled')
     assert result['publication_verified'] and state(s)==s['feature'],result
+    if round_number==2 and index!=0:landed_peers.append(index)
     if a.recovery_controls and round_number==1 and index==0:
      before_replay=s['world'].git('ls-remote','origin','refs/heads/main',cwd=s['repo']).stdout
      replay=land(s,prepared[index],'round-1-lost-response')
@@ -636,8 +719,9 @@ try:
    for current in sessions:
     for identity,row in ordinary.items():
      metadata,body=unpack((current['repo']/'memory-bank'/row['path']).read_text())
-     assert metadata==row['metadata'] and body==row['body'],(current['number'],identity,'admitted-source-not-preserved')
+     assert metadata==row['metadata'] and body==row['body'] and stat.S_IMODE((current['repo']/'memory-bank'/row['path']).stat().st_mode)==row['mode_bits'],(current['number'],identity,'admitted-source-not-preserved')
     assert state(current)==current['feature']
+    seed_check(current,'round-'+str(round_number))
    event('all-round-learning-preserved',round=round_number,unique_sources=len(ordinary),refreshed_banks=len(sessions),exact_body_metadata_origin_conditions_evidence=True)
    if a.recovery_controls and round_number==1:
     lost=sessions[1];cursors=[path for path in lost['world'].paths['state'].rglob('refresh-cursor.json') if json.loads(path.read_text()).get('repo_root')==str(lost['repo'])]
@@ -648,6 +732,8 @@ try:
     event('lost-cursor-reconstructed',session=1,baseline_source=value['baseline_source'])
 
   if a.semantic_scenarios:post_round_semantics(sessions)
+  for current in sessions:seed_check(current,'final',allow_designated_prune=a.semantic_scenarios)
+  require_scenario_events()
   outcome.update(complete_compatible_rounds=True,recovery_controls_executed=a.recovery_controls,sessions=a.sessions,seed_lessons=a.lessons,developers=2,independent_clones=3,
    captured_lessons=len(lessons),all_sessions_expected_feature_state_preserved=all(state(s)==s['feature'] for s in sessions),ordinary_code_integration_explicitly_expected=a.semantic_scenarios)
   event('compatible-rounds-complete',**outcome)
