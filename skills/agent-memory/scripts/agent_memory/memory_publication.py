@@ -197,8 +197,8 @@ def index_bytes(root):
     return digest(path.read_bytes() if path.exists() else None)
 
 
-def candidate(root, binding, files):
-    before = recovery.tree(root, binding['authority_head'], binding['bank_root'])
+def candidate(root, binding, files, *, quarantine_records=False):
+    before = recovery.tree(root, binding['authority_head'], binding['bank_root'],quarantine_records=quarantine_records)
     if files == before:
         return None
     # This index contains the fresh authority tree, not the feature HEAD/index.
@@ -231,7 +231,7 @@ def prepare(repo, proof):
     if observed_policy['unsupported_rules']:
         return result('prepare', 'pending-policy', reason='Repository rules need an explicit supported landing method',
                       unsupported_rules=observed_policy['unsupported_rules'], git_metadata_writes_performed=True)
-    proposed = candidate(root, binding, reviewed['publish_files'])
+    proposed = candidate(root, binding, reviewed['publish_files'],quarantine_records=proof['schema']=='agent-memory/semantic-sharing-proof-v2')
     semantic.final_sources(root, binding, binding)
     if index_bytes(root) != original_index:
         raise ContractError('Original index changed during publication preparation; inspect without overwriting it')
@@ -257,7 +257,7 @@ def request_value(root, value):
     parents = recovery.command(root, 'rev-list', '--parents', '-n', '1', value['candidate']).strip().split()[1:]
     if parents != [value['base']]:
         raise ContractError('Memory candidate must have only the freshly reviewed authority parent')
-    after = recovery.tree(root, value['candidate'], binding['bank_root'])
+    after = recovery.tree(root, value['candidate'], binding['bank_root'],quarantine_records=proof['schema']=='agent-memory/semantic-sharing-proof-v2')
     if (bank.validate_files(after)['project_id'] != value['project_id']
             or tx.file_hashes(after) != proof['publish_hashes']):
         raise ContractError('Actual candidate bank does not equal the exact reviewed publication result')
@@ -385,7 +385,8 @@ def land(repo, request):
     original_index = index_bytes(root)
     # Inventory before any retry. A prior success stays historical if later
     # corrected; neither a new proof nor a duplicate push is needed for readback.
-    readback = recovery.replay(root, {key: request[key] for key in ('base', 'candidate')})
+    readback = recovery.replay(root, {key: request[key] for key in ('base', 'candidate')},
+        quarantine_records=request['proof']['schema']=='agent-memory/semantic-sharing-proof-v2')
     if readback['intended_delta_landed']:
         return result('land', 'already-landed', publication_verified=True,
                       intended_delta_current=readback['intended_delta_current'], witnessed_commit=readback['witnessed_commit'],
@@ -418,7 +419,8 @@ def land(repo, request):
     code, _ = git_write(root, 'push', '--porcelain', '--no-follow-tags', '--recurse-submodules=no', '--', binding['authority_remote'],
                         proposed+':refs/heads/'+binding['authority_branch'], network=True, optional=True)
     writes.fault('publication-after-push')
-    readback = recovery.replay(root, {key: request[key] for key in ('base', 'candidate')})
+    readback = recovery.replay(root, {key: request[key] for key in ('base', 'candidate')},
+        quarantine_records=request['proof']['schema']=='agent-memory/semantic-sharing-proof-v2')
     if index_bytes(root) != original_index:
         raise ContractError('Original feature index changed externally during publication; preserve and inspect it')
     if not readback['intended_delta_landed']:

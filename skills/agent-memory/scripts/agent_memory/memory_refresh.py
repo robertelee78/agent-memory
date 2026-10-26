@@ -185,7 +185,7 @@ def apply(prepared):
     # Observe again after the local transaction. A moving/offline remote cannot
     # turn a mechanically completed import into a claim of latest shared truth.
     try:
-        observation = recovery.observe(root)
+        observation = recovery.observe(root,quarantine_records=proof['schema']=='agent-memory/semantic-sharing-proof-v2')
     except ContractError:
         return result('apply', 'pending-stale', **{**common, 'git_metadata_writes_performed': None},
                       reason='Import is consistent but latest authority could not be verified; inspect again before shared recall')
