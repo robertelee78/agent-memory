@@ -92,6 +92,15 @@ previous memory observation can be outside feature-code ancestry; it MUST remain
 reachable from authority. The session MUST NOT merge code merely to import
 memory, and MUST NOT infer current branch implementation from landed learning.
 
+When resuming after a completed import, the session MUST first use the
+[refresh inspection](../refresh/GUIDE.md) to resolve the actual verified cursor
+or Git baseline. It MUST retain the unchanged inner `inspection` from that
+private boundary artifact and carry its returned `request.base` into subsequent
+v2 selection/review. The direct semantic initial helper without an explicit base
+uses Git common ancestry; it MUST NOT be described as automatically reusing a
+prior import cursor. Losing a disposable cursor still requires actual source
+review, never advancement of feature ancestry or an invented empty bank.
+
 `binding` names the exact authority/base/local commit IDs, project/scope/settings,
 and complete source hashes. Selected `sources` contain complete ordinary context prose
 and typed learning from both sides, including the meaningful introductions in
