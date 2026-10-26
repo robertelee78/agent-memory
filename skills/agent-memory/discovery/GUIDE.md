@@ -78,6 +78,11 @@ If a map has generic repeated captions, is misleading, or gives insufficient
 coverage, the session MUST broaden its inspection or perform a separate governed
 source-preserving map organization. It MUST NOT declare no match from that map.
 Any organization changes the source observation and requires a fresh start.
+When organizing a map, the session MUST derive its topic purposes/read triggers
+from the actual retained subjects and conditions, rather than a storage bucket or
+the latest query's wording. It MUST preserve distinct applicability, evidence and
+source contents. An excluded candidate alone MUST NOT establish that the task
+requires its missing condition; other plausible sources may answer the question.
 
 ## Apply
 

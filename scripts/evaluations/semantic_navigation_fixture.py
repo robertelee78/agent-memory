@@ -35,7 +35,7 @@ DOMAINS=[
 ]
 
 SPECIAL={
- 'retry-limit':'request-reliability','conditional-resume':'request-reliability','head-dispatch':'work-admission',
+ 'retry-limit':'request-reliability','conditional-resume':'session-recovery','head-dispatch':'work-admission',
  'cursor-empty':'pagination','cursor-repeated':'pagination',
  'ledger-only':'retention','retention-dev':'retention','retention-prod':'retention',
  'timeout-v1':'request-reliability','timeout-v2':'request-reliability',
@@ -55,7 +55,7 @@ SUBJECTS={
  'financial-reconciliation':'Idempotency receipts and repeated financial requests',
  'workspace-configuration':'Workspace appearance decisions and unresolved room claims',
  'source-review':'Sources awaiting safety or authority review',
- 'session-recovery':'Session-specific recovery prerequisites and unfinished work',
+ 'session-recovery':'Operation resumption, recovery prerequisites and session-specific context',
 }
 
 
@@ -115,7 +115,7 @@ def corpus(template,count):
  files['MEMORY.md']=header({'schema':'agent-memory/v1','project-id':PID,'router-updated':STAMP})+'# Project memory\n\n## Routes\n\n'+route_table(root,'MEMORY.md')+'\n## Omitted contexts\n\n'+''.join('- `'+path+'`: No separate evidence in this synthetic fixture\n' for path in CONTEXTS[1:])
  assert len(files['MEMORY.md'].encode())<=16384 and len(root)<=64
  assert len({row['metadata']['id'] for row in rows})==count
- return files,rows,{'fixture':'semantic-navigation-v1','distinct_lessons':count,'canonical_files':len(files),
+ return files,rows,{'fixture':'semantic-navigation-v2-map-correction','distinct_lessons':count,'canonical_files':len(files),
   'canonical_bytes':sum(len(value.encode()) for value in files.values()),'root_routes':len(root),
   'layout_basis':'authored source subjects and actual component identities, independent of held-out questions',
   'frozen_literal_baseline_modified':False}
