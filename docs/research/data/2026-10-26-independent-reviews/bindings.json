@@ -1,0 +1,74 @@
+{
+  "candidate": "90087179dd47ba5c32866c8e226afd7c919f1460",
+  "all_three_dispositions": "APPROVED FOR STATIC SCOPE",
+  "tests_run_by_reviewers": false,
+  "whole_release_accepted": false,
+  "kimi_initial_deadline_retained": true,
+  "bindings": [
+    {
+      "path": "fable-review.md",
+      "sha256": "b6662d92c1a6fd54c0ae34a4b3f182fe21603aae76a7763da1d6d36a2ee06510",
+      "raw_original": "/tmp/agent-memory-v003/external-reviews-9008717/fable-review.md"
+    },
+    {
+      "path": "glm53-review.md",
+      "sha256": "9107a7bafe04e416eb29b1a96359d2c6d65b3fc187c1fcff4509dfcd749bff37",
+      "raw_original": "/tmp/agent-memory-v003/external-reviews-9008717/glm53-review.md"
+    },
+    {
+      "path": "kimi_k3-review.md",
+      "sha256": "2ed74de295268a3ecbcaec0d1eb0ad891f807032447208f4d0038314152b5b88",
+      "raw_original": "/tmp/agent-memory-v003/external-reviews-9008717/kimi_k3-review.md"
+    },
+    {
+      "path": "results.json",
+      "sha256": "3f73599149ba9a7438d3d81f830b45620d93d821fc0cf553ee7957a27a3f95c3",
+      "raw_original": "/tmp/agent-memory-v003/external-reviews-9008717/results.json"
+    },
+    {
+      "path": "kimi_k3-finish-result.json",
+      "sha256": "be3bd029cca286ba8103f1882c82923b3a24d151a6a9b1d3241bd7921346148e",
+      "raw_original": "/tmp/agent-memory-v003/external-reviews-9008717/kimi_k3-finish-result.json"
+    },
+    {
+      "private_retained_path": "/tmp/agent-memory-v003/external-reviews-9008717/fable.stdout",
+      "sha256": "9508f9f0d078b8d1e004b85400f2b50ed637a77e71cd554c4fe16afe45ba7fa0",
+      "bytes": 9395
+    },
+    {
+      "private_retained_path": "/tmp/agent-memory-v003/external-reviews-9008717/glm53.stdout",
+      "sha256": "92e449a096504acc6b24009d9b9967d89ee0e38f89f5e443c0b5a8f352e445f2",
+      "bytes": 1367200
+    },
+    {
+      "private_retained_path": "/tmp/agent-memory-v003/external-reviews-9008717/kimi_k3.stdout",
+      "sha256": "ff74a2d274cb6901beadc704bddcabaad493f3189f7d0341b6b99977d91b3846",
+      "bytes": 1283387
+    },
+    {
+      "private_retained_path": "/tmp/agent-memory-v003/external-reviews-9008717/kimi_k3-finish.stdout",
+      "sha256": "7dff672e98a19ff231b351c0117df504bfa8ede3c5727b1409e8d0d4d810a1a5",
+      "bytes": 9914
+    },
+    {
+      "private_retained_path": "/tmp/agent-memory-v003/external-reviews-9008717/source-before.json",
+      "sha256": "210246211f33413cb4b453aa01b6a48f5585bf0322c9e8b1abfebb77de30531d",
+      "bytes": 90798
+    },
+    {
+      "private_retained_path": "/tmp/agent-memory-v003/external-reviews-9008717/source-after.json",
+      "sha256": "874611025940dc2923665efad2c5c29bda4c5a77a2d6412a47ef5a228e2113a9",
+      "bytes": 90838
+    },
+    {
+      "private_retained_path": "/tmp/agent-memory-v003/external-reviews-9008717/source-after-finish.json",
+      "sha256": "26a8840b84ca03e866766e5707cececffa01244d16e6a82245041030697921e0",
+      "bytes": 90838
+    },
+    {
+      "private_retained_path": "/tmp/agent-memory-v003/external-reviews-9008717/prompt.txt",
+      "sha256": "c8aefd387e7f8a6dbec8edaa7b9878dbe1fc84e5162ddce3583f2d700e03c7c9",
+      "bytes": 2925
+    }
+  ]
+}
