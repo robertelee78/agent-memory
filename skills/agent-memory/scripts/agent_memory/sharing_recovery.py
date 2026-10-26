@@ -571,6 +571,10 @@ def replay(repo, request, *, quarantine_records=False):
                   remote_freshness_verified=True, safe_to_retry_without_reconciliation=False)
 
 
+from . import validation_memo
+
+
+@validation_memo.operation()
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest='operation', required=True)

@@ -432,6 +432,10 @@ def land(repo, request):
                   blocked_paths=reviewed['blocked_paths'], conflicts=reviewed['conflicts'])
 
 
+from . import validation_memo
+
+
+@validation_memo.operation()
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('operation', choices=['prepare', 'land'])

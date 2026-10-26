@@ -220,6 +220,10 @@ def read_input(path, *, version2=False):
     return value
 
 
+from . import validation_memo
+
+
+@validation_memo.operation()
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest='operation', required=True)

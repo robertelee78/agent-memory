@@ -129,6 +129,7 @@
     {"name": "publication-admission", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_publication_admission.py"},
     {"name": "memory-refresh", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_memory_refresh.py"},
     {"name": "refresh-v2", "layer": "concurrency", "scope": "v0.0.3", "path": "tests/contracts/test_refresh_v2.py"},
+    {"name": "operation-validation-reuse", "layer": "concurrency", "scope": "v0.0.3", "path": "tests/contracts/test_validation_memo.py"},
     {"name": "known-holds-v2", "layer": "concurrency", "scope": "v0.0.3", "path": "tests/contracts/test_known_holds_v2.py"},
     {"name": "quarantined-sharing-v2", "layer": "concurrency", "scope": "v0.0.3", "path": "tests/contracts/test_quarantined_sharing_v2.py"},
     {"name": "new-topic-merge", "layer": "concurrency", "scope": "v0.0.3", "path": "tests/contracts/test_new_topic_merge.py"},

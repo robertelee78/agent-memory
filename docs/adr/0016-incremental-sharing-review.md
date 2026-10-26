@@ -48,6 +48,19 @@ Whole-data observation and private artifact bounds SHALL be distinct from bounde
 agent disclosure. Batch Git reads MUST check complete inventories and exact blob
 identities/sizes without silently skipping data. The existing observed transaction,
 memory-only publication/refresh and recovery boundaries SHALL remain authoritative.
+
+Repeated pure format/safety validation MAY reuse successful results within one
+explicit operation when the complete immutable input bytes and all relevant
+flags match. Such reuse MUST have finite entry/retained-data bounds, preserve
+caller isolation, fall back to normal validation when unavailable, and end with
+the owning operation even on failure. It MUST NOT cache source/Git observations,
+identity, applicability/time, repository policy, semantic judgments or failed
+checks. Filesystem-dependent canonical-authority normalization MUST run freshly
+before a format-result hit; an unchanged `file://` string is insufficient.
+Parsed-record output requests MUST still produce their complete metadata/body
+output. Every existing source/index/authority recheck and pre/post-publication
+readback SHALL remain. Optional recall-catalog reuse MUST independently retain
+its complete executing-validator binding and safe fallback.
 No required database, personal memory, cross-repository transfer, MCP or daemon
 is introduced; Markdown format remains unchanged and local review state disposable.
 

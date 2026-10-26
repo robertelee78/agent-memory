@@ -10,7 +10,7 @@ import sys
 import tempfile
 import uuid
 
-from . import repository_config
+from . import repository_config, validation_memo
 from . import bank_writes as writes
 from . import local_registry as storage
 from . import scope_binding as identity
@@ -46,6 +46,14 @@ REASONS = {reason for reason, _ in (*SECRETS, *SUSPICIOUS)} | {
 
 
 def scan(content, *, maximum=LIMIT):
+    memo = validation_memo.current()
+    key = validation_memo.text_key(content, maximum) if memo is not None else None
+    if key is None:
+        return _scan(content, maximum=maximum)
+    return memo.checked('security-scan', key, lambda: _scan(content, maximum=maximum))
+
+
+def _scan(content, *, maximum=LIMIT):
     if maximum not in {LIMIT,65536}:raise ContractError('Security scan needs the fixed source or review-page budget')
     if (not isinstance(content, str) or not content.strip() or len(content.encode()) > maximum
             or any(ord(c) < 32 and c not in '\n\r\t' for c in content)):
