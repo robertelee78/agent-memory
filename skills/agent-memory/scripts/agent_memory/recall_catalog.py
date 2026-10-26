@@ -330,8 +330,9 @@ def invalidate_after_change(repo,current_hashes):
             value,_=pointer(directory);secret=key(directory)
             raw=read_private(directory/value['file'],MAX_CACHE+MAX_HEADER+1)
             if raw is None:return 'not-present'
-            first=raw.partition(b'\n')[0]
-            project=json.loads(first)['binding']['project_id']
+            header_end=raw.find(b'\n',0,MAX_HEADER+1)
+            if header_end<0:raise CacheMiss('catalog header bound')
+            project=json.loads(raw[:header_end])['binding']['project_id']
             header,payload=authenticate(raw,root,bank,project,secret,strict_settings=False)
             data=json.loads(payload)
             if data['hashes']==current_hashes:return 'current'

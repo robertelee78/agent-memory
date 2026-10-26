@@ -273,9 +273,15 @@ def qualified_read(repo,trace,request,rationale):
         result=retrieval.retrieve(root,request)
         # Newly derived hashes/labels for withheld sources remain internal.
         navigation=copy.deepcopy(trace);navigation.update(sources=[],complete=False,rationale=None)
+        current=sum(row.get('selection_class')=='current-record' and row.get('selection',{}).get('current') is True
+                    for row in result['results'])
+        orientation=sum(row.get('selection_class')=='orientation-only' for row in result['results'])
         return {'schema':'agent-memory/discovery-result-v1','operation':'read','discovery':navigation,
             'qualification':result,'qualification_sha256':digest(encoded(result)),
-            'usable_as_current_guidance':True,'semantic_interpreter':'invoking-harness',
+            'qualification_completed':True,'usable_as_current_guidance':bool(current),
+            'qualified_current_records':current,'orientation_only_results':orientation,
+            'selection_state':'current-records-available' if current else 'orientation-only' if orientation else 'empty',
+            'semantic_interpreter':'invoking-harness',
             'semantic_completeness_verified':False,'canonical_writes_performed':False}
     from . import comparison
     result=comparison.inspect(root,request)

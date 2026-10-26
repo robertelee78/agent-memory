@@ -102,6 +102,8 @@ For recall, the response contains qualified results and a content-free digest.
 Its returned navigation state is deliberately incomplete with no selected-source
 hashes; it MUST NOT be treated as an exact replayable checked trace. Newly observed
 hashes/labels for excluded sources MUST NOT escape through that state or errors.
+Successful empty qualification and orientation-only results MUST remain separately
+labelled; neither may become usable current guidance through the outer response.
 Comparison MAY return its completed checked request/trace because hidden or
 unsafe selected sources refuse that entire inspection.
 

@@ -52,10 +52,26 @@ class DiscoveryWorkflowContract(unittest.TestCase):
             start=self.start(w,repo);request=self.recall(start['discovery'],path);request.pop('discovery')
             r,value=self.read(w,repo,start['discovery'],request);self.assertEqual(r.returncode,0,value)
             self.assertEqual(value['qualification']['results'],[])
+            self.assertTrue(value['qualification_completed']);self.assertFalse(value['usable_as_current_guidance'])
+            self.assertEqual(value['selection_state'],'empty');self.assertEqual(value['qualified_current_records'],0)
             rendered=json.dumps(value)
             self.assertNotIn('Withheld material stays withheld',rendered)
             self.assertNotIn(hashlib.sha256((bank/path).read_bytes()).hexdigest(),rendered)
             self.assertEqual(value['discovery']['sources'],[])
+
+    def test_successful_orientation_and_empty_qualification_are_not_promoted_to_current_guidance(self):
+        with World() as w:
+            repo,bank=self.fixture(w);start=self.start(w,repo)
+            for paths,include_context,expected in [(['projectbrief.md'],True,'orientation-only'),([],False,'empty')]:
+                with self.subTest(selection=expected):
+                    request=self.recall(start['discovery'],'projectbrief.md');request.pop('discovery')
+                    request.update(paths=paths,include_context=include_context,kinds=[])
+                    r,value=self.read(w,repo,start['discovery'],request);self.assertEqual(r.returncode,0,value)
+                    self.assertTrue(value['qualification_completed']);self.assertFalse(value['usable_as_current_guidance'])
+                    self.assertEqual(value['selection_state'],expected);self.assertEqual(value['qualified_current_records'],0)
+                    if paths:
+                        row=value['qualification']['results'][0]
+                        self.assertEqual(row['selection_class'],'orientation-only');self.assertIsNone(row['trust'])
 
     def test_changed_map_explains_the_problem_and_restart_repairs_navigation(self):
         with World() as w:

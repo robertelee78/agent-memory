@@ -153,6 +153,38 @@ class RecallCatalogContract(unittest.TestCase):
             self.assertEqual(recalled['results'],[])
             self.assertEqual(before[1:],self.h.state(w,repo,bank)[1:])
 
+    def test_corrupt_oversized_cleanup_header_defers_without_decoding_it_or_failing_actual_forget(self):
+        with World() as w:
+            repo,bank,meta,request,pointer,before=self.ready(w)
+            generation=pointer.parent/json.loads(pointer.read_text())['file']
+            # Valid but over-bound JSON: parsing this is unnecessary work. A
+            # narrow spy makes the pre-decode limit a deterministic assertion.
+            raw=json.dumps({'padding':'x'*17000}).encode()+b'\n{}';generation.write_bytes(raw)
+            program='''import sys,json
+sys.path.insert(0,sys.argv[1])
+from agent_memory import recall_catalog as c
+original=c.json.loads;oversized=[]
+def bounded(value,*args,**kwargs):
+ if len(value)>c.MAX_HEADER:oversized.append(len(value))
+ return original(value,*args,**kwargs)
+c.json.loads=bounded
+assert c.invalidate_after_change(sys.argv[2],{})=='deferred-to-canonical-fallback'
+assert not oversized,'Oversized header was decoded before its bound was checked'
+print('bounded cleanup fallback')
+'''
+            result=w.run([sys.executable,'-I','-c',program,self.pack/'scripts',repo],check=False)
+            self.assertEqual(result.returncode,0,result.stderr);self.assertIn('bounded cleanup fallback',result.stdout)
+            g=governance_fixtures.GovernanceContract();g.pack=self.pack;g.pid=self.h.pid;g.actor=self.h.actor
+            deletion=g.request(bank,meta,request['paths'][0],'delete')
+            deletion['authority'].update(basis='explicit-deletion',reason_class='user-request');deletion['delete_ids']=[meta['id']]
+            result,plan=g.preview(w,repo,deletion);self.assertEqual(result.returncode,0,plan)
+            result,done=g.apply(w,plan['proposal']);self.assertEqual(result.returncode,0,done)
+            self.assertTrue(done['verified']);self.assertEqual(done['derived_cache_state'],'deferred-to-canonical-fallback')
+            self.assertFalse((bank/request['paths'][0]).exists());self.assertEqual(generation.read_bytes(),raw)
+            result,replayed=g.apply(w,plan['proposal']);self.assertEqual(result.returncode,0,replayed)
+            self.assertTrue(replayed['already_applied']);self.assertEqual(replayed['derived_cache_state'],'deferred-to-canonical-fallback')
+            self.assertEqual(before[1:],self.h.state(w,repo,bank)[1:])
+
     def test_full_namespace_preserves_unknown_evidence_and_stops_adding_cache_files(self):
         with World() as w:
             repo,bank,meta,request,pointer,before=self.ready(w)
