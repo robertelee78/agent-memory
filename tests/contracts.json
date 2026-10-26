@@ -132,6 +132,7 @@
     {"name": "migration-catalog", "layer": "lifecycle", "scope": "v0.0.3", "path": "tests/contracts/test_migration_catalog.py"},
     {"name": "migration-runtime-rollback", "layer": "lifecycle", "scope": "v0.0.3", "path": "tests/contracts/test_migration_runtime_rollback.py"},
     {"name": "lifecycle-security-contract", "layer": "lifecycle", "scope": "v0.0.3", "path": "tests/contracts/test_lifecycle_security_contract.py"},
+    {"name": "recall-catalog", "layer": "bank", "scope": "v0.0.3", "path": "tests/contracts/test_recall_catalog.py"},
     {"name": "semantic-discovery", "layer": "bank", "scope": "v0.0.3", "path": "tests/contracts/test_discovery.py"}
   ]
 }

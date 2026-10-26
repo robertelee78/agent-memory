@@ -87,47 +87,12 @@ def match(request, candidate):
     return {'strategy': 'ordinary-text' if terms else 'current-inventory', 'score': score, 'matching_terms': terms}
 
 
-def retrieve(repo, request, *, owned_lock=None, deferred_paths=()):
-    started = time.perf_counter()
-    request_value(request)
-    if not isinstance(deferred_paths, (list, tuple, set, frozenset)) or len(deferred_paths) > 256:
-        raise ContractError('Deferred recall paths require a complete bounded set')
-    for path in deferred_paths:
-        if path != 'MEMORY.md':
-            bank_contract.path_value(path)
-    deferred_paths = frozenset(deferred_paths)
-    root, bank = writes.bank_path(repo)
-    selected_scope = scope_binding.require(root, request['project_id'], owned_lock=owned_lock)
-    context, observed_git = observed_context(root, request['context'])
-    observation=bank_observation.observe(root,owned_lock)
-    checked,observed=observation.checked,observation.hashes
-    project = checked['project_id']
-    discovery_result=None
-    selection_request=request
-    discovered_selection=None
-    if 'discovery' in request:
-        from . import discovery
-        discovery.trace_value(request['discovery'])
-        discovered={row['path'] for row in request['discovery']['sources']}
-        discovered_entries=[entry for entry in checked['entries'] if entry['path'] in discovered]
-        if not set(request['ids']).issubset({entry.get('id') for entry in discovered_entries}):
-            raise ContractError('Traced stable-ID lookup must name an actual discovered source version')
-        selected=set(request['paths'])|{entry['path'] for entry in discovered_entries if entry.get('id') in request['ids']}
-        if not request['paths'] and not request['ids']:selected=discovered
-        discovery_result=discovery.check_trace(root,request['discovery'],checked,observed,selected_scope,
-            intent='recall',selected_paths=selected,owned_lock=owned_lock,context=request['context'])
-        # Semantic navigation supplies exact observed sources. A successful empty
-        # discovery never falls through to the legacy full-inventory selector.
-        discovered_selection=selected
-        selection_request={**request,'ids':[],'paths':sorted(selected)}
-    if project != request['project_id']:
-        raise ContractError('Canonical project changed after scope resolution')
-    now = datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')
+def evaluate_sources(root,bank,project,entries,source,parsed,hashes,request,selection_request,context,now,deferred_paths,discovered_selection):
     excluded = Counter()
     pool = []
     superseders = {}
     canonical_bytes = 0
-    for entry in checked['entries']:
+    for entry in entries:
         path, kind = entry['path'], entry['format']
         if kind not in {'standalone-record', 'context-prose'}:
             excluded['non-guidance-format'] += 1
@@ -142,7 +107,7 @@ def retrieve(repo, request, *, owned_lock=None, deferred_paths=()):
         if reasons:
             excluded.update(reasons)
             continue
-        raw=observation.sources[path][:MAX_FILE+1]
+        raw=source(path)[:MAX_FILE+1]
         canonical_bytes += len(raw)
         if len(raw) > MAX_FILE:
             if kind == 'standalone-record':
@@ -151,12 +116,12 @@ def retrieve(repo, request, *, owned_lock=None, deferred_paths=()):
                 raise ContractError('Active record exceeds safe inspection bounds; resolve its metadata before recall')
             excluded['content-limit'] += 1
             continue
-        if digest(raw) != observed[path]:
+        if digest(raw) != hashes[path]:
             raise ContractError('Canonical memory changed while reading candidates')
         text = raw.decode('utf-8')
         metadata = None
         if kind == 'standalone-record':
-            _, metadata, body = observation.parsed[path]
+            _, metadata, body = parsed(path,text)
             applicable = records.applicability(metadata, {'bank_project_id': project, 'context': context})
             selection = lifecycle.current(metadata, {'authorized-scope': True, 'applicable': applicable['applicable'],
                 'now': now, 'minimum-trust': request['minimum_trust'], 'active-superseders': []})
@@ -189,7 +154,7 @@ def retrieve(repo, request, *, owned_lock=None, deferred_paths=()):
                 excluded.update('handoff:' + reason for reason in assessment['reasons'])
                 continue
         candidate = {'path': path, 'format': kind, 'body': body,
-            'source_sha256': observed[path], 'scope_chain': entry['scope_chain'],
+            'source_sha256': hashes[path], 'scope_chain': entry['scope_chain'],
             'source_class': 'external', 'untrusted_data': True, 'source_assertions_verified': False,
             'admission_verified': False, 'procedural_guidance': False}
         if metadata is not None:
@@ -237,11 +202,87 @@ def retrieve(repo, request, *, owned_lock=None, deferred_paths=()):
             continue
         results.append(candidate)
         used += size
+    return results,excluded,used,len(pool),len(ranked),canonical_bytes
+
+
+def retrieve(repo, request, *, owned_lock=None, deferred_paths=()):
+    started = time.perf_counter()
+    request_value(request)
+    if not isinstance(deferred_paths, (list, tuple, set, frozenset)) or len(deferred_paths) > 256:
+        raise ContractError('Deferred recall paths require a complete bounded set')
+    for path in deferred_paths:
+        if path != 'MEMORY.md':
+            bank_contract.path_value(path)
+    deferred_paths = frozenset(deferred_paths)
+    from . import recall_catalog
+    # An optional accelerator cannot turn loss/corruption into failed memory.
+    # Its complete frame is discarded before the authoritative fallback runs.
+    if 'discovery' in request:
+        try:
+            cached=recall_catalog.load_catalog(repo,request['project_id'],owner=owned_lock)
+            return _retrieve(repo,request,owned_lock,deferred_paths,started,cached=cached)
+        except Exception:
+            cached=None
+    engine=None
+    try:
+        engine=recall_catalog.generation()
+    except Exception:
+        pass
+    return _retrieve(repo,request,owned_lock,deferred_paths,started,cache_engine=engine)
+
+
+def _retrieve(repo,request,owned_lock,deferred_paths,started,*,cached=None,cache_engine=None):
+    root, bank = writes.bank_path(repo)
+    selected_scope = scope_binding.require(root, request['project_id'], owned_lock=owned_lock)
+    context, observed_git = observed_context(root, request['context'])
+    observation=cached if cached is not None else bank_observation.observe(root,owned_lock)
+    checked,observed=observation.checked,observation.hashes
+    project = checked['project_id']
+    discovery_result=None
+    selection_request=request
+    discovered_selection=None
+    if 'discovery' in request:
+        from . import discovery
+        discovery.trace_value(request['discovery'])
+        discovered={row['path'] for row in request['discovery']['sources']}
+        discovered_entries=[entry for entry in checked['entries'] if entry['path'] in discovered]
+        if not set(request['ids']).issubset({entry.get('id') for entry in discovered_entries}):
+            raise ContractError('Traced stable-ID lookup must name an actual discovered source version')
+        selected=set(request['paths'])|{entry['path'] for entry in discovered_entries if entry.get('id') in request['ids']}
+        if not request['paths'] and not request['ids']:selected=discovered
+        discovery_result=discovery.check_trace(root,request['discovery'],checked,observed,selected_scope,
+            intent='recall',selected_paths=selected,owned_lock=owned_lock,context=request['context'])
+        # Semantic navigation supplies exact observed sources. A successful empty
+        # discovery never falls through to the legacy full-inventory selector.
+        discovered_selection=selected
+        selection_request={**request,'ids':[],'paths':sorted(selected)}
+    if project != request['project_id']:
+        raise ContractError('Canonical project changed after scope resolution')
+    now = datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')
+    entries=cached.selected_entries(discovered_selection) if cached is not None else checked['entries']
+    source=cached.source if cached is not None else lambda path:observation.sources[path]
+    parsed=cached.parsed if cached is not None else lambda path,text:observation.parsed[path]
+    results,excluded,used,pool_count,ranked_count,canonical_bytes=evaluate_sources(root,bank,project,entries,
+        source,parsed,observed,request,selection_request,
+        context,now,deferred_paths,discovered_selection)
     scope_binding.require(root, project, expected=selected_scope, owned_lock=owned_lock)
     record_ids = sorted({item['record']['id'] for item in results if 'record' in item})
     audit = security.audit(root, str(uuid.uuid4()), 'retrieval', 'checked', selected_scope,
                            ['external'], record_ids=record_ids)
-    observation.recheck()
+    catalog_updated=False
+    if cached is not None:
+        scan_metrics=cached.recheck(owned_lock)
+        scan_metrics['payload_bytes']+=cached.payload_bytes_read
+        scan_metrics['file_reads']+=cached.payload_file_reads
+    else:
+        if cache_engine is not None:
+            try:
+                from . import recall_catalog
+                catalog_updated=recall_catalog.publish(observation,cache_engine)
+            except Exception:
+                pass
+        observation.recheck()
+        scan_metrics={'payload_bytes':observation.payload_bytes_read,'file_reads':observation.payload_file_reads}
     if git_context(root) != observed_git:
         raise ContractError('Bank or checkout context changed during recall; reread before use')
     scope_binding.require(root, project, expected=selected_scope, owned_lock=owned_lock)
@@ -249,14 +290,18 @@ def retrieve(repo, request, *, owned_lock=None, deferred_paths=()):
         'evaluated_at': now, 'context': context, 'scope_context': selected_scope,
         'bank_observation_sha256': digest(encoded({'project_id': project, 'sources': observed})),
         'excluded_counts': dict(sorted(excluded.items())),
-        'metrics': {'inventory_files': len(observed), 'entries': len(checked['entries']), 'qualified_candidates': len(pool),
-            'ranked': len(ranked), 'selected': len(results), 'bounded_candidate_bytes_read': canonical_bytes,
-            'operation_local_observation_used':True,'canonical_observation_payload_bytes_read':observation.payload_bytes_read,
-            'canonical_observation_file_reads':observation.payload_file_reads,'parsed_records':len(observation.parsed),
+        'metrics': {'inventory_files': len(observed), 'entries': len(checked['entries']), 'qualified_candidates': pool_count,
+            'ranked': ranked_count, 'selected': len(results), 'bounded_candidate_bytes_read': canonical_bytes,
+            'operation_local_observation_used':cached is None,'canonical_observation_payload_bytes_read':scan_metrics['payload_bytes'],
+            'canonical_observation_file_reads':scan_metrics['file_reads'],
+            'parsed_records':cached.parsed_records if cached is not None else len(observation.parsed),
+            'catalog_updated':catalog_updated,'inspected_entries':len(entries),
+            'candidate_count_scope':'semantic-selection-invalidation-and-oversize-guards' if cached is not None else 'complete-bank',
             'result_bytes': used, 'elapsed_seconds': time.perf_counter() - started},
         **({'discovery':discovery_result} if discovery_result is not None else {}),
         'audit': audit, 'canonical_writes_performed': False, 'audit_writes_performed': True,
-        'optional_indexes_used': False, 'source_assertions_verified': False, 'publication_verified': False,
+        'derived_cache_writes_performed':True if catalog_updated else False if cached is not None else None,
+        'optional_indexes_used': cached is not None, 'source_assertions_verified': False, 'publication_verified': False,
         'code_working_bytes_verified': False, 'validation_scope': 'metadata-currentness-and-bounded-file-recall'}
 
 

@@ -32,7 +32,7 @@ def markers(bank,owner):
             raise ContractError('Bank ownership changed; preserve work and retry with actual ownership')
 
 
-def scan(bank,*,read_sources):
+def scan(bank,*,read_sources,metrics=None):
     """Complete physical topology plus streaming canonical hashes, bounded memory."""
     physical={};hashes={};sources={};total=0
     def failure(exc):raise ContractError('Bank physical inventory is incomplete') from exc
@@ -59,6 +59,7 @@ def scan(bank,*,read_sources):
             if read_sources:sources[relative]=b''.join(parts)
     if 'MEMORY.md' not in hashes:
         raise ContractError('A complete canonical router is required')
+    if metrics is not None:metrics.update(payload_bytes=total,file_reads=len(hashes))
     return physical,hashes,sources
 
 
