@@ -29,16 +29,28 @@ python3 -B scripts/evaluations/daily_use.py --root . --out /tmp/am-daily-variati
 Every session prepares an actual source-bound pending publication before the
 first push in each round. Ascending then reverse landing order exercises stale
 plans. Each refreshed bank must preserve every ordinary admitted record's exact
-metadata/body, as well as successful qualified peer recall. The semantic schedule
+metadata/body/mode and every original seed record's exact identity/bytes/mode,
+as well as successful qualified peer recall. Only the explicitly governed seed
+deletion has a narrow final exception backed by the exact tombstone witness. The semantic schedule
 adds same-file compatible edits, contradiction and conditional duplicate cases,
 clarification/consolidation, pruning and tombstones, explicit caller code
-integration, and withheld replacements with useful independent learning. Fault
-controls exercise offline return, lost responses, interruption/recovery,
+integration, and withheld replacements with useful independent learning. A session-specific transport adapter keeps session 0 offline through all other
+sessions' second-round landings, proves it is still unavailable, then restores
+it before reconciliation. The shared remote and other worktrees stay online.
+Fault controls exercise offline return, lost responses, interruption/recovery,
 lost cursor/pages, stale authority, missing/duplicate review acknowledgements,
 changed framing closure, ambiguous/rewritten bases and an actual old consumer.
 
+Required wall and withheld-record holds are asserted positively with exact
+components and attribution, alongside the upper bound on allowed dependent
+routes. Public pages/stdout/stderr must omit the negative fixture body markers;
+private raw evidence remains distinct. Completion requires every declared
+scenario event, so a runtime cannot skip a branch and still report completion.
+
 The output retains exact source bindings, commands, private inputs/results by
-content hash, feature/index/HEAD histories and outcomes. Exit 0 means this one
+content hash, feature/index/HEAD histories and outcomes. Raised execution errors
+retain attempted argv/environment/inputs, exit null, exception chain and available
+partial streams before being re-raised; the worker deadline stays 300 seconds. Exit 0 means this one
 cohort completed; it does not accept the whole story. A failed or continued debug
 run must remain identified, never replaced by a smaller pass. Whole acceptance
 requires both full schedules, variations, the separate #98 retrieval evidence,
