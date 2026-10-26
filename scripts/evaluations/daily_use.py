@@ -561,7 +561,7 @@ def seed_check(s,phase,*,allow_designated_prune=False):
   deleted={seed_prune['record_path']};expected-=deleted
   assert not (s['repo']/'memory-bank'/seed_prune['record_path']).exists()
   assert (s['repo']/'memory-bank'/seed_prune['tombstone_path']).read_bytes()==seed_prune['tombstone_bytes']
- bank=s['repo']/'memory-bank';actual_paths={p.relative_to(bank).as_posix() for p in (bank/'topics/seed/records').glob('*.md')};assert actual_paths==expected
+ bank=s['repo']/'memory-bank';actual_paths={p.relative_to(bank).as_posix() for p in (bank/'topics/seed/records').rglob('*.md')};assert actual_paths==expected
  actual={}
  for path in sorted(expected):
   target=bank/path;assert target.is_file() and not target.is_symlink()
@@ -571,16 +571,44 @@ def seed_check(s,phase,*,allow_designated_prune=False):
  event('seed-learning-preserved',session=s['number'],phase=phase,records=len(actual),expected_initial_ids=a.lessons,designated_pruned_paths=sorted(deleted),inventory_sha256=retain(json.dumps(actual,sort_keys=True).encode()))
 
 
+def offline_transport_source(flag,online):
+ return '#!'+sys.executable+'\n'+"""import json,os,sys,time
+from pathlib import Path
+flag=Path("""+repr(str(flag))+""")
+target=Path.cwd().resolve();args=sys.argv[1:];index=0;command=''
+while index<len(args):
+ arg=args[index]
+ if arg=='-C':
+  if index+1>=len(args):sys.exit(2)
+  if args[index+1]:target=(target/args[index+1]).resolve()
+  index+=2
+ elif arg.startswith('-C') and len(arg)>2:
+  target=(target/arg[2:]).resolve();index+=1
+ elif arg in {'-c','--config-env'}:index+=2
+ elif arg=='--':break
+ elif arg.startswith('-'):index+=1
+ else:command=arg;break
+if flag.exists() and str(target)==json.loads(flag.read_text())['repo'] and command in {'fetch','push','ls-remote'}:
+ record={'effective_repo':str(target),'command':command,'argv':args,'monotonic_seconds':time.perf_counter()}
+ descriptor=os.open(str(flag.with_suffix('.denials.jsonl')),os.O_WRONLY|os.O_CREAT|os.O_APPEND,0o600)
+ with os.fdopen(descriptor,'a') as stream:stream.write(json.dumps(record)+'\\n')
+ sys.stderr.write('Owned session transport is offline.\\n');sys.exit(1)
+os.execv('/bin/sh',['/bin/sh',"""+repr(str(online))+""",*args])
+"""
+
+
 def offline_start(s):
  w=s['world'];wrapper=w.inside('fixture-bin/git');original=wrapper.read_bytes();mode=stat.S_IMODE(wrapper.stat().st_mode)
  online=w.inside('fixture-bin/daily-online-git');online.write_bytes(original);online.chmod(mode)
  flag=w.inside('daily-offline-session.json');flag.write_text(json.dumps({'repo':str(s['repo'])}));flag.chmod(0o600)
- adapter='#!'+sys.executable+'\nimport json,os,sys\nfrom pathlib import Path\nflag=Path('+repr(str(flag))+')\nif flag.exists() and str(Path.cwd().resolve())==json.loads(flag.read_text())["repo"] and any(arg in {"fetch","push","ls-remote"} for arg in sys.argv[1:]):\n sys.stderr.write("Owned session transport is offline.\\n");sys.exit(1)\nos.execv("/bin/sh",["/bin/sh",'+repr(str(online))+',*sys.argv[1:]])\n'
+ adapter=offline_transport_source(flag,online)
  compile(adapter,str(wrapper),'exec')
- wrapper.write_text(adapter);wrapper.chmod(mode);s['offline_adapter']={'wrapper':wrapper,'original':original,'mode':mode,'flag':flag}
+ wrapper.write_text(adapter);wrapper.chmod(mode);s['offline_adapter']={'wrapper':wrapper,'original':original,'mode':mode,'flag':flag,'denials':flag.with_suffix('.denials.jsonl')}
  event('session-specific-outage-started',session=s['number'],scope=str(s['repo']),adapter_sha256=retain(adapter.encode()),original_adapter_sha256=retain(original))
  before=inventory(s['repo']/'memory-bank');pending=public(w,s['pack'],'sharing_recovery.py','inspect','--fetch','--repo',s['repo'])
  assert pending['sharing_state']=='pending-stale' and not pending['remote_freshness_verified']
+ denials=[json.loads(line) for line in s['offline_adapter']['denials'].read_text().splitlines()];assert denials and all(value['effective_repo']==str(s['repo']) for value in denials)
+ s['offline_adapter']['initial_denials']=len(denials)
  own=next((identity,row) for identity,row in lessons.items() if row['session']==0 and row['round']==2 and row.get('role') is None)
  assert typed_recall(s,[own[0]])['results'][0]['body']==own[1]['body'] and before==inventory(s['repo']/'memory-bank') and state(s)==s['feature']
  event('offline-session-preserved-local-learning',session=0,peer_publications_so_far=0)
@@ -590,7 +618,8 @@ def offline_rejoin(s,landed_peers):
  assert set(landed_peers)==set(range(1,a.sessions));adapter=s['offline_adapter'];assert adapter['flag'].is_file()
  pending=public(s['world'],s['pack'],'sharing_recovery.py','inspect','--fetch','--repo',s['repo'])
  assert pending['sharing_state']=='pending-stale' and not pending['remote_freshness_verified'] and state(s)==s['feature']
- event('offline-session-still-offline-after-peer-publications',session=0,verified_peer_landings=list(landed_peers))
+ denials=[json.loads(line) for line in adapter['denials'].read_text().splitlines()];assert len(denials)>adapter['initial_denials'] and all(value['effective_repo']==str(s['repo']) for value in denials)
+ event('offline-session-still-offline-after-peer-publications',session=0,verified_peer_landings=list(landed_peers),actual_denial_log_sha256=retain(adapter['denials'].read_bytes()))
  adapter['flag'].unlink();adapter['wrapper'].write_bytes(adapter['original']);adapter['wrapper'].chmod(adapter['mode'])
  assert adapter['wrapper'].read_bytes()==adapter['original']
  event('offline-session-rejoined-after-peer-publications',session=0,verified_peer_landings=list(landed_peers),transport_restored=True)
