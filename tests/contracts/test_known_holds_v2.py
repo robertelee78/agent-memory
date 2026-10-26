@@ -74,6 +74,10 @@ class KnownHoldsVersionTwoContract(unittest.TestCase):
                 for _ in range(2):
                     checked=self.invoke(w,'check','--v2','--repo',repo,'--input',proof)
                     self.assertTrue(checked['source_observation_current']);self.assertEqual(recorded,registry.read_bytes())
+                if round_number:
+                    stale=w.inside('renewed-proof-'+str(round_number-1)+'.json')
+                    self.invoke(w,'check','--v2','--repo',repo,'--input',stale,expected=1)
+                    self.assertEqual(recorded,registry.read_bytes())
                 self.assertEqual(before,self.h.state(w,repo,bank))
                 if prior is not None:
                     # Renewing a resolution must keep the exact predecessor as
@@ -81,6 +85,11 @@ class KnownHoldsVersionTwoContract(unittest.TestCase):
                     record=next(iter(json.loads(recorded)['records'].values()))
                     self.assertEqual(record['resolution_history'][-1],prior)
                 prior=next(iter(json.loads(recorded)['records'].values()))['resolution']
+            registry.unlink()
+            recovered=self.invoke(w,'recover-holds','--repo',repo,'--project-id',view['binding']['project_id'])
+            self.assertTrue(recovered['verified']);self.assertEqual(recorded,registry.read_bytes())
+            self.assertTrue(self.invoke(w,'check','--v2','--repo',repo,'--input',proof)['source_observation_current'])
+            self.assertEqual(recorded,registry.read_bytes());self.assertEqual(before,self.h.state(w,repo,bank))
 
     def test_known_dispute_survives_rewording_changed_framing_and_registry_recovery(self):
         with World() as w:
