@@ -39,3 +39,12 @@ safe connectivity/access/retry instructions. Raw Git stderr, remote values and
 memory text remain private. An offline public refresh control checks that result
 and preserves all original memory/feature state. This changes failure diagnosis,
 not authority, retry policy, transport permissions or what may be published.
+
+The first diagnostic control at `b38c4518a06c3630a42e4e15f814972c8069222a`
+failed one assertion: a fully offline authority fails its initial `ls-remote`
+advertisement before any fetch occurs. The parallel tracking-ref control passed.
+The follow-up distinguishes safe advertisement and fetch failures rather than
+mislabeling both as fetch. The fully offline public check now expects the actual
+advertisement stage; a separate disposable adapter permits real advertisement
+and deliberately fails fetch to verify that stage's repair text. That adapter
+is fault injection, not evidence of a second naturally occurring Git incident.

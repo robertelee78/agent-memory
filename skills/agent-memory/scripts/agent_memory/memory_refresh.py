@@ -248,11 +248,11 @@ def main(argv=None):
         print(json.dumps(value, indent=2)); return 0
     except (ContractError, OSError, ValueError, UnicodeError, TypeError, KeyError, AttributeError, RecursionError) as exc:
         from .sharing_holds import HoldFailure
-        fetch_failed=isinstance(exc,recovery.FetchFailure)
-        known=isinstance(exc,HoldFailure) or fetch_failed
+        authority_failed=isinstance(exc,recovery.AuthorityFailure)
+        known=isinstance(exc,HoldFailure) or authority_failed
         print(json.dumps(result(args.operation, 'pending-inspection', canonical_writes_performed=None,
                                 git_metadata_writes_performed=None,
-                                failure_component='authority-fetch' if fetch_failed else 'known-dispute-state' if known else args.operation,
+                                failure_component=exc.component if authority_failed else 'known-dispute-state' if known else args.operation,
                                 failure_code=exc.code if known else 'refresh-unverified',
                                 reason=str(exc) if known else 'Unresolved, offline, unsafe, interrupted or changed refresh; retain the original proposal and local memory, inspect/recover before retry',
                                 repair=exc.repair if known else 'Preserve the proposal, bank and pending evidence. Run am doctor for this repository and inspect the failed component before repeating refresh inspection; do not reset or replace the bank.')))

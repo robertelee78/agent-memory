@@ -65,8 +65,8 @@ class SharingRecoveryContract(unittest.TestCase):
             failed=w.run([sys.executable,'-I',self.pack/'scripts/refresh_memory.py','inspect','--v2','--repo',repo,'--output',w.inside('offline-inspection.json')],check=False)
             diagnostic=json.loads(failed.stdout)
             self.assertEqual(failed.returncode,1,diagnostic)
-            self.assertEqual(diagnostic['failure_component'],'authority-fetch')
-            self.assertEqual(diagnostic['failure_code'],'authority-fetch-unavailable')
+            self.assertEqual(diagnostic['failure_component'],'authority-advertisement')
+            self.assertEqual(diagnostic['failure_code'],'authority-advertisement-unavailable')
             self.assertIn('configured authority branch',diagnostic['reason'])
             self.assertIn('Preserve the bank',diagnostic['repair'])
             self.assertNotIn(str(remote),failed.stdout+failed.stderr)
@@ -377,6 +377,27 @@ class SharingRecoveryContract(unittest.TestCase):
             self.assertEqual(w.git('for-each-ref','--format=%(refname) %(objectname)','refs/remotes',cwd=repo).stdout,tracking,log.read_text())
             self.assertEqual([state(checkout) for checkout in (repo,other)],before)
             self.assertEqual(w.git('for-each-ref','--format=%(refname)','refs/agent-memory/observations',cwd=repo).stdout,'')
+
+
+
+    def test_fetch_failure_after_real_advertisement_has_specific_safe_repair(self):
+        with World() as w:
+            repo,bank,peer,base=self.fixture(w);before=self.state(w,repo,bank)
+            binary=w.inside('fetch failure adapter');binary.mkdir()
+            real=shutil.which('git',path=w.env['PATH']);wrapper=binary/'git'
+            wrapper.write_text('#!'+sys.executable+'\nimport os,sys\nif "fetch" in sys.argv[1:]:\n sys.stderr.write("PRIVATE_FETCH_FAILURE\\n");sys.exit(1)\nos.execv('+repr(real)+',['+repr(real)+',*sys.argv[1:]])\n')
+            wrapper.chmod(0o755);w.env['PATH']=str(binary)+':'+w.env['PATH']
+            # The adapter leaves actual identity and ls-remote intact, then
+            # fails the public refresh's transport only at the fetch stage.
+            failed=w.run([sys.executable,'-I',self.pack/'scripts/refresh_memory.py','inspect','--v2','--repo',repo,'--output',w.inside('fetch-inspection.json')],check=False)
+            diagnostic=json.loads(failed.stdout)
+            self.assertEqual(failed.returncode,1,diagnostic)
+            self.assertEqual(diagnostic['failure_component'],'authority-fetch')
+            self.assertEqual(diagnostic['failure_code'],'authority-fetch-unavailable')
+            self.assertIn('configured authority branch',diagnostic['reason'])
+            self.assertIn('Preserve the bank',diagnostic['repair'])
+            self.assertNotIn('PRIVATE_FETCH_FAILURE',failed.stdout+failed.stderr)
+            self.assertEqual(before,self.state(w,repo,bank))
 
 
 if __name__=='__main__':unittest.main()

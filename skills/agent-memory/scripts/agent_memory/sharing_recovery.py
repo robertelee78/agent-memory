@@ -25,14 +25,26 @@ from .frontmatter import ContractError, read, write
 from .identity_git import git
 from . import sharing_limits as limits
 
-class FetchFailure(ContractError):
-    code = 'authority-fetch-unavailable'
+class AuthorityFailure(ContractError):
     repair = ('Check connectivity and access for the configured authority remote and local Git metadata. '
               'Preserve the bank, feature work and pending evidence; repeat the original refresh inspection '
               'after the issue clears. Do not reset/reinitialize memory or remove unknown locks.')
 
+
+class FetchFailure(AuthorityFailure):
+    code = 'authority-fetch-unavailable'
+    component = 'authority-fetch'
+
     def __init__(self):
         super().__init__('Fetching the configured authority branch failed; no fresh remote observation was established.')
+
+
+class AdvertisementFailure(AuthorityFailure):
+    code = 'authority-advertisement-unavailable'
+    component = 'authority-advertisement'
+
+    def __init__(self):
+        super().__init__('Reading the configured authority branch advertisement failed; no fresh remote observation was established.')
 
 
 MAX_FILES = limits.MAX_FILES
@@ -176,8 +188,11 @@ def tree(repo, revision, prefix, *, quarantine_records=False):
 
 
 def server(repo, remote, branch):
-    response = command(repo, 'ls-remote', '--symref', '--', remote, 'HEAD', 'refs/heads/' + branch,
-                       network=True, limit=65536)
+    try:
+        response = command(repo, 'ls-remote', '--symref', '--', remote, 'HEAD', 'refs/heads/' + branch,
+                           network=True, limit=65536)
+    except ContractError as exc:
+        raise AdvertisementFailure() from exc
     default, observed = None, None
     for line in response.splitlines():
         left, ref = line.split('\t', 1)
