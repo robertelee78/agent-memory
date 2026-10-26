@@ -22,7 +22,7 @@ class KnownHoldsVersionTwoContract(unittest.TestCase):
             path=w.inside(name+'-request.json');path.write_text(json.dumps(request));args+=['--input',path]
         self.invoke(w,*args);return output,json.loads(output.read_text())
 
-    def review(self,w,repo,view_path,view,contradiction):
+    def review(self,w,repo,view_path,view,contradiction,resolutions=None):
         for page in view['pages']:self.invoke(w,'page-v2','--repo',repo,'--input',view_path,'--page',str(page['index']))
         rows={row['key']:row for row in view['sources']}
         judgment={'schema':'agent-memory/semantic-sharing-judgment-v2','request':view['request'],'binding':view['binding'],
@@ -31,6 +31,7 @@ class KnownHoldsVersionTwoContract(unittest.TestCase):
                 'reason':'This authored fixture retains the same unresolved room color claims.'} for a,b in view['required_pairs']],
             'dependencies':{},'consolidations':[],'rationale':'Exercise retained dispute mechanics, not a model semantic-quality verdict.',
             'recorded_at':datetime.now(timezone.utc).isoformat()}
+        if resolutions is not None:judgment['resolutions']=resolutions
         path=w.inside('judgment.json');path.write_text(json.dumps(judgment));output=w.inside('reviewed.json')
         if output.exists():output.unlink()
         self.invoke(w,'review-v2','--repo',repo,'--input',path,'--output',output)
@@ -40,6 +41,46 @@ class KnownHoldsVersionTwoContract(unittest.TestCase):
         request=view['request'];request['selections']={key:{'searches':['wall','atrium'],'paths':sorted(self.claims),
             'ids':[],'complete':True,'uncertain':False} for key in view['changed']}
         return request
+
+    def test_renewed_clarification_proof_replays_without_losing_prior_resolution(self):
+        from contracts.test_comparison import render
+        with World() as w:
+            self.h=fixtures.SemanticSharingContract();repo,bank,peer,base=self.h.fixture(w)
+            _,local=self.h.add(bank,'wall-local','# Atrium wall\n\nUse yellow.\n')
+            _,landed=self.h.add(peer/'memory-bank','wall-peer','# Atrium wall\n\nUse blue.\n')
+            self.claims={local,landed};self.h.publish(w,peer)
+            _,initial=self.inspect(w,repo,'initial')
+            path,view=self.inspect(w,repo,'selected',self.select(initial))
+            self.review(w,repo,path,view,True)
+            feedback,feedback_path=self.h.add(bank,'clarification','# Clarification\n\nThe detecting developer confirmed blue.\n')
+            feedback['kind']='user-feedback';feedback['evidence']=['user:synthetic-blue-clarification']
+            registry=None;prior=None
+            for round_number,wording in enumerate(('confirmed blue','specified a blue finish','selected blue paint')):
+                (bank/feedback_path).write_text(render(feedback,'# Clarification\n\nThe detecting developer '+wording+'.\n'))
+                _,initial=self.inspect(w,repo,'clarified-'+str(round_number))
+                self.assertTrue(initial['known_causes']);self.assertFalse(initial['known_causes'][0]['resolved'])
+                request=self.select(initial)
+                for selection in request['selections'].values():selection['paths'].append(feedback_path)
+                path,view=self.inspect(w,repo,'clarified-selected-'+str(round_number),request)
+                evidence=next(row['key'] for row in view['sources'] if row['path']==feedback_path)
+                resolutions={cause['id']:{'basis':'operator-clarification','evidence':[evidence],
+                    'reason':'Synthetic attributed clarification resolves the retained yellow/blue disagreement.'} for cause in view['known_causes']}
+                before=self.h.state(w,repo,bank)
+                reviewed=self.review(w,repo,path,view,False,resolutions)
+                self.assertFalse(reviewed['blocked_paths'])
+                proof=w.inside('renewed-proof-'+str(round_number)+'.json');proof.write_text(json.dumps(reviewed['proof']))
+                registry=next(w.paths['state'].rglob('semantic-holds/*/registry.json'))
+                recorded=registry.read_bytes()
+                for _ in range(2):
+                    checked=self.invoke(w,'check','--v2','--repo',repo,'--input',proof)
+                    self.assertTrue(checked['source_observation_current']);self.assertEqual(recorded,registry.read_bytes())
+                self.assertEqual(before,self.h.state(w,repo,bank))
+                if prior is not None:
+                    # Renewing a resolution must keep the exact predecessor as
+                    # audit/replay context, without treating it as current truth.
+                    record=next(iter(json.loads(recorded)['records'].values()))
+                    self.assertEqual(record['resolution_history'][-1],prior)
+                prior=next(iter(json.loads(recorded)['records'].values()))['resolution']
 
     def test_known_dispute_survives_rewording_changed_framing_and_registry_recovery(self):
         with World() as w:
