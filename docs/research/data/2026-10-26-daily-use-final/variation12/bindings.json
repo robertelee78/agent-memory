@@ -1,0 +1,111 @@
+{
+  "cohort_pass_only": true,
+  "whole_story_acceptance_claimed": false,
+  "source": "81fec82c1619d20c12473d23e3fdf6706d52b641",
+  "files": {
+    "source-binding.json": {
+      "retained_path": "/tmp/agent-memory-v003/daily-use-v1-variation-12-10000-81fec82/source-binding.json",
+      "original": {
+        "sha256": "7e773ce64bced3dd9d20f39ccfccd8f0326e01e6912d11fcaf3842acb18953cd",
+        "bytes": 153231
+      },
+      "export": {
+        "sha256": "7e773ce64bced3dd9d20f39ccfccd8f0326e01e6912d11fcaf3842acb18953cd",
+        "bytes": 153231
+      },
+      "transformation": null
+    },
+    "source-before.json": {
+      "retained_path": "/tmp/agent-memory-v003/daily-use-v1-variation-12-10000-81fec82/source-before.json",
+      "original": {
+        "sha256": "e8238df25612323733d91d02c6d9bc6a08e547e37ae72fdeae774bec3625bc28",
+        "bytes": 123
+      },
+      "export": {
+        "sha256": "e8238df25612323733d91d02c6d9bc6a08e547e37ae72fdeae774bec3625bc28",
+        "bytes": 123
+      },
+      "transformation": null
+    },
+    "source-after.json": {
+      "retained_path": "/tmp/agent-memory-v003/daily-use-v1-variation-12-10000-81fec82/source-after.json",
+      "original": {
+        "sha256": "e8238df25612323733d91d02c6d9bc6a08e547e37ae72fdeae774bec3625bc28",
+        "bytes": 123
+      },
+      "export": {
+        "sha256": "e8238df25612323733d91d02c6d9bc6a08e547e37ae72fdeae774bec3625bc28",
+        "bytes": 123
+      },
+      "transformation": null
+    },
+    "seed-reference.json": {
+      "retained_path": "/tmp/agent-memory-v003/daily-use-v1-variation-12-10000-81fec82/seed-reference.json",
+      "original": {
+        "sha256": "0805f8af56659b8991db187f899010a2351e035dd4766d7daad83dd081c35773",
+        "bytes": 1708893
+      },
+      "export": {
+        "sha256": "0805f8af56659b8991db187f899010a2351e035dd4766d7daad83dd081c35773",
+        "bytes": 1708893
+      },
+      "transformation": null
+    },
+    "outcome.json": {
+      "retained_path": "/tmp/agent-memory-v003/daily-use-v1-variation-12-10000-81fec82/outcome.json",
+      "original": {
+        "sha256": "aeadf3fe72db7e317f2014824a368ac600fc9af9abf613046b5ec50888fc0169",
+        "bytes": 426
+      },
+      "export": {
+        "sha256": "aeadf3fe72db7e317f2014824a368ac600fc9af9abf613046b5ec50888fc0169",
+        "bytes": 426
+      },
+      "transformation": null
+    },
+    "events.json": {
+      "retained_path": "/tmp/agent-memory-v003/daily-use-v1-variation-12-10000-81fec82/events.json",
+      "original": {
+        "sha256": "11bad175541b0ec67cda59a42c7e5cf706dcfe57c349efad9513dc84679d4883",
+        "bytes": 24419
+      },
+      "export": {
+        "sha256": "11bad175541b0ec67cda59a42c7e5cf706dcfe57c349efad9513dc84679d4883",
+        "bytes": 24419
+      },
+      "transformation": null
+    },
+    "feature-state-history.jsonl": {
+      "retained_path": "/tmp/agent-memory-v003/daily-use-v1-variation-12-10000-81fec82/feature-state-history.jsonl",
+      "original": {
+        "sha256": "405c4b9b2eabb19a495bda4cf9aeac2fcd0a54ca0770f441514444174403e1fc",
+        "bytes": 46222
+      },
+      "export": {
+        "sha256": "405c4b9b2eabb19a495bda4cf9aeac2fcd0a54ca0770f441514444174403e1fc",
+        "bytes": 46222
+      },
+      "transformation": null
+    },
+    "controller.py": {
+      "retained_path": "/tmp/agent-memory-v003/daily-use-v1-variation-12-10000-81fec82/controller.py",
+      "original": {
+        "sha256": "f48fe78daf796a8cfcc1527280b62d82d6c2988a7a995cbf0d4c83730cf73a76",
+        "bytes": 64770
+      },
+      "committed_source": "81fec82c1619d20c12473d23e3fdf6706d52b641:scripts/evaluations/daily_use.py"
+    },
+    "commands-without-environment.json": {
+      "retained_path": "/tmp/agent-memory-v003/daily-use-v1-variation-12-10000-81fec82/commands.json",
+      "original": {
+        "sha256": "850f1aa8f4d73f3c2bf0b90a2593c151a2fa6621262dd3f6669ea0184ac723d3",
+        "bytes": 2054804
+      },
+      "export": {
+        "sha256": "9fc725a90fd40fece327c3ac711fbbdee5a2967b8609f27864cb658a3d17ce6f",
+        "bytes": 689288
+      },
+      "transformation": "Private isolated-World environment omitted from each command, including its cleanup capability token. Other command/input-hash/result fields unchanged."
+    }
+  }
+}
