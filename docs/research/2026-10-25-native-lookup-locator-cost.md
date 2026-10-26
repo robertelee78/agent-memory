@@ -58,3 +58,13 @@ remain, including the final fresh native qualifier. This is operation-local path
 reuse, not a cached identity/authority decision. A public installed-command
 control covers tag-like, tab/newline, Unicode/space filenames and a second mixed-
 case locator; existing indexed/HEAD deletion and custom-worktree controls remain.
+
+The tagged-query follow-up at `adf5852b98c2a297e767f556bae4718c1d7c41f9`
+measures 5.356/5.373 seconds for the complete 50k native path. It is closer but
+still above the target; its source-qualified results are retained separately.
+The next narrow changes combine the two local setting reads into one coherent
+NUL-delimited Git config read (retaining exact duplicate/empty-value refusal),
+and compute each walked directory's bank-relative prefix once instead of once
+per file. `os.walk`, every actual file's lstat/open/no-follow/type/hash/budget
+checks and the final source/physical inventory comparison remain unchanged.
+There is no cross-operation cache or removal of configuration rechecks.

@@ -38,8 +38,10 @@ def scan(bank,*,read_sources,metrics=None):
     def failure(exc):raise ContractError('Bank physical inventory is incomplete') from exc
     for directory,dirs,files in os.walk(bank,followlinks=False,onerror=failure):
         parent=Path(directory)
+        directory_relative=parent.relative_to(bank).as_posix()
+        prefix='' if directory_relative=='.' else directory_relative+'/'
         for name in [*dirs,*files]:
-            path=parent/name;relative=path.relative_to(bank).as_posix();mode=path.lstat().st_mode
+            path=parent/name;relative=prefix+name;mode=path.lstat().st_mode
             if stat.S_ISLNK(mode):raise ContractError('Bank paths must not be symlinks')
             physical[relative]='directory' if stat.S_ISDIR(mode) else 'file' if stat.S_ISREG(mode) else 'other'
             if len(physical)>MAX_FILES*2:raise ContractError('Complete physical bank inventory exceeds its finite budget')

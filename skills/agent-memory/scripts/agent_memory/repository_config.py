@@ -24,6 +24,24 @@ def local_value(root, key):
     return values[0]
 
 
+def local_settings(root):
+    # One local-config read keeps these two fields coherent. Git normalizes
+    # section/key spelling in --get-regexp output; values remain verbatim.
+    raw = git(root, 'config', '--local', '--null', '--get-regexp',
+              r'^agent-memory\.(bankroot|authoritybranch)$', optional=True)
+    if raw is None:
+        return {}
+    if not raw.endswith('\0'):
+        raise ContractError('Repository memory configuration inventory is incomplete')
+    result = {}
+    for entry in raw.split('\0')[:-1]:
+        key, separator, value = entry.partition('\n')
+        if key not in {'agent-memory.bankroot', 'agent-memory.authoritybranch'} or not separator or not value or key in result:
+            raise ContractError('Repository memory configuration needs one explicit value per key')
+        result[key] = value
+    return result
+
+
 def safe_label(value):
     # Import at operation time: the security module consumes the shared writer.
     from .security import scan
@@ -203,7 +221,8 @@ def settings(repo, *, router_reader=None):
         raise ContractError('Existing Git metadata/configuration cannot be inspected; do not guess the bank root')
     if top is not None and Path(top).resolve() != root:
         raise ContractError('Select the actual repository root for its one memory bank')
-    explicit = local_value(root, 'agent-memory.bankRoot')
+    configured = local_settings(root)
+    explicit = configured.get('agent-memory.bankroot')
     if explicit is not None:
         validate_root(explicit)
     roots = git_roots(root, router_reader=router_reader) if top is not None else set()
@@ -223,7 +242,7 @@ def settings(repo, *, router_reader=None):
             raise ContractError('Configured bank directory cannot follow symlinks or occupied files')
     if not (current / 'MEMORY.md').is_file():
         physical_others(root, current, router_reader=router_reader)
-    branch = local_value(root, 'agent-memory.authorityBranch')
+    branch = configured.get('agent-memory.authoritybranch')
     if branch is not None:
         validate_branch(branch)
     return {'bank_root': relative, 'authority_branch': branch}
