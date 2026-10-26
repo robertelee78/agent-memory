@@ -448,7 +448,7 @@ def prune_and_older_branch(all_sessions):
  assert metadata['kind']=='semantic-fact'
  for target in (s,all_sessions[-1]):
   before=typed_recall(target,[identity],{'component':'src/seed/0'},kinds=['semantic-fact'])['results']
-  assert len(before)==1 and before[0]['metadata']==metadata and before[0]['body']==body
+  assert len(before)==1 and before[0]['record']==metadata and before[0]['body']==body
  gov=GovernanceContract();gov.pid=s['project'];gov.actor=s['actor'];value=gov.request(bank,metadata,path,'delete')
  value['authority'].update(basis='explicit-deletion',reason_class='obsolete',reason='Predeclared synthetic fixture confirms this seed policy obsolete under every retained condition; remove its stable identity.')
  value['delete_ids']=[identity]
@@ -542,7 +542,7 @@ def withheld_replacement_independent_path(all_sessions):
  s=all_sessions[2];w=s['world'];bank=s['repo']/'memory-bank';old_path='topics/seed/records/1.md';old,body=unpack((bank/old_path).read_text())
  assert old['kind']=='semantic-fact'
  before=typed_recall(s,[old['id']],{'component':'src/seed/1'},kinds=['semantic-fact'])['results']
- assert len(before)==1 and before[0]['metadata']==old and before[0]['body']==body
+ assert len(before)==1 and before[0]['record']==old and before[0]['body']==body
  new_id,new_row=capture(s,3);lessons[new_id]=new_row
  replacement=copy.deepcopy(old);identity=str(uuid.uuid4());replacement.update(id=identity,visibility='hidden',supersedes=[{'id':old['id'],'version':old['version']}])
  path='topics/withheld-replacement-'+str(s['number'])+'.md';marker='sk-'+('Q'*24)
