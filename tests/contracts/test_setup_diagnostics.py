@@ -137,10 +137,6 @@ class SetupDiagnostics(unittest.TestCase):
             for op in ('status', 'doctor'):
                 self.check(w, cli, repo, op, 'purge_pending')
 
-
-if __name__ == '__main__':
-    unittest.main()
-
     def test_tag_like_filenames_and_mixed_case_competing_router_preserve_real_locator_evidence(self):
         with World() as w:
             _, _, receipt = fixture(w)
@@ -163,3 +159,6 @@ if __name__ == '__main__':
             (competing / 'mEmOrY.Md').write_bytes((custom / 'MEMORY.md').read_bytes())
             for op in ('status', 'doctor'):
                 self.check(w, cli, repo, op, 'inspection_required', 1)
+
+if __name__ == '__main__':
+    unittest.main()
