@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "/tmp/agent-memory-v003/full-macos-gate-e816844/source/scripts/evaluations/daily_use.py", line 725, in <module>
+    result=land(s,prepared[index],'round-'+str(round_number)+'-original')
+  File "/tmp/agent-memory-v003/full-macos-gate-e816844/source/scripts/evaluations/daily_use.py", line 239, in land
+    return public(s['world'],s['pack'],'publish_memory.py','land','--v2','--repo',s['repo'],
+     '--input',save(s['world'],request,s['name']+'-'+label+'-landing'))
+  File "/tmp/agent-memory-v003/full-macos-gate-e816844/source/scripts/evaluations/daily_use.py", line 63, in public
+    try:r=w.run(argv,check=False,timeout=300,group=True,env=overrides)
+          ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/agent-memory-v003/full-macos-gate-e816844/source/tests/world.py", line 184, in run
+    raise subprocess.TimeoutExpired(argv, timeout, output=stdout, stderr=stderr)
+subprocess.TimeoutExpired: Command '['/opt/homebrew/opt/python@3.15/bin/python3.15', '-I', '/private/tmp/agent-memory-test-uj3jdkva/portable pack/scripts/publish_memory.py', 'land', '--v2', '--repo', '/private/tmp/agent-memory-test-uj3jdkva/sessions/session-0', '--input', '/private/tmp/agent-memory-test-uj3jdkva/inputs/session-0-round-1-original-landing.json']' timed out after 300 seconds

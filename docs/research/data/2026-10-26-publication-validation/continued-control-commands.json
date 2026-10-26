@@ -1,0 +1,141 @@
+[
+  {
+    "number": 1,
+    "argv": [
+      "/opt/homebrew/opt/python@3.15/bin/python3.15",
+      "-I",
+      "/private/tmp/agent-memory-test-tbkuxmbo/portable pack/scripts/refresh_memory.py",
+      "inspect",
+      "--v2",
+      "--repo",
+      "/private/tmp/agent-memory-test-tbkuxmbo/sessions/session-0",
+      "--output",
+      "/private/tmp/agent-memory-test-tbkuxmbo/inputs/session-0-fixed-control-initial-boundary.json"
+    ],
+    "inputs": {},
+    "exit": 0,
+    "timed_out": false,
+    "seconds": 29.5579990419792,
+    "stdout_sha256": "5dcd5c84b78942317ab14f3fa202916f841f8a8567541d70ad93d699885688e2",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "public_forbidden_marker_absent": true
+  },
+  {
+    "number": 2,
+    "argv": [
+      "/opt/homebrew/opt/python@3.15/bin/python3.15",
+      "-I",
+      "/private/tmp/agent-memory-test-tbkuxmbo/portable pack/scripts/reconcile_memory.py",
+      "inspect-v2",
+      "--repo",
+      "/private/tmp/agent-memory-test-tbkuxmbo/sessions/session-0",
+      "--output",
+      "/private/tmp/agent-memory-test-tbkuxmbo/inputs/session-0-fixed-control-selected.json",
+      "--input",
+      "/private/tmp/agent-memory-test-tbkuxmbo/inputs/session-0-fixed-control-selected-request.json"
+    ],
+    "inputs": {
+      "/private/tmp/agent-memory-test-tbkuxmbo/inputs/session-0-fixed-control-selected-request.json": "a2039da269a26892076b6248bc076ec67942ad02685a53893a9ab693eeddad28"
+    },
+    "exit": 0,
+    "timed_out": false,
+    "seconds": 27.497101958026178,
+    "stdout_sha256": "a16acffad60fa0c7bba5b32e1a04aef50103e6a7be5ca2db5eff3c7b5eff4047",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "public_forbidden_marker_absent": true
+  },
+  {
+    "number": 3,
+    "argv": [
+      "/opt/homebrew/opt/python@3.15/bin/python3.15",
+      "-I",
+      "/private/tmp/agent-memory-test-tbkuxmbo/portable pack/scripts/reconcile_memory.py",
+      "page-v2",
+      "--repo",
+      "/private/tmp/agent-memory-test-tbkuxmbo/sessions/session-0",
+      "--input",
+      "/private/tmp/agent-memory-test-tbkuxmbo/inputs/session-0-fixed-control-selected.json",
+      "--page",
+      "0"
+    ],
+    "inputs": {
+      "/private/tmp/agent-memory-test-tbkuxmbo/inputs/session-0-fixed-control-selected.json": "519c741884d177375bdf00e4945a3a1aea977bc5039ba6a7e92ef820905e7769"
+    },
+    "exit": 0,
+    "timed_out": false,
+    "seconds": 27.20324487495236,
+    "stdout_sha256": "2b61b5322dd203ff652dbdcc316ed508371e1283022d313e4b279c8f84eca320",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "public_forbidden_marker_absent": true
+  },
+  {
+    "number": 4,
+    "argv": [
+      "/opt/homebrew/opt/python@3.15/bin/python3.15",
+      "-I",
+      "/private/tmp/agent-memory-test-tbkuxmbo/portable pack/scripts/reconcile_memory.py",
+      "review-v2",
+      "--repo",
+      "/private/tmp/agent-memory-test-tbkuxmbo/sessions/session-0",
+      "--input",
+      "/private/tmp/agent-memory-test-tbkuxmbo/inputs/session-0-fixed-control-judgment.json",
+      "--output",
+      "/private/tmp/agent-memory-test-tbkuxmbo/inputs/session-0-fixed-control-review.json"
+    ],
+    "inputs": {
+      "/private/tmp/agent-memory-test-tbkuxmbo/inputs/session-0-fixed-control-judgment.json": "8f34f554d9d8a9669bc6e9540affc815443c21e91d2250878f8a7b1bd0f9c45e"
+    },
+    "exit": 0,
+    "timed_out": false,
+    "seconds": 44.71080704207998,
+    "stdout_sha256": "f29700c26d15f2ee599be7c6b21a44a5d9183af2dc76204ab26f264a02c4dee9",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "public_forbidden_marker_absent": true
+  },
+  {
+    "number": 5,
+    "argv": [
+      "/opt/homebrew/opt/python@3.15/bin/python3.15",
+      "-I",
+      "/private/tmp/agent-memory-test-tbkuxmbo/portable pack/scripts/publish_memory.py",
+      "prepare",
+      "--v2",
+      "--repo",
+      "/private/tmp/agent-memory-test-tbkuxmbo/sessions/session-0",
+      "--input",
+      "/private/tmp/agent-memory-test-tbkuxmbo/inputs/session-0-fixed-control-proof.json"
+    ],
+    "inputs": {
+      "/private/tmp/agent-memory-test-tbkuxmbo/inputs/session-0-fixed-control-proof.json": "adc9f3d2a2d955635b530ecfa76adefff48862ad3adbd507f4177cea11a669e9"
+    },
+    "exit": 0,
+    "timed_out": false,
+    "seconds": 49.607332583051175,
+    "stdout_sha256": "1545f2ac8bda1bbe3f22fe27bd176a72355ec66c58d84a7e9b8d740d68988888",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "public_forbidden_marker_absent": true
+  },
+  {
+    "number": 6,
+    "argv": [
+      "/opt/homebrew/opt/python@3.15/bin/python3.15",
+      "-I",
+      "/private/tmp/agent-memory-test-tbkuxmbo/portable pack/scripts/publish_memory.py",
+      "land",
+      "--v2",
+      "--repo",
+      "/private/tmp/agent-memory-test-tbkuxmbo/sessions/session-0",
+      "--input",
+      "/private/tmp/agent-memory-test-tbkuxmbo/inputs/session-0-fixed-control-landing.json"
+    ],
+    "inputs": {
+      "/private/tmp/agent-memory-test-tbkuxmbo/inputs/session-0-fixed-control-landing.json": "d6230e60abc0bb30efb37e043e89410f499670af4475a812fb63da16c06f7072"
+    },
+    "exit": 0,
+    "timed_out": false,
+    "seconds": 111.46209208294749,
+    "stdout_sha256": "2fa8d0ea48e532dad50f8bdc347692c4cb5aa0960aa916faed536e5be3252bef",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "public_forbidden_marker_absent": true
+  }
+]

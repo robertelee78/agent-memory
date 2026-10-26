@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "/tmp/am-daily-use-v003-sLngnApM/daily-use-v1.py", line 725, in <module>
+    result=land(s,prepared[index],'round-'+str(round_number)+'-original')
+  File "/tmp/am-daily-use-v003-sLngnApM/daily-use-v1.py", line 239, in land
+    return public(s['world'],s['pack'],'publish_memory.py','land','--v2','--repo',s['repo'],
+     '--input',save(s['world'],request,s['name']+'-'+label+'-landing'))
+  File "/tmp/am-daily-use-v003-sLngnApM/daily-use-v1.py", line 63, in public
+    try:r=w.run(argv,check=False,timeout=300,group=True,env=overrides)
+          ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/am-daily-use-v003-sLngnApM/source/tests/world.py", line 184, in run
+    raise subprocess.TimeoutExpired(argv, timeout, output=stdout, stderr=stderr)
+subprocess.TimeoutExpired: Command '['/usr/bin/python3', '-I', '/tmp/agent-memory-test-o4wxjzqa/portable pack/scripts/publish_memory.py', 'land', '--v2', '--repo', '/tmp/agent-memory-test-o4wxjzqa/sessions/session-0', '--input', '/tmp/agent-memory-test-o4wxjzqa/inputs/session-0-round-1-original-landing.json']' timed out after 300 seconds

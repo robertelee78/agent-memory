@@ -1,0 +1,14 @@
+{
+  "complete_compatible_rounds": true,
+  "full_daily_use_v1_acceptance": false,
+  "required_fault_matrix_complete": false,
+  "recovery_controls_executed": true,
+  "sessions": 6,
+  "seed_lessons": 128,
+  "developers": 2,
+  "independent_clones": 3,
+  "captured_lessons": 19,
+  "all_sessions_expected_feature_state_preserved": true,
+  "ordinary_code_integration_explicitly_expected": true,
+  "seconds": 688.4856042629108
+}

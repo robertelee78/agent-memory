@@ -51,7 +51,7 @@ memory-only publication/refresh and recovery boundaries SHALL remain authoritati
 
 Repeated pure format/safety validation MAY reuse successful results within one
 explicit operation when the complete immutable input bytes and all relevant
-flags match. Such reuse MUST have finite entry/retained-data bounds, preserve
+flags match. Such reuse MUST have finite entry/encoded-value bounds, preserve
 caller isolation, fall back to normal validation when unavailable, and end with
 the owning operation even on failure. It MUST NOT cache source/Git observations,
 identity, applicability/time, repository policy, semantic judgments or failed

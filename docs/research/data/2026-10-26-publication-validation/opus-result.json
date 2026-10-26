@@ -1,0 +1,9 @@
+{
+  "exit": 0,
+  "seconds": 163.12654941703659,
+  "runtime_source": "1099ca625d5ae5323664dffdf22e89c6935d70ba",
+  "source_unchanged": true,
+  "models": [
+    "claude-opus-5-5"
+  ]
+}

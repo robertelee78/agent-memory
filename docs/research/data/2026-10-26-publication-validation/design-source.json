@@ -1,0 +1,139 @@
+{
+  "reviewer": "codex-review-59",
+  "implementer": "codex-root",
+  "work_key": "robertelee78/agent-memory:ADR-0009:daily-use-reliability",
+  "source_commit": "1099ca625d5ae5323664dffdf22e89c6935d70ba",
+  "source_tree": "9be88620c353850bf39140bb11d72071581815b3",
+  "failure_source": "e816844c4395858f3e1279f3847aafe557c84ac5",
+  "failure_source_portable_bytes_modes_equal_reviewed_source": true,
+  "files_read": [
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/memory_publication.py",
+      "sha256": "b7782510eedb6922a30e3856a8c6810d9715ad0a8e1790894ec8bb1b148cb787",
+      "bytes": 28670,
+      "git_mode": "100644",
+      "git_blob": "9b507db75409df20a19b7c41fabe8d67fc432ba6"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/bank_contract.py",
+      "sha256": "51aefd75e66302409c86bf5422839d331d1f905a57214666bdd7c0a5b0b8f368",
+      "bytes": 20209,
+      "git_mode": "100644",
+      "git_blob": "eff2be75301a42f9fd94911817fae274a70e44f5"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/bank_layout.py",
+      "sha256": "94cae5be223e723841e6c3d0a6d8373cc21e18cc6d6652024d2ac03d605e2f94",
+      "bytes": 11790,
+      "git_mode": "100644",
+      "git_blob": "fd4b1a464270af794a285cc78d6b6f6fd72eb22a"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/records.py",
+      "sha256": "04bf692fa98337b9ee8e3fe6072d115106592c03fbdc1b237a867fa97369fb96",
+      "bytes": 12430,
+      "git_mode": "100644",
+      "git_blob": "1da95764f4c50421c070f44cedcf5691d11c46f4"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/security.py",
+      "sha256": "3faa474d95fc7809dc8fc0abc365fb6c77b3d8f2784e50231ee3e8853be77011",
+      "bytes": 16656,
+      "git_mode": "100644",
+      "git_blob": "468ab40fe84af55804b87a8bdf94b2578e97863e"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/sharing_recovery.py",
+      "sha256": "4900740978ca33ee430e451e45b2d5b248e79a8000b525d0bf8684ebd1c6e480",
+      "bytes": 34110,
+      "git_mode": "100644",
+      "git_blob": "19b5e11b9572503aa3346d0f14d60b4fe12d0dd4"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/semantic_sharing.py",
+      "sha256": "788dfa0faf1c3f845b007cd2e7e65ac7bd363483bb241b4ca98b29fbe03832a5",
+      "bytes": 42568,
+      "git_mode": "100644",
+      "git_blob": "1bb9ab3d736fac2bf587b2c0c09da904849f6d7d"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/scopes.py",
+      "sha256": "db04b8a90103d45731a02e2da4a0bbfc940b5745bf5b9d72d8b1d6ee08fbad61",
+      "bytes": 4561,
+      "git_mode": "100644",
+      "git_blob": "d6e622e61f8815a5b38d0e72101caa324cf676b3"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/lifecycle.py",
+      "sha256": "0bbf1aa4ff91e89dda010ab9a24ff92f9ffd8e1d730e3c83bc4f6d3de122b54b",
+      "bytes": 11456,
+      "git_mode": "100644",
+      "git_blob": "5c8f946fce417055c3839407df1b13e89a5281cb"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/remote_identity.py",
+      "sha256": "93b926dc8264e288e8a3ddfbb6dc1ef7a9534f74ddffe63238b9ecfa42c10bb9",
+      "bytes": 3115,
+      "git_mode": "100644",
+      "git_blob": "2c1ea3b66d317b5986f9e8218df4d8ecbec16076"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/bank_transactions.py",
+      "sha256": "1588c7e1ec89b2b56e2ebf1d0b994ad5f2e21126953a35d7939371360b92d64f",
+      "bytes": 36095,
+      "git_mode": "100644",
+      "git_blob": "8e7b3bc3a008c00dd82552e4a3774a32b8bfb008"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/tombstones.py",
+      "sha256": "035a33a08bbf655fc6d2613bd5b0da6b8a24bc7fbc9cb60047eae8e3e10dd1ec",
+      "bytes": 7430,
+      "git_mode": "100644",
+      "git_blob": "69b0caa3e02b71fc4aa38d3a6e498884a613a113"
+    }
+  ],
+  "proposal_and_failure_evidence": [
+    {
+      "path": "/tmp/agent-memory-v003/publication-cost-static-1099ca6/review.md",
+      "sha256": "093b942892b74857204ce804025b7b72d1a35cb63f51d0337bb3845b2f8b3f69",
+      "bytes": 8646
+    },
+    {
+      "path": "/tmp/agent-memory-v003/daily-use-v1-variation-12-10000-e816844/failure.txt",
+      "sha256": "8ea39a12facc3970580493d26b16bdc0c4d56714b9a5ed84853c10f6b1e3261e",
+      "bytes": 1343
+    },
+    {
+      "path": "/tmp/agent-memory-v003/daily-use-v1-variation-12-10000-e816844/outcome.json",
+      "sha256": "6c11cb412657bc7fdde3fb7abdd68ecf7deec083174572306fea663ef28c374e",
+      "bytes": 590
+    },
+    {
+      "path": "/tmp/agent-memory-v003/daily-use-v1-variation-12-10000-e816844/commands.json",
+      "sha256": "152ec9fc35e0f46ec2d2da7497bfe717f49c62e5579067ab6e7afd2e7122c8c6",
+      "bytes": 401813
+    }
+  ],
+  "observed_command": {
+    "number": 137,
+    "operation": "publish land --v2",
+    "exit": null,
+    "timed_out": true,
+    "seconds": 300.0348667920334,
+    "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "disposition": "APPROVED bounded design direction only with explicit fresh canonicalization/bypass amendment and mandatory contracts in report",
+  "unamended_validate_files_universal_purity_claim_approved": false,
+  "parent_amendment": "Preserve fresh authority/header canonicalization before any format-cache hit or bypass file:// canonical remote; never cache actual scope/identity/time/source/Git observations.",
+  "timeout_cause_proved": false,
+  "product_executions": 0,
+  "test_executions": 0,
+  "model_calls": 0,
+  "implementation_or_workload_accepted": false,
+  "jobs": "terminal and collected",
+  "worlds": 0,
+  "source_holds": "RELEASED",
+  "external_writer_grant": "NONE / RELEASED",
+  "report_sha256": "adab28915c260835c85860c935cb40a0d51ddff3c11c8e07442fea55a0e275a1"
+}

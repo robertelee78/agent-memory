@@ -1,0 +1,163 @@
+{
+  "repair_commit": "fc3a259407f9219c5920d44e9e602e02013250e7",
+  "budget_test_commit": "d5073e3dfdb47361ca8c5e9305e7f1b463aa7785",
+  "integration_commit": "81fec82c1619d20c12473d23e3fdf6706d52b641",
+  "files": {
+    "macos12-outcome.json": {
+      "sha256": "6c11cb412657bc7fdde3fb7abdd68ecf7deec083174572306fea663ef28c374e",
+      "origin": "/tmp/agent-memory-v003/daily-use-v1-variation-12-10000-e816844/outcome.json"
+    },
+    "macos12-failure.txt": {
+      "sha256": "8ea39a12facc3970580493d26b16bdc0c4d56714b9a5ed84853c10f6b1e3261e",
+      "origin": "/tmp/agent-memory-v003/daily-use-v1-variation-12-10000-e816844/failure.txt"
+    },
+    "macos12-source-before.json": {
+      "sha256": "8ed95d8f478d068fe97b79a7faea91d8d87061717b8e90fb76a920c5783915f7",
+      "origin": "/tmp/agent-memory-v003/daily-use-v1-variation-12-10000-e816844/source-before.json"
+    },
+    "macos12-source-after.json": {
+      "sha256": "8ed95d8f478d068fe97b79a7faea91d8d87061717b8e90fb76a920c5783915f7",
+      "origin": "/tmp/agent-memory-v003/daily-use-v1-variation-12-10000-e816844/source-after.json"
+    },
+    "linux24-outcome.json": {
+      "sha256": "80f9e7767e50e95600239f04f19f5d54edbe44238cd1c50296dfdc8eb7b1fc8a",
+      "origin": "/tmp/agent-memory-v003/daily-use-v1-required-24-10000-e816844/linux/outcome.json"
+    },
+    "linux24-failure.txt": {
+      "sha256": "daeb2e40b1105ca9394f8d42abc3c505c194f15e840bd6f5fe87f557a1b66b98",
+      "origin": "/tmp/agent-memory-v003/daily-use-v1-required-24-10000-e816844/linux/failure.txt"
+    },
+    "linux24-source-before.json": {
+      "sha256": "8ed95d8f478d068fe97b79a7faea91d8d87061717b8e90fb76a920c5783915f7",
+      "origin": "/tmp/agent-memory-v003/daily-use-v1-required-24-10000-e816844/linux/source-before.json"
+    },
+    "linux24-source-after.json": {
+      "sha256": "8ed95d8f478d068fe97b79a7faea91d8d87061717b8e90fb76a920c5783915f7",
+      "origin": "/tmp/agent-memory-v003/daily-use-v1-required-24-10000-e816844/linux/source-after.json"
+    },
+    "focused-macos-results.json": {
+      "sha256": "05496419f8fb32e35d23fbc010266dc5014cc86f466cfae1c3e8b9dcfe7d5d6a",
+      "origin": "/tmp/agent-memory-v003/publication-cost-fc3a259-native/macos/results.json"
+    },
+    "budget-macos-results.json": {
+      "sha256": "1aa08240df2117a59998475c56ff7328b9e1710b161aee586557105b3b2aaadc",
+      "origin": "/tmp/agent-memory-v003/publication-cost-d5073e3-budget/macos/results.json"
+    },
+    "focused-macos-source-before.json": {
+      "sha256": "160f6ee4a5dbbfabebc83b034113a30c7937e5f8b7e581f27ccd15179d94bb2d",
+      "origin": "/tmp/agent-memory-v003/publication-cost-fc3a259-native/macos/source-before.json"
+    },
+    "budget-macos-source-before.json": {
+      "sha256": "8cf5064a4d790dae8e8f9a940a840769179d32c04af1376d23d28aa7e9dbc406",
+      "origin": "/tmp/agent-memory-v003/publication-cost-d5073e3-budget/macos/source-before.json"
+    },
+    "focused-macos-source-after.json": {
+      "sha256": "160f6ee4a5dbbfabebc83b034113a30c7937e5f8b7e581f27ccd15179d94bb2d",
+      "origin": "/tmp/agent-memory-v003/publication-cost-fc3a259-native/macos/source-after.json"
+    },
+    "budget-macos-source-after.json": {
+      "sha256": "8cf5064a4d790dae8e8f9a940a840769179d32c04af1376d23d28aa7e9dbc406",
+      "origin": "/tmp/agent-memory-v003/publication-cost-d5073e3-budget/macos/source-after.json"
+    },
+    "focused-linux-results.json": {
+      "sha256": "05496419f8fb32e35d23fbc010266dc5014cc86f466cfae1c3e8b9dcfe7d5d6a",
+      "origin": "/tmp/agent-memory-v003/publication-cost-fc3a259-native/linux/results.json"
+    },
+    "budget-linux-results.json": {
+      "sha256": "1aa08240df2117a59998475c56ff7328b9e1710b161aee586557105b3b2aaadc",
+      "origin": "/tmp/agent-memory-v003/publication-cost-d5073e3-budget/linux/results.json"
+    },
+    "focused-linux-source-before.json": {
+      "sha256": "271500770bec3005ba9df3f2bc86b1d0e2069fd080f586cffd0f79fa01710ed8",
+      "origin": "/tmp/agent-memory-v003/publication-cost-fc3a259-native/linux/source-before.json"
+    },
+    "budget-linux-source-before.json": {
+      "sha256": "baffb0b1f764f0a3627950e517edead75d956451c789ad6852d75d82dc3830b1",
+      "origin": "/tmp/agent-memory-v003/publication-cost-d5073e3-budget/linux/source-before.json"
+    },
+    "focused-linux-source-after.json": {
+      "sha256": "271500770bec3005ba9df3f2bc86b1d0e2069fd080f586cffd0f79fa01710ed8",
+      "origin": "/tmp/agent-memory-v003/publication-cost-fc3a259-native/linux/source-after.json"
+    },
+    "budget-linux-source-after.json": {
+      "sha256": "baffb0b1f764f0a3627950e517edead75d956451c789ad6852d75d82dc3830b1",
+      "origin": "/tmp/agent-memory-v003/publication-cost-d5073e3-budget/linux/source-after.json"
+    },
+    "opus-review.md": {
+      "sha256": "093b942892b74857204ce804025b7b72d1a35cb63f51d0337bb3845b2f8b3f69",
+      "origin": "/tmp/agent-memory-v003/publication-cost-static-1099ca6/review.md"
+    },
+    "opus-source-binding.json": {
+      "sha256": "6a4b6a17fa4e9db79cda0d724329869a1f82792c5e02edf276ba54dd59b34cd8",
+      "origin": "/tmp/agent-memory-v003/publication-cost-static-1099ca6/source-binding.json"
+    },
+    "opus-result.json": {
+      "sha256": "9f44c3d03350f7fd677ab7b8daf90b399f41902691dc5beaad5fe234d6a570d0",
+      "origin": "/tmp/agent-memory-v003/publication-cost-static-1099ca6/result.json"
+    },
+    "design-review.md": {
+      "sha256": "adab28915c260835c85860c935cb40a0d51ddff3c11c8e07442fea55a0e275a1",
+      "origin": "/tmp/agent-memory-v003/publication-cost-design-review/review.md"
+    },
+    "design-source.json": {
+      "sha256": "049539d7a6e3ffe61c7f96f6065ff71bbdf096da17879a6e9846802b3ced1cda",
+      "origin": "/tmp/agent-memory-v003/publication-cost-design-review/source.json"
+    },
+    "code-review.md": {
+      "sha256": "21a3fb3901d87528b846ab3e45f7b7a9f8a7d6552291360fc2ab242983c27868",
+      "origin": "/tmp/agent-memory-v003/publication-cost-fc3a259-review/review.md"
+    },
+    "code-source.json": {
+      "sha256": "a1dcd4a1610ec6f18932527c5bb213cb69faccb6a407b1c363f8fc52ffb14e6b",
+      "origin": "/tmp/agent-memory-v003/publication-cost-fc3a259-review/source.json"
+    },
+    "continued-control-result.json": {
+      "sha256": "1b5e17102985211b40ffc1b0ba367ed3ea4707d0e6df9863bc1138890efa63b4",
+      "origin": "/tmp/agent-memory-v003/publication-cost-fixed-retained-control/result.json"
+    },
+    "continued-control-commands.json": {
+      "sha256": "212b692ed8e5f2403ffcf9443948db5da8e87887c0f5db75de8760f8b0910b91",
+      "origin": "/tmp/agent-memory-v003/publication-cost-fixed-retained-control/commands.json",
+      "origin_sha256": "81008e2e011279a5dfc5b1109e9400a70a78ed5a5b2e57f6d0fff0f257193ba9",
+      "omitted_fields": [
+        "environment (owned fixture roots and token)"
+      ]
+    },
+    "continued-control-source-bindings.json": {
+      "sha256": "8c3273190989a7652bad7ed0203587b66a0ddb25e1d61c607ef157d5b57075c3",
+      "origin": "/tmp/agent-memory-v003/publication-cost-fixed-retained-control/source-bindings.json"
+    },
+    "pilot-outcome.json": {
+      "sha256": "34502fbe06e727d0b9fa37304c9a7c6fea29d80773f1146ff128ebe8fd8083e9",
+      "origin": "/tmp/agent-memory-v003/daily-use-v1-semantic-pilot-6-128-fc3a259/linux/outcome.json"
+    },
+    "pilot-events.json": {
+      "sha256": "7b23fc76aecd97a4254d314141ed4d704bb25546f9959d0c6d66b67127c9f2fc",
+      "origin": "/tmp/agent-memory-v003/daily-use-v1-semantic-pilot-6-128-fc3a259/linux/events.json"
+    },
+    "pilot-source-before.json": {
+      "sha256": "8d4d7c4f46252e7dd93648eece01153f9c06381e14755b44adc7de8758b5b33a",
+      "origin": "/tmp/agent-memory-v003/daily-use-v1-semantic-pilot-6-128-fc3a259/linux/source-before.json"
+    },
+    "pilot-source-after.json": {
+      "sha256": "8d4d7c4f46252e7dd93648eece01153f9c06381e14755b44adc7de8758b5b33a",
+      "origin": "/tmp/agent-memory-v003/daily-use-v1-semantic-pilot-6-128-fc3a259/linux/source-after.json"
+    },
+    "pilot-seed-reference.json": {
+      "sha256": "34742ef808f167a71786e128d435f91d23feb8bd74b4395dbdab1b8292f9f0f5",
+      "origin": "/tmp/agent-memory-v003/daily-use-v1-semantic-pilot-6-128-fc3a259/linux/seed-reference.json"
+    },
+    "linux24-failed-command.json": {
+      "sha256": "41ed53e1caad30cebcc1a26028c20889615d82545b4d8c0b066e9e92761ef6b8"
+    },
+    "instrumented-call-counts.json": {
+      "sha256": "f46823bc7a1b92974bac6679062bf681aa8773903fe1b0cae7786a6a782c26ea"
+    },
+    "macos12-failed-command.json": {
+      "sha256": "25092315cf34a8d5058bf72c13c5c96804a9788275167f455e9d358b4e0fd2d4"
+    }
+  },
+  "required_final_workloads": "running",
+  "whole_story_acceptance_claimed": false,
+  "raw_private_fixture_transcripts": "retained outside checkout; hashes and selected command receipts exported"
+}

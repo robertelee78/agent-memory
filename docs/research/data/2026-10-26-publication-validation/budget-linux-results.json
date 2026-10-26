@@ -1,0 +1,17 @@
+[
+  {
+    "name": "validation-budget-eviction",
+    "path": "tests/contracts/test_validation_memo.py",
+    "exit": 0,
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "expected_failures": 0,
+    "unexpected_successes": 0,
+    "test_ids": [
+      "selected_native_suite.ValidationMemoContract.test_small_retained_budgets_evict_and_oversized_results_fall_back_without_truncation"
+    ],
+    "passed": true
+  }
+]

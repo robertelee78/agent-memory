@@ -1,0 +1,35 @@
+{
+  "profile_sha256": "799bfcd5542e984ec902488aec2e870020647b35025490ccb2919350ba9aef71",
+  "counts": [
+    {
+      "module": "bank_layout.py",
+      "line": 73,
+      "function": "inherited",
+      "primitive_calls": 150000,
+      "total_calls": 150000
+    },
+    {
+      "module": "bank_contract.py",
+      "line": 312,
+      "function": "validate_files",
+      "primitive_calls": 15,
+      "total_calls": 15
+    },
+    {
+      "module": "bank_writes.py",
+      "line": 48,
+      "function": "snapshot",
+      "primitive_calls": 5,
+      "total_calls": 5
+    },
+    {
+      "module": "security.py",
+      "line": 48,
+      "function": "scan",
+      "primitive_calls": 102233,
+      "total_calls": 102233
+    }
+  ],
+  "native_clock_claimed": false,
+  "cumulative_parent_times_distorted_by_periodic_profile_dump": true
+}
