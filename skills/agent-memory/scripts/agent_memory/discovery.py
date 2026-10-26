@@ -91,7 +91,7 @@ def check_trace(repo,trace,checked,observed,scope,*,intent,selected_paths,owned_
     trace_value(trace)
     root,bank=writes.bank_path(repo)
     actual,git=retrieval.observed_context(root,trace['binding']['context'] if context is None else context)
-    expected={'repo_root':str(root),'bank_root':repository_config.relative(root),'project_id':checked['project_id'],
+    expected={'repo_root':str(root),'bank_root':bank.relative_to(root).as_posix(),'project_id':checked['project_id'],
         'scope_context':scope,'context':actual,'git_context':git,'inventory_sha256':digest(encoded(observed))}
     if trace['intent']!=intent or trace['binding']!=expected:
         raise changed()
@@ -162,7 +162,7 @@ def start(repo,task,intent,context=None):
     if len(raw)>MAX_FILE:raise ContractError('A bounded root router is required')
     body=raw.decode('utf-8');security.ensure_safe({'MEMORY.md':body})
     trace={'schema':SCHEMA,'task':task,'intent':intent,
-        'binding':{'repo_root':str(root),'bank_root':repository_config.relative(root),'project_id':scope['project_id'],
+        'binding':{'repo_root':str(root),'bank_root':bank.relative_to(root).as_posix(),'project_id':scope['project_id'],
             'scope_context':scope,'context':actual,'git_context':git,'inventory_sha256':digest(encoded(observation.hashes))},
         'nodes':[{'path':'MEMORY.md','sha256':observation.hashes['MEMORY.md']}],
         'sources':[],'complete':False,'rationale':None}
@@ -194,7 +194,7 @@ def navigation_tables(repo,trace):
     scopes.conditions(trace['binding']['context'])
     actual,git=retrieval.observed_context(root,trace['binding']['context'])
     binding=trace['binding']
-    if any(binding[k]!=v for k,v in {'repo_root':str(root),'bank_root':repository_config.relative(root),
+    if any(binding[k]!=v for k,v in {'repo_root':str(root),'bank_root':bank.relative_to(root).as_posix(),
             'scope_context':scope,'context':actual,'git_context':git}.items()):raise changed()
     tables={}
     for row in trace['nodes']:

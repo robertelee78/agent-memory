@@ -30,3 +30,31 @@ at `/tmp/agent-memory-v003/profile-full-navigation-6a983d0/`; the
 [diagnostic export](data/2026-10-25-native-lookup-profile.json) binds their hashes.
 New exact-source native controls, isolated complete-lookup measurements and
 independent review remain required before any five-second or whole-story pass.
+
+## Complete-path follow-up
+
+The first spelling-only optimization at `244f6d33e68ce00e216ed81d4283d41cba894d24`
+passed 59 registered methods on each platform and bounded independent static
+review. Its new 50k warm complete lookups measured 6.626/6.840 seconds, with
+3.937/4.037-second final reads. It improves the path but still misses five seconds.
+Those observations remain separately retained at
+`/tmp/agent-memory-v003/locator-filter-244f6d3-cost-50000/`.
+
+The next repair asks Git for the fixed case-insensitive router basename at every
+depth in the working/index listing, with NUL-delimited status tags. The documented
+[Git status-tag format](https://git-scm.com/docs/git-ls-files#Documentation/git-ls-files.txt--t)
+preserves filename whitespace and distinguishes indexed from untracked paths in
+one listing. The fixed
+[glob pathspec](https://git-scm.com/docs/gitglossary#def_pathspec) includes that
+basename in any directory. Unknown/failed output refuses; HEAD's complete tree
+inventory and exact working/index/HEAD router versions are still examined. The
+common Git adapter defaults to literal paths; only this fixed internal locator
+query opts into glob semantics. It does not accept a caller-supplied pattern.
+
+Discovery also derives the bank-relative name from its already resolved actual
+`root, bank` pair instead of invoking a third settings discovery just to stringify
+that pair. Both original scope/context checks and navigation/source rechecks
+remain, including the final fresh native qualifier. This is operation-local path
+reuse, not a cached identity/authority decision. A public installed-command
+control covers tag-like, tab/newline, Unicode/space filenames and a second mixed-
+case locator; existing indexed/HEAD deletion and custom-worktree controls remain.

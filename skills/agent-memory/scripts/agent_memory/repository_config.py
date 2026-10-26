@@ -113,19 +113,31 @@ def object_router_bytes(root, expression, cache):
 
 
 def git_roots(root, *, router_reader=None):
-    listed = git(root, 'ls-files', '--cached', '--others', '--exclude-standard', '-z', optional=True)
-    indexed = git(root, 'ls-files', '--cached', '-z', optional=True)
-    if listed is None or indexed is None:
+    # Git's fixed glob covers this one basename at every depth, including
+    # case variants. Status tags distinguish indexed versus untracked names
+    # without a second listing or parsing filename whitespace as metadata.
+    listed = git(root, 'ls-files', '--cached', '--others', '--exclude-standard', '-t', '-z',
+                 '--', ':(icase,glob)**/MEMORY.md', optional=True, glob_pathspecs=True)
+    if listed is None or (listed and not listed.endswith('\0')):
         raise ContractError('Repository memory inventory is unavailable; do not infer absence')
+    listed_paths, indexed_paths = set(), set()
+    for entry in listed.split('\0'):
+        if not entry:
+            continue
+        if len(entry) < 3 or entry[1] != ' ' or entry[0] not in 'HSMRCK?U':
+            raise ContractError('Repository memory inventory has an unknown status; do not infer absence')
+        path = entry[2:]
+        listed_paths.add(path)
+        if entry[0] != '?':
+            indexed_paths.add(path)
     head = git(root, 'rev-parse', '--verify', 'HEAD', optional=True)
     committed = git(root, 'ls-tree', '-r', '--name-only', '-z', head) if head else ''
-    indexed_paths = set(indexed.split('\0'))
     committed_paths = set(committed.split('\0'))
     # Examine every inventory spelling, but construct path objects only for
     # possible locators. Ordinary source/record filenames cannot be routers.
     # A final dot component still needs PurePosixPath normalization before the
     # exact same locator/hidden-component checks used below.
-    candidates = (path for path in [*listed.split('\0'), *committed_paths] if path
+    candidates = (path for path in [*listed_paths, *committed_paths] if path
                   and path.rstrip('/').rsplit('/', 1)[-1].casefold() in {'memory.md', '.'})
     paths = sorted({parsed for path in candidates if (parsed := PurePosixPath(path)).name.casefold() == 'memory.md'
                     and not any(part.startswith('.') for part in parsed.parts)})
