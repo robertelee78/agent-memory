@@ -610,10 +610,12 @@ def main(argv=None):
         print(json.dumps(value,indent=2));return 0
     except (ContractError,OSError,ValueError,TypeError,KeyError,AttributeError,UnicodeError,RecursionError) as exc:
         from .sharing_holds import HoldFailure
-        known=isinstance(exc,HoldFailure)
+        from .sharing_recovery import FetchFailure
+        fetch_failed=isinstance(exc,FetchFailure)
+        known=isinstance(exc,HoldFailure) or fetch_failed
         print(json.dumps({'schema':'agent-memory/semantic-sharing-result-v1','operation':args.command,
             'publication_verified':False,'canonical_writes_performed':False,'remote_freshness_verified':False,
-            'failure_component':'known-dispute-state' if known else args.command,
+            'failure_component':'authority-fetch' if fetch_failed else 'known-dispute-state' if known else args.command,
             'failure_code':exc.code if known else 'semantic-review-unverified',
             'error':str(exc) if known else 'Incomplete, changed or unsafe semantic review; retain local work and inspect actual sources',
             'repair':exc.repair if known else 'Preserve the bank, original request and pending evidence. Run am doctor for this repository, inspect the failed component, then repeat source inspection and review; do not substitute an empty bank or a compatibility judgment.'}));return 1

@@ -32,3 +32,10 @@ control alone is not the full #99 acceptance gate. The retained original workloa
 private diagnostic trace and expected failing control remain under
 `/tmp/agent-memory-v003/daily-use-v1-semantic-smoke-6-128-v6-diagnostic/` and
 `/tmp/agent-memory-v003/tracking-ref-reproduction-af7936b/`.
+
+Fetch failures also receive a typed, content-free `authority-fetch-unavailable`
+result in refresh/semantic inspection, with an actual fetch-stage component and
+safe connectivity/access/retry instructions. Raw Git stderr, remote values and
+memory text remain private. An offline public refresh control checks that result
+and preserves all original memory/feature state. This changes failure diagnosis,
+not authority, retry policy, transport permissions or what may be published.
