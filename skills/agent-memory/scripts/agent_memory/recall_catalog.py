@@ -34,7 +34,7 @@ MAX_NAMESPACE=256
 ENGINE_ROOTS=('frontmatter','developer_identity','scopes','lifecycle','records','bank_contract','bank_layout',
     'bank_observation','bank_writes','repository_config','scope_binding','project_identity','local_registry',
     'security','handoff','discovery','retrieval','recall_catalog','bank_transactions','tombstones',
-    'identity_git','remote_identity','trust_paths','checkpoint')
+    'identity_git','remote_identity','trust_paths','checkpoint','sharing_limits')
 
 
 class CacheMiss(Exception):

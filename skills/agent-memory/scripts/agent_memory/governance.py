@@ -536,7 +536,7 @@ def main(argv=None, *, required_operations=None):
     args = parser.parse_args(argv)
     try:
         prepared = admission.read_input(args.request if args.command == 'preview' else args.proposal,
-                                        262144 if args.command == 'preview' else 33554432)
+                                        262144 if args.command == 'preview' else 512*1024*1024)
         if required_operations is not None:
             request = (prepared if args.command == 'preview' else
                        tx.proposal_value(prepared)['governance_evidence']['request'])

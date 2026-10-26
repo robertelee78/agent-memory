@@ -17,6 +17,7 @@ from . import lifecycle, records, scope_binding, scopes, security, handoff
 from .developer_identity import digest, encoded, load, uuid_valid
 from .frontmatter import ContractError
 from .identity_git import git
+from . import sharing_limits
 
 FIELDS = {'project_id', 'query', 'ids', 'paths', 'context', 'kinds',
           'minimum_trust', 'limit', 'include_context'}
@@ -208,7 +209,7 @@ def evaluate_sources(root,bank,project,entries,source,parsed,hashes,request,sele
 def retrieve(repo, request, *, owned_lock=None, deferred_paths=()):
     started = time.perf_counter()
     request_value(request)
-    if not isinstance(deferred_paths, (list, tuple, set, frozenset)) or len(deferred_paths) > 256:
+    if not isinstance(deferred_paths, (list, tuple, set, frozenset)) or len(deferred_paths) > sharing_limits.MAX_FILES:
         raise ContractError('Deferred recall paths require a complete bounded set')
     for path in deferred_paths:
         if path != 'MEMORY.md':

@@ -45,8 +45,9 @@ REASONS = {reason for reason, _ in (*SECRETS, *SUSPICIOUS)} | {
     'source-review-required'}
 
 
-def scan(content):
-    if (not isinstance(content, str) or not content.strip() or len(content.encode()) > LIMIT
+def scan(content, *, maximum=LIMIT):
+    if maximum not in {LIMIT,65536}:raise ContractError('Security scan needs the fixed source or review-page budget')
+    if (not isinstance(content, str) or not content.strip() or len(content.encode()) > maximum
             or any(ord(c) < 32 and c not in '\n\r\t' for c in content)):
         raise ContractError('Security content must be useful bounded UTF8 text without control separators')
     redacted, reasons = content, []

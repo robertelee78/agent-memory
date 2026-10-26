@@ -6,11 +6,13 @@ publication or a claim that feature code matches shared authority.
 from __future__ import annotations
 
 import argparse
+import hashlib
 from datetime import datetime, timezone
 import json
 import os
 from pathlib import Path, PurePosixPath
 import re
+import resource
 import subprocess
 import sys
 import tempfile
@@ -21,15 +23,16 @@ from . import bank_writes as writes, repository_config, scope_binding, sharing_b
 from .developer_identity import digest, encoded, load
 from .frontmatter import ContractError, read, write
 from .identity_git import git
+from . import sharing_limits as limits
 
-MAX_FILES = 256
-MAX_BYTES = 1048576
-MAX_FILE = 16384
+MAX_FILES = limits.MAX_FILES
+MAX_BYTES = limits.MAX_BANK
+MAX_FILE = limits.MAX_FILE
 MAX_LOCATOR_TREE_BYTES = 16 * 1024 * 1024
 MISSING = object()
 
 
-def command(repo, *args, network=False, limit=MAX_BYTES, glob_pathspecs=False):
+def raw_command(repo, *args, network=False, limit=MAX_BYTES, glob_pathspecs=False, payload=None):
     # Never let ambient worktree/index/object redirection alter the repository.
     allowed = {'GIT_CONFIG_NOSYSTEM', 'GIT_CONFIG_SYSTEM', 'GIT_CONFIG_GLOBAL',
                'GIT_TERMINAL_PROMPT', 'GIT_ASKPASS', 'GIT_ALLOW_PROTOCOL'}
@@ -43,15 +46,27 @@ def command(repo, *args, network=False, limit=MAX_BYTES, glob_pathspecs=False):
             '-c', 'core.hooksPath=/dev/null', '-C', str(repo), *args]
     # Spool output instead of allocating an unbounded remote/tree response.
     with tempfile.TemporaryFile() as output:
+        # These commands are read-only, with lazy fetch/hooks disabled above.
+        # Never apply a file-size limit to fetch/ref writers: it would also cap
+        # legitimate Git pack/ref writes, not just this stdout spool.
+        reader = bool(args) and args[0] in {'ls-tree','cat-file','ls-files'}
+        def bound_reader():
+            previous=resource.getrlimit(resource.RLIMIT_FSIZE)
+            cap=min([limit+1,*[value for value in previous if value!=resource.RLIM_INFINITY]])
+            resource.setrlimit(resource.RLIMIT_FSIZE,(cap,cap))
         try:
-            result = subprocess.run(argv, env=env, stdout=output, stderr=subprocess.DEVNULL,
-                                    timeout=30 if network else 10)
+            result = subprocess.run(argv, env=env, input=payload, stdout=output, stderr=subprocess.DEVNULL,
+                                    timeout=30 if network else 10, preexec_fn=bound_reader if reader else None)
         except (OSError, subprocess.TimeoutExpired) as exc:
             raise ContractError('Git sharing observation failed; retain local memory and retry') from exc
         output.seek(0); raw = output.read(limit + 1)
     if result.returncode or len(raw) > limit:
         raise ContractError('Git sharing observation failed or exceeded its bound; retain local memory')
-    return raw.decode('utf-8')
+    return raw
+
+
+def command(repo, *args, network=False, limit=MAX_BYTES, glob_pathspecs=False):
+    return raw_command(repo, *args, network=network, limit=limit, glob_pathspecs=glob_pathspecs).decode('utf-8')
 
 
 def oid(value):
@@ -68,10 +83,7 @@ def commit(repo, value):
 
 
 def bounded(files, *, allow_absent=False):
-    if (not isinstance(files, dict) or len(files) > MAX_FILES or
-            any(not isinstance(v, str) or len(v.encode()) > MAX_FILE for v in files.values()) or
-            sum(len(v.encode()) for v in files.values()) > MAX_BYTES):
-        raise ContractError('Complete memory snapshot exceeds recovery bounds; review without truncation')
+    limits.bank_size(files)
     if files == {} and allow_absent:
         return {'project_id': None, 'entries': [], 'routes': []}
     checked = bank.validate_files(files)
@@ -83,8 +95,8 @@ def bounded(files, *, allow_absent=False):
 
 def tree(repo, revision, prefix):
     commit(repo, revision)
-    output = command(repo, 'ls-tree', '-rz', '--full-tree', revision, '--', prefix)
-    files = {}
+    output = command(repo, 'ls-tree', '-rz', '--full-tree', revision, '--', prefix, limit=MAX_LOCATOR_TREE_BYTES)
+    objects = {}
     for item in output.split('\0'):
         if not item:
             continue
@@ -95,12 +107,46 @@ def tree(repo, revision, prefix):
         path = path[len(prefix) + 1:]
         if path != 'MEMORY.md':
             bank.path_value(path)
-        if bank.runtime_path(path) or len(files) >= MAX_FILES:
+        if bank.runtime_path(path) or len(objects) >= MAX_FILES or path in objects:
             raise ContractError('Excluded runtime artifacts or oversized bank tree require review')
-        size = int(command(repo, 'cat-file', '-s', blob).strip())
-        if size > MAX_FILE:
-            raise ContractError('Shared memory object exceeds bounded review')
-        files[path] = command(repo, 'cat-file', 'blob', blob, limit=MAX_FILE)
+        objects[path] = oid(blob)
+    # One exact batch replaces two Git children per file. Bound output before
+    # allocation; each response still proves its actual object/type/size/bytes.
+    unique = sorted(set(objects.values()))
+    blobs = {}
+    if unique:
+        metadata=raw_command(repo,'cat-file','--batch-check',payload=('\n'.join(unique)+'\n').encode(),limit=len(unique)*128)
+        lines=metadata.decode('ascii').splitlines()
+        if len(lines)!=len(unique):raise ContractError('Incomplete batch object size inventory')
+        sizes={};total=0
+        for expected,line in zip(unique,lines):
+            fields=line.split()
+            if len(fields)!=3 or fields[:2]!=[expected,'blob'] or not fields[2].isdigit():
+                raise ContractError('Batch size inventory must name exact requested blobs')
+            size=int(fields[2]);total+=size
+            if size>MAX_FILE or total>MAX_BYTES:raise ContractError('Shared objects exceed bounded review before payload read')
+            sizes[expected]=size
+        raw = raw_command(repo, 'cat-file', '--batch', payload=('\n'.join(unique)+'\n').encode(),
+                          limit=total + len(unique) * 128)
+        offset = total = 0
+        for expected in unique:
+            end = raw.find(b'\n', offset, offset + 128)
+            if end < 0:
+                raise ContractError('Incomplete batch object header')
+            fields = raw[offset:end].decode('ascii').split()
+            if len(fields) != 3 or fields[:2] != [expected, 'blob'] or not fields[2].isdigit():
+                raise ContractError('Batch object identity/type is not the requested blob')
+            size = int(fields[2]); offset = end + 1; total += size
+            if size != sizes[expected] or size > MAX_FILE or total > MAX_BYTES or offset + size >= len(raw) or raw[offset+size:offset+size+1] != b'\n':
+                raise ContractError('Shared object exceeds bounds or has incomplete framing')
+            body = raw[offset:offset+size]; offset += size + 1
+            algorithm = hashlib.sha1 if len(expected) == 40 else hashlib.sha256
+            if algorithm(b'blob '+str(size).encode()+b'\0'+body).hexdigest() != expected:
+                raise ContractError('Shared object bytes do not match their actual Git identity')
+            blobs[expected] = body.decode('utf-8')
+        if offset != len(raw):
+            raise ContractError('Unexpected trailing batch object data')
+    files = {path: blobs[blob] for path, blob in objects.items()}
     if not files:
         # Bootstrap means no bank has ever occupied this prefix on authority.
         # A removed bank is not permission to discard its invalidation history.

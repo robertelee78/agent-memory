@@ -259,7 +259,8 @@ def preview(repo, value):
     if desired is None:return result('preview', disposition='no-change', proposal=None, canonical_writes_performed=False)
     p = tx.preview(root, desired, 'compact')['proposal']
     p.update(operation_id=operation_id, consolidation_evidence=evidence)
-    if len(encoded(p)) > 33554432:raise ContractError('Complete maintenance proposal exceeds its reader; inspect smaller bounded banks')
+    from .sharing_limits import private_bytes
+    private_bytes(p)
     validate_transaction(p)
     return result('preview', disposition='consolidate-existing', proposal=p, canonical_writes_performed=False,
                   per_record_operator_approval_required=False, run_at_turn_boundary=True)
@@ -314,7 +315,7 @@ def main(argv=None):
     args = parser.parse_args(argv)
     try:
         value = (preview(args.repo, admission.read_input(args.input, 262144)) if args.command == 'preview'
-                 else apply(admission.read_input(args.proposal, 33554432)))
+                 else apply(admission.read_input(args.proposal, 512*1024*1024)))
         print(json.dumps(value, indent=2, ensure_ascii=False));return 0
     except (ContractError, OSError, ValueError, UnicodeError, TypeError, KeyError, AttributeError, RecursionError):
         print(json.dumps(result(args.command, verified=False,

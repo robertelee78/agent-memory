@@ -43,14 +43,16 @@ def prior_deletions(root, prefix, indexed, current):
 
 
 def inspect(repo, *, owned_lock=None):
+    from . import sharing_recovery as recovery, sharing_limits as limits
     root, bank = writes.bank_path(repo)
     context = scope_binding.require(root, owned_lock=owned_lock)
     configuration = repository_config.settings(root)
     checked, observed = writes.snapshot(root, owned_lock=owned_lock)
     prefix = configuration['bank_root'] + '/'
     canonical = [prefix + path for path in sorted(observed)]
-    if len(encoded(canonical)) > 65536:
-        raise ContractError('Sharing path inventory exceeds its bounded command manifest')
+    if len(canonical)>limits.MAX_FILES or len(encoded(canonical))>recovery.MAX_LOCATOR_TREE_BYTES:
+        raise ContractError('Sharing path inventory exceeds its complete metadata budget; preserve it without truncation')
+    canonical_set=set(canonical)
     project = scope_binding.project.status(root, owned_lock=owned_lock)
     remote = project['evidence']['authority_name']
     if remote:
@@ -66,7 +68,7 @@ def inspect(repo, *, owned_lock=None):
         branch, source = 'main', 'initial-main-default-unverified'
     repository_config.validate_branch(branch)
     # Read actual Git evidence; canonical remote identifiers are never fetch URLs.
-    indexed = git(root, 'ls-files', '--stage', '-z', '--', configuration['bank_root'])
+    indexed = recovery.command(root, 'ls-files', '--stage', '-z', '--', configuration['bank_root'],limit=recovery.MAX_LOCATOR_TREE_BYTES)
     entries = {}
     for item in indexed.split('\0'):
         if not item:
@@ -75,10 +77,10 @@ def inspect(repo, *, owned_lock=None):
         mode, blob, stage = header.split()
         # Several stages for one path must never masquerade as ordinary.
         entries[path] = (mode, blob, stage if path not in entries else 'unmerged')
-    deleted = prior_deletions(root, configuration['bank_root'], entries, canonical)
+    deleted = prior_deletions(root, configuration['bank_root'], entries, canonical_set)
     tracked, unmerged, excluded_tracked = set(), 0, 0
     for path, (mode, _, stage) in entries.items():
-        if path not in canonical and path not in deleted:
+        if path not in canonical_set and path not in deleted:
             excluded_tracked += 1
         elif stage != '0' or mode != '100644':
             unmerged += 1
@@ -86,8 +88,11 @@ def inspect(repo, *, owned_lock=None):
             tracked.add(path)
     ignored = set()
     for selection in ('--cached', '--others'):
-        output = git(root, 'ls-files', selection, '--ignored', '--exclude-standard', '-z', '--', *canonical)
-        ignored.update(path for path in output.split('\0') if path)
+        # Query the one bank prefix and filter the complete actual canonical set.
+        # Thousands of paths must not become one platform-sized argv or hide
+        # ignored canonical files by truncating a command manifest.
+        output = recovery.command(root, 'ls-files', selection, '--ignored', '--exclude-standard', '-z', '--', configuration['bank_root'],limit=recovery.MAX_LOCATOR_TREE_BYTES)
+        ignored.update(path for path in output.split('\0') if path in canonical_set)
     blockers = []
     if ignored:
         blockers.append('canonical-memory-is-ignored')
@@ -115,13 +120,13 @@ def inspect(repo, *, owned_lock=None):
         if len(raw) > 16384:
             safety.append('bounded-content-review-required')
             continue
-        scan = security.scan(raw.decode('utf-8') + '\n' + prefix + path)
+        scan = security.scan(raw.decode('utf-8') + '\n' + prefix + path,maximum=65536)
         safety.extend(scan['reasons'])
     if safety:
         blockers.append('unsafe-or-unreviewable-memory-content')
     scope_binding.require(root, checked['project_id'], expected=context, owned_lock=owned_lock)
     if (writes.snapshot(root, owned_lock=owned_lock)[1] != observed or repository_config.settings(root) != configuration
-            or git(root, 'ls-files', '--stage', '-z', '--', configuration['bank_root']) != indexed):
+            or recovery.command(root, 'ls-files', '--stage', '-z', '--', configuration['bank_root'],limit=recovery.MAX_LOCATOR_TREE_BYTES) != indexed):
         raise ContractError('Canonical bank or boundary configuration changed; inspect again')
     return {'schema': 'agent-memory/sharing-boundary-v1', 'project_id': checked['project_id'],
         'bank_root': configuration['bank_root'], 'authority_remote': remote,
