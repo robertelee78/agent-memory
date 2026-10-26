@@ -25,6 +25,28 @@ from .frontmatter import ContractError, read, write
 from .identity_git import git
 from . import sharing_limits as limits
 
+class AuthorityFailure(ContractError):
+    repair = ('Check connectivity and access for the configured authority remote and local Git metadata. '
+              'Preserve the bank, feature work and pending evidence; repeat the original refresh inspection '
+              'after the issue clears. Do not reset/reinitialize memory or remove unknown locks.')
+
+
+class FetchFailure(AuthorityFailure):
+    code = 'authority-fetch-unavailable'
+    component = 'authority-fetch'
+
+    def __init__(self):
+        super().__init__('Fetching the configured authority branch failed; no fresh remote observation was established.')
+
+
+class AdvertisementFailure(AuthorityFailure):
+    code = 'authority-advertisement-unavailable'
+    component = 'authority-advertisement'
+
+    def __init__(self):
+        super().__init__('Reading the configured authority branch advertisement failed; no fresh remote observation was established.')
+
+
 MAX_FILES = limits.MAX_FILES
 MAX_BYTES = limits.MAX_BANK
 MAX_FILE = limits.MAX_FILE
@@ -166,8 +188,11 @@ def tree(repo, revision, prefix, *, quarantine_records=False):
 
 
 def server(repo, remote, branch):
-    response = command(repo, 'ls-remote', '--symref', '--', remote, 'HEAD', 'refs/heads/' + branch,
-                       network=True, limit=65536)
+    try:
+        response = command(repo, 'ls-remote', '--symref', '--', remote, 'HEAD', 'refs/heads/' + branch,
+                           network=True, limit=65536)
+    except ContractError as exc:
+        raise AdvertisementFailure() from exc
     default, observed = None, None
     for line in response.splitlines():
         left, ref = line.split('\t', 1)
@@ -258,11 +283,16 @@ def observe(repo, *, owned_lock=None, quarantine_records=False):
     remote, branch = boundary['authority_remote'], boundary['authority_branch']
     head = server(root, remote, branch)
     # Unique disposable ref: do not overwrite FETCH_HEAD, remote tracking refs,
-    # the caller's branch/index or another session's observation.
+    # the caller's branch/index or another session's observation. An explicit
+    # destination alone still permits the named remote's configured fetch map
+    # to update shared remote-tracking refs; an empty refmap disables that.
     ref = 'refs/agent-memory/observations/' + str(uuid.uuid4())
     try:
-        command(root, 'fetch', '--no-tags', '--no-write-fetch-head', '--no-recurse-submodules',
-                '--', remote, 'refs/heads/' + branch + ':' + ref, network=True, limit=65536)
+        try:
+            command(root, 'fetch', '--no-tags', '--no-write-fetch-head', '--refmap=', '--no-recurse-submodules',
+                    '--', remote, 'refs/heads/' + branch + ':' + ref, network=True, limit=65536)
+        except ContractError as exc:
+            raise FetchFailure() from exc
         writes.fault('sharing-after-fetch')
         fetched = git(root, 'rev-parse', '--verify', ref)
         if fetched != head or server(root, remote, branch) != head:
