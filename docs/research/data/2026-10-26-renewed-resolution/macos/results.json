@@ -1,0 +1,62 @@
+[
+  {
+    "name": "semantic-sharing",
+    "path": "tests/contracts/test_semantic_sharing.py",
+    "exit": 0,
+    "errors": 0,
+    "expected_failures": 0,
+    "failures": 0,
+    "passed": true,
+    "skipped": 0,
+    "tests": 9,
+    "unexpected_successes": 0
+  },
+  {
+    "name": "memory-refresh",
+    "path": "tests/contracts/test_memory_refresh.py",
+    "exit": 0,
+    "errors": 0,
+    "expected_failures": 0,
+    "failures": 0,
+    "passed": true,
+    "skipped": 0,
+    "tests": 2,
+    "unexpected_successes": 0
+  },
+  {
+    "name": "refresh-v2",
+    "path": "tests/contracts/test_refresh_v2.py",
+    "exit": 0,
+    "errors": 0,
+    "expected_failures": 0,
+    "failures": 0,
+    "passed": true,
+    "skipped": 0,
+    "tests": 2,
+    "unexpected_successes": 0
+  },
+  {
+    "name": "known-holds-v2",
+    "path": "tests/contracts/test_known_holds_v2.py",
+    "exit": 0,
+    "errors": 0,
+    "expected_failures": 0,
+    "failures": 0,
+    "passed": true,
+    "skipped": 0,
+    "tests": 3,
+    "unexpected_successes": 0
+  },
+  {
+    "name": "quarantined-sharing-v2",
+    "path": "tests/contracts/test_quarantined_sharing_v2.py",
+    "exit": 0,
+    "errors": 0,
+    "expected_failures": 0,
+    "failures": 0,
+    "passed": true,
+    "skipped": 0,
+    "tests": 4,
+    "unexpected_successes": 0
+  }
+]

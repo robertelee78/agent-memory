@@ -1,0 +1,147 @@
+{
+  "candidate": "4322e6b9efa36a350ac3353932169beeb6ed9692",
+  "bounded_native_methods_per_platform": 20,
+  "whole_story_acceptance": false,
+  "bindings": [
+    {
+      "path": "macos/known-holds-v2.stderr",
+      "sha256": "aa74dc6cb1ce370d6668d855fafe23b237661bc5f54b60984c5408e5d3c90992",
+      "retained_original": "/tmp/agent-memory-v003/renewed-resolution-4322e6b/macos/known-holds-v2.stderr"
+    },
+    {
+      "path": "macos/known-holds-v2.stdout",
+      "sha256": "d3a5842c48f7edd20015ee4b157f8d0e329e69280e90309e6498f5d70c79cf47",
+      "retained_original": "/tmp/agent-memory-v003/renewed-resolution-4322e6b/macos/known-holds-v2.stdout"
+    },
+    {
+      "path": "macos/memory-refresh.stderr",
+      "sha256": "b4d1ed524357219f247d9e9cbafea490838fbc056fc8c6423c5f6953f06f0933",
+      "retained_original": "/tmp/agent-memory-v003/renewed-resolution-4322e6b/macos/memory-refresh.stderr"
+    },
+    {
+      "path": "macos/memory-refresh.stdout",
+      "sha256": "ae71b312c3c907ddb86430274e7bc7f449360ef5ea09930ba82a47aaadc2e5e9",
+      "retained_original": "/tmp/agent-memory-v003/renewed-resolution-4322e6b/macos/memory-refresh.stdout"
+    },
+    {
+      "path": "macos/quarantined-sharing-v2.stderr",
+      "sha256": "2fc470bc23c2533c03a0d4fbe004aeb831e21fde1bf51b91a04dad94ad156ff4",
+      "retained_original": "/tmp/agent-memory-v003/renewed-resolution-4322e6b/macos/quarantined-sharing-v2.stderr"
+    },
+    {
+      "path": "macos/quarantined-sharing-v2.stdout",
+      "sha256": "f688d4032a593196e3e8868b7063c3df6576791fd664aef6b0afb17e60b17441",
+      "retained_original": "/tmp/agent-memory-v003/renewed-resolution-4322e6b/macos/quarantined-sharing-v2.stdout"
+    },
+    {
+      "path": "macos/refresh-v2.stderr",
+      "sha256": "ec1f0fe0e1f9adbfa7ee089b531036153036fbd232b8a34ed05dfc580fed8138",
+      "retained_original": "/tmp/agent-memory-v003/renewed-resolution-4322e6b/macos/refresh-v2.stderr"
+    },
+    {
+      "path": "macos/refresh-v2.stdout",
+      "sha256": "ae71b312c3c907ddb86430274e7bc7f449360ef5ea09930ba82a47aaadc2e5e9",
+      "retained_original": "/tmp/agent-memory-v003/renewed-resolution-4322e6b/macos/refresh-v2.stdout"
+    },
+    {
+      "path": "macos/results.json",
+      "sha256": "4c0476ec814d204eb0a12a766eef526c571fec7dfdafa47ecd26afa0e58d2dcd",
+      "retained_original": "/tmp/agent-memory-v003/renewed-resolution-4322e6b/macos/results.json"
+    },
+    {
+      "path": "macos/semantic-sharing.stderr",
+      "sha256": "ffeecce596536a5aedf9271a3d951c301f9927b00e1b37927a587bb377365129",
+      "retained_original": "/tmp/agent-memory-v003/renewed-resolution-4322e6b/macos/semantic-sharing.stderr"
+    },
+    {
+      "path": "macos/semantic-sharing.stdout",
+      "sha256": "6647e53db4601a3162ee249841702a27d1de7b942fc908e9e4d023a780c3ceed",
+      "retained_original": "/tmp/agent-memory-v003/renewed-resolution-4322e6b/macos/semantic-sharing.stdout"
+    },
+    {
+      "path": "macos/source-after.json",
+      "sha256": "5cb2b04161440faf150df4c583848a0e2b5ef671c5aff27c6b9904db6f815e54",
+      "retained_original": "/tmp/agent-memory-v003/renewed-resolution-4322e6b/macos/source-after.json"
+    },
+    {
+      "path": "macos/source-before.json",
+      "sha256": "5cb2b04161440faf150df4c583848a0e2b5ef671c5aff27c6b9904db6f815e54",
+      "retained_original": "/tmp/agent-memory-v003/renewed-resolution-4322e6b/macos/source-before.json"
+    },
+    {
+      "path": "linux/known-holds-v2.stderr",
+      "sha256": "dbfbcd278dcfaa636e92c19600bb228f2c5394bff1934833ab00b9d31a3e3c72",
+      "retained_original": "/tmp/agent-memory-v003/renewed-resolution-4322e6b/linux/known-holds-v2.stderr"
+    },
+    {
+      "path": "linux/known-holds-v2.stdout",
+      "sha256": "d3a5842c48f7edd20015ee4b157f8d0e329e69280e90309e6498f5d70c79cf47",
+      "retained_original": "/tmp/agent-memory-v003/renewed-resolution-4322e6b/linux/known-holds-v2.stdout"
+    },
+    {
+      "path": "linux/memory-refresh.stderr",
+      "sha256": "96ce7e4e14abb88d8de66c15763d86744477b816962a61062b1be4b57c8e3816",
+      "retained_original": "/tmp/agent-memory-v003/renewed-resolution-4322e6b/linux/memory-refresh.stderr"
+    },
+    {
+      "path": "linux/memory-refresh.stdout",
+      "sha256": "ae71b312c3c907ddb86430274e7bc7f449360ef5ea09930ba82a47aaadc2e5e9",
+      "retained_original": "/tmp/agent-memory-v003/renewed-resolution-4322e6b/linux/memory-refresh.stdout"
+    },
+    {
+      "path": "linux/quarantined-sharing-v2.stderr",
+      "sha256": "8e72e81d4cbbfaf29e5538340d53d03ccf95d3e2d5a8ade08148831ecf89a95a",
+      "retained_original": "/tmp/agent-memory-v003/renewed-resolution-4322e6b/linux/quarantined-sharing-v2.stderr"
+    },
+    {
+      "path": "linux/quarantined-sharing-v2.stdout",
+      "sha256": "f688d4032a593196e3e8868b7063c3df6576791fd664aef6b0afb17e60b17441",
+      "retained_original": "/tmp/agent-memory-v003/renewed-resolution-4322e6b/linux/quarantined-sharing-v2.stdout"
+    },
+    {
+      "path": "linux/refresh-v2.stderr",
+      "sha256": "b20f2e2cd437cf8624e08ea3914af1cc12656962489548ea46745924cfc83411",
+      "retained_original": "/tmp/agent-memory-v003/renewed-resolution-4322e6b/linux/refresh-v2.stderr"
+    },
+    {
+      "path": "linux/refresh-v2.stdout",
+      "sha256": "ae71b312c3c907ddb86430274e7bc7f449360ef5ea09930ba82a47aaadc2e5e9",
+      "retained_original": "/tmp/agent-memory-v003/renewed-resolution-4322e6b/linux/refresh-v2.stdout"
+    },
+    {
+      "path": "linux/results.json",
+      "sha256": "4c0476ec814d204eb0a12a766eef526c571fec7dfdafa47ecd26afa0e58d2dcd",
+      "retained_original": "/tmp/agent-memory-v003/renewed-resolution-4322e6b/linux/results.json"
+    },
+    {
+      "path": "linux/semantic-sharing.stderr",
+      "sha256": "c014f44e64dc01e5300e3eade07d31a05c4959cbee8cf2723ee6c1804b307e79",
+      "retained_original": "/tmp/agent-memory-v003/renewed-resolution-4322e6b/linux/semantic-sharing.stderr"
+    },
+    {
+      "path": "linux/semantic-sharing.stdout",
+      "sha256": "6647e53db4601a3162ee249841702a27d1de7b942fc908e9e4d023a780c3ceed",
+      "retained_original": "/tmp/agent-memory-v003/renewed-resolution-4322e6b/linux/semantic-sharing.stdout"
+    },
+    {
+      "path": "linux/source-after.json",
+      "sha256": "c04c82311f440a1d8e0599b446c08e06673556fdb6fa8eb543e23de913152c2b",
+      "retained_original": "/tmp/agent-memory-v003/renewed-resolution-4322e6b/linux/source-after.json"
+    },
+    {
+      "path": "linux/source-before.json",
+      "sha256": "c04c82311f440a1d8e0599b446c08e06673556fdb6fa8eb543e23de913152c2b",
+      "retained_original": "/tmp/agent-memory-v003/renewed-resolution-4322e6b/linux/source-before.json"
+    },
+    {
+      "path": "static-review.md",
+      "sha256": "c4f2055e6c21cff7d7c9767e474f38341b9c88e224c687b958691da2d900d8b1",
+      "retained_original": "/tmp/agent-memory-v003/renewed-resolution-4322e6b/static-review.md"
+    },
+    {
+      "path": "static-review.source.json",
+      "sha256": "78984f4b816c6e6db286c3bdc17f076d1666233c45ad3f80c6f94f854a449d2c",
+      "retained_original": "/tmp/agent-memory-v003/renewed-resolution-4322e6b/static-review.source.json"
+    }
+  ]
+}

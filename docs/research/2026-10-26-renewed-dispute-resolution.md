@@ -56,3 +56,30 @@ known-hold suite on macOS. The extended recovery/stale-proof checks, native
 Mac/Linux cohort and fresh complete daily-use scenario must qualify the final
 candidate separately. This small regression does not stand in for the required
 12/1,000 and 24/10,000 multi-session schedules or their independent variations.
+
+## Qualified follow-up
+
+Final repair `4322e6b9efa36a350ac3353932169beeb6ed9692` passes the focused
+20-method native cohort on both macOS and Linux, with complete source byte/mode
+checks before and after. [Results and evidence bindings](data/2026-10-26-renewed-resolution/bindings.json)
+retain the three-method known-hold regression, semantic-sharing, refresh and
+quarantine controls. Independent bounded static review approves the repair; it
+does not accept the entire reliability story.
+
+A fresh six-session/128-lesson diagnostic at `9008717` passes correction,
+consolidation, pruning and ordinary code integration. Its final negative scenario
+first exposed two controller errors: comparison selected an existing retry lesson
+without visiting its actual parent map, and an assertion omitted the specifically
+held parent route of a quarantined child. The runtime correctly refused the first
+operation and held only the dependent route in the second. The diagnostic retained
+its failure, then continued with narrowly corrected test navigation/assertions;
+independent safe learning published and refreshed while the unsafe replacement
+and linked old claim remained held. No runtime bytes changed during continuation.
+That diagnostic is not a fresh, unmodified acceptance run. Both original failures
+and continuation are retained under `daily-use-v1-semantic-smoke-6-128-v8` and
+`daily-use-v1-semantic-smoke-6-128-v9-debug` in the private evaluation root.
+
+The versioned [daily-use controller](../../scripts/evaluations/daily_use.py)
+contains the corrected navigation and granular dependency assertion, and checks
+every ordinary admitted source's complete metadata/body in every refreshed bank
+after each round. The required full-size fresh runs remain separate evidence.

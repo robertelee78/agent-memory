@@ -1,0 +1,80 @@
+{
+  "reviewer": "codex-review-59",
+  "implementer": "codex-root",
+  "scope": "bounded static renewed-resolution repair, not whole #99 acceptance",
+  "work_key": "robertelee78/agent-memory:ADR-0009:daily-use-reliability",
+  "requirement": "7ca331173f75ccbd06d929647dc5bc68fe002c2c:ADR-0009:daily-use-reliability",
+  "candidate": "4322e6b9efa36a350ac3353932169beeb6ed9692",
+  "tree": "24bc8734cb5c3ebf5840ce1bcdbc88bdf1b1da24",
+  "comparison_base": "50e13603be7b8df9ae0912795b7f890266ff3688",
+  "changed_paths": [
+    "docs/research/2026-10-26-renewed-dispute-resolution.md",
+    "skills/agent-memory/scripts/agent_memory/sharing_holds.py",
+    "tests/contracts/test_known_holds_v2.py"
+  ],
+  "files_read": [
+    {
+      "path": "docs/research/2026-10-26-renewed-dispute-resolution.md",
+      "sha256": "832cde81d48d3c9e599c518dd5a3ae7e3af9c11646f23545c85017e5e8344e98",
+      "bytes": 3599,
+      "git_mode": "100644",
+      "git_blob": "8b0a16f0f28f7f745bf9d71313bae4ade59d6261"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/sharing_holds.py",
+      "sha256": "89bcb0e2ac9c2fb4b69526c4d8db354e921221e5ec3a01b2527c01c80261c352",
+      "bytes": 20501,
+      "git_mode": "100644",
+      "git_blob": "177fdf70d0867e9bfadc49b2a06389820fe13608"
+    },
+    {
+      "path": "tests/contracts/test_known_holds_v2.py",
+      "sha256": "98101dbe6a68d102ba54f49fe9603e9bc4c561f911356fd6b4849830eb8577c1",
+      "bytes": 12954,
+      "git_mode": "100644",
+      "git_blob": "5feebe6cb84d9069e09a0fe369430e4e06c24b89"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/sharing_frontier.py",
+      "sha256": "4a6695d005a51a017b7142538507faeb87b0adf391843bc99870ffe77d859cc9",
+      "bytes": 19619,
+      "git_mode": "100644",
+      "git_blob": "4460b390e51201d7eb258584e0c1abc2656ab32d"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/sharing_hold_mapping.py",
+      "sha256": "a5f83eb5ee7dd223ba3027189f18026c7f9267b778788d8643fd1627cb60ba5c",
+      "bytes": 5767,
+      "git_mode": "100644",
+      "git_blob": "3012be8a9895fb767c6b43c22e74c4b1830f9e2c"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/semantic_sharing.py",
+      "sha256": "788dfa0faf1c3f845b007cd2e7e65ac7bd363483bb241b4ca98b29fbe03832a5",
+      "bytes": 42568,
+      "git_mode": "100644",
+      "git_blob": "1bb9ab3d736fac2bf587b2c0c09da904849f6d7d"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/sharing_limits.py",
+      "sha256": "eea6164a2e8a174105b64f4e84d827556abf1a664e23789bef0b208e3f5c10be",
+      "bytes": 3148,
+      "git_mode": "100644",
+      "git_blob": "1afc018c5b81894cddf8cddea1b925e04f457b87"
+    }
+  ],
+  "actual_test_definitions_not_executions": [
+    "test_renewed_clarification_proof_replays_without_losing_prior_resolution",
+    "test_known_dispute_survives_rewording_changed_framing_and_registry_recovery",
+    "test_wrong_project_recovery_preserves_private_state_and_stale_bank_marker"
+  ],
+  "disposition": "APPROVED bounded static repair",
+  "product_executions": 0,
+  "model_calls": 0,
+  "parent_test_outcomes_adopted": false,
+  "jobs": "terminal and collected",
+  "worlds": 0,
+  "source_holds": "RELEASED",
+  "external_writer_grant": "NONE / RELEASED",
+  "report_sha256": "c4f2055e6c21cff7d7c9767e474f38341b9c88e224c687b958691da2d900d8b1"
+}
