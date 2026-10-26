@@ -392,7 +392,13 @@ def merge_files(base, local, landed, *, quarantine_records=False):
     for path in sorted(structural - {'MEMORY.md'}):order(path)
     for path in ordered:
         values = [f.get(path, MISSING) for f in maps]
-        if any(v is MISSING for v in values):
+        parts = None
+        if values[0] is MISSING and all(value is not MISSING for value in values[1:]):
+            # The index was absent at the actual Git base. Two sides can still
+            # agree exactly on its header/introduction and add independent
+            # routes. Do not invent prose or choose competing route values.
+            parts = [({}, {}, MISSING), *[index_parts(path, value) for value in values[1:]]]
+        elif any(v is MISSING for v in values):
             selected = choose(*values)
             if selected is not MISSING:
                 meta, routes, prefix = index_parts(path, selected)
@@ -400,8 +406,9 @@ def merge_files(base, local, landed, *, quarantine_records=False):
                 continue
         else:
             parts = [index_parts(path, v) for v in values]
+        if parts is not None:
             meta = mapping(*[{k:v for k,v in p[0].items() if k != 'updated'} for p in parts])
-            meta['updated'] = max(p[0]['updated'] for p in parts)
+            meta['updated'] = max(p[0]['updated'] for p in parts if 'updated' in p[0])
             meta = header_order(meta, [p[0] for p in parts])
             routes = mapping(*[{k:v for k,v in p[1].items() if k not in drops} for p in parts]);prefix = choose(*[p[2] for p in parts])
         routes = {p:r for p,r in routes.items() if p in merged}
