@@ -86,7 +86,7 @@ At natural turn boundaries the session MUST follow the ADR-0012 memory-only
 refresh workflow, check for landed memory, and load only changed knowledge that
 qualifies for its current task. Refresh MUST NOT interrupt a turn, change code,
 the index or feature ancestry, or assume that this branch contains remembered
-code changes. Hooks that enforce invocation belong to v0.0.3; the active v0.0.1
+code changes. Hooks that enforce invocation belong to v0.0.4; the installed
 skill MUST perform the explicit boundary workflow itself.
 
 For bounded harness context, the session MUST continue to

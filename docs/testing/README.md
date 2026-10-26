@@ -18,8 +18,11 @@ alone does not establish release readiness.
 
 The [portable lifecycle matrix](../contracts/portable-lifecycle.md) binds every
 approved lifecycle obligation to registered executable cases and adds installed
-copy/all-client and link/custom-only journeys. The CI workflow runs the same
-complete gate on Ubuntu/macOS and Python 3.11/3.15, retaining actual results,
+copy/all-client and link/custom-only journeys. Routine qualification runs locally
+on the available macOS and Linux machines, retaining source-bound results.
+The manually dispatched CI workflow can run the same complete gate on
+Ubuntu/macOS and Python 3.11/3.15 when explicitly needed. Pushes and releases do
+not automatically start that expensive matrix. Each run retains actual results,
 failures and checked-out commit/tree evidence for each cell.
 
 Each suite retains its 300-second worker deadline. The complete sequential

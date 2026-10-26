@@ -2,7 +2,7 @@
 
 A portable, local-first Memory Bank for coding agents.
 
-## v0.0.2
+## v0.0.3
 
 One repository owns one shared Markdown memory bank. The skill captures durable
 learning, reads existing memory before adding it, combines duplicates without
@@ -11,8 +11,9 @@ independently of unfinished feature code and refresh into other sessions,
 worktrees and clones through the repository's existing Git rules. Contradictions
 go to the detecting developer for clarification.
 
-The [v0.0.2 release guide](docs/releases/v0.0.2.md) covers the corrected AWA-style
-CLI and lifecycle. [Published releases](https://github.com/robertelee78/agent-memory/releases)
+The [v0.0.3 release guide](docs/releases/v0.0.3.md) covers signed installation,
+semantic recall through the skill and CLI, and shared-memory recovery.
+[Published releases](https://github.com/robertelee78/agent-memory/releases)
 hold the immutable source and actual qualification evidence for each version.
 
 ## Install and first use
@@ -25,7 +26,7 @@ Install on macOS or Linux with one command, just like AWA:
 curl -fsSL https://raw.githubusercontent.com/robertelee78/agent-memory/main/install.sh | bash
 ```
 
-The v0.0.3 release branch adds pinned-key signed delivery to this same command.
+The default command verifies delivery with a pinned publisher key.
 Requires Bash 3.2+, Python 3.11+, Git, curl and OpenSSH `ssh-keygen` with SSH
 signature support. No checkout, GitHub authentication, developer identity or
 initialized memory bank is needed. The bootstrap verifies the signed release
@@ -74,6 +75,22 @@ memory, and publishes eligible memory through current repository rules. Load
 the skill in each session; v0.0.4 hooks are planned to cover forgotten invocation.
 The [common CLI guide](skills/agent-memory/maintain/cli/GUIDE.md) documents the
 same public helpers and installed aliases.
+
+Install once per computer. Each repository keeps its own Git-tracked bank and
+explicit project binding; it does not need a separate runtime installation.
+Cloning this development repository includes its project memory. Installing the
+portable runtime does not copy, initialize or bind that development bank for a
+consumer repository.
+
+### Semantic recall
+
+Ask your coding agent a plain-language question about the project. The skill
+interprets meaning, navigates bounded topic maps through the CLI and reads
+qualified current records, preserving conditions and source evidence. This
+workflow supports Claude, Codex, OpenCode and custom harnesses without requiring
+a vector service. Direct terminal `am search` remains literal;
+[standalone terminal semantic search](https://github.com/robertelee78/agent-memory/issues/200)
+is tracked for a later release.
 
 To inspect setup and health, replace `/path/to/project` with your repository or
 worktree path. Both commands are read-only; missing identity or bank setup is
@@ -228,7 +245,7 @@ available when the command and helpers are absent.
 
 Run `scripts/test.sh` from a checkout with Python 3.11+ and Git. It runs the
 offline public-interface suites in disposable test worlds. The registry declares
-117 mandatory suites and explicitly excludes optional future stores.
+mandatory suites and explicitly excludes optional future stores.
 `scripts/test.sh --release` rejects incomplete release coverage. See the [test gate guide](docs/testing/README.md)
 for isolation rules, suite registration and receipt fields.
 The [portable lifecycle matrix](docs/contracts/portable-lifecycle.md) connects
@@ -274,7 +291,9 @@ explains shared-bank access, developer attribution and the treatment of memory a
 
 The [lifecycle security contract](docs/contracts/lifecycle-security.md) separates
 publisher authentication from integrity, ownership, compatibility and recovery.
-Current managed Git is unsigned; a digest or verified receipt is not a signature.
+Default release sources verify the pinned publisher signature. Legacy managed
+Git and explicit development/custom sources retain their unsigned trust boundary;
+a digest or mechanical receipt alone is not a signature.
 
 The [manual checkpoint workflow](docs/contracts/manual-checkpoint.md) covers
 single-file edits, resume, and subsequent validation of external changes.

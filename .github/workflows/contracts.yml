@@ -1,8 +1,6 @@
 name: Offline release contracts
 
 on:
-  push:
-    branches: ['**']
   workflow_dispatch:
 
 permissions:
