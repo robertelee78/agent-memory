@@ -1,0 +1,27 @@
+{
+  "ok": true,
+  "schema": "github-work-accountability/extraction-v3",
+  "source": {
+    "commit": "8d2163bd3c6c5555aeaffc175bf2207917572dd8",
+    "blob": "87db9d86eb40cd296cce6894baa4d9d3089cacb2",
+    "against": null,
+    "against_blob": ""
+  },
+  "root_key": "robertelee78/agent-memory:ADR-0005",
+  "epic_key": "robertelee78/agent-memory:ADR-0005",
+  "epic_count": 5,
+  "story_count": 8,
+  "coverage_count": 8,
+  "planned_delivery": {
+    "robertelee78/agent-memory:ADR-0005:admission": "Planned delivery: merge",
+    "robertelee78/agent-memory:ADR-0005:assembly": "Planned delivery: merge",
+    "robertelee78/agent-memory:ADR-0005:consolidation": "Planned delivery: merge",
+    "robertelee78/agent-memory:ADR-0005:deduplicate-before-write": "Planned delivery: merge",
+    "robertelee78/agent-memory:ADR-0005:forgetting": "Planned delivery: merge",
+    "robertelee78/agent-memory:ADR-0005:growing-bank-recall": "Planned delivery: release v0.0.3",
+    "robertelee78/agent-memory:ADR-0005:lifecycle-schema": "Planned delivery: merge",
+    "robertelee78/agent-memory:ADR-0005:retrieval": "Planned delivery: merge"
+  },
+  "warnings": [],
+  "errors": []
+}

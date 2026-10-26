@@ -34,5 +34,8 @@
       "result": "previously-accepted-runtime/result.json",
       "raw_manifest": "previously-accepted-runtime/raw-evidence-manifest.json"
     }
-  ]
+  ],
+  "supplemental_independent_review": "independent-review/review.md",
+  "operator_decision_receipt": "operator-decision-receipt.json",
+  "source_reconciliation_receipt": "source-reconciliation-receipt.json"
 }

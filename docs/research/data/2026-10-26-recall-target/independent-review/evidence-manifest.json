@@ -1,0 +1,242 @@
+{
+  "/tmp/agent-memory-v003/final-validation-native-cost-50000-e6ad11c/1.stderr": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  "/tmp/agent-memory-v003/final-validation-native-cost-50000-e6ad11c/1.stdout": {
+    "sha256": "a0ab474ce1361f28329c056d903e5cd76381007aae97a4837219d42172fffebd",
+    "bytes": 8360
+  },
+  "/tmp/agent-memory-v003/final-validation-native-cost-50000-e6ad11c/10.stderr": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  "/tmp/agent-memory-v003/final-validation-native-cost-50000-e6ad11c/10.stdout": {
+    "sha256": "ce37386f80b50d89c904364246e016bcaf317ddc944527c312da61882e2207be",
+    "bytes": 2514
+  },
+  "/tmp/agent-memory-v003/final-validation-native-cost-50000-e6ad11c/11.stderr": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  "/tmp/agent-memory-v003/final-validation-native-cost-50000-e6ad11c/11.stdout": {
+    "sha256": "8dfcdeeec3edbfa3213204a8bdfc72fa79ba0d15d3a1db6bfe1d5328590fd8d9",
+    "bytes": 3554
+  },
+  "/tmp/agent-memory-v003/final-validation-native-cost-50000-e6ad11c/12.stderr": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  "/tmp/agent-memory-v003/final-validation-native-cost-50000-e6ad11c/12.stdout": {
+    "sha256": "7b0520c472b718ac532c6acd10beda6c1291827364df447f1ba98f3ba3467404",
+    "bytes": 7203
+  },
+  "/tmp/agent-memory-v003/final-validation-native-cost-50000-e6ad11c/2.stderr": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  "/tmp/agent-memory-v003/final-validation-native-cost-50000-e6ad11c/2.stdout": {
+    "sha256": "ce37386f80b50d89c904364246e016bcaf317ddc944527c312da61882e2207be",
+    "bytes": 2514
+  },
+  "/tmp/agent-memory-v003/final-validation-native-cost-50000-e6ad11c/3.stderr": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  "/tmp/agent-memory-v003/final-validation-native-cost-50000-e6ad11c/3.stdout": {
+    "sha256": "8dfcdeeec3edbfa3213204a8bdfc72fa79ba0d15d3a1db6bfe1d5328590fd8d9",
+    "bytes": 3554
+  },
+  "/tmp/agent-memory-v003/final-validation-native-cost-50000-e6ad11c/4.stderr": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  "/tmp/agent-memory-v003/final-validation-native-cost-50000-e6ad11c/4.stdout": {
+    "sha256": "451506f04a2a4c844d744f0cab4a7b9ad35c30d24884b8e459ed31e771d50823",
+    "bytes": 7600
+  },
+  "/tmp/agent-memory-v003/final-validation-native-cost-50000-e6ad11c/5.stderr": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  "/tmp/agent-memory-v003/final-validation-native-cost-50000-e6ad11c/5.stdout": {
+    "sha256": "ee04ea3188b3b71a9df545dbfe907ee1c253b25918a91b5a0c59fc267b30dc18",
+    "bytes": 8361
+  },
+  "/tmp/agent-memory-v003/final-validation-native-cost-50000-e6ad11c/6.stderr": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  "/tmp/agent-memory-v003/final-validation-native-cost-50000-e6ad11c/6.stdout": {
+    "sha256": "ce37386f80b50d89c904364246e016bcaf317ddc944527c312da61882e2207be",
+    "bytes": 2514
+  },
+  "/tmp/agent-memory-v003/final-validation-native-cost-50000-e6ad11c/7.stderr": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  "/tmp/agent-memory-v003/final-validation-native-cost-50000-e6ad11c/7.stdout": {
+    "sha256": "8dfcdeeec3edbfa3213204a8bdfc72fa79ba0d15d3a1db6bfe1d5328590fd8d9",
+    "bytes": 3554
+  },
+  "/tmp/agent-memory-v003/final-validation-native-cost-50000-e6ad11c/8.stderr": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  "/tmp/agent-memory-v003/final-validation-native-cost-50000-e6ad11c/8.stdout": {
+    "sha256": "8076e5dc60b43801651f1125e42f14d28ffead313a8d5fc62a9b33f6cccae012",
+    "bytes": 7202
+  },
+  "/tmp/agent-memory-v003/final-validation-native-cost-50000-e6ad11c/9.stderr": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  "/tmp/agent-memory-v003/final-validation-native-cost-50000-e6ad11c/9.stdout": {
+    "sha256": "b79cc841c5dba46ea5b10d995af7a392becb8a0bdf74cac25d5e752ec39ace82",
+    "bytes": 8361
+  },
+  "/tmp/agent-memory-v003/final-validation-native-cost-50000-e6ad11c/commands.json": {
+    "sha256": "f67854846f52a130746907d968798931c1a7c3d2df9afff02a0a0e32d683290d",
+    "bytes": 6046
+  },
+  "/tmp/agent-memory-v003/final-validation-native-cost-50000-e6ad11c/observations.json": {
+    "sha256": "19df3c30c257b584209ab9ef4ea5b8895e07b68c17ce9a50e602bd0acd52b6f2",
+    "bytes": 2767
+  },
+  "/tmp/agent-memory-v003/final-validation-native-cost-50000-e6ad11c/result.json": {
+    "sha256": "8ea177b7c1ecee88eccf3c2b180252c8ca7e0e32d4399f8a5807da70ee988631",
+    "bytes": 3623
+  },
+  "/tmp/agent-memory-v003/final-validation-native-cost-50000-e6ad11c/source-after.json": {
+    "sha256": "21d600b76f1dbc575fea5ca82e2ae58144a524580175d7df40774b278d8e69d8",
+    "bytes": 160888
+  },
+  "/tmp/agent-memory-v003/final-validation-native-cost-50000-e6ad11c/source-before.json": {
+    "sha256": "21d600b76f1dbc575fea5ca82e2ae58144a524580175d7df40774b278d8e69d8",
+    "bytes": 160888
+  },
+  "/tmp/agent-memory-v003/measure-full-navigation-final-validation.py": {
+    "sha256": "60af35a825b37da97b3158964035feac23f6cf9f8e7fbf03f4e554839ec33c31",
+    "bytes": 5376
+  },
+  "/tmp/agent-memory-v003/accepted-runtime-under-load-native-cost-50000-d01ce2e/1.stderr": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  "/tmp/agent-memory-v003/accepted-runtime-under-load-native-cost-50000-d01ce2e/1.stdout": {
+    "sha256": "d1fa3c6026967a4dd3d4e5cda56e804f135f75c8f7a3fdf4337750afb299a43b",
+    "bytes": 8360
+  },
+  "/tmp/agent-memory-v003/accepted-runtime-under-load-native-cost-50000-d01ce2e/10.stderr": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  "/tmp/agent-memory-v003/accepted-runtime-under-load-native-cost-50000-d01ce2e/10.stdout": {
+    "sha256": "788d968f37c847ac00ca4e876b703a8eb3599f28d53e28871e5d8b1c05a0871b",
+    "bytes": 2514
+  },
+  "/tmp/agent-memory-v003/accepted-runtime-under-load-native-cost-50000-d01ce2e/11.stderr": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  "/tmp/agent-memory-v003/accepted-runtime-under-load-native-cost-50000-d01ce2e/11.stdout": {
+    "sha256": "666e171aa5104a429c62be858815d07ab8eb5f7aeb8dc927f4481ca0fe47fc55",
+    "bytes": 3554
+  },
+  "/tmp/agent-memory-v003/accepted-runtime-under-load-native-cost-50000-d01ce2e/12.stderr": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  "/tmp/agent-memory-v003/accepted-runtime-under-load-native-cost-50000-d01ce2e/12.stdout": {
+    "sha256": "fa5dc41883696b6f8b4a9c1659fe7df654ae00386ba0edf5a055435f8ba78930",
+    "bytes": 7202
+  },
+  "/tmp/agent-memory-v003/accepted-runtime-under-load-native-cost-50000-d01ce2e/2.stderr": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  "/tmp/agent-memory-v003/accepted-runtime-under-load-native-cost-50000-d01ce2e/2.stdout": {
+    "sha256": "788d968f37c847ac00ca4e876b703a8eb3599f28d53e28871e5d8b1c05a0871b",
+    "bytes": 2514
+  },
+  "/tmp/agent-memory-v003/accepted-runtime-under-load-native-cost-50000-d01ce2e/3.stderr": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  "/tmp/agent-memory-v003/accepted-runtime-under-load-native-cost-50000-d01ce2e/3.stdout": {
+    "sha256": "666e171aa5104a429c62be858815d07ab8eb5f7aeb8dc927f4481ca0fe47fc55",
+    "bytes": 3554
+  },
+  "/tmp/agent-memory-v003/accepted-runtime-under-load-native-cost-50000-d01ce2e/4.stderr": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  "/tmp/agent-memory-v003/accepted-runtime-under-load-native-cost-50000-d01ce2e/4.stdout": {
+    "sha256": "3a0d8f2d81cc0e785217136f93d0e7a83d46455639a4baf21830ff00a5400cd6",
+    "bytes": 7599
+  },
+  "/tmp/agent-memory-v003/accepted-runtime-under-load-native-cost-50000-d01ce2e/5.stderr": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  "/tmp/agent-memory-v003/accepted-runtime-under-load-native-cost-50000-d01ce2e/5.stdout": {
+    "sha256": "131be3d6a9c57253cbdc8b672894760982ea708acf8b000e8ef1356d014b5e48",
+    "bytes": 8361
+  },
+  "/tmp/agent-memory-v003/accepted-runtime-under-load-native-cost-50000-d01ce2e/6.stderr": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  "/tmp/agent-memory-v003/accepted-runtime-under-load-native-cost-50000-d01ce2e/6.stdout": {
+    "sha256": "788d968f37c847ac00ca4e876b703a8eb3599f28d53e28871e5d8b1c05a0871b",
+    "bytes": 2514
+  },
+  "/tmp/agent-memory-v003/accepted-runtime-under-load-native-cost-50000-d01ce2e/7.stderr": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  "/tmp/agent-memory-v003/accepted-runtime-under-load-native-cost-50000-d01ce2e/7.stdout": {
+    "sha256": "666e171aa5104a429c62be858815d07ab8eb5f7aeb8dc927f4481ca0fe47fc55",
+    "bytes": 3554
+  },
+  "/tmp/agent-memory-v003/accepted-runtime-under-load-native-cost-50000-d01ce2e/8.stderr": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  "/tmp/agent-memory-v003/accepted-runtime-under-load-native-cost-50000-d01ce2e/8.stdout": {
+    "sha256": "52780971eeda3131502a0ce55614d24b2bfb7e6553a6ba5b7c77c43226c47507",
+    "bytes": 7203
+  },
+  "/tmp/agent-memory-v003/accepted-runtime-under-load-native-cost-50000-d01ce2e/9.stderr": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  "/tmp/agent-memory-v003/accepted-runtime-under-load-native-cost-50000-d01ce2e/9.stdout": {
+    "sha256": "e90db207b73cd21badd3eb9790182c489b1e0117a63debc7836d616d294e5b85",
+    "bytes": 8361
+  },
+  "/tmp/agent-memory-v003/accepted-runtime-under-load-native-cost-50000-d01ce2e/commands.json": {
+    "sha256": "e2e4154c4557890a81690706c4b39841cf6f2271eb450ad25d53f6c5fb1dae6a",
+    "bytes": 6046
+  },
+  "/tmp/agent-memory-v003/accepted-runtime-under-load-native-cost-50000-d01ce2e/observations.json": {
+    "sha256": "4134dbd05f0535f14bd844fd701e6cea7bf064329bb44e8cedfe4d66ed4db191",
+    "bytes": 2765
+  },
+  "/tmp/agent-memory-v003/accepted-runtime-under-load-native-cost-50000-d01ce2e/result.json": {
+    "sha256": "411c7a826b58b4e213be07a64441924ccff133df96384794e07e95556f8ae05b",
+    "bytes": 3621
+  },
+  "/tmp/agent-memory-v003/accepted-runtime-under-load-native-cost-50000-d01ce2e/source-after.json": {
+    "sha256": "2911cabadd63a58e09b749169971bfd88680878bd68c618a335afef5c62d2b28",
+    "bytes": 144517
+  },
+  "/tmp/agent-memory-v003/accepted-runtime-under-load-native-cost-50000-d01ce2e/source-before.json": {
+    "sha256": "2911cabadd63a58e09b749169971bfd88680878bd68c618a335afef5c62d2b28",
+    "bytes": 144517
+  },
+  "/tmp/agent-memory-v003/measure-full-navigation-785ae41.py": {
+    "sha256": "4bfe8c5ac0730d4c78673a295bf612e7d9c0e3a674808d39f7b5466026373223",
+    "bytes": 5374
+  }
+}

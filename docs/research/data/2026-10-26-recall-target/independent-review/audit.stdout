@@ -1,0 +1,56 @@
+{
+  "errors": [],
+  "files_hashed": 60,
+  "runs": [
+    {
+      "label": "repaired-runtime",
+      "source": "e6ad11c6ccc5bd2a67c0f6dfe49557dcfa4b4346",
+      "tracked_files": 797,
+      "portable_files": 162,
+      "source_Git_bytes_modes_match": true,
+      "raw_manifest_entries": 29,
+      "commands": 12,
+      "warm_full_native_seconds": [
+        6.168920167023316,
+        5.993992708041333
+      ],
+      "cold_full_native_seconds": 24.765108624938875,
+      "setup_seconds": 144.57237554201856,
+      "fixture": {
+        "fixture": "semantic-navigation-v3-parent-scopes",
+        "distinct_lessons": 50000,
+        "canonical_files": 50843,
+        "canonical_bytes": 59047173,
+        "root_routes": 31,
+        "layout_basis": "authored source subjects and actual component identities, independent of held-out questions",
+        "frozen_literal_baseline_modified": false
+      },
+      "producer_sha256": "60af35a825b37da97b3158964035feac23f6cf9f8e7fbf03f4e554839ec33c31"
+    },
+    {
+      "label": "previously-accepted-runtime",
+      "source": "d01ce2eb98b2669fee44d7c171239a183ceaf742",
+      "tracked_files": 710,
+      "portable_files": 161,
+      "source_Git_bytes_modes_match": true,
+      "raw_manifest_entries": 29,
+      "commands": 12,
+      "warm_full_native_seconds": [
+        6.283692292054184,
+        6.391442833933979
+      ],
+      "cold_full_native_seconds": 25.69789141707588,
+      "setup_seconds": 147.27684145898093,
+      "fixture": {
+        "fixture": "semantic-navigation-v3-parent-scopes",
+        "distinct_lessons": 50000,
+        "canonical_files": 50843,
+        "canonical_bytes": 59047173,
+        "root_routes": 31,
+        "layout_basis": "authored source subjects and actual component identities, independent of held-out questions",
+        "frozen_literal_baseline_modified": false
+      },
+      "producer_sha256": "4bfe8c5ac0730d4c78673a295bf612e7d9c0e3a674808d39f7b5466026373223"
+    }
+  ]
+}

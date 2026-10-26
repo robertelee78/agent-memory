@@ -1,0 +1,13 @@
+{
+  "schema": "github-work-accountability/comment-v1",
+  "repository": "robertelee78/agent-memory",
+  "issue": 98,
+  "url": "https://github.com/robertelee78/agent-memory/issues/98#issuecomment-6423930426",
+  "id": 6423930426,
+  "work_key": "robertelee78/agent-memory:ADR-0005:growing-bank-recall",
+  "event": "decision",
+  "actor": "codex-root",
+  "time": "2026-10-26T18:18:40Z",
+  "posted": true,
+  "verified": true
+}

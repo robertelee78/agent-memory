@@ -9,8 +9,8 @@ goal. This changes the release budget, not the recorded measurements or quality
 criteria. The latest runtime's two samples under concurrent local qualification
 load are **6.169 and 5.994 seconds**; the previously accepted runtime measured
 **6.284 and 6.391 seconds** in a separate run while the same heavy jobs remained
-active. These sequential observations show no measured slowdown from the repair;
-they do not isolate load as a proven cause or establish a universal timing bound.
+active. The repaired samples were lower in these runs; neither the repair's
+effect nor load's effect was isolated. They do not establish a universal timing bound.
 Cold catalog rebuild paths take 24.765 and 25.698 seconds respectively.
 [Both runs, source bindings and retained raw-output hashes](data/2026-10-26-recall-target/summary.json)
 remain available. Known-path timing does not prove semantic precision or recall.

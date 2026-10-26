@@ -1,0 +1,110 @@
+{
+  "verified": true,
+  "source": {
+    "commit": "8d2163bd3c6c5555aeaffc175bf2207917572dd8",
+    "blob": "87db9d86eb40cd296cce6894baa4d9d3089cacb2",
+    "against": null,
+    "against_blob": ""
+  },
+  "items": [
+    {
+      "number": 20,
+      "work_key": "robertelee78/agent-memory:ADR-0005",
+      "verified": true,
+      "state_and_milestone_preserved": true,
+      "awa_record_lines_preserved": true
+    },
+    {
+      "number": 21,
+      "work_key": "robertelee78/agent-memory:ADR-0005:section:admission",
+      "verified": true,
+      "state_and_milestone_preserved": true,
+      "awa_record_lines_preserved": true
+    },
+    {
+      "number": 22,
+      "work_key": "robertelee78/agent-memory:ADR-0005:section:consolidation",
+      "verified": true,
+      "state_and_milestone_preserved": true,
+      "awa_record_lines_preserved": true
+    },
+    {
+      "number": 23,
+      "work_key": "robertelee78/agent-memory:ADR-0005:section:retrieval",
+      "verified": true,
+      "state_and_milestone_preserved": true,
+      "awa_record_lines_preserved": true
+    },
+    {
+      "number": 24,
+      "work_key": "robertelee78/agent-memory:ADR-0005:section:assembly",
+      "verified": true,
+      "state_and_milestone_preserved": true,
+      "awa_record_lines_preserved": true
+    },
+    {
+      "number": 25,
+      "work_key": "robertelee78/agent-memory:ADR-0005:section:forgetting",
+      "verified": true,
+      "state_and_milestone_preserved": true,
+      "awa_record_lines_preserved": true
+    },
+    {
+      "number": 26,
+      "work_key": "robertelee78/agent-memory:ADR-0005:lifecycle-schema",
+      "verified": true,
+      "state_and_milestone_preserved": true,
+      "awa_record_lines_preserved": true
+    },
+    {
+      "number": 27,
+      "work_key": "robertelee78/agent-memory:ADR-0005:admission",
+      "verified": true,
+      "state_and_milestone_preserved": true,
+      "awa_record_lines_preserved": true
+    },
+    {
+      "number": 28,
+      "work_key": "robertelee78/agent-memory:ADR-0005:consolidation",
+      "verified": true,
+      "state_and_milestone_preserved": true,
+      "awa_record_lines_preserved": true
+    },
+    {
+      "number": 29,
+      "work_key": "robertelee78/agent-memory:ADR-0005:retrieval",
+      "verified": true,
+      "state_and_milestone_preserved": true,
+      "awa_record_lines_preserved": true
+    },
+    {
+      "number": 30,
+      "work_key": "robertelee78/agent-memory:ADR-0005:assembly",
+      "verified": true,
+      "state_and_milestone_preserved": true,
+      "awa_record_lines_preserved": true
+    },
+    {
+      "number": 31,
+      "work_key": "robertelee78/agent-memory:ADR-0005:forgetting",
+      "verified": true,
+      "state_and_milestone_preserved": true,
+      "awa_record_lines_preserved": true
+    },
+    {
+      "number": 87,
+      "work_key": "robertelee78/agent-memory:ADR-0005:deduplicate-before-write",
+      "verified": true,
+      "state_and_milestone_preserved": true,
+      "awa_record_lines_preserved": true
+    },
+    {
+      "number": 98,
+      "work_key": "robertelee78/agent-memory:ADR-0005:growing-bank-recall",
+      "verified": true,
+      "state_and_milestone_preserved": true,
+      "awa_record_lines_preserved": true
+    }
+  ],
+  "requirement_change": "Only #98 gains explicit seven-second budget and precision/recall priority; v0.0.1 obligations and immutable historical approval/acceptance evidence remain unchanged."
+}

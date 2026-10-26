@@ -1,0 +1,657 @@
+{
+  "reviewer": "codex-review-59",
+  "candidate": "8d2163bd3c6c5555aeaffc175bf2207917572dd8",
+  "tree": "00e4126294ae7bc73cd6ee88f5372c66cdf1b64d",
+  "comparison_base": "e6ad11c6ccc5bd2a67c0f6dfe49557dcfa4b4346",
+  "frozen_runtime_commit": "81fec82c1619d20c12473d23e3fdf6706d52b641",
+  "runtime_test_controller_bytes_modes_unchanged": true,
+  "changed_files": [
+    {
+      "path": "docs/adr/0005-admission-consolidation-retrieval.md",
+      "sha256": "04d496ee818c1688d00d4edff65caef1e95bdd1a302bb84b53867711105779c5",
+      "bytes": 10552,
+      "mode": "100644",
+      "git_blob": "87db9d86eb40cd296cce6894baa4d9d3089cacb2"
+    },
+    {
+      "path": "docs/design/v0.0.3-recall-catalog.md",
+      "sha256": "a4529e22ea4ad8fa32432f82038ac2dede94a261a1b7dd79d6f3108b4991033b",
+      "bytes": 16162,
+      "mode": "100644",
+      "git_blob": "5c9d5118266664f4870e9b2021cbaf5d8af0679b"
+    },
+    {
+      "path": "docs/releases/v0.0.3.md",
+      "sha256": "8bcbd5ee8a7d60b5ad9a42cd1810ce906489f7184ff6de5d20f459fb18d55922",
+      "bytes": 5903,
+      "mode": "100644",
+      "git_blob": "d3d867791b2f2c34b29d776ca7fee5acca84bc81"
+    },
+    {
+      "path": "docs/research/2026-10-25-recall-final-evaluation.md",
+      "sha256": "8c3681b25df5c779b78751212d3c669e6923ad814dde5106184a341c638d2e6b",
+      "bytes": 12752,
+      "mode": "100644",
+      "git_blob": "db6b9e777fe0a80c33d73e8ce27e46b5558f2721"
+    },
+    {
+      "path": "docs/research/data/2026-10-26-recall-target/previously-accepted-runtime/commands.json",
+      "sha256": "e2e4154c4557890a81690706c4b39841cf6f2271eb450ad25d53f6c5fb1dae6a",
+      "bytes": 6046,
+      "mode": "100644",
+      "git_blob": "2a50533139a8aec3697012fa34d24ee5fdf90d03"
+    },
+    {
+      "path": "docs/research/data/2026-10-26-recall-target/previously-accepted-runtime/observations.json",
+      "sha256": "4134dbd05f0535f14bd844fd701e6cea7bf064329bb44e8cedfe4d66ed4db191",
+      "bytes": 2765,
+      "mode": "100644",
+      "git_blob": "46a69ea66d5e1d881fefecb6f7a73343abd51666"
+    },
+    {
+      "path": "docs/research/data/2026-10-26-recall-target/previously-accepted-runtime/producer.py",
+      "sha256": "4bfe8c5ac0730d4c78673a295bf612e7d9c0e3a674808d39f7b5466026373223",
+      "bytes": 5374,
+      "mode": "100644",
+      "git_blob": "d71d6ebb9ee95eb037134f4c52c2cf4d90a08778"
+    },
+    {
+      "path": "docs/research/data/2026-10-26-recall-target/previously-accepted-runtime/raw-evidence-manifest.json",
+      "sha256": "465df2b6da8d49dfc6fe304b750a509d8588e1c36ccb80ed03c4c8f0b2bbab48",
+      "bytes": 3875,
+      "mode": "100644",
+      "git_blob": "b1b80019f0024133ad501bc1cd07b6badbf2064a"
+    },
+    {
+      "path": "docs/research/data/2026-10-26-recall-target/previously-accepted-runtime/result.json",
+      "sha256": "411c7a826b58b4e213be07a64441924ccff133df96384794e07e95556f8ae05b",
+      "bytes": 3621,
+      "mode": "100644",
+      "git_blob": "57336315b551c15100b64326c9167a79ec3f7f7f"
+    },
+    {
+      "path": "docs/research/data/2026-10-26-recall-target/previously-accepted-runtime/source-after.json",
+      "sha256": "2911cabadd63a58e09b749169971bfd88680878bd68c618a335afef5c62d2b28",
+      "bytes": 144517,
+      "mode": "100644",
+      "git_blob": "207cdafb85484c11e227e28ef93db2f555985a80"
+    },
+    {
+      "path": "docs/research/data/2026-10-26-recall-target/previously-accepted-runtime/source-before.json",
+      "sha256": "2911cabadd63a58e09b749169971bfd88680878bd68c618a335afef5c62d2b28",
+      "bytes": 144517,
+      "mode": "100644",
+      "git_blob": "207cdafb85484c11e227e28ef93db2f555985a80"
+    },
+    {
+      "path": "docs/research/data/2026-10-26-recall-target/repaired-runtime/commands.json",
+      "sha256": "f67854846f52a130746907d968798931c1a7c3d2df9afff02a0a0e32d683290d",
+      "bytes": 6046,
+      "mode": "100644",
+      "git_blob": "05b03bf5f848b929900de7057fbbab8cf60bb1e8"
+    },
+    {
+      "path": "docs/research/data/2026-10-26-recall-target/repaired-runtime/observations.json",
+      "sha256": "19df3c30c257b584209ab9ef4ea5b8895e07b68c17ce9a50e602bd0acd52b6f2",
+      "bytes": 2767,
+      "mode": "100644",
+      "git_blob": "7aef24fb711b9452118bbdcc30087f822f75f62a"
+    },
+    {
+      "path": "docs/research/data/2026-10-26-recall-target/repaired-runtime/producer.py",
+      "sha256": "60af35a825b37da97b3158964035feac23f6cf9f8e7fbf03f4e554839ec33c31",
+      "bytes": 5376,
+      "mode": "100644",
+      "git_blob": "eb196cfe333b11430ac3b2d31eb8233e7e7d3761"
+    },
+    {
+      "path": "docs/research/data/2026-10-26-recall-target/repaired-runtime/raw-evidence-manifest.json",
+      "sha256": "9c0c853f65c7b5aba85305bc069c71589dbd2f3431cc858e75ace6697f403cae",
+      "bytes": 3864,
+      "mode": "100644",
+      "git_blob": "7d8ac843a1be8b3b7671102c56ed2a346951b11a"
+    },
+    {
+      "path": "docs/research/data/2026-10-26-recall-target/repaired-runtime/result.json",
+      "sha256": "8ea177b7c1ecee88eccf3c2b180252c8ca7e0e32d4399f8a5807da70ee988631",
+      "bytes": 3623,
+      "mode": "100644",
+      "git_blob": "9e573414b3e089fb23114ef0317bc9013026c3fb"
+    },
+    {
+      "path": "docs/research/data/2026-10-26-recall-target/repaired-runtime/source-after.json",
+      "sha256": "21d600b76f1dbc575fea5ca82e2ae58144a524580175d7df40774b278d8e69d8",
+      "bytes": 160888,
+      "mode": "100644",
+      "git_blob": "511827b2d6311fdffe1d2a4473c599a5d6786be2"
+    },
+    {
+      "path": "docs/research/data/2026-10-26-recall-target/repaired-runtime/source-before.json",
+      "sha256": "21d600b76f1dbc575fea5ca82e2ae58144a524580175d7df40774b278d8e69d8",
+      "bytes": 160888,
+      "mode": "100644",
+      "git_blob": "511827b2d6311fdffe1d2a4473c599a5d6786be2"
+    },
+    {
+      "path": "docs/research/data/2026-10-26-recall-target/summary.json",
+      "sha256": "87e22e79149186ffe2f7e2a68d84d9b9f0a275747a1bfc66fd6e1bc92e7f21c3",
+      "bytes": 1573,
+      "mode": "100644",
+      "git_blob": "b38c0c9633e68517cb0771b34d755f80a250f4c9"
+    }
+  ],
+  "source_snapshots_checked": [
+    {
+      "label": "repaired-runtime/before",
+      "commit": "e6ad11c6ccc5bd2a67c0f6dfe49557dcfa4b4346",
+      "tracked_files": 797,
+      "portable_files": 162,
+      "Git_bytes_modes_match": true
+    },
+    {
+      "label": "previously-accepted-runtime/before",
+      "commit": "d01ce2eb98b2669fee44d7c171239a183ceaf742",
+      "tracked_files": 710,
+      "portable_files": 161,
+      "Git_bytes_modes_match": true
+    }
+  ],
+  "runs": [
+    {
+      "label": "repaired-runtime",
+      "source": "e6ad11c6ccc5bd2a67c0f6dfe49557dcfa4b4346",
+      "tracked_files": 797,
+      "portable_files": 162,
+      "source_Git_bytes_modes_match": true,
+      "raw_manifest_entries": 29,
+      "public_json_exports_equal_raw": [
+        "commands.json",
+        "observations.json",
+        "result.json",
+        "source-after.json",
+        "source-before.json"
+      ],
+      "commands": 12,
+      "warm_full_native_seconds": [
+        6.168920167023316,
+        5.993992708041333
+      ],
+      "cold_full_native_seconds": 24.765108624938875,
+      "setup_seconds": 144.57237554201856,
+      "fixture": {
+        "fixture": "semantic-navigation-v3-parent-scopes",
+        "distinct_lessons": 50000,
+        "canonical_files": 50843,
+        "canonical_bytes": 59047173,
+        "root_routes": 31,
+        "layout_basis": "authored source subjects and actual component identities, independent of held-out questions",
+        "frozen_literal_baseline_modified": false
+      },
+      "qualified_rows": [
+        {
+          "path": "topics/r/9a2b24a7-3464-4ce4-b488-28e5c6de71d3-v1.md",
+          "format": "standalone-record",
+          "body": "# Bounded retries\n\nRetry transient requests three times with exponential backoff. Preserve the request identifier across attempts; a permanent validation failure is returned immediately.\n",
+          "source_sha256": "1b70a9dff4a2bcbc7cfa9400330c3661b2bf8a6db19e08d254d1a52b7cc8e601",
+          "scope_chain": [
+            "repository",
+            "repository",
+            "repository"
+          ],
+          "source_class": "external",
+          "untrusted_data": true,
+          "source_assertions_verified": false,
+          "admission_verified": false,
+          "procedural_guidance": false,
+          "record": {
+            "schema": "agent-memory/record-v1",
+            "id": "9a2b24a7-3464-4ce4-b488-28e5c6de71d3",
+            "version": 1,
+            "project-id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+            "kind": "semantic-fact",
+            "status": "active",
+            "scope": "repository",
+            "applicability": "known",
+            "conditions": {},
+            "source": {
+              "actor": "fixture-observer",
+              "kind": "executable-test"
+            },
+            "evidence": [
+              "fixture://quality/retry-limit"
+            ],
+            "origin": {
+              "developer-id": "aa5e6be7-6e22-4e31-b653-9d855486b8a2",
+              "harness": "custom-fixture",
+              "session": "fixed-quality-labels",
+              "code-state": "not-code"
+            },
+            "recorded-at": "2026-10-25T08:00:00Z",
+            "updated": "2026-10-25T08:00:00Z",
+            "valid-from": null,
+            "valid-until": null,
+            "derived-from": [],
+            "corrects": [],
+            "supersedes": [],
+            "trust": "reviewed",
+            "visibility": "visible",
+            "admission-reason": "Authored synthetic evaluation assertion; not real admission evidence"
+          },
+          "selection_class": "current-record",
+          "selection": {
+            "current": true,
+            "gates": {
+              "authorized-scope": true,
+              "applicable": true,
+              "active": true,
+              "valid-time": true,
+              "sufficient-trust": true,
+              "visible": true,
+              "no-active-superseder": true
+            },
+            "reasons": []
+          },
+          "match": {
+            "strategy": "exact-path",
+            "score": 9000,
+            "matching_terms": []
+          }
+        },
+        {
+          "path": "topics/r/9a2b24a7-3464-4ce4-b488-28e5c6de71d3-v1.md",
+          "format": "standalone-record",
+          "body": "# Bounded retries\n\nRetry transient requests three times with exponential backoff. Preserve the request identifier across attempts; a permanent validation failure is returned immediately.\n",
+          "source_sha256": "1b70a9dff4a2bcbc7cfa9400330c3661b2bf8a6db19e08d254d1a52b7cc8e601",
+          "scope_chain": [
+            "repository",
+            "repository",
+            "repository"
+          ],
+          "source_class": "external",
+          "untrusted_data": true,
+          "source_assertions_verified": false,
+          "admission_verified": false,
+          "procedural_guidance": false,
+          "record": {
+            "schema": "agent-memory/record-v1",
+            "id": "9a2b24a7-3464-4ce4-b488-28e5c6de71d3",
+            "version": 1,
+            "project-id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+            "kind": "semantic-fact",
+            "status": "active",
+            "scope": "repository",
+            "applicability": "known",
+            "conditions": {},
+            "source": {
+              "actor": "fixture-observer",
+              "kind": "executable-test"
+            },
+            "evidence": [
+              "fixture://quality/retry-limit"
+            ],
+            "origin": {
+              "developer-id": "aa5e6be7-6e22-4e31-b653-9d855486b8a2",
+              "harness": "custom-fixture",
+              "session": "fixed-quality-labels",
+              "code-state": "not-code"
+            },
+            "recorded-at": "2026-10-25T08:00:00Z",
+            "updated": "2026-10-25T08:00:00Z",
+            "valid-from": null,
+            "valid-until": null,
+            "derived-from": [],
+            "corrects": [],
+            "supersedes": [],
+            "trust": "reviewed",
+            "visibility": "visible",
+            "admission-reason": "Authored synthetic evaluation assertion; not real admission evidence"
+          },
+          "selection_class": "current-record",
+          "selection": {
+            "current": true,
+            "gates": {
+              "authorized-scope": true,
+              "applicable": true,
+              "active": true,
+              "valid-time": true,
+              "sufficient-trust": true,
+              "visible": true,
+              "no-active-superseder": true
+            },
+            "reasons": []
+          },
+          "match": {
+            "strategy": "exact-path",
+            "score": 9000,
+            "matching_terms": []
+          }
+        },
+        {
+          "path": "topics/r/9a2b24a7-3464-4ce4-b488-28e5c6de71d3-v1.md",
+          "format": "standalone-record",
+          "body": "# Bounded retries\n\nRetry transient requests three times with exponential backoff. Preserve the request identifier across attempts; a permanent validation failure is returned immediately.\n",
+          "source_sha256": "1b70a9dff4a2bcbc7cfa9400330c3661b2bf8a6db19e08d254d1a52b7cc8e601",
+          "scope_chain": [
+            "repository",
+            "repository",
+            "repository"
+          ],
+          "source_class": "external",
+          "untrusted_data": true,
+          "source_assertions_verified": false,
+          "admission_verified": false,
+          "procedural_guidance": false,
+          "record": {
+            "schema": "agent-memory/record-v1",
+            "id": "9a2b24a7-3464-4ce4-b488-28e5c6de71d3",
+            "version": 1,
+            "project-id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+            "kind": "semantic-fact",
+            "status": "active",
+            "scope": "repository",
+            "applicability": "known",
+            "conditions": {},
+            "source": {
+              "actor": "fixture-observer",
+              "kind": "executable-test"
+            },
+            "evidence": [
+              "fixture://quality/retry-limit"
+            ],
+            "origin": {
+              "developer-id": "aa5e6be7-6e22-4e31-b653-9d855486b8a2",
+              "harness": "custom-fixture",
+              "session": "fixed-quality-labels",
+              "code-state": "not-code"
+            },
+            "recorded-at": "2026-10-25T08:00:00Z",
+            "updated": "2026-10-25T08:00:00Z",
+            "valid-from": null,
+            "valid-until": null,
+            "derived-from": [],
+            "corrects": [],
+            "supersedes": [],
+            "trust": "reviewed",
+            "visibility": "visible",
+            "admission-reason": "Authored synthetic evaluation assertion; not real admission evidence"
+          },
+          "selection_class": "current-record",
+          "selection": {
+            "current": true,
+            "gates": {
+              "authorized-scope": true,
+              "applicable": true,
+              "active": true,
+              "valid-time": true,
+              "sufficient-trust": true,
+              "visible": true,
+              "no-active-superseder": true
+            },
+            "reasons": []
+          },
+          "match": {
+            "strategy": "exact-path",
+            "score": 9000,
+            "matching_terms": []
+          }
+        }
+      ],
+      "producer_sha256": "60af35a825b37da97b3158964035feac23f6cf9f8e7fbf03f4e554839ec33c31"
+    },
+    {
+      "label": "previously-accepted-runtime",
+      "source": "d01ce2eb98b2669fee44d7c171239a183ceaf742",
+      "tracked_files": 710,
+      "portable_files": 161,
+      "source_Git_bytes_modes_match": true,
+      "raw_manifest_entries": 29,
+      "public_json_exports_equal_raw": [
+        "commands.json",
+        "observations.json",
+        "result.json",
+        "source-after.json",
+        "source-before.json"
+      ],
+      "commands": 12,
+      "warm_full_native_seconds": [
+        6.283692292054184,
+        6.391442833933979
+      ],
+      "cold_full_native_seconds": 25.69789141707588,
+      "setup_seconds": 147.27684145898093,
+      "fixture": {
+        "fixture": "semantic-navigation-v3-parent-scopes",
+        "distinct_lessons": 50000,
+        "canonical_files": 50843,
+        "canonical_bytes": 59047173,
+        "root_routes": 31,
+        "layout_basis": "authored source subjects and actual component identities, independent of held-out questions",
+        "frozen_literal_baseline_modified": false
+      },
+      "qualified_rows": [
+        {
+          "path": "topics/r/9a2b24a7-3464-4ce4-b488-28e5c6de71d3-v1.md",
+          "format": "standalone-record",
+          "body": "# Bounded retries\n\nRetry transient requests three times with exponential backoff. Preserve the request identifier across attempts; a permanent validation failure is returned immediately.\n",
+          "source_sha256": "1b70a9dff4a2bcbc7cfa9400330c3661b2bf8a6db19e08d254d1a52b7cc8e601",
+          "scope_chain": [
+            "repository",
+            "repository",
+            "repository"
+          ],
+          "source_class": "external",
+          "untrusted_data": true,
+          "source_assertions_verified": false,
+          "admission_verified": false,
+          "procedural_guidance": false,
+          "record": {
+            "schema": "agent-memory/record-v1",
+            "id": "9a2b24a7-3464-4ce4-b488-28e5c6de71d3",
+            "version": 1,
+            "project-id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+            "kind": "semantic-fact",
+            "status": "active",
+            "scope": "repository",
+            "applicability": "known",
+            "conditions": {},
+            "source": {
+              "actor": "fixture-observer",
+              "kind": "executable-test"
+            },
+            "evidence": [
+              "fixture://quality/retry-limit"
+            ],
+            "origin": {
+              "developer-id": "aa5e6be7-6e22-4e31-b653-9d855486b8a2",
+              "harness": "custom-fixture",
+              "session": "fixed-quality-labels",
+              "code-state": "not-code"
+            },
+            "recorded-at": "2026-10-25T08:00:00Z",
+            "updated": "2026-10-25T08:00:00Z",
+            "valid-from": null,
+            "valid-until": null,
+            "derived-from": [],
+            "corrects": [],
+            "supersedes": [],
+            "trust": "reviewed",
+            "visibility": "visible",
+            "admission-reason": "Authored synthetic evaluation assertion; not real admission evidence"
+          },
+          "selection_class": "current-record",
+          "selection": {
+            "current": true,
+            "gates": {
+              "authorized-scope": true,
+              "applicable": true,
+              "active": true,
+              "valid-time": true,
+              "sufficient-trust": true,
+              "visible": true,
+              "no-active-superseder": true
+            },
+            "reasons": []
+          },
+          "match": {
+            "strategy": "exact-path",
+            "score": 9000,
+            "matching_terms": []
+          }
+        },
+        {
+          "path": "topics/r/9a2b24a7-3464-4ce4-b488-28e5c6de71d3-v1.md",
+          "format": "standalone-record",
+          "body": "# Bounded retries\n\nRetry transient requests three times with exponential backoff. Preserve the request identifier across attempts; a permanent validation failure is returned immediately.\n",
+          "source_sha256": "1b70a9dff4a2bcbc7cfa9400330c3661b2bf8a6db19e08d254d1a52b7cc8e601",
+          "scope_chain": [
+            "repository",
+            "repository",
+            "repository"
+          ],
+          "source_class": "external",
+          "untrusted_data": true,
+          "source_assertions_verified": false,
+          "admission_verified": false,
+          "procedural_guidance": false,
+          "record": {
+            "schema": "agent-memory/record-v1",
+            "id": "9a2b24a7-3464-4ce4-b488-28e5c6de71d3",
+            "version": 1,
+            "project-id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+            "kind": "semantic-fact",
+            "status": "active",
+            "scope": "repository",
+            "applicability": "known",
+            "conditions": {},
+            "source": {
+              "actor": "fixture-observer",
+              "kind": "executable-test"
+            },
+            "evidence": [
+              "fixture://quality/retry-limit"
+            ],
+            "origin": {
+              "developer-id": "aa5e6be7-6e22-4e31-b653-9d855486b8a2",
+              "harness": "custom-fixture",
+              "session": "fixed-quality-labels",
+              "code-state": "not-code"
+            },
+            "recorded-at": "2026-10-25T08:00:00Z",
+            "updated": "2026-10-25T08:00:00Z",
+            "valid-from": null,
+            "valid-until": null,
+            "derived-from": [],
+            "corrects": [],
+            "supersedes": [],
+            "trust": "reviewed",
+            "visibility": "visible",
+            "admission-reason": "Authored synthetic evaluation assertion; not real admission evidence"
+          },
+          "selection_class": "current-record",
+          "selection": {
+            "current": true,
+            "gates": {
+              "authorized-scope": true,
+              "applicable": true,
+              "active": true,
+              "valid-time": true,
+              "sufficient-trust": true,
+              "visible": true,
+              "no-active-superseder": true
+            },
+            "reasons": []
+          },
+          "match": {
+            "strategy": "exact-path",
+            "score": 9000,
+            "matching_terms": []
+          }
+        },
+        {
+          "path": "topics/r/9a2b24a7-3464-4ce4-b488-28e5c6de71d3-v1.md",
+          "format": "standalone-record",
+          "body": "# Bounded retries\n\nRetry transient requests three times with exponential backoff. Preserve the request identifier across attempts; a permanent validation failure is returned immediately.\n",
+          "source_sha256": "1b70a9dff4a2bcbc7cfa9400330c3661b2bf8a6db19e08d254d1a52b7cc8e601",
+          "scope_chain": [
+            "repository",
+            "repository",
+            "repository"
+          ],
+          "source_class": "external",
+          "untrusted_data": true,
+          "source_assertions_verified": false,
+          "admission_verified": false,
+          "procedural_guidance": false,
+          "record": {
+            "schema": "agent-memory/record-v1",
+            "id": "9a2b24a7-3464-4ce4-b488-28e5c6de71d3",
+            "version": 1,
+            "project-id": "7eea1199-8123-4989-8cde-012d3361c8ee",
+            "kind": "semantic-fact",
+            "status": "active",
+            "scope": "repository",
+            "applicability": "known",
+            "conditions": {},
+            "source": {
+              "actor": "fixture-observer",
+              "kind": "executable-test"
+            },
+            "evidence": [
+              "fixture://quality/retry-limit"
+            ],
+            "origin": {
+              "developer-id": "aa5e6be7-6e22-4e31-b653-9d855486b8a2",
+              "harness": "custom-fixture",
+              "session": "fixed-quality-labels",
+              "code-state": "not-code"
+            },
+            "recorded-at": "2026-10-25T08:00:00Z",
+            "updated": "2026-10-25T08:00:00Z",
+            "valid-from": null,
+            "valid-until": null,
+            "derived-from": [],
+            "corrects": [],
+            "supersedes": [],
+            "trust": "reviewed",
+            "visibility": "visible",
+            "admission-reason": "Authored synthetic evaluation assertion; not real admission evidence"
+          },
+          "selection_class": "current-record",
+          "selection": {
+            "current": true,
+            "gates": {
+              "authorized-scope": true,
+              "applicable": true,
+              "active": true,
+              "valid-time": true,
+              "sufficient-trust": true,
+              "visible": true,
+              "no-active-superseder": true
+            },
+            "reasons": []
+          },
+          "match": {
+            "strategy": "exact-path",
+            "score": 9000,
+            "matching_terms": []
+          }
+        }
+      ],
+      "producer_sha256": "4bfe8c5ac0730d4c78673a295bf612e7d9c0e3a674808d39f7b5466026373223"
+    }
+  ],
+  "errors": [],
+  "raw_files_hashed": 60,
+  "new_product_executions": 0,
+  "new_models": 0,
+  "scope": "supplemental product-target/docs/evidence review, not whole #99 acceptance or release",
+  "holds": "RELEASED",
+  "external_writer_grant": "NONE / RELEASED",
+  "jobs": "terminal and collected",
+  "worlds": 0,
+  "disposition": "APPROVED bounded supplemental product-target/docs/evidence amendment; nonblocking causal-wording caution",
+  "report_sha256": "a95c700a3b6a5b5a43f55a4a589864901fced72668c470338851031683159951",
+  "operator_target_seconds": 7,
+  "quality_safety_gates_waived": false,
+  "whole_99_or_release_accepted": false
+}
