@@ -1,0 +1,194 @@
+{
+  "reviewer": "codex-review-59",
+  "evidence_commit": "10a9eb7959082afb889c61a9cbac3f750d7af0c8",
+  "tree": "cf043f246b28c4151ce8a6f23de7f9de2c3ff32f",
+  "runtime_commit": "81fec82c1619d20c12473d23e3fdf6706d52b641",
+  "source_snapshots_checked": [
+    {
+      "label": "cohort frozen source",
+      "commit": "81fec82c1619d20c12473d23e3fdf6706d52b641",
+      "tracked_files": 758,
+      "portable_files": 162,
+      "Git_bytes_modes_match": true
+    }
+  ],
+  "controller_sha256": "f48fe78daf796a8cfcc1527280b62d82d6c2988a7a995cbf0d4c83730cf73a76",
+  "raw_gzip_files_verified": 2839,
+  "compressed_bytes_verified": 207052424,
+  "decompressed_bytes_verified": 710261079,
+  "public_commands": 1708,
+  "exit_counts": {
+    "0": 1706,
+    "1": 1,
+    "86": 1
+  },
+  "expected_refusals_and_interruption": [
+    {
+      "number": 540,
+      "helper": "reconcile_memory.py",
+      "operation": "page-v2",
+      "exit": 1,
+      "input_names": [],
+      "code": "semantic-review-unverified"
+    },
+    {
+      "number": 590,
+      "helper": "refresh_memory.py",
+      "operation": "apply",
+      "exit": 86,
+      "kind": "declared after-receipt interruption"
+    }
+  ],
+  "unique_input_blobs": 1124,
+  "valid_review_page_ack_checks": 142,
+  "retained_actual_page_bodies": 669,
+  "admitted_records": 48,
+  "ordinary_records": 48,
+  "role_records": 0,
+  "actual_ordinary_refresh_plan_checks": 1752,
+  "complete_refreshed_banks_rounds": 48,
+  "seed_inventory_events_verified": 96,
+  "seed_initial_IDs": 1000,
+  "required_scenarios": 10,
+  "feature_observations": [
+    {
+      "session": 0,
+      "observations": 12,
+      "distinct_states": 1
+    },
+    {
+      "session": 1,
+      "observations": 10,
+      "distinct_states": 1
+    },
+    {
+      "session": 2,
+      "observations": 10,
+      "distinct_states": 1
+    },
+    {
+      "session": 3,
+      "observations": 10,
+      "distinct_states": 1
+    },
+    {
+      "session": 4,
+      "observations": 10,
+      "distinct_states": 1
+    },
+    {
+      "session": 5,
+      "observations": 10,
+      "distinct_states": 1
+    },
+    {
+      "session": 6,
+      "observations": 10,
+      "distinct_states": 1
+    },
+    {
+      "session": 7,
+      "observations": 10,
+      "distinct_states": 1
+    },
+    {
+      "session": 8,
+      "observations": 10,
+      "distinct_states": 1
+    },
+    {
+      "session": 9,
+      "observations": 10,
+      "distinct_states": 1
+    },
+    {
+      "session": 10,
+      "observations": 10,
+      "distinct_states": 1
+    },
+    {
+      "session": 11,
+      "observations": 10,
+      "distinct_states": 1
+    },
+    {
+      "session": 12,
+      "observations": 10,
+      "distinct_states": 1
+    },
+    {
+      "session": 13,
+      "observations": 10,
+      "distinct_states": 1
+    },
+    {
+      "session": 14,
+      "observations": 10,
+      "distinct_states": 1
+    },
+    {
+      "session": 15,
+      "observations": 10,
+      "distinct_states": 1
+    },
+    {
+      "session": 16,
+      "observations": 10,
+      "distinct_states": 1
+    },
+    {
+      "session": 17,
+      "observations": 10,
+      "distinct_states": 1
+    },
+    {
+      "session": 18,
+      "observations": 10,
+      "distinct_states": 1
+    },
+    {
+      "session": 19,
+      "observations": 10,
+      "distinct_states": 1
+    },
+    {
+      "session": 20,
+      "observations": 10,
+      "distinct_states": 1
+    },
+    {
+      "session": 21,
+      "observations": 10,
+      "distinct_states": 1
+    },
+    {
+      "session": 22,
+      "observations": 10,
+      "distinct_states": 1
+    },
+    {
+      "session": 23,
+      "observations": 10,
+      "distinct_states": 1
+    }
+  ],
+  "negative_recall_findings": [],
+  "publication_states": {
+    "('prepare', 'prepared')": 94,
+    "('land', 'landed')": 48,
+    "('land', 'already-landed')": 1,
+    "('land', 'pending-reconciliation')": 46
+  },
+  "private_apply_readback_bodies_retained": 0,
+  "private_apply_readback_bodies_not_retained": 49,
+  "seconds": 8776.590710052289,
+  "driver_exit": 0,
+  "errors": [],
+  "new_product_or_test_executions": 0,
+  "new_model_calls": 0,
+  "whole99_or_release_accepted": false,
+  "jobs": "terminal and collected",
+  "worlds": 0,
+  "source_holds": "RELEASED",
+  "external_writer_grant": "NONE / RELEASED"
+}

@@ -76,5 +76,7 @@
   "all_round_learning_verified": true,
   "feature_state_verified": true,
   "source_preserved": true,
-  "whole_acceptance_claimed": false
+  "whole_acceptance_claimed": false,
+  "bounded_core_variation_independently_approved": true,
+  "independent_review": "independent-review/review.md"
 }
