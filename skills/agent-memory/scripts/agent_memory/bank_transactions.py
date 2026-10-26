@@ -438,7 +438,8 @@ def apply(prepared):
             if not locations(*writes.bank_path(p['repo_root']), p['operation_id'])[1].exists():
                 validate_refresh(p, owned_lock=owner)
             security.guarded_start(p['repo_root'], p['operation_id'], context,
-                {path: p['files'][path] for path in changed(p) if path in p['files']}, classes, action='refresh')
+                {path: p['files'][path] for path in changed(p) if path in p['files']}, classes, action='refresh',
+                complete_refresh=p['refresh_evidence']['proof']['schema']=='agent-memory/semantic-sharing-proof-v2')
         elif p['operation'] == 'initialize':
             validate_transaction(p)
             security.guarded_start(p['repo_root'], p['operation_id'], context,

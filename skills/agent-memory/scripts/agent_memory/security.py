@@ -134,9 +134,24 @@ def ensure_safe(contents):
         raise ContractError('Security policy quarantined proposed memory; redact or review before writing: ' + ', '.join(reasons))
 
 
-def guarded_start(repo, operation_id, context, contents, source_classes, *, action):
+def complete_refresh_reasons(contents):
+    """Inspect every bounded canonical source in a versioned complete refresh."""
+    from . import bank_contract, sharing_limits
+    sharing_limits.bank_size(contents)
+    for path in contents:
+        if path!='MEMORY.md':
+            bank_contract.path_value(path)
+    # The bank bound applies to payload bytes. The separately bounded path
+    # label must also pass, without concatenation shrinking a 16KiB source.
+    return sorted({reason for path,body in contents.items()
+        for reason in scan(path+'\n'+body,maximum=65536)['reasons']})
+
+
+def guarded_start(repo, operation_id, context, contents, source_classes, *, action, complete_refresh=False):
     """Call under the governed writer's resolved scope and bank lock."""
-    reasons = content_reasons(contents)
+    if complete_refresh and action!='refresh':
+        raise ContractError('Complete refresh scanning cannot widen a capture or another mutation')
+    reasons = complete_refresh_reasons(contents) if complete_refresh else content_reasons(contents)
     event = audit(repo, operation_id, 'mutation', 'refused' if reasons else 'started',
                   context, source_classes, reasons, action=action)
     if reasons:
