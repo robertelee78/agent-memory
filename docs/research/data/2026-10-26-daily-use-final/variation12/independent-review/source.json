@@ -1,0 +1,139 @@
+{
+  "reviewer": "codex-review-59",
+  "evidence_commit": "fcd4b559bb95bfd81dc2869d1566a9ef5b5694e5",
+  "tree": "ddac13d8b13481262296cfe91dcf8892906f4362",
+  "runtime_commit": "81fec82c1619d20c12473d23e3fdf6706d52b641",
+  "source_snapshots_checked": [
+    {
+      "label": "cohort frozen source",
+      "commit": "81fec82c1619d20c12473d23e3fdf6706d52b641",
+      "tracked_files": 758,
+      "portable_files": 162,
+      "Git_bytes_modes_match": true
+    }
+  ],
+  "carry_forward_changed_functions": [
+    "prune_and_older_branch",
+    "typed_recall",
+    "withheld_replacement_independent_path"
+  ],
+  "controller_sha256": "f48fe78daf796a8cfcc1527280b62d82d6c2988a7a995cbf0d4c83730cf73a76",
+  "raw_gzip_files_verified": 1283,
+  "compressed_bytes_verified": 870743559,
+  "decompressed_bytes_verified": 2785233292,
+  "public_commands": 716,
+  "exit_counts": {
+    "0": 714,
+    "1": 1,
+    "86": 1
+  },
+  "expected_refusals_and_interruption": [
+    {
+      "number": 246,
+      "helper": "reconcile_memory.py",
+      "operation": "page-v2",
+      "exit": 1,
+      "input_names": [],
+      "code": "semantic-review-unverified"
+    },
+    {
+      "number": 276,
+      "helper": "refresh_memory.py",
+      "operation": "apply",
+      "exit": 86,
+      "kind": "declared after-receipt interruption"
+    }
+  ],
+  "unique_input_blobs": 560,
+  "valid_review_page_ack_checks": 70,
+  "retained_actual_page_bodies": 193,
+  "admitted_records": 24,
+  "ordinary_records": 24,
+  "role_records": 0,
+  "actual_ordinary_refresh_plan_checks": 444,
+  "complete_refreshed_banks_rounds": 24,
+  "seed_inventory_events_verified": 48,
+  "seed_initial_IDs": 10000,
+  "required_scenarios": 10,
+  "feature_observations": [
+    {
+      "session": 0,
+      "observations": 12,
+      "distinct_states": 1
+    },
+    {
+      "session": 1,
+      "observations": 10,
+      "distinct_states": 1
+    },
+    {
+      "session": 2,
+      "observations": 10,
+      "distinct_states": 1
+    },
+    {
+      "session": 3,
+      "observations": 10,
+      "distinct_states": 1
+    },
+    {
+      "session": 4,
+      "observations": 10,
+      "distinct_states": 1
+    },
+    {
+      "session": 5,
+      "observations": 10,
+      "distinct_states": 1
+    },
+    {
+      "session": 6,
+      "observations": 10,
+      "distinct_states": 1
+    },
+    {
+      "session": 7,
+      "observations": 10,
+      "distinct_states": 1
+    },
+    {
+      "session": 8,
+      "observations": 10,
+      "distinct_states": 1
+    },
+    {
+      "session": 9,
+      "observations": 10,
+      "distinct_states": 1
+    },
+    {
+      "session": 10,
+      "observations": 10,
+      "distinct_states": 1
+    },
+    {
+      "session": 11,
+      "observations": 10,
+      "distinct_states": 1
+    }
+  ],
+  "negative_recall_findings": [],
+  "publication_states": {
+    "('prepare', 'prepared')": 46,
+    "('land', 'landed')": 24,
+    "('land', 'already-landed')": 1,
+    "('land', 'pending-reconciliation')": 22
+  },
+  "private_apply_readback_bodies_retained": 0,
+  "private_apply_readback_bodies_not_retained": 25,
+  "seconds": 18665.647295208066,
+  "driver_exit": 0,
+  "errors": [],
+  "new_product_or_test_executions": 0,
+  "new_model_calls": 0,
+  "whole99_or_release_accepted": false,
+  "jobs": "terminal and collected",
+  "worlds": 0,
+  "source_holds": "RELEASED",
+  "external_writer_grant": "NONE / RELEASED"
+}

@@ -76,5 +76,8 @@
   "all_round_learning_verified": true,
   "feature_state_verified": true,
   "source_preserved": true,
-  "whole_acceptance_claimed": false
+  "whole_acceptance_claimed": false,
+  "bounded_core_variation_independently_approved": true,
+  "independent_review": "independent-review/review.md",
+  "process_exit_evidence": "later-process-exit-observation.json; root-observed terminal PTY58935 exit0, not an original native driver receipt."
 }
