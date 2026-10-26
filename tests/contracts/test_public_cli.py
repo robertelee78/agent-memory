@@ -9,6 +9,10 @@ from cli_alias_fixtures import channel, install, alias_tmpdir, advance_to_curren
 from runtime_update_fixtures import fixture, advance
 from contracts.test_installer import snapshot
 
+CURRENT_VERSION = json.loads(next(line.split('metadata: ', 1)[1]
+    for line in (PACK/'SKILL.md').read_text().splitlines()
+    if line.startswith('metadata: ')))['version']
+
 
 def pipe(world, source, *args):
     return world.run(['/bin/bash', '-c',
@@ -79,7 +83,7 @@ class PublicCLIContract(unittest.TestCase):
             self.assertIn('Installation preview; no changes made', planned.stdout)
             self.assertNotIn('"verified"', planned.stdout); self.assertEqual(snapshot(w.root), before)
             first = pipe(w, source, '--presets', 'none')
-            self.assertEqual(first.returncode, 0, first.stderr); self.assertIn('Installed am 0.0.2', first.stdout)
+            self.assertEqual(first.returncode, 0, first.stderr); self.assertIn('Installed am '+CURRENT_VERSION, first.stdout)
             receipt_path = w.paths['state']/'agent-memory/install/receipt.json'
             receipt = json.loads(receipt_path.read_text()); cli = Path(receipt['bin_dir'])/'am'
             old = receipt_path.read_bytes()
@@ -110,10 +114,10 @@ class PublicCLIContract(unittest.TestCase):
             old_update = w.run([legacy, 'update'])
             self.assertTrue(json.loads(old_update.stdout)['verified'])
             self.assertEqual(legacy.read_bytes(), old_bytes)
-            version = w.run([legacy, '--version']); self.assertTrue(version.stdout.startswith('agent-memory 0.0.2\n'))
-            refreshed = w.run([legacy, 'install']); self.assertIn('Installed agent-memory 0.0.2', refreshed.stdout)
+            version = w.run([legacy, '--version']); self.assertTrue(version.stdout.startswith('agent-memory '+CURRENT_VERSION+'\n'))
+            refreshed = w.run([legacy, 'install']); self.assertIn('Installed agent-memory '+CURRENT_VERSION, refreshed.stdout)
             short = directory/'am'
-            self.assertTrue(w.run([short, '--version']).stdout.startswith('am 0.0.2\n'))
+            self.assertTrue(w.run([short, '--version']).stdout.startswith('am '+CURRENT_VERSION+'\n'))
             self.assertEqual(legacy.read_bytes(), short.read_bytes())
 
     def test_refusals_and_preserved_uninstall_are_readable_and_keep_failure_codes(self):
