@@ -128,6 +128,7 @@
     {"name": "known-holds-v2", "layer": "concurrency", "scope": "v0.0.3", "path": "tests/contracts/test_known_holds_v2.py"},
     {"name": "quarantined-sharing-v2", "layer": "concurrency", "scope": "v0.0.3", "path": "tests/contracts/test_quarantined_sharing_v2.py"},
     {"name": "new-topic-merge", "layer": "concurrency", "scope": "v0.0.3", "path": "tests/contracts/test_new_topic_merge.py"},
+    {"name": "large-refresh-security", "layer": "concurrency", "scope": "v0.0.3", "path": "tests/contracts/test_large_refresh_security.py"},
     {"name": "refresh-pending", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_refresh_pending.py"},
     {"name": "refresh-invalidation", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_refresh_invalidation.py"},
     {"name": "refresh-cursor", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_refresh_cursor.py"},
