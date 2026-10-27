@@ -32,6 +32,23 @@ class TurnHookContract(unittest.TestCase):
         self.assertIn('Never directly edit or stage', prompt)
         self.assertIn('do not bypass permissions', prompt)
 
+    def test_opt_in_claude_stop_wakes_once_and_preserves_permissions(self):
+        hook = HOOK.parent / 'claude_stop.py'
+        def run(value):
+            return subprocess.run([sys.executable, '-B', str(hook)], input=json.dumps(value).encode(),
+                                  capture_output=True, timeout=5)
+        wake = run({'hook_event_name': 'Stop', 'stop_hook_active': False})
+        self.assertEqual(wake.returncode, 2)
+        self.assertIn(str(HOOK.resolve().parent.parent / 'SKILL.md'), wake.stderr.decode())
+        self.assertIn('do not bypass permissions', wake.stderr.decode())
+        self.assertIn('Never directly edit or stage', wake.stderr.decode())
+        guarded = run({'hook_event_name': 'Stop', 'stop_hook_active': True})
+        self.assertEqual(guarded.returncode, 0)
+        self.assertEqual(guarded.stderr, b'')
+        malformed = run({'hook_event_name': 'Stop'})
+        self.assertEqual(malformed.returncode, 0)
+        self.assertIn('pending', json.loads(malformed.stdout)['systemMessage'])
+
     def test_invalid_and_oversized_events_surface_pending_without_blocking(self):
         for raw in (b'bad json', b'{}', b'X' * (64 * 1024 + 1)):
             with self.subTest(length=len(raw)):
