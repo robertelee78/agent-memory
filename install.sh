@@ -13,11 +13,24 @@ for argument in "$@"; do
       exit 0 ;;
   esac
 done
-command -v python3 >/dev/null 2>&1 || { echo 'am: Python 3.11+ is required' >&2; exit 1; }
-python3 -I -c 'import sys; sys.exit(0 if sys.version_info >= (3,11) else 1)' || {
-  echo 'am: Python 3.11+ must be available as python3 on PATH' >&2; exit 1;
-}
-python3 -I - "$@" <<'AM_VERIFIED_INSTALLER'
+am_python=
+old_ifs=$IFS
+IFS=:
+set -f
+for directory in $PATH; do
+  [ -n "$directory" ] || directory=.
+  candidate=$directory/python3
+  if [ -x "$candidate" ] && "$candidate" -I -c 'import sys; sys.exit(sys.version_info < (3, 11))' >/dev/null 2>&1; then
+    am_python=$candidate
+    break
+  fi
+done
+IFS=$old_ifs
+set +f
+if [ -z "$am_python" ]; then
+  echo 'am: Python 3.11+ must be available as python3 on PATH' >&2; exit 1
+fi
+"$am_python" -I - "$@" <<'AM_VERIFIED_INSTALLER'
 """C2E-style signed acquisition; standalone so the bootstrap embeds this verifier."""
 from __future__ import annotations
 

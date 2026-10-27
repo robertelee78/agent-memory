@@ -329,6 +329,36 @@ class InstallerContract(unittest.TestCase):
                 self.assertFalse(plugin.exists()); self.assertFalse(plugin.is_symlink())
                 self.assertEqual(other.read_text(), 'foreign plugin\n')
 
+    def test_wrapper_chooses_supported_python_after_older_path_entry(self):
+        with World() as world:
+            source = self.source(world)
+            receipt = self.run_install(world, source, '--presets', 'none')['receipt']
+            older = world.inside('older python'); older.mkdir()
+            (older/'python3').write_text('#!/bin/sh\nexit 1\n'); (older/'python3').chmod(0o755)
+            supported = world.inside('supported python with spaces'); supported.mkdir()
+            (supported/'python3').symlink_to(sys.executable)
+            world.env['PATH'] = str(older) + ':' + str(supported) + ':/usr/bin:/bin'
+            for cache in source.rglob('__pycache__'):
+                shutil.rmtree(cache)
+            command = Path(receipt['bin_dir'])/'am'
+            result = world.run([command, '--version'], check=False)
+            self.assertEqual(result.returncode,0,result.stdout+result.stderr)
+            self.assertTrue(result.stdout.startswith('am '),result.stdout)
+            alias = world.run([Path(receipt['bin_dir'])/'agent-memory','--version'],check=False)
+            self.assertEqual(alias.returncode,0,alias.stdout+alias.stderr)
+            self.assertTrue(alias.stdout.startswith('agent-memory '), alias.stdout)
+            self.assertEqual(alias.stdout.splitlines()[1:], result.stdout.splitlines()[1:])
+            hook_launcher = source/'hooks/python3.sh'
+            hook = world.run(['/bin/sh', hook_launcher, '-c',
+                              'import sys; print(sys.version_info >= (3,11), sys.dont_write_bytecode)'], check=False)
+            self.assertEqual(hook.returncode, 0, hook.stderr)
+            self.assertEqual(hook.stdout.strip(), 'True True')
+            self.assertFalse(list(source.rglob('__pycache__')))
+            bootstrap = world.run(['/bin/bash', ROOT/'install.sh', '--invalid-option'], check=False)
+            self.assertNotEqual(bootstrap.returncode, 0)
+            self.assertIn('Unknown install option', bootstrap.stderr)
+            self.assertNotIn('Python 3.11+', bootstrap.stderr)
+
     def test_codex_stop_install_preserves_foreign_settings_and_uninstalls(self):
         with World() as world:
             source = self.source(world)

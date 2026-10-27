@@ -175,6 +175,25 @@ class PublishedAcknowledgmentContract(unittest.TestCase):
             other = w.repository("other-repository")
             self.assertNotEqual(invoke('published', other).returncode, 0)
 
+class OpenCodeLauncherContract(unittest.TestCase):
+    def test_real_ledger_with_older_python_first(self):
+        import subprocess
+        import sys
+        from world import World
+        hooks = Path(__file__).resolve().parents[2] / 'skills/agent-memory/hooks'
+        with World() as w:
+            old = w.inside('old python'); old.mkdir()
+            (old/'python3').write_text('#!/bin/sh\nexit 1\n'); (old/'python3').chmod(0o755)
+            supported = w.inside('supported python'); supported.mkdir()
+            (supported/'python3').symlink_to(sys.executable)
+            w.env['PATH'] = str(old) + ':' + str(supported) + ':/usr/bin:/bin'
+            repo = w.repository()
+            value = {'root': str(w.root.resolve()), 'session': 's', 'source': 'p', 'repo': str(repo)}
+            result = subprocess.run(['/bin/sh', str(hooks/'python3.sh'), str(hooks/'boundary_ledger.py')],
+                                    input=json.dumps(value), text=True, capture_output=True, env=w.env, timeout=30)
+            self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+            self.assertEqual(json.loads(result.stdout)['status'], 'not-applicable')
+
 class UninitializedBoundaryContract(unittest.TestCase):
     def test_absent_context_skips_and_malformed_bank_remains_pending(self):
         import subprocess

@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
 
@@ -62,6 +63,12 @@ process.stdout.write(JSON.stringify(checks));
             (Path(tmp)/'second').mkdir()
             env['AGENT_MEMORY_STATE_HOME']=str((Path(tmp)/'second').resolve())
             shutil.copyfile(ROOT/'skills/agent-memory/hooks/opencode-v2-queue.js',target)
+            shutil.copyfile(ROOT/'skills/agent-memory/hooks/python3.sh', Path(tmp)/'python3.sh')
+            old = Path(tmp)/'old python'; old.mkdir()
+            (old/'python3').write_text('#!/bin/sh\nexit 1\n'); (old/'python3').chmod(0o755)
+            supported_python = Path(tmp)/'supported python'; supported_python.mkdir()
+            (supported_python/'python3').symlink_to(sys.executable)
+            env['PATH'] = str(old) + ':' + str(supported_python) + ':/usr/bin:/bin'
             env['TEST_REPO']=str(Path(tmp).resolve())
             (Path(tmp)/'boundary_ledger.py').write_text('import json,sys,os\nr=json.load(sys.stdin)\nassert r.get("repo")==os.environ["TEST_REPO"]\nprint(json.dumps({"status":"assessed-no-learning" if r.get("action")=="assessed-no-learning" else ("pending-turn" if r.get("action")=="inspect" else "reserved")}))\n')
             supported=subprocess.run([shutil.which('node'),'--input-type=module','-e',source,str(target)],
