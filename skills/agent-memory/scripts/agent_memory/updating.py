@@ -246,7 +246,18 @@ def run(args):
             or (source['kind'] == 'managed' and source['remote'] == install.DEFAULT_REMOTE and source['ref'] == 'main')):
         from . import release_distribution as release
         with tempfile.TemporaryDirectory(prefix='am-preverified-update-') as temporary:
-            root = Path(temporary)/'source'; release.acquire(root)
+            observation = release.probe()
+            manifest, raw, _, _ = observation
+            # A verified exact manifest needs no archive fetch: use the owned,
+            # independently verified installed source for planning instead.
+            if (source['kind'] == 'release'
+                    and source.get('release_manifest_sha256') == release.digest(raw)
+                    and source.get('revision') == manifest['source_commit']
+                    and source.get('artifact_digest') == manifest['artifact_digest']
+                    and source.get('version') == manifest['version']):
+                root = code
+            else:
+                root = Path(temporary)/'source'; release.acquire(root, observation=observation)
             install.BOOTSTRAP_SOURCE = root
             try:
                 return run(args)

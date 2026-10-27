@@ -215,7 +215,8 @@ def download(url, maximum, *, json_response=False):
     return raw
 
 
-def acquire(destination):
+def probe():
+    """Authenticate the latest release identity before fetching its payload."""
     locator = parse(download(API + '/latest', MAX_METADATA, json_response=True))
     require(isinstance(locator, dict) and locator.get('draft') is False and locator.get('prerelease') is False
             and isinstance(locator.get('tag_name'), str), 'Stable release locator is unavailable')
@@ -225,6 +226,11 @@ def acquire(destination):
     raw = download(base + MANIFEST, MAX_METADATA)
     signature = download(base + SIGNATURE, 4096)
     manifest = verify_manifest(raw, signature, tag)
+    return manifest, raw, signature, base
+
+
+def acquire(destination, *, observation=None):
+    manifest, raw, signature, base = observation if observation is not None else probe()
     extract(download(base + ARCHIVE, manifest['archive_size']), destination, manifest)
     (destination/MANIFEST).write_bytes(raw)
     (destination/SIGNATURE).write_bytes(signature)

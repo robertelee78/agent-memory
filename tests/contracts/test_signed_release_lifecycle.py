@@ -18,6 +18,20 @@ class SignedReleaseLifecycle(unittest.TestCase):
         self.assertEqual(result.returncode,expected,(result.stdout+result.stderr)[:2500])
         return json.loads(result.stdout)
 
+    def test_current_signed_update_checks_manifest_without_archive_or_bank_scan(self):
+        with World() as w, SignedRelease(w) as release:
+            release.prepare()
+            installed = json.loads(release.install().stdout)
+            self.assertTrue(installed['verified'])
+            cli = Path(installed['receipt']['bin_dir'])/'am'
+            release.requests.clear()
+            value = self.value(w, cli, 'update')
+            self.assertTrue(value['verified'])
+            self.assertFalse(value['changed'])
+            self.assertEqual(value['compatibility']['bank_scan'], 'not-needed-no-changes')
+            self.assertFalse(any(p.endswith('/agent-memory.tar.gz') for p in release.requests), release.requests)
+            self.assertTrue(any(p.endswith('/release-manifest.json.sshsig') for p in release.requests), release.requests)
+
     def test_actual_v002_index_refresh_and_deleted_worktree_upgrade_through_signed_one_liner(self):
         import shutil
         from identity_fixtures import bind

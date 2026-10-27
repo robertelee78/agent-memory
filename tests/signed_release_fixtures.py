@@ -25,12 +25,13 @@ class SignedRelease:
         world.run(['openssl','req','-x509','-newkey','rsa:2048','-sha256','-nodes','-days','1',
                    '-keyout',tls_key,'-out',cert,'-config',config])
         world.env['CURL_CA_BUNDLE'] = str(cert)
-        self.responses = {}; owner = self
+        self.responses = {}; self.requests = []; owner = self
         self.build_count = 0
         self.signature_count = 0
         class Handler(BaseHTTPRequestHandler):
             def log_message(self, *args): pass
             def do_GET(self):
+                owner.requests.append(self.path)
                 if self.path == '/api/latest' and self.headers.get('Accept') != 'application/vnd.github+json':
                     self.send_error(415); return
                 authority = getattr(owner,'publisher_state',None)
