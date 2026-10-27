@@ -116,8 +116,17 @@ Without `--json`, these commands print a human-readable view of the same result.
 A session MAY add `--projection /absolute/reference-projection.json` to doctor
 when an optional derived reference file is actually in use. Without `--fix`,
 doctor MUST NOT initialize missing state, rebuild caches, acquire a new writer
-lock, migrate, recover, uninstall or purge data. `--fix` MUST use only the
-verified receipt-owned runtime and bank recovery operations described above.
+lock, migrate, recover, uninstall or purge data. `--fix` MUST use the verified receipt-owned runtime and bank recovery operations
+described above, or the shared identity preview/apply protocol for a uniquely
+recognized historical checkout after a filesystem device-number change. It MUST
+preserve the existing project UUID, bank and historical binding. Read-only
+continuity already permits memory operations; persistence is optional and changes
+pinned registry evidence, so previously prepared proposals require fresh preparation.
+Prompts that failed before source recording require a new real prompt.
+
+Doctor also reports private Codex prompt/stop failure records independently.
+Their fixed stage/reason codes describe the last observed adapter failure;
+absence of a failure record does not establish assessment, capture or publication.
 
 ## Read back
 

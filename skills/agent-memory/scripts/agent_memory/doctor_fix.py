@@ -118,6 +118,24 @@ def run(repo='.', projection=None):
             actions.append({'component': 'runtime.repair', 'state': 'refused',
                             'detail': 'Cannot safely verify and reconcile the owned runtime; existing state was preserved.',
                             'repair': 'Inspect am doctor and the installation receipt; preserve modified targets and use the trusted recover helper when directed.'})
+    identity_attempted = False
+    try:
+        from . import project_identity, scope_binding
+        identity = project_identity.status(repo)
+        if not pending and identity['resolved'] and identity['evidence'].get('binding_source') == 'historical-device-change':
+            identity_attempted = True
+            preview = scope_binding.preview(repo, 'link', identity['project_id'],
+                                            'Persist verified checkout continuity after filesystem device-number change')
+            result = scope_binding.apply(preview)
+            install.require(result.get('verified') and result.get('resolved'), 'Checkout repair readback failed')
+            actions.append({'component': 'identity.checkout_continuity', 'state': 'repaired',
+                            'detail': 'Persisted the current checkout binding while preserving the project identity and bank.',
+                            'repair': 'Prepare previously pending proposals again; their pinned registry evidence changed. Retry prompts that were not recorded.'})
+    except diagnostics.ERRORS:
+        if identity_attempted:
+            actions.append({'component': 'identity.checkout_continuity', 'state': 'refused',
+                            'detail': 'Checkout evidence changed or repair could not be verified; preserve current state and inspect identity status.',
+                            'repair': 'Run am identity status; resolve the reported conflict before retrying.'})
     bank_attempted = False
     if any(c['component'] == 'bank.transaction' for c in before['warnings']):
         try:
@@ -154,7 +172,7 @@ def run(repo='.', projection=None):
     after['repairs_performed'] = any(v['state'] == 'repaired' for v in actions)
     # Acquiring the existing lifecycle lock may update private owner metadata
     # even if a later ownership check refuses the repair.
-    after['writes_performed'] = True if acquired or any(v['component'] == 'bank.transaction' and v['state'] == 'repaired' for v in actions) else None if (pending or gaps or hook_failures or bank_attempted) else False
+    after['writes_performed'] = True if any(v['component'] == 'identity.checkout_continuity' and v['state'] == 'repaired' for v in actions) or acquired or any(v['component'] == 'bank.transaction' and v['state'] == 'repaired' for v in actions) else None if (pending or gaps or hook_failures or bank_attempted or identity_attempted) else False
     after['restart_clients'] = sorted({name for item in actions for name in item.get('restart_clients', [])})
     if missing and any(v['component'] == 'runtime.hooks' and v['state'] == 'repaired' for v in actions):
         warning = {'component': 'runtime.hook_recreated', 'state': 'warning',

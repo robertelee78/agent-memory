@@ -72,6 +72,161 @@ class ProjectIdentityContract(unittest.TestCase):
         world.git("add", ".", cwd=repo)
         world.git("commit", "-m", "Fixture bank", cwd=repo)
 
+    def historical(self, world, repo):
+        data = json.loads(self.registry(world).read_text())
+        current = self.status(world, repo)['evidence']['checkout_key']
+        device, inode = current.split(':')
+        historical = str(int(device) + 100) + ':' + inode
+        data['checkouts'][historical] = data['checkouts'].pop(current)
+        self.registry(world).write_text(json.dumps(data))
+        return current, historical
+
+    def test_device_change_recovers_readonly_and_explicit_link_persists_alias(self):
+        with World() as world:
+            repo = world.repository()
+            world.git('remote', 'add', 'origin', 'https://github.com/example/project.git', cwd=repo)
+            identity, _ = self.create(world, repo)
+            current, old = self.historical(world, repo)
+            before = self.registry(world).read_bytes()
+            status = self.status(world, repo)
+            self.assertTrue(status['resolved'], status)
+            self.assertEqual(status['project_id'], identity)
+            self.assertEqual(status['evidence']['checkout_key'], old)
+            self.assertEqual(status['evidence']['observed_checkout_key'], current)
+            self.assertEqual(status['evidence']['binding_source'], 'historical-device-change')
+            self.assertEqual(self.registry(world).read_bytes(), before)
+            previous_history = status['checkout_entry']['history']
+            proposal = self.preview(world, repo, 'link')
+            result, receipt = self.apply(world, proposal)
+            self.assertEqual(result.returncode, 0, receipt)
+            self.assertTrue(receipt['binding_status']['resolved'])
+            self.assertEqual(receipt['binding_status']['evidence']['binding_source'], 'exact')
+            data = json.loads(self.registry(world).read_text())
+            self.assertEqual(data['checkouts'][current]['history'][:-1], previous_history)
+            self.assertIn(old, data['checkouts'])
+            self.commit(world, repo)
+            worktree = world.inside('recovered worktree')
+            world.git('worktree', 'add', '-b', 'recovered', worktree, cwd=repo)
+            self.assertTrue(self.status(world, worktree)['resolved'])
+
+    def test_scope_link_repair_preserves_bank_and_verifies_current_alias(self):
+        from contracts.test_scope_binding import ScopeBindingContract
+        with World() as world:
+            helper = ScopeBindingContract()
+            repo = world.repository()
+            world.git('remote', 'add', 'origin', 'https://github.com/example/project.git', cwd=repo)
+            helper.developer(world)
+            self.create(world, repo)
+            current, old = self.historical(world, repo)
+            before = helper.canonical(repo / 'memory-bank')
+            proposal = helper.preview(world, repo, 'link')
+            result, receipt = helper.apply(world, proposal)
+            self.assertEqual(result.returncode, 0, receipt)
+            self.assertTrue(receipt['verified'], receipt)
+            self.assertTrue(helper.status(world, repo)['resolved'])
+            self.assertEqual(helper.canonical(repo / 'memory-bank'), before)
+            self.assertEqual(self.status(world, repo)['evidence']['checkout_key'], current)
+
+    def test_historical_fork_and_rebind_require_explicit_alias_link(self):
+        with World() as world:
+            repo = world.repository()
+            world.git('remote', 'add', 'origin', 'https://github.com/example/project.git', cwd=repo)
+            self.create(world, repo)
+            self.historical(world, repo)
+            before = self.registry(world).read_bytes()
+            for action in ('rebind', 'fork'):
+                result, receipt = self.command(world, 'preview', '--repo', repo,
+                                               '--action', action, '--reason', 'Explicit fixture decision')
+                self.assertEqual(result.returncode, 1, receipt)
+                self.assertIn('explicit link', receipt['error'])
+                self.assertEqual(self.registry(world).read_bytes(), before)
+            self.apply(world, self.preview(world, repo, 'link'))
+            self.preview(world, repo, 'rebind')
+            world.git('remote', 'set-url', 'origin', 'https://github.com/example/fork.git', cwd=repo)
+            self.preview(world, repo, 'fork')
+
+    def test_observed_alias_registered_after_preview_refuses_and_retains_history(self):
+        with World() as world:
+            repo = world.repository()
+            world.git('remote', 'add', 'origin', 'https://github.com/example/project.git', cwd=repo)
+            self.create(world, repo)
+            current, old = self.historical(world, repo)
+            proposal = self.preview(world, repo, 'link')
+            data = json.loads(self.registry(world).read_text())
+            data['checkouts'][current] = json.loads(json.dumps(data['checkouts'][old]))
+            data['checkouts'][current]['locations'].append(str(world.inside('concurrent-known-location')))
+            self.registry(world).write_text(json.dumps(data))
+            before = self.registry(world).read_bytes()
+            result, receipt = self.apply(world, proposal)
+            self.assertEqual(result.returncode, 1, receipt)
+            self.assertIn('changed after preview', receipt['error'])
+            self.assertEqual(self.registry(world).read_bytes(), before)
+
+    def test_old_pending_proposal_evidence_requires_fresh_preview(self):
+        with World() as world:
+            repo = world.repository()
+            self.create(world, repo)
+            proposal = self.preview(world, repo, 'link')
+            for key in ('binding_source', 'observed_checkout_key'):
+                del proposal['proposal']['evidence'][key]
+            before = self.registry(world).read_bytes()
+            result, receipt = self.apply(world, proposal)
+            self.assertEqual(result.returncode, 1, receipt)
+            self.assertIn('evidence changed', receipt['error'])
+            self.assertEqual(self.registry(world).read_bytes(), before)
+
+    def test_historical_candidates_are_deterministic_and_conflicts_refused(self):
+        with World() as world:
+            repo = world.repository()
+            world.git('remote', 'add', 'origin', 'https://github.com/example/project.git', cwd=repo)
+            self.create(world, repo)
+            current, old = self.historical(world, repo)
+            data = json.loads(self.registry(world).read_text())
+            replacement = '100:' + old.split(':')[1]
+            data['checkouts'][replacement] = data['checkouts'].pop(old)
+            old = replacement
+            alternate = '9:' + old.split(':')[1]
+            data['checkouts'][alternate] = json.loads(json.dumps(data['checkouts'][old]))
+            self.registry(world).write_text(json.dumps(data))
+            self.assertEqual(self.status(world, repo)['evidence']['checkout_key'], alternate)
+            data['checkouts'][alternate]['authority_name'] = 'other'
+            self.registry(world).write_text(json.dumps(data))
+            status = self.status(world, repo)
+            self.assertFalse(status['resolved'])
+            self.assertIn('Conflicting historical', ' '.join(status['issues']))
+
+    def test_historical_recovery_requires_bank_authority_location_and_inode(self):
+        for change in ('remote', 'bank', 'inode', 'location', 'missing-remote'):
+            with self.subTest(change=change), World() as world:
+                repo = world.repository()
+                world.git('remote', 'add', 'origin', 'https://github.com/example/project.git', cwd=repo)
+                self.create(world, repo)
+                current, old = self.historical(world, repo)
+                data = json.loads(self.registry(world).read_text())
+                if change == 'remote':
+                    world.git('remote', 'set-url', 'origin', 'https://github.com/example/other.git', cwd=repo)
+                elif change == 'bank':
+                    self.bank(world, repo, str(uuid.uuid4()), 'repo://github.com/example/project')
+                elif change == 'inode':
+                    data['checkouts'][old.split(':')[0] + ':999999999999'] = data['checkouts'].pop(old)
+                elif change == 'location':
+                    data['checkouts'][old]['locations'] = [str(world.inside('another/.git'))]
+                else:
+                    world.git('remote', 'remove', 'origin', cwd=repo)
+                self.registry(world).write_text(json.dumps(data))
+                self.assertFalse(self.status(world, repo)['resolved'])
+
+    def test_historical_recovery_preserves_explicit_authority(self):
+        with World() as world:
+            repo = world.repository()
+            world.git('remote', 'add', 'origin', 'https://github.com/example/project.git', cwd=repo)
+            world.git('remote', 'add', 'upstream', 'https://github.com/example/upstream.git', cwd=repo)
+            self.create(world, repo, authority='origin')
+            self.historical(world, repo)
+            status = self.status(world, repo)
+            self.assertTrue(status['resolved'], status)
+            self.assertEqual(status['evidence']['authority_name'], 'origin')
+
     def test_bootstrap_is_read_only_until_explicit_local_registration_and_bank_initialization(self):
         with World() as world:
             repo = world.repository()

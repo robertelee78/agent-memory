@@ -88,7 +88,7 @@ def discover(repo, authority=None, *, owned_lock=None, owned_transaction=None, m
     if metadata is None:
         raise ContractError('Existing bank router is not a supported migration source')
     return {"repo_root": str(root), "is_git": is_git, "common_git_dir": str(common) if is_git else None,
-            "checkout_key": f"{stat.st_dev}:{stat.st_ino}", "location": str(common), "authority_name": selected,
+            "checkout_key": f"{stat.st_dev}:{stat.st_ino}", "observed_checkout_key": f"{stat.st_dev}:{stat.st_ino}", "location": str(common), "authority_name": selected,
             "canonical_remote": canonical, "configured_authority": configured_values, "remotes": remotes, "bank_project_id": metadata.get("project-id"),
             "bank_canonical_remote": metadata.get("canonical-remote"), "repository_settings": repo_settings, "router_sha256": digest(raw), "issues": issues}
 
@@ -162,13 +162,37 @@ def observe():
 
 
 def evidence(repo, data, authority=None, **owned):
-    # A saved explicit authority decision remains effective for this checkout.
+    """Resolve prior adoption without treating a transient device number as durable."""
     initial = discover(repo, authority, **owned)
-    known = data["checkouts"].get(initial["checkout_key"])
+    key = initial["checkout_key"]
+    known = data["checkouts"].get(key)
+    historical = False
+    if known is None:
+        inode = key.split(":", 1)[1]
+        candidates = [(k, v) for k, v in data["checkouts"].items()
+                      if k.split(":", 1)[1] == inode and initial["location"] in v["locations"]]
+        decisions = {(v["project_id"], v["authority_name"]) for _, v in candidates}
+        if len(decisions) > 1:
+            initial["issues"].append("Conflicting historical checkout bindings; inspect registry history and explicitly link or fork")
+        elif candidates:
+            key, known = min(candidates, key=lambda item: tuple(map(int, item[0].split(":"))))
+            historical = True
+    # Preserve the saved explicit authority even when ordinary remote discovery
+    # is ambiguous. Configured or caller-selected authority still takes priority.
     if authority is None and not initial['configured_authority'] and known and known["authority_name"] is not None:
-        if initial['authority_name'] == known['authority_name']:
+        if initial['authority_name'] != known['authority_name']:
+            initial = discover(repo, known["authority_name"], **owned)
+    if historical:
+        project = data["projects"].get(known["project_id"])
+        remote = initial["canonical_remote"]
+        if (not initial["issues"] and remote is not None and project is not None
+                and initial["bank_project_id"] == known["project_id"]
+                and project["canonical_remote"] == remote == initial["bank_canonical_remote"]):
+            initial["checkout_key"] = key
+            initial["binding_source"] = "historical-device-change"
             return initial
-        return discover(repo, known["authority_name"], **owned)
+        initial["issues"].append("Historical checkout evidence does not establish matching bank and authority; restore the registered authority then explicitly link, or explicitly fork after reviewing identity evidence")
+    initial["binding_source"] = "exact" if data["checkouts"].get(initial["checkout_key"]) else "unregistered"
     return initial
 
 
@@ -206,6 +230,8 @@ def plan(data, proof, action, target, reason):
     if action not in SPEC["actions"] or proof["issues"]:
         raise ContractError("Repository authority is ambiguous; choose/repair a consistent authority remote before binding")
     text(reason)
+    if proof.get("binding_source") == "historical-device-change" and action != "link":
+        raise ContractError("Persist the recovered checkout alias with an explicit link before rebind or fork")
     checkout = data["checkouts"].get(proof["checkout_key"])
     bank_id, remote = proof["bank_project_id"], proof["canonical_remote"]
     if action in {"create", "fork"}:
@@ -291,7 +317,15 @@ def apply(prepared):
                  "canonical_remote": proof["canonical_remote"], "location": proof["location"], "reason": proposal["reason"], "at": storage.now(),
                  "previous_project_id": data["checkouts"].get(proof["checkout_key"], {}).get("project_id") or proof["bank_project_id"]}
         entry["history"].append(event)
-        checkout = updated["checkouts"].setdefault(proof["checkout_key"], {"project_id": target, "locations": [], "authority_name": None, "history": []})
+        checkout_key = proof["checkout_key"]
+        if proposal["action"] == "link" and proof.get("binding_source") == "historical-device-change":
+            checkout_key = proof["observed_checkout_key"]
+            if checkout_key in updated["checkouts"]:
+                raise ContractError("Observed checkout alias already exists; preserve its history and prepare a fresh decision")
+            # This explicit link persists the current alias and retains the
+            # established checkout's provenance, including prior locations.
+            updated["checkouts"][checkout_key] = copy.deepcopy(updated["checkouts"][proof["checkout_key"]])
+        checkout = updated["checkouts"].setdefault(checkout_key, {"project_id": target, "locations": [], "authority_name": None, "history": []})
         checkout["project_id"] = target
         checkout["authority_name"] = proof["authority_name"]
         if proof["location"] not in checkout["locations"]:

@@ -303,12 +303,32 @@ def identities(report, root, bank):
         common = git(root, 'rev-parse', '--git-common-dir', optional=True)
         location = (root / common).resolve() if common else root
         identity = location.stat()
-        entry = data['checkouts'].get(f'{identity.st_dev}:{identity.st_ino}')
+        observed_key = f'{identity.st_dev}:{identity.st_ino}'
+        entry = data['checkouts'].get(observed_key)
         project_id = bank.get('project_id') or (entry['project_id'] if entry else None)
+        historical = False
+        binding_source = 'exact' if entry else 'unregistered'
+        # Quick diagnostics keep malformed/busy bank evidence independent of
+        # local registration. Only the shared resolver may establish continuity.
+        if entry is None and project_id:
+            try:
+                resolved = project_identity.status(root)
+                if resolved['resolved']:
+                    entry = resolved['checkout_entry']
+                    historical = resolved['evidence'].get('binding_source') == 'historical-device-change'
+                    binding_source = resolved['evidence'].get('binding_source')
+            except ERRORS:
+                pass  # Full doctor separately inspects bank/authority failures.
         matches = entry is not None and project_id == entry['project_id'] and project_id in data['projects']
         report.value['project'] = {'id': project_id, 'checkout_binding_matches': matches,
                                    'binding_state': 'matches' if matches else ('missing' if entry is None else 'mismatch'),
-                                   'authority_verified': False, 'pending_operation': os.path.lexists(lock)}
+                                   'authority_verified': False, 'pending_operation': os.path.lexists(lock),
+                                   'binding_source': binding_source,
+                                   'observed_checkout_key': observed_key}
+        if historical and matches:
+            report.add('identity.checkout_continuity', 'warning',
+                       'Recognized the previously adopted checkout after its filesystem device number changed; memory operations can continue.',
+                       'Optional: am doctor --fix persists the current binding. This invalidates previously prepared proposals; prepare them again.')
         if not matches:
             if entry is not None:
                 report.add('identity.project', 'warning', 'Project binding differs from the observed bank; both identities are preserved.',
@@ -620,6 +640,16 @@ def run(operation, repo='.', projection=None):
         report.attempt('data.purge', lambda: shallow_purge_state(report, root),
                        'Preserve purge metadata and quarantine; inspect through am doctor without resuming deletion.')
     if operation == 'doctor':
+        def hook_outcomes():
+            from . import hook_failure
+            failures = hook_failure.read(root)
+            report.value['hook_failures'] = failures
+            for item in failures:
+                report.add('hook.' + item['harness'] + '.' + item['adapter'], 'warning',
+                           'Hook failure observed at ' + item['timestamp'] + ': ' + item['stage'] + ' / ' + item['reason'],
+                           'Inspect the project identity findings and resolve the reported stage; submit a new real prompt afterward. Pending capture is not publication.')
+        report.attempt('hook.outcomes', hook_outcomes,
+                       'Preserve private hook failure metadata; inspect its ownership and the installed adapter.')
         report.add('prerequisite.python', 'pass' if sys.version_info >= (3, 11) else 'failure',
                    'Python ' + '.'.join(map(str, sys.version_info[:3])), 'Use Python 3.11 or newer.')
         report.add('prerequisite.git', 'pass' if shutil.which('git') else 'failure',

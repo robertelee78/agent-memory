@@ -123,3 +123,19 @@ provenance rather than reattribute old work to a newly selected developer.
 ## Diagnostic fallback
 
 If ordinary setup cannot establish a verified binding, the session MAY inspect the actual registry, Git authority evidence and canonical router with read-only tools. It MUST retain the original proposal/recovery bundle and unresolved state, and MUST NOT force a new project/developer UUID or replace an occupied bank to bypass the refusal.
+
+**Filesystem device-number changes.**
+
+The common resolver can recognize prior adoption when the canonical common Git
+location and inode, bank/project UUID and authority all agree despite a changed
+device number. Equivalent history is reported through status/doctor; ordinary
+hooks remain quiet and resolution writes nothing. Independent clones, changed
+inodes, changed authority and conflicting history still require explicit review.
+
+`am doctor --fix` can persist the current alias through verified link. This is
+optional and invalidates previously pinned registry evidence: prepare pending
+proposals again, including proposals prepared by older runtimes without the new
+observation fields. Never rewrite their receipts. A historical binding MUST be
+linked to the current alias before explicit rebind/fork. If authority changed at
+the same time, restore the registered authority before linking, then review a
+rebind; do not infer adoption from a matching remote alone.

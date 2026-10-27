@@ -187,9 +187,19 @@ def binding_guard(p, owner=None, marker=None):
     operation = data['operations'].get(p['operation_id'])
     original = p['project']['evidence']
     expected_ids = {original['bank_project_id'], p['project']['project_id']}
+    # An explicit link may persist a current-device alias of the exact
+    # historical decision. Only its derived resolution fields may change.
+    repaired_alias = (p['project']['action'] == 'link'
+                      and original.get('binding_source') == 'historical-device-change'
+                      and proof.get('binding_source') == 'exact'
+                      and proof['checkout_key'] == original.get('observed_checkout_key')
+                      and proof.get('observed_checkout_key') == original.get('observed_checkout_key'))
+    # Registration itself changes unregistered to exact; source is derived,
+    # while the effective checkout key may change only for this repair.
+    derived = {'binding_source'} | ({'checkout_key'} if repaired_alias else set())
     if (not operation or operation['proposal_sha256'] != digest(encoded(p['project']))
             or any(proof[key] != value for key, value in original.items()
-                   if key not in {'bank_project_id', 'bank_canonical_remote', 'router_sha256'})
+                   if key not in {'bank_project_id', 'bank_canonical_remote', 'router_sha256'} | derived)
             or data['checkouts'][proof['checkout_key']]['project_id'] != p['project']['project_id']
             or data['projects'][p['project']['project_id']]['canonical_remote'] != original['canonical_remote']
             or proof['bank_project_id'] not in expected_ids):
