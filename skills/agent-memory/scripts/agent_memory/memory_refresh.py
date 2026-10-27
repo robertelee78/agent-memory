@@ -234,6 +234,15 @@ def main(argv=None):
         command.add_argument('--output');command.add_argument('--v2',action='store_true')
     args = parser.parse_args(argv)
     try:
+        if args.output:
+            supplied = Path(args.output).expanduser()
+            if not supplied.is_absolute() or '..' in supplied.parts:
+                print(json.dumps(result(args.operation, 'pending-private-output',
+                    canonical_writes_performed=False, git_metadata_writes_performed=False,
+                    failure_component='output', failure_code='private-output-path-invalid',
+                    reason='The private output path must be absolute and must not contain parent-directory components.',
+                    repair='Choose a new absolute path in an owner-only directory outside the repository and installed runtime, then retry with --output. Preserve the bank and pending evidence.')))
+                return 1
         if args.operation == 'inspect': value = inspect(args.repo, args.base,version2=args.v2)
         elif args.operation == 'prepare':
             request=read_input(args.input,version2=args.v2)

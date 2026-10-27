@@ -58,6 +58,13 @@ not a second canonical memory or an authenticated source of truth.
 
 ## Observe
 
+Every `--output` below requires an absolute path in an existing owner-only
+directory outside the checkout and installed runtime. For example, after creating
+an owner-only directory `/tmp/am-private-example`, use
+`--output /tmp/am-private-example/refresh-inspection.json`; a relative path such
+as `--output refresh-inspection.json` is refused before refresh work starts.
+Choose a fresh private filename and preserve any existing receipt.
+
 With `SKILL_DIR` resolved to this package:
 
 ```sh
