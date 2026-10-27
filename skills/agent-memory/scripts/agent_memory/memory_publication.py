@@ -19,6 +19,7 @@ from .developer_identity import digest, encoded
 from .frontmatter import ContractError
 from .sharing_holds import HoldFailure
 from .identity_git import git
+from . import sharing_limits as limits
 
 SCHEMA = 'agent-memory/publication-request-v1'
 FIELDS = {'schema', 'repo_root', 'project_id', 'base', 'candidate', 'proof'}
@@ -448,10 +449,11 @@ def main(argv=None):
     parser.add_argument('--v2',action='store_true',help='Read an explicitly v2 proof/request with the complete private-operation budget')
     args = parser.parse_args(argv)
     try:
+        if args.output:
+            limits.preflight_private_output(args.output, args.repo)
         value = semantic.read_input(args.input,version2=args.v2)
         outcome = prepare(args.repo, value) if args.operation == 'prepare' else land(args.repo, value)
         if args.output:
-            from . import sharing_limits as limits
             outcome=limits.write_private(args.output,outcome,args.repo)
         print(json.dumps(outcome, indent=2)); return 0
     except HoldFailure as exc:
@@ -460,9 +462,13 @@ def main(argv=None):
                                 repair=exc.repair, git_metadata_writes_performed=None,
                                 remote_freshness_verified=False)))
         return 1
-    except (ContractError, OSError, ValueError, UnicodeError, TypeError, KeyError, AttributeError, RecursionError):
-        print(json.dumps(result(args.operation, 'pending-inspection', reason='Unresolved, unsafe, offline, changed or interrupted publication; retain local memory and inspect before retry',
-                                git_metadata_writes_performed=None, remote_freshness_verified=False)))
+    except (ContractError, OSError, ValueError, UnicodeError, TypeError, KeyError, AttributeError, RecursionError) as exc:
+        output_failed = isinstance(exc, limits.PrivateOutputError)
+        print(json.dumps(result(args.operation, 'pending-private-output' if output_failed else 'pending-inspection',
+                                failure_code='private-output-invalid' if output_failed else 'publication-unverified',
+                                reason=str(exc) if output_failed else 'Unresolved, unsafe, offline, changed or interrupted publication; retain local memory and inspect before retry',
+                                repair=str(exc) if output_failed else 'Preserve local memory and original pending evidence; inspect before retrying.',
+                                git_metadata_writes_performed=False if output_failed else None, remote_freshness_verified=False)))
         return 1
 
 

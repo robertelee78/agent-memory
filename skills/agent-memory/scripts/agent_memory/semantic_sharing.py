@@ -635,6 +635,8 @@ def main(argv=None):
     p=sub.add_parser('recover-holds');p.add_argument('--repo',required=True);p.add_argument('--project-id',required=True)
     args=parser.parse_args(argv)
     try:
+        if getattr(args, 'output', None):
+            limits.preflight_private_output(args.output, args.repo)
         if args.command=='recover-holds':
             from . import sharing_holds
             # Recovery operates only on this explicitly selected project, never on authority refs or canonical memory.
@@ -666,13 +668,14 @@ def main(argv=None):
         from .sharing_holds import HoldFailure
         from .sharing_recovery import AuthorityFailure
         authority_failed=isinstance(exc,AuthorityFailure)
+        output_failed=isinstance(exc,limits.PrivateOutputError)
         known=isinstance(exc,HoldFailure) or authority_failed
         print(json.dumps({'schema':'agent-memory/semantic-sharing-result-v1','operation':args.command,
             'publication_verified':False,'canonical_writes_performed':False,'remote_freshness_verified':False,
-            'failure_component':exc.component if authority_failed else 'known-dispute-state' if known else args.command,
-            'failure_code':exc.code if known else 'semantic-review-unverified',
-            'error':str(exc) if known else 'Incomplete, changed or unsafe semantic review; retain local work and inspect actual sources',
-            'repair':exc.repair if known else 'Preserve the bank, original request and pending evidence. Run am doctor for this repository, inspect the failed component, then repeat source inspection and review; do not substitute an empty bank or a compatibility judgment.'}));return 1
+            'failure_component':'output' if output_failed else exc.component if authority_failed else 'known-dispute-state' if known else args.command,
+            'failure_code':'private-output-invalid' if output_failed else exc.code if known else 'semantic-review-unverified',
+            'error':str(exc) if output_failed or known else 'Incomplete, changed or unsafe semantic review; retain local work and inspect actual sources',
+            'repair':str(exc) if output_failed else exc.repair if known else 'Preserve the bank, original request and pending evidence. Run am doctor for this repository, inspect the failed component, then repeat source inspection and review; do not substitute an empty bank or a compatibility judgment.'}));return 1
 
 
 if __name__=='__main__':sys.exit(main())
