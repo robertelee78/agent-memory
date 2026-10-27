@@ -11,6 +11,41 @@ from runtime_update_fixtures import ROOT, fixture, advance, call, snapshot, owne
 
 
 class RuntimeUpdateContract(unittest.TestCase):
+    def test_current_update_checks_ownership_without_scanning_banks(self):
+        with World() as world:
+            _, _, receipt = fixture(world)
+            before = receipt_path(world).read_bytes()
+            cli = Path(receipt['bin_dir'])/'am'
+            result = world.run([cli, '--json', 'update'], check=False)
+            data = json.loads(result.stdout)
+            self.assertEqual(result.returncode, 0, data)
+            self.assertTrue(data['verified'])
+            self.assertFalse(data['changed'])
+            self.assertEqual(data['restart_clients'], [])
+            self.assertEqual(data['compatibility']['bank_scan'], 'not-needed-no-changes')
+            self.assertEqual(receipt_path(world).read_bytes(), before)
+            human = world.run([cli, 'update'])
+            self.assertEqual(human.stdout.strip(), 'am 1.0.0 is up to date.')
+            self.assertNotIn('Restart', human.stdout)
+
+    def test_same_version_still_reconciles_changed_owned_receipt(self):
+        with World() as world:
+            _, _, receipt = fixture(world)
+            target = world.paths['codex']/'AGENTS.md'
+            target.write_text(target.read_text()+'User text added outside the managed block.\n')
+            old_receipt = receipt_path(world).read_bytes()
+            cli = Path(receipt['bin_dir'])/'am'
+            result = world.run([cli, '--json', 'update'], check=False)
+            data = json.loads(result.stdout)
+            self.assertEqual(result.returncode, 0, data)
+            self.assertTrue(data['verified'])
+            self.assertTrue(data['changed'])
+            self.assertFalse(data['update_available'])
+            self.assertNotEqual(receipt_path(world).read_bytes(), old_receipt)
+            self.assertIn('User text added outside the managed block.', target.read_text())
+            next_run = world.run([cli, 'update'])
+            self.assertEqual(next_run.stdout.strip(), 'am 1.0.0 is up to date.')
+
     def test_dangling_lifecycle_records_are_preserved_and_refuse_update(self):
         for name in ('owner.json', 'journal.json'):
             with self.subTest(record=name), World() as world:

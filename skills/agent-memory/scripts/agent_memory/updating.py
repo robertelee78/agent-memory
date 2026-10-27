@@ -262,17 +262,31 @@ def run(args):
     def work():
         old = current(state,code)
         with staged(old) as (root, candidate):
-            compatibility = banks(args.repo,candidate['compatibility'])
             summary = {'operation':'update','current':old['source'],'available':{k:v for k,v in candidate.items() if k not in ('path','pack')},
                        'channel':{'remote':old['source']['remote'],'ref':old['source']['ref']},
                        'update_available':any(candidate.get(k) != old['source'].get(k) for k in
                                               ('kind', 'revision', 'artifact_digest', 'release_manifest_sha256')),
                        'loaded_content_changes':candidate['artifact_digest']!=old['source']['artifact_digest'],
-                       'compatibility':compatibility,'atomicity':'per target; journaled rollback across targets'}
+                       'atomicity':'per target; journaled rollback across targets'}
             same_revision = not summary['update_available']
             with install.prepare(configuration(old),state,code,old,
                                  candidate_root=None if same_revision else root, candidate_kind=candidate['kind']) as plan:
                 plan['operation']='update'
+                # With no candidate or target changes there are no bank writes to
+                # qualify. Still verify ownership and public wrapper dispatch.
+                if (not args.check and not args.repo and same_revision and old['source'] == plan['source']
+                        and not plan['restart'] and len(plan['actions']) == len(old['targets'])
+                        and not any(a['changed'] for a in plan['actions'])
+                        and all(t['identity'] == next(a['after'] for a in plan['actions'] if a['path'] == t['path'])
+                                for t in old['targets'])):
+                    install.verify_targets(old['targets'], source=old['source'])
+                    wrapper_readback(old)
+                    return {**summary, 'compatibility': {'bank_scan': 'not-needed-no-changes',
+                            'bank_writes_performed': False, 'implicit_migration_performed': False},
+                            'verified': True, 'changed': False, 'receipt': old,
+                            'restart_clients': [], 'receipt_path': str(state/'receipt.json')}
+                compatibility = banks(args.repo,candidate['compatibility'])
+                summary['compatibility'] = compatibility
                 plan['rollback_repositories'] = compatibility['observed_repositories']
                 if args.check:
                     return {**summary,'check_complete':True,'eligible':True,'verified':False,

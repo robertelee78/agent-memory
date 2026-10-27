@@ -97,7 +97,7 @@ class PublicCLIContract(unittest.TestCase):
             self.assertEqual(json.loads(receipt_path.read_text())['source']['revision'],
                              w.git('rev-parse', 'HEAD', cwd=source).stdout.strip())
             repeated = pipe(w, source); self.assertEqual(repeated.returncode, 0, repeated.stderr)
-            self.assertIn('is current', repeated.stdout)
+            self.assertIn('is up to date', repeated.stdout)
             bank = w.paths['repo']/'memory-bank'; bank.mkdir(); (bank/'keep.md').write_text('Keep memory.\n')
             preview = w.run([cli, 'uninstall', '--check']); self.assertIn('Uninstall preview', preview.stdout)
             self.assertTrue(cli.exists())

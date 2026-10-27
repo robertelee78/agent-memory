@@ -133,10 +133,13 @@ def render(data, command, prog, code):
                 print(f"{prog} {safe(current.get('version', version))} is current at {safe(current.get('revision', revision))}.")
             print('Preview only; no installation changes.')
         elif data.get('changed'):
-            print(f"Updated {prog} {safe(current.get('version'))} -> {safe(version)} "
-                  f"({safe(current.get('revision', '')[:12])} -> {safe(revision[:12])}).")
+            if data.get('update_available'):
+                print(f"Updated {prog} {safe(current.get('version'))} -> {safe(version)} "
+                      f"({safe(current.get('revision', '')[:12])} -> {safe(revision[:12])}).")
+            else:
+                print(f"Reconciled {prog} {safe(version)} installation ({safe(revision[:12])}).")
         else:
-            print(f'{prog} {safe(version)} is current ({safe(revision[:12])}).')
+            print(f'{prog} {safe(version)} is up to date.')
     elif command in ('install', 'uninstall') and not code:
         preview = data.get('check_complete') or data.get('schema') == 'agent-memory/install-plan-v1'
         if preview:
