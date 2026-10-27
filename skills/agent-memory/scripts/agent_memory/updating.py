@@ -63,6 +63,7 @@ def current(state, code):
 
 def banks(extra, compatibility, *, require_readable=False):
     """Use the established one-bank locator; never invent another bank path."""
+    from concurrent.futures import ThreadPoolExecutor
     from . import migration, bank_transactions
     roots = set(); gaps = []
     cwd = Path.cwd().resolve()
@@ -86,25 +87,21 @@ def banks(extra, compatibility, *, require_readable=False):
             if listed.returncode:
                 gaps.append({'location':location, 'reason':'registered Git location cannot list worktrees'})
                 continue
-            roots.update(Path(line[9:]).resolve() for line in listed.stdout.splitlines() if line.startswith('worktree '))
+            for line in listed.stdout.splitlines():
+                if line.startswith('worktree '):
+                    worktree = Path(line[9:]).resolve()
+                    roots.add(worktree)
     install.require(len(roots)<=1024, 'Discovered repository inventory exceeds its bound')
-    result = []; seen = set(); observed_roots = []
-    for root in sorted(roots):
+    def inspect(root):
         if not root.is_dir():
-            gaps.append({'location':str(root), 'reason':'worktree no longer available; not inspected'})
-            continue
-        observed_roots.append(str(root))
+            return None, {'location':str(root), 'reason':'worktree no longer available; not inspected'}
         settings = repository_config.settings(root, router_reader=migration.router_metadata)
         bank = root / settings['bank_root']
         router = bank/'MEMORY.md'
         if not os.path.lexists(router):
-            continue
+            return None, None
         install.require(not bank.is_symlink() and not router.is_symlink() and router.is_file(),
                         'Discovered bank/router must be an ordinary readable path')
-        path = bank.resolve()
-        if path in seen:
-            continue
-        seen.add(path)
         def idle():
             install.require(not any(os.path.lexists(bank/name) for name in
                             ('.agent-memory.lock', bank_transactions.MARKER)),
@@ -125,9 +122,22 @@ def banks(extra, compatibility, *, require_readable=False):
         install.require(migration.read_regular(bank, 'MEMORY.md', 16384)[0] == raw
                         and repository_config.settings(root, router_reader=migration.router_metadata) == settings,
                         'Discovered bank changed during compatibility observation')
-        result.append({'repository':str(root), 'bank':str(bank), 'schema':schema,
+        return {'repository':str(root), 'bank':str(bank), 'schema':schema,
                        'directly_readable':readable, 'explicit_migration_required':not readable,
-                       'router_sha256':install.sha(raw)})
+                       'router_sha256':install.sha(raw)}, None
+    result = []; seen = set(); observed_roots = []
+    ordered = sorted(roots)
+    # Every repository is independently inspected; the bounded pool only
+    # overlaps Git and filesystem reads. map preserves deterministic order.
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        for root, (record, gap) in zip(ordered, pool.map(inspect, ordered)):
+            if gap:
+                gaps.append(gap)
+                continue
+            observed_roots.append(str(root))
+            if record and Path(record['bank']).resolve() not in seen:
+                seen.add(Path(record['bank']).resolve())
+                result.append(record)
     return {'banks':result, 'discovery_gaps':gaps, 'observed_repositories':observed_roots,
             'bank_writes_performed':False,
             'implicit_migration_performed':False}

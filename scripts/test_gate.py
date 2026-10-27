@@ -42,7 +42,7 @@ def registry():
         if entry["name"] == "optional-stores":
             if entry.get("scope") != "future" or not entry.get("reason") or entry.get("path"):
                 raise ValueError("Optional stores must be explicitly outside v0.0.1")
-        elif entry.get("scope") not in {"v0.0.1", "v0.0.2", "v0.0.3"}:
+        elif entry.get("scope") not in {"v0.0.1", "v0.0.2", "v0.0.3", "v0.0.4"}:
             raise ValueError("Required contracts cannot be marked optional")
         if entry.get("path"):
             raw = ROOT / entry["path"]
