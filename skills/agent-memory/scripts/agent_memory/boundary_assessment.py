@@ -11,9 +11,14 @@ def validate(value, source):
     if len(json.dumps(value, ensure_ascii=False).encode()) > 2048:
         raise ContractError('No-learning assessment exceeds its bound')
     for candidate in value['candidates']:
-        if (not isinstance(candidate, dict) or set(candidate) != {'claim','disposition','reason'}
-                or candidate['disposition'] != 'not-durable'
+        if not isinstance(candidate, dict):
+            raise ContractError('Eligible, ambiguous or unresolved learning remains pending')
+        disposition = candidate.get('disposition')
+        expected = {'claim', 'disposition', 'reason'}
+        if disposition == 'already-recorded':
+            expected.add('memory_evidence')
+        if (set(candidate) != expected or disposition not in ('not-durable', 'already-recorded')
                 or any(not isinstance(candidate[k], str) or not candidate[k].strip()
-                       or len(candidate[k].encode()) > 1024 for k in ('claim','reason'))):
+                       or len(candidate[k].encode()) > 1024 for k in expected - {'disposition'})):
             raise ContractError('Eligible, ambiguous or unresolved learning remains pending')
     return value
