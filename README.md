@@ -2,7 +2,7 @@
 
 A portable, local-first Memory Bank for coding agents.
 
-## v0.0.4
+## v0.0.6
 
 One repository owns one shared Markdown memory bank. The skill captures durable
 learning, reads existing memory before adding it, combines duplicates without
@@ -11,8 +11,8 @@ independently of unfinished feature code and refresh into other sessions,
 worktrees and clones through the repository's existing Git rules. Contradictions
 go to the detecting developer for clarification.
 
-The [v0.0.4 release guide](docs/releases/v0.0.4.md) covers the lifecycle,
-turn-boundary adapters and their current verification limits.
+The [v0.0.6 release guide](docs/releases/v0.0.6.md) covers updates, repair,
+and their current verification limits.
 [Published releases](https://github.com/robertelee78/agent-memory/releases)
 hold the immutable source and actual qualification evidence for each version.
 
@@ -111,6 +111,16 @@ am status --repo /path/to/project
 am doctor --repo /path/to/project
 ```
 
+To repair problems that can be safely verified, run:
+
+```sh
+am doctor --fix --repo /path/to/project
+```
+
+The repair reports what it changed and what still needs attention. It preserves
+unrelated user files and repository memory, and does not guess when ownership
+or a recovery outcome is uncertain.
+
 ### Update
 
 Update the managed runtime with one command:
@@ -118,6 +128,11 @@ Update the managed runtime with one command:
 ```sh
 am update
 ```
+
+If the installed release and owned targets are current, the command reports
+that `am` is up to date without scanning unrelated repositories. If an owned
+client target needs reconciliation, it repairs that target when safe and reports
+whether clients need restarting.
 
 To preview first:
 
