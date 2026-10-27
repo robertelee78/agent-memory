@@ -15,6 +15,7 @@ try {
 const marker = 'Agent Memory turn boundary:'
 const identityMarker = 'Agent Memory observed OpenCode session:'
 const conflictMarker = 'Agent Memory session identity conflict:'
+const foregroundMarker = 'Agent Memory OpenCode foreground:'
 let warned = false
 function pending () {
   if (warned) return
@@ -51,7 +52,12 @@ export default {
             }
             pending()
           }
-          if (disposeQueue.active) return
+          if (disposeQueue.active) {
+            if (!event.system.some((part) => typeof part?.text === 'string' && (part.text.startsWith(foregroundMarker) || part.text.startsWith(conflictMarker)))) {
+              event.system.push({ type: 'text', text: `${foregroundMarker} For an ordinary user turn, use and refresh relevant memory as needed to answer the user's request, and deliver the response promptly. Defer automatic capture, comparison and publication to the queued Agent Memory continuation; do not repeat those steps in the foreground. If the user explicitly asks for a memory operation, perform that requested operation normally. In the queued continuation, perform the governed boundary workflow rather than deferring it again. Preserve pending outcomes and normal permissions.` })
+            }
+            return
+          }
           if (event.system.some((part) => typeof part?.text === 'string' && part.text.startsWith(marker))) return
           event.system.push({ type: 'text', text: prompt })
         } catch { pending() }
