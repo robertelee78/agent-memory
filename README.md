@@ -45,6 +45,11 @@ Keep Python 3.11+ available as `python3` on `PATH` when running `am`.
 Re-run the default one-line command to update an existing managed installation,
 or use `am update`.
 
+When upgrading from v0.0.3 with `am update`, run `am update` a second time
+to activate the new owned client hooks, then restart the agent sessions. The
+first update runs the old updater, which cannot install targets introduced by
+the new version. Check client hook trust and use `am doctor` if activation fails.
+
 For an optional preview or custom install options, pass arguments to Bash:
 
 ```sh
