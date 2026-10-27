@@ -329,6 +329,22 @@ class InstallerContract(unittest.TestCase):
                 self.assertFalse(plugin.exists()); self.assertFalse(plugin.is_symlink())
                 self.assertEqual(other.read_text(), 'foreign plugin\n')
 
+    def test_codex_stop_install_preserves_foreign_settings_and_uninstalls(self):
+        with World() as world:
+            source = self.source(world)
+            settings = world.paths['codex']/'hooks.json'
+            foreign = {'hooks': {'Stop': [{'hooks': [{'type':'command','command':'foreign-stop'}]}]}}
+            settings.write_text(json.dumps(foreign))
+            receipt = self.run_install(world, source, '--presets', 'codex')
+            self.assertTrue(receipt['verified'])
+            value = json.loads(settings.read_text())
+            self.assertEqual(value['hooks']['Stop'][0], foreign['hooks']['Stop'][0])
+            self.assertIn('codex_stop.py', value['hooks']['Stop'][1]['hooks'][0]['command'])
+            self.assertNotIn('async', value['hooks']['Stop'][1]['hooks'][0])
+            result = world.run([sys.executable,'-I',source/'scripts/uninstall_runtime.py','uninstall'],check=False)
+            self.assertEqual(result.returncode,0,result.stdout+result.stderr)
+            self.assertEqual(json.loads(settings.read_text()),foreign)
+
     def test_interrupted_claude_stop_install_restores_original_settings(self):
         with World() as world:
             source=self.source(world);settings=world.paths['claude']/'settings.json'

@@ -1,6 +1,7 @@
 {
   "schema": "agent-memory/test-contracts-v1",
   "suites": [
+    {"name": "codex-stop-boundary", "layer": "client", "scope": "v0.0.4", "path": "tests/contracts/test_codex_stop.py"},
     {"name": "opencode-boundary-ledger", "layer": "client", "scope": "v0.0.4", "path": "tests/contracts/test_opencode_boundary_ledger.py"},
     {"name": "opencode-queue", "layer": "client", "scope": "v0.0.4", "path": "tests/contracts/test_opencode_queue.py"},
     {"name": "bounded-bank-observation", "layer": "bank", "scope": "v0.0.4", "path": "tests/contracts/test_bounded_bank_observation.py"},

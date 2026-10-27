@@ -716,6 +716,8 @@ def prepare(args, state, code, old, *, candidate_root=None, candidate_kind=None)
                 stop = None
                 if name == 'claude':
                     stop = {'hooks': [{'type': 'command', 'command': 'python3 ' + shlex.quote(str(active_pack/'hooks/claude_stop.py')), 'asyncRewake': True}]}
+                elif name == 'codex':
+                    stop = {'hooks': [{'type': 'command', 'command': 'python3 ' + shlex.quote(str(active_pack/'hooks/codex_stop.py'))}]}
                 add(hook, 'hook-config', hook_entry=client_hooks.entry(command), stop_entry=stop)
                 groups[name].append(str(absolute(hook)))
             elif name == 'opencode' and hook and not no_guidance:
