@@ -244,6 +244,11 @@ def run(args):
                 install.BOOTSTRAP_SOURCE = None
     paths = [state, code, *(Path(t['path']) for t in before['targets']),
              *(Path(before['bin_dir'])/name for name in install.COMMAND_NAMES)]
+    if not before.get('no_guidance', False):
+        for name, _, _ in install.presets(before['presets']):
+            hook = install.hook_paths(name)
+            if hook:
+                paths.append(install.absolute(hook))
     def work():
         old = current(state,code)
         with staged(old) as (root, candidate):

@@ -125,6 +125,37 @@ def capture(repo, request):
         canonical_writes_performed=False, audit=event)
 
 
+def draft(repo, value):
+    """Build mechanical record fields, retaining every agent judgment explicitly.
+
+    This is not a capture, semantic comparison, admission, or publication.
+    The caller must still run the existing governed operations on this request.
+    """
+    fields = {'body', 'kind', 'scope', 'applicability', 'conditions', 'source',
+              'evidence', 'harness', 'session', 'code_state', 'assessment',
+              'repository_evidence'}
+    if not isinstance(value, dict) or set(value) != fields or not isinstance(value['source'], dict):
+        raise ContractError('Draft requires explicit learning, source, applicability and assessment')
+    context = scope_binding.require(repo)
+    now = datetime.now(timezone.utc).isoformat()
+    metadata = {
+        'schema': 'agent-memory/record-v1', 'id': str(uuid.uuid4()), 'version': 1,
+        'project-id': context['project_id'], 'kind': value['kind'], 'status': 'candidate',
+        'scope': value['scope'], 'applicability': value['applicability'],
+        'conditions': value['conditions'], 'source': value['source'], 'evidence': value['evidence'],
+        'origin': {'developer-id': context['developer_id'], 'harness': value['harness'],
+                   'session': value['session'], 'code-state': value['code_state']},
+        'recorded-at': now, 'updated': now, 'valid-from': None, 'valid-until': None,
+        'derived-from': [], 'corrects': [], 'supersedes': [],
+    }
+    request = {'project_id': context['project_id'], 'candidate': {'metadata': metadata, 'body': value['body']},
+               'source_class': value['source'].get('kind'), 'repository_evidence': value['repository_evidence'],
+               'assessment': value['assessment']}
+    request_value(request)
+    return result('draft', request=request, admission_verified=False, canonical_writes_performed=False,
+                  note='Explicit agent assessment only; capture and semantic comparison are still required.')
+
+
 def capture_value(repo, value, *, owned_lock=None):
     value = value.get('capture', value) if isinstance(value, dict) else value
     if not isinstance(value, dict) or set(value) != CAPTURE or value['schema'] != 'agent-memory/capture-v1':
@@ -275,6 +306,7 @@ def read_input(path, maximum=65536):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest='command', required=True)
+    d = commands.add_parser('draft');d.add_argument('--repo', required=True);d.add_argument('--input', required=True)
     c = commands.add_parser('capture');c.add_argument('--repo', required=True);c.add_argument('--request', required=True)
     p = commands.add_parser('preview');p.add_argument('--repo', required=True)
     for flag in ('capture', 'request', 'proof'):p.add_argument('--' + flag, required=True)
@@ -282,7 +314,8 @@ def main(argv=None):
     a = commands.add_parser('apply');a.add_argument('--proposal', required=True)
     args = parser.parse_args(argv)
     try:
-        if args.command == 'capture':value = capture(args.repo, read_input(args.request, 16384))
+        if args.command == 'draft':value = draft(args.repo, read_input(args.input, 16384))
+        elif args.command == 'capture':value = capture(args.repo, read_input(args.request, 16384))
         elif args.command == 'preview':value = preview(args.repo, read_input(args.capture), read_input(args.request), read_input(args.proof),read_input(args.navigation,16384) if args.navigation else None)
         else:value = apply(read_input(args.proposal, sharing_limits.MAX_PRIVATE))
         print(json.dumps(value, indent=2, ensure_ascii=False));return 0

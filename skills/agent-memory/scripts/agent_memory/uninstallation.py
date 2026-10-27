@@ -65,7 +65,30 @@ def prepare(old, state, code):
         install.trust_paths.tree(path)
         before = install.fingerprint(path); raw = None
         after = None
-        if before is not None and target['kind'] == 'activation':
+        if before is not None and target['kind'] == 'hook-config':
+            if before['kind'] != 'file':
+                preserve(target, 'Client hook configuration is no longer an ordinary file'); return
+            try:
+                from . import client_hooks
+                current = path.read_bytes()
+                raw = client_hooks.remove(current, target['hook_entry'], target.get('originally_absent', False),
+                                          target.get('hook_original_shape'))
+                # Restore exact original bytes only if the entire current JSON
+                # still matches the original plus our one owned entry.
+                for backup in old.get('backups', []):
+                    if backup.get('original_path') != str(path) or backup.get('kind') != 'pre-activation-snapshot':
+                        continue
+                    saved = Path(backup['path'])
+                    if backup['identity'].get('kind') == 'file' and install.fingerprint(saved) == backup['identity']:
+                        original = saved.read_bytes()
+                        if client_hooks.parse(client_hooks.merge(original, None, target['hook_entry'])) == client_hooks.parse(current):
+                            raw = original
+                    break
+            except (ContractError, UnicodeError, ValueError, KeyError):
+                preserve(target, 'Owned client hook was changed; unrelated configuration preserved'); return
+            if raw is not None:
+                after = {'kind': 'file', 'hash': install.sha(raw), 'mode': before['mode']}
+        elif before is not None and target['kind'] == 'activation':
             if before['kind'] != 'file':
                 preserve(target, 'Activation path is no longer an ordinary file'); return
             try:

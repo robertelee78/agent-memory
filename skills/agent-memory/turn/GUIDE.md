@@ -1,0 +1,87 @@
+---
+kind: operation
+domain: capture
+---
+
+# Turn-boundary memory
+
+## Use when
+
+Use this route when a harness invokes the skill at a natural turn boundary.
+
+## Required context
+
+A session MUST first load the [capture domain](../capture/GUIDE.md). The invoking
+agent makes semantic judgments; the CLI observes and validates state. This route
+never replaces the discovery, comparison, admission, refresh or publication gates.
+
+## Inputs and preconditions
+
+Resolve the actual repository, developer, session and harness. Inspect `am status
+--repo REPO`. If the bank or binding is missing, ambiguous or unavailable, preserve
+it and report pending; never infer that memory is empty.
+
+## Observe
+
+At the start of a turn follow [sharing refresh](../sharing/refresh/GUIDE.md) to
+observe and import eligible landed memory. Offline or conflicting results remain
+pending; do not interrupt unrelated work or claim freshness.
+
+## Plan
+
+Before finishing, consider whether this turn produced a durable, sourced project
+lesson. If none, do nothing. Do not store transcripts, secrets, unconfirmed proposals,
+duplicate tracker status or personal memory. Read actual evidence and follow
+[admission](../admission/GUIDE.md), [discovery](../discovery/GUIDE.md) and
+[comparison](../comparison/GUIDE.md). Check alternate wording and relevant routes;
+classify every plausible match by meaning and preserve conditions, evidence and
+provenance. Conflicts and uncertainty remain pending and reach the detecting
+person. A text search is not semantic proof.
+
+## Apply
+
+The [admission helper](../scripts/admit_learning.py) is also available as the
+installed CLI. `am admission draft --repo REPO --input PRIVATE_JSON` fills the random record ID,
+bound project/developer IDs and timestamps. Supply a JSON object with exactly:
+`body`, `kind`, `scope`, `applicability`, `conditions`, `source`, `evidence`,
+`harness`, `session`, `code_state`, `assessment`, and `repository_evidence`.
+Use actual source, harness/session, applicability and evidence; the assessment
+fields and legal values are defined in [admission](../admission/GUIDE.md).
+
+```sh
+python3 -I "$SKILL_DIR/scripts/admit_learning.py" draft --repo REPO --input PRIVATE_JSON
+```
+
+Pass the returned `request` to `am admission capture`, then complete semantic
+discovery and comparison, `am admission preview`, and `am admission apply`.
+Do not skip a gate.
+
+## Read back
+
+A draft is not captured or admitted. An admission receipt establishes only a
+local governed write. Follow [publication](../sharing/publication/GUIDE.md) for a
+memory-only landing and check actual authority readback.
+
+## Verify
+
+A local draft, injected instruction, successful hook process or unverified
+attempt is not a published memory. Retain operation IDs and verified receipts;
+distinguish local admission from actual landed publication and imported refresh.
+
+## Outcomes
+
+Conflicts, failures and pending publication reach the detecting person promptly;
+ordinary success and no-learning outcomes remain quiet. The agent cannot assert
+semantic truth or authority freshness from a mechanical draft.
+
+## Failure handling
+
+The adapter only supplies invocation context. The agent can still fail to follow
+it; no hook proves that capture or refresh occurred. Report unsupported adapters,
+missing trust, model failure and interrupted operations as pending.
+
+## Diagnostic fallback
+
+Preserve the bank, feature work and pending operations. Custom harnesses may
+invoke the same skill and CLI explicitly; never replace governed memory with an
+empty bank or a fabricated receipt.
