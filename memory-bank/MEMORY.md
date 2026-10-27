@@ -1,7 +1,7 @@
 ---
 schema: "agent-memory/v1"
 project-id: "add009c6-d31e-49a6-a372-b8cab316d7bb"
-router-updated: "2026-10-27T14:31:35.295756+00:00"
+router-updated: "2026-10-27T22:03:02.770886+00:00"
 canonical-remote: "repo://github.com/robertelee78/agent-memory"
 ---
 # Project memory
@@ -24,6 +24,8 @@ Router time describes this map, not every file's revision.
 | [history/events/476b2d8d-6ecd-4bf7-a0f2-99fea4dfd79b.md](<history/events/476b2d8d-6ecd-4bf7-a0f2-99fea4dfd79b.md>) | Provenance of updater performance observations | repository | active | When reviewing the updater incident evidence |
 | [topics/a7a752e7-b981-41b7-95be-f0f37de1e3e3.md](<topics/a7a752e7-b981-41b7-95be-f0f37de1e3e3.md>) | Evidenced durable project learning | repository | active | When this learning and its conditions apply |
 | [history/events/f439f01a-ddcf-4833-8dc3-bff8f08b10ef.md](<history/events/f439f01a-ddcf-4833-8dc3-bff8f08b10ef.md>) | Admission provenance event | repository | active | When inspecting the admission history |
+| [topics/163d04c3-1d70-41ec-99b3-9b06f6f80b61.md](<topics/163d04c3-1d70-41ec-99b3-9b06f6f80b61.md>) | Checkout identity continuity and evidence required for automatic memory completion | repository | active | When changing checkout identity, hook diagnostics or integration qualification |
+| [history/events/7fc8ac35-41c4-47c9-8652-3484ae7ef3fa.md](<history/events/7fc8ac35-41c4-47c9-8652-3484ae7ef3fa.md>) | Provenance of checkout continuity and hook qualification learning | repository | active | When reviewing the identity incident and completion evidence |
 
 ## Omitted contexts
 
