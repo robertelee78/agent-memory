@@ -19,6 +19,9 @@ class CodexStopContract(unittest.TestCase):
             prompt={**event,'hook_event_name':'UserPromptSubmit','prompt':'Actual scoped user request'}
             p=subprocess.run([sys.executable,'-I',str(helper.pack/'hooks/codex_prompt.py')],input=json.dumps(prompt),text=True,capture_output=True,env=w.env,timeout=10)
             self.assertEqual(p.returncode,0,p.stderr)
+            altered={**prompt,'prompt':'Different user request'}
+            bad=subprocess.run([sys.executable,'-I',str(helper.pack/'hooks/codex_prompt.py')],input=json.dumps(altered),text=True,capture_output=True,env=w.env,timeout=10)
+            self.assertIn('pending',json.loads(bad.stdout)['systemMessage'])
             def invoke(value):
                 p=subprocess.run([sys.executable,'-I',str(hook)],input=json.dumps(value),text=True,capture_output=True,env=w.env,timeout=10)
                 self.assertEqual(p.returncode,0,p.stderr);return json.loads(p.stdout)
@@ -32,6 +35,10 @@ class CodexStopContract(unittest.TestCase):
             self.assertTrue(json.loads(ack.stdout)['verified'],ack.stdout+ack.stderr)
             retry=subprocess.run(args,text=True,capture_output=True,env=w.env,timeout=10)
             self.assertTrue(json.loads(retry.stdout)['already_completed'],retry.stdout+retry.stderr)
+            repeat=subprocess.run([sys.executable,'-I',str(helper.pack/'hooks/codex_prompt.py')],input=json.dumps(prompt),text=True,capture_output=True,env=w.env,timeout=10)
+            self.assertEqual(json.loads(repeat.stdout),{})
+            changed=subprocess.run([sys.executable,'-I',str(helper.pack/'hooks/codex_prompt.py')],input=json.dumps(altered),text=True,capture_output=True,env=w.env,timeout=10)
+            self.assertIn('pending',json.loads(changed.stdout)['systemMessage'])
             self.assertIn('pending',invoke({**event,'turn_id':None})['systemMessage'])
             self.assertEqual(before,helper.state(w,repo,bank))
     def test_nonrepository_and_uninitialized_are_quiet(self):
@@ -39,6 +46,6 @@ class CodexStopContract(unittest.TestCase):
             hook=Path(__file__).resolve().parents[2]/'skills/agent-memory/hooks/codex_stop.py'
             for repo in (w.repository(),w.inside('outside')):
                 repo.mkdir(exist_ok=True)
-                event={'hook_event_name':'Stop','session_id':'session','turn_id':'turn','stop_hook_active':False,'cwd':str(repo),'last_assistant_message':'ok'}
+                event={'hook_event_name':'Stop','session_id':str(uuid.uuid4()),'turn_id':str(uuid.uuid4()),'stop_hook_active':False,'cwd':str(repo),'last_assistant_message':'ok'}
                 result=subprocess.run([sys.executable,'-I',str(hook)],input=json.dumps(event),text=True,capture_output=True,env=w.env,timeout=10)
                 self.assertEqual(json.loads(result.stdout),{})

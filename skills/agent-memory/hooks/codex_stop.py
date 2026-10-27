@@ -21,7 +21,7 @@ def main():
         if event['stop_hook_active']:
             print('{}'); return 0
         session, turn = event.get('session_id'), event.get('turn_id')
-        if any(not isinstance(v, str) or not re.fullmatch(r'[A-Za-z0-9_-]{1,128}', v) for v in (session, turn)):
+        if any(not isinstance(v, str) or not re.fullmatch(r'[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}', v) for v in (session, turn)):
             raise ValueError('turn identity unavailable')
         final = event.get('last_assistant_message')
         if not isinstance(final, str) or not final or len(final.encode()) > 65536:
