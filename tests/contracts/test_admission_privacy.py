@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 import sys
 import unittest
+import tempfile
 from unittest.mock import patch
 from world import World
 
@@ -39,6 +40,11 @@ class AdmissionPrivacyContract(unittest.TestCase):
             with patch('agent_memory.admission.os.stat', side_effect=racing_stat):
                 with self.assertRaises(PrivateInputError):read_input(path)
             self.assertTrue(swapped[0])
+
+    def test_platform_temporary_alias_with_private_directory(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            path=Path(temporary)/'input.json';path.write_text('{"value":1}');path.chmod(0o644)
+            self.assertEqual(read_input(path), {'value':1})
 
     def test_intermediate_symlink_is_refused(self):
         with World() as world:

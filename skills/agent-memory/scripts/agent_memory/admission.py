@@ -330,6 +330,14 @@ class PrivateInputError(ContractError):
 def read_input(path, maximum=65536):
     try:
         path = Path(os.path.abspath(path))
+        if sys.platform == 'darwin' and len(path.parts) > 1 and path.parts[1] in ('tmp', 'var', 'etc'):
+            alias = Path('/') / path.parts[1]
+            expected = Path('/private') / path.parts[1]
+            info = alias.lstat()
+            if stat.S_ISLNK(info.st_mode):
+                if info.st_uid != 0 or (alias.parent / os.readlink(alias)).resolve() != expected:
+                    raise PrivateInputError('Unexpected system path alias')
+                path = expected.joinpath(*path.parts[2:])
         trust_paths.inspect(path.parent, private_directory=True)
         flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
         descriptors = [os.open(path.anchor, flags)]
