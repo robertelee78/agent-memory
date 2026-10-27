@@ -125,6 +125,9 @@ use bounded, focused tests and existing evidence; it MUST NOT require a multi-ho
 end-to-end run. Preserve failed and interrupted stress-run evidence and track
 unverified scale and timeout behavior explicitly. A smaller passing test MUST NOT
 be represented as proof that the 24-session stress target passed.
+For v0.0.4, qualify the reliability and recovery behavior with focused tests
+within that duration budget. The work to make the full 24-session / 10,000-lesson
+stress workload practical within that budget is targeted for v0.0.5.
 
 For optional stores and indexes, tests SHALL prove that:
 
