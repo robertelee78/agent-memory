@@ -1,6 +1,7 @@
 {
   "schema": "agent-memory/test-contracts-v1",
   "suites": [
+    {"name": "experimental-opencode-source-window", "layer": "client", "scope": "v0.0.4", "path": "tests/contracts/test_opencode_experimental_queue.py"},
     {"name": "turn-hook-invocation", "layer": "client", "scope": "v0.0.4", "path": "tests/contracts/test_turn_hook.py"},
     {"name": "owned-client-hooks", "layer": "lifecycle", "scope": "v0.0.4", "path": "tests/contracts/test_client_hooks.py"},
     {"name": "recall-observation", "layer": "bank", "scope": "v0.0.3", "path": "tests/contracts/test_recall_observation.py"},
