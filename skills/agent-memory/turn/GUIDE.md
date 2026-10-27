@@ -40,6 +40,41 @@ person. A text search is not semantic proof.
 
 ## Apply
 
+For one candidate, `am admission start --repo REPO --input PRIVATE_JSON` combines
+mechanical draft, capture and the first discovery observation. Supply one object:
+
+```json
+{
+  "task": "Find prior decisions about this actual subject and its conditions",
+  "searches": ["actual concept", "different wording for that concept"],
+  "candidate": {
+    "body": "# Actual lesson\n\nThe small durable lesson and its conditions.\n",
+    "kind": "project-decision", "scope": "repository",
+    "applicability": "known", "conditions": {},
+    "source": {"kind": "user", "actor": "actual source actor"},
+    "evidence": ["Actual evidence identifying the source and relevant context"],
+    "harness": "actual harness", "session": "actual session",
+    "code_state": "not-code", "repository_evidence": null,
+    "assessment": {"category": "confirmed-decision", "utility": "Actual future utility",
+      "durable": true, "evidence_confidence": "confirmed", "evidence_reason": "Actual basis",
+      "confirmed": true, "source_redundant": false, "work_state_copy": false, "review": null}
+  }
+}
+```
+
+Replace **every** illustrative value with the actual observed source and agent
+judgment, including kind, source class, conditions, code state and assessment;
+consult [admission](../admission/GUIDE.md) for valid categories and evidence.
+This example is not evidence that an observation is confirmed or code-independent.
+Keep inputs and outputs private. The response's `capture`, `discovery` and
+`comparison_request` are inputs for the next steps; its discovery is explicitly
+incomplete. Select plausible routes and paths by meaning, then supply them in
+`comparison_request.read_paths`. Pass the `discovery` result and comparison request
+to `am discover read`, with a truthful coverage rationale. Use its checked request
+and observation for the existing comparison review; preserve the exact returned
+capture and proof for preview. An ineligible or unconfirmed candidate returns no
+discovery or comparison request. This helper does not admit or publish learning.
+
 The [admission helper](../scripts/admit_learning.py) is also available as the
 installed CLI. `am admission draft --repo REPO --input PRIVATE_JSON` fills the random record ID,
 bound project/developer IDs and timestamps. Supply a JSON object with exactly:

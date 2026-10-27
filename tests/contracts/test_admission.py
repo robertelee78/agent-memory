@@ -49,6 +49,32 @@ class AdmissionContract(unittest.TestCase):
             self.assertFalse(invalid['admission_verified'])
             self.assertEqual(self.state(w, repo, bank), before)
 
+    def test_start_keeps_semantic_review_pending_and_never_writes_bank(self):
+        with World() as w:
+            repo, bank = self.fixture(w)
+            source = self.request()
+            old = source['candidate']['metadata']
+            value = {'body': source['candidate']['body'], 'kind': old['kind'],
+                     'scope': old['scope'], 'applicability': old['applicability'],
+                     'conditions': old['conditions'], 'source': old['source'], 'evidence': old['evidence'],
+                     'harness': old['origin']['harness'], 'session': old['origin']['session'],
+                     'code_state': 'not-code', 'assessment': source['assessment'], 'repository_evidence': None}
+            request = {'candidate': value, 'task': 'Assess the retry policy and related attempt limits',
+                       'searches': ['retry policy', 'attempt cap']}
+            before = self.state(w, repo, bank)
+            started = self.good(w, 'admit_learning.py', 'start', '--repo', repo, '--input', self.save(w, request))
+            self.assertEqual(started['decision'], 'eligible')
+            self.assertFalse(started['admission_verified'])
+            self.assertFalse(started['discovery']['discovery']['complete'])
+            self.assertEqual(started['capture']['request']['candidate'], started['comparison_request']['candidate'])
+            self.assertEqual(self.state(w, repo, bank), before)
+            value['assessment']['confirmed'] = False
+            pending = self.good(w, 'admit_learning.py', 'start', '--repo', repo, '--input', self.save(w, request))
+            self.assertEqual(pending['decision'], 'review-required')
+            self.assertIsNone(pending['discovery'])
+            self.assertIsNone(pending['comparison_request'])
+            self.assertEqual(self.state(w, repo, bank), before)
+
     def request(self, source='user', category='user-correction'):
         candidate=fixtures.ComparisonContract.candidate(self)['candidate']
         candidate['metadata']['source']={'kind':source,'actor':'Explicit fixture source; not authenticated'}

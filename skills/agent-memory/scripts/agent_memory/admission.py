@@ -156,6 +156,32 @@ def draft(repo, value):
                   note='Explicit agent assessment only; capture and semantic comparison are still required.')
 
 
+def start(repo, value):
+    """Combine mechanical drafting, capture and *incomplete* discovery.
+
+    The caller supplies the semantic searches and still selects sources and
+    judges all matches. This does not create an admission or a sharing proof.
+    """
+    if not isinstance(value, dict) or set(value) != {'candidate', 'task', 'searches'}:
+        raise ContractError('Start requires explicit candidate, task and alternative searches')
+    from . import discovery
+    request = draft(repo, value['candidate'])['request']
+    comparison_request = {'project_id': request['project_id'], 'candidate': request['candidate'],
+                          'searches': value['searches'], 'read_paths': []}
+    comparison.request_value(comparison_request)
+    captured = capture(repo, request)
+    if captured['decision'] != 'eligible':
+        return result('start', decision=captured['decision'], reasons=captured['reasons'],
+                      capture=captured['capture'], discovery=None, comparison_request=None,
+                      admission_verified=False, canonical_writes_performed=False)
+    observed = discovery.start(repo, value['task'], 'comparison')
+    return result('start', decision='eligible', reasons=captured['reasons'],
+                  capture=captured['capture'], discovery=observed,
+                  comparison_request=comparison_request, admission_verified=False,
+                  canonical_writes_performed=False,
+                  note='Discovery is incomplete; select sources and perform semantic review before admission.')
+
+
 def capture_value(repo, value, *, owned_lock=None):
     value = value.get('capture', value) if isinstance(value, dict) else value
     if not isinstance(value, dict) or set(value) != CAPTURE or value['schema'] != 'agent-memory/capture-v1':
@@ -307,6 +333,7 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest='command', required=True)
     d = commands.add_parser('draft');d.add_argument('--repo', required=True);d.add_argument('--input', required=True)
+    s = commands.add_parser('start');s.add_argument('--repo', required=True);s.add_argument('--input', required=True)
     c = commands.add_parser('capture');c.add_argument('--repo', required=True);c.add_argument('--request', required=True)
     p = commands.add_parser('preview');p.add_argument('--repo', required=True)
     for flag in ('capture', 'request', 'proof'):p.add_argument('--' + flag, required=True)
@@ -315,6 +342,7 @@ def main(argv=None):
     args = parser.parse_args(argv)
     try:
         if args.command == 'draft':value = draft(args.repo, read_input(args.input, 16384))
+        elif args.command == 'start':value = start(args.repo, read_input(args.input, 16384))
         elif args.command == 'capture':value = capture(args.repo, read_input(args.request, 16384))
         elif args.command == 'preview':value = preview(args.repo, read_input(args.capture), read_input(args.request), read_input(args.proof),read_input(args.navigation,16384) if args.navigation else None)
         else:value = apply(read_input(args.proposal, sharing_limits.MAX_PRIVATE))
