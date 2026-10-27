@@ -12,7 +12,10 @@ session SHOULD use its own worktree or branch. This skill is harness agnostic.
 
 The words MUST, MUST NOT, SHOULD and MAY carry their RFC 2119 meanings in this
 file and its linked guides. A session MUST resolve `SKILL_DIR` to the directory
-containing this file before using a packaged script.
+containing this file before using a packaged script. Use the installed `am` command
+when available. For packaged scripts, use `/bin/sh "$SKILL_DIR/hooks/python3.sh"`
+followed by the script path and arguments; it selects a supported Python from PATH,
+including when an older system Python appears first.
 
 
 ## Loading contract

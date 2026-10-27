@@ -125,10 +125,10 @@ The format helper plans only a returned representation. A session MUST separate 
 With `SKILL_DIR` resolved to the packaged skill directory:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/record_contract.py" model
-python3 -I "$SKILL_DIR/scripts/record_contract.py" render --input /tmp/record-proposal.json
-python3 -I "$SKILL_DIR/scripts/record_contract.py" validate --file memory-bank/topics/example.md --require redaction
-python3 -I "$SKILL_DIR/scripts/record_contract.py" applicability --file memory-bank/topics/example.md --input /tmp/record-context.json
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/record_contract.py" model
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/record_contract.py" render --input /tmp/record-proposal.json
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/record_contract.py" validate --file memory-bank/topics/example.md --require redaction
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/record_contract.py" applicability --file memory-bank/topics/example.md --input /tmp/record-context.json
 ```
 
 ## Read back

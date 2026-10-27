@@ -58,18 +58,18 @@ from a manual editor ignoring the protocol.
 ## Apply
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/bank_writes.py" inspect --repo /path/to/repo
-python3 -I "$SKILL_DIR/scripts/bank_writes.py" preview --repo /path/to/repo \
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/bank_writes.py" inspect --repo /path/to/repo
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/bank_writes.py" preview --repo /path/to/repo \
   --path activeContext.md --content /private/path/reviewed.md > /private/path/proposal.json
-python3 -I "$SKILL_DIR/scripts/bank_writes.py" apply --proposal /private/path/proposal.json
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/bank_writes.py" apply --proposal /private/path/proposal.json
 ```
 
 Adding/removing routes or records requires the recoverable multi-file protocol:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/bank_transactions.py" preview --repo /path/to/repo \
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/bank_transactions.py" preview --repo /path/to/repo \
   --files /private/path/complete-reviewed-files.json --operation replace > /private/path/transaction.json
-python3 -I "$SKILL_DIR/scripts/bank_transactions.py" apply --proposal /private/path/transaction.json
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/bank_transactions.py" apply --proposal /private/path/transaction.json
 ```
 
 ## Read back
@@ -109,8 +109,8 @@ refresh/publication cursor or fresh projection source.
 A visible lock requires explicit lock recovery before bank resolution:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/bank_writes.py" recover --repo /path/to/repo > /private/path/unlock.json
-python3 -I "$SKILL_DIR/scripts/bank_writes.py" recover --repo /path/to/repo \
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/bank_writes.py" recover --repo /path/to/repo > /private/path/unlock.json
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/bank_writes.py" recover --repo /path/to/repo \
   --proposal /private/path/unlock.json
 ```
 

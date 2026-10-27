@@ -111,10 +111,10 @@ Missing evidence MUST NOT be filled with invented requirements.
 With `SKILL_DIR` resolved to the packaged skill directory:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/bank_layout.py" inspect --repo /path/to/repo
-python3 -I "$SKILL_DIR/scripts/bank_layout.py" model
-python3 -I "$SKILL_DIR/scripts/bank_layout.py" render-index --input /tmp/topic-index.json
-python3 -I "$SKILL_DIR/scripts/bank_layout.py" validate-index --file memory-bank/topics/index.md --path topics/index.md
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/bank_layout.py" inspect --repo /path/to/repo
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/bank_layout.py" model
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/bank_layout.py" render-index --input /tmp/topic-index.json
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/bank_layout.py" validate-index --file memory-bank/topics/index.md --path topics/index.md
 ```
 
 ## Read back

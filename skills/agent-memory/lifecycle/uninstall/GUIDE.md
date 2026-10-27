@@ -40,7 +40,7 @@ outside removal ownership.
 The session MUST preview removal before applying it:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/uninstall_runtime.py" uninstall --check > /private/path/uninstall-plan.json
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/uninstall_runtime.py" uninstall --check > /private/path/uninstall-plan.json
 ```
 
 The session MUST review each target's before/after identity and the `preserved`
@@ -54,7 +54,7 @@ After an authorized acceptable preview, the session MUST run the same helper
 without `--check`, or the installed `agent-memory uninstall` command:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/uninstall_runtime.py" uninstall > /private/path/uninstall-receipt.json
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/uninstall_runtime.py" uninstall > /private/path/uninstall-receipt.json
 ```
 
 The lifecycle lock, external journal and native per-target moves retain rollback
@@ -102,7 +102,7 @@ The session MUST recover interrupted runtime removal using the trusted complete
 package, even when the installed command and managed source are gone:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/installer.py" recover
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/installer.py" recover
 ```
 
 The session MUST read the verified recovery result before retrying uninstall.

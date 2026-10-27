@@ -62,9 +62,9 @@ code, approved-intent or work-record conflict MAY require a focused PM Q&A.
 With `SKILL_DIR` resolved, save evidence and proposals outside canonical memory:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/consolidate_learning.py" preview --repo /path/to/repo \
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/consolidate_learning.py" preview --repo /path/to/repo \
   --input /private/path/maintenance-input.json > /private/path/maintenance.json
-python3 -I "$SKILL_DIR/scripts/consolidate_learning.py" apply \
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/consolidate_learning.py" apply \
   --proposal /private/path/maintenance.json
 ```
 

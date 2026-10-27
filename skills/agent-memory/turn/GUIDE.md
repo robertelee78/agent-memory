@@ -96,7 +96,7 @@ Use actual source, harness/session, applicability and evidence; the assessment
 fields and legal values are defined in [admission](../admission/GUIDE.md).
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/admit_learning.py" draft --repo REPO --input PRIVATE_JSON
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/admit_learning.py" draft --repo REPO --input PRIVATE_JSON
 ```
 
 Pass the returned `request` to `am admission capture`, then complete semantic

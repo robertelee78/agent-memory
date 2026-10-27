@@ -48,6 +48,22 @@ class SkillRouteContract(unittest.TestCase):
             for path, (digest, mode) in observed(pack).items():
                 self.assertEqual(value['files'][path], {'sha256': digest, 'mode': oct(mode)})
 
+    def test_documented_selector_uses_supported_python_after_older_path_entry(self):
+        with World() as world:
+            pack = self.copy(world)
+            older = world.inside('older python'); older.mkdir()
+            (older/'python3').write_text('#!/bin/sh\nexit 1\n'); (older/'python3').chmod(0o755)
+            supported = world.inside('supported python'); supported.mkdir()
+            (supported/'python3').symlink_to(sys.executable)
+            world.env['PATH'] = str(older) + ':' + str(supported) + ':/usr/bin:/bin'
+            world.env['SKILL_DIR'] = str(pack)
+            for document in pack.rglob('*.md'):
+                self.assertNotIn('python3 -I "$SKILL_DIR/scripts/', document.read_text())
+            guide = (pack/'turn/GUIDE.md').read_text()
+            self.assertIn('/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/admit_learning.py" draft', guide)
+            result = world.run(['/bin/sh', '-c', '/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/admit_learning.py" draft --help'], check=False)
+            self.assertEqual(result.returncode, 0, result.stderr)
+
     def test_every_documented_helper_dispatch_also_accepts_real_public_help(self):
         with World() as world:
             pack = self.copy(world); value = self.check(world, pack)

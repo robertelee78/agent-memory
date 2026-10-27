@@ -249,7 +249,7 @@ def git_operation(argv, path):
 
 def command_argv(line, path):
     require('$(' not in line and '`' not in line, 'dispatch', path, 'Command substitutions are outside the literal command contract')
-    literal = re.sub(r'"\$SKILL_DIR/scripts/[a-z_]+\.py"', '', line)
+    literal = re.sub(r'"\$SKILL_DIR/(?:scripts/[a-z_]+\.py|hooks/python3\.sh)"', '', line)
     require('$' not in literal, 'dispatch', path, 'Only the quoted SKILL_DIR helper path may expand')
     unquoted = re.sub(r"'[^']*'|\"(?:\\.|[^\"\\])*\"", '', literal)
     require(not re.search(r'[*?\[\]{}~]', unquoted), 'dispatch', path, 'Unquoted shell expansions are outside the literal command contract')
@@ -454,6 +454,9 @@ def validate(pack):
                     continue
                 # Explicit bytecode suppression is a supported inspection
                 # prefix. Keep isolated execution and all helper checks below.
+                if argv[:2] == ['/bin/sh', '$SKILL_DIR/hooks/python3.sh']:
+                    require('hooks/python3.sh' in files, 'dispatch', path, 'Supported Python launcher is missing')
+                    argv = ['python3', '-I', *argv[2:]]
                 if argv[:3] == ['python3', '-B', '-I']:
                     argv = [argv[0], *argv[2:]]
                 require(argv[:2] == ['python3', '-I'] and len(argv) >= 3

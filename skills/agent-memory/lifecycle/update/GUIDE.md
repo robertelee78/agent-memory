@@ -43,7 +43,7 @@ With `SKILL_DIR` resolved to a trusted complete package, the session MUST previe
 an update before activation:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/update_runtime.py" update --check > /private/path/update-check.json
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/update_runtime.py" update --check > /private/path/update-check.json
 ```
 
 The session MAY add repeated `--repo /absolute/repository` arguments for relevant
@@ -60,7 +60,7 @@ After an acceptable authorized check, the session MUST invoke the same trusted
 helper without `--check`:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/update_runtime.py" update > /private/path/update-receipt.json
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/update_runtime.py" update > /private/path/update-receipt.json
 ```
 
 The installed `agent-memory update` command dispatches this operation. A trusted

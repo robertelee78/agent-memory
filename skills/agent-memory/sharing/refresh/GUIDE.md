@@ -76,8 +76,8 @@ the full review below or its specific recovery. Do not treat this observation as
 proof that other sessions have no private pending work.
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/refresh_memory.py" inspect --v2 --repo /path/to/repo --output /private/refresh-inspection.json
-python3 -I "$SKILL_DIR/scripts/refresh_memory.py" inspect --v2 --repo /path/to/repo --base FULL_SHARED_COMMIT --output /private/explicit-refresh-inspection.json
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/refresh_memory.py" inspect --v2 --repo /path/to/repo --output /private/refresh-inspection.json
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/refresh_memory.py" inspect --v2 --repo /path/to/repo --base FULL_SHARED_COMMIT --output /private/explicit-refresh-inspection.json
 ```
 
 The session MUST retain the stored complete result and extract its nested
@@ -106,7 +106,7 @@ canonical knowledge. Local state MUST remain outside Git and the bank.
 ## Plan
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/refresh_memory.py" prepare --v2 --repo /path/to/repo --input /private/refresh-input.json --output /private/prepared-refresh.json
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/refresh_memory.py" prepare --v2 --repo /path/to/repo --input /private/refresh-input.json --output /private/prepared-refresh.json
 ```
 
 Only `prepared` contains a `proposal`. The session MUST save that exact proposal
@@ -124,7 +124,7 @@ The session MUST retain the conflict packet while independent imports proceed.
 ## Apply
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/refresh_memory.py" apply --v2 --input /private/refresh-proposal.json --output /private/applied-refresh.json
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/refresh_memory.py" apply --v2 --input /private/refresh-proposal.json --output /private/applied-refresh.json
 ```
 
 ## Read back

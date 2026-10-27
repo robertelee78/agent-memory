@@ -86,7 +86,7 @@ With `SKILL_DIR` resolved, save inputs/results outside the canonical bank and
 outside any sharing delta:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/admit_learning.py" capture --repo /path/to/repo \
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/admit_learning.py" capture --repo /path/to/repo \
   --request /private/path/capture-request.json > /private/path/captured.json
 ```
 
@@ -124,10 +124,10 @@ silently omit a route or drop an older lesson to make room.
 ## Apply
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/admit_learning.py" preview --repo /path/to/repo \
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/admit_learning.py" preview --repo /path/to/repo \
   --capture /private/path/captured.json --request /private/path/comparison-request.json \
   --proof /private/path/comparison-review.json > /private/path/admission.json
-python3 -I "$SKILL_DIR/scripts/admit_learning.py" apply \
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/admit_learning.py" apply \
   --proposal /private/path/admission.json
 ```
 

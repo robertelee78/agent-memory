@@ -60,14 +60,14 @@ It MAY call the same portable helper from any harness:
 ## Apply
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/security_policy.py" --repo /path/to/repo \
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/security_policy.py" --repo /path/to/repo \
   --request /private/path/security-request.json
 ```
 
 For a separately approved procedure-eligibility request, the session MUST use the explicit approval branch instead of assuming routine capture grants that authority.
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/security_policy.py" --repo /path/to/repo \
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/security_policy.py" --repo /path/to/repo \
   --request /private/path/procedure-request.json \
   --operator-approval /private/path/operator-approval.json
 ```

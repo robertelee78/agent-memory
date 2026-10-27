@@ -51,7 +51,7 @@ setup and do not create mediated audit evidence.
 With `SKILL_DIR` resolved to this portable package:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/scope_binding.py" status --repo /path/to/repo
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/scope_binding.py" status --repo /path/to/repo
 ```
 
 Status is read-only. It shows the selected developer ID, project ID, attribution

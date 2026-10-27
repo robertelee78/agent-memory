@@ -145,9 +145,9 @@ Ordinary context remains orientation-only and requires statement qualification.
 With `SKILL_DIR` resolved to this portable package:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/initialize.py" inspect --repo /path/to/repo > /private/path/inventory.json
-python3 -I "$SKILL_DIR/scripts/initialize.py" read --repo /path/to/repo --path README.md
-python3 -I "$SKILL_DIR/scripts/initialize.py" read --repo /path/to/repo --path docs/adr/001-example.md
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/initialize.py" inspect --repo /path/to/repo > /private/path/inventory.json
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/initialize.py" read --repo /path/to/repo --path README.md
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/initialize.py" read --repo /path/to/repo --path docs/adr/001-example.md
 ```
 
 `inspect` writes nothing. It reports the bank's state, observed memory hashes,
@@ -170,7 +170,7 @@ memory. This skill does not implement a competing AWA tracker client or change
 Projects during initialization.
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/initialize.py" inspect --repo /path/to/repo \
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/initialize.py" inspect --repo /path/to/repo \
   --awa-evidence /private/path/awa-evidence.json > /private/path/inventory.json
 ```
 
@@ -210,9 +210,9 @@ An existing bank uses ordinary resolved identity; independent clone/fork or
 authority ambiguity requires its explicit binding decision first.
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/initialize.py" preview --repo /path/to/repo \
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/initialize.py" preview --repo /path/to/repo \
   --review /private/path/review.json > /private/path/initialize.json
-python3 -I "$SKILL_DIR/scripts/initialize.py" apply --proposal /private/path/initialize.json
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/initialize.py" apply --proposal /private/path/initialize.json
 ```
 
 ## Read back
