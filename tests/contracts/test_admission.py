@@ -74,6 +74,15 @@ class AdmissionContract(unittest.TestCase):
             self.assertIsNone(pending['discovery'])
             self.assertIsNone(pending['comparison_request'])
             self.assertEqual(self.state(w, repo, bank), before)
+            value['assessment']['confirmed'] = True
+            value['body'] = '# Unsafe\n\npassword=WITHHELD_ADMISSION_SECRET\n'
+            response, quarantined = self.call(w, 'admit_learning.py', 'start', '--repo', repo, '--input', self.save(w, request))
+            self.assertEqual(response.returncode, 0)
+            self.assertEqual(quarantined['decision'], 'quarantine')
+            self.assertIsNone(quarantined['capture'])
+            self.assertIsNone(quarantined['discovery'])
+            self.assertNotIn('WITHHELD_ADMISSION_SECRET', response.stdout + response.stderr)
+            self.assertEqual(self.state(w, repo, bank), before)
 
     def request(self, source='user', category='user-correction'):
         candidate=fixtures.ComparisonContract.candidate(self)['candidate']
