@@ -39,6 +39,7 @@ MUST NOT be treated as evidence that a guide is semantically complete.
 | [0017](0017-standalone-semantic-search.md) | Standalone semantic terminal search after v0.0.3 | Proposed (later release) |
 | [0018](0018-repair-diagnostics-and-observation-bounds.md) | Repair diagnostics and bounded observation | Proposed (v0.0.4) |
 | [0019](0019-stable-checkout-binding-and-hook-diagnostics.md) | Checkout continuity and actionable hook diagnostics | Accepted (v0.0.7) |
+| [0020](0020-repeatable-turn-boundaries.md) | Repeated steering, refresh and quiet completion | Accepted (v0.0.8) |
 
 [ADR-0013](0013-public-cli-and-corrective-releases.md) defines the corrective
 `v0.0.2` public command contract and the current future-release mapping. Older

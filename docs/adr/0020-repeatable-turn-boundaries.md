@@ -1,6 +1,6 @@
 ---
 id: ADR-0020
-status: proposed
+status: accepted
 date: 2026-10-27
 amends: [ADR-0004, ADR-0012, ADR-0019]
 ---
@@ -17,6 +17,10 @@ The operator authorized research, independent review, AWA decomposition,
 implementation and a signed corrective release. Repo-local Markdown, semantic
 comparison, provenance, memory-only publication and ordinary Git rules remain
 unchanged. Temporary protocol state is not canonical or personal memory.
+
+Accepted for v0.0.8 execution under the operator’s explicit pipeline instruction,
+Opus design acceptance and independent code-aware acceptance. This is not
+implementation acceptance or release evidence.
 
 ## Decision
 
@@ -39,26 +43,56 @@ receipt covers only that observation. Stop succeeds only when every currently
 observed ID has its own valid completed receipt; later observations remain
 pending. It MUST NOT infer semantic truth or publication from source coverage.
 
-All prompt registration, completion publication and Stop inventory use one
-owner-only lock per checkout/session/turn namespace, using nonblocking POSIX
-flock on macOS/Linux. Unsafe lock paths, contention or failed validation MUST
-preserve state and return concise pending; they MUST NOT steal locks or spin.
-Publication verification can occur before the lock, but evidence MUST be checked
-again inside it before completion is recorded. Concurrent registration cannot
-be erased or covered by an acknowledgment for a different ID.
+Prompt registration MUST be append-only and independent of the completion/
+inventory lock. Each invocation reserves one of at most128 fixed source slots
+with exclusive creation, writes its immutable observation and verifies durable
+readback before reporting registration success. A reserved partial/invalid slot
+counts as pending; inventory MUST NOT ignore it. Thus registration contending
+with completion or Stop still leaves discoverable source evidence. If safe
+durable registration is impossible, UserPromptSubmit MUST block that input with
+a short actionable error, rather than pass unrecorded input as tracked.
+
+Completion recording and Stop inventory use one owner-only lock per checkout/
+session/turn namespace, using nonblocking POSIX flock on macOS/Linux. Unsafe
+lock paths or contention preserve state and return concise pending; they MUST
+NOT steal locks or spin. Publication verification can occur before the lock,
+but evidence MUST be checked again before completion is recorded. Stop MUST
+repeat its source inventory/pins before a quiet result, so a concurrently
+registered source cannot be credited by an older acknowledgment.
 
 The v2 namespace MUST be scoped per checkout/session/turn, with at most 128
 observations per turn, observation records at most4KiB and completion records at
 most64KiB. Both encoded output bounds MUST be checked before exclusive/atomic
 publication. Source observations retain identifiers/digests, never prompt text.
-Capacity exhaustion MUST retain existing evidence and require inspection, never
-truncate or rewrite it. Listing history MUST retain bounded inventory limits.
+Capacity exhaustion or failed registration MUST leave a bounded per-turn pending
+fault indication whenever safe state access permits, so completion of only the
+previously recorded observations cannot conceal an omitted input. A fault MUST
+NOT be silently cleared or called assessed. Existing evidence is retained for
+inspection, never truncated or rewritten. Listing history retains bounded limits.
+
+A bounded checkout-level pending-turn index MUST retain references to turns
+with unresolved observations, reservations or faults across sessions. It holds
+at most4096 turn references and no prompt text. Registration MUST establish a
+durable index reference before accepting an input and recheck it after source
+publication. Completion/index cleanup MUST recheck inventory after removing a
+reference and restore it if work remains; index maintenance MUST NOT orphan a
+concurrently appended source. Index capacity or unsafe state blocks acceptance
+with an actionable error; it cannot silently evict an older turn.
+
+At prompt time the adapter MUST expose a bounded prior-pending summary, with a
+route to the actual retained original identifiers. It SHOULD avoid repeating an
+unchanged notice within one session. Stop reports earlier pending work concisely
+without blocking unrelated current-turn completion. A later session may assess
+an earlier observation only after recovering its actual original source and
+verifying its digest; current input is never substituted or reassigned.
 
 Existing v1 records remain in place behind a read/acknowledge compatibility shim;
 no eager conversion, invented assessment or source reassignment is allowed.
-New v2 state uses a separate namespace. Older runtimes cannot establish coverage
-of v2 observations; downgrade is not evidence of completion and re-upgrade must
-retain pending work. Interrupted/cancelled work stays pending, not no-learning.
+Legacy pending observations MUST participate in the bounded backlog view, even
+if they are not in the v2 index. New v2 state uses a separate namespace. Older
+runtimes cannot establish coverage of v2 observations; downgrade is not evidence
+of completion and re-upgrade must retain pending work. Interrupted/cancelled work
+stays pending, not no-learning.
 
 ### T2: Recognize a verified imported snapshot on the next quick check
 
@@ -135,8 +169,11 @@ inside their repository bank; private validation receipts remain outside Git.
 ### T4: Prove repeated normal operation before release
 
 Acceptance MUST test multiple distinct steering submissions in one active turn,
-identical redelivery, interruption/resume, late steering racing completion,
-legacy evidence, corrupt evidence and nullable final text. It MUST test proactive
+identical-text submissions, interruption/resume, registration contending with
+completion and Stop, late steering racing completion,
+legacy evidence, corrupt evidence and nullable final text. Cap exhaustion then
+a new turn, and interruption then a new session, MUST expose prior pending work
+without falsely completing it or blocking unrelated work. It MUST test proactive
 completion followed by quiet Stop and a bounded forgotten-operation fallback.
 
 Refresh tests MUST include first real import then quick current, repeated full
