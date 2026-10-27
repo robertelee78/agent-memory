@@ -5,7 +5,7 @@ import os
 import stat
 
 
-def reserve(root, session, source, action="reserve", repo=None, publication_request=None):
+def reserve(root, session, source, action="reserve", repo=None, publication_request=None, assessment=None):
     """Persist intent and attempt before queueing; never retry an existing intent."""
     if (not os.path.isabs(root) or not isinstance(session, str) or not isinstance(source, str)
             or not session or not source or len(session) > 512 or len(source) > 512):
@@ -71,6 +71,13 @@ def reserve(root, session, source, action="reserve", repo=None, publication_requ
         done = key + '.assessed'
         request_hash = None
         witnessed = None
+        if action == 'assessed-no-learning':
+            import sys
+            from pathlib import Path
+            sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'scripts'))
+            from agent_memory import boundary_assessment
+            boundary_assessment.validate(assessment, source)
+            request_hash = hashlib.sha256(json.dumps(assessment, sort_keys=True, separators=(',', ':'), ensure_ascii=False).encode()).hexdigest()
         if action == 'published':
             from agent_memory import memory_publication, sharing_recovery
             if repository_context is None or not isinstance(publication_request, dict):
@@ -104,7 +111,7 @@ def reserve(root, session, source, action="reserve", repo=None, publication_requ
                     return {'status': 'already-published' if record['status'] == 'published' else 'assessed-no-learning'}
                 if action == 'inspect':
                     return {'status': 'completed-source'}
-                if action != record['status'] or (action == 'published' and request_hash != record['request_hash']):
+                if action != record['status'] or (action in ('published', 'assessed-no-learning') and request_hash != record['request_hash']):
                     raise ValueError('completion differs from original assessment')
                 return {'status': action, 'already_completed': True, 'publication_verified': action == 'published',
                         'witnessed_commit': witnessed, 'source_publication_link_verified': False}
@@ -220,7 +227,7 @@ if __name__ == '__main__':
     import sys
     try:
         request = json.load(sys.stdin)
-        print(json.dumps(reserve(request['root'], request['session'], request['source'], request.get('action', 'reserve'), request.get('repo'), request.get('publication_request'))))
+        print(json.dumps(reserve(request['root'], request['session'], request['source'], request.get('action', 'reserve'), request.get('repo'), request.get('publication_request'), request.get('assessment'))))
     except Exception:
         print(json.dumps({'status': 'pending', 'reason': 'ledger-unavailable'}))
         sys.exit(1)

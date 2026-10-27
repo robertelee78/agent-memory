@@ -68,7 +68,7 @@ class ClaudeBoundaryContract(unittest.TestCase):
             second=call(event);self.assertEqual(second.returncode,0);self.assertIn('pending',second.stdout)
             request={'session':session,'prompt':prompt,'source_uuid':message,
                      'source_sha256':hashlib.sha256(b'Synthetic decision').hexdigest(),
-                     'outcome':'no-learning','assessment':'The source contains no reusable lesson.'}
+                     'outcome':'no-learning','assessment':{'source_id':message,'source_review':'Reviewed source; no reusable lesson.','candidates':[]}}
             input_path=w.inside('assessment.json');input_path.write_text(json.dumps(request))
             cli=HOOK.parent.parent/'scripts/installer.py'
             bad={**request,'source_sha256':'0'*64};input_path.write_text(json.dumps(bad))

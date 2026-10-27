@@ -32,7 +32,7 @@ class CodexStopContract(unittest.TestCase):
             inventory=subprocess.run([sys.executable,'-I',str(cli),'codex-boundary','--repo',str(repo),'--list-pending'],text=True,capture_output=True,env=w.env,timeout=10)
             listed=json.loads(inventory.stdout);self.assertTrue(listed['verified']);self.assertEqual(listed['pending'][0]['turn'],turn);self.assertNotIn(prompt['prompt'],inventory.stdout)
             self.assertEqual(invoke({**event,'stop_hook_active':True}),{})
-            request={'session':session,'prompt':turn,'source_uuid':turn,'source_sha256':hashlib.sha256(prompt['prompt'].encode()).hexdigest(),'outcome':'no-learning','assessment':'No durable project learning was produced.'}
+            request={'session':session,'prompt':turn,'source_uuid':turn,'source_sha256':hashlib.sha256(prompt['prompt'].encode()).hexdigest(),'outcome':'no-learning','assessment':{'source_id':turn,'source_review':'Reviewed this source; no durable project learning.','candidates':[]}}
             input_path=w.inside('codex-ack.json');input_path.write_text(json.dumps(request))
             cli=helper.pack/'scripts/installer.py'
             args=[sys.executable,'-I',str(cli),'codex-boundary','--repo',str(repo),'--input',str(input_path)]

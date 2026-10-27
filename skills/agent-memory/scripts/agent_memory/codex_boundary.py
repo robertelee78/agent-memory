@@ -21,9 +21,13 @@ def complete(repo, value):
     if (not isinstance(value, dict) or set(value) not in (fields, fields|{'publication_request'})
             or any(not isinstance(value[k],str) or not UUID.fullmatch(value[k]) for k in ('session','prompt','source_uuid'))
             or not isinstance(value['source_sha256'],str) or not re.fullmatch('[0-9a-f]{64}',value['source_sha256'])
-            or value['outcome'] not in ('no-learning','published') or not isinstance(value['assessment'],str)
-            or not value['assessment'].strip() or len(value['assessment'].encode())>2048):
+            or value['outcome'] not in ('no-learning','published')):
         raise ContractError('Use an explicit bounded source-bound assessment')
+    if value['outcome']=='no-learning':
+        from . import boundary_assessment
+        boundary_assessment.validate(value['assessment'], value['source_uuid'])
+    elif not isinstance(value['assessment'],str) or not value['assessment'].strip() or len(value['assessment'].encode())>2048:
+        raise ContractError('Published outcome requires a bounded assessment')
     if (value['outcome']=='published') != ('publication_request' in value):
         raise ContractError('Published completion requires the original publication request')
     root,bank=bank_writes.bank_path(repo);context=scope_binding.require(root)

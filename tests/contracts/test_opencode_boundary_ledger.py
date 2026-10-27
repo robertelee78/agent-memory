@@ -53,12 +53,15 @@ class BoundaryLedgerTest(unittest.TestCase):
             root = os.path.realpath(root)
             self.assertEqual(supported.reserve(root, 's', 'turn')['status'], 'reserved')
             self.assertEqual(supported.reserve(root, 's', 'turn', 'inspect')['status'], 'pending-turn')
-            self.assertEqual(supported.reserve(root, 's', 'turn', 'assessed-no-learning')['status'], 'assessed-no-learning')
+            with self.assertRaises(Exception): supported.reserve(root, 's', 'turn', 'assessed-no-learning')
+            with self.assertRaises(Exception): supported.reserve(root, 's', 'turn', 'assessed-no-learning', assessment={'source_id':'turn','source_review':'Reviewed','candidates':[{'claim':'Confirmed decision','disposition':'eligible','reason':'Durable'}]})
+            self.assertEqual(supported.reserve(root, 's', 'turn', 'inspect')['status'], 'pending-turn')
+            self.assertEqual(supported.reserve(root, 's', 'turn', 'assessed-no-learning', assessment={'source_id':'turn','source_review':'Reviewed source.','candidates':[]})['status'], 'assessed-no-learning')
             self.assertEqual(supported.reserve(root, 's', 'turn')['status'], 'assessed-no-learning')
             self.assertEqual(supported.reserve(root, 's', 'turn', 'inspect')['status'], 'completed-source')
             self.assertEqual(len(list((Path(root) / 'experimental-boundary' / hashlib.sha256(b's').hexdigest()).iterdir())), 1)
             with self.assertRaises(FileNotFoundError):
-                supported.reserve(root, 's', 'missing', 'assessed-no-learning')
+                supported.reserve(root, 's', 'missing', 'assessed-no-learning', assessment={'source_id':'missing','source_review':'Reviewed source.','candidates':[]})
 
     def test_supported_intent_only_is_explicitly_recoverable(self):
         path = Path(__file__).resolve().parents[2] / 'skills/agent-memory/hooks/boundary_ledger.py'
@@ -71,7 +74,7 @@ class BoundaryLedgerTest(unittest.TestCase):
             directory = Path(root) / 'experimental-boundary' / hashlib.sha256(b's').hexdigest()
             next(directory.glob('*.attempt')).unlink()
             self.assertEqual(supported.reserve(root, 's', 'turn', 'inspect')['status'], 'pending-turn')
-            self.assertEqual(supported.reserve(root, 's', 'turn', 'assessed-no-learning')['status'], 'assessed-no-learning')
+            self.assertEqual(supported.reserve(root, 's', 'turn', 'assessed-no-learning', assessment={'source_id':'turn','source_review':'Reviewed source.','candidates':[]})['status'], 'assessed-no-learning')
             self.assertEqual(supported.reserve(root, 's', 'turn', 'inspect')['status'], 'completed-source')
 
     def test_supported_tampered_intent_stays_pending(self):
@@ -88,7 +91,7 @@ class BoundaryLedgerTest(unittest.TestCase):
                 value = json.loads(intent.read_text()); value[field] = 'tampered'
                 intent.write_text(json.dumps(value))
                 with self.assertRaises(ValueError): supported.reserve(root, 's', 'turn', 'inspect')
-                with self.assertRaises(ValueError): supported.reserve(root, 's', 'turn', 'assessed-no-learning')
+                with self.assertRaises(ValueError): supported.reserve(root, 's', 'turn', 'assessed-no-learning', assessment={'source_id':'turn','source_review':'Reviewed source.','candidates':[]})
                 self.assertTrue(intent.exists())
                 self.assertFalse(list(directory.glob('*.assessed')))
 

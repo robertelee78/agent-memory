@@ -52,7 +52,7 @@ rows.push({id:q2.id,type:'synthetic',metadata:q2.metadata},{id:'t2',type:'assist
 checks.secondTool=JSON.parse((await tool.execute({source_id:'u2'},{sessionID:'s',messageID:'t2'})).content);
 const q1pos=rows.findIndex(row=>row.id===q1.id);const removed=rows.splice(q1pos,1);
 checks.recovered=JSON.parse((await tool.execute({source_id:'u1',recover:true},{sessionID:'s',messageID:'t2'})).content);rows.splice(q1pos,0,...removed);
-if(registered.source_ack){checks.recoveryAck=JSON.parse((await registered.source_ack.execute({source_id:'u1',outcome:'no-learning',recover:true},{sessionID:'s',messageID:'t2'})).content);checks.ack=JSON.parse((await registered.source_ack.execute({source_id:'u2',outcome:'no-learning'},{sessionID:'s',messageID:'t2'})).content);checks.badAck=JSON.parse((await registered.source_ack.execute({source_id:'u1',outcome:'no-learning'},{sessionID:'s',messageID:'t2'})).content);checks.pubAck=JSON.parse((await registered.source_ack.execute({source_id:'u2',outcome:'published'},{sessionID:'s',messageID:'t2'})).content);}
+if(registered.source_ack){checks.eligibleAck=JSON.parse((await registered.source_ack.execute({source_id:'u2',outcome:'no-learning',assessment:{source_id:'u2',source_review:'Reviewed source',candidates:[{claim:'Decision',disposition:'eligible',reason:'Durable'}]}},{sessionID:'s',messageID:'t2'})).content);checks.recoveryAck=JSON.parse((await registered.source_ack.execute({source_id:'u1',outcome:'no-learning',assessment:{source_id:'u1',source_review:'Reviewed source',candidates:[]},recover:true},{sessionID:'s',messageID:'t2'})).content);checks.ack=JSON.parse((await registered.source_ack.execute({source_id:'u2',outcome:'no-learning',assessment:{source_id:'u2',source_review:'Reviewed source',candidates:[]}},{sessionID:'s',messageID:'t2'})).content);checks.badAck=JSON.parse((await registered.source_ack.execute({source_id:'u1',outcome:'no-learning',assessment:{source_id:'u1',source_review:'Reviewed source',candidates:[]}},{sessionID:'s',messageID:'t2'})).content);checks.pubAck=JSON.parse((await registered.source_ack.execute({source_id:'u2',outcome:'published'},{sessionID:'s',messageID:'t2'})).content);}
 checks.queued=queued.size;
 process.stdout.write(JSON.stringify(checks));
 '''
@@ -77,6 +77,7 @@ process.stdout.write(JSON.stringify(checks));
             self.assertEqual(supported.returncode,0,supported.stderr)
             self.assertEqual(json.loads(supported.stdout)['queued'],2)
             self.assertEqual(json.loads(supported.stdout)['ack']['status'],'assessed-no-learning')
+            self.assertEqual(json.loads(supported.stdout)['eligibleAck']['status'],'pending')
             self.assertEqual(json.loads(supported.stdout)['recovered']['source_id'],'u1')
             self.assertEqual(json.loads(supported.stdout)['recoveryAck']['source_id'],'u1')
             self.assertEqual(json.loads(supported.stdout)['badAck']['status'],'pending')

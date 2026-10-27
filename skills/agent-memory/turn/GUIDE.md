@@ -139,7 +139,7 @@ When a background Stop wake supplies a source-bound session, prompt, message UUI
 source SHA-256, verify that exact source before assessing it. After an explicit
 no-learning assessment, write a private JSON object containing `session`,
 `prompt`, `source_uuid`, `source_sha256`, `outcome` set to `no-learning`, and a
-bounded `assessment` explaining the agent's judgment. For a published lesson,
+`assessment` object: `{ "source_id": "ACTUAL_SOURCE_UUID", "source_review": "what the agent reviewed and why no learning needs capture", "candidates": [] }`. List each potential durable claim in `candidates` as `{ "claim": "actual claim", "disposition": "not-durable", "reason": "actual reason" }`. Eligible, ambiguous or unresolved claims and incomplete capture or publication MUST remain pending. This structured assessment remains the agent's assertion, not proof that no claim was missed. For a published lesson,
 set `outcome` to `published` and add `publication_request` containing the exact
 original prepared request. Run `am claude-boundary --repo REPO --input PRIVATE_JSON`.
 The helper independently replays the publication request against the authority;
@@ -160,5 +160,5 @@ is assessed, acknowledge through
 `am codex-boundary --repo REPO --input PRIVATE_JSON`. Use the session ID,
 original turn ID for both `prompt` and `source_uuid`, and the source SHA-256
 provided by the Stop hook. The remaining fields and outcomes follow the background
-acknowledgement above. The source-to-publication relationship and no-learning
+acknowledgement above. For no-learning, set assessment.source_id to the original turn ID. The source-to-publication relationship and no-learning
 judgment remain agent assertions; a witnessed publication does not prove either.
