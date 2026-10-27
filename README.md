@@ -36,6 +36,11 @@ staging. The installed runtime lives in its own managed location; the archive
 contains no development memory from this repository. The fetched bootstrap itself
 remains the initial HTTPS trust anchor.
 Restart running agent sessions after installation so they load the skill.
+
+Turn-boundary adapters supply the shared skill instruction in Claude, Codex and
+OpenCode. Codex may require you to review and trust the Agent Memory hook in
+`/hooks`; configuration alone does not prove a hook ran or that memory was
+captured. Conflicts and unavailable publication remain pending for the session.
 Keep Python 3.11+ available as `python3` on `PATH` when running `am`.
 Re-run the default one-line command to update an existing managed installation,
 or use `am update`.

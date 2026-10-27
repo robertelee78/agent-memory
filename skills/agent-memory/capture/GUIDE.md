@@ -31,4 +31,5 @@ changes only `activeContext.md`; missing-context route preparation is separate.
 | Initialize from evidence | [initialize](../initialize/GUIDE.md) |
 | Compare existing learning | [comparison](../comparison/GUIDE.md) |
 | Capture/admit durable learning | [admission](../admission/GUIDE.md) |
+| Run an automatically invoked turn boundary | [turn](../turn/GUIDE.md) |
 | Checkpoint active context | [checkpoint](../checkpoint/GUIDE.md) |

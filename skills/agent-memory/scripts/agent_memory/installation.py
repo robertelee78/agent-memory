@@ -15,6 +15,7 @@ import json
 import os
 from pathlib import Path
 import shutil
+import shlex
 import stat
 import subprocess
 import sys
@@ -389,7 +390,7 @@ def read_receipt(state):
     if value.get('uninstalled') is True:
         return None
     for item in value['targets']:
-        require(isinstance(item, dict) and item.get('kind') in {'copy', 'link', 'wrapper', 'activation', 'source'}
+        require(isinstance(item, dict) and item.get('kind') in {'copy', 'link', 'wrapper', 'activation', 'source', 'hook-config', 'hook-link'}
                 and absolute(item['path']) == Path(item['path']) and 'identity' in item,
                 'Malformed target ownership receipt')
     return value
@@ -426,6 +427,18 @@ def presets(names):
     require(keys and len(set(keys)) == len(keys) and all(k in values for k in keys),
             'Presets must be all, none, or a unique comma-separated agents,codex,claude,opencode list')
     return [(key, *values[key]) for key in keys]
+
+
+def hook_paths(name):
+    """Client-owned configuration paths; exact entries remain independently owned."""
+    home = Path.home()
+    if name == 'codex':
+        return Path(os.environ.get('CODEX_HOME', home/'.codex'))/'hooks.json'
+    if name == 'claude':
+        return Path(os.environ.get('CLAUDE_CONFIG_DIR', home/'.claude'))/'settings.json'
+    if name == 'opencode':
+        return Path(os.environ.get('XDG_CONFIG_HOME', home/'.config'))/'opencode/plugins/agent-memory.js'
+    return None
 
 
 def wrapper(pack):
@@ -490,15 +503,23 @@ def preflight_layout(args, state, code, old):
     if args.command == 'install':
         cfg = configuration(args, old)
         paths.extend(cfg['bin_dir']/name for name in COMMAND_NAMES)
-        for _, target, guidance in presets(cfg['presets']):
+        for name, target, guidance in presets(cfg['presets']):
             paths.append(absolute(target/'agent-memory'))
             if guidance and not cfg['no_guidance']:
                 paths.append(absolute(guidance))
+            hook = hook_paths(name)
+            if hook and not cfg['no_guidance']:
+                paths.append(absolute(hook))
         paths.extend(absolute(target)/'agent-memory' for target in cfg['custom_targets'])
         if args.development_source:
             sources.add(absolute(args.development_source).resolve(strict=True))
     elif args.command == 'update' and old:
         paths.extend(absolute(old['bin_dir'])/name for name in COMMAND_NAMES)
+        if not old.get('no_guidance', False):
+            for name, _, _ in presets(old['presets']):
+                hook = hook_paths(name)
+                if hook:
+                    paths.append(absolute(hook))
     for path in paths[1:]:
         preflight_path(path)
         require_layout(not path.is_relative_to(state) and not state.is_relative_to(path),
@@ -521,10 +542,13 @@ def lifecycle_paths(args, state, code, old):
     if args.command == 'install':
         cfg = configuration(args, old)
         paths.extend(cfg['bin_dir'] / name for name in COMMAND_NAMES)
-        for _, target, guidance in presets(cfg['presets']):
+        for name, target, guidance in presets(cfg['presets']):
             paths.append(absolute(target / 'agent-memory'))
             if guidance and not cfg['no_guidance']:
                 paths.append(absolute(guidance))
+            hook = hook_paths(name)
+            if hook and not cfg['no_guidance']:
+                paths.append(absolute(hook))
         paths.extend(absolute(target) / 'agent-memory' for target in cfg['custom_targets'])
     return paths
 
@@ -617,13 +641,26 @@ def prepare(args, state, code, old, *, candidate_root=None, candidate_kind=None)
         no_guidance, bin_dir = cfg['no_guidance'], cfg['bin_dir']
         prior = {item['path']: item for item in old['targets']} if old else {}
         actions = []; adapters = []
-        def add(path, kind, raw=None, source_path=None, mode_bits=0o644, block=False):
+        def add(path, kind, raw=None, source_path=None, mode_bits=0o644, block=False, hook_entry=None):
             path = absolute(path); preflight_path(path); before = fingerprint(path)
             previous = prior.get(str(path))
             if block:
                 require(before is None or before['kind'] == 'file', 'Activation file collision: ' + str(path))
                 raw = activation(path.read_bytes() if before else b'',
                                  previous.get('block_hash') if previous and previous['kind']=='activation' else None, shim=shim)
+                mode_bits = before['mode'] if before else 0o644
+            elif kind == 'hook-config':
+                from . import client_hooks
+                require(before is None or before['kind'] == 'file', 'Client hook configuration collision: ' + str(path))
+                require(previous is None or previous['kind'] == kind, 'Client hook ownership changed: ' + str(path))
+                original_raw = path.read_bytes() if before else b''
+                document = client_hooks.parse(original_raw)
+                original_shape = previous.get('hook_original_shape', {}) if previous else {
+                    'hooks_present': 'hooks' in document,
+                    'event_present': 'UserPromptSubmit' in document.get('hooks', {}),
+                }
+                raw = client_hooks.merge(original_raw,
+                                         previous.get('hook_entry') if previous else None, hook_entry)
                 mode_bits = before['mode'] if before else 0o644
             elif before is not None:
                 if previous and kind == 'source' and before != previous['identity']:
@@ -632,7 +669,9 @@ def prepare(args, state, code, old, *, candidate_root=None, candidate_kind=None)
                 else:
                     require(previous is not None and previous['identity'] == before,
                             'Unrelated or user-modified target; preserve: ' + str(path))
-            if kind == 'link':
+            if kind == 'hook-link':
+                after = {'kind': 'link', 'target': str(source_path)}
+            elif kind == 'link':
                 after = {'kind': 'link', 'target': str(active_pack)}
             elif kind in ('copy', 'source'):
                 after = fingerprint(source_path)
@@ -645,6 +684,9 @@ def prepare(args, state, code, old, *, candidate_root=None, candidate_kind=None)
             actions.append({'path': str(path), 'kind': kind, 'before': before, 'after': after,
                             'raw': raw, 'source_path': str(source_path) if source_path else None,
                             'mode_bits': mode_bits, 'changed': before != after})
+            if hook_entry is not None:
+                actions[-1]['hook_entry'] = hook_entry
+                actions[-1]['hook_original_shape'] = original_shape
         if source['kind'] in ('managed', 'release'):
             add(code, 'source', source_path=root)
         groups = {}
@@ -656,6 +698,15 @@ def prepare(args, state, code, old, *, candidate_root=None, candidate_kind=None)
             add(target/'agent-memory', mode, source_path=pack_source)
             if guidance and not no_guidance:
                 add(guidance, 'activation', block=True)
+            hook = hook_paths(name)
+            if name in ('codex', 'claude') and hook and not no_guidance:
+                from . import client_hooks
+                command = 'python3 ' + shlex.quote(str(active_pack/'hooks/turn_hook.py'))
+                add(hook, 'hook-config', hook_entry=client_hooks.entry(command))
+                groups[name].append(str(absolute(hook)))
+            elif name == 'opencode' and hook and not no_guidance:
+                add(hook, 'hook-link', source_path=active_pack/'hooks'/'opencode.js')
+                groups[name].append(str(absolute(hook)))
         for target in custom:
             add(absolute(target)/'agent-memory', mode, source_path=pack_source)
             adapter = 'custom:' + str(absolute(target))
@@ -680,6 +731,8 @@ def prepare(args, state, code, old, *, candidate_root=None, candidate_kind=None)
                 return previous is None or previous.get('artifact_digest') != source['artifact_digest']
             if item['kind'] == 'activation':
                 return previous is None or previous.get('block_hash') != sha(shim.encode())
+            if item['kind'] in ('hook-config', 'hook-link'):
+                return previous is None or item['changed'] or previous.get('artifact_digest') != source['artifact_digest']
             return False
         restart = [a for a in adapters if any(item['path'] in groups[a] and loaded_change(item)
                                              for item in actions)]
@@ -707,6 +760,13 @@ def verify_targets(targets, *, source=None):
         path = Path(target['path'])
         trust_paths.tree(path)
         observed = fingerprint(path)
+        if target['kind'] == 'hook-config' and 'hook_entry' in target:
+            from . import client_hooks
+            require(observed is not None and observed['kind'] == 'file',
+                    'Client hook configuration is unavailable: ' + str(path))
+            client_hooks.locate(client_hooks.parse(path.read_bytes()), target.get('hook_entry'))
+            require(fingerprint(path) == observed, 'Client hook configuration changed during verification')
+            continue
         if observed != target['identity']:
             require(target['kind'] == 'source' and source and source.get('kind') == 'managed'
                     and observed and target['identity']
@@ -724,7 +784,7 @@ def verify_targets(targets, *, source=None):
 
 def rollback_compatibility(state, journal):
     """No executable restoration until the old runtime can read current banks."""
-    restoring = [a for a in journal['actions'] if a['kind'] in {'source', 'copy', 'link', 'wrapper'}
+    restoring = [a for a in journal['actions'] if a['kind'] in {'source', 'copy', 'link', 'wrapper', 'hook-link'}
                  and a['before'] is not None and fingerprint(Path(a['path'])) != a['before']]
     if not restoring:
         return
@@ -858,8 +918,13 @@ def install(plan, *, before_activate=None, after_activate=None):
     for action in plan['actions']:
         target = {'path': action['path'], 'kind': action['kind'], 'identity': action['after'],
                   'pre_change_identity': action['before']}
-        if action['kind'] in ('copy','link'):
+        if action['kind'] in ('copy','link','hook-link','hook-config'):
             target['artifact_digest'] = plan['source']['artifact_digest']
+        if action['kind'] == 'hook-config' and operation != 'uninstall':
+            target['hook_entry'] = action['hook_entry']
+            target['hook_original_shape'] = action['hook_original_shape']
+            previous = next((t for t in (old['targets'] if old else []) if t['path']==action['path']), None)
+            target['originally_absent'] = previous['originally_absent'] if previous else action['before'] is None
         if action['kind'] == 'activation' and operation != 'uninstall':
             target['block_hash'] = sha(plan['shim'].encode())
             previous = next((t for t in (old['targets'] if old else []) if t['path']==action['path']), None)
@@ -899,6 +964,8 @@ def install(plan, *, before_activate=None, after_activate=None):
             replace_record(state/'journal.json', journal)
             if action['after'] is None:
                 pass  # The old node moves to its rollback stage during removal.
+            elif action['kind'] == 'hook-link':
+                runtime_faults.mutate('link-stage', lambda: stage.symlink_to(action['after']['target']))
             elif action['kind'] == 'link':
                 runtime_faults.mutate('link-stage', lambda: stage.symlink_to(plan['source']['pack'], target_is_directory=True))
             elif action['kind'] in ('copy','source'):

@@ -102,6 +102,7 @@ unneeded siblings or interrupting an executing turn.
 | Initialize from evidence | [capture](capture/GUIDE.md) | [initialize](initialize/GUIDE.md) |
 | Compare existing learning | [capture](capture/GUIDE.md) | [comparison](comparison/GUIDE.md) |
 | Capture/admit durable learning | [capture](capture/GUIDE.md) | [admission](admission/GUIDE.md) |
+| Run an automatically invoked turn boundary | [capture](capture/GUIDE.md) | [turn](turn/GUIDE.md) |
 | Checkpoint active context | [capture](capture/GUIDE.md) | [checkpoint](checkpoint/GUIDE.md) |
 | Correct/prune/forget learning | [govern](govern/GUIDE.md) | [governance](governance/GUIDE.md) |
 | Inspect inactive guidance | [govern](govern/GUIDE.md) | [inactive](inactive/GUIDE.md) |

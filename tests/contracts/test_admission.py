@@ -20,6 +20,35 @@ class AdmissionContract(unittest.TestCase):
     state=fixtures.ComparisonContract.state
     add=fixtures.ComparisonContract.add
 
+    def test_draft_fills_identity_without_deciding_or_writing(self):
+        with World() as w:
+            repo, bank = self.fixture(w)
+            source = self.request()
+            old = source['candidate']['metadata']
+            old['origin']['code-state'] = 'not-code'
+            value = {'body': source['candidate']['body'], 'kind': old['kind'],
+                     'scope': old['scope'], 'applicability': old['applicability'],
+                     'conditions': old['conditions'], 'source': old['source'], 'evidence': old['evidence'],
+                     'harness': old['origin']['harness'], 'session': old['origin']['session'],
+                     'code_state': 'not-code', 'assessment': source['assessment'], 'repository_evidence': None}
+            before = self.state(w, repo, bank)
+            drafted = self.good(w, 'admit_learning.py', 'draft', '--repo', repo, '--input', self.save(w, value))
+            self.assertFalse(drafted['admission_verified'])
+            self.assertFalse(drafted['canonical_writes_performed'])
+            request = drafted['request']
+            self.assertEqual(request['project_id'], self.pid)
+            self.assertEqual(request['candidate']['metadata']['origin']['developer-id'], self.actor)
+            self.assertEqual(request['assessment'], value['assessment'])
+            self.assertEqual(self.state(w, repo, bank), before)
+            captured = self.capture(w, repo, request)
+            self.assertEqual(captured['decision'], 'eligible')
+            self.assertFalse(captured['admission_verified'])
+            del value['assessment']
+            r, invalid = self.call(w, 'admit_learning.py', 'draft', '--repo', repo, '--input', self.save(w, value))
+            self.assertEqual(r.returncode, 1)
+            self.assertFalse(invalid['admission_verified'])
+            self.assertEqual(self.state(w, repo, bank), before)
+
     def request(self, source='user', category='user-correction'):
         candidate=fixtures.ComparisonContract.candidate(self)['candidate']
         candidate['metadata']['source']={'kind':source,'actor':'Explicit fixture source; not authenticated'}
