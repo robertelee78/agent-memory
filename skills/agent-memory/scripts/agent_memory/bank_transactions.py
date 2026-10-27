@@ -38,10 +38,11 @@ def file_hashes(files):
 
 
 def files_at(bank):
-    # The shared inventory refuses all symlinks, including runtime and parents.
-    observed = writes.hashes(bank)
-    files = {path: (bank / path).read_bytes().decode("utf-8") for path in observed}
-    if file_hashes(files) != observed or writes.hashes(bank) != observed:
+    from . import bank_observation
+    physical, observed, sources = bank_observation.scan(bank, read_sources=True, require_router=False)
+    files = {path: raw.decode("utf-8") for path, raw in sources.items()}
+    after_physical, after, _ = bank_observation.scan(bank, read_sources=False, require_router=False)
+    if file_hashes(files) != observed or after != observed or after_physical != physical:
         raise ContractError("Bank changed during transaction inventory")
     return files
 
