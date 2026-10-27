@@ -111,7 +111,7 @@ a claim that device numbers are stable or identity is authentication. Repeated
 ordinary resolution writes nothing and does not grow the registry.
 
 Failure metadata SHALL use one replaceable owner-only bounded JSON record per
-(canonical common-Git location, harness, adapter), keyed by SHA-256 of the location plus fixed harness and adapter names under the private runtime
+(canonical common-Git location, canonical checkout root, harness, adapter), keyed by SHA-256 of the common-Git location, checkout root and fixed harness and adapter names under the private runtime
 state root, outside repository memory. Records SHALL contain only schema, fixed
 harness/adapter/stage/reason, and timestamp; at most 4096 bytes, mode 0600 within a 0700 directory. Writes MUST
 use atomic replacement and refuse symlink/hardlink redirection. No transcript, prompt,
@@ -159,3 +159,14 @@ of this ADR and source-bound task extraction. Release publication requires
 focused passing checks, independent implementation review, signed artifacts,
 public install/update verification and AWA delivery readback. Unrelated existing
 v0.0.7 work MUST NOT be silently represented as delivered.
+
+## Implementation-review clarification
+
+Independent Opus implementation review identified that failure metadata shared
+only by common Git directory allowed one worktree to clear another's warning.
+Failure records therefore include the canonical checkout root in their key; the
+shared project identity still uses common Git evidence. A damaged but safely
+owned diagnostic file MAY be replaced or cleared; unsafe ownership or redirected
+paths MUST remain refused. Read-only diagnostics MUST tolerate a concurrent
+record removal. Historical rebind/fork MUST first persist the current alias
+through explicit link, so a prior alias is not silently reassigned.
