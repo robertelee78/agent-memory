@@ -13,6 +13,25 @@ from refresh_fixtures import RefreshFixture
 
 
 class MemoryRefreshContract(RefreshFixture):
+    def test_current_untracked_canonical_memory_explains_full_review_without_writes(self):
+        from contracts.test_semantic_sharing import SemanticSharingContract
+        with World() as w:
+            repo, bank, peer, base = self.fixture(w)
+            SemanticSharingContract().add(bank, 'untracked-lesson',
+                '# Untracked lesson\n\nAn eligible independent local lesson.\n')
+            before = self.state(w, repo, bank)
+            response = w.run([sys.executable, '-I', self.pack/'scripts/installer.py',
+                              'refresh', 'current', '--repo', repo], check=False)
+            result = json.loads(response.stdout)
+            self.assertEqual(response.returncode, 1, result)
+            self.assertEqual(result['failure_component'], 'local-boundary')
+            self.assertEqual(result['failure_code'], 'canonical-memory-untracked')
+            self.assertIn('refresh inspect --v2', result['repair'])
+            self.assertFalse(result['remote_freshness_verified'])
+            self.assertFalse(result['canonical_writes_performed'])
+            self.assertFalse(result['git_metadata_writes_performed'])
+            self.assertEqual(before, self.state(w, repo, bank))
+
     def test_current_equal_bank_and_orphan_journal(self):
         with World() as w:
             repo, bank, peer, base = self.fixture(w)

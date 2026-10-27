@@ -22,6 +22,10 @@ CURSOR_FIELDS = {'schema', 'repo_root', 'project_id', 'authority_head', 'operati
                  'receipt_sha256', 'resulting_hashes', 'git_context', 'checksum'}
 
 
+class UntrackedCanonicalMemory(ContractError):
+    """The quick equality check cannot cover locally untracked memory."""
+
+
 def result(operation, state, **values):
     return {'schema': 'agent-memory/refresh-result-v1', 'operation': operation, 'sharing_state': state,
             'refresh_applied': False, 'canonical_writes_performed': False, 'original_index_writes_performed': False,
@@ -124,6 +128,8 @@ def current(repo):
         raise ContractError('Preserve the unverified refresh cursor and use full review')
     boundary = sharing_boundary.inspect(root)
     if not boundary['local_boundary_ready']:
+        if set(boundary['blockers']) == {'canonical-memory-is-not-tracked'}:
+            raise UntrackedCanonicalMemory('Locally untracked canonical memory requires full review.')
         raise ContractError('Local sharing boundary is not ready; use full review')
     context = scope_binding.require(root)
 
@@ -386,15 +392,16 @@ def main(argv=None):
         from .sharing_holds import HoldFailure
         authority_failed=isinstance(exc,recovery.AuthorityFailure)
         output_failed=isinstance(exc,limits.PrivateOutputError)
+        untracked_memory=isinstance(exc,UntrackedCanonicalMemory)
         known=isinstance(exc,HoldFailure) or authority_failed
         print(json.dumps(result(args.operation, 'pending-private-output' if output_failed else 'pending-inspection', canonical_writes_performed=False if output_failed or args.operation == 'current' else None,
-                                git_metadata_writes_performed=False if output_failed else None,
+                                git_metadata_writes_performed=False if output_failed or untracked_memory else None,
                                 **({'pending_capture': 'unknown', 'pending_publication': 'unknown', 'semantic_truth_verified': False}
                                    if args.operation == 'current' else {}),
-                                failure_component='output' if output_failed else exc.component if authority_failed else 'known-dispute-state' if known else args.operation,
-                                failure_code='private-output-invalid' if output_failed else exc.code if known else 'refresh-unverified',
-                                reason=str(exc) if output_failed or known else 'Unresolved, offline, unsafe, interrupted or changed refresh; retain the original proposal and local memory, inspect/recover before retry',
-                                repair=str(exc) if output_failed else exc.repair if known else 'Preserve the proposal, bank and pending evidence. Run am doctor for this repository and inspect the failed component before repeating refresh inspection; do not reset or replace the bank.')))
+                                failure_component='output' if output_failed else 'local-boundary' if untracked_memory else exc.component if authority_failed else 'known-dispute-state' if known else args.operation,
+                                failure_code='private-output-invalid' if output_failed else 'canonical-memory-untracked' if untracked_memory else exc.code if known else 'refresh-unverified',
+                                reason=str(exc) if output_failed or untracked_memory or known else 'Unresolved, offline, unsafe, interrupted or changed refresh; retain the original proposal and local memory, inspect/recover before retry',
+                                repair=str(exc) if output_failed else 'Preserve local memory and feature work. Run am refresh inspect --v2 --repo REPO --output /private/path/inspection.json using an owner-only directory outside the repository, then complete the required review. Do not stage or reset memory just to pass this quick check.' if untracked_memory else exc.repair if known else 'Preserve the proposal, bank and pending evidence. Run am doctor for this repository and inspect the failed component before repeating refresh inspection; do not reset or replace the bank.')))
         return 1
 
 
