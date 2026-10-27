@@ -77,6 +77,9 @@ process.stdout.write(JSON.stringify({one: one.system, two: two.system, disposed}
             for name in ('opencode-v1', 'opencode-v2'):
                 shutil.copyfile(directory/(name+'.js'), target/(name+'.mjs'))
             shutil.copyfile(directory/'boundary-prompt.txt', target/'boundary-prompt.txt')
+            shutil.copyfile(directory/'opencode-v2-queue.js', target/'opencode-v2-queue.js')
+            shutil.copyfile(directory/'boundary_ledger.py', target/'boundary_ledger.py')
+            (target/'package.json').write_text('{"type":"module"}')
             result = subprocess.run([shutil.which('node'), '--input-type=module', '-e', source,
                                      str(target/'opencode-v1.mjs'), str(target/'opencode-v2.mjs')],
                                     capture_output=True, text=True, timeout=5)

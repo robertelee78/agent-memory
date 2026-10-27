@@ -1,3 +1,4 @@
+import queue from './opencode-v2-queue.js'
 // The shared prompt invokes the portable skill; it is not a capture receipt.
 import { readFileSync, realpathSync } from 'node:fs'
 import { dirname, join } from 'node:path'
@@ -23,8 +24,11 @@ export default {
   id: 'agent-memory-turn-boundary',
   setup: async (ctx) => {
     try {
+      let disposeQueue = () => {}
+      try { disposeQueue = await queue.setup(ctx) } catch { pending() }
       const registration = await ctx.session.hook('context', (event) => {
         try {
+          if (disposeQueue.active) return
           if (!Array.isArray(event?.system)) { pending(); return }
           if (event.system.some((part) => typeof part?.text === 'string' && part.text.startsWith(marker))) return
           event.system.push({ type: 'text', text: prompt })
@@ -32,6 +36,7 @@ export default {
       })
       if (typeof registration?.dispose !== 'function') { pending(); return () => {} }
       return () => {
+        try { disposeQueue?.() } catch { pending() }
         try {
           const result = registration.dispose()
           if (result && typeof result.catch === 'function') return result.catch(pending)
