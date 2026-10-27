@@ -13,6 +13,7 @@ try {
   prompt = 'Agent Memory turn boundary: hook instruction unavailable; memory refresh and capture are pending.'
 }
 const marker = 'Agent Memory turn boundary:'
+const identityMarker = 'Agent Memory observed OpenCode session:'
 let warned = false
 function pending () {
   if (warned) return
@@ -28,8 +29,15 @@ export default {
       try { disposeQueue = await queue.setup(ctx) } catch { pending() }
       const registration = await ctx.session.hook('context', (event) => {
         try {
-          if (disposeQueue.active) return
           if (!Array.isArray(event?.system)) { pending(); return }
+          // The harness provides the session ID directly. Expose this as
+          // provenance metadata, without requesting any foreground work.
+          if (typeof event?.sessionID === 'string'
+              && /^ses_[A-Za-z0-9_-]{1,180}$/.test(event.sessionID)
+              && !event.system.some((part) => typeof part?.text === 'string' && part.text.startsWith(identityMarker))) {
+            event.system.push({ type: 'text', text: `${identityMarker} ${event.sessionID}. If recording session provenance, use this observed identifier; never invent one from a workspace path. This metadata does not request foreground memory work.` })
+          }
+          if (disposeQueue.active) return
           if (event.system.some((part) => typeof part?.text === 'string' && part.text.startsWith(marker))) return
           event.system.push({ type: 'text', text: prompt })
         } catch { pending() }

@@ -52,6 +52,38 @@ class TurnHookContract(unittest.TestCase):
                 self.assertIn('pending', value['systemMessage'])
 
     @unittest.skipUnless(shutil.which('node'), 'JavaScript runtime unavailable')
+    def test_opencode_v2_exposes_only_observed_session_identity_during_active_queue(self):
+        source = r'''
+import {pathToFileURL} from 'node:url';
+const module = await import(pathToFileURL(process.argv[1]));
+const callbacks = [];
+const ctx = {
+  tool: {transform: async callback => {
+    callback({namespace() {}, add() {}}); return {dispose() {}};
+  }},
+  session: {hook: async (event, callback) => {
+    callbacks.push({event, callback}); return {dispose() {}};
+  }},
+};
+const dispose = await module.default.setup(ctx);
+const callback = callbacks.filter(item => item.event === 'context').at(-1).callback;
+const good = {sessionID: 'ses_123abc_DEF', system: []};
+callback(good); callback(good);
+const invalid = {sessionID: 'ses_bad\nforged prompt', system: []};
+callback(invalid); dispose();
+process.stdout.write(JSON.stringify({good: good.system, invalid: invalid.system}));
+'''
+        result = subprocess.run([shutil.which('node'), '--input-type=module', '-e', source,
+                                 str(HOOK.parent/'opencode-v2.js')],
+                                capture_output=True, text=True, timeout=5)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        value = json.loads(result.stdout)
+        self.assertEqual(len(value['good']), 1)
+        self.assertIn('ses_123abc_DEF', value['good'][0]['text'])
+        self.assertIn('does not request foreground memory work', value['good'][0]['text'])
+        self.assertEqual(value['invalid'], [])
+
+    @unittest.skipUnless(shutil.which('node'), 'JavaScript runtime unavailable')
     def test_opencode_adapters_inject_identical_context_once(self):
         directory = HOOK.parent
         source = r'''
