@@ -4,6 +4,7 @@ import json
 import os
 from pathlib import Path
 import re
+import stat
 import sys
 import uuid
 
@@ -39,19 +40,56 @@ def create(repo):
             'canonical_writes_performed':False,'verified':True}
 
 
+def checked_directory(path):
+    trust_paths.state(path)
+    fd = os.open(path, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    info = os.fstat(fd)
+    if info.st_uid != os.geteuid() or stat.S_IMODE(info.st_mode) != 0o700:
+        os.close(fd)
+        raise ContractError('Private workspace must remain owner-only')
+    check_directory(path, info)
+    return fd, info
+
+
+def check_directory(path, expected):
+    trust_paths.state(path)
+    observed = path.lstat()
+    if (not stat.S_ISDIR(observed.st_mode) or observed.st_dev != expected.st_dev
+            or observed.st_ino != expected.st_ino or observed.st_uid != os.geteuid()
+            or stat.S_IMODE(observed.st_mode) != 0o700):
+        raise ContractError('Private workspace changed; preserve it for inspection')
+
+
+def write_fd(dfd, name, raw):
+    fd = os.open(name, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600, dir_fd=dfd)
+    with os.fdopen(fd, 'wb') as stream:
+        stream.write(raw); stream.flush(); os.fsync(stream.fileno())
+    os.fsync(dfd)
+
+
 def write_exclusive(directory, name, raw):
-    trust_paths.state(directory)
-    dfd = os.open(directory, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    fd, info = checked_directory(directory)
     try:
-        fd = os.open(name, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600, dir_fd=dfd)
-        try:
-            with os.fdopen(fd, 'wb') as stream:
-                stream.write(raw); stream.flush(); os.fsync(stream.fileno())
-        except BaseException:
-            raise  # Preserve any interrupted file; never guess or overwrite it.
-        os.fsync(dfd)
+        write_fd(fd, name, raw)
+        check_directory(directory, info)
     finally:
-        os.close(dfd)
+        os.close(fd)
+
+
+def read_binding(fd):
+    record = os.open('binding.json', os.O_RDONLY | os.O_NOFOLLOW, dir_fd=fd)
+    try:
+        info = os.fstat(record)
+        if (not stat.S_ISREG(info.st_mode) or info.st_uid != os.geteuid()
+                or info.st_nlink != 1 or stat.S_IMODE(info.st_mode) != 0o600 or info.st_size > 4096):
+            raise ContractError('Private workspace binding is unsafe')
+        with os.fdopen(record, 'rb', closefd=False) as stream:
+            raw = stream.read(4097)
+        if len(raw) > 4096:
+            raise ContractError('Private workspace binding exceeds its bound')
+        return raw
+    finally:
+        os.close(record)
 
 
 def put(repo, workspace, name, raw):
@@ -59,18 +97,26 @@ def put(repo, workspace, name, raw):
         raise ContractError('Use the returned workspace ID and a simple new JSON filename')
     if len(raw) > MAX_INPUT:
         raise ContractError('Private input exceeds the 16 MiB bound')
-    value = load(raw)  # Reject malformed or duplicate-key JSON; keep explicit bytes.
+    value = load(raw)
     if not isinstance(value, (dict, list)):
         raise ContractError('Private input must be a JSON object or array')
     root, context, base = workspace_root(repo)
     path = base / workspace
-    trust_paths.state(path)
-    binding = path / 'binding.json'
-    trust_paths.record(binding)
-    if load(binding.read_bytes()) != {'schema':'agent-memory/private-workspace-v1','repo':str(root),
-                                      'project_id':context['project_id'],'workspace':workspace}:
-        raise ContractError('Private workspace does not match this bound repository')
-    write_exclusive(path, name, raw)
+    fd, info = checked_directory(path)
+    try:
+        binding = read_binding(fd)
+        if load(binding) != {'schema':'agent-memory/private-workspace-v1','repo':str(root),
+                             'project_id':context['project_id'],'workspace':workspace}:
+            raise ContractError('Private workspace does not match this bound repository')
+        check_directory(path, info)
+        scope_binding.require(root, context['project_id'], expected=context)
+        write_fd(fd, name, raw)
+        check_directory(path, info)
+        if read_binding(fd) != binding:
+            raise ContractError('Private workspace binding changed; preserve written evidence')
+        scope_binding.require(root, context['project_id'], expected=context)
+    finally:
+        os.close(fd)
     return {'operation':'private-put','path':str(path/name),'bytes':len(raw),
             'canonical_writes_performed':False,'verified':True}
 
