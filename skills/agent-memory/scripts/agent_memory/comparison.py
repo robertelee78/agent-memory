@@ -249,6 +249,16 @@ def read_input(path):
     return load(raw)
 
 
+def cli_judgment(value):
+    """Accept the inspect envelope as shorthand; proofs still use the exact observation."""
+    if isinstance(value, dict) and set(value) == {'observation', 'decisions', 'rationale'}:
+        observed = value['observation']
+        if (isinstance(observed, dict) and observed.get('schema') == 'agent-memory/comparison-result-v1'
+                and observed.get('operation') == 'inspect' and observed.get('comparison_read_complete') is True):
+            return {**value, 'observation': observed.get('observation')}
+    return value
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest='command', required=True)
@@ -262,7 +272,7 @@ def main(argv=None):
     try:
         request = read_input(args.request)
         value = inspect(args.repo, request) if args.command == 'inspect' else (
-            review(args.repo, request, read_input(args.judgment)) if args.command == 'review'
+            review(args.repo, request, cli_judgment(read_input(args.judgment))) if args.command == 'review'
             else check(args.repo, request, read_input(args.proof)))
         print(json.dumps(value, indent=2, ensure_ascii=False))
         return 0

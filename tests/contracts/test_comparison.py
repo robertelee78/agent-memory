@@ -77,6 +77,37 @@ class ComparisonContract(unittest.TestCase):
         return ({p.relative_to(bank).as_posix():p.read_bytes() for p in bank.rglob('*') if p.is_file()},
             (repo/'code.py').read_bytes(),(repo/'.git/index').read_bytes(),w.git('rev-parse','HEAD',cwd=repo).stdout)
 
+    def test_cli_inspection_envelope_preserves_explicit_source_bound_judgment(self):
+        with World() as w:
+            repo, bank = self.fixture(w)
+            self.add(bank, 'attempt-cap')
+            request = self.candidate()
+            before = self.state(w, repo, bank)
+            inspection = self.inspect(w, repo, request)
+            canonical = self.judgment(inspection)
+            standard, standard_value = self.review(w, repo, request, canonical)
+            self.assertEqual(standard.returncode, 0, standard_value)
+            wrapped = {**canonical, 'observation': inspection}
+            accepted, value = self.review(w, repo, request, wrapped)
+            self.assertEqual(accepted.returncode, 0, value)
+            self.assertEqual(value['proof'], standard_value['proof'])
+            for mutated in (
+                {**wrapped, 'decisions': []},
+                {**wrapped, 'decisions': canonical['decisions'] * 2},
+                {**wrapped, 'observation': {**inspection, 'schema': 'unknown'}},
+                {**wrapped, 'observation': {**inspection, 'comparison_read_complete': False}},
+                {**wrapped, 'observation': {**inspection, 'observation': {**inspection['observation'], 'router_sha256': '0'*64}}},
+            ):
+                refused, _ = self.review(w, repo, request, mutated)
+                self.assertNotEqual(refused.returncode, 0)
+            changed = bank / 'projectbrief.md'
+            original = changed.read_bytes()
+            changed.write_bytes(original + b'\nNew independent observation.\n')
+            stale, _ = self.review(w, repo, request, wrapped)
+            self.assertNotEqual(stale.returncode, 0)
+            changed.write_bytes(original)
+            self.assertEqual(self.state(w, repo, bank), before)
+
     def test_alternative_wording_finds_equivalent_learning_and_retains_existing_identity_evidence_and_origin(self):
         with World() as w:
             repo,bank=self.fixture(w);old,path=self.add(bank,'attempt-cap');request=self.candidate();before=self.state(w,repo,bank)

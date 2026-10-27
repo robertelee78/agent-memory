@@ -87,7 +87,7 @@ identity. Before combining, it MUST compare current source authority using
 [the authority guide](../authority/GUIDE.md).
 
 The judgment MUST contain exactly `observation`, `decisions` and `rationale`.
-`observation` MUST be the complete actual object returned by inspect, unchanged.
+`observation` MUST be the unchanged `observation` field from the actual inspect result. The CLI also accepts the entire inspect result as a shorthand and extracts that field before validating current sources; the stored proof uses the nested observation.
 `decisions` MUST classify every returned path exactly once. Each decision has
 exactly `path`, `classification` and a meaningful bounded `rationale`.
 The overall rationale MUST explain the comparison, including why no plausible
