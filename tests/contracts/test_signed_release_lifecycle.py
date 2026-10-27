@@ -31,6 +31,13 @@ class SignedReleaseLifecycle(unittest.TestCase):
             self.assertEqual(value['compatibility']['bank_scan'], 'not-needed-no-changes')
             self.assertFalse(any(p.endswith('/agent-memory.tar.gz') for p in release.requests), release.requests)
             self.assertTrue(any(p.endswith('/release-manifest.json.sshsig') for p in release.requests), release.requests)
+            before = receipt_path(w).read_bytes()
+            signature = '/download/v0.0.3/release-manifest.json.sshsig'
+            raw = bytearray(release.responses[signature]); raw[len(raw)//2] ^= 1
+            release.responses[signature] = bytes(raw)
+            rejected = self.value(w, cli, 'update', expected=1)
+            self.assertFalse(rejected['verified'])
+            self.assertEqual(receipt_path(w).read_bytes(), before)
 
     def test_actual_v002_index_refresh_and_deleted_worktree_upgrade_through_signed_one_liner(self):
         import shutil
