@@ -1,0 +1,1707 @@
+{
+  "commit": "69278b8e4ee6b86838eae1af3d5cf31dc4b16a6e",
+  "files_verified": 340,
+  "scope": "portable package, tests, canonical memory fixture, test gate",
+  "files": [
+    {
+      "path": "memory-bank/MEMORY.md",
+      "git_blob": "57cbc5c7cc2e0846b8ee771e5cf825bf0ce7d771",
+      "mode": "100644"
+    },
+    {
+      "path": "memory-bank/activeContext.md",
+      "git_blob": "abd9f5565cddcadbb384972983e55c791d7bd400",
+      "mode": "100644"
+    },
+    {
+      "path": "memory-bank/productContext.md",
+      "git_blob": "9ddb8fdc010b5f0d84d3c339276b3e6eec16627a",
+      "mode": "100644"
+    },
+    {
+      "path": "memory-bank/progress.md",
+      "git_blob": "bb91ba28041cf2f575c3547541796c2aed274bb9",
+      "mode": "100644"
+    },
+    {
+      "path": "memory-bank/projectbrief.md",
+      "git_blob": "ee82ca9b8f73a071e25687961aad6fc600dc028c",
+      "mode": "100644"
+    },
+    {
+      "path": "memory-bank/systemPatterns.md",
+      "git_blob": "d17b83b3479ef43b7d442099fcfe0e5e57489b5c",
+      "mode": "100644"
+    },
+    {
+      "path": "memory-bank/techContext.md",
+      "git_blob": "8f28c5dfcc65e5e1defe86870d94ab144547c37a",
+      "mode": "100644"
+    },
+    {
+      "path": "scripts/test_gate.py",
+      "git_blob": "7f66958f19a6ea06b0176111aba6d73ab25f2b6f",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/SKILL.md",
+      "git_blob": "34f6bafcf538c043e4f11e0586aec6d5af0a64e9",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/access/GUIDE.md",
+      "git_blob": "1df58941821802924a66ee5641096c1687b3cca8",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/adapters/github-publication.json",
+      "git_blob": "ab8b674dbe62fe5e71194045352d1567a78e63d4",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/admission/GUIDE.md",
+      "git_blob": "d41f759eb7d2d5fba10f27792c1e6ddedd6f9eb8",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/assembly/GUIDE.md",
+      "git_blob": "3866f6ee19b373e65fd3226e65e34f3a74d88b68",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/authority/GUIDE.md",
+      "git_blob": "f691dd01fb335ce74aaaab3197f2cf70fa14a315",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/bank/GUIDE.md",
+      "git_blob": "c0da9ad25a1147963fe6021df709e0bfe4ad047f",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/bank/inspect/GUIDE.md",
+      "git_blob": "02663047483d90210a03f1dea0f579cbb97fdd3f",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/capture/GUIDE.md",
+      "git_blob": "73c1895f92964ef2c819b7c8375bc5119cc62a17",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/checkpoint/GUIDE.md",
+      "git_blob": "0a1d7cae1f697f5cebf90374f293e8222d561d19",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/comparison/GUIDE.md",
+      "git_blob": "dc3ec22dd22ede34f7337db88d79658ef3357341",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/consolidation/GUIDE.md",
+      "git_blob": "44e94936855eb1a14b06cb9a1e53e50e1021b73b",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/discovery/GUIDE.md",
+      "git_blob": "e2728e5bdec97ff8bda49f2bd3cb317dbcfea7e3",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/govern/GUIDE.md",
+      "git_blob": "1b494cfdf49b57cff3fa7fceb2f4c25d166c872f",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/governance/GUIDE.md",
+      "git_blob": "433151fe95948ebecfcfff74c18a9fda797ec6fa",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/identity/GUIDE.md",
+      "git_blob": "c064f3880698734d0ba06f7eae7232e71daf2053",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/inactive/GUIDE.md",
+      "git_blob": "af2a9c3f04d4af5e037783ee17f9b23a0183d0b3",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/initialize/GUIDE.md",
+      "git_blob": "bf3216cd57da3e219612aac595a2bcfbd1d65a76",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/keys/allowed-signers",
+      "git_blob": "6c953160730fe10542ed780656c1acc188793487",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/layout/GUIDE.md",
+      "git_blob": "118fb16f66b5d689be09df9a94670e9c1f6f9f11",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/lifecycle/diagnose/GUIDE.md",
+      "git_blob": "f980285f184f6ef21bd02d73487ff063e9dac9c7",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/lifecycle/install/GUIDE.md",
+      "git_blob": "60c5925b1238d7669390bc21fcaf874eb2e76ae5",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/lifecycle/migrate/GUIDE.md",
+      "git_blob": "0d8804d8cfe64c0b1a0f4581802e9506ad5bb98f",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/lifecycle/purge/GUIDE.md",
+      "git_blob": "3e4a128ed6aea47cd57803dc0389d8a99bfec620",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/lifecycle/uninstall/GUIDE.md",
+      "git_blob": "668da4ab3d96f0990b848f9da94f14f2b13d6592",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/lifecycle/update/GUIDE.md",
+      "git_blob": "9dc3820e078cca033084495f8496395802a9d7da",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/maintain/GUIDE.md",
+      "git_blob": "d72beae06ca012e55fb9ca3efa01e395e0feb04c",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/maintain/artifact/GUIDE.md",
+      "git_blob": "7340c06cbf3d495bc574b1fc128d01f2228b5a22",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/maintain/cli/GUIDE.md",
+      "git_blob": "c6439cb53b4918a12d35bfe0b1672d750b892982",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/maintain/pack/GUIDE.md",
+      "git_blob": "e7064577c1bcaf4eda1858a23f0d60f95d628bdb",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/model/GUIDE.md",
+      "git_blob": "5f580bf2fbbe3ab951666c62f5b17a31de9d3a64",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/offline/GUIDE.md",
+      "git_blob": "bcb04ce62246643e615cd57da255494b0ceef822",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/projections/GUIDE.md",
+      "git_blob": "ff01062f5e98f164c922ad2d1c8d6c4c83fdb962",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/recall/GUIDE.md",
+      "git_blob": "5888c1bf5a27b7857fbe173a037cffbb6c621fee",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/records/GUIDE.md",
+      "git_blob": "3b6bdcc286478068a97c9773ff58465ed98f2dc9",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/resume/GUIDE.md",
+      "git_blob": "56ece96c4dd71d101bb262f47fe5edb0a85b4a58",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/retrieval/GUIDE.md",
+      "git_blob": "826664991266ec2181d5e97db20e8014d004d0a2",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/schemas/authority-policy.json",
+      "git_blob": "931b913088d31e310b4c90aabb8f30db179111a6",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/schemas/bank-router.json",
+      "git_blob": "da017d60790de8007eec0f25b764d0510476be2d",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/schemas/developers.json",
+      "git_blob": "340789d2c176b6729368632c1aa0796a41f13061",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/schemas/history-event.json",
+      "git_blob": "7ae9551d4a4cad8542463cff9f3acfc253a727a3",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/schemas/lifecycle.json",
+      "git_blob": "6bd0908ea45206b77c330d3428ff51de9a34ecc5",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/schemas/migrations.json",
+      "git_blob": "b17939d1c1563a02ba46182b37e975bbf1d6e6d8",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/schemas/projects.json",
+      "git_blob": "7646c59dab62207d081a69b0477090ca46356fa6",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/schemas/record.json",
+      "git_blob": "cad4689ab442df85e69354a4e8df1d52a7c9cac3",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/schemas/runtime-compatibility.json",
+      "git_blob": "5388262c7d804f116f855d5bc1618be610a00683",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/schemas/scope-policy.json",
+      "git_blob": "49c80d5558bd536ea28f3a7cf09fc7cf882d3929",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/schemas/tombstone.json",
+      "git_blob": "e3f4b29dc30211ab16ba1a531ea953e0bb4f6c91",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/schemas/topic-index.json",
+      "git_blob": "c78ca3fa847ebe3dd81cb9b05b947db051bae407",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scope/GUIDE.md",
+      "git_blob": "773d4b22009fa48ba1fec51287010960f489e87c",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/admit_learning.py",
+      "git_blob": "c0c00398efec147c6506f79ecde8348af6f34763",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/__init__.py",
+      "git_blob": "99f53214a9aa2e23b8d988502da346bc760de852",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/admission.py",
+      "git_blob": "75a50dc43f647a7779630bc524a7d34839bda9da",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/admission_navigation.py",
+      "git_blob": "d7bc5f41a56d8285cb112ad07a780c34c929b1a6",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/artifact.py",
+      "git_blob": "8ad2c943acf86a32bf5e741749b7ffad8fcda17c",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/assembly.py",
+      "git_blob": "185186e7b5e1c61fe0405c86e2e053141609bb46",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/authority.py",
+      "git_blob": "7b332ac99cb6c3a80bdbce2a405617f3ab528a7f",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/bank_contract.py",
+      "git_blob": "9cb14b9bc722cbdb082fb35ccc4ee4d778912076",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/bank_layout.py",
+      "git_blob": "fd4b1a464270af794a285cc78d6b6f6fd72eb22a",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/bank_observation.py",
+      "git_blob": "1553ecf6519fca5685195313d97785bc377eef63",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/bank_state.py",
+      "git_blob": "884f74e4c724e7022eaa6419f5881c1760f232dc",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/bank_transactions.py",
+      "git_blob": "8e7b3bc3a008c00dd82552e4a3774a32b8bfb008",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/bank_writes.py",
+      "git_blob": "f2ccd6111acad5ae035c739720e352ee94c4013d",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/checkpoint.py",
+      "git_blob": "226744c517dd9638f429ba2da939e743ba703354",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/cli.py",
+      "git_blob": "4115fa01380a9968ecd74cc9a75d74aeabcb5a6b",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/comparison.py",
+      "git_blob": "38cd9e0954b70655e46de10f60c8b56aa4886aa8",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/console.py",
+      "git_blob": "c600c62f64f4a5e49ac33adad85f2c2c07c9071d",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/consolidation.py",
+      "git_blob": "f6944d6c8180fe1fa7e7d9bb0369e24e072545d7",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/developer_identity.py",
+      "git_blob": "1a303483e855cd98e84ea949bc5bd54043390a3f",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/diagnostics.py",
+      "git_blob": "f6724c78880923b0e3edca75b3c86b0edef0fa60",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/discovery.py",
+      "git_blob": "20d8e51fcfac91575cd9a60be374a05f20658f9c",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/frontmatter.py",
+      "git_blob": "3f4db58fa2d6984a5a69616dbdb6ced667c6218e",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/governance.py",
+      "git_blob": "74e078711499c92418eab0d6dda63ed60b5983f4",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/handoff.py",
+      "git_blob": "c78e27388235383b560c7f1d6b5e20fa08bedb8c",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/identity_git.py",
+      "git_blob": "8dde490616f895d392ceea8d32ec4efa36940e96",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/inactive.py",
+      "git_blob": "90254d0635456d878a6157aae481b16ebcfd1c05",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/initialization.py",
+      "git_blob": "84f3c13f981892b66ff4ccb466cd70dfb4d412e8",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/installation.py",
+      "git_blob": "7de45e76ab3d9b5d916766e2870584114c673497",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/lifecycle.py",
+      "git_blob": "5c8f946fce417055c3839407df1b13e89a5281cb",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/local_registry.py",
+      "git_blob": "892987bab66df38a49aa83e23562d9198b940e2a",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/managed_source.py",
+      "git_blob": "7b8caae83642631a3e9d1c6033e5a7acce02d690",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/memory_publication.py",
+      "git_blob": "1ddc5a4f5b93dfa223ef3561cc58617c8449adc3",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/memory_refresh.py",
+      "git_blob": "03bd3b161fcf6dd5e90585243b02858a0eecdb93",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/migration.py",
+      "git_blob": "13deb34126e9d3580cb53def32f24408227a052b",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/migration_codecs.py",
+      "git_blob": "200aeb590d4beffaba8026d12736ff69d1d2879b",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/migration_contract.py",
+      "git_blob": "06e2fe261a487f29051bc23a2cdc907057eef5e3",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/model_reference.py",
+      "git_blob": "30bd91f52f51ce202a0657eb3a715e1479d63ce1",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/pack_validation.py",
+      "git_blob": "1f4fabc1e0acdaed68de7a17c6dcaf3dcb426a60",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/project_identity.py",
+      "git_blob": "8e46f5a9e4eede7bf23be4791b467b7691d8ba33",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/projections.py",
+      "git_blob": "552dbeb835310aae3e78914f4c05e1b3e24f7954",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/purging.py",
+      "git_blob": "a4216c2db49bb531592c8bc6d3bdc50d36c401f6",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/recall_catalog.py",
+      "git_blob": "85823752d11096aba71cb1203b8ad104ff575782",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/records.py",
+      "git_blob": "1da95764f4c50421c070f44cedcf5691d11c46f4",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/release_distribution.py",
+      "git_blob": "80b5f0d6cdf382627a06523cc2d8396883b34891",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/remote_identity.py",
+      "git_blob": "2c1ea3b66d317b5986f9e8218df4d8ecbec16076",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/repository_config.py",
+      "git_blob": "40fe050739f48f04caebcce158439c970e03e3d1",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/retrieval.py",
+      "git_blob": "9dd054560fb4c8113af887f41a21c4c4198c3755",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/runtime_faults.py",
+      "git_blob": "f38a238ff43fd44bacedaf1f43557761916e9095",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/scope_binding.py",
+      "git_blob": "144e9ac5a1f85cedf9979155803a476999441eaf",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/scopes.py",
+      "git_blob": "d6e622e61f8815a5b38d0e72101caa324cf676b3",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/security.py",
+      "git_blob": "be0ac071a0693628943ce5e63a4662f2b6c703c4",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/semantic_sharing.py",
+      "git_blob": "02e8c02e8835211e8e6f8e526d7db39f25490043",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/sharing_boundary.py",
+      "git_blob": "20f8023551a212e8c3cdc1c6a9b364c82e5bf26c",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/sharing_frontier.py",
+      "git_blob": "4460b390e51201d7eb258584e0c1abc2656ab32d",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/sharing_hold_mapping.py",
+      "git_blob": "3012be8a9895fb767c6b43c22e74c4b1830f9e2c",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/sharing_holds.py",
+      "git_blob": "177fdf70d0867e9bfadc49b2a06389820fe13608",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/sharing_limits.py",
+      "git_blob": "1afc018c5b81894cddf8cddea1b925e04f457b87",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/sharing_recovery.py",
+      "git_blob": "59005a058ede7dac5720acbd7fbed8a813aa4609",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/tombstones.py",
+      "git_blob": "69b0caa3e02b71fc4aa38d3a6e498884a613a113",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/trust_paths.py",
+      "git_blob": "923759bcfe1bc160068a1f999e69002f4eea9009",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/uninstallation.py",
+      "git_blob": "75f423eeaab18a46a27aa6a423a857bda97c95b8",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/updating.py",
+      "git_blob": "eefb58bcdaad7c441802d889d2959d3507732630",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/validation_memo.py",
+      "git_blob": "342f9e63fd32944a9b6edc0d42f2a4909514c39a",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/am_console.py",
+      "git_blob": "2e345cc20c196d430fd108859acf92c4bcef7306",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/artifact.py",
+      "git_blob": "fd19d599e3bd10553a05b6f68199d983ae8d8e54",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/assemble_context.py",
+      "git_blob": "3760e5bd31f5c38ee5c27384bed236a0dd3dde47",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/authority_policy.py",
+      "git_blob": "a618233a594157c4b37a77cf90e80bfec9090e7a",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/bank_contract.py",
+      "git_blob": "6f317383f651307ca10b09d2f63cf8c8cb988649",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/bank_layout.py",
+      "git_blob": "5ec6d277201c7bc2ce3270c9c5cb1dd1772ca4b5",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/bank_state.py",
+      "git_blob": "3028752750025543b5e7d92326cc708b46106440",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/bank_transactions.py",
+      "git_blob": "9783b928620d79514aae66bba3b0f20c5016653f",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/bank_writes.py",
+      "git_blob": "3dddef8e90f1e619777b8aa4e29bb976a91541e0",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/checkpoint.py",
+      "git_blob": "e0b34bd216a08d1e1c51b3886786f7d47fb88935",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/compare_learning.py",
+      "git_blob": "7367475cda57f87a847347a53b26a6c12cc2d160",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/consolidate_learning.py",
+      "git_blob": "75a8b0cfd7c302ba722681a598458930a22d4fbf",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/developer_identity.py",
+      "git_blob": "a991e66e129558f8d7dd92f06d79a42be694c9e5",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/diagnose.py",
+      "git_blob": "2c155961208ad9824b0aaf1dab2b6bfe395a8dae",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/discover_memory.py",
+      "git_blob": "0847c4c881af0b215872a222315d4358aed4c878",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/govern_memory.py",
+      "git_blob": "70587d926412678b024a272477e61a5a37d7f20d",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/inactive_records.py",
+      "git_blob": "30c8f4d82268a98622465864c871358572f4d506",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/initialize.py",
+      "git_blob": "993da93afc747c3f3a12ca886050740bb1e2b803",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/installer.py",
+      "git_blob": "6057ed3b83f14464cad283a7b7f9eac1307eeaed",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/lifecycle_model.py",
+      "git_blob": "d86065e70ce918138a7ba729866a39f170061b0c",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/migrate_bank.py",
+      "git_blob": "e1d4ab80d63baca80f90eef92b38e04adf7b978e",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/project_identity.py",
+      "git_blob": "3b3cae479451ade6cd597d953bb733d337ed233c",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/projection.py",
+      "git_blob": "dfc7f62032c92fa6defc6887710376dfc5feadfc",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/publish_memory.py",
+      "git_blob": "1b4d3f30dbb955217b638c41de7ad34c83bbc355",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/reconcile_memory.py",
+      "git_blob": "849ad17429ff814a9b04db3a01dfabb75cbb3afe",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/record_contract.py",
+      "git_blob": "417baed5ef442bd91263e42c95dc837334b643bb",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/refresh_memory.py",
+      "git_blob": "cac106236f918b0213685d8e7e8fa6fb00af0042",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/retrieve.py",
+      "git_blob": "5faaf2bbc4b96593ad4cd3d05250725649ad9446",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/scope_binding.py",
+      "git_blob": "ca87979ad04b3ad5250917f3fc693f78f4ee4399",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/scope_policy.py",
+      "git_blob": "4a3fda7a233286f5419a12cabe38bba49fa53ea2",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/security_policy.py",
+      "git_blob": "1f7e296070cb817653e27082cd353256ff1cc905",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/sharing_boundary.py",
+      "git_blob": "981c2bf7b24a50b8990834819c338e9da2d47546",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/sharing_recovery.py",
+      "git_blob": "de788e9ac9ec1103c8a195b013a8e82f05e26d32",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/tombstones.py",
+      "git_blob": "a87695a7326d9b1cdb336a9bf8d3d638397904e7",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/uninstall_runtime.py",
+      "git_blob": "063e20ea491b034e85f19b84767cfe9ee2d4766b",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/update_runtime.py",
+      "git_blob": "51a046ae0352d8ea15e84c35f4f2ee93b3760fc4",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/scripts/validate_pack.py",
+      "git_blob": "318e7ec80b09d42f3ebacf222f13e0bd98e4c7db",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/security/GUIDE.md",
+      "git_blob": "650e53539a5c928bfd5853d3080bdc709b050aa3",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/sharing/GUIDE.md",
+      "git_blob": "4b8728940ce53345062ee42e8f3d335c9466750f",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/sharing/boundary/GUIDE.md",
+      "git_blob": "226c732eb4413be51893c87f4ff269f5ba82e132",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/sharing/publication/GUIDE.md",
+      "git_blob": "8bd479133ea7b3db7cd122a64aee4f633331dce4",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/sharing/recovery/GUIDE.md",
+      "git_blob": "3364b1a4f7db44aa9bef594759e7d52573c7d3b3",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/sharing/refresh/GUIDE.md",
+      "git_blob": "378f7f9d8498e4195e13f3ccf81dbaff9522f10e",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/sharing/semantic/GUIDE.md",
+      "git_blob": "09df9dbbd97ca449e17fbf79d1fbeca416e63c8b",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/templates/activation-markdown.example.txt",
+      "git_blob": "4817b159b874f767c25315e7e6a981362157559c",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/templates/record-proposal.example.json",
+      "git_blob": "ba2cbb2428994694b4bd101fff2b1484dc46e049",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/templates/router-markdown.example.txt",
+      "git_blob": "6c8a5af5b33c480a8acc2ba8a983c6b215a36772",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/templates/router-proposal.example.json",
+      "git_blob": "74fb7ecb6c16df083d57162389b86a6b437d8fd0",
+      "mode": "100644"
+    },
+    {
+      "path": "skills/agent-memory/writes/GUIDE.md",
+      "git_blob": "dbea4d3900f5f2ad098d5f4c04d6e93ab767ab0a",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/cli_alias_fixtures.py",
+      "git_blob": "4dd9819ad3f0f9ce839fe473b090fe559fa896bb",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts.json",
+      "git_blob": "b5483f1377a0f96156c152c54b075109d760e5c2",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_admission.py",
+      "git_blob": "c1421cb73750284eede612d1831b864b5338793c",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_assembly.py",
+      "git_blob": "e6a1c34545c65683a52d34a9ef656d22c4bef8fd",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_authority_boundary.py",
+      "git_blob": "4740ddb7f4e55c1926d965526aa5af51b5a7c4e4",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_authority_policy.py",
+      "git_blob": "e7cf11074556c0c9938b3612748b8cf2c926cde6",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_bank_layout.py",
+      "git_blob": "18ae59ebad1a6954d676d54babdd5d1aa85b85eb",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_bank_transactions.py",
+      "git_blob": "7726fc1a897652b58d871f2c2a7face802a7ed59",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_bank_usability.py",
+      "git_blob": "1812c7f14bf0275110984dc44a1c3eaa4f00ac51",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_bank_writes.py",
+      "git_blob": "cdd03674b64aae61ff29bc0668a9bb5efd72668e",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_bounded_resume.py",
+      "git_blob": "d89e14194fc873561715fbdc593ca653722d7519",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_checkpoint.py",
+      "git_blob": "3ea0a829b7d8a1b969891db38745fa3ac77dba01",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_comparison.py",
+      "git_blob": "03742788f541bc92dea0c987fc8b90d5daad305c",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_concurrent_bank_writers.py",
+      "git_blob": "6504ac6813a63a36000435cdb9f659fe79df3450",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_consolidation.py",
+      "git_blob": "6a7c22e2deda191fb6c96d1f1b5775d81dbf84fc",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_current_bank.py",
+      "git_blob": "da303b5d357e80880ea412d6ee3ba407c4129669",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_developer_identity.py",
+      "git_blob": "43ec518bf144d6b6b0196ad8261f40f76d4b31f2",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_discovery.py",
+      "git_blob": "c8fb4d367bf4d15491b1ff97eabbe76859030d0d",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_discovery_workflow.py",
+      "git_blob": "c00a5d00d5971b8c06302599763e34e12843d5b6",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_explicit_migration.py",
+      "git_blob": "dbe35e202244f2557f47cc397e57f40fcd7d0ab8",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_gate_diagnostics.py",
+      "git_blob": "2271b95559f9fc6e3b687d536eb81d3e311a0cf4",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_governance.py",
+      "git_blob": "3b539fc4c16fe62c84dcf434f7109fcfccf18992",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_governance_recovery.py",
+      "git_blob": "aa0ef27bfa546394859b98bc71c7f2435c989dcc",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_harness.py",
+      "git_blob": "5d07a447db789de5f0cc10af93d8835c5db48f62",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_identity_canaries.py",
+      "git_blob": "8902d27dc73bb24cb4f8785dee2b1b28bafeb3e5",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_inactive_guidance.py",
+      "git_blob": "8ea5189e7194cea726f68b73636cd2bbb4c12fe0",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_incident_evidence.py",
+      "git_blob": "4086ee115035be16e691e805db0e63160b3c84c2",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_independent_local_bank.py",
+      "git_blob": "e3308ad61817e0905c2826da9cb497248ca1b513",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_initialization.py",
+      "git_blob": "2891d6327c931ae7e2fd3fb12389accfd3c2c903",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_initialization_routes.py",
+      "git_blob": "f86515713e72be3c49776aaf13770a70fee9408d",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_install_write_copy_after.py",
+      "git_blob": "14896b25c628c3ad158d5e156e8900c93474f9dc",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_install_write_copy_after_part_1.py",
+      "git_blob": "5e4693a4e875c5291d59490cfa56516782a53f99",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_install_write_copy_after_part_2.py",
+      "git_blob": "9dd88160f10287b9a9e65cb645a0b0f729315863",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_install_write_copy_after_part_3.py",
+      "git_blob": "6b36ec7a3d524cb2103b093afccd22eeb6386d4e",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_install_write_copy_before.py",
+      "git_blob": "090faa314a7392590dbdb3ab2790c683d94d4593",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_install_write_copy_before_part_1.py",
+      "git_blob": "223ce2b88ab2181bdf803154123502d428d1458e",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_install_write_copy_before_part_2.py",
+      "git_blob": "e2400c73c23f5849fef7ea430e18571d968a8df6",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_install_write_copy_before_part_3.py",
+      "git_blob": "9f9b0e39784686b2e1ac0558cb39ff24bfbd1227",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_install_write_link_after.py",
+      "git_blob": "6f1a2b228e51f4b842d6e1b4860053d5149cf7ff",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_install_write_link_after_part_1.py",
+      "git_blob": "8e5c974c0b9cc33a8b871d3342d2df3f4b22d0e8",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_install_write_link_after_part_2.py",
+      "git_blob": "c444856701f389ec1cfcebdcfc9091cbb9c33a6c",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_install_write_link_after_part_3.py",
+      "git_blob": "521866b32cfd51e4736879f6eacd1b0fbaeb9550",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_install_write_link_before.py",
+      "git_blob": "b1cc65df4578c67f8c04d65ca6e94b817941930a",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_install_write_link_before_part_1.py",
+      "git_blob": "587c5f53d0f36c1e678d6285eddc683804ca9c3e",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_install_write_link_before_part_2.py",
+      "git_blob": "9ab7cd81cb5d4fb9266747448b64f5d7a09d2468",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_install_write_link_before_part_3.py",
+      "git_blob": "10036fa222ee75f0a2e6372cea24f2658b8d0030",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_installed_bank_governance.py",
+      "git_blob": "f0888bc8fce0c2ad287f6ebd748693408108c8b7",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_installed_bank_initialization.py",
+      "git_blob": "c824c350077127ef3342e926c5374c510d6f2c45",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_installed_bank_qualified_recall.py",
+      "git_blob": "f0216cef05e402cc689c3642142097721d78cb30",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_installed_bank_roundtrip.py",
+      "git_blob": "f497d1b860fe2bc13e2bb286fcd7b5b06229f871",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_installed_layout.py",
+      "git_blob": "c2a81105c4c87a8c68863486b35ee4164bd5d6a0",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_installer.py",
+      "git_blob": "5bf5bac950433c44208225f683832222bf8b580f",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_known_holds_v2.py",
+      "git_blob": "5feebe6cb84d9069e09a0fe369430e4e06c24b89",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_large_refresh_security.py",
+      "git_blob": "da919bc714c3cb74cfe5da8656aaadfc72d8b1a8",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_lifecycle_cleanup_after.py",
+      "git_blob": "168efaddbf6e07e7027833217d336dacbbf2b06d",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_lifecycle_cleanup_before.py",
+      "git_blob": "ad4eebc15c9534fc58e6ef43057eaa5916edc2c0",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_lifecycle_lost_responses.py",
+      "git_blob": "7100e56ccc254f029f16f036696c17a6d4011bc3",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_lifecycle_model.py",
+      "git_blob": "3076f5b62826ad95deb08013047eea858b1ed1e8",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_lifecycle_partitions.py",
+      "git_blob": "b47429577c6a154c994cf3eb54dd97b4dc475c84",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_lifecycle_security_contract.py",
+      "git_blob": "f6dca6b02c20664481b7f0bbebd5ef3dfb78a25b",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_lifecycle_trust.py",
+      "git_blob": "30b3c470dfcbea2ac07d3e1fcb9fddc76b927333",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_managed_source_bounds.py",
+      "git_blob": "b01fcb33ab6a64787e7084980988d077081ddfdd",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_managed_source_ownership.py",
+      "git_blob": "18ccdd9aeaf3de8e104725f01a858aa33e39b7f4",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_manual_checkpoint.py",
+      "git_blob": "4be87795d5fe5a5d5bd1efc1d13dc7fc62b5ddb9",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_memory_publication.py",
+      "git_blob": "13dfa32731662f7687bac7f6567101a6117e5919",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_memory_refresh.py",
+      "git_blob": "38c76687a5685090633633584265161eb7cc2d24",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_migration_catalog.py",
+      "git_blob": "806a135445b20e74de1d203be8e857da65f3e759",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_migration_runtime_rollback.py",
+      "git_blob": "3479a8f3a81152178653e9814aabb11f6061e3a6",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_multi_machine_compatible.py",
+      "git_blob": "676ae3dbeb6836b45ab1e543f90a55146b196359",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_multi_machine_conflicts.py",
+      "git_blob": "f28ccf92f126ddc70a3061c59b41ec82094064ad",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_multi_machine_matrix.py",
+      "git_blob": "1513904c4f08ca914103aa55383b324d15410572",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_multi_machine_merge_replay.py",
+      "git_blob": "a6fd43c667373dc35f2a95beba95c2529bbdab09",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_multi_machine_race.py",
+      "git_blob": "e3f8fbf60e1decce6be2c655ac18c8f24973980c",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_new_topic_merge.py",
+      "git_blob": "0896dffd94116276747e380c1f179651075f60c5",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_observation_applicability.py",
+      "git_blob": "e4b6fcece07647b823853ea8854cdb2d782c52a5",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_offline_skill.py",
+      "git_blob": "63d479fc36b8f87840f7c48ae0f3cd3a61adb518",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_portable_artifact.py",
+      "git_blob": "615665fb909d1b4c46cbb2d206b9ed3148cf2791",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_portable_handoff.py",
+      "git_blob": "3bf5a3f8052114aaeb5fcddfba5a664d85115552",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_portable_lifecycle.py",
+      "git_blob": "564f69fde92d3c33390e782802da14491044afee",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_project_identity.py",
+      "git_blob": "1052726ce0f05d6ea0bb562af5cd252142579f98",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_projection_contract.py",
+      "git_blob": "5d808c85e90346a1c378487fe690b27dd7526acb",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_public_cli.py",
+      "git_blob": "2fba4b23244ea62189563f36634e4b7485ae80c0",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_publication_admission.py",
+      "git_blob": "5e59d6477042155dd0a17898675e34ebb17cf801",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_publication_pending.py",
+      "git_blob": "0a19e71b118b565eed9bb99c68e01ebd2043daf0",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_publication_policy.py",
+      "git_blob": "c8b667bc28185219a4a9411e05db078017506faf",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_publication_recovery.py",
+      "git_blob": "b21e9008c9633bb6c8452a7f6b1e8b9825105c74",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_publication_worktree.py",
+      "git_blob": "a8845789899c561e1464c3835a71484fc9be3824",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_purge_unlock_after.py",
+      "git_blob": "0e73f8f67536d5b2f57a0eadac9d70881b90f779",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_purge_unlock_before.py",
+      "git_blob": "de274fcccfe75df1ee781cbe90f840658cf0e28c",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_purge_write_after.py",
+      "git_blob": "66d2b05c6d9eae18d7d6ec3cce6235fb69777c63",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_purge_write_before.py",
+      "git_blob": "fd3d3932ffd834fd577aeb163e5adf78cbb752c7",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_quarantined_sharing_v2.py",
+      "git_blob": "9ecfc10cbcf6a10ab29d006b8943a6b0187d34d9",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_read_only_audits.py",
+      "git_blob": "ef1d7bf9ce3592e9fee142ffa9e29900375565a6",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_recall_catalog.py",
+      "git_blob": "a21f6824ae349eae3a3b219ec942605dafd1e91b",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_recall_observation.py",
+      "git_blob": "e745437c608ee16a43ab5127b188a25c1dba7a8e",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_records.py",
+      "git_blob": "72720a4eca95232f7a4daf5733b56f2f73f2ee27",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_recover_commit_write_copy_after.py",
+      "git_blob": "416d05c86265bbb8c1243228f125b3184fb71631",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_recover_commit_write_copy_before.py",
+      "git_blob": "0372956b59ae049579f628cba385b2c41698f9e7",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_recover_rollback_write_copy_after.py",
+      "git_blob": "944862405623f037ba309cedbec3a9305fc642af",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_recover_rollback_write_copy_before.py",
+      "git_blob": "8f072d8c70967c2db5e649e45ef3658e817d2c6a",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_refresh_conflicts.py",
+      "git_blob": "ffc5f7f6c0e6fa5afb746257c757851f2e456bd5",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_refresh_cursor.py",
+      "git_blob": "47b80627d000040c060f49680b59796905cfe652",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_refresh_integration.py",
+      "git_blob": "74de81d14a0586f0c6e76d1e318b69d6ef39e1e8",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_refresh_invalidation.py",
+      "git_blob": "964094bbfb9482cfb17334240388faa015d02411",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_refresh_pending.py",
+      "git_blob": "d52ece834edbe9c9871a4ad6e88145ad7fcd845d",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_refresh_recovery.py",
+      "git_blob": "c0abf6b1ac73d024798178e21be5d4c77028f650",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_refresh_v2.py",
+      "git_blob": "f60c22d538d097abad1e85921e03af8a60a29ebf",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_release_canaries.py",
+      "git_blob": "f0bf89338f7457f9965d7bbc88df86f3133672e2",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_retrieval.py",
+      "git_blob": "40d19759e7ec87820739db648b1d85c4b3a2756e",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_router.py",
+      "git_blob": "511d478d9923b251583239c3f0756d6dde5ce5d0",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_runtime_diagnostics.py",
+      "git_blob": "fa340ec5af32428ef9875cfe2ca9937bd6802ee7",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_runtime_purge.py",
+      "git_blob": "7c615507e65c3254439d85023f12f1253293d70e",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_runtime_uninstall.py",
+      "git_blob": "f4ca09a3b0a94642971b4f845b775232daf8cc73",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_runtime_update.py",
+      "git_blob": "c2070b1f7ce0522ec94d932ec458c864d6e7a3c1",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_scope_binding.py",
+      "git_blob": "581f0a440aed7d8231e165438d6da3da2e217456",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_scope_policy.py",
+      "git_blob": "aa59ba7c8cfb361ba9803fb3189fe892447ce620",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_security_policy.py",
+      "git_blob": "7e1c2c9b02fec553f94f01dc091e77f58c7f0d0c",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_semantic_introductions.py",
+      "git_blob": "4463339fbfe3566c1a4bdfc65f4b09474b2fdee3",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_semantic_sharing.py",
+      "git_blob": "11a29ac622191a9db943f4fa3dd4c4b445722aa3",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_setup_diagnostics.py",
+      "git_blob": "7af7a571e29b2fb1c65abb22f3631b46dece3a08",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_shared_learning_loop.py",
+      "git_blob": "38224db4fbc908b41a5d05945d16287203b52bb0",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_sharing_boundary.py",
+      "git_blob": "20c21118eacc483a199861c0fa236ce883141606",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_sharing_recovery.py",
+      "git_blob": "61d80d986554a6ff320613d2be6cf5097a565f4e",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_signed_release_lifecycle.py",
+      "git_blob": "990e27a80f17e984f7b8d750298491ffe0154354",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_signed_release_publisher.py",
+      "git_blob": "825398547f8442761e7aae54722dc7559aeb15de",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_skill_routes.py",
+      "git_blob": "e2c6ebd70b3cede6bd1a9b757fef5e332d322ad3",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_tombstones.py",
+      "git_blob": "69ba5ecd732d40709a84392fe914bc7c37019548",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_unified_cli_operations.py",
+      "git_blob": "7f770116764b07c7cb0446b8bf707fcbac0cf5f9",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_uninstall_write_copy_after.py",
+      "git_blob": "1d2a880fe56563f69470fa5ba745379d5a5321a8",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_uninstall_write_copy_before.py",
+      "git_blob": "5d2f4ea8afb55ec64289b97ffeb4613e846c1e68",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_uninstall_write_link_after.py",
+      "git_blob": "80670f782e896de727c43ac81b3f9082ffdc8d80",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_uninstall_write_link_before.py",
+      "git_blob": "4622c2c9d301c22a586d9e96183a3f1e168c5f25",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_update_discovery_gaps.py",
+      "git_blob": "341b7fbc647568e9e90ad33d4124e8b67aa7fb87",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_update_write_after.py",
+      "git_blob": "53cd9a19342ff14f757974ff6a3c5cff3b2b2399",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_update_write_after_part_1.py",
+      "git_blob": "f199a068fce4a75a0efd72720c4d51e521781a2b",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_update_write_after_part_2.py",
+      "git_blob": "a01e72022069c7bbca79727eb558b08cc9700cf8",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_update_write_after_part_3.py",
+      "git_blob": "b6fffa5bd93770ad85645d7f93971a8349438c73",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_update_write_before.py",
+      "git_blob": "5fadd52caca637172dd712ac3e5b11fe881daa40",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_update_write_before_part_1.py",
+      "git_blob": "35abdfb220ee0159b9db6eca1ca99099fce0c722",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_update_write_before_part_2.py",
+      "git_blob": "c0264a0b80370c22393ac4c106ba65b0a1e55465",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_update_write_before_part_3.py",
+      "git_blob": "1b5237e9f2cf3f0694810c6b0ef22fd127762b61",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_validation_memo.py",
+      "git_blob": "f5909d207be793059ce5e5aa0056015c5f506fd9",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_worker_collection.py",
+      "git_blob": "4cefe846a2aa088b99e89b17b9ebdc20ba00cb85",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/contracts/test_worker_ownership.py",
+      "git_blob": "c374f4a80d949710648328f37ca7ab5bbb2af169",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/fault_partitions.py",
+      "git_blob": "f64da4a6b9cfe389a4a21df0f9b3ac0836f85d5f",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/fixtures/legacy-cli/README.md",
+      "git_blob": "02d6e872fdc720eb85b85271682fdd3f9d5ff4c3",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/fixtures/legacy-cli/pre-am-3af48ea.tar.gz",
+      "git_blob": "34040144f50c338c4c78f4b21dcb3d07d03446bd",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/fixtures/legacy-cli/provenance.json",
+      "git_blob": "3805cc0fead6d989817802f1c2feb3017e3187bd",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/fixtures/v0.0.2-runtime/portable-pack.tar.gz",
+      "git_blob": "4fb9639171189c2c526c305df07fbbb43d320f05",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/fixtures/v0.0.2-runtime/provenance.json",
+      "git_blob": "a4420651deed6ba028c5cf547baa74461a87b5b5",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/identity_fixtures.py",
+      "git_blob": "b914b2ea26f90126d3086b1db744ebfc94b7505d",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/incidents.json",
+      "git_blob": "eb5a009db3e87353b7c3a6e39e05f0ceecbed2dc",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/installed_cli_fixtures.py",
+      "git_blob": "e9dcea1b55db9d98c51b5b9bf505ab0eea97d8f1",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/lifecycle-matrix.json",
+      "git_blob": "5f1549999677d0c83fa2855e5953e4ed69723a94",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/lifecycle_cleanup_fixtures.py",
+      "git_blob": "bfbf905d932f925ffd43be23658b8158e89184ee",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/lifecycle_fault_fixtures.py",
+      "git_blob": "01cd3c1bda56ec886dbeb75fc39e98d0e84c3f8e",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/lifecycle_unlock_fixtures.py",
+      "git_blob": "448a06b50c3e807e94c59efaa2e0f8a164f30101",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/migration_fixtures.py",
+      "git_blob": "aa3786469cc78373712f40d417142efb32ebec4b",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/multi_machine_fixtures.py",
+      "git_blob": "06376797c7c7f6dad91e00a84dc47ff61fa76828",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/publication_fixtures.py",
+      "git_blob": "6d232e3eb271d59064ad73cfc042de2bcddd34a2",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/publication_github.py",
+      "git_blob": "db6035cecfebf1287f2d1a522ab96bd13096118f",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/record_fixtures.py",
+      "git_blob": "d660164f2463427dc32c9a098d747addc997b07b",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/refresh_fixtures.py",
+      "git_blob": "7ff9e10b07f91d6e8f651a854390c4ad3e875469",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/release_canary_fixtures.py",
+      "git_blob": "bd9bd6205e6af89b62b3a5b18b30c977615d7fdc",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/runtime_update_fixtures.py",
+      "git_blob": "a9c536d91ecaa8ea6efc071fe368745cd4a44588",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/runtime_update_interrupts.py",
+      "git_blob": "0eb294bfec8a1c4754d2b45f0f1418224ce48921",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/shared-learning-matrix.json",
+      "git_blob": "08676cc12072a5e3e1e04fba2552265715506f11",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/signed_publisher_fixtures.py",
+      "git_blob": "37e6d3817cfca93f041c1a814a7cee56798e882f",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/signed_release_fixtures.py",
+      "git_blob": "a39378c81d7eb228cf0579dc0324f2fffce80134",
+      "mode": "100644"
+    },
+    {
+      "path": "tests/world.py",
+      "git_blob": "27d7ccd9d224edb454a162b804e6a739cb604a68",
+      "mode": "100644"
+    }
+  ]
+}
