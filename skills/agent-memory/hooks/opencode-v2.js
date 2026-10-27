@@ -12,17 +12,35 @@ try {
   prompt = 'Agent Memory turn boundary: hook instruction unavailable; memory refresh and capture are pending.'
 }
 const marker = 'Agent Memory turn boundary:'
+let warned = false
+function pending () {
+  if (warned) return
+  warned = true
+  try { console.warn('Agent Memory: OpenCode turn hook unavailable; automatic refresh and capture remain pending.') } catch {}
+}
 
 export default {
   id: 'agent-memory-turn-boundary',
   setup: async (ctx) => {
-    const registration = await ctx.session.hook('context', (event) => {
-      try {
-        if (!Array.isArray(event?.system)) return
-        if (event.system.some((part) => typeof part?.text === 'string' && part.text.startsWith(marker))) return
-        event.system.push({ type: 'text', text: prompt })
-      } catch { /* Preserve the user's turn; no capture or freshness is claimed. */ }
-    })
-    return () => registration.dispose()
+    try {
+      const registration = await ctx.session.hook('context', (event) => {
+        try {
+          if (!Array.isArray(event?.system)) { pending(); return }
+          if (event.system.some((part) => typeof part?.text === 'string' && part.text.startsWith(marker))) return
+          event.system.push({ type: 'text', text: prompt })
+        } catch { pending() }
+      })
+      if (typeof registration?.dispose !== 'function') { pending(); return () => {} }
+      return () => {
+        try {
+          const result = registration.dispose()
+          if (result && typeof result.catch === 'function') return result.catch(pending)
+          return result
+        } catch { pending() }
+      }
+    } catch {
+      pending()
+      return () => {}
+    }
   },
 }

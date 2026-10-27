@@ -52,6 +52,8 @@ const dispose = await v2.default.setup({session: {hook: async (_event, cb) => {
   callback = cb; return {dispose: () => { disposed = true }};
 }}});
 const two = {system: []}; callback(two); callback(two); dispose();
+const failureDispose = await v2.default.setup({session: {hook: async () => { throw new Error('fixture'); }}});
+failureDispose();
 process.stdout.write(JSON.stringify({one: one.system, two: two.system, disposed}));
 '''
         with tempfile.TemporaryDirectory() as tmp:
@@ -68,6 +70,7 @@ process.stdout.write(JSON.stringify({one: one.system, two: two.system, disposed}
         self.assertEqual(len(value['two']), 1)
         self.assertEqual(value['one'][0], value['two'][0]['text'])
         self.assertTrue(value['disposed'])
+        self.assertIn('pending', result.stderr)
 
 
 if __name__ == '__main__':
