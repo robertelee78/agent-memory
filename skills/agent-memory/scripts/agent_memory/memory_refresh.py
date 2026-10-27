@@ -191,11 +191,13 @@ def current(repo):
                 raise ContractError('Hidden or unadmitted memory requires review')
 
     def mode_and_index():
+        local_modes = []
         for path in values['local']:
             target = bank / path
             mode = target.lstat().st_mode
-            if not stat.S_ISREG(mode) or stat.S_IMODE(mode) != 0o644:
+            if not stat.S_ISREG(mode) or stat.S_IMODE(mode) not in {0o644, 0o664}:
                 raise ContractError('Nonordinary local bank file mode requires review')
+            local_modes.append((path, stat.S_IMODE(mode)))
         prefix = observation['bank_root'] + '/'
         tree_raw = recovery.command(root, 'ls-tree', '-rz', '--full-tree', observation['local_head'],
                                     '--', observation['bank_root'], limit=recovery.MAX_LOCATOR_TREE_BYTES)
@@ -214,7 +216,7 @@ def current(repo):
             index_entries[path] = oid
         if tree_entries != index_entries or set(tree_entries) != {prefix + path for path in values['local']}:
             raise ContractError('HEAD and index bank inventories differ')
-        return tree_raw, index_raw
+        return tree_raw, index_raw, tuple(local_modes)
 
     before_modes = mode_and_index()
     writes.fault('refresh-current-before-final-recheck')
@@ -276,7 +278,7 @@ def save_cursor(root, p, observation, receipt, expected):
              'resulting_hashes': receipt['resulting_hashes'],
              'git_context': p['refresh_evidence']['git_context']}
     value['checksum'] = digest(encoded(value))
-    path = cursor_path(root); path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+    path = cursor_path(root); storage.private_mkdir(path.parent)
     storage.replace(path, limits.private_bytes(value), expected)
     return {'stored': True, 'authority_head': observation['authority_head'], 'content_free': True}
 

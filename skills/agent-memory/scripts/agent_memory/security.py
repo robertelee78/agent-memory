@@ -93,7 +93,7 @@ def audit(repo, operation_id, category, phase, context, source_classes, reasons=
     directory = operations.parent / 'security-audit'
     if directory.is_symlink() or (directory.exists() and not directory.is_dir()):
         raise ContractError('Security audit location must remain a canonical private directory')
-    directory.mkdir(parents=True, exist_ok=True, mode=0o700)
+    storage.private_mkdir(directory)
     path = directory / (operation_id + '.' + action + '.' + phase + '.' + context['developer_id'] + '.json')
     event = {'schema': 'agent-memory/security-audit-v1', 'operation_id': operation_id,
              'project_id': context['project_id'], 'developer_id': context['developer_id'],

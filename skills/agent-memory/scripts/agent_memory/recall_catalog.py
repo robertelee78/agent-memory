@@ -425,7 +425,7 @@ def publish(observation,engine):
     coherent(engine)
     root,bank,directory=locations(observation.root)
     for path in (directory.parent,directory):
-        trust_paths.inspect(path);path.mkdir(parents=True,exist_ok=True,mode=0o700)
+        trust_paths.inspect(path);storage.private_mkdir(path)
     trust_paths.state(directory)
     with publication_lock(directory):
         # Capacity is established before creating any key/generation/pointer.

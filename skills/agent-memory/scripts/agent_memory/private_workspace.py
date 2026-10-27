@@ -8,7 +8,7 @@ import stat
 import sys
 import uuid
 
-from . import bank_writes, scope_binding, trust_paths
+from . import bank_writes, local_registry as storage, scope_binding, trust_paths
 from .developer_identity import encoded, load
 from .frontmatter import ContractError
 
@@ -27,7 +27,7 @@ def workspace_root(repo):
 
 def create(repo):
     root, context, base = workspace_root(repo)
-    base.mkdir(parents=True, exist_ok=True, mode=0o700)
+    storage.private_mkdir(base)
     trust_paths.state(base)
     name = uuid.uuid4().hex
     path = base / name

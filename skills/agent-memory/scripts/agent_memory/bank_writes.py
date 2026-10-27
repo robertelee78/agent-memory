@@ -136,7 +136,7 @@ def fault(stage):
 
 
 def record(receipt_path, payload):
-    receipt_path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+    storage.private_mkdir(receipt_path.parent)
     # Cooperating writers hold the bank lock. Preserve an unexpected receipt
     # with the same immediate observed-byte guard used for metadata writes.
     storage.replace(receipt_path, payload, None)

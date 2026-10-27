@@ -220,7 +220,7 @@ def apply(prepared):
         if bundle_path.is_symlink() or (bundle_path.exists() and bundle_path.read_bytes() != raw):
             raise ContractError('Unknown binding recovery bundle; preserve it')
         if not bundle_path.exists() and transactions.receipt_value(receipt_path, tx) is None:
-            bundle_path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+            storage.private_mkdir(bundle_path.parent)
             storage.replace(bundle_path, raw, None)
     # Existing operation replay never re-applies an old registry decision.
     registry = project.apply(p['project'])

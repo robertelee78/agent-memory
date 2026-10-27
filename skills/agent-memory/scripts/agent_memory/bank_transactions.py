@@ -494,7 +494,7 @@ def _apply(prepared, *, check_identity):
             raise ContractError("Bank changed before journaling")
         preflight(bank, p)
         raw = limits.private_bytes({"schema": "agent-memory/transaction-journal-v1", "proposal": p, "base_files": base_files})
-        journal.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+        storage.private_mkdir(journal.parent)
         if journal.exists():
             if limits.read_bytes(journal) != raw:
                 raise ContractError("Unknown journal or reused transaction ID; preserve it")

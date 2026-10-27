@@ -1,9 +1,12 @@
 """Actual public refresh preserves stale feature code, index and unpublished learning."""
 import unittest
 import json
+import os
+import subprocess
 import sys
 import time
 import hashlib
+from pathlib import Path
 
 from world import World
 from contracts import test_retrieval as retrieval_helpers
@@ -13,6 +16,62 @@ from refresh_fixtures import RefreshFixture
 
 
 class MemoryRefreshContract(RefreshFixture):
+    def test_private_state_directory_creation_preserves_existing_modes_and_links(self):
+        with World() as w:
+            repo, bank, peer, base = self.fixture(w)
+            existing = w.inside('existing-state'); existing.mkdir(); existing.chmod(0o775)
+            target = existing/'one'/'two'
+            helper = ('import sys;sys.path.insert(0,sys.argv[1]);'
+                      'from agent_memory.local_registry import private_mkdir;private_mkdir(sys.argv[2])')
+            result = subprocess.run([sys.executable, '-B', '-c', helper,
+                                     str(self.pack/'scripts'), str(target)],
+                                    env=w.env, text=True, capture_output=True, timeout=20)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(existing.stat().st_mode & 0o777, 0o775)
+            self.assertEqual((existing/'one').stat().st_mode & 0o777, 0o700)
+            self.assertEqual(target.stat().st_mode & 0o777, 0o700)
+            link = existing/'alias'; link.symlink_to(target, target_is_directory=True)
+            denied = subprocess.run([sys.executable, '-B', '-c', helper,
+                                     str(self.pack/'scripts'), str(link/'child')],
+                                    env=w.env, text=True, capture_output=True, timeout=20)
+            self.assertNotEqual(denied.returncode, 0)
+            self.assertTrue(link.is_symlink())
+            self.assertFalse((target/'child').exists())
+
+    def test_current_succeeds_with_group_writable_umask_for_new_runtime_state(self):
+        previous = os.umask(0o002)
+        try:
+            with World() as w:
+                repo, bank, peer, base = self.fixture(w)
+                before = self.state(w, repo, bank)
+                response = w.run([sys.executable, '-I', self.pack/'scripts/installer.py',
+                                  'refresh', 'current', '--repo', repo], check=False)
+                result = json.loads(response.stdout)
+                self.assertEqual(response.returncode, 0, result)
+                self.assertEqual(result['sharing_state'], 'bank-synchronized')
+                self.assertEqual(before, self.state(w, repo, bank))
+                self.assertEqual((bank/'MEMORY.md').stat().st_mode & 0o777, 0o664)
+                root = Path(w.env['AGENT_MEMORY_STATE_HOME'])
+                state = root/'writes'/hashlib.sha256(str(bank).encode()).hexdigest()
+                for directory in (root, root/'writes', state, state/'transactions'):
+                    self.assertEqual(directory.stat().st_mode & 0o777, 0o700, str(directory))
+        finally:
+            os.umask(previous)
+
+    def test_current_rejects_executable_and_world_writable_bank_files(self):
+        for mode in (0o755, 0o666):
+            with self.subTest(mode=oct(mode)), World() as w:
+                repo, bank, peer, base = self.fixture(w)
+                target = bank/'MEMORY.md'; target.chmod(mode)
+                before = self.state(w, repo, bank)
+                response = w.run([sys.executable, '-I', self.pack/'scripts/installer.py',
+                                  'refresh', 'current', '--repo', repo], check=False)
+                result = json.loads(response.stdout)
+                self.assertNotEqual(result['sharing_state'], 'bank-synchronized', result)
+                self.assertFalse(result['remote_freshness_verified'])
+                self.assertEqual(before, self.state(w, repo, bank))
+                self.assertEqual(target.stat().st_mode & 0o777, mode)
+
     def test_current_untracked_canonical_memory_explains_full_review_without_writes(self):
         from contracts.test_semantic_sharing import SemanticSharingContract
         with World() as w:
@@ -64,7 +123,7 @@ class MemoryRefreshContract(RefreshFixture):
             self.assertEqual(before, self.state(w, repo, bank))
 
     def test_current_refuses_local_and_authority_changes_at_final_recheck(self):
-        for scenario in ('local', 'authority', 'index'):
+        for scenario in ('local', 'authority', 'index', 'mode'):
             with self.subTest(scenario=scenario), World() as w:
                 repo, bank, peer, base = self.fixture(w)
                 rendezvous = w.inside('rendezvous');rendezvous.mkdir()
@@ -83,14 +142,19 @@ class MemoryRefreshContract(RefreshFixture):
                     target = peer/'memory-bank'/'activeContext.md';target.write_text(target.read_text()+'\nAuthority changed during observation.\n')
                     w.git('add', 'memory-bank', cwd=peer);w.git('commit', '-m', 'Concurrent memory change', cwd=peer)
                     w.git('push', 'origin', 'HEAD:main', cwd=peer)
-                else:
+                elif scenario == 'index':
                     target = repo/'code.py';target.write_text('VALUE = 987  # changed during observation\n')
                     w.git('add', 'code.py', cwd=repo)
+                else:
+                    target = bank/'MEMORY.md';target.chmod(0o664)
                 (rendezvous/(stage+'.release')).touch()
                 stdout, stderr = child.communicate(timeout=30);result=json.loads(stdout)
                 self.assertNotEqual(result['sharing_state'], 'bank-synchronized', (result,stderr))
                 self.assertFalse(result['remote_freshness_verified'])
-                self.assertIn('changed during observation', target.read_text())
+                if scenario == 'mode':
+                    self.assertEqual(target.stat().st_mode & 0o777, 0o664)
+                else:
+                    self.assertIn('changed during observation', target.read_text())
 
     def test_current_refuses_unchanged_hidden_record_and_corrupt_hold_anchor(self):
         from contracts.test_semantic_sharing import SemanticSharingContract, comparison, project_id

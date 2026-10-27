@@ -13,7 +13,7 @@ import tempfile
 from urllib.parse import quote
 import uuid
 
-from . import bank_contract as bank, bank_transactions as tx, bank_writes as writes
+from . import bank_contract as bank, bank_transactions as tx, bank_writes as writes, local_registry as storage
 from . import scope_binding, semantic_sharing as semantic, sharing_recovery as recovery
 from .developer_identity import digest, encoded
 from .frontmatter import ContractError
@@ -206,7 +206,7 @@ def candidate(root, binding, files, *, quarantine_records=False):
     # This index contains the fresh authority tree, not the feature HEAD/index.
     # Desired blobs are read from the exact reviewed result, never git add -A.
     temporary_root, _ = writes.state_paths(root, root/binding['bank_root'], str(uuid.uuid4()))
-    temporary_root.mkdir(parents=True, exist_ok=True, mode=0o700)
+    storage.private_mkdir(temporary_root)
     with tempfile.TemporaryDirectory(prefix='publication-', dir=temporary_root) as directory:
         index = Path(directory)/'index'
         git_write(root, 'read-tree', binding['authority_head'], index=index)

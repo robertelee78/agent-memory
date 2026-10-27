@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 import os
 from pathlib import Path
 import socket
+import stat
 import tempfile
 import uuid
 
@@ -15,6 +16,31 @@ try:
     import fcntl
 except ImportError:
     fcntl = None
+
+
+def private_mkdir(path):
+    """Create each missing directory owner-only, without changing existing modes."""
+    path = Path(path)
+    if not path.is_absolute() or '..' in path.parts:
+        raise ContractError('Private state directory must be an absolute canonical path')
+    missing = []
+    node = path
+    while True:
+        try:
+            info = node.lstat()
+        except FileNotFoundError:
+            missing.append(node)
+            node = node.parent
+            continue
+        if not stat.S_ISDIR(info.st_mode):
+            raise ContractError('Private state path must not follow links or non-directories')
+        break
+    for node in reversed(missing):
+        try:
+            node.mkdir(mode=0o700)
+        except FileExistsError:
+            if not stat.S_ISDIR(node.lstat().st_mode):
+                raise ContractError('Private state path changed while creating directories')
 
 
 def paths(name):

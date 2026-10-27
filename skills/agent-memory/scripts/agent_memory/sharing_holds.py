@@ -190,7 +190,7 @@ def load(root,project_id,*,skip_judgment=None):
 
 def prepare_directory(directory):
     for path in (directory.parent,directory):
-        trust_paths.inspect(path);path.mkdir(parents=True,exist_ok=True,mode=0o700);trust_paths.state(path)
+        trust_paths.inspect(path);storage.private_mkdir(path);trust_paths.state(path)
 
 
 def commit_store(root,project_id,desired,observed_sha,directory,anchor):
