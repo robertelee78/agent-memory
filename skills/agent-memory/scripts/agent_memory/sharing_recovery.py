@@ -31,6 +31,11 @@ class AuthorityFailure(ContractError):
               'after the issue clears. Do not reset/reinitialize memory or remove unknown locks.')
 
 
+class ObservationCleanupFailure(AuthorityFailure):
+    code = 'observation-cleanup-failed'
+    component = 'observation-cleanup'
+
+
 class FetchFailure(AuthorityFailure):
     code = 'authority-fetch-unavailable'
     component = 'authority-fetch'
@@ -316,8 +321,22 @@ def observe(repo, *, owned_lock=None, quarantine_records=False):
                 'landed_hashes': transactions.file_hashes(files), 'shared_bank_present': bool(files),
                 'observed_at': datetime.now(timezone.utc).isoformat(), 'remote_freshness_verified': True}
     finally:
-        # Objects remain addressable by immutable IDs, even if the cursor/ref is lost.
-        command(root, 'update-ref', '-d', ref)
+        # Preserve the original typed failure if private-ref cleanup also fails.
+        # Do not report successful observation when cleanup itself fails.
+        active = sys.exc_info()[1]
+        try:
+            command(root, 'update-ref', '-d', ref)
+        except ContractError as cleanup:
+            message = ('Private observation ref cleanup failed; preserve Git metadata and '
+                       'inspect repository permissions before retrying.')
+            if active is None:
+                raise ObservationCleanupFailure(message) from cleanup
+            if isinstance(active, ContractError):
+                active.args = (str(active) + ' ' + message,)
+                active.repair = (getattr(active, 'repair', 'Preserve local memory and pending evidence; retry after checking repository access.')
+                                 + ' ' + message)
+            else:
+                active.add_note(message)
 
 
 def result(operation, **values):
