@@ -126,9 +126,9 @@ Preserve the bank, feature work and pending operations. Custom harnesses may
 invoke the same skill and CLI explicitly; never replace governed memory with an
 empty bank or a fabricated receipt.
 
-## Claude background boundary acknowledgment
+**Background boundary acknowledgment.**
 
-When a Claude Stop wake supplies a source-bound session, prompt, message UUID and
+When a background Stop wake supplies a source-bound session, prompt, message UUID and
 source SHA-256, verify that exact source before assessing it. After an explicit
 no-learning assessment, write a private JSON object containing `session`,
 `prompt`, `source_uuid`, `source_sha256`, `outcome` set to `no-learning`, and a

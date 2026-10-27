@@ -329,6 +329,37 @@ class InstallerContract(unittest.TestCase):
                 self.assertFalse(plugin.exists()); self.assertFalse(plugin.is_symlink())
                 self.assertEqual(other.read_text(), 'foreign plugin\n')
 
+    def test_interrupted_claude_stop_install_restores_original_settings(self):
+        with World() as world:
+            source=self.source(world);settings=world.paths['claude']/'settings.json'
+            original=b'{"hooks":{"Stop":[{"hooks":[{"type":"command","command":"foreign"}]}]}}\n'
+            settings.write_bytes(original)
+            result=world.run([sys.executable,'-I',HELPER,'install','--development-source',source,
+                              '--presets','claude'],check=False,
+                             env={'AGENT_MEMORY_FAULT_STAGE':'install-before-receipt','AGENT_MEMORY_FAULT_MODE':'exit'})
+            self.assertEqual(result.returncode,86,result.stdout+result.stderr)
+            recovery=world.run([sys.executable,'-I',HELPER,'recover'],check=False)
+            self.assertEqual(recovery.returncode,0,recovery.stdout+recovery.stderr)
+            self.assertEqual(settings.read_bytes(),original)
+
+    def test_claude_stop_ownership_preserves_foreign_hooks_and_tampering(self):
+        with World() as world:
+            source = self.source(world)
+            settings = world.paths['claude']/'settings.json'
+            foreign = {'hooks': {'Stop': [{'hooks': [{'type':'command','command':'foreign-stop'}]}]}}
+            settings.write_text(json.dumps(foreign))
+            receipt = self.run_install(world, source, '--presets', 'claude')
+            self.assertTrue(receipt['verified'])
+            value = json.loads(settings.read_text())
+            self.assertEqual(value['hooks']['Stop'][0], foreign['hooks']['Stop'][0])
+            self.assertTrue(value['hooks']['Stop'][1]['hooks'][0]['asyncRewake'])
+            value['hooks']['Stop'][1]['hooks'][0]['command'] = 'changed-by-user'
+            settings.write_text(json.dumps(value))
+            result = world.run([sys.executable, '-I', source/'scripts/uninstall_runtime.py', 'uninstall'], check=False)
+            self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
+            self.assertTrue(any(row['path']==str(settings) for row in json.loads(result.stdout)['preserved']))
+            self.assertEqual(json.loads(settings.read_text()), value)
+
     def test_owned_client_hook_lifecycle_preserves_foreign_configuration(self):
         with World() as world:
             source = self.source(world)

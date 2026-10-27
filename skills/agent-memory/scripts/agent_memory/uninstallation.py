@@ -73,6 +73,9 @@ def prepare(old, state, code):
                 current = path.read_bytes()
                 raw = client_hooks.remove(current, target['hook_entry'], target.get('originally_absent', False),
                                           target.get('hook_original_shape'))
+                if target.get('stop_entry'):
+                    raw = client_hooks.remove(raw, target['stop_entry'], target.get('originally_absent', False),
+                                              target.get('stop_original_shape'), event='Stop')
                 # Restore exact original bytes only if the entire current JSON
                 # still matches the original plus our one owned entry.
                 for backup in old.get('backups', []):
@@ -81,7 +84,10 @@ def prepare(old, state, code):
                     saved = Path(backup['path'])
                     if backup['identity'].get('kind') == 'file' and install.fingerprint(saved) == backup['identity']:
                         original = saved.read_bytes()
-                        if client_hooks.parse(client_hooks.merge(original, None, target['hook_entry'])) == client_hooks.parse(current):
+                        rebuilt = client_hooks.merge(original, None, target['hook_entry'])
+                        if target.get('stop_entry'):
+                            rebuilt = client_hooks.merge(rebuilt, None, target['stop_entry'], event='Stop')
+                        if client_hooks.parse(rebuilt) == client_hooks.parse(current):
                             raw = original
                     break
             except (ContractError, UnicodeError, ValueError, KeyError):

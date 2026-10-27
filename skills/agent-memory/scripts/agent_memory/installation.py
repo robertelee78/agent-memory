@@ -642,7 +642,7 @@ def prepare(args, state, code, old, *, candidate_root=None, candidate_kind=None)
         no_guidance, bin_dir = cfg['no_guidance'], cfg['bin_dir']
         prior = {item['path']: item for item in old['targets']} if old else {}
         actions = []; adapters = []
-        def add(path, kind, raw=None, source_path=None, mode_bits=0o644, block=False, hook_entry=None):
+        def add(path, kind, raw=None, source_path=None, mode_bits=0o644, block=False, hook_entry=None, stop_entry=None):
             path = absolute(path); preflight_path(path); before = fingerprint(path)
             previous = prior.get(str(path))
             if block:
@@ -662,6 +662,12 @@ def prepare(args, state, code, old, *, candidate_root=None, candidate_kind=None)
                 }
                 raw = client_hooks.merge(original_raw,
                                          previous.get('hook_entry') if previous else None, hook_entry)
+                stop_shape = previous.get('stop_original_shape', {}) if previous and previous.get('stop_entry') else {
+                    'hooks_present': 'hooks' in document,
+                    'event_present': 'Stop' in document.get('hooks', {}),
+                }
+                if stop_entry is not None:
+                    raw = client_hooks.merge(raw, previous.get('stop_entry') if previous else None, stop_entry, event='Stop')
                 mode_bits = before['mode'] if before else 0o644
             elif before is not None:
                 if previous and kind == 'source' and before != previous['identity']:
@@ -688,6 +694,9 @@ def prepare(args, state, code, old, *, candidate_root=None, candidate_kind=None)
             if hook_entry is not None:
                 actions[-1]['hook_entry'] = hook_entry
                 actions[-1]['hook_original_shape'] = original_shape
+                if stop_entry is not None:
+                    actions[-1]['stop_entry'] = stop_entry
+                    actions[-1]['stop_original_shape'] = stop_shape
         if source['kind'] in ('managed', 'release'):
             add(code, 'source', source_path=root)
         groups = {}
@@ -703,7 +712,10 @@ def prepare(args, state, code, old, *, candidate_root=None, candidate_kind=None)
             if name in ('codex', 'claude') and hook and not no_guidance:
                 from . import client_hooks
                 command = 'python3 ' + shlex.quote(str(active_pack/'hooks/turn_hook.py'))
-                add(hook, 'hook-config', hook_entry=client_hooks.entry(command))
+                stop = None
+                if name == 'claude':
+                    stop = {'hooks': [{'type': 'command', 'command': 'python3 ' + shlex.quote(str(active_pack/'hooks/claude_stop.py')), 'asyncRewake': True}]}
+                add(hook, 'hook-config', hook_entry=client_hooks.entry(command), stop_entry=stop)
                 groups[name].append(str(absolute(hook)))
             elif name == 'opencode' and hook and not no_guidance:
                 add(hook, 'hook-link', source_path=active_pack/'hooks'/'opencode.js')
@@ -765,7 +777,10 @@ def verify_targets(targets, *, source=None):
             from . import client_hooks
             require(observed is not None and observed['kind'] == 'file',
                     'Client hook configuration is unavailable: ' + str(path))
-            client_hooks.locate(client_hooks.parse(path.read_bytes()), target.get('hook_entry'))
+            document = client_hooks.parse(path.read_bytes())
+            client_hooks.locate(document, target.get('hook_entry'))
+            if target.get('stop_entry'):
+                client_hooks.locate(document, target['stop_entry'], event='Stop')
             require(fingerprint(path) == observed, 'Client hook configuration changed during verification')
             continue
         if observed != target['identity']:
@@ -924,6 +939,9 @@ def install(plan, *, before_activate=None, after_activate=None):
         if action['kind'] == 'hook-config' and operation != 'uninstall':
             target['hook_entry'] = action['hook_entry']
             target['hook_original_shape'] = action['hook_original_shape']
+            if action.get('stop_entry'):
+                target['stop_entry'] = action['stop_entry']
+                target['stop_original_shape'] = action['stop_original_shape']
             previous = next((t for t in (old['targets'] if old else []) if t['path']==action['path']), None)
             target['originally_absent'] = previous['originally_absent'] if previous else action['before'] is None
         if action['kind'] == 'activation' and operation != 'uninstall':

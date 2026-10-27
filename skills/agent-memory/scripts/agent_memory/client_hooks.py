@@ -42,39 +42,41 @@ def entry(command):
     return {'hooks': [{'type': 'command', 'command': command}]}
 
 
-def locate(document, owned):
+def locate(document, owned, event=EVENT):
     if not isinstance(owned, dict) or set(owned) != {'hooks'}:
         raise ContractError('Invalid owned hook receipt')
-    groups = document.get('hooks', {}).get(EVENT, [])
+    groups = document.get('hooks', {}).get(event, [])
     matches = [i for i, item in enumerate(groups) if item == owned]
     if len(matches) != 1:
         raise ContractError('Owned hook is missing, duplicated or changed; preserve client configuration')
     return matches[0]
 
 
-def merge(raw, owned, desired):
+def merge(raw, owned, desired, event=EVENT):
     document = parse(raw)
-    groups = document.setdefault('hooks', {}).setdefault(EVENT, [])
+    groups = document.setdefault('hooks', {}).setdefault(event, [])
+    if not isinstance(groups, list):
+        raise ContractError('Existing client hook configuration has an unsupported shape')
     if owned is None:
         if desired in groups:
             raise ContractError('Identical unowned hook already exists; preserve client configuration')
         groups.append(copy.deepcopy(desired))
     else:
-        position = locate(document, owned)
+        position = locate(document, owned, event)
         if desired != owned and desired in groups:
             raise ContractError('Desired hook collides with an existing client hook')
         groups[position] = copy.deepcopy(desired)
     return encode(document)
 
 
-def remove(raw, owned, originally_absent=False, original_shape=None):
+def remove(raw, owned, originally_absent=False, original_shape=None, event=EVENT):
     document = parse(raw)
-    position = locate(document, owned)
-    groups = document['hooks'][EVENT]
+    position = locate(document, owned, event)
+    groups = document['hooks'][event]
     del groups[position]
     original_shape = original_shape or {}
     if not groups and not original_shape.get('event_present'):
-        del document['hooks'][EVENT]
+        del document['hooks'][event]
     if not document['hooks'] and not original_shape.get('hooks_present'):
         del document['hooks']
     if originally_absent and not document:
