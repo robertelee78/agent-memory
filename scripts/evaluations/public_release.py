@@ -3,7 +3,7 @@ from pathlib import Path
 import argparse,hashlib,json,os,platform,shutil,sys,time,traceback
 sys.dont_write_bytecode=True
 if not __debug__: raise SystemExit('Public canary requires assertions; rerun without Python optimization')
-p=argparse.ArgumentParser();p.add_argument('operation',choices=['prepare-legacy','upgrade-legacy','upgrade-via-cli','fresh']);p.add_argument('--source',required=True);p.add_argument('--out',required=True);p.add_argument('--expected-source');a=p.parse_args()
+p=argparse.ArgumentParser();p.add_argument('operation',choices=['prepare-legacy','upgrade-legacy','upgrade-via-cli','fresh']);p.add_argument('--source',required=True);p.add_argument('--out',required=True);p.add_argument('--expected-source');p.add_argument('--legacy-version',default='0.0.3');p.add_argument('--release-version',default='0.0.4');a=p.parse_args()
 root=Path(a.source).resolve();out=Path(a.out).resolve()
 sys.path.insert(0,str(root/'tests'))
 from world import World
@@ -51,24 +51,20 @@ try:
  assert snapshot(repo)==original['snapshot']
  if a.operation=='upgrade-via-cli':
   old=json.loads(receipt_path(w).read_text());cli=Path(old['bin_dir'])/'am'
-  assert old['source']['version']=='0.0.2' and old['source']['kind']=='managed'
-  run('old-process-update',[cli,'update'])
-  transition=json.loads(receipt_path(w).read_text());assert transition['source']['version']=='0.0.3' and transition['source']['kind']=='managed'
-  interim=json.loads(run('first-transition-version-json',[cli,'--json','version']).stdout)
-  assert interim['security']['publisher_authentication']=='not_established' and not interim['security']['signature_verification_performed']
-  run('new-process-signed-adoption',[cli,'update'])
+  assert old['source']['version']==a.legacy_version and old['source']['kind']=='release'
+  run('signed-legacy-update',[cli,'update'])
  else:
   run(a.operation+'-one-line',['bash','-o','pipefail','-c','curl -fsSL "$1" | bash','public-canary',url])
  receipt=json.loads(receipt_path(w).read_text());cli=Path(receipt['bin_dir'])/'am';source=Path(receipt['source']['path'])
  assert source.is_relative_to(w.root) and cli.is_relative_to(w.root)
  assert all(Path(t['path']).is_relative_to(w.root) for t in receipt['targets'])
- expected='0.0.2' if a.operation=='prepare-legacy' else '0.0.3'
+ expected=a.legacy_version if a.operation=='prepare-legacy' else a.release_version
  assert receipt['verified'] and receipt['source']['version']==expected,receipt['source']
  version=run(a.operation+'-version',[cli,'--version'])
  assert version.stdout.startswith('am '+expected+'\n') and not version.stdout.lstrip().startswith('{'),version.stdout
  assert snapshot(repo)==original['snapshot']
  if a.operation=='prepare-legacy':
-  assert receipt['source']['kind']=='managed' and receipt['source']['remote']=='https://github.com/robertelee78/agent-memory.git' and receipt['source']['ref']=='main'
+  assert receipt['source']['kind']=='release' and receipt['source']['release_manifest_sha256']
   (out/'legacy-receipt.json').write_text(json.dumps(receipt,indent=2)+'\n')
   result={'prepared':True,'legacy_version':expected,'source_revision':receipt['source']['revision'],'world_retained':True,'actual_public_default_install':True,'platform':platform.platform(),'seconds':time.perf_counter()-started}
  else:
