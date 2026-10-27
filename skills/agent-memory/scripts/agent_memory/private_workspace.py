@@ -47,7 +47,11 @@ def checked_directory(path):
     if info.st_uid != os.geteuid() or stat.S_IMODE(info.st_mode) != 0o700:
         os.close(fd)
         raise ContractError('Private workspace must remain owner-only')
-    check_directory(path, info)
+    try:
+        check_directory(path, info)
+    except BaseException:
+        os.close(fd)
+        raise
     return fd, info
 
 
