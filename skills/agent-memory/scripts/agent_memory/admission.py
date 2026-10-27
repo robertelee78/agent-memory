@@ -168,12 +168,12 @@ def start(repo, value):
     request = draft(repo, value['candidate'])['request']
     comparison_request = {'project_id': request['project_id'], 'candidate': request['candidate'],
                           'searches': value['searches'], 'read_paths': []}
-    comparison.request_value(comparison_request)
     captured = capture(repo, request)
     if captured['decision'] != 'eligible':
         return result('start', decision=captured['decision'], reasons=captured['reasons'],
                       capture=captured['capture'], discovery=None, comparison_request=None,
                       admission_verified=False, canonical_writes_performed=False)
+    comparison.request_value(comparison_request)
     observed = discovery.start(repo, value['task'], 'comparison')
     return result('start', decision='eligible', reasons=captured['reasons'],
                   capture=captured['capture'], discovery=observed,
