@@ -214,8 +214,9 @@ and the progressive-disclosure architecture used by
 
 The ADRs are **Accepted for v0.0.1**, with the operator's
 [design approval](docs/design/v0.0.1-approval.md) bound to the 52 first-release
-tasks. Later-release proposals remain under review. Design approval does not
-claim that the implementation already exists.
+tasks. The operator also approved v0.0.4 turn-boundary hook work; other later
+proposals remain under review. Design approval does not claim that the
+implementation already exists.
 
 Implementation planning is tracked in the repository's
 [GitHub Projects](https://github.com/robertelee78/agent-memory/projects) and
@@ -231,7 +232,7 @@ The refined `v0.0.1` scope includes automatic durable capture, deduplication,
 consolidation, relevant recall, and evidence-based pruning, plus
 [memory-only Git publication and turn-boundary refresh](docs/adr/0012-git-shared-memory.md)
 across worktrees, computers, and developers. Code integration keeps its normal
-workflow. Later release milestones remain planning proposals for refinement.
+workflow. Release milestones show the current approved and planned work.
 
 ## Development checks
 
@@ -243,11 +244,17 @@ natural turn boundaries; `am boundary` invokes the existing refresh
 protocol. The [file-only workflow](skills/agent-memory/offline/GUIDE.md) remains
 available when the command and helpers are absent.
 
-Run `scripts/test.sh` from a checkout with Python 3.11+ and Git. It runs the
-offline public-interface suites in disposable test worlds. The registry declares
-mandatory suites and explicitly excludes optional future stores.
-`scripts/test.sh --release` rejects incomplete release coverage. See the [test gate guide](docs/testing/README.md)
-for isolation rules, suite registration and receipt fields.
+Run focused public-interface checks from a checkout with Python 3.11+ and Git.
+Use disposable test worlds and retain the source revision and results. Routine
+qualification runs locally on the available macOS and Linux machines; each test
+invocation should reasonably finish within 10–15 minutes. Run a broader or
+hosted matrix only when its coverage is needed.
+
+`scripts/test.sh` runs the registered offline suites; `scripts/test.sh --release`
+applies the historical complete gate. These full commands can take
+longer than the routine time limit and are not required for every release. See
+the [test gate guide](docs/testing/README.md) for their isolation and receipt
+format. Release evidence must identify the checks actually run and any limits.
 The [portable lifecycle matrix](docs/contracts/portable-lifecycle.md) connects
 the complete lifecycle requirements to real installed-command and fault cases.
 
@@ -259,8 +266,8 @@ channel checks, staged fast-forward activation and recoverable retries. The
 [runtime uninstaller](docs/contracts/runtime-uninstall.md) preserves project
 memory and user edits; a separate inventory-bound, explicitly confirmed purge
 deletes only one selected local bank. Read-only `version`, `status` and `doctor`
-commands expose runtime identity and bank health. The complete portable lifecycle
-matrix is included in the mandatory release gate.
+commands expose runtime identity and bank health. The portable lifecycle matrix
+provides broader coverage when that qualification is needed.
 
 The [shared lifecycle model](docs/contracts/lifecycle-model.md) supplies the
 read-only transition and current-selection decisions used by later operations.
@@ -349,8 +356,8 @@ updates, uninstall and preserved project data.
 The [lifecycle fault harness](docs/contracts/lifecycle-faults.md) enumerates real
 before/after write interruptions, verified commits with lost responses, and
 recovery/retry checks. Its isolated suite workers collect their process groups
-before cleanup; the complete release gate requires every registered mandatory
-suite and complete interruption/recovery/retry proofs.
+before cleanup. Its full gate requires every registered suite and complete
+interruption/recovery/retry proofs; focused runs report only the cases exercised.
 
 The [typed record contract](skills/agent-memory/records/GUIDE.md) preserves
 provenance, conditions, validity and explicit stale state in standalone Markdown.
