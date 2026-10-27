@@ -31,6 +31,13 @@ class MemoryRefreshContract(RefreshFixture):
             self.assertFalse(result['canonical_writes_performed'])
             self.assertFalse(result['git_metadata_writes_performed'])
             self.assertEqual(before, self.state(w, repo, bank))
+            inspection = w.run([sys.executable, '-I', self.pack/'scripts/installer.py',
+                                'refresh', 'inspect', '--v2', '--repo', repo,
+                                '--output', w.inside('private-inspection.json')], check=False)
+            inspected = json.loads(inspection.stdout)
+            self.assertEqual(inspection.returncode, 0, inspected)
+            self.assertTrue(inspected['remote_freshness_verified'])
+            self.assertEqual(before, self.state(w, repo, bank))
 
     def test_current_equal_bank_and_orphan_journal(self):
         with World() as w:
