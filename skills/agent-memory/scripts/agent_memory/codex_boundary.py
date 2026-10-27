@@ -134,8 +134,9 @@ def list_pending(repo):
     try:
         with os.scandir(dfd) as scan:
             for i,entry in enumerate(scan):
-                if i>=4096:raise ContractError('Pending inventory exceeds limit; preserve evidence')
+                if i>=65536:raise ContractError('Boundary inventory exceeds 65536 entries; preserve evidence for inspection')
                 if not entry.name.endswith('.pending'):continue
+                if len(entries)>=4096:raise ContractError('Pending inventory exceeds 4096 entries; preserve evidence for inspection')
                 fd=os.open(entry.name,os.O_RDONLY|os.O_NOFOLLOW,dir_fd=dfd)
                 try:
                     info=os.fstat(fd)
@@ -161,5 +162,6 @@ def main(argv=None):
             value=load(sharing_limits.read_bytes(args.input,sharing_limits.MAX_PRIVATE));result=complete(args.repo,value)
         print(json.dumps(result));return 0
     except (OSError,ValueError,TypeError,KeyError,UnicodeError) as exc:
+        reason=str(exc) if isinstance(exc,ContractError) and ('inventory exceeds' in str(exc)) else 'Boundary completion remains pending; preserve evidence and inspect the failure.'
         print(json.dumps({'verified':False,'publication_verified':False,'canonical_writes_performed':False,
-                          'reason':'Boundary completion remains pending; preserve evidence and inspect the failure.'}));return 1
+                          'reason':reason,'repair':'Preserve boundary records; inspect retained completed and pending evidence before retrying.'}));return 1
