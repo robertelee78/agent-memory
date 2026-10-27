@@ -96,7 +96,7 @@ The initial v0.0.2 workload envelope SHALL be:
 | Workload | Sessions in distinct worktrees/branches | Distinct durable lessons |
 | --- | ---: | ---: |
 | Representative use | 12 | 1,000 |
-| Stress gate | 24 | 10,000 |
+| Stress target | 24 | 10,000 |
 | Exploratory upper bound | 48 | 50,000 |
 
 Session count and bank size SHALL also vary independently so contention and
@@ -114,9 +114,17 @@ applicable records. Raw measurements and degradations SHALL be retained even
 when an exploratory test exceeds a target. A successful capacity or concurrent
 write test MUST NOT stand in for retrieval-quality evidence. The 48-session /
 50,000-lesson combined case is exploratory and does not by itself block release;
-baseline correctness and the 24-session / 10,000-lesson stress gate remain
-required. Additional scope and quantitative tolerances MAY be refined from
+baseline correctness remains required. The 24-session / 10,000-lesson workload
+is a stress target rather than a release gate until it can be exercised within
+the test duration budget below. Additional scope and quantitative tolerances MAY be refined from
 v0.0.1 usage and measured baselines.
+
+On 2026-10-27 the operator set a practical test duration budget: individual
+tests SHALL reasonably complete within 10–15 minutes. Release qualification SHALL
+use bounded, focused tests and existing evidence; it MUST NOT require a multi-hour
+end-to-end run. Preserve failed and interrupted stress-run evidence and track
+unverified scale and timeout behavior explicitly. A smaller passing test MUST NOT
+be represented as proof that the 24-session stress target passed.
 
 For optional stores and indexes, tests SHALL prove that:
 
