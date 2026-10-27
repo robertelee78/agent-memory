@@ -23,24 +23,34 @@ def private_mkdir(path):
     path = Path(path)
     if not path.is_absolute() or '..' in path.parts:
         raise ContractError('Private state directory must be an absolute canonical path')
-    missing = []
-    node = path
-    while True:
-        try:
-            info = node.lstat()
-        except FileNotFoundError:
-            missing.append(node)
-            node = node.parent
-            continue
-        if not stat.S_ISDIR(info.st_mode):
-            raise ContractError('Private state path must not follow links or non-directories')
-        break
-    for node in reversed(missing):
-        try:
-            node.mkdir(mode=0o700)
-        except FileExistsError:
-            if not stat.S_ISDIR(node.lstat().st_mode):
+    flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
+    descriptors = []
+    try:
+        descriptors.append(os.open(path.anchor, flags))
+        for part in path.parts[1:]:
+            parent = descriptors[-1]
+            try:
+                child = os.open(part, flags, dir_fd=parent)
+            except FileNotFoundError:
+                try:
+                    os.mkdir(part, 0o700, dir_fd=parent)
+                except FileExistsError:
+                    pass
+                child = os.open(part, flags, dir_fd=parent)
+            descriptors.append(child)
+        # Check every opened directory is still the entry reached from its
+        # pinned parent. Never chmod or replace an existing directory.
+        for i, part in enumerate(path.parts[1:]):
+            opened = os.fstat(descriptors[i + 1])
+            named = os.stat(part, dir_fd=descriptors[i], follow_symlinks=False)
+            if (not stat.S_ISDIR(named.st_mode)
+                    or (opened.st_dev, opened.st_ino) != (named.st_dev, named.st_ino)):
                 raise ContractError('Private state path changed while creating directories')
+    except OSError as exc:
+        raise ContractError('Cannot safely create private state directories; preserve existing paths') from exc
+    finally:
+        for fd in reversed(descriptors):
+            os.close(fd)
 
 
 def paths(name):

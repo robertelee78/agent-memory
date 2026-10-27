@@ -37,6 +37,36 @@ class MemoryRefreshContract(RefreshFixture):
             self.assertNotEqual(denied.returncode, 0)
             self.assertTrue(link.is_symlink())
             self.assertFalse((target/'child').exists())
+            (target/'nested').mkdir()
+            deeper = subprocess.run([sys.executable, '-B', '-c', helper,
+                                     str(self.pack/'scripts'), str(link/'nested'/'child')],
+                                    env=w.env, text=True, capture_output=True, timeout=20)
+            self.assertNotEqual(deeper.returncode, 0)
+            self.assertFalse((target/'nested'/'child').exists())
+
+    def test_private_state_directory_rejects_ancestor_rebinding_during_create(self):
+        with World() as w:
+            repo, bank, peer, base = self.fixture(w)
+            parent = w.inside('rebind-parent'); parent.mkdir(mode=0o700)
+            moved = w.inside('rebind-moved'); target = parent/'leaf'
+            script = '''import os,sys
+from unittest.mock import patch
+sys.path.insert(0,sys.argv[1])
+from agent_memory.local_registry import private_mkdir
+real=os.mkdir
+def swap(path,mode=0o777,*,dir_fd=None):
+    if path == 'leaf':
+        os.rename(sys.argv[2],sys.argv[3]); real(sys.argv[2],0o700)
+    return real(path,mode,dir_fd=dir_fd)
+with patch('os.mkdir',swap): private_mkdir(sys.argv[4])
+'''
+            result = subprocess.run([sys.executable, '-B', '-c', script,
+                                     str(self.pack/'scripts'), str(parent), str(moved), str(target)],
+                                    env=w.env, text=True, capture_output=True, timeout=20)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn('changed while creating directories', result.stderr)
+            self.assertFalse(target.exists())
+            self.assertTrue((moved/'leaf').is_dir())
 
     def test_current_succeeds_with_group_writable_umask_for_new_runtime_state(self):
         previous = os.umask(0o002)
