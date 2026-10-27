@@ -331,8 +331,12 @@ def read_input(path, maximum=65536):
     try:
         path = Path(os.path.abspath(path))
         trust_paths.inspect(path.parent, private_directory=True)
-        directory = os.open(path.parent, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+        flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
+        descriptors = [os.open(path.anchor, flags)]
         try:
+            for part in path.parent.parts[1:]:
+                descriptors.append(os.open(part, flags, dir_fd=descriptors[-1]))
+            directory = descriptors[-1]
             parent = os.fstat(directory)
             if parent.st_uid != os.geteuid() or stat.S_IMODE(parent.st_mode) != 0o700:
                 raise PrivateInputError('Admission input requires a private parent')
@@ -344,13 +348,22 @@ def read_input(path, maximum=65536):
                     raise PrivateInputError('Admission input must be a protected regular file')
                 with os.fdopen(fd, 'rb', closefd=False) as stream:
                     raw = stream.read(maximum + 1)
+                after = os.fstat(fd)
+                named = os.stat(path.name, dir_fd=directory, follow_symlinks=False)
+                identity = lambda v: (v.st_dev, v.st_ino, v.st_size, v.st_mtime_ns,
+                                      v.st_ctime_ns, v.st_mode, v.st_uid, v.st_nlink)
+                if identity(info) != identity(after) or identity(info) != identity(named):
+                    raise PrivateInputError('Admission input changed during read')
             finally:
                 os.close(fd)
-            now = path.parent.lstat()
-            if (now.st_dev, now.st_ino) != (parent.st_dev, parent.st_ino):
-                raise PrivateInputError('Admission input directory changed')
+            for i, part in enumerate(path.parent.parts[1:]):
+                named = os.stat(part, dir_fd=descriptors[i], follow_symlinks=False)
+                opened = os.fstat(descriptors[i + 1])
+                if not stat.S_ISDIR(named.st_mode) or (named.st_dev, named.st_ino) != (opened.st_dev, opened.st_ino):
+                    raise PrivateInputError('Admission input directory changed')
         finally:
-            os.close(directory)
+            for directory in reversed(descriptors):
+                os.close(directory)
     except (OSError, trust_paths.TrustPathError) as exc:
         raise PrivateInputError('Admission input is not in a trusted private workspace') from exc
     if len(raw) > maximum:
