@@ -11,7 +11,6 @@ from .frontmatter import ContractError
 
 MAX_FILES=65536
 MAX_BYTES=64*1024*1024
-CHUNK=65536
 
 
 def read_source(bank, relative, limit):
@@ -30,7 +29,8 @@ def read_source(bank, relative, limit):
                 raise ContractError('Canonical source is no longer ordinary')
             raw=stream.read(limit+1)
             after=os.fstat(stream.fileno())
-            if (before.st_dev,before.st_ino,before.st_size,before.st_mtime_ns,before.st_ctime_ns) != (
+            if (before.st_size <= limit and len(raw) != before.st_size) or (
+                    before.st_dev,before.st_ino,before.st_size,before.st_mtime_ns,before.st_ctime_ns) != (
                     after.st_dev,after.st_ino,after.st_size,after.st_mtime_ns,after.st_ctime_ns):
                 raise ContractError('Canonical source changed during bounded observation')
             return raw
