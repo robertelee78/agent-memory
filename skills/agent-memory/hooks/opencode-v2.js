@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url'
 let prompt
 try {
   const directory = dirname(realpathSync(fileURLToPath(import.meta.url)))
-  prompt = readFileSync(join(directory, 'boundary-prompt.txt'), 'utf8').trim().replaceAll('{{SKILL_DIR}}', dirname(directory))
+  prompt = readFileSync(join(directory, 'boundary-prompt.txt'), 'utf8').trim().replaceAll('{{SKILL_DIR}}', () => dirname(directory))
   if (!prompt || Buffer.byteLength(prompt, 'utf8') > 4096) throw new Error('invalid prompt')
 } catch {
   prompt = 'Agent Memory turn boundary: hook instruction unavailable; memory refresh and capture are pending.'
