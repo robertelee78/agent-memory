@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 import stat
 
-from . import bank_contract as contract, bank_writes as writes
+from . import bank_contract as contract, bank_writes as writes, sharing_limits
 from .developer_identity import digest, uuid_valid
 from .frontmatter import ContractError
 
@@ -32,7 +32,7 @@ def markers(bank,owner):
             raise ContractError('Bank ownership changed; preserve work and retry with actual ownership')
 
 
-def scan(bank,*,read_sources,metrics=None):
+def scan(bank,*,read_sources,metrics=None,require_router=True):
     """Complete physical topology plus streaming canonical hashes, bounded memory."""
     physical={};hashes={};sources={};total=0
     def failure(exc):raise ContractError('Bank physical inventory is incomplete') from exc
@@ -45,21 +45,26 @@ def scan(bank,*,read_sources,metrics=None):
             if stat.S_ISLNK(mode):raise ContractError('Bank paths must not be symlinks')
             physical[relative]='directory' if stat.S_ISDIR(mode) else 'file' if stat.S_ISREG(mode) else 'other'
             if len(physical)>MAX_FILES*2:raise ContractError('Complete physical bank inventory exceeds its finite budget')
-            if not stat.S_ISREG(mode) or path.suffix!='.md' or contract.runtime_path(relative):continue
+            if path.suffix!='.md' or contract.runtime_path(relative):continue
+            if not stat.S_ISREG(mode):
+                raise ContractError('Canonical Markdown source must be an ordinary file')
             if len(hashes)>=MAX_FILES:raise ContractError('Complete canonical bank exceeds its finite file budget')
-            hasher=hashlib.sha256();parts=[]
+            hasher=hashlib.sha256();parts=[];source_size=0
             # Refuse a replaced final symlink rather than follow it during read.
             fd=os.open(path,os.O_RDONLY|getattr(os,'O_NOFOLLOW',0)|getattr(os,'O_NONBLOCK',0))
             with os.fdopen(fd,'rb') as stream:
                 if not stat.S_ISREG(os.fstat(stream.fileno()).st_mode):raise ContractError('Canonical source is no longer ordinary')
-                while chunk:=stream.read(CHUNK):
+                while chunk:=stream.read(min(CHUNK, sharing_limits.MAX_FILE-source_size+1, MAX_BYTES-total+1)):
+                    source_size+=len(chunk)
                     total+=len(chunk)
+                    if source_size>sharing_limits.MAX_FILE:
+                        raise ContractError('Canonical source exceeds 16KiB; preserve it without truncation')
                     if total>MAX_BYTES:raise ContractError('Complete canonical bank exceeds 64MiB; preserve it without truncation')
                     hasher.update(chunk)
                     if read_sources:parts.append(chunk)
             hashes[relative]=hasher.hexdigest()
             if read_sources:sources[relative]=b''.join(parts)
-    if 'MEMORY.md' not in hashes:
+    if require_router and 'MEMORY.md' not in hashes:
         raise ContractError('A complete canonical router is required')
     if metrics is not None:metrics.update(payload_bytes=total,file_reads=len(hashes))
     return physical,hashes,sources
