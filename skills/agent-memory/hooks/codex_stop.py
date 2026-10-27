@@ -53,13 +53,18 @@ def main():
         sys.path.insert(0, str(directory.parent / 'scripts'))
         from agent_memory import bank_writes, repository_config, scope_binding, trust_paths
         if not os.path.lexists(repository_config.bank_path(repo)):
-            print('{}'); return 0
+            diagnostic(repo);print('{}'); return 0
         stage, reason = 'identity', 'identity.unresolved'
         context = scope_binding.require(repo)
         stage, reason = 'boundary', 'state.unavailable'
         _, bank = bank_writes.bank_path(repo)
         operations, _ = bank_writes.state_paths(repo, bank, str(uuid.uuid4()))
-        ledger = operations.parent / 'codex-boundaries'; trust_paths.state(ledger)
+        ledger = operations.parent / 'codex-boundaries'
+        if not os.path.lexists(ledger):
+            reason = 'boundary.missing'
+            raise FileNotFoundError()
+        reason = 'boundary.unsafe'
+        trust_paths.state(ledger)
         key = hashlib.sha256((session+':'+turn).encode()).hexdigest()
         reason = 'boundary.missing'
         dfd = os.open(ledger, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)

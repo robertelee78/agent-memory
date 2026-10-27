@@ -642,8 +642,14 @@ def run(operation, repo='.', projection=None):
     if operation == 'doctor':
         def hook_outcomes():
             from . import hook_failure
-            failures = hook_failure.read(root)
+            unreadable = []
+            failures = hook_failure.read(root, errors=unreadable)
             report.value['hook_failures'] = failures
+            report.value['hook_diagnostic_errors'] = unreadable
+            for item in unreadable:
+                report.add('hook.' + item['harness'] + '.' + item['adapter'], 'warning',
+                           'Private hook failure metadata could not be safely read: state.unavailable.',
+                           'Preserve redirected or foreign files. A safely owned malformed record heals on the next successful adapter invocation; inspect ownership before manual recovery.')
             for item in failures:
                 report.add('hook.' + item['harness'] + '.' + item['adapter'], 'warning',
                            'Hook failure observed at ' + item['timestamp'] + ': ' + item['stage'] + ' / ' + item['reason'],

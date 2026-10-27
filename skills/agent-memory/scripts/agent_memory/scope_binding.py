@@ -196,7 +196,7 @@ def binding_guard(p, owner=None, marker=None):
                       and proof.get('observed_checkout_key') == original.get('observed_checkout_key'))
     # Registration itself changes unregistered to exact; source is derived,
     # while the effective checkout key may change only for this repair.
-    derived = {'binding_source'} | ({'checkout_key'} if repaired_alias else set())
+    derived = {'binding_source', 'continuity_issues'} | ({'checkout_key'} if repaired_alias else set())
     if (not operation or operation['proposal_sha256'] != digest(encoded(p['project']))
             or any(proof[key] != value for key, value in original.items()
                    if key not in {'bank_project_id', 'bank_canonical_remote', 'router_sha256'} | derived)

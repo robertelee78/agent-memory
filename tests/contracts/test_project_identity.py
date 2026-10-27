@@ -167,7 +167,7 @@ class ProjectIdentityContract(unittest.TestCase):
             repo = world.repository()
             self.create(world, repo)
             proposal = self.preview(world, repo, 'link')
-            for key in ('binding_source', 'observed_checkout_key'):
+            for key in ('binding_source', 'observed_checkout_key', 'continuity_issues'):
                 del proposal['proposal']['evidence'][key]
             before = self.registry(world).read_bytes()
             result, receipt = self.apply(world, proposal)
@@ -194,6 +194,56 @@ class ProjectIdentityContract(unittest.TestCase):
             status = self.status(world, repo)
             self.assertFalse(status['resolved'])
             self.assertIn('Conflicting historical', ' '.join(status['issues']))
+
+    def test_conflicting_historical_aliases_allow_explicit_scope_link(self):
+        from contracts.test_scope_binding import ScopeBindingContract
+        with World() as world:
+            helper = ScopeBindingContract()
+            repo = world.repository()
+            world.git('remote', 'add', 'origin', 'https://github.com/example/project.git', cwd=repo)
+            helper.developer(world)
+            self.create(world, repo)
+            current, old = self.historical(world, repo)
+            data = json.loads(self.registry(world).read_text())
+            other = '999999999:' + old.split(':')[1]
+            data['checkouts'][other] = json.loads(json.dumps(data['checkouts'][old]))
+            data['checkouts'][other]['authority_name'] = 'other'
+            self.registry(world).write_text(json.dumps(data))
+            self.assertFalse(self.status(world, repo)['resolved'])
+            before_bank = helper.canonical(repo / 'memory-bank')
+            result, receipt = helper.apply(world, helper.preview(world, repo, 'link'))
+            self.assertEqual(result.returncode, 0, receipt)
+            self.assertTrue(receipt['verified'])
+            self.assertTrue(self.status(world, repo)['resolved'])
+            self.assertEqual(helper.canonical(repo / 'memory-bank'), before_bank)
+            final = json.loads(self.registry(world).read_text())
+            self.assertEqual(final['checkouts'][old], data['checkouts'][old])
+            self.assertEqual(final['checkouts'][other], data['checkouts'][other])
+
+    def test_rebound_aliases_after_later_device_change_require_explicit_selection(self):
+        with World() as world:
+            repo = world.repository()
+            world.git('remote', 'add', 'origin', 'https://github.com/example/project.git', cwd=repo)
+            world.git('remote', 'add', 'upstream', 'https://github.com/example/new.git', cwd=repo)
+            identity, _ = self.create(world, repo, authority='origin')
+            current, old = self.historical(world, repo)
+            result, receipt = self.apply(world, self.preview(world, repo, 'link', authority='origin'))
+            self.assertEqual(result.returncode, 0, receipt)
+            proposal = self.preview(world, repo, 'rebind', authority='upstream')
+            result, receipt = self.apply(world, proposal)
+            self.assertEqual(result.returncode, 0, receipt)
+            self.bank(world, repo, identity, 'repo://github.com/example/new')
+            data = json.loads(self.registry(world).read_text())
+            later = str(int(current.split(':')[0]) + 200) + ':' + current.split(':')[1]
+            data['checkouts'][later] = data['checkouts'].pop(current)
+            self.registry(world).write_text(json.dumps(data))
+            status = self.status(world, repo)
+            self.assertFalse(status['resolved'])
+            self.assertIn('Conflicting historical', ' '.join(status['issues']))
+            result, receipt = self.apply(world, self.preview(world, repo, 'link', authority='upstream'))
+            self.assertEqual(result.returncode, 0, receipt)
+            self.assertTrue(self.status(world, repo)['resolved'])
+            self.assertEqual(self.status(world, repo)['project_id'], identity)
 
     def test_historical_recovery_requires_bank_authority_location_and_inode(self):
         for change in ('remote', 'bank', 'inode', 'location', 'missing-remote'):

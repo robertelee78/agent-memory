@@ -145,3 +145,23 @@ class HookFailureContract(unittest.TestCase):
             with patch.dict(os.environ,{**w.env,'AGENT_MEMORY_STATE_HOME':str(forbidden)},clear=True):
                 with self.assertRaises(ValueError):hook_failure.record(worktree,'codex','prompt','identity','identity.unresolved')
                 self.assertFalse(forbidden.exists())
+
+    def test_one_corrupt_adapter_does_not_hide_other_failure(self):
+        with World() as w:
+            repo=w.repository()
+            with patch.dict(os.environ,w.env,clear=True):
+                for adapter in ['prompt','stop']:hook_failure.record(repo,'codex',adapter,'identity','identity.unresolved')
+                directory,name=hook_failure.paths(repo,'codex','prompt');(directory/name).write_text('{invalid')
+                errors=[];records=hook_failure.read(repo,errors=errors)
+                self.assertEqual([r['adapter'] for r in records],['stop'])
+                self.assertEqual(errors,[{'harness':'codex','adapter':'prompt','reason':'state.unavailable'}])
+
+    def test_bank_absence_clears_only_its_own_adapter(self):
+        with World() as w:
+            repo=w.repository();pack=Path(__file__).resolve().parents[2]/'skills/agent-memory'
+            with patch.dict(os.environ,w.env,clear=True):
+                for adapter in ['prompt','stop']:hook_failure.record(repo,'codex',adapter,'identity','identity.unresolved')
+            event={'hook_event_name':'UserPromptSubmit','session_id':str(uuid.uuid4()),'turn_id':str(uuid.uuid4()),'cwd':str(repo),'prompt':'no bank'}
+            result=subprocess.run([sys.executable,'-I',str(pack/'hooks/codex_prompt.py')],input=json.dumps(event),text=True,capture_output=True,env=w.env,timeout=10)
+            self.assertEqual(json.loads(result.stdout),{})
+            with patch.dict(os.environ,w.env,clear=True):self.assertEqual([r['adapter'] for r in hook_failure.read(repo)],['stop'])

@@ -167,13 +167,14 @@ def evidence(repo, data, authority=None, **owned):
     key = initial["checkout_key"]
     known = data["checkouts"].get(key)
     historical = False
+    continuity_issues = []
     if known is None:
         inode = key.split(":", 1)[1]
         candidates = [(k, v) for k, v in data["checkouts"].items()
                       if k.split(":", 1)[1] == inode and initial["location"] in v["locations"]]
         decisions = {(v["project_id"], v["authority_name"]) for _, v in candidates}
         if len(decisions) > 1:
-            initial["issues"].append("Conflicting historical checkout bindings; inspect registry history and explicitly link or fork")
+            continuity_issues.append("Conflicting historical checkout bindings; inspect registry history and explicitly link or fork")
         elif candidates:
             key, known = min(candidates, key=lambda item: tuple(map(int, item[0].split(":"))))
             historical = True
@@ -190,9 +191,11 @@ def evidence(repo, data, authority=None, **owned):
                 and project["canonical_remote"] == remote == initial["bank_canonical_remote"]):
             initial["checkout_key"] = key
             initial["binding_source"] = "historical-device-change"
+            initial["continuity_issues"] = continuity_issues
             return initial
-        initial["issues"].append("Historical checkout evidence does not establish matching bank and authority; restore the registered authority then explicitly link, or explicitly fork after reviewing identity evidence")
+        continuity_issues.append("Historical checkout evidence does not establish matching bank and authority; restore the registered authority then explicitly link, or explicitly fork after reviewing identity evidence")
     initial["binding_source"] = "exact" if data["checkouts"].get(initial["checkout_key"]) else "unregistered"
+    initial["continuity_issues"] = continuity_issues
     return initial
 
 
@@ -206,7 +209,7 @@ def status(repo, authority=None, **owned):
     proof = evidence(repo, data, authority, **owned)
     checkout = data["checkouts"].get(proof["checkout_key"])
     project_id = proof["bank_project_id"] or (checkout["project_id"] if checkout else None)
-    issues = list(proof["issues"])
+    issues = list(proof["issues"]) + list(proof.get("continuity_issues", []))
     if project_id is None:
         issues.append("No project identity; preview create, then initialize the bank")
     if checkout is None:

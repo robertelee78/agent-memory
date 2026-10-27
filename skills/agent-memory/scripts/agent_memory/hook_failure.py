@@ -82,14 +82,19 @@ def read_one(directory, name, harness, adapter, *, content=True):
     return validate(json.loads(raw), harness, adapter) if content else raw
 
 
-def read(repo):
+def read(repo, *, errors=None):
     values = []
     for harness, adapter in ADAPTERS:
         try:
             directory, name = paths(repo, harness, adapter)
         except NoRepository:
             return []
-        value = read_one(directory, name, harness, adapter)
+        try:
+            value = read_one(directory, name, harness, adapter)
+        except (OSError, ValueError, TypeError, KeyError, UnicodeError):
+            if errors is None: raise
+            errors.append({'harness':harness,'adapter':adapter,'reason':'state.unavailable'})
+            continue
         if value is not None: values.append(value)
     return values
 

@@ -34,7 +34,7 @@ def main():
         sys.path.insert(0,str(pack/'scripts'))
         from agent_memory import bank_writes,repository_config,scope_binding,trust_paths
         if not os.path.lexists(repository_config.bank_path(root)):
-            print('{}');return 0
+            diagnostic(root);print('{}');return 0
         stage,reason='identity','identity.unresolved'
         context=scope_binding.require(root);
         stage,reason='boundary','state.unavailable'
