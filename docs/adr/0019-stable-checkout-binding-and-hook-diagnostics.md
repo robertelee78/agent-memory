@@ -36,14 +36,20 @@ origin/main; this does not explain the installed runtime's identity failure.
 ### T1: Recover a previously established checkout binding
 
 The implementation MUST preserve project and developer UUIDs and bank bytes.
-An exact current binding remains authoritative. When it is absent, resolution
+An exact current binding remains usable only with the existing project/bank and
+authority checks; inode identity is provenance, not authentication. A same-device
+move remains supported under ADR-0011. Device-number churn recovery additionally
+requires the previously registered location; moved-and-remounted checkouts require
+explicit relinking. Inode reuse with identical path, project and authority is
+indistinguishable in legacy metadata and counts as project continuity, not proof
+of physical checkout continuity. When it is absent, resolution
 MUST recognize a semantically unique historical binding with the same canonical common-Git
 location and inode despite a different device number, only when the registered
 project UUID, bank UUID, bank canonical remote and current authority agree.
 Equivalent historical keys for the same project and authority count as one
 decision; conflicting project or authority decisions MUST be refused. Hooks and
 all supported harnesses MUST continue through the shared read-only resolver when
-these conditions hold. The effective registry key MUST be deterministic and
+these conditions hold. The effective registry key MUST be lexicographically smallest among equivalent candidates and deterministic and
 retained in operation guards; the observed filesystem key remains separately
 visible. Explicit saved authority selections MUST be preserved.
 Conflicting candidates, changed inode, changed authority, copied banks, missing
@@ -80,6 +86,16 @@ semantic assessment, local admission, published memory and fresh recall.
 Claude, Codex and OpenCode use the same identity rules. Local focused tests
 SHOULD complete within 10–15 minutes; broad unrelated gates are excluded.
 
+## Relationship to previous decisions
+
+ADR-0011 retains its stable project UUID, common Git directory, same-filesystem
+move and explicit independent-clone adoption rules; this ADR amends the exact
+device/inode lookup used to recognize prior adoption. ADR-0004 retains shared
+harness semantics and pending failure handling; T3 adds actionable failure
+provenance. ADR-0018 retains safe owned repair and refusal of ambiguity; T2 adds
+verified repair of this specifically recognized historical binding. No existing
+ADR is superseded and no prior release delivery claim is changed.
+
 ## Alternatives considered
 
 Dropping the device component permits inode collisions across volumes. Path-only
@@ -92,18 +108,27 @@ a claim that device numbers are stable or identity is authentication. Repeated
 ordinary resolution writes nothing and does not grow the registry.
 
 Failure metadata SHALL use one replaceable owner-only bounded JSON record per
-canonical common-Git location, keyed by its SHA-256 under the private runtime
+canonical common-Git location, keyed by SHA-256 of the location plus fixed harness and adapter names under the private runtime
 state root, outside repository memory. Records SHALL contain only schema, fixed
 harness/stage/reason, and timestamp; at most 4096 bytes. No transcript, prompt,
 final answer, arbitrary exception string or credentials are retained. A subsequent
-successful hook clears its own failure state; absence never proves publication.
+successful adapter clears only its own failure state; absence never proves publication.
 Early failures before safe repository discovery report the fixed code without
 writing. Codes include event.invalid, repository.unavailable, identity.unresolved,
 boundary.missing, boundary.unsafe, boundary.source_mismatch, and state.unavailable.
-Stages are event, repository, identity, boundary and guidance.
+Stages are event, repository, identity, boundary and guidance. This release adds
+failure metadata for Codex prompt and stop only; Claude/OpenCode share identity
+resolution but retain their current adapter reporting. Diagnostics MUST enumerate
+both Codex adapter records independently. Recovered routine turns remain quiet.
 
 Repair MUST use existing registry locks and optimistic read-set revalidation.
 It MUST NOT rewrite previously prepared proposals to bypass changed evidence.
+Persisting a current alias changes the exact pinned registry/key read set:
+pending proposals MUST be prepared again, never rewritten. Doctor MUST explain
+this consequence. Ordinary recognition performs no write and requires no repair.
+T4 MUST prove that the recovered prompt creates its pending ledger before Stop
+and acknowledgment, so missing-ledger behavior is checked independently.
+
 A prompt that failed before retaining its source MUST be retried as a real prompt
 after repair; no source identity or completion receipt may be fabricated.
 
