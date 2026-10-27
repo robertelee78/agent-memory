@@ -235,6 +235,14 @@ def settings(repo, *, router_reader=None, immutable_cache=None):
         raise ContractError('Existing Git metadata/configuration cannot be inspected; do not guess the bank root')
     if top is not None and Path(top).resolve() != root:
         raise ContractError('Select the actual repository root for its one memory bank')
+    if immutable_cache is not None:
+        # A listed worktree can be redirected after inventory. Never reuse an
+        # object observation from a different Git object store, even when the
+        # replacement store reports the same HEAD string.
+        common = git(root, 'rev-parse', '--git-common-dir', optional=True)
+        actual_common = (root / common).resolve() if common else None
+        if actual_common != immutable_cache.get('common_dir'):
+            immutable_cache = None
     configured = local_settings(root)
     explicit = configured.get('agent-memory.bankroot')
     if explicit is not None:

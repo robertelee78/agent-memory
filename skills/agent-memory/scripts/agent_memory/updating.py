@@ -91,7 +91,8 @@ def banks(extra, compatibility, *, require_readable=False):
             # A single worktree-list invocation observes one shared object store.
             # Cache only immutable tree/blob identities within this pass. Never
             # share these caches across later compatibility observations.
-            group = str(path.resolve())
+            common = install.git(path, 'rev-parse', '--git-common-dir', check=False)
+            group = str((path / common.stdout.strip()).resolve()) if common.returncode == 0 and common.stdout.strip() else None
             for line in listed.stdout.splitlines():
                 if line.startswith('worktree '):
                     worktree = Path(line[9:]).resolve()
@@ -105,7 +106,7 @@ def banks(extra, compatibility, *, require_readable=False):
         if not hasattr(worker, 'groups'):
             worker.groups = {}
         group = root_caches.get(root)
-        immutable_cache = worker.groups.setdefault(group, {'trees': {}, 'blobs': {}}) if group else None
+        immutable_cache = worker.groups.setdefault(group, {'trees': {}, 'blobs': {}, 'common_dir': Path(group)}) if group else None
         settings = repository_config.settings(root, router_reader=migration.router_metadata,
                                               immutable_cache=immutable_cache)
         bank = root / settings['bank_root']

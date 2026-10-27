@@ -49,6 +49,30 @@ class ImmutableUpdateInventory(unittest.TestCase):
                 self.assertEqual(repository_config.git_roots(root, immutable_cache=cache), set())
                 self.assertEqual(sum(args[0] == 'ls-tree' for args in calls), 2)
 
+    def test_redirected_worktree_cannot_reuse_another_object_store(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = pathlib.Path(tmp) / 'first'
+            second = pathlib.Path(tmp) / 'second'
+            foreign = pathlib.Path(tmp) / 'foreign'
+            subprocess.run(['git', 'init', '-q', str(root)], check=True)
+            def git(path, *args):
+                return subprocess.run(['git', '-C', str(path), *args], check=True,
+                                      capture_output=True, text=True).stdout.strip()
+            git(root, 'config', 'user.name', 'Fixture')
+            git(root, 'config', 'user.email', 'fixture@example.invalid')
+            (root / 'README.md').write_text('fixture\n')
+            git(root, 'add', 'README.md')
+            git(root, 'commit', '-qm', 'fixture')
+            oid = git(root, 'rev-parse', 'HEAD')
+            git(root, 'worktree', 'add', '-q', '--detach', str(second))
+            cache = {'common_dir': (root / '.git').resolve()}
+            repository_config.settings(root, immutable_cache=cache)
+            subprocess.run(['git', 'init', '-q', str(foreign)], check=True)
+            (foreign / '.git' / 'HEAD').write_text(oid + '\n')
+            (second / '.git').write_text('gitdir: ' + str(foreign / '.git') + '\n')
+            with self.assertRaises(ContractError):
+                repository_config.settings(second, immutable_cache=cache)
+
 
 if __name__ == '__main__':
     unittest.main()
