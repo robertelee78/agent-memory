@@ -445,9 +445,23 @@ def hook_paths(name):
 
 
 def wrapper(pack):
-    # Python repr handles spaces, quotes and shell punctuation without shell evaluation.
-    return ('#!/usr/bin/env python3\nimport runpy\nimport sys\nsys.dont_write_bytecode = True\n'
-            + 'runpy.run_path(' + repr(str(pack/'scripts/installer.py')) + ", run_name='__main__')\n").encode()
+    # Search every PATH component: macOS login shells can put an older system
+    # Python before an otherwise available supported interpreter. Quote the
+    # selected package path as shell data, never as an evaluated command.
+    target = shlex.quote(str(pack / 'scripts/installer.py'))
+    return ("#!/bin/sh\n"
+            "old_ifs=$IFS\nIFS=:\nset -f\n"
+            "for dir in $PATH; do\n"
+            "  [ -n \"$dir\" ] || dir=.\n"
+            "  candidate=$dir/python3\n"
+            "  if [ -x \"$candidate\" ] && \"$candidate\" -I -c 'import sys; sys.exit(sys.version_info < (3, 11))' >/dev/null 2>&1; then\n"
+            "    IFS=$old_ifs\n"
+            "    exec \"$candidate\" -I -c 'import runpy,sys; sys.orig_argv=[sys.executable,sys.argv[1]]; sys.argv=sys.argv[1:]; runpy.run_path(sys.argv.pop(1),run_name=\"__main__\")' \"$0\" " + target + " \"$@\"\n"
+            "  fi\n"
+            "done\n"
+            "IFS=$old_ifs\n"
+            "printf '%s\\n' 'am: Python 3.11+ must be available as python3 on PATH.' >&2\n"
+            "exit 1\n").encode()
 
 
 def preflight_path(path):
@@ -728,8 +742,16 @@ def prepare(args, state, code, old, *, candidate_root=None, candidate_kind=None)
             add(absolute(target)/'agent-memory', mode, source_path=pack_source)
             adapter = 'custom:' + str(absolute(target))
             adapters.append(adapter); groups[adapter] = [str(absolute(target)/'agent-memory')]
-        for name in artifact.command_names(source['compatibility']):
-            add(bin_dir/name, 'wrapper', raw=wrapper(active_pack), mode_bits=0o755)
+        names = artifact.command_names(source['compatibility'])
+        for name in names:
+            # Do not rewrite a legacy runtime's launcher until its own updater
+            # has installed a runtime that understands the current commands.
+            if 'am' not in names:
+                raw = ('#!/usr/bin/env python3\nimport runpy\nimport sys\nsys.dont_write_bytecode = True\n'
+                       + 'runpy.run_path(' + repr(str(active_pack/'scripts/installer.py')) + ", run_name='__main__')\n").encode()
+            else:
+                raw = wrapper(active_pack)
+            add(bin_dir/name, 'wrapper', raw=raw, mode_bits=0o755)
         paths = [Path(a['path']) for a in actions]
         for index, path in enumerate(paths):
             require(not path.is_relative_to(state) and not state.is_relative_to(path),
