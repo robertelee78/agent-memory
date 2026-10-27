@@ -52,11 +52,45 @@ class BoundaryLedgerTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as root:
             root = os.path.realpath(root)
             self.assertEqual(supported.reserve(root, 's', 'turn')['status'], 'reserved')
+            self.assertEqual(supported.reserve(root, 's', 'turn', 'inspect')['status'], 'pending-turn')
             self.assertEqual(supported.reserve(root, 's', 'turn', 'assessed-no-learning')['status'], 'assessed-no-learning')
             self.assertEqual(supported.reserve(root, 's', 'turn')['status'], 'assessed-no-learning')
+            self.assertEqual(supported.reserve(root, 's', 'turn', 'inspect')['status'], 'completed-source')
             self.assertEqual(len(list((Path(root) / 'experimental-boundary' / hashlib.sha256(b's').hexdigest()).iterdir())), 1)
             with self.assertRaises(FileNotFoundError):
                 supported.reserve(root, 's', 'missing', 'assessed-no-learning')
+
+    def test_supported_intent_only_is_explicitly_recoverable(self):
+        path = Path(__file__).resolve().parents[2] / 'skills/agent-memory/hooks/boundary_ledger.py'
+        spec = importlib.util.spec_from_file_location('supported_intent_only', path)
+        supported = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(supported)
+        with tempfile.TemporaryDirectory() as root:
+            root = os.path.realpath(root)
+            supported.reserve(root, 's', 'turn')
+            directory = Path(root) / 'experimental-boundary' / hashlib.sha256(b's').hexdigest()
+            next(directory.glob('*.attempt')).unlink()
+            self.assertEqual(supported.reserve(root, 's', 'turn', 'inspect')['status'], 'pending-turn')
+            self.assertEqual(supported.reserve(root, 's', 'turn', 'assessed-no-learning')['status'], 'assessed-no-learning')
+            self.assertEqual(supported.reserve(root, 's', 'turn', 'inspect')['status'], 'completed-source')
+
+    def test_supported_tampered_intent_stays_pending(self):
+        path = Path(__file__).resolve().parents[2] / 'skills/agent-memory/hooks/boundary_ledger.py'
+        spec = importlib.util.spec_from_file_location('supported_tamper', path)
+        supported = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(supported)
+        for field in ('schema', 'turn_key'):
+            with tempfile.TemporaryDirectory() as root:
+                root = os.path.realpath(root)
+                supported.reserve(root, 's', 'turn')
+                directory = Path(root) / 'experimental-boundary' / hashlib.sha256(b's').hexdigest()
+                intent = next(directory.glob('*.intent'))
+                value = json.loads(intent.read_text()); value[field] = 'tampered'
+                intent.write_text(json.dumps(value))
+                with self.assertRaises(ValueError): supported.reserve(root, 's', 'turn', 'inspect')
+                with self.assertRaises(ValueError): supported.reserve(root, 's', 'turn', 'assessed-no-learning')
+                self.assertTrue(intent.exists())
+                self.assertFalse(list(directory.glob('*.assessed')))
 
     def test_supported_capacity_has_non_destructive_recovery(self):
         from unittest.mock import patch
@@ -132,6 +166,8 @@ class PublishedAcknowledgmentContract(unittest.TestCase):
             self.assertTrue(proof['publication_verified'])
             self.assertFalse(proof['source_publication_link_verified'])
             self.assertEqual(proof['witnessed_commit'], landed['witnessed_commit'])
+            completed = invoke('inspect')
+            self.assertEqual(json.loads(completed.stdout)['status'], 'completed-source')
             retry = invoke('published')
             self.assertEqual(retry.returncode, 0, retry.stdout + retry.stderr)
             self.assertTrue(json.loads(retry.stdout)['already_completed'])

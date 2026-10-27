@@ -49,7 +49,9 @@ checks.mismatch=JSON.parse((await tool.execute({source_id:'u2'},{sessionID:'s',m
 checks.firstTool=JSON.parse((await tool.execute({source_id:'u1'},{sessionID:'s',messageID:'t1'})).content);
 rows.push({id:q2.id,type:'synthetic',metadata:q2.metadata},{id:'t2',type:'assistant'});
 checks.secondTool=JSON.parse((await tool.execute({source_id:'u2'},{sessionID:'s',messageID:'t2'})).content);
-if(registered.source_ack){checks.ack=JSON.parse((await registered.source_ack.execute({source_id:'u2',outcome:'no-learning'},{sessionID:'s',messageID:'t2'})).content);checks.badAck=JSON.parse((await registered.source_ack.execute({source_id:'u1',outcome:'no-learning'},{sessionID:'s',messageID:'t2'})).content);checks.pubAck=JSON.parse((await registered.source_ack.execute({source_id:'u2',outcome:'published'},{sessionID:'s',messageID:'t2'})).content);}
+const q1pos=rows.findIndex(row=>row.id===q1.id);const removed=rows.splice(q1pos,1);
+checks.recovered=JSON.parse((await tool.execute({source_id:'u1',recover:true},{sessionID:'s',messageID:'t2'})).content);rows.splice(q1pos,0,...removed);
+if(registered.source_ack){checks.recoveryAck=JSON.parse((await registered.source_ack.execute({source_id:'u1',outcome:'no-learning',recover:true},{sessionID:'s',messageID:'t2'})).content);checks.ack=JSON.parse((await registered.source_ack.execute({source_id:'u2',outcome:'no-learning'},{sessionID:'s',messageID:'t2'})).content);checks.badAck=JSON.parse((await registered.source_ack.execute({source_id:'u1',outcome:'no-learning'},{sessionID:'s',messageID:'t2'})).content);checks.pubAck=JSON.parse((await registered.source_ack.execute({source_id:'u2',outcome:'published'},{sessionID:'s',messageID:'t2'})).content);}
 checks.queued=queued.size;
 process.stdout.write(JSON.stringify(checks));
 '''
@@ -61,13 +63,15 @@ process.stdout.write(JSON.stringify(checks));
             env['AGENT_MEMORY_STATE_HOME']=str((Path(tmp)/'second').resolve())
             shutil.copyfile(ROOT/'skills/agent-memory/hooks/opencode-v2-queue.js',target)
             env['TEST_REPO']=str(Path(tmp).resolve())
-            (Path(tmp)/'boundary_ledger.py').write_text('import json,sys,os\nr=json.load(sys.stdin)\nassert r.get("repo")==os.environ["TEST_REPO"]\nprint(json.dumps({"status":"assessed-no-learning" if r.get("action")=="assessed-no-learning" else "reserved"}))\n')
+            (Path(tmp)/'boundary_ledger.py').write_text('import json,sys,os\nr=json.load(sys.stdin)\nassert r.get("repo")==os.environ["TEST_REPO"]\nprint(json.dumps({"status":"assessed-no-learning" if r.get("action")=="assessed-no-learning" else ("pending-turn" if r.get("action")=="inspect" else "reserved")}))\n')
             supported=subprocess.run([shutil.which('node'),'--input-type=module','-e',source,str(target)],
                                      capture_output=True,text=True,timeout=5,env=env)
             proc = supported
             self.assertEqual(supported.returncode,0,supported.stderr)
             self.assertEqual(json.loads(supported.stdout)['queued'],2)
             self.assertEqual(json.loads(supported.stdout)['ack']['status'],'assessed-no-learning')
+            self.assertEqual(json.loads(supported.stdout)['recovered']['source_id'],'u1')
+            self.assertEqual(json.loads(supported.stdout)['recoveryAck']['source_id'],'u1')
             self.assertEqual(json.loads(supported.stdout)['badAck']['status'],'pending')
             self.assertEqual(json.loads(supported.stdout)['pubAck']['reason'],'session-repository-unavailable')
             probe = r"import {pathToFileURL} from 'node:url'; const m=await import(pathToFileURL(process.argv[1])); const r=[{id:'u',type:'user',text:'x'},{id:'a',type:'assistant',finish:'stop',time:{completed:1},content:[{type:'tool',output:{truncated:true}}]}]; process.stdout.write(m.sourceWindow(r,'u','s').content)"

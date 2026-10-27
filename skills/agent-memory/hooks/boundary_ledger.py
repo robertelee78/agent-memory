@@ -102,22 +102,48 @@ def reserve(root, session, source, action="reserve", repo=None, publication_requ
                     raise ValueError('invalid or different completion marker')
                 if action == 'reserve':
                     return {'status': 'already-published' if record['status'] == 'published' else 'assessed-no-learning'}
+                if action == 'inspect':
+                    return {'status': 'completed-source'}
                 if action != record['status'] or (action == 'published' and request_hash != record['request_hash']):
                     raise ValueError('completion differs from original assessment')
                 return {'status': action, 'already_completed': True, 'publication_verified': action == 'published',
                         'witnessed_commit': witnessed, 'source_publication_link_verified': False}
             finally:
                 os.close(completed)
-        if action in ('assessed-no-learning', 'published'):
+        if action == 'inspect':
             for suffix in ('.intent', '.attempt'):
-                existing = os.open(key + suffix, os.O_RDONLY | os.O_NOFOLLOW, dir_fd=fd)
+                try:
+                    existing = os.open(key + suffix, os.O_RDONLY | os.O_NOFOLLOW, dir_fd=fd)
+                except FileNotFoundError:
+                    if suffix == '.attempt':
+                        continue
+                    raise
                 try:
                     info = os.fstat(existing)
-                    if not stat.S_ISREG(info.st_mode) or info.st_uid != os.getuid() or info.st_nlink != 1 or info.st_mode & 0o077:
+                    if not stat.S_ISREG(info.st_mode) or info.st_uid != os.getuid() or info.st_nlink != 1 or info.st_mode & 0o077 or info.st_size > 4096:
+                        raise ValueError('invalid pending turn marker')
+                    if suffix == '.intent':
+                        intent = json.loads(os.read(existing, 4097))
+                        if (not isinstance(intent, dict) or set(intent) != {'schema', 'turn_key', 'repository'} or intent['schema'] != 'agent-memory/experimental-boundary-intent-v1' or intent['turn_key'] != key or intent['repository'] != repository_context):
+                            raise ValueError('pending turn binding changed')
+                finally:
+                    os.close(existing)
+            return {'status': 'pending-turn'}
+        if action in ('assessed-no-learning', 'published'):
+            for suffix in ('.intent', '.attempt'):
+                try:
+                    existing = os.open(key + suffix, os.O_RDONLY | os.O_NOFOLLOW, dir_fd=fd)
+                except FileNotFoundError:
+                    if suffix == '.attempt':
+                        continue
+                    raise
+                try:
+                    info = os.fstat(existing)
+                    if not stat.S_ISREG(info.st_mode) or info.st_uid != os.getuid() or info.st_nlink != 1 or info.st_mode & 0o077 or info.st_size > 4096:
                         raise ValueError('invalid turn marker')
                     if suffix == '.intent':
                         pending_data = json.loads(os.read(existing, 4097))
-                        if pending_data.get('repository') != repository_context:
+                        if (not isinstance(pending_data, dict) or set(pending_data) != {'schema', 'turn_key', 'repository'} or pending_data['schema'] != 'agent-memory/experimental-boundary-intent-v1' or pending_data['turn_key'] != key or pending_data['repository'] != repository_context):
                             raise ValueError('session repository or project changed')
                 finally:
                     os.close(existing)
@@ -131,7 +157,11 @@ def reserve(root, session, source, action="reserve", repo=None, publication_requ
                 os.close(complete)
             os.fsync(fd)
             for suffix in ('.intent', '.attempt'):
-                os.unlink(key + suffix, dir_fd=fd)
+                try:
+                    os.unlink(key + suffix, dir_fd=fd)
+                except FileNotFoundError:
+                    if suffix != '.attempt':
+                        raise
             os.fsync(fd)
             return {'status': action, 'publication_verified': action == 'published', 'witnessed_commit': witnessed, 'source_publication_link_verified': False}
         if action != 'reserve':
