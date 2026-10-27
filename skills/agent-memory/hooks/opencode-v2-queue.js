@@ -48,14 +48,17 @@ export function sourceWindow(rows, sourceId, sessionId, recordId = null, expecte
     window.push(row)
   }
   const explicitlyTruncated = value => value && typeof value === 'object' && (value.truncated === true || Object.values(value).some(explicitlyTruncated))
-  if (window.some(row => typeof row.id !== 'string' || !row.id || row.error || explicitlyTruncated(row))
+  if (window.some(row => typeof row.id !== 'string' || !row.id || row.error)
       || new Set(window.map(row => row.id)).size !== window.length) return pending('source-incomplete')
   const finals = window.filter(row => row.type === 'assistant' && row.finish === 'stop' && row.time?.completed && !row.error)
-  if (finals.length !== 1 || window.at(-1) !== finals[0]) return pending('source-incomplete')
+  if (finals.length !== 1 || window.at(-1) !== finals[0] || explicitlyTruncated(window[0]) || explicitlyTruncated(finals[0])) return pending('source-incomplete')
   const hash = row => createHash('sha256').update(JSON.stringify(row)).digest('hex')
+  const truncated = window.slice(1, -1).filter(explicitlyTruncated).map(row => ({ id: row.id, type: row.type, sha256: hash(row), truncated: true }))
   const common = { status: 'observed', session_id: sessionId, source_id: sourceId, final_id: finals[0].id,
     untrusted_data: true, source_completeness_verified: false,
-    semantic_truth_verified: false, admission_verified: false, publication_verified: false }
+    semantic_truth_verified: false, admission_verified: false, publication_verified: false,
+    truncated_records: truncated,
+    evidence_instruction: 'Intermediate records marked truncated are incomplete. Retrieve the original evidence independently when material; if unavailable retain pending. A projected record or its hash does not restore missing content.' }
   if (recordId !== null) {
     const record = window.find(row => row.id === recordId)
     if (!record || typeof expectedHash !== 'string' || hash(record) !== expectedHash) return pending('record-unavailable-or-changed')
@@ -70,7 +73,7 @@ export function sourceWindow(rows, sourceId, sessionId, recordId = null, expecte
   }
   const full = JSON.stringify({ ...common, records: window, omitted_records: [] })
   if (Buffer.byteLength(full, 'utf8') <= MAX_WINDOW_BYTES) return { content: full }
-  const omitted = window.slice(1, -1).map(row => ({ id: row.id, type: row.type, sha256: hash(row), omitted: true,
+  const omitted = window.slice(1, -1).map(row => ({ id: row.id, type: row.type, sha256: hash(row), omitted: true, truncated: explicitlyTruncated(row) === true,
     tools: Array.isArray(row.content) ? row.content.filter(part => part?.type === 'tool').map(part => ({ name: part.name ?? part.tool ?? null, id: part.id ?? null })) : [] }))
   const selected = JSON.stringify({ ...common, records: [window[0], finals[0]], omitted_records: omitted,
     instruction: 'Intermediate evidence is omitted. Retrieve relevant omitted records by ID and hash; if material evidence cannot be verified, retain pending.' })

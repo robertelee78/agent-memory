@@ -25,6 +25,10 @@ const checks={first:JSON.parse(mod.sourceWindow(rows,'u1','s').content),
  incomplete:JSON.parse(mod.sourceWindow([user('u1','yellow')],'u1','s').content),
  compacted:JSON.parse(mod.sourceWindow([user('u1','yellow'),{type:'compaction'}],'u1','s').content),
  oversized:JSON.parse(mod.sourceWindow([user('u1','x'.repeat(20000)),final('a1','done')],'u1','s').content)};
+const truncatedMiddle={id:'mid',type:'assistant',content:[{type:'tool',state:{metadata:{truncated:true},output:'partial'}}]};
+checks.truncatedMiddle=JSON.parse(mod.sourceWindow([user('u','decision'),truncatedMiddle,final('a','done')],'u','s').content);
+checks.truncatedUser=JSON.parse(mod.sourceWindow([{...user('u','decision'),truncated:true},final('a','done')],'u','s').content);
+checks.truncatedFinal=JSON.parse(mod.sourceWindow([user('u','decision'),{...final('a','done'),truncated:true}],'u','s').content);
 const large=[user('u1','yellow'),{id:'i1',type:'assistant',content:'a'.repeat(9000)},{id:'i2',type:'assistant',content:'b'.repeat(9000)},final('a1','done')];
 checks.manifest=JSON.parse(mod.sourceWindow(large,'u1','s').content);
 checks.retrieved=JSON.parse(mod.sourceWindow(large,'u1','s','i1',checks.manifest.omitted_records[0].sha256).content);
@@ -87,6 +91,12 @@ process.stdout.write(JSON.stringify(checks));
             self.assertEqual(json.loads(trunc.stdout)['reason'],'source-incomplete')
         self.assertEqual(proc.returncode,0,proc.stderr)
         result=json.loads(proc.stdout)
+        self.assertEqual(result['truncatedMiddle']['status'],'observed')
+        self.assertEqual(result['truncatedMiddle']['truncated_records'][0]['id'],'mid')
+        self.assertFalse(result['truncatedMiddle']['source_completeness_verified'])
+        self.assertIn('if unavailable retain pending',result['truncatedMiddle']['evidence_instruction'])
+        self.assertEqual(result['truncatedUser']['reason'],'source-incomplete')
+        self.assertEqual(result['truncatedFinal']['reason'],'source-incomplete')
         self.assertEqual(result['first']['final_id'],'a1')
         self.assertEqual(result['second']['final_id'],'a2')
         self.assertEqual(result['first']['status'],'observed')
