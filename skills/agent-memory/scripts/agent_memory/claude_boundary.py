@@ -30,10 +30,39 @@ def complete(repo, value):
     operations,_=bank_writes.state_paths(root,bank,str(uuid.uuid4()));directory=operations.parent/'claude-boundaries'
     trust_paths.state(directory)
     key=hashlib.sha256((value['session']+':'+value['prompt']).encode()).hexdigest()
+    request_hash=hashlib.sha256(json.dumps(value,sort_keys=True,separators=(',',':'),ensure_ascii=False).encode()).hexdigest()
     dfd=os.open(directory,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW)
     directory_identity=os.fstat(dfd)
     try:
-        fd=os.open(key+'.pending',os.O_RDONLY|os.O_NOFOLLOW,dir_fd=dfd)
+        try:
+            fd=os.open(key+'.pending',os.O_RDONLY|os.O_NOFOLLOW,dir_fd=dfd)
+        except FileNotFoundError:
+            fd_done=os.open(key+'.done',os.O_RDONLY|os.O_NOFOLLOW,dir_fd=dfd)
+            try:
+                st=os.fstat(fd_done)
+                if not stat.S_ISREG(st.st_mode) or st.st_uid!=os.geteuid() or st.st_nlink!=1 or st.st_mode&0o077 or st.st_size>4096:
+                    raise ContractError('Completed boundary evidence is unsafe')
+                with os.fdopen(fd_done,'rb',closefd=False) as stream: previous=load(stream.read(4097))
+            finally:os.close(fd_done)
+            if (not isinstance(previous,dict) or previous.get('schema')!='agent-memory/claude-boundary-completed-v1'
+                    or previous.get('project_id')!=context['project_id'] or previous.get('source_uuid')!=value['source_uuid']
+                    or previous.get('source_sha256')!=value['source_sha256'] or previous.get('input_sha256')!=request_hash
+                    or previous.get('outcome')!=value['outcome']):
+                raise ContractError('Completed boundary differs from requested retry')
+            witnessed=None
+            if value['outcome']=='published':
+                request=value['publication_request'];memory_publication.request_value(root,request);proof=request['proof']
+                if proof.get('blocked_paths') or proof.get('blocked_components'):
+                    raise ContractError('Conflicted publication remains pending')
+                replay=sharing_recovery.replay(root,{'base':request['base'],'candidate':request['candidate']},
+                        quarantine_records=proof.get('schema')=='agent-memory/semantic-sharing-proof-v2')
+                if not replay.get('intended_delta_landed'):
+                    raise ContractError('Publication is not independently witnessed on authority')
+                witnessed=replay['witnessed_commit']
+            scope_binding.require(root,context['project_id'],expected=context)
+            return {'verified':True,'already_completed':True,'outcome':value['outcome'],
+                    'assessment_is_agent_assertion':True,'source_publication_link_verified':False,
+                    'publication_verified':witnessed is not None,'witnessed_commit':witnessed,'canonical_writes_performed':False}
         try:
             info=os.fstat(fd)
             if not stat.S_ISREG(info.st_mode) or info.st_uid!=os.geteuid() or info.st_nlink!=1 or info.st_mode&0o077 or info.st_size>4096:
@@ -64,7 +93,7 @@ def complete(repo, value):
         record={'schema':'agent-memory/claude-boundary-completed-v1','project_id':context['project_id'],
                 'source_uuid':value['source_uuid'],'source_sha256':value['source_sha256'],'outcome':value['outcome'],
                 'assessment':value['assessment'],'assessment_is_agent_assertion':True,'source_publication_link_verified':False,'witnessed_commit':witnessed,
-                'pending_sha256':hashlib.sha256(raw).hexdigest()}
+                'pending_sha256':hashlib.sha256(raw).hexdigest(),'input_sha256':request_hash}
         output=json.dumps(record,sort_keys=True).encode()
         try:
             done=os.open(key+'.done',os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600,dir_fd=dfd)

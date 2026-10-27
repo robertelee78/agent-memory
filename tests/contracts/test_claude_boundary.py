@@ -48,6 +48,10 @@ class ClaudeBoundaryContract(unittest.TestCase):
             self.assertEqual(after.returncode,0,after.stdout+after.stderr)
             self.assertTrue(json.loads(after.stdout)['publication_verified'])
             self.assertTrue(json.loads(after.stdout)['assessment_is_agent_assertion'])
+            retry=w.run([sys.executable,'-I',cli,'claude-boundary','--repo',repo,'--input',path],check=False)
+            self.assertEqual(retry.returncode,0,retry.stdout+retry.stderr)
+            self.assertTrue(json.loads(retry.stdout)['already_completed'])
+            self.assertTrue(json.loads(retry.stdout)['publication_verified'])
 
     def test_bound_source_and_duplicate_are_fail_closed(self):
         with World() as w:
@@ -83,6 +87,12 @@ class ClaudeBoundaryContract(unittest.TestCase):
             recovered=w.run([sys.executable,'-I',cli,'claude-boundary','--repo',repo,'--input',input_path],check=False)
             self.assertEqual(recovered.returncode,0,recovered.stdout+recovered.stderr)
             self.assertFalse(pending.exists())
+            retry=w.run([sys.executable,'-I',cli,'claude-boundary','--repo',repo,'--input',input_path],check=False)
+            self.assertEqual(retry.returncode,0,retry.stdout+retry.stderr)
+            self.assertTrue(json.loads(retry.stdout)['already_completed'])
+            changed={**request,'assessment':'A different decision.'};input_path.write_text(json.dumps(changed))
+            refused=w.run([sys.executable,'-I',cli,'claude-boundary','--repo',repo,'--input',input_path],check=False)
+            self.assertNotEqual(refused.returncode,0)
             self.assertEqual(call(event).stdout,'')
             guarded=call({**event,'stop_hook_active':True});self.assertEqual(guarded.returncode,0)
             missing=call({**event,'prompt_id':str(uuid.uuid4())});self.assertEqual(missing.returncode,0);self.assertIn('pending',missing.stdout)
