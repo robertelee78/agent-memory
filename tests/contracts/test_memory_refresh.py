@@ -1,5 +1,7 @@
 """Actual public refresh preserves stale feature code, index and unpublished learning."""
 import unittest
+import json
+import sys
 
 from world import World
 from contracts import test_retrieval as retrieval_helpers
@@ -9,6 +11,29 @@ from refresh_fixtures import RefreshFixture
 
 
 class MemoryRefreshContract(RefreshFixture):
+    def test_public_cli_rejects_relative_outputs_before_any_refresh_operation(self):
+        with World() as w:
+            repo, bank, peer, base = self.fixture(w)
+            before = self.state(w, repo, bank)
+            for operation, flags in (
+                ('inspect', ['--repo', str(repo)]),
+                ('prepare', ['--repo', str(repo), '--input', 'unused.json']),
+                ('apply', ['--input', 'unused.json']),
+            ):
+                with self.subTest(operation=operation):
+                    response = w.run([sys.executable, '-I', self.pack/'scripts/installer.py',
+                        'refresh', operation, '--v2', *flags, '--output', 'private-secret-output.json'],
+                        cwd=repo, check=False)
+                    result = json.loads(response.stdout)
+                    self.assertEqual(response.returncode, 1)
+                    self.assertEqual(result['failure_code'], 'private-output-path-invalid')
+                    self.assertFalse(result['canonical_writes_performed'])
+                    self.assertFalse(result['git_metadata_writes_performed'])
+                    self.assertIn('absolute', result['repair'])
+                    self.assertNotIn('private-secret-output.json', response.stdout + response.stderr)
+                    self.assertFalse((repo/'private-secret-output.json').exists())
+                    self.assertEqual(before, self.state(w, repo, bank))
+
     def test_second_clone_import_is_recalled_with_conditions_without_code_index_or_local_learning_loss(self):
         with World() as w:
             repo, bank, peer, base = self.fixture(w)
