@@ -1,23 +1,23 @@
 ---
 id: ADR-0004
 status: accepted
-approval-scope: v0.0.1
+approval-scope: v0.0.1 and v0.0.4 turn-boundary hooks
 date: 2026-10-21
 depends-on: [ADR-0001, ADR-0002]
 ---
 
 # ADR-0004: Harness-independent skill and CLI
 
-Accepted for **v0.0.1 only**, as recorded in the
-[operator approval](../design/v0.0.1-approval.md). Later-milestone proposals
-remain under review. Implementation, acceptance and delivery require separate
-evidence.
+The v0.0.1 scope was accepted in the [operator approval](../design/v0.0.1-approval.md).
+The operator subsequently approved v0.0.4 execution of turn-boundary hooks for
+Claude Code, Codex, and OpenCode. Other later-milestone proposals remain under
+review. Implementation, acceptance and delivery require separate evidence.
 
 ## Context
 
 Claude Code, Codex, OpenCode, and custom harnesses need the same memory behavior.
-The operator selected the AWA-style portable skill plus CLI interface. MCP and
-harness-hook integrations were proposals, not requested product capabilities.
+The operator selected the AWA-style portable skill plus CLI interface and later
+approved turn-boundary hooks; MCP integration remains excluded.
 
 ## Decision
 
@@ -35,7 +35,7 @@ the common workflow; MCP is excluded below.
 MCP integration SHALL NOT be implemented in the planned releases. Its previous
 proposal is withdrawn by the operator, who selected skill plus CLI as sufficient.
 
-In `v0.0.3`, harness hooks SHALL invoke the common capture/refresh operation
+In `v0.0.4`, harness hooks SHALL invoke the common capture/refresh operation
 automatically at turn boundaries, including when an agent forgets to invoke the
 skill. Hooks SHALL supply invocation only: they MUST NOT own memory semantics,
 bypass admission or Git rules, or interrupt ongoing work. Supported harness
