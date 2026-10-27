@@ -70,8 +70,10 @@ const callback = callbacks.filter(item => item.event === 'context').at(-1).callb
 const good = {sessionID: 'ses_123abc_DEF', system: []};
 callback(good); callback(good);
 const invalid = {sessionID: 'ses_bad\nforged prompt', system: []};
-callback(invalid); dispose();
-process.stdout.write(JSON.stringify({good: good.system, invalid: invalid.system}));
+callback(invalid);
+const stale = {sessionID: 'ses_current', system: [{type:'text',text:'Agent Memory observed OpenCode session: ses_stale. foreign context'}]};
+callback(stale); callback(stale); dispose();
+process.stdout.write(JSON.stringify({good: good.system, invalid: invalid.system, stale: stale.system}));
 '''
         result = subprocess.run([shutil.which('node'), '--input-type=module', '-e', source,
                                  str(HOOK.parent/'opencode-v2.js')],
@@ -81,7 +83,12 @@ process.stdout.write(JSON.stringify({good: good.system, invalid: invalid.system}
         self.assertEqual(len(value['good']), 1)
         self.assertIn('ses_123abc_DEF', value['good'][0]['text'])
         self.assertIn('does not request foreground memory work', value['good'][0]['text'])
-        self.assertEqual(value['invalid'], [])
+        self.assertEqual(len(value['invalid']), 1)
+        self.assertIn('unavailable or invalid', value['invalid'][0]['text'])
+        self.assertEqual(len(value['stale']), 2)
+        self.assertIn('ses_stale', value['stale'][0]['text'])
+        self.assertIn('ses_current', value['stale'][1]['text'])
+        self.assertIn('do not record or acknowledge', value['stale'][1]['text'])
 
     @unittest.skipUnless(shutil.which('node'), 'JavaScript runtime unavailable')
     def test_opencode_adapters_inject_identical_context_once(self):

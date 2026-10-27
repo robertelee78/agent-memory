@@ -14,6 +14,7 @@ try {
 }
 const marker = 'Agent Memory turn boundary:'
 const identityMarker = 'Agent Memory observed OpenCode session:'
+const conflictMarker = 'Agent Memory session identity conflict:'
 let warned = false
 function pending () {
   if (warned) return
@@ -32,10 +33,23 @@ export default {
           if (!Array.isArray(event?.system)) { pending(); return }
           // The harness provides the session ID directly. Expose this as
           // provenance metadata, without requesting any foreground work.
-          if (typeof event?.sessionID === 'string'
-              && /^ses_[A-Za-z0-9_-]{1,180}$/.test(event.sessionID)
-              && !event.system.some((part) => typeof part?.text === 'string' && part.text.startsWith(identityMarker))) {
-            event.system.push({ type: 'text', text: `${identityMarker} ${event.sessionID}. If recording session provenance, use this observed identifier; never invent one from a workspace path. This metadata does not request foreground memory work.` })
+          const prior = event.system.filter((part) => typeof part?.text === 'string' && part.text.startsWith(identityMarker))
+          if (typeof event?.sessionID === 'string' && /^ses_[A-Za-z0-9_-]{1,180}$/.test(event.sessionID)) {
+            const identity = `${identityMarker} ${event.sessionID}. If recording session provenance, use this observed identifier; never invent one from a workspace path. This metadata does not request foreground memory work.`
+            if (prior.length === 0) {
+              event.system.push({ type: 'text', text: identity })
+            } else if (prior.length !== 1 || prior[0].text !== identity) {
+              // Keep other providers' context intact and make disagreement explicit.
+              if (!event.system.some((part) => typeof part?.text === 'string' && part.text.startsWith(conflictMarker))) {
+                event.system.push({ type: 'text', text: `${conflictMarker} The current native OpenCode session is ${event.sessionID}, but conflicting session metadata is present. Preserve pending work; do not record or acknowledge provenance until the conflict is resolved.` })
+              }
+              pending()
+            }
+          } else if (prior.length || disposeQueue.active || event?.sessionID !== undefined) {
+            if (!event.system.some((part) => typeof part?.text === 'string' && part.text.startsWith(conflictMarker))) {
+              event.system.push({ type: 'text', text: `${conflictMarker} The native OpenCode session ID is unavailable or invalid. Preserve pending work; do not record or acknowledge session provenance.` })
+            }
+            pending()
           }
           if (disposeQueue.active) return
           if (event.system.some((part) => typeof part?.text === 'string' && part.text.startsWith(marker))) return
