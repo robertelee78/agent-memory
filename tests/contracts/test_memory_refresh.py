@@ -116,6 +116,45 @@ class MemoryRefreshContract(RefreshFixture):
                     self.assertFalse((repo/'private-secret-output.json').exists())
                     self.assertEqual(before, self.state(w, repo, bank))
 
+    def test_public_sharing_commands_reject_unsafe_output_before_work(self):
+        with World() as w:
+            repo, bank, peer, base = self.fixture(w)
+            before = self.state(w, repo, bank)
+            unsafe=w.inside('unsafe-private-directory');unsafe.mkdir(mode=0o755);unsafe.chmod(0o755)
+            occupied=w.inside('existing-private.json');occupied.write_text('preserve original')
+            redirected=w.inside('redirected-private.json');redirected.symlink_to(occupied)
+            for target in (unsafe/'secret-path.json', redirected):
+                for command in (
+                    ['semantic', 'inspect-v2', '--repo', str(repo)],
+                    ['publish', 'prepare', '--repo', str(repo), '--input', 'unused.json'],
+                    ['refresh', 'inspect', '--v2', '--repo', str(repo)],
+                ):
+                    with self.subTest(target=target.name, command=command[0]):
+                        response=w.run([sys.executable,'-I',self.pack/'scripts/installer.py',
+                                        *command,'--output',target],cwd=repo,check=False)
+                        result=json.loads(response.stdout)
+                        self.assertEqual(response.returncode,1,result)
+                        self.assertEqual(result['failure_code'],'private-output-invalid')
+                        self.assertIn('owner-only',result['repair'])
+                        self.assertNotIn(str(target),response.stdout+response.stderr)
+                        self.assertFalse(result['canonical_writes_performed'])
+                        self.assertFalse(result.get('git_metadata_writes_performed',False))
+                        self.assertEqual(before,self.state(w,repo,bank))
+            self.assertEqual(occupied.read_text(),'preserve original')
+
+    def test_private_output_preflight_preserves_identical_retry(self):
+        with World() as w:
+            repo, bank, peer, base = self.fixture(w)
+            target=w.inside('same-output.json')
+            script=('import sys;sys.path.insert(0,sys.argv[1]);'
+                    'from agent_memory import sharing_limits as s;'
+                    'value={"operation":"fixture","value":"unchanged"};'
+                    's.write_private(sys.argv[2],value,sys.argv[3]);'
+                    's.preflight_private_output(sys.argv[2],sys.argv[3]);'
+                    's.write_private(sys.argv[2],value,sys.argv[3])')
+            response=w.run([sys.executable,'-I','-c',script,self.pack/'scripts',target,repo],check=False)
+            self.assertEqual(response.returncode,0,response.stderr)
+
     def test_second_clone_import_is_recalled_with_conditions_without_code_index_or_local_learning_loss(self):
         with World() as w:
             repo, bank, peer, base = self.fixture(w)

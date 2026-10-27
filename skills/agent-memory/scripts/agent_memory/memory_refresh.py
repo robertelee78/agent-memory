@@ -350,6 +350,7 @@ def main(argv=None):
         command.add_argument('--output');command.add_argument('--v2',action='store_true')
     args = parser.parse_args(argv)
     try:
+        input_value = None
         if getattr(args, 'output', None):
             supplied = Path(args.output).expanduser()
             if not supplied.is_absolute() or '..' in supplied.parts:
@@ -359,6 +360,12 @@ def main(argv=None):
                     reason='The private output path must be absolute and must not contain parent-directory components.',
                     repair='Choose a new absolute path in an owner-only directory outside the repository and installed runtime, then retry with --output. Preserve the bank and pending evidence.')))
                 return 1
+            if hasattr(args, 'repo'):
+                output_repo = args.repo
+            else:
+                input_value = read_input(args.input,version2=args.v2)
+                output_repo = tx.proposal_value(input_value)['repo_root']
+            limits.preflight_private_output(args.output, output_repo)
         if args.operation == 'current': value = current(args.repo)
         elif args.operation == 'inspect': value = inspect(args.repo, args.base,version2=args.v2)
         elif args.operation == 'prepare':
@@ -371,23 +378,23 @@ def main(argv=None):
                     repair='Rerun am refresh prepare with the original --repo and --input plus --v2 --output /private/path/refresh.json; select an owner-only location outside the repository.'),indent=2))
                 return 1
             value = prepare(args.repo, request)
-        else: value = apply(read_input(args.input,version2=args.v2))
+        else: value = apply(input_value if input_value is not None else read_input(args.input,version2=args.v2))
         if getattr(args, 'output', None):
-            repo=args.repo if hasattr(args,'repo') else tx.proposal_value(read_input(args.input,version2=args.v2))['repo_root']
-            value=limits.write_private(args.output,value,repo)
+            value=limits.write_private(args.output,value,output_repo)
         print(json.dumps(value, indent=2)); return 0
     except (ContractError, OSError, ValueError, UnicodeError, TypeError, KeyError, AttributeError, RecursionError) as exc:
         from .sharing_holds import HoldFailure
         authority_failed=isinstance(exc,recovery.AuthorityFailure)
+        output_failed=isinstance(exc,limits.PrivateOutputError)
         known=isinstance(exc,HoldFailure) or authority_failed
-        print(json.dumps(result(args.operation, 'pending-inspection', canonical_writes_performed=False if args.operation == 'current' else None,
-                                git_metadata_writes_performed=None,
+        print(json.dumps(result(args.operation, 'pending-private-output' if output_failed else 'pending-inspection', canonical_writes_performed=False if output_failed or args.operation == 'current' else None,
+                                git_metadata_writes_performed=False if output_failed else None,
                                 **({'pending_capture': 'unknown', 'pending_publication': 'unknown', 'semantic_truth_verified': False}
                                    if args.operation == 'current' else {}),
-                                failure_component=exc.component if authority_failed else 'known-dispute-state' if known else args.operation,
-                                failure_code=exc.code if known else 'refresh-unverified',
-                                reason=str(exc) if known else 'Unresolved, offline, unsafe, interrupted or changed refresh; retain the original proposal and local memory, inspect/recover before retry',
-                                repair=exc.repair if known else 'Preserve the proposal, bank and pending evidence. Run am doctor for this repository and inspect the failed component before repeating refresh inspection; do not reset or replace the bank.')))
+                                failure_component='output' if output_failed else exc.component if authority_failed else 'known-dispute-state' if known else args.operation,
+                                failure_code='private-output-invalid' if output_failed else exc.code if known else 'refresh-unverified',
+                                reason=str(exc) if output_failed or known else 'Unresolved, offline, unsafe, interrupted or changed refresh; retain the original proposal and local memory, inspect/recover before retry',
+                                repair=str(exc) if output_failed else exc.repair if known else 'Preserve the proposal, bank and pending evidence. Run am doctor for this repository and inspect the failed component before repeating refresh inspection; do not reset or replace the bank.')))
         return 1
 
 

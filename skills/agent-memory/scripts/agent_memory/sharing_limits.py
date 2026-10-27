@@ -11,6 +11,30 @@ MAX_PRIVATE = 512 * 1024 * 1024
 MAX_PAGE = 65536
 
 
+class PrivateOutputError(ContractError):
+    """A private output location cannot safely accept a new artifact."""
+
+
+def preflight_private_output(path, repo):
+    """Reject unsafe output locations before the caller performs any work."""
+    from . import trust_paths
+    try:
+        supplied = Path(path).expanduser()
+        if not supplied.is_absolute() or '..' in supplied.parts:
+            raise ContractError('nonabsolute private output')
+        parent = trust_paths.git_pointer(Path('/'), str(supplied.parent))
+        trust_paths.state(parent)
+        target = parent / supplied.name
+        trust_paths.record(target)
+        pack = Path(__file__).resolve().parents[2]
+        source = pack.parent.parent if pack.parent.name == 'skills' else pack
+        if any(target.is_relative_to(root) for root in (Path(repo).resolve(), source, pack)):
+            raise ContractError('private output overlaps repository or runtime')
+        return target
+    except (ContractError, OSError, ValueError, TypeError):
+        raise PrivateOutputError('Choose a new absolute output path in an existing owner-only directory outside the repository and installed runtime; preserve existing files.') from None
+
+
 def bank_size(files):
     if (not isinstance(files, dict) or len(files) > MAX_FILES
             or any(not isinstance(v, str) or len(v.encode()) > MAX_FILE for v in files.values())
