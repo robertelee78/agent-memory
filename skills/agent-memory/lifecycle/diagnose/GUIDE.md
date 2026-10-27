@@ -86,9 +86,11 @@ The installed machine equivalents are `am status --json` and `am doctor --json`.
 For an explicitly requested safe repair, use `am doctor --fix --repo /absolute/repository`.
 The repair rechecks the exact recorded source, recovers an owned interrupted
 runtime transaction when its journal can be verified, and reconciles missing
-or outdated receipt-owned client hooks with the transactional installer. It
-then runs doctor again and reports repairs and remaining refusals. It does not
-alter project memory, infer identity, overwrite modified targets, resume purges,
+or outdated receipt-owned client integration with the transactional installer.
+It may also complete cleanup of an unlocked bank transaction whose verified
+receipt uniquely establishes its outcome, using the existing recovery protocol.
+It then runs doctor again and reports repairs and remaining refusals. It does not
+infer identity, overwrite modified targets, resume purges,
 or rebuild an arbitrary selected projection. Active locks, untrusted sources,
 changed hooks and ambiguous transactions remain preserved for inspection.
 Packaged public entrypoints disable Python bytecode before importing product
@@ -115,7 +117,7 @@ A session MAY add `--projection /absolute/reference-projection.json` to doctor
 when an optional derived reference file is actually in use. Without `--fix`,
 doctor MUST NOT initialize missing state, rebuild caches, acquire a new writer
 lock, migrate, recover, uninstall or purge data. `--fix` MUST use only the
-verified receipt-owned runtime repairs described above.
+verified receipt-owned runtime and bank recovery operations described above.
 
 ## Read back
 

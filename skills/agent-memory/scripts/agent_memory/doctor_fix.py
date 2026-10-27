@@ -52,6 +52,27 @@ def reconcile_hooks(state, code, old):
         return install.install(value)
 
 
+def recover_completed_bank(repo):
+    """Finish only a previously receipted outcome using the public recovery protocol."""
+    from . import bank_transactions as tx
+    root, bank = tx.writes.bank_path(repo)
+    marker = bank / tx.MARKER
+    lock = bank / '.agent-memory.lock'
+    if not marker.is_file() or marker.is_symlink() or os.path.lexists(lock):
+        return None
+    m = tx.load(marker.read_bytes())
+    if not isinstance(m, dict) or not tx.uuid_valid(m.get('transaction_id')):
+        return None
+    journal, receipt_path = tx.locations(root, bank, m['transaction_id'])
+    _, proposal = tx.journal_value(tx.limits.read_bytes(journal), root, bank, m['transaction_id'])
+    receipt = tx.receipt_value(receipt_path, proposal)
+    if receipt is None:
+        return None
+    mode = 'finish' if receipt['outcome'] == 'finished' else 'rollback'
+    preview = tx.recover(repo, mode=mode)
+    return tx.recover(repo, prepared=preview['proposal'])
+
+
 def run(repo='.', projection=None):
     from . import diagnostics
     before = diagnostics.run('doctor', repo, projection)
@@ -96,6 +117,20 @@ def run(repo='.', projection=None):
             actions.append({'component': 'runtime.repair', 'state': 'refused',
                             'detail': 'Cannot safely verify and reconcile the owned runtime; existing state was preserved.',
                             'repair': 'Inspect am doctor and the installation receipt; preserve modified targets and use the trusted recover helper when directed.'})
+    bank_attempted = False
+    if any(c['component'] == 'bank.transaction' for c in before['warnings']):
+        try:
+            # No decision is made without an already verified outcome receipt.
+            bank_attempted = True
+            recovered = recover_completed_bank(repo)
+            if recovered is not None:
+                install.require(recovered.get('verified'), 'Bank recovery was not verified')
+                actions.append({'component': 'bank.transaction', 'state': 'repaired',
+                                'detail': 'Completed cleanup for the previously verified bank transaction outcome.'})
+        except diagnostics.ERRORS:
+            actions.append({'component': 'bank.transaction', 'state': 'refused',
+                            'detail': 'The recorded bank outcome could not be safely recovered.',
+                            'repair': 'Preserve the bank and inspect am doctor and the original transaction evidence.'})
     try:
         after = diagnostics.run('doctor', repo, projection)
     except diagnostics.ERRORS:
@@ -118,7 +153,7 @@ def run(repo='.', projection=None):
     after['repairs_performed'] = any(v['state'] == 'repaired' for v in actions)
     # Acquiring the existing lifecycle lock may update private owner metadata
     # even if a later ownership check refuses the repair.
-    after['writes_performed'] = True if acquired else None if (pending or gaps or hook_failures) else False
+    after['writes_performed'] = True if acquired or any(v['component'] == 'bank.transaction' and v['state'] == 'repaired' for v in actions) else None if (pending or gaps or hook_failures or bank_attempted) else False
     after['restart_clients'] = sorted({name for item in actions for name in item.get('restart_clients', [])})
     if missing and any(v['component'] == 'runtime.hooks' and v['state'] == 'repaired' for v in actions):
         warning = {'component': 'runtime.hook_recreated', 'state': 'warning',

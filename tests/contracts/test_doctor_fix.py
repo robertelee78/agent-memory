@@ -42,7 +42,7 @@ class DoctorFixContract(unittest.TestCase):
             result = world.run([cli, 'doctor', '--fix', '--repo', repo, '--json'], check=False)
             data = json.loads(result.stdout)
             self.assertEqual(snapshot(bank), before)
-            skipped = [entry for entry in data['repairs'] if entry['component'] == 'bank.transaction']
+            skipped = [entry for entry in data['repairs'] if entry['component'] == 'bank.transaction' and entry['state'] == 'skipped']
             self.assertEqual(skipped[0]['state'], 'skipped')
             self.assertIn('original operation', skipped[0]['repair'])
 
@@ -65,6 +65,22 @@ class DoctorFixContract(unittest.TestCase):
             self.assertTrue(data['repairs_performed'])
             for entry in targets:
                 self.assertTrue(Path(entry['path']).exists())
+
+    def test_receipted_bank_transaction_cleanup(self):
+        from contracts.test_bank_transactions import BankTransactionsContract
+        helper = BankTransactionsContract()
+        with World() as world:
+            _, _, receipt = fixture(world)
+            repo, bank, _, after, proposal = helper.fixture(world)
+            helper.crash(world, proposal, 'transaction-after-receipt')
+            helper.unlock(world, repo)
+            cli = Path(receipt['bin_dir']) / 'am'
+            result = world.run([cli, 'doctor', '--fix', '--repo', repo, '--json'], check=False)
+            data = json.loads(result.stdout)
+            self.assertEqual(result.returncode, 0, data)
+            self.assertFalse((bank / '.agent-memory-transaction.md').exists())
+            self.assertEqual(helper.canonical(bank), after)
+            self.assertTrue(any(a['component'] == 'bank.transaction' and a['state'] == 'repaired' for a in data['repairs']))
 
     def test_modified_owned_hook_is_preserved_and_not_replaced(self):
         with World() as world:
