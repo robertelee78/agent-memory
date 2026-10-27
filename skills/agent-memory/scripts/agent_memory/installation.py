@@ -444,6 +444,17 @@ def hook_paths(name):
     return None
 
 
+def client_hook_entries(name, active_pack):
+    """Return the exact owned prompt and Stop entries for this runtime."""
+    from . import client_hooks
+    launcher = '/bin/sh ' + shlex.quote(str(active_pack/'hooks'/'python3.sh')) + ' '
+    prompt = launcher + shlex.quote(str(active_pack/'hooks'/('codex_prompt.py' if name == 'codex' else 'turn_hook.py')))
+    stop = {'hooks': [{'type': 'command', 'command': launcher + shlex.quote(str(active_pack/'hooks'/('codex_stop.py' if name == 'codex' else 'claude_stop.py')))}]}
+    if name == 'claude':
+        stop['hooks'][0]['asyncRewake'] = True
+    return client_hooks.entry(prompt), stop
+
+
 def wrapper(pack):
     # Search every PATH component: macOS login shells can put an older system
     # Python before an otherwise available supported interpreter. Quote the
@@ -726,15 +737,8 @@ def prepare(args, state, code, old, *, candidate_root=None, candidate_kind=None)
                 add(guidance, 'activation', block=True)
             hook = hook_paths(name)
             if name in ('codex', 'claude') and hook and not no_guidance:
-                from . import client_hooks
-                launcher = '/bin/sh ' + shlex.quote(str(active_pack/'hooks'/'python3.sh')) + ' '
-                command = launcher + shlex.quote(str(active_pack/'hooks'/('codex_prompt.py' if name == 'codex' else 'turn_hook.py')))
-                stop = None
-                if name == 'claude':
-                    stop = {'hooks': [{'type': 'command', 'command': launcher + shlex.quote(str(active_pack/'hooks/claude_stop.py')), 'asyncRewake': True}]}
-                elif name == 'codex':
-                    stop = {'hooks': [{'type': 'command', 'command': launcher + shlex.quote(str(active_pack/'hooks/codex_stop.py'))}]}
-                add(hook, 'hook-config', hook_entry=client_hooks.entry(command), stop_entry=stop)
+                prompt_entry, stop = client_hook_entries(name, active_pack)
+                add(hook, 'hook-config', hook_entry=prompt_entry, stop_entry=stop)
                 groups[name].append(str(absolute(hook)))
             elif name == 'opencode' and hook and not no_guidance:
                 add(hook, 'hook-link', source_path=active_pack/'hooks'/'opencode.js')

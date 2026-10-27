@@ -199,10 +199,11 @@ def hook_migration(report, active):
         kind = 'hook-link' if name == 'opencode' else 'hook-config'
         missing = not target or target.get('kind') != kind
         if not missing and kind == 'hook-config':
-            missing = not target.get('hook_entry') or not target.get('stop_entry')
+            prompt, stop = installation.client_hook_entries(name, Path(active['source']['pack']))
+            missing = target.get('hook_entry') != prompt or target.get('stop_entry') != stop
         if missing:
             report.add('runtime.hook_migration.' + name, 'warning',
-                       name + ' hook activation is missing from the installation receipt; turn-boundary automation is not established.',
+                       name + ' hook activation is missing or outdated in the installation receipt; turn-boundary automation is not established.',
                        'Run am install to reconcile the existing installation, then restart the agent client. If it refuses, follow the reported ownership or recovery guidance.', path)
 
 
