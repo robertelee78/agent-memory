@@ -146,13 +146,15 @@ class MemoryRefreshContract(RefreshFixture):
                     target = repo/'code.py';target.write_text('VALUE = 987  # changed during observation\n')
                     w.git('add', 'code.py', cwd=repo)
                 else:
-                    target = bank/'MEMORY.md';target.chmod(0o664)
+                    target = bank/'MEMORY.md'
+                    replacement_mode = 0o644 if target.stat().st_mode & 0o777 == 0o664 else 0o664
+                    target.chmod(replacement_mode)
                 (rendezvous/(stage+'.release')).touch()
                 stdout, stderr = child.communicate(timeout=30);result=json.loads(stdout)
                 self.assertNotEqual(result['sharing_state'], 'bank-synchronized', (result,stderr))
                 self.assertFalse(result['remote_freshness_verified'])
                 if scenario == 'mode':
-                    self.assertEqual(target.stat().st_mode & 0o777, 0o664)
+                    self.assertEqual(target.stat().st_mode & 0o777, replacement_mode)
                 else:
                     self.assertIn('changed during observation', target.read_text())
 
