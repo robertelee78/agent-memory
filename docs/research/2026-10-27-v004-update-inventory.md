@@ -23,3 +23,12 @@ macOS and Linux, including unsupported bank schema refusal and an update check
 followed by activation and repeat. These fixture tests are separate from the
 real-inventory timing above. Further signed-channel, changing-state and final
 integrated-source controls are recorded separately before release.
+
+A complete update from a disposable managed local channel, with its isolated
+registry pointing at the operator's real registered worktree inventory, completed
+in 101.679 seconds on macOS. It reported 605 observed repositories, 150 banks,
+70 gaps, a verified update and no bank writes. The installed runtime and receipt
+were in a disposable test world; project banks were observed read-only. This is
+a local-channel fixture, not a signed-channel network timing or an exact
+reproduction of the earlier 6m25s upgrade. Separate signed-transition tests
+passed on macOS and Linux.
