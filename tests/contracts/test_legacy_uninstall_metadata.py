@@ -26,3 +26,13 @@ class LegacyUninstallMetadataContract(unittest.TestCase):
             self.assertTrue(result['verified'])
             self.assertTrue(source.exists())
             self.assertTrue(any(x['kind']=='source' for x in result['preserved']))
+
+    def test_untracked_payload_is_preserved(self):
+        with World() as w:
+            _,_,receipt=fixture(w)
+            source=Path(receipt['source']['path'])
+            (source/'user-file.txt').write_text('do not remove\n')
+            result=uninstall(w,receipt,source=True)
+            self.assertTrue(result['verified'])
+            self.assertEqual((source/'user-file.txt').read_text(),'do not remove\n')
+            self.assertTrue(any(x['kind']=='source' for x in result['preserved']))
