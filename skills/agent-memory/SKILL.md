@@ -1,7 +1,7 @@
 ---
 name: agent-memory
 description: Maintain a repository's shared Markdown memory across sessions, worktrees and machines; use to initialize, resume, recall, capture durable project learning, correct, forget or checkpoint memory.
-metadata: {"version": "0.0.4"}
+metadata: {"version": "0.0.5"}
 ---
 
 # Agent memory
@@ -13,9 +13,9 @@ session SHOULD use its own worktree or branch. This skill is harness agnostic.
 The words MUST, MUST NOT, SHOULD and MAY carry their RFC 2119 meanings in this
 file and its linked guides. A session MUST resolve `SKILL_DIR` to the directory
 containing this file before using a packaged script. Use the installed `am` command
-when available. For packaged scripts, use `/bin/sh "$SKILL_DIR/hooks/python3.sh"`
-followed by the script path and arguments; it selects a supported Python from PATH,
-including when an older system Python appears first.
+when available. For packaged scripts, use Python isolated mode with Python 3.11 or later. If an older
+system Python appears first on PATH, put a supported Python first before running
+the examples. Installed `am` and client hooks select a supported interpreter.
 
 
 ## Loading contract

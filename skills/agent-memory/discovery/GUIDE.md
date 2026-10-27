@@ -32,7 +32,7 @@ With SKILL_DIR resolved to this portable package, a session MUST start a checked
 compact observation, replacing the task and intent with its actual operation:
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/discover_memory.py" start --repo /path/to/repo \
+python3 -I "$SKILL_DIR/scripts/discover_memory.py" start --repo /path/to/repo \
   --intent comparison --task 'Determine what this new observation changes'
 ```
 
@@ -74,7 +74,7 @@ When using the helper, the session SHOULD save the returned `discovery` object
 (or entire bounded result) to a private JSON file and follow a connected index:
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/discover_memory.py" node \
+python3 -I "$SKILL_DIR/scripts/discover_memory.py" node \
   --repo /path/to/repo --input /private/navigation.json \
   --path topics/request-failures.md
 ```
@@ -106,7 +106,7 @@ For the supported CLI workflow, the session SHOULD pass its ordinary recall or
 comparison request and a meaning-based selection rationale to one qualified read:
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/discover_memory.py" read \
+python3 -I "$SKILL_DIR/scripts/discover_memory.py" read \
   --repo /path/to/repo --input /private/navigation.json \
   --request /private/request.json \
   --rationale 'These actual routes cover the request retry policy and its conditions.'

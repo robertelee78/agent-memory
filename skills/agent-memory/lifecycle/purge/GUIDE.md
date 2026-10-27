@@ -41,7 +41,7 @@ The session MUST obtain a read-only exact preview, with `SKILL_DIR` resolved to
 a trusted complete package:
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/uninstall_runtime.py" purge-data --repo /absolute/repository --path /absolute/repository/memory-bank --check > /private/path/purge-preview.json
+python3 -I "$SKILL_DIR/scripts/uninstall_runtime.py" purge-data --repo /absolute/repository --path /absolute/repository/memory-bank --check > /private/path/purge-preview.json
 ```
 
 The example bank path MUST be replaced by the repository's actual resolved bank,
@@ -58,7 +58,7 @@ MUST use the same repository/path selection and replace
 `CONFIRMED_PREVIEW_SHA256` with that operator-confirmed digest:
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/uninstall_runtime.py" purge-data --repo /absolute/repository --path /absolute/repository/memory-bank --confirm CONFIRMED_PREVIEW_SHA256 > /private/path/purge-receipt.json
+python3 -I "$SKILL_DIR/scripts/uninstall_runtime.py" purge-data --repo /absolute/repository --path /absolute/repository/memory-bank --confirm CONFIRMED_PREVIEW_SHA256 > /private/path/purge-receipt.json
 ```
 
 The installed `agent-memory purge-data` command uses the same options. Changed

@@ -79,7 +79,7 @@ With `SKILL_DIR` resolved to a trusted complete package, the session MUST previe
 the intended source and target configuration before activation. For example:
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/installer.py" install --check --development-source /path/to/checkout --mode copy --presets none --target-dir /path/to/custom/skills
+python3 -I "$SKILL_DIR/scripts/installer.py" install --check --development-source /path/to/checkout --mode copy --presets none --target-dir /path/to/custom/skills
 ```
 
 The session MUST compare each target's current and planned identity. Check mode
@@ -97,7 +97,7 @@ After an authorized acceptable preview, the session MUST run the same install
 configuration without `--check`:
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/installer.py" install --development-source /path/to/checkout --mode copy --presets none --target-dir /path/to/custom/skills
+python3 -I "$SKILL_DIR/scripts/installer.py" install --development-source /path/to/checkout --mode copy --presets none --target-dir /path/to/custom/skills
 ```
 
 The installer stages all targets, checks atomic replacement on each target
@@ -144,7 +144,7 @@ When installation is interrupted, the session MUST use the trusted source helper
 even if the installed command does not exist:
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/installer.py" recover
+python3 -I "$SKILL_DIR/scripts/installer.py" recover
 ```
 
 Recovery verifies a committed receipt or rolls back an incomplete activation.

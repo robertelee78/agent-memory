@@ -41,12 +41,12 @@ The session MUST plan a disposable reference object and distinguish any private 
 With `SKILL_DIR` resolved to this package:
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/projection.py" build --repo /path/to/repo \
+python3 -I "$SKILL_DIR/scripts/projection.py" build --repo /path/to/repo \
   --input /private/path/references.json
 ```
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/projection.py" check --repo /path/to/repo \
+python3 -I "$SKILL_DIR/scripts/projection.py" check --repo /path/to/repo \
   --input /private/path/projection.json
 ```
 

@@ -37,7 +37,7 @@ With `SKILL_DIR` resolved to the trusted portable package, preview one explicit
 target format. The destination file MUST be in an operator-owned private directory:
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/migrate_bank.py" preview --repo REPO --to agent-memory/v1 > /private/path/migration-preview.json
+python3 -I "$SKILL_DIR/scripts/migrate_bank.py" preview --repo REPO --to agent-memory/v1 > /private/path/migration-preview.json
 ```
 
 The installed equivalent is `am --json migrate preview` with those arguments.
@@ -61,7 +61,7 @@ sources MUST remain preserved; nothing is truncated to fit.
 After inspecting the source-bound preview and authorized format change:
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/migrate_bank.py" apply --proposal /private/path/migration-preview.json
+python3 -I "$SKILL_DIR/scripts/migrate_bank.py" apply --proposal /private/path/migration-preview.json
 ```
 
 ## Read back
@@ -97,8 +97,8 @@ as permission to replay old changes.
 The session MUST preserve all state and first inspect the selected repository:
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/migrate_bank.py" recover --repo REPO
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/migrate_bank.py" recover-lock --repo REPO
+python3 -I "$SKILL_DIR/scripts/migrate_bank.py" recover --repo REPO
+python3 -I "$SKILL_DIR/scripts/migrate_bank.py" recover-lock --repo REPO
 ```
 
 `recover` without a mode inventories the visible owned operation; it is not an
@@ -111,14 +111,14 @@ marker. A dead-lock proposal can be applied only after its ownership/process
 proofs still agree:
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/migrate_bank.py" recover-lock --repo REPO --proposal /private/path/dead-lock.json
+python3 -I "$SKILL_DIR/scripts/migrate_bank.py" recover-lock --repo REPO --proposal /private/path/dead-lock.json
 ```
 
 After the bank is available, select the original operation and exact outcome:
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/migrate_bank.py" recover --repo REPO --operation OPERATION_UUID --mode finish > /private/path/migration-recovery.json
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/migrate_bank.py" recover --repo REPO --mode finish --proposal /private/path/migration-recovery.json
+python3 -I "$SKILL_DIR/scripts/migrate_bank.py" recover --repo REPO --operation OPERATION_UUID --mode finish > /private/path/migration-recovery.json
+python3 -I "$SKILL_DIR/scripts/migrate_bank.py" recover --repo REPO --mode finish --proposal /private/path/migration-recovery.json
 ```
 
 A session MAY select `rollback` instead of `finish` in both invocations. Finish
@@ -142,8 +142,8 @@ A finished migration receipt MUST remain immutable. To restore its original
 verified backup, the session MUST preview a NEW operation UUID and receipt:
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/migrate_bank.py" restore --repo REPO --operation ORIGINAL_UUID > /private/path/restoration.json
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/migrate_bank.py" restore --repo REPO --proposal /private/path/restoration.json
+python3 -I "$SKILL_DIR/scripts/migrate_bank.py" restore --repo REPO --operation ORIGINAL_UUID > /private/path/restoration.json
+python3 -I "$SKILL_DIR/scripts/migrate_bank.py" restore --repo REPO --proposal /private/path/restoration.json
 ```
 
 The current complete bank MUST still equal the original migrated path inventory,

@@ -47,7 +47,7 @@ establish installation ownership, a trusted source revision or active clients.
 With `SKILL_DIR` resolved to the trusted package, the session MUST run:
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/artifact.py" inspect --pack /path/to/complete/package > /private/path/artifact.json
+python3 -I "$SKILL_DIR/scripts/artifact.py" inspect --pack /path/to/complete/package > /private/path/artifact.json
 ```
 
 ## Read back

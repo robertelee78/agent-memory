@@ -65,7 +65,7 @@ hashing still scale with bank size. These are bounds, not a latency guarantee.
 With `SKILL_DIR` resolved to this package:
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/compare_learning.py" inspect --repo /path/to/repo \
+python3 -I "$SKILL_DIR/scripts/compare_learning.py" inspect --repo /path/to/repo \
   --request /private/path/comparison.json
 ```
 
@@ -121,7 +121,7 @@ and consequential corrections MUST surface promptly at the next boundary.
 ## Apply
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/compare_learning.py" review --repo /path/to/repo \
+python3 -I "$SKILL_DIR/scripts/compare_learning.py" review --repo /path/to/repo \
   --request /private/path/comparison.json --judgment /private/path/judgment.json
 ```
 
@@ -154,7 +154,7 @@ comparison against its locked observed bank immediately before mutation.
 ## Verify
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/compare_learning.py" check --repo /path/to/repo \
+python3 -I "$SKILL_DIR/scripts/compare_learning.py" check --repo /path/to/repo \
   --request /private/path/comparison.json --proof /private/path/proof.json
 ```
 

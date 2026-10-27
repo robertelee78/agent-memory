@@ -90,7 +90,7 @@ heading level or unterminated fences require inspection/clarification.
 With `SKILL_DIR` resolved to this portable package:
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/checkpoint.py" inspect --repo /path/to/repo > /private/path/current.json
+python3 -I "$SKILL_DIR/scripts/checkpoint.py" inspect --repo /path/to/repo > /private/path/current.json
 ```
 
 Inspect is read-only and does not require identity setup. It returns current
@@ -137,15 +137,15 @@ For that preparation only, input `observed_active_sha256` is `null`:
 ## Apply
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/checkpoint.py" preview --repo /path/to/repo \
+python3 -I "$SKILL_DIR/scripts/checkpoint.py" preview --repo /path/to/repo \
   --input /private/path/fields.json > /private/path/checkpoint.json
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/checkpoint.py" apply --proposal /private/path/checkpoint.json
+python3 -I "$SKILL_DIR/scripts/checkpoint.py" apply --proposal /private/path/checkpoint.json
 ```
 
 For an intentionally omitted active context, the session MUST use the separate preparation branch below rather than applying the ordinary single-file proposal.
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/checkpoint.py" prepare --repo /path/to/repo \
+python3 -I "$SKILL_DIR/scripts/checkpoint.py" prepare --repo /path/to/repo \
   --input /private/path/fields.json > /private/path/prepare.json
 ```
 
