@@ -13,9 +13,11 @@ const SCHEMA = 'agent-memory/opencode-boundary-v1'
 async function reserveTurn(session, source, action = 'reserve', repo = null, publication_request = null) {
   let root
   try { root = realpathSync(process.env.AGENT_MEMORY_STATE_HOME || join(process.env.XDG_STATE_HOME || join(homedir(), '.local', 'state'), 'agent-memory')) } catch { return {status:'pending', reason:'state-root-unavailable'} }
-  const helper = join(dirname(fileURLToPath(import.meta.url)), 'boundary_ledger.py')
+  const hookDirectory = dirname(fileURLToPath(import.meta.url))
+  const helper = join(hookDirectory, 'boundary_ledger.py')
+  const launcher = join(hookDirectory, 'python3.sh')
   return await new Promise(resolve => {
-    const child = execFile('python3', [helper], { timeout: action === 'published' ? 120000 : 2000, maxBuffer: 4096 }, (error, stdout) => {
+    const child = execFile('/bin/sh', [launcher, helper], { timeout: action === 'published' ? 120000 : 2000, maxBuffer: 4096 }, (error, stdout) => {
       try { resolve(error ? {status:'pending', reason:'ledger-unavailable'} : JSON.parse(stdout)) } catch { resolve({status:'pending', reason:'ledger-unavailable'}) }
     })
     child.stdin.on('error', () => {})
