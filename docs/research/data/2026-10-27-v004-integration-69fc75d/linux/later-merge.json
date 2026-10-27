@@ -1,0 +1,28 @@
+{
+  "schema": "am-local-test-receipt-v1",
+  "source_commit": "69fc75d44f76921c6c984a6d4016cc03dd1d7cf1",
+  "case": "later-merge",
+  "argv": [
+    "/usr/bin/python3",
+    "-B",
+    "-m",
+    "unittest",
+    "-v",
+    "test_multi_machine_merge_replay.MultiMachineMergeReplay"
+  ],
+  "cwd": "/tmp/am99-bridge-69fc75d/source",
+  "env_overrides": {
+    "PYTHONPATH": "tests:tests/contracts",
+    "PYTHONDONTWRITEBYTECODE": "1"
+  },
+  "platform": "Linux-6.17.0-41-generic-x86_64-with-glibc2.42",
+  "hostname": "ns1025741",
+  "python": "3.13.7 (main, Mar  3 2026, 12:19:54) [GCC 15.2.0]",
+  "started_at": "2026-10-27T12:36:45.138546+00:00",
+  "elapsed_seconds": 14.712,
+  "exit_code": 0,
+  "timeout_seconds": 840,
+  "timed_out": false,
+  "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderr_sha256": "855a8634d87728f2952eace124ceee31e308575a4fb25b840b5ef3eb4651c4f3"
+}

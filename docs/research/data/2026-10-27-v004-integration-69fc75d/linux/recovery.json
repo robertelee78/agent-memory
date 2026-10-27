@@ -1,0 +1,28 @@
+{
+  "schema": "am-local-test-receipt-v1",
+  "source_commit": "69fc75d44f76921c6c984a6d4016cc03dd1d7cf1",
+  "case": "recovery",
+  "argv": [
+    "/usr/bin/python3",
+    "-B",
+    "-m",
+    "unittest",
+    "-v",
+    "test_refresh_recovery.RefreshRecoveryContract"
+  ],
+  "cwd": "/tmp/am99-bridge-69fc75d/source",
+  "env_overrides": {
+    "PYTHONPATH": "tests:tests/contracts",
+    "PYTHONDONTWRITEBYTECODE": "1"
+  },
+  "platform": "Linux-6.17.0-41-generic-x86_64-with-glibc2.42",
+  "hostname": "ns1025741",
+  "python": "3.13.7 (main, Mar  3 2026, 12:19:54) [GCC 15.2.0]",
+  "started_at": "2026-10-27T12:36:42.824466+00:00",
+  "elapsed_seconds": 13.098,
+  "exit_code": 0,
+  "timeout_seconds": 840,
+  "timed_out": false,
+  "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderr_sha256": "9f1a0144ca81009dc5d3a2ba6ff1b0a0884648448d6e65d3c8b8d29f051e3f82"
+}
