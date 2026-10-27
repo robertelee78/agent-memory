@@ -75,7 +75,22 @@ def prepare(old, state, code):
             if raw is not None:
                 after = {'kind': 'file', 'hash': install.sha(raw), 'mode': before['mode']}
         elif before is not None and before != target['identity']:
-            preserve(target, 'Current identity differs from installation ownership'); return
+            # A managed checkout's .git metadata can change without changing
+            # its receipt-owned payload. Re-establish that ownership, while
+            # retaining the exact current fingerprint as the transaction guard.
+            if (target['kind'] == 'source' and source.get('kind') == 'managed'
+                    and path == code and before.get('kind') == 'directory'
+                    and target['identity'].get('kind') == 'directory'
+                    and before.get('mode') == target['identity'].get('mode')):
+                try:
+                    from .managed_source import verify
+                    verify(path, source)
+                    install.require(install.fingerprint(path) == before,
+                                    'Managed source changed during ownership verification')
+                except (ContractError, OSError, ValueError, TypeError, KeyError, subprocess.SubprocessError):
+                    preserve(target, 'Current identity differs from installation ownership'); return
+            else:
+                preserve(target, 'Current identity differs from installation ownership'); return
         actions.append({'path': str(path), 'kind': target['kind'], 'before': before, 'after': after,
                         'raw': raw, 'mode_bits': before['mode'] if before and before['kind']=='file' else 0o644,
                         'changed': before != after})
