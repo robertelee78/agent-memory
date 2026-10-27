@@ -66,6 +66,11 @@ Replace **every** illustrative value with the actual observed source and agent
 judgment, including kind, source class, conditions, code state and assessment;
 consult [admission](../admission/GUIDE.md) for valid categories and evidence.
 This example is not evidence that an observation is confirmed or code-independent.
+For an operator statement, use the explicit configured developer identity or a
+non-identifying source label such as `operator`. In the actor, body, evidence and
+all other fields, do not infer or copy a personal email, account profile or
+contact details from harness authentication. Retain such details only when
+actual project evidence requires them and existing sharing rules permit them.
 Keep inputs and outputs private. The response's `capture`, `discovery` and
 `comparison_request` are inputs for the next steps; its discovery is explicitly
 incomplete. Select plausible routes and paths by meaning, then supply them in
