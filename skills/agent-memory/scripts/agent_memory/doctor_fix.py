@@ -54,13 +54,14 @@ def reconcile_hooks(state, code, old):
 
 def recover_completed_bank(repo):
     """Finish only a previously receipted outcome using the public recovery protocol."""
-    from . import bank_transactions as tx
+    from . import bank_transactions as tx, migration
     root, bank = tx.writes.bank_path(repo)
     marker = bank / tx.MARKER
     lock = bank / '.agent-memory.lock'
-    if not marker.is_file() or marker.is_symlink() or os.path.lexists(lock):
+    if not os.path.lexists(marker) or os.path.lexists(lock):
         return None
-    m = tx.load(marker.read_bytes())
+    raw, _ = migration.read_regular(bank, tx.MARKER, migration.MAX_FILE)
+    m = tx.load(raw)
     if not isinstance(m, dict) or not tx.uuid_valid(m.get('transaction_id')):
         return None
     journal, receipt_path = tx.locations(root, bank, m['transaction_id'])

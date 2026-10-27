@@ -66,6 +66,26 @@ class DoctorFixContract(unittest.TestCase):
             for entry in targets:
                 self.assertTrue(Path(entry['path']).exists())
 
+    def test_unsafe_bank_markers_are_preserved(self):
+        with World() as world:
+            repo, _, receipt = fixture(world)
+            cli = Path(receipt['bin_dir']) / 'am'
+            bank = make_bank(world, repo)
+            marker = bank / '.agent-memory-transaction.md'
+            external = world.inside('foreign-marker')
+            external.write_text('foreign data')
+            marker.symlink_to(external)
+            result = world.run([cli, 'doctor', '--fix', '--repo', repo, '--json'], check=False)
+            self.assertTrue(marker.is_symlink())
+            self.assertEqual(external.read_text(), 'foreign data')
+            self.assertFalse(json.loads(result.stdout)['repairs_performed'])
+            marker.unlink()
+            marker.write_bytes(b'x' * (2 * 1024 * 1024))
+            size = marker.stat().st_size
+            result = world.run([cli, 'doctor', '--fix', '--repo', repo, '--json'], check=False)
+            self.assertEqual(marker.stat().st_size, size)
+            self.assertFalse(json.loads(result.stdout)['repairs_performed'])
+
     def test_receipted_bank_transaction_cleanup(self):
         from contracts.test_bank_transactions import BankTransactionsContract
         helper = BankTransactionsContract()
