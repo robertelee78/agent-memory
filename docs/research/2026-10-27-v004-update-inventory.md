@@ -32,3 +32,9 @@ were in a disposable test world; project banks were observed read-only. This is
 a local-channel fixture, not a signed-channel network timing or an exact
 reproduction of the earlier 6m25s upgrade. Separate signed-transition tests
 passed on macOS and Linux.
+
+A separately recorded full update against candidate `66ea847` completed in
+100.988 seconds, verified, with 606 repositories, 151 banks and 70 gaps; it
+again reported no bank writes. Its private receipt includes source, command,
+host and output digests. These timings still use a local channel and differ
+from the original upgrade environment.
