@@ -1,0 +1,28 @@
+{
+  "schema": "am-local-test-receipt-v1",
+  "source_commit": "69fc75d44f76921c6c984a6d4016cc03dd1d7cf1",
+  "case": "v2-refresh",
+  "argv": [
+    "/usr/bin/python3",
+    "-B",
+    "-m",
+    "unittest",
+    "-v",
+    "test_quarantined_sharing_v2.QuarantinedSharingVersionTwoContract.test_local_unsafe_body_stays_local_while_safe_peer_learning_is_imported_and_recalled"
+  ],
+  "cwd": "/tmp/am99-bridge-69fc75d/source",
+  "env_overrides": {
+    "PYTHONPATH": "tests:tests/contracts",
+    "PYTHONDONTWRITEBYTECODE": "1"
+  },
+  "platform": "Linux-6.17.0-41-generic-x86_64-with-glibc2.42",
+  "hostname": "ns1025741",
+  "python": "3.13.7 (main, Mar  3 2026, 12:19:54) [GCC 15.2.0]",
+  "started_at": "2026-10-27T12:36:35.957555+00:00",
+  "elapsed_seconds": 6.865,
+  "exit_code": 0,
+  "timeout_seconds": 840,
+  "timed_out": false,
+  "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderr_sha256": "55e09333697880acaf987623ca9932e2e4c42aa35296bf8fbb061b13f553d5a3"
+}

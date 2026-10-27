@@ -1,0 +1,1720 @@
+{
+  "commit": "69fc75d44f76921c6c984a6d4016cc03dd1d7cf1",
+  "files": [
+    {
+      "path": "memory-bank/MEMORY.md",
+      "mode": "100644",
+      "blob": "57cbc5c7cc2e0846b8ee771e5cf825bf0ce7d771"
+    },
+    {
+      "path": "memory-bank/activeContext.md",
+      "mode": "100644",
+      "blob": "abd9f5565cddcadbb384972983e55c791d7bd400"
+    },
+    {
+      "path": "memory-bank/productContext.md",
+      "mode": "100644",
+      "blob": "9ddb8fdc010b5f0d84d3c339276b3e6eec16627a"
+    },
+    {
+      "path": "memory-bank/progress.md",
+      "mode": "100644",
+      "blob": "bb91ba28041cf2f575c3547541796c2aed274bb9"
+    },
+    {
+      "path": "memory-bank/projectbrief.md",
+      "mode": "100644",
+      "blob": "ee82ca9b8f73a071e25687961aad6fc600dc028c"
+    },
+    {
+      "path": "memory-bank/systemPatterns.md",
+      "mode": "100644",
+      "blob": "d17b83b3479ef43b7d442099fcfe0e5e57489b5c"
+    },
+    {
+      "path": "memory-bank/techContext.md",
+      "mode": "100644",
+      "blob": "8f28c5dfcc65e5e1defe86870d94ab144547c37a"
+    },
+    {
+      "path": "scripts/test_gate.py",
+      "mode": "100644",
+      "blob": "bb483bebe349f7933e86a45a058f1480b36bbb42"
+    },
+    {
+      "path": "skills/agent-memory/SKILL.md",
+      "mode": "100644",
+      "blob": "34f6bafcf538c043e4f11e0586aec6d5af0a64e9"
+    },
+    {
+      "path": "skills/agent-memory/access/GUIDE.md",
+      "mode": "100644",
+      "blob": "1df58941821802924a66ee5641096c1687b3cca8"
+    },
+    {
+      "path": "skills/agent-memory/adapters/github-publication.json",
+      "mode": "100644",
+      "blob": "ab8b674dbe62fe5e71194045352d1567a78e63d4"
+    },
+    {
+      "path": "skills/agent-memory/admission/GUIDE.md",
+      "mode": "100644",
+      "blob": "d41f759eb7d2d5fba10f27792c1e6ddedd6f9eb8"
+    },
+    {
+      "path": "skills/agent-memory/assembly/GUIDE.md",
+      "mode": "100644",
+      "blob": "3866f6ee19b373e65fd3226e65e34f3a74d88b68"
+    },
+    {
+      "path": "skills/agent-memory/authority/GUIDE.md",
+      "mode": "100644",
+      "blob": "f691dd01fb335ce74aaaab3197f2cf70fa14a315"
+    },
+    {
+      "path": "skills/agent-memory/bank/GUIDE.md",
+      "mode": "100644",
+      "blob": "c0da9ad25a1147963fe6021df709e0bfe4ad047f"
+    },
+    {
+      "path": "skills/agent-memory/bank/inspect/GUIDE.md",
+      "mode": "100644",
+      "blob": "02663047483d90210a03f1dea0f579cbb97fdd3f"
+    },
+    {
+      "path": "skills/agent-memory/capture/GUIDE.md",
+      "mode": "100644",
+      "blob": "73c1895f92964ef2c819b7c8375bc5119cc62a17"
+    },
+    {
+      "path": "skills/agent-memory/checkpoint/GUIDE.md",
+      "mode": "100644",
+      "blob": "0a1d7cae1f697f5cebf90374f293e8222d561d19"
+    },
+    {
+      "path": "skills/agent-memory/comparison/GUIDE.md",
+      "mode": "100644",
+      "blob": "dc3ec22dd22ede34f7337db88d79658ef3357341"
+    },
+    {
+      "path": "skills/agent-memory/consolidation/GUIDE.md",
+      "mode": "100644",
+      "blob": "44e94936855eb1a14b06cb9a1e53e50e1021b73b"
+    },
+    {
+      "path": "skills/agent-memory/discovery/GUIDE.md",
+      "mode": "100644",
+      "blob": "e2728e5bdec97ff8bda49f2bd3cb317dbcfea7e3"
+    },
+    {
+      "path": "skills/agent-memory/govern/GUIDE.md",
+      "mode": "100644",
+      "blob": "1b494cfdf49b57cff3fa7fceb2f4c25d166c872f"
+    },
+    {
+      "path": "skills/agent-memory/governance/GUIDE.md",
+      "mode": "100644",
+      "blob": "433151fe95948ebecfcfff74c18a9fda797ec6fa"
+    },
+    {
+      "path": "skills/agent-memory/identity/GUIDE.md",
+      "mode": "100644",
+      "blob": "c064f3880698734d0ba06f7eae7232e71daf2053"
+    },
+    {
+      "path": "skills/agent-memory/inactive/GUIDE.md",
+      "mode": "100644",
+      "blob": "af2a9c3f04d4af5e037783ee17f9b23a0183d0b3"
+    },
+    {
+      "path": "skills/agent-memory/initialize/GUIDE.md",
+      "mode": "100644",
+      "blob": "bf3216cd57da3e219612aac595a2bcfbd1d65a76"
+    },
+    {
+      "path": "skills/agent-memory/keys/allowed-signers",
+      "mode": "100644",
+      "blob": "6c953160730fe10542ed780656c1acc188793487"
+    },
+    {
+      "path": "skills/agent-memory/layout/GUIDE.md",
+      "mode": "100644",
+      "blob": "118fb16f66b5d689be09df9a94670e9c1f6f9f11"
+    },
+    {
+      "path": "skills/agent-memory/lifecycle/diagnose/GUIDE.md",
+      "mode": "100644",
+      "blob": "f980285f184f6ef21bd02d73487ff063e9dac9c7"
+    },
+    {
+      "path": "skills/agent-memory/lifecycle/install/GUIDE.md",
+      "mode": "100644",
+      "blob": "60c5925b1238d7669390bc21fcaf874eb2e76ae5"
+    },
+    {
+      "path": "skills/agent-memory/lifecycle/migrate/GUIDE.md",
+      "mode": "100644",
+      "blob": "0d8804d8cfe64c0b1a0f4581802e9506ad5bb98f"
+    },
+    {
+      "path": "skills/agent-memory/lifecycle/purge/GUIDE.md",
+      "mode": "100644",
+      "blob": "3e4a128ed6aea47cd57803dc0389d8a99bfec620"
+    },
+    {
+      "path": "skills/agent-memory/lifecycle/uninstall/GUIDE.md",
+      "mode": "100644",
+      "blob": "668da4ab3d96f0990b848f9da94f14f2b13d6592"
+    },
+    {
+      "path": "skills/agent-memory/lifecycle/update/GUIDE.md",
+      "mode": "100644",
+      "blob": "9dc3820e078cca033084495f8496395802a9d7da"
+    },
+    {
+      "path": "skills/agent-memory/maintain/GUIDE.md",
+      "mode": "100644",
+      "blob": "d72beae06ca012e55fb9ca3efa01e395e0feb04c"
+    },
+    {
+      "path": "skills/agent-memory/maintain/artifact/GUIDE.md",
+      "mode": "100644",
+      "blob": "7340c06cbf3d495bc574b1fc128d01f2228b5a22"
+    },
+    {
+      "path": "skills/agent-memory/maintain/cli/GUIDE.md",
+      "mode": "100644",
+      "blob": "c6439cb53b4918a12d35bfe0b1672d750b892982"
+    },
+    {
+      "path": "skills/agent-memory/maintain/pack/GUIDE.md",
+      "mode": "100644",
+      "blob": "e7064577c1bcaf4eda1858a23f0d60f95d628bdb"
+    },
+    {
+      "path": "skills/agent-memory/model/GUIDE.md",
+      "mode": "100644",
+      "blob": "5f580bf2fbbe3ab951666c62f5b17a31de9d3a64"
+    },
+    {
+      "path": "skills/agent-memory/offline/GUIDE.md",
+      "mode": "100644",
+      "blob": "bcb04ce62246643e615cd57da255494b0ceef822"
+    },
+    {
+      "path": "skills/agent-memory/projections/GUIDE.md",
+      "mode": "100644",
+      "blob": "ff01062f5e98f164c922ad2d1c8d6c4c83fdb962"
+    },
+    {
+      "path": "skills/agent-memory/recall/GUIDE.md",
+      "mode": "100644",
+      "blob": "5888c1bf5a27b7857fbe173a037cffbb6c621fee"
+    },
+    {
+      "path": "skills/agent-memory/records/GUIDE.md",
+      "mode": "100644",
+      "blob": "3b6bdcc286478068a97c9773ff58465ed98f2dc9"
+    },
+    {
+      "path": "skills/agent-memory/resume/GUIDE.md",
+      "mode": "100644",
+      "blob": "56ece96c4dd71d101bb262f47fe5edb0a85b4a58"
+    },
+    {
+      "path": "skills/agent-memory/retrieval/GUIDE.md",
+      "mode": "100644",
+      "blob": "826664991266ec2181d5e97db20e8014d004d0a2"
+    },
+    {
+      "path": "skills/agent-memory/schemas/authority-policy.json",
+      "mode": "100644",
+      "blob": "931b913088d31e310b4c90aabb8f30db179111a6"
+    },
+    {
+      "path": "skills/agent-memory/schemas/bank-router.json",
+      "mode": "100644",
+      "blob": "da017d60790de8007eec0f25b764d0510476be2d"
+    },
+    {
+      "path": "skills/agent-memory/schemas/developers.json",
+      "mode": "100644",
+      "blob": "340789d2c176b6729368632c1aa0796a41f13061"
+    },
+    {
+      "path": "skills/agent-memory/schemas/history-event.json",
+      "mode": "100644",
+      "blob": "7ae9551d4a4cad8542463cff9f3acfc253a727a3"
+    },
+    {
+      "path": "skills/agent-memory/schemas/lifecycle.json",
+      "mode": "100644",
+      "blob": "6bd0908ea45206b77c330d3428ff51de9a34ecc5"
+    },
+    {
+      "path": "skills/agent-memory/schemas/migrations.json",
+      "mode": "100644",
+      "blob": "b17939d1c1563a02ba46182b37e975bbf1d6e6d8"
+    },
+    {
+      "path": "skills/agent-memory/schemas/projects.json",
+      "mode": "100644",
+      "blob": "7646c59dab62207d081a69b0477090ca46356fa6"
+    },
+    {
+      "path": "skills/agent-memory/schemas/record.json",
+      "mode": "100644",
+      "blob": "cad4689ab442df85e69354a4e8df1d52a7c9cac3"
+    },
+    {
+      "path": "skills/agent-memory/schemas/runtime-compatibility.json",
+      "mode": "100644",
+      "blob": "5388262c7d804f116f855d5bc1618be610a00683"
+    },
+    {
+      "path": "skills/agent-memory/schemas/scope-policy.json",
+      "mode": "100644",
+      "blob": "49c80d5558bd536ea28f3a7cf09fc7cf882d3929"
+    },
+    {
+      "path": "skills/agent-memory/schemas/tombstone.json",
+      "mode": "100644",
+      "blob": "e3f4b29dc30211ab16ba1a531ea953e0bb4f6c91"
+    },
+    {
+      "path": "skills/agent-memory/schemas/topic-index.json",
+      "mode": "100644",
+      "blob": "c78ca3fa847ebe3dd81cb9b05b947db051bae407"
+    },
+    {
+      "path": "skills/agent-memory/scope/GUIDE.md",
+      "mode": "100644",
+      "blob": "773d4b22009fa48ba1fec51287010960f489e87c"
+    },
+    {
+      "path": "skills/agent-memory/scripts/admit_learning.py",
+      "mode": "100644",
+      "blob": "c0c00398efec147c6506f79ecde8348af6f34763"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/__init__.py",
+      "mode": "100644",
+      "blob": "99f53214a9aa2e23b8d988502da346bc760de852"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/admission.py",
+      "mode": "100644",
+      "blob": "75a50dc43f647a7779630bc524a7d34839bda9da"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/admission_navigation.py",
+      "mode": "100644",
+      "blob": "d7bc5f41a56d8285cb112ad07a780c34c929b1a6"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/artifact.py",
+      "mode": "100644",
+      "blob": "8ad2c943acf86a32bf5e741749b7ffad8fcda17c"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/assembly.py",
+      "mode": "100644",
+      "blob": "185186e7b5e1c61fe0405c86e2e053141609bb46"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/authority.py",
+      "mode": "100644",
+      "blob": "7b332ac99cb6c3a80bdbce2a405617f3ab528a7f"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/bank_contract.py",
+      "mode": "100644",
+      "blob": "9cb14b9bc722cbdb082fb35ccc4ee4d778912076"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/bank_layout.py",
+      "mode": "100644",
+      "blob": "fd4b1a464270af794a285cc78d6b6f6fd72eb22a"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/bank_observation.py",
+      "mode": "100644",
+      "blob": "cf967ff2056768a75686966de9131b215c5ec0fe"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/bank_state.py",
+      "mode": "100644",
+      "blob": "884f74e4c724e7022eaa6419f5881c1760f232dc"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/bank_transactions.py",
+      "mode": "100644",
+      "blob": "8f4c8fd7e920b8b1ab402c1532d91c3611d80d11"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/bank_writes.py",
+      "mode": "100644",
+      "blob": "53220def9d0a233cbcede508a7d2dc22ed47bcff"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/checkpoint.py",
+      "mode": "100644",
+      "blob": "226744c517dd9638f429ba2da939e743ba703354"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/cli.py",
+      "mode": "100644",
+      "blob": "4115fa01380a9968ecd74cc9a75d74aeabcb5a6b"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/comparison.py",
+      "mode": "100644",
+      "blob": "38cd9e0954b70655e46de10f60c8b56aa4886aa8"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/console.py",
+      "mode": "100644",
+      "blob": "c600c62f64f4a5e49ac33adad85f2c2c07c9071d"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/consolidation.py",
+      "mode": "100644",
+      "blob": "f6944d6c8180fe1fa7e7d9bb0369e24e072545d7"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/developer_identity.py",
+      "mode": "100644",
+      "blob": "1a303483e855cd98e84ea949bc5bd54043390a3f"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/diagnostics.py",
+      "mode": "100644",
+      "blob": "f6724c78880923b0e3edca75b3c86b0edef0fa60"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/discovery.py",
+      "mode": "100644",
+      "blob": "20d8e51fcfac91575cd9a60be374a05f20658f9c"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/frontmatter.py",
+      "mode": "100644",
+      "blob": "3f4db58fa2d6984a5a69616dbdb6ced667c6218e"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/governance.py",
+      "mode": "100644",
+      "blob": "74e078711499c92418eab0d6dda63ed60b5983f4"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/handoff.py",
+      "mode": "100644",
+      "blob": "c78e27388235383b560c7f1d6b5e20fa08bedb8c"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/identity_git.py",
+      "mode": "100644",
+      "blob": "8dde490616f895d392ceea8d32ec4efa36940e96"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/inactive.py",
+      "mode": "100644",
+      "blob": "90254d0635456d878a6157aae481b16ebcfd1c05"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/initialization.py",
+      "mode": "100644",
+      "blob": "84f3c13f981892b66ff4ccb466cd70dfb4d412e8"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/installation.py",
+      "mode": "100644",
+      "blob": "7de45e76ab3d9b5d916766e2870584114c673497"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/lifecycle.py",
+      "mode": "100644",
+      "blob": "5c8f946fce417055c3839407df1b13e89a5281cb"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/local_registry.py",
+      "mode": "100644",
+      "blob": "892987bab66df38a49aa83e23562d9198b940e2a"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/managed_source.py",
+      "mode": "100644",
+      "blob": "7b8caae83642631a3e9d1c6033e5a7acce02d690"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/memory_publication.py",
+      "mode": "100644",
+      "blob": "22e38633e73a2809537839ecb39163cac5d1b7d0"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/memory_refresh.py",
+      "mode": "100644",
+      "blob": "03bd3b161fcf6dd5e90585243b02858a0eecdb93"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/migration.py",
+      "mode": "100644",
+      "blob": "13deb34126e9d3580cb53def32f24408227a052b"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/migration_codecs.py",
+      "mode": "100644",
+      "blob": "200aeb590d4beffaba8026d12736ff69d1d2879b"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/migration_contract.py",
+      "mode": "100644",
+      "blob": "06e2fe261a487f29051bc23a2cdc907057eef5e3"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/model_reference.py",
+      "mode": "100644",
+      "blob": "30bd91f52f51ce202a0657eb3a715e1479d63ce1"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/pack_validation.py",
+      "mode": "100644",
+      "blob": "1f4fabc1e0acdaed68de7a17c6dcaf3dcb426a60"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/project_identity.py",
+      "mode": "100644",
+      "blob": "8e46f5a9e4eede7bf23be4791b467b7691d8ba33"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/projections.py",
+      "mode": "100644",
+      "blob": "552dbeb835310aae3e78914f4c05e1b3e24f7954"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/purging.py",
+      "mode": "100644",
+      "blob": "a4216c2db49bb531592c8bc6d3bdc50d36c401f6"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/recall_catalog.py",
+      "mode": "100644",
+      "blob": "85823752d11096aba71cb1203b8ad104ff575782"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/records.py",
+      "mode": "100644",
+      "blob": "1da95764f4c50421c070f44cedcf5691d11c46f4"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/release_distribution.py",
+      "mode": "100644",
+      "blob": "80b5f0d6cdf382627a06523cc2d8396883b34891"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/remote_identity.py",
+      "mode": "100644",
+      "blob": "2c1ea3b66d317b5986f9e8218df4d8ecbec16076"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/repository_config.py",
+      "mode": "100644",
+      "blob": "40fe050739f48f04caebcce158439c970e03e3d1"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/retrieval.py",
+      "mode": "100644",
+      "blob": "9dd054560fb4c8113af887f41a21c4c4198c3755"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/runtime_faults.py",
+      "mode": "100644",
+      "blob": "f38a238ff43fd44bacedaf1f43557761916e9095"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/scope_binding.py",
+      "mode": "100644",
+      "blob": "144e9ac5a1f85cedf9979155803a476999441eaf"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/scopes.py",
+      "mode": "100644",
+      "blob": "d6e622e61f8815a5b38d0e72101caa324cf676b3"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/security.py",
+      "mode": "100644",
+      "blob": "be0ac071a0693628943ce5e63a4662f2b6c703c4"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/semantic_sharing.py",
+      "mode": "100644",
+      "blob": "02e8c02e8835211e8e6f8e526d7db39f25490043"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/sharing_boundary.py",
+      "mode": "100644",
+      "blob": "20f8023551a212e8c3cdc1c6a9b364c82e5bf26c"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/sharing_frontier.py",
+      "mode": "100644",
+      "blob": "4460b390e51201d7eb258584e0c1abc2656ab32d"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/sharing_hold_mapping.py",
+      "mode": "100644",
+      "blob": "3012be8a9895fb767c6b43c22e74c4b1830f9e2c"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/sharing_holds.py",
+      "mode": "100644",
+      "blob": "177fdf70d0867e9bfadc49b2a06389820fe13608"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/sharing_limits.py",
+      "mode": "100644",
+      "blob": "1afc018c5b81894cddf8cddea1b925e04f457b87"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/sharing_recovery.py",
+      "mode": "100644",
+      "blob": "59005a058ede7dac5720acbd7fbed8a813aa4609"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/tombstones.py",
+      "mode": "100644",
+      "blob": "69b0caa3e02b71fc4aa38d3a6e498884a613a113"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/trust_paths.py",
+      "mode": "100644",
+      "blob": "923759bcfe1bc160068a1f999e69002f4eea9009"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/uninstallation.py",
+      "mode": "100644",
+      "blob": "b214b37effd5364472ca5870036cd80ff82bd127"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/updating.py",
+      "mode": "100644",
+      "blob": "eefb58bcdaad7c441802d889d2959d3507732630"
+    },
+    {
+      "path": "skills/agent-memory/scripts/agent_memory/validation_memo.py",
+      "mode": "100644",
+      "blob": "342f9e63fd32944a9b6edc0d42f2a4909514c39a"
+    },
+    {
+      "path": "skills/agent-memory/scripts/am_console.py",
+      "mode": "100644",
+      "blob": "2e345cc20c196d430fd108859acf92c4bcef7306"
+    },
+    {
+      "path": "skills/agent-memory/scripts/artifact.py",
+      "mode": "100644",
+      "blob": "fd19d599e3bd10553a05b6f68199d983ae8d8e54"
+    },
+    {
+      "path": "skills/agent-memory/scripts/assemble_context.py",
+      "mode": "100644",
+      "blob": "3760e5bd31f5c38ee5c27384bed236a0dd3dde47"
+    },
+    {
+      "path": "skills/agent-memory/scripts/authority_policy.py",
+      "mode": "100644",
+      "blob": "a618233a594157c4b37a77cf90e80bfec9090e7a"
+    },
+    {
+      "path": "skills/agent-memory/scripts/bank_contract.py",
+      "mode": "100644",
+      "blob": "6f317383f651307ca10b09d2f63cf8c8cb988649"
+    },
+    {
+      "path": "skills/agent-memory/scripts/bank_layout.py",
+      "mode": "100644",
+      "blob": "5ec6d277201c7bc2ce3270c9c5cb1dd1772ca4b5"
+    },
+    {
+      "path": "skills/agent-memory/scripts/bank_state.py",
+      "mode": "100644",
+      "blob": "3028752750025543b5e7d92326cc708b46106440"
+    },
+    {
+      "path": "skills/agent-memory/scripts/bank_transactions.py",
+      "mode": "100644",
+      "blob": "9783b928620d79514aae66bba3b0f20c5016653f"
+    },
+    {
+      "path": "skills/agent-memory/scripts/bank_writes.py",
+      "mode": "100644",
+      "blob": "3dddef8e90f1e619777b8aa4e29bb976a91541e0"
+    },
+    {
+      "path": "skills/agent-memory/scripts/checkpoint.py",
+      "mode": "100644",
+      "blob": "e0b34bd216a08d1e1c51b3886786f7d47fb88935"
+    },
+    {
+      "path": "skills/agent-memory/scripts/compare_learning.py",
+      "mode": "100644",
+      "blob": "7367475cda57f87a847347a53b26a6c12cc2d160"
+    },
+    {
+      "path": "skills/agent-memory/scripts/consolidate_learning.py",
+      "mode": "100644",
+      "blob": "75a8b0cfd7c302ba722681a598458930a22d4fbf"
+    },
+    {
+      "path": "skills/agent-memory/scripts/developer_identity.py",
+      "mode": "100644",
+      "blob": "a991e66e129558f8d7dd92f06d79a42be694c9e5"
+    },
+    {
+      "path": "skills/agent-memory/scripts/diagnose.py",
+      "mode": "100644",
+      "blob": "2c155961208ad9824b0aaf1dab2b6bfe395a8dae"
+    },
+    {
+      "path": "skills/agent-memory/scripts/discover_memory.py",
+      "mode": "100644",
+      "blob": "0847c4c881af0b215872a222315d4358aed4c878"
+    },
+    {
+      "path": "skills/agent-memory/scripts/govern_memory.py",
+      "mode": "100644",
+      "blob": "70587d926412678b024a272477e61a5a37d7f20d"
+    },
+    {
+      "path": "skills/agent-memory/scripts/inactive_records.py",
+      "mode": "100644",
+      "blob": "30c8f4d82268a98622465864c871358572f4d506"
+    },
+    {
+      "path": "skills/agent-memory/scripts/initialize.py",
+      "mode": "100644",
+      "blob": "993da93afc747c3f3a12ca886050740bb1e2b803"
+    },
+    {
+      "path": "skills/agent-memory/scripts/installer.py",
+      "mode": "100644",
+      "blob": "6057ed3b83f14464cad283a7b7f9eac1307eeaed"
+    },
+    {
+      "path": "skills/agent-memory/scripts/lifecycle_model.py",
+      "mode": "100644",
+      "blob": "d86065e70ce918138a7ba729866a39f170061b0c"
+    },
+    {
+      "path": "skills/agent-memory/scripts/migrate_bank.py",
+      "mode": "100644",
+      "blob": "e1d4ab80d63baca80f90eef92b38e04adf7b978e"
+    },
+    {
+      "path": "skills/agent-memory/scripts/project_identity.py",
+      "mode": "100644",
+      "blob": "3b3cae479451ade6cd597d953bb733d337ed233c"
+    },
+    {
+      "path": "skills/agent-memory/scripts/projection.py",
+      "mode": "100644",
+      "blob": "dfc7f62032c92fa6defc6887710376dfc5feadfc"
+    },
+    {
+      "path": "skills/agent-memory/scripts/publish_memory.py",
+      "mode": "100644",
+      "blob": "1b4d3f30dbb955217b638c41de7ad34c83bbc355"
+    },
+    {
+      "path": "skills/agent-memory/scripts/reconcile_memory.py",
+      "mode": "100644",
+      "blob": "849ad17429ff814a9b04db3a01dfabb75cbb3afe"
+    },
+    {
+      "path": "skills/agent-memory/scripts/record_contract.py",
+      "mode": "100644",
+      "blob": "417baed5ef442bd91263e42c95dc837334b643bb"
+    },
+    {
+      "path": "skills/agent-memory/scripts/refresh_memory.py",
+      "mode": "100644",
+      "blob": "cac106236f918b0213685d8e7e8fa6fb00af0042"
+    },
+    {
+      "path": "skills/agent-memory/scripts/retrieve.py",
+      "mode": "100644",
+      "blob": "5faaf2bbc4b96593ad4cd3d05250725649ad9446"
+    },
+    {
+      "path": "skills/agent-memory/scripts/scope_binding.py",
+      "mode": "100644",
+      "blob": "ca87979ad04b3ad5250917f3fc693f78f4ee4399"
+    },
+    {
+      "path": "skills/agent-memory/scripts/scope_policy.py",
+      "mode": "100644",
+      "blob": "4a3fda7a233286f5419a12cabe38bba49fa53ea2"
+    },
+    {
+      "path": "skills/agent-memory/scripts/security_policy.py",
+      "mode": "100644",
+      "blob": "1f7e296070cb817653e27082cd353256ff1cc905"
+    },
+    {
+      "path": "skills/agent-memory/scripts/sharing_boundary.py",
+      "mode": "100644",
+      "blob": "981c2bf7b24a50b8990834819c338e9da2d47546"
+    },
+    {
+      "path": "skills/agent-memory/scripts/sharing_recovery.py",
+      "mode": "100644",
+      "blob": "de788e9ac9ec1103c8a195b013a8e82f05e26d32"
+    },
+    {
+      "path": "skills/agent-memory/scripts/tombstones.py",
+      "mode": "100644",
+      "blob": "a87695a7326d9b1cdb336a9bf8d3d638397904e7"
+    },
+    {
+      "path": "skills/agent-memory/scripts/uninstall_runtime.py",
+      "mode": "100644",
+      "blob": "063e20ea491b034e85f19b84767cfe9ee2d4766b"
+    },
+    {
+      "path": "skills/agent-memory/scripts/update_runtime.py",
+      "mode": "100644",
+      "blob": "51a046ae0352d8ea15e84c35f4f2ee93b3760fc4"
+    },
+    {
+      "path": "skills/agent-memory/scripts/validate_pack.py",
+      "mode": "100644",
+      "blob": "318e7ec80b09d42f3ebacf222f13e0bd98e4c7db"
+    },
+    {
+      "path": "skills/agent-memory/security/GUIDE.md",
+      "mode": "100644",
+      "blob": "650e53539a5c928bfd5853d3080bdc709b050aa3"
+    },
+    {
+      "path": "skills/agent-memory/sharing/GUIDE.md",
+      "mode": "100644",
+      "blob": "4b8728940ce53345062ee42e8f3d335c9466750f"
+    },
+    {
+      "path": "skills/agent-memory/sharing/boundary/GUIDE.md",
+      "mode": "100644",
+      "blob": "226c732eb4413be51893c87f4ff269f5ba82e132"
+    },
+    {
+      "path": "skills/agent-memory/sharing/publication/GUIDE.md",
+      "mode": "100644",
+      "blob": "8bd479133ea7b3db7cd122a64aee4f633331dce4"
+    },
+    {
+      "path": "skills/agent-memory/sharing/recovery/GUIDE.md",
+      "mode": "100644",
+      "blob": "3364b1a4f7db44aa9bef594759e7d52573c7d3b3"
+    },
+    {
+      "path": "skills/agent-memory/sharing/refresh/GUIDE.md",
+      "mode": "100644",
+      "blob": "378f7f9d8498e4195e13f3ccf81dbaff9522f10e"
+    },
+    {
+      "path": "skills/agent-memory/sharing/semantic/GUIDE.md",
+      "mode": "100644",
+      "blob": "09df9dbbd97ca449e17fbf79d1fbeca416e63c8b"
+    },
+    {
+      "path": "skills/agent-memory/templates/activation-markdown.example.txt",
+      "mode": "100644",
+      "blob": "4817b159b874f767c25315e7e6a981362157559c"
+    },
+    {
+      "path": "skills/agent-memory/templates/record-proposal.example.json",
+      "mode": "100644",
+      "blob": "ba2cbb2428994694b4bd101fff2b1484dc46e049"
+    },
+    {
+      "path": "skills/agent-memory/templates/router-markdown.example.txt",
+      "mode": "100644",
+      "blob": "6c8a5af5b33c480a8acc2ba8a983c6b215a36772"
+    },
+    {
+      "path": "skills/agent-memory/templates/router-proposal.example.json",
+      "mode": "100644",
+      "blob": "74fb7ecb6c16df083d57162389b86a6b437d8fd0"
+    },
+    {
+      "path": "skills/agent-memory/writes/GUIDE.md",
+      "mode": "100644",
+      "blob": "dbea4d3900f5f2ad098d5f4c04d6e93ab767ab0a"
+    },
+    {
+      "path": "tests/cli_alias_fixtures.py",
+      "mode": "100644",
+      "blob": "4dd9819ad3f0f9ce839fe473b090fe559fa896bb"
+    },
+    {
+      "path": "tests/contracts.json",
+      "mode": "100644",
+      "blob": "d3d1f567b3829c933e4cadc3c204aa587bee2d21"
+    },
+    {
+      "path": "tests/contracts/test_admission.py",
+      "mode": "100644",
+      "blob": "c1421cb73750284eede612d1831b864b5338793c"
+    },
+    {
+      "path": "tests/contracts/test_assembly.py",
+      "mode": "100644",
+      "blob": "e6a1c34545c65683a52d34a9ef656d22c4bef8fd"
+    },
+    {
+      "path": "tests/contracts/test_authority_boundary.py",
+      "mode": "100644",
+      "blob": "4740ddb7f4e55c1926d965526aa5af51b5a7c4e4"
+    },
+    {
+      "path": "tests/contracts/test_authority_policy.py",
+      "mode": "100644",
+      "blob": "e7cf11074556c0c9938b3612748b8cf2c926cde6"
+    },
+    {
+      "path": "tests/contracts/test_bank_layout.py",
+      "mode": "100644",
+      "blob": "18ae59ebad1a6954d676d54babdd5d1aa85b85eb"
+    },
+    {
+      "path": "tests/contracts/test_bank_transactions.py",
+      "mode": "100644",
+      "blob": "7726fc1a897652b58d871f2c2a7face802a7ed59"
+    },
+    {
+      "path": "tests/contracts/test_bank_usability.py",
+      "mode": "100644",
+      "blob": "1812c7f14bf0275110984dc44a1c3eaa4f00ac51"
+    },
+    {
+      "path": "tests/contracts/test_bank_writes.py",
+      "mode": "100644",
+      "blob": "cdd03674b64aae61ff29bc0668a9bb5efd72668e"
+    },
+    {
+      "path": "tests/contracts/test_bounded_bank_observation.py",
+      "mode": "100644",
+      "blob": "221d34e7c1142d4a828e47c50de5dc6765711fd9"
+    },
+    {
+      "path": "tests/contracts/test_bounded_resume.py",
+      "mode": "100644",
+      "blob": "d89e14194fc873561715fbdc593ca653722d7519"
+    },
+    {
+      "path": "tests/contracts/test_checkpoint.py",
+      "mode": "100644",
+      "blob": "3ea0a829b7d8a1b969891db38745fa3ac77dba01"
+    },
+    {
+      "path": "tests/contracts/test_comparison.py",
+      "mode": "100644",
+      "blob": "03742788f541bc92dea0c987fc8b90d5daad305c"
+    },
+    {
+      "path": "tests/contracts/test_concurrent_bank_writers.py",
+      "mode": "100644",
+      "blob": "6504ac6813a63a36000435cdb9f659fe79df3450"
+    },
+    {
+      "path": "tests/contracts/test_consolidation.py",
+      "mode": "100644",
+      "blob": "6a7c22e2deda191fb6c96d1f1b5775d81dbf84fc"
+    },
+    {
+      "path": "tests/contracts/test_current_bank.py",
+      "mode": "100644",
+      "blob": "da303b5d357e80880ea412d6ee3ba407c4129669"
+    },
+    {
+      "path": "tests/contracts/test_developer_identity.py",
+      "mode": "100644",
+      "blob": "43ec518bf144d6b6b0196ad8261f40f76d4b31f2"
+    },
+    {
+      "path": "tests/contracts/test_discovery.py",
+      "mode": "100644",
+      "blob": "c8fb4d367bf4d15491b1ff97eabbe76859030d0d"
+    },
+    {
+      "path": "tests/contracts/test_discovery_workflow.py",
+      "mode": "100644",
+      "blob": "c00a5d00d5971b8c06302599763e34e12843d5b6"
+    },
+    {
+      "path": "tests/contracts/test_explicit_migration.py",
+      "mode": "100644",
+      "blob": "dbe35e202244f2557f47cc397e57f40fcd7d0ab8"
+    },
+    {
+      "path": "tests/contracts/test_gate_diagnostics.py",
+      "mode": "100644",
+      "blob": "2271b95559f9fc6e3b687d536eb81d3e311a0cf4"
+    },
+    {
+      "path": "tests/contracts/test_governance.py",
+      "mode": "100644",
+      "blob": "3b539fc4c16fe62c84dcf434f7109fcfccf18992"
+    },
+    {
+      "path": "tests/contracts/test_governance_recovery.py",
+      "mode": "100644",
+      "blob": "aa0ef27bfa546394859b98bc71c7f2435c989dcc"
+    },
+    {
+      "path": "tests/contracts/test_harness.py",
+      "mode": "100644",
+      "blob": "5d07a447db789de5f0cc10af93d8835c5db48f62"
+    },
+    {
+      "path": "tests/contracts/test_identity_canaries.py",
+      "mode": "100644",
+      "blob": "8902d27dc73bb24cb4f8785dee2b1b28bafeb3e5"
+    },
+    {
+      "path": "tests/contracts/test_inactive_guidance.py",
+      "mode": "100644",
+      "blob": "8ea5189e7194cea726f68b73636cd2bbb4c12fe0"
+    },
+    {
+      "path": "tests/contracts/test_incident_evidence.py",
+      "mode": "100644",
+      "blob": "4086ee115035be16e691e805db0e63160b3c84c2"
+    },
+    {
+      "path": "tests/contracts/test_independent_local_bank.py",
+      "mode": "100644",
+      "blob": "e3308ad61817e0905c2826da9cb497248ca1b513"
+    },
+    {
+      "path": "tests/contracts/test_initialization.py",
+      "mode": "100644",
+      "blob": "2891d6327c931ae7e2fd3fb12389accfd3c2c903"
+    },
+    {
+      "path": "tests/contracts/test_initialization_routes.py",
+      "mode": "100644",
+      "blob": "f86515713e72be3c49776aaf13770a70fee9408d"
+    },
+    {
+      "path": "tests/contracts/test_install_write_copy_after.py",
+      "mode": "100644",
+      "blob": "14896b25c628c3ad158d5e156e8900c93474f9dc"
+    },
+    {
+      "path": "tests/contracts/test_install_write_copy_after_part_1.py",
+      "mode": "100644",
+      "blob": "5e4693a4e875c5291d59490cfa56516782a53f99"
+    },
+    {
+      "path": "tests/contracts/test_install_write_copy_after_part_2.py",
+      "mode": "100644",
+      "blob": "9dd88160f10287b9a9e65cb645a0b0f729315863"
+    },
+    {
+      "path": "tests/contracts/test_install_write_copy_after_part_3.py",
+      "mode": "100644",
+      "blob": "6b36ec7a3d524cb2103b093afccd22eeb6386d4e"
+    },
+    {
+      "path": "tests/contracts/test_install_write_copy_before.py",
+      "mode": "100644",
+      "blob": "090faa314a7392590dbdb3ab2790c683d94d4593"
+    },
+    {
+      "path": "tests/contracts/test_install_write_copy_before_part_1.py",
+      "mode": "100644",
+      "blob": "223ce2b88ab2181bdf803154123502d428d1458e"
+    },
+    {
+      "path": "tests/contracts/test_install_write_copy_before_part_2.py",
+      "mode": "100644",
+      "blob": "e2400c73c23f5849fef7ea430e18571d968a8df6"
+    },
+    {
+      "path": "tests/contracts/test_install_write_copy_before_part_3.py",
+      "mode": "100644",
+      "blob": "9f9b0e39784686b2e1ac0558cb39ff24bfbd1227"
+    },
+    {
+      "path": "tests/contracts/test_install_write_link_after.py",
+      "mode": "100644",
+      "blob": "6f1a2b228e51f4b842d6e1b4860053d5149cf7ff"
+    },
+    {
+      "path": "tests/contracts/test_install_write_link_after_part_1.py",
+      "mode": "100644",
+      "blob": "8e5c974c0b9cc33a8b871d3342d2df3f4b22d0e8"
+    },
+    {
+      "path": "tests/contracts/test_install_write_link_after_part_2.py",
+      "mode": "100644",
+      "blob": "c444856701f389ec1cfcebdcfc9091cbb9c33a6c"
+    },
+    {
+      "path": "tests/contracts/test_install_write_link_after_part_3.py",
+      "mode": "100644",
+      "blob": "521866b32cfd51e4736879f6eacd1b0fbaeb9550"
+    },
+    {
+      "path": "tests/contracts/test_install_write_link_before.py",
+      "mode": "100644",
+      "blob": "b1cc65df4578c67f8c04d65ca6e94b817941930a"
+    },
+    {
+      "path": "tests/contracts/test_install_write_link_before_part_1.py",
+      "mode": "100644",
+      "blob": "587c5f53d0f36c1e678d6285eddc683804ca9c3e"
+    },
+    {
+      "path": "tests/contracts/test_install_write_link_before_part_2.py",
+      "mode": "100644",
+      "blob": "9ab7cd81cb5d4fb9266747448b64f5d7a09d2468"
+    },
+    {
+      "path": "tests/contracts/test_install_write_link_before_part_3.py",
+      "mode": "100644",
+      "blob": "10036fa222ee75f0a2e6372cea24f2658b8d0030"
+    },
+    {
+      "path": "tests/contracts/test_installed_bank_governance.py",
+      "mode": "100644",
+      "blob": "f0888bc8fce0c2ad287f6ebd748693408108c8b7"
+    },
+    {
+      "path": "tests/contracts/test_installed_bank_initialization.py",
+      "mode": "100644",
+      "blob": "c824c350077127ef3342e926c5374c510d6f2c45"
+    },
+    {
+      "path": "tests/contracts/test_installed_bank_qualified_recall.py",
+      "mode": "100644",
+      "blob": "f0216cef05e402cc689c3642142097721d78cb30"
+    },
+    {
+      "path": "tests/contracts/test_installed_bank_roundtrip.py",
+      "mode": "100644",
+      "blob": "f497d1b860fe2bc13e2bb286fcd7b5b06229f871"
+    },
+    {
+      "path": "tests/contracts/test_installed_layout.py",
+      "mode": "100644",
+      "blob": "c2a81105c4c87a8c68863486b35ee4164bd5d6a0"
+    },
+    {
+      "path": "tests/contracts/test_installer.py",
+      "mode": "100644",
+      "blob": "5bf5bac950433c44208225f683832222bf8b580f"
+    },
+    {
+      "path": "tests/contracts/test_known_holds_v2.py",
+      "mode": "100644",
+      "blob": "5feebe6cb84d9069e09a0fe369430e4e06c24b89"
+    },
+    {
+      "path": "tests/contracts/test_large_refresh_security.py",
+      "mode": "100644",
+      "blob": "da919bc714c3cb74cfe5da8656aaadfc72d8b1a8"
+    },
+    {
+      "path": "tests/contracts/test_legacy_uninstall_metadata.py",
+      "mode": "100644",
+      "blob": "6c6a154ad4f89f6d26d11673924dff676b44ef19"
+    },
+    {
+      "path": "tests/contracts/test_lifecycle_cleanup_after.py",
+      "mode": "100644",
+      "blob": "168efaddbf6e07e7027833217d336dacbbf2b06d"
+    },
+    {
+      "path": "tests/contracts/test_lifecycle_cleanup_before.py",
+      "mode": "100644",
+      "blob": "ad4eebc15c9534fc58e6ef43057eaa5916edc2c0"
+    },
+    {
+      "path": "tests/contracts/test_lifecycle_lost_responses.py",
+      "mode": "100644",
+      "blob": "7100e56ccc254f029f16f036696c17a6d4011bc3"
+    },
+    {
+      "path": "tests/contracts/test_lifecycle_model.py",
+      "mode": "100644",
+      "blob": "3076f5b62826ad95deb08013047eea858b1ed1e8"
+    },
+    {
+      "path": "tests/contracts/test_lifecycle_partitions.py",
+      "mode": "100644",
+      "blob": "b47429577c6a154c994cf3eb54dd97b4dc475c84"
+    },
+    {
+      "path": "tests/contracts/test_lifecycle_security_contract.py",
+      "mode": "100644",
+      "blob": "f6dca6b02c20664481b7f0bbebd5ef3dfb78a25b"
+    },
+    {
+      "path": "tests/contracts/test_lifecycle_trust.py",
+      "mode": "100644",
+      "blob": "30b3c470dfcbea2ac07d3e1fcb9fddc76b927333"
+    },
+    {
+      "path": "tests/contracts/test_managed_source_bounds.py",
+      "mode": "100644",
+      "blob": "b01fcb33ab6a64787e7084980988d077081ddfdd"
+    },
+    {
+      "path": "tests/contracts/test_managed_source_ownership.py",
+      "mode": "100644",
+      "blob": "18ccdd9aeaf3de8e104725f01a858aa33e39b7f4"
+    },
+    {
+      "path": "tests/contracts/test_manual_checkpoint.py",
+      "mode": "100644",
+      "blob": "4be87795d5fe5a5d5bd1efc1d13dc7fc62b5ddb9"
+    },
+    {
+      "path": "tests/contracts/test_memory_publication.py",
+      "mode": "100644",
+      "blob": "13dfa32731662f7687bac7f6567101a6117e5919"
+    },
+    {
+      "path": "tests/contracts/test_memory_refresh.py",
+      "mode": "100644",
+      "blob": "38c76687a5685090633633584265161eb7cc2d24"
+    },
+    {
+      "path": "tests/contracts/test_migration_catalog.py",
+      "mode": "100644",
+      "blob": "806a135445b20e74de1d203be8e857da65f3e759"
+    },
+    {
+      "path": "tests/contracts/test_migration_runtime_rollback.py",
+      "mode": "100644",
+      "blob": "3479a8f3a81152178653e9814aabb11f6061e3a6"
+    },
+    {
+      "path": "tests/contracts/test_multi_machine_compatible.py",
+      "mode": "100644",
+      "blob": "676ae3dbeb6836b45ab1e543f90a55146b196359"
+    },
+    {
+      "path": "tests/contracts/test_multi_machine_conflicts.py",
+      "mode": "100644",
+      "blob": "f28ccf92f126ddc70a3061c59b41ec82094064ad"
+    },
+    {
+      "path": "tests/contracts/test_multi_machine_matrix.py",
+      "mode": "100644",
+      "blob": "1513904c4f08ca914103aa55383b324d15410572"
+    },
+    {
+      "path": "tests/contracts/test_multi_machine_merge_replay.py",
+      "mode": "100644",
+      "blob": "a6fd43c667373dc35f2a95beba95c2529bbdab09"
+    },
+    {
+      "path": "tests/contracts/test_multi_machine_race.py",
+      "mode": "100644",
+      "blob": "e3f8fbf60e1decce6be2c655ac18c8f24973980c"
+    },
+    {
+      "path": "tests/contracts/test_new_topic_merge.py",
+      "mode": "100644",
+      "blob": "0896dffd94116276747e380c1f179651075f60c5"
+    },
+    {
+      "path": "tests/contracts/test_observation_applicability.py",
+      "mode": "100644",
+      "blob": "e4b6fcece07647b823853ea8854cdb2d782c52a5"
+    },
+    {
+      "path": "tests/contracts/test_offline_skill.py",
+      "mode": "100644",
+      "blob": "63d479fc36b8f87840f7c48ae0f3cd3a61adb518"
+    },
+    {
+      "path": "tests/contracts/test_portable_artifact.py",
+      "mode": "100644",
+      "blob": "615665fb909d1b4c46cbb2d206b9ed3148cf2791"
+    },
+    {
+      "path": "tests/contracts/test_portable_handoff.py",
+      "mode": "100644",
+      "blob": "3bf5a3f8052114aaeb5fcddfba5a664d85115552"
+    },
+    {
+      "path": "tests/contracts/test_portable_lifecycle.py",
+      "mode": "100644",
+      "blob": "564f69fde92d3c33390e782802da14491044afee"
+    },
+    {
+      "path": "tests/contracts/test_project_identity.py",
+      "mode": "100644",
+      "blob": "1052726ce0f05d6ea0bb562af5cd252142579f98"
+    },
+    {
+      "path": "tests/contracts/test_projection_contract.py",
+      "mode": "100644",
+      "blob": "5d808c85e90346a1c378487fe690b27dd7526acb"
+    },
+    {
+      "path": "tests/contracts/test_public_cli.py",
+      "mode": "100644",
+      "blob": "2fba4b23244ea62189563f36634e4b7485ae80c0"
+    },
+    {
+      "path": "tests/contracts/test_publication_admission.py",
+      "mode": "100644",
+      "blob": "5e59d6477042155dd0a17898675e34ebb17cf801"
+    },
+    {
+      "path": "tests/contracts/test_publication_hold_recovery.py",
+      "mode": "100644",
+      "blob": "b468a3459bf1abac63c96e61376c4ab556623c8d"
+    },
+    {
+      "path": "tests/contracts/test_publication_pending.py",
+      "mode": "100644",
+      "blob": "0a19e71b118b565eed9bb99c68e01ebd2043daf0"
+    },
+    {
+      "path": "tests/contracts/test_publication_policy.py",
+      "mode": "100644",
+      "blob": "c8b667bc28185219a4a9411e05db078017506faf"
+    },
+    {
+      "path": "tests/contracts/test_publication_recovery.py",
+      "mode": "100644",
+      "blob": "b21e9008c9633bb6c8452a7f6b1e8b9825105c74"
+    },
+    {
+      "path": "tests/contracts/test_publication_worktree.py",
+      "mode": "100644",
+      "blob": "a8845789899c561e1464c3835a71484fc9be3824"
+    },
+    {
+      "path": "tests/contracts/test_purge_unlock_after.py",
+      "mode": "100644",
+      "blob": "0e73f8f67536d5b2f57a0eadac9d70881b90f779"
+    },
+    {
+      "path": "tests/contracts/test_purge_unlock_before.py",
+      "mode": "100644",
+      "blob": "de274fcccfe75df1ee781cbe90f840658cf0e28c"
+    },
+    {
+      "path": "tests/contracts/test_purge_write_after.py",
+      "mode": "100644",
+      "blob": "66d2b05c6d9eae18d7d6ec3cce6235fb69777c63"
+    },
+    {
+      "path": "tests/contracts/test_purge_write_before.py",
+      "mode": "100644",
+      "blob": "fd3d3932ffd834fd577aeb163e5adf78cbb752c7"
+    },
+    {
+      "path": "tests/contracts/test_quarantined_sharing_v2.py",
+      "mode": "100644",
+      "blob": "9ecfc10cbcf6a10ab29d006b8943a6b0187d34d9"
+    },
+    {
+      "path": "tests/contracts/test_read_only_audits.py",
+      "mode": "100644",
+      "blob": "ef1d7bf9ce3592e9fee142ffa9e29900375565a6"
+    },
+    {
+      "path": "tests/contracts/test_recall_catalog.py",
+      "mode": "100644",
+      "blob": "a21f6824ae349eae3a3b219ec942605dafd1e91b"
+    },
+    {
+      "path": "tests/contracts/test_recall_observation.py",
+      "mode": "100644",
+      "blob": "e745437c608ee16a43ab5127b188a25c1dba7a8e"
+    },
+    {
+      "path": "tests/contracts/test_records.py",
+      "mode": "100644",
+      "blob": "72720a4eca95232f7a4daf5733b56f2f73f2ee27"
+    },
+    {
+      "path": "tests/contracts/test_recover_commit_write_copy_after.py",
+      "mode": "100644",
+      "blob": "416d05c86265bbb8c1243228f125b3184fb71631"
+    },
+    {
+      "path": "tests/contracts/test_recover_commit_write_copy_before.py",
+      "mode": "100644",
+      "blob": "0372956b59ae049579f628cba385b2c41698f9e7"
+    },
+    {
+      "path": "tests/contracts/test_recover_rollback_write_copy_after.py",
+      "mode": "100644",
+      "blob": "944862405623f037ba309cedbec3a9305fc642af"
+    },
+    {
+      "path": "tests/contracts/test_recover_rollback_write_copy_before.py",
+      "mode": "100644",
+      "blob": "8f072d8c70967c2db5e649e45ef3658e817d2c6a"
+    },
+    {
+      "path": "tests/contracts/test_refresh_conflicts.py",
+      "mode": "100644",
+      "blob": "ffc5f7f6c0e6fa5afb746257c757851f2e456bd5"
+    },
+    {
+      "path": "tests/contracts/test_refresh_cursor.py",
+      "mode": "100644",
+      "blob": "47b80627d000040c060f49680b59796905cfe652"
+    },
+    {
+      "path": "tests/contracts/test_refresh_integration.py",
+      "mode": "100644",
+      "blob": "74de81d14a0586f0c6e76d1e318b69d6ef39e1e8"
+    },
+    {
+      "path": "tests/contracts/test_refresh_invalidation.py",
+      "mode": "100644",
+      "blob": "964094bbfb9482cfb17334240388faa015d02411"
+    },
+    {
+      "path": "tests/contracts/test_refresh_pending.py",
+      "mode": "100644",
+      "blob": "d52ece834edbe9c9871a4ad6e88145ad7fcd845d"
+    },
+    {
+      "path": "tests/contracts/test_refresh_recovery.py",
+      "mode": "100644",
+      "blob": "c0abf6b1ac73d024798178e21be5d4c77028f650"
+    },
+    {
+      "path": "tests/contracts/test_refresh_v2.py",
+      "mode": "100644",
+      "blob": "f60c22d538d097abad1e85921e03af8a60a29ebf"
+    },
+    {
+      "path": "tests/contracts/test_release_canaries.py",
+      "mode": "100644",
+      "blob": "f0bf89338f7457f9965d7bbc88df86f3133672e2"
+    },
+    {
+      "path": "tests/contracts/test_retrieval.py",
+      "mode": "100644",
+      "blob": "40d19759e7ec87820739db648b1d85c4b3a2756e"
+    },
+    {
+      "path": "tests/contracts/test_router.py",
+      "mode": "100644",
+      "blob": "511d478d9923b251583239c3f0756d6dde5ce5d0"
+    },
+    {
+      "path": "tests/contracts/test_runtime_diagnostics.py",
+      "mode": "100644",
+      "blob": "fa340ec5af32428ef9875cfe2ca9937bd6802ee7"
+    },
+    {
+      "path": "tests/contracts/test_runtime_purge.py",
+      "mode": "100644",
+      "blob": "7c615507e65c3254439d85023f12f1253293d70e"
+    },
+    {
+      "path": "tests/contracts/test_runtime_uninstall.py",
+      "mode": "100644",
+      "blob": "f4ca09a3b0a94642971b4f845b775232daf8cc73"
+    },
+    {
+      "path": "tests/contracts/test_runtime_update.py",
+      "mode": "100644",
+      "blob": "c2070b1f7ce0522ec94d932ec458c864d6e7a3c1"
+    },
+    {
+      "path": "tests/contracts/test_scope_binding.py",
+      "mode": "100644",
+      "blob": "581f0a440aed7d8231e165438d6da3da2e217456"
+    },
+    {
+      "path": "tests/contracts/test_scope_policy.py",
+      "mode": "100644",
+      "blob": "aa59ba7c8cfb361ba9803fb3189fe892447ce620"
+    },
+    {
+      "path": "tests/contracts/test_security_policy.py",
+      "mode": "100644",
+      "blob": "7e1c2c9b02fec553f94f01dc091e77f58c7f0d0c"
+    },
+    {
+      "path": "tests/contracts/test_semantic_introductions.py",
+      "mode": "100644",
+      "blob": "4463339fbfe3566c1a4bdfc65f4b09474b2fdee3"
+    },
+    {
+      "path": "tests/contracts/test_semantic_sharing.py",
+      "mode": "100644",
+      "blob": "11a29ac622191a9db943f4fa3dd4c4b445722aa3"
+    },
+    {
+      "path": "tests/contracts/test_setup_diagnostics.py",
+      "mode": "100644",
+      "blob": "7af7a571e29b2fb1c65abb22f3631b46dece3a08"
+    },
+    {
+      "path": "tests/contracts/test_shared_learning_loop.py",
+      "mode": "100644",
+      "blob": "38224db4fbc908b41a5d05945d16287203b52bb0"
+    },
+    {
+      "path": "tests/contracts/test_sharing_boundary.py",
+      "mode": "100644",
+      "blob": "20c21118eacc483a199861c0fa236ce883141606"
+    },
+    {
+      "path": "tests/contracts/test_sharing_recovery.py",
+      "mode": "100644",
+      "blob": "61d80d986554a6ff320613d2be6cf5097a565f4e"
+    },
+    {
+      "path": "tests/contracts/test_signed_release_lifecycle.py",
+      "mode": "100644",
+      "blob": "990e27a80f17e984f7b8d750298491ffe0154354"
+    },
+    {
+      "path": "tests/contracts/test_signed_release_publisher.py",
+      "mode": "100644",
+      "blob": "825398547f8442761e7aae54722dc7559aeb15de"
+    },
+    {
+      "path": "tests/contracts/test_skill_routes.py",
+      "mode": "100644",
+      "blob": "e2c6ebd70b3cede6bd1a9b757fef5e332d322ad3"
+    },
+    {
+      "path": "tests/contracts/test_tombstones.py",
+      "mode": "100644",
+      "blob": "69ba5ecd732d40709a84392fe914bc7c37019548"
+    },
+    {
+      "path": "tests/contracts/test_unified_cli_operations.py",
+      "mode": "100644",
+      "blob": "7f770116764b07c7cb0446b8bf707fcbac0cf5f9"
+    },
+    {
+      "path": "tests/contracts/test_uninstall_write_copy_after.py",
+      "mode": "100644",
+      "blob": "1d2a880fe56563f69470fa5ba745379d5a5321a8"
+    },
+    {
+      "path": "tests/contracts/test_uninstall_write_copy_before.py",
+      "mode": "100644",
+      "blob": "5d2f4ea8afb55ec64289b97ffeb4613e846c1e68"
+    },
+    {
+      "path": "tests/contracts/test_uninstall_write_link_after.py",
+      "mode": "100644",
+      "blob": "80670f782e896de727c43ac81b3f9082ffdc8d80"
+    },
+    {
+      "path": "tests/contracts/test_uninstall_write_link_before.py",
+      "mode": "100644",
+      "blob": "4622c2c9d301c22a586d9e96183a3f1e168c5f25"
+    },
+    {
+      "path": "tests/contracts/test_update_discovery_gaps.py",
+      "mode": "100644",
+      "blob": "341b7fbc647568e9e90ad33d4124e8b67aa7fb87"
+    },
+    {
+      "path": "tests/contracts/test_update_write_after.py",
+      "mode": "100644",
+      "blob": "53cd9a19342ff14f757974ff6a3c5cff3b2b2399"
+    },
+    {
+      "path": "tests/contracts/test_update_write_after_part_1.py",
+      "mode": "100644",
+      "blob": "f199a068fce4a75a0efd72720c4d51e521781a2b"
+    },
+    {
+      "path": "tests/contracts/test_update_write_after_part_2.py",
+      "mode": "100644",
+      "blob": "a01e72022069c7bbca79727eb558b08cc9700cf8"
+    },
+    {
+      "path": "tests/contracts/test_update_write_after_part_3.py",
+      "mode": "100644",
+      "blob": "b6fffa5bd93770ad85645d7f93971a8349438c73"
+    },
+    {
+      "path": "tests/contracts/test_update_write_before.py",
+      "mode": "100644",
+      "blob": "5fadd52caca637172dd712ac3e5b11fe881daa40"
+    },
+    {
+      "path": "tests/contracts/test_update_write_before_part_1.py",
+      "mode": "100644",
+      "blob": "35abdfb220ee0159b9db6eca1ca99099fce0c722"
+    },
+    {
+      "path": "tests/contracts/test_update_write_before_part_2.py",
+      "mode": "100644",
+      "blob": "c0264a0b80370c22393ac4c106ba65b0a1e55465"
+    },
+    {
+      "path": "tests/contracts/test_update_write_before_part_3.py",
+      "mode": "100644",
+      "blob": "1b5237e9f2cf3f0694810c6b0ef22fd127762b61"
+    },
+    {
+      "path": "tests/contracts/test_validation_memo.py",
+      "mode": "100644",
+      "blob": "f5909d207be793059ce5e5aa0056015c5f506fd9"
+    },
+    {
+      "path": "tests/contracts/test_worker_collection.py",
+      "mode": "100644",
+      "blob": "4cefe846a2aa088b99e89b17b9ebdc20ba00cb85"
+    },
+    {
+      "path": "tests/contracts/test_worker_ownership.py",
+      "mode": "100644",
+      "blob": "c374f4a80d949710648328f37ca7ab5bbb2af169"
+    },
+    {
+      "path": "tests/fault_partitions.py",
+      "mode": "100644",
+      "blob": "f64da4a6b9cfe389a4a21df0f9b3ac0836f85d5f"
+    },
+    {
+      "path": "tests/fixtures/legacy-cli/README.md",
+      "mode": "100644",
+      "blob": "02d6e872fdc720eb85b85271682fdd3f9d5ff4c3"
+    },
+    {
+      "path": "tests/fixtures/legacy-cli/pre-am-3af48ea.tar.gz",
+      "mode": "100644",
+      "blob": "34040144f50c338c4c78f4b21dcb3d07d03446bd"
+    },
+    {
+      "path": "tests/fixtures/legacy-cli/provenance.json",
+      "mode": "100644",
+      "blob": "3805cc0fead6d989817802f1c2feb3017e3187bd"
+    },
+    {
+      "path": "tests/fixtures/v0.0.2-runtime/portable-pack.tar.gz",
+      "mode": "100644",
+      "blob": "4fb9639171189c2c526c305df07fbbb43d320f05"
+    },
+    {
+      "path": "tests/fixtures/v0.0.2-runtime/provenance.json",
+      "mode": "100644",
+      "blob": "a4420651deed6ba028c5cf547baa74461a87b5b5"
+    },
+    {
+      "path": "tests/identity_fixtures.py",
+      "mode": "100644",
+      "blob": "b914b2ea26f90126d3086b1db744ebfc94b7505d"
+    },
+    {
+      "path": "tests/incidents.json",
+      "mode": "100644",
+      "blob": "eb5a009db3e87353b7c3a6e39e05f0ceecbed2dc"
+    },
+    {
+      "path": "tests/installed_cli_fixtures.py",
+      "mode": "100644",
+      "blob": "e9dcea1b55db9d98c51b5b9bf505ab0eea97d8f1"
+    },
+    {
+      "path": "tests/lifecycle-matrix.json",
+      "mode": "100644",
+      "blob": "5f1549999677d0c83fa2855e5953e4ed69723a94"
+    },
+    {
+      "path": "tests/lifecycle_cleanup_fixtures.py",
+      "mode": "100644",
+      "blob": "bfbf905d932f925ffd43be23658b8158e89184ee"
+    },
+    {
+      "path": "tests/lifecycle_fault_fixtures.py",
+      "mode": "100644",
+      "blob": "01cd3c1bda56ec886dbeb75fc39e98d0e84c3f8e"
+    },
+    {
+      "path": "tests/lifecycle_unlock_fixtures.py",
+      "mode": "100644",
+      "blob": "448a06b50c3e807e94c59efaa2e0f8a164f30101"
+    },
+    {
+      "path": "tests/migration_fixtures.py",
+      "mode": "100644",
+      "blob": "aa3786469cc78373712f40d417142efb32ebec4b"
+    },
+    {
+      "path": "tests/multi_machine_fixtures.py",
+      "mode": "100644",
+      "blob": "06376797c7c7f6dad91e00a84dc47ff61fa76828"
+    },
+    {
+      "path": "tests/publication_fixtures.py",
+      "mode": "100644",
+      "blob": "6d232e3eb271d59064ad73cfc042de2bcddd34a2"
+    },
+    {
+      "path": "tests/publication_github.py",
+      "mode": "100644",
+      "blob": "db6035cecfebf1287f2d1a522ab96bd13096118f"
+    },
+    {
+      "path": "tests/record_fixtures.py",
+      "mode": "100644",
+      "blob": "d660164f2463427dc32c9a098d747addc997b07b"
+    },
+    {
+      "path": "tests/refresh_fixtures.py",
+      "mode": "100644",
+      "blob": "7ff9e10b07f91d6e8f651a854390c4ad3e875469"
+    },
+    {
+      "path": "tests/release_canary_fixtures.py",
+      "mode": "100644",
+      "blob": "bd9bd6205e6af89b62b3a5b18b30c977615d7fdc"
+    },
+    {
+      "path": "tests/runtime_update_fixtures.py",
+      "mode": "100644",
+      "blob": "a9c536d91ecaa8ea6efc071fe368745cd4a44588"
+    },
+    {
+      "path": "tests/runtime_update_interrupts.py",
+      "mode": "100644",
+      "blob": "0eb294bfec8a1c4754d2b45f0f1418224ce48921"
+    },
+    {
+      "path": "tests/shared-learning-matrix.json",
+      "mode": "100644",
+      "blob": "08676cc12072a5e3e1e04fba2552265715506f11"
+    },
+    {
+      "path": "tests/signed_publisher_fixtures.py",
+      "mode": "100644",
+      "blob": "37e6d3817cfca93f041c1a814a7cee56798e882f"
+    },
+    {
+      "path": "tests/signed_release_fixtures.py",
+      "mode": "100644",
+      "blob": "a39378c81d7eb228cf0579dc0324f2fffce80134"
+    },
+    {
+      "path": "tests/world.py",
+      "mode": "100644",
+      "blob": "27d7ccd9d224edb454a162b804e6a739cb604a68"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "schema": "am-local-test-receipt-v1",
+  "source_commit": "69fc75d44f76921c6c984a6d4016cc03dd1d7cf1",
+  "case": "later-merge",
+  "argv": [
+    "/opt/homebrew/opt/python@3.15/bin/python3.15",
+    "-B",
+    "-m",
+    "unittest",
+    "-v",
+    "test_multi_machine_merge_replay.MultiMachineMergeReplay"
+  ],
+  "cwd": "/private/tmp/am99-bridge-69fc75d/source",
+  "env_overrides": {
+    "PYTHONPATH": "tests:tests/contracts",
+    "PYTHONDONTWRITEBYTECODE": "1"
+  },
+  "platform": "macOS-27.2-arm64-arm-64bit-Mach-O",
+  "hostname": "Mac",
+  "python": "3.15.0 (main, Oct  9 2026, 11:16:41) [Clang 21.0.0 (clang-2100.3.34.2)]",
+  "started_at": "2026-10-27T12:37:16.282683+00:00",
+  "elapsed_seconds": 76.106,
+  "exit_code": 0,
+  "timeout_seconds": 840,
+  "timed_out": false,
+  "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderr_sha256": "31d9c5b5eeaf136fd2ee6d304198e65fc20afd590c6def3153612988ded31a40"
+}
