@@ -38,7 +38,10 @@ proposal is withdrawn by the operator, who selected skill plus CLI as sufficient
 In `v0.0.4`, harness hooks SHALL invoke the common capture/refresh operation
 automatically at turn boundaries, including when an agent forgets to invoke the
 skill. Hooks SHALL supply invocation only: they MUST NOT own memory semantics,
-bypass admission or Git rules, or interrupt ongoing work. Supported harness
+bypass admission or Git rules, or interrupt unrelated ongoing work. The operator
+approved a Codex same-turn continuation that MAY delay that turn's final response
+while the memory operation runs; it MUST preserve normal permissions and MUST
+leave unsuccessful or unverified work pending. Supported harness
 events and integration details SHALL be established and tested through each
 selected harness's public invocation surface before claiming support.
 Explicit skill/CLI invocation MUST remain available to custom harnesses and
