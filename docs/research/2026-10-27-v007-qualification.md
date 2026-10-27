@@ -14,6 +14,7 @@ Design/source: ADR-0019, fba0875fcdda2e56362c03fee2166a13344454d3.
 - Earlier common focused snapshot: 42 tests passed on macOS and Linux.
 - Final Linux source snapshot: 49 tests, 21.648 seconds, passed.
 - Final macOS source snapshot: 49 tests, 54.290 seconds, passed.
+- Claude/OpenCode boundary regressions: 16 tests, 60.226 seconds, passed.
 - Portable package validator: valid, version 0.0.7. No bank writes.
 
 ## Independent review
@@ -52,3 +53,26 @@ resolution recognizes the existing project IDs for agent-memory, ioa-brain,
 cve-to-exploit and vox; it writes no registry or bank data. Reboot/remount is a
 plausible origin of the device-number change, not a proven OS event. Unrelated
 v0.0.7 roadmap tasks are not delivered by this corrective implementation.
+
+## Supported-policy durable run
+
+At product commit 4cb7f023, a real Codex run using the existing explicit synthetic
+GitHub policy and real local Git transport completed governed capture, semantic
+comparison and verified publication in 276.3 seconds. The witnessed fixture
+commit was 2bea80b81c8468c97cd1fa24245255107e6afdaf. The source-bound acknowledgment
+reported outcome published and publication_verified true, with zero pending and
+one completed boundary. This verifies real model workflow against test policy;
+it is not evidence of actual GitHub governance for a consumer repository.
+
+A new Codex thread recalled the fixture's 17-second delay with its applicability
+and operator evidence through governed recall. Final boundary counts were zero
+pending and two completed. Its authority refresh remained pending because the
+login-shell PATH lost the explicit fixture transport. The model diagnosed that
+fixture environment without changing origin policy. Recall was from canonical
+local memory; fresh imported/shared-authority recall is NOT claimed. No retry or
+unbounded gate was used. Raw private proof and source hashes were retained at
+am-v007-codex-sihhthvj; authentication material was removed by the controller.
+
+All tested process exits, assessments, admissions, published outcomes and local
+versus authority-fresh recall are reported separately. Public release signature,
+installation/update and production activation are verified after publication.
