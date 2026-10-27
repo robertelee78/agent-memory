@@ -126,13 +126,11 @@ def object_router_bytes(root, expression, cache):
         raw += b'\n'
     if len(raw) != int(size):
         raise ContractError('Tracked memory locator bytes are incomplete; do not infer absence')
-    if len(cache) >= 256:
-        cache.pop(next(iter(cache)))
     cache[oid] = raw
     return raw
 
 
-def git_roots(root, *, router_reader=None, immutable_cache=None):
+def git_roots(root, *, router_reader=None):
     # Git's fixed glob covers this one basename at every depth, including
     # case variants. Status tags distinguish indexed versus untracked names
     # without a second listing or parsing filename whitespace as metadata.
@@ -151,18 +149,7 @@ def git_roots(root, *, router_reader=None, immutable_cache=None):
         if entry[0] != '?':
             indexed_paths.add(path)
     head = git(root, 'rev-parse', '--verify', 'HEAD', optional=True)
-    trees = immutable_cache.setdefault('trees', {}) if immutable_cache is not None else {}
-    committed = ''
-    if head:
-        if head in trees:
-            committed = trees[head]
-        else:
-            committed = git(root, 'ls-tree', '-r', '--name-only', '-z', head)
-            # Bound the optimization's memory independently of repository size.
-            if len(committed.encode('utf-8', errors='surrogateescape')) <= 1048576:
-                if len(trees) >= 32:
-                    trees.pop(next(iter(trees)))
-                trees[head] = committed
+    committed = git(root, 'ls-tree', '-r', '--name-only', '-z', head) if head else ''
     committed_paths = set(committed.split('\0'))
     # Examine every inventory spelling, but construct path objects only for
     # possible locators. Ordinary source/record filenames cannot be routers.
@@ -174,8 +161,7 @@ def git_roots(root, *, router_reader=None, immutable_cache=None):
                     and not any(part.startswith('.') for part in parsed.parts)})
     if len(paths) > MAX_ROUTERS:
         raise ContractError('Memory locator inventory exceeds its bound; incomplete discovery cannot prove absence')
-    roots = set()
-    cache = immutable_cache.setdefault('blobs', {}) if immutable_cache is not None else {}
+    roots, cache = set(), {}
     for path in paths:
         if path.is_absolute() or '..' in path.parts:
             raise ContractError('Invalid possible repository memory locator')
@@ -228,26 +214,18 @@ def physical_others(root, selected, *, router_reader=None):
                 raise ContractError('Existing memory lies outside the selected bank; configure its location before initialization')
 
 
-def settings(repo, *, router_reader=None, immutable_cache=None):
+def settings(repo, *, router_reader=None):
     root = Path(repo).resolve()
     top = git(root, 'rev-parse', '--show-toplevel', optional=True)
     if top is None and (root / '.git').exists():
         raise ContractError('Existing Git metadata/configuration cannot be inspected; do not guess the bank root')
     if top is not None and Path(top).resolve() != root:
         raise ContractError('Select the actual repository root for its one memory bank')
-    if immutable_cache is not None:
-        # A listed worktree can be redirected after inventory. Never reuse an
-        # object observation from a different Git object store, even when the
-        # replacement store reports the same HEAD string.
-        common = git(root, 'rev-parse', '--git-common-dir', optional=True)
-        actual_common = (root / common).resolve() if common else None
-        if actual_common != immutable_cache.get('common_dir'):
-            immutable_cache = None
     configured = local_settings(root)
     explicit = configured.get('agent-memory.bankroot')
     if explicit is not None:
         validate_root(explicit)
-    roots = git_roots(root, router_reader=router_reader, immutable_cache=immutable_cache) if top is not None else set()
+    roots = git_roots(root, router_reader=router_reader) if top is not None else set()
     if len(roots) > 1 or (explicit is not None and any(value != explicit for value in roots)):
         raise ContractError('Competing memory bank locations require explicit reconciliation; preserve every source')
     relative = explicit or (next(iter(roots)) if roots else 'memory-bank')

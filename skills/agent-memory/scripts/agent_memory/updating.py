@@ -64,9 +64,8 @@ def current(state, code):
 def banks(extra, compatibility, *, require_readable=False):
     """Use the established one-bank locator; never invent another bank path."""
     from concurrent.futures import ThreadPoolExecutor
-    from threading import local
     from . import migration, bank_transactions
-    roots = set(); gaps = []; root_caches = {}
+    roots = set(); gaps = []
     cwd = Path.cwd().resolve()
     top = install.git(cwd, 'rev-parse', '--show-toplevel', check=False)
     roots.add(Path(top.stdout.strip()).resolve() if top.returncode==0 else cwd)
@@ -88,27 +87,15 @@ def banks(extra, compatibility, *, require_readable=False):
             if listed.returncode:
                 gaps.append({'location':location, 'reason':'registered Git location cannot list worktrees'})
                 continue
-            # A single worktree-list invocation observes one shared object store.
-            # Cache only immutable tree/blob identities within this pass. Never
-            # share these caches across later compatibility observations.
-            common = install.git(path, 'rev-parse', '--git-common-dir', check=False)
-            group = str((path / common.stdout.strip()).resolve()) if common.returncode == 0 and common.stdout.strip() else None
             for line in listed.stdout.splitlines():
                 if line.startswith('worktree '):
                     worktree = Path(line[9:]).resolve()
                     roots.add(worktree)
-                    root_caches.setdefault(worktree, group)
     install.require(len(roots)<=1024, 'Discovered repository inventory exceeds its bound')
-    worker = local()
     def inspect(root):
         if not root.is_dir():
             return None, {'location':str(root), 'reason':'worktree no longer available; not inspected'}
-        if not hasattr(worker, 'groups'):
-            worker.groups = {}
-        group = root_caches.get(root)
-        immutable_cache = worker.groups.setdefault(group, {'trees': {}, 'blobs': {}, 'common_dir': Path(group)}) if group else None
-        settings = repository_config.settings(root, router_reader=migration.router_metadata,
-                                              immutable_cache=immutable_cache)
+        settings = repository_config.settings(root, router_reader=migration.router_metadata)
         bank = root / settings['bank_root']
         router = bank/'MEMORY.md'
         if not os.path.lexists(router):
@@ -133,8 +120,7 @@ def banks(extra, compatibility, *, require_readable=False):
                          if require_readable else 'Candidate cannot read or explicitly migrate discovered bank: ') + str(bank))
         idle()
         install.require(migration.read_regular(bank, 'MEMORY.md', 16384)[0] == raw
-                        and repository_config.settings(root, router_reader=migration.router_metadata,
-                                                       immutable_cache=immutable_cache) == settings,
+                        and repository_config.settings(root, router_reader=migration.router_metadata) == settings,
                         'Discovered bank changed during compatibility observation')
         return {'repository':str(root), 'bank':str(bank), 'schema':schema,
                        'directly_readable':readable, 'explicit_migration_required':not readable,
