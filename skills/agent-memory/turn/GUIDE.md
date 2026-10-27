@@ -125,3 +125,17 @@ missing trust, model failure and interrupted operations as pending.
 Preserve the bank, feature work and pending operations. Custom harnesses may
 invoke the same skill and CLI explicitly; never replace governed memory with an
 empty bank or a fabricated receipt.
+
+## Claude background boundary acknowledgment
+
+When a Claude Stop wake supplies a source-bound session, prompt, message UUID and
+source SHA-256, verify that exact source before assessing it. After an explicit
+no-learning assessment, write a private JSON object containing `session`,
+`prompt`, `source_uuid`, `source_sha256`, `outcome` set to `no-learning`, and a
+bounded `assessment` explaining the agent's judgment. For a published lesson,
+set `outcome` to `published` and add `publication_request` containing the exact
+original prepared request. Run `am claude-boundary --repo REPO --input PRIVATE_JSON`.
+The helper independently replays the publication request against the authority;
+it records the connection to the prompt as an agent assertion, not semantic proof; it does not mechanically prove the published lesson derives from that source.
+A denied command, unresolved conflict, unavailable source or unverified landing
+MUST stay pending. Never acknowledge incomplete work as complete.

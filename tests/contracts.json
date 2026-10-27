@@ -2,6 +2,7 @@
   "schema": "agent-memory/test-contracts-v1",
   "suites": [
     {"name": "bounded-bank-observation", "layer": "bank", "scope": "v0.0.4", "path": "tests/contracts/test_bounded_bank_observation.py"},
+    {"name": "claude-boundary", "layer": "client", "scope": "v0.0.4", "path": "tests/contracts/test_claude_boundary.py"},
     {"name": "turn-hook-invocation", "layer": "client", "scope": "v0.0.4", "path": "tests/contracts/test_turn_hook.py"},
     {"name": "owned-client-hooks", "layer": "lifecycle", "scope": "v0.0.4", "path": "tests/contracts/test_client_hooks.py"},
     {"name": "recall-observation", "layer": "bank", "scope": "v0.0.3", "path": "tests/contracts/test_recall_observation.py"},

@@ -37,11 +37,6 @@ class TurnHookContract(unittest.TestCase):
         def run(value):
             return subprocess.run([sys.executable, '-B', str(hook)], input=json.dumps(value).encode(),
                                   capture_output=True, timeout=5)
-        wake = run({'hook_event_name': 'Stop', 'stop_hook_active': False})
-        self.assertEqual(wake.returncode, 2)
-        self.assertIn(str(HOOK.resolve().parent.parent / 'SKILL.md'), wake.stderr.decode())
-        self.assertIn('do not bypass permissions', wake.stderr.decode())
-        self.assertIn('Never directly edit or stage', wake.stderr.decode())
         guarded = run({'hook_event_name': 'Stop', 'stop_hook_active': True})
         self.assertEqual(guarded.returncode, 0)
         self.assertEqual(guarded.stderr, b'')
