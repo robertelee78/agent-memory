@@ -28,6 +28,9 @@ class TurnHookContract(unittest.TestCase):
         self.assertIn('compare it with existing memory by meaning', prompt)
         self.assertIn('do not invent', prompt.lower())
         self.assertIn('pending', prompt)
+        self.assertIn(str(HOOK.resolve().parent.parent / 'SKILL.md'), prompt)
+        self.assertIn('Never directly edit or stage', prompt)
+        self.assertIn('do not bypass permissions', prompt)
 
     def test_invalid_and_oversized_events_surface_pending_without_blocking(self):
         for raw in (b'bad json', b'{}', b'X' * (64 * 1024 + 1)):

@@ -18,7 +18,9 @@ def main():
         event = json.loads(raw)
         if not isinstance(event, dict) or event.get('hook_event_name') != 'UserPromptSubmit':
             raise ValueError('unsupported event')
-        prompt = (Path(__file__).resolve().parent / 'boundary-prompt.txt').read_text(encoding='utf-8').strip()
+        directory = Path(__file__).resolve().parent
+        prompt = (directory / 'boundary-prompt.txt').read_text(encoding='utf-8').strip()
+        prompt = prompt.replace('{{SKILL_DIR}}', str(directory.parent))
         if not prompt or len(prompt.encode('utf-8')) > 4096:
             raise ValueError('invalid instruction')
         print(json.dumps({'hookSpecificOutput': {'hookEventName': 'UserPromptSubmit', 'additionalContext': prompt}}))
