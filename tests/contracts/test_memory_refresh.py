@@ -2,6 +2,8 @@
 import unittest
 import json
 import sys
+import time
+import hashlib
 
 from world import World
 from contracts import test_retrieval as retrieval_helpers
@@ -11,6 +13,86 @@ from refresh_fixtures import RefreshFixture
 
 
 class MemoryRefreshContract(RefreshFixture):
+    def test_current_equal_bank_and_orphan_journal(self):
+        with World() as w:
+            repo, bank, peer, base = self.fixture(w)
+            before = self.state(w, repo, bank)
+            def run():
+                response = w.run([sys.executable, '-I', self.pack/'scripts/installer.py',
+                                  'refresh', 'current', '--repo', repo], check=False)
+                return response, json.loads(response.stdout)
+            response, result = run()
+            self.assertEqual(response.returncode, 0, result)
+            self.assertEqual(result['sharing_state'], 'bank-synchronized')
+            self.assertEqual(result['pending_capture'], 'unknown')
+            self.assertEqual(result['pending_publication'], 'unknown')
+            self.assertFalse(result['semantic_truth_verified'])
+            self.assertEqual(before, self.state(w, repo, bank))
+            bank_hash = hashlib.sha256(str(bank).encode()).hexdigest()
+            journal = w.paths['state']/'agent-memory'/'writes'/bank_hash/'transactions'/'unknown'/'journal.json'
+            journal.parent.mkdir(parents=True, exist_ok=True);journal.write_text('{}')
+            response, result = run()
+            self.assertEqual(response.returncode, 1)
+            self.assertNotEqual(result['sharing_state'], 'bank-synchronized')
+            self.assertTrue(journal.exists())
+            self.assertEqual(before, self.state(w, repo, bank))
+
+    def test_current_refuses_local_and_authority_changes_at_final_recheck(self):
+        for scenario in ('local', 'authority', 'index'):
+            with self.subTest(scenario=scenario), World() as w:
+                repo, bank, peer, base = self.fixture(w)
+                rendezvous = w.inside('rendezvous');rendezvous.mkdir()
+                stage = 'refresh-current-before-final-recheck'
+                w.env.update(AGENT_MEMORY_FAULT_STAGE=stage, AGENT_MEMORY_FAULT_MODE='pause',
+                             AGENT_MEMORY_FAULT_DIR=str(rendezvous))
+                child = w.spawn([sys.executable, '-I', self.pack/'scripts/installer.py',
+                                 'refresh', 'current', '--repo', repo], cwd=repo)
+                ready = rendezvous/(stage+'.ready');deadline = time.monotonic()+10
+                while not ready.exists() and time.monotonic()<deadline:
+                    time.sleep(.01)
+                self.assertTrue(ready.exists(), 'current observation did not reach its final recheck')
+                if scenario == 'local':
+                    target = bank/'activeContext.md';target.write_text(target.read_text()+'\nLocal changed during observation.\n')
+                elif scenario == 'authority':
+                    target = peer/'memory-bank'/'activeContext.md';target.write_text(target.read_text()+'\nAuthority changed during observation.\n')
+                    w.git('add', 'memory-bank', cwd=peer);w.git('commit', '-m', 'Concurrent memory change', cwd=peer)
+                    w.git('push', 'origin', 'HEAD:main', cwd=peer)
+                else:
+                    target = repo/'code.py';target.write_text('VALUE = 987  # changed during observation\n')
+                    w.git('add', 'code.py', cwd=repo)
+                (rendezvous/(stage+'.release')).touch()
+                stdout, stderr = child.communicate(timeout=30);result=json.loads(stdout)
+                self.assertNotEqual(result['sharing_state'], 'bank-synchronized', (result,stderr))
+                self.assertFalse(result['remote_freshness_verified'])
+                self.assertIn('changed during observation', target.read_text())
+
+    def test_current_refuses_unchanged_hidden_record_and_corrupt_hold_anchor(self):
+        from contracts.test_semantic_sharing import SemanticSharingContract, comparison, project_id
+        for scenario in ('hidden', 'hold-anchor'):
+            with self.subTest(scenario=scenario), World() as w:
+                repo, bank, peer, base = self.fixture(w)
+                if scenario == 'hidden':
+                    meta, path = SemanticSharingContract().add(peer/'memory-bank', 'hidden', '# Hidden fixture\n\nA hidden lesson.\n')
+                    meta['visibility'] = 'hidden'
+                    (peer/'memory-bank'/path).write_text(comparison.render(meta, '# Hidden fixture\n\nA hidden lesson.\n'))
+                    w.git('add', 'memory-bank', cwd=peer);w.git('commit', '-m', 'Hidden fixture', cwd=peer)
+                    w.git('push', 'origin', 'HEAD:main', cwd=peer);w.git('fetch', 'origin', 'main', cwd=repo)
+                    w.git('reset', '--hard', 'FETCH_HEAD', cwd=repo)
+                else:
+                    bank_hash=hashlib.sha256(str(bank).encode()).hexdigest()
+                    directory=w.paths['state']/'agent-memory'/'writes'/bank_hash/'semantic-holds'
+                    directory.mkdir(parents=True,exist_ok=True)
+                    anchor=directory/(project_id((bank/'MEMORY.md').read_text())+'.present.json')
+                    anchor.write_text('corrupt')
+                before=self.state(w,repo,bank)
+                response=w.run([sys.executable,'-I',self.pack/'scripts/installer.py',
+                                'refresh','current','--repo',repo],check=False)
+                result=json.loads(response.stdout)
+                self.assertNotEqual(result['sharing_state'],'bank-synchronized',result)
+                self.assertFalse(result['remote_freshness_verified'])
+                self.assertEqual(before,self.state(w,repo,bank))
+                if scenario == 'hold-anchor':self.assertEqual(anchor.read_text(),'corrupt')
+
     def test_public_cli_rejects_relative_outputs_before_any_refresh_operation(self):
         with World() as w:
             repo, bank, peer, base = self.fixture(w)
