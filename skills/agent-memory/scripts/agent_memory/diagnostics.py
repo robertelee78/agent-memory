@@ -186,6 +186,26 @@ def receipt_view(report):
     return active
 
 
+def hook_migration(report, active):
+    """Report receipt-level gaps without trusting client configuration or writing it."""
+    if not active or active.get('no_guidance', False):
+        return
+    targets = {item['path']: item for item in active['targets']}
+    for name in active.get('enabled_adapters', []):
+        if name not in {'codex', 'claude', 'opencode'}:
+            continue
+        path = installation.hook_paths(name)
+        target = targets.get(str(installation.absolute(path)))
+        kind = 'hook-link' if name == 'opencode' else 'hook-config'
+        missing = not target or target.get('kind') != kind
+        if not missing and kind == 'hook-config':
+            missing = not target.get('hook_entry') or not target.get('stop_entry')
+        if missing:
+            report.add('runtime.hook_migration.' + name, 'warning',
+                       name + ' hook activation is missing from the installation receipt; turn-boundary automation is not established.',
+                       'Run am install to reconcile the existing installation, then restart the agent client. If it refuses, follow the reported ownership or recovery guidance.', path)
+
+
 def tracked_bank_roots(root):
     """Positive history only: an untracked current file is not tracked history."""
     indexed = git(root, 'ls-files', '--cached', '-z')
@@ -583,6 +603,8 @@ def run(operation, repo='.', projection=None):
             report.add('runtime.executing_artifact', 'pass', 'Executing package inventory, route graph and declared compatibility are valid.', path=artifact.PACK)
     if operation == 'version':
         return report.finish()
+    report.attempt('runtime.hook_migration', lambda: hook_migration(report, active),
+                   'Inspect the installation receipt and retry am install only after resolving the reported ownership issue.')
     root = Path(repo).expanduser().resolve(strict=True)
     installation.require(root.is_dir(), 'Repository must be an existing directory')
     located = report.attempt('bank.locator', lambda: lightweight_bank(root),
