@@ -17,15 +17,16 @@ class BoundaryLedgerTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as root:
             first = ledger.reserve(os.path.realpath(root), 'session', 'turn')
             self.assertEqual(first['status'], 'reserved')
-            directory = Path(root) / 'experimental-boundary'
+            directory = Path(root) / 'experimental-boundary' / hashlib.sha256(b'session').hexdigest()
             self.assertEqual(len(list(directory.iterdir())), 2)
             self.assertEqual(ledger.reserve(os.path.realpath(root), 'session', 'turn')['reason'], 'existing-intent')
             self.assertEqual(ledger.reserve(os.path.realpath(root), 'session', 'other')['status'], 'reserved')
 
     def test_intent_without_attempt_is_uncertain(self):
         with tempfile.TemporaryDirectory() as root:
-            directory = Path(root) / 'experimental-boundary'
-            directory.mkdir(mode=0o700)
+            directory = Path(root) / 'experimental-boundary' / hashlib.sha256(b'session').hexdigest()
+            directory.mkdir(mode=0o700, parents=True)
+            directory.parent.chmod(0o700)
             key = hashlib.sha256(json.dumps(['session', 'turn'], separators=(',', ':')).encode()).hexdigest()
             (directory / (key + '.intent')).write_text('interrupted')
             self.assertEqual(ledger.reserve(os.path.realpath(root), 'session', 'turn')['status'], 'pending')
@@ -88,7 +89,7 @@ class BoundaryLedgerTest(unittest.TestCase):
             with mock.patch.object(ledger.os, 'fsync', side_effect=swap):
                 with self.assertRaisesRegex(ValueError, 'namespace changed'):
                     ledger.reserve(root, 'session', 'turn')
-            self.assertEqual(len(list((Path(root) / 'old-boundary').iterdir())), 2)
+            self.assertEqual(len(list((Path(root) / 'old-boundary' / hashlib.sha256(b'session').hexdigest()).iterdir())), 2)
 
     def test_rejects_symlink_and_untrusted_root(self):
         with tempfile.TemporaryDirectory() as root, tempfile.TemporaryDirectory() as other:
