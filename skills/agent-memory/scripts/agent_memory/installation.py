@@ -52,6 +52,7 @@ MEMORY_ROUTES = {
     'capture': ('admit_learning.py', ('capture',)),
     'admission': ('admit_learning.py', ()),
     'claude-boundary': ('claude_boundary.py', ()),
+    'codex-boundary': ('codex_boundary.py', ()),
     'private': ('private_workspace.py', ()),
     'compare': ('compare_learning.py', ()),
     'compact': ('consolidate_learning.py', ()),
@@ -712,7 +713,7 @@ def prepare(args, state, code, old, *, candidate_root=None, candidate_kind=None)
             hook = hook_paths(name)
             if name in ('codex', 'claude') and hook and not no_guidance:
                 from . import client_hooks
-                command = 'python3 ' + shlex.quote(str(active_pack/'hooks/turn_hook.py'))
+                command = 'python3 ' + shlex.quote(str(active_pack/'hooks'/('codex_prompt.py' if name == 'codex' else 'turn_hook.py')))
                 stop = None
                 if name == 'claude':
                     stop = {'hooks': [{'type': 'command', 'command': 'python3 ' + shlex.quote(str(active_pack/'hooks/claude_stop.py')), 'asyncRewake': True}]}

@@ -146,3 +146,15 @@ The helper independently replays the publication request against the authority;
 it records the connection to the prompt as an agent assertion, not semantic proof; it does not mechanically prove the published lesson derives from that source.
 A denied command, unresolved conflict, unavailable source or unverified landing
 MUST stay pending. Never acknowledge incomplete work as complete.
+
+**Codex same-turn acknowledgement.**
+
+The Codex prompt hook records a private hash of the actual user prompt, session
+and turn before a synchronous Stop continuation. It does not retain prompt
+text. If a source-bound continuation is unavailable or interrupted, the record
+remains pending. After the actual original turn is assessed, acknowledge through
+`am codex-boundary --repo REPO --input PRIVATE_JSON`. Use the session ID,
+original turn ID for both `prompt` and `source_uuid`, and the source SHA-256
+provided by the Stop hook. The remaining fields and outcomes follow the Claude
+acknowledgement above. The source-to-publication relationship and no-learning
+judgment remain agent assertions; a witnessed publication does not prove either.

@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import re
 import subprocess
+import uuid
 import sys
 
 
@@ -34,16 +35,32 @@ def main():
         repo = Path(found.stdout.strip()).resolve(strict=True)
         directory = Path(__file__).resolve().parent
         sys.path.insert(0, str(directory.parent / 'scripts'))
-        from agent_memory import repository_config, scope_binding
+        from agent_memory import bank_writes, repository_config, scope_binding, trust_paths
         if not os.path.lexists(repository_config.bank_path(repo)):
             print('{}'); return 0
-        scope_binding.require(repo)
+        context = scope_binding.require(repo)
+        _, bank = bank_writes.bank_path(repo)
+        operations, _ = bank_writes.state_paths(repo, bank, str(uuid.uuid4()))
+        ledger = operations.parent / 'codex-boundaries'; trust_paths.state(ledger)
+        key = hashlib.sha256((session+':'+turn).encode()).hexdigest()
+        dfd = os.open(ledger, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+        try:
+            fd = os.open(key+'.pending', os.O_RDONLY | os.O_NOFOLLOW, dir_fd=dfd)
+            try:
+                import stat
+                info=os.fstat(fd)
+                if not stat.S_ISREG(info.st_mode) or info.st_uid!=os.geteuid() or info.st_nlink!=1 or info.st_mode&0o077 or info.st_size>4096:raise ValueError('unsafe pending record')
+                with os.fdopen(fd,'rb',closefd=False) as f: pending=json.loads(f.read(4097))
+            finally: os.close(fd)
+        finally: os.close(dfd)
+        if pending.get('schema')!='agent-memory/codex-boundary-pending-v1' or pending.get('project_id')!=context['project_id'] or pending.get('source_uuid')!=turn or not re.fullmatch('[0-9a-f]{64}',pending.get('source_sha256','')):raise ValueError('pending source mismatch')
         prompt = (directory / 'boundary-prompt.txt').read_text(encoding='utf-8').strip().replace('{{SKILL_DIR}}', str(directory.parent))
         if not prompt or len(prompt.encode()) > 4096:
             raise ValueError('boundary guidance unavailable')
         reason = (prompt + ' This is the same Codex session ' + session + ', original turn ' + turn
                   + ', with final answer SHA-256 ' + hashlib.sha256(final.encode()).hexdigest()
-                  + '. Assess the actual original turn in this same session; do not attribute later or unrelated turns to it. '
+                  + '. Original user prompt SHA-256 is ' + pending['source_sha256'] + '. Assess the original turn in this same session; do not attribute later turns to it. '
+                  + 'Acknowledge the result with am codex-boundary using session, prompt and source_uuid set to the original turn ID and source_sha256 set to the stated prompt hash. '
                   + 'If the original source or permissions are unavailable, report pending. Do not invent capture or publication.')
         print(json.dumps({'decision':'block','reason':reason})); return 0
     except (OSError, ValueError, TypeError, KeyError, UnicodeError, ImportError, subprocess.SubprocessError):
