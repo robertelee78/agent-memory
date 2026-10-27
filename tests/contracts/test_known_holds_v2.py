@@ -76,6 +76,32 @@ class KnownHoldsVersionTwoContract(unittest.TestCase):
             reviewed=json.loads(output.read_text());self.assertTrue(reviewed['conflicts_pending'])
             self.assertTrue(self.claims.issubset(set(reviewed['blocked_paths'])))
 
+    def test_indexed_review_refuses_changed_source_or_authority(self):
+        for scenario in ('local-source', 'authority-head'):
+            with self.subTest(scenario=scenario), World() as w:
+                self.h=fixtures.SemanticSharingContract();repo,bank,peer,_=self.h.fixture(w)
+                _,local=self.h.add(bank,'wall-local','# Atrium wall\n\nUse yellow.\n')
+                _,landed=self.h.add(peer/'memory-bank','wall-peer','# Atrium wall\n\nUse blue.\n')
+                self.claims={local,landed};self.h.publish(w,peer)
+                _,initial=self.inspect(w,repo,'stale-initial')
+                path,view=self.inspect(w,repo,'stale-selected',self.select(initial))
+                decisions={'pages':[p['sha256'] for p in view['pages']],
+                    'pairs':[{'index':i,'classification':'related','reason':'Synthetic fixture review.'}
+                             for i,_ in enumerate(view['required_pairs'])],
+                    'consolidations':[],'rationale':'Exercise refusal of a stale source-bound review.'}
+                input_path=w.inside('stale-decisions.json');input_path.write_text(json.dumps(decisions))
+                output=w.inside('stale-review.json')
+                if scenario=='local-source':
+                    source=bank/local;source.write_text(source.read_text().replace('Use yellow.','Use green.'))
+                else:
+                    source=peer/'memory-bank'/landed;source.write_text(source.read_text().replace('Use blue.','Use purple.'))
+                    self.h.publish(w,peer)
+                before=self.h.state(w,repo,bank)
+                refused=self.invoke(w,'review-indexed-v2','--repo',repo,'--inspection',path,
+                                    '--input',input_path,'--output',output,expected=1)
+                self.assertFalse(output.exists());self.assertEqual(self.h.state(w,repo,bank),before)
+                self.assertFalse(refused['publication_verified']);self.assertFalse(refused['canonical_writes_performed'])
+
     def test_renewed_clarification_proof_replays_without_losing_prior_resolution(self):
         from contracts.test_comparison import render
         with World() as w:
