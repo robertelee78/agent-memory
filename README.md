@@ -2,7 +2,7 @@
 
 A portable, local-first Memory Bank for coding agents.
 
-## v0.0.3
+## v0.0.4
 
 One repository owns one shared Markdown memory bank. The skill captures durable
 learning, reads existing memory before adding it, combines duplicates without
@@ -11,8 +11,8 @@ independently of unfinished feature code and refresh into other sessions,
 worktrees and clones through the repository's existing Git rules. Contradictions
 go to the detecting developer for clarification.
 
-The [v0.0.3 release guide](docs/releases/v0.0.3.md) covers signed installation,
-semantic recall through the skill and CLI, and shared-memory recovery.
+The [v0.0.4 release guide](docs/releases/v0.0.4.md) covers the lifecycle,
+turn-boundary adapters and their current verification limits.
 [Published releases](https://github.com/robertelee78/agent-memory/releases)
 hold the immutable source and actual qualification evidence for each version.
 
@@ -76,8 +76,8 @@ Ask your coding agent to use the installed `agent-memory` skill in the target
 repository. It routes explicit developer/project setup, evidence-led bank
 initialization, qualified recall and the learning loop. At natural turn
 boundaries it refreshes landed memory, compares new learning with existing
-memory, and publishes eligible memory through current repository rules. Load
-the skill in each session; v0.0.4 hooks are planned to cover forgotten invocation.
+memory, and publishes eligible memory through current repository rules. The installed adapters provide turn-boundary guidance; the agent must still
+complete the governed workflow, and denied permissions or failures remain pending.
 The [common CLI guide](skills/agent-memory/maintain/cli/GUIDE.md) documents the
 same public helpers and installed aliases.
 
@@ -194,8 +194,8 @@ improve it without losing that simplicity.
 
 The common path MUST remain useful with files, Git, and the installed skill
 alone, with a deterministic CLI for governed operations. MCP is outside planned
-scope. v0.0.4 hooks will invoke the shared capture/refresh operation at turn
-boundaries. Any optional search projection must
+scope. Turn-boundary adapters direct supported agents to the shared capture and
+refresh workflow, without bypassing harness permissions. Any optional search projection must
 remain disposable; it cannot become the authority for project memory.
 
 The product is not “save more chat and vector-search it.” It is a maintained
