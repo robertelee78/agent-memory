@@ -71,7 +71,14 @@ non-identifying source label such as `operator`. In the actor, body, evidence an
 all other fields, do not infer or copy a personal email, account profile or
 contact details from harness authentication. Retain such details only when
 actual project evidence requires them and existing sharing rules permit them.
-Keep inputs and outputs private. The response's `capture`, `discovery` and
+Keep inputs and outputs private. For an initialized, bound repository, `am private
+create --repo REPO` creates an owner-only workspace outside the checkout and
+returns its ID and path. To retain an explicit authored JSON object without a
+separate shell directory-creation command, pass its exact bytes on stdin to
+`am private put --repo REPO --workspace ID --name request.json`. Use the returned
+path as the input to the governed operation. The helper never supplies judgments,
+replaces a prior file, or grants permissions; if the harness denies the command,
+retain the work and report it pending. The response's `capture`, `discovery` and
 `comparison_request` are inputs for the next steps; its discovery is explicitly
 incomplete. Select plausible routes and paths by meaning, then supply them in
 `comparison_request.read_paths`. Pass the `discovery` result and comparison request

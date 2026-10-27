@@ -52,6 +52,7 @@ MEMORY_ROUTES = {
     'capture': ('admit_learning.py', ('capture',)),
     'admission': ('admit_learning.py', ()),
     'claude-boundary': ('claude_boundary.py', ()),
+    'private': ('private_workspace.py', ()),
     'compare': ('compare_learning.py', ()),
     'compact': ('consolidate_learning.py', ()),
     'checkpoint': ('checkpoint.py', ()),
