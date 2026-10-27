@@ -576,6 +576,45 @@ def read_input(path, *, version2=False):
     return value
 
 
+def compact_review(repo, manifest, decisions):
+    """Translate explicit indexed human/agent judgments into the existing v2 review.
+
+    Indexing saves copying opaque source keys; it does not classify any pair,
+    acknowledge any page, or replace the existing fresh source/proof gates.
+    """
+    from . import sharing_frontier as frontier
+    if (not isinstance(manifest, dict) or manifest.get('schema') != 'agent-memory/semantic-sharing-inspection-v2'
+            or not isinstance(decisions, dict)
+            or set(decisions) not in ({'pages', 'pairs', 'consolidations', 'rationale'},
+                                       {'pages', 'pairs', 'consolidations', 'rationale', 'resolutions'})):
+        raise ContractError('Use the selected inspection and explicit page and pair judgments')
+    current = frontier.inspect(repo, manifest.get('request'))
+    if current != manifest or manifest['pending_selections']:
+        raise ContractError('Selected inspection changed or still needs semantic selection')
+    pages = [page['sha256'] for page in manifest['pages']]
+    if decisions['pages'] != pages or not isinstance(decisions['pairs'], list):
+        raise ContractError('Explicitly acknowledge each actual page in order')
+    pairs, seen = [], set()
+    for row in decisions['pairs']:
+        if (not isinstance(row, dict) or set(row) != {'index', 'classification', 'reason'}
+                or type(row['index']) is not int or row['index'] < 0
+                or row['index'] >= len(manifest['required_pairs']) or row['index'] in seen):
+            raise ContractError('Every exact pair requires one explicit indexed judgment')
+        seen.add(row['index'])
+        left, right = manifest['required_pairs'][row['index']]
+        pairs.append({'left': left, 'right': right, 'classification': row['classification'], 'reason': row['reason']})
+    if seen != set(range(len(manifest['required_pairs']))):
+        raise ContractError('Every exact pair requires one explicit indexed judgment')
+    judgment = {'schema': 'agent-memory/semantic-sharing-judgment-v2', 'request': manifest['request'],
+                'binding': manifest['binding'], 'manifest_sha256': manifest['manifest_sha256'],
+                'pages': pages, 'pairs': pairs, 'dependencies': manifest['request']['dependencies'],
+                'consolidations': decisions['consolidations'], 'rationale': decisions['rationale'],
+                'recorded_at': datetime.now(timezone.utc).isoformat()}
+    if 'resolutions' in decisions:
+        judgment['resolutions'] = decisions['resolutions']
+    return review(repo, judgment)
+
+
 from . import validation_memo
 
 
@@ -590,18 +629,31 @@ def main(argv=None):
         p.add_argument('--output')
     p=sub.add_parser('inspect-v2');p.add_argument('--repo',required=True);p.add_argument('--input');p.add_argument('--output',required=True)
     p=sub.add_parser('page-v2');p.add_argument('--repo',required=True);p.add_argument('--input',required=True);p.add_argument('--page',type=int,required=True)
+    p=sub.add_parser('worklist-v2');p.add_argument('--repo',required=True);p.add_argument('--input',required=True);p.add_argument('--page',type=int,required=True)
     p=sub.add_parser('review-v2');p.add_argument('--repo',required=True);p.add_argument('--input',required=True);p.add_argument('--output',required=True)
+    p=sub.add_parser('review-indexed-v2');p.add_argument('--repo',required=True);p.add_argument('--inspection',required=True);p.add_argument('--input',required=True);p.add_argument('--output',required=True)
     p=sub.add_parser('recover-holds');p.add_argument('--repo',required=True);p.add_argument('--project-id',required=True)
     args=parser.parse_args(argv)
     try:
+        if getattr(args, 'output', None):
+            limits.preflight_private_output(args.output, args.repo)
         if args.command=='recover-holds':
             from . import sharing_holds
             # Recovery operates only on this explicitly selected project, never on authority refs or canonical memory.
             value=sharing_holds.recover(args.repo,args.project_id)
-        elif args.command in {'inspect-v2','page-v2','review-v2'}:
+        elif args.command=='review-indexed-v2':
+            value=compact_review(args.repo,read_input(args.inspection,version2=True),load(limits.read_bytes(args.input,limits.MAX_PRIVATE)))
+        elif args.command in {'inspect-v2','page-v2','worklist-v2','review-v2'}:
             from . import sharing_frontier as frontier
             if args.command=='inspect-v2':value=frontier.inspect(args.repo,read_input(args.input,version2=True) if args.input else None)
-            elif args.command=='page-v2':value=frontier.page(args.repo,read_input(args.input,version2=True),args.page)
+            elif args.command in {'page-v2','worklist-v2'}:
+                manifest=read_input(args.input,version2=True)
+                value=frontier.page(args.repo,manifest,args.page)
+                if args.command=='worklist-v2':
+                    indices={tuple(pair): index for index,pair in enumerate(manifest['required_pairs'])}
+                    value={**value,'page_sha256':manifest['pages'][args.page]['sha256'],
+                           'items':[{**item,'pair_index':indices[tuple(item['edge'])]} if 'edge' in item else item
+                                    for item in value['items']]}
             else:value=review(args.repo,read_input(args.input,version2=True))
         elif args.command=='inspect':value=inspect(args.repo,args.base)
         elif args.command=='review':value=review(args.repo,read_input(args.input))
@@ -616,13 +668,14 @@ def main(argv=None):
         from .sharing_holds import HoldFailure
         from .sharing_recovery import AuthorityFailure
         authority_failed=isinstance(exc,AuthorityFailure)
+        output_failed=isinstance(exc,limits.PrivateOutputError)
         known=isinstance(exc,HoldFailure) or authority_failed
         print(json.dumps({'schema':'agent-memory/semantic-sharing-result-v1','operation':args.command,
             'publication_verified':False,'canonical_writes_performed':False,'remote_freshness_verified':False,
-            'failure_component':exc.component if authority_failed else 'known-dispute-state' if known else args.command,
-            'failure_code':exc.code if known else 'semantic-review-unverified',
-            'error':str(exc) if known else 'Incomplete, changed or unsafe semantic review; retain local work and inspect actual sources',
-            'repair':exc.repair if known else 'Preserve the bank, original request and pending evidence. Run am doctor for this repository, inspect the failed component, then repeat source inspection and review; do not substitute an empty bank or a compatibility judgment.'}));return 1
+            'failure_component':'output' if output_failed else exc.component if authority_failed else 'known-dispute-state' if known else args.command,
+            'failure_code':'private-output-invalid' if output_failed else exc.code if known else 'semantic-review-unverified',
+            'error':str(exc) if output_failed or known else 'Incomplete, changed or unsafe semantic review; retain local work and inspect actual sources',
+            'repair':str(exc) if output_failed else exc.repair if known else 'Preserve the bank, original request and pending evidence. Run am doctor for this repository, inspect the failed component, then repeat source inspection and review; do not substitute an empty bank or a compatibility judgment.'}));return 1
 
 
 if __name__=='__main__':sys.exit(main())

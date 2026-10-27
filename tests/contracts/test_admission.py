@@ -20,6 +20,70 @@ class AdmissionContract(unittest.TestCase):
     state=fixtures.ComparisonContract.state
     add=fixtures.ComparisonContract.add
 
+    def test_draft_fills_identity_without_deciding_or_writing(self):
+        with World() as w:
+            repo, bank = self.fixture(w)
+            source = self.request()
+            old = source['candidate']['metadata']
+            old['origin']['code-state'] = 'not-code'
+            value = {'body': source['candidate']['body'], 'kind': old['kind'],
+                     'scope': old['scope'], 'applicability': old['applicability'],
+                     'conditions': old['conditions'], 'source': old['source'], 'evidence': old['evidence'],
+                     'harness': old['origin']['harness'], 'session': old['origin']['session'],
+                     'code_state': 'not-code', 'assessment': source['assessment'], 'repository_evidence': None}
+            before = self.state(w, repo, bank)
+            drafted = self.good(w, 'admit_learning.py', 'draft', '--repo', repo, '--input', self.save(w, value))
+            self.assertFalse(drafted['admission_verified'])
+            self.assertFalse(drafted['canonical_writes_performed'])
+            request = drafted['request']
+            self.assertEqual(request['project_id'], self.pid)
+            self.assertEqual(request['candidate']['metadata']['origin']['developer-id'], self.actor)
+            self.assertEqual(request['assessment'], value['assessment'])
+            self.assertEqual(self.state(w, repo, bank), before)
+            captured = self.capture(w, repo, request)
+            self.assertEqual(captured['decision'], 'eligible')
+            self.assertFalse(captured['admission_verified'])
+            del value['assessment']
+            r, invalid = self.call(w, 'admit_learning.py', 'draft', '--repo', repo, '--input', self.save(w, value))
+            self.assertEqual(r.returncode, 1)
+            self.assertFalse(invalid['admission_verified'])
+            self.assertEqual(self.state(w, repo, bank), before)
+
+    def test_start_keeps_semantic_review_pending_and_never_writes_bank(self):
+        with World() as w:
+            repo, bank = self.fixture(w)
+            source = self.request()
+            old = source['candidate']['metadata']
+            value = {'body': source['candidate']['body'], 'kind': old['kind'],
+                     'scope': old['scope'], 'applicability': old['applicability'],
+                     'conditions': old['conditions'], 'source': old['source'], 'evidence': old['evidence'],
+                     'harness': old['origin']['harness'], 'session': old['origin']['session'],
+                     'code_state': 'not-code', 'assessment': source['assessment'], 'repository_evidence': None}
+            request = {'candidate': value, 'task': 'Assess the retry policy and related attempt limits',
+                       'searches': ['retry policy', 'attempt cap']}
+            before = self.state(w, repo, bank)
+            started = self.good(w, 'admit_learning.py', 'start', '--repo', repo, '--input', self.save(w, request))
+            self.assertEqual(started['decision'], 'eligible')
+            self.assertFalse(started['admission_verified'])
+            self.assertFalse(started['discovery']['discovery']['complete'])
+            self.assertEqual(started['capture']['request']['candidate'], started['comparison_request']['candidate'])
+            self.assertEqual(self.state(w, repo, bank), before)
+            value['assessment']['confirmed'] = False
+            pending = self.good(w, 'admit_learning.py', 'start', '--repo', repo, '--input', self.save(w, request))
+            self.assertEqual(pending['decision'], 'review-required')
+            self.assertIsNone(pending['discovery'])
+            self.assertIsNone(pending['comparison_request'])
+            self.assertEqual(self.state(w, repo, bank), before)
+            value['assessment']['confirmed'] = True
+            value['body'] = '# Unsafe\n\npassword=WITHHELD_ADMISSION_SECRET\n'
+            response, quarantined = self.call(w, 'admit_learning.py', 'start', '--repo', repo, '--input', self.save(w, request))
+            self.assertEqual(response.returncode, 0)
+            self.assertEqual(quarantined['decision'], 'quarantine')
+            self.assertIsNone(quarantined['capture'])
+            self.assertIsNone(quarantined['discovery'])
+            self.assertNotIn('WITHHELD_ADMISSION_SECRET', response.stdout + response.stderr)
+            self.assertEqual(self.state(w, repo, bank), before)
+
     def request(self, source='user', category='user-correction'):
         candidate=fixtures.ComparisonContract.candidate(self)['candidate']
         candidate['metadata']['source']={'kind':source,'actor':'Explicit fixture source; not authenticated'}

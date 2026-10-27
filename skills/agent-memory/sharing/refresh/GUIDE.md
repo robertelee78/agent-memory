@@ -58,7 +58,22 @@ not a second canonical memory or an authenticated source of truth.
 
 ## Observe
 
+Every `--output` below requires an absolute path in an existing owner-only
+directory outside the checkout and installed runtime. For example, after creating
+an owner-only directory `/tmp/am-private-example`, use
+`--output /tmp/am-private-example/refresh-inspection.json`; a relative path such
+as `--output refresh-inspection.json` is refused before refresh work starts.
+Choose a fresh private filename and preserve any existing receipt.
+
 With `SKILL_DIR` resolved to this package:
+
+An agent MAY first run `am refresh current --repo REPO` for a narrow no-import
+observation. `bank-synchronized` means only that the complete observed canonical
+bank matched the freshly read authority at the checked point in time. It does not
+establish semantic truth, recall, publication or capture completion; pending
+capture and publication remain explicitly unknown. Any other outcome requires
+the full review below or its specific recovery. Do not treat this observation as
+proof that other sessions have no private pending work.
 
 ```sh
 python3 -I "$SKILL_DIR/scripts/refresh_memory.py" inspect --v2 --repo /path/to/repo --output /private/refresh-inspection.json

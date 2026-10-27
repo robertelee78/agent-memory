@@ -42,6 +42,66 @@ class KnownHoldsVersionTwoContract(unittest.TestCase):
             'ids':[],'complete':True,'uncertain':False} for key in view['changed']}
         return request
 
+    def test_indexed_review_requires_every_pair_and_preserves_conflict(self):
+        with World() as w:
+            self.h=fixtures.SemanticSharingContract();repo,bank,peer,base=self.h.fixture(w)
+            _,local=self.h.add(bank,'wall-local','# Atrium wall\n\nUse yellow.\n')
+            _,landed=self.h.add(peer/'memory-bank','wall-peer','# Atrium wall\n\nUse blue.\n')
+            self.claims={local,landed};self.h.publish(w,peer)
+            _,initial=self.inspect(w,repo,'indexed-initial')
+            path,view=self.inspect(w,repo,'indexed-selected',self.select(initial))
+            for page in view['pages']:
+                exposed=self.invoke(w,'worklist-v2','--repo',repo,'--input',path,'--page',str(page['index']))
+                self.assertEqual(exposed['page_sha256'],page['sha256'])
+                for item in exposed['items']:
+                    if 'edge' in item:self.assertEqual(view['required_pairs'][item['pair_index']],item['edge'])
+            rows={row['key']:row for row in view['sources']}
+            decisions={'pages':[p['sha256'] for p in view['pages']],
+                'pairs':[{'index':i,'classification':'contradiction' if {rows[a]['path'],rows[b]['path']}==self.claims else 'related',
+                          'reason':'Actual fixture meanings were compared and retained.'}
+                         for i,(a,b) in enumerate(view['required_pairs'])],
+                'consolidations':[],'rationale':'Review every real source and preserve the disputed wall colors.'}
+            input_path=w.inside('indexed-decisions.json');output=w.inside('indexed-review.json')
+            incomplete={**decisions,'pairs':decisions['pairs'][:-1]};input_path.write_text(json.dumps(incomplete))
+            self.invoke(w,'review-indexed-v2','--repo',repo,'--inspection',path,'--input',input_path,'--output',output,expected=1)
+            self.assertFalse(output.exists())
+            no_pages={**decisions,'pages':[]};input_path.write_text(json.dumps(no_pages))
+            self.invoke(w,'review-indexed-v2','--repo',repo,'--inspection',path,'--input',input_path,'--output',output,expected=1)
+            self.assertFalse(output.exists())
+            duplicate={**decisions,'pairs':decisions['pairs']+[decisions['pairs'][0]]};input_path.write_text(json.dumps(duplicate))
+            self.invoke(w,'review-indexed-v2','--repo',repo,'--inspection',path,'--input',input_path,'--output',output,expected=1)
+            self.assertFalse(output.exists())
+            input_path.write_text(json.dumps(decisions))
+            self.invoke(w,'review-indexed-v2','--repo',repo,'--inspection',path,'--input',input_path,'--output',output)
+            reviewed=json.loads(output.read_text());self.assertTrue(reviewed['conflicts_pending'])
+            self.assertTrue(self.claims.issubset(set(reviewed['blocked_paths'])))
+
+    def test_indexed_review_refuses_changed_source_or_authority(self):
+        for scenario in ('local-source', 'authority-head'):
+            with self.subTest(scenario=scenario), World() as w:
+                self.h=fixtures.SemanticSharingContract();repo,bank,peer,_=self.h.fixture(w)
+                _,local=self.h.add(bank,'wall-local','# Atrium wall\n\nUse yellow.\n')
+                _,landed=self.h.add(peer/'memory-bank','wall-peer','# Atrium wall\n\nUse blue.\n')
+                self.claims={local,landed};self.h.publish(w,peer)
+                _,initial=self.inspect(w,repo,'stale-initial')
+                path,view=self.inspect(w,repo,'stale-selected',self.select(initial))
+                decisions={'pages':[p['sha256'] for p in view['pages']],
+                    'pairs':[{'index':i,'classification':'related','reason':'Synthetic fixture review.'}
+                             for i,_ in enumerate(view['required_pairs'])],
+                    'consolidations':[],'rationale':'Exercise refusal of a stale source-bound review.'}
+                input_path=w.inside('stale-decisions.json');input_path.write_text(json.dumps(decisions))
+                output=w.inside('stale-review.json')
+                if scenario=='local-source':
+                    source=bank/local;source.write_text(source.read_text().replace('Use yellow.','Use green.'))
+                else:
+                    source=peer/'memory-bank'/landed;source.write_text(source.read_text().replace('Use blue.','Use purple.'))
+                    self.h.publish(w,peer)
+                before=self.h.state(w,repo,bank)
+                refused=self.invoke(w,'review-indexed-v2','--repo',repo,'--inspection',path,
+                                    '--input',input_path,'--output',output,expected=1)
+                self.assertFalse(output.exists());self.assertEqual(self.h.state(w,repo,bank),before)
+                self.assertFalse(refused['publication_verified']);self.assertFalse(refused['canonical_writes_performed'])
+
     def test_renewed_clarification_proof_replays_without_losing_prior_resolution(self):
         from contracts.test_comparison import render
         with World() as w:

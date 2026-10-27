@@ -3,7 +3,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from pathlib import Path
+import stat
 import sys
 import uuid
 
@@ -109,6 +111,119 @@ def inspect(repo, base=None, *, version2=False):
     return result('inspect', 'review-required', inspection=value, cursor_state=state,
                   baseline_source='explicit' if base is not None else 'cursor' if previous else 'git-common-base',
                   git_metadata_writes_performed=True, remote_freshness_verified=True)
+
+
+def current(repo):
+    """Prove only a point-in-time equal bank, never semantic truth or no pending work."""
+    from . import records, sharing_boundary, sharing_holds
+    root, bank = writes.bank_path(repo)
+    before_index = index_hash(root)
+    before_git = retrieval.git_context(root)
+    prior, cursor_sha, cursor_state = cursor(root)
+    if cursor_state not in {'absent', 'verified-local-hint'}:
+        raise ContractError('Preserve the unverified refresh cursor and use full review')
+    boundary = sharing_boundary.inspect(root)
+    if not boundary['local_boundary_ready']:
+        raise ContractError('Local sharing boundary is not ready; use full review')
+    context = scope_binding.require(root)
+
+    def transaction_inventory(operations):
+        # Resolve from / using directory descriptors. Neither intermediate nor
+        # final components may be followed if replaced by a symlink.
+        state_root = operations.parents[2]
+        pieces = [*state_root.parts[1:], 'writes', operations.parent.name, 'transactions']
+        descriptors = []
+        identities = []
+        flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
+        try:
+            descriptors.append(os.open('/', flags))
+            for index, piece in enumerate(pieces):
+                try:
+                    fd = os.open(piece, flags, dir_fd=descriptors[-1])
+                except FileNotFoundError:
+                    return identities, ('absent', index)
+                descriptors.append(fd)
+                metadata = os.fstat(fd)
+                if index >= len(state_root.parts) - 2 and (
+                        metadata.st_uid != os.getuid() or stat.S_IMODE(metadata.st_mode) & 0o022):
+                    raise ContractError('Untrusted transaction recovery location')
+                if index >= len(state_root.parts) - 2:
+                    identities.append((metadata.st_dev, metadata.st_ino, metadata.st_mode,
+                                       metadata.st_uid, metadata.st_mtime_ns, metadata.st_ctime_ns))
+            with os.scandir(descriptors[-1]) as entries:
+                if next(entries, None) is not None:
+                    raise ContractError('Transaction recovery evidence requires review')
+            return identities, ('empty',)
+        finally:
+            for fd in reversed(descriptors):
+                os.close(fd)
+
+    def runtime_state():
+        holds, hold_sha = sharing_holds.read_store(root, context['project_id'])
+        if holds['records']:
+            raise ContractError('Known holds require explicit review')
+        operations, _ = writes.state_paths(root, bank, str(uuid.uuid4()))
+        return holds, hold_sha, cursor(root), transaction_inventory(operations)
+
+    before_state = runtime_state()
+    root, observation, binding, values, checked = semantic.snapshots(
+        root, prior['authority_head'] if prior else None, quarantine_records=False)
+    if not observation['shared_bank_present'] or not values['base'] or not (
+            values['base'] == values['local'] == values['landed']):
+        return result('current', 'review-required', pending_capture='unknown',
+                      pending_publication='unknown', semantic_truth_verified=False,
+                      git_metadata_writes_performed=True)
+    head = recovery.tree(root, observation['local_head'], observation['bank_root'])
+    if head != values['local']:
+        return result('current', 'review-required', pending_capture='unknown',
+                      pending_publication='unknown', semantic_truth_verified=False,
+                      git_metadata_writes_performed=True)
+    for entry in checked['local']['entries']:
+        if entry['format'] == 'standalone-record':
+            _, meta, _ = records.parse(values['local'][entry['path']])
+            if meta.get('visibility') != 'visible' or meta.get('status') in {'candidate', 'quarantined'}:
+                raise ContractError('Hidden or unadmitted memory requires review')
+
+    def mode_and_index():
+        for path in values['local']:
+            target = bank / path
+            mode = target.lstat().st_mode
+            if not stat.S_ISREG(mode) or stat.S_IMODE(mode) != 0o644:
+                raise ContractError('Nonordinary local bank file mode requires review')
+        prefix = observation['bank_root'] + '/'
+        tree_raw = recovery.command(root, 'ls-tree', '-rz', '--full-tree', observation['local_head'],
+                                    '--', observation['bank_root'], limit=recovery.MAX_LOCATOR_TREE_BYTES)
+        index_raw = recovery.command(root, 'ls-files', '--stage', '-z', '--', observation['bank_root'],
+                                     limit=recovery.MAX_LOCATOR_TREE_BYTES)
+        tree_entries, index_entries = {}, {}
+        for item in filter(None, tree_raw.split('\0')):
+            header, path = item.split('\t', 1); mode, kind, oid = header.split()
+            if not path.startswith(prefix) or mode != '100644' or kind != 'blob' or path in tree_entries:
+                raise ContractError('Nonordinary HEAD bank entry requires review')
+            tree_entries[path] = oid
+        for item in filter(None, index_raw.split('\0')):
+            header, path = item.split('\t', 1); mode, oid, stage = header.split()
+            if not path.startswith(prefix) or mode != '100644' or stage != '0' or path in index_entries:
+                raise ContractError('Nonordinary index bank entry requires review')
+            index_entries[path] = oid
+        if tree_entries != index_entries or set(tree_entries) != {prefix + path for path in values['local']}:
+            raise ContractError('HEAD and index bank inventories differ')
+        return tree_raw, index_raw
+
+    before_modes = mode_and_index()
+    writes.fault('refresh-current-before-final-recheck')
+    semantic.final_sources(root, observation, binding)
+    if (scope_binding.require(root, context['project_id'], expected=context) != context
+            or retrieval.git_context(root) != before_git or index_hash(root) != before_index
+            or sharing_boundary.inspect(root) != boundary or runtime_state() != before_state
+            or mode_and_index() != before_modes or cursor(root)[1:] != (cursor_sha, cursor_state)):
+        raise ContractError('Memory, index, identity or recovery state changed during observation')
+    if recovery.server(root, observation['authority_remote'], observation['authority_branch']) != observation['authority_head']:
+        raise ContractError('Authority advanced during observation')
+    return result('current', 'bank-synchronized', pending_capture='unknown', pending_publication='unknown',
+                  semantic_truth_verified=False, source_assertions_verified=False,
+                  remote_freshness_verified=True, observed_authority_head=observation['authority_head'],
+                  git_metadata_writes_performed=True)
 
 
 def validate_transaction(p, *, owned_lock=None):
@@ -228,13 +343,31 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest='operation', required=True)
     check = sub.add_parser('inspect'); check.add_argument('--repo', required=True); check.add_argument('--base')
+    current_parser = sub.add_parser('current'); current_parser.add_argument('--repo', required=True)
     preview = sub.add_parser('prepare'); preview.add_argument('--repo', required=True); preview.add_argument('--input', required=True)
     writer = sub.add_parser('apply'); writer.add_argument('--input', required=True)
     for command in (check,preview,writer):
         command.add_argument('--output');command.add_argument('--v2',action='store_true')
     args = parser.parse_args(argv)
     try:
-        if args.operation == 'inspect': value = inspect(args.repo, args.base,version2=args.v2)
+        input_value = None
+        if getattr(args, 'output', None):
+            supplied = Path(args.output).expanduser()
+            if not supplied.is_absolute() or '..' in supplied.parts:
+                print(json.dumps(result(args.operation, 'pending-private-output',
+                    canonical_writes_performed=False, git_metadata_writes_performed=False,
+                    failure_component='output', failure_code='private-output-path-invalid',
+                    reason='The private output path must be absolute and must not contain parent-directory components.',
+                    repair='Choose a new absolute path in an owner-only directory outside the repository and installed runtime, then retry with --output. Preserve the bank and pending evidence.')))
+                return 1
+            if hasattr(args, 'repo'):
+                output_repo = args.repo
+            else:
+                input_value = read_input(args.input,version2=args.v2)
+                output_repo = tx.proposal_value(input_value)['repo_root']
+            limits.preflight_private_output(args.output, output_repo)
+        if args.operation == 'current': value = current(args.repo)
+        elif args.operation == 'inspect': value = inspect(args.repo, args.base,version2=args.v2)
         elif args.operation == 'prepare':
             request=read_input(args.input,version2=args.v2)
             proof=request.get('proof') if isinstance(request,dict) else None
@@ -245,21 +378,23 @@ def main(argv=None):
                     repair='Rerun am refresh prepare with the original --repo and --input plus --v2 --output /private/path/refresh.json; select an owner-only location outside the repository.'),indent=2))
                 return 1
             value = prepare(args.repo, request)
-        else: value = apply(read_input(args.input,version2=args.v2))
-        if args.output:
-            repo=args.repo if hasattr(args,'repo') else tx.proposal_value(read_input(args.input,version2=args.v2))['repo_root']
-            value=limits.write_private(args.output,value,repo)
+        else: value = apply(input_value if input_value is not None else read_input(args.input,version2=args.v2))
+        if getattr(args, 'output', None):
+            value=limits.write_private(args.output,value,output_repo)
         print(json.dumps(value, indent=2)); return 0
     except (ContractError, OSError, ValueError, UnicodeError, TypeError, KeyError, AttributeError, RecursionError) as exc:
         from .sharing_holds import HoldFailure
         authority_failed=isinstance(exc,recovery.AuthorityFailure)
+        output_failed=isinstance(exc,limits.PrivateOutputError)
         known=isinstance(exc,HoldFailure) or authority_failed
-        print(json.dumps(result(args.operation, 'pending-inspection', canonical_writes_performed=None,
-                                git_metadata_writes_performed=None,
-                                failure_component=exc.component if authority_failed else 'known-dispute-state' if known else args.operation,
-                                failure_code=exc.code if known else 'refresh-unverified',
-                                reason=str(exc) if known else 'Unresolved, offline, unsafe, interrupted or changed refresh; retain the original proposal and local memory, inspect/recover before retry',
-                                repair=exc.repair if known else 'Preserve the proposal, bank and pending evidence. Run am doctor for this repository and inspect the failed component before repeating refresh inspection; do not reset or replace the bank.')))
+        print(json.dumps(result(args.operation, 'pending-private-output' if output_failed else 'pending-inspection', canonical_writes_performed=False if output_failed or args.operation == 'current' else None,
+                                git_metadata_writes_performed=False if output_failed else None,
+                                **({'pending_capture': 'unknown', 'pending_publication': 'unknown', 'semantic_truth_verified': False}
+                                   if args.operation == 'current' else {}),
+                                failure_component='output' if output_failed else exc.component if authority_failed else 'known-dispute-state' if known else args.operation,
+                                failure_code='private-output-invalid' if output_failed else exc.code if known else 'refresh-unverified',
+                                reason=str(exc) if output_failed or known else 'Unresolved, offline, unsafe, interrupted or changed refresh; retain the original proposal and local memory, inspect/recover before retry',
+                                repair=str(exc) if output_failed else exc.repair if known else 'Preserve the proposal, bank and pending evidence. Run am doctor for this repository and inspect the failed component before repeating refresh inspection; do not reset or replace the bank.')))
         return 1
 
 

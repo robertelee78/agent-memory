@@ -307,6 +307,57 @@ class MacOSCommandContract(unittest.TestCase):
 
 
 class InstallerContract(unittest.TestCase):
+    def test_opencode_versioned_hook_is_owned_and_removed(self):
+        for name, version, expected in [('opencode', '1.19.3', 'v1'), ('opencode2', 'opencode v2.1.3', 'v2')]:
+            with self.subTest(version=expected), World() as world:
+                source = self.source(world)
+                fakebin = world.inside('fake-bin'); fakebin.mkdir()
+                executable = fakebin/name
+                executable.write_text('#!/bin/sh\nprintf "%s\\n" "'+version+'"\n')
+                executable.chmod(0o755)
+                world.env['PATH'] = str(fakebin)+os.pathsep+world.env['PATH']
+                plugin = world.paths['config']/'opencode/plugins/agent-memory.js'
+                plugin.parent.mkdir(parents=True)
+                other = plugin.parent/'other.js'; other.write_text('foreign plugin\n')
+                result = self.run_install(world, source, '--presets', 'opencode')
+                self.assertTrue(result['verified'])
+                self.assertTrue(plugin.is_symlink())
+                self.assertTrue(os.readlink(plugin).endswith('/hooks/opencode.js'))
+                result = world.run([sys.executable, '-I', source/'scripts/uninstall_runtime.py', 'uninstall'],
+                                   check=False)
+                self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
+                self.assertFalse(plugin.exists()); self.assertFalse(plugin.is_symlink())
+                self.assertEqual(other.read_text(), 'foreign plugin\n')
+
+    def test_owned_client_hook_lifecycle_preserves_foreign_configuration(self):
+        with World() as world:
+            source = self.source(world)
+            codex = world.paths['codex']/'hooks.json'
+            claude = world.paths['claude']/'settings.json'
+            foreign = {'hooks': {'UserPromptSubmit': [{'hooks': [{'type': 'command', 'command': 'foreign-hook'}]}]},
+                       'other': {'kept': True}}
+            original = (json.dumps(foreign, separators=(',', ':'))+'\n').encode()
+            codex.write_bytes(original); claude.write_bytes(original)
+            first = self.run_install(world, source, '--presets', 'codex,claude')
+            self.assertTrue(first['verified'])
+            for path in (codex, claude):
+                value = json.loads(path.read_text())
+                self.assertEqual(len(value['hooks']['UserPromptSubmit']), 2)
+                self.assertEqual(value['hooks']['UserPromptSubmit'][0], foreign['hooks']['UserPromptSubmit'][0])
+                value['user-edit'] = 'preserve later changes'
+                path.write_text(json.dumps(value))
+            second = self.run_install(world, source)
+            self.assertTrue(second['verified'])
+            for path in (codex, claude):
+                value = json.loads(path.read_text())
+                self.assertEqual(len(value['hooks']['UserPromptSubmit']), 2)
+                self.assertEqual(value['user-edit'], 'preserve later changes')
+            result = world.run([sys.executable, '-I', source/'scripts/uninstall_runtime.py', 'uninstall'], check=False)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertTrue(json.loads(result.stdout)['verified'])
+            for path in (codex, claude):
+                self.assertEqual(json.loads(path.read_text()), {**foreign, 'user-edit': 'preserve later changes'})
+
     def source(self, world):
         target = world.inside('developer source with spaces')
         shutil.copytree(PACK, target)

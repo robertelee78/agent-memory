@@ -84,6 +84,27 @@ python3 -I "$SKILL_DIR/scripts/reconcile_memory.py" inspect-v2 --repo /path/to/r
 python3 -I "$SKILL_DIR/scripts/reconcile_memory.py" page-v2 --repo /path/to/repo --input /private/selected-inspection.json --page 0
 ```
 
+For a shorter judgment handoff, `am semantic worklist-v2 --repo REPO --input
+SELECTED --page N` returns the same checked disclosure page, plus its page digest
+and a stable `pair_index` on each edge. Read every page and every source in it.
+Then write a private JSON object containing exactly `pages` (the page digests in
+order), `pairs` (one object for every actual edge, each with `index`,
+`classification` and a source-specific `reason`), `consolidations` (the actual
+explicit groups, or `[]` if none) and `rationale`. Include `resolutions` only for
+actual evidenced resolutions. Use:
+
+```sh
+python3 -I "$SKILL_DIR/scripts/reconcile_memory.py" review-indexed-v2 --repo REPO --inspection SELECTED \
+  --input PRIVATE_DECISIONS --output PRIVATE_REVIEWED
+```
+
+The helper maps the indices to the exact source keys, carries over the selected
+request and dependencies, and invokes the same fresh source-bound review. It
+rejects missing, repeated or out-of-range pairs, unacknowledged pages, incomplete
+selections and stale observations. It does not choose classifications, generate
+reasons, assert coverage or complete an omitted semantic decision. Read the
+complete private result and retain its exact proof for publication or refresh.
+
 The operation uses [fresh recovery observations](../recovery/GUIDE.md), explicit
 project/developer resolution and the configured single bank. It reads the prior
 shared baseline, current local bank and freshly fetched authority bank. With no
