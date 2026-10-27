@@ -5,6 +5,8 @@ import argparse
 import copy
 from datetime import datetime, timezone
 import json
+import os
+import stat
 from pathlib import Path
 import sys
 import uuid
@@ -14,7 +16,7 @@ from . import comparison, lifecycle, records, scope_binding, security
 from .developer_identity import digest, encoded, load, uuid_valid
 from .frontmatter import ContractError, write
 from .identity_git import git
-from . import sharing_limits
+from . import sharing_limits, trust_paths
 
 REQUEST = {'project_id', 'candidate', 'source_class', 'repository_evidence', 'assessment'}
 ASSESSMENT = {'category', 'utility', 'durable', 'evidence_confidence', 'evidence_reason',
@@ -321,9 +323,36 @@ def apply(prepared):
         canonical_writes_performed=receipt['writes_performed'])
 
 
+class PrivateInputError(ContractError):
+    """Admission input must not expose private evidence to other users."""
+
+
 def read_input(path, maximum=65536):
-    with Path(path).open('rb') as stream:
-        raw = stream.read(maximum + 1)
+    try:
+        path = Path(os.path.abspath(path))
+        trust_paths.inspect(path.parent, private_directory=True)
+        directory = os.open(path.parent, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+        try:
+            parent = os.fstat(directory)
+            if parent.st_uid != os.geteuid() or stat.S_IMODE(parent.st_mode) != 0o700:
+                raise PrivateInputError('Admission input requires a private parent')
+            fd = os.open(path.name, os.O_RDONLY | os.O_NOFOLLOW, dir_fd=directory)
+            try:
+                info = os.fstat(fd)
+                if (not stat.S_ISREG(info.st_mode) or info.st_uid != os.geteuid()
+                        or info.st_mode & 0o022 or info.st_nlink != 1):
+                    raise PrivateInputError('Admission input must be a protected regular file')
+                with os.fdopen(fd, 'rb', closefd=False) as stream:
+                    raw = stream.read(maximum + 1)
+            finally:
+                os.close(fd)
+            now = path.parent.lstat()
+            if (now.st_dev, now.st_ino) != (parent.st_dev, parent.st_ino):
+                raise PrivateInputError('Admission input directory changed')
+        finally:
+            os.close(directory)
+    except (OSError, trust_paths.TrustPathError) as exc:
+        raise PrivateInputError('Admission input is not in a trusted private workspace') from exc
     if len(raw) > maximum:
         raise ContractError('Admission input exceeds its bounded reader')
     return load(raw)
@@ -347,9 +376,9 @@ def main(argv=None):
         elif args.command == 'preview':value = preview(args.repo, read_input(args.capture), read_input(args.request), read_input(args.proof),read_input(args.navigation,16384) if args.navigation else None)
         else:value = apply(read_input(args.proposal, sharing_limits.MAX_PRIVATE))
         print(json.dumps(value, indent=2, ensure_ascii=False));return 0
-    except (ContractError, OSError, ValueError, UnicodeError, TypeError, KeyError, AttributeError, RecursionError):
-        print(json.dumps(result(args.command, admission_verified=False, canonical_writes_performed=False,
-            error='Unsafe, ineligible, unavailable or changed admission; preserve sources and repeat evidence/comparison review')))
+    except (ContractError, OSError, ValueError, UnicodeError, TypeError, KeyError, AttributeError, RecursionError) as exc:
+        error = ('Admission input must be a protected file in an owner-only directory. Use am private create and am private put; preserve the existing input.' if isinstance(exc, PrivateInputError) else 'Unsafe, ineligible, unavailable or changed admission; preserve sources and repeat evidence/comparison review')
+        print(json.dumps(result(args.command, admission_verified=False, canonical_writes_performed=False, error=error)))
         return 1
 
 
