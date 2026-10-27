@@ -42,14 +42,16 @@ move remains supported under ADR-0011. Device-number churn recovery additionally
 requires the previously registered location; moved-and-remounted checkouts require
 explicit relinking. Inode reuse with identical path, project and authority is
 indistinguishable in legacy metadata and counts as project continuity, not proof
-of physical checkout continuity. When it is absent, resolution
+of physical checkout continuity. When the exact observed registry key is absent, resolution
 MUST recognize a semantically unique historical binding with the same canonical common-Git
 location and inode despite a different device number, only when the registered
 project UUID, bank UUID, bank canonical remote and current authority agree.
 Equivalent historical keys for the same project and authority count as one
 decision; conflicting project or authority decisions MUST be refused. Hooks and
 all supported harnesses MUST continue through the shared read-only resolver when
-these conditions hold. The effective registry key MUST be lexicographically smallest among equivalent candidates and deterministic and
+these conditions hold. The effective registry key MUST be the exact observed key when registered; otherwise
+it MUST be the historical candidate with the smallest numeric (device, inode)
+tuple among equivalent candidates and
 retained in operation guards; the observed filesystem key remains separately
 visible. Explicit saved authority selections MUST be preserved.
 Conflicting candidates, changed inode, changed authority, copied banks, missing
@@ -57,7 +59,8 @@ bank identity and independent clones MUST remain unresolved. A remote match
 alone MUST NOT adopt a checkout. Linked worktrees MUST use their common Git
 directory. Read-only resolution MUST NOT write registries. This compatibility
 rule MUST be explicitly reported as recovered historical evidence, rather than
-claim a device number is durable identity or authentication.
+claim a device number is durable identity or authentication. This evidence is
+reported in resolver results, status and doctor; routine hooks stay quiet.
 
 ### T2: Diagnose and repair the binding
 
@@ -108,14 +111,21 @@ a claim that device numbers are stable or identity is authentication. Repeated
 ordinary resolution writes nothing and does not grow the registry.
 
 Failure metadata SHALL use one replaceable owner-only bounded JSON record per
-canonical common-Git location, keyed by SHA-256 of the location plus fixed harness and adapter names under the private runtime
+(canonical common-Git location, harness, adapter), keyed by SHA-256 of the location plus fixed harness and adapter names under the private runtime
 state root, outside repository memory. Records SHALL contain only schema, fixed
-harness/stage/reason, and timestamp; at most 4096 bytes. No transcript, prompt,
+harness/stage/reason, and timestamp; at most 4096 bytes, mode 0600 within a 0700 directory. Writes MUST
+use atomic replacement and refuse symlink/hardlink redirection. No transcript, prompt,
 final answer, arbitrary exception string or credentials are retained. A subsequent
 successful adapter clears only its own failure state; absence never proves publication.
 Early failures before safe repository discovery report the fixed code without
 writing. Codes include event.invalid, repository.unavailable, identity.unresolved,
-boundary.missing, boundary.unsafe, boundary.source_mismatch, and state.unavailable.
+boundary.missing, boundary.unsafe, boundary.source_mismatch, state.unavailable,
+guidance.unavailable and internal.unexpected. Event and repository codes map to
+their named stages; identity.unresolved maps to identity; boundary codes and
+state.unavailable map to boundary; guidance.unavailable maps to guidance.
+internal.unexpected retains the last known stage. Doctor MUST separately inspect
+the shared resolver to distinguish missing binding, conflicting history, changed
+checkout and authority mismatch before choosing repair advice.
 Stages are event, repository, identity, boundary and guidance. This release adds
 failure metadata for Codex prompt and stop only; Claude/OpenCode share identity
 resolution but retain their current adapter reporting. Diagnostics MUST enumerate
@@ -124,7 +134,8 @@ both Codex adapter records independently. Recovered routine turns remain quiet.
 Repair MUST use existing registry locks and optimistic read-set revalidation.
 It MUST NOT rewrite previously prepared proposals to bypass changed evidence.
 Persisting a current alias changes the exact pinned registry/key read set:
-pending proposals MUST be prepared again, never rewritten. Doctor MUST explain
+pending proposals MUST be prepared again, never rewritten. Persistence is optional:
+read-only continuity already permits operation. Doctor MUST explain
 this consequence. Ordinary recognition performs no write and requires no repair.
 T4 MUST prove that the recovered prompt creates its pending ledger before Stop
 and acknowledgment, so missing-ledger behavior is checked independently.
