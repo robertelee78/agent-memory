@@ -38,6 +38,7 @@ MUST NOT be treated as evidence that a guide is semantically complete.
 | [0016](0016-incremental-sharing-review.md) | Changed-learning sharing review for existing task #99 | Accepted scope (v0.0.3 #99) |
 | [0017](0017-standalone-semantic-search.md) | Standalone semantic terminal search after v0.0.3 | Proposed (later release) |
 | [0018](0018-repair-diagnostics-and-observation-bounds.md) | Repair diagnostics and bounded observation | Proposed (v0.0.4) |
+| [0019](0019-stable-checkout-binding-and-hook-diagnostics.md) | Checkout continuity and actionable hook diagnostics | Accepted (v0.0.7) |
 
 [ADR-0013](0013-public-cli-and-corrective-releases.md) defines the corrective
 `v0.0.2` public command contract and the current future-release mapping. Older

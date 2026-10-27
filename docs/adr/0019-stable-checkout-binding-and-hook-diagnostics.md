@@ -1,6 +1,6 @@
 ---
 id: ADR-0019
-status: proposed
+status: accepted
 date: 2026-10-27
 amends: [ADR-0011, ADR-0004, ADR-0018]
 ---
@@ -113,7 +113,7 @@ ordinary resolution writes nothing and does not grow the registry.
 Failure metadata SHALL use one replaceable owner-only bounded JSON record per
 (canonical common-Git location, harness, adapter), keyed by SHA-256 of the location plus fixed harness and adapter names under the private runtime
 state root, outside repository memory. Records SHALL contain only schema, fixed
-harness/stage/reason, and timestamp; at most 4096 bytes, mode 0600 within a 0700 directory. Writes MUST
+harness/adapter/stage/reason, and timestamp; at most 4096 bytes, mode 0600 within a 0700 directory. Writes MUST
 use atomic replacement and refuse symlink/hardlink redirection. No transcript, prompt,
 final answer, arbitrary exception string or credentials are retained. A subsequent
 successful adapter clears only its own failure state; absence never proves publication.
@@ -142,6 +142,15 @@ and acknowledgment, so missing-ledger behavior is checked independently.
 
 A prompt that failed before retaining its source MUST be retried as a real prompt
 after repair; no source identity or completion receipt may be fabricated.
+
+## Approval
+
+The operator authorized research, independent Opus review, revision, execution
+and publication. Opus conditionally accepted the design after its six required
+clarifications; those clarifications are incorporated here, with the preserved
+ADR-0011 same-device move rule stated explicitly. The review is retained in
+[the final review](../research/2026-10-27-adr0019-opus-final.md). Acceptance of the
+decision does not establish implementation or release delivery.
 
 ## Delivery
 
