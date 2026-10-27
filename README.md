@@ -118,8 +118,9 @@ am doctor --fix --repo /path/to/project
 ```
 
 The repair reports what it changed and what still needs attention. It preserves
-unrelated user files and repository memory, and does not guess when ownership
-or a recovery outcome is uncertain.
+unrelated user files and memory; a verified interrupted bank transaction may be
+converged to its recorded outcome. It does not guess when ownership or a
+recovery outcome is uncertain.
 
 ### Update
 
