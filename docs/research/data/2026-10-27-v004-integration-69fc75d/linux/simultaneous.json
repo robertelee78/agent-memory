@@ -1,0 +1,28 @@
+{
+  "schema": "am-local-test-receipt-v1",
+  "source_commit": "69fc75d44f76921c6c984a6d4016cc03dd1d7cf1",
+  "case": "simultaneous",
+  "argv": [
+    "/usr/bin/python3",
+    "-B",
+    "-m",
+    "unittest",
+    "-v",
+    "test_multi_machine_race.MultiMachineRace"
+  ],
+  "cwd": "/tmp/am99-bridge-69fc75d/source",
+  "env_overrides": {
+    "PYTHONPATH": "tests:tests/contracts",
+    "PYTHONDONTWRITEBYTECODE": "1"
+  },
+  "platform": "Linux-6.17.0-41-generic-x86_64-with-glibc2.42",
+  "hostname": "ns1025741",
+  "python": "3.13.7 (main, Mar  3 2026, 12:19:54) [GCC 15.2.0]",
+  "started_at": "2026-10-27T12:36:55.922522+00:00",
+  "elapsed_seconds": 17.452,
+  "exit_code": 0,
+  "timeout_seconds": 840,
+  "timed_out": false,
+  "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderr_sha256": "f57fbdeeccfba1b5c12920a32fe93ab2aa81ff32a5b2c18496548c89f547224f"
+}
