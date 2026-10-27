@@ -53,7 +53,7 @@ def main():
                 with os.fdopen(fd,'rb',closefd=False) as f: pending=json.loads(f.read(4097))
             finally: os.close(fd)
         finally: os.close(dfd)
-        if pending.get('schema')!='agent-memory/codex-boundary-pending-v1' or pending.get('project_id')!=context['project_id'] or pending.get('source_uuid')!=turn or not re.fullmatch('[0-9a-f]{64}',pending.get('source_sha256','')):raise ValueError('pending source mismatch')
+        if not isinstance(pending,dict) or pending.get('schema')!='agent-memory/codex-boundary-pending-v1' or pending.get('project_id')!=context['project_id'] or pending.get('session')!=session or pending.get('turn')!=turn or pending.get('source_uuid')!=turn or not re.fullmatch('[0-9a-f]{64}',pending.get('source_sha256','')):raise ValueError('pending source mismatch')
         prompt = (directory / 'boundary-prompt.txt').read_text(encoding='utf-8').strip().replace('{{SKILL_DIR}}', str(directory.parent))
         if not prompt or len(prompt.encode()) > 4096:
             raise ValueError('boundary guidance unavailable')

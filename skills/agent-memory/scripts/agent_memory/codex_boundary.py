@@ -71,7 +71,7 @@ def complete(repo, value):
         finally:os.close(fd)
         pending=load(raw)
         if (not isinstance(pending,dict) or pending.get('schema')!='agent-memory/codex-boundary-pending-v1'
-                or pending.get('project_id')!=context['project_id'] or pending.get('source_uuid')!=value['source_uuid']
+                or pending.get('project_id')!=context['project_id'] or pending.get('session')!=value['session'] or pending.get('turn')!=value['prompt'] or pending.get('source_uuid')!=value['source_uuid']
                 or pending.get('source_sha256')!=value['source_sha256']):
             raise ContractError('Pending boundary does not match the assessed source')
         witnessed=None
@@ -124,10 +124,41 @@ def complete(repo, value):
     finally:os.close(dfd)
 
 
-def main(argv=None):
-    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--repo',required=True);parser.add_argument('--input',required=True);args=parser.parse_args(argv)
+def list_pending(repo):
+    root,bank=bank_writes.bank_path(repo);context=scope_binding.require(root)
+    operations,_=bank_writes.state_paths(root,bank,str(uuid.uuid4()));directory=operations.parent/'codex-boundaries'
+    if not os.path.lexists(directory):
+        return {'operation':'pending','verified':True,'pending':[],'canonical_writes_performed':False}
+    trust_paths.state(directory);dfd=os.open(directory,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW)
+    entries=[]
     try:
-        value=load(sharing_limits.read_bytes(args.input,sharing_limits.MAX_PRIVATE));result=complete(args.repo,value)
+        with os.scandir(dfd) as scan:
+            for i,entry in enumerate(scan):
+                if i>=4096:raise ContractError('Pending inventory exceeds limit; preserve evidence')
+                if not entry.name.endswith('.pending'):continue
+                fd=os.open(entry.name,os.O_RDONLY|os.O_NOFOLLOW,dir_fd=dfd)
+                try:
+                    info=os.fstat(fd)
+                    if not stat.S_ISREG(info.st_mode) or info.st_uid!=os.geteuid() or info.st_nlink!=1 or info.st_mode&0o077 or info.st_size>4096:raise ContractError('Unsafe pending record')
+                    with os.fdopen(fd,'rb',closefd=False) as f:record=load(f.read(4097))
+                finally:os.close(fd)
+                if (not isinstance(record,dict) or set(record)!={'schema','project_id','session','turn','source_uuid','source_sha256'} or record['schema']!='agent-memory/codex-boundary-pending-v1' or record['project_id']!=context['project_id'] or not UUID.fullmatch(record['session']) or not UUID.fullmatch(record['turn']) or record['source_uuid']!=record['turn'] or not re.fullmatch('[0-9a-f]{64}',record['source_sha256']) or entry.name!=hashlib.sha256((record['session']+':'+record['turn']).encode()).hexdigest()+'.pending'):
+                    raise ContractError('Pending record is malformed or belongs to another project')
+                entries.append(record)
+        scope_binding.require(root,context['project_id'],expected=context)
+    finally:os.close(dfd)
+    return {'operation':'pending','verified':True,'pending':entries,'canonical_writes_performed':False,'source_completeness_verified':False}
+
+
+def main(argv=None):
+    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--repo',required=True);parser.add_argument('--input');parser.add_argument('--list-pending',action='store_true');args=parser.parse_args(argv)
+    try:
+        if args.list_pending:
+            if args.input:raise ContractError('Select either pending inventory or acknowledgement')
+            result=list_pending(args.repo)
+        else:
+            if not args.input:raise ContractError('Acknowledgement requires input')
+            value=load(sharing_limits.read_bytes(args.input,sharing_limits.MAX_PRIVATE));result=complete(args.repo,value)
         print(json.dumps(result));return 0
     except (OSError,ValueError,TypeError,KeyError,UnicodeError) as exc:
         print(json.dumps({'verified':False,'publication_verified':False,'canonical_writes_performed':False,

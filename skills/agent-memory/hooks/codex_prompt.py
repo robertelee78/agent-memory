@@ -23,7 +23,7 @@ def main():
         context=scope_binding.require(root);_,bank=bank_writes.bank_path(root)
         operations,_=bank_writes.state_paths(root,bank,str(uuid.uuid4()));ledger=operations.parent/'codex-boundaries'
         trust_paths.inspect(ledger);ledger.mkdir(parents=True,exist_ok=True,mode=0o700);trust_paths.state(ledger)
-        key=hashlib.sha256((session+':'+turn).encode()).hexdigest();data=json.dumps({'schema':'agent-memory/codex-boundary-pending-v1','project_id':context['project_id'],'source_uuid':turn,'source_sha256':hashlib.sha256(text.encode()).hexdigest()},sort_keys=True).encode()
+        key=hashlib.sha256((session+':'+turn).encode()).hexdigest();data=json.dumps({'schema':'agent-memory/codex-boundary-pending-v1','project_id':context['project_id'],'session':session,'turn':turn,'source_uuid':turn,'source_sha256':hashlib.sha256(text.encode()).hexdigest()},sort_keys=True).encode()
         dfd=os.open(ledger,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW)
         try:
             try:done=os.open(key+'.done',os.O_RDONLY|os.O_NOFOLLOW,dir_fd=dfd)
@@ -34,7 +34,7 @@ def main():
                     info=os.fstat(done)
                     if not stat.S_ISREG(info.st_mode) or info.st_uid!=os.geteuid() or info.st_nlink!=1 or info.st_mode&0o077 or info.st_size>4096:raise ValueError('unsafe completed record')
                     with os.fdopen(done,'rb',closefd=False) as stream: completed=json.loads(stream.read(4097))
-                    if (completed.get('schema')!='agent-memory/codex-boundary-completed-v1' or completed.get('project_id')!=context['project_id'] or completed.get('source_uuid')!=turn or completed.get('source_sha256')!=hashlib.sha256(text.encode()).hexdigest()):raise ValueError('completed prompt source differs')
+                    if (not isinstance(completed,dict) or completed.get('schema')!='agent-memory/codex-boundary-completed-v1' or completed.get('project_id')!=context['project_id'] or completed.get('source_uuid')!=turn or completed.get('source_sha256')!=hashlib.sha256(text.encode()).hexdigest()):raise ValueError('completed prompt source differs')
                 finally:os.close(done)
                 print('{}');return 0
             try:fd=os.open(key+'.pending',os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600,dir_fd=dfd)

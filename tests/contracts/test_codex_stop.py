@@ -26,6 +26,11 @@ class CodexStopContract(unittest.TestCase):
                 p=subprocess.run([sys.executable,'-I',str(hook)],input=json.dumps(value),text=True,capture_output=True,env=w.env,timeout=10)
                 self.assertEqual(p.returncode,0,p.stderr);return json.loads(p.stdout)
             answer=invoke(event);self.assertEqual(answer['decision'],'block');self.assertIn(turn,answer['reason']);self.assertIn('permissions',answer['reason'])
+            pending_file=next(w.paths['state'].rglob('codex-boundaries/*.pending'));original=pending_file.read_bytes()
+            pending_file.write_text('[]');self.assertIn('pending',invoke(event)['systemMessage']);pending_file.write_bytes(original)
+            cli=helper.pack/'scripts/installer.py'
+            inventory=subprocess.run([sys.executable,'-I',str(cli),'codex-boundary','--repo',str(repo),'--list-pending'],text=True,capture_output=True,env=w.env,timeout=10)
+            listed=json.loads(inventory.stdout);self.assertTrue(listed['verified']);self.assertEqual(listed['pending'][0]['turn'],turn);self.assertNotIn(prompt['prompt'],inventory.stdout)
             self.assertEqual(invoke({**event,'stop_hook_active':True}),{})
             request={'session':session,'prompt':turn,'source_uuid':turn,'source_sha256':hashlib.sha256(prompt['prompt'].encode()).hexdigest(),'outcome':'no-learning','assessment':'No durable project learning was produced.'}
             input_path=w.inside('codex-ack.json');input_path.write_text(json.dumps(request))
@@ -35,6 +40,9 @@ class CodexStopContract(unittest.TestCase):
             self.assertTrue(json.loads(ack.stdout)['verified'],ack.stdout+ack.stderr)
             retry=subprocess.run(args,text=True,capture_output=True,env=w.env,timeout=10)
             self.assertTrue(json.loads(retry.stdout)['already_completed'],retry.stdout+retry.stderr)
+            done=next(w.paths['state'].rglob('codex-boundaries/*.done'));done_original=done.read_bytes();done.write_text('[]')
+            malformed=subprocess.run([sys.executable,'-I',str(helper.pack/'hooks/codex_prompt.py')],input=json.dumps(prompt),text=True,capture_output=True,env=w.env,timeout=10)
+            self.assertIn('pending',json.loads(malformed.stdout)['systemMessage']);done.write_bytes(done_original)
             repeat=subprocess.run([sys.executable,'-I',str(helper.pack/'hooks/codex_prompt.py')],input=json.dumps(prompt),text=True,capture_output=True,env=w.env,timeout=10)
             self.assertEqual(json.loads(repeat.stdout),{})
             changed=subprocess.run([sys.executable,'-I',str(helper.pack/'hooks/codex_prompt.py')],input=json.dumps(altered),text=True,capture_output=True,env=w.env,timeout=10)
