@@ -17,6 +17,7 @@ from . import bank_contract as bank, bank_transactions as tx, bank_writes as wri
 from . import scope_binding, semantic_sharing as semantic, sharing_recovery as recovery
 from .developer_identity import digest, encoded
 from .frontmatter import ContractError
+from .sharing_holds import HoldFailure
 from .identity_git import git
 
 SCHEMA = 'agent-memory/publication-request-v1'
@@ -393,6 +394,8 @@ def land(repo, request):
                       remote_freshness_verified=True, git_metadata_writes_performed=True)
     try:
         reviewed = semantic.check(root, request['proof'])
+    except HoldFailure:
+        raise
     except ContractError:
         return result('land', 'pending-reconciliation', reason='Sources or authority changed; inventory, deduplicate and review the new source set',
                       git_metadata_writes_performed=True)
@@ -451,6 +454,12 @@ def main(argv=None):
             from . import sharing_limits as limits
             outcome=limits.write_private(args.output,outcome,args.repo)
         print(json.dumps(outcome, indent=2)); return 0
+    except HoldFailure as exc:
+        print(json.dumps(result(args.operation, 'pending-inspection', reason=str(exc),
+                                failure_component='known-dispute-state', failure_code=exc.code,
+                                repair=exc.repair, git_metadata_writes_performed=None,
+                                remote_freshness_verified=False)))
+        return 1
     except (ContractError, OSError, ValueError, UnicodeError, TypeError, KeyError, AttributeError, RecursionError):
         print(json.dumps(result(args.operation, 'pending-inspection', reason='Unresolved, unsafe, offline, changed or interrupted publication; retain local memory and inspect before retry',
                                 git_metadata_writes_performed=None, remote_freshness_verified=False)))
