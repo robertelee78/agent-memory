@@ -1,6 +1,7 @@
 {
   "schema": "agent-memory/test-contracts-v1",
   "suites": [
+    {"name": "bounded-bank-observation", "layer": "bank", "scope": "v0.0.4", "path": "tests/contracts/test_bounded_bank_observation.py"},
     {"name": "recall-observation", "layer": "bank", "scope": "v0.0.3", "path": "tests/contracts/test_recall_observation.py"},
     {"name": "signed-release-lifecycle", "layer": "lifecycle", "scope": "v0.0.3", "path": "tests/contracts/test_signed_release_lifecycle.py"},
     {"name": "signed-release-publisher", "layer": "lifecycle", "scope": "v0.0.3", "path": "tests/contracts/test_signed_release_publisher.py"},

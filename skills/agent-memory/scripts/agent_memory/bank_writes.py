@@ -36,27 +36,14 @@ def runtime(path):
 
 
 def hashes(bank):
-    output = {}
-    for path in sorted(bank.rglob("*")):
-        if path.is_symlink():
-            raise ContractError("Bank contains a symlink; preserve it for explicit repair")
-        if path.is_file() and path.suffix == ".md" and not runtime(path.relative_to(bank)):
-            output[path.relative_to(bank).as_posix()] = digest(path.read_bytes())
-    return output
+    from . import bank_observation
+    return bank_observation.scan(bank, read_sources=False, require_router=False)[1]
 
 
 def snapshot(repo, owned_lock=None):
-    root, bank = bank_path(repo)
-    before = hashes(bank)
-    checked = contract.validate(root, owned_lock=owned_lock)
-    after = hashes(bank)
-    if before != after:
-        raise ContractError("Bank changed during inventory; reread before proceeding")
-    # Public read-only snapshots must also notice a writer arriving during reads.
-    lock = bank / ".agent-memory.lock"
-    if lock.is_symlink() or (lock.exists() and (owned_lock is None or lock.read_bytes() != owned_lock)):
-        raise ContractError("Bank is busy; no stable inventory is available")
-    return checked, after
+    from . import bank_observation
+    observed = bank_observation.observe(repo, owner=owned_lock)
+    return observed.checked, observed.hashes
 
 
 def state_paths(repo, bank, operation_id):
