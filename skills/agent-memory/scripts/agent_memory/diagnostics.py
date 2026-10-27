@@ -662,7 +662,11 @@ def run(operation, repo='.', projection=None):
 
 def execute(args):
     try:
-        value = run(args.command, getattr(args, 'repo', '.'), getattr(args, 'projection', None))
+        if args.command == 'doctor' and getattr(args, 'fix', False):
+            from . import doctor_fix
+            value = doctor_fix.run(getattr(args, 'repo', '.'), getattr(args, 'projection', None))
+        else:
+            value = run(args.command, getattr(args, 'repo', '.'), getattr(args, 'projection', None))
     except ERRORS:
         report = Report(args.command)
         report.add('diagnostic.inputs', 'failure', 'Diagnostic input or local layout cannot be inspected safely.',
@@ -682,4 +686,5 @@ def main(argv=None):
             command.add_argument('--repo', default='.')
         if name == 'doctor':
             command.add_argument('--projection', help='Explicit optional reference-projection JSON to check without writing an audit')
+            command.add_argument('--fix', action='store_true', help='Repair safely identified owned runtime faults and recheck')
     return execute(parser.parse_args(argv))

@@ -592,7 +592,7 @@ def public_plan(plan):
 
 
 @contextmanager
-def prepare(args, state, code, old, *, candidate_root=None, candidate_kind=None):
+def prepare(args, state, code, old, *, candidate_root=None, candidate_kind=None, repair_missing_hooks=False):
     with tempfile.TemporaryDirectory(prefix='agent-memory-install-source-') as scratch:
         scratch = Path(scratch)
         saved = old['source'] if old else None
@@ -687,14 +687,15 @@ def prepare(args, state, code, old, *, candidate_root=None, candidate_kind=None)
                     'hooks_present': 'hooks' in document,
                     'event_present': 'UserPromptSubmit' in document.get('hooks', {}),
                 }
+                missing_owned = bool(repair_missing_hooks and previous and before is None)
                 raw = client_hooks.merge(original_raw,
-                                         previous.get('hook_entry') if previous else None, hook_entry)
+                                         previous.get('hook_entry') if previous and not missing_owned else None, hook_entry)
                 stop_shape = previous.get('stop_original_shape', {}) if previous and previous.get('stop_entry') else {
                     'hooks_present': 'hooks' in document,
                     'event_present': 'Stop' in document.get('hooks', {}),
                 }
                 if stop_entry is not None:
-                    raw = client_hooks.merge(raw, previous.get('stop_entry') if previous else None, stop_entry, event='Stop')
+                    raw = client_hooks.merge(raw, previous.get('stop_entry') if previous and not missing_owned else None, stop_entry, event='Stop')
                 mode_bits = before['mode'] if before else 0o644
             elif before is not None:
                 if previous and kind == 'source' and before != previous['identity']:
@@ -1164,6 +1165,7 @@ def main(argv=None):
             diagnostic.add_argument('--repo', default='.')
         if name == 'doctor':
             diagnostic.add_argument('--projection')
+            diagnostic.add_argument('--fix', action='store_true', help='Repair safely identified owned runtime faults and recheck')
     args = parser.parse_args(argv)
     if args.command in ('version', 'status', 'doctor'):
         from .diagnostics import execute

@@ -1,6 +1,7 @@
 {
   "schema": "agent-memory/test-contracts-v1",
   "suites": [
+    {"name": "doctor-fix", "layer": "lifecycle", "scope": "v0.0.6", "path": "tests/contracts/test_doctor_fix.py"},
     {"name": "codex-stop-boundary", "layer": "client", "scope": "v0.0.4", "path": "tests/contracts/test_codex_stop.py"},
     {"name": "opencode-boundary-ledger", "layer": "client", "scope": "v0.0.4", "path": "tests/contracts/test_opencode_boundary_ledger.py"},
     {"name": "opencode-queue", "layer": "client", "scope": "v0.0.4", "path": "tests/contracts/test_opencode_queue.py"},

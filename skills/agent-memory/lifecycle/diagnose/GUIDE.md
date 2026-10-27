@@ -83,6 +83,14 @@ python3 -I "$SKILL_DIR/scripts/diagnose.py" doctor --repo /absolute/repository -
 ```
 
 The installed machine equivalents are `am status --json` and `am doctor --json`.
+For an explicitly requested safe repair, use `am doctor --fix --repo /absolute/repository`.
+The repair rechecks the exact recorded source, recovers an owned interrupted
+runtime transaction when its journal can be verified, and reconciles missing
+or outdated receipt-owned client hooks with the transactional installer. It
+then runs doctor again and reports repairs and remaining refusals. It does not
+alter project memory, infer identity, overwrite modified targets, resume purges,
+or rebuild an arbitrary selected projection. Active locks, untrusted sources,
+changed hooks and ambiguous transactions remain preserved for inspection.
 Packaged public entrypoints disable Python bytecode before importing product
 modules. A session MUST use these entrypoints for supported audits. For custom
 Python inspection, it MUST pass `-B` or set `sys.dont_write_bytecode = True`
@@ -94,19 +102,20 @@ Supported runtime audits preserve the complete artifact file bytes and modes;
 they MUST NOT filter executable caches out of an integrity comparison. Unexpected
 `__pycache__` or `.pyc` files remain drift, even if all receipt-owned source bytes
 match. A session MUST preserve them and use a trusted outside helper to inspect
-the receipt and changed targets. Diagnostics grant no permission to clean caches,
+the receipt and changed targets. Read-only diagnostics grant no permission to clean caches,
 rewrite receipts or force an update. A source hash identifies bytes, not the
 process that wrote an unexpected file.
 
 Runtime-artifact immutability is distinct from a declared private audit outside
 the package: governed recall may write such an audit while preserving canonical
 memory and runtime. Version, status, doctor, artifact inspection and package
-validation perform no setup or private audit writes.
+validation perform no setup or private audit writes unless `doctor --fix` was requested.
 Without `--json`, these commands print a human-readable view of the same result.
 A session MAY add `--projection /absolute/reference-projection.json` to doctor
-when an optional derived reference file is actually in use. Doctor MUST NOT
-initialize missing state, rebuild caches, acquire a new writer lock, migrate,
-recover, uninstall or purge data on the operator's behalf.
+when an optional derived reference file is actually in use. Without `--fix`,
+doctor MUST NOT initialize missing state, rebuild caches, acquire a new writer
+lock, migrate, recover, uninstall or purge data. `--fix` MUST use only the
+verified receipt-owned runtime repairs described above.
 
 ## Read back
 

@@ -51,7 +51,7 @@ Usage:
   {prog} version
   {prog} -V
   {prog} status [--repo PATH]
-  {prog} doctor [--repo PATH]
+  {prog} doctor [--repo PATH] [--fix]
   {prog} recover
   {prog} migrate preview --repo PATH --to SCHEMA
   {prog} migrate apply --proposal FILE
@@ -175,6 +175,12 @@ def render(data, command, prog, code):
         if data.get('setup'):
             print('setup ' + safe(data['setup']['state']))
             print('next ' + safe(data['setup']['next_step']))
+        for item in data.get('repairs', []):
+            print('repair ' + safe(item.get('state', 'unknown')) + ': ' + safe(item.get('detail', '')))
+            if item.get('repair'):
+                print('  ' + safe(item['repair']))
+        if data.get('operation') == 'doctor-fix' and not data.get('repairs'):
+            print('No automatic runtime repair was performed.')
     elif command == 'migrate' and not code:
         print(f"{prog} migrate: {safe(data.get('state', 'inspected'))}")
         if data.get('source_schema'):
