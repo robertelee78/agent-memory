@@ -675,7 +675,7 @@ def prepare(args, state, code, old, *, candidate_root=None, candidate_kind=None,
             if block:
                 require(before is None or before['kind'] == 'file', 'Activation file collision: ' + str(path))
                 raw = activation(path.read_bytes() if before else b'',
-                                 previous.get('block_hash') if previous and previous['kind']=='activation' else None, shim=shim)
+                                 previous.get('block_hash') if previous and previous['kind']=='activation' and not (repair_missing_hooks and before is None) else None, shim=shim)
                 mode_bits = before['mode'] if before else 0o644
             elif kind == 'hook-config':
                 from . import client_hooks

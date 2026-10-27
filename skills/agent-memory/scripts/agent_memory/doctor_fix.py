@@ -7,9 +7,9 @@ from . import artifact, installation as install, updating
 from .frontmatter import ContractError
 
 
-def trusted_receipt(state, code):
+def trusted_receipt(state, code, receipt=None):
     """Verify the running package is the exact recorded source before repair."""
-    old = install.read_receipt(state)
+    old = receipt if receipt is not None else install.read_receipt(state)
     install.require(old is not None, 'No active installation receipt')
     source = old['source']
     if source['kind'] in {'managed', 'release'}:
@@ -31,7 +31,7 @@ def reconcile_hooks(state, code, old):
     missing = []
     for target in old['targets']:
         path = Path(target['path'])
-        if not os.path.lexists(path) and target['kind'] in {'hook-config', 'hook-link'}:
+        if not os.path.lexists(path) and target['kind'] in {'hook-config', 'hook-link', 'link', 'copy', 'wrapper', 'activation'}:
             missing.append(target)
         elif target['kind'] == 'activation':
             install.require(path.is_file() and not path.is_symlink(), 'Activation target is missing or linked')
@@ -61,7 +61,7 @@ def run(repo='.', projection=None):
     pending = any(c['component'] == 'runtime.transaction' for c in before['warnings'])
     gaps = any(c['component'].startswith('runtime.hook_migration.') for c in before['warnings'])
     hook_failures = [c for c in before['checks']
-                     if c['component'] in {'runtime.target.hook-link', 'runtime.target.hook-config'}
+                     if c['component'] in {'runtime.target.hook-link', 'runtime.target.hook-config', 'runtime.target.link', 'runtime.target.copy', 'runtime.target.wrapper', 'runtime.target.activation'}
                      and c['state'] == 'failure']
     missing = any(c.get('path') and not os.path.lexists(c['path']) for c in hook_failures)
     if pending or gaps or hook_failures:
@@ -70,15 +70,21 @@ def run(repo='.', projection=None):
             paths = [state, code, *(Path(t['path']) for t in observed['targets'])] if observed else [state, code]
             with install.runtime_faults.operation('doctor-fix', paths), install.locked(state):
                 acquired = True
-                old = trusted_receipt(state, code)
                 if pending:
                     journal = install.read_journal(state)
+                    try:
+                        trusted_receipt(state, code)
+                    except (OSError, ValueError, TypeError, KeyError, UnicodeError, RecursionError, subprocess.SubprocessError, ContractError):
+                        # During activation the source can already be the journal's
+                        # candidate while the receipt still records the old source.
+                        install.require(journal is not None, 'Missing recovery journal')
+                        trusted_receipt(state, code, journal['receipt'])
                     was_pending = bool(journal and journal['status'] not in ('complete', 'rolled-back'))
                     recovered = install.recover(state)
                     install.require(recovered.get('verified'), 'Lifecycle recovery was not verified')
                     actions.append({'component': 'runtime.transaction', 'state': 'repaired' if was_pending else 'unchanged',
                                     'detail': 'Verified the recorded runtime transaction.'})
-                    old = trusted_receipt(state, code)
+                old = trusted_receipt(state, code)
                 if gaps or hook_failures:
                     outcome = reconcile_hooks(state, code, old)
                     install.require(outcome.get('verified'), 'Hook reconciliation was not verified')
@@ -116,7 +122,7 @@ def run(repo='.', projection=None):
     after['restart_clients'] = sorted({name for item in actions for name in item.get('restart_clients', [])})
     if missing and any(v['component'] == 'runtime.hooks' and v['state'] == 'repaired' for v in actions):
         warning = {'component': 'runtime.hook_recreated', 'state': 'warning',
-                   'detail': 'Missing client hook targets were recreated from the ownership receipt; other content previously removed from a missing file was not restored.',
+                   'detail': 'Missing owned integration targets were recreated from the ownership receipt; other content previously removed from missing files was not restored.',
                    'repair': 'Review the affected client configuration and restore any separately maintained settings if needed.'}
         after['checks'].append(warning)
         after['warnings'].append(warning)

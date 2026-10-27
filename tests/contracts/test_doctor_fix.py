@@ -46,6 +46,26 @@ class DoctorFixContract(unittest.TestCase):
             self.assertEqual(skipped[0]['state'], 'skipped')
             self.assertIn('original operation', skipped[0]['repair'])
 
+    def test_missing_owned_runtime_targets_are_recreated(self):
+        with World() as world:
+            repo, _, receipt = fixture(world)
+            cli = Path(receipt['bin_dir']) / 'am'
+            targets = [entry for entry in receipt['targets'] if entry['kind'] in {'copy', 'link', 'activation', 'wrapper'} and Path(entry['path']) != cli]
+            self.assertTrue(targets)
+            for entry in targets:
+                path = Path(entry['path'])
+                if path.is_dir() and not path.is_symlink():
+                    import shutil
+                    shutil.rmtree(path)
+                else:
+                    path.unlink()
+            result = world.run([cli, 'doctor', '--fix', '--repo', repo, '--json'], check=False)
+            data = json.loads(result.stdout)
+            self.assertEqual(result.returncode, 0, data)
+            self.assertTrue(data['repairs_performed'])
+            for entry in targets:
+                self.assertTrue(Path(entry['path']).exists())
+
     def test_modified_owned_hook_is_preserved_and_not_replaced(self):
         with World() as world:
             repo, _, receipt = fixture(world)
@@ -73,6 +93,22 @@ class DoctorFixContract(unittest.TestCase):
             self.assertTrue(data['repairs_performed'])
             self.assertEqual(hook.read_bytes(), before)
             self.assertEqual(data['restart_clients'], [])
+
+    def test_recover_update_interrupted_before_receipt(self):
+        with World() as world:
+            repo, pack, receipt = fixture(world)
+            advance(world, repo, pack)
+            call(world, receipt, expected=86, env={
+                'AGENT_MEMORY_FAULT_STAGE': 'update-before-receipt',
+                'AGENT_MEMORY_FAULT_MODE': 'exit',
+            })
+            journal = world.paths['state'] / 'agent-memory/install/journal.json'
+            cli = Path(receipt['bin_dir']) / 'am'
+            result = world.run([cli, 'doctor', '--fix', '--repo', repo, '--json'], check=False)
+            data = json.loads(result.stdout)
+            self.assertEqual(result.returncode, 0, data)
+            self.assertTrue(data['repairs_performed'])
+            self.assertEqual(json.loads(journal.read_text())['status'], 'rolled-back')
 
     def test_recover_committed_interrupted_update_from_recorded_journal(self):
         with World() as world:
