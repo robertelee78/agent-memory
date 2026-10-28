@@ -1,0 +1,64 @@
+{
+  "platform": "Linux",
+  "source": {
+    "version": "0.0.9",
+    "revision": "07956881057fe29bb3160deaecc23b3e7abc9f93",
+    "kind": "release",
+    "artifact_digest": null
+  },
+  "repository_preserved": true,
+  "cache_paths_before": [],
+  "cache_paths_after": [],
+  "commands": [
+    {
+      "label": "actual-update",
+      "exit": 0,
+      "seconds": 31.83552295109257,
+      "stdout": "Updated am 0.0.8 -> 0.0.9 (c92b605fb09f -> 07956881057f).\nRestart running agent sessions to load the changed skill.\n",
+      "stderr": ""
+    },
+    {
+      "label": "version",
+      "exit": 0,
+      "seconds": 1.1245752880349755,
+      "stdout": "am 0.0.9\nrevision 07956881057fe29bb3160deaecc23b3e7abc9f93 (verified_release)\nsource /home/robert/.local/share/agent-memory/source\n",
+      "stderr": ""
+    },
+    {
+      "label": "version-json",
+      "exit": 0,
+      "seconds": 1.1259620878845453,
+      "result": {
+        "structured_output_retained_privately": true
+      }
+    },
+    {
+      "label": "doctor",
+      "exit": 0,
+      "seconds": 3.6893369609024376,
+      "result": {
+        "ok": true,
+        "setup": "ready",
+        "warnings": []
+      }
+    },
+    {
+      "label": "refresh-current",
+      "exit": 0,
+      "seconds": 21.040590659948066,
+      "result": {
+        "sharing_state": "bank-synchronized",
+        "remote_freshness_verified": true,
+        "canonical_writes_performed": false,
+        "original_index_writes_performed": false
+      }
+    },
+    {
+      "label": "noop-update",
+      "exit": 0,
+      "seconds": 6.651650882093236,
+      "stdout": "am 0.0.9 is up to date.\n",
+      "stderr": ""
+    }
+  ]
+}

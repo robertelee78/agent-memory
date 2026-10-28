@@ -70,3 +70,45 @@ The canaries qualify public delivery; cross-harness conversational behavior is
 covered by the separate native qualification reports.
 
 Durable [public command, result and version receipts](data/2026-10-28-quiet-boundaries/public-delivery/) are retained with this report. They contain only disposable fixture profiles; operator-profile recovery is a separate incident and is not conflated with these four delivery canaries.
+
+## Actual operator Linux adoption (separate from canaries)
+
+After publication, the operator's existing installation on `192.168.1.202` was
+updated once, with the prior authorized cache repair already complete. The
+preflight receipt was the expected signed v0.0.8 source
+`c92b605fb09f2058f9258258bbec00f41c76eeb7`; no unexpected source drift or bytecode
+cache was found. The controller used `python3 -I -B` and the actual installed
+`~/.local/bin/am`, with a 240-second bound for the update.
+
+| Actual installed command | Exit | Seconds |
+| --- | ---: | ---: |
+| `am update` (v0.0.8 to v0.0.9) | 0 | 31.836 |
+| `am --version` | 0 | 1.125 |
+| `am --json version` | 0 | 1.126 |
+| `am --json doctor --repo /opt/repo-to-cve` | 0 | 3.689 |
+| `am refresh current --repo /opt/repo-to-cve` | 0 | 21.041 |
+| `am update` (already current) | 0 | 6.652 |
+
+Human output confirmed:
+
+```text
+Updated am 0.0.8 -> 0.0.9 (c92b605fb09f -> 07956881057f).
+Restart running agent sessions to load the changed skill.
+```
+
+The authenticated version diagnostic verified the exact published v0.0.9 source
+and pinned publisher signature. Doctor reported `ok: true` and no warnings.
+Quick refresh reported `bank-synchronized` with
+`remote_freshness_verified: true`, `canonical_writes_performed: false` and
+`original_index_writes_performed: false`. It retained the operation's explicit
+limits: no publication or semantic-completeness claim. Fetch metadata changed as
+expected; the original HEAD, index bytes, complete bank file hashes and Git
+working-tree status were identical before and after all six commands. Installed
+source contained zero `__pycache__` or `.pyc` paths both before and after.
+
+The no-op update printed only `am 0.0.9 is up to date.` No retry, reinstall,
+uninstall, directory-mode change or source bypass was needed. Evidence is
+`/tmp/am-v009-actual-linux-adoption.json` on Linux and its collected local copy
+at the same path. Restarting a running harness or reloading its skill is still
+required to use the updated prompt guidance; these CLI checks do not claim a
+new live conversational-hook qualification.

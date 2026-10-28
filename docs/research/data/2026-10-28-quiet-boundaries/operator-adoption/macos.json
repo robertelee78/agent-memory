@@ -1,0 +1,39 @@
+{
+  "platform": "macOS",
+  "update": {
+    "exit": 0,
+    "seconds": 134.49,
+    "stdout": "Updated am 0.0.8 -> 0.0.9 (c92b605fb09f -> 07956881057f).\nRestart running agent sessions to load the changed skill.\n",
+    "stderr": ""
+  },
+  "postchecks": [
+    {
+      "command": [
+        "am",
+        "--version"
+      ],
+      "exit": 0,
+      "seconds": 0.96,
+      "stdout": "am 0.0.9\nrevision 07956881057fe29bb3160deaecc23b3e7abc9f93 (verified_release)\nsource /Users/robert.lee/.local/share/agent-memory/source\n",
+      "stderr": ""
+    },
+    {
+      "operation": "doctor",
+      "exit": 0,
+      "seconds": 3.45,
+      "ok": true,
+      "setup": "ready",
+      "warnings": []
+    },
+    {
+      "command": [
+        "am",
+        "update"
+      ],
+      "exit": 0,
+      "seconds": 5.9,
+      "stdout": "am 0.0.9 is up to date.\n",
+      "stderr": ""
+    }
+  ]
+}
