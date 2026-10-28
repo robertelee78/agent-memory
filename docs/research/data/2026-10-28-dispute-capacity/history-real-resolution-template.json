@@ -1,0 +1,79 @@
+{
+  "checksum": "15396b435d35d1036dabd47fcbf1c27bad74fec48038f58c0ec15174eb184955",
+  "project_id": "54f2e9fa-6f07-4e45-aba8-1931dcd0289d",
+  "records": {
+    "915ea39fe0429f45f0fa63093660cfe512d41e24ee546cf8008dc1283a91f446": {
+      "binding": {
+        "authority_head": "9820a5c9dc97f2797c14af0a53048d0ce4e38e59",
+        "bank_root": "memory-bank",
+        "base": "281ae4551edbfc42e60e555f124e58596d11ed06",
+        "scope_context": {
+          "checkout_key": "16777230:469032373",
+          "developer_id": "5ee20d9a-4dc7-4c39-99c7-fdee58eaa4af",
+          "developer_sha256": "4f6af6a1b47473e44a669c9f8f7457a0820e7b00fcf0c380e61786309a5ed7e2",
+          "initialization_only": false,
+          "project_id": "54f2e9fa-6f07-4e45-aba8-1931dcd0289d",
+          "project_sha256": "2255d055c34e266b62fbcca41ae302f08df0e76b416bf6bc094beac6de84cb46",
+          "repository_settings_sha256": "61482cfa0612c62576281d77915cd7cbfca4be3643fcce3031bffa237e4a310c"
+        }
+      },
+      "cause": {
+        "classification": "contradiction",
+        "origin": "ff8056ecae8df2a8ec90ee20bcafc7e7da2ed1b03da820a60120e0286c522f22",
+        "reason": "This authored fixture retains the same unresolved room color claims.",
+        "sources": [
+          "5e29904548a9a325d6ec806cfc6bc0cee373215dfc2f4d14427b6d5c87927bc2",
+          "5fb06b42aa58841669a08b85fba8d9126760bad81b741e590f749fdd52814671"
+        ]
+      },
+      "dependencies": {},
+      "judgment_sha256": "ff8056ecae8df2a8ec90ee20bcafc7e7da2ed1b03da820a60120e0286c522f22",
+      "proof_sha256": "8ee2f11346da9b3ab0504a6ea3951f037096b04897492306322597e61a496076",
+      "references": {
+        "5e29904548a9a325d6ec806cfc6bc0cee373215dfc2f4d14427b6d5c87927bc2": {
+          "component": "body",
+          "path": "topics/wall-local.md",
+          "record": {
+            "id": "c3a80108-1acc-49bc-9aff-2818a71a4481",
+            "version": 1
+          },
+          "source_sha256_by_side": {
+            "local": "649b0cbbbc44758d408d5670dfcb007897f7c33eec51a9fabee59ccea85b3eb3"
+          },
+          "target_path": null
+        },
+        "5fb06b42aa58841669a08b85fba8d9126760bad81b741e590f749fdd52814671": {
+          "component": "body",
+          "path": "topics/wall-peer.md",
+          "record": {
+            "id": "ed584ad6-def1-4722-a290-214503297c67",
+            "version": 1
+          },
+          "source_sha256_by_side": {
+            "landed": "32b2bb14b92fad07f3ee1fb30c5b5ec88a132fab4eae1e4c08fd7873776d778b"
+          },
+          "target_path": null
+        }
+      },
+      "resolution": {
+        "basis": "operator-clarification",
+        "endpoint_sources": {
+          "5e29904548a9a325d6ec806cfc6bc0cee373215dfc2f4d14427b6d5c87927bc2": [
+            "5e29904548a9a325d6ec806cfc6bc0cee373215dfc2f4d14427b6d5c87927bc2"
+          ],
+          "5fb06b42aa58841669a08b85fba8d9126760bad81b741e590f749fdd52814671": [
+            "5fb06b42aa58841669a08b85fba8d9126760bad81b741e590f749fdd52814671"
+          ]
+        },
+        "evidence": [
+          "7bd590cdafc5fad9f634b8dd1dc7dd6acb963606abe3b8f482daf65418434db5"
+        ],
+        "judgment_sha256": "1c98a4dd24115d05317729ed0eed9b421007b9e0e5ce8b08d41a4c476c7a232d",
+        "proof_sha256": "d56ca1cb73271263cc3ac1a10dbef7fe4de2284e7ecbad830a9c2b5f20f4f031",
+        "reason": "Actual attributed fixture clarification resolves retained wall colors."
+      }
+    }
+  },
+  "repo_root": "/private/tmp/agent-memory-test-n97unj4j/repo",
+  "schema": "agent-memory/known-semantic-holds-v2"
+}

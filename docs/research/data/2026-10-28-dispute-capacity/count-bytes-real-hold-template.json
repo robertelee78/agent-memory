@@ -1,0 +1,63 @@
+{
+  "checksum": "6059563ed5c1b2be990963f0d855fd4d0b09638d0345de0aacc4023ca63db521",
+  "project_id": "1e899355-04c4-45a8-a509-78441a1c2361",
+  "records": {
+    "b814b6afc0be357a30f5cdb96f971fe467aeecf9e14a75ddc3525d5aa276c1a3": {
+      "binding": {
+        "authority_head": "579812998038757ce0ceef7f396d8099101870e1",
+        "bank_root": "memory-bank",
+        "base": "a8afbad722775f2f557510d808b3722ba0231d3a",
+        "scope_context": {
+          "checkout_key": "16777230:469075431",
+          "developer_id": "a7d2d54a-af7d-4bc7-9be4-5aa674532642",
+          "developer_sha256": "e7d12d75085b1909359fbbc9cbedd9c847a1e4ee4869cb83508461a790339fa0",
+          "initialization_only": false,
+          "project_id": "1e899355-04c4-45a8-a509-78441a1c2361",
+          "project_sha256": "ebddc0bb32940a909e71093c5d7752db9e585366756efcc2f8ff97335734346f",
+          "repository_settings_sha256": "61482cfa0612c62576281d77915cd7cbfca4be3643fcce3031bffa237e4a310c"
+        }
+      },
+      "cause": {
+        "classification": "contradiction",
+        "origin": "5c0864ce2a94378784b3b7ce10295dc0073d5b695ea66dea5551a26b6b646bd9",
+        "reason": "This authored fixture retains the same unresolved room color claims.",
+        "sources": [
+          "6755795413a5422cc87b156469e1bc219ab289c987d224a29a73bf6b517ae3f5",
+          "ac9582f3889ac06e9111ae41d3269561cbbf856f49cc2bb9a0c6f8246d3acfca"
+        ]
+      },
+      "dependencies": {},
+      "judgment_sha256": "5c0864ce2a94378784b3b7ce10295dc0073d5b695ea66dea5551a26b6b646bd9",
+      "proof_sha256": "1b3795db5fe6288f8e10e2bfc702d007b5454db26e6eafafede9a813cf9201a3",
+      "references": {
+        "6755795413a5422cc87b156469e1bc219ab289c987d224a29a73bf6b517ae3f5": {
+          "component": "body",
+          "path": "topics/wall-peer.md",
+          "record": {
+            "id": "0b4c5fdb-8672-4e87-b401-9635371cbb1d",
+            "version": 1
+          },
+          "source_sha256_by_side": {
+            "landed": "d225ab3eec6ee42da6d56cc182c0a0cb0a3fe9fc71d9a420efc89e8c57a5b36a"
+          },
+          "target_path": null
+        },
+        "ac9582f3889ac06e9111ae41d3269561cbbf856f49cc2bb9a0c6f8246d3acfca": {
+          "component": "body",
+          "path": "topics/wall-local.md",
+          "record": {
+            "id": "310ed25b-67de-4467-a5c4-4f2eeb5a28e6",
+            "version": 1
+          },
+          "source_sha256_by_side": {
+            "local": "aec8493e1ef5f5b081f9aa18cc22889193d2a6f89e476299675aa2b97416a0d4"
+          },
+          "target_path": null
+        }
+      },
+      "resolution": null
+    }
+  },
+  "repo_root": "/private/tmp/agent-memory-test-ygn6e73f/repo",
+  "schema": "agent-memory/known-semantic-holds-v2"
+}

@@ -1,0 +1,33 @@
+{
+  "source_commit": "bdfadd269799b3f487f336270d5e4092dc9f0c07",
+  "runtime_sha256": "53178d2ceb8dd8fe12395e30c4e8890ea959d08f600caae9dd82312874416822",
+  "limits_unchanged": {
+    "records": 4096,
+    "predecessor_history_per_record": 4096,
+    "sealed_registry_bytes": 16777216
+  },
+  "runs": {
+    "history": {
+      "complete": true,
+      "terminal_cases": 2,
+      "actual_proof_directory": "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/am-v010-capacity-proof-w8cujszh",
+      "controller_sha256": "0ff74968993ce049d215616a250811c0d7f31b440d6b573cb91356099f9f1dd6"
+    },
+    "count-bytes": {
+      "complete": true,
+      "terminal_cases": 4,
+      "actual_proof_directory": "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/am-v010-capacity-proof-pqdtckl6",
+      "controller_sha256": "d4e532c4f1c6b13750ae6b8a74dc7e0aab5ee4059396966e31aa162ccac24173"
+    },
+    "partial-redundant-page-apparatus": {
+      "complete": false,
+      "counted_as_acceptance": false,
+      "reason": "Stopped redundant per-page public rebuild apparatus; replaced with complete manifest/source-row inspection, without changing runtime gates.",
+      "completed_partial_commands": 43,
+      "actual_proof_directory": "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/am-v010-capacity-proof-09dkfjtl",
+      "controller_sha256": "eae12e435516e05d876064ba6c9c7a349402fa583072be96cef5a2fc6a3c25d5",
+      "retained_controller_disabled": true,
+      "disabled_reason": "Prevent accidental repeat of known redundant apparatus beyond the per-test budget; complete raw original remains at the recorded private path."
+    }
+  }
+}

@@ -1,0 +1,88 @@
+[
+  {
+    "scenario": "record-count-boundary",
+    "existing_records": 4095,
+    "seed_bytes": 9918365,
+    "seed_schema_valid": true,
+    "status": "accepted",
+    "seconds": 12.993690667004557,
+    "actual_records": 4096,
+    "actual_bytes": 9920787,
+    "bank_index_HEAD_preserved": true,
+    "registry_recovery_preserved": false,
+    "public_result": {
+      "schema": "agent-memory/semantic-sharing-result-v1",
+      "operation": "review",
+      "canonical_writes_performed": false,
+      "publication_verified": false,
+      "conflicts_pending": true,
+      "proof_sha256": "ef28bb5f034e7becc94556b820c1346334b9a7deea32b3b0b8a6bf4f06e791fe"
+    }
+  },
+  {
+    "scenario": "record-count-excess",
+    "existing_records": 4096,
+    "seed_bytes": 9920787,
+    "seed_schema_valid": true,
+    "status": "refused",
+    "seconds": 12.026385625009425,
+    "actual_records": 4096,
+    "actual_bytes": 9920787,
+    "bank_index_HEAD_preserved": true,
+    "registry_recovery_preserved": true,
+    "public_result": {
+      "schema": "agent-memory/semantic-sharing-result-v1",
+      "operation": "review-v2",
+      "publication_verified": false,
+      "canonical_writes_performed": false,
+      "remote_freshness_verified": false,
+      "failure_component": "review-v2",
+      "failure_code": "semantic-review-unverified",
+      "error": "Incomplete, changed or unsafe semantic review; retain local work and inspect actual sources",
+      "repair": "Preserve the bank, original request and pending evidence. Run am doctor for this repository, inspect the failed component, then repeat source inspection and review; do not substitute an empty bank or a compatibility judgment."
+    }
+  },
+  {
+    "scenario": "store-bytes-boundary",
+    "existing_records": 4095,
+    "seed_bytes": 16774794,
+    "seed_schema_valid": true,
+    "status": "accepted",
+    "seconds": 14.243052707999595,
+    "actual_records": 4096,
+    "actual_bytes": 16777216,
+    "bank_index_HEAD_preserved": true,
+    "registry_recovery_preserved": false,
+    "public_result": {
+      "schema": "agent-memory/semantic-sharing-result-v1",
+      "operation": "review",
+      "canonical_writes_performed": false,
+      "publication_verified": false,
+      "conflicts_pending": true,
+      "proof_sha256": "c48e29255a9dcb094edd0e5448acedff266e61ad11e8e55aadf7b4dd9c22938c"
+    }
+  },
+  {
+    "scenario": "store-bytes-excess",
+    "existing_records": 4095,
+    "seed_bytes": 16774795,
+    "seed_schema_valid": true,
+    "status": "refused",
+    "seconds": 13.63584516699484,
+    "actual_records": 4095,
+    "actual_bytes": 16774795,
+    "bank_index_HEAD_preserved": true,
+    "registry_recovery_preserved": true,
+    "public_result": {
+      "schema": "agent-memory/semantic-sharing-result-v1",
+      "operation": "review-v2",
+      "publication_verified": false,
+      "canonical_writes_performed": false,
+      "remote_freshness_verified": false,
+      "failure_component": "review-v2",
+      "failure_code": "semantic-review-unverified",
+      "error": "Incomplete, changed or unsafe semantic review; retain local work and inspect actual sources",
+      "repair": "Preserve the bank, original request and pending evidence. Run am doctor for this repository, inspect the failed component, then repeat source inspection and review; do not substitute an empty bank or a compatibility judgment."
+    }
+  }
+]

@@ -1,0 +1,34 @@
+{
+  "passed": true,
+  "tests": 5,
+  "failures": 0,
+  "errors": 0,
+  "seconds": 199.30646254200838,
+  "rows": [
+    {
+      "test": "contracts.test_known_hold_capacity.KnownHoldCapacityContract.test_history_boundary_excess_and_retry",
+      "seconds": 39.70129287499003
+    },
+    {
+      "test": "contracts.test_known_hold_capacity.KnownHoldCapacityContract.test_persisted_corruption_and_interruption_remain_noncapacity",
+      "seconds": 16.51042541700008
+    },
+    {
+      "test": "contracts.test_known_hold_capacity.KnownHoldCapacityContract.test_record_boundary_excess_and_retry",
+      "seconds": 48.86983199999668
+    },
+    {
+      "test": "contracts.test_known_hold_capacity.KnownHoldCapacityContract.test_sealed_byte_boundary_excess_and_retry",
+      "seconds": 77.2309245409997
+    },
+    {
+      "test": "contracts.test_known_hold_capacity.KnownHoldCapacityContract.test_structure_precedes_capacity_and_combined_dimension_precedence",
+      "seconds": 16.993654082994908
+    }
+  ],
+  "sha256": {
+    "skills/agent-memory/scripts/agent_memory/sharing_holds.py": "80fa56d5797fee377e36d8fddb6a823bc43f9cf42c473b310b318c7efa7d99a8",
+    "tests/contracts/test_known_hold_capacity.py": "cd6bdaa04eb5f4903bffb7a0635868d9c4e7c437a357be8c85f14bf8a36399be",
+    "skills/agent-memory/SKILL.md": "7740943fcb1f901b1c1dc2ca3f181be6830793675d9fb8c2a3f46a7d05bc11c2"
+  }
+}

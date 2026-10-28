@@ -1,0 +1,49 @@
+test_history_boundary_excess_and_retry (contracts.test_known_hold_capacity.KnownHoldCapacityContract.test_history_boundary_excess_and_retry) ... FAIL
+test_persisted_corruption_and_interruption_remain_noncapacity (contracts.test_known_hold_capacity.KnownHoldCapacityContract.test_persisted_corruption_and_interruption_remain_noncapacity) ... ok
+test_record_boundary_excess_and_retry (contracts.test_known_hold_capacity.KnownHoldCapacityContract.test_record_boundary_excess_and_retry) ... ok
+test_sealed_byte_boundary_excess_and_retry (contracts.test_known_hold_capacity.KnownHoldCapacityContract.test_sealed_byte_boundary_excess_and_retry) ... ok
+test_structure_precedes_capacity_and_combined_dimension_precedence (contracts.test_known_hold_capacity.KnownHoldCapacityContract.test_structure_precedes_capacity_and_combined_dimension_precedence) ... FAIL
+test_indexed_review_refuses_changed_source_or_authority (contracts.test_known_holds_v2.KnownHoldsVersionTwoContract.test_indexed_review_refuses_changed_source_or_authority) ... ok
+test_indexed_review_requires_every_pair_and_preserves_conflict (contracts.test_known_holds_v2.KnownHoldsVersionTwoContract.test_indexed_review_requires_every_pair_and_preserves_conflict) ... ok
+test_known_dispute_survives_rewording_changed_framing_and_registry_recovery (contracts.test_known_holds_v2.KnownHoldsVersionTwoContract.test_known_dispute_survives_rewording_changed_framing_and_registry_recovery) ... ok
+test_renewed_clarification_proof_replays_without_losing_prior_resolution (contracts.test_known_holds_v2.KnownHoldsVersionTwoContract.test_renewed_clarification_proof_replays_without_losing_prior_resolution) ... ok
+test_wrong_project_recovery_preserves_private_state_and_stale_bank_marker (contracts.test_known_holds_v2.KnownHoldsVersionTwoContract.test_wrong_project_recovery_preserves_private_state_and_stale_bank_marker) ... ok
+
+======================================================================
+FAIL: test_history_boundary_excess_and_retry (contracts.test_known_hold_capacity.KnownHoldCapacityContract.test_history_boundary_excess_and_retry)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/opt/agent-memory-worktrees/v010-capacity-repro/tests/contracts/test_known_hold_capacity.py", line 172, in test_history_boundary_excess_and_retry
+    repo, bank = self.fixture(w, resolved=True)
+                 ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/opt/agent-memory-worktrees/v010-capacity-repro/tests/contracts/test_known_hold_capacity.py", line 76, in fixture
+    self.review(w, repo, self.judgment(view, resolutions), 'clarified')
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/agent-memory-worktrees/v010-capacity-repro/tests/contracts/test_known_hold_capacity.py", line 58, in review
+    value = self.invoke(w, 'review-v2', '--repo', repo, '--input', request, '--output', output, expected=expected)
+  File "/opt/agent-memory-worktrees/v010-capacity-repro/tests/contracts/test_known_hold_capacity.py", line 36, in invoke
+    self.assertEqual(result.returncode, expected, (value, result.stderr))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 1 != 0 : ({'schema': 'agent-memory/semantic-sharing-result-v1', 'operation': 'review-v2', 'publication_verified': False, 'canonical_writes_performed': False, 'remote_freshness_verified': False, 'failure_component': 'review-v2', 'failure_code': 'semantic-review-unverified', 'error': 'Incomplete, changed or unsafe semantic review; retain local work and inspect actual sources', 'repair': 'Preserve the bank, original request and pending evidence. Run am doctor for this repository, inspect the failed component, then repeat source inspection and review; do not substitute an empty bank or a compatibility judgment.'}, '')
+
+======================================================================
+FAIL: test_structure_precedes_capacity_and_combined_dimension_precedence (contracts.test_known_hold_capacity.KnownHoldCapacityContract.test_structure_precedes_capacity_and_combined_dimension_precedence)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/opt/agent-memory-worktrees/v010-capacity-repro/tests/contracts/test_known_hold_capacity.py", line 212, in test_structure_precedes_capacity_and_combined_dimension_precedence
+    repo, bank = self.fixture(w, resolved=True)
+                 ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/opt/agent-memory-worktrees/v010-capacity-repro/tests/contracts/test_known_hold_capacity.py", line 76, in fixture
+    self.review(w, repo, self.judgment(view, resolutions), 'clarified')
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/agent-memory-worktrees/v010-capacity-repro/tests/contracts/test_known_hold_capacity.py", line 58, in review
+    value = self.invoke(w, 'review-v2', '--repo', repo, '--input', request, '--output', output, expected=expected)
+  File "/opt/agent-memory-worktrees/v010-capacity-repro/tests/contracts/test_known_hold_capacity.py", line 36, in invoke
+    self.assertEqual(result.returncode, expected, (value, result.stderr))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 1 != 0 : ({'schema': 'agent-memory/semantic-sharing-result-v1', 'operation': 'review-v2', 'publication_verified': False, 'canonical_writes_performed': False, 'remote_freshness_verified': False, 'failure_component': 'review-v2', 'failure_code': 'semantic-review-unverified', 'error': 'Incomplete, changed or unsafe semantic review; retain local work and inspect actual sources', 'repair': 'Preserve the bank, original request and pending evidence. Run am doctor for this repository, inspect the failed component, then repeat source inspection and review; do not substitute an empty bank or a compatibility judgment.'}, '')
+
+----------------------------------------------------------------------
+Ran 10 tests in 285.993s
+
+FAILED (failures=2)
