@@ -68,7 +68,10 @@ Typed HoldFailure outcomes SHALL use `known-holds-record-capacity`,
 `known-holds-history-capacity`, or `known-holds-byte-capacity`, carried through
 existing semantic/publication/refresh error surfaces as `known-dispute-state`.
 The reason SHALL identify the measured amount, actual limit and exhausted
-dimension. Repair guidance SHALL preserve local learning and all evidence, state
+dimension. When several limits are exceeded, primary classification SHALL use
+fixed precedence: record count, then per-record history count, then byte size.
+Byte size SHALL be measured from the same complete sealed encoding used by the
+persisted-state guard, not an unsealed payload or a journal envelope. Repair guidance SHALL preserve local learning and all evidence, state
 that the current runtime cannot retain the proposed additional metadata, and
 require a supported reviewed capacity/retention change. Replaying recovery or
 retrying the same write does not increase capacity. This correction MUST NOT
@@ -78,8 +81,11 @@ mark unfinished review/publication as completed.
 Public-command acceptance SHALL exercise each actual boundary and excess using
 valid fixture state derived from a real public review; fixtures need not perform
 thousands of redundant CLI renewals. It SHALL preserve old failing results,
-validate exact unchanged-state hashes after refusal, and test idempotent same-proof
-retry at capacity. Malformed/checksum-invalid and interrupted persisted state,
+validate exact unchanged-state hashes after refusal, and test both retry cases.
+Reapplying a proof already recorded at an exact limit SHALL succeed as a no-op
+with byte-identical state and no capacity error. Retrying a refused excess SHALL
+return the same typed capacity refusal and byte-identical state without marking
+anything completed. A combined-excess case SHALL verify the fixed precedence. Malformed/checksum-invalid and interrupted persisted state,
 and malformed proposed input, SHALL remain negative controls with their original
 non-capacity diagnoses. Focused qualification SHALL run on macOS and Linux within
 the operator's 10–15-minute per-test budget. Independent review SHALL bind actual
