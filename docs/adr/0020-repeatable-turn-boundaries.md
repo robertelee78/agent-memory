@@ -2,6 +2,7 @@
 id: ADR-0020
 status: accepted
 date: 2026-10-27
+amended: 2026-10-27
 amends: [ADR-0004, ADR-0012, ADR-0019]
 ---
 
@@ -135,7 +136,7 @@ optimistic validation is retained; this path adds no writer lock or schema.
 
 ### T3: Make compliant completion quiet and keep fallback bounded
 
-Prompt guidance MUST provide a bounded source envelope and route to truthful
+Codex prompt guidance MUST provide a bounded source envelope and route to truthful
 assessment before final. Already loaded unchanged instructions need not be
 repeated in full. A no-learning turn MUST assess actual observations without
 creating a durable record or running a novelty scan for a nonexistent candidate.
@@ -145,7 +146,7 @@ for no-learning assessments. Stdin is limited to64KiB and MUST refuse published
 outcomes; publication requests retain the existing file-based verified path.
 File-based compatibility remains available. Encoded completion bounds also apply.
 
-Stop MUST validate completion for the current observed sources and emit no
+Codex Stop MUST validate completion for the current observed sources and emit no
 message or block when all are complete. It MUST NOT interpret missing pending
 alone as success, and corrupt/unsafe completed evidence MUST stay pending.
 Nullable final-answer text MUST NOT defeat a valid completion. If work remains,
@@ -160,6 +161,35 @@ turn a newer steering source into an already assessed source. Internal generated
 instructions MUST NOT be classified as a new operator decision merely because
 the harness delivers them as user-role text. Any special recognition MUST use
 retained exact generated evidence and context, never an arbitrary text marker.
+
+Claude and OpenCode MUST use their supported native lifecycle and original
+message/source identifiers (including verified transcript-entry UUIDs, or an
+explicit local observation ID when the native API does not expose a message ID).
+Accepted native inputs MUST be retained before their first completion callback,
+so interruption cannot erase source tracking. Claude enrollment MUST NOT demand
+a transcript row before the native hook has durably published it. OpenCode
+backlog metadata MUST retain original native identifiers for later discovery;
+unavailable original evidence stays pending, not automatically assessed.
+They MUST NOT inherit Codex turn IDs or pretend a
+shared callback API exists. Their guidance and continuations MUST be shortened
+to bounded operation routes and native source context, rather than repeating the
+full workflow. A native post-answer pass MAY be used when supported; it MUST
+remain source-bound and leave unavailable evidence pending.
+
+The bounded wake rule applies to ALL THREE adapters, using each native session/
+message lifecycle: at most one wake per native source-set fingerprint and at
+most two wakes per native lifecycle. The attempt count MUST be retained durably
+before each wake/queue submission. At the cap, remaining work stays visibly
+pending and the adapter stops blocking or queueing another continuation. Native
+re-entry flags alone are not proof that this durable limit was enforced.
+
+All three adapters' guidance MUST preserve the substantive operator-facing task
+answer across a memory continuation. Routine completion MUST NOT replace a code
+answer or review verdict with bookkeeping. If tools are unavailable, preserve the
+original answer and add only a concise pending qualification when consequential;
+never claim an assessment or keep waking indefinitely. Each generated guidance/
+fallback message MUST remain at most2048 UTF-8 bytes. Bounded source-window tools
+retain their existing separate evidence limits and truncation qualifications.
 
 Native harness tool/hook UI cannot be promised invisible. Routine agent prose
 SHOULD omit successful bookkeeping, paths and JSON. Failures, conflicts and
@@ -182,18 +212,29 @@ new files, stale or damaged receipt/cursor, branch/index changes, fresh authorit
 changes and retained source/mode/lock/race guards. Code/index/branch preservation
 and no duplicate memory MUST be verified.
 
-A bounded real Codex run MUST exercise distinct and identical-text messages and
-at least two normal completion cycles. Each cycle MUST show all observed sources
-retained, truthful assessments, completed matching receipts and a quiet Stop.
+Live qualification is REQUIRED for OpenCode, Codex and Claude, using the actual
+supported installed clients (OpenCode2.1.3 at the operator's known path). Each
+MUST complete at least two ordinary turns with native source tracking, truthful
+assessment/completion, preserved task answers and no repeated fallback loop.
+Test distinct and identical-text follow-ups using each native client's supported
+steering or queue behavior; do not relabel queued work as same-turn steering.
+Interruption/resume and pending recovery MUST retain original source attribution.
+Codex MUST additionally demonstrate multiple actual submissions in one active
+turn and quiet proactive completion followed by Stop. Claude/OpenCode MUST
+show their actual native continuation/completion behavior and bounded messages.
+A no-tools case MUST preserve the substantive task answer and remain pending
+without a loop. Test capabilities and any unverified limitation explicitly.
+
 A real import followed by quick synchronization MUST succeed without full review
 repetition. Publication and recall are verified separately if durable learning is
 admitted; no-learning MUST NOT claim either. Source mismatch on ordinary steering,
-missing-source coverage, forced routine fallback or repeated unchanged-bank review
-fails acceptance. Synthetic governance/freshness limits MUST remain explicit. Claude/OpenCode common-memory regressions MUST pass;
-this release does not claim live-model coverage of unchanged adapters unless
-actually observed. Tests MUST run locally on macOS and Linux, with each command
-bounded to at most 10–15 minutes. Signed public fresh-install/update/no-op and
-consumer-memory isolation checks MUST pass. Actual production activation and any
+missing-source coverage, overwritten task answers, unbounded routine fallback or
+repeated unchanged-bank review fails acceptance. Synthetic governance/freshness
+limits MUST remain explicit. Local macOS/Linux contract checks and signed public
+fresh-install/update/no-op plus consumer-memory isolation checks MUST pass. Each
+command MUST remain bounded to at most10–15minutes.
+
+Actual production activation and any
 remaining pending legacy observations MUST be reported accurately.
 
 ## Alternatives and delivery

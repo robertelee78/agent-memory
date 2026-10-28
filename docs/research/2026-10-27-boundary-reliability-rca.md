@@ -68,3 +68,36 @@ These findings do not invalidate the v0.0.7 checkout-identity repair. They expos
 missing behavior in steering, the quick path after import and ordinary quiet
 completion. Canonical memory remains repository-local. No old source digest or
 completion outcome may be rewritten to hide these failures.
+
+## Native-adapter extension after operator clarification
+
+The operator explicitly requires good behavior in OpenCode, Codex and Claude.
+Claude2.1.306's current UserPromptSubmit adapter emits generic guidance without
+reserving source evidence. First AM persistence occurs in claude_stop.py after
+claude_source.source requires a visible transcript entry and final assistant
+text. An interruption before Stop can therefore leave no AM reservation, and
+proactive completion before first Stop has no pending record to acknowledge.
+The official Claude hook reference says transcript writes can lag hook execution;
+pre-prompt registration must use direct event session/prompt identifiers and
+prompt digest, then verify the transcript-entry UUID later when needed.
+https://code.claude.com/docs/en/hooks#common-input-fields
+
+Claude already checks a completed receipt at Stop; that differs from Codex.
+Its existing pending marker prevents repeated registration but does not solve
+pre-prompt source enrollment or transcript-lag behavior. A tools-restricted
+review invocation returned only memory-pending prose instead of its requested
+verdict, motivating explicit task-answer preservation in native continuations.
+
+OpenCode2.1.3 uses native message IDs and a synthetic queued pass. Its existing
+intent records retain hashed keys and repository metadata, not original native
+session/source IDs, so they cannot independently enumerate original sources
+across sessions. Current recovery searches the original native session and
+requires a completed final assistant record; interrupted windows intentionally
+remain pending/unavailable. Failed queue attempts remain pending instead of
+retrying in a loop. These are qualified recovery limits, not Codex's turn/hash
+collision. New bookkeeping must preserve native IDs and expose bounded recovery
+routes without inventing missing source or replacing the native callback model.
+
+No claim is made that old interrupted sources can be retrospectively marked
+assessed. The live acceptance matrix must verify repeated native cycles, source
+retention, bounded pending behavior and preservation of substantive task answers.
