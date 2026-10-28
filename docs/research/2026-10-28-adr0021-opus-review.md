@@ -126,3 +126,36 @@ One optional clarification, not blocking: the "Unqualified providers retain the 
 
 This accepts the design only. Exact implementation, actual native completion and
 signed delivery still require separate evidence.
+
+
+## Corrective delivery scope and known native limitation
+
+The final reviewed ADR SHA-256 is `3c385a321f0ca5d56301092798274f281dd416a8814bf6fb3f49a34aba90c88c`. Actual independent `claude -p --model opus --safe-mode --tools '' --effort low` reviewed the bounded v0.0.9 compatibility exception, retained functional requirements and T4 v0.0.10 deferral. This is design acceptance, not a publication receipt. The operator mandate is fully landing the repair release; no explicit preference vote about noise is invented.
+
+# Verdict: ACCEPT
+
+The scope is internally consistent, and nothing in it waives a functional or integrity requirement. The OpenCode exception covers only the observed control text and the single null operation. It does not cover anything that touches data, permissions, source coverage or stage truthfulness.
+
+## Why it holds
+
+- **Integrity boundaries are untouched.** T1's trust policy, no-chmod rule, rebinding refusal, `-I -B` imports, cache-drift checks and the no-bank/code/index/branch-mutation rule all stay MUST. The exception explicitly says it "does not waive data integrity, permissions, exact source coverage or truthful stage reporting."
+- **The exception matches the evidence you cited.** One combined acknowledgment per turn satisfies routine calls ≤1. Zero workspaces satisfies workspaces=0. A single business answer satisfies repeated answers=0. Bank, code, index and HEAD were preserved. The two non-conformances (control text and the null op) are named, counted separately, and barred from being classified as quiet passes or first-use loading.
+- **Removing the failed suppression is correctly bounded.** The experimental code is removed, the failures are retained, and the ADR forbids enabling it, cancelling sessions, filtering answers or changing permissions. The functional baseline is hash-matched to its native proof.
+- **The operator-mandate wording is honest.** Both the Context section and the exception disclaim any explicit vote about noise or control text, and ground the decision in the fix-and-release instruction.
+- **T4 is properly fenced.** It is backlog, does not delay v0.0.9, and any timing or API change needs its own reviewed design.
+
+## Gates that remain open (execution requirements, not design defects)
+
+These are still MUSTs in the ADR. From what you described, they are not yet shown as satisfied, so the release cannot be claimed until they are:
+
+1. **OpenCode injected-refresh-failure case (T3).** Your summary covers the three-turn PM fixture but not the injected failure. That case requires one actionable notice and combined health false, from actual OpenCode, counted from native event records.
+2. **Separate reporting of native UI vs. SDK final-result attribution for OpenCode.** This means stating which record the SDK exposes as the final result when the control pass emits text.
+3. **Real Linux 0700/0775 qualification plus the negative unprotected-path case.**
+4. **Signed release checks:** signatures, public install/update, consumer-bank isolation, and no executable-cache drift after verification.
+5. **Independent implementation/delivery review and source-bound AWA readiness.** The ADR keeps these as separate requirements.
+
+## Non-blocking nit
+
+In Context, the "operator requested fixes and release / one-command route is a reversible default" point appears twice in adjacent sentences. Collapse it to one if you touch the file again.
+
+The named execution evidence is retained in the native OpenCode report (including injected failure and SDK final-record attribution), refresh qualification report (actual Linux positive and negative cases), and independent implementation review. Signed public install/update/isolation/readback remains a post-publication delivery check; no pre-publication delivery claim is made.

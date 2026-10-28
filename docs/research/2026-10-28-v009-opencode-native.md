@@ -133,6 +133,8 @@ refresh/assessment stage health, safe state trust and actionable failures.
 retain native IDs and source identities without promoting this other-domain test
 dialogue into this repository's project knowledge. Original event bodies remain
 in the private local proof directories for review. The functional baseline still
-has unwanted control-pass prose and a gratuitous null operation. Publication
-awaits an explicit product decision on shipping that limitation versus continuing
-to require fully silent OpenCode completion. No release has been claimed.
+has unwanted control-pass prose and a gratuitous null operation. ADR-0021 now scopes v0.0.9 to the verified functional repairs with this explicit
+compatibility limitation, under the operator's reiterated instruction to fully
+land the corrective release. Full silence is T4 for v0.0.10. This is not a
+retroactive quiet PASS or an invented explicit preference vote. Actual signed
+publication and delivery checks remain separate.

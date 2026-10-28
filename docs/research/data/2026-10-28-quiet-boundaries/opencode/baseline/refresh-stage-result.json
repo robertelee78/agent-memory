@@ -1,0 +1,15 @@
+{
+  "extraction": "Actual native refresh-failure tool result; assessment bodies excluded",
+  "results": [
+    {
+      "schema": "agent-memory/turn-check-v1",
+      "status": "pending",
+      "verified": false,
+      "refresh_verified": false,
+      "assessment_verified": true,
+      "notice_required": true,
+      "publication_verified": false,
+      "reason": "am: memory refresh pending [authority-advertisement/authority-advertisement-unavailable]: Reading the configured authority branch advertisement failed; no fresh remote observation was established. Check connectivity and access for the configured authority remote and local Git metadata. Preserve the bank, feature work and pending evidence; repeat the original refresh inspection after the issue clears. Do not reset/reinitialize memory or remove unknown locks."
+    }
+  ]
+}

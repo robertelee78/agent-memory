@@ -61,8 +61,9 @@ Routine no-learning handling MUST avoid private workspace creation and use a
 bounded direct assessment route. Codex and Claude perform routine checks before
 emitting the task answer. OpenCode retains its existing native queued control
 pass after the original answer: that pass MUST preserve the original native
-answer record, remain silent on routine success and MUST NOT repeat the business
-answer. This timing exception avoids inventing a new pre-final source identity
+answer record, suppress successful helper receipt bodies and MUST NOT repeat the
+business answer. The v0.0.9 native compatibility exception below qualifies its
+remaining model-generated control text; it is not a quiet-success claim. This timing exception avoids inventing a new pre-final source identity
 contract. Native UI and SDK result attribution MUST be qualified separately, retaining
 which original/control record the SDK exposes as the final result.
 Codex and
@@ -99,7 +100,8 @@ promise tool-card suppression through an unsupported host field.
 
 Once the installed guidance is loaded, normal no-learning completion MUST use
 at most one memory-maintenance command/native call total, create no private request workspace and emit no successful receipt body or
-memory narration. Required source recovery, genuine admission/publication and
+memory narration in the pre-answer adapters. OpenCode retains the explicitly
+counted v0.0.9 compatibility limitation below. Required source recovery, genuine admission/publication and
 consequential failures are distinct cases and MUST retain their actual work.
 A failed refresh MAY coexist with a truthful no-learning assessment, but combined
 health MUST remain pending/false and the process MUST report one actionable
@@ -111,52 +113,35 @@ of invisible tool cards. Stop fallback remains bounded; automatic capture MUST
 NOT be removed to obtain a quiet transcript, and host-specific final-result
 limitations MUST remain explicit.
 
-### Exact OpenCode control termination
+### v0.0.9 OpenCode compatibility exception
 
-Native PM qualification showed that asking a model to emit an empty final
-response is insufficient: it can narrate completion or repeatedly call a null
-operation. The adapter MUST NOT rely on that instruction as its terminal
-mechanism and MUST NOT interrupt the whole session to stop one control pass.
-The public interrupt API is session-scoped and could cancel newer operator work.
+The operator repeatedly requested a corrective release and reaffirmed the goal
+of fully landing v0.0.9. The release implements the verified functional repairs
+without making native silence a new release hold. This is a bounded delivery
+decision under that existing mandate, not a claim that the operator cast an
+explicit preference vote about control text. It does not waive data integrity,
+permissions, exact source coverage or truthful stage reporting.
 
-After an actual same-source combined check verifies both refresh and assessment,
-the adapter MAY retain a replaceable in-process tuple of native session ID,
-original source ID, retained synthetic control ID, acknowledging assistant ID
-and operator-admission epoch. Only a subsequent model context for that exact
-acknowledged control, with its native tail and epoch still matching and no later
-operator/steering input, MAY remove tools from that outgoing request and request
-a unique terminal sentinel through the documented request-local stop sequence.
-When the qualified model emits the sentinel first and the provider honors the
-stop setting, it omits that sentinel and completes the control without visible
-text. This is conditional behavior, not a guarantee from instruction alone. This is a terminal
-transport mechanism, never an authored assessment or capture receipt.
+Actual OpenCode 2.1.3 with Baseten Kimi K3 completed the three-turn PM fixture,
+preserved original answers and all bank/code/index/HEAD state, and used one
+source-bound combined acknowledgment per turn with zero request workspaces.
+Normal acknowledgments had no receipt body. Its model nevertheless emitted a
+brief bookkeeping response and one gratuitous Code Mode null operation on
+successful control passes. The v0.0.9 release MUST document and count that native
+limitation and SDK final-record behavior; it MUST NOT call those trials quiet
+passes or infer behavior for unqualified providers.
 
-A failed/pending refresh, failed assessment, source recovery, cross-session
-operation, missing native evidence or a changed tail/epoch MUST NOT arm this
-transition. Persisted assessment-only completion MUST NOT arm it either.
-Request shaping MUST apply only to the exact already-acknowledged control;
-it MUST NOT interrupt an execution, remove queued input, alter genuine operator
-turns or suppress a required failure notice. A newly admitted operator input
-invalidates the cached tuple. If input arrives after a validated context snapshot,
-the shaping affects only that old outgoing request, not the later input.
-Restarting the plugin discards the tuple; it MUST NOT reconstruct terminal
-success from an assessment receipt alone.
+Stronger empty-output instructions and an exact-control stop-sequence experiment
+failed actual native qualification. The complete experimental terminal code,
+epoch caches, tool removal and sentinel handling were removed. No provider/model
+qualified for that optimization. v0.0.9 MUST NOT enable it, cancel whole sessions,
+filter substantive model answers or alter permissions to disguise the limitation.
+Failed trials MUST remain retained as failures. The original functional baseline
+is independently hash-matched to its completed native proof.
 
-Tool removal MAY be enabled only for a provider/model whose actual native
-qualification accepts that outgoing request with its existing tool history. A
-documented request-local tool-choice-none setting SHOULD be preferred when the
-host exposes one while retaining definitions. An undocumented setting MUST NOT
-be invented. Unqualified providers retain the existing bounded control behavior
-and an explicit compatibility limitation, rather than a false quiet-success claim.
-A provider rejection or visible error is failed qualification.
-
-The native model/provider must honor the documented stop setting and emit the
-sentinel before any visible text. Nonempty pre-sentinel output or completion
-without the sentinel is failed qualification, not quiet success. Qualification
-MUST retain actual native completion, tool counts, original answer record and
-SDK final-row attribution. An empty control row is not a replacement business
-answer; host attribution limits MUST remain explicit. Repeated null calls or a
-timeout remain failed qualification, never quiet success.
+Fully silent native OpenCode completion is tracked by T4 for v0.0.10. This
+exception permits only the documented control text/no-op; all v0.0.9 functional
+acceptance criteria and safety boundaries remain required.
 
 ### T3: Operator-visible acceptance and corrective delivery
 
@@ -167,7 +152,10 @@ answers/questions, check truthful stage outcomes, and retain pending sources.
 Native UI and machine-result behavior MUST be reported separately. Broad repeated remote CI is excluded.
 
 Acceptance thresholds are routine assessment calls <=1, request workspaces=0,
-repeated business answers/questions=0; an injected refresh failure produces one
+repeated business answers/questions=0. OpenCode control text and its extra null
+operation MUST be counted separately under the specific v0.0.9 exception; they
+are not hidden as first-use loading or classified as quiet passes. An injected
+refresh failure produces one
 actionable notice and combined health false. Counts MUST be derived from actual
 native event/transcript records with retained sanitized evidence, not merely a
 passing narrative. Real Linux qualification MUST cover the observed 0700/0775
@@ -180,3 +168,19 @@ isolation and absence of new executable-cache drift after verification. No
 release is claimed by this design. Accepted for corrective v0.0.9 execution under the operator's fix-and-release
 instruction and the retained Opus review. Source-bound AWA readiness and
 independent implementation/delivery review remain separate requirements.
+
+
+### T4: Fully silent native OpenCode completion (v0.0.10)
+
+T4 is Backlog for v0.0.10 and MUST NOT delay v0.0.9's verified functional repairs.
+It MUST establish a supported native mechanism for completing only the exact
+acknowledged control without extra tools, bookkeeping prose or a repeated
+business answer. It MUST preserve original task results and qualified SDK result
+attribution, actual source assessment, automatic durable capture, permissions,
+new operator/steering input and pending evidence. It MUST NOT substitute a
+persisted assessment-only receipt for fresh combined success, invent source
+coverage, cancel whole sessions, filter substantive answers or rely on unbounded
+model retries. Alternative source timing or native API changes require their own
+reviewed design before implementation. Actual native multi-turn qualification
+MUST count routine calls, text, source coverage and failure behavior, retain
+unsuccessful trials, and qualify provider/model compatibility explicitly.
