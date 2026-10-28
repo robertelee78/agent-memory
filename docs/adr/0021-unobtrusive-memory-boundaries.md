@@ -1,6 +1,6 @@
 ---
 id: ADR-0021
-status: proposed
+status: accepted
 date: 2026-10-27
 amended: 2026-10-28
 amends: [ADR-0018, ADR-0020]
@@ -24,7 +24,7 @@ capability is assumed. The operator requested fixes and release; the one-command
 implementation default within the existing skill/CLI contract, not a claim of an
 explicit preference vote. No new approval question blocks the clear defects.
 
-## Decision for review
+## Decision
 
 ### T1: Consistent state trust and specific refresh diagnostics
 
@@ -39,7 +39,7 @@ replaceable entry. Preserve the shared Unix ownership/root-sticky/permission
 policy exactly, including trusted ownership checks below a barrier; ACLs are not
 authenticated. Group membership grants no Unix traversal through that barrier.
 Parity tests MUST cover the common evaluator, and barrier chmod/rebinding during
-observation MUST refuse stale proof. Direct diagnostic imports MUST use `-B`
+observation MUST refuse stale proof. Direct diagnostic imports MUST use `-I -B`
 (`-I` ignores PYTHONDONTWRITEBYTECODE); signed verification MUST NOT skip or bless
 unexpected executable caches. Unknown changes remain preserved for inspection. Specific safe failure codes and next
 steps MUST survive to the CLI; a setup-only doctor result MUST NOT claim that an
@@ -64,19 +64,22 @@ in that same CLI invocation; OpenCode MAY use one native source-acknowledgment
 call when the actual original source is already in context. Source-window tools
 remain required for unavailable, omitted or recovered original evidence. Supported quiet success MUST suppress result
 payloads while retaining useful failure output. Instructions MUST put the routine
-route first and avoid unnecessary rereading of unchanged loaded guides.
+route first and avoid rereading unchanged loaded guides. First-use loading and
+task-relevant recall remain visible and MUST be counted separately, never
+reclassified to hide repeated routine work.
 
 Refresh, assessment, admission and publication MUST retain distinct states.
 A verified source assessment MUST NOT imply freshness, capture or publication.
 Failed refresh MUST remain explicit and actionable without displacing the task
-answer or inducing repeated repair attempts on every dialogue turn.
+answer or inducing repeated repair attempts on every dialogue turn. Even on a
+failed assessment, emit the task answer only once, with one brief failure notice.
 
 The confirmed incident emitted a full PM answer in commentary and repeated its
 question in the final answer. Routine guidance MUST keep the business response
 out of commentary and emit it only once after the pre-answer assessment. PM
 answers and questions MUST NOT be repeated solely as memory bookkeeping.
 Codex MUST support quiet-success parity with the existing Claude adapter.
-Direct no-learning stdin intake remains at most64KiB. A forgotten-operation
+Direct no-learning stdin intake remains at most 64 KiB. A forgotten-operation
 fallback retains the existing durable cap: at most one wake per source-set
 fingerprint and two per native lifecycle; no unbounded repair retries. A known
 unresolved failure MUST be reported once per session/state change rather than
@@ -86,8 +89,8 @@ continuations and SDK final-result preservation. It MUST NOT silently remove
 mandatory capture after forgotten invocation, invent no-learning receipts or
 promise tool-card suppression through an unsupported host field.
 
-Normal no-learning completion MUST use at most one assessment command/native
-call, create no private request workspace and emit no successful receipt body or
+Once the installed guidance is loaded, normal no-learning completion MUST use
+at most one memory-maintenance command/native call total, create no private request workspace and emit no successful receipt body or
 memory narration. Required source recovery, genuine admission/publication and
 consequential failures are distinct cases and MUST retain their actual work.
 A failed refresh MAY coexist with a truthful no-learning assessment, but combined
@@ -106,18 +109,19 @@ Acceptance MUST include an actual multi-turn PM conversation in Codex, Claude an
 OpenCode, with a decision, a follow-up question, an unchanged bank and an injected
 refresh failure. It MUST count routine commands/workspaces and repeated business
 answers/questions, check truthful stage outcomes, and retain pending sources.
-Native UI and machine-result behavior MUST be reported separately. Each command
-MUST fit the operator's 10–15 minute maximum; broad repeated remote CI is excluded.
+Native UI and machine-result behavior MUST be reported separately. Broad repeated remote CI is excluded.
 
 Acceptance thresholds are routine assessment calls <=1, request workspaces=0,
 repeated business answers/questions=0; an injected refresh failure produces one
 actionable notice and combined health false. Counts MUST be derived from actual
 native event/transcript records with retained sanitized evidence, not merely a
-passing narrative. Real Linux qualification MUST cover the observed0700/0775
-chain and a negative unprotected path. Each command has a hard15-minute timeout;
+passing narrative. Real Linux qualification MUST cover the observed 0700/0775
+chain and a negative unprotected path. Each command has a hard 15-minute timeout;
 timeouts fail that case and are not skipped.
 
 The signed corrective release MUST retain actual public installation/update
 checks and consumer-memory isolation. Verification MUST cover signatures, public artifact delivery, consumer-bank
 isolation and absence of new executable-cache drift after verification. No
-release is claimed by this design. Design review, AWA decomposition and product alignment precede readiness.
+release is claimed by this design. Accepted for corrective v0.0.9 execution under the operator's fix-and-release
+instruction and the retained Opus review. Source-bound AWA readiness and
+independent implementation/delivery review remain separate requirements.
