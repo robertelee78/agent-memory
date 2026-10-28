@@ -5,6 +5,10 @@ import os
 import stat
 import fcntl
 import re
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+from agent_memory import trust_paths
 
 
 def read_marker(fd,name):
@@ -103,11 +107,14 @@ def backlog(fd,repository,offset=0):
 def verify_namespace(parts,identities):
     check=os.open('/',os.O_RDONLY|os.O_DIRECTORY)
     try:
-        for part,identity in zip(parts,identities):
+        protected,_=trust_paths.inspect_entry('/',os.fstat(check),False)
+        for index,(part,identity) in enumerate(zip(parts,identities)):
             next_check=os.open(part,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW,dir_fd=check)
             os.close(check);check=next_check
             info=os.fstat(check)
             if (info.st_dev,info.st_ino)!=identity:raise ValueError('state namespace changed; source remains pending')
+            protected,_=trust_paths.inspect_entry('/'+'/'.join(parts[:index+1]),info,protected)
+            if index>=len(parts)-2 and (info.st_uid!=os.getuid() or stat.S_IMODE(info.st_mode)!=0o700):raise ValueError('boundary state directory is not private and owned')
     finally:os.close(check)
 
 
@@ -149,6 +156,7 @@ def reserve(root, session, source, action="reserve", repo=None, publication_requ
         repo = str(checkout)
     parts = os.path.normpath(root).split(os.sep)[1:] + ['experimental-boundary', hashlib.sha256(session.encode()).hexdigest()]
     fd = os.open('/', os.O_RDONLY | os.O_DIRECTORY)
+    protected, _ = trust_paths.inspect_entry('/', os.fstat(fd), False)
     identities = []
     completion_lock = None
     try:
@@ -164,10 +172,9 @@ def reserve(root, session, source, action="reserve", repo=None, publication_requ
             fd = next_fd
             info = os.fstat(fd)
             identities.append((info.st_dev, info.st_ino))
-            if index < len(parts) - 3 and (info.st_uid not in (0, os.getuid()) or (info.st_mode & 0o022 and not (info.st_uid == 0 and info.st_mode & stat.S_ISVTX))):
-                raise ValueError('state ancestor is not trusted')
-            if index == len(parts) - 3 and (info.st_uid != os.getuid() or info.st_mode & 0o022):
-                raise ValueError('state root must be owned and not group/world writable')
+            protected, _ = trust_paths.inspect_entry('/' + '/'.join(parts[:index+1]), info, protected)
+            if index == len(parts) - 3 and info.st_uid != os.getuid():
+                raise ValueError('state root must be owned by the executing user')
             if index >= len(parts) - 2 and (info.st_uid != os.getuid() or stat.S_IMODE(info.st_mode) != 0o700):
                 raise ValueError('boundary state directory is not private and owned')
         repository_context = None
@@ -366,7 +373,24 @@ if __name__ == '__main__':
     import sys
     try:
         request = json.load(sys.stdin)
-        print(json.dumps(reserve(request['root'], request['session'], request['source'], request.get('action', 'reserve'), request.get('repo'), request.get('publication_request'), request.get('assessment'), request.get('fingerprint'), request.get('offset',0))))
+        def complete(_repo, _value):
+            result = reserve(request['root'], request['session'], request['source'], request.get('action', 'reserve'), request.get('repo'), request.get('publication_request'), request.get('assessment'), request.get('fingerprint'), request.get('offset',0))
+            return dict(result, verified=result.get('status') == request.get('action'))
+        if request.get('refresh_current') is True:
+            if request.get('action') != 'assessed-no-learning' or not request.get('repo'):
+                raise ValueError('combined native check requires an actual no-learning assessment and repository')
+            from agent_memory import turn_check
+            value = {'session':request['session'], 'prompt':request['source'], 'outcome':'no-learning', 'assessment':request.get('assessment')}
+            result = turn_check.check(request['repo'], value, complete, 'opencode')
+            if result.get('verified') is not True and result.get('notice_required') is not False:
+                result['failure_notice'] = turn_check.failure_notice(result)
+            # Native routine responses retain stage truth without echoing source reviews.
+            result['assessment'] = {key:val for key,val in result['assessment'].items()
+                                    if key in ('verified','status','reason','repair')}
+        else:
+            result = complete(None, None)
+            result.pop('verified', None)
+        print(json.dumps(result))
     except Exception:
         print(json.dumps({'status': 'pending', 'reason': 'ledger-unavailable'}))
         sys.exit(1)

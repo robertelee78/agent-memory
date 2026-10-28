@@ -36,7 +36,7 @@ def observed_stop(repo, event, pack):
                '. Read ' + str(pack / 'turn/GUIDE.md') +
                '; inspect am claude-boundary --list-pending --session ' + session + ' --prompt ' + prompt +
                '. Assess exact original sources; complete only verified work. Preserve the substantive task answer. '
-               'No-learning success is silent. If tools/evidence are unavailable, leave memory pending. Your final response MUST repeat the substantive task answer already given, adding only a brief pending qualification if needed. Never finish with empty text or bookkeeping alone.')
+               'No-learning success is silent. If tools/evidence are unavailable, leave memory pending. The original answer is already retained. Do not repeat it. End silently after success; report only one brief actionable pending qualification if necessary.')
     if len(message.encode()) > 2048:
         raise ValueError('guidance bound')
     if event['stop_hook_active']:
@@ -161,7 +161,7 @@ def main():
                   scoped['transcript'] + '; follow ' + str(directory.parent / 'turn/GUIDE.md') +
                   '. Acknowledge truthful no-learning or verified publication via am claude-boundary. '
                   'Preserve the substantive task answer; routine bookkeeping stays quiet. '
-                  'Unavailable tools or evidence leave memory pending. Your final response MUST repeat the substantive task answer already given, with only a brief pending qualification. Never finish with empty text or bookkeeping alone.')
+                  'Unavailable tools or evidence leave memory pending. The original answer is already retained. Do not repeat it. End silently after success; report only one brief actionable pending qualification if necessary.')
         if len(prompt.encode()) > 2048:
             raise ValueError('guidance bound')
         print(prompt, file=sys.stderr)

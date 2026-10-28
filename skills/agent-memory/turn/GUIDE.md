@@ -9,28 +9,84 @@ domain: capture
 
 Use this route when a harness invokes the skill at a natural turn boundary.
 
+### Routine compact path
+
+Reuse this guide and the skill while their loaded content is unchanged. For an
+initialized, bound bank, assess the actual source before ending. When no durable
+candidate exists, use exactly one maintenance call, with no private request
+workspace and no separate status, refresh, inventory or novelty scan:
+`am codex-boundary --repo REPO --stdin --refresh --quiet`, or
+`am claude-boundary --repo REPO --input - --refresh --quiet`.
+Pass the exact supplied session, prompt, observation_id and source_sha256,
+`outcome: no-learning`, and an authored `assessment` with observation ID as
+source_id, actual source_review and truthful candidates. These are judgments,
+never placeholders or a mechanically inferred absence of learning. The bounded
+stdin object is limited to 64 KiB. The complete no-learning shape is:
+
+```json
+{"session":"ACTUAL_SESSION","prompt":"ACTUAL_PROMPT","observation_id":"ACTUAL_OBSERVATION","source_sha256":"ACTUAL_SOURCE_DIGEST","outcome":"no-learning","assessment":{"source_id":"ACTUAL_OBSERVATION","source_review":"Actual review of this original source and why no learning is eligible","candidates":[]}}
+```
+
+Replace every illustrative value with the actual supplied source and your own
+review. `assessment` requires `source_id`, `source_review` and `candidates`;
+category/durable/reason fields are not this contract. Candidate dispositions use
+the evidence rules below. Multiple current observations may use
+`{"schema":"agent-memory/turn-check-request-v1","assessments":[...]}`;
+retain their distinct IDs and one actual session/lifecycle.
+
+The combined `agent-memory/turn-check-v1` response keeps mechanical freshness and
+source assessment separate. Successful quiet checks emit nothing. A real source
+assessment can finish while freshness remains pending: overall verification is
+false and exit status is nonzero. Report one brief actionable failure, then
+preserve pending work; do not repeat the same repair narrative on every turn.
+Verbose mode retains both stages for diagnosis. Native responses with
+`notice_required: false` retain the pending state without another user-facing
+notice for the same failure in that session. Older assessment-only receipts
+retain their original narrow meaning and never prove freshness or publication.
+
+The `codex-boundary` and `claude-boundary` adapters MUST emit the task answer or question only once, in final;
+never emit the full answer first in commentary. The `opencode` adapter’s existing native
+queued control pass follows the completed original answer. It MUST retain that
+answer and MUST NOT repeat the business answer or emit ordinary bookkeeping
+prose. With actual original source/context available, use one native
+`am.source_ack`; it observes the source and checks freshness internally. Routine
+success returns empty content. Its explicit `diagnostic: true` input returns
+structured stages and original IDs for diagnosis, not ordinary bookkeeping. Read
+`am.source_window` separately only for omitted/unknown evidence or recovery.
+After an intentionally empty successful native acknowledgment, end the control
+pass immediately: no further tool call or completion prose. A fallback after an
+already emitted answer MUST preserve that original record without repeating it.
+Some host SDKs may expose the final control record instead of the original task
+answer; that host attribution limit MUST remain explicit rather than being hidden
+by a duplicated answer.
+Eligible or ambiguous learning MUST follow the governed route below, never a
+fabricated no-learning shortcut. Native tool cards may remain visible.
+
 ## Required context
 
-A session MUST first load the [capture domain](../capture/GUIDE.md). The invoking
+For a durable candidate, a session MUST first load the [capture domain](../capture/GUIDE.md). The invoking
 agent makes semantic judgments; the CLI observes and validates state. This route
 never replaces the discovery, comparison, admission, refresh or publication gates.
 
 ## Inputs and preconditions
 
-Resolve the actual repository, developer, session and harness. Inspect `am status
+The compact routine above does not need an extra status command. For durable
+capture or recovery, resolve the actual repository, developer, session and harness. Inspect `am status
 --repo REPO`. If the bank or binding is missing, ambiguous or unavailable, preserve
 it and report pending; never infer that memory is empty.
 
 ## Observe
 
-At the start of a turn follow [sharing refresh](../sharing/refresh/GUIDE.md) to
-observe and import eligible landed memory. Offline or conflicting results remain
+Before relying on a newly landed lesson follow [sharing refresh](../sharing/refresh/GUIDE.md) to
+observe and import eligible landed memory. A routine no-learning turn uses its
+combined quick check above rather than an extra refresh command; a review-required
+result still needs the governed refresh route before claiming imported freshness. Offline or conflicting results remain
 pending; do not interrupt unrelated work or claim freshness.
 
 ## Plan
 
 Before finishing, consider whether this turn produced a durable, sourced project
-lesson. If none, do nothing. Do not store transcripts, secrets, unconfirmed proposals,
+lesson. If none, use the compact source acknowledgment above without admission. Do not store transcripts, secrets, unconfirmed proposals,
 duplicate tracker status or personal memory. Read actual evidence and follow
 [admission](../admission/GUIDE.md), [discovery](../discovery/GUIDE.md) and
 [comparison](../comparison/GUIDE.md). Check alternate wording and relevant routes;
@@ -96,7 +152,7 @@ Use actual source, harness/session, applicability and evidence; the assessment
 fields and legal values are defined in [admission](../admission/GUIDE.md).
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/admit_learning.py" draft --repo REPO --input PRIVATE_JSON
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/admit_learning.py" draft --repo REPO --input PRIVATE_JSON
 ```
 
 Pass the returned `request` to `am admission capture`, then complete semantic
@@ -150,8 +206,8 @@ Use one JSON object per observation. A session SHOULD construct JSON with a
 structured encoder and MUST NOT depend on shell-specific word splitting to
 separate identifiers. Set `assessment.source_id` to that observation ID; use the actual source review
 and candidate dispositions described below. For the `codex-boundary` adapter use
-`am codex-boundary --repo REPO --stdin`; for the `claude-boundary` adapter use
-`am claude-boundary --repo REPO --input - --quiet`. These bounded stdin routes
+`am codex-boundary --repo REPO --stdin --refresh --quiet`; for the `claude-boundary` adapter use
+`am claude-boundary --repo REPO --input - --refresh --quiet`. These bounded stdin routes
 accept no-learning only (at most 64 KiB). A published outcome MUST use a private
 input file and the exact original prepared `publication_request`; the helper
 independently verifies publication. A completion for one observation MUST NOT
@@ -182,8 +238,8 @@ a failure SHOULD report its specific pending state briefly. A session MUST NOT
 narrate private workspace creation or no-learning bookkeeping as product progress.
 
 The `opencode` adapter retains its native session/message identifiers and uses its existing
-`am.source_window` and `am.source_ack` tools. A session MUST inspect the exact
-original native source window, retain pending interruption evidence and complete
+`am.source_window` and `am.source_ack` tools. The source acknowledgment internally inspects the exact
+original native source window; a separate window call is needed only for missing context or recovery. A session MUST retain pending interruption evidence and complete
 only a truthful assessment or verified publication. Native adapters MUST NOT
 pretend their message IDs are another adapter’s observation IDs or infer completion from a
 successful queue or injected instruction.

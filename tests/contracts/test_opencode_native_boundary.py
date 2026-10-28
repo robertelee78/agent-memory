@@ -115,7 +115,7 @@ import {pathToFileURL} from 'node:url';
 const plugin=(await import(pathToFileURL(process.argv[1]))).default;
 const repo=process.argv[2],hooks={},tools={},queues=[],sessions=new Map();
 const ctx={tool:{transform:async fn=>{fn({namespace(){},add(x){tools[x.name]=x.execute}});return{dispose(){}}}},session:{
- hook:async(name,fn)=>{hooks[name]=fn;return{dispose(){}}},get:async()=>({location:{directory:repo}}),
+ hook:async(name,fn)=>{const prior=hooks[name];hooks[name]=async event=>{if(prior)await prior(event);await fn(event)};return{dispose(){}}},get:async()=>({location:{directory:repo}}),
  context:async({sessionID})=>sessions.get(sessionID),synthetic:async x=>{queues.push(x);return{id:x.id,payload:{text:x.text}}}
 }};
 const dispose=await plugin.setup(ctx);
@@ -126,24 +126,31 @@ await hooks.context({sessionID:'ses_original',messages:[{id:source.id}]});await 
 if(queues.length!==1||Buffer.byteLength(queues[0].text)>2048||!queues[0].text.includes('Preserve the substantive task answer'))throw Error('unbounded or duplicate queue');
 const rows=sessions.get('ses_original');rows.push({type:'assistant',id:'answer',text:'The fixture value is seven.',finish:'stop',time:{completed:1}},
  {type:'synthetic',id:queues[0].id,text:queues[0].text,metadata:queues[0].metadata},{type:'assistant',id:'continuation'});
-const ack=JSON.parse((await tools.source_ack({source_id:source.id,outcome:'no-learning',assessment:{source_id:source.id,source_review:'Reviewed the fixture explanation; no durable claim.',candidates:[]}}, {sessionID:'ses_original',messageID:'continuation'})).content);
-if(ack.status!=='assessed-no-learning'||ack.publication_verified)throw Error('false completion');
+const quiet=await tools.source_ack({source_id:source.id,outcome:'no-learning',assessment:{source_id:source.id,source_review:'Reviewed the fixture explanation; no durable claim.',candidates:[]}}, {sessionID:'ses_original',messageID:'continuation'});
+if(quiet.content!=='')throw Error('routine receipt body');
+const outgoing=()=>({sessionID:'ses_original',model:{providerID:'baseten',id:'moonshotai/Kimi-K3'},messages:[{role:'user',id:source.id},{role:'assistant',id:'answer'},{role:'user',id:queues[0].id},{role:'assistant',id:'continuation'}],system:[],tools:{execute:{}},options:{}});
+const terminal=outgoing();await hooks.context(terminal);
+if(Object.keys(terminal.tools).length||terminal.options.stop?.length!==1||!terminal.system.at(-1)?.text.includes(terminal.options.stop[0]))throw Error('exact control not terminal-shaped');
+
+const ack=JSON.parse((await tools.source_ack({source_id:source.id,diagnostic:true,outcome:'no-learning',assessment:{source_id:source.id,source_review:'Reviewed the fixture explanation; no durable claim.',candidates:[]}}, {sessionID:'ses_original',messageID:'continuation'})).content);
+if(ack.schema!=='agent-memory/turn-check-v1'||!ack.assessment_verified||!ack.refresh_verified||!ack.verified||ack.publication_verified)throw Error('false completion: '+JSON.stringify(ack));
 const interrupted={type:'user',id:'msg_interrupted',text:'Inspect the temporary fixture.'};rows.push(interrupted);
 const next={messageID:interrupted.id,sessionID:'ses_original'};await hooks.prompt(next);interrupted.metadata=next.metadata;
+const steered=outgoing();await hooks.context(steered);if(!steered.tools.execute||steered.options.stop)throw Error('new operator admission changed');
 sessions.set('ses_later',[{type:'assistant',id:'later-assistant'}]);
 const backlog=JSON.parse((await tools.pending_sources({}, {sessionID:'ses_later'})).content);
 if(backlog.pending_count!==1||backlog.sources[0].session_id!=='ses_original'||backlog.sources[0].source_id!=='msg_interrupted')throw Error('native source lost');
 const missing=JSON.parse((await tools.source_window({source_id:interrupted.id,recover:true,source_session_id:'ses_original'}, {sessionID:'ses_later',messageID:'later-assistant'})).content);
 if(missing.status!=='pending')throw Error('interrupted source falsely complete');
 rows.push({type:'assistant',id:'resumed-answer',text:'The fixture is temporary.',finish:'stop',time:{completed:2}});
-const recovered=JSON.parse((await tools.source_ack({source_id:interrupted.id,recover:true,source_session_id:'ses_original',outcome:'no-learning',assessment:{source_id:interrupted.id,source_review:'Recovered original native source and resumed answer; no durable claim.',candidates:[]}}, {sessionID:'ses_later',messageID:'later-assistant'})).content);
-if(recovered.status!=='assessed-no-learning'||recovered.session_id!=='ses_original')throw Error('source reassigned');
+const recovered=JSON.parse((await tools.source_ack({source_id:interrupted.id,recover:true,source_session_id:'ses_original',diagnostic:true,outcome:'no-learning',assessment:{source_id:interrupted.id,source_review:'Recovered original native source and resumed answer; no durable claim.',candidates:[]}}, {sessionID:'ses_later',messageID:'later-assistant'})).content);
+if(!recovered.verified||!recovered.assessment_verified||recovered.session_id!=='ses_original'||recovered.source_id!==interrupted.id)throw Error('source reassigned');
 await hooks.context({sessionID:'ses_original',messages:[{id:interrupted.id}]});
 if(queues.length!==1)throw Error('completed source requeued');
 dispose();process.stdout.write(JSON.stringify({firstBacklog,ack,backlog,missing,recovered,queues:queues.length,bytes:Buffer.byteLength(queues[0].text)}));
 '''
         with World() as w:
             fixture=PublicationFixture();repo,bank,peer,base=fixture.fixture(w)
-            result=subprocess.run([shutil.which('node'),'--input-type=module','-e',code,str(HOOKS/'opencode-v2-queue.js'),str(repo)],env=w.env,text=True,capture_output=True,timeout=60)
+            result=subprocess.run([shutil.which('node'),'--input-type=module','-e',code,str(HOOKS/'opencode-v2.js'),str(repo)],env=w.env,text=True,capture_output=True,timeout=60)
             self.assertEqual(result.returncode,0,result.stdout+result.stderr)
             value=json.loads(result.stdout);self.assertEqual(value['queues'],1);self.assertLessEqual(value['bytes'],2048)

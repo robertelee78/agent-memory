@@ -43,7 +43,7 @@ def main():
         observation=turn_sources.register(root,'codex',session,turn,hashlib.sha256(text.encode()).hexdigest())
         stage,reason='guidance','guidance.unavailable'
         guidance=(pack/'hooks'/'boundary-prompt.txt').read_text(encoding='utf-8').strip().replace('{{SKILL_DIR}}',str(pack))
-        guidance += (' Observation '+observation['observation_id']+' in Codex session '+session+', active turn '+turn+', source SHA-256 '+observation['source_sha256']+'. Assess this exact source before final; acknowledge through am codex-boundary using observation_id, session, prompt=active turn, source_sha256 and truthful outcome/assessment. No-learning assessment.source_id is this local observation ID, not a native message ID. Earlier pending: am codex-boundary --repo REPO --list-pending.')
+        guidance += (' Observation '+observation['observation_id']+'; session='+session+'; prompt='+turn+'; source_sha256='+observation['source_sha256']+'. Before final use one am codex-boundary --repo REPO --stdin --refresh --quiet with top-level session,prompt,observation_id,source_sha256,outcome,assessment; for no-learning assessment requires source_id=this observation ID, source_review=actual review, candidates=authored list (empty only if none). Never substitute a later input. Earlier pending IDs: am codex-boundary --repo REPO --list-pending.')
         try:notice=turn_sources.pending_notice(root,'codex',session,turn)
         except (OSError,ValueError):notice=True  # Optional notice bookkeeping cannot veto durable source registration.
         if notice:guidance += ' Earlier pending work exists; inspect am codex-boundary --list-pending to recover original identifiers. Never substitute this input for an earlier source.'

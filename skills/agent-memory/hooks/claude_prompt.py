@@ -41,8 +41,8 @@ def main(event=None):
         context = (guide + '\nClaude source: session=' + session + ' prompt=' + prompt +
                    ' observation_id=' + obs['observation_id'] + ' source_sha256=' + obs['source_sha256'] +
                    '. Before final submit top-level session,prompt,observation_id,source_sha256,outcome,assessment '
-                   'via am claude-boundary --input - --quiet for no-learning; assessment.source_id=observation_id. '
-                   'Read the observation protocol in turn/GUIDE.md. Retain original native source attribution.')
+                   'via one am claude-boundary --repo REPO --input - --refresh --quiet for no-learning; assessment requires source_id=observation_id, source_review=actual review, candidates=authored list (empty only if none). '
+                   'Use actual source attribution. On routine success, output only the task response: no announcement of reading guides, assessments, no-learning or saved/unsaved memory, in progress or final.')
         prior = turn_sources.backlog(repo, harness='claude')
         if any(t.get('session') != session or t.get('lifecycle') != prompt for t in prior.get('turns', [])) or prior.get('legacy'):
             context += ' Earlier memory work remains pending; inspect am claude-boundary --list-pending before assessing an original source.'

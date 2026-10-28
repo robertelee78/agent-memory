@@ -136,10 +136,10 @@ def main(argv=None):
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--repo',required=True);parser.add_argument('--input')
     parser.add_argument('--list-pending',action='store_true');parser.add_argument('--session');parser.add_argument('--prompt')
-    parser.add_argument('--quiet',action='store_true');args=parser.parse_args(argv)
+    parser.add_argument('--quiet',action='store_true');parser.add_argument('--refresh',action='store_true');args=parser.parse_args(argv)
     try:
         if args.list_pending:
-            if args.input or args.quiet:raise ContractError('Select pending inspection or acknowledgment')
+            if args.input or args.quiet or args.refresh:raise ContractError('Select pending inspection or acknowledgment')
             from . import claude_turns
             result=claude_turns.pending(args.repo,args.session,args.prompt)
         else:
@@ -148,13 +148,19 @@ def main(argv=None):
                 raw=sys.stdin.buffer.read(65537)
                 if len(raw)>65536:raise ContractError('Stdin assessment exceeds64KiB')
                 value=load(raw)
-                if not isinstance(value,dict) or value.get('outcome')!='no-learning':raise ContractError('Stdin supports no-learning only; published requests require private file input')
+                if not args.refresh and (not isinstance(value,dict) or value.get('outcome')!='no-learning'):raise ContractError('Stdin supports no-learning only; published requests require private file input')
             else:value=load(sharing_limits.read_bytes(args.input,sharing_limits.MAX_PRIVATE))
-            result=complete(args.repo,value)
-        if not args.quiet:print(json.dumps(result))
-        return 0
+            if args.refresh:
+                from . import turn_check
+                result=turn_check.check(args.repo,value,complete,'claude')
+            else:result=complete(args.repo,value)
+        from . import turn_check
+        return turn_check.emit(result,args.quiet)
     except (OSError,ValueError,TypeError,KeyError,UnicodeError) as exc:
         reason = str(exc) if isinstance(exc, ContractError) else 'Original source or pending record is unavailable or unsafe; preserve the retained observation.'
+        if args.refresh and args.quiet:
+            print('am: source assessment pending: '+reason+' Preserve the original observation; inspect the matching boundary pending inventory.',file=sys.stderr)
+            return 1
         print(json.dumps({'verified':False,'publication_verified':False,'canonical_writes_performed':False,
                           'reason':reason,'repair':'Inspect am claude-boundary --list-pending. Current hook observations require top-level session,prompt,observation_id,source_sha256,outcome,assessment; assessment.source_id is observation_id. Legacy source_uuid applies only to legacy boundaries. Preserve original sources; read turn/GUIDE.md before retrying.'}));return 1
 

@@ -177,10 +177,10 @@ def list_pending(repo,offset=0,legacy_offset=0):
 
 
 def main(argv=None):
-    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--repo',required=True);parser.add_argument('--input');parser.add_argument('--list-pending',action='store_true');parser.add_argument('--stdin',action='store_true');parser.add_argument('--offset',type=int,default=0);parser.add_argument('--legacy-offset',type=int,default=0);args=parser.parse_args(argv)
+    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--repo',required=True);parser.add_argument('--input');parser.add_argument('--list-pending',action='store_true');parser.add_argument('--stdin',action='store_true');parser.add_argument('--offset',type=int,default=0);parser.add_argument('--legacy-offset',type=int,default=0);parser.add_argument('--quiet',action='store_true');parser.add_argument('--refresh',action='store_true');args=parser.parse_args(argv)
     try:
         if args.list_pending:
-            if args.input or args.stdin:raise ContractError('Select either pending inventory or acknowledgement')
+            if args.input or args.stdin or args.quiet or args.refresh:raise ContractError('Select either pending inventory or acknowledgement')
             result=list_pending(args.repo,args.offset,args.legacy_offset)
         else:
             if bool(args.input)==bool(args.stdin):raise ContractError('Select one file or bounded stdin assessment')
@@ -188,11 +188,19 @@ def main(argv=None):
                 raw=sys.stdin.buffer.read(65537)
                 if len(raw)>65536:raise ContractError('Stdin assessment exceeds bound')
                 value=load(raw)
-                if not isinstance(value,dict) or value.get('outcome')!='no-learning':raise ContractError('Stdin accepts no-learning only')
+                if not args.refresh and (not isinstance(value,dict) or value.get('outcome')!='no-learning'):raise ContractError('Stdin accepts no-learning only')
             else:value=load(sharing_limits.read_bytes(args.input,sharing_limits.MAX_PRIVATE))
-            result=complete(args.repo,value)
-        print(json.dumps(result));return 0
+            if args.refresh:
+                from . import turn_check
+                result=turn_check.check(args.repo,value,complete,'codex')
+            else:result=complete(args.repo,value)
+        from . import turn_check
+        return turn_check.emit(result,args.quiet)
     except (OSError,ValueError,TypeError,KeyError,UnicodeError) as exc:
         reason=str(exc) if isinstance(exc,ContractError) and ('inventory exceeds' in str(exc)) else 'Boundary completion remains pending; preserve evidence and inspect the failure.'
-        print(json.dumps({'verified':False,'publication_verified':False,'canonical_writes_performed':False,
-                          'reason':reason,'repair':'Preserve boundary records; inspect retained completed and pending evidence before retrying.'}));return 1
+        failure={'verified':False,'publication_verified':False,'canonical_writes_performed':False,
+                 'reason':reason,'repair':'Preserve boundary records; inspect retained completed and pending evidence before retrying.'}
+        if args.quiet:
+            print('am: source assessment pending: '+reason+' '+failure['repair'],file=sys.stderr)
+        else:print(json.dumps(failure))
+        return 1
