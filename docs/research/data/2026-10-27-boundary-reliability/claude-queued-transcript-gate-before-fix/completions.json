@@ -1,0 +1,30 @@
+[
+  {
+    "observation_id": "5a4f2be4-a1c9-43d5-8048-baac4257b598",
+    "receipt": {
+      "assessment": {
+        "candidates": [
+          {
+            "claim": "2 + 2 = 4",
+            "disposition": "not-durable",
+            "reason": "General arithmetic fact unrelated to the repository; user stated it is disposable."
+          }
+        ],
+        "source_id": "5a4f2be4-a1c9-43d5-8048-baac4257b598",
+        "source_review": "User asked what 2 + 2 is and explicitly labeled it a disposable arithmetic fixture with no lasting project decision. No project, code or process learning is present."
+      },
+      "assessment_is_agent_assertion": true,
+      "canonical_writes_performed": false,
+      "input_sha256": "1a2bd6cc5d7a5fc86ef2a7b289c765549e8df559c5bf0cad2bb9159534e98828",
+      "observation_id": "5a4f2be4-a1c9-43d5-8048-baac4257b598",
+      "outcome": "no-learning",
+      "publication_verified": false,
+      "source_publication_link_verified": false,
+      "source_sha256": "772671f50c37065e88096a8fa4d30212b4b69ae55b54ee51bc7986fc0bf887a7",
+      "witnessed_commit": null
+    },
+    "record_sha256": "0212320bcfd78e9c1c4aabae1a41db34ca54c739fb732b806440e3ca3c7d74f1",
+    "schema": "agent-memory/source-completed-v2",
+    "source_sha256": "772671f50c37065e88096a8fa4d30212b4b69ae55b54ee51bc7986fc0bf887a7"
+  }
+]

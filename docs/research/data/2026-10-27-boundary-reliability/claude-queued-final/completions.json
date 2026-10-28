@@ -1,0 +1,68 @@
+[
+  {
+    "observation_id": "2cfd8962-4c9d-4e58-94d9-161cb8b279d2",
+    "receipt": {
+      "assessment": {
+        "candidates": [],
+        "source_id": "2cfd8962-4c9d-4e58-94d9-161cb8b279d2",
+        "source_review": "Disposable arithmetic question (3+3) answered directly; no project decision, constraint or lesson involved."
+      },
+      "assessment_is_agent_assertion": true,
+      "canonical_writes_performed": false,
+      "input_sha256": "88c452896b589013c5b74daeb42c0dd8102353c42c06459bd1257a58deede740",
+      "observation_id": "2cfd8962-4c9d-4e58-94d9-161cb8b279d2",
+      "outcome": "no-learning",
+      "publication_verified": false,
+      "source_publication_link_verified": false,
+      "source_sha256": "fce75eb34323542801e92a04262fedfea7787f101df47aa36fabc14a1fe6dad1",
+      "witnessed_commit": null
+    },
+    "record_sha256": "9a203cbdb29b60311b2b9d2b5a05aa1ee19c06ff759bee4ffe86385cb8939aaf",
+    "schema": "agent-memory/source-completed-v2",
+    "source_sha256": "fce75eb34323542801e92a04262fedfea7787f101df47aa36fabc14a1fe6dad1"
+  },
+  {
+    "observation_id": "85965f2b-3613-4f1f-9206-0b16eacae88b",
+    "receipt": {
+      "assessment": {
+        "candidates": [],
+        "source_id": "85965f2b-3613-4f1f-9206-0b16eacae88b",
+        "source_review": "Disposable arithmetic question (3+3) answered directly; no project decision, constraint or lesson involved."
+      },
+      "assessment_is_agent_assertion": true,
+      "canonical_writes_performed": false,
+      "input_sha256": "7533d3d16aa111914d84e1b63192a390ac0e8fe25fe8dfc1b29a8b6d5e8aba51",
+      "observation_id": "85965f2b-3613-4f1f-9206-0b16eacae88b",
+      "outcome": "no-learning",
+      "publication_verified": false,
+      "source_publication_link_verified": false,
+      "source_sha256": "fce75eb34323542801e92a04262fedfea7787f101df47aa36fabc14a1fe6dad1",
+      "witnessed_commit": null
+    },
+    "record_sha256": "f5e8a463560f7d283a6c35e01114a3595c2895c20a526650672a7554d8a6ada7",
+    "schema": "agent-memory/source-completed-v2",
+    "source_sha256": "fce75eb34323542801e92a04262fedfea7787f101df47aa36fabc14a1fe6dad1"
+  },
+  {
+    "observation_id": "6edf875d-c910-4175-9447-a0c96a5efef2",
+    "receipt": {
+      "assessment": {
+        "candidates": [],
+        "source_id": "6edf875d-c910-4175-9447-a0c96a5efef2",
+        "source_review": "Disposable arithmetic question (2+2) answered directly; no project decision, constraint or lesson involved."
+      },
+      "assessment_is_agent_assertion": true,
+      "canonical_writes_performed": false,
+      "input_sha256": "40272ccef710c693402e5c43dd68cd3fb5326a8e3f812be80533d2fd3d449bdf",
+      "observation_id": "6edf875d-c910-4175-9447-a0c96a5efef2",
+      "outcome": "no-learning",
+      "publication_verified": false,
+      "source_publication_link_verified": false,
+      "source_sha256": "772671f50c37065e88096a8fa4d30212b4b69ae55b54ee51bc7986fc0bf887a7",
+      "witnessed_commit": null
+    },
+    "record_sha256": "01c81cb58da9fe9340820491d5ab43b4a863d0f1559bb4eb2bf7c63baff32708",
+    "schema": "agent-memory/source-completed-v2",
+    "source_sha256": "772671f50c37065e88096a8fa4d30212b4b69ae55b54ee51bc7986fc0bf887a7"
+  }
+]

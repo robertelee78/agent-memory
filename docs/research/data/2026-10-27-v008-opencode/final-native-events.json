@@ -1,0 +1,126 @@
+{
+  "two.jsonl": {
+    "event_counts": {
+      "step_start": 4,
+      "text": 2,
+      "step_finish": 3,
+      "tool_use": 2
+    },
+    "assistant_text": [
+      "The result is five.",
+      "The result is five."
+    ],
+    "tools": [
+      {
+        "tool": "execute",
+        "status": "completed"
+      },
+      {
+        "tool": "execute",
+        "status": "completed"
+      }
+    ],
+    "errors": []
+  },
+  "interrupted.jsonl": {
+    "event_counts": {},
+    "assistant_text": [],
+    "tools": [],
+    "errors": []
+  },
+  "enrollment-error.jsonl": {
+    "event_counts": {
+      "error": 1
+    },
+    "assistant_text": [],
+    "tools": [],
+    "errors": [
+      {
+        "type": "unknown",
+        "message": "UnexpectedStatus: 500"
+      }
+    ]
+  },
+  "resumed.jsonl": {
+    "event_counts": {
+      "step_start": 4,
+      "tool_use": 5,
+      "step_finish": 4,
+      "text": 1
+    },
+    "assistant_text": [
+      "The temporary check is complete.\n\nThe result is five.\n\nThe earlier interrupted sources remain untouched in the pending backlog \u2014 I made no attempt to acknowledge or publish them, so their pending state is preserved as requested."
+    ],
+    "tools": [
+      {
+        "tool": "execute",
+        "status": "completed"
+      },
+      {
+        "tool": "shell",
+        "status": "completed"
+      },
+      {
+        "tool": "execute",
+        "status": "completed"
+      },
+      {
+        "tool": "read",
+        "status": "completed"
+      },
+      {
+        "tool": "execute",
+        "status": "completed"
+      }
+    ],
+    "errors": []
+  },
+  "no-tools.jsonl": {
+    "event_counts": {
+      "step_start": 2,
+      "text": 2,
+      "step_finish": 1
+    },
+    "assistant_text": [
+      "The result is five.",
+      "The result is five. Pending: the bounded Agent Memory review for msg_17ffcf9d70012VjKrT7ylLXucN is incomplete because the required am source-window/acknowledgment tools are unavailable; I did not complete or publish any memory outcome."
+    ],
+    "tools": [],
+    "errors": []
+  },
+  "one.jsonl": {
+    "event_counts": {
+      "step_start": 5,
+      "text": 2,
+      "step_finish": 4,
+      "tool_use": 5
+    },
+    "assistant_text": [
+      "The result is five.",
+      "The result is five."
+    ],
+    "tools": [
+      {
+        "tool": "execute",
+        "status": "completed"
+      },
+      {
+        "tool": "read",
+        "status": "completed"
+      },
+      {
+        "tool": "read",
+        "status": "completed"
+      },
+      {
+        "tool": "shell",
+        "status": "completed"
+      },
+      {
+        "tool": "execute",
+        "status": "completed"
+      }
+    ],
+    "errors": []
+  }
+}

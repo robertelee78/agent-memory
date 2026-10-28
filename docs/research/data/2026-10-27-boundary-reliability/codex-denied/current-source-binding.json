@@ -1,0 +1,9 @@
+{
+  "comparison": "current working-tree bytes",
+  "files": 188,
+  "mismatches": [
+    "turn/GUIDE.md",
+    "hooks/boundary_ledger.py",
+    "hooks/claude_stop.py"
+  ]
+}

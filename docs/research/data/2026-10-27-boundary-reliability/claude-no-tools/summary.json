@@ -1,0 +1,135 @@
+{
+  "runs": [
+    {
+      "exit": 0,
+      "seconds": 7.5012162499988335,
+      "session": "d30b9dc1-3baa-4902-aa1b-a09e0f6385da",
+      "result": [
+        {
+          "duration_api_ms": 3050,
+          "stop_reason": "end_turn",
+          "session_id": "d30b9dc1-3baa-4902-aa1b-a09e0f6385da",
+          "total_cost_usd": 0.13032525,
+          "usage": {
+            "input_tokens": 6,
+            "cache_creation_input_tokens": 6109,
+            "cache_read_input_tokens": 5141,
+            "output_tokens": 136,
+            "output_tokens_details": {
+              "thinking_tokens": 0
+            },
+            "server_tool_use": {
+              "web_search_requests": 0,
+              "web_fetch_requests": 0
+            },
+            "service_tier": "standard",
+            "cache_creation": {
+              "ephemeral_1h_input_tokens": 6109,
+              "ephemeral_5m_input_tokens": 0
+            },
+            "inference_geo": "global",
+            "iterations": [
+              {
+                "input_tokens": 4,
+                "output_tokens": 69,
+                "cache_read_input_tokens": 4492,
+                "cache_creation_input_tokens": 1342,
+                "cache_creation": {
+                  "ephemeral_5m_input_tokens": 0,
+                  "ephemeral_1h_input_tokens": 1342
+                },
+                "type": "message"
+              }
+            ],
+            "speed": "standard",
+            "fallback_credit": null
+          },
+          "modelUsage": {
+            "claude-fable-5-1": {
+              "inputTokens": 6,
+              "outputTokens": 136,
+              "cacheReadInputTokens": 5141,
+              "cacheCreationInputTokens": 6109,
+              "webSearchRequests": 0,
+              "costUSD": 0.13032525,
+              "contextWindow": 1000000,
+              "maxOutputTokens": 64000,
+              "thinkingTokens": 0,
+              "canonicalModel": "claude-fable-5-1",
+              "provider": "firstParty",
+              "costBasis": "list"
+            }
+          },
+          "permission_denials": [],
+          "terminal_reason": "completed",
+          "fast_mode_state": "off",
+          "fast_mode_disabled_reason": "sdk_opt_in_required",
+          "subagent_stats": {
+            "spawned": 0,
+            "requested": {
+              "background": 0,
+              "foreground": 0,
+              "unset": 0
+            },
+            "started_in_background": 0,
+            "max_depth": 0,
+            "spawned_by_subagents": 0,
+            "completed": 0,
+            "failed": 0,
+            "killed": {
+              "parent": 0,
+              "user": 0,
+              "system": 0
+            },
+            "refused": {
+              "depth_limit": 0,
+              "concurrency_limit": 0,
+              "budget": 0
+            },
+            "by_type": {}
+          },
+          "safety_stops": 0,
+          "is_error": false,
+          "num_turns": 2,
+          "subtype": "success",
+          "api_error_status": null,
+          "result": "8 is even because it is divisible by 2 with no remainder (8 = 2 \u00d7 4).\n\nMemory acknowledgment remains pending since tools are unavailable this turn; there was no durable learning from this question.",
+          "ttft_ms": 3304,
+          "type": "result",
+          "duration_ms": 6849,
+          "uuid": "96883526-1a40-4152-842a-75bcedeb0415",
+          "ttft_stream_ms": 2435,
+          "time_to_request_ms": 1702,
+          "first_content_frame_ms": 2435,
+          "queued_turn_count": 0,
+          "result_index": 0
+        }
+      ]
+    }
+  ],
+  "pending": {
+    "turns": [
+      {
+        "harness": "claude",
+        "session": "d30b9dc1-3baa-4902-aa1b-a09e0f6385da",
+        "lifecycle": "29b22e23-0190-4016-9e1e-91f0f6b92e3f",
+        "project_id": "d328343f-49cd-45af-bcb0-036ce31278ea",
+        "pending": [
+          {
+            "observation_id": "f0ba5c13-aebd-4d00-89e2-7ebd4f938756",
+            "source_sha256": "47fb72cfe48371334ee45a2ea41ac50e2ada42de6cf4881f707f22d6d1252228"
+          }
+        ],
+        "faults": [],
+        "fingerprint": "9051bbe384ac8925cb2d3e7ab3c1ad75f4134e042a0cc37d0609556d683eba6c",
+        "complete": false
+      }
+    ],
+    "legacy": [],
+    "faults": [],
+    "next_offset": null,
+    "next_legacy_offset": null,
+    "source_completeness_verified": false
+  },
+  "completion_count": 0
+}

@@ -1,0 +1,19 @@
+{
+  "schema": "agent-memory/refresh-result-v1",
+  "operation": "current",
+  "sharing_state": "bank-synchronized",
+  "refresh_applied": false,
+  "canonical_writes_performed": false,
+  "original_index_writes_performed": false,
+  "publication_verified": false,
+  "feature_code_freshness_verified": false,
+  "remote_freshness_verified": true,
+  "relevant_imports_read": false,
+  "local_memory_available": true,
+  "pending_capture": "unknown",
+  "pending_publication": "unknown",
+  "semantic_truth_verified": false,
+  "source_assertions_verified": false,
+  "observed_authority_head": "711df384ab4420c5bb0347e6b990558d86e5c47a",
+  "git_metadata_writes_performed": true
+}

@@ -1,0 +1,27 @@
+{
+  "baseline": {
+    "timeout": true,
+    "seconds": 40.00614129200039
+  },
+  "one": {
+    "exit": 0,
+    "seconds": 32.85381958399739
+  },
+  "session_id": "ses_e8007441fffeRB69JO9Pl4A8Sc",
+  "two": {
+    "exit": 0,
+    "seconds": 21.11747608299993
+  },
+  "state_files": [
+    "agent-memory/experimental-boundary/34981be52b823a1946f6b726e5661cf0fbc2b152cd1ecf5181c58e68f385bfae/4e4655eb5eb47842ec4636dbaa72b8a43b3a96234757201709dc6d48a0f1ad9c.assessed",
+    "agent-memory/experimental-boundary/34981be52b823a1946f6b726e5661cf0fbc2b152cd1ecf5181c58e68f385bfae/51cb98e075fafcee0caa662f11efd5c8f0b4c1216a18a12849ba5f725b97c9c0.wake-0",
+    "agent-memory/experimental-boundary/34981be52b823a1946f6b726e5661cf0fbc2b152cd1ecf5181c58e68f385bfae/51cb98e075fafcee0caa662f11efd5c8f0b4c1216a18a12849ba5f725b97c9c0.wake-lock",
+    "agent-memory/experimental-boundary/34981be52b823a1946f6b726e5661cf0fbc2b152cd1ecf5181c58e68f385bfae/4e4655eb5eb47842ec4636dbaa72b8a43b3a96234757201709dc6d48a0f1ad9c.wake-lock",
+    "agent-memory/experimental-boundary/34981be52b823a1946f6b726e5661cf0fbc2b152cd1ecf5181c58e68f385bfae/51cb98e075fafcee0caa662f11efd5c8f0b4c1216a18a12849ba5f725b97c9c0.assessed",
+    "agent-memory/experimental-boundary/34981be52b823a1946f6b726e5661cf0fbc2b152cd1ecf5181c58e68f385bfae/4e4655eb5eb47842ec4636dbaa72b8a43b3a96234757201709dc6d48a0f1ad9c.wake-0"
+  ],
+  "pending_intents": 0,
+  "completed": 2,
+  "native_intents": [],
+  "mode": "real OpenCode2.1.3 standalone with isolated HOME/config/data and copied native auth; no production service restart"
+}

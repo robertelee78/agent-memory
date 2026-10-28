@@ -1,0 +1,486 @@
+{
+  "model": "gpt-6.1-sol",
+  "client": "actual app-server0.165.0",
+  "steps": [
+    {
+      "kind": "native-steer",
+      "expected_turn": "01a17ff0-9be1-7d22-a9cb-6b9f0e40ca65",
+      "response": {
+        "turnId": "01a17ff0-9be1-7d22-a9cb-6b9f0e40ca65"
+      },
+      "sha256": "c2cb9578872d0b371e0198948c24c74e6e75bf59eaae45c9df5e7ce73b06d6b8"
+    },
+    {
+      "kind": "native-steer",
+      "expected_turn": "01a17ff0-9be1-7d22-a9cb-6b9f0e40ca65",
+      "response": {
+        "turnId": "01a17ff0-9be1-7d22-a9cb-6b9f0e40ca65"
+      },
+      "sha256": "c2cb9578872d0b371e0198948c24c74e6e75bf59eaae45c9df5e7ce73b06d6b8"
+    },
+    {
+      "kind": "native-steer",
+      "expected_turn": "01a17ff0-9be1-7d22-a9cb-6b9f0e40ca65",
+      "response": {
+        "turnId": "01a17ff0-9be1-7d22-a9cb-6b9f0e40ca65"
+      },
+      "sha256": "a86ec2ce57f055aba11c9af9447342a25d3a37133dcd0561c37f995ff0279f0a"
+    },
+    {
+      "kind": "first-completed",
+      "event": {
+        "method": "turn/completed",
+        "params": {
+          "threadId": "01a17ff0-9922-75a3-bd32-87a50e65118c",
+          "turn": {
+            "id": "01a17ff0-9be1-7d22-a9cb-6b9f0e40ca65",
+            "rootTurnId": "01a17ff0-9be1-7d22-a9cb-6b9f0e40ca65",
+            "items": [
+              {
+                "type": "agentMessage",
+                "id": "msg_08d22e941f999d4c016ae143e4295c81978aca8ea9df5d84f6",
+                "text": "2+2=4; this is a fixture result.",
+                "phase": "final_answer",
+                "memoryCitation": null,
+                "delivery": null,
+                "questions": null
+              }
+            ],
+            "itemsView": "summary",
+            "status": "completed",
+            "error": null,
+            "startedAt": 1793147837,
+            "completedAt": 1793147877,
+            "durationMs": 39782
+          }
+        },
+        "emittedAtMs": 1793147877192
+      }
+    },
+    {
+      "kind": "second-completed",
+      "event": {
+        "method": "turn/completed",
+        "params": {
+          "threadId": "01a17ff0-9922-75a3-bd32-87a50e65118c",
+          "turn": {
+            "id": "01a17ff1-3850-7a81-9a63-48f115743bfe",
+            "rootTurnId": "01a17ff1-3850-7a81-9a63-48f115743bfe",
+            "items": [
+              {
+                "type": "agentMessage",
+                "id": "msg_08d22e941f999d4c016ae143f7c08c8197a6d69e5d3e8ef7ad",
+                "text": "3+3=6.",
+                "phase": "final_answer",
+                "memoryCitation": null,
+                "delivery": null,
+                "questions": null
+              }
+            ],
+            "itemsView": "summary",
+            "status": "completed",
+            "error": null,
+            "startedAt": 1793147877,
+            "completedAt": 1793147896,
+            "durationMs": 19224
+          }
+        },
+        "emittedAtMs": 1793147896685
+      }
+    },
+    {
+      "kind": "no-tools-completed",
+      "event": {
+        "method": "turn/completed",
+        "params": {
+          "threadId": "01a17ff1-8504-7301-905b-51cd8ce94706",
+          "turn": {
+            "id": "01a17ff1-8509-71f3-9f19-65578001e4b1",
+            "rootTurnId": "01a17ff1-8509-71f3-9f19-65578001e4b1",
+            "items": [
+              {
+                "type": "agentMessage",
+                "id": "msg_05d3299ad1989e33016ae143ffd77881948ae030ed1e1355bf",
+                "text": "11. Memory remains pending because tool use is denied.",
+                "phase": "final_answer",
+                "memoryCitation": null,
+                "delivery": null,
+                "questions": null
+              }
+            ],
+            "itemsView": "summary",
+            "status": "completed",
+            "error": null,
+            "startedAt": 1793147897,
+            "completedAt": 1793147904,
+            "durationMs": 7683
+          }
+        },
+        "emittedAtMs": 1793147904783
+      }
+    }
+  ],
+  "hook_trust": [
+    {
+      "event": "preToolUse",
+      "status": "trusted"
+    },
+    {
+      "event": "userPromptSubmit",
+      "status": "trusted"
+    },
+    {
+      "event": "stop",
+      "status": "trusted"
+    }
+  ],
+  "first_inventory": {
+    "sources": [
+      {
+        "control_origin_hint": false,
+        "harness": "codex",
+        "lifecycle": "01a17ff0-9be1-7d22-a9cb-6b9f0e40ca65",
+        "native_source_id": null,
+        "observation_id": "c3eb43a1-a1e0-4b0b-b451-c5b135ec9c46",
+        "project_id": "b64d0d22-e8d7-4e9e-bc9c-b2bd81dee03b",
+        "schema": "agent-memory/turn-source-v2",
+        "session": "01a17ff0-9922-75a3-bd32-87a50e65118c",
+        "source_reference": null,
+        "source_sha256": "ad9ec3d380f89bbd77b254abdddae518b4f65e64593345ed9efe559b32ad4e00",
+        "completed": true,
+        "completion": {
+          "assessment": {
+            "candidates": [],
+            "source_id": "c3eb43a1-a1e0-4b0b-b451-c5b135ec9c46",
+            "source_review": "Reviewed the original request for a two-second local wait and a short 2+2 answer, explicitly described as an isolated fixture with no new project decision."
+          },
+          "assessment_is_agent_assertion": true,
+          "canonical_writes_performed": false,
+          "input_sha256": "a67f9c569b45a2b8aea62e94a1232ec23141abaeeb2167945c2cb9b4ed005375",
+          "observation_id": "c3eb43a1-a1e0-4b0b-b451-c5b135ec9c46",
+          "outcome": "no-learning",
+          "publication_verified": false,
+          "source_publication_link_verified": false,
+          "source_sha256": "ad9ec3d380f89bbd77b254abdddae518b4f65e64593345ed9efe559b32ad4e00",
+          "witnessed_commit": null
+        }
+      },
+      {
+        "control_origin_hint": false,
+        "harness": "codex",
+        "lifecycle": "01a17ff0-9be1-7d22-a9cb-6b9f0e40ca65",
+        "native_source_id": null,
+        "observation_id": "3748ded5-7694-48aa-ab89-e0d9137487c8",
+        "project_id": "b64d0d22-e8d7-4e9e-bc9c-b2bd81dee03b",
+        "schema": "agent-memory/turn-source-v2",
+        "session": "01a17ff0-9922-75a3-bd32-87a50e65118c",
+        "source_reference": null,
+        "source_sha256": "c2cb9578872d0b371e0198948c24c74e6e75bf59eaae45c9df5e7ce73b06d6b8",
+        "completed": true,
+        "completion": {
+          "assessment": {
+            "candidates": [],
+            "source_id": "3748ded5-7694-48aa-ab89-e0d9137487c8",
+            "source_review": "Reviewed the original follow-up asking to state that this is a fixture result; this is output wording for this isolated task, not durable project learning."
+          },
+          "assessment_is_agent_assertion": true,
+          "canonical_writes_performed": false,
+          "input_sha256": "577fec30875a1606a16515df33d81220fd4da844acdd2d342c019072c48c2e2e",
+          "observation_id": "3748ded5-7694-48aa-ab89-e0d9137487c8",
+          "outcome": "no-learning",
+          "publication_verified": false,
+          "source_publication_link_verified": false,
+          "source_sha256": "c2cb9578872d0b371e0198948c24c74e6e75bf59eaae45c9df5e7ce73b06d6b8",
+          "witnessed_commit": null
+        }
+      },
+      {
+        "control_origin_hint": false,
+        "harness": "codex",
+        "lifecycle": "01a17ff0-9be1-7d22-a9cb-6b9f0e40ca65",
+        "native_source_id": null,
+        "observation_id": "08f1fd64-6962-41a0-aaf4-01a7e2d9d882",
+        "project_id": "b64d0d22-e8d7-4e9e-bc9c-b2bd81dee03b",
+        "schema": "agent-memory/turn-source-v2",
+        "session": "01a17ff0-9922-75a3-bd32-87a50e65118c",
+        "source_reference": null,
+        "source_sha256": "c2cb9578872d0b371e0198948c24c74e6e75bf59eaae45c9df5e7ce73b06d6b8",
+        "completed": true,
+        "completion": {
+          "assessment": {
+            "candidates": [],
+            "source_id": "08f1fd64-6962-41a0-aaf4-01a7e2d9d882",
+            "source_review": "Reviewed the separately observed repeated follow-up asking to state that this is a fixture result; it supplies only task-local output wording."
+          },
+          "assessment_is_agent_assertion": true,
+          "canonical_writes_performed": false,
+          "input_sha256": "267c3e33a8179f88c704d57b2cb89ad6ad75a664c37d635f9154396d1ad09c45",
+          "observation_id": "08f1fd64-6962-41a0-aaf4-01a7e2d9d882",
+          "outcome": "no-learning",
+          "publication_verified": false,
+          "source_publication_link_verified": false,
+          "source_sha256": "c2cb9578872d0b371e0198948c24c74e6e75bf59eaae45c9df5e7ce73b06d6b8",
+          "witnessed_commit": null
+        }
+      },
+      {
+        "control_origin_hint": false,
+        "harness": "codex",
+        "lifecycle": "01a17ff0-9be1-7d22-a9cb-6b9f0e40ca65",
+        "native_source_id": null,
+        "observation_id": "09f2e672-6587-45da-8793-73ed7a042b90",
+        "project_id": "b64d0d22-e8d7-4e9e-bc9c-b2bd81dee03b",
+        "schema": "agent-memory/turn-source-v2",
+        "session": "01a17ff0-9922-75a3-bd32-87a50e65118c",
+        "source_reference": null,
+        "source_sha256": "a86ec2ce57f055aba11c9af9447342a25d3a37133dcd0561c37f995ff0279f0a",
+        "completed": true,
+        "completion": {
+          "assessment": {
+            "candidates": [],
+            "source_id": "09f2e672-6587-45da-8793-73ed7a042b90",
+            "source_review": "Reviewed the original follow-up to keep the answer short and retain 2+2; this is a task-local instruction with no durable project lesson."
+          },
+          "assessment_is_agent_assertion": true,
+          "canonical_writes_performed": false,
+          "input_sha256": "da65ad91124ab81b9d5f85f66ad4d8f04819af9cd61d646bcfd91195664fb2cf",
+          "observation_id": "09f2e672-6587-45da-8793-73ed7a042b90",
+          "outcome": "no-learning",
+          "publication_verified": false,
+          "source_publication_link_verified": false,
+          "source_sha256": "a86ec2ce57f055aba11c9af9447342a25d3a37133dcd0561c37f995ff0279f0a",
+          "witnessed_commit": null
+        }
+      }
+    ],
+    "pending": [],
+    "completed": [
+      {
+        "control_origin_hint": false,
+        "harness": "codex",
+        "lifecycle": "01a17ff0-9be1-7d22-a9cb-6b9f0e40ca65",
+        "native_source_id": null,
+        "observation_id": "c3eb43a1-a1e0-4b0b-b451-c5b135ec9c46",
+        "project_id": "b64d0d22-e8d7-4e9e-bc9c-b2bd81dee03b",
+        "schema": "agent-memory/turn-source-v2",
+        "session": "01a17ff0-9922-75a3-bd32-87a50e65118c",
+        "source_reference": null,
+        "source_sha256": "ad9ec3d380f89bbd77b254abdddae518b4f65e64593345ed9efe559b32ad4e00",
+        "completed": true,
+        "completion": {
+          "assessment": {
+            "candidates": [],
+            "source_id": "c3eb43a1-a1e0-4b0b-b451-c5b135ec9c46",
+            "source_review": "Reviewed the original request for a two-second local wait and a short 2+2 answer, explicitly described as an isolated fixture with no new project decision."
+          },
+          "assessment_is_agent_assertion": true,
+          "canonical_writes_performed": false,
+          "input_sha256": "a67f9c569b45a2b8aea62e94a1232ec23141abaeeb2167945c2cb9b4ed005375",
+          "observation_id": "c3eb43a1-a1e0-4b0b-b451-c5b135ec9c46",
+          "outcome": "no-learning",
+          "publication_verified": false,
+          "source_publication_link_verified": false,
+          "source_sha256": "ad9ec3d380f89bbd77b254abdddae518b4f65e64593345ed9efe559b32ad4e00",
+          "witnessed_commit": null
+        }
+      },
+      {
+        "control_origin_hint": false,
+        "harness": "codex",
+        "lifecycle": "01a17ff0-9be1-7d22-a9cb-6b9f0e40ca65",
+        "native_source_id": null,
+        "observation_id": "3748ded5-7694-48aa-ab89-e0d9137487c8",
+        "project_id": "b64d0d22-e8d7-4e9e-bc9c-b2bd81dee03b",
+        "schema": "agent-memory/turn-source-v2",
+        "session": "01a17ff0-9922-75a3-bd32-87a50e65118c",
+        "source_reference": null,
+        "source_sha256": "c2cb9578872d0b371e0198948c24c74e6e75bf59eaae45c9df5e7ce73b06d6b8",
+        "completed": true,
+        "completion": {
+          "assessment": {
+            "candidates": [],
+            "source_id": "3748ded5-7694-48aa-ab89-e0d9137487c8",
+            "source_review": "Reviewed the original follow-up asking to state that this is a fixture result; this is output wording for this isolated task, not durable project learning."
+          },
+          "assessment_is_agent_assertion": true,
+          "canonical_writes_performed": false,
+          "input_sha256": "577fec30875a1606a16515df33d81220fd4da844acdd2d342c019072c48c2e2e",
+          "observation_id": "3748ded5-7694-48aa-ab89-e0d9137487c8",
+          "outcome": "no-learning",
+          "publication_verified": false,
+          "source_publication_link_verified": false,
+          "source_sha256": "c2cb9578872d0b371e0198948c24c74e6e75bf59eaae45c9df5e7ce73b06d6b8",
+          "witnessed_commit": null
+        }
+      },
+      {
+        "control_origin_hint": false,
+        "harness": "codex",
+        "lifecycle": "01a17ff0-9be1-7d22-a9cb-6b9f0e40ca65",
+        "native_source_id": null,
+        "observation_id": "08f1fd64-6962-41a0-aaf4-01a7e2d9d882",
+        "project_id": "b64d0d22-e8d7-4e9e-bc9c-b2bd81dee03b",
+        "schema": "agent-memory/turn-source-v2",
+        "session": "01a17ff0-9922-75a3-bd32-87a50e65118c",
+        "source_reference": null,
+        "source_sha256": "c2cb9578872d0b371e0198948c24c74e6e75bf59eaae45c9df5e7ce73b06d6b8",
+        "completed": true,
+        "completion": {
+          "assessment": {
+            "candidates": [],
+            "source_id": "08f1fd64-6962-41a0-aaf4-01a7e2d9d882",
+            "source_review": "Reviewed the separately observed repeated follow-up asking to state that this is a fixture result; it supplies only task-local output wording."
+          },
+          "assessment_is_agent_assertion": true,
+          "canonical_writes_performed": false,
+          "input_sha256": "267c3e33a8179f88c704d57b2cb89ad6ad75a664c37d635f9154396d1ad09c45",
+          "observation_id": "08f1fd64-6962-41a0-aaf4-01a7e2d9d882",
+          "outcome": "no-learning",
+          "publication_verified": false,
+          "source_publication_link_verified": false,
+          "source_sha256": "c2cb9578872d0b371e0198948c24c74e6e75bf59eaae45c9df5e7ce73b06d6b8",
+          "witnessed_commit": null
+        }
+      },
+      {
+        "control_origin_hint": false,
+        "harness": "codex",
+        "lifecycle": "01a17ff0-9be1-7d22-a9cb-6b9f0e40ca65",
+        "native_source_id": null,
+        "observation_id": "09f2e672-6587-45da-8793-73ed7a042b90",
+        "project_id": "b64d0d22-e8d7-4e9e-bc9c-b2bd81dee03b",
+        "schema": "agent-memory/turn-source-v2",
+        "session": "01a17ff0-9922-75a3-bd32-87a50e65118c",
+        "source_reference": null,
+        "source_sha256": "a86ec2ce57f055aba11c9af9447342a25d3a37133dcd0561c37f995ff0279f0a",
+        "completed": true,
+        "completion": {
+          "assessment": {
+            "candidates": [],
+            "source_id": "09f2e672-6587-45da-8793-73ed7a042b90",
+            "source_review": "Reviewed the original follow-up to keep the answer short and retain 2+2; this is a task-local instruction with no durable project lesson."
+          },
+          "assessment_is_agent_assertion": true,
+          "canonical_writes_performed": false,
+          "input_sha256": "da65ad91124ab81b9d5f85f66ad4d8f04819af9cd61d646bcfd91195664fb2cf",
+          "observation_id": "09f2e672-6587-45da-8793-73ed7a042b90",
+          "outcome": "no-learning",
+          "publication_verified": false,
+          "source_publication_link_verified": false,
+          "source_sha256": "a86ec2ce57f055aba11c9af9447342a25d3a37133dcd0561c37f995ff0279f0a",
+          "witnessed_commit": null
+        }
+      }
+    ],
+    "faults": [],
+    "fingerprint": "2290fae09cf9923549a4af71cfc7e6f12248bda7ba8eede64628846c40004de1",
+    "complete": true
+  },
+  "second_inventory": {
+    "sources": [
+      {
+        "control_origin_hint": false,
+        "harness": "codex",
+        "lifecycle": "01a17ff1-3850-7a81-9a63-48f115743bfe",
+        "native_source_id": null,
+        "observation_id": "ac7367b7-e693-4caf-8250-dfa584ed0d72",
+        "project_id": "b64d0d22-e8d7-4e9e-bc9c-b2bd81dee03b",
+        "schema": "agent-memory/turn-source-v2",
+        "session": "01a17ff0-9922-75a3-bd32-87a50e65118c",
+        "source_reference": null,
+        "source_sha256": "22432eae3ad05b826496783de950bb14979c58329c162f8a86c93f2c3774fa6c",
+        "completed": true,
+        "completion": {
+          "assessment": {
+            "candidates": [],
+            "source_id": "ac7367b7-e693-4caf-8250-dfa584ed0d72",
+            "source_review": "Reviewed the original second ordinary fixture question requesting 3+3 in one short sentence and explicitly stating no durable project requirement. This is isolated arithmetic and task-local response formatting, with no durable project learning."
+          },
+          "assessment_is_agent_assertion": true,
+          "canonical_writes_performed": false,
+          "input_sha256": "a4cdf41f55f1687721b4e06426889ce66cc31b62153a45cbab50ff54dd5456a9",
+          "observation_id": "ac7367b7-e693-4caf-8250-dfa584ed0d72",
+          "outcome": "no-learning",
+          "publication_verified": false,
+          "source_publication_link_verified": false,
+          "source_sha256": "22432eae3ad05b826496783de950bb14979c58329c162f8a86c93f2c3774fa6c",
+          "witnessed_commit": null
+        }
+      }
+    ],
+    "pending": [],
+    "completed": [
+      {
+        "control_origin_hint": false,
+        "harness": "codex",
+        "lifecycle": "01a17ff1-3850-7a81-9a63-48f115743bfe",
+        "native_source_id": null,
+        "observation_id": "ac7367b7-e693-4caf-8250-dfa584ed0d72",
+        "project_id": "b64d0d22-e8d7-4e9e-bc9c-b2bd81dee03b",
+        "schema": "agent-memory/turn-source-v2",
+        "session": "01a17ff0-9922-75a3-bd32-87a50e65118c",
+        "source_reference": null,
+        "source_sha256": "22432eae3ad05b826496783de950bb14979c58329c162f8a86c93f2c3774fa6c",
+        "completed": true,
+        "completion": {
+          "assessment": {
+            "candidates": [],
+            "source_id": "ac7367b7-e693-4caf-8250-dfa584ed0d72",
+            "source_review": "Reviewed the original second ordinary fixture question requesting 3+3 in one short sentence and explicitly stating no durable project requirement. This is isolated arithmetic and task-local response formatting, with no durable project learning."
+          },
+          "assessment_is_agent_assertion": true,
+          "canonical_writes_performed": false,
+          "input_sha256": "a4cdf41f55f1687721b4e06426889ce66cc31b62153a45cbab50ff54dd5456a9",
+          "observation_id": "ac7367b7-e693-4caf-8250-dfa584ed0d72",
+          "outcome": "no-learning",
+          "publication_verified": false,
+          "source_publication_link_verified": false,
+          "source_sha256": "22432eae3ad05b826496783de950bb14979c58329c162f8a86c93f2c3774fa6c",
+          "witnessed_commit": null
+        }
+      }
+    ],
+    "faults": [],
+    "fingerprint": "e21279f3a5ce99ddadcc8df92de93253cd0e61365a14ece62f312b05767b122e",
+    "complete": true
+  },
+  "no_tools_inventory": {
+    "sources": [
+      {
+        "control_origin_hint": false,
+        "harness": "codex",
+        "lifecycle": "01a17ff1-8509-71f3-9f19-65578001e4b1",
+        "native_source_id": null,
+        "observation_id": "67625f51-f7b2-45a4-85c9-8ae59fa734ac",
+        "project_id": "b64d0d22-e8d7-4e9e-bc9c-b2bd81dee03b",
+        "schema": "agent-memory/turn-source-v2",
+        "session": "01a17ff1-8504-7301-905b-51cd8ce94706",
+        "source_reference": null,
+        "source_sha256": "7d2272f5889f29ec12c0a258689db86d371d78e8e7b053d28131bdce997a1c8f",
+        "completed": false,
+        "completion": null
+      }
+    ],
+    "pending": [
+      {
+        "control_origin_hint": false,
+        "harness": "codex",
+        "lifecycle": "01a17ff1-8509-71f3-9f19-65578001e4b1",
+        "native_source_id": null,
+        "observation_id": "67625f51-f7b2-45a4-85c9-8ae59fa734ac",
+        "project_id": "b64d0d22-e8d7-4e9e-bc9c-b2bd81dee03b",
+        "schema": "agent-memory/turn-source-v2",
+        "session": "01a17ff1-8504-7301-905b-51cd8ce94706",
+        "source_reference": null,
+        "source_sha256": "7d2272f5889f29ec12c0a258689db86d371d78e8e7b053d28131bdce997a1c8f",
+        "completed": false,
+        "completion": null
+      }
+    ],
+    "completed": [],
+    "faults": [],
+    "fingerprint": "eb51ab6109bd8a94dd299a97e5936555824bea28cdc101f827a32ee0af5fdc13",
+    "complete": false
+  },
+  "terminal": true
+}

@@ -1,0 +1,44 @@
+{
+  "runs": [
+    {
+      "exit": 0,
+      "seconds": 41.739571332997,
+      "results": [
+        "2 + 2 = 4, and 3 + 3 = 6.\n\nMemory note: the boundary helper rejected the no-learning acknowledgments for this turn's three observations, reporting that the original source or pending record is unavailable and that the memory installation is in a not-installed state. The observations remain pending and were preserved. No memory was written."
+      ]
+    }
+  ],
+  "pending": {
+    "turns": [
+      {
+        "harness": "claude",
+        "session": "7f2e16dc-7832-4667-8358-45630b3e31c4",
+        "lifecycle": "7eb523ec-1054-49b5-83d9-4abe949698c2",
+        "project_id": "e909637a-5968-4e0c-ab44-81d921db0213",
+        "pending": [
+          {
+            "observation_id": "e20573f1-75a6-4e2c-96d7-68a907d123e7",
+            "source_sha256": "772671f50c37065e88096a8fa4d30212b4b69ae55b54ee51bc7986fc0bf887a7"
+          },
+          {
+            "observation_id": "7a24dc53-2fe4-4942-b126-1ea7847c7f73",
+            "source_sha256": "fce75eb34323542801e92a04262fedfea7787f101df47aa36fabc14a1fe6dad1"
+          },
+          {
+            "observation_id": "a1977361-0dd0-4f0f-a4fb-406d12bb7b2c",
+            "source_sha256": "fce75eb34323542801e92a04262fedfea7787f101df47aa36fabc14a1fe6dad1"
+          }
+        ],
+        "faults": [],
+        "fingerprint": "bcf0a5c5e53d119c784a769ccf412c612b39334707d7531b2e5e6db24ba9c918",
+        "complete": false
+      }
+    ],
+    "legacy": [],
+    "faults": [],
+    "next_offset": null,
+    "next_legacy_offset": null,
+    "source_completeness_verified": false
+  },
+  "completion_count": 0
+}

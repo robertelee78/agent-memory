@@ -1,0 +1,1829 @@
+{
+  "schema": "agent-memory/pack-validation-v1",
+  "valid": true,
+  "writes_performed": false,
+  "candidate_code_executed": false,
+  "semantic_completeness_verified": false,
+  "version": "0.0.8",
+  "files": {
+    "SKILL.md": {
+      "sha256": "a780eba86d56f7e350194c90a599bc87e79ed1732768dae2f03e189edf40c4ad",
+      "mode": "0o644"
+    },
+    "access/GUIDE.md": {
+      "sha256": "596d2d78fdbb9c69a02d2ad4d655d488134d2f4919acf054e7cdee88f4ff5c35",
+      "mode": "0o644"
+    },
+    "adapters/github-publication.json": {
+      "sha256": "fd9715736f07e9a4624026d6b650a84212f7241d62d7ad21d787a8de2911b098",
+      "mode": "0o644"
+    },
+    "admission/GUIDE.md": {
+      "sha256": "1af1b5615e32038807dd970acb11f22d40f034324b63bdb106df4b3e00e70fe1",
+      "mode": "0o644"
+    },
+    "assembly/GUIDE.md": {
+      "sha256": "929b5b91f46ee150cf76f76d4fae1716dd4999bc06a6f3d72ad2e2f4dc2d8383",
+      "mode": "0o644"
+    },
+    "authority/GUIDE.md": {
+      "sha256": "860a35372641ca9f3531507bab829213aae40f179999e430abbdfd7b99990250",
+      "mode": "0o644"
+    },
+    "bank/GUIDE.md": {
+      "sha256": "b13613556868509c01af531e4d37058d5f2b779ae47db5f6783f773b79d420f6",
+      "mode": "0o644"
+    },
+    "bank/inspect/GUIDE.md": {
+      "sha256": "af1e6e283fca59f1f42fddfb7003471ce000e8b69da6162af471b66302aaec9c",
+      "mode": "0o644"
+    },
+    "capture/GUIDE.md": {
+      "sha256": "3e39bf6c049b6c3b229999b7bf703c890855e5397df917c75f97871b6141e0e8",
+      "mode": "0o644"
+    },
+    "checkpoint/GUIDE.md": {
+      "sha256": "02dc7db377c14324d44ca01450c9b7e5c68af40db2b38c7805bc017a32fec69d",
+      "mode": "0o644"
+    },
+    "comparison/GUIDE.md": {
+      "sha256": "bd7ab49a88a02e96c4083074bc3da5a6da5e2d9b39efebbbabb189adbac938c4",
+      "mode": "0o644"
+    },
+    "consolidation/GUIDE.md": {
+      "sha256": "aafbf7227994708640f1797fba75215f37f5bb1bdfe207ba5b83799b4a64c5cb",
+      "mode": "0o644"
+    },
+    "discovery/GUIDE.md": {
+      "sha256": "163f0d0c39727bd475c91346885fe51226763b70582b4aba5990d233fa8ac950",
+      "mode": "0o644"
+    },
+    "govern/GUIDE.md": {
+      "sha256": "547858788489110aafccc5e144156c5a7ff81e29d860dae32be8be719e5c9c12",
+      "mode": "0o644"
+    },
+    "governance/GUIDE.md": {
+      "sha256": "a5b483c6481e5f8c06614338d1eb3bbc61aff65f1f32cc00932fc58dd3c475bd",
+      "mode": "0o644"
+    },
+    "hooks/__pycache__/boundary_ledger.cpython-315.pyc": {
+      "sha256": "0498ddde855dad57f19bf11b3f25ca58e9c4f03a1295ddd4ef6faa6235a2c416",
+      "mode": "0o644"
+    },
+    "hooks/boundary-prompt.txt": {
+      "sha256": "be519ecf51d59ad84e16b52bf11b9458aa7098bef5bb60e1746e79754547527f",
+      "mode": "0o644"
+    },
+    "hooks/boundary_ledger.py": {
+      "sha256": "aa899b8f0cc93d28dedf02b4e27fac34f78aad4694fa76d11028951b713de6b9",
+      "mode": "0o644"
+    },
+    "hooks/claude_prompt.py": {
+      "sha256": "46d4f51b18c56e7284b7fa96de392cebfeec8306dc0c64e481e8696b92e7a616",
+      "mode": "0o644"
+    },
+    "hooks/claude_source.py": {
+      "sha256": "6bf1777ae03a28e9a73f39349cb3944998f7f98eae6a30f576894f922a659648",
+      "mode": "0o644"
+    },
+    "hooks/claude_stop.py": {
+      "sha256": "e2b26d486b6dbc8e4da372bb83299a263791925dc78ea52d4609a8219f2fffa9",
+      "mode": "0o644"
+    },
+    "hooks/codex_prompt.py": {
+      "sha256": "e2c216f9f320d003261b228428294b543b4f0376dd1035028254caf4808bd1c4",
+      "mode": "0o644"
+    },
+    "hooks/codex_stop.py": {
+      "sha256": "084120fada92f6073935eacd2d644127d3eab9728cdbc37f70725716b439c97d",
+      "mode": "0o644"
+    },
+    "hooks/opencode-v1.js": {
+      "sha256": "4c1484fcf12c8b972449b5c14531104475c1b5b7ad7247b69e995eea1e0ed651",
+      "mode": "0o644"
+    },
+    "hooks/opencode-v2-queue.js": {
+      "sha256": "d9d0ee35739e6672b60f663f19e2b0eed7c552a4f3273204c814bbbafcf0c2e0",
+      "mode": "0o644"
+    },
+    "hooks/opencode-v2.js": {
+      "sha256": "0a6f44d842940840325fb21d54df1b31e547903cd4d1dc638e6cb0c6cd0ea19a",
+      "mode": "0o644"
+    },
+    "hooks/opencode.js": {
+      "sha256": "4ad837bef26963f8dab9302758466d6f0fee872a65a6f2952abe84e75f9176be",
+      "mode": "0o644"
+    },
+    "hooks/python3.sh": {
+      "sha256": "b2d8226d79c09290ddfb15a6ed3a9bd88e93e45b16191f425e0454f6abda8289",
+      "mode": "0o755"
+    },
+    "hooks/turn_hook.py": {
+      "sha256": "af1ea9e70874caf3eb03f80d8c15280b8dd059229eb826fe5547e74a068abe9c",
+      "mode": "0o644"
+    },
+    "identity/GUIDE.md": {
+      "sha256": "6e124a6baef2127e5e9b7e6b3cb3a6396da68e890678d8c91f775462310719e0",
+      "mode": "0o644"
+    },
+    "inactive/GUIDE.md": {
+      "sha256": "733c1e682c0211d64c96286f842c6c966e6c2dad0de8f6a6c739fa2b9996ad05",
+      "mode": "0o644"
+    },
+    "initialize/GUIDE.md": {
+      "sha256": "f49d5a828472cec3281038691c4285948e3645e9da02d9c83cd9f6cb32c1a789",
+      "mode": "0o644"
+    },
+    "keys/allowed-signers": {
+      "sha256": "d526abc28e9d8bdb782a31ccd634e6d86d417f3ca704fa21e25fe04d18cf6d9f",
+      "mode": "0o644"
+    },
+    "layout/GUIDE.md": {
+      "sha256": "99bf49f93b9204d53d506a98f39641ef9f0807b42de38978c8186507e8ad7824",
+      "mode": "0o644"
+    },
+    "lifecycle/diagnose/GUIDE.md": {
+      "sha256": "c8259e37782f29eb330bd3324a457cac13a832ce380debd721b67b991baa2417",
+      "mode": "0o644"
+    },
+    "lifecycle/install/GUIDE.md": {
+      "sha256": "06afde7d46f8ebdea01828d3c94ad9654f74eb4a3e544a1e48ae8751c278d609",
+      "mode": "0o644"
+    },
+    "lifecycle/migrate/GUIDE.md": {
+      "sha256": "5f9e361842fd1da072057f70ddd609dec330fd8e34821ffa33ba2063ac0f3c7a",
+      "mode": "0o644"
+    },
+    "lifecycle/purge/GUIDE.md": {
+      "sha256": "242eaa07417eb3748324df86bf23f8f3d811f09ae83da1d975e1309fe45ebee8",
+      "mode": "0o644"
+    },
+    "lifecycle/uninstall/GUIDE.md": {
+      "sha256": "79c471d80beaa7ca2b545fb176fd3ee3f491e781871c9a5d8e9c52a1e7009f25",
+      "mode": "0o644"
+    },
+    "lifecycle/update/GUIDE.md": {
+      "sha256": "06a1069a9de19ca99e52ea37268cec72af1e5c2ab9d1d114381f39a7af63481b",
+      "mode": "0o644"
+    },
+    "maintain/GUIDE.md": {
+      "sha256": "3b3bef74d931a5f5108813a52a27c01904123981983a58bd2cea4d892242f6cb",
+      "mode": "0o644"
+    },
+    "maintain/artifact/GUIDE.md": {
+      "sha256": "40d53f5ebfa13569cb63ab816e14628c86744a24d56223d1cfa62e7042ec117c",
+      "mode": "0o644"
+    },
+    "maintain/cli/GUIDE.md": {
+      "sha256": "bb150352f709823b30a68a8a0311a99436437248930bdc20c9dc9fd316785cf7",
+      "mode": "0o644"
+    },
+    "maintain/pack/GUIDE.md": {
+      "sha256": "b5b2299d5b6563ac07c8551a988bdcca472bde1480e8ee7a0a0d1aa52803fd4e",
+      "mode": "0o644"
+    },
+    "model/GUIDE.md": {
+      "sha256": "f19fc051e20836e776b7b4925746440897724c860116c3851df20318eda83ae1",
+      "mode": "0o644"
+    },
+    "offline/GUIDE.md": {
+      "sha256": "a4695f8b6b0eaabe78142c200a329adb57a29a8427883a0ca86253561c88cd6b",
+      "mode": "0o644"
+    },
+    "projections/GUIDE.md": {
+      "sha256": "e22b3436156d331f271e1a77ba8485777930f6248b157183c355366bc02fc7dc",
+      "mode": "0o644"
+    },
+    "recall/GUIDE.md": {
+      "sha256": "2197bec0de12441eef0e86d50900c4a90662678f4dcee1f773d4b2caff36e3ef",
+      "mode": "0o644"
+    },
+    "records/GUIDE.md": {
+      "sha256": "1245610cb89a942f0354813cbda555202f2935a0af0ce2a7119c9dc5e5b81750",
+      "mode": "0o644"
+    },
+    "resume/GUIDE.md": {
+      "sha256": "24e3b06a5c1956c62b066260cf482bdd27049f75f823d0dce31119b629fa53bd",
+      "mode": "0o644"
+    },
+    "retrieval/GUIDE.md": {
+      "sha256": "41a450bfdf44249727be5773cd619a29e65fb8de4461c49ef0db6cb2d928d4b7",
+      "mode": "0o644"
+    },
+    "schemas/authority-policy.json": {
+      "sha256": "87cc49f65ca248b0ae5abca301713628bce7e0d39489fa2b8aeeaff8bad3ec38",
+      "mode": "0o644"
+    },
+    "schemas/bank-router.json": {
+      "sha256": "6b0a3407082a36a324967f8db0bfacb927b86eb0c9bee9969507b8ddda613815",
+      "mode": "0o644"
+    },
+    "schemas/developers.json": {
+      "sha256": "0e8bac4afe342fe373d48a3f7b508b583f2895fc4b8fa8d9f8c3a0d4a51c161c",
+      "mode": "0o644"
+    },
+    "schemas/history-event.json": {
+      "sha256": "39a4f30897346d949b5367463534b83dee89edb19e32ce9597a8263b8bc940fc",
+      "mode": "0o644"
+    },
+    "schemas/lifecycle.json": {
+      "sha256": "3bcc178a912f3eae1938c8af4b5560505e98333b0ed631cf05cee26e5aecff68",
+      "mode": "0o644"
+    },
+    "schemas/migrations.json": {
+      "sha256": "0414bca02184e7c1b9ccaa2b04a10e72446455ce59e715b7c91e758b4e87598e",
+      "mode": "0o644"
+    },
+    "schemas/projects.json": {
+      "sha256": "46a4aabab4c389e1934a4cc260bf15df05d53054dd1b43285ad2339a7ee1b66b",
+      "mode": "0o644"
+    },
+    "schemas/record.json": {
+      "sha256": "7052928381ff74dd72d48f5756f13a246f7d96476660c1f32ad6faf21eae68bd",
+      "mode": "0o644"
+    },
+    "schemas/runtime-compatibility.json": {
+      "sha256": "941a77fd4719da2457ff2d107f95063dc190239680a35199e9b564f2514b133b",
+      "mode": "0o644"
+    },
+    "schemas/scope-policy.json": {
+      "sha256": "a2742b9b6fd03a8a0fc2f05744194a176024eb9198013aabfa4e917dded7af35",
+      "mode": "0o644"
+    },
+    "schemas/tombstone.json": {
+      "sha256": "f5c7d9beff58a6039e70b7bbd9a54880784b309e00a2def85e32e3a30e39b197",
+      "mode": "0o644"
+    },
+    "schemas/topic-index.json": {
+      "sha256": "c395f060dbacce748caf73a49a96ea16eb62df60bbf6fb0a9cfa958c494b125b",
+      "mode": "0o644"
+    },
+    "scope/GUIDE.md": {
+      "sha256": "9a82f447e0ec6f865248e66f407320cffd2d425253e0798b2be56fe36db2b1c8",
+      "mode": "0o644"
+    },
+    "scripts/admit_learning.py": {
+      "sha256": "50fc5cd65e524015cadb8b6e395f4db8e1d13fee59d6a04e24fe2ff2b80f80c5",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/__init__.py": {
+      "sha256": "83e0c35d6b88ef7d73629b1e51a791ac80e7b482b8ddc8833b8702d65a421e74",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/__pycache__/__init__.cpython-315.pyc": {
+      "sha256": "74fd9257fc50b45035c173e1dabece7af7e0d0d72918d9db98a03abf5d444cce",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/__pycache__/admission.cpython-315.pyc": {
+      "sha256": "d9dc310faf1fa3bcbf01211d742ea401668c12bbecd8620ca9a93ca8830587ae",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/__pycache__/bank_contract.cpython-315.pyc": {
+      "sha256": "ecc0038462e6291d200d142d78b18a4447e2291a4fc8bce973ac9a921fc6cfd9",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/__pycache__/bank_layout.cpython-315.pyc": {
+      "sha256": "6381f426b106670c31777d5b38e81d1dad38be7eaed524d65b59b3b0533aa948",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/__pycache__/bank_observation.cpython-315.pyc": {
+      "sha256": "569535b57f297b5143593e7f1ad16aca7068f355c13eb87d2feeb60355868f5c",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/__pycache__/bank_transactions.cpython-315.pyc": {
+      "sha256": "caff28758d1d335979df778aef0d4802ec51342e9b6e379ad4c045b0388a432b",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/__pycache__/bank_writes.cpython-315.pyc": {
+      "sha256": "ecbd2b27b73a1f566aae72e3a1e44d5448b2ab3ebc8980ff4004486e13777fff",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/__pycache__/boundary_assessment.cpython-315.pyc": {
+      "sha256": "e59a0e8a3c7561eef88f2ba021d50bc6df2aceac7c789522501bf3cb47908dae",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/__pycache__/comparison.cpython-315.pyc": {
+      "sha256": "4551c6b07136377142d18a8c9c15f0b14ee6bf848c3f8fb753304bd0b074dc21",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/__pycache__/consolidation.cpython-315.pyc": {
+      "sha256": "181190d9d294739876571ac262db2650dc7ce3d1f2a9bf380f0249ac72573847",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/__pycache__/developer_identity.cpython-315.pyc": {
+      "sha256": "330bf15911b09d1b27e0e5d694071e19af7d8d6b4468959541df0991f1c8d568",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/__pycache__/frontmatter.cpython-315.pyc": {
+      "sha256": "54e4722f552bfe93058049fbbd743fa50f97db7b72d452bd479d67cfba1fc004",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/__pycache__/governance.cpython-315.pyc": {
+      "sha256": "e19295d49215b4d6955f758a978507c6bb9f17aefa31f3c48bcd7ca49778cbf3",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/__pycache__/handoff.cpython-315.pyc": {
+      "sha256": "4008befb4d1cd23b55babd283ae6a88d879ce63b1ccaf09cc375a85bbd50e0ed",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/__pycache__/hook_failure.cpython-315.pyc": {
+      "sha256": "7a4c48479c465651d474deebcbc44c2095b74c336d30f1413614a2dac47c2043",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/__pycache__/identity_git.cpython-315.pyc": {
+      "sha256": "68c44e9ded93cf02f454de446962e5285673b574d3f2a91620f79c10f472189b",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/__pycache__/inactive.cpython-315.pyc": {
+      "sha256": "e5e9bafb5ea0e80efd13ab6d1a538e32c1c3e55c50bc672d78ce804278fb4e78",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/__pycache__/lifecycle.cpython-315.pyc": {
+      "sha256": "ef4e861da33c13d7e7b883c4756f4b2385d7eec4212ff30ded004cf251886491",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/__pycache__/local_registry.cpython-315.pyc": {
+      "sha256": "7569fb1d9c97e2200d2c3bc73807cf95a3c151ab528b5808c5a4eb2562d314b6",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/__pycache__/memory_publication.cpython-315.pyc": {
+      "sha256": "58cda639154ce48082b0a63e6ad545bb4cfdeea57f9d3ef9b7ad6c669ed219d3",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/__pycache__/project_identity.cpython-315.pyc": {
+      "sha256": "6ad41e0991364119efd7774872365db33839b6076a633b697b0ca56c8c4dc0ee",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/__pycache__/records.cpython-315.pyc": {
+      "sha256": "265b60c8de945e325beefbd20840e2316833c423b65d2198f6a6e5f1db5212db",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/__pycache__/remote_identity.cpython-315.pyc": {
+      "sha256": "4e54205283e337371f541a0a148949f0e862b286c9a55ccb54bbc2b8e8ad1a98",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/__pycache__/repository_config.cpython-315.pyc": {
+      "sha256": "e2cf905c796be92582201f5989290972cf00778affb02af87406d2abf5691910",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/__pycache__/retrieval.cpython-315.pyc": {
+      "sha256": "f4e9027626f9b4e7d9ac896a9cb7ba7c93e1b73156f55b2e0be0fb8c239ede88",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/__pycache__/scope_binding.cpython-315.pyc": {
+      "sha256": "6233c3ffdaf8cce1433960c7bfc047b5058405e119eea5ad8ce5f4f1c1eb4aed",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/__pycache__/scopes.cpython-315.pyc": {
+      "sha256": "75b2b75e3740736dd3e40e5f9e848eed22ac491e33dc38bd4de55bc34475a7ee",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/__pycache__/security.cpython-315.pyc": {
+      "sha256": "1d962691e1bfb8d931049a4b4fa427c4c18d675ca303592391d637ecc9da2298",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/__pycache__/semantic_sharing.cpython-315.pyc": {
+      "sha256": "e8a732d4e1adedd79bc522c25834968239c123bb262ae43df58f3d6dbfee7205",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/__pycache__/sharing_boundary.cpython-315.pyc": {
+      "sha256": "dd8d273f25de2768327dc7c10270e8e268b1b407bb07e61b524facad52815528",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/__pycache__/sharing_holds.cpython-315.pyc": {
+      "sha256": "b5e96a15b7d303735b5c6ec56777c150d1a0af3c02dc423e5bcf6dda2755e2e7",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/__pycache__/sharing_limits.cpython-315.pyc": {
+      "sha256": "2b539e6cf3c587965b36f87424b74b75fa1725d1a70bbbea83e3f68f609e2aab",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/__pycache__/sharing_recovery.cpython-315.pyc": {
+      "sha256": "c526b99387a782500ed2126334231fa1ea05adb7a4a2e01a1312fe57834c55a0",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/__pycache__/tombstones.cpython-315.pyc": {
+      "sha256": "c0b52c2ec2d03abf9c12aa9df664d5c65f1dbfe795d437c4104f506425a5fde8",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/__pycache__/trust_paths.cpython-315.pyc": {
+      "sha256": "76eb93e7fab270e2e1ffc83a5dd3d5c4364d52e983f0709fbf26f95f0655ea00",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/__pycache__/turn_sources.cpython-315.pyc": {
+      "sha256": "05460e46e72912dcdbce4824d82d3de1d767339c4337d49472a8cc4f2dbcd08c",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/__pycache__/validation_memo.cpython-315.pyc": {
+      "sha256": "b0b066b6fb35e7b304fd1492ee53cffdbd9c8b874a4ffae3517cd0b2d5ed2c9d",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/admission.py": {
+      "sha256": "7fba5492a6354d0404030dbe38c2b1dc0a94bcde173e64153f8d4dd43a3cd1cc",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/admission_navigation.py": {
+      "sha256": "48bada791a14c72d79b2d82bac9886aca7e8fb3052d72b4a00e434d0627566d4",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/artifact.py": {
+      "sha256": "bd9cfad65b452c37da8f1642b1a96868160998979c027c279b9ecee54fcf5ed9",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/assembly.py": {
+      "sha256": "54fceb6df13d7faad0233bc771ae86c8d0cb26a7aff7a44b059548bef3b46d48",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/authority.py": {
+      "sha256": "1a82adf302a9045e29a5784164ee1fb43b4c448ddab325a274c4614495d0e625",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/bank_contract.py": {
+      "sha256": "4d5ca8e70b4abf83fd94aecd8c9678ceeef3168a63ff2c5f10a5e221134a69c9",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/bank_layout.py": {
+      "sha256": "94cae5be223e723841e6c3d0a6d8373cc21e18cc6d6652024d2ac03d605e2f94",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/bank_observation.py": {
+      "sha256": "2b0b3c9ccb0157047775b09a3d3eaa3252c91c46d332421ea9119db4ee7029f4",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/bank_state.py": {
+      "sha256": "9759905557e60a41896e52d1d1e7d8b1946b15e7b15b3842b08a390a8667ff4f",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/bank_transactions.py": {
+      "sha256": "edaaf0b53a8f6ae3859ecd1bbfc803baa2a0a7328fbb6bced538a9f7139fa77f",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/bank_writes.py": {
+      "sha256": "b7042e733cac8fc0bda9609680009726d1e1b30c91ca872115d315cfa79c1360",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/boundary_assessment.py": {
+      "sha256": "5178274642f344175859b8d1b8b49ed93728cbb41860098d1e540f51f57e0a2f",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/checkpoint.py": {
+      "sha256": "192c969da345837932840d72683c1012f750371f155b406eddcf16c50001402d",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/claude_boundary.py": {
+      "sha256": "875138b8cf4b3f9e7e5d0f42fb8ff6e8aa0e5b9a814bce577fd61b0791123e6a",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/claude_turns.py": {
+      "sha256": "464dd31efb437522408b6f70cd0a6821e12ad2c622c912a5601735517e0bf04b",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/cli.py": {
+      "sha256": "88a33c5600ab9e31b67d7fbf64d92b21ca8f2170b9acbbe0ee517ebeaddd2283",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/client_hooks.py": {
+      "sha256": "9939b04e25a2a78cecfb4529c36e7f4a577b6dba36e7f6267655a36641a464e6",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/codex_boundary.py": {
+      "sha256": "a64c851902793b9d0a6f2c7c14742fe80ddd6624e41bfd139b31669add8bb39f",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/comparison.py": {
+      "sha256": "7b95d7e4ed428bda0cb6021f17898269b33b7d006ff38b73de689813cd40fe31",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/console.py": {
+      "sha256": "19410f67490ee7e77ff67afc9bf4b8cf76a33c6e91028f888f14eb0801725019",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/consolidation.py": {
+      "sha256": "331dfaa1a48199b4271b234f6bcbb159272be9ee65fd2c06b9b9a00c078b4617",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/developer_identity.py": {
+      "sha256": "b3b0e0ef0a26a4805574b40d2c1bb26570a1bc350e6cd879a4305c84ff96f1fb",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/diagnostics.py": {
+      "sha256": "d19b04955101e6a98566ee5089fcf0cd32781d088f9f79679e1267159d541595",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/discovery.py": {
+      "sha256": "335a812e8d8086c1b8a64b8041cb0a653de18c5ab4dd95bb7b43927bc2c20c23",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/doctor_fix.py": {
+      "sha256": "31c954b140dd41d16e3ed45da031ccb91ebd2903a071f2ec2376817d29ff1323",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/frontmatter.py": {
+      "sha256": "636cf6701644f50154a9bcf46631a30b2e22be1f3fe9cee3bf78400fbbd601ba",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/governance.py": {
+      "sha256": "0335a86df6c4aef842f7feafe7179b831cba4b0d7a4e3a7df26bc0187221afbf",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/handoff.py": {
+      "sha256": "30ef248dcf9e08840597444789475cca5be5cbc7a000a602aac5b856732b8ea9",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/hook_failure.py": {
+      "sha256": "c6e42036db3c208b644b658365d296251ecdb21ab56bced69d134c47f23cc8e2",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/identity_git.py": {
+      "sha256": "2498a78b3938ed435a577b6ecb68e8caa4168c6ba61c17bb2ae13570c14f223c",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/inactive.py": {
+      "sha256": "0d80aa5b3c1d7b476d4c15cc50f83d0b399a27c5b0e2b4bedb20d9797b694a56",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/initialization.py": {
+      "sha256": "928670ef76c2ccad2fe4b51e2ae8ebca87af740fdadf04402cff06f41b668d08",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/installation.py": {
+      "sha256": "6a3e923ea4f3327c720640eb39451b557c3783be9ed12c0f2d4bdf7a7a0987b9",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/lifecycle.py": {
+      "sha256": "0bbf1aa4ff91e89dda010ab9a24ff92f9ffd8e1d730e3c83bc4f6d3de122b54b",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/local_registry.py": {
+      "sha256": "7014a2421b1c4a1623256c5d322aa4e595ed36ffbf0cdd2829ac292bf4756497",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/managed_source.py": {
+      "sha256": "2890a04cfcf8d801d188eabe4d0f8f49b471068f26d24dc9d44efa0ff18fd67f",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/memory_publication.py": {
+      "sha256": "3aec32bce502b1f415c5b5d4261f7d95f6466667f741fcc8ca7b6312921bbfd7",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/memory_refresh.py": {
+      "sha256": "7a87c0db6f3a8b16a945825cf04c0ce3df5ba907c0c01d64595e39940a27c7ae",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/migration.py": {
+      "sha256": "061b5f78d71fc19a67989a15f5d61cd573dfa28b3275333136e85dfdccc9ce34",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/migration_codecs.py": {
+      "sha256": "7ea202991fc63b5119b65f38679efa429c009ab42e4dfdf1dce1d7d693879991",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/migration_contract.py": {
+      "sha256": "4dc7c88768272aa7fba4168155babbc8337634e7d5fb24e8a87a5f87ca20cc0c",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/model_reference.py": {
+      "sha256": "5548c83737112a5929b37390a32db226be0b6e2a9fce1fcc8db22553515c77ce",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/pack_validation.py": {
+      "sha256": "8bc0f886289197937101a42096bdde7b744546f01b4d30c330323fd8c9bcb057",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/private_workspace.py": {
+      "sha256": "645d7c4fba2510543eba29331412c94bbf4fa119d7b4e73ef428c2ff18f280ec",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/project_identity.py": {
+      "sha256": "47d1ed8810143960decb2c8d73678b027578f3d6eeb784e1bed1acd73b6734b9",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/projections.py": {
+      "sha256": "2cf4458f9efbdb4a5d45da3fbf6b28f8ef833586898901db9f8c8f4d222d5947",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/purging.py": {
+      "sha256": "18e29b83a13e420d044a63711b59afd8f6f8e85312d3d0b271ad8733cf7da8f5",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/recall_catalog.py": {
+      "sha256": "b1fadef691141211879e1f1e2f6768a90dac7019219b083479c08fd95b5f7244",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/records.py": {
+      "sha256": "04bf692fa98337b9ee8e3fe6072d115106592c03fbdc1b237a867fa97369fb96",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/release_distribution.py": {
+      "sha256": "75415e3a00a08b0867b762582242d22774e39333be128d240784a88bf1169664",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/remote_identity.py": {
+      "sha256": "93b926dc8264e288e8a3ddfbb6dc1ef7a9534f74ddffe63238b9ecfa42c10bb9",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/repository_config.py": {
+      "sha256": "34f96c83c648a27b99bbdc97e3dfaf7d50f6235a494ba6e9503513dcfe520cc3",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/retrieval.py": {
+      "sha256": "2096be570bbfa6cf8804f8cfe137049ca1e07b4904c1bfe0b6d0f3219f8c27aa",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/runtime_faults.py": {
+      "sha256": "faff1d65f9d15d25aef801367e6779f3a03812eac71f8d64fee4e6de0009c861",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/scope_binding.py": {
+      "sha256": "fb2b3c5a4eb65406d40b3699d44542dd128b6410f751b578a935363503530a3c",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/scopes.py": {
+      "sha256": "db04b8a90103d45731a02e2da4a0bbfc940b5745bf5b9d72d8b1d6ee08fbad61",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/security.py": {
+      "sha256": "f718cede417c366e9d0435d2744211de07a14808ef937b2a357a8fe69ec1d7ec",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/semantic_sharing.py": {
+      "sha256": "c97a551ed7577af64d35a2654dc111d8036119c35e283d59269d81122ad5b601",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/sharing_boundary.py": {
+      "sha256": "18781fb97e252e79c9c05e6db556f6865ec0cd35efd720425edd7e3234868c16",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/sharing_frontier.py": {
+      "sha256": "4a6695d005a51a017b7142538507faeb87b0adf391843bc99870ffe77d859cc9",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/sharing_hold_mapping.py": {
+      "sha256": "a5f83eb5ee7dd223ba3027189f18026c7f9267b778788d8643fd1627cb60ba5c",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/sharing_holds.py": {
+      "sha256": "53178d2ceb8dd8fe12395e30c4e8890ea959d08f600caae9dd82312874416822",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/sharing_limits.py": {
+      "sha256": "47fae8f47db2ca7aee502c7757d9fc33e41f2969dc9bc76fb97d7984fb594a89",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/sharing_recovery.py": {
+      "sha256": "991a76b2fb7d7c165f932702845e9a0b2ff5dd8d9784c21188b0d03ff43c036e",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/tombstones.py": {
+      "sha256": "035a33a08bbf655fc6d2613bd5b0da6b8a24bc7fbc9cb60047eae8e3e10dd1ec",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/trust_paths.py": {
+      "sha256": "755e90c417d8bfbd157be733636de095f7d4670f305c855fe8260f6b9845c02b",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/turn_sources.py": {
+      "sha256": "48d3b9f9c5d7f0aedb29f48e79adec0c186092ab26d7fed7a02b295b9d131edf",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/uninstallation.py": {
+      "sha256": "7c81ddc469c1338ffa6be0fedb9d637c29e9ccd17e80ae6952d8c03aff594938",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/updating.py": {
+      "sha256": "874f3d00a99038370c2e50a41614018c7890eb7b20a80e9b2fc6aefb0ed93876",
+      "mode": "0o644"
+    },
+    "scripts/agent_memory/validation_memo.py": {
+      "sha256": "96cbfe90938c9f58ee780bbe55d8cef993a0a34fb193afcdd2a101f6bd35bfbf",
+      "mode": "0o644"
+    },
+    "scripts/am_console.py": {
+      "sha256": "3eef10908721bf56181e40d7a3f59d37adf3d8a9be3ddc2dc95e4fd6cc7bdec9",
+      "mode": "0o644"
+    },
+    "scripts/artifact.py": {
+      "sha256": "42fe4a04afc7bb7249b6ce0286b1c7b8ca44b45a7dcb872bdc214d55e4ffe7e9",
+      "mode": "0o644"
+    },
+    "scripts/assemble_context.py": {
+      "sha256": "5e3a9910aaf64d07041bf66595ef2a92db5be017ea31c43d5ebf11f66f0bc541",
+      "mode": "0o644"
+    },
+    "scripts/authority_policy.py": {
+      "sha256": "c7a5adef1918d0a6c3834472319a41b1e07a412ec1f9a5d94c7e9d6656405487",
+      "mode": "0o644"
+    },
+    "scripts/bank_contract.py": {
+      "sha256": "b69c16b0e1543b860088465308c20fa000b41a49085fc60be1e566a75c1f1ff7",
+      "mode": "0o644"
+    },
+    "scripts/bank_layout.py": {
+      "sha256": "8dd7768412be8f735cb5de6976f28def70b00068dbdf3a923c4f7a3fef4b6f0a",
+      "mode": "0o644"
+    },
+    "scripts/bank_state.py": {
+      "sha256": "d29f7df56745bd4feac35ef83365e78974658c098713d38c6a7ccd189779ffaf",
+      "mode": "0o644"
+    },
+    "scripts/bank_transactions.py": {
+      "sha256": "5c43edee0a3e353e4f615d40bfa0b4e02e6c8513bf5742a41f823234f859b444",
+      "mode": "0o644"
+    },
+    "scripts/bank_writes.py": {
+      "sha256": "512800551dc2a34a7098e7fc51a9557d1134faea2ef61deefea6ce4d8d0e57dc",
+      "mode": "0o644"
+    },
+    "scripts/checkpoint.py": {
+      "sha256": "7307d2e00ca8967ec7ca70363910aa3852253948e7a4ae9444a8986d05eb15a4",
+      "mode": "0o644"
+    },
+    "scripts/claude_boundary.py": {
+      "sha256": "755aaf2634336f795f451f5251722bbc6603eb8a08ffaa45bbe486e6f356813e",
+      "mode": "0o644"
+    },
+    "scripts/codex_boundary.py": {
+      "sha256": "21003d2c89301d09e67ca3a20f1cfa50a52542317b81739092c4cbf19f3e87a8",
+      "mode": "0o644"
+    },
+    "scripts/compare_learning.py": {
+      "sha256": "4c7dc5ab93ed445170bae14aa92ae6d3a43893fe14de49bc4e301715ba0ca7fd",
+      "mode": "0o644"
+    },
+    "scripts/consolidate_learning.py": {
+      "sha256": "6a0151e4806de773d91fc46f052a1d7a8f917ed08f57dabac83c5094852bf777",
+      "mode": "0o644"
+    },
+    "scripts/developer_identity.py": {
+      "sha256": "8a27f0a2ba9bc282fbf223f34ea61fa48692e5f58e69764a75dfd2cb3f5bd07d",
+      "mode": "0o644"
+    },
+    "scripts/diagnose.py": {
+      "sha256": "6a278a41f9025d1126cf509e5d09bb1a21145f8ee7085fe46a27fb9500b546f6",
+      "mode": "0o644"
+    },
+    "scripts/discover_memory.py": {
+      "sha256": "1750d40b87d411be41e816db8edc01e56a01b17a1ceb542f3e6343c6bf147c94",
+      "mode": "0o644"
+    },
+    "scripts/govern_memory.py": {
+      "sha256": "59fc5c0267ac8aada8d455a299b37ac3399a7ceee8d419cbe4056a3c76d50d38",
+      "mode": "0o644"
+    },
+    "scripts/inactive_records.py": {
+      "sha256": "67c5a002a54a7a3873b3a166fe05944d22737450999b0a70d1d6bc7af68d7443",
+      "mode": "0o644"
+    },
+    "scripts/initialize.py": {
+      "sha256": "3ee3d258f259851f978cb5caf08b614da004881bc00995c14414f53cee524034",
+      "mode": "0o644"
+    },
+    "scripts/installer.py": {
+      "sha256": "4f49caebcca4f3ca575f713413532189ed60491414f4b27da30e646091d65cf1",
+      "mode": "0o644"
+    },
+    "scripts/lifecycle_model.py": {
+      "sha256": "fbda7ab7ff3a3e1c809cfd9fc5a6b14064d3bc822fdbe45b2327c3448a4f1a0d",
+      "mode": "0o644"
+    },
+    "scripts/migrate_bank.py": {
+      "sha256": "5d78b97da2e5b9600ed93c945d8084b6881ccb43d879e9597c19d48ca208a1ff",
+      "mode": "0o644"
+    },
+    "scripts/private_workspace.py": {
+      "sha256": "9620df9d532a8e84cddaacce7f29daf88e09f038318092f0171590b4e4f11eb0",
+      "mode": "0o644"
+    },
+    "scripts/project_identity.py": {
+      "sha256": "db93902cc2db9e976d6565287ca26eacabe9cf3180d6101607b5ababa9210e8b",
+      "mode": "0o644"
+    },
+    "scripts/projection.py": {
+      "sha256": "dcc4d89d818ef2dacc4966086589996b384a7f934fbb198866ba694f127ef077",
+      "mode": "0o644"
+    },
+    "scripts/publish_memory.py": {
+      "sha256": "629e04454a36baa9b9cfb57157c0cf2d839b38138df7a66363f6f33d1c77d7fc",
+      "mode": "0o644"
+    },
+    "scripts/reconcile_memory.py": {
+      "sha256": "b38197a59d87024b38d891272aa2825f0afc40f85ccd46b0460bf77359fd8b4d",
+      "mode": "0o644"
+    },
+    "scripts/record_contract.py": {
+      "sha256": "35ba78b2d02fa2d3ebcc0a7e60eac625a803cfc32325510480172b73dd891a22",
+      "mode": "0o644"
+    },
+    "scripts/refresh_memory.py": {
+      "sha256": "630da615f9641a87876ae0a51dd7f78f391a9a02042093b749745c550c090940",
+      "mode": "0o644"
+    },
+    "scripts/retrieve.py": {
+      "sha256": "df3a27157512b4b2b605ed1bb4b062c7a185d8ccd2ce9b62d7f1e5f354c5b3dd",
+      "mode": "0o644"
+    },
+    "scripts/scope_binding.py": {
+      "sha256": "cc06af9acefdfc764da285b77abbd9650ae6779404ef23977bd70fbe59025658",
+      "mode": "0o644"
+    },
+    "scripts/scope_policy.py": {
+      "sha256": "264bc99e60a46664531f0e56c57fc03d9a1c489c2ba9a68b56c32ed206cae664",
+      "mode": "0o644"
+    },
+    "scripts/security_policy.py": {
+      "sha256": "bc66d265df7ffe4d2677591c213ec5b5d15d6317e0cdf61808734b541976fbf5",
+      "mode": "0o644"
+    },
+    "scripts/sharing_boundary.py": {
+      "sha256": "8003d5939cd05f3bcc1b5996fb1986b772f3a3b54ebacbbca2a28e39f54da8f8",
+      "mode": "0o644"
+    },
+    "scripts/sharing_recovery.py": {
+      "sha256": "72f42fd0246be9d2b91ed66f29bb9b4d8d384af6aa701317396f35ccefd3fedf",
+      "mode": "0o644"
+    },
+    "scripts/tombstones.py": {
+      "sha256": "f7bc61b202bbb6d827caa06bba1b8414f7953d3295e8a3f457d58814467d90fa",
+      "mode": "0o644"
+    },
+    "scripts/uninstall_runtime.py": {
+      "sha256": "df65bc2e652babf3821a19711284978f3bebcf6dcb21af92b64525fbcb272994",
+      "mode": "0o644"
+    },
+    "scripts/update_runtime.py": {
+      "sha256": "9a69f3fc9a5f72e9d33976eb6eb1d3359254d58c15e2f5eec0a58f2d46c774d8",
+      "mode": "0o644"
+    },
+    "scripts/validate_pack.py": {
+      "sha256": "1d1d28bfe50be1cd16ee78a660905c9424893f968fa15a151a5d7769da5dac74",
+      "mode": "0o644"
+    },
+    "security/GUIDE.md": {
+      "sha256": "21da69080823fee925f2587785d577a8734a8586167df00d013c82dde685780e",
+      "mode": "0o644"
+    },
+    "sharing/GUIDE.md": {
+      "sha256": "16fa4e1e3761cb8e86658b70add5d43a7e2419c8fa74865c380d76c64f37bfd2",
+      "mode": "0o644"
+    },
+    "sharing/boundary/GUIDE.md": {
+      "sha256": "48c61b92f4bcad9ff2e0cb56c036db245c6375f2b0c1725208ed46fe63b79c94",
+      "mode": "0o644"
+    },
+    "sharing/publication/GUIDE.md": {
+      "sha256": "7816ce21c1e50a6262c821a9e7d593dc034808e5326a12c1b793fa08627283e3",
+      "mode": "0o644"
+    },
+    "sharing/recovery/GUIDE.md": {
+      "sha256": "4871d45eb428d97dc9af0ca78bebe7402f36e9a430cf0398674137ac491ad317",
+      "mode": "0o644"
+    },
+    "sharing/refresh/GUIDE.md": {
+      "sha256": "b5a19bc05fff18a86c2d83ea29adb0cba1679e0fdfc94b04f6cae0c231463123",
+      "mode": "0o644"
+    },
+    "sharing/semantic/GUIDE.md": {
+      "sha256": "b4e232fe6ab339ec88f30012e80498f189012a89f29001f9cecb740b80072496",
+      "mode": "0o644"
+    },
+    "templates/activation-markdown.example.txt": {
+      "sha256": "dfecfad23e1faca1aa70a4b7f4e977f6fe2e95933fdca52526688b10a3bf2978",
+      "mode": "0o644"
+    },
+    "templates/record-proposal.example.json": {
+      "sha256": "87e9a441607c8ec83545ee57f157cd51b2be8b6adbc527f730f9c533e2ef4ce8",
+      "mode": "0o644"
+    },
+    "templates/router-markdown.example.txt": {
+      "sha256": "329ab031924ff78336b8e3625a794d0829c7e7612b8b8ddabe07729e387e610d",
+      "mode": "0o644"
+    },
+    "templates/router-proposal.example.json": {
+      "sha256": "b42ae26be99dd84f3263e0adb6d3f2477cf953d2440a254b607e24df3e0a99c0",
+      "mode": "0o644"
+    },
+    "turn/GUIDE.md": {
+      "sha256": "e0df0928fd9dc278e0c9edd3b91d0fc0f8f2103b018b3883d68f70285300efff",
+      "mode": "0o644"
+    },
+    "writes/GUIDE.md": {
+      "sha256": "8ac4521ca766b3d0d2c52ec5818cf40d5c0d0839426876468ecee8b2ab605c42",
+      "mode": "0o644"
+    }
+  },
+  "guides": [
+    "SKILL.md",
+    "access/GUIDE.md",
+    "admission/GUIDE.md",
+    "assembly/GUIDE.md",
+    "authority/GUIDE.md",
+    "bank/GUIDE.md",
+    "bank/inspect/GUIDE.md",
+    "capture/GUIDE.md",
+    "checkpoint/GUIDE.md",
+    "comparison/GUIDE.md",
+    "consolidation/GUIDE.md",
+    "discovery/GUIDE.md",
+    "govern/GUIDE.md",
+    "governance/GUIDE.md",
+    "identity/GUIDE.md",
+    "inactive/GUIDE.md",
+    "initialize/GUIDE.md",
+    "layout/GUIDE.md",
+    "lifecycle/diagnose/GUIDE.md",
+    "lifecycle/install/GUIDE.md",
+    "lifecycle/migrate/GUIDE.md",
+    "lifecycle/purge/GUIDE.md",
+    "lifecycle/uninstall/GUIDE.md",
+    "lifecycle/update/GUIDE.md",
+    "maintain/GUIDE.md",
+    "maintain/artifact/GUIDE.md",
+    "maintain/cli/GUIDE.md",
+    "maintain/pack/GUIDE.md",
+    "model/GUIDE.md",
+    "offline/GUIDE.md",
+    "projections/GUIDE.md",
+    "recall/GUIDE.md",
+    "records/GUIDE.md",
+    "resume/GUIDE.md",
+    "retrieval/GUIDE.md",
+    "scope/GUIDE.md",
+    "security/GUIDE.md",
+    "sharing/GUIDE.md",
+    "sharing/boundary/GUIDE.md",
+    "sharing/publication/GUIDE.md",
+    "sharing/recovery/GUIDE.md",
+    "sharing/refresh/GUIDE.md",
+    "sharing/semantic/GUIDE.md",
+    "turn/GUIDE.md",
+    "writes/GUIDE.md"
+  ],
+  "mandatory_loads": {
+    "SKILL.md": [
+      "access/GUIDE.md",
+      "comparison/GUIDE.md",
+      "discovery/GUIDE.md",
+      "offline/GUIDE.md",
+      "resume/GUIDE.md",
+      "retrieval/GUIDE.md",
+      "writes/GUIDE.md"
+    ],
+    "access/GUIDE.md": [],
+    "admission/GUIDE.md": [
+      "capture/GUIDE.md",
+      "comparison/GUIDE.md",
+      "consolidation/GUIDE.md",
+      "governance/GUIDE.md",
+      "writes/GUIDE.md"
+    ],
+    "assembly/GUIDE.md": [
+      "comparison/GUIDE.md",
+      "recall/GUIDE.md"
+    ],
+    "authority/GUIDE.md": [
+      "access/GUIDE.md"
+    ],
+    "bank/GUIDE.md": [],
+    "bank/inspect/GUIDE.md": [
+      "bank/GUIDE.md"
+    ],
+    "capture/GUIDE.md": [],
+    "checkpoint/GUIDE.md": [
+      "capture/GUIDE.md",
+      "identity/GUIDE.md"
+    ],
+    "comparison/GUIDE.md": [
+      "capture/GUIDE.md",
+      "security/GUIDE.md"
+    ],
+    "consolidation/GUIDE.md": [
+      "comparison/GUIDE.md",
+      "maintain/GUIDE.md"
+    ],
+    "discovery/GUIDE.md": [
+      "recall/GUIDE.md"
+    ],
+    "govern/GUIDE.md": [],
+    "governance/GUIDE.md": [
+      "govern/GUIDE.md"
+    ],
+    "identity/GUIDE.md": [
+      "access/GUIDE.md"
+    ],
+    "inactive/GUIDE.md": [
+      "govern/GUIDE.md",
+      "governance/GUIDE.md"
+    ],
+    "initialize/GUIDE.md": [
+      "capture/GUIDE.md",
+      "identity/GUIDE.md"
+    ],
+    "layout/GUIDE.md": [
+      "maintain/GUIDE.md"
+    ],
+    "lifecycle/diagnose/GUIDE.md": [
+      "lifecycle/install/GUIDE.md",
+      "maintain/GUIDE.md"
+    ],
+    "lifecycle/install/GUIDE.md": [
+      "maintain/GUIDE.md"
+    ],
+    "lifecycle/migrate/GUIDE.md": [
+      "maintain/GUIDE.md"
+    ],
+    "lifecycle/purge/GUIDE.md": [
+      "maintain/GUIDE.md"
+    ],
+    "lifecycle/uninstall/GUIDE.md": [
+      "maintain/GUIDE.md"
+    ],
+    "lifecycle/update/GUIDE.md": [
+      "maintain/GUIDE.md"
+    ],
+    "maintain/GUIDE.md": [],
+    "maintain/artifact/GUIDE.md": [
+      "maintain/GUIDE.md"
+    ],
+    "maintain/cli/GUIDE.md": [
+      "maintain/GUIDE.md"
+    ],
+    "maintain/pack/GUIDE.md": [
+      "maintain/GUIDE.md"
+    ],
+    "model/GUIDE.md": [
+      "identity/GUIDE.md"
+    ],
+    "offline/GUIDE.md": [
+      "bank/GUIDE.md",
+      "checkpoint/GUIDE.md",
+      "initialize/GUIDE.md",
+      "retrieval/GUIDE.md"
+    ],
+    "projections/GUIDE.md": [
+      "maintain/GUIDE.md"
+    ],
+    "recall/GUIDE.md": [],
+    "records/GUIDE.md": [
+      "bank/GUIDE.md",
+      "comparison/GUIDE.md"
+    ],
+    "resume/GUIDE.md": [
+      "recall/GUIDE.md"
+    ],
+    "retrieval/GUIDE.md": [
+      "discovery/GUIDE.md",
+      "recall/GUIDE.md"
+    ],
+    "scope/GUIDE.md": [
+      "access/GUIDE.md"
+    ],
+    "security/GUIDE.md": [
+      "access/GUIDE.md"
+    ],
+    "sharing/GUIDE.md": [],
+    "sharing/boundary/GUIDE.md": [
+      "model/GUIDE.md",
+      "sharing/GUIDE.md"
+    ],
+    "sharing/publication/GUIDE.md": [
+      "sharing/GUIDE.md",
+      "sharing/semantic/GUIDE.md"
+    ],
+    "sharing/recovery/GUIDE.md": [
+      "sharing/GUIDE.md"
+    ],
+    "sharing/refresh/GUIDE.md": [
+      "recall/GUIDE.md",
+      "sharing/GUIDE.md",
+      "sharing/semantic/GUIDE.md",
+      "writes/GUIDE.md"
+    ],
+    "sharing/semantic/GUIDE.md": [
+      "sharing/GUIDE.md"
+    ],
+    "turn/GUIDE.md": [
+      "capture/GUIDE.md"
+    ],
+    "writes/GUIDE.md": [
+      "bank/GUIDE.md",
+      "comparison/GUIDE.md"
+    ]
+  },
+  "documented_commands": [
+    {
+      "guide": "access/GUIDE.md",
+      "script": "scripts/scope_binding.py",
+      "module": "scripts/agent_memory/scope_binding.py",
+      "operation": "status"
+    },
+    {
+      "guide": "admission/GUIDE.md",
+      "script": "scripts/admit_learning.py",
+      "module": "scripts/agent_memory/admission.py",
+      "operation": "capture"
+    },
+    {
+      "guide": "admission/GUIDE.md",
+      "script": "scripts/admit_learning.py",
+      "module": "scripts/agent_memory/admission.py",
+      "operation": "preview"
+    },
+    {
+      "guide": "admission/GUIDE.md",
+      "script": "scripts/admit_learning.py",
+      "module": "scripts/agent_memory/admission.py",
+      "operation": "apply"
+    },
+    {
+      "guide": "assembly/GUIDE.md",
+      "script": "scripts/assemble_context.py",
+      "module": "scripts/agent_memory/assembly.py",
+      "operation": "preview"
+    },
+    {
+      "guide": "assembly/GUIDE.md",
+      "script": "scripts/assemble_context.py",
+      "module": "scripts/agent_memory/assembly.py",
+      "operation": "check"
+    },
+    {
+      "guide": "authority/GUIDE.md",
+      "script": "scripts/authority_policy.py",
+      "module": "scripts/agent_memory/authority.py",
+      "operation": "model"
+    },
+    {
+      "guide": "authority/GUIDE.md",
+      "script": "scripts/authority_policy.py",
+      "module": "scripts/agent_memory/authority.py",
+      "operation": "assess"
+    },
+    {
+      "guide": "bank/inspect/GUIDE.md",
+      "script": "scripts/bank_state.py",
+      "module": "scripts/agent_memory/bank_state.py",
+      "operation": "inspect"
+    },
+    {
+      "guide": "bank/inspect/GUIDE.md",
+      "script": "scripts/bank_state.py",
+      "module": "scripts/agent_memory/bank_state.py",
+      "operation": "inspect"
+    },
+    {
+      "guide": "checkpoint/GUIDE.md",
+      "script": "scripts/checkpoint.py",
+      "module": "scripts/agent_memory/checkpoint.py",
+      "operation": "inspect"
+    },
+    {
+      "guide": "checkpoint/GUIDE.md",
+      "script": "scripts/checkpoint.py",
+      "module": "scripts/agent_memory/checkpoint.py",
+      "operation": "preview"
+    },
+    {
+      "guide": "checkpoint/GUIDE.md",
+      "script": "scripts/checkpoint.py",
+      "module": "scripts/agent_memory/checkpoint.py",
+      "operation": "apply"
+    },
+    {
+      "guide": "checkpoint/GUIDE.md",
+      "script": "scripts/checkpoint.py",
+      "module": "scripts/agent_memory/checkpoint.py",
+      "operation": "prepare"
+    },
+    {
+      "guide": "comparison/GUIDE.md",
+      "script": "scripts/compare_learning.py",
+      "module": "scripts/agent_memory/comparison.py",
+      "operation": "inspect"
+    },
+    {
+      "guide": "comparison/GUIDE.md",
+      "script": "scripts/compare_learning.py",
+      "module": "scripts/agent_memory/comparison.py",
+      "operation": "review"
+    },
+    {
+      "guide": "comparison/GUIDE.md",
+      "script": "scripts/compare_learning.py",
+      "module": "scripts/agent_memory/comparison.py",
+      "operation": "check"
+    },
+    {
+      "guide": "consolidation/GUIDE.md",
+      "script": "scripts/consolidate_learning.py",
+      "module": "scripts/agent_memory/consolidation.py",
+      "operation": "preview"
+    },
+    {
+      "guide": "consolidation/GUIDE.md",
+      "script": "scripts/consolidate_learning.py",
+      "module": "scripts/agent_memory/consolidation.py",
+      "operation": "apply"
+    },
+    {
+      "guide": "discovery/GUIDE.md",
+      "script": "scripts/discover_memory.py",
+      "module": "scripts/agent_memory/discovery.py",
+      "operation": "start"
+    },
+    {
+      "guide": "discovery/GUIDE.md",
+      "script": "scripts/discover_memory.py",
+      "module": "scripts/agent_memory/discovery.py",
+      "operation": "node"
+    },
+    {
+      "guide": "discovery/GUIDE.md",
+      "script": "scripts/discover_memory.py",
+      "module": "scripts/agent_memory/discovery.py",
+      "operation": "read"
+    },
+    {
+      "guide": "governance/GUIDE.md",
+      "script": "scripts/govern_memory.py",
+      "module": "scripts/agent_memory/governance.py",
+      "operation": "preview"
+    },
+    {
+      "guide": "governance/GUIDE.md",
+      "script": "scripts/govern_memory.py",
+      "module": "scripts/agent_memory/governance.py",
+      "operation": "apply"
+    },
+    {
+      "guide": "identity/GUIDE.md",
+      "script": "scripts/developer_identity.py",
+      "module": "scripts/agent_memory/developer_identity.py",
+      "operation": "preview"
+    },
+    {
+      "guide": "identity/GUIDE.md",
+      "script": "scripts/developer_identity.py",
+      "module": "scripts/agent_memory/developer_identity.py",
+      "operation": "apply"
+    },
+    {
+      "guide": "identity/GUIDE.md",
+      "script": "scripts/scope_binding.py",
+      "module": "scripts/agent_memory/scope_binding.py",
+      "operation": "preview"
+    },
+    {
+      "guide": "identity/GUIDE.md",
+      "script": "scripts/scope_binding.py",
+      "module": "scripts/agent_memory/scope_binding.py",
+      "operation": "apply"
+    },
+    {
+      "guide": "identity/GUIDE.md",
+      "script": "scripts/bank_writes.py",
+      "module": "scripts/agent_memory/bank_writes.py",
+      "operation": "recover"
+    },
+    {
+      "guide": "identity/GUIDE.md",
+      "script": "scripts/bank_writes.py",
+      "module": "scripts/agent_memory/bank_writes.py",
+      "operation": "recover"
+    },
+    {
+      "guide": "identity/GUIDE.md",
+      "script": "scripts/scope_binding.py",
+      "module": "scripts/agent_memory/scope_binding.py",
+      "operation": "apply"
+    },
+    {
+      "guide": "inactive/GUIDE.md",
+      "script": "scripts/inactive_records.py",
+      "module": "scripts/agent_memory/inactive.py",
+      "operation": "compact"
+    },
+    {
+      "guide": "inactive/GUIDE.md",
+      "script": "scripts/inactive_records.py",
+      "module": "scripts/agent_memory/inactive.py",
+      "operation": "filter"
+    },
+    {
+      "guide": "initialize/GUIDE.md",
+      "script": "scripts/initialize.py",
+      "module": "scripts/agent_memory/initialization.py",
+      "operation": "inspect"
+    },
+    {
+      "guide": "initialize/GUIDE.md",
+      "script": "scripts/initialize.py",
+      "module": "scripts/agent_memory/initialization.py",
+      "operation": "read"
+    },
+    {
+      "guide": "initialize/GUIDE.md",
+      "script": "scripts/initialize.py",
+      "module": "scripts/agent_memory/initialization.py",
+      "operation": "read"
+    },
+    {
+      "guide": "initialize/GUIDE.md",
+      "script": "scripts/initialize.py",
+      "module": "scripts/agent_memory/initialization.py",
+      "operation": "inspect"
+    },
+    {
+      "guide": "initialize/GUIDE.md",
+      "script": "scripts/initialize.py",
+      "module": "scripts/agent_memory/initialization.py",
+      "operation": "preview"
+    },
+    {
+      "guide": "initialize/GUIDE.md",
+      "script": "scripts/initialize.py",
+      "module": "scripts/agent_memory/initialization.py",
+      "operation": "apply"
+    },
+    {
+      "guide": "layout/GUIDE.md",
+      "script": "scripts/bank_layout.py",
+      "module": "scripts/agent_memory/bank_layout.py",
+      "operation": "inspect"
+    },
+    {
+      "guide": "layout/GUIDE.md",
+      "script": "scripts/bank_layout.py",
+      "module": "scripts/agent_memory/bank_layout.py",
+      "operation": "model"
+    },
+    {
+      "guide": "layout/GUIDE.md",
+      "script": "scripts/bank_layout.py",
+      "module": "scripts/agent_memory/bank_layout.py",
+      "operation": "render-index"
+    },
+    {
+      "guide": "layout/GUIDE.md",
+      "script": "scripts/bank_layout.py",
+      "module": "scripts/agent_memory/bank_layout.py",
+      "operation": "validate-index"
+    },
+    {
+      "guide": "lifecycle/diagnose/GUIDE.md",
+      "script": "scripts/diagnose.py",
+      "module": "scripts/agent_memory/diagnostics.py",
+      "operation": "version"
+    },
+    {
+      "guide": "lifecycle/diagnose/GUIDE.md",
+      "script": "scripts/diagnose.py",
+      "module": "scripts/agent_memory/diagnostics.py",
+      "operation": "status"
+    },
+    {
+      "guide": "lifecycle/diagnose/GUIDE.md",
+      "script": "scripts/diagnose.py",
+      "module": "scripts/agent_memory/diagnostics.py",
+      "operation": "doctor"
+    },
+    {
+      "guide": "lifecycle/install/GUIDE.md",
+      "script": "scripts/installer.py",
+      "module": "scripts/agent_memory/installation.py",
+      "operation": "install"
+    },
+    {
+      "guide": "lifecycle/install/GUIDE.md",
+      "script": "scripts/installer.py",
+      "module": "scripts/agent_memory/installation.py",
+      "operation": "install"
+    },
+    {
+      "guide": "lifecycle/install/GUIDE.md",
+      "script": "scripts/installer.py",
+      "module": "scripts/agent_memory/installation.py",
+      "operation": "recover"
+    },
+    {
+      "guide": "lifecycle/migrate/GUIDE.md",
+      "script": "scripts/migrate_bank.py",
+      "module": "scripts/agent_memory/migration.py",
+      "operation": "preview"
+    },
+    {
+      "guide": "lifecycle/migrate/GUIDE.md",
+      "script": "scripts/migrate_bank.py",
+      "module": "scripts/agent_memory/migration.py",
+      "operation": "apply"
+    },
+    {
+      "guide": "lifecycle/migrate/GUIDE.md",
+      "script": "scripts/migrate_bank.py",
+      "module": "scripts/agent_memory/migration.py",
+      "operation": "recover"
+    },
+    {
+      "guide": "lifecycle/migrate/GUIDE.md",
+      "script": "scripts/migrate_bank.py",
+      "module": "scripts/agent_memory/migration.py",
+      "operation": "recover-lock"
+    },
+    {
+      "guide": "lifecycle/migrate/GUIDE.md",
+      "script": "scripts/migrate_bank.py",
+      "module": "scripts/agent_memory/migration.py",
+      "operation": "recover-lock"
+    },
+    {
+      "guide": "lifecycle/migrate/GUIDE.md",
+      "script": "scripts/migrate_bank.py",
+      "module": "scripts/agent_memory/migration.py",
+      "operation": "recover"
+    },
+    {
+      "guide": "lifecycle/migrate/GUIDE.md",
+      "script": "scripts/migrate_bank.py",
+      "module": "scripts/agent_memory/migration.py",
+      "operation": "recover"
+    },
+    {
+      "guide": "lifecycle/migrate/GUIDE.md",
+      "script": "scripts/migrate_bank.py",
+      "module": "scripts/agent_memory/migration.py",
+      "operation": "restore"
+    },
+    {
+      "guide": "lifecycle/migrate/GUIDE.md",
+      "script": "scripts/migrate_bank.py",
+      "module": "scripts/agent_memory/migration.py",
+      "operation": "restore"
+    },
+    {
+      "guide": "lifecycle/purge/GUIDE.md",
+      "script": "scripts/uninstall_runtime.py",
+      "module": "scripts/agent_memory/uninstallation.py",
+      "operation": "purge-data"
+    },
+    {
+      "guide": "lifecycle/purge/GUIDE.md",
+      "script": "scripts/uninstall_runtime.py",
+      "module": "scripts/agent_memory/uninstallation.py",
+      "operation": "purge-data"
+    },
+    {
+      "guide": "lifecycle/uninstall/GUIDE.md",
+      "script": "scripts/uninstall_runtime.py",
+      "module": "scripts/agent_memory/uninstallation.py",
+      "operation": "uninstall"
+    },
+    {
+      "guide": "lifecycle/uninstall/GUIDE.md",
+      "script": "scripts/uninstall_runtime.py",
+      "module": "scripts/agent_memory/uninstallation.py",
+      "operation": "uninstall"
+    },
+    {
+      "guide": "lifecycle/uninstall/GUIDE.md",
+      "script": "scripts/installer.py",
+      "module": "scripts/agent_memory/installation.py",
+      "operation": "recover"
+    },
+    {
+      "guide": "lifecycle/update/GUIDE.md",
+      "script": "scripts/update_runtime.py",
+      "module": "scripts/agent_memory/updating.py",
+      "operation": "update"
+    },
+    {
+      "guide": "lifecycle/update/GUIDE.md",
+      "script": "scripts/update_runtime.py",
+      "module": "scripts/agent_memory/updating.py",
+      "operation": "update"
+    },
+    {
+      "guide": "maintain/artifact/GUIDE.md",
+      "script": "scripts/artifact.py",
+      "module": "scripts/agent_memory/artifact.py",
+      "operation": "inspect"
+    },
+    {
+      "guide": "maintain/cli/GUIDE.md",
+      "script": "scripts/installer.py",
+      "module": "scripts/agent_memory/installation.py",
+      "operation": null
+    },
+    {
+      "guide": "maintain/cli/GUIDE.md",
+      "script": "scripts/installer.py",
+      "module": "scripts/agent_memory/scope_binding.py",
+      "operation": "identity"
+    },
+    {
+      "guide": "maintain/cli/GUIDE.md",
+      "script": "scripts/installer.py",
+      "module": "scripts/agent_memory/initialization.py",
+      "operation": "init"
+    },
+    {
+      "guide": "maintain/cli/GUIDE.md",
+      "script": "scripts/installer.py",
+      "module": "scripts/agent_memory/retrieval.py",
+      "operation": "search"
+    },
+    {
+      "guide": "maintain/cli/GUIDE.md",
+      "script": "scripts/installer.py",
+      "module": "scripts/agent_memory/checkpoint.py",
+      "operation": "checkpoint"
+    },
+    {
+      "guide": "maintain/cli/GUIDE.md",
+      "script": "scripts/installer.py",
+      "module": "scripts/agent_memory/memory_refresh.py",
+      "operation": "boundary"
+    },
+    {
+      "guide": "maintain/pack/GUIDE.md",
+      "script": "scripts/validate_pack.py",
+      "module": "scripts/agent_memory/pack_validation.py",
+      "operation": null
+    },
+    {
+      "guide": "offline/GUIDE.md",
+      "script": "scripts/bank_contract.py",
+      "module": "scripts/agent_memory/bank_contract.py",
+      "operation": "validate"
+    },
+    {
+      "guide": "offline/GUIDE.md",
+      "script": "scripts/bank_writes.py",
+      "module": "scripts/agent_memory/bank_writes.py",
+      "operation": "inspect"
+    },
+    {
+      "guide": "offline/GUIDE.md",
+      "script": "scripts/bank_contract.py",
+      "module": "scripts/agent_memory/bank_contract.py",
+      "operation": "render"
+    },
+    {
+      "guide": "projections/GUIDE.md",
+      "script": "scripts/projection.py",
+      "module": "scripts/agent_memory/projections.py",
+      "operation": "build"
+    },
+    {
+      "guide": "projections/GUIDE.md",
+      "script": "scripts/projection.py",
+      "module": "scripts/agent_memory/projections.py",
+      "operation": "check"
+    },
+    {
+      "guide": "records/GUIDE.md",
+      "script": "scripts/record_contract.py",
+      "module": "scripts/agent_memory/records.py",
+      "operation": "model"
+    },
+    {
+      "guide": "records/GUIDE.md",
+      "script": "scripts/record_contract.py",
+      "module": "scripts/agent_memory/records.py",
+      "operation": "render"
+    },
+    {
+      "guide": "records/GUIDE.md",
+      "script": "scripts/record_contract.py",
+      "module": "scripts/agent_memory/records.py",
+      "operation": "validate"
+    },
+    {
+      "guide": "records/GUIDE.md",
+      "script": "scripts/record_contract.py",
+      "module": "scripts/agent_memory/records.py",
+      "operation": "applicability"
+    },
+    {
+      "guide": "resume/GUIDE.md",
+      "script": "scripts/retrieve.py",
+      "module": "scripts/agent_memory/retrieval.py",
+      "operation": null
+    },
+    {
+      "guide": "retrieval/GUIDE.md",
+      "script": "scripts/retrieve.py",
+      "module": "scripts/agent_memory/retrieval.py",
+      "operation": null
+    },
+    {
+      "guide": "scope/GUIDE.md",
+      "script": "scripts/scope_policy.py",
+      "module": "scripts/agent_memory/scopes.py",
+      "operation": "model"
+    },
+    {
+      "guide": "scope/GUIDE.md",
+      "script": "scripts/scope_policy.py",
+      "module": "scripts/agent_memory/scopes.py",
+      "operation": "decide"
+    },
+    {
+      "guide": "security/GUIDE.md",
+      "script": "scripts/security_policy.py",
+      "module": "scripts/agent_memory/security.py",
+      "operation": null
+    },
+    {
+      "guide": "security/GUIDE.md",
+      "script": "scripts/security_policy.py",
+      "module": "scripts/agent_memory/security.py",
+      "operation": null
+    },
+    {
+      "guide": "sharing/boundary/GUIDE.md",
+      "external": "git",
+      "operation": "config"
+    },
+    {
+      "guide": "sharing/boundary/GUIDE.md",
+      "external": "git",
+      "operation": "config"
+    },
+    {
+      "guide": "sharing/boundary/GUIDE.md",
+      "script": "scripts/sharing_boundary.py",
+      "module": "scripts/agent_memory/sharing_boundary.py",
+      "operation": null
+    },
+    {
+      "guide": "sharing/publication/GUIDE.md",
+      "script": "scripts/publish_memory.py",
+      "module": "scripts/agent_memory/memory_publication.py",
+      "operation": "prepare"
+    },
+    {
+      "guide": "sharing/publication/GUIDE.md",
+      "script": "scripts/publish_memory.py",
+      "module": "scripts/agent_memory/memory_publication.py",
+      "operation": "land"
+    },
+    {
+      "guide": "sharing/recovery/GUIDE.md",
+      "script": "scripts/sharing_recovery.py",
+      "module": "scripts/agent_memory/sharing_recovery.py",
+      "operation": "inspect"
+    },
+    {
+      "guide": "sharing/recovery/GUIDE.md",
+      "script": "scripts/sharing_recovery.py",
+      "module": "scripts/agent_memory/sharing_recovery.py",
+      "operation": "inspect"
+    },
+    {
+      "guide": "sharing/recovery/GUIDE.md",
+      "script": "scripts/sharing_recovery.py",
+      "module": "scripts/agent_memory/sharing_recovery.py",
+      "operation": "replay"
+    },
+    {
+      "guide": "sharing/recovery/GUIDE.md",
+      "script": "scripts/sharing_recovery.py",
+      "module": "scripts/agent_memory/sharing_recovery.py",
+      "operation": "reconcile"
+    },
+    {
+      "guide": "sharing/recovery/GUIDE.md",
+      "script": "scripts/sharing_recovery.py",
+      "module": "scripts/agent_memory/sharing_recovery.py",
+      "operation": "reconcile"
+    },
+    {
+      "guide": "sharing/refresh/GUIDE.md",
+      "script": "scripts/refresh_memory.py",
+      "module": "scripts/agent_memory/memory_refresh.py",
+      "operation": "inspect"
+    },
+    {
+      "guide": "sharing/refresh/GUIDE.md",
+      "script": "scripts/refresh_memory.py",
+      "module": "scripts/agent_memory/memory_refresh.py",
+      "operation": "inspect"
+    },
+    {
+      "guide": "sharing/refresh/GUIDE.md",
+      "script": "scripts/refresh_memory.py",
+      "module": "scripts/agent_memory/memory_refresh.py",
+      "operation": "prepare"
+    },
+    {
+      "guide": "sharing/refresh/GUIDE.md",
+      "script": "scripts/refresh_memory.py",
+      "module": "scripts/agent_memory/memory_refresh.py",
+      "operation": "apply"
+    },
+    {
+      "guide": "sharing/semantic/GUIDE.md",
+      "script": "scripts/reconcile_memory.py",
+      "module": "scripts/agent_memory/semantic_sharing.py",
+      "operation": "inspect-v2"
+    },
+    {
+      "guide": "sharing/semantic/GUIDE.md",
+      "script": "scripts/reconcile_memory.py",
+      "module": "scripts/agent_memory/semantic_sharing.py",
+      "operation": "inspect-v2"
+    },
+    {
+      "guide": "sharing/semantic/GUIDE.md",
+      "script": "scripts/reconcile_memory.py",
+      "module": "scripts/agent_memory/semantic_sharing.py",
+      "operation": "page-v2"
+    },
+    {
+      "guide": "sharing/semantic/GUIDE.md",
+      "script": "scripts/reconcile_memory.py",
+      "module": "scripts/agent_memory/semantic_sharing.py",
+      "operation": "review-indexed-v2"
+    },
+    {
+      "guide": "sharing/semantic/GUIDE.md",
+      "script": "scripts/reconcile_memory.py",
+      "module": "scripts/agent_memory/semantic_sharing.py",
+      "operation": "review-v2"
+    },
+    {
+      "guide": "sharing/semantic/GUIDE.md",
+      "script": "scripts/reconcile_memory.py",
+      "module": "scripts/agent_memory/semantic_sharing.py",
+      "operation": "check"
+    },
+    {
+      "guide": "sharing/semantic/GUIDE.md",
+      "script": "scripts/reconcile_memory.py",
+      "module": "scripts/agent_memory/semantic_sharing.py",
+      "operation": "recover-holds"
+    },
+    {
+      "guide": "turn/GUIDE.md",
+      "script": "scripts/admit_learning.py",
+      "module": "scripts/agent_memory/admission.py",
+      "operation": "draft"
+    },
+    {
+      "guide": "writes/GUIDE.md",
+      "script": "scripts/bank_writes.py",
+      "module": "scripts/agent_memory/bank_writes.py",
+      "operation": "inspect"
+    },
+    {
+      "guide": "writes/GUIDE.md",
+      "script": "scripts/bank_writes.py",
+      "module": "scripts/agent_memory/bank_writes.py",
+      "operation": "preview"
+    },
+    {
+      "guide": "writes/GUIDE.md",
+      "script": "scripts/bank_writes.py",
+      "module": "scripts/agent_memory/bank_writes.py",
+      "operation": "apply"
+    },
+    {
+      "guide": "writes/GUIDE.md",
+      "script": "scripts/bank_transactions.py",
+      "module": "scripts/agent_memory/bank_transactions.py",
+      "operation": "preview"
+    },
+    {
+      "guide": "writes/GUIDE.md",
+      "script": "scripts/bank_transactions.py",
+      "module": "scripts/agent_memory/bank_transactions.py",
+      "operation": "apply"
+    },
+    {
+      "guide": "writes/GUIDE.md",
+      "script": "scripts/bank_writes.py",
+      "module": "scripts/agent_memory/bank_writes.py",
+      "operation": "recover"
+    },
+    {
+      "guide": "writes/GUIDE.md",
+      "script": "scripts/bank_writes.py",
+      "module": "scripts/agent_memory/bank_writes.py",
+      "operation": "recover"
+    }
+  ],
+  "file_operations": {
+    "offline/GUIDE.md": [
+      "initialize",
+      "inspect",
+      "checkpoint",
+      "resume"
+    ]
+  },
+  "rfc_tokens_observed": 1780,
+  "limits": [
+    "Supported Markdown links and literal argparse dispatch are mechanically checked.",
+    "Conditioned navigation is distinct from recognized direct mandatory loading sentences.",
+    "Parameter semantics, arbitrary English obligations and behavioral correctness require independent review.",
+    "Documentation refactors also require preserved source, rule/strength/location mapping and actual independent use."
+  ]
+}

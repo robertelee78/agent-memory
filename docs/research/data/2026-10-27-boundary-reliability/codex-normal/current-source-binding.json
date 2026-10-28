@@ -1,0 +1,12 @@
+{
+  "comparison": "current working-tree bytes",
+  "files": 188,
+  "mismatches": [
+    "turn/GUIDE.md",
+    "hooks/opencode-v2.js",
+    "hooks/boundary_ledger.py",
+    "hooks/claude_prompt.py",
+    "hooks/claude_stop.py",
+    "scripts/agent_memory/claude_boundary.py"
+  ]
+}

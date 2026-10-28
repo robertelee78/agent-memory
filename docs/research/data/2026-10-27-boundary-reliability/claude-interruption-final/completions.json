@@ -1,0 +1,30 @@
+[
+  {
+    "observation_id": "3446c1a3-04e2-477b-a2b6-4ec7a1ff86b2",
+    "receipt": {
+      "assessment": {
+        "candidates": [
+          {
+            "claim": "6 + 6 = 12",
+            "disposition": "not-durable",
+            "reason": "Disposable arithmetic check, not project knowledge."
+          }
+        ],
+        "source_id": "3446c1a3-04e2-477b-a2b6-4ec7a1ff86b2",
+        "source_review": "Verified the prompt text in the native transcript (uuid 28a2189a-9cdb-45f6-8d59-71374cb10b57) matches source_sha256. It is a disposable arithmetic check (6 + 6) plus boundary bookkeeping instructions; no durable project lesson."
+      },
+      "assessment_is_agent_assertion": true,
+      "canonical_writes_performed": false,
+      "input_sha256": "786856c709d3a110f0697d039919d3572f790e038ecfa0949bd4a0822f9d1d1f",
+      "observation_id": "3446c1a3-04e2-477b-a2b6-4ec7a1ff86b2",
+      "outcome": "no-learning",
+      "publication_verified": false,
+      "source_publication_link_verified": false,
+      "source_sha256": "9317e8aae220be2391686388123e22aedd4b57efc3103d76fa3fc3b649e6a3d0",
+      "witnessed_commit": null
+    },
+    "record_sha256": "c1579640bc85800f7943a58bf1fda42f5614672b04ff0e567e8a02c676345a73",
+    "schema": "agent-memory/source-completed-v2",
+    "source_sha256": "9317e8aae220be2391686388123e22aedd4b57efc3103d76fa3fc3b649e6a3d0"
+  }
+]

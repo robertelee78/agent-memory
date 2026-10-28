@@ -1,0 +1,15 @@
+{
+  "enrollment-error.jsonl": {
+    "event_counts": {
+      "error": 1
+    },
+    "assistant_text": [],
+    "tools": [],
+    "errors": [
+      {
+        "type": "unknown",
+        "message": "UnexpectedStatus: 500"
+      }
+    ]
+  }
+}

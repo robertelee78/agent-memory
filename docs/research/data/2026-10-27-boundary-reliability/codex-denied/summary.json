@@ -1,0 +1,90 @@
+{
+  "model": "gpt-6.1-sol",
+  "client": "actual app-server0.165.0",
+  "steps": [
+    {
+      "kind": "no-tools-completed",
+      "event": {
+        "method": "turn/completed",
+        "params": {
+          "threadId": "01a17ff2-c440-7b83-a95a-44407c9c7dae",
+          "turn": {
+            "id": "01a17ff2-c5a8-7801-917e-5a16362acede",
+            "rootTurnId": "01a17ff2-c5a8-7801-917e-5a16362acede",
+            "items": [
+              {
+                "type": "agentMessage",
+                "id": "msg_0248063e4763cc77016ae1445469688195ae05b3aa01d9c7be",
+                "text": "11. Memory assessment remains pending because tools were blocked.",
+                "phase": "final_answer",
+                "memoryCitation": null,
+                "delivery": null,
+                "questions": null
+              }
+            ],
+            "itemsView": "summary",
+            "status": "completed",
+            "error": null,
+            "startedAt": 1793147979,
+            "completedAt": 1793147989,
+            "durationMs": 10273
+          }
+        },
+        "emittedAtMs": 1793147989450
+      }
+    }
+  ],
+  "hook_trust": [
+    {
+      "event": "preToolUse",
+      "status": "trusted"
+    },
+    {
+      "event": "userPromptSubmit",
+      "status": "trusted"
+    },
+    {
+      "event": "stop",
+      "status": "trusted"
+    }
+  ],
+  "no_tools_inventory": {
+    "sources": [
+      {
+        "control_origin_hint": false,
+        "harness": "codex",
+        "lifecycle": "01a17ff2-c5a8-7801-917e-5a16362acede",
+        "native_source_id": null,
+        "observation_id": "50e425ce-72f3-4b1a-a1e5-054a8abe6101",
+        "project_id": "30daacaf-26aa-4095-97c3-61ea8ed24bb1",
+        "schema": "agent-memory/turn-source-v2",
+        "session": "01a17ff2-c440-7b83-a95a-44407c9c7dae",
+        "source_reference": null,
+        "source_sha256": "0a39ab12e678b8b18c0214aad19ea607c2114af8371d878a5c1aa5f49d080952",
+        "completed": false,
+        "completion": null
+      }
+    ],
+    "pending": [
+      {
+        "control_origin_hint": false,
+        "harness": "codex",
+        "lifecycle": "01a17ff2-c5a8-7801-917e-5a16362acede",
+        "native_source_id": null,
+        "observation_id": "50e425ce-72f3-4b1a-a1e5-054a8abe6101",
+        "project_id": "30daacaf-26aa-4095-97c3-61ea8ed24bb1",
+        "schema": "agent-memory/turn-source-v2",
+        "session": "01a17ff2-c440-7b83-a95a-44407c9c7dae",
+        "source_reference": null,
+        "source_sha256": "0a39ab12e678b8b18c0214aad19ea607c2114af8371d878a5c1aa5f49d080952",
+        "completed": false,
+        "completion": null
+      }
+    ],
+    "completed": [],
+    "faults": [],
+    "fingerprint": "688a1b44ec74c389e8d31986e3b2f50e390a010610f4d5a976d0cbb9be96c064",
+    "complete": false
+  },
+  "terminal": true
+}

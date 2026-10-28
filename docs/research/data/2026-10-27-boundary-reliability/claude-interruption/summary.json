@@ -1,0 +1,64 @@
+{
+  "runs": [
+    {
+      "interrupted_exit": 0,
+      "session": "0bc492ab-8e82-450c-8184-5aa3852375be",
+      "pending_before": {
+        "turns": [
+          {
+            "harness": "claude",
+            "session": "0bc492ab-8e82-450c-8184-5aa3852375be",
+            "lifecycle": "2ed3c702-5e55-49df-9555-b11598a18544",
+            "project_id": "ee93726c-1d5b-4303-bd2d-ab1310133280",
+            "pending": [
+              {
+                "observation_id": "a9b5b803-0648-452b-953e-0806b434044b",
+                "source_sha256": "f1b8b2a178a1de8f82705e49c19298965954570a3004bb043f2580b1bca14287"
+              }
+            ],
+            "faults": [],
+            "fingerprint": "c6e66f0d05c17e529a32aeecb39eba0eb7f88afa23b54a3c0ced44d2b6a9b0cd",
+            "complete": false
+          }
+        ],
+        "legacy": [],
+        "faults": [],
+        "next_offset": null,
+        "next_legacy_offset": null,
+        "source_completeness_verified": false
+      }
+    },
+    {
+      "resumed_exit": 0,
+      "seconds": 63.71766470900184,
+      "result": [
+        "**6 + 6 = 12.**\n\nThe current source was verified against the native transcript and assessed as no-learning.\n\nThe earlier interrupted observation remains pending. Its original prompt text was recovered from the transcript's queue record and its digest matches, but the adapter refused the assessment because the retained user turn for that prompt holds only an interruption marker. I did not mark it complete. It stays in the pending list for a later turn where the source verifies."
+      ]
+    }
+  ],
+  "pending": {
+    "turns": [
+      {
+        "harness": "claude",
+        "session": "0bc492ab-8e82-450c-8184-5aa3852375be",
+        "lifecycle": "2ed3c702-5e55-49df-9555-b11598a18544",
+        "project_id": "ee93726c-1d5b-4303-bd2d-ab1310133280",
+        "pending": [
+          {
+            "observation_id": "a9b5b803-0648-452b-953e-0806b434044b",
+            "source_sha256": "f1b8b2a178a1de8f82705e49c19298965954570a3004bb043f2580b1bca14287"
+          }
+        ],
+        "faults": [],
+        "fingerprint": "c6e66f0d05c17e529a32aeecb39eba0eb7f88afa23b54a3c0ced44d2b6a9b0cd",
+        "complete": false
+      }
+    ],
+    "legacy": [],
+    "faults": [],
+    "next_offset": null,
+    "next_legacy_offset": null,
+    "source_completeness_verified": false
+  },
+  "completion_count": 1
+}

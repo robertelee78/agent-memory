@@ -1,0 +1,58 @@
+[
+  {
+    "observation_id": "92ca1404-b31c-4b8f-a9d3-8b1c674a4ae1",
+    "receipt": {
+      "assessment": {
+        "candidates": [
+          {
+            "claim": "3 + 3 = 6",
+            "disposition": "not-durable",
+            "reason": "General arithmetic fact, not repository-specific project knowledge."
+          }
+        ],
+        "source_id": "92ca1404-b31c-4b8f-a9d3-8b1c674a4ae1",
+        "source_review": "User asked a plain arithmetic question (3 + 3). No project lesson, decision or constraint was produced."
+      },
+      "assessment_is_agent_assertion": true,
+      "canonical_writes_performed": false,
+      "input_sha256": "45bd036a5371163e37f3cfcf67dd96f04647dca93fd124bc094a8e812c3ee269",
+      "observation_id": "92ca1404-b31c-4b8f-a9d3-8b1c674a4ae1",
+      "outcome": "no-learning",
+      "publication_verified": false,
+      "source_publication_link_verified": false,
+      "source_sha256": "fce75eb34323542801e92a04262fedfea7787f101df47aa36fabc14a1fe6dad1",
+      "witnessed_commit": null
+    },
+    "record_sha256": "da1491df8b92031d8c019d392671cc72fa6ecfa357f782b9100c9da27fdc8988",
+    "schema": "agent-memory/source-completed-v2",
+    "source_sha256": "fce75eb34323542801e92a04262fedfea7787f101df47aa36fabc14a1fe6dad1"
+  },
+  {
+    "observation_id": "35a60771-eea5-4beb-a954-6537ffbb9e69",
+    "receipt": {
+      "assessment": {
+        "candidates": [
+          {
+            "claim": "2 + 2 = 4",
+            "disposition": "not-durable",
+            "reason": "General arithmetic fact, not repository-specific project knowledge; user marked the turn as disposable."
+          }
+        ],
+        "source_id": "35a60771-eea5-4beb-a954-6537ffbb9e69",
+        "source_review": "User asked a disposable arithmetic question (2 + 2) and explicitly stated it carries no lasting project decision. No project lesson, decision or constraint was produced."
+      },
+      "assessment_is_agent_assertion": true,
+      "canonical_writes_performed": false,
+      "input_sha256": "80e7213ece59fde24a203aa76c5e3069010fb055f1ffad44b89f3bdb72557aef",
+      "observation_id": "35a60771-eea5-4beb-a954-6537ffbb9e69",
+      "outcome": "no-learning",
+      "publication_verified": false,
+      "source_publication_link_verified": false,
+      "source_sha256": "772671f50c37065e88096a8fa4d30212b4b69ae55b54ee51bc7986fc0bf887a7",
+      "witnessed_commit": null
+    },
+    "record_sha256": "31c2c4a9f6043657ac8e6f29507b42c469fd1aa643d1215abcbe8b1f459ec95e",
+    "schema": "agent-memory/source-completed-v2",
+    "source_sha256": "772671f50c37065e88096a8fa4d30212b4b69ae55b54ee51bc7986fc0bf887a7"
+  }
+]

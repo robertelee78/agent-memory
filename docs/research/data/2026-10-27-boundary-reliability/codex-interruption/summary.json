@@ -1,0 +1,248 @@
+{
+  "model": "gpt-6.1-sol",
+  "client": "actual app-server0.165.0",
+  "steps": [
+    {
+      "kind": "interrupted",
+      "event": {
+        "method": "turn/completed",
+        "params": {
+          "threadId": "01a17ff4-a2a8-7633-91cc-825fc7670963",
+          "turn": {
+            "id": "01a17ff4-a455-7bd2-8d1e-639b0c633f20",
+            "rootTurnId": "01a17ff4-a455-7bd2-8d1e-639b0c633f20",
+            "items": [],
+            "itemsView": "notLoaded",
+            "status": "interrupted",
+            "error": null,
+            "startedAt": 1793148101,
+            "completedAt": 1793148104,
+            "durationMs": 2593
+          }
+        },
+        "emittedAtMs": 1793148104311
+      }
+    },
+    {
+      "kind": "new-session-recovery",
+      "event": {
+        "method": "turn/completed",
+        "params": {
+          "threadId": "01a17ff4-afaf-7441-89a9-34ebb7a2abf1",
+          "turn": {
+            "id": "01a17ff4-afb6-74e3-b358-c0772ea05821",
+            "rootTurnId": "01a17ff4-afb6-74e3-b358-c0772ea05821",
+            "items": [
+              {
+                "type": "agentMessage",
+                "id": "msg_0c2539d848dff1af016ae144ef64e081958f7f5d5d34509b50",
+                "text": "8 + 8 = **16**. The original source\u2019s SHA-256 matched the retained observation. Recovery completed through the governed CLI; the cancelled wait was not executed.",
+                "phase": "final_answer",
+                "memoryCitation": null,
+                "delivery": null,
+                "questions": null
+              }
+            ],
+            "itemsView": "summary",
+            "status": "completed",
+            "error": null,
+            "startedAt": 1793148104,
+            "completedAt": 1793148145,
+            "durationMs": 40403
+          }
+        },
+        "emittedAtMs": 1793148145036
+      }
+    }
+  ],
+  "hook_trust": [
+    {
+      "event": "preToolUse",
+      "status": "trusted"
+    },
+    {
+      "event": "userPromptSubmit",
+      "status": "trusted"
+    },
+    {
+      "event": "stop",
+      "status": "trusted"
+    }
+  ],
+  "interrupt_response": {},
+  "interrupted_inventory": {
+    "sources": [
+      {
+        "control_origin_hint": false,
+        "harness": "codex",
+        "lifecycle": "01a17ff4-a455-7bd2-8d1e-639b0c633f20",
+        "native_source_id": null,
+        "observation_id": "ae52733b-a9ee-4361-88cb-51c02b31bc07",
+        "project_id": "38b1d6ea-c650-4f1d-9132-37f8a823ebbe",
+        "schema": "agent-memory/turn-source-v2",
+        "session": "01a17ff4-a2a8-7633-91cc-825fc7670963",
+        "source_reference": null,
+        "source_sha256": "fc02869a46aa634ee8d8dc057ef883a4207230985a41e6616abaefa2d8a30a9e",
+        "completed": false,
+        "completion": null
+      }
+    ],
+    "pending": [
+      {
+        "control_origin_hint": false,
+        "harness": "codex",
+        "lifecycle": "01a17ff4-a455-7bd2-8d1e-639b0c633f20",
+        "native_source_id": null,
+        "observation_id": "ae52733b-a9ee-4361-88cb-51c02b31bc07",
+        "project_id": "38b1d6ea-c650-4f1d-9132-37f8a823ebbe",
+        "schema": "agent-memory/turn-source-v2",
+        "session": "01a17ff4-a2a8-7633-91cc-825fc7670963",
+        "source_reference": null,
+        "source_sha256": "fc02869a46aa634ee8d8dc057ef883a4207230985a41e6616abaefa2d8a30a9e",
+        "completed": false,
+        "completion": null
+      }
+    ],
+    "completed": [],
+    "faults": [],
+    "fingerprint": "a02c7f0c03be20aca3f30003944825e8af9492143695092de03d8e848f1dc319",
+    "complete": false
+  },
+  "recovered_inventory": {
+    "sources": [
+      {
+        "control_origin_hint": false,
+        "harness": "codex",
+        "lifecycle": "01a17ff4-a455-7bd2-8d1e-639b0c633f20",
+        "native_source_id": null,
+        "observation_id": "ae52733b-a9ee-4361-88cb-51c02b31bc07",
+        "project_id": "38b1d6ea-c650-4f1d-9132-37f8a823ebbe",
+        "schema": "agent-memory/turn-source-v2",
+        "session": "01a17ff4-a2a8-7633-91cc-825fc7670963",
+        "source_reference": null,
+        "source_sha256": "fc02869a46aa634ee8d8dc057ef883a4207230985a41e6616abaefa2d8a30a9e",
+        "completed": true,
+        "completion": {
+          "assessment": {
+            "candidates": [],
+            "source_id": "ae52733b-a9ee-4361-88cb-51c02b31bc07",
+            "source_review": "Reviewed the exact original private source bytes and verified their SHA-256 against the retained pending observation. The request to wait and answer 8+8 is ephemeral fixture work, explicitly introduces no durable project requirement, and yields 16. The cancelled wait was not executed. No durable project learning requires capture."
+          },
+          "assessment_is_agent_assertion": true,
+          "canonical_writes_performed": false,
+          "input_sha256": "8ff3c7621273a7ec3b29915aef9d0684d5eaafd5bd927adf4854735e17e5aa20",
+          "observation_id": "ae52733b-a9ee-4361-88cb-51c02b31bc07",
+          "outcome": "no-learning",
+          "publication_verified": false,
+          "source_publication_link_verified": false,
+          "source_sha256": "fc02869a46aa634ee8d8dc057ef883a4207230985a41e6616abaefa2d8a30a9e",
+          "witnessed_commit": null
+        }
+      }
+    ],
+    "pending": [],
+    "completed": [
+      {
+        "control_origin_hint": false,
+        "harness": "codex",
+        "lifecycle": "01a17ff4-a455-7bd2-8d1e-639b0c633f20",
+        "native_source_id": null,
+        "observation_id": "ae52733b-a9ee-4361-88cb-51c02b31bc07",
+        "project_id": "38b1d6ea-c650-4f1d-9132-37f8a823ebbe",
+        "schema": "agent-memory/turn-source-v2",
+        "session": "01a17ff4-a2a8-7633-91cc-825fc7670963",
+        "source_reference": null,
+        "source_sha256": "fc02869a46aa634ee8d8dc057ef883a4207230985a41e6616abaefa2d8a30a9e",
+        "completed": true,
+        "completion": {
+          "assessment": {
+            "candidates": [],
+            "source_id": "ae52733b-a9ee-4361-88cb-51c02b31bc07",
+            "source_review": "Reviewed the exact original private source bytes and verified their SHA-256 against the retained pending observation. The request to wait and answer 8+8 is ephemeral fixture work, explicitly introduces no durable project requirement, and yields 16. The cancelled wait was not executed. No durable project learning requires capture."
+          },
+          "assessment_is_agent_assertion": true,
+          "canonical_writes_performed": false,
+          "input_sha256": "8ff3c7621273a7ec3b29915aef9d0684d5eaafd5bd927adf4854735e17e5aa20",
+          "observation_id": "ae52733b-a9ee-4361-88cb-51c02b31bc07",
+          "outcome": "no-learning",
+          "publication_verified": false,
+          "source_publication_link_verified": false,
+          "source_sha256": "fc02869a46aa634ee8d8dc057ef883a4207230985a41e6616abaefa2d8a30a9e",
+          "witnessed_commit": null
+        }
+      }
+    ],
+    "faults": [],
+    "fingerprint": "a02c7f0c03be20aca3f30003944825e8af9492143695092de03d8e848f1dc319",
+    "complete": true
+  },
+  "current_inventory": {
+    "sources": [
+      {
+        "control_origin_hint": false,
+        "harness": "codex",
+        "lifecycle": "01a17ff4-afb6-74e3-b358-c0772ea05821",
+        "native_source_id": null,
+        "observation_id": "3d1cc31b-ff0d-4718-88c3-fbb83714636f",
+        "project_id": "38b1d6ea-c650-4f1d-9132-37f8a823ebbe",
+        "schema": "agent-memory/turn-source-v2",
+        "session": "01a17ff4-afaf-7441-89a9-34ebb7a2abf1",
+        "source_reference": null,
+        "source_sha256": "61496bbfd0ba09655bb4c84cb53ead0b6fefadb4f841d6201d31087b24e14b42",
+        "completed": true,
+        "completion": {
+          "assessment": {
+            "candidates": [],
+            "source_id": "3d1cc31b-ff0d-4718-88c3-fbb83714636f",
+            "source_review": "Reviewed this exact current recovery request separately and verified its SHA-256 against its retained observation. It directs source-specific recovery of ephemeral fixture work and preservation of the answer 16; it establishes no durable project lesson or requirement."
+          },
+          "assessment_is_agent_assertion": true,
+          "canonical_writes_performed": false,
+          "input_sha256": "b36d056d33d7d97aabd3a63a8808fc02fed3cb8707f0d91fd5caa83a526e7822",
+          "observation_id": "3d1cc31b-ff0d-4718-88c3-fbb83714636f",
+          "outcome": "no-learning",
+          "publication_verified": false,
+          "source_publication_link_verified": false,
+          "source_sha256": "61496bbfd0ba09655bb4c84cb53ead0b6fefadb4f841d6201d31087b24e14b42",
+          "witnessed_commit": null
+        }
+      }
+    ],
+    "pending": [],
+    "completed": [
+      {
+        "control_origin_hint": false,
+        "harness": "codex",
+        "lifecycle": "01a17ff4-afb6-74e3-b358-c0772ea05821",
+        "native_source_id": null,
+        "observation_id": "3d1cc31b-ff0d-4718-88c3-fbb83714636f",
+        "project_id": "38b1d6ea-c650-4f1d-9132-37f8a823ebbe",
+        "schema": "agent-memory/turn-source-v2",
+        "session": "01a17ff4-afaf-7441-89a9-34ebb7a2abf1",
+        "source_reference": null,
+        "source_sha256": "61496bbfd0ba09655bb4c84cb53ead0b6fefadb4f841d6201d31087b24e14b42",
+        "completed": true,
+        "completion": {
+          "assessment": {
+            "candidates": [],
+            "source_id": "3d1cc31b-ff0d-4718-88c3-fbb83714636f",
+            "source_review": "Reviewed this exact current recovery request separately and verified its SHA-256 against its retained observation. It directs source-specific recovery of ephemeral fixture work and preservation of the answer 16; it establishes no durable project lesson or requirement."
+          },
+          "assessment_is_agent_assertion": true,
+          "canonical_writes_performed": false,
+          "input_sha256": "b36d056d33d7d97aabd3a63a8808fc02fed3cb8707f0d91fd5caa83a526e7822",
+          "observation_id": "3d1cc31b-ff0d-4718-88c3-fbb83714636f",
+          "outcome": "no-learning",
+          "publication_verified": false,
+          "source_publication_link_verified": false,
+          "source_sha256": "61496bbfd0ba09655bb4c84cb53ead0b6fefadb4f841d6201d31087b24e14b42",
+          "witnessed_commit": null
+        }
+      }
+    ],
+    "faults": [],
+    "fingerprint": "6fc54d8101bab06a17ad591684a14fc4ca7b05ef4dc5ac3164f8620d41a5ee8c",
+    "complete": true
+  },
+  "terminal": true
+}

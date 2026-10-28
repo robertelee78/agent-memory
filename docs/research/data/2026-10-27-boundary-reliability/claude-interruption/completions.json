@@ -1,0 +1,30 @@
+[
+  {
+    "observation_id": "954a2a6a-dfbe-4679-b137-749e85cc9186",
+    "receipt": {
+      "assessment": {
+        "candidates": [
+          {
+            "claim": "6 + 6 = 12",
+            "disposition": "not-durable",
+            "reason": "Disposable arithmetic check, no repository decision or constraint."
+          }
+        ],
+        "source_id": "954a2a6a-dfbe-4679-b137-749e85cc9186",
+        "source_review": "Verified the prompt text against the native transcript; SHA-256 matches. The prompt asks for 6 + 6 and for assessment of this source plus recovery of the earlier pending source. Answer is 12. No durable project lesson: trivial arithmetic and memory bookkeeping instructions only."
+      },
+      "assessment_is_agent_assertion": true,
+      "canonical_writes_performed": false,
+      "input_sha256": "ca5a3ad1020c7c07742e188c2ddaff3b47d823c3c0ecc9825ab3fe42b1cb85f5",
+      "observation_id": "954a2a6a-dfbe-4679-b137-749e85cc9186",
+      "outcome": "no-learning",
+      "publication_verified": false,
+      "source_publication_link_verified": false,
+      "source_sha256": "9317e8aae220be2391686388123e22aedd4b57efc3103d76fa3fc3b649e6a3d0",
+      "witnessed_commit": null
+    },
+    "record_sha256": "a7fc2149c3a6baaf6b9cc352a1da1b76d6d198ba2305844554767a5152a6d334",
+    "schema": "agent-memory/source-completed-v2",
+    "source_sha256": "9317e8aae220be2391686388123e22aedd4b57efc3103d76fa3fc3b649e6a3d0"
+  }
+]

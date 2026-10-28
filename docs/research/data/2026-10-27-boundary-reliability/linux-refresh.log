@@ -1,0 +1,12 @@
+test_cursor_receipt_and_branch_pins_cannot_be_mixed_or_missing (contracts.test_refresh_receipt_snapshot.ReceiptSnapshotCurrent.test_cursor_receipt_and_branch_pins_cannot_be_mixed_or_missing) ... ok
+test_import_then_current_then_full_noop_then_current_preserves_feature_state (contracts.test_refresh_receipt_snapshot.ReceiptSnapshotCurrent.test_import_then_current_then_full_noop_then_current_preserves_feature_state) ... ok
+test_imported_remote_deletion_is_part_of_complete_snapshot (contracts.test_refresh_receipt_snapshot.ReceiptSnapshotCurrent.test_imported_remote_deletion_is_part_of_complete_snapshot) ... ok
+test_local_mutations_staged_memory_and_new_authority_remain_review_required (contracts.test_refresh_receipt_snapshot.ReceiptSnapshotCurrent.test_local_mutations_staged_memory_and_new_authority_remain_review_required) ... ok
+test_current_untracked_canonical_memory_explains_full_review_without_writes (contracts.test_memory_refresh.MemoryRefreshContract.test_current_untracked_canonical_memory_explains_full_review_without_writes) ... ok
+test_current_refuses_local_and_authority_changes_at_final_recheck (contracts.test_memory_refresh.MemoryRefreshContract.test_current_refuses_local_and_authority_changes_at_final_recheck) ... ok
+test_current_equal_bank_and_orphan_journal (contracts.test_memory_refresh.MemoryRefreshContract.test_current_equal_bank_and_orphan_journal) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 36.809s
+
+OK

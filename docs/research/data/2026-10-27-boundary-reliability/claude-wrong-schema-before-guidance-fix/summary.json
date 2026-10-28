@@ -1,0 +1,262 @@
+{
+  "runs": [
+    {
+      "exit": 0,
+      "seconds": 71.30519187500249,
+      "session": "448497dc-9adc-48df-9512-ad2df12ce1cd",
+      "result": [
+        {
+          "duration_api_ms": 63594,
+          "stop_reason": "end_turn",
+          "session_id": "448497dc-9adc-48df-9512-ad2df12ce1cd",
+          "total_cost_usd": 0.542337,
+          "usage": {
+            "input_tokens": 198,
+            "cache_creation_input_tokens": 18133,
+            "cache_read_input_tokens": 186988,
+            "output_tokens": 2619,
+            "output_tokens_details": {
+              "thinking_tokens": 277
+            },
+            "server_tool_use": {
+              "web_search_requests": 0,
+              "web_fetch_requests": 0
+            },
+            "service_tier": "standard",
+            "cache_creation": {
+              "ephemeral_1h_input_tokens": 18133,
+              "ephemeral_5m_input_tokens": 0
+            },
+            "inference_geo": "global",
+            "iterations": [
+              {
+                "input_tokens": 32,
+                "output_tokens": 143,
+                "cache_read_input_tokens": 28554,
+                "cache_creation_input_tokens": 691,
+                "cache_creation": {
+                  "ephemeral_5m_input_tokens": 0,
+                  "ephemeral_1h_input_tokens": 691
+                },
+                "type": "message"
+              }
+            ],
+            "speed": "standard",
+            "fallback_credit": null
+          },
+          "modelUsage": {
+            "claude-fable-5-1": {
+              "inputTokens": 198,
+              "outputTokens": 2619,
+              "cacheReadInputTokens": 186988,
+              "cacheCreationInputTokens": 18133,
+              "webSearchRequests": 0,
+              "costUSD": 0.542337,
+              "contextWindow": 1000000,
+              "maxOutputTokens": 64000,
+              "thinkingTokens": 277,
+              "canonicalModel": "claude-fable-5-1",
+              "provider": "firstParty",
+              "costBasis": "list"
+            }
+          },
+          "permission_denials": [],
+          "terminal_reason": "completed",
+          "fast_mode_state": "off",
+          "fast_mode_disabled_reason": "sdk_opt_in_required",
+          "subagent_stats": {
+            "spawned": 0,
+            "requested": {
+              "background": 0,
+              "foreground": 0,
+              "unset": 0
+            },
+            "started_in_background": 0,
+            "max_depth": 0,
+            "spawned_by_subagents": 0,
+            "completed": 0,
+            "failed": 0,
+            "killed": {
+              "parent": 0,
+              "user": 0,
+              "system": 0
+            },
+            "refused": {
+              "depth_limit": 0,
+              "concurrency_limit": 0,
+              "budget": 0
+            },
+            "by_type": {}
+          },
+          "safety_stops": 0,
+          "is_error": false,
+          "num_turns": 8,
+          "subtype": "success",
+          "api_error_status": null,
+          "result": "2 + 2 = 4.\n\nMemory remains pending: the exact no-learning assessment for this turn was resubmitted twice, but the memory tool still cannot verify the retained transcript source, so it stays pending for a later retry. No memory bank files were changed.",
+          "ttft_ms": 7360,
+          "type": "result",
+          "duration_ms": 70651,
+          "uuid": "1c22c640-d7be-41cc-9283-a1fbb61304d5",
+          "ttft_stream_ms": 4287,
+          "time_to_request_ms": 1606,
+          "first_content_frame_ms": 4288,
+          "queued_turn_count": 0,
+          "result_index": 0
+        }
+      ]
+    },
+    {
+      "exit": 0,
+      "seconds": 41.93816454199987,
+      "session": "448497dc-9adc-48df-9512-ad2df12ce1cd",
+      "result": [
+        {
+          "duration_api_ms": 97724,
+          "stop_reason": "end_turn",
+          "session_id": "448497dc-9adc-48df-9512-ad2df12ce1cd",
+          "total_cost_usd": 0.7158749999999999,
+          "usage": {
+            "input_tokens": 70,
+            "cache_creation_input_tokens": 3468,
+            "cache_read_input_tokens": 123112,
+            "output_tokens": 1454,
+            "output_tokens_details": {
+              "thinking_tokens": 0
+            },
+            "server_tool_use": {
+              "web_search_requests": 0,
+              "web_fetch_requests": 0
+            },
+            "service_tier": "standard",
+            "cache_creation": {
+              "ephemeral_1h_input_tokens": 3468,
+              "ephemeral_5m_input_tokens": 0
+            },
+            "inference_geo": "global",
+            "iterations": [
+              {
+                "input_tokens": 32,
+                "output_tokens": 78,
+                "cache_read_input_tokens": 32114,
+                "cache_creation_input_tokens": 599,
+                "cache_creation": {
+                  "ephemeral_5m_input_tokens": 0,
+                  "ephemeral_1h_input_tokens": 599
+                },
+                "type": "message"
+              }
+            ],
+            "speed": "standard",
+            "fallback_credit": null
+          },
+          "modelUsage": {
+            "claude-fable-5-1": {
+              "inputTokens": 268,
+              "outputTokens": 4073,
+              "thinkingTokens": 277,
+              "cacheReadInputTokens": 310100,
+              "cacheCreationInputTokens": 21601,
+              "webSearchRequests": 0,
+              "costUSD": 0.7158749999999999,
+              "contextWindow": 1000000,
+              "maxOutputTokens": 64000,
+              "canonicalModel": "claude-fable-5-1",
+              "provider": "firstParty",
+              "costBasis": "list"
+            }
+          },
+          "permission_denials": [],
+          "terminal_reason": "completed",
+          "fast_mode_state": "off",
+          "fast_mode_disabled_reason": "sdk_opt_in_required",
+          "subagent_stats": {
+            "spawned": 0,
+            "requested": {
+              "background": 0,
+              "foreground": 0,
+              "unset": 0
+            },
+            "started_in_background": 0,
+            "max_depth": 0,
+            "spawned_by_subagents": 0,
+            "completed": 0,
+            "failed": 0,
+            "killed": {
+              "parent": 0,
+              "user": 0,
+              "system": 0
+            },
+            "refused": {
+              "depth_limit": 0,
+              "concurrency_limit": 0,
+              "budget": 0
+            },
+            "by_type": {}
+          },
+          "safety_stops": 0,
+          "is_error": false,
+          "num_turns": 4,
+          "subtype": "success",
+          "api_error_status": null,
+          "result": "3 + 3 = 6.\n\nMemory remains pending: the retried no-learning assessment for this turn still cannot be verified against the retained transcript source, and the earlier turn's assessment is in the same state. No memory bank files were changed.",
+          "ttft_ms": 18837,
+          "type": "result",
+          "duration_ms": 41347,
+          "uuid": "9613e95f-b482-4371-a829-df902408e178",
+          "ttft_stream_ms": 5151,
+          "time_to_request_ms": 2113,
+          "first_content_frame_ms": 5151,
+          "queued_turn_count": 0,
+          "result_index": 0
+        }
+      ]
+    },
+    {
+      "exit": 1,
+      "seconds": 0.7537240839992592,
+      "session": "448497dc-9adc-48df-9512-ad2df12ce1cd",
+      "result": []
+    }
+  ],
+  "pending": {
+    "turns": [
+      {
+        "harness": "claude",
+        "session": "448497dc-9adc-48df-9512-ad2df12ce1cd",
+        "lifecycle": "d8761be0-ad00-4fcb-9667-1ffb7ff4b50a",
+        "project_id": "c801d834-34e2-4b90-ba5c-9d5d8d6406d0",
+        "pending": [
+          {
+            "observation_id": "60af8bc8-bd66-4f06-a67b-b9626b4edd0d",
+            "source_sha256": "772671f50c37065e88096a8fa4d30212b4b69ae55b54ee51bc7986fc0bf887a7"
+          }
+        ],
+        "faults": [],
+        "fingerprint": "b98f049d7fb912111715a9e95e838b9d9f726095a3608a9ce535430654709be1",
+        "complete": false
+      },
+      {
+        "harness": "claude",
+        "session": "448497dc-9adc-48df-9512-ad2df12ce1cd",
+        "lifecycle": "32ab4e53-fe28-41a6-a5dd-63b513bd26a1",
+        "project_id": "c801d834-34e2-4b90-ba5c-9d5d8d6406d0",
+        "pending": [
+          {
+            "observation_id": "659db98d-9a97-4955-a19f-712f0484836a",
+            "source_sha256": "fce75eb34323542801e92a04262fedfea7787f101df47aa36fabc14a1fe6dad1"
+          }
+        ],
+        "faults": [],
+        "fingerprint": "f364db5b6c2347aa211425b9441d278f531f86f606478fadc856d5f7ccf59ed2",
+        "complete": false
+      }
+    ],
+    "legacy": [],
+    "faults": [],
+    "next_offset": null,
+    "next_legacy_offset": null,
+    "source_completeness_verified": false
+  },
+  "completion_count": 0
+}

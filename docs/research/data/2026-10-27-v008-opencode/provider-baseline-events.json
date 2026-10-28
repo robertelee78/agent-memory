@@ -1,0 +1,60 @@
+{
+  "two.jsonl": {
+    "event_counts": {
+      "step_start": 4,
+      "text": 2,
+      "step_finish": 3,
+      "tool_use": 2
+    },
+    "assistant_text": [
+      "The result is five.",
+      "The result is five."
+    ],
+    "tools": [
+      {
+        "tool": "execute",
+        "status": "completed"
+      },
+      {
+        "tool": "execute",
+        "status": "completed"
+      }
+    ],
+    "errors": []
+  },
+  "baseline-no-am.jsonl": {
+    "event_counts": {
+      "step_start": 2
+    },
+    "assistant_text": [],
+    "tools": [],
+    "errors": []
+  },
+  "one.jsonl": {
+    "event_counts": {
+      "step_start": 4,
+      "text": 2,
+      "step_finish": 3,
+      "tool_use": 3
+    },
+    "assistant_text": [
+      "The result is five.",
+      "The result is five."
+    ],
+    "tools": [
+      {
+        "tool": "read",
+        "status": "completed"
+      },
+      {
+        "tool": "execute",
+        "status": "completed"
+      },
+      {
+        "tool": "execute",
+        "status": "completed"
+      }
+    ],
+    "errors": []
+  }
+}

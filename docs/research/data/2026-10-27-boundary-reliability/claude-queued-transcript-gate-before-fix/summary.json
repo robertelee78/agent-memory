@@ -1,0 +1,40 @@
+{
+  "runs": [
+    {
+      "exit": 0,
+      "seconds": 45.224341583998466,
+      "results": [
+        "2 + 2 = 4, and 3 + 3 = 6.\n\nMemory note: the first message was acknowledged as no-learning. The two boundary observations for the mid-turn \"3 + 3\" follow-up could not be verified because the helper reported the retained native message had changed, so they remain pending rather than being marked complete. Nothing durable was recorded, which is correct for disposable arithmetic."
+      ]
+    }
+  ],
+  "pending": {
+    "turns": [
+      {
+        "harness": "claude",
+        "session": "5e8afcf3-bc24-47a0-a44a-3dfb1c0f8061",
+        "lifecycle": "84b3caa7-c469-4a63-879d-499ebe5f60fc",
+        "project_id": "ffa905b1-bcf0-44ce-b7bf-5d40ba669d6b",
+        "pending": [
+          {
+            "observation_id": "b60cb5c5-ecfd-4bb8-9523-d07d9b4c172e",
+            "source_sha256": "fce75eb34323542801e92a04262fedfea7787f101df47aa36fabc14a1fe6dad1"
+          },
+          {
+            "observation_id": "64c30959-21ab-4aed-a9c1-983913fa5bcd",
+            "source_sha256": "fce75eb34323542801e92a04262fedfea7787f101df47aa36fabc14a1fe6dad1"
+          }
+        ],
+        "faults": [],
+        "fingerprint": "f93ec92328eba96ceb29be20bcf3c83375e80f84241a776502f1fa1470d43380",
+        "complete": false
+      }
+    ],
+    "legacy": [],
+    "faults": [],
+    "next_offset": null,
+    "next_legacy_offset": null,
+    "source_completeness_verified": false
+  },
+  "completion_count": 1
+}

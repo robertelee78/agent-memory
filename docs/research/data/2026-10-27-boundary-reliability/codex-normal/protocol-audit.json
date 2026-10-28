@@ -1,0 +1,17 @@
+{
+  "native_version": "codex-cli 0.165.0",
+  "thread_start_responses": [
+    {
+      "thread": "01a17ff0-9922-75a3-bd32-87a50e65118c",
+      "model": "gpt-6.1-sol",
+      "provider": "openai"
+    },
+    {
+      "thread": "01a17ff1-8504-7301-905b-51cd8ce94706",
+      "model": "gpt-6.1-sol",
+      "provider": "openai"
+    }
+  ],
+  "raw_account_notifications_retained_publicly": false,
+  "source": "Read actual native response objects; no new model or product execution"
+}
