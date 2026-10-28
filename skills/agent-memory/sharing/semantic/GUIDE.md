@@ -359,12 +359,8 @@ Recovery verifies scope/ownership, restores a verified retained registry/journal
 or imports supported predecessor records while preserving originals. Unknown
 evidence MUST remain preserved; an active writer MUST be allowed to finish.
 
-## Diagnostic fallback
 
-If normal semantic review cannot establish a usable proof, a session MAY inspect bounded actual source components and stronger project evidence to resolve the question with the detecting developer. It MUST preserve the held claims/conditions/provenance, obtain a fresh complete judgment, and apply only through the corresponding governed refresh/publication caller.
-
-
-## Dispute metadata capacity
+### Dispute metadata capacity
 
 A valid proposed dispute-state update can report `known-holds-record-capacity`,
 `known-holds-history-capacity`, or `known-holds-byte-capacity`, separately from
@@ -380,3 +376,8 @@ a supported, independently reviewed capacity/retention upgrade is required.
 The session MUST NOT delete disputes/history, raise limits, or claim completed
 review/publication to clear the error. An already-recorded proof at capacity
 remains an idempotent no-op success; a repeated excess remains refused.
+
+
+## Diagnostic fallback
+
+If normal semantic review cannot establish a usable proof, a session MAY inspect bounded actual source components and stronger project evidence to resolve the question with the detecting developer. It MUST preserve the held claims/conditions/provenance, obtain a fresh complete judgment, and apply only through the corresponding governed refresh/publication caller.
