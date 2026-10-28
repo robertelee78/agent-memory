@@ -1,0 +1,9 @@
+{
+  "source": "53b3a27a4c2a12d5b8937852f3b8c8f57cdab4cb",
+  "protected": true,
+  "explicit_user_eligible": true,
+  "unsupported_rules": [],
+  "review_required": false,
+  "read_only_policy_observation": true,
+  "required_check_entries_retained": 4
+}
