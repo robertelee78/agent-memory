@@ -50,12 +50,12 @@ def seal(value):
     return {**value,'checksum':digest(encoded(value))}
 
 
-def registry_value(value,root,project_id):
+def registry_value(value,root,project_id,*,successor=False):
     if (not isinstance(value,dict) or set(value)!={'schema','repo_root','project_id','records','checksum'}
             or value['schema']!=SCHEMA or value['repo_root']!=str(root) or value['project_id']!=project_id
             or value['checksum']!=digest(encoded({k:v for k,v in value.items() if k!='checksum'}))
-            or not isinstance(value['records'],dict) or len(value['records'])>MAX_RECORDS
-            or len(encoded(value))>MAX_STORE):
+            or not isinstance(value['records'],dict)
+            or (not successor and (len(value['records'])>MAX_RECORDS or len(encoded(value))>MAX_STORE))):
         raise ContractError('Known review inventory is changed/oversized; preserve it for recovery')
     for key,record in value['records'].items():
         fields={'binding','cause','references','dependencies','judgment_sha256','proof_sha256','resolution'}
@@ -63,7 +63,7 @@ def registry_value(value,root,project_id):
             raise ContractError('Known review evidence has an unknown format')
         if 'resolution_history' in record:
             history=record['resolution_history']
-            if (not isinstance(history,list) or not 1<=len(history)<=MAX_RECORDS
+            if (not isinstance(history,list) or not history or (not successor and len(history)>MAX_RECORDS)
                     or not isinstance(record['resolution'],dict)
                     or any(not isinstance(previous,dict) or set(previous)!={
                         'basis','evidence','reason','endpoint_sources','judgment_sha256','proof_sha256'}
@@ -89,6 +89,26 @@ def registry_value(value,root,project_id):
             if reference.get('record') is not None:
                 from .records import reference as record_reference
                 record_reference(reference['record'])
+    if successor:
+        # This path is used only for a sealed successor derived from a verified
+        # current store and validated review. Finish every structural check above
+        # before diagnosing capacity; persisted readers keep their original guards.
+        def exhausted(code,amount,limit,dimension):
+            return HoldFailure(code,
+                'Known-dispute '+dimension+' capacity exhausted: proposed '+str(amount)+'; supported limit '+str(limit)+'.',
+                'Preserve local learning, pending review, the registry, recovery copy, journal and all predecessor evidence. '
+                'This runtime cannot retain the proposed additional metadata. A supported, independently reviewed capacity/retention upgrade is required; '
+                'recovery and identical retries do not increase capacity. Do not prune disputes or history to force this write.')
+        # Fixed precedence for a successor that exceeds multiple bounds.
+        if len(value['records'])>MAX_RECORDS:
+            raise exhausted('known-holds-record-capacity',len(value['records']),MAX_RECORDS,'record-count')
+        for record in value['records'].values():
+            history=record.get('resolution_history',[])
+            if len(history)>MAX_RECORDS:
+                raise exhausted('known-holds-history-capacity',len(history),MAX_RECORDS,'per-record predecessor-history')
+        amount=len(encoded(value))
+        if amount>MAX_STORE:
+            raise exhausted('known-holds-byte-capacity',amount,MAX_STORE,'sealed-registry-byte')
     return value
 
 
@@ -261,7 +281,7 @@ def record(root,project_id,proof,references,*,resolutions=None,owned_lock=None,v
                     records[key].setdefault('resolution_history',[]).append(copy.deepcopy(previous))
                 records[key]['resolution']=renewed
             desired=seal({'schema':SCHEMA,'repo_root':str(root),'project_id':project_id,'records':records})
-            registry_value(desired,root,project_id)
+            registry_value(desired,root,project_id,successor=True)
             if desired!=current:commit_store(root,project_id,desired,observed_sha,directory,anchor)
         if verify is not None:verify(bank_token)
 
