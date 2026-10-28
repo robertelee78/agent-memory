@@ -1,0 +1,103 @@
+[
+  {
+    "label": "fresh-one-line",
+    "argv": [
+      "bash",
+      "-o",
+      "pipefail",
+      "-c",
+      "curl -fsSL \"$1\" | bash",
+      "public-canary",
+      "https://raw.githubusercontent.com/robertelee78/agent-memory/main/install.sh"
+    ],
+    "exit": 0,
+    "seconds": 2.6062805830006255,
+    "stdout_sha256": "df7e788673fdf8183428e963f9c2074f735014b59e2937a5f491226489736a79",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "label": "fresh-version",
+    "argv": [
+      "/private/tmp/agent-memory-test-cgeo5k40/home/.local/bin/am",
+      "--version"
+    ],
+    "exit": 0,
+    "seconds": 1.0374125840025954,
+    "stdout_sha256": "c93c98db073c8a32c7d6fdd365c742275c4aef2393adcac65afd17240c9786f4",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "label": "fresh-version-json",
+    "argv": [
+      "/private/tmp/agent-memory-test-cgeo5k40/home/.local/bin/am",
+      "--json",
+      "version"
+    ],
+    "exit": 0,
+    "seconds": 0.9296780000004219,
+    "stdout_sha256": "e47bf33866c3410aafb59e9ff2309c1674e5cc157feffaf7b804cf7ae8994217",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "label": "fresh-update-check",
+    "argv": [
+      "/private/tmp/agent-memory-test-cgeo5k40/home/.local/bin/am",
+      "--json",
+      "update",
+      "--check"
+    ],
+    "exit": 0,
+    "seconds": 3.9817955000035,
+    "stdout_sha256": "db70e22f0731556286d600be7b8a9924858b6dacbaacbe3e68d6d7e1755a6374",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "label": "fresh-update",
+    "argv": [
+      "/private/tmp/agent-memory-test-cgeo5k40/home/.local/bin/am",
+      "--json",
+      "update"
+    ],
+    "exit": 0,
+    "seconds": 5.298346416006098,
+    "stdout_sha256": "dba07163ccbabe4ad6ea839f34b51fbf77e1219a1194c2f440051e4aa070dadd",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "label": "fresh-status",
+    "argv": [
+      "/private/tmp/agent-memory-test-cgeo5k40/home/.local/bin/am",
+      "status",
+      "--repo",
+      "/private/tmp/agent-memory-test-cgeo5k40/consumer"
+    ],
+    "exit": 0,
+    "seconds": 0.4758640829968499,
+    "stdout_sha256": "cbfe256dac0fc364d0d9d286ed7a18f04ca92bac053b25703416ccdfe5663a8e",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "label": "fresh-uninstall-check",
+    "argv": [
+      "/private/tmp/agent-memory-test-cgeo5k40/home/.local/bin/am",
+      "--json",
+      "uninstall",
+      "--check"
+    ],
+    "exit": 0,
+    "seconds": 0.15607020900642965,
+    "stdout_sha256": "4e1ed887583af589d2886ac796aabd5f0af6d66d66a6882556a2a9ff1521dba1",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "label": "fresh-uninstall",
+    "argv": [
+      "/private/tmp/agent-memory-test-cgeo5k40/home/.local/bin/am",
+      "uninstall"
+    ],
+    "exit": 0,
+    "seconds": 0.35923737499979325,
+    "stdout_sha256": "b05ae71e5710f724e94952336dcc1b9571d520688e9670bfcfd38f253411211f",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+]

@@ -1,0 +1,95 @@
+{
+  "schema": "agent-memory/diagnostic-result-v1",
+  "operation": "version",
+  "writes_performed": false,
+  "network_performed": false,
+  "repairs_performed": false,
+  "checks": [
+    {
+      "component": "runtime.executing_artifact",
+      "state": "pass",
+      "detail": "Executing package inventory, route graph and declared compatibility are valid.",
+      "path": "/tmp/agent-memory-test-rfacdp0a/data/agent-memory/source/skills/agent-memory"
+    }
+  ],
+  "security": {
+    "publisher_authentication": "verified",
+    "signature_verification_performed": true,
+    "recorded_source_selection": "pinned_signed_release",
+    "executing_verifier_authenticated": false,
+    "platform_acls_audited": false
+  },
+  "installation": {
+    "state": "active",
+    "receipt_path": "/tmp/agent-memory-test-rfacdp0a/state/agent-memory/install/receipt.json",
+    "receipt_schema": "agent-memory/install-receipt-v1",
+    "mode": "link",
+    "enabled_adapters": [
+      "agents",
+      "codex",
+      "claude",
+      "opencode"
+    ],
+    "health": "not_audited",
+    "update_availability": "not_cached_or_fetched",
+    "purge_transactions": "not_scanned",
+    "channel": {
+      "kind": "release",
+      "ref": "releases/latest",
+      "remote": "repo://github.com/robertelee78/agent-memory"
+    },
+    "recorded_source": {
+      "path": "/tmp/agent-memory-test-rfacdp0a/data/agent-memory/source",
+      "pack": "/tmp/agent-memory-test-rfacdp0a/data/agent-memory/source/skills/agent-memory",
+      "version": "0.0.9",
+      "revision": "07956881057fe29bb3160deaecc23b3e7abc9f93",
+      "artifact_digest": "992510030a2e163e95d567954c95d6236d2c3ee2e9c22d6e60c3dacfbddbe78b",
+      "dirty": false
+    },
+    "preserved_target_count": 0,
+    "transaction": {
+      "operation": "update",
+      "state": "complete"
+    }
+  },
+  "executing_source": {
+    "kind": "release",
+    "path": "/tmp/agent-memory-test-rfacdp0a/data/agent-memory/source",
+    "pack": "/tmp/agent-memory-test-rfacdp0a/data/agent-memory/source/skills/agent-memory",
+    "remote": "https://github.com/robertelee78/agent-memory.git",
+    "ref": "releases/latest",
+    "revision": "07956881057fe29bb3160deaecc23b3e7abc9f93",
+    "dirty": false,
+    "version": "0.0.9",
+    "artifact_digest": "992510030a2e163e95d567954c95d6236d2c3ee2e9c22d6e60c3dacfbddbe78b",
+    "compatibility": {
+      "schema": "agent-memory/runtime-compatibility-v1",
+      "readable_bank_schemas": [
+        "agent-memory/v1"
+      ],
+      "migrator_source_schemas": [],
+      "migration_catalog": "schemas/migrations.json",
+      "python_minimum": "3.11",
+      "installed_commands": [
+        "am",
+        "agent-memory"
+      ],
+      "git_required_for": [
+        "governed-repository-operations",
+        "git-sharing"
+      ],
+      "required_python_packages": [],
+      "required_agent_clients": [],
+      "optional_adapters": [
+        "adapters/github-publication.json"
+      ]
+    },
+    "release_manifest_sha256": "79a8ba469abb5d4235ef129f4c3d2a4c786198a10ec7d2d480127928b9a8293f",
+    "signature_namespace": "agent-memory.release",
+    "signature_principal": "release@agent-memory",
+    "cleanliness": "verified_release"
+  },
+  "failures": [],
+  "warnings": [],
+  "ok": true
+}

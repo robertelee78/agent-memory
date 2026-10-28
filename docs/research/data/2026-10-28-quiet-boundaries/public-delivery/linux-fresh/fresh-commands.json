@@ -1,0 +1,103 @@
+[
+  {
+    "label": "fresh-one-line",
+    "argv": [
+      "bash",
+      "-o",
+      "pipefail",
+      "-c",
+      "curl -fsSL \"$1\" | bash",
+      "public-canary",
+      "https://raw.githubusercontent.com/robertelee78/agent-memory/main/install.sh"
+    ],
+    "exit": 0,
+    "seconds": 2.6953049569856375,
+    "stdout_sha256": "ab25767b135e118922b5f8e6c95eb2767629f8fd2d2d0b4048d5cd6fa3ece705",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "label": "fresh-version",
+    "argv": [
+      "/tmp/agent-memory-test-cdapaeg3/home/.local/bin/am",
+      "--version"
+    ],
+    "exit": 0,
+    "seconds": 1.190938679035753,
+    "stdout_sha256": "40895eaa4c572c098287cafb9d6140822d2bc6ed546eab10f8224c433fb2084f",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "label": "fresh-version-json",
+    "argv": [
+      "/tmp/agent-memory-test-cdapaeg3/home/.local/bin/am",
+      "--json",
+      "version"
+    ],
+    "exit": 0,
+    "seconds": 1.3402358258608729,
+    "stdout_sha256": "100be1e50d0521f867cc59e96289ccdd151e21136c62670b42e068029044da8e",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "label": "fresh-update-check",
+    "argv": [
+      "/tmp/agent-memory-test-cdapaeg3/home/.local/bin/am",
+      "--json",
+      "update",
+      "--check"
+    ],
+    "exit": 0,
+    "seconds": 4.997193132061511,
+    "stdout_sha256": "1262e87c00f8ab26d1d094d13a8b7af4c619017c7c6bf36268f2190efb9f99fc",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "label": "fresh-update",
+    "argv": [
+      "/tmp/agent-memory-test-cdapaeg3/home/.local/bin/am",
+      "--json",
+      "update"
+    ],
+    "exit": 0,
+    "seconds": 6.548386486945674,
+    "stdout_sha256": "192b0e33b5445210d2f168cba205c062a2f2c0a9491a6ec2747fee399465cd2f",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "label": "fresh-status",
+    "argv": [
+      "/tmp/agent-memory-test-cdapaeg3/home/.local/bin/am",
+      "status",
+      "--repo",
+      "/tmp/agent-memory-test-cdapaeg3/consumer"
+    ],
+    "exit": 0,
+    "seconds": 0.5899470709264278,
+    "stdout_sha256": "b769b8c1395b2d2bf526965be2ffd173ff8e09d676b88fd281f1906e20e7202c",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "label": "fresh-uninstall-check",
+    "argv": [
+      "/tmp/agent-memory-test-cdapaeg3/home/.local/bin/am",
+      "--json",
+      "uninstall",
+      "--check"
+    ],
+    "exit": 0,
+    "seconds": 0.18930064304731786,
+    "stdout_sha256": "7b5a9aa62f9d22ceebac1c16bf9b2d9df10d1140a25c7cdd32bf7872baf15b72",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "label": "fresh-uninstall",
+    "argv": [
+      "/tmp/agent-memory-test-cdapaeg3/home/.local/bin/am",
+      "uninstall"
+    ],
+    "exit": 0,
+    "seconds": 0.29079235601238906,
+    "stdout_sha256": "b05ae71e5710f724e94952336dcc1b9571d520688e9670bfcfd38f253411211f",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+]

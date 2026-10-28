@@ -1,0 +1,38 @@
+[
+  {
+    "canary": "linux-fresh",
+    "seconds": 18.501,
+    "completed_commands": 8,
+    "maximum_command_seconds": 6.548,
+    "source_commit": "07956881057fe29bb3160deaecc23b3e7abc9f93",
+    "artifact_digest": "992510030a2e163e95d567954c95d6236d2c3ee2e9c22d6e60c3dacfbddbe78b",
+    "result_sha256": "14038163777d50689c0864ff5ba17a51792d6726d4024bb85c7b3ddca86fe925"
+  },
+  {
+    "canary": "linux-upgrade",
+    "seconds": 21.001,
+    "completed_commands": 8,
+    "maximum_command_seconds": 6.701,
+    "source_commit": "07956881057fe29bb3160deaecc23b3e7abc9f93",
+    "artifact_digest": "992510030a2e163e95d567954c95d6236d2c3ee2e9c22d6e60c3dacfbddbe78b",
+    "result_sha256": "cbd9d08a84a27a8dcbe1c09e78a04d1d1879c691a3d9e7cb0d58c434aff7ddb5"
+  },
+  {
+    "canary": "mac-fresh",
+    "seconds": 15.872,
+    "completed_commands": 8,
+    "maximum_command_seconds": 5.298,
+    "source_commit": "07956881057fe29bb3160deaecc23b3e7abc9f93",
+    "artifact_digest": "992510030a2e163e95d567954c95d6236d2c3ee2e9c22d6e60c3dacfbddbe78b",
+    "result_sha256": "707e6abbd6330f3661f14eb5c2976e57ae9cdb6b72cdfe0e7cde7194485fddb0"
+  },
+  {
+    "canary": "mac-upgrade",
+    "seconds": 18.1,
+    "completed_commands": 8,
+    "maximum_command_seconds": 6.095,
+    "source_commit": "07956881057fe29bb3160deaecc23b3e7abc9f93",
+    "artifact_digest": "992510030a2e163e95d567954c95d6236d2c3ee2e9c22d6e60c3dacfbddbe78b",
+    "result_sha256": "48945479db73367335a17dde55f03d51e731366528f64f2f9a8428245f484e91"
+  }
+]

@@ -583,3 +583,93 @@ post-verification cache checks remain mandatory after publication. Prepared
 signed v0.0.8 upgrade worlds are not completed delivery receipts. Final release
 source must retain the accepted runtime bytes and receive its own delivery
 binding/review; no public delivery claim is made here.
+
+## Final T3 public delivery verdict: ACCEPT for signed v0.0.9
+
+Exact published source:
+`07956881057fe29bb3160deaecc23b3e7abc9f93`.
+Portable artifact digest:
+`992510030a2e163e95d567954c95d6236d2c3ee2e9c22d6e60c3dacfbddbe78b`.
+
+The reviewer independently read public GitHub release metadata, the tag reference
+and downloaded manifest for
+[v0.0.9](https://github.com/robertelee78/agent-memory/releases/tag/v0.0.9).
+The non-draft release and tag resolve to that exact source. Manifest archive
+SHA-256 `964e6053ba1615c6473c7f8f87c327abfde0dd0887da652d44d8b8c9f5be66d0`
+matches GitHub's archive asset digest; its source and portable digest match the
+publisher receipt and all four installed-version diagnostics. No runtime, script
+or test difference exists between accepted candidate `7d48d41` and the published
+source. Later evidence commits do not change this immutable release binding.
+
+All four actual public canary results pass. The reviewer read every command
+record, result and installed JSON version diagnostic in
+`/tmp/am-v009-public-delivery-proof/`, verified their collected result hashes,
+and checked all 32 command exits are zero. Each platform exercised a public
+default fresh install and actual existing signed-v0.0.8 CLI update, followed by
+human version/status, authenticated JSON version, update check, public no-op
+update, uninstall preview and actual uninstall. Longest completed command was
+6.701 seconds; the existing runner bounds each command to 180 seconds. There is
+no retry counted as a passing transition.
+
+| Canary | Total seconds | Result SHA-256 |
+| --- | ---: | --- |
+| macOS fresh | 15.872 | `707e6abbd6330f3661f14eb5c2976e57ae9cdb6b72cdfe0e7cde7194485fddb0` |
+| macOS signed-v0.0.8 upgrade | 18.100 | `48945479db73367335a17dde55f03d51e731366528f64f2f9a8428245f484e91` |
+| Linux fresh | 18.501 | `14038163777d50689c0864ff5ba17a51792d6726d4024bb85c7b3ddca86fe925` |
+| Linux signed-v0.0.8 upgrade | 21.001 | `cbd9d08a84a27a8dcbe1c09e78a04d1d1879c691a3d9e7cb0d58c434aff7ddb5` |
+
+The existing canary runner is unchanged at SHA-256
+`3ae630243176d524844d59aafb4e2c03cde70667c45cde1bc12e3a27c45d0d54`.
+Its assertions preserve consumer memory, staged code, HEAD/index and original
+client text, exclude development memory and `.git`, verify no-op updates and
+remove disposable worlds only after successful uninstall/readback. The reviewer
+previously read those assertions and rechecked the exact runner hash. Saved
+macOS legacy receipt/version and actual update stdout independently confirm
+signed 0.0.8 at C92 transitioning to this 0.0.9 source; Linux preparation evidence
+and its successful actual CLI transition remain separately retained.
+
+All four installed diagnostics report `ok: true`, no failures/warnings,
+publisher authentication verified, signature verification performed, exact
+revision/digest and `cleanliness: verified_release`. Their executing package
+inventory/route/compatibility check passes. These are actual installed-inventory
+and publisher-verification receipts, not merely package-build validation. This
+review did not rerun the signature verifier, native models or public transitions.
+The bytecode-safe controllers and CLI introduce no verification exemption. The
+evidence covers verified inventory before teardown; it does not claim scanning
+already removed source directories after uninstall.
+
+Critical proof bindings:
+
+| Artifact | SHA-256 |
+| --- | --- |
+| `/tmp/am-v009-publish.json` | `d0dc8def6c7ebad197620bce95fb85c591413a1b53d2f2d66463df4000a09feb` |
+| `/tmp/am-v009-public-delivery-proof/summary.json` | `e7f1f0b11377fce425fc69e1cffe3ccc162b6d46bf0e8624abebf8e888084f2e` |
+| macOS fresh installed-version diagnostic | `e47bf33866c3410aafb59e9ff2309c1674e5cc157feffaf7b804cf7ae8994217` |
+| macOS upgrade installed-version diagnostic | `29c68eeaed363e88c2df54f89e95a0638b9404ed1f40efa501fc5a01059ec4e1` |
+| Linux fresh installed-version diagnostic | `100be1e50d0521f867cc59e96289ccdd151e21136c62670b42e068029044da8e` |
+| Linux upgrade installed-version diagnostic | `578910e6d92314b2f123862126dea17ccd234b84e4a771fb1da8a093e82c9503` |
+
+This closes the previously pending public-delivery review for T3 under the
+accepted v0.0.9 compatibility scope. Full native OpenCode silence remains T4 for
+v0.0.10; failed experiments remain failed and disabled. Nothing here claims
+universal model compliance, semantic truth, new durable admission/publication or
+completion of old pending sources.
+
+The operator's separate historical macOS v0.0.8 installed profile currently has
+reported bytecode-cache drift undergoing preservation/quarantine review. The
+four disposable public canaries neither used nor repaired that profile. Their
+clean v0.0.9 results must not be presented as proof that this historical local
+incident is resolved, or that actual operator adoption has completed. That
+maintenance/adoption proof remains a separate activity; it is not a failure of
+these delivered artifact canaries. No runtime or profile files were edited by
+this reviewer. AWA release closure and any memory publication remain coordinator
+actions rather than effects of this review document.
+
+The durable copies under
+`data/2026-10-28-quiet-boundaries/public-delivery/` were independently compared
+with the private proofs: all thirteen command/result/diagnostic/summary files
+are byte-identical. `publication.json` has identical parsed values with different
+formatting; its durable byte SHA-256 is
+`5f8595a28e22b105da4a3bf96a682dcd648889dd9867aba998e2a2b3574913b8`.
+The other private-path hash bindings above apply to their retained repository
+copies as well. No further delivery gate remains from this independent T3 review.
