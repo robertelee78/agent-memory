@@ -1,0 +1,50 @@
+{
+  "exit": 0,
+  "seconds": 39.94585612500305,
+  "actual_native_input": "This is a read-only activation check of the installed Agent Memory hooks in this actual repository. What is 2 + 2? Return the arithmetic answer only. This test introduces no durable project learning. Assess the exact source supplied by the native hook using the installed skill, leave every older pending source untouched, and preserve all code, bank files, index and branch. Only private source-assessment state may change. Do not initialize, admit, publish or stage anything.",
+  "final_answers": [
+    "4"
+  ],
+  "completion_receipts": [
+    {
+      "verified": true,
+      "already_completed": false,
+      "observation_id": "3b793005-eba4-40f8-b08c-c50bdb900a23",
+      "source_sha256": "796d9b9e1ac5607fb9931bb636c43b3dad1850a8c754e83109783dbf09528b11",
+      "outcome": "no-learning",
+      "assessment": {
+        "source_id": "3b793005-eba4-40f8-b08c-c50bdb900a23",
+        "source_review": "Reviewed the exact native-hook supplied user source: a read-only activation check requesting only the result of 2 + 2, explicitly introducing no durable project learning and requiring older pending sources and repository content to remain untouched. This is a transient arithmetic and activation-check request, with no durable project lesson.",
+        "candidates": []
+      },
+      "assessment_is_agent_assertion": true,
+      "source_publication_link_verified": false,
+      "publication_verified": false,
+      "witnessed_commit": null,
+      "input_sha256": "aab34e774d76f0baea707c16f5482e782a74e52cfd578a8ed4191daddc6b3361",
+      "canonical_writes_performed": false
+    }
+  ],
+  "refresh_results": [
+    {
+      "schema": "agent-memory/refresh-result-v1",
+      "operation": "current",
+      "sharing_state": "bank-synchronized",
+      "refresh_applied": false,
+      "canonical_writes_performed": false,
+      "original_index_writes_performed": false,
+      "publication_verified": false,
+      "feature_code_freshness_verified": false,
+      "remote_freshness_verified": true,
+      "relevant_imports_read": false,
+      "local_memory_available": true,
+      "pending_capture": "unknown",
+      "pending_publication": "unknown",
+      "semantic_truth_verified": false,
+      "source_assertions_verified": false,
+      "observed_authority_head": "c92b605fb09f2058f9258258bbec00f41c76eeb7",
+      "git_metadata_writes_performed": true
+    }
+  ],
+  "qualification": "Actual installed hook and project bank; no durable admission/publication requested by this arithmetic activation check. Old pending sources preserved."
+}

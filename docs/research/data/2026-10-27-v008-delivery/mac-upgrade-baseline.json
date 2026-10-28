@@ -1,0 +1,119 @@
+{
+  "prepared": {
+    "prepared": true,
+    "legacy_version": "0.0.7",
+    "source_revision": "9e1a497d67203f0918c66276671b672f988d7630",
+    "world_retained": true,
+    "actual_public_default_install": true,
+    "platform": "macOS-27.2-arm64-arm-64bit-Mach-O",
+    "seconds": 5.770902332998958
+  },
+  "legacy_receipt_verified": true,
+  "legacy_source": {
+    "kind": "release",
+    "version": "0.0.7",
+    "revision": "9e1a497d67203f0918c66276671b672f988d7630",
+    "release_manifest_sha256": "470cf85d1ef6cbafd7a442f40af6ff3822eb134ae512efbf83dedc7ed2fd06ab",
+    "artifact_digest": "7c509dde14cf06e5a0a65289537dadfdd20124e198f9707fbd8baecd6bf10010"
+  },
+  "prior_version_output": "am 0.0.7\nrevision 9e1a497d67203f0918c66276671b672f988d7630 (verified_release)\nsource /private/tmp/agent-memory-test-7k_icbfi/data/agent-memory/source\n",
+  "actual_update_output": "Updated am 0.0.7 -> 0.0.8 (9e1a497d6720 -> c92b605fb09f).\nRestart running agent sessions to load the changed skill.\n",
+  "commands": [
+    {
+      "label": "signed-legacy-update",
+      "argv": [
+        "/private/tmp/agent-memory-test-7k_icbfi/home/.local/bin/am",
+        "update"
+      ],
+      "exit": 0,
+      "seconds": 5.8077652499996475,
+      "stdout_sha256": "3d093915b2c21461d0e8e44ec78cba2117b34aebc519e19d7a6702217f40862a",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "upgrade-via-cli-version",
+      "argv": [
+        "/private/tmp/agent-memory-test-7k_icbfi/home/.local/bin/am",
+        "--version"
+      ],
+      "exit": 0,
+      "seconds": 0.9354952920002688,
+      "stdout_sha256": "5e33025db6aaccf56bd7c35d77972b5b923a5fe5a022f7f9811f284b0fdb1969",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "upgrade-via-cli-version-json",
+      "argv": [
+        "/private/tmp/agent-memory-test-7k_icbfi/home/.local/bin/am",
+        "--json",
+        "version"
+      ],
+      "exit": 0,
+      "seconds": 0.9506191660002514,
+      "stdout_sha256": "7b07119f6e355e5e7a05284ede7572e123510ef7642dcb7220718c1721ded316",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "upgrade-via-cli-update-check",
+      "argv": [
+        "/private/tmp/agent-memory-test-7k_icbfi/home/.local/bin/am",
+        "--json",
+        "update",
+        "--check"
+      ],
+      "exit": 0,
+      "seconds": 3.992059000000154,
+      "stdout_sha256": "008808779171f1ef1e900d4f6f0a4bc58ccfcf3a73e93845862b9e7c9e403f7b",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "upgrade-via-cli-update",
+      "argv": [
+        "/private/tmp/agent-memory-test-7k_icbfi/home/.local/bin/am",
+        "--json",
+        "update"
+      ],
+      "exit": 0,
+      "seconds": 5.235029749997921,
+      "stdout_sha256": "7b48ed5f3f5801d7f1531a24f24132a77bbf961751b73728a6b898457a48e5d5",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "upgrade-via-cli-status",
+      "argv": [
+        "/private/tmp/agent-memory-test-7k_icbfi/home/.local/bin/am",
+        "status",
+        "--repo",
+        "/private/tmp/agent-memory-test-7k_icbfi/consumer"
+      ],
+      "exit": 0,
+      "seconds": 0.47893029099941486,
+      "stdout_sha256": "1985faafa9104f07ee32049dcf12f5db00f895327cd1b00d7f61c8c3df52423e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "upgrade-via-cli-uninstall-check",
+      "argv": [
+        "/private/tmp/agent-memory-test-7k_icbfi/home/.local/bin/am",
+        "--json",
+        "uninstall",
+        "--check"
+      ],
+      "exit": 0,
+      "seconds": 0.16357629200138035,
+      "stdout_sha256": "0f486f452a5ded6b5bfd1321f531328d40fc89fc1c704ff7fed2a66024089bf6",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "upgrade-via-cli-uninstall",
+      "argv": [
+        "/private/tmp/agent-memory-test-7k_icbfi/home/.local/bin/am",
+        "uninstall"
+      ],
+      "exit": 0,
+      "seconds": 0.4486022499986575,
+      "stdout_sha256": "b05ae71e5710f724e94952336dcc1b9571d520688e9670bfcfd38f253411211f",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "passed": true,
+  "actual_public_default_install": false,
+  "source_commit": "c92b605fb09f2058f9258258bbec00f41c76eeb7",
+  "signed_publisher_verified": true,
+  "development_memory_absent": true,
+  "consumer_and_staged_code_preserved": true,
+  "client_text_restored": true,
+  "public_update_noop_verified": true,
+  "uninstalled": true,
+  "world_retained": false,
+  "platform": "Linux-6.17.0-41-generic-x86_64-with-glibc2.42",
+  "seconds": 19.384968324564397
+}

@@ -1,0 +1,119 @@
+{
+  "prepared": {
+    "prepared": true,
+    "legacy_version": "0.0.7",
+    "source_revision": "9e1a497d67203f0918c66276671b672f988d7630",
+    "world_retained": true,
+    "actual_public_default_install": true,
+    "platform": "Linux-6.17.0-41-generic-x86_64-with-glibc2.42",
+    "seconds": 5.003957130946219
+  },
+  "legacy_receipt_verified": true,
+  "legacy_source": {
+    "kind": "release",
+    "version": "0.0.7",
+    "revision": "9e1a497d67203f0918c66276671b672f988d7630",
+    "release_manifest_sha256": "470cf85d1ef6cbafd7a442f40af6ff3822eb134ae512efbf83dedc7ed2fd06ab",
+    "artifact_digest": "7c509dde14cf06e5a0a65289537dadfdd20124e198f9707fbd8baecd6bf10010"
+  },
+  "prior_version_output": "am 0.0.7\nrevision 9e1a497d67203f0918c66276671b672f988d7630 (verified_release)\nsource /tmp/agent-memory-test-8c08vn_n/data/agent-memory/source\n",
+  "actual_update_output": "Updated am 0.0.7 -> 0.0.8 (9e1a497d6720 -> c92b605fb09f).\nRestart running agent sessions to load the changed skill.\n",
+  "commands": [
+    {
+      "label": "signed-legacy-update",
+      "argv": [
+        "/tmp/agent-memory-test-8c08vn_n/home/.local/bin/am",
+        "update"
+      ],
+      "exit": 0,
+      "seconds": 5.641487159766257,
+      "stdout_sha256": "3d093915b2c21461d0e8e44ec78cba2117b34aebc519e19d7a6702217f40862a",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "upgrade-via-cli-version",
+      "argv": [
+        "/tmp/agent-memory-test-8c08vn_n/home/.local/bin/am",
+        "--version"
+      ],
+      "exit": 0,
+      "seconds": 1.1320437006652355,
+      "stdout_sha256": "76c8ddfd00001de0722608386d6588caaaeaabd467e00e7be18bac575254115c",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "upgrade-via-cli-version-json",
+      "argv": [
+        "/tmp/agent-memory-test-8c08vn_n/home/.local/bin/am",
+        "--json",
+        "version"
+      ],
+      "exit": 0,
+      "seconds": 1.1317801782861352,
+      "stdout_sha256": "17b97cbf1701f99aeac0b0ddebe34dc6e6588f94d20878c4e0241ace183f9984",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "upgrade-via-cli-update-check",
+      "argv": [
+        "/tmp/agent-memory-test-8c08vn_n/home/.local/bin/am",
+        "--json",
+        "update",
+        "--check"
+      ],
+      "exit": 0,
+      "seconds": 4.537252550013363,
+      "stdout_sha256": "0c22cdbb28ec325cb9757312f8756f7ce5622c7c89f20a1cd891e528b65bdd07",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "upgrade-via-cli-update",
+      "argv": [
+        "/tmp/agent-memory-test-8c08vn_n/home/.local/bin/am",
+        "--json",
+        "update"
+      ],
+      "exit": 0,
+      "seconds": 6.039656789973378,
+      "stdout_sha256": "91ad414342e72c4296b6ec7930be9d4e46985b9486d7c037408f365670325b2b",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "upgrade-via-cli-status",
+      "argv": [
+        "/tmp/agent-memory-test-8c08vn_n/home/.local/bin/am",
+        "status",
+        "--repo",
+        "/tmp/agent-memory-test-8c08vn_n/consumer"
+      ],
+      "exit": 0,
+      "seconds": 0.4827502416446805,
+      "stdout_sha256": "506c22a4152f06dfd90b3d07fe420984fb2fb6fa94019c08763be7ac5f6ab67a",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "upgrade-via-cli-uninstall-check",
+      "argv": [
+        "/tmp/agent-memory-test-8c08vn_n/home/.local/bin/am",
+        "--json",
+        "uninstall",
+        "--check"
+      ],
+      "exit": 0,
+      "seconds": 0.18006053939461708,
+      "stdout_sha256": "95dc2049ed4c06119c707720df96e0729957655bb78c13066e96424d473f7ab7",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "upgrade-via-cli-uninstall",
+      "argv": [
+        "/tmp/agent-memory-test-8c08vn_n/home/.local/bin/am",
+        "uninstall"
+      ],
+      "exit": 0,
+      "seconds": 0.23011367581784725,
+      "stdout_sha256": "b05ae71e5710f724e94952336dcc1b9571d520688e9670bfcfd38f253411211f",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

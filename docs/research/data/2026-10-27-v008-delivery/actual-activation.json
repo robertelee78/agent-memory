@@ -1,0 +1,23 @@
+{
+  "installed_version_output": "am 0.0.8\nrevision c92b605fb09f2058f9258258bbec00f41c76eeb7 (verified_release)\nsource /Users/robert.lee/.local/share/agent-memory/source\n",
+  "update_output": "Updated am 0.0.7 -> 0.0.8 (9e1a497d6720 -> c92b605fb09f).\nRestart running agent sessions to load the changed skill.\n",
+  "upgrade_seconds_approx": 130.26,
+  "timing_basis": "redirected-log creation to final output modification; approximate, not profiled",
+  "no_op": {
+    "exit": 0,
+    "seconds": 5.9292752080000355,
+    "stdout": "am 0.0.8 is up to date.\n",
+    "stderr": ""
+  },
+  "doctor": {
+    "ok": true,
+    "setup": "ready",
+    "warnings": [],
+    "failures": [],
+    "publisher_authentication": "verified",
+    "signature_verification_performed": true
+  },
+  "retained_old_legacy_pending": 3,
+  "new_v2_pending_turns": 0,
+  "pending_faults": []
+}
