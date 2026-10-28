@@ -148,8 +148,18 @@ is rejected and MUST trigger fresh reconciliation. The session MUST NOT use
 Normal pre-push hooks remain active; follow-tags and submodule pushes are disabled.
 Only the explicit memory publication ref is updated.
 
-Merge queues, required deployments/signatures/linear history, restricted push
-actors, disallowed merge methods and unknown rule types currently require a
+Classic restricted-push protection is supported when the authenticated GitHub
+user is explicitly listed by stable ID and login in the complete allowed-user
+inventory. AM reobserves that eligibility before a normal protected-workflow
+push; write/admin permission alone is insufficient. Team-only or App-only grants,
+unavailable identities, malformed/incomplete lists and changed actor evidence
+remain pending. API and Git transport credentials may differ: a rejected push
+requires inspection of both identities and current rules, not an override.
+Preserve local learning and original source observations; local admission does
+not complete a published source assessment.
+
+Merge queues, required deployments/signatures/linear history, disallowed merge
+methods and unknown rule types currently require a
 supported explicit continuation. The session MUST retain their pending state
 rather than claim they passed or attempt a privileged bypass. It MAY use the
 ordinary repository workflow only after fresh source review and actual required

@@ -10,7 +10,7 @@ import re
 import subprocess
 import sys
 import tempfile
-from urllib.parse import quote
+from urllib.parse import quote, urlsplit, parse_qs
 import uuid
 
 from . import bank_contract as bank, bank_transactions as tx, bank_writes as writes, local_registry as storage
@@ -115,6 +115,58 @@ def repository(root):
     return match[1]+'/'+match[2]
 
 
+def restricted_push_actor(endpoint, restrictions):
+    """Observe an explicit user grant; API eligibility never bypasses Git policy."""
+    repair = ('Retain local learning and pending sources; inspect the authenticated '
+              'GitHub user and branch allowed users. Team/App-only grants require '
+              'a supported repository workflow; do not loosen protection or switch credentials automatically.')
+    try:
+        if (not isinstance(restrictions, dict)
+                or any(not isinstance(restrictions.get(key), list) for key in ('users', 'teams', 'apps'))):
+            raise ContractError('Classic push-actor restriction is incomplete or malformed')
+        actor = api('user')
+        def user(value):
+            if (not isinstance(value, dict) or type(value.get('id')) is not int
+                    or value['id'] <= 0 or value.get('type') != 'User'
+                    or not isinstance(value.get('login'), str)
+                    or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9-]{0,38}', value['login'])):
+                raise ContractError('Push-actor user identity is incomplete or malformed')
+            return {'id': value['id'], 'login': value['login'].lower(), 'type': 'User'}
+        actor = user(actor)
+        users, seen = [], set()
+        for page in range(1, 5):
+            rows, headers = api(endpoint+'?per_page=100&page='+str(page), with_headers=True)
+            if not isinstance(rows, list) or len(rows) > 100:
+                raise ContractError('Allowed push-user inventory is incomplete or malformed')
+            for row in rows:
+                value = user(row)
+                if value['id'] in seen:
+                    raise ContractError('Allowed push-user inventory has duplicate or conflicting IDs')
+                seen.add(value['id']); users.append(value)
+            link = headers.get('link', '')
+            if link and not all(re.fullmatch(r'\s*<[^>]+>;\s*rel="(?:next|prev|first|last)"\s*', part) for part in link.split(',')):
+                raise ContractError('Allowed push-user pagination header is malformed')
+            if 'rel="next"' not in link:
+                break
+            matches = re.findall(r'<([^>]+)>;\s*rel="next"', link)
+            if len(matches) != 1:
+                raise ContractError('Allowed push-user pagination chain is malformed')
+            parsed = urlsplit(matches[0])
+            if (parsed.scheme != 'https' or parsed.netloc != 'api.github.com'
+                    or parsed.path != '/'+endpoint or parsed.fragment
+                    or parse_qs(parsed.query) != {'per_page': ['100'], 'page': [str(page+1)]}):
+                raise ContractError('Allowed push-user pagination chain changed or is incomplete')
+        else:
+            raise ContractError('Allowed push-user inventory exceeds four complete pages')
+        observation = {'actor': actor, 'users': sorted(users, key=lambda value: value['id'])}
+        if actor not in users:
+            return {**observation, 'eligible': False,
+                    'reason': 'Authenticated GitHub user is not an explicitly allowed push user.', 'repair': repair}
+        return {**observation, 'eligible': True}
+    except ContractError as exc:
+        return {'eligible': False, 'reason': 'Explicit push-user eligibility is unverified: '+str(exc), 'repair': repair}
+
+
 def policy(root, binding):
     name = repository(root); endpoint = 'repos/'+name
     repo = api(endpoint)
@@ -134,6 +186,7 @@ def policy(root, binding):
     known = {'pull_request', 'required_status_checks', 'non_fast_forward', 'deletion'}
     unsupported = sorted({r['type'] for r in rules} - known)
     classic = None
+    push_actor = None
     if branch_data['protected']:
         classic = api(endpoint+'/branches/'+branch+'/protection', allow_missing=True)
         if classic is None and not rules:
@@ -145,7 +198,9 @@ def policy(root, binding):
                 if classic.get(key, {}).get('enabled') is True:
                     unsupported.append(key)
             if classic.get('restrictions') is not None:
-                unsupported.append('restricted-push-actors')
+                push_actor = restricted_push_actor(endpoint+'/branches/'+branch+'/protection/restrictions/users', classic['restrictions'])
+                if not push_actor['eligible']:
+                    unsupported.append('restricted-push-actor-unverified')
     requirements = (classic or {}).get('required_pull_request_reviews') or {}
     review = (requirements.get('required_approving_review_count', 0) > 0
               or requirements.get('require_code_owner_reviews') is True
@@ -177,12 +232,13 @@ def policy(root, binding):
     if protected and repo.get('allow_merge_commit') is not True:
         unsupported.append('merge-commit-method-disabled')
     return {'repository': name, 'protected': protected, 'review_required': review,
+            'push_actor': push_actor,
             'required_checks': [{'context': c, 'app_id': a} for c, a in sorted(checks, key=lambda x: (x[0], x[1] or 0))],
             'conversation_resolution_required': bool(classic and classic.get('required_conversation_resolution', {}).get('enabled')),
             'unsupported_rules': sorted(set(unsupported)), 'observation_sha256': digest(encoded({
                 'repo': {k: repo.get(k) for k in ('full_name', 'default_branch', 'permissions', 'archived', 'disabled', 'allow_merge_commit')},
                 'branch': {k: branch_data[k] for k in ('name', 'protected')},
-                'rules': sorted(rules, key=lambda r: encoded(r)), 'classic': classic}))}
+                'rules': sorted(rules, key=lambda r: encoded(r)), 'classic': classic, 'push_actor': push_actor}))}
 
 
 def result(operation, state, **values):
@@ -232,7 +288,8 @@ def prepare(repo, proof):
     observed_policy = policy(root, binding)
     if observed_policy['unsupported_rules']:
         return result('prepare', 'pending-policy', reason='Repository rules need an explicit supported landing method',
-                      unsupported_rules=observed_policy['unsupported_rules'], git_metadata_writes_performed=True)
+                      unsupported_rules=observed_policy['unsupported_rules'],
+                      policy_failure=observed_policy.get('push_actor'), git_metadata_writes_performed=True)
     proposed = candidate(root, binding, reviewed['publish_files'],quarantine_records=proof['schema']=='agent-memory/semantic-sharing-proof-v2')
     semantic.final_sources(root, binding, binding)
     if index_bytes(root) != original_index:
@@ -403,7 +460,8 @@ def land(repo, request):
     observed_policy = policy(root, binding)
     if observed_policy['unsupported_rules']:
         return result('land', 'pending-policy', unsupported_rules=observed_policy['unsupported_rules'],
-                      reason='Repository requires an explicitly supported landing method', git_metadata_writes_performed=True)
+                      reason='Repository requires an explicitly supported landing method',
+                      policy_failure=observed_policy.get('push_actor'), git_metadata_writes_performed=True)
     proposed, pr_url = request['candidate'], None
     if observed_policy['protected']:
         proposed, pr_url, reason = protected_candidate(root, request, observed_policy)
@@ -428,7 +486,8 @@ def land(repo, request):
     if index_bytes(root) != original_index:
         raise ContractError('Original feature index changed externally during publication; preserve and inspect it')
     if not readback['intended_delta_landed']:
-        return result('land', 'pending-reconciliation', reason='Push was rejected or authority advanced; reconcile before any retry',
+        return result('land', 'pending-reconciliation', reason=('Push was rejected; API and Git transport may use different credentials, or repository rules/authority changed. Inspect both identities and current rules; preserve the candidate and local learning before retrying.' if code else
+                              'Authority advanced or landing readback is unavailable; preserve the candidate and reconcile before retrying'),
                       transport_exit=code, pull_request=pr_url, git_metadata_writes_performed=True)
     return result('land', 'landed', publication_verified=True, witnessed_commit=readback['witnessed_commit'],
                   intended_delta_current=readback['intended_delta_current'], pull_request=pr_url,

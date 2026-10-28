@@ -146,6 +146,7 @@
     {"name": "publication-hold-recovery", "layer": "concurrency", "scope": "v0.0.4", "path": "tests/contracts/test_publication_hold_recovery.py"},
     {"name": "publication-recovery", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_publication_recovery.py"},
     {"name": "publication-pending", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_publication_pending.py"},
+    {"name": "publication-restricted-actor", "layer": "concurrency", "scope": "v0.0.10", "path": "tests/contracts/test_publication_restricted_actor.py"},
     {"name": "publication-policy", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_publication_policy.py"},
     {"name": "publication-worktree", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_publication_worktree.py"},
     {"name": "publication-admission", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_publication_admission.py"},

@@ -44,6 +44,8 @@ d=json.loads((Path(os.environ['AGENT_MEMORY_TEST_ROOT'])/'github-policy.json').r
 def git(*a):return subprocess.run([d['real_git'],'-C',d['remote'],*a],text=True,capture_output=True,check=True).stdout.strip()
 for line in sys.stdin:
  old,new,ref=line.split()
+ if ref=='refs/heads/main' and d.get('restrictions') is not None:
+  if d.get('transport_actor_id',7) not in [u.get('id') for u in d.get('allowed_users',[])]:sys.exit(1)
  if ref=='refs/heads/main' and d['protected']:
   if d['review']!='APPROVED' or d['checks']!='SUCCESS' or d['merge_state']!='CLEAN' or not d['pulls']:sys.exit(1)
   candidate=d['pulls'][0]['head']['sha']
@@ -75,14 +77,33 @@ def response(status,value,extra=''):
  print('HTTP/2.0 '+str(status)+' Fixture\nContent-Type: application/json\n'+extra+'\n'+json.dumps(value));sys.exit(0 if status<400 else 1)
 repo={'full_name':'fixture/memory','default_branch':'main','permissions':{'push':d['push'],'admin':True},'archived':False,'disabled':False,'allow_merge_commit':True,'pushed_at':len(d['events'])}
 if d.get('unavailable'):response(403,{'message':'Fixture permission failure'})
+if endpoint=='user':
+ d['actor_reads']=d.get('actor_reads',0)+1
+ if d.get('change_actor_at')==d['actor_reads']:d['actor']={'id':8,'login':'other-user','type':'User'}
+ if d.get('actor_unavailable'):response(403,{'message':'Actor unavailable'})
+ response(200,d.get('actor',{'id':7,'login':'allowed-user','type':'User'}))
+if endpoint.startswith('repos/fixture/memory/branches/main/protection/restrictions/users?'):
+ page=int(endpoint.split('page=')[-1])
+ if page==d.get('allowlist_failed_page'):response(403,{'message':'Allowlist unavailable'})
+ rows=d.get('allowed_users',[])
+ if not isinstance(rows,list):response(200,rows)
+ link=''
+ if len(rows)>page*100:
+  target='https://api.github.com/repos/fixture/memory/branches/main/protection/restrictions/users?per_page=100&page='+str(page+1)
+  if d.get('broken_next'):target='https://api.github.com/repos/fixture/memory/branches/main/protection/restrictions/users?per_page=100&page=99'
+  link='Link: <'+target+'>; rel="next"\n'
+ response(200,rows[(page-1)*100:page*100],link)
 if endpoint=='repos/fixture/memory':response(200,repo)
 if endpoint=='repos/fixture/memory/branches/main':response(200,{'name':'main','protected':d['protected'],'commit':{'sha':git('rev-parse','refs/heads/main')}})
 if endpoint.startswith('repos/fixture/memory/rules/branches/main?'):
  page=int(endpoint.split('page=')[-1]);rows=d['rules'][(page-1)*100:page*100]
  response(200,rows,'Link: <fixture>; rel="next"\n' if len(d['rules'])>page*100 else '')
 if endpoint=='repos/fixture/memory/branches/main/protection':
+ d['protection_reads']=d.get('protection_reads',0)+1
+ if d.get('remove_restrictions_at')==d['protection_reads']:d['restrictions']=None
+ if d.get('change_allowlist_at')==d['protection_reads']:d['allowed_users']=[]
  if not d['protected']:response(404,{'message':'Branch not protected'})
- response(200,{'required_pull_request_reviews':{'required_approving_review_count':1},'enforce_admins':{'enabled':False},'required_status_checks':{'contexts':['fixture-ci']},'restrictions':None})
+ response(200,{'required_pull_request_reviews':{'required_approving_review_count':1},'enforce_admins':{'enabled':False},'required_status_checks':{'contexts':['fixture-ci']},'restrictions':d.get('restrictions')})
 if endpoint.startswith('repos/fixture/memory/pulls?'):response(200,d['pulls'])
 if endpoint=='repos/fixture/memory/pulls' and method=='POST':
  c=git('rev-parse','refs/heads/'+body['head']);base=git('rev-parse','refs/heads/'+body['base'])
