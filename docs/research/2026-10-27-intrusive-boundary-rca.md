@@ -70,3 +70,14 @@ receipts, or promise invisible UI using an unsupported setting.
 Primary reference: https://learn.chatgpt.com/docs/hooks
 Relevant source: memory_refresh.py, trust_paths.py, codex_boundary.py,
 claude_stop.py, codex_stop.py and turn/GUIDE.md in the signed v0.0.8 source.
+
+## Exact dialogue phase evidence
+
+Read-only inspection of the operator-specified native Codex turn found a
+687-byte assistant commentary message and a 312-byte final-answer message, then
+one task-complete event. These align with the reported full PM response before
+the memory commands and repeated question afterward. No other-repository message
+body was copied into this RCA. The observed duplication therefore occurs in
+ordinary commentary/final emission; a Stop continuation is not necessary to
+explain this incident. The separate fallback repetition risks above remain real
+but must not be mislabeled as this trace's established cause.
