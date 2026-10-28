@@ -1,15 +1,21 @@
 ---
 id: ADR-0018
-status: proposed
+status: accepted
+approval-scope: capacity-diagnosis-for-v0.0.10
+amended: 2026-10-28
 date: 2026-10-26
 related: [ADR-0007, ADR-0009, ADR-0012, ADR-0014, ADR-0015, ADR-0016]
 ---
 
 # ADR-0018: Repair diagnostics and bounded observation
 
-Proposed for **v0.0.4**, based on independent static review of the v0.0.3
-candidate. This proposal does not authorize implementation, change v0.0.3's
-acceptance criteria, or claim a reproduced production failure for these paths.
+Originally proposed for **v0.0.4** from independent static review of v0.0.3.
+The operator selected the capacity-diagnosis correction for **v0.0.10** on
+2026-10-28, bounded by public reproduction and independent design review.
+Acceptance is limited to that outcome; it does not retroactively approve other
+sections or alter delivered releases and their separate acceptance evidence.
+The implementation attempt requires an actual independent approval of this
+immutable design, not this status field alone.
 The [review RCA and triage](../research/2026-10-26-static-review-followups.md)
 separates source-confirmed mechanisms from pending executable reproductions.
 
@@ -22,7 +28,7 @@ refusals whose diagnosis or repair can improve, plus an unbounded observation
 path before format validation. These are follow-ups to existing lifecycle and
 sharing behavior, rather than a new installation or memory architecture.
 
-## Proposed outcomes
+## Outcomes and approval scope
 
 ### Typed publication recovery
 
@@ -37,15 +43,47 @@ and retain ordinary stale-source refusal and successful publication controls.
 
 ### Capacity diagnosis
 
-A recognized dispute-registry/history capacity limit SHALL be reported as
-capacity exhaustion, separately from corruption or incomplete recovery. The
-message SHALL identify the actual limit and a truthful next step; it MUST NOT
-suggest that replaying recovery will increase the supported capacity. It MUST
-NOT discard a known dispute or its evidence to force a successful renewal.
-Acceptance SHALL exercise the supported boundary and an excess through public
-commands, verify refusal before durable replacement, and preserve the original
-registry, recovery evidence, bank and feature state. Retention/archival policy
-remains a design question; this proposal does not authorize destructive pruning.
+A fully structurally validated successor to the verified current dispute registry
+SHALL distinguish capacity exhaustion from malformed or interrupted persisted
+state. The public resolution-history reproduction accepted 4,095 to 4,096
+predecessor entries, then refused 4,096 to 4,097 with a generic review diagnosis
+while preserving original state. This confirms a diagnostic defect, not data loss.
+
+The unchanged limits are 4,096 dispute records, 4,096 predecessor resolution
+entries **per record** (the current resolution is separate), and 16,777,216
+encoded bytes for the complete sealed registry. The exact boundary SHALL remain
+supported. A proposed successor exceeding one SHALL fail before replacing any
+journal, registry, recovery copy or anchor; canonical memory, feature work, index,
+HEAD, pending review and every retained predecessor SHALL remain intact.
+
+Proposed-state validation MAY separate structural validity from capacity solely
+for the successor derived from verified current state and validated review. It
+MUST validate the full schema/checksum and every record/history entry before
+classifying excess; malformed proposed data MUST NOT be certified as capacity.
+Persisted-state readers SHALL retain their existing validation and recovery
+diagnoses; an already oversized, malformed, checksum-invalid or incomplete
+persisted store MUST NOT become trusted through this path.
+
+Typed HoldFailure outcomes SHALL use `known-holds-record-capacity`,
+`known-holds-history-capacity`, or `known-holds-byte-capacity`, carried through
+existing semantic/publication/refresh error surfaces as `known-dispute-state`.
+The reason SHALL identify the measured amount, actual limit and exhausted
+dimension. Repair guidance SHALL preserve local learning and all evidence, state
+that the current runtime cannot retain the proposed additional metadata, and
+require a supported reviewed capacity/retention change. Replaying recovery or
+retrying the same write does not increase capacity. This correction MUST NOT
+raise limits, prune history, remove disputes, introduce automatic archival, or
+mark unfinished review/publication as completed.
+
+Public-command acceptance SHALL exercise each actual boundary and excess using
+valid fixture state derived from a real public review; fixtures need not perform
+thousands of redundant CLI renewals. It SHALL preserve old failing results,
+validate exact unchanged-state hashes after refusal, and test idempotent same-proof
+retry at capacity. Malformed/checksum-invalid and interrupted persisted state,
+and malformed proposed input, SHALL remain negative controls with their original
+non-capacity diagnoses. Focused qualification SHALL run on macOS and Linux within
+the operator's 10–15-minute per-test budget. Independent review SHALL bind actual
+implementation and evidence before this outcome becomes release-ready.
 
 ### Verified legacy uninstall repair
 
@@ -78,8 +116,9 @@ results and exact preserved state. Work SHALL use the existing portable skill,
 CLI, ownership/recovery mechanisms and same-repository Markdown bank. It MUST
 NOT introduce personal memory, cross-repository sharing, MCP or a required
 service. Tasks SHALL remain Backlog until their designs are actually approved.
-Delivery SHALL be an independently accepted implementation in the published
-v0.0.4 release; a static review or planning document is not delivery evidence.
+Capacity-diagnosis delivery SHALL be an independently accepted implementation
+in the published v0.0.10 release; other outcomes retain their recorded delivery
+history rather than inheriting this new approval. For every outcome, a static review or planning document is not delivery evidence.
 
 ## Consequences
 
