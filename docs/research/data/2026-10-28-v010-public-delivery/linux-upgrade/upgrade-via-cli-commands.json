@@ -1,0 +1,98 @@
+[
+  {
+    "label": "signed-legacy-update",
+    "argv": [
+      "/tmp/agent-memory-test-7ddpjna6/home/.local/bin/am",
+      "update"
+    ],
+    "exit": 0,
+    "seconds": 5.349811000050977,
+    "stdout_sha256": "6350488fd566696ed9de08895e2480d7b86c21583395c8dc3529f5609de2ce8f",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "label": "upgrade-via-cli-version",
+    "argv": [
+      "/tmp/agent-memory-test-7ddpjna6/home/.local/bin/am",
+      "--version"
+    ],
+    "exit": 0,
+    "seconds": 1.1931245720479637,
+    "stdout_sha256": "69d5c775ea62ebe439f866cf1638db37df705994418d77992ba1c60c7272e823",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "label": "upgrade-via-cli-version-json",
+    "argv": [
+      "/tmp/agent-memory-test-7ddpjna6/home/.local/bin/am",
+      "--json",
+      "version"
+    ],
+    "exit": 0,
+    "seconds": 1.1896350120659918,
+    "stdout_sha256": "7cb4060960797a8fe5352d101cc53c5bc90cb36bc9957a3e8a9427649ab38d67",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "label": "upgrade-via-cli-update-check",
+    "argv": [
+      "/tmp/agent-memory-test-7ddpjna6/home/.local/bin/am",
+      "--json",
+      "update",
+      "--check"
+    ],
+    "exit": 0,
+    "seconds": 5.097282696980983,
+    "stdout_sha256": "0c7943788564bd1f7426869c0e2f1b64ebe3b60303cd75c3ced6979d500d292c",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "label": "upgrade-via-cli-update",
+    "argv": [
+      "/tmp/agent-memory-test-7ddpjna6/home/.local/bin/am",
+      "--json",
+      "update"
+    ],
+    "exit": 0,
+    "seconds": 6.3995726918801665,
+    "stdout_sha256": "fe7ed1017dc3572ad2d41e73c3d82796131b3cbc0493c8bfb86fa0cf3610e805",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "label": "upgrade-via-cli-status",
+    "argv": [
+      "/tmp/agent-memory-test-7ddpjna6/home/.local/bin/am",
+      "status",
+      "--repo",
+      "/tmp/agent-memory-test-7ddpjna6/consumer"
+    ],
+    "exit": 0,
+    "seconds": 0.5390664620790631,
+    "stdout_sha256": "1d1e7c389578a70277453d46364d7287411343d0490b862a45cb7fb6ecf86682",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "label": "upgrade-via-cli-uninstall-check",
+    "argv": [
+      "/tmp/agent-memory-test-7ddpjna6/home/.local/bin/am",
+      "--json",
+      "uninstall",
+      "--check"
+    ],
+    "exit": 0,
+    "seconds": 0.1880776968318969,
+    "stdout_sha256": "1bee41b9bd724f03e79911d8ac1fd533b8382e1e6d58427beac56c46317205d3",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "label": "upgrade-via-cli-uninstall",
+    "argv": [
+      "/tmp/agent-memory-test-7ddpjna6/home/.local/bin/am",
+      "uninstall"
+    ],
+    "exit": 0,
+    "seconds": 0.238327844068408,
+    "stdout_sha256": "b05ae71e5710f724e94952336dcc1b9571d520688e9670bfcfd38f253411211f",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+]

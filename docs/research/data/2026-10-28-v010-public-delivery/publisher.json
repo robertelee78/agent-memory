@@ -1,0 +1,9 @@
+{
+  "published": true,
+  "tag": "v0.0.10",
+  "source_commit": "76a7886408e8a295adca7f3df2536efdb1a107b7",
+  "artifact_digest": "f102c92563f1a5ff1e647b1428b3459750438d943679f71e7e973b121f38a2aa",
+  "url": "https://github.com/robertelee78/agent-memory/releases/tag/v0.0.10",
+  "default_activation_performed": true,
+  "verified_main_commit": "76a7886408e8a295adca7f3df2536efdb1a107b7"
+}

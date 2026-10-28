@@ -1,0 +1,14 @@
+{
+  "passed": true,
+  "actual_public_default_install": true,
+  "source_commit": "76a7886408e8a295adca7f3df2536efdb1a107b7",
+  "signed_publisher_verified": true,
+  "development_memory_absent": true,
+  "consumer_and_staged_code_preserved": true,
+  "client_text_restored": true,
+  "public_update_noop_verified": true,
+  "uninstalled": true,
+  "world_retained": false,
+  "platform": "macOS-27.2-arm64-arm-64bit-Mach-O",
+  "seconds": 17.223706832999596
+}
