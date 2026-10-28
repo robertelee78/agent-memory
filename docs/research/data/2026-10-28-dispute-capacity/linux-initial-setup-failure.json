@@ -1,0 +1,16 @@
+{
+  "passed": false,
+  "classification": "setup-only missing root scripts in source archive",
+  "tests": 5,
+  "errors": 5,
+  "failures": 0,
+  "seconds": 0.5019814227707684,
+  "source_hashes": {
+    "skills/agent-memory/scripts/agent_memory/sharing_holds.py": "80fa56d5797fee377e36d8fddb6a823bc43f9cf42c473b310b318c7efa7d99a8",
+    "tests/contracts/test_known_hold_capacity.py": "cd6bdaa04eb5f4903bffb7a0635868d9c4e7c437a357be8c85f14bf8a36399be",
+    "skills/agent-memory/SKILL.md": "7740943fcb1f901b1c1dc2ca3f181be6830793675d9fb8c2a3f46a7d05bc11c2"
+  },
+  "raw_directory": "/tmp/am-v010-capacity-linux-t3itlGZa",
+  "raw_log_sha256": "d881c4f3f3008686298744552f183f121377e60b2d949402c9cf1a4fb5567f89",
+  "first_trace": "test_history_boundary_excess_and_retry (contracts.test_known_hold_capacity.KnownHoldCapacityContract.test_history_boundary_excess_and_retry) ... ERROR\nTraceback (most recent call last):\n  File \"/tmp/am-v010-capacity-linux-t3itlGZa/tests/contracts/test_known_hold_capacity.py\", line 172, in test_history_boundary_excess_and_retry\n    repo, bank = self.fixture(w, resolved=True)\n                 ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^\n  File \"/tmp/am-v010-capacity-linux-t3itlGZa/tests/contracts/test_known_hold_capacity.py\", line 62, in fixture\n    self.h = fixtures.SemanticSharingContract(); repo, bank, peer, _ = self.h.fixture(w)\n                                                                       ~~~~~~~~~~~~~~^^^\n  File \"/tmp/am-v010-capacity-linux-t3itlGZa/tests/contracts/test_semantic_sharing.py\", line 24, in fixture\n    helper=recovery.SharingRecoveryContract();repo,bank,peer,base=helper.fixture(w);self.pack=helper.pack\n                                                                  ~~~~~~~~~~~~~~^^^\n  File \"/tmp/am-v010-capacity-linux-t3itlGZa/tests/contracts/test_sharing_recovery.py\", line 32, in fixture\n    helper=boundary.SharingBoundaryContract();repo,bank=helper.fixture(w,root);self.pack=helper.pack\n                                                        ~~~~~~~~~~~~~~^^^^^^^^\n  File \"/tmp/am-v010-capacity-linux-t3itlGZa/tests/contracts/test_sharing_boundary.py\", line 42, in fixture\n    bind(w,repo)\n    ~~~~^^^^^^^^\n  File \"/tmp/am-v010-capacity-linux-t3itlGZa/tests/identity_fixtures.py\", line 19, in bind\n    dev = command('developer_identity.py', 'status', '--repo', repo)\n  File \"/tmp/am-v010-capacity-linux-t3itlGZa/tests/identity_fixtures.py\", line 11, in command\n    output = world.run([sys.executable, '-I', ROOT / 'scripts' / helper, *args])\n  File \"/tmp/am-v010-capacity-linux-t3itlGZa/tests/world.py\", line 139, in run\n    return subprocess.run(argv, cwd=working, env=child_env,\n           ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n                          text=True, capture_output=True, check=check, timeout=timeout)\n                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.14/subprocess.py\", line 578, in run\n    raise CalledProcessError(retcode, process.args,\n                             output=stdout, stderr=stderr)\nsubprocess.CalledProcessError: Command '['/usr/bin/python3', '-I', '/tmp/am-v010-capacity-linux-t3itlGZa/scripts/developer_identity.py', 'status', '--repo', '/tmp/agent-memory-test-m7t_20p_/repo']' returned non-zero exit status 2.\n\n"
+}

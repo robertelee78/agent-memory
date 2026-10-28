@@ -1,0 +1,10 @@
+test_history_boundary_excess_and_retry (contracts.test_known_hold_capacity.KnownHoldCapacityContract.test_history_boundary_excess_and_retry) ... ok
+test_persisted_corruption_and_interruption_remain_noncapacity (contracts.test_known_hold_capacity.KnownHoldCapacityContract.test_persisted_corruption_and_interruption_remain_noncapacity) ... ok
+test_record_boundary_excess_and_retry (contracts.test_known_hold_capacity.KnownHoldCapacityContract.test_record_boundary_excess_and_retry) ... ok
+test_sealed_byte_boundary_excess_and_retry (contracts.test_known_hold_capacity.KnownHoldCapacityContract.test_sealed_byte_boundary_excess_and_retry) ... ok
+test_structure_precedes_capacity_and_combined_dimension_precedence (contracts.test_known_hold_capacity.KnownHoldCapacityContract.test_structure_precedes_capacity_and_combined_dimension_precedence) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 99.862s
+
+OK

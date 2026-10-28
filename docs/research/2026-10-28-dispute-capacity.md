@@ -101,3 +101,30 @@ to test combined-dimension precedence and malformed proposed data; it is not
 claimed as an end-to-end public review. Original bank/HEAD/index and retained
 private-state hashes are asserted throughout. The corrected result contains
 exactly five collected tests, with zero errors/failures and no timeout passes.
+
+## Linux functional qualification and source binding
+
+The same five focused cases passed on the operator's Linux machine in 99.862
+seconds, with zero failures/errors/timeouts. The longest individual case was
+44.393 seconds. The isolated source was
+`/tmp/am-v010-capacity-linux-final-fnjaSbrL`; no operator profile or installed
+runtime was changed. Every public subprocess had a 180-second bound and the
+whole controller a 600-second cutoff. Runtime, test source and v0.0.10 metadata
+hashes match the macOS pass and release candidate exactly.
+
+This functional run does **not** establish identical release-package inventory.
+The test archive contained all 189 actual portable assets plus 241 inert
+AppleDouble `._*` files introduced by macOS tar metadata. The complete raw hash
+map is retained, without hiding those extra entries. The only actual asset
+content difference from the final candidate is
+`sharing/semantic/GUIDE.md`: the independently reviewed capacity guidance moved
+from an extra H2 to H3 inside Failure handling so the pack's fixed section layout
+validates. No runtime or normative guidance text changed. Final package inventory,
+signing and public-delivery canaries qualify that actual release pack separately.
+The exact differences and scope are retained in `linux-source-binding.json`.
+
+The first Linux archive omitted root `scripts` wrappers used by identity-fixture
+setup. Its five setup errors completed in 0.502 seconds before capacity assertions;
+that failed apparatus is retained separately and is not a product failure or
+qualification pass. A fresh isolated source including those wrappers ran the
+successful suite. Neither test nor runtime source was modified for Linux.

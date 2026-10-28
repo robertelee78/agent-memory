@@ -1,0 +1,17 @@
+{
+  "tested_commit": "9f47542",
+  "raw_result_contains_full_portable_hash_map": true,
+  "runtime_test_metadata_exact_match": true,
+  "release_assets": 189,
+  "tested_archive_assets": 430,
+  "assets_missing_from_archive": [],
+  "archive_only_AppleDouble_files": 241,
+  "other_differences": [
+    {
+      "path": "skills/agent-memory/sharing/semantic/GUIDE.md",
+      "linux_tested_sha256": "e02f20a83ea8f76f99700cdc700bbd515e8382aedc37d2da12e44e9809601e7d",
+      "release_candidate_sha256": "80ffe2c2eeb05e8f94af344d87fb3c07af2f2f715e4de8b73081bc082d56975a"
+    }
+  ],
+  "scope": "Functional capacity qualification only; final release artifact inventory and signing qualification are separate."
+}
