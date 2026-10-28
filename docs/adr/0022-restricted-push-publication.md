@@ -28,13 +28,18 @@ truthfulness gates is authorized by this correction.
 ### T1: Explicit allowed-user publication
 
 For classic push restrictions, AM MUST read the authenticated GitHub user and
-all pages of the branch's allowed-user endpoint. It MUST validate positive integer
+all pages of the branch's allowed-user endpoint, following `Link rel="next"`
+until absent within four pages of 100 entries. Non-200 responses, exceeded bounds,
+duplicate/conflicting user IDs and malformed entries are incomplete evidence. It MUST validate positive integer
 user IDs and logins and match the stable ID together with case-insensitive login.
 Only an explicit matching user permits the existing supported publication path.
 Repository write permission or admin status alone MUST NOT establish eligibility.
 Malformed, unavailable, incomplete or nonmatching observations MUST remain
 pending with a specific cause and an actionable next step. API identity is not
 proof of Git transport identity: GitHub still enforces the final ordinary push.
+A rejected push after API eligibility MUST retain the candidate and local state,
+remain unpublished/pending, and name possible API/transport credential mismatch
+alongside changed rules or authority as causes requiring inspection.
 Team-only and App-only eligibility remain pending until supported with their own
 complete evidence; this correction MUST NOT infer membership or install identity.
 No credential switch, privileged override, force push, auto-approval or repository
@@ -42,7 +47,8 @@ protection mutation is permitted.
 
 The validated actor and allowlist observations MUST participate in the policy
 fingerprint and be reobserved by the existing immediate pre-push policy check.
-An actor or restriction change invalidates the pending candidate's eligibility.
+An actor or restriction change during the final recheck (including removed
+restrictions) invalidates the current observation; missing/404 evidence is not a pass.
 Existing PR, required review/check/App identity, merge-object, semantic proof,
 source pins, original-index preservation and authority readback gates MUST remain.
 The supported protected-branch workflow remains in use, including for a branch
@@ -62,7 +68,10 @@ Bounded local protocol tests MUST exercise actual prepare/land commands and real
 Git remotes: allowed user succeeds only through required reviews/checks; an
 unlisted admin cannot prepare; malformed/unavailable or paginated allowlist
 observations remain pending; actor/allowlist changes before landing refuse writes;
-local bank, feature code, HEAD and index remain intact. Existing publication
+team/App-only grants and unavailable `/user` remain pending despite admin/write
+access; mismatched ID/login pairs refuse; duplicate IDs refuse; a simulated Git
+transport rejection after API eligibility remains unpublished with the specific
+credential-mismatch diagnostic; local bank, feature code, HEAD and index remain intact. Existing publication
 policy, pending and recovery suites remain regression coverage. No live consumer
 repository is modified by qualification. Independent review precedes landing.
 
