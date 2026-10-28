@@ -50,12 +50,36 @@ records remain outside the checkout. Retain failed Worlds for inspection. Keep
 the trusted support source available independently of any other job's temporary
 cleanup. Do not point these commands at a real user home or live bank.
 
-## Current evidence
+## Original v0.0.3 preparation evidence
 
 Four public v0.0.2 preparations succeeded on macOS/Linux at default source
 `31f10a29fcd2e03c668cdc9fc5f163ea45dc8cb5`. Their
 [source-bound summaries and apparatus reviews](../research/data/2026-10-26-public-lifecycle/)
 retain the two original test-evidence gaps, their repairs and final Opus static
 approval. The optimized-Python guard also refused before any product command.
-The public v0.0.3 journeys and release delivery remain pending; preparation and
-static approval do not substitute for those executions.
+These are historical preparation records, not the current release status.
+Preparation and static approval do not substitute for actual delivery checks;
+consult each release's source-bound qualification report for subsequent results.
+
+
+## Current signed-to-signed release checks
+
+For a signed v0.0.9 baseline and v0.0.10 target, prepare once on each supported
+platform before publication:
+
+```sh
+python3 -I -B scripts/evaluations/public_release.py prepare-legacy --source . --out /tmp/am-public-v010-upgrade --legacy-version 0.0.9 --release-version 0.0.10
+```
+
+After publication and verified activation, pass the exact signed release commit
+to `--expected-source`, retaining those same version options, for
+`upgrade-via-cli` against that retained output and `fresh` against a separate
+new output directory. A failed attempt is retained, never overwritten. Run
+these probes in disposable profiles, not operator homes. Each public command
+stream and its bank/code/index preservation are checked independently of
+source-contract qualification.
+
+The trusted support checkout includes root `scripts/` wrappers as well as
+`tests/` and `skills/`; copying only the package and tests cannot run the identity
+fixtures. A setup error before a product assertion is apparatus evidence, not a
+runtime pass or failure. Python diagnostic/test launchers use `-I -B`.

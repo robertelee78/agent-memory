@@ -2,7 +2,7 @@
 
 A portable, local-first Memory Bank for coding agents.
 
-## v0.0.9
+## v0.0.10
 
 One repository owns one shared Markdown memory bank. The skill captures durable
 learning, reads existing memory before adding it, combines duplicates without
@@ -11,8 +11,10 @@ independently of unfinished feature code and refresh into other sessions,
 worktrees and clones through the repository's existing Git rules. Contradictions
 go to the detecting developer for clarification.
 
-The [v0.0.9 release guide](docs/releases/v0.0.9.md) covers Linux refresh repairs,
-quieter routine hooks and separate refresh/assessment health.
+The [v0.0.10 release guide](docs/releases/v0.0.10.md) covers publication by
+explicitly allowed push actors and precise dispute-capacity diagnostics. Existing
+repository protections remain in force; local learning and pending publication
+remain distinct.
 [Published releases](https://github.com/robertelee78/agent-memory/releases)
 hold the immutable source and actual qualification evidence for each version.
 
