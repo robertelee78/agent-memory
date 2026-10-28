@@ -237,6 +237,35 @@ command MUST remain bounded to at most10–15minutes.
 Actual production activation and any
 remaining pending legacy observations MUST be reported accurately.
 
+## Native callback evidence refinement
+
+For newly enrolled Claude observations, the direct UserPromptSubmit payload is
+source evidence. Native session/prompt IDs correlate a lifecycle; they MUST NOT
+be treated as unique submission or transcript-entry identities. Every callback
+MUST retain its own local observation UUID and exact prompt digest, including
+identical text under the same prompt ID. Completion MUST bind that exact
+observation, context and digest. It MUST NOT require a later transcript user row
+or infer a native message UUID from queue content, ordering or callback ordinal.
+The v2 observation and request formats MUST reject `source_uuid`; the v1 shim
+MUST retain its existing native transcript-UUID requirements without relabeling
+old records. The retained native-source hint is lifecycle correlation only.
+
+Native transcripts and queue records MAY assist source recovery; a private
+reference is only a locator. For earlier or interrupted work the agent MUST
+recover the actual original source, independently check its digest and assess its
+actual context before acknowledgment. Unknown, unavailable or ambiguous original
+sources MUST remain pending. Matching identifiers or hashes, callback existence
+and injected instructions MUST NOT imply assessment or completion. No-learning
+and source-to-publication judgments remain agent assertions; independent
+admission and authority-publication gates remain unchanged. This mirrors the
+native-callback witness already used by Codex, without inventing transcript IDs.
+
+Tests MUST cover three actual native callbacks sharing one prompt ID, with
+distinct and identical text, separate explicit completions and quiet Stop only
+when all observations are complete. Wrong digests, unknown observations and
+cross-context acknowledgments MUST remain refused. Interrupted or ambiguous
+recovery MUST remain pending unless exact original evidence is recovered.
+
 ## Alternatives and delivery
 
 Overwriting a prior prompt hash, auto-acknowledging every turn, staging imported

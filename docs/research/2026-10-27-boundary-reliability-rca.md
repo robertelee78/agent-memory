@@ -101,3 +101,29 @@ routes without inventing missing source or replacing the native callback model.
 No claim is made that old interrupted sources can be retrospectively marked
 assessed. The live acceptance matrix must verify repeated native cycles, source
 retention, bounded pending behavior and preservation of substantive task answers.
+
+## Live qualification findings and design refinement
+
+Real Claude Code 2.1.306 streaming input delivered three UserPromptSubmit
+callbacks (different and identical queued follow-ups) with one active prompt_id.
+The shared observation protocol correctly retained three IDs. The additional
+Claude-only transcript gate then refused the last two: the native log retained
+only the first input as a plain user row and the absorbed follow-ups as queue
+removals with commandUuid/deliveryId but no promptId. These are not proven
+callback-to-transcript bindings. Inferring a mapping from text/order would
+introduce another unsupported identity assumption.
+
+ADR-0020 now uses the actual prompt callback as the v2 source witness consistently
+with Codex. Explicit assessments remain required, exact observed digests and
+contexts remain checked, and recovery requires the actual original source and
+context. Legacy transcript-UUID records are unchanged. Opus and independent
+review accepted this narrow refinement; previous failed live results are retained
+rather than recast as successful tests.
+
+Other live checks exposed two presentation/protocol defects: the old legacy
+example appeared before the v2 fields, causing a model to send source_uuid for an
+observation; and an async Claude fallback could leave its SDK final result empty
+after the answer was already emitted. The current protocol now appears first,
+required fields and repair instructions are explicit, and continuations require
+the substantive answer in their final response. Production asyncRewake normal
+and no-tools tests separately verify those corrections.
