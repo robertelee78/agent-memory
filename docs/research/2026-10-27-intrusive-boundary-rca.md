@@ -81,3 +81,22 @@ body was copied into this RCA. The observed duplication therefore occurs in
 ordinary commentary/final emission; a Stop continuation is not necessary to
 explain this incident. The separate fallback repetition risks above remain real
 but must not be mislabeled as this trace's established cause.
+
+## Later installed-artifact mismatch
+
+Read-only outside verification on 2026-10-28 established that all 188 owned v0.0.8
+pack files retained their receipt hashes and modes, and both signed metadata
+files matched the trusted release. Only 34 CPython3.14 bytecode-cache files were
+extra. Their creation immediately follows our earlier diagnostic import using
+`python3 -I` without `-B`. The cache header timestamps/sizes match the original
+source files. This is attributable to our diagnostic, not a demonstrated user
+edit or changed signed source. Private backups and exact pre/post inventories
+were retained before atomically quarantining only those generated cache files.
+The receipt and journal were not regenerated or modified.
+
+This integrity refusal is correct: Python can read existing bytecode even with
+-B, so skipping executable caches during source verification is not an acceptable
+repair. Direct diagnostic imports MUST disable cache writes, and source repair
+MUST preserve unknown changes and independently verify signed payloads before
+activation. The separate refresh path-policy defect remains to be repaired in
+the corrective release.

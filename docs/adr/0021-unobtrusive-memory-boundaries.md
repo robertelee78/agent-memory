@@ -15,10 +15,13 @@ unnecessary workspace calls and repeated task dialogue. v0.0.8's successful
 source coverage did not establish acceptable operator-visible normal use.
 This proposed corrective source does not reopen or alter its shipped tasks.
 
-The product choice between one compact routine command and zero visible memory
-tool calls is pending. This document is not approved for execution or release.
+The operator requested that the defects be fixed and a new release published.
+The implementation uses one compact routine CLI/native assessment check, with
+quiet stdout. This is a bounded improvement within the existing skill-plus-CLI
+contract, not a claim that native tool cards can be hidden. No zero-visibility
+capability is assumed. Technical review precedes execution readiness.
 
-## Proposed requirements
+## Decision for review
 
 ### T1: Consistent state trust and specific refresh diagnostics
 
@@ -37,7 +40,11 @@ feature code, index or branch changes are permitted from the quick check.
 ### T2: Quiet routine operation and distinct completion stages
 
 Routine no-learning handling MUST avoid private workspace creation and use a
-bounded direct assessment route. Supported quiet success MUST suppress result
+bounded direct assessment route before emitting the task answer. Codex and
+Claude SHOULD combine the quick refresh observation and the explicit assessment
+in that same CLI invocation; OpenCode SHOULD use one native source-acknowledgment
+call when the actual original source is already in context. Source-window tools
+remain required for unavailable, omitted or recovered original evidence. Supported quiet success MUST suppress result
 payloads while retaining useful failure output. Instructions MUST put the routine
 route first and avoid unnecessary rereading of unchanged loaded guides.
 
@@ -52,8 +59,17 @@ continuations and SDK final-result preservation. It MUST NOT silently remove
 mandatory capture after forgotten invocation, invent no-learning receipts or
 promise tool-card suppression through an unsupported host field.
 
-The routine command budget and fallback policy remain pending the operator's
-visibility choice. CLI stdout silence alone is not evidence of invisible UI.
+Normal no-learning completion MUST use at most one assessment command/native
+call, create no private request workspace and emit no successful receipt body or
+memory narration. Required source recovery, genuine admission/publication and
+consequential failures are distinct cases and MUST retain their actual work.
+A failed refresh MAY coexist with a truthful no-learning assessment, but combined
+health MUST remain pending/false and the process MUST report one actionable
+failure rather than a green overall success. Existing assessment-only receipt
+compatibility MUST NOT be silently redefined. CLI stdout silence is not evidence
+of invisible tool cards. Stop fallback remains bounded; automatic capture MUST
+NOT be removed to obtain a quiet transcript, and host-specific final-result
+limitations MUST remain explicit.
 
 ### T3: Operator-visible acceptance and corrective delivery
 
