@@ -62,8 +62,10 @@ async completion does not start a new model turn; Stop blocking creates another
 continuation prompt. Quiet stdout cannot guarantee hidden tool cards. A portable
 CLI does not establish a host-independent private channel for model assessment.
 
-The operator has been asked whether one compact routine command is acceptable or
-no visible memory tool calls are required. This is a material design choice.
+The operator was asked about compact versus invisible calls, then explicitly
+requested fixes and a new release. Proceed with the minimal one-command route
+within the established skill/CLI contract; do not treat the absence of a preference
+vote as a reason to leave clear defects unfixed. Zero visibility is not promised.
 Do not silently weaken automatic capture, replace semantics with fixed no-learning
 receipts, or promise invisible UI using an unsupported setting.
 
