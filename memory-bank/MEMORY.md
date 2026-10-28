@@ -1,7 +1,7 @@
 ---
 schema: "agent-memory/v1"
 project-id: "add009c6-d31e-49a6-a372-b8cab316d7bb"
-router-updated: "2026-10-27T22:03:02.770886+00:00"
+router-updated: "2026-10-28T01:04:52.919595+00:00"
 canonical-remote: "repo://github.com/robertelee78/agent-memory"
 ---
 # Project memory
@@ -26,6 +26,8 @@ Router time describes this map, not every file's revision.
 | [history/events/f439f01a-ddcf-4833-8dc3-bff8f08b10ef.md](<history/events/f439f01a-ddcf-4833-8dc3-bff8f08b10ef.md>) | Admission provenance event | repository | active | When inspecting the admission history |
 | [topics/163d04c3-1d70-41ec-99b3-9b06f6f80b61.md](<topics/163d04c3-1d70-41ec-99b3-9b06f6f80b61.md>) | Checkout identity continuity and evidence required for automatic memory completion | repository | active | When changing checkout identity, hook diagnostics or integration qualification |
 | [history/events/7fc8ac35-41c4-47c9-8652-3484ae7ef3fa.md](<history/events/7fc8ac35-41c4-47c9-8652-3484ae7ef3fa.md>) | Provenance of checkout continuity and hook qualification learning | repository | active | When reviewing the identity incident and completion evidence |
+| [topics/fb0c23a6-148a-44f4-b050-bb161e903119.md](<topics/fb0c23a6-148a-44f4-b050-bb161e903119.md>) | Native callback lifecycle IDs versus individually assessed source observations | repository | active | When designing or testing harness prompt capture, steering, transcript reconciliation or interrupted-source recovery |
+| [history/events/4d451b02-97c0-4f2b-9a68-13f74b9530d3.md](<history/events/4d451b02-97c0-4f2b-9a68-13f74b9530d3.md>) | Evidence behind native callback identity and pending-source constraints | repository | active | When reviewing why callback observations retain separate provenance and assessments |
 
 ## Omitted contexts
 
