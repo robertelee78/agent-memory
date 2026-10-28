@@ -71,7 +71,15 @@ An agent MAY first run `am refresh current --repo REPO` for a narrow no-import
 observation. `bank-synchronized` means only that the complete observed canonical
 bank matched the freshly read authority at the checked point in time. It does not
 establish semantic truth, recall, publication or capture completion; pending
-capture and publication remain explicitly unknown. Any other outcome requires
+capture and publication remain explicitly unknown. A complete unchanged snapshot
+covered by the same-checkout/branch/revision cursor and its exact verified
+completed receipt MAY qualify even while feature HEAD/index retain the older
+bank. The complete path/hash map and freshly fetched authority MUST match;
+HEAD/index bank entries MUST still match each other with ordinary modes and
+stage zero. This is receipt coverage, not proof the importer created every file.
+Local changes, damaged evidence, staged memory, holds, locks and unsafe files
+still require review; do not stage imported files merely to pass the check.
+Any other outcome requires
 the full review below or its specific recovery. Do not treat this observation as
 proof that other sessions have no private pending work.
 

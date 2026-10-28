@@ -44,9 +44,9 @@ const ctx={tool:{transform:async cb=>{cb({namespace(){},add(t){registered[t.name
  session:{hook:async(name,cb)=>{if(name==='prompt')promptHook=cb;else contextHook=cb;return {dispose(){}}},
  get:async()=>({location:{directory:process.env.TEST_REPO}}), synthetic:async(v)=>{if(!queued.has(v.id))queued.set(v.id,{id:v.id,payload:{text:v.text},metadata:v.metadata});return queued.get(v.id)},context:async()=>rows}};
 await mod.default.setup(ctx);
-const p1={sessionID:'s',messageID:'u1'};promptHook(p1);rows[0].metadata=p1.metadata;
+const p1={sessionID:'s',messageID:'u1'};await promptHook(p1);rows[0].metadata=p1.metadata;
 await contextHook({sessionID:'s',messages:[{id:'u1'}]});await contextHook({sessionID:'s',messages:[{id:'u1'}]});
-const p2={sessionID:'s',messageID:'u2'};promptHook(p2);rows[2].metadata=p2.metadata;
+const p2={sessionID:'s',messageID:'u2'};await promptHook(p2);rows[2].metadata=p2.metadata;
 await contextHook({sessionID:'s',messages:[{id:'u2'}]});
 const q1=queued.get(mod.syntheticId('s','u1')),q2=queued.get(mod.syntheticId('s','u2'));
 rows.push({id:q1.id,type:'synthetic',metadata:q1.metadata},{id:'t1',type:'assistant'});
@@ -74,7 +74,7 @@ process.stdout.write(JSON.stringify(checks));
             (supported_python/'python3').symlink_to(sys.executable)
             env['PATH'] = str(old) + ':' + str(supported_python) + ':/usr/bin:/bin'
             env['TEST_REPO']=str(Path(tmp).resolve())
-            (Path(tmp)/'boundary_ledger.py').write_text('import json,sys,os\nr=json.load(sys.stdin)\nassert r.get("repo")==os.environ["TEST_REPO"]\nprint(json.dumps({"status":"assessed-no-learning" if r.get("action")=="assessed-no-learning" else ("pending-turn" if r.get("action")=="inspect" else "reserved")}))\n')
+            (Path(tmp)/'boundary_ledger.py').write_text('import json,sys,os\nr=json.load(sys.stdin)\nassert r.get("repo")==os.environ["TEST_REPO"]\nprint(json.dumps({"status":"enrolled" if r.get("action")=="enroll" else "assessed-no-learning" if r.get("action")=="assessed-no-learning" else ("pending-turn" if r.get("action")=="inspect" else "reserved")}))\n')
             supported=subprocess.run([shutil.which('node'),'--input-type=module','-e',source,str(target)],
                                      capture_output=True,text=True,timeout=5,env=env)
             proc = supported

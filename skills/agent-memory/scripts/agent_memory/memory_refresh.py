@@ -23,7 +23,7 @@ CURSOR_FIELDS = {'schema', 'repo_root', 'project_id', 'authority_head', 'operati
 
 
 class UntrackedCanonicalMemory(ContractError):
-    """The quick equality check cannot cover locally untracked memory."""
+    """Untracked memory without a completed-snapshot witness needs review."""
 
 
 def result(operation, state, **values):
@@ -126,11 +126,17 @@ def current(repo):
     prior, cursor_sha, cursor_state = cursor(root)
     if cursor_state not in {'absent', 'verified-local-hint'}:
         raise ContractError('Preserve the unverified refresh cursor and use full review')
+    # A completed import deliberately leaves feature HEAD/index unchanged.
+    # Its receipt covers the whole resulting snapshot, not creation ownership
+    # of individual files. Compare complete maps so additions/deletions count.
+    receipt_covered = prior is not None and writes.snapshot(root)[1] == prior['resulting_hashes']
     boundary = sharing_boundary.inspect(root)
     if not boundary['local_boundary_ready']:
         if set(boundary['blockers']) == {'canonical-memory-is-not-tracked'}:
-            raise UntrackedCanonicalMemory('Locally untracked canonical memory requires full review.')
-        raise ContractError('Local sharing boundary is not ready; use full review')
+            if not receipt_covered:
+                raise UntrackedCanonicalMemory('Locally untracked canonical memory requires full review.')
+        else:
+            raise ContractError('Local sharing boundary is not ready; use full review')
     context = scope_binding.require(root)
 
     def transaction_inventory(operations):
@@ -179,8 +185,9 @@ def current(repo):
         return result('current', 'review-required', pending_capture='unknown',
                       pending_publication='unknown', semantic_truth_verified=False,
                       git_metadata_writes_performed=True)
+    receipt_covered = prior is not None and tx.file_hashes(values['local']) == prior['resulting_hashes']
     head = recovery.tree(root, observation['local_head'], observation['bank_root'])
-    if head != values['local']:
+    if head != values['local'] and not receipt_covered:
         return result('current', 'review-required', pending_capture='unknown',
                       pending_publication='unknown', semantic_truth_verified=False,
                       git_metadata_writes_performed=True)
@@ -214,7 +221,8 @@ def current(repo):
             if not path.startswith(prefix) or mode != '100644' or stage != '0' or path in index_entries:
                 raise ContractError('Nonordinary index bank entry requires review')
             index_entries[path] = oid
-        if tree_entries != index_entries or set(tree_entries) != {prefix + path for path in values['local']}:
+        if tree_entries != index_entries or (not receipt_covered and
+                set(tree_entries) != {prefix + path for path in values['local']}):
             raise ContractError('HEAD and index bank inventories differ')
         return tree_raw, index_raw, tuple(local_modes)
 

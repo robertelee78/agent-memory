@@ -11,14 +11,17 @@ LIMIT = 16 * 1024 * 1024
 UUID = re.compile(r'[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\Z')
 
 
-def source(event):
+def source(event, *, require_final=True):
     session, prompt = event.get('session_id'), event.get('prompt_id')
-    if not isinstance(session, str) or not UUID.fullmatch(session) or not isinstance(prompt, str) or not UUID.fullmatch(prompt):
+    ids = (session, prompt)
+    if any(not isinstance(v, str) or not v or len(v.encode()) > 512 or any(ord(c) < 32 for c in v) for v in ids):
         raise ValueError('missing prompt identity')
+    if require_final and any(not UUID.fullmatch(v) for v in ids):
+        raise ValueError('unsupported legacy prompt identity')
     transcript = event.get('transcript_path')
     if not isinstance(transcript, str) or not Path(transcript).is_absolute():
         raise ValueError('missing transcript')
-    fd = os.open(transcript, os.O_RDONLY | os.O_NOFOLLOW)
+    fd = os.open(transcript, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
     try:
         info = os.fstat(fd)
         if not stat.S_ISREG(info.st_mode) or info.st_uid != os.geteuid() or info.st_size > LIMIT:
@@ -44,9 +47,11 @@ def source(event):
     if len(found) != 1 or not isinstance(found[0].get('uuid'), str) or not UUID.fullmatch(found[0]['uuid']):
         raise ValueError('source user message is missing or ambiguous')
     last = event.get('last_assistant_message')
-    if not isinstance(last, str) or not last or len(last.encode()) > 65536:
+    if require_final and (not isinstance(last, str) or not last):
         raise ValueError('final assistant message is unavailable')
+    if last is not None and (not isinstance(last, str) or len(last.encode()) > 65536):
+        raise ValueError('invalid assistant message')
     source_hash = hashlib.sha256(found[0]['message']['content'].encode()).hexdigest()
-    last_hash = hashlib.sha256(last.encode()).hexdigest()
+    last_hash = hashlib.sha256(last.encode()).hexdigest() if last else None
     return {'session': session, 'prompt': prompt, 'source_uuid': found[0]['uuid'],
             'source_sha256': source_hash, 'assistant_sha256': last_hash, 'transcript': transcript}

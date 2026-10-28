@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Emit the shared, non-blocking turn instruction for Claude/Codex hooks.
+"""Compatibility prompt entrypoint; native Claude inputs enroll before acceptance.
 
 This is invocation guidance, not a memory operation or an admission receipt.
 """
@@ -19,6 +19,10 @@ def main():
         if not isinstance(event, dict) or event.get('hook_event_name') != 'UserPromptSubmit':
             raise ValueError('unsupported event')
         directory = Path(__file__).resolve().parent
+        if all(key in event for key in ('prompt_id', 'prompt', 'transcript_path')):
+            sys.path.insert(0, str(directory))
+            from claude_prompt import main as claude_prompt
+            return claude_prompt(event)
         prompt = (directory / 'boundary-prompt.txt').read_text(encoding='utf-8').strip()
         prompt = prompt.replace('{{SKILL_DIR}}', str(directory.parent))
         if not prompt or len(prompt.encode('utf-8')) > 4096:

@@ -56,7 +56,7 @@ class HookFailureContract(unittest.TestCase):
             self.assertEqual(run('stop',event)['decision'],'block')
             with patch.dict(os.environ,w.env,clear=True):self.assertEqual(hook_failure.read(repo),[])
             changed={**prompt,'prompt':'DIFFERENT SECRET'}
-            self.assertIn('boundary/boundary.source_mismatch',run('prompt',changed)['systemMessage'])
+            self.assertIn('hookSpecificOutput',run('prompt',changed))
             with patch.dict(os.environ,w.env,clear=True):
                 self.assertNotIn('SECRET',json.dumps(hook_failure.read(repo)))
 
@@ -69,7 +69,8 @@ class HookFailureContract(unittest.TestCase):
             event={'hook_event_name':'UserPromptSubmit','session_id':str(uuid.uuid4()),'turn_id':str(uuid.uuid4()),'cwd':str(repo),'prompt':'SECRET PROMPT'}
             result=subprocess.run([sys.executable,'-I',str(helper.pack/'hooks/codex_prompt.py')],input=json.dumps(event),text=True,capture_output=True,env=w.env,timeout=10)
             self.assertEqual(result.returncode,0,result.stderr)
-            self.assertIn('identity/identity.unresolved',json.loads(result.stdout)['systemMessage'])
+            self.assertEqual(json.loads(result.stdout)['decision'],'block')
+            self.assertIn('identity/identity.unresolved',json.loads(result.stdout)['reason'])
             with patch.dict(os.environ,w.env,clear=True):
                 records=hook_failure.read(repo)
                 self.assertEqual(records[0]['stage'],'identity');self.assertNotIn('SECRET',json.dumps(records))

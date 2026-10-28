@@ -133,7 +133,62 @@ Preserve the bank, feature work and pending operations. Custom harnesses may
 invoke the same skill and CLI explicitly; never replace governed memory with an
 empty bank or a fabricated receipt.
 
-**Background boundary acknowledgment.**
+**Same-turn acknowledgement.**
+
+Supported native input hooks retain each observed submission separately,
+including identical follow-ups. Native turn IDs can cover several messages. The
+local `observation_id` identifies one observation; it is not a native message ID
+or proof of source completeness. The source envelope supplied to the agent includes
+native `session`, `prompt`, `observation_id` and `source_sha256`. A session MUST
+assess the exact original source before finalizing its substantive answer and MUST
+NOT attribute later instructions to an earlier source. When no durable learning
+exists, no admission, semantic novelty scan or memory record is required.
+
+For each supplied observation, submit an explicit assessment containing exactly
+`session`, `prompt`, `observation_id`, `source_sha256`, `outcome`, and `assessment`.
+Use one JSON object per observation. A session SHOULD construct JSON with a
+structured encoder and MUST NOT depend on shell-specific word splitting to
+separate identifiers. Set `assessment.source_id` to that observation ID; use the actual source review
+and candidate dispositions described below. For the `codex-boundary` adapter use
+`am codex-boundary --repo REPO --stdin`; for the `claude-boundary` adapter use
+`am claude-boundary --repo REPO --input - --quiet`. These bounded stdin routes
+accept no-learning only (at most 64 KiB). A published outcome MUST use a private
+input file and the exact original prepared `publication_request`; the helper
+independently verifies publication. A completion for one observation MUST NOT
+complete another. Exact retries are idempotent; modified or corrupt evidence MUST
+remain pending. The direct native prompt callback is the mechanical source witness for new
+observations; a later transcript row is not required. This does not prove the
+agent read or correctly assessed the source. For recovery, the agent MUST obtain
+the actual original text and context and independently match its digest; absent
+or ambiguous evidence MUST stay pending. A native transcript locator is only a
+recovery aid, never a reconstructed message identity.
+
+Inspect retained work with `am codex-boundary --repo REPO --list-pending` or
+`am claude-boundary --repo REPO --list-pending`. The `codex-boundary` inventory pages expose
+`next_offset` and `next_legacy_offset`; use their values with `--offset` and
+`--legacy-offset`. These private inventories contain identifiers and hashes,
+not original prompt text or verified semantic judgments. A session MUST recover
+the original native source and digest before assessing earlier work. Unavailable
+or interrupted sources MUST remain pending without blocking unrelated tasks.
+Legacy source-bound continuations retain their original `source_uuid` input
+format; a session MUST NOT manufacture new observation coverage for old turns.
+
+Valid completed observations allow a quiet Stop. If assessment is missing, an
+adapter MAY request a bounded continuation; it MUST preserve the substantive task
+answer, retain pending work and stop retrying at its durable wake cap. Restricted
+tools, permission denials and missing evidence MUST NOT replace a review or task
+answer with memory bookkeeping. Routine success and no-learning MUST be silent in progress and final answers;
+a failure SHOULD report its specific pending state briefly. A session MUST NOT
+narrate private workspace creation or no-learning bookkeeping as product progress.
+
+The `opencode` adapter retains its native session/message identifiers and uses its existing
+`am.source_window` and `am.source_ack` tools. A session MUST inspect the exact
+original native source window, retain pending interruption evidence and complete
+only a truthful assessment or verified publication. Native adapters MUST NOT
+pretend their message IDs are another adapter’s observation IDs or infer completion from a
+successful queue or injected instruction.
+
+**Legacy background boundary acknowledgment.**
 
 When a background Stop wake supplies a source-bound session, prompt, message UUID and
 source SHA-256, verify that exact source before assessing it. After an explicit
@@ -146,19 +201,3 @@ The helper independently replays the publication request against the authority;
 it records the connection to the prompt as an agent assertion, not semantic proof; it does not mechanically prove the published lesson derives from that source.
 A denied command, unresolved conflict, unavailable source or unverified landing
 MUST stay pending. Never acknowledge incomplete work as complete.
-
-**Same-turn acknowledgement.**
-
-A supported prompt hook records a private hash of the actual user prompt, session
-and turn before a synchronous Stop continuation. It does not retain prompt
-text. If a source-bound continuation is unavailable or interrupted, the record
-remains pending. Inspect the current repository’s retained identifiers and prompt
-hashes with `am codex-boundary --repo REPO --list-pending`; this does not contain
-the original prompt or prove source completeness. Resume the original session
-and verify the actual source before assessment. After the actual original turn
-is assessed, acknowledge through
-`am codex-boundary --repo REPO --input PRIVATE_JSON`. Use the session ID,
-original turn ID for both `prompt` and `source_uuid`, and the source SHA-256
-provided by the Stop hook. The remaining fields and outcomes follow the background
-acknowledgement above. For no-learning, set assessment.source_id to the original turn ID. The source-to-publication relationship and no-learning
-judgment remain agent assertions; a witnessed publication does not prove either.

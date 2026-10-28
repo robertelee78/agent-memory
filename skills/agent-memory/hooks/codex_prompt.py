@@ -39,52 +39,24 @@ def main():
         context=scope_binding.require(root);
         stage,reason='boundary','state.unavailable'
         _,bank=bank_writes.bank_path(root)
-        operations,_=bank_writes.state_paths(root,bank,str(uuid.uuid4()));ledger=operations.parent/'codex-boundaries'
-        trust_paths.inspect(ledger);ledger.mkdir(parents=True,exist_ok=True,mode=0o700);trust_paths.state(ledger)
-        key=hashlib.sha256((session+':'+turn).encode()).hexdigest();data=json.dumps({'schema':'agent-memory/codex-boundary-pending-v1','project_id':context['project_id'],'session':session,'turn':turn,'source_uuid':turn,'source_sha256':hashlib.sha256(text.encode()).hexdigest()},sort_keys=True).encode()
-        dfd=os.open(ledger,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW)
-        try:
-            reason='boundary.unsafe'
-            try:done=os.open(key+'.done',os.O_RDONLY|os.O_NOFOLLOW,dir_fd=dfd)
-            except FileNotFoundError:done=None
-            if done is not None:
-                reason='boundary.unsafe'
-                try:
-                    import stat
-                    info=os.fstat(done)
-                    if not stat.S_ISREG(info.st_mode) or info.st_uid!=os.geteuid() or info.st_nlink!=1 or info.st_mode&0o077 or info.st_size>4096:raise ValueError('unsafe completed record')
-                    with os.fdopen(done,'rb',closefd=False) as stream: completed=json.loads(stream.read(4097))
-                    reason='boundary.source_mismatch'
-                    if (not isinstance(completed,dict) or completed.get('schema')!='agent-memory/codex-boundary-completed-v1' or completed.get('project_id')!=context['project_id'] or completed.get('source_uuid')!=turn or completed.get('source_sha256')!=hashlib.sha256(text.encode()).hexdigest()):raise ValueError('completed prompt source differs')
-                finally:os.close(done)
-                diagnostic(root);print('{}');return 0
-            reason='state.unavailable'
-            try:fd=os.open(key+'.pending',os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600,dir_fd=dfd)
-            except FileExistsError:
-                reason='boundary.unsafe'
-                existing=os.open(key+'.pending',os.O_RDONLY|os.O_NOFOLLOW,dir_fd=dfd)
-                try:
-                    import stat
-                    info=os.fstat(existing)
-                    if not stat.S_ISREG(info.st_mode) or info.st_uid!=os.geteuid() or info.st_nlink!=1 or info.st_mode&0o077 or info.st_size>4096:raise ValueError('unsafe pending record')
-                    with os.fdopen(existing,'rb',closefd=False) as stream: previous=json.loads(stream.read(4097))
-                    reason='boundary.source_mismatch'
-                    if previous!=json.loads(data):raise ValueError('prompt source differs from retained boundary')
-                finally:os.close(existing)
-                diagnostic(root);print('{}');return 0
-            with os.fdopen(fd,'wb') as f:f.write(data);f.flush();os.fsync(f.fileno())
-            os.fsync(dfd)
-        finally:os.close(dfd)
+        from agent_memory import turn_sources
+        observation=turn_sources.register(root,'codex',session,turn,hashlib.sha256(text.encode()).hexdigest())
         stage,reason='guidance','guidance.unavailable'
         guidance=(pack/'hooks'/'boundary-prompt.txt').read_text(encoding='utf-8').strip().replace('{{SKILL_DIR}}',str(pack))
+        guidance += (' Observation '+observation['observation_id']+' in Codex session '+session+', active turn '+turn+', source SHA-256 '+observation['source_sha256']+'. Assess this exact source before final; acknowledge through am codex-boundary using observation_id, session, prompt=active turn, source_sha256 and truthful outcome/assessment. No-learning assessment.source_id is this local observation ID, not a native message ID. Earlier pending: am codex-boundary --repo REPO --list-pending.')
+        try:notice=turn_sources.pending_notice(root,'codex',session,turn)
+        except (OSError,ValueError):notice=True  # Optional notice bookkeeping cannot veto durable source registration.
+        if notice:guidance += ' Earlier pending work exists; inspect am codex-boundary --list-pending to recover original identifiers. Never substitute this input for an earlier source.'
+        if observation['control_origin_hint']:guidance += ' Retained generated-control hint: these instructions are not a new operator decision; still assess this observation explicitly.'
+        if len(guidance.encode())>2048:raise ValueError('guidance exceeds bound')
         diagnostic(root)
         print(json.dumps({'hookSpecificOutput':{'hookEventName':'UserPromptSubmit','additionalContext':guidance}}));return 0
     except (OSError,ValueError,TypeError,KeyError,UnicodeError,ImportError,subprocess.SubprocessError):
         diagnostic(diagnostic_repo,stage,reason)
-        print(json.dumps({'systemMessage':f'Agent Memory Codex prompt pending [{stage}/{reason}]. Run am doctor for this repository; preserve work and retry the actual prompt after resolving the reported cause.'}));return 0
+        print(json.dumps({'decision':'block','reason':f'Agent Memory input not accepted [{stage}/{reason}]. Preserve work; run am doctor and am codex-boundary --list-pending for this repository, then retry this input after resolving the fault.'}));return 0
 
     except Exception:
         diagnostic(diagnostic_repo,stage,'internal.unexpected')
-        print(json.dumps({'systemMessage':f'Agent Memory Codex prompt pending [{stage}/internal.unexpected]. Preserve work and run am doctor; no capture or publication is established.'})); return 0
+        print(json.dumps({'decision':'block','reason':f'Agent Memory input not accepted [{stage}/internal.unexpected]. Preserve work and inspect am doctor before retrying.'})); return 0
 
 if __name__=='__main__':sys.exit(main())

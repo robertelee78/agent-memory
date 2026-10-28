@@ -17,6 +17,9 @@ UUID = re.compile(r'[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-
 
 
 def complete(repo, value):
+    if isinstance(value, dict) and 'observation_id' in value:
+        from . import claude_turns
+        return claude_turns.complete(repo, value)
     fields={'session','prompt','source_uuid','source_sha256','outcome','assessment'}
     if (not isinstance(value, dict) or set(value) not in (fields, fields|{'publication_request'})
             or any(not isinstance(value[k],str) or not UUID.fullmatch(value[k]) for k in ('session','prompt','source_uuid'))
@@ -39,9 +42,9 @@ def complete(repo, value):
     directory_identity=os.fstat(dfd)
     try:
         try:
-            fd=os.open(key+'.pending',os.O_RDONLY|os.O_NOFOLLOW,dir_fd=dfd)
+            fd=os.open(key+'.pending',os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK,dir_fd=dfd)
         except FileNotFoundError:
-            fd_done=os.open(key+'.done',os.O_RDONLY|os.O_NOFOLLOW,dir_fd=dfd)
+            fd_done=os.open(key+'.done',os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK,dir_fd=dfd)
             try:
                 st=os.fstat(fd_done)
                 if not stat.S_ISREG(st.st_mode) or st.st_uid!=os.geteuid() or st.st_nlink!=1 or st.st_mode&0o077 or st.st_size>4096:
@@ -98,18 +101,19 @@ def complete(repo, value):
                 'source_uuid':value['source_uuid'],'source_sha256':value['source_sha256'],'outcome':value['outcome'],
                 'assessment':value['assessment'],'assessment_is_agent_assertion':True,'source_publication_link_verified':False,'witnessed_commit':witnessed,
                 'pending_sha256':hashlib.sha256(raw).hexdigest(),'input_sha256':request_hash}
-        output=json.dumps(record,sort_keys=True).encode()
+        output=json.dumps(record,sort_keys=True,ensure_ascii=False).encode()
+        if len(output)>4096:raise ContractError('Legacy completion exceeds its reader bound; preserve pending evidence')
         try:
             done=os.open(key+'.done',os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600,dir_fd=dfd)
         except FileExistsError:
-            done=os.open(key+'.done',os.O_RDONLY|os.O_NOFOLLOW,dir_fd=dfd)
+            done=os.open(key+'.done',os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK,dir_fd=dfd)
             try:
                 dstat=os.fstat(done)
                 if (not stat.S_ISREG(dstat.st_mode) or dstat.st_uid!=os.geteuid() or dstat.st_nlink!=1
                         or dstat.st_mode&0o077 or dstat.st_size>4096):
                     raise ContractError('Completed boundary evidence is unsafe')
                 with os.fdopen(done,'rb',closefd=False) as stream: existing=stream.read(4097)
-                if existing != output:
+                if load(existing) != record:
                     raise ContractError('Completed boundary differs; preserve both records')
             finally:os.close(done)
         else:
@@ -129,10 +133,31 @@ def complete(repo, value):
 
 
 def main(argv=None):
-    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--repo',required=True);parser.add_argument('--input',required=True);args=parser.parse_args(argv)
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--repo',required=True);parser.add_argument('--input')
+    parser.add_argument('--list-pending',action='store_true');parser.add_argument('--session');parser.add_argument('--prompt')
+    parser.add_argument('--quiet',action='store_true');args=parser.parse_args(argv)
     try:
-        value=load(sharing_limits.read_bytes(args.input,sharing_limits.MAX_PRIVATE));result=complete(args.repo,value)
-        print(json.dumps(result));return 0
+        if args.list_pending:
+            if args.input or args.quiet:raise ContractError('Select pending inspection or acknowledgment')
+            from . import claude_turns
+            result=claude_turns.pending(args.repo,args.session,args.prompt)
+        else:
+            if not args.input or args.session or args.prompt:raise ContractError('Acknowledgment requires its exact input')
+            if args.input=='-':
+                raw=sys.stdin.buffer.read(65537)
+                if len(raw)>65536:raise ContractError('Stdin assessment exceeds64KiB')
+                value=load(raw)
+                if not isinstance(value,dict) or value.get('outcome')!='no-learning':raise ContractError('Stdin supports no-learning only; published requests require private file input')
+            else:value=load(sharing_limits.read_bytes(args.input,sharing_limits.MAX_PRIVATE))
+            result=complete(args.repo,value)
+        if not args.quiet:print(json.dumps(result))
+        return 0
     except (OSError,ValueError,TypeError,KeyError,UnicodeError) as exc:
+        reason = str(exc) if isinstance(exc, ContractError) else 'Original source or pending record is unavailable or unsafe; preserve the retained observation.'
         print(json.dumps({'verified':False,'publication_verified':False,'canonical_writes_performed':False,
-                          'reason':'Boundary completion remains pending; preserve evidence and inspect the failure.'}));return 1
+                          'reason':reason,'repair':'Inspect am claude-boundary --list-pending. Current hook observations require top-level session,prompt,observation_id,source_sha256,outcome,assessment; assessment.source_id is observation_id. Legacy source_uuid applies only to legacy boundaries. Preserve original sources; read turn/GUIDE.md before retrying.'}));return 1
+
+
+if __name__ == '__main__':
+    sys.exit(main())

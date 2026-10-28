@@ -16,7 +16,7 @@ from .frontmatter import ContractError
 UUID = re.compile(r'[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\Z')
 
 
-def complete(repo, value):
+def legacy_complete(repo, value):
     fields={'session','prompt','source_uuid','source_sha256','outcome','assessment'}
     if (not isinstance(value, dict) or set(value) not in (fields, fields|{'publication_request'})
             or any(not isinstance(value[k],str) or not UUID.fullmatch(value[k]) for k in ('session','prompt','source_uuid'))
@@ -39,9 +39,9 @@ def complete(repo, value):
     directory_identity=os.fstat(dfd)
     try:
         try:
-            fd=os.open(key+'.pending',os.O_RDONLY|os.O_NOFOLLOW,dir_fd=dfd)
+            fd=os.open(key+'.pending',os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK,dir_fd=dfd)
         except FileNotFoundError:
-            fd_done=os.open(key+'.done',os.O_RDONLY|os.O_NOFOLLOW,dir_fd=dfd)
+            fd_done=os.open(key+'.done',os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK,dir_fd=dfd)
             try:
                 st=os.fstat(fd_done)
                 if not stat.S_ISREG(st.st_mode) or st.st_uid!=os.geteuid() or st.st_nlink!=1 or st.st_mode&0o077 or st.st_size>4096:
@@ -98,18 +98,19 @@ def complete(repo, value):
                 'source_uuid':value['source_uuid'],'source_sha256':value['source_sha256'],'outcome':value['outcome'],
                 'assessment':value['assessment'],'assessment_is_agent_assertion':True,'source_publication_link_verified':False,'witnessed_commit':witnessed,
                 'pending_sha256':hashlib.sha256(raw).hexdigest(),'input_sha256':request_hash}
-        output=json.dumps(record,sort_keys=True).encode()
+        output=json.dumps(record,sort_keys=True,ensure_ascii=False).encode()
+        if len(output)>4096:raise ContractError('Encoded legacy completion exceeds bound; preserve pending source')
         try:
             done=os.open(key+'.done',os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600,dir_fd=dfd)
         except FileExistsError:
-            done=os.open(key+'.done',os.O_RDONLY|os.O_NOFOLLOW,dir_fd=dfd)
+            done=os.open(key+'.done',os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK,dir_fd=dfd)
             try:
                 dstat=os.fstat(done)
                 if (not stat.S_ISREG(dstat.st_mode) or dstat.st_uid!=os.geteuid() or dstat.st_nlink!=1
                         or dstat.st_mode&0o077 or dstat.st_size>4096):
                     raise ContractError('Completed boundary evidence is unsafe')
                 with os.fdopen(done,'rb',closefd=False) as stream: existing=stream.read(4097)
-                if existing != output:
+                if load(existing) != record:
                     raise ContractError('Completed boundary differs; preserve both records')
             finally:os.close(done)
         else:
@@ -128,7 +129,21 @@ def complete(repo, value):
     finally:os.close(dfd)
 
 
-def list_pending(repo):
+def complete(repo,value):
+    from . import turn_sources
+    if not isinstance(value,dict):raise ContractError('Explicit source assessment required')
+    if 'observation_id' not in value:return legacy_complete(repo,value)
+    required={'session','prompt','observation_id','source_sha256','outcome','assessment'}
+    if set(value) not in (required,required|{'publication_request'}):raise ContractError('Use exact observation-bound assessment fields')
+    for key in ['session','prompt','observation_id']:
+        if not isinstance(value[key],str) or not UUID.fullmatch(value[key]):raise ContractError('Use actual Codex identity and local observation UUID')
+    observation=turn_sources.get(repo,'codex',value['session'],value['prompt'],value['observation_id'])
+    if observation['source_sha256']!=value['source_sha256']:raise ContractError('Original source digest differs')
+    receipt=turn_sources.verify_assessment(repo,value,value['observation_id'])
+    return turn_sources.complete(repo,'codex',value['session'],value['prompt'],value['observation_id'],value['source_sha256'],receipt)
+
+
+def legacy_list_pending(repo):
     root,bank=bank_writes.bank_path(repo);context=scope_binding.require(root)
     operations,_=bank_writes.state_paths(root,bank,str(uuid.uuid4()));directory=operations.parent/'codex-boundaries'
     if not os.path.lexists(directory):
@@ -141,7 +156,7 @@ def list_pending(repo):
                 if i>=65536:raise ContractError('Boundary inventory exceeds 65536 entries; preserve evidence for inspection')
                 if not entry.name.endswith('.pending'):continue
                 if len(entries)>=4096:raise ContractError('Pending inventory exceeds 4096 entries; preserve evidence for inspection')
-                fd=os.open(entry.name,os.O_RDONLY|os.O_NOFOLLOW,dir_fd=dfd)
+                fd=os.open(entry.name,os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK,dir_fd=dfd)
                 try:
                     info=os.fstat(fd)
                     if not stat.S_ISREG(info.st_mode) or info.st_uid!=os.geteuid() or info.st_nlink!=1 or info.st_mode&0o077 or info.st_size>4096:raise ContractError('Unsafe pending record')
@@ -155,15 +170,27 @@ def list_pending(repo):
     return {'operation':'pending','verified':True,'pending':entries,'canonical_writes_performed':False,'source_completeness_verified':False}
 
 
+def list_pending(repo,offset=0,legacy_offset=0):
+    from . import turn_sources
+    backlog=turn_sources.backlog(repo,'codex',offset,legacy_offset)
+    return {'operation':'pending','verified':True,'pending':[x['source'] for x in backlog['legacy']],**backlog,'canonical_writes_performed':False}
+
+
 def main(argv=None):
-    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--repo',required=True);parser.add_argument('--input');parser.add_argument('--list-pending',action='store_true');args=parser.parse_args(argv)
+    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--repo',required=True);parser.add_argument('--input');parser.add_argument('--list-pending',action='store_true');parser.add_argument('--stdin',action='store_true');parser.add_argument('--offset',type=int,default=0);parser.add_argument('--legacy-offset',type=int,default=0);args=parser.parse_args(argv)
     try:
         if args.list_pending:
-            if args.input:raise ContractError('Select either pending inventory or acknowledgement')
-            result=list_pending(args.repo)
+            if args.input or args.stdin:raise ContractError('Select either pending inventory or acknowledgement')
+            result=list_pending(args.repo,args.offset,args.legacy_offset)
         else:
-            if not args.input:raise ContractError('Acknowledgement requires input')
-            value=load(sharing_limits.read_bytes(args.input,sharing_limits.MAX_PRIVATE));result=complete(args.repo,value)
+            if bool(args.input)==bool(args.stdin):raise ContractError('Select one file or bounded stdin assessment')
+            if args.stdin:
+                raw=sys.stdin.buffer.read(65537)
+                if len(raw)>65536:raise ContractError('Stdin assessment exceeds bound')
+                value=load(raw)
+                if not isinstance(value,dict) or value.get('outcome')!='no-learning':raise ContractError('Stdin accepts no-learning only')
+            else:value=load(sharing_limits.read_bytes(args.input,sharing_limits.MAX_PRIVATE))
+            result=complete(args.repo,value)
         print(json.dumps(result));return 0
     except (OSError,ValueError,TypeError,KeyError,UnicodeError) as exc:
         reason=str(exc) if isinstance(exc,ContractError) and ('inventory exceeds' in str(exc)) else 'Boundary completion remains pending; preserve evidence and inspect the failure.'

@@ -1,59 +1,78 @@
-"""Codex Stop guidance stays in the current turn and preserves local state."""
+"""Quiet proactive completion and bounded source-bound Codex fallback."""
+import hashlib
 import json
+import os
+from pathlib import Path
 import subprocess
 import sys
 import unittest
 import uuid
-import hashlib
-from pathlib import Path
+from unittest.mock import patch
 from world import World
 from contracts import test_admission
+sys.path.insert(0,str(Path(__file__).resolve().parents[2]/'skills/agent-memory/scripts'))
+from agent_memory import turn_sources as core
 
 class CodexStopContract(unittest.TestCase):
-    def test_bound_turn_continues_once_and_missing_identity_is_pending(self):
+    def call(self,w,pack,adapter,event):
+        r=subprocess.run([sys.executable,'-I',str(pack/'hooks'/('codex_'+adapter+'.py'))],input=json.dumps(event),text=True,capture_output=True,env=w.env,timeout=15)
+        self.assertEqual(r.returncode,0,r.stderr);return json.loads(r.stdout)
+    def test_proactive_complete_nullable_final_late_steering_and_durable_wake_cap(self):
         with World() as w:
             helper=test_admission.AdmissionContract();repo,bank=helper.fixture(w)
-            hook=helper.pack/'hooks/codex_stop.py';before=helper.state(w,repo,bank)
-            session,turn=str(uuid.uuid4()),str(uuid.uuid4())
-            event={'hook_event_name':'Stop','session_id':session,'turn_id':turn,'stop_hook_active':False,'cwd':str(repo),'last_assistant_message':'fixture answer'}
-            prompt={**event,'hook_event_name':'UserPromptSubmit','prompt':'Actual scoped user request'}
-            p=subprocess.run([sys.executable,'-I',str(helper.pack/'hooks/codex_prompt.py')],input=json.dumps(prompt),text=True,capture_output=True,env=w.env,timeout=10)
-            self.assertEqual(p.returncode,0,p.stderr)
-            altered={**prompt,'prompt':'Different user request'}
-            bad=subprocess.run([sys.executable,'-I',str(helper.pack/'hooks/codex_prompt.py')],input=json.dumps(altered),text=True,capture_output=True,env=w.env,timeout=10)
-            self.assertIn('pending',json.loads(bad.stdout)['systemMessage'])
-            def invoke(value):
-                p=subprocess.run([sys.executable,'-I',str(hook)],input=json.dumps(value),text=True,capture_output=True,env=w.env,timeout=10)
-                self.assertEqual(p.returncode,0,p.stderr);return json.loads(p.stdout)
-            answer=invoke(event);self.assertEqual(answer['decision'],'block');self.assertIn(turn,answer['reason']);self.assertIn('permissions',answer['reason'])
-            pending_file=next(w.paths['state'].rglob('codex-boundaries/*.pending'));original=pending_file.read_bytes()
-            pending_file.write_text('[]');self.assertIn('pending',invoke(event)['systemMessage']);pending_file.write_bytes(original)
-            cli=helper.pack/'scripts/installer.py'
-            inventory=subprocess.run([sys.executable,'-I',str(cli),'codex-boundary','--repo',str(repo),'--list-pending'],text=True,capture_output=True,env=w.env,timeout=10)
-            listed=json.loads(inventory.stdout);self.assertTrue(listed['verified']);self.assertEqual(listed['pending'][0]['turn'],turn);self.assertNotIn(prompt['prompt'],inventory.stdout)
-            self.assertEqual(invoke({**event,'stop_hook_active':True}),{})
-            request={'session':session,'prompt':turn,'source_uuid':turn,'source_sha256':hashlib.sha256(prompt['prompt'].encode()).hexdigest(),'outcome':'no-learning','assessment':{'source_id':turn,'source_review':'Reviewed this source; no durable project learning.','candidates':[]}}
-            input_path=w.inside('codex-ack.json');input_path.write_text(json.dumps(request))
-            cli=helper.pack/'scripts/installer.py'
-            args=[sys.executable,'-I',str(cli),'codex-boundary','--repo',str(repo),'--input',str(input_path)]
-            ack=subprocess.run(args,text=True,capture_output=True,env=w.env,timeout=10)
-            self.assertTrue(json.loads(ack.stdout)['verified'],ack.stdout+ack.stderr)
-            retry=subprocess.run(args,text=True,capture_output=True,env=w.env,timeout=10)
-            self.assertTrue(json.loads(retry.stdout)['already_completed'],retry.stdout+retry.stderr)
-            done=next(w.paths['state'].rglob('codex-boundaries/*.done'));done_original=done.read_bytes();done.write_text('[]')
-            malformed=subprocess.run([sys.executable,'-I',str(helper.pack/'hooks/codex_prompt.py')],input=json.dumps(prompt),text=True,capture_output=True,env=w.env,timeout=10)
-            self.assertIn('pending',json.loads(malformed.stdout)['systemMessage']);done.write_bytes(done_original)
-            repeat=subprocess.run([sys.executable,'-I',str(helper.pack/'hooks/codex_prompt.py')],input=json.dumps(prompt),text=True,capture_output=True,env=w.env,timeout=10)
-            self.assertEqual(json.loads(repeat.stdout),{})
-            changed=subprocess.run([sys.executable,'-I',str(helper.pack/'hooks/codex_prompt.py')],input=json.dumps(altered),text=True,capture_output=True,env=w.env,timeout=10)
-            self.assertIn('pending',json.loads(changed.stdout)['systemMessage'])
-            self.assertIn('pending',invoke({**event,'turn_id':None})['systemMessage'])
-            self.assertEqual(before,helper.state(w,repo,bank))
-    def test_nonrepository_and_uninitialized_are_quiet(self):
+            s,t=str(uuid.uuid4()),str(uuid.uuid4())
+            event={'hook_event_name':'Stop','session_id':s,'turn_id':t,'stop_hook_active':False,'cwd':str(repo),'last_assistant_message':None}
+            def prompt(text):return self.call(w,helper.pack,'prompt',{**event,'hook_event_name':'UserPromptSubmit','prompt':text})
+            prompt('ordinary no-learning question')
+            with patch.dict(os.environ,w.env,clear=True):
+                source=core.inspect(repo,'codex',s,t)['pending'][0]
+                request={'session':s,'prompt':t,'observation_id':source['observation_id'],'source_sha256':source['source_sha256'],'outcome':'no-learning','assessment':{'source_id':source['observation_id'],'source_review':'Reviewed actual question; no durable learning.','candidates':[]}}
+                receipt=core.verify_assessment(repo,request,source['observation_id'])
+                core.complete(repo,'codex',s,t,source['observation_id'],source['source_sha256'],receipt)
+            self.assertEqual(self.call(w,helper.pack,'stop',event),{})
+            prompt('late steering source')
+            first=self.call(w,helper.pack,'stop',event);self.assertEqual(first['decision'],'block');self.assertLessEqual(len(first['reason'].encode()),2048)
+            self.assertNotIn('decision',self.call(w,helper.pack,'stop',event))
+            prompt(first['reason'])
+            with patch.dict(os.environ,w.env,clear=True):
+                self.assertTrue(any(x['control_origin_hint'] for x in core.inspect(repo,'codex',s,t)['sources']))
+            second=self.call(w,helper.pack,'stop',event);self.assertEqual(second['decision'],'block')
+            prompt('another actual steering source')
+            self.assertNotIn('decision',self.call(w,helper.pack,'stop',{**event,'stop_hook_active':True}))
+    def test_nonrepository_uninitialized_and_missing_source(self):
         with World() as w:
-            hook=Path(__file__).resolve().parents[2]/'skills/agent-memory/hooks/codex_stop.py'
-            for repo in (w.repository(),w.inside('outside')):
+            hook=Path(__file__).resolve().parents[2]/'skills/agent-memory'
+            for repo in [w.repository(),w.inside('outside')]:
                 repo.mkdir(exist_ok=True)
-                event={'hook_event_name':'Stop','session_id':str(uuid.uuid4()),'turn_id':str(uuid.uuid4()),'stop_hook_active':False,'cwd':str(repo),'last_assistant_message':'ok'}
-                result=subprocess.run([sys.executable,'-I',str(hook)],input=json.dumps(event),text=True,capture_output=True,env=w.env,timeout=10)
-                self.assertEqual(json.loads(result.stdout),{})
+                event={'hook_event_name':'Stop','session_id':str(uuid.uuid4()),'turn_id':str(uuid.uuid4()),'stop_hook_active':False,'cwd':str(repo),'last_assistant_message':None}
+                self.assertEqual(self.call(w,hook,'stop',event),{})
+    def test_legacy_completion_remains_quiet_without_rewriting_source(self):
+        with World() as w:
+            helper=test_admission.AdmissionContract();repo,bank=helper.fixture(w)
+            s,t=str(uuid.uuid4()),str(uuid.uuid4());digest=hashlib.sha256(b'actual legacy source').hexdigest()
+            with patch.dict(os.environ,w.env,clear=True):
+                from agent_memory import bank_writes,scope_binding
+                operations,_=bank_writes.state_paths(repo,bank,str(uuid.uuid4()));directory=operations.parent/'codex-boundaries';directory.mkdir(parents=True,mode=0o700)
+                key=hashlib.sha256((s+':'+t).encode()).hexdigest()
+                pending={'schema':'agent-memory/codex-boundary-pending-v1','project_id':scope_binding.require(repo)['project_id'],'session':s,'turn':t,'source_uuid':t,'source_sha256':digest}
+                path=directory/(key+'.pending');path.write_text(json.dumps(pending));path.chmod(0o600)
+            request={'session':s,'prompt':t,'source_uuid':t,'source_sha256':digest,'outcome':'no-learning','assessment':{'source_id':t,'source_review':'Reviewed actual retained legacy source; no durable lesson. '+'😀'*380,'candidates':[]}}
+            inp=w.inside('legacy-assessment.json');inp.write_text(json.dumps(request))
+            r=subprocess.run([sys.executable,'-I',str(helper.pack/'scripts/installer.py'),'codex-boundary','--repo',str(repo),'--input',str(inp)],text=True,capture_output=True,env=w.env,timeout=15)
+            self.assertEqual(r.returncode,0,r.stdout+r.stderr)
+            event={'hook_event_name':'Stop','session_id':s,'turn_id':t,'stop_hook_active':False,'cwd':str(repo),'last_assistant_message':None}
+            self.assertEqual(self.call(w,helper.pack,'stop',event),{})
+
+    def test_quiet_completion_surfaces_earlier_pending_once(self):
+        with World() as w:
+            helper=test_admission.AdmissionContract();repo,bank=helper.fixture(w)
+            s,t=str(uuid.uuid4()),str(uuid.uuid4());digest=hashlib.sha256(b'current').hexdigest()
+            with patch.dict(os.environ,w.env,clear=True):
+                obs=core.register(repo,'codex',s,t,digest)
+                value={'observation_id':obs['observation_id'],'source_sha256':digest,'outcome':'no-learning','assessment':{'source_id':obs['observation_id'],'source_review':'Reviewed actual current fixture request; no durable learning.','candidates':[]}}
+                receipt=core.verify_assessment(repo,value,obs['observation_id']);core.complete(repo,'codex',s,t,obs['observation_id'],digest,receipt)
+                core.register(repo,'codex',str(uuid.uuid4()),str(uuid.uuid4()),hashlib.sha256(b'earlier interrupted source').hexdigest())
+            event={'hook_event_name':'Stop','session_id':s,'turn_id':t,'stop_hook_active':False,'cwd':str(repo),'last_assistant_message':None}
+            first=self.call(w,helper.pack,'stop',event)
+            self.assertIn('earlier source assessments remain pending',first['systemMessage']);self.assertNotIn('decision',first)
+            self.assertEqual(self.call(w,helper.pack,'stop',event),{})

@@ -8,9 +8,9 @@ let prompt
 try {
   const directory = dirname(realpathSync(fileURLToPath(import.meta.url)))
   prompt = readFileSync(join(directory, 'boundary-prompt.txt'), 'utf8').trim().replaceAll('{{SKILL_DIR}}', () => dirname(directory))
-  if (!prompt || Buffer.byteLength(prompt, 'utf8') > 4096) throw new Error('invalid prompt')
+  if (!prompt || Buffer.byteLength(prompt, 'utf8') > 2048) throw new Error('invalid prompt')
 } catch {
-  prompt = 'Agent Memory turn boundary: hook instruction unavailable; memory refresh and capture are pending.'
+  prompt = 'Agent Memory turn boundary: preserve the substantive task answer. Follow the installed agent-memory turn operation for actual source assessment; routine no-learning bookkeeping stays quiet. If tools or instructions are unavailable, retain pending and add only a concise consequential qualification. Never infer capture or publication from hook execution.'
 }
 const marker = 'Agent Memory turn boundary:'
 const identityMarker = 'Agent Memory observed OpenCode session:'
