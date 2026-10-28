@@ -63,3 +63,20 @@ I found no blocking security or behavior contradictions. The revision fixes the 
 None of these change the security posture or contradict the stated behavior.
 
 The accepted source incorporates the non-blocking isolation/spacing/failure-output clarifications and makes the one-call budget total routine maintenance calls, with first-use loading counted separately. This is technical design acceptance, not proof of implementation, native UX or signed delivery.
+
+## Native OpenCode timing amendment
+
+**ACCEPT**, with one wording fix recommended before commit. I reviewed the text directly and did not run the pasted script.
+
+**Preserves native contracts:** Yes. OpenCode keeps its existing queued post-answer control pass and its `source_ack` precondition: the original completed assistant record plus control-message context. No new pre-final identity is invented. Codex and Claude stay pre-answer. Automatic capture, the stop-fallback caps and the host-limit disclosures are untouched. No MCP is added and hidden UI is not promised.
+
+**Meets the one-answer/no-workspace budget:** Yes. The control pass must be silent on success, must not repeat the business answer, and keeps the original answer record. It creates no workspace. On failure, OpenCode emits one notice after the single answer, which fits "answer once, one brief failure notice."
+
+**Recommended fix:**
+- **T2 call budget:** The text says OpenCode "MAY use one native source-acknowledgment call" but never says that call also covers refresh. Since the cap is "≤1 call total," state it explicitly, e.g. "one native call combining source acknowledgment and quick refresh, reporting through the versioned combined-operation schema."
+
+**Non-blocking notes:**
+- T3 should require evidence of which record the OpenCode SDK reports as the final result (original answer vs. control pass), not just a qualification.
+- The Context section still says "This proposed corrective source," which is stale under `status: accepted`.
+
+The accepted amendment explicitly retains OpenCode's existing queued source contract, combines its acknowledgment and refresh in one native call, and requires SDK final-record evidence. Codex/Claude remain pre-answer. No new source identity, MCP or hidden-tool-card guarantee is introduced.

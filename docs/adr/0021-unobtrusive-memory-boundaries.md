@@ -14,7 +14,7 @@ The [operator-incident RCA](../research/2026-10-27-intrusive-boundary-rca.md)
 identifies an actual Linux path-policy inconsistency, generic diagnostics,
 unnecessary workspace calls and repeated task dialogue. v0.0.8's successful
 source coverage did not establish acceptable operator-visible normal use.
-This proposed corrective source does not reopen or alter its shipped tasks.
+This corrective source does not reopen or alter its shipped tasks.
 
 The operator requested that the defects be fixed and a new release published.
 The implementation uses one compact routine CLI/native assessment check, with
@@ -58,10 +58,17 @@ feature code, index or branch changes are permitted from the quick check.
 ### T2: Quiet routine operation and distinct completion stages
 
 Routine no-learning handling MUST avoid private workspace creation and use a
-bounded direct assessment route before emitting the task answer. Codex and
+bounded direct assessment route. Codex and Claude perform routine checks before
+emitting the task answer. OpenCode retains its existing native queued control
+pass after the original answer: that pass MUST preserve the original native
+answer record, remain silent on routine success and MUST NOT repeat the business
+answer. This timing exception avoids inventing a new pre-final source identity
+contract. Native UI and SDK result attribution MUST be qualified separately, retaining
+which original/control record the SDK exposes as the final result.
+Codex and
 Claude MAY combine the quick refresh observation and the explicit assessment
-in that same CLI invocation; OpenCode MAY use one native source-acknowledgment
-call when the actual original source is already in context. Source-window tools
+in that same CLI invocation; OpenCode MAY use one native call combining source acknowledgment and quick refresh through the
+versioned combined-operation schema when the actual source is already in context. Source-window tools
 remain required for unavailable, omitted or recovered original evidence. Supported quiet success MUST suppress result
 payloads while retaining useful failure output. Instructions MUST put the routine
 route first and avoid rereading unchanged loaded guides. First-use loading and
@@ -76,7 +83,8 @@ failed assessment, emit the task answer only once, with one brief failure notice
 
 The confirmed incident emitted a full PM answer in commentary and repeated its
 question in the final answer. Routine guidance MUST keep the business response
-out of commentary and emit it only once after the pre-answer assessment. PM
+out of commentary and emit it only once. For the pre-answer adapters, this follows
+assessment; the OpenCode control pass MUST NOT emit another business response. PM
 answers and questions MUST NOT be repeated solely as memory bookkeeping.
 Codex MUST support quiet-success parity with the existing Claude adapter.
 Direct no-learning stdin intake remains at most 64 KiB. A forgotten-operation
