@@ -81,7 +81,7 @@ if endpoint=='user':
  d['actor_reads']=d.get('actor_reads',0)+1
  if d.get('change_actor_at')==d['actor_reads']:d['actor']={'id':8,'login':'other-user','type':'User'}
  if d.get('actor_unavailable'):response(403,{'message':'Actor unavailable'})
- response(200,d.get('actor',{'id':7,'login':'allowed-user','type':'User'}))
+ response(d.get('actor_status',200),d.get('actor',{'id':7,'login':'allowed-user','type':'User'}))
 if endpoint.startswith('repos/fixture/memory/branches/main/protection/restrictions/users?'):
  page=int(endpoint.split('page=')[-1])
  if page==d.get('allowlist_failed_page'):response(403,{'message':'Allowlist unavailable'})
@@ -92,7 +92,7 @@ if endpoint.startswith('repos/fixture/memory/branches/main/protection/restrictio
   target='https://api.github.com/repos/fixture/memory/branches/main/protection/restrictions/users?per_page=100&page='+str(page+1)
   if d.get('broken_next'):target='https://api.github.com/repos/fixture/memory/branches/main/protection/restrictions/users?per_page=100&page=99'
   link='Link: <'+target+'>; rel="next"\n'
- response(200,rows[(page-1)*100:page*100],link)
+ response(d.get('allowlist_status',{}).get(str(page),200),rows[(page-1)*100:page*100],link)
 if endpoint=='repos/fixture/memory':response(200,repo)
 if endpoint=='repos/fixture/memory/branches/main':response(200,{'name':'main','protected':d['protected'],'commit':{'sha':git('rev-parse','refs/heads/main')}})
 if endpoint.startswith('repos/fixture/memory/rules/branches/main?'):

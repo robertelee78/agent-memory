@@ -81,7 +81,7 @@ def api(endpoint, *, method='GET', body=None, allow_missing=False, with_headers=
     status = int(match[1]) if match else None
     if status == 404 and allow_missing:
         return None
-    if code or status not in {200, 201} or not separator:
+    if code or status not in ({200} if method == 'GET' else {200, 201}) or not separator:
         raise ContractError('GitHub rules or permission observation unavailable; publication remains pending')
     try:
         value = json.loads(content)

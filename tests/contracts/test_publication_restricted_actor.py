@@ -40,6 +40,7 @@ class RestrictedActorContract(PublicationFixture):
             {'actor': {**USER, 'id': 8}},
             {'actor': {**USER, 'login': 'different-user'}},
             {'actor_unavailable': True},
+            {'actor_status': 201},
             {'allowed_users': [USER, USER]},
             {'allowed_users': [{**USER, 'id': True}]},
             {'allowed_users': {'users': [USER]}},
@@ -72,7 +73,7 @@ class RestrictedActorContract(PublicationFixture):
             self.assertEqual(prepared['sharing_state'], 'prepared')
             proof = prepared['request']['proof']; before = self.state(w, repo, bank)
             baseline = json.loads(policy.read_text())
-            for change in [{'allowlist_failed_page': 2}, {'broken_next': True},
+            for change in [{'allowlist_failed_page': 2}, {'allowlist_status': {'2': 201}}, {'broken_next': True},
                            {'allowed_users': users+[USER]},
                            {'allowed_users': users[:100]+[users[0]]}]:
                 with self.subTest(change=change):
