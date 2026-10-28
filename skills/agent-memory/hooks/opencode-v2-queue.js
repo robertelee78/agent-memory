@@ -33,56 +33,6 @@ export function syntheticId(sessionId, sourceId) {
   return 'msg_' + createHash('sha256').update(sessionId).update('\0').update(sourceId).digest('hex').slice(0, 26)
 }
 
-// Bounded storage with a process-instance-wide non-repeating admission generation.
-export function controlEpochs(limit = 128) {
-  let generation = 0n
-  const values = new Map()
-  return {
-    observe(session) {
-      values.delete(session); values.set(session, ++generation)
-      while (values.size > limit) values.delete(values.keys().next().value)
-      return generation
-    },
-    current(session) { return values.get(session) ?? null },
-    clear() { values.clear() },
-  }
-}
-
-export function canArmTerminal(assessment, input, context, observation, before, current) {
-  return before !== null && before === current && assessment?.verified === true
-    && assessment.refresh_verified === true && assessment.assessment_verified === true
-    && input?.recover !== true && input?.diagnostic !== true
-    && observation?.session_id === context?.sessionID && typeof context?.messageID === 'string'
-}
-
-// Request-local transport optimization, never an assessment or persisted receipt.
-export function terminalContext(event, rows, terminal, epoch) {
-  if (!terminal || terminal.refresh_verified !== true || terminal.assessment_verified !== true || terminal.epoch !== epoch || event?.sessionID !== terminal.session_id
-      || event?.model?.providerID !== 'baseten' || event?.model?.id !== 'moonshotai/Kimi-K3'
-      || !Array.isArray(event.messages) || !Array.isArray(rows)
-      || !event.tools || !event.options || !Array.isArray(event.system)) return false
-  const inputs = event.messages.filter(row => row?.role === 'user')
-  const assistants = event.messages.filter(row => row?.role === 'assistant')
-  if (inputs.at(-1)?.id !== terminal.control_id || assistants.at(-1)?.id !== terminal.assistant_id) return false
-  const controls = rows.filter(row => row?.id === terminal.control_id)
-  const control = controls[0], marker = control?.metadata?.[FIELD]
-  const nativeInputs = rows.filter(row => row?.type === 'user' || row?.type === 'synthetic')
-  if (controls.length !== 1 || control?.type !== 'synthetic' || marker?.schema !== SCHEMA
-      || marker?.source_id !== terminal.source_id
-      || control.id !== syntheticId(terminal.session_id, terminal.source_id)
-      || createHash('sha256').update(JSON.stringify(control)).digest('hex') !== terminal.control_sha256
-      || createHash('sha256').update(sourceWindow(rows, terminal.source_id, terminal.session_id).content).digest('hex') !== terminal.source_window_sha256
-      || nativeInputs.at(-1)?.id !== terminal.control_id
-      || rows.at(-1)?.id !== terminal.assistant_id || rows.at(-1)?.type !== 'assistant') return false
-  const sentinel = 'AM_CONTROL_DONE_' + createHash('sha256').update(JSON.stringify([
-    terminal.session_id, terminal.source_id, terminal.control_id, terminal.assistant_id,
-  ])).digest('hex').slice(0, 24)
-  event.tools = {}
-  event.options.stop = [sentinel]
-  event.system.push({type:'text', text:'The exact Agent Memory control has already completed its verified source assessment and freshness check. The original business answer is retained. For this terminal transport request, output exactly ' + sentinel + ' as the first and only response text. No preface, explanation, reasoning text, JSON or tools.'})
-  return true
-}
-
 // The source is OpenCode's active session projection. Its completeness and
 // semantic meaning are deliberately not claimed, even when IDs can be mapped.
 export function sourceWindow(rows, sourceId, sessionId, recordId = null, expectedHash = null, offset = null) {
@@ -135,13 +85,6 @@ export default {
   id: 'agent-memory-turn-queue',
   async setup(ctx) {
     const registrations = []
-    const admissions = controlEpochs()
-    const terminalControls = new Map()
-    const epochFor = session => admissions.current(session)
-    const boundedSet = (map, key, value) => {
-      map.delete(key); map.set(key, value)
-      while (map.size > 128) map.delete(map.keys().next().value)
-    }
     const warn = () => {
       try { console.warn('Agent Memory: turn continuation could not be verified; capture and publication remain pending.') } catch {}
     }
@@ -218,8 +161,6 @@ export default {
           input: { type: 'object', properties: { source_id: { type: 'string' }, outcome: { type: 'string', enum: ['no-learning', 'published'] }, source_session_id: { type: 'string' }, recover: { type: 'boolean' }, diagnostic: { type: 'boolean' }, publication_request: { type: 'object' }, assessment: { type: 'object' } }, required: ['source_id', 'outcome'], additionalProperties: false },
           options: { namespace: 'am', codemode: true },
           execute: async (input, context) => {
-            const admitted = epochFor(context.sessionID)
-            terminalControls.delete(context.sessionID)
             if (!['no-learning', 'published'].includes(input?.outcome)) return pending('outcome-unavailable')
             if (input.outcome === 'no-learning') {
               const a = input.assessment
@@ -237,23 +178,7 @@ export default {
             const assessment = await reserveTurn(observation.session_id, input.source_id, action, repo, input.publication_request ?? null, input.assessment ?? null, null, 0, action === 'assessed-no-learning')
             if (assessment.schema === 'agent-memory/turn-check-v1') {
               if (input.diagnostic === true) return {content: JSON.stringify({...assessment, session_id: observation.session_id, source_id: input.source_id})}
-              if (assessment.verified === true) {
-                if (canArmTerminal(assessment, input, context, observation, admitted, epochFor(context.sessionID))) {
-                  try {
-                    const current = await rowsFor(context.sessionID)
-                    const controlID = syntheticId(context.sessionID,input.source_id)
-                    const control = Array.isArray(current) ? current.find(row => row?.id === controlID && row?.type === 'synthetic') : null
-                    if (control && epochFor(context.sessionID) === admitted) {
-                      boundedSet(terminalControls, context.sessionID, {session_id:context.sessionID,
-                        source_id:input.source_id, control_id:controlID, assistant_id:context.messageID, epoch:admitted,
-                        refresh_verified:assessment.refresh_verified, assessment_verified:assessment.assessment_verified,
-                        control_sha256:createHash('sha256').update(JSON.stringify(control)).digest('hex'),
-                        source_window_sha256:createHash('sha256').update(JSON.stringify(observation)).digest('hex')})
-                    }
-                  } catch {} // Optional transport optimization cannot replace a completed check.
-                }
-                return {content: ''}
-              }
+              if (assessment.verified === true) return {content: ''}
               const result = {schema: assessment.schema, status: 'pending', verified: false,
                 refresh_verified: assessment.refresh_verified, assessment_verified: assessment.assessment_verified,
                 notice_required: assessment.notice_required, publication_verified: false}
@@ -271,8 +196,6 @@ export default {
         if (typeof event?.messageID !== 'string' || typeof event?.sessionID !== 'string') throw new Error('Agent Memory: native source unavailable; preserve the input and retry.')
         const marker = event.metadata?.[FIELD]
         if (marker?.schema === SCHEMA && event.messageID === syntheticId(event.sessionID, marker.source_id)) return
-        terminalControls.delete(event.sessionID)
-        admissions.observe(event.sessionID)
         const repo = await sessionRepo(event.sessionID)
         if (!repo) throw new Error('Agent Memory: repository unavailable; preserve the input and retry.')
         const enrolled = await reserveTurn(event.sessionID, event.messageID, 'enroll', repo)
@@ -282,13 +205,6 @@ export default {
       }))
       registrations.push(await ctx.session.hook('context', async event => {
         try {
-          const terminal = terminalControls.get(event?.sessionID)
-          if (terminal) {
-            const observed = await rowsFor(event.sessionID)
-            if (terminalContext(event, observed, terminal, epochFor(event.sessionID))) return
-            // A changed native/input context cannot later reuse an old green check.
-            terminalControls.delete(event.sessionID)
-          }
           const last = event?.messages?.at(-1)?.id
           if (!last || typeof event?.sessionID !== 'string') return
           const rows = await rowsFor(event.sessionID)
@@ -320,7 +236,6 @@ export default {
       }))
       if (registrations.some(registration => typeof registration?.dispose !== 'function')) throw new Error('hook registration unavailable')
       const dispose = () => {
-        admissions.clear(); terminalControls.clear()
         for (const registration of registrations.reverse()) {
           try { const result = registration?.dispose?.(); if (result?.catch) result.catch(warn) } catch { warn() }
         }

@@ -128,15 +128,10 @@ const rows=sessions.get('ses_original');rows.push({type:'assistant',id:'answer',
  {type:'synthetic',id:queues[0].id,text:queues[0].text,metadata:queues[0].metadata},{type:'assistant',id:'continuation'});
 const quiet=await tools.source_ack({source_id:source.id,outcome:'no-learning',assessment:{source_id:source.id,source_review:'Reviewed the fixture explanation; no durable claim.',candidates:[]}}, {sessionID:'ses_original',messageID:'continuation'});
 if(quiet.content!=='')throw Error('routine receipt body');
-const outgoing=()=>({sessionID:'ses_original',model:{providerID:'baseten',id:'moonshotai/Kimi-K3'},messages:[{role:'user',id:source.id},{role:'assistant',id:'answer'},{role:'user',id:queues[0].id},{role:'assistant',id:'continuation'}],system:[],tools:{execute:{}},options:{}});
-const terminal=outgoing();await hooks.context(terminal);
-if(Object.keys(terminal.tools).length||terminal.options.stop?.length!==1||!terminal.system.at(-1)?.text.includes(terminal.options.stop[0]))throw Error('exact control not terminal-shaped');
-
 const ack=JSON.parse((await tools.source_ack({source_id:source.id,diagnostic:true,outcome:'no-learning',assessment:{source_id:source.id,source_review:'Reviewed the fixture explanation; no durable claim.',candidates:[]}}, {sessionID:'ses_original',messageID:'continuation'})).content);
 if(ack.schema!=='agent-memory/turn-check-v1'||!ack.assessment_verified||!ack.refresh_verified||!ack.verified||ack.publication_verified)throw Error('false completion: '+JSON.stringify(ack));
 const interrupted={type:'user',id:'msg_interrupted',text:'Inspect the temporary fixture.'};rows.push(interrupted);
 const next={messageID:interrupted.id,sessionID:'ses_original'};await hooks.prompt(next);interrupted.metadata=next.metadata;
-const steered=outgoing();await hooks.context(steered);if(!steered.tools.execute||steered.options.stop)throw Error('new operator admission changed');
 sessions.set('ses_later',[{type:'assistant',id:'later-assistant'}]);
 const backlog=JSON.parse((await tools.pending_sources({}, {sessionID:'ses_later'})).content);
 if(backlog.pending_count!==1||backlog.sources[0].session_id!=='ses_original'||backlog.sources[0].source_id!=='msg_interrupted')throw Error('native source lost');

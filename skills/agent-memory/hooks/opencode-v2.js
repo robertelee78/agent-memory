@@ -28,6 +28,7 @@ export default {
   setup: async (ctx) => {
     try {
       let disposeQueue = () => {}
+      try { disposeQueue = await queue.setup(ctx) } catch { pending() }
       const registration = await ctx.session.hook('context', (event) => {
         try {
           if (!Array.isArray(event?.system)) { pending(); return }
@@ -62,8 +63,6 @@ export default {
         } catch { pending() }
       })
       if (typeof registration?.dispose !== 'function') { pending(); return () => {} }
-      // Register foreground shaping first, so exact-control transport is last.
-      try { disposeQueue = await queue.setup(ctx) } catch { pending() }
       return () => {
         try { disposeQueue?.() } catch { pending() }
         try {

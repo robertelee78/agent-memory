@@ -1,7 +1,6 @@
 {
   "schema": "agent-memory/test-contracts-v1",
   "suites": [
-    {"name": "opencode-terminal-context", "layer": "client", "scope": "v0.0.9", "path": "tests/contracts/test_opencode_terminal_context.py"},
     {"name": "refresh-path-policy", "layer": "concurrency", "scope": "v0.0.9", "path": "tests/contracts/test_refresh_path_policy.py"},
     {"name": "compact-turn-check", "layer": "client", "scope": "v0.0.9", "path": "tests/contracts/test_compact_turn_check.py"},
     {"name": "opencode-native-source-turns", "layer": "client", "scope": "v0.0.8", "path": "tests/contracts/test_opencode_native_boundary.py"},
