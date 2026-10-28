@@ -91,3 +91,5 @@ history and require explicit treatment of unfinished obligations.
 
 Changes to a referenced design contract MUST also reconcile the tasks that
 depend on it.
+
+| [0021](0021-unobtrusive-memory-boundaries.md) | Unobtrusive boundaries and truthful operation health | Proposed; visibility choice pending |
