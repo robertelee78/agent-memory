@@ -1,7 +1,7 @@
 ---
 schema: "agent-memory/v1"
 project-id: "add009c6-d31e-49a6-a372-b8cab316d7bb"
-router-updated: "2026-10-28T01:04:52.919595+00:00"
+router-updated: "2026-10-28T15:16:04.674650+00:00"
 canonical-remote: "repo://github.com/robertelee78/agent-memory"
 ---
 # Project memory
@@ -28,6 +28,8 @@ Router time describes this map, not every file's revision.
 | [history/events/7fc8ac35-41c4-47c9-8652-3484ae7ef3fa.md](<history/events/7fc8ac35-41c4-47c9-8652-3484ae7ef3fa.md>) | Provenance of checkout continuity and hook qualification learning | repository | active | When reviewing the identity incident and completion evidence |
 | [topics/fb0c23a6-148a-44f4-b050-bb161e903119.md](<topics/fb0c23a6-148a-44f4-b050-bb161e903119.md>) | Native callback lifecycle IDs versus individually assessed source observations | repository | active | When designing or testing harness prompt capture, steering, transcript reconciliation or interrupted-source recovery |
 | [history/events/4d451b02-97c0-4f2b-9a68-13f74b9530d3.md](<history/events/4d451b02-97c0-4f2b-9a68-13f74b9530d3.md>) | Evidence behind native callback identity and pending-source constraints | repository | active | When reviewing why callback observations retain separate provenance and assessments |
+| [topics/672d154e-be1e-4db9-a56b-dca30a9db915.md](<topics/672d154e-be1e-4db9-a56b-dca30a9db915.md>) | Signed installed-tree integrity when diagnostic imports generate executable cache files | repository | active | When diagnosing signed installation receipt mismatches or choosing a safe Python diagnostic launcher |
+| [history/events/89b6ec8a-3773-4831-8380-e239330fcd45.md](<history/events/89b6ec8a-3773-4831-8380-e239330fcd45.md>) | Evidence behind executable cache refusal and source-preserving recovery | repository | active | When reviewing cache provenance, signed payload verification or bounded quarantine evidence |
 
 ## Omitted contexts
 
