@@ -1,0 +1,8 @@
+{
+  "skills/agent-memory/scripts/agent_memory/trust_paths.py": "d0e70480f2a05c50f5b2777b7dc2023940ebd893e1eeb34666a0874c90c35d12",
+  "skills/agent-memory/scripts/agent_memory/memory_refresh.py": "6239647d2c850d373d79eca8a1c4d424ffec884a7adfe0f57196f128e1713909",
+  "skills/agent-memory/scripts/agent_memory/diagnostics.py": "fdc44e2048e1888f7b1dc5276a8e3031dac4a72c9780cbdcebe6f7a87cfa62aa",
+  "skills/agent-memory/scripts/agent_memory/turn_check.py": "e49335bc6e866bd279d27ab51d96b1207ced22ac86dabe3d5204b8e548944255",
+  "tests/contracts/test_refresh_path_policy.py": "98582e314f156a274ab008070d21de995b9b522b41b69755e767d469c8bab562",
+  "tests/contracts/test_compact_turn_check.py": "9f39870271ca693356deb203651de25c786328c67ef78b3e15b5bec7f903d0a6"
+}

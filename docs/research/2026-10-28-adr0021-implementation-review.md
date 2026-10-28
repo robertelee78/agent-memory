@@ -465,3 +465,121 @@ release. Shipping core fixes with an accepted compatibility limitation requires
 that product decision and corresponding source-bound scope/acceptance record;
 this rollback review does not make that decision or claim full silence. No runtime
 files, real profiles or models were changed or executed by the reviewer.
+
+## Baseline release preflight before the scope amendment
+
+At clean baseline commit `81523c9ba447ab78213aa4bf19cd52d75377c26d`, the
+reviewer again verified the restored OpenCode/shared runtime and accepted T1
+hashes above. The package validator was independently invoked through the
+existing supported interpreter launcher (`-I -B`): exit zero, valid true,
+version 0.0.9. No native models or public install checks were repeated.
+
+The working source tree already contained ignored bytecode-cache entries before
+that read-only validation; the before/after inventory was identical. Those
+existing entries were preserved, not removed or blessed as authenticated source.
+The release builder uses tracked Git archive bytes rather than ignored caches or
+development memory and disables its own bytecode writes. This source-tree check
+does not replace signed-installed-source drift verification or the required
+actual public delivery canaries.
+
+The coordinator is preparing an explicit narrow v0.0.9 scope amendment under the
+operator's existing fix-and-publish mandate. No operator preference vote for a
+noise exception is inferred. Final T1–T3 acceptance must bind the exact reviewed
+amendment, its independent design verdict and immutable candidate; this preflight
+does not itself waive the previous full-silence criterion.
+
+## Final reviewed v0.0.9 scope and immutable candidate verdict
+
+**T1 implementation: ACCEPT** at
+`0a4a544efab187693bd5fb90c9f5dfd831fd92c8`.
+**T2 implementation: ACCEPT within the amended v0.0.9 scope** at
+`7d48d4103e288983afd5e650f66e21e51687230f`.
+**T3 prepublication technical qualification: ACCEPT; signed public delivery
+verification remains pending.** This is not final delivery acceptance or an AWA
+lifecycle update.
+
+The reviewer read the exact amended ADR and retained final Opus review. The ADR
+SHA-256 is
+`3c385a321f0ca5d56301092798274f281dd416a8814bf6fb3f49a34aba90c88c`;
+the Opus review artifact SHA-256 is
+`4f98a04beedb2562c4b52d163e3dde1f24ef3e5a450f059a1b2762dff2a87145`.
+The final scope review says ACCEPT for the narrow corrective-delivery exception.
+Earlier design reviews and failed trials remain separately labeled.
+
+The amendment resolves the prior release-scope hold explicitly. It permits only
+the observed OpenCode successful-control prose and single extra null operation,
+counts both separately, and defers full native silence to T4/v0.0.10. It does not
+claim an operator preference vote. It treats delivering the verified core fixes
+as a bounded implementation default under the existing fix-and-publish mandate.
+Data integrity, exact source assessment, permissions, original business-answer
+preservation, truthful stage reporting and delivery checks remain required.
+The removed terminal experiment is not an enabled or qualified feature. This
+verdict supersedes the previous full-silence release hold only within that
+formally reviewed v0.0.9 scope; it does not recast a failed quietness trial as a
+quiet pass or complete T4.
+
+The reviewer independently rechecked that T1's three production files are byte
+identical between the accepted T1 candidate and the final candidate. The four
+restored OpenCode/shared files still match the completed baseline native proof.
+There is no package/runtime/script/test change from the independently validated
+baseline `81523c9` to `7d48d41`; the final scope change is outside executable
+package behavior. Final accepted critical runtime hashes are:
+
+| Runtime file | SHA-256 |
+| --- | --- |
+| `scripts/agent_memory/trust_paths.py` | `d0e70480f2a05c50f5b2777b7dc2023940ebd893e1eeb34666a0874c90c35d12` |
+| `scripts/agent_memory/memory_refresh.py` | `6239647d2c850d373d79eca8a1c4d424ffec884a7adfe0f57196f128e1713909` |
+| `scripts/agent_memory/diagnostics.py` | `fdc44e2048e1888f7b1dc5276a8e3031dac4a72c9780cbdcebe6f7a87cfa62aa` |
+| `scripts/agent_memory/turn_check.py` | `e49335bc6e866bd279d27ab51d96b1207ced22ac86dabe3d5204b8e548944255` |
+| `hooks/boundary_ledger.py` | `10b25fd2d4ecb13d402956efbe2c7a6850727b897092f16f021de71cd77b0341` |
+| `hooks/opencode-v2-queue.js` | `fc2a5cebf5261725fd70db430fec3d015d9ee2e6790cb5d1d39203729c636155` |
+| `hooks/opencode-v2.js` | `0a6f44d842940840325fb21d54df1b31e547903cd4d1dc638e6cb0c6cd0ea19a` |
+
+### Prepublication execution evidence
+
+The earlier independently checked Codex/Claude native counts and qualifications
+stand. The reviewer additionally recomputed OpenCode's retained baseline event
+counts: one source acknowledgment on each of three native invocations, extra null
+operations on the two successful controls, and none on the outage control. The
+native original business answers remain once; the extra success text is control
+bookkeeping, not quiet success. The SDK/final-stream attribution limitation is
+explicit in the native report.
+
+The actual outage stage response has combined verified false, refresh verified
+false, assessment verified true and a concrete authority-advertisement failure
+with an actionable repair. The reviewer independently located the exact same
+object in the original private native tool-result stream, matching the public
+sanitized extraction at
+`data/2026-10-28-quiet-boundaries/opencode/baseline/refresh-stage-result.json`
+(SHA-256 `e1564636b1363064350b2d09cbe4f56b9a823c5a5c97f643d23fe25d9bdefd90`).
+This verifies the failed-refresh execution gate without inferring freshness from
+the completed source assessment.
+
+The reviewer read the real Linux controller and retained results. Ten path-policy
+contracts passed in 8.053 seconds, including protected/unprotected paths and
+specific final-source diagnostics; four compact-check contracts passed in 10.404
+seconds. There were no skips, failures, expected failures or unexpected successes.
+The controller records execution on the actual Linux host, plus the actual
+operator-bank quick check reporting bank-synchronized, fresh authority observation
+and no canonical/index writes. The separate original candidate probe records
+bank/index preservation and unchanged HEAD before/after. Native PM client proofs
+were run on macOS; this is shared-contract and real-path Linux qualification, not
+a claim that native Linux model conversations were executed.
+
+Private source-bound Linux evidence read by this reviewer:
+
+| Artifact | SHA-256 |
+| --- | --- |
+| `/tmp/am-v009-linux-final.json` | `52f87f4ab75a515bf12ebc07f904c61012ff84376907998d30eb99e41e8d7008` |
+| `/tmp/am-v009-linux-final.py` | `4015b7b467efbb700b04d8d89da0ea72145ccb74d6fe675f0aadc6717d9fd8c0` |
+| `/tmp/am-v009-linux-candidate-current.json` | `064eda5870c119705187eba45fc7c554cfa316ac36708ae962c2aa71a50e4530` |
+
+No model or broad test suite was rerun for this final scope review. Package
+validation and cache-drift qualifications above remain exact: source-tree ignored
+caches were preserved and not authenticated, while signed installed-source
+verification must still reject unexpected executable drift. Actual signed public
+v0.0.9 install/update/no-op, publisher verification, consumer-memory isolation and
+post-verification cache checks remain mandatory after publication. Prepared
+signed v0.0.8 upgrade worlds are not completed delivery receipts. Final release
+source must retain the accepted runtime bytes and receive its own delivery
+binding/review; no public delivery claim is made here.

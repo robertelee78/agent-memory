@@ -1,0 +1,9 @@
+test_actual_assessment_refresh_failure_dedup_and_recovery (contract_suite.CompactChecks.test_actual_assessment_refresh_failure_dedup_and_recovery) ... ok
+test_actual_cli_one_call_quiet_and_exact_legacy_receipt_scope (contract_suite.CompactChecks.test_actual_cli_one_call_quiet_and_exact_legacy_receipt_scope) ... ok
+test_batch_distinct_observations_and_partial_failure (contract_suite.CompactChecks.test_batch_distinct_observations_and_partial_failure) ... ok
+test_native_combined_refresh_uses_protected_writable_state_without_review_echo (contract_suite.CompactChecks.test_native_combined_refresh_uses_protected_writable_state_without_review_echo) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 10.212s
+
+OK

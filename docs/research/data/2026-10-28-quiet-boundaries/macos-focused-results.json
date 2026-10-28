@@ -1,0 +1,44 @@
+[
+  {
+    "suite": "test_claude_source_turns.py",
+    "exit": 0,
+    "seconds": 16.219188499992015,
+    "counts": {
+      "errors": 0,
+      "expected_failures": 0,
+      "failures": 0,
+      "passed": true,
+      "skipped": 0,
+      "tests": 5,
+      "unexpected_successes": 0
+    }
+  },
+  {
+    "suite": "test_codex_stop.py",
+    "exit": 0,
+    "seconds": 11.770068499987246,
+    "counts": {
+      "errors": 0,
+      "expected_failures": 0,
+      "failures": 0,
+      "passed": true,
+      "skipped": 0,
+      "tests": 4,
+      "unexpected_successes": 0
+    }
+  },
+  {
+    "suite": "test_skill_routes.py",
+    "exit": 0,
+    "seconds": 22.1879706250038,
+    "counts": {
+      "errors": 0,
+      "expected_failures": 0,
+      "failures": 0,
+      "passed": true,
+      "skipped": 0,
+      "tests": 19,
+      "unexpected_successes": 0
+    }
+  }
+]

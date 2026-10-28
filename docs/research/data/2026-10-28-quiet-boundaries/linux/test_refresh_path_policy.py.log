@@ -1,0 +1,15 @@
+test_actual_protected_775_chain_current_and_doctor_preserve_feature_work (contract_suite.RefreshPathPolicyIntegration.test_actual_protected_775_chain_current_and_doctor_preserve_feature_work) ... ok
+test_final_source_mutation_has_specific_api_and_cli_diagnostic (contract_suite.RefreshPathPolicyIntegration.test_final_source_mutation_has_specific_api_and_cli_diagnostic) ... ok
+test_unprotected_state_failure_remains_specific_without_changing_work (contract_suite.RefreshPathPolicyIntegration.test_unprotected_state_failure_remains_specific_without_changing_work) ... ok
+test_barrier_chmod_or_rebinding_during_observation_is_refused (contract_suite.TransactionPathPolicy.test_barrier_chmod_or_rebinding_during_observation_is_refused) ... ok
+test_foreign_owner_rejected_below_private_barrier (contract_suite.TransactionPathPolicy.test_foreign_owner_rejected_below_private_barrier) ... ok
+test_orphan_recovery_is_specific_and_preserved (contract_suite.TransactionPathPolicy.test_orphan_recovery_is_specific_and_preserved) ... ok
+test_protected_intermediates_share_policy_without_chmod (contract_suite.TransactionPathPolicy.test_protected_intermediates_share_policy_without_chmod) ... ok
+test_redirected_intermediate_rejected_without_following (contract_suite.TransactionPathPolicy.test_redirected_intermediate_rejected_without_following) ... ok
+test_unexpected_error_text_is_not_exposed (contract_suite.TransactionPathPolicy.test_unexpected_error_text_is_not_exposed) ... ok
+test_unprotected_writable_ancestor_rejected_by_both_walks (contract_suite.TransactionPathPolicy.test_unprotected_writable_ancestor_rejected_by_both_walks) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 7.834s
+
+OK
