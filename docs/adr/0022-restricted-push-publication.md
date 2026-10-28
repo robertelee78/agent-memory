@@ -66,8 +66,9 @@ new assessment outcome to hide genuine pending work.
 
 Bounded local protocol tests MUST exercise actual prepare/land commands and real
 Git remotes: allowed user succeeds only through required reviews/checks; an
-unlisted admin cannot prepare; malformed/unavailable or paginated allowlist
-observations remain pending; actor/allowlist changes before landing refuse writes;
+unlisted admin cannot prepare; a matching user on a later page within the bound
+succeeds, while exceeded bounds, non-200 pages, broken next chains and malformed
+or unavailable allowlist observations remain pending; actor/allowlist changes before landing refuse writes;
 team/App-only grants and unavailable `/user` remain pending despite admin/write
 access; mismatched ID/login pairs refuse; duplicate IDs refuse; a simulated Git
 transport rejection after API eligibility remains unpublished with the specific
