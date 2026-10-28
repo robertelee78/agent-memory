@@ -102,3 +102,30 @@ repair. Direct diagnostic imports MUST disable cache writes, and source repair
 MUST preserve unknown changes and independently verify signed payloads before
 activation. The separate refresh path-policy defect remains to be repaired in
 the corrective release.
+
+
+## Native qualification follow-up: terminal control
+
+Actual OpenCode 2.1.3 with Kimi K3 completed the quiet source acknowledgment but
+then narrated bookkeeping. Stronger empty-final instructions caused seventeen
+null-operation calls and a 180-second timeout. That failed trial is retained;
+empty output from a helper is not proof that the native control pass ended.
+The supported provider request stop setting, scoped to an already-verified exact
+control context, is the proposed terminal mechanism in ADR-0021. Session interrupt
+is rejected because its session-wide scope cannot isolate newer user input.
+
+Primary references: [official model-request hooks](https://dev.opencode.ai/v2/docs/build/plugins/server#model-requests),
+[pinned model request construction](https://github.com/anomalyco/opencode/blob/v2.1.3/packages/core/src/session/model-request.ts),
+[Chat stop settings](https://github.com/anomalyco/opencode/blob/v2.1.3/packages/ai/src/protocols/openai-chat.ts),
+and [session interruption](https://github.com/anomalyco/opencode/blob/v2.1.3/packages/core/src/session/execution.ts).
+
+Claude's first-use native trial also exposed a request-shape instruction gap:
+the model invented assessment fields after reading only the guide's opening.
+An explicit complete shape now precedes durable-capture details and the prompt
+lists all required nested fields. The fallback previously explicitly required
+repeating a business answer to preserve an SDK-selected final result; this
+contradicted ADR-0021's no-duplication requirement. That instruction was removed;
+the original answer record is preserved and SDK control-row attribution is
+qualified explicitly. A targeted follow-up confirmed one maintenance call per
+turn and no duplicated answer. These are adapter behavior findings, not new
+project-memory facts or evidence of semantic recall quality.

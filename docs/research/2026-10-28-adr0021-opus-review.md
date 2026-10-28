@@ -80,3 +80,49 @@ The accepted source incorporates the non-blocking isolation/spacing/failure-outp
 - The Context section still says "This proposed corrective source," which is stale under `status: accepted`.
 
 The accepted amendment explicitly retains OpenCode's existing queued source contract, combines its acknowledgment and refresh in one native call, and requires SDK final-record evidence. Codex/Claude remain pre-answer. No new source identity, MCP or hidden-tool-card guarantee is introduced.
+
+
+## Exact-control termination amendment review
+
+Actual independent `claude -p --model opus --safe-mode --tools '' --effort low`
+reviewed the narrow ADR amendment. The first review blocked an overstated quiet
+termination guarantee and unqualified tool removal across providers. The revision
+requires sentinel-first output, treats visible text/errors/timeouts as failures,
+and permits tool removal only for a natively qualified provider/model. It retains
+exact source/control/epoch checks and never interrupts the session.
+
+The revised ADR SHA-256 is `6f43948960e36a09135462109f9ff4b07133b5ee404bc680b49a466af6997fbc`.
+
+### Initial verdict
+
+**BLOCK**
+
+The amendment fits its narrow scope. It is request-local, does not interrupt the session, authors nothing, and arms only after an exact-source success that verifies both refresh and assessment. The tuple, tail and epoch checks handle the steering race correctly: later input invalidates the tuple, and an in-flight snapshot affects only the old request. Two concrete defects remain:
+
+1. **The termination guarantee is overstated.** The text says: "The provider stop omits that sentinel from output and completes the control without a second business answer or another tool cycle."
+   - A stop sequence only fires if the model actually emits the sentinel. Any text the model produces before the sentinel stays in the output.
+   - Once tools are removed, the model can still narrate completion ("Done, no learning.") and then emit the sentinel, or never emit it at all. Either way the control row is non-empty, which is the failure this amendment exists to fix.
+   - **Required fix:** state that the mechanism depends on the model emitting the sentinel first. Any non-empty pre-sentinel content, or a completion without the sentinel, is failed qualification and never quiet success. Count it in the retained evidence like null-call loops and timeouts.
+
+2. **Removing tools can produce an invalid request.** The shaped request's context contains the acknowledging combined-operation tool call and its result.
+   - Some providers reject a request that contains tool-use or tool-result history but defines no tools. Anthropic's Messages API is one example.
+   - That rejection becomes a provider error on the control pass. It may surface as a session error, which contradicts "remains silent on routine success".
+   - **Required fix:** use the documented request-local tool-choice "none", keeping the tool definitions, where the provider supports it. Otherwise, qualify tool removal per provider and model. A provider rejection of the shaped request must count as failed qualification, and it must not leave the control pass in a visible error state that is reported as success.
+
+No other blocking defects.
+
+### Revised verdict
+
+**ACCEPT**
+
+Both prior BLOCK findings are resolved in the amendment text:
+
+1. **Stop conditional on sentinel-first; nonempty output fails.** The amendment frames quiet completion as conditional: "When the qualified model emits the sentinel first and the provider honors the stop setting…". It says outright that this is "not a guarantee from instruction alone." It then classes nonempty pre-sentinel output, completion without the sentinel, repeated null calls and timeouts as failed qualification, never quiet success.
+2. **Provider/model-qualified tool removal; no invented tool-choice; provider rejection fails.** Tool removal requires actual native qualification for that provider/model with its existing tool history. A tool-choice-none setting is only preferred "when the host exposes one" as a documented setting, and "an undocumented setting MUST NOT be invented." Unqualified providers keep the existing bounded behavior with an explicit limitation. Provider rejection or a visible error counts as failed qualification.
+
+I found no new blocking defects. The arming preconditions (exact tuple, matching tail and epoch, no later input, not after restart or from an assessment-only receipt) and the non-interruption constraints are consistent with T2's one-call and distinct-stage requirements.
+
+One optional clarification, not blocking: the "Unqualified providers retain the existing bounded control behavior" sentence sits in the tool-removal paragraph. It could also say explicitly that a provider not qualified for the *stop sequence* uses that same fallback. The current wording already implies this through "failed qualification," so it doesn't need to change.
+
+This accepts the design only. Exact implementation, actual native completion and
+signed delivery still require separate evidence.

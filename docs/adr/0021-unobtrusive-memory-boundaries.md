@@ -111,6 +111,53 @@ of invisible tool cards. Stop fallback remains bounded; automatic capture MUST
 NOT be removed to obtain a quiet transcript, and host-specific final-result
 limitations MUST remain explicit.
 
+### Exact OpenCode control termination
+
+Native PM qualification showed that asking a model to emit an empty final
+response is insufficient: it can narrate completion or repeatedly call a null
+operation. The adapter MUST NOT rely on that instruction as its terminal
+mechanism and MUST NOT interrupt the whole session to stop one control pass.
+The public interrupt API is session-scoped and could cancel newer operator work.
+
+After an actual same-source combined check verifies both refresh and assessment,
+the adapter MAY retain a replaceable in-process tuple of native session ID,
+original source ID, retained synthetic control ID, acknowledging assistant ID
+and operator-admission epoch. Only a subsequent model context for that exact
+acknowledged control, with its native tail and epoch still matching and no later
+operator/steering input, MAY remove tools from that outgoing request and request
+a unique terminal sentinel through the documented request-local stop sequence.
+When the qualified model emits the sentinel first and the provider honors the
+stop setting, it omits that sentinel and completes the control without visible
+text. This is conditional behavior, not a guarantee from instruction alone. This is a terminal
+transport mechanism, never an authored assessment or capture receipt.
+
+A failed/pending refresh, failed assessment, source recovery, cross-session
+operation, missing native evidence or a changed tail/epoch MUST NOT arm this
+transition. Persisted assessment-only completion MUST NOT arm it either.
+Request shaping MUST apply only to the exact already-acknowledged control;
+it MUST NOT interrupt an execution, remove queued input, alter genuine operator
+turns or suppress a required failure notice. A newly admitted operator input
+invalidates the cached tuple. If input arrives after a validated context snapshot,
+the shaping affects only that old outgoing request, not the later input.
+Restarting the plugin discards the tuple; it MUST NOT reconstruct terminal
+success from an assessment receipt alone.
+
+Tool removal MAY be enabled only for a provider/model whose actual native
+qualification accepts that outgoing request with its existing tool history. A
+documented request-local tool-choice-none setting SHOULD be preferred when the
+host exposes one while retaining definitions. An undocumented setting MUST NOT
+be invented. Unqualified providers retain the existing bounded control behavior
+and an explicit compatibility limitation, rather than a false quiet-success claim.
+A provider rejection or visible error is failed qualification.
+
+The native model/provider must honor the documented stop setting and emit the
+sentinel before any visible text. Nonempty pre-sentinel output or completion
+without the sentinel is failed qualification, not quiet success. Qualification
+MUST retain actual native completion, tool counts, original answer record and
+SDK final-row attribution. An empty control row is not a replacement business
+answer; host attribution limits MUST remain explicit. Repeated null calls or a
+timeout remain failed qualification, never quiet success.
+
 ### T3: Operator-visible acceptance and corrective delivery
 
 Acceptance MUST include an actual multi-turn PM conversation in Codex, Claude and
