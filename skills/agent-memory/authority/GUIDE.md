@@ -57,8 +57,8 @@ The session MUST plan only a read-only assessment of the supplied precise claim.
 With `SKILL_DIR` resolved to the packaged skill directory:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/authority_policy.py" model
-python3 -I "$SKILL_DIR/scripts/authority_policy.py" assess --input /tmp/reviewed-assertions.json
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/authority_policy.py" model
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/authority_policy.py" assess --input /tmp/reviewed-assertions.json
 ```
 
 ## Read back

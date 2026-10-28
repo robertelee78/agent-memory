@@ -19,7 +19,37 @@ class TrustPathError(ContractError):
 
 
 def refuse(path, reason):
-    raise TrustPathError('Unsafe lifecycle trust path: ' + str(path) + ': ' + reason)
+    error = TrustPathError('Unsafe lifecycle trust path: ' + str(path) + ': ' + reason)
+    error.path = Path(path)
+    error.reason = reason
+    raise error
+
+
+def inspect_entry(path, value, protected, *, final=False, allow_final_link=False):
+    """Apply the shared Unix reachability policy to one observed path entry.
+
+    Descriptor walkers pass their own fstat observation and retain their own
+    rebinding pins. A private directory protects descendants, not its own entry.
+    The returned link flag is only for inspect's explicitly allowed final link.
+    """
+    current_uid = os.geteuid()
+    mode = value.st_mode
+    if value.st_uid not in {current_uid, 0}:
+        refuse(path, 'owner is neither the executing user nor root')
+    if stat.S_ISLNK(mode):
+        if not final or not allow_final_link:
+            refuse(path, 'a trusted ordinary path must not be redirected by a symlink')
+        return protected, True
+    if not stat.S_ISDIR(mode) and not (final and stat.S_ISREG(mode)):
+        refuse(path, 'an ordinary directory or regular file is required')
+    if not protected and mode & 0o022:
+        if not (stat.S_ISDIR(mode) and value.st_uid == 0 and mode & stat.S_ISVTX):
+            refuse(path, 'group/other write access permits an untrusted principal to change it')
+    if stat.S_ISREG(mode) and value.st_nlink != 1 and mode & 0o022:
+        refuse(path, 'a writable payload has aliases outside its checked path')
+    if stat.S_ISDIR(mode) and value.st_uid == current_uid and not mode & 0o077:
+        protected = True
+    return protected, False
 
 
 def inspect(path, *, private_directory=False, sensitive_record=False,
@@ -45,24 +75,11 @@ def inspect(path, *, private_directory=False, sensitive_record=False,
         except FileNotFoundError:
             break
         final = node == path
-        mode = value.st_mode
-        if value.st_uid not in {current_uid, 0}:
-            refuse(node, 'owner is neither the executing user nor root')
-        if stat.S_ISLNK(mode):
-            if not final or not allow_final_link:
-                refuse(node, 'a trusted ordinary path must not be redirected by a symlink')
+        protected, final_link = inspect_entry(node, value, protected,
+            final=final, allow_final_link=allow_final_link)
+        if final_link:
             leaf = value
             break  # Link mode bits do not describe permissions of its target.
-        if not stat.S_ISDIR(mode) and not (final and stat.S_ISREG(mode)):
-            refuse(node, 'an ordinary directory or regular file is required')
-        if not protected and mode & 0o022:
-            if not (stat.S_ISDIR(mode) and value.st_uid == 0 and mode & stat.S_ISVTX):
-                refuse(node, 'group/other write access permits an untrusted principal to change it')
-        # A hardlink outside a private barrier could expose a writable payload.
-        if stat.S_ISREG(mode) and value.st_nlink != 1 and mode & 0o022:
-            refuse(node, 'a writable payload has aliases outside its checked path')
-        if stat.S_ISDIR(mode) and value.st_uid == current_uid and not mode & 0o077:
-            protected = True
         if final:
             leaf = value
     if leaf is not None and private_directory:

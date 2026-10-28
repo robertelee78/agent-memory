@@ -14,7 +14,7 @@ from . import retrieval, scope_binding, semantic_sharing as semantic, sharing_re
 from .developer_identity import digest, encoded, load, uuid_valid
 from .frontmatter import ContractError
 from .identity_git import git
-from . import sharing_limits as limits
+from . import sharing_limits as limits, trust_paths
 
 LIMIT = 4 * 1048576
 CURSOR = 'agent-memory/refresh-cursor-v1'
@@ -24,6 +24,119 @@ CURSOR_FIELDS = {'schema', 'repo_root', 'project_id', 'authority_head', 'operati
 
 class UntrackedCanonicalMemory(ContractError):
     """Untracked memory without a completed-snapshot witness needs review."""
+
+
+class CurrentFailure(ContractError):
+    """Fixed operation diagnostics, never arbitrary source or Git error text."""
+    def __init__(self, code, reason, *, component='current', repair=None, path=None):
+        super().__init__(reason)
+        self.code, self.component = code, component
+        self.repair = repair or ('Preserve memory and feature work. Use am refresh inspect --v2 '
+            '--repo REPO --output /private/path/inspection.json and complete its source review; '
+            'do not stage, reset or replace the bank merely to pass the quick check.')
+        self.path = path
+
+
+def _policy_pin(value):
+    return value.st_dev, value.st_ino, value.st_mode, value.st_uid
+
+
+def transaction_inventory(operations):
+    """Read recovery state through pinned descriptors and the shared path policy."""
+    state_root = operations.parents[2]
+    pieces = [*state_root.parts[1:], 'writes', operations.parent.name, 'transactions']
+    descriptors, bindings, policy_pins, mutable_pins = [], [], [], []
+    flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
+    node = Path('/')
+
+    def changed():
+        raise CurrentFailure('current-source-changed',
+            'Transaction recovery path changed during the observation.',
+            component='current.transaction-state')
+
+    def finish(status, missing=None):
+        # Check both retained descriptors and the named bindings: a valid old
+        # descriptor must not bless a replacement tree at the same path.
+        for fd, expected in zip(descriptors, policy_pins):
+            if _policy_pin(os.fstat(fd)) != expected:
+                changed()
+        for parent, name, fd, expected in bindings:
+            try:
+                named = os.stat(name, dir_fd=parent, follow_symlinks=False)
+            except OSError:
+                changed()
+            if _policy_pin(named) != expected or _policy_pin(os.fstat(fd)) != expected:
+                changed()
+        if missing is not None:
+            parent, name = missing
+            try:
+                os.stat(name, dir_fd=parent, follow_symlinks=False)
+            except FileNotFoundError:
+                pass
+            else:
+                changed()
+        return tuple(policy_pins), tuple(mutable_pins), status
+
+    try:
+        descriptors.append(os.open('/', flags))
+        root_info = os.fstat(descriptors[0])
+        protected, _ = trust_paths.inspect_entry(node, root_info, False)
+        policy_pins.append(_policy_pin(root_info))
+        for index, piece in enumerate(pieces):
+            node = node / piece
+            parent = descriptors[-1]
+            try:
+                fd = os.open(piece, flags, dir_fd=parent)
+            except FileNotFoundError:
+                return finish(('absent', index), (parent, piece))
+            except OSError:
+                raise CurrentFailure('transaction-path-untrusted',
+                    'Transaction recovery path is unavailable, redirected or not an ordinary directory.',
+                    component='current.transaction-state', path=str(node),
+                    repair='Preserve this state path. Inspect its owner, directory type and Unix permissions from a trusted helper; do not follow redirects or chmod shared parents blindly.') from None
+            descriptors.append(fd)
+            info = os.fstat(fd)
+            protected, _ = trust_paths.inspect_entry(node, info, protected)
+            pin = _policy_pin(info)
+            policy_pins.append(pin)
+            bindings.append((parent, piece, fd, pin))
+            if index >= len(state_root.parts) - 2:
+                mutable_pins.append((*pin, info.st_mtime_ns, info.st_ctime_ns))
+        with os.scandir(descriptors[-1]) as entries:
+            if next(entries, None) is not None:
+                raise CurrentFailure('transaction-recovery-pending',
+                    'Retained transaction recovery evidence requires review.',
+                    component='current.transaction-state', path=str(node),
+                    repair='Preserve the transaction directory and original journal. Inspect the existing operation and use its governed recovery workflow; do not delete or age-steal recovery evidence.')
+        return finish(('empty',))
+    except trust_paths.TrustPathError as exc:
+        raise CurrentFailure('transaction-path-untrusted',
+            'Transaction recovery path violates the shared Unix owner, permission or link policy.',
+            component='current.transaction-state', path=str(getattr(exc, 'path', node)),
+            repair='Preserve this state path. Inspect the reported path owner and Unix permissions from a trusted helper. Do not change existing directory modes or discard state merely to pass the check.') from None
+    finally:
+        for fd in reversed(descriptors):
+            os.close(fd)
+
+
+def local_prerequisites(repo):
+    """Inspect local recovery-path prerequisites only; never fetch or import."""
+    root, bank = writes.bank_path(repo)
+    operations = state_operations(root, bank)
+    _, _, inventory = transaction_inventory(operations)
+    return {'scope': 'local-transaction-path-and-recovery-only',
+            'transaction_state': inventory[0], 'remote_check': 'not-exercised',
+            'remote_freshness_verified': False, 'canonical_writes_performed': False}
+
+
+def state_operations(root, bank):
+    try:
+        return writes.state_paths(root, bank, str(uuid.uuid4()))[0]
+    except (ContractError, OSError):
+        raise CurrentFailure('transaction-path-untrusted',
+            'The private state locator is unavailable, redirected or not outside the repository.',
+            component='current.transaction-state',
+            repair='Preserve the state locator and bank. Inspect AGENT_MEMORY_STATE_HOME or XDG_STATE_HOME and their ownership/links; do not reset state or follow a redirected path.') from None
 
 
 def result(operation, state, **values):
@@ -37,13 +150,14 @@ def result(operation, state, **values):
 def index_hash(root):
     path = Path(git(root, 'rev-parse', '--path-format=absolute', '--git-path', 'index'))
     if path.is_symlink():
-        raise ContractError('Refresh refuses a redirected original index')
+        raise CurrentFailure('current-source-changed', 'Refresh refuses a redirected original index.',
+            component='current.head-index')
     return digest(path.read_bytes() if path.exists() else None)
 
 
 def cursor_path(root):
     root, bank = writes.bank_path(root)
-    directory, _ = writes.state_paths(root, bank, str(uuid.uuid4()))
+    directory = state_operations(root, bank)
     target = directory.parent/'refresh-cursor.json'
     if target.is_symlink():
         raise ContractError('Disposable refresh cursor is a symlink; preserve it for inspection')
@@ -125,7 +239,9 @@ def current(repo):
     before_git = retrieval.git_context(root)
     prior, cursor_sha, cursor_state = cursor(root)
     if cursor_state not in {'absent', 'verified-local-hint'}:
-        raise ContractError('Preserve the unverified refresh cursor and use full review')
+        raise CurrentFailure('current-review-required',
+            'The refresh cursor is unverified or belongs to another checkout context; preserve it and use full review.',
+            component='current.cursor')
     # A completed import deliberately leaves feature HEAD/index unchanged.
     # Its receipt covers the whole resulting snapshot, not creation ownership
     # of individual files. Compare complete maps so additions/deletions count.
@@ -136,45 +252,18 @@ def current(repo):
             if not receipt_covered:
                 raise UntrackedCanonicalMemory('Locally untracked canonical memory requires full review.')
         else:
-            raise ContractError('Local sharing boundary is not ready; use full review')
+            raise CurrentFailure('current-review-required',
+                'The local sharing boundary is not ready; full source review is required.',
+                component='current.local-boundary')
     context = scope_binding.require(root)
-
-    def transaction_inventory(operations):
-        # Resolve from / using directory descriptors. Neither intermediate nor
-        # final components may be followed if replaced by a symlink.
-        state_root = operations.parents[2]
-        pieces = [*state_root.parts[1:], 'writes', operations.parent.name, 'transactions']
-        descriptors = []
-        identities = []
-        flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
-        try:
-            descriptors.append(os.open('/', flags))
-            for index, piece in enumerate(pieces):
-                try:
-                    fd = os.open(piece, flags, dir_fd=descriptors[-1])
-                except FileNotFoundError:
-                    return identities, ('absent', index)
-                descriptors.append(fd)
-                metadata = os.fstat(fd)
-                if index >= len(state_root.parts) - 2 and (
-                        metadata.st_uid != os.getuid() or stat.S_IMODE(metadata.st_mode) & 0o022):
-                    raise ContractError('Untrusted transaction recovery location')
-                if index >= len(state_root.parts) - 2:
-                    identities.append((metadata.st_dev, metadata.st_ino, metadata.st_mode,
-                                       metadata.st_uid, metadata.st_mtime_ns, metadata.st_ctime_ns))
-            with os.scandir(descriptors[-1]) as entries:
-                if next(entries, None) is not None:
-                    raise ContractError('Transaction recovery evidence requires review')
-            return identities, ('empty',)
-        finally:
-            for fd in reversed(descriptors):
-                os.close(fd)
 
     def runtime_state():
         holds, hold_sha = sharing_holds.read_store(root, context['project_id'])
         if holds['records']:
-            raise ContractError('Known holds require explicit review')
-        operations, _ = writes.state_paths(root, bank, str(uuid.uuid4()))
+            raise CurrentFailure('current-review-required',
+                'Known memory disputes require explicit review before current guidance is established.',
+                component='current.known-disputes')
+        operations = state_operations(root, bank)
         return holds, hold_sha, cursor(root), transaction_inventory(operations)
 
     before_state = runtime_state()
@@ -195,7 +284,8 @@ def current(repo):
         if entry['format'] == 'standalone-record':
             _, meta, _ = records.parse(values['local'][entry['path']])
             if meta.get('visibility') != 'visible' or meta.get('status') in {'candidate', 'quarantined'}:
-                raise ContractError('Hidden or unadmitted memory requires review')
+                raise CurrentFailure('current-review-required',
+                    'Hidden or unadmitted memory requires source review.', component='current.local-bank')
 
     def mode_and_index():
         local_modes = []
@@ -203,7 +293,8 @@ def current(repo):
             target = bank / path
             mode = target.lstat().st_mode
             if not stat.S_ISREG(mode) or stat.S_IMODE(mode) not in {0o644, 0o664}:
-                raise ContractError('Nonordinary local bank file mode requires review')
+                raise CurrentFailure('current-source-changed',
+                    'A local bank entry is not an ordinary readable Markdown file.', component='current.local-bank')
             local_modes.append((path, stat.S_IMODE(mode)))
         prefix = observation['bank_root'] + '/'
         tree_raw = recovery.command(root, 'ls-tree', '-rz', '--full-tree', observation['local_head'],
@@ -214,32 +305,89 @@ def current(repo):
         for item in filter(None, tree_raw.split('\0')):
             header, path = item.split('\t', 1); mode, kind, oid = header.split()
             if not path.startswith(prefix) or mode != '100644' or kind != 'blob' or path in tree_entries:
-                raise ContractError('Nonordinary HEAD bank entry requires review')
+                raise CurrentFailure('current-source-changed',
+                    'A HEAD bank entry is nonordinary; preserve the index and use full review.', component='current.head-index')
             tree_entries[path] = oid
         for item in filter(None, index_raw.split('\0')):
             header, path = item.split('\t', 1); mode, oid, stage = header.split()
             if not path.startswith(prefix) or mode != '100644' or stage != '0' or path in index_entries:
-                raise ContractError('Nonordinary index bank entry requires review')
+                raise CurrentFailure('current-source-changed',
+                    'An index bank entry is nonordinary or unmerged; preserve it and use full review.', component='current.head-index')
             index_entries[path] = oid
         if tree_entries != index_entries or (not receipt_covered and
                 set(tree_entries) != {prefix + path for path in values['local']}):
-            raise ContractError('HEAD and index bank inventories differ')
+            raise CurrentFailure('current-source-changed',
+                'HEAD and index bank inventories differ; preserve staged memory and use full review.', component='current.head-index')
         return tree_raw, index_raw, tuple(local_modes)
 
     before_modes = mode_and_index()
     writes.fault('refresh-current-before-final-recheck')
-    semantic.final_sources(root, observation, binding)
-    if (scope_binding.require(root, context['project_id'], expected=context) != context
-            or retrieval.git_context(root) != before_git or index_hash(root) != before_index
-            or sharing_boundary.inspect(root) != boundary or runtime_state() != before_state
-            or mode_and_index() != before_modes or cursor(root)[1:] != (cursor_sha, cursor_state)):
-        raise ContractError('Memory, index, identity or recovery state changed during observation')
+    from .sharing_holds import HoldFailure
+    try:
+        semantic.final_sources(root, observation, binding)
+        if (scope_binding.require(root, context['project_id'], expected=context) != context
+                or retrieval.git_context(root) != before_git or index_hash(root) != before_index
+                or sharing_boundary.inspect(root) != boundary or runtime_state() != before_state
+                or mode_and_index() != before_modes or cursor(root)[1:] != (cursor_sha, cursor_state)):
+            raise CurrentFailure('current-source-changed',
+                'Memory, index, identity or recovery state changed during the observation; obtain fresh source review.',
+                component='current.final-recheck')
+    except (CurrentFailure, recovery.AuthorityFailure, HoldFailure):
+        raise
+    except (ContractError, OSError, ValueError, UnicodeError, TypeError, KeyError,
+            AttributeError, RecursionError):
+        raise CurrentFailure('current-source-changed',
+            'Final memory, index, identity or recovery evidence changed or became unavailable during the observation; obtain fresh source review.',
+            component='current.final-recheck') from None
     if recovery.server(root, observation['authority_remote'], observation['authority_branch']) != observation['authority_head']:
-        raise ContractError('Authority advanced during observation')
+        raise CurrentFailure('current-source-changed',
+            'The repository authority advanced during the observation; obtain a fresh observation.',
+            component='current.authority')
     return result('current', 'bank-synchronized', pending_capture='unknown', pending_publication='unknown',
                   semantic_truth_verified=False, source_assertions_verified=False,
                   remote_freshness_verified=True, observed_authority_head=observation['authority_head'],
                   git_metadata_writes_performed=True)
+
+
+def current_result(repo):
+    """Return the public quick-check observation, including safe expected failures.
+
+    This is shared by the CLI and combined native boundary adapters. Assessment,
+    admission and publication are deliberately not inferred by this operation.
+    """
+    try:
+        value = current(repo)
+        if value['sharing_state'] == 'review-required':
+            value.update(failure_component='current.snapshot', failure_code='current-review-required',
+                reason='Local, baseline and authority memory require source review before synchronization is established.',
+                repair='Preserve memory and feature work. Run am refresh inspect --v2 --repo REPO --output /private/path/inspection.json and complete its governed review; do not stage or reset memory merely to satisfy the quick check.')
+        return value
+    except (ContractError, OSError, ValueError, UnicodeError, TypeError, KeyError, AttributeError, RecursionError) as exc:
+        from .sharing_holds import HoldFailure
+        if isinstance(exc, (CurrentFailure, recovery.AuthorityFailure, HoldFailure)):
+            component = exc.component if hasattr(exc, 'component') else 'current.known-disputes'
+            code, reason, repair = exc.code, str(exc), exc.repair
+        elif isinstance(exc, UntrackedCanonicalMemory):
+            component, code = 'current.local-boundary', 'canonical-memory-untracked'
+            reason = 'Locally untracked canonical memory lacks a completed snapshot witness and requires full review.'
+            repair = 'Preserve local memory and feature work. Run am refresh inspect --v2 --repo REPO --output /private/path/inspection.json and review original sources; do not stage or reset memory just to pass the quick check.'
+        elif isinstance(exc, trust_paths.TrustPathError):
+            component, code = 'current.state-path', 'transaction-path-untrusted'
+            reason = 'A private state path violates the shared Unix owner, permission or link policy.'
+            repair = 'Preserve state and inspect the local refresh prerequisite in am doctor. Do not follow redirects or chmod existing parent directories blindly.'
+        else:
+            # Arbitrary exception text can contain source data or credentialed
+            # remotes. The phase is retained without echoing those contents.
+            component, code = 'current.prerequisites', 'refresh-prerequisite-unverified'
+            reason = 'A local bank, identity or snapshot prerequisite could not be verified.'
+            repair = 'Preserve the bank and pending evidence. Run am doctor, then am refresh inspect --v2 --repo REPO --output /private/path/inspection.json to inspect the failed prerequisite before retrying.'
+        values = {'failure_component': component, 'failure_code': code, 'reason': reason, 'repair': repair}
+        if isinstance(exc, CurrentFailure) and exc.path is not None:
+            values['failure_path'] = exc.path
+        return result('current', 'pending-inspection', canonical_writes_performed=False,
+            git_metadata_writes_performed=False if isinstance(exc, UntrackedCanonicalMemory) else None,
+            pending_capture='unknown', pending_publication='unknown', semantic_truth_verified=False,
+            **values)
 
 
 def validate_transaction(p, *, owned_lock=None):
@@ -382,7 +530,7 @@ def main(argv=None):
                 input_value = read_input(args.input,version2=args.v2)
                 output_repo = tx.proposal_value(input_value)['repo_root']
             limits.preflight_private_output(args.output, output_repo)
-        if args.operation == 'current': value = current(args.repo)
+        if args.operation == 'current': value = current_result(args.repo)
         elif args.operation == 'inspect': value = inspect(args.repo, args.base,version2=args.v2)
         elif args.operation == 'prepare':
             request=read_input(args.input,version2=args.v2)
@@ -397,7 +545,8 @@ def main(argv=None):
         else: value = apply(input_value if input_value is not None else read_input(args.input,version2=args.v2))
         if getattr(args, 'output', None):
             value=limits.write_private(args.output,value,output_repo)
-        print(json.dumps(value, indent=2)); return 0
+        print(json.dumps(value, indent=2))
+        return 1 if args.operation == 'current' and value['sharing_state'] == 'pending-inspection' else 0
     except (ContractError, OSError, ValueError, UnicodeError, TypeError, KeyError, AttributeError, RecursionError) as exc:
         from .sharing_holds import HoldFailure
         authority_failed=isinstance(exc,recovery.AuthorityFailure)

@@ -33,13 +33,13 @@ This operation has no mutation plan: it inspects existing files. A session MUST 
 With `SKILL_DIR` resolved to the packaged skill directory:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/bank_state.py" inspect --repo /path/to/project
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/bank_state.py" inspect --repo /path/to/project
 ```
 
 For deliberate inspection of one existing ordinary context file:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/bank_state.py" inspect --repo /path/to/project --path activeContext.md
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/bank_state.py" inspect --repo /path/to/project --path activeContext.md
 ```
 
 This selector MUST require the same-project identity and current safety/source

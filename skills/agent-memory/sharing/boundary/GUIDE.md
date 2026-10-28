@@ -86,7 +86,7 @@ A session MUST distinguish an explicitly reviewed local setting change from movi
 With `SKILL_DIR` resolved to this package:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/sharing_boundary.py" --repo /path/to/repo
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/sharing_boundary.py" --repo /path/to/repo
 ```
 
 If reviewed local configuration is required, the session MUST apply only those explicit settings from the inputs and repeat inspection before exchange.

@@ -516,6 +516,21 @@ def bank_doctor(report, root, projection_path):
         report.add('bank.setup', 'warning', 'A tracked router is missing from this existing bank directory.',
                    'Inspect Git state and restore/reconcile the known bank; preserve remaining files and do not initialize a replacement.')
         return
+    def refresh_prerequisites():
+        from . import memory_refresh
+        try:
+            observed = memory_refresh.local_prerequisites(root)
+        except memory_refresh.CurrentFailure as exc:
+            report.value['refresh'] = {'local_prerequisites': 'pending', 'remote_check': 'not-exercised',
+                                      'remote_freshness_verified': False, 'failure_code': exc.code}
+            report.add('bank.refresh_prerequisites', 'failure', exc.code + ': ' + str(exc),
+                       exc.repair, exc.path)
+            return
+        report.value['refresh'] = observed
+        report.add('bank.refresh_prerequisites', 'pass',
+                   'Local transaction-path protection and retained recovery inventory were inspected; remote freshness and complete refresh were not exercised.')
+    report.attempt('bank.refresh_prerequisites', refresh_prerequisites,
+                   'Preserve private state and original recovery evidence. Inspect the reported local refresh prerequisite before retrying; no remote refresh was performed.')
     transaction = bank / '.agent-memory-transaction.md'
     lock = bank / '.agent-memory.lock'
     if os.path.lexists(transaction) or os.path.lexists(lock):
@@ -692,7 +707,7 @@ def run(operation, repo='.', projection=None):
     setup_assessment(report)
     result = report.finish()
     if operation == 'doctor':
-        result['installation']['health'] = 'failures_detected' if result['failures'] else 'inspected_with_qualifications'
+        result.setdefault('installation', {})['health'] = 'failures_detected' if result['failures'] else 'inspected_with_qualifications'
     return result
 
 

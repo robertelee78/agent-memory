@@ -42,12 +42,12 @@ Python helpers still emit JSON by default. The trusted source entry point remain
 installation or when repairing a missing wrapper:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/installer.py" --help
-python3 -I "$SKILL_DIR/scripts/installer.py" identity status --repo REPO --json
-python3 -I "$SKILL_DIR/scripts/installer.py" init inspect --repo REPO
-python3 -I "$SKILL_DIR/scripts/installer.py" search --repo REPO --request RECALL_JSON
-python3 -I "$SKILL_DIR/scripts/installer.py" checkpoint inspect --repo REPO
-python3 -I "$SKILL_DIR/scripts/installer.py" boundary inspect --repo REPO
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/installer.py" --help
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/installer.py" identity status --repo REPO --json
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/installer.py" init inspect --repo REPO
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/installer.py" search --repo REPO --request RECALL_JSON
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/installer.py" checkpoint inspect --repo REPO
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/installer.py" boundary inspect --repo REPO
 ```
 
 The installed equivalents start with `am` (or `agent-memory`), followed by the same

@@ -53,7 +53,7 @@ MUST NOT be represented as an independent agent's understanding.
 With `SKILL_DIR` resolved to this package:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/retrieve.py" --repo /path/to/repo \
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/retrieve.py" --repo /path/to/repo \
   --request /private/path/recall.json
 ```
 

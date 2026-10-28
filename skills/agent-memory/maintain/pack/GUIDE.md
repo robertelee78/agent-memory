@@ -59,7 +59,7 @@ a structurally valid package is insufficient evidence of preserved meaning.
 With `SKILL_DIR` resolved to the trusted package, the session MUST run:
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/validate_pack.py" --pack /path/to/candidate > /private/path/pack-check.json
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/validate_pack.py" --pack /path/to/candidate > /private/path/pack-check.json
 ```
 
 ## Read back

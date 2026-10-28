@@ -77,7 +77,7 @@ A session MUST observe actual local memory, fresh authority and current reposito
 ## Plan
 
 ```sh
-   python3 -I "$SKILL_DIR/scripts/publish_memory.py" prepare --v2 --repo /path/to/repo --input /private/semantic-proof.json --output /private/prepared-publication.json
+   /bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/publish_memory.py" prepare --v2 --repo /path/to/repo --input /private/semantic-proof.json --output /private/prepared-publication.json
    ```
 
 4. The session MUST inspect `sharing_state`. Only `prepared` contains a `request`;
@@ -103,7 +103,7 @@ banks and nonordinary/unmerged entries MUST remain for inspection.
 ## Apply
 
 ```sh
-python3 -I "$SKILL_DIR/scripts/publish_memory.py" land --v2 --repo /path/to/repo --input /private/publication-request.json --output /private/landed-publication.json
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/publish_memory.py" land --v2 --repo /path/to/repo --input /private/publication-request.json --output /private/landed-publication.json
 ```
 
 ## Read back
