@@ -128,3 +128,15 @@ setup. Its five setup errors completed in 0.502 seconds before capacity assertio
 that failed apparatus is retained separately and is not a product failure or
 qualification pass. A fresh isolated source including those wrappers ran the
 successful suite. Neither test nor runtime source was modified for Linux.
+
+## Integration checks
+
+The existing five known-hold contracts and one public publication-recovery
+contract passed against unchanged runtime source `31a8a35` (138.571 and48.918
+seconds respectively). This supporting proof remains separate from the five
+new focused tests. The final guide keeps identical capacity wording inside its
+required Failure handling section; complete static package validation passed
+189files,45guides and117documentedcommands. An initial static refusal of an extra
+H2 section is corrected, not treated as a pass. All returned file hashes/modes
+were compared with the actual candidate. No candidate code was executed by
+that static check, and it does not certify semantic truth.
