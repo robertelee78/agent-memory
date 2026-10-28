@@ -45,6 +45,6 @@ separately records signed publication and activation. The qualification controll
 is `scripts/evaluations/public_release.py` in the immutable release source.
 
 AWA closed milestone v0.0.10 with exactly #203 and #237 Done, preserving its agreed
-2026-10-28 due date. Completed Projects64/68 and root epics closed and remained
+2026-10-28 due date. Completed Projects 64/68 and root epics closed and remained
 public. Eight deferred tasks moved to v0.0.11 as Backlog without receiving design
 approval or a new delivery claim.

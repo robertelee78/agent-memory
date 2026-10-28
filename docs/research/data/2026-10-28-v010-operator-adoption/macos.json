@@ -1,0 +1,14 @@
+{
+  "platform": "macOS",
+  "update_exit": 0,
+  "update_seconds": 149.64311908298987,
+  "version_human": [
+    "am 0.0.10",
+    "revision 76a7886408e8a295adca7f3df2536efdb1a107b7 (verified_release)"
+  ],
+  "doctor_exit": 0,
+  "doctor_seconds": 3.598255709002842,
+  "doctor_ok": true,
+  "doctor_warnings": [],
+  "latency_cause_profiled": false
+}
