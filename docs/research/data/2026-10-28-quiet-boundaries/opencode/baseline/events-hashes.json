@@ -1,0 +1,193 @@
+[
+  {
+    "file": "decision.jsonl",
+    "original_sha256": "37f6eeb8c9f3c823b8d8c887a239a1a6fa5070011424cd82bf67264ce2f96dfb",
+    "events": [
+      {
+        "type": "tool_use",
+        "message_id": "msg_182c81381001J0Q5DD8ujDkq4L",
+        "tool": "read",
+        "status": "completed",
+        "source_ack_call": false,
+        "null_noop": false,
+        "input_sha256": "a7f952f02c0e24bfe51f3abf739d1c8402d944a121afec4ebdee670ad8a26c8d"
+      },
+      {
+        "type": "tool_use",
+        "message_id": "msg_182c81381001J0Q5DD8ujDkq4L",
+        "tool": "read",
+        "status": "completed",
+        "source_ack_call": false,
+        "null_noop": false,
+        "input_sha256": "899783b5930e743bd16546ab3ab6485ee4f7b3507931183a469cf618c27a637e"
+      },
+      {
+        "type": "tool_use",
+        "message_id": "msg_182c81381001J0Q5DD8ujDkq4L",
+        "tool": "read",
+        "status": "completed",
+        "source_ack_call": false,
+        "null_noop": false,
+        "input_sha256": "d2ed86916a9e180d59a433f810564eb676da7af319c4cfb4ee8672df12f868f5"
+      },
+      {
+        "type": "step_finish",
+        "message_id": "msg_182c81381001J0Q5DD8ujDkq4L",
+        "reason": "tool-calls"
+      },
+      {
+        "type": "text",
+        "message_id": "msg_182c8470d001ZtUFuT8pZNYSew",
+        "bytes": 1606,
+        "text_sha256": "99ea48394c5b618ba1d803526f9d36018f744e61b23688c85e0c03e3b5454a27",
+        "serialized_tool_markup": false
+      },
+      {
+        "type": "step_finish",
+        "message_id": "msg_182c8470d001ZtUFuT8pZNYSew",
+        "reason": "stop"
+      },
+      {
+        "type": "tool_use",
+        "message_id": "msg_182c8d2df0015f6FZmmY684HPq",
+        "tool": "execute",
+        "status": "completed",
+        "source_ack_call": true,
+        "null_noop": false,
+        "input_sha256": "ef7982954cade28b92e59bf79cfc11f53ad11bf0c843784d9106a5323fc5fac6"
+      },
+      {
+        "type": "step_finish",
+        "message_id": "msg_182c8d2df0015f6FZmmY684HPq",
+        "reason": "tool-calls"
+      },
+      {
+        "type": "tool_use",
+        "message_id": "msg_182c93047001agY94iPwZRO7fh",
+        "tool": "execute",
+        "status": "completed",
+        "source_ack_call": false,
+        "null_noop": true,
+        "input_sha256": "462d188a3a193eed3f3e5fbbebe0c2d2c00dd9f5cc897edaffdaf08028c53647"
+      },
+      {
+        "type": "step_finish",
+        "message_id": "msg_182c93047001agY94iPwZRO7fh",
+        "reason": "tool-calls"
+      },
+      {
+        "type": "text",
+        "message_id": "msg_182c947c1001K4jetYMftLj7ii",
+        "bytes": 317,
+        "text_sha256": "f597a0d74102deaf21f293db736fef39ba1f979d6772f577e816ca72fc178f0b",
+        "serialized_tool_markup": false
+      }
+    ]
+  },
+  {
+    "file": "refresh-failure.jsonl",
+    "original_sha256": "5dfec4db8c95ee78f6b0d2cf630cf4d4189047b4c9e5d1a6d2b4f96be0d9bf4a",
+    "events": [
+      {
+        "type": "tool_use",
+        "message_id": "msg_182cab802001U70ILbN6dSTR2A",
+        "tool": "read",
+        "status": "completed",
+        "source_ack_call": false,
+        "null_noop": false,
+        "input_sha256": "cf13de1a05ad66213599529deea26aea2312c723d7080dc6b631b5a5fe3c2370"
+      },
+      {
+        "type": "step_finish",
+        "message_id": "msg_182cab802001U70ILbN6dSTR2A",
+        "reason": "tool-calls"
+      },
+      {
+        "type": "text",
+        "message_id": "msg_182cae592001Q0iCYvzK56nVyF",
+        "bytes": 528,
+        "text_sha256": "dae3d9f018ac3e4dbc0c228d3018dcd6a302b8e6fdc72a2026d2a6721f854862",
+        "serialized_tool_markup": false
+      },
+      {
+        "type": "step_finish",
+        "message_id": "msg_182cae592001Q0iCYvzK56nVyF",
+        "reason": "stop"
+      },
+      {
+        "type": "tool_use",
+        "message_id": "msg_182cb4b5e0019IAbvsBwdZfIPn",
+        "tool": "execute",
+        "status": "completed",
+        "source_ack_call": true,
+        "null_noop": false,
+        "input_sha256": "fcc4f196c6179a4557eafeba50b9bcbed893c1439a315d49c1a24141b4f6c679"
+      },
+      {
+        "type": "step_finish",
+        "message_id": "msg_182cb4b5e0019IAbvsBwdZfIPn",
+        "reason": "tool-calls"
+      },
+      {
+        "type": "text",
+        "message_id": "msg_182cbbcc9001yX0hIHxIjzdgpj",
+        "bytes": 296,
+        "text_sha256": "489475a01a62f6bbd509691c4ecfb137479d363b05538d8e0003a12f95f91f1e",
+        "serialized_tool_markup": false
+      }
+    ]
+  },
+  {
+    "file": "followup.jsonl",
+    "original_sha256": "4660088f132934dc2a29e5df10ad9d6c498f48073eacdbd2df0a0897668b5fda",
+    "events": [
+      {
+        "type": "text",
+        "message_id": "msg_182c95b3c001ZnYUwU1nQl3SYN",
+        "bytes": 363,
+        "text_sha256": "2d21090b8f34f73c0ee7388e0c9cc0c20b35764110bdbc5de0cd47ffc21ea358",
+        "serialized_tool_markup": false
+      },
+      {
+        "type": "step_finish",
+        "message_id": "msg_182c95b3c001ZnYUwU1nQl3SYN",
+        "reason": "stop"
+      },
+      {
+        "type": "tool_use",
+        "message_id": "msg_182c982c0001e3dNlhPQ2ypTgx",
+        "tool": "execute",
+        "status": "completed",
+        "source_ack_call": true,
+        "null_noop": false,
+        "input_sha256": "481a1f34248e848d85b466fe4a057f2c061cfc72bc86e6d0607494ea647c2e2c"
+      },
+      {
+        "type": "step_finish",
+        "message_id": "msg_182c982c0001e3dNlhPQ2ypTgx",
+        "reason": "tool-calls"
+      },
+      {
+        "type": "tool_use",
+        "message_id": "msg_182c9bb22001eJ7tnj8ZC1drEH",
+        "tool": "execute",
+        "status": "completed",
+        "source_ack_call": false,
+        "null_noop": true,
+        "input_sha256": "462d188a3a193eed3f3e5fbbebe0c2d2c00dd9f5cc897edaffdaf08028c53647"
+      },
+      {
+        "type": "step_finish",
+        "message_id": "msg_182c9bb22001eJ7tnj8ZC1drEH",
+        "reason": "tool-calls"
+      },
+      {
+        "type": "text",
+        "message_id": "msg_182c9d0ce001rdI53ABHVTjC4l",
+        "bytes": 188,
+        "text_sha256": "63c96f5130e23ee870d3b0dc4d2169e781471636308371c94ce1ac8a336ca51f",
+        "serialized_tool_markup": false
+      }
+    ]
+  }
+]

@@ -1,0 +1,70 @@
+[
+  {
+    "index": 0,
+    "maintenance_calls": 1,
+    "guide_loading_calls": 1,
+    "private_workspace_calls": 0,
+    "business_final_messages": 1,
+    "commentary_messages": 0,
+    "check_exits": [
+      0
+    ],
+    "check_output_bytes": [
+      0
+    ],
+    "seconds": 33.22794004098978,
+    "state_preserved": true,
+    "source_complete": true
+  },
+  {
+    "index": 1,
+    "maintenance_calls": 1,
+    "guide_loading_calls": 0,
+    "private_workspace_calls": 0,
+    "business_final_messages": 1,
+    "commentary_messages": 0,
+    "check_exits": [
+      0
+    ],
+    "check_output_bytes": [
+      0
+    ],
+    "seconds": 49.28544616700674,
+    "state_preserved": true,
+    "source_complete": true
+  },
+  {
+    "index": 2,
+    "maintenance_calls": 1,
+    "guide_loading_calls": 0,
+    "private_workspace_calls": 0,
+    "business_final_messages": 1,
+    "commentary_messages": 0,
+    "check_exits": [
+      1
+    ],
+    "check_output_bytes": [
+      315
+    ],
+    "seconds": 17.81768908299273,
+    "state_preserved": true,
+    "source_complete": true
+  },
+  {
+    "index": 3,
+    "maintenance_calls": 1,
+    "guide_loading_calls": 0,
+    "private_workspace_calls": 0,
+    "business_final_messages": 1,
+    "commentary_messages": 0,
+    "check_exits": [
+      1
+    ],
+    "check_output_bytes": [
+      0
+    ],
+    "seconds": 18.147557541000424,
+    "state_preserved": true,
+    "source_complete": true
+  }
+]

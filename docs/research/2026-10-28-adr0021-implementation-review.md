@@ -415,3 +415,53 @@ claim that the model/provider emits or honors the sentinel, that native control
 output is empty, or that SDK final-result attribution preserves the business
 answer. Those are separate actual-native observations. Earlier visible-markup
 and repeated-null-call trials remain failed evidence.
+
+## Terminal experiment removed: rollback verified; full-silence acceptance BLOCKED
+
+The final ordered native experiment failed in 63.284 seconds. The coordinator's
+retained report records actual empty tools, configured stop sequence and terminal
+instruction last, followed by visible serialized null-tool markup and a normal
+native stop. This is not quiet success or proof of matching the hidden sentinel.
+Follow-up/outage repeats were skipped after that selected case failed. No further
+native model trial was run for the rollback.
+
+The unqualified experiment has now been removed. The reviewer independently
+verified all four restored runtime hashes against the original completed
+three-turn native proof's retained source map at
+`/private/tmp/am-v009-opencode-pm-3vkwp7xw/source-hashes.json`:
+
+| Active restored runtime | Verified SHA-256 |
+| --- | --- |
+| `hooks/opencode-v2-queue.js` | `fc2a5cebf5261725fd70db430fec3d015d9ee2e6790cb5d1d39203729c636155` |
+| `hooks/opencode-v2.js` | `0a6f44d842940840325fb21d54df1b31e547903cd4d1dc638e6cb0c6cd0ea19a` |
+| `hooks/boundary_ledger.py` | `10b25fd2d4ecb13d402956efbe2c7a6850727b897092f16f021de71cd77b0341` |
+| `scripts/agent_memory/turn_check.py` | `e49335bc6e866bd279d27ab51d96b1207ced22ac86dabe3d5204b8e548944255` |
+
+That original source-map SHA-256 is
+`9125b2cb3f63daa629d2210948ac5307291b46646d75e379dfb36e11d69438df`.
+The reviewer checked that terminal shaping, sentinel instructions, epoch/cache
+arming symbols and event-identity workarounds are absent from the active adapter
+files. The dedicated terminal-context test and its contract-registry entry are
+also absent. The retained full-wrapper test continues to chain all callbacks;
+its current SHA-256 is
+`79f0e251c779b9e8a4d902751b6ca2de2a5336894e97da2f3187a347c908ef92`.
+The coordinator reports its rollback regression passed in 14.7 seconds; the
+reviewer did not repeat that already passing run.
+
+**Rollback/source restoration: ACCEPT. No terminal experiment is enabled.** The
+restored baseline retains the previously accepted single combined check, empty
+successful helper content, explicit diagnostic opt-in, truthful independent stage
+health, actionable/deduplicated failure reporting and bounded backend execution.
+Its demonstrated native model behavior still includes an extra null-return call
+and successful control bookkeeping prose. Earlier static acceptance of an
+experimental implementation does not enable or qualify it after this rollback.
+Experiment source remains in local history at
+`4b03db1422471c206b905834b3cddde07402c5c6`; all failed trials remain failed.
+
+**Full OpenCode silence and complete ADR-0021 T3/release acceptance remain
+BLOCKED under the current criteria.** A concrete baseline can be reviewed while
+the operator chooses whether to defer that limitation explicitly or hold the
+release. Shipping core fixes with an accepted compatibility limitation requires
+that product decision and corresponding source-bound scope/acceptance record;
+this rollback review does not make that decision or claim full silence. No runtime
+files, real profiles or models were changed or executed by the reviewer.

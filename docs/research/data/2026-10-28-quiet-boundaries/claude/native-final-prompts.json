@@ -1,0 +1,5 @@
+[
+  "The existing memory already records our approved decision: one top-level review-needed status, with typed reasons distinguishing uncertain input from incomplete analysis, and supporting evidence for both. I confirm that existing decision. Continue our PM discussion: recommend how to present the two reasons to an operator and ask exactly one short refinement question. Give only your useful PM response.",
+  "Keep your presentation recommendation as a proposal, not another approved decision. Building on the approved status decision already in memory, ask exactly one short refinement question about the evidence we should retain. Give only the PM response.",
+  "Our existing approved status decision is unchanged. Summarize it in one sentence and ask exactly one refinement question about reviewing uncertain input. Any new suggestion remains a proposal. Give only the PM response, plus a brief actionable qualification only if needed."
+]

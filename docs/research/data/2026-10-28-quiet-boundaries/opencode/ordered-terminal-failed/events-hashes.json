@@ -1,0 +1,92 @@
+[
+  {
+    "file": "decision.jsonl",
+    "original_sha256": "c06c4d7f4dec8546a60b9571721e7e28c114f621631f2d5c1c2949000d0e30e9",
+    "events": [
+      {
+        "type": "text",
+        "message_id": "msg_182e46ad40013lyJ8ClGV3coNG",
+        "bytes": 84,
+        "text_sha256": "1b1dc9ce180fb3b1ea4ffd077c3414f696621ae70715c18584c576d39d3f888d",
+        "serialized_tool_markup": false
+      },
+      {
+        "type": "tool_use",
+        "message_id": "msg_182e46ad40013lyJ8ClGV3coNG",
+        "tool": "read",
+        "status": "completed",
+        "source_ack_call": false,
+        "null_noop": false,
+        "input_sha256": "abc41293152aed010e68b44775719eb4e013fd11594f20885a3dc9033f2e20d1"
+      },
+      {
+        "type": "tool_use",
+        "message_id": "msg_182e46ad40013lyJ8ClGV3coNG",
+        "tool": "read",
+        "status": "completed",
+        "source_ack_call": false,
+        "null_noop": false,
+        "input_sha256": "a09187a65ecb0c13e6ce237a283b08829b6532809b20c776d397a696284be8ce"
+      },
+      {
+        "type": "step_finish",
+        "message_id": "msg_182e46ad40013lyJ8ClGV3coNG",
+        "reason": "tool-calls"
+      },
+      {
+        "type": "text",
+        "message_id": "msg_182e488580018HZEad4TCPi4CC",
+        "bytes": 53,
+        "text_sha256": "1823e8f273faebe922e29e05796f34bf573cf09f3869bcaf99133d64c609a1e0",
+        "serialized_tool_markup": false
+      },
+      {
+        "type": "tool_use",
+        "message_id": "msg_182e488580018HZEad4TCPi4CC",
+        "tool": "read",
+        "status": "completed",
+        "source_ack_call": false,
+        "null_noop": false,
+        "input_sha256": "c14a74be4fe84cb9d58fcaa781e53cfbfd137ea55385e7cbff95b4ff521c8281"
+      },
+      {
+        "type": "step_finish",
+        "message_id": "msg_182e488580018HZEad4TCPi4CC",
+        "reason": "tool-calls"
+      },
+      {
+        "type": "text",
+        "message_id": "msg_182e4b00f001OHfrmu55M5pzIH",
+        "bytes": 1239,
+        "text_sha256": "a4375071862ae65e7788db9a98b79b112589d148445426a6b510b76e5055d5da",
+        "serialized_tool_markup": false
+      },
+      {
+        "type": "step_finish",
+        "message_id": "msg_182e4b00f001OHfrmu55M5pzIH",
+        "reason": "stop"
+      },
+      {
+        "type": "tool_use",
+        "message_id": "msg_182e4ec56001uSmqhITkN1uXxf",
+        "tool": "execute",
+        "status": "completed",
+        "source_ack_call": true,
+        "null_noop": false,
+        "input_sha256": "5760f60f240fdf3da7479ba589359be823d63e15157c54c4192f217f9c0c7f7d"
+      },
+      {
+        "type": "step_finish",
+        "message_id": "msg_182e4ec56001uSmqhITkN1uXxf",
+        "reason": "tool-calls"
+      },
+      {
+        "type": "text",
+        "message_id": "msg_182e5467a001W5f1SrZR2kQqGC",
+        "bytes": 188,
+        "text_sha256": "df0e5bab83e4c63b189933727fe2d9e5b95200a9bc4f061a1e967536b515edb4",
+        "serialized_tool_markup": true
+      }
+    ]
+  }
+]

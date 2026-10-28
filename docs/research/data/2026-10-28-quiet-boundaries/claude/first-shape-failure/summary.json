@@ -1,0 +1,334 @@
+{
+  "runs": [
+    {
+      "exit": 0,
+      "seconds": 95.11010945799353,
+      "session": "81df5614-94bf-4b06-8536-c8becd0ecc65",
+      "result": [
+        {
+          "duration_api_ms": 80492,
+          "stop_reason": "end_turn",
+          "session_id": "81df5614-94bf-4b06-8536-c8becd0ecc65",
+          "total_cost_usd": 0.6004247500000001,
+          "usage": {
+            "input_tokens": 230,
+            "cache_creation_input_tokens": 18534,
+            "cache_read_input_tokens": 212179,
+            "output_tokens": 3488,
+            "output_tokens_details": {
+              "thinking_tokens": 349
+            },
+            "server_tool_use": {
+              "web_search_requests": 0,
+              "web_fetch_requests": 0
+            },
+            "service_tier": "standard",
+            "cache_creation": {
+              "ephemeral_1h_input_tokens": 18534,
+              "ephemeral_5m_input_tokens": 0
+            },
+            "inference_geo": "global",
+            "iterations": [
+              {
+                "input_tokens": 32,
+                "output_tokens": 405,
+                "cache_read_input_tokens": 28933,
+                "cache_creation_input_tokens": 713,
+                "cache_creation": {
+                  "ephemeral_5m_input_tokens": 0,
+                  "ephemeral_1h_input_tokens": 713
+                },
+                "type": "message"
+              }
+            ],
+            "speed": "standard",
+            "fallback_credit": null
+          },
+          "modelUsage": {
+            "claude-fable-5-1": {
+              "inputTokens": 230,
+              "outputTokens": 3488,
+              "cacheReadInputTokens": 212179,
+              "cacheCreationInputTokens": 18534,
+              "webSearchRequests": 0,
+              "costUSD": 0.6004247500000001,
+              "contextWindow": 1000000,
+              "maxOutputTokens": 64000,
+              "thinkingTokens": 349,
+              "canonicalModel": "claude-fable-5-1",
+              "provider": "firstParty",
+              "costBasis": "list"
+            }
+          },
+          "permission_denials": [],
+          "terminal_reason": "completed",
+          "fast_mode_state": "off",
+          "fast_mode_disabled_reason": "sdk_opt_in_required",
+          "subagent_stats": {
+            "spawned": 0,
+            "requested": {
+              "background": 0,
+              "foreground": 0,
+              "unset": 0
+            },
+            "started_in_background": 0,
+            "max_depth": 0,
+            "spawned_by_subagents": 0,
+            "completed": 0,
+            "failed": 0,
+            "killed": {
+              "parent": 0,
+              "user": 0,
+              "system": 0
+            },
+            "refused": {
+              "depth_limit": 0,
+              "concurrency_limit": 0,
+              "budget": 0
+            },
+            "by_type": {}
+          },
+          "safety_stops": 0,
+          "is_error": false,
+          "num_turns": 9,
+          "subtype": "success",
+          "api_error_status": null,
+          "result": "**Recommendation: lead with the status, then show the reasons as two labeled, parallel rows under it.**\n\n- **Keep the top line simple.** The operator sees one status, \"Needs review\", with nothing else competing for attention. Reasons appear directly beneath it, never as a separate status.\n- **Label each reason by what the operator should do, not by its internal type.** \"Input may be wrong\" tells the operator to go verify the source data. \"Analysis did not finish\" tells them to rerun or wait. Avoid internal names like \"uncertain input\" or \"incomplete analysis\" in the UI.\n- **Put evidence one click or one expand away.** Each reason row shows a one-line summary of its strongest evidence inline, with full supporting detail collapsed below. This keeps the default view scannable and the detail available.\n- **Order by actionability when both appear.** Show the input reason first, because fixing input often makes the analysis reason moot. Say so in a short hint when both are present.\n- **Make the pair visually distinct but equal in weight.** Same row shape, same font, different icon. Neither should read as the \"real\" reason.\n\nRefinement question: when both reasons are present, should the operator be able to resolve them separately, or does the status clear only when both are resolved together?",
+          "ttft_ms": 10637,
+          "type": "result",
+          "duration_ms": 94512,
+          "uuid": "ebec32af-76f4-4a5e-b446-16cbeec55243",
+          "ttft_stream_ms": 7497,
+          "time_to_request_ms": 1212,
+          "first_content_frame_ms": 7497,
+          "queued_turn_count": 0,
+          "result_index": 0
+        }
+      ]
+    },
+    {
+      "exit": 0,
+      "seconds": 17.07361087499885,
+      "session": "81df5614-94bf-4b06-8536-c8becd0ecc65",
+      "result": [
+        {
+          "duration_api_ms": 90435,
+          "stop_reason": "end_turn",
+          "session_id": "81df5614-94bf-4b06-8536-c8becd0ecc65",
+          "total_cost_usd": 0.6921442500000001,
+          "usage": {
+            "input_tokens": 34,
+            "cache_creation_input_tokens": 1811,
+            "cache_read_input_tokens": 60438,
+            "output_tokens": 801,
+            "output_tokens_details": {
+              "thinking_tokens": 0
+            },
+            "server_tool_use": {
+              "web_search_requests": 0,
+              "web_fetch_requests": 0
+            },
+            "service_tier": "standard",
+            "cache_creation": {
+              "ephemeral_1h_input_tokens": 1811,
+              "ephemeral_5m_input_tokens": 0
+            },
+            "inference_geo": "global",
+            "iterations": [
+              {
+                "input_tokens": 32,
+                "output_tokens": 169,
+                "cache_read_input_tokens": 30792,
+                "cache_creation_input_tokens": 665,
+                "cache_creation": {
+                  "ephemeral_5m_input_tokens": 0,
+                  "ephemeral_1h_input_tokens": 665
+                },
+                "type": "message"
+              }
+            ],
+            "speed": "standard",
+            "fallback_credit": null
+          },
+          "modelUsage": {
+            "claude-fable-5-1": {
+              "inputTokens": 264,
+              "outputTokens": 4289,
+              "thinkingTokens": 349,
+              "cacheReadInputTokens": 272617,
+              "cacheCreationInputTokens": 20345,
+              "webSearchRequests": 0,
+              "costUSD": 0.6921442500000001,
+              "contextWindow": 1000000,
+              "maxOutputTokens": 64000,
+              "canonicalModel": "claude-fable-5-1",
+              "provider": "firstParty",
+              "costBasis": "list"
+            }
+          },
+          "permission_denials": [],
+          "terminal_reason": "completed",
+          "fast_mode_state": "off",
+          "fast_mode_disabled_reason": "sdk_opt_in_required",
+          "subagent_stats": {
+            "spawned": 0,
+            "requested": {
+              "background": 0,
+              "foreground": 0,
+              "unset": 0
+            },
+            "started_in_background": 0,
+            "max_depth": 0,
+            "spawned_by_subagents": 0,
+            "completed": 0,
+            "failed": 0,
+            "killed": {
+              "parent": 0,
+              "user": 0,
+              "system": 0
+            },
+            "refused": {
+              "depth_limit": 0,
+              "concurrency_limit": 0,
+              "budget": 0
+            },
+            "by_type": {}
+          },
+          "safety_stops": 0,
+          "is_error": false,
+          "num_turns": 2,
+          "subtype": "success",
+          "api_error_status": null,
+          "result": "**Proposal, not a decision:** show the single \"Needs review\" status on top, with the two typed reasons beneath it as parallel rows. Each row carries an action-oriented label and a one-line evidence summary, with full evidence collapsed below. When both reasons apply, list the input reason first since fixing input can make the analysis reason moot.\n\nRefinement question: for the evidence behind each reason, should we retain the raw artifact itself, such as the input record or partial analysis output, or only a pointer to it plus a short summary?",
+          "ttft_ms": 8134,
+          "type": "result",
+          "duration_ms": 16497,
+          "uuid": "7f64e24a-68f7-44d8-8b5d-59f6d6b9043c",
+          "ttft_stream_ms": 1911,
+          "time_to_request_ms": 985,
+          "first_content_frame_ms": 1912,
+          "queued_turn_count": 0,
+          "result_index": 0
+        }
+      ]
+    },
+    {
+      "exit": 0,
+      "seconds": 14.830005916999653,
+      "session": "81df5614-94bf-4b06-8536-c8becd0ecc65",
+      "result": [
+        {
+          "duration_api_ms": 100879,
+          "stop_reason": "end_turn",
+          "session_id": "81df5614-94bf-4b06-8536-c8becd0ecc65",
+          "total_cost_usd": 0.7831520000000001,
+          "usage": {
+            "input_tokens": 34,
+            "cache_creation_input_tokens": 1673,
+            "cache_read_input_tokens": 63831,
+            "output_tokens": 825,
+            "output_tokens_details": {
+              "thinking_tokens": 0
+            },
+            "server_tool_use": {
+              "web_search_requests": 0,
+              "web_fetch_requests": 0
+            },
+            "service_tier": "standard",
+            "cache_creation": {
+              "ephemeral_1h_input_tokens": 1673,
+              "ephemeral_5m_input_tokens": 0
+            },
+            "inference_geo": "global",
+            "iterations": [
+              {
+                "input_tokens": 32,
+                "output_tokens": 201,
+                "cache_read_input_tokens": 32374,
+                "cache_creation_input_tokens": 756,
+                "cache_creation": {
+                  "ephemeral_5m_input_tokens": 0,
+                  "ephemeral_1h_input_tokens": 756
+                },
+                "type": "message"
+              }
+            ],
+            "speed": "standard",
+            "fallback_credit": null
+          },
+          "modelUsage": {
+            "claude-fable-5-1": {
+              "inputTokens": 298,
+              "outputTokens": 5114,
+              "thinkingTokens": 349,
+              "cacheReadInputTokens": 336448,
+              "cacheCreationInputTokens": 22018,
+              "webSearchRequests": 0,
+              "costUSD": 0.7831520000000001,
+              "contextWindow": 1000000,
+              "maxOutputTokens": 64000,
+              "canonicalModel": "claude-fable-5-1",
+              "provider": "firstParty",
+              "costBasis": "list"
+            }
+          },
+          "permission_denials": [],
+          "terminal_reason": "completed",
+          "fast_mode_state": "off",
+          "fast_mode_disabled_reason": "sdk_opt_in_required",
+          "subagent_stats": {
+            "spawned": 0,
+            "requested": {
+              "background": 0,
+              "foreground": 0,
+              "unset": 0
+            },
+            "started_in_background": 0,
+            "max_depth": 0,
+            "spawned_by_subagents": 0,
+            "completed": 0,
+            "failed": 0,
+            "killed": {
+              "parent": 0,
+              "user": 0,
+              "system": 0
+            },
+            "refused": {
+              "depth_limit": 0,
+              "concurrency_limit": 0,
+              "budget": 0
+            },
+            "by_type": {}
+          },
+          "safety_stops": 0,
+          "is_error": false,
+          "num_turns": 2,
+          "subtype": "success",
+          "api_error_status": null,
+          "result": "**Approved decision, unchanged:** a result carries one top-level review-needed status, with a typed reason distinguishing uncertain input from incomplete analysis, and supporting evidence retained for both.\n\nRefinement question: when the reason is uncertain input, should the operator be able to confirm or correct the input in place and automatically trigger a rerun, or should the status only clear after a separate explicit re-review?\n\nQualification: the memory refresh check reported a pending transaction recovery that needs review through its governed recovery workflow. Nothing was written and the transaction evidence was preserved. This turn produced no new durable learning.",
+          "ttft_ms": 7815,
+          "type": "result",
+          "duration_ms": 14158,
+          "uuid": "59d08348-a0e2-4333-b080-f15e6336550b",
+          "ttft_stream_ms": 2062,
+          "time_to_request_ms": 995,
+          "first_content_frame_ms": 2062,
+          "queued_turn_count": 0,
+          "result_index": 0
+        }
+      ]
+    }
+  ],
+  "pending": {
+    "turns": [],
+    "legacy": [],
+    "faults": [],
+    "next_offset": null,
+    "next_legacy_offset": null,
+    "source_completeness_verified": false
+  },
+  "completion_count": 3,
+  "workspace_count": 0,
+  "retained_injected_evidence": true,
+  "bank_head_index_code_unchanged": true
+}

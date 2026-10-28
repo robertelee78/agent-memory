@@ -1,0 +1,334 @@
+{
+  "runs": [
+    {
+      "exit": 0,
+      "seconds": 46.55214287499257,
+      "session": "148e4743-f003-49a2-a458-52d9d961da67",
+      "result": [
+        {
+          "duration_api_ms": 39012,
+          "stop_reason": "end_turn",
+          "session_id": "148e4743-f003-49a2-a458-52d9d961da67",
+          "total_cost_usd": 0.396516,
+          "usage": {
+            "input_tokens": 98,
+            "cache_creation_input_tokens": 14740,
+            "cache_read_input_tokens": 79544,
+            "output_tokens": 1617,
+            "output_tokens_details": {
+              "thinking_tokens": 61
+            },
+            "server_tool_use": {
+              "web_search_requests": 0,
+              "web_fetch_requests": 0
+            },
+            "service_tier": "standard",
+            "cache_creation": {
+              "ephemeral_1h_input_tokens": 14740,
+              "ephemeral_5m_input_tokens": 0
+            },
+            "inference_geo": "global",
+            "iterations": [
+              {
+                "input_tokens": 32,
+                "output_tokens": 389,
+                "cache_read_input_tokens": 25248,
+                "cache_creation_input_tokens": 604,
+                "cache_creation": {
+                  "ephemeral_5m_input_tokens": 0,
+                  "ephemeral_1h_input_tokens": 604
+                },
+                "type": "message"
+              }
+            ],
+            "speed": "standard",
+            "fallback_credit": null
+          },
+          "modelUsage": {
+            "claude-fable-5-1": {
+              "inputTokens": 98,
+              "outputTokens": 1617,
+              "cacheReadInputTokens": 79544,
+              "cacheCreationInputTokens": 14740,
+              "webSearchRequests": 0,
+              "costUSD": 0.396516,
+              "contextWindow": 1000000,
+              "maxOutputTokens": 64000,
+              "thinkingTokens": 61,
+              "canonicalModel": "claude-fable-5-1",
+              "provider": "firstParty",
+              "costBasis": "list"
+            }
+          },
+          "permission_denials": [],
+          "terminal_reason": "completed",
+          "fast_mode_state": "off",
+          "fast_mode_disabled_reason": "sdk_opt_in_required",
+          "subagent_stats": {
+            "spawned": 0,
+            "requested": {
+              "background": 0,
+              "foreground": 0,
+              "unset": 0
+            },
+            "started_in_background": 0,
+            "max_depth": 0,
+            "spawned_by_subagents": 0,
+            "completed": 0,
+            "failed": 0,
+            "killed": {
+              "parent": 0,
+              "user": 0,
+              "system": 0
+            },
+            "refused": {
+              "depth_limit": 0,
+              "concurrency_limit": 0,
+              "budget": 0
+            },
+            "by_type": {}
+          },
+          "safety_stops": 0,
+          "is_error": false,
+          "num_turns": 4,
+          "subtype": "success",
+          "api_error_status": null,
+          "result": "Confirmed: the recorded decision stands, and nothing new needed saving this turn.\n\n**Recommendation for presenting the two reasons to an operator**\n\nShow one status badge, \"Needs review\", and make the typed reason the first line of detail, phrased as the action the operator should take rather than as the diagnosis.\n\n- **Uncertain input** reads as \"Check the source data.\" Show the specific field or record that is ambiguous, the candidate interpretations, and a one-click way to confirm or correct it. The operator fixes something upstream.\n- **Incomplete analysis** reads as \"Analysis did not finish.\" Show which step stopped, what was covered, and a retry or escalate action. The operator does not touch the data.\n\nKeep the evidence collapsed under each reason by default, with a consistent layout for both so operators learn one pattern. Let the review queue be filtered and sorted by reason, since the two reasons route to different people and different fixes. If one item has both reasons, list uncertain input first, because resolving it often removes the need to rerun the analysis.\n\n**One refinement question:** when both reasons apply to the same item, should the operator be able to clear one reason independently, or does the item stay in review until both are resolved?",
+          "ttft_ms": 6648,
+          "type": "result",
+          "duration_ms": 45938,
+          "uuid": "3cc4200f-6c20-45c3-9977-9a8f10028e9a",
+          "ttft_stream_ms": 3653,
+          "time_to_request_ms": 1108,
+          "first_content_frame_ms": 3653,
+          "queued_turn_count": 0,
+          "result_index": 0
+        }
+      ]
+    },
+    {
+      "exit": 0,
+      "seconds": 27.03211741699488,
+      "session": "148e4743-f003-49a2-a458-52d9d961da67",
+      "result": [
+        {
+          "duration_api_ms": 58856,
+          "stop_reason": "end_turn",
+          "session_id": "148e4743-f003-49a2-a458-52d9d961da67",
+          "total_cost_usd": 0.47685199999999994,
+          "usage": {
+            "input_tokens": 34,
+            "cache_creation_input_tokens": 1627,
+            "cache_read_input_tokens": 52824,
+            "output_tokens": 685,
+            "output_tokens_details": {
+              "thinking_tokens": 0
+            },
+            "server_tool_use": {
+              "web_search_requests": 0,
+              "web_fetch_requests": 0
+            },
+            "service_tier": "standard",
+            "cache_creation": {
+              "ephemeral_1h_input_tokens": 1627,
+              "ephemeral_5m_input_tokens": 0
+            },
+            "inference_geo": "global",
+            "iterations": [
+              {
+                "input_tokens": 32,
+                "output_tokens": 211,
+                "cache_read_input_tokens": 26972,
+                "cache_creation_input_tokens": 507,
+                "cache_creation": {
+                  "ephemeral_5m_input_tokens": 0,
+                  "ephemeral_1h_input_tokens": 507
+                },
+                "type": "message"
+              }
+            ],
+            "speed": "standard",
+            "fallback_credit": null
+          },
+          "modelUsage": {
+            "claude-fable-5-1": {
+              "inputTokens": 132,
+              "outputTokens": 2302,
+              "thinkingTokens": 61,
+              "cacheReadInputTokens": 132368,
+              "cacheCreationInputTokens": 16367,
+              "webSearchRequests": 0,
+              "costUSD": 0.47685199999999994,
+              "contextWindow": 1000000,
+              "maxOutputTokens": 64000,
+              "canonicalModel": "claude-fable-5-1",
+              "provider": "firstParty",
+              "costBasis": "list"
+            }
+          },
+          "permission_denials": [],
+          "terminal_reason": "completed",
+          "fast_mode_state": "off",
+          "fast_mode_disabled_reason": "sdk_opt_in_required",
+          "subagent_stats": {
+            "spawned": 0,
+            "requested": {
+              "background": 0,
+              "foreground": 0,
+              "unset": 0
+            },
+            "started_in_background": 0,
+            "max_depth": 0,
+            "spawned_by_subagents": 0,
+            "completed": 0,
+            "failed": 0,
+            "killed": {
+              "parent": 0,
+              "user": 0,
+              "system": 0
+            },
+            "refused": {
+              "depth_limit": 0,
+              "concurrency_limit": 0,
+              "budget": 0
+            },
+            "by_type": {}
+          },
+          "safety_stops": 0,
+          "is_error": false,
+          "num_turns": 2,
+          "subtype": "success",
+          "api_error_status": null,
+          "result": "**Proposal, not a decision:** present the approved review-needed status as one badge, with the typed reason as the first detail line phrased as the operator's next action. Uncertain input points to the specific ambiguous field and offers confirm or correct. Incomplete analysis names the step that stopped and offers retry or escalate. Evidence for each reason sits collapsed beneath it in the same layout, and the queue is filterable by reason.\n\n**Refinement question on evidence:** for uncertain input, should we retain only the ambiguous field and its candidate interpretations, or also a snapshot of the raw source record so the operator can judge context without opening the upstream system?",
+          "ttft_ms": 13713,
+          "type": "result",
+          "duration_ms": 26424,
+          "uuid": "9bd867c8-39cc-44cf-afee-b113023b32ab",
+          "ttft_stream_ms": 6438,
+          "time_to_request_ms": 1039,
+          "first_content_frame_ms": 6438,
+          "queued_turn_count": 0,
+          "result_index": 0
+        }
+      ]
+    },
+    {
+      "exit": 0,
+      "seconds": 23.5864488750085,
+      "session": "148e4743-f003-49a2-a458-52d9d961da67",
+      "result": [
+        {
+          "duration_api_ms": 78094,
+          "stop_reason": "end_turn",
+          "session_id": "148e4743-f003-49a2-a458-52d9d961da67",
+          "total_cost_usd": 0.5621507499999999,
+          "usage": {
+            "input_tokens": 34,
+            "cache_creation_input_tokens": 1569,
+            "cache_read_input_tokens": 55915,
+            "output_tokens": 792,
+            "output_tokens_details": {
+              "thinking_tokens": 69
+            },
+            "server_tool_use": {
+              "web_search_requests": 0,
+              "web_fetch_requests": 0
+            },
+            "service_tier": "standard",
+            "cache_creation": {
+              "ephemeral_1h_input_tokens": 1569,
+              "ephemeral_5m_input_tokens": 0
+            },
+            "inference_geo": "global",
+            "iterations": [
+              {
+                "input_tokens": 32,
+                "output_tokens": 312,
+                "cache_read_input_tokens": 28436,
+                "cache_creation_input_tokens": 612,
+                "cache_creation": {
+                  "ephemeral_5m_input_tokens": 0,
+                  "ephemeral_1h_input_tokens": 612
+                },
+                "type": "message"
+              }
+            ],
+            "speed": "standard",
+            "fallback_credit": null
+          },
+          "modelUsage": {
+            "claude-fable-5-1": {
+              "inputTokens": 166,
+              "outputTokens": 3094,
+              "thinkingTokens": 130,
+              "cacheReadInputTokens": 188283,
+              "cacheCreationInputTokens": 17936,
+              "webSearchRequests": 0,
+              "costUSD": 0.5621507499999999,
+              "contextWindow": 1000000,
+              "maxOutputTokens": 64000,
+              "canonicalModel": "claude-fable-5-1",
+              "provider": "firstParty",
+              "costBasis": "list"
+            }
+          },
+          "permission_denials": [],
+          "terminal_reason": "completed",
+          "fast_mode_state": "off",
+          "fast_mode_disabled_reason": "sdk_opt_in_required",
+          "subagent_stats": {
+            "spawned": 0,
+            "requested": {
+              "background": 0,
+              "foreground": 0,
+              "unset": 0
+            },
+            "started_in_background": 0,
+            "max_depth": 0,
+            "spawned_by_subagents": 0,
+            "completed": 0,
+            "failed": 0,
+            "killed": {
+              "parent": 0,
+              "user": 0,
+              "system": 0
+            },
+            "refused": {
+              "depth_limit": 0,
+              "concurrency_limit": 0,
+              "budget": 0
+            },
+            "by_type": {}
+          },
+          "safety_stops": 0,
+          "is_error": false,
+          "num_turns": 2,
+          "subtype": "success",
+          "api_error_status": null,
+          "result": "**Approved decision, unchanged:** the importer reports one top-level review-needed status whose typed reason distinguishes uncertain input from incomplete analysis, with supporting evidence retained for both.\n\n**Refinement question:** when an operator reviews an uncertain-input item and confirms one interpretation, should that confirmation apply only to that record, or be remembered as a rule for future records with the same ambiguity? As a proposal, I'd start with per-record only and add rules later once we see repeat patterns.\n\n**Qualification:** the memory refresh check reported pending transaction recovery evidence in the memory bank and asks that it be reviewed through the governed recovery workflow, not deleted. I left it untouched. This turn's assessment itself completed.",
+          "ttft_ms": 11637,
+          "type": "result",
+          "duration_ms": 22980,
+          "uuid": "dd90b94b-b9b3-4958-83bc-46890c9ecc40",
+          "ttft_stream_ms": 4967,
+          "time_to_request_ms": 1004,
+          "first_content_frame_ms": 4968,
+          "queued_turn_count": 0,
+          "result_index": 0
+        }
+      ]
+    }
+  ],
+  "pending": {
+    "turns": [],
+    "legacy": [],
+    "faults": [],
+    "next_offset": null,
+    "next_legacy_offset": null,
+    "source_completeness_verified": false
+  },
+  "completion_count": 3,
+  "workspace_count": 0,
+  "retained_injected_evidence": true,
+  "bank_head_index_code_unchanged": true
+}

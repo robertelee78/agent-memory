@@ -1,0 +1,11 @@
+{
+  "mode": "real OpenCode2.1.3 standalone; isolated HOME/config/data/VOX directories and copied native auth; no production restart",
+  "session_id": "ses_e7d228807ffeFG82QltLzIdGzK",
+  "preserved_feature_and_bank": true,
+  "private_workspaces": 0,
+  "decision": {
+    "exit": 0,
+    "seconds": 86.339
+  },
+  "summary_original_sha256": "a575a19ce370898412e5b77f8ec11361861e618034ee97d680536e4c70320913"
+}

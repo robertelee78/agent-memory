@@ -1,0 +1,228 @@
+{
+  "runs": [
+    {
+      "exit": 0,
+      "seconds": 34.3793063750054,
+      "session": "55634bf7-8647-49c1-9681-982166721fb4",
+      "result": [
+        {
+          "duration_api_ms": 24900,
+          "stop_reason": "end_turn",
+          "session_id": "55634bf7-8647-49c1-9681-982166721fb4",
+          "total_cost_usd": 0.36713625,
+          "usage": {
+            "input_tokens": 98,
+            "cache_creation_input_tokens": 13096,
+            "cache_read_input_tokens": 77745,
+            "output_tokens": 1696,
+            "output_tokens_details": {
+              "thinking_tokens": 128
+            },
+            "server_tool_use": {
+              "web_search_requests": 0,
+              "web_fetch_requests": 0
+            },
+            "service_tier": "standard",
+            "cache_creation": {
+              "ephemeral_1h_input_tokens": 13096,
+              "ephemeral_5m_input_tokens": 0
+            },
+            "inference_geo": "global",
+            "iterations": [
+              {
+                "input_tokens": 32,
+                "output_tokens": 576,
+                "cache_read_input_tokens": 23649,
+                "cache_creation_input_tokens": 559,
+                "cache_creation": {
+                  "ephemeral_5m_input_tokens": 0,
+                  "ephemeral_1h_input_tokens": 559
+                },
+                "type": "message"
+              }
+            ],
+            "speed": "standard",
+            "fallback_credit": null
+          },
+          "modelUsage": {
+            "claude-fable-5-1": {
+              "inputTokens": 98,
+              "outputTokens": 1696,
+              "cacheReadInputTokens": 77745,
+              "cacheCreationInputTokens": 13096,
+              "webSearchRequests": 0,
+              "costUSD": 0.36713625,
+              "contextWindow": 1000000,
+              "maxOutputTokens": 64000,
+              "thinkingTokens": 128,
+              "canonicalModel": "claude-fable-5-1",
+              "provider": "firstParty",
+              "costBasis": "list"
+            }
+          },
+          "permission_denials": [],
+          "terminal_reason": "completed",
+          "fast_mode_state": "off",
+          "fast_mode_disabled_reason": "sdk_opt_in_required",
+          "subagent_stats": {
+            "spawned": 0,
+            "requested": {
+              "background": 0,
+              "foreground": 0,
+              "unset": 0
+            },
+            "started_in_background": 0,
+            "max_depth": 0,
+            "spawned_by_subagents": 0,
+            "completed": 0,
+            "failed": 0,
+            "killed": {
+              "parent": 0,
+              "user": 0,
+              "system": 0
+            },
+            "refused": {
+              "depth_limit": 0,
+              "concurrency_limit": 0,
+              "budget": 0
+            },
+            "by_type": {}
+          },
+          "safety_stops": 0,
+          "is_error": false,
+          "num_turns": 4,
+          "subtype": "success",
+          "api_error_status": null,
+          "result": "Confirmed, the approved decision stands as recorded. Here is my recommendation for presenting the two reasons to an operator.\n\n**Lead with the status, then the reason as a verb phrase.** The operator should see \"Review needed\" first, then one plain-language line that tells them what kind of work the review is: \"Input is uncertain\" versus \"Analysis is incomplete.\" The distinction matters to the operator because it changes who acts. Uncertain input sends them back to the source or submitter. Incomplete analysis sends them to the tool or the analyst.\n\n**Show evidence inline, but collapsed by default.** Each reason carries its own evidence block. For uncertain input, show the specific fields or values in question and why they were flagged, such as a low-confidence parse or a conflict between sources. For incomplete analysis, show which checks ran, which did not, and why they stopped. Keep the summary to one line and let the operator expand it.\n\n**Use one visual treatment for the status, not two colours for the reasons.** Both reasons are the same severity for triage purposes. Distinguishing them with an icon or label is enough. Colouring them differently invites operators to treat one as less urgent.\n\n**Allow both reasons on one item.** An item can have uncertain input and incomplete analysis at the same time. Present them as a short list under the single status rather than forcing a primary reason.\n\n**Suggest the next action with each reason.** A short \"what to do\" hint per reason, such as \"Confirm with submitter\" or \"Re-run after fixing the failed check,\" turns the status from a flag into a task.\n\nOne refinement question: should the operator be able to resolve the two reasons independently, so an item can clear \"uncertain input\" while \"incomplete analysis\" stays open, or does resolving either one require the whole item to be re-reviewed?",
+          "ttft_ms": 3446,
+          "type": "result",
+          "duration_ms": 33783,
+          "uuid": "3f125cec-f537-4b1c-94ce-f70d37aa0d1a",
+          "ttft_stream_ms": 2152,
+          "time_to_request_ms": 1206,
+          "first_content_frame_ms": 2152,
+          "queued_turn_count": 0,
+          "result_index": 0
+        }
+      ]
+    },
+    {
+      "exit": 0,
+      "seconds": 14.925599124995642,
+      "session": "55634bf7-8647-49c1-9681-982166721fb4",
+      "result": [
+        {
+          "duration_api_ms": 32522,
+          "stop_reason": "end_turn",
+          "session_id": "55634bf7-8647-49c1-9681-982166721fb4",
+          "total_cost_usd": 0.44546424999999995,
+          "usage": {
+            "input_tokens": 34,
+            "cache_creation_input_tokens": 1815,
+            "cache_read_input_tokens": 49752,
+            "output_tokens": 585,
+            "output_tokens_details": {
+              "thinking_tokens": 0
+            },
+            "server_tool_use": {
+              "web_search_requests": 0,
+              "web_fetch_requests": 0
+            },
+            "service_tier": "standard",
+            "cache_creation": {
+              "ephemeral_1h_input_tokens": 1815,
+              "ephemeral_5m_input_tokens": 0
+            },
+            "inference_geo": "global",
+            "iterations": [
+              {
+                "input_tokens": 32,
+                "output_tokens": 139,
+                "cache_read_input_tokens": 25544,
+                "cache_creation_input_tokens": 479,
+                "cache_creation": {
+                  "ephemeral_5m_input_tokens": 0,
+                  "ephemeral_1h_input_tokens": 479
+                },
+                "type": "message"
+              }
+            ],
+            "speed": "standard",
+            "fallback_credit": null
+          },
+          "modelUsage": {
+            "claude-fable-5-1": {
+              "inputTokens": 132,
+              "outputTokens": 2281,
+              "thinkingTokens": 128,
+              "cacheReadInputTokens": 127497,
+              "cacheCreationInputTokens": 14911,
+              "webSearchRequests": 0,
+              "costUSD": 0.44546424999999995,
+              "contextWindow": 1000000,
+              "maxOutputTokens": 64000,
+              "canonicalModel": "claude-fable-5-1",
+              "provider": "firstParty",
+              "costBasis": "list"
+            }
+          },
+          "permission_denials": [],
+          "terminal_reason": "completed",
+          "fast_mode_state": "off",
+          "fast_mode_disabled_reason": "sdk_opt_in_required",
+          "subagent_stats": {
+            "spawned": 0,
+            "requested": {
+              "background": 0,
+              "foreground": 0,
+              "unset": 0
+            },
+            "started_in_background": 0,
+            "max_depth": 0,
+            "spawned_by_subagents": 0,
+            "completed": 0,
+            "failed": 0,
+            "killed": {
+              "parent": 0,
+              "user": 0,
+              "system": 0
+            },
+            "refused": {
+              "depth_limit": 0,
+              "concurrency_limit": 0,
+              "budget": 0
+            },
+            "by_type": {}
+          },
+          "safety_stops": 0,
+          "is_error": false,
+          "num_turns": 2,
+          "subtype": "success",
+          "api_error_status": null,
+          "result": "Understood. The presentation approach I described stays a proposal for your review. The only approved decision is the one already recorded: a single top-level review-needed status, with typed reasons separating uncertain input from incomplete analysis, each backed by supporting evidence.\n\nOne refinement question on that evidence: for the incomplete-analysis reason, should we retain only the list of checks that did not run, or also the raw error or stop condition from each failed check?",
+          "ttft_ms": 5982,
+          "type": "result",
+          "duration_ms": 14203,
+          "uuid": "a5d710fb-3d86-45cf-b70c-556dc31da16e",
+          "ttft_stream_ms": 2099,
+          "time_to_request_ms": 1027,
+          "first_content_frame_ms": 2099,
+          "queued_turn_count": 0,
+          "result_index": 0
+        }
+      ]
+    }
+  ],
+  "pending": {
+    "turns": [],
+    "legacy": [],
+    "faults": [],
+    "next_offset": null,
+    "next_legacy_offset": null,
+    "source_completeness_verified": false
+  },
+  "completion_count": 2,
+  "workspace_count": 0,
+  "retained_injected_evidence": null,
+  "bank_head_index_code_unchanged": true
+}

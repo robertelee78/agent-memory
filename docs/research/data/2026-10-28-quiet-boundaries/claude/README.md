@@ -1,0 +1,1 @@
+The retained controllers refer to `/tmp/am-v009-native-final-prompts.json`; its exact bytes are retained here as `native-final-prompts.json`. Paths describe the executed fixture and can be remapped for reproduction. Authentication/configuration bytes are not included. Initial failed trials and later targeted checks remain distinct evidence.
