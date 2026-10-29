@@ -7,7 +7,7 @@
   "all_actual_cache_attributes_match_signed_source": true,
   "reproduction_controller_sha256": "91ad8df6dca7cb33bfbcd2cb0841b57c2e885dd58a522bec9d48a26ddf925d65",
   "private_raw_commands_sha256": "70d05f7e72548a34c86c92617c59d74f6c2bd6438f1b93da2bee6c401c9cf1a5",
-  "private_evidence_directory": "/tmp/am-v011-cache-producer-private",
+  "private_evidence_directory": "<operator-user-state>/agent-memory/diagnostics/research/v011-bytecode-rca-<private-case-id>/",
   "setup_apparatus_failures": [
     {
       "file": "default-path-setup-failure.log",
@@ -23,12 +23,16 @@
     "linux": {
       "python": "3.14.4",
       "completed_command_seconds": 7.799811318283901,
-      "source_helpers": "Complete earlier isolated source including root wrappers; active signed9installation has exact authentic payload, no AppleDouble."
+      "source_helpers": "Local research snapshot9f475427edbdba7e12d9275f3931e9f40bbbe8b7; all439trackedhelperfiles/modes bound in linux-auxiliary-source.json, all501metadataextras catalogued; no clean helper-inventory claim. Active installed signed9payload authentication separately189files."
     },
     "macos": {
       "python": "3.15.0",
       "completed_command_seconds": 20.73127350100549,
-      "source_helpers": "Full clean git archive a67b8b8 including root wrappers; no AppleDouble."
+      "source_helpers": "Full clean git archive a67b8b8 including root wrappers; no AppleDouble.",
+      "qualified_scope": "Cache-generation/refusal mechanism and module closure under CPython3.15; no incident3.14 cache-tag/header/marshal/body-byte identity claim."
     }
-  }
+  },
+  "durable_retention_receipt": "durable-evidence.json",
+  "linux_auxiliary_source_receipt": "linux-auxiliary-source.json",
+  "actual_module_names_equal_full_reproduction_scope": "LinuxCPython3.14 full replay only. MacCPython3.15 has corresponding module names with different cache tags."
 }

@@ -15,5 +15,6 @@
     "semantic_sharing.compact_review"
   ],
   "raw_records_published": false,
-  "private_source_reference": "/tmp/am-v011-cache-producer-28873qt6/matches.json, selected invocation record"
+  "private_source_reference": "<operator-user-state>/agent-memory/diagnostics/research/v011-bytecode-rca-<private-case-id>/event.jsonl",
+  "durable_retention_receipt": "durable-evidence.json"
 }

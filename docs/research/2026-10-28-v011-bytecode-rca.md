@@ -6,6 +6,13 @@ healing is not implemented or approved by this document.** Current integrity
 checks remain strict; no cache exclusion, receipt rewrite or source-mode change
 is proposed as a substitute for verification.
 
+Issue #238 closes only on acceptance of the RCA, preventive diagnostic guidance
+and reviewed **proposal**. Actual healing code belongs to a separate new future
+Backlog item, proposed key `ADR-0021:verified-cache-healing` for v0.0.12. No issue
+number is invented here and no implementation is authorized by closing #238.
+That follow-on item requires its own detailed startup-trust/parser design,
+independent review, Ready state, execution attempt and implementation acceptance.
+
 ## Finding
 
 The Linux producer was a Codex-authored diagnostic command that imported Agent
@@ -50,7 +57,13 @@ search can miss a later event in a resumed session. The event's SHA-256 is
 `9117b6bff2da72e59933b6cb284c13508ba3e64a3660a7632ab8d4c86842e3ba`;
 the extracted original command's SHA-256 is
 `72c1b89057c59db1f687fc104fe33d57bda3a83acd2741aef1637e73894ad90f`.
-Raw transcript records and the unredacted command remain private. The public
+Only the necessary original event, extracted command and source/proof metadata
+were copied into durable, owner-only operator user state on both the incident
+Linux machine and the reviewing Mac. Original bytes retain those hashes. Each
+case directory is `0700`, each file `0600`; creation used no-follow traversal and
+exclusive file creation without symlink following or destination replacement.
+These copies are outside `/tmp`, the repository and installed runtime payload.
+No unrelated session records were copied into durable evidence. The public
 producer receipt contains only AM-relevant redacted commands and metadata.
 
 The trace establishes an actual cache-producing invocation, not merely a guess
@@ -90,6 +103,13 @@ It does not copy the other repository's private learning, inputs or judgments.
 | Linux x86_64 | CPython 3.14.4 | 0 caches | 0 caches | 35 caches | `am update` refuses identity; `am doctor` reports failure |
 | macOS arm64 | CPython 3.15.0 | 0 caches | 0 caches | 35 caches | `am update` refuses identity; `am doctor` reports failure |
 
+The macOS CPython 3.15 replay proves the cache-generation/refusal mechanism and
+corresponding module closure. Its `cpython-315` tags and native generated bodies
+are **not** evidence of byte identity, header identity or marshal identity with
+the incident's CPython 3.14 caches. The matching-version Linux replay and the
+original incident's signed-source/header/code-attribute forensics are separate
+evidence, not claims transferred from the Mac result.
+
 The environment bytecode guard was deliberately removed for all three controls,
 so normal launcher/helper prevention is demonstrated independently of it. The
 same direct diagnostic differs only in its interpreter flags for the `-I -B`
@@ -98,11 +118,31 @@ bank/index/HEAD, and removed their disposable worlds afterwards. Every command
 had a 180-second bound. Completed command times summed to 7.800 seconds on Linux
 and 20.731 seconds on macOS, with no timeout counted as success.
 
-The Linux active signed installation had exactly the authenticated release
-payload; no AppleDouble files were installed. Its auxiliary fixture-helper tree
-came from the earlier isolated test source. macOS used a complete `git archive`
-source tree including root wrappers, without AppleDouble metadata. This qualifies
-these functional controls, not a new release package or recovery implementation.
+The Linux active signed v0.0.9 installation had exactly the separately
+authenticated 189-file release payload, pinned signature and matching artifact
+digest; no AppleDouble files were installed. This is distinct from the auxiliary
+fixture-helper source tree used to construct the disposable bank.
+
+That Linux auxiliary tree is bound to local research snapshot
+`9f475427edbdba7e12d9275f3931e9f40bbbe8b7`, not described as a published signed
+release. All 439 tracked files under `scripts`, `tests` and `skills` match that
+snapshot by hash and canonical Git checkout mode. The public
+`linux-auxiliary-source.json` records each path/hash/mode and **all 501**
+AppleDouble metadata extras, grouped by identical bytes/mode with every observed
+filename retained. It records no other extras within those source roots and
+makes no clean auxiliary-inventory claim. The earlier count of 241 described
+only metadata under the portable-pack subtree, not the whole helper source.
+
+The controller imports `tests/world.py`,
+`tests/contracts/test_sharing_boundary.py` and `tests/identity_fixtures.py`;
+identity setup invokes the explicit root `scripts/developer_identity.py` and
+`scripts/project_identity.py` wrappers. Python resolves their ordinary package
+modules and the fixture copies the known pack subtree. No `._*` filename is
+named by these imports or entrypoints, parsed as fixture metadata, or executed;
+the extras remain recorded, not silently authenticated. macOS used a complete
+clean `git archive` of `a67b8b8`, including root wrappers and without AppleDouble
+metadata. These controls qualify the stated functional mechanism, not a new
+release package or recovery implementation.
 
 An initial early-validation diagnostic created 31 caches before reaching deeper
 review imports; it proved the mechanism but was not the full observed closure.
@@ -113,10 +153,16 @@ private logs and hashes are retained separately rather than counted as product
 failures or passing controls.
 
 The controller and redacted receipts are in
-`data/2026-10-28-v011-bytecode-rca/`. Raw private evidence is retained at
-`/tmp/am-v011-cache-producer-28873qt6` on Linux and the locally collected
-`/tmp/am-v011-cache-producer-private`. The public binding receipt records original
-hashes and scope without publishing unrelated transcript contents.
+`data/2026-10-28-v011-bytecode-rca/`. The authoritative raw-evidence retention is
+`<operator-user-state>/agent-memory/diagnostics/research/v011-bytecode-rca-<private-case-id>/`
+on both machines. An authorized reviewer can locate the private case by the
+original event/command hashes; `durable-evidence.json` records all four retained
+file hashes, modes and storage scope without publishing account metadata.
+`event.jsonl` and `command.txt` are exact originals; `source-metadata.json` and
+`proof-source-metadata.json` bind provenance and the helper source inventory.
+Original `/tmp` working records remain intact, but are not the only retention
+or a prerequisite for verifying the producer. The public binding receipt records
+scope without publishing unrelated transcript contents.
 
 ## Immediate diagnostic guidance
 
@@ -164,9 +210,12 @@ conditions before it can be accepted:
    define and test finite file-count, per-file/aggregate-byte, time, memory,
    nesting and object-count limits. Require the supported native code format,
    header flags, exact applicable interpreter, filename/source binding and full
-   semantic code-attribute comparison if that strategy is selected. Consume the
-   complete body and reject trailing bytes, malformed input and mismatches. Never
-   execute cached code, import the suspect package or reconstruct a callable.
+   semantic code-attribute comparison **only if the parser strategy is selected**.
+   Bytewise verification compares the complete candidate file without requiring
+   deserialization. Any reviewed parser alternative must consume the complete
+   input and reject trailing bytes, malformed input and mismatches. Never execute
+   cached code, import the suspect package or reconstruct a callable. These are
+   alternative strategies, not a requirement to parse unproved caches.
 5. **Serialize and pin the repair.** Respect the existing lifecycle flock and any
    pending activation/recovery ownership. Retain no-follow directory descriptors
    from trusted ancestors to leaf; pin owner/mode/inode and named bindings, then

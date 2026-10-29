@@ -1,0 +1,21 @@
+{
+  "schema": "agent-memory/redacted-private-evidence-retention-v1",
+  "storage_template": "<operator-user-state>/agent-memory/diagnostics/research/v011-bytecode-rca-<private-case-id>/",
+  "copies": [
+    "incident Linux user state",
+    "review macOS user state"
+  ],
+  "raw_files_sha256": {
+    "event.jsonl": "9117b6bff2da72e59933b6cb284c13508ba3e64a3660a7632ab8d4c86842e3ba",
+    "command.txt": "72c1b89057c59db1f687fc104fe33d57bda3a83acd2741aef1637e73894ad90f",
+    "source-metadata.json": "7fe1c5de855d7a32d3d7e5340a53fe7ffa0be72e5d3684552ec6d4d78be2f496",
+    "proof-source-metadata.json": "1da2cf2beccfd5bf74b4d7d52265abf512581d20d5c27f97698f3521e955895b"
+  },
+  "exact_original_event_and_command_bytes_preserved": true,
+  "directory_mode": "0o700",
+  "file_mode": "0o600",
+  "creation_policy": "No-follow ancestor traversal; new private case directory; exclusive no-follow file creation; no existing destination replacement.",
+  "outside_tmp_repository_and_installed_runtime": true,
+  "original_tmp_evidence_retained": true,
+  "unrelated_session_content_copied": false
+}

@@ -1,0 +1,4049 @@
+{
+  "source_snapshot_revision": "9f475427edbdba7e12d9275f3931e9f40bbbe8b7",
+  "source_snapshot_scope": [
+    "skills",
+    "tests",
+    "scripts"
+  ],
+  "source_kind": "auxiliary research helper tree; not installed signed payload",
+  "tracked_files": {
+    "scripts/admit_learning.py": {
+      "sha256": "388c60336dc9d7426a39732341fbd186c995a22d67ab5adaed57192a6e20ccf9",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "388c60336dc9d7426a39732341fbd186c995a22d67ab5adaed57192a6e20ccf9",
+      "source_checkout_mode": "0o644"
+    },
+    "scripts/artifact.py": {
+      "sha256": "8eddac4638022c8518bb5632944ee23237761e007782cb3c05cea6cf420848e2",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "8eddac4638022c8518bb5632944ee23237761e007782cb3c05cea6cf420848e2",
+      "source_checkout_mode": "0o644"
+    },
+    "scripts/assemble_context.py": {
+      "sha256": "d491d5ad9953bccc9f906888a7c06262da35de8dfee655a5249806572d86ef20",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "d491d5ad9953bccc9f906888a7c06262da35de8dfee655a5249806572d86ef20",
+      "source_checkout_mode": "0o644"
+    },
+    "scripts/authority_policy.py": {
+      "sha256": "7e93d0ef591fdaf07f600c918dc8e9ef17ad902dd22b7ba73e4c331e579e875a",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "7e93d0ef591fdaf07f600c918dc8e9ef17ad902dd22b7ba73e4c331e579e875a",
+      "source_checkout_mode": "0o644"
+    },
+    "scripts/bank_contract.py": {
+      "sha256": "48d45dac18d5f5a265b649085a5121e9778d30a34e824726381a9ce2485500bd",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "48d45dac18d5f5a265b649085a5121e9778d30a34e824726381a9ce2485500bd",
+      "source_checkout_mode": "0o644"
+    },
+    "scripts/bank_layout.py": {
+      "sha256": "15847b5c8b45d507ed20ce20e4b14984a5466898693f60477d06024be9420b8d",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "15847b5c8b45d507ed20ce20e4b14984a5466898693f60477d06024be9420b8d",
+      "source_checkout_mode": "0o644"
+    },
+    "scripts/bank_state.py": {
+      "sha256": "4c14e70b879d5e3b53003bf884be975f365e14454d01cd5663da766d38664e79",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "4c14e70b879d5e3b53003bf884be975f365e14454d01cd5663da766d38664e79",
+      "source_checkout_mode": "0o644"
+    },
+    "scripts/bank_transactions.py": {
+      "sha256": "27e30f411cc4befbca25002bda19583741fb421a4b64e4cbf907b6efd12f7700",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "27e30f411cc4befbca25002bda19583741fb421a4b64e4cbf907b6efd12f7700",
+      "source_checkout_mode": "0o644"
+    },
+    "scripts/bank_writes.py": {
+      "sha256": "9ad41b28752a21d7d6e46602f4ad4a1d1408a06ef89be8ddff8c317828698df2",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "9ad41b28752a21d7d6e46602f4ad4a1d1408a06ef89be8ddff8c317828698df2",
+      "source_checkout_mode": "0o644"
+    },
+    "scripts/capture_guide_examples.py": {
+      "sha256": "c17127cc1fef716841f761e298182e0ae48444e5402a04ee26e832795645e638",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "c17127cc1fef716841f761e298182e0ae48444e5402a04ee26e832795645e638",
+      "source_checkout_mode": "0o644"
+    },
+    "scripts/check_execution_plan.py": {
+      "sha256": "f779bc3c60fd345c83700327ebe6d6669d1a7dc079f9c4fe7f58865d30e5c78b",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "f779bc3c60fd345c83700327ebe6d6669d1a7dc079f9c4fe7f58865d30e5c78b",
+      "source_checkout_mode": "0o644"
+    },
+    "scripts/checkpoint.py": {
+      "sha256": "30bf890ddd555f483fb71ccf39bedba8a6bb15807dfbdbbf8f5e9e44f11b7a28",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "30bf890ddd555f483fb71ccf39bedba8a6bb15807dfbdbbf8f5e9e44f11b7a28",
+      "source_checkout_mode": "0o644"
+    },
+    "scripts/compare_learning.py": {
+      "sha256": "4b177ea666671b8b15cbd2f94d5c4989f585ddb0b97a256f014486fa9aa68963",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "4b177ea666671b8b15cbd2f94d5c4989f585ddb0b97a256f014486fa9aa68963",
+      "source_checkout_mode": "0o644"
+    },
+    "scripts/consolidate_learning.py": {
+      "sha256": "cd9d7311cd7fb4ab12186850fe7a9b57f9645499313cd6a6547ddd58bf880305",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "cd9d7311cd7fb4ab12186850fe7a9b57f9645499313cd6a6547ddd58bf880305",
+      "source_checkout_mode": "0o644"
+    },
+    "scripts/developer_identity.py": {
+      "sha256": "fcbf063480e1dd15a054851df293527ef0cb48569f1563ee5368c47a309ece40",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "fcbf063480e1dd15a054851df293527ef0cb48569f1563ee5368c47a309ece40",
+      "source_checkout_mode": "0o644"
+    },
+    "scripts/diagnose.py": {
+      "sha256": "f656355086312990eaa838dfc2863207d5028ecb80be2797301ed7aed81fe2f8",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "f656355086312990eaa838dfc2863207d5028ecb80be2797301ed7aed81fe2f8",
+      "source_checkout_mode": "0o644"
+    },
+    "scripts/distribution/README.md": {
+      "sha256": "50a1da876797f55b6cadac3e07c60d0b22679cac04317653bfeb36572e400190",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "50a1da876797f55b6cadac3e07c60d0b22679cac04317653bfeb36572e400190",
+      "source_checkout_mode": "0o644"
+    },
+    "scripts/distribution/install.sh.in": {
+      "sha256": "e15b36dcf48431463a99a570970104485fbc0447d07d5d05fb8ed6dc125d0ad6",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "e15b36dcf48431463a99a570970104485fbc0447d07d5d05fb8ed6dc125d0ad6",
+      "source_checkout_mode": "0o644"
+    },
+    "scripts/distribution/release.py": {
+      "sha256": "cb6690f362e6a6d33b8216629d40d83cee9b76e3d425c733549e38d496d21a7d",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "cb6690f362e6a6d33b8216629d40d83cee9b76e3d425c733549e38d496d21a7d",
+      "source_checkout_mode": "0o644"
+    },
+    "scripts/evaluations/daily_use.py": {
+      "sha256": "988c819ec4635a12357cbb1a4f7d272b44248aae3df6f25b191344b81ac8944d",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "988c819ec4635a12357cbb1a4f7d272b44248aae3df6f25b191344b81ac8944d",
+      "source_checkout_mode": "0o644"
+    },
+    "scripts/evaluations/labeled_recall_fixture.py": {
+      "sha256": "dded27f037c0770edbf3127eb8f8b944ce29d05b331d4cf0782c2389e627e2a9",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "dded27f037c0770edbf3127eb8f8b944ce29d05b331d4cf0782c2389e627e2a9",
+      "source_checkout_mode": "0o644"
+    },
+    "scripts/evaluations/labeled_recall_probe.py": {
+      "sha256": "b6e321e2d29db18cbb1962014be71348a5c75c5e6feb8ffac24cf481528cf66a",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "b6e321e2d29db18cbb1962014be71348a5c75c5e6feb8ffac24cf481528cf66a",
+      "source_checkout_mode": "0o644"
+    },
+    "scripts/evaluations/literal_growth_probe.py": {
+      "sha256": "6034aef1fc4dc6164fc3ca7ef6ca05e4afc05b0cbc90562607d20314281f6b80",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "6034aef1fc4dc6164fc3ca7ef6ca05e4afc05b0cbc90562607d20314281f6b80",
+      "source_checkout_mode": "0o644"
+    },
+    "scripts/evaluations/public_release.py": {
+      "sha256": "3ae630243176d524844d59aafb4e2c03cde70667c45cde1bc12e3a27c45d0d54",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "3ae630243176d524844d59aafb4e2c03cde70667c45cde1bc12e3a27c45d0d54",
+      "source_checkout_mode": "0o644"
+    },
+    "scripts/evaluations/semantic_navigation_fixture.py": {
+      "sha256": "a1b8cfae9a269ba79c6ae0e29e287dfd6c6c57c64bb7f88ab03927dd5ce9963f",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "a1b8cfae9a269ba79c6ae0e29e287dfd6c6c57c64bb7f88ab03927dd5ce9963f",
+      "source_checkout_mode": "0o644"
+    },
+    "scripts/evaluations/sharing_capacity_probe.py": {
+      "sha256": "d31f9143a57f3e5b135bb238ebb275b96b8be29db86cbdc11eca5be11bb49541",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "d31f9143a57f3e5b135bb238ebb275b96b8be29db86cbdc11eca5be11bb49541",
+      "source_checkout_mode": "0o644"
+    },
+    "scripts/govern_memory.py": {
+      "sha256": "8c1ff0a88e9783e064ebda9322c93847391f563ef4ab8c102833f8107c826037",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "8c1ff0a88e9783e064ebda9322c93847391f563ef4ab8c102833f8107c826037",
+      "source_checkout_mode": "0o644"
+    },
+    "scripts/guide_evidence.py": {
+      "sha256": "df2327b159c82e06015abbba5fdee220972ee315a2ee24b3e1d35b5db34ede45",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "df2327b159c82e06015abbba5fdee220972ee315a2ee24b3e1d35b5db34ede45",
+      "source_checkout_mode": "0o644"
+    },
+    "scripts/inactive_records.py": {
+      "sha256": "0e094e0029e14f619f9033a94a12e03ec2339f62d3a6ebdf7c832c71968ce1b2",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "0e094e0029e14f619f9033a94a12e03ec2339f62d3a6ebdf7c832c71968ce1b2",
+      "source_checkout_mode": "0o644"
+    },
+    "scripts/initialize.py": {
+      "sha256": "98623f56c031edd1019362fa1aaab082c3e8c5d73ef76a76433ee3c002e361c3",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "98623f56c031edd1019362fa1aaab082c3e8c5d73ef76a76433ee3c002e361c3",
+      "source_checkout_mode": "0o644"
+    },
+    "scripts/installer.py": {
+      "sha256": "1a5db845661e655319c9cb73bb8963224ad12b9661f2712db9c488d65f493a45",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "1a5db845661e655319c9cb73bb8963224ad12b9661f2712db9c488d65f493a45",
+      "source_checkout_mode": "0o644"
+    },
+    "scripts/lifecycle_model.py": {
+      "sha256": "924acf98452865e2ef6f7e766bc5d4853fdc460a8cb745430465ab0d932d8983",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "924acf98452865e2ef6f7e766bc5d4853fdc460a8cb745430465ab0d932d8983",
+      "source_checkout_mode": "0o644"
+    },
+    "scripts/project_identity.py": {
+      "sha256": "eed62f1d2d851b8d70c66b4976920134aaf88c4b61eabe22b22696b26627ff5d",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "eed62f1d2d851b8d70c66b4976920134aaf88c4b61eabe22b22696b26627ff5d",
+      "source_checkout_mode": "0o644"
+    },
+    "scripts/projection.py": {
+      "sha256": "8a1216407da195674bf08e2b1cd51fc86a56ffd7890d05a8a589ae8e33a8fe9b",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "8a1216407da195674bf08e2b1cd51fc86a56ffd7890d05a8a589ae8e33a8fe9b",
+      "source_checkout_mode": "0o644"
+    },
+    "scripts/publish_memory.py": {
+      "sha256": "1047b50b460c39a8b989a5b87c00d5bce05841b707e800332324373c5a8f5e1f",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "1047b50b460c39a8b989a5b87c00d5bce05841b707e800332324373c5a8f5e1f",
+      "source_checkout_mode": "0o644"
+    },
+    "scripts/reconcile_memory.py": {
+      "sha256": "6bae585f8b703f438a63038f6f68f9db121b3f9cefcc34aa7df744270be99150",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "6bae585f8b703f438a63038f6f68f9db121b3f9cefcc34aa7df744270be99150",
+      "source_checkout_mode": "0o644"
+    },
+    "scripts/record_contract.py": {
+      "sha256": "5c5d14d531e018da6e1904441277e8c012a4cb66cb189c3f591e80860dda5023",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "5c5d14d531e018da6e1904441277e8c012a4cb66cb189c3f591e80860dda5023",
+      "source_checkout_mode": "0o644"
+    },
+    "scripts/refresh_memory.py": {
+      "sha256": "38deac45f4bebaa8d20311e25828e850b45fd7754a53e0b59f0801edff254555",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "38deac45f4bebaa8d20311e25828e850b45fd7754a53e0b59f0801edff254555",
+      "source_checkout_mode": "0o644"
+    },
+    "scripts/retrieve.py": {
+      "sha256": "421a1b9628715067f08b644e409544aeace7fb9b6d5d1f005a9ab4920c05bfa4",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "421a1b9628715067f08b644e409544aeace7fb9b6d5d1f005a9ab4920c05bfa4",
+      "source_checkout_mode": "0o644"
+    },
+    "scripts/run_contract_suite.py": {
+      "sha256": "f9838d7e2a1e2f0b1a9e8baa618f5e3147b730ce67d427452f8592c7bae460f4",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "f9838d7e2a1e2f0b1a9e8baa618f5e3147b730ce67d427452f8592c7bae460f4",
+      "source_checkout_mode": "0o644"
+    },
+    "scripts/run_incident.py": {
+      "sha256": "f582b6446acfff0ce9577b7037464a7780037c1cdf707ffbd814be120def6359",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "f582b6446acfff0ce9577b7037464a7780037c1cdf707ffbd814be120def6359",
+      "source_checkout_mode": "0o644"
+    },
+    "scripts/scope_binding.py": {
+      "sha256": "d95d790fc20b2fee97f91a85c5b842a5d660de42e99dd5e09309355419df350f",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "d95d790fc20b2fee97f91a85c5b842a5d660de42e99dd5e09309355419df350f",
+      "source_checkout_mode": "0o644"
+    },
+    "scripts/scope_policy.py": {
+      "sha256": "b5dd2929db6d99a8a3442d12a8f1a69aa86912db9ae4aed7be79c20efb6b3255",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "b5dd2929db6d99a8a3442d12a8f1a69aa86912db9ae4aed7be79c20efb6b3255",
+      "source_checkout_mode": "0o644"
+    },
+    "scripts/security_policy.py": {
+      "sha256": "e7ddca0038ff07cfe89a2035984007e70e477a99e6f437e16ac79487bf7ccfa6",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "e7ddca0038ff07cfe89a2035984007e70e477a99e6f437e16ac79487bf7ccfa6",
+      "source_checkout_mode": "0o644"
+    },
+    "scripts/sharing_boundary.py": {
+      "sha256": "acf02110893ecefc4d03bbb438cabb6491c4ded0722bfdb7c461ee0afe558840",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "acf02110893ecefc4d03bbb438cabb6491c4ded0722bfdb7c461ee0afe558840",
+      "source_checkout_mode": "0o644"
+    },
+    "scripts/sharing_recovery.py": {
+      "sha256": "258b46408d46b5d0e324ca50ce5e46302d7c76ce9b3a3fda2357a3717fd576a5",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "258b46408d46b5d0e324ca50ce5e46302d7c76ce9b3a3fda2357a3717fd576a5",
+      "source_checkout_mode": "0o644"
+    },
+    "scripts/test.sh": {
+      "sha256": "3c80c557464723268870980f9ab1132644ece0b85263c839324df627b6213030",
+      "mode": "0o755",
+      "regular": true,
+      "git_tree_mode": "100755",
+      "source_sha256": "3c80c557464723268870980f9ab1132644ece0b85263c839324df627b6213030",
+      "source_checkout_mode": "0o755"
+    },
+    "scripts/test_gate.py": {
+      "sha256": "62bf9436ddd56fbb349e7f60ab59a6542fbaa9c43e98adb8049a1a8b4537960c",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "62bf9436ddd56fbb349e7f60ab59a6542fbaa9c43e98adb8049a1a8b4537960c",
+      "source_checkout_mode": "0o644"
+    },
+    "scripts/tombstones.py": {
+      "sha256": "c830d7571afdbb6da49604d2732fd3c791817df9fe1d0f38d8c5191dc0cc57a8",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "c830d7571afdbb6da49604d2732fd3c791817df9fe1d0f38d8c5191dc0cc57a8",
+      "source_checkout_mode": "0o644"
+    },
+    "scripts/uninstall_runtime.py": {
+      "sha256": "9ab295f4e8b3112789ff445ff90dbb69153b80dba1b4c9fa847e40d70af39374",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "9ab295f4e8b3112789ff445ff90dbb69153b80dba1b4c9fa847e40d70af39374",
+      "source_checkout_mode": "0o644"
+    },
+    "scripts/update_runtime.py": {
+      "sha256": "257230901eb3c85bb3a3b62e4baf82cf07deb3a7c9db18717ea6bd5115c08749",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "257230901eb3c85bb3a3b62e4baf82cf07deb3a7c9db18717ea6bd5115c08749",
+      "source_checkout_mode": "0o644"
+    },
+    "scripts/validate_pack.py": {
+      "sha256": "d87687ed9ad1a2c16a52ee717ee910925c1234b77b8c1e011988814fd0d0bbf5",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "d87687ed9ad1a2c16a52ee717ee910925c1234b77b8c1e011988814fd0d0bbf5",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/SKILL.md": {
+      "sha256": "7740943fcb1f901b1c1dc2ca3f181be6830793675d9fb8c2a3f46a7d05bc11c2",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "7740943fcb1f901b1c1dc2ca3f181be6830793675d9fb8c2a3f46a7d05bc11c2",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/access/GUIDE.md": {
+      "sha256": "ddaf6e792230c05fb1008c8dd5f42714685adc969cdad07c1983caeed200944d",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "ddaf6e792230c05fb1008c8dd5f42714685adc969cdad07c1983caeed200944d",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/adapters/github-publication.json": {
+      "sha256": "fd9715736f07e9a4624026d6b650a84212f7241d62d7ad21d787a8de2911b098",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "fd9715736f07e9a4624026d6b650a84212f7241d62d7ad21d787a8de2911b098",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/admission/GUIDE.md": {
+      "sha256": "7781f57e9fe921da278c84eef8df249c75ea8200020421894ef01514f816cae0",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "7781f57e9fe921da278c84eef8df249c75ea8200020421894ef01514f816cae0",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/assembly/GUIDE.md": {
+      "sha256": "894f50e821081458e21aa16c092f234f766953c8e2f4184f013156bfd3624a8c",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "894f50e821081458e21aa16c092f234f766953c8e2f4184f013156bfd3624a8c",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/authority/GUIDE.md": {
+      "sha256": "a5eb5d3bc3a65c3f51c122ab9d675a95f8ccd3acb192076292c7e14fad9f43d2",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "a5eb5d3bc3a65c3f51c122ab9d675a95f8ccd3acb192076292c7e14fad9f43d2",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/bank/GUIDE.md": {
+      "sha256": "b13613556868509c01af531e4d37058d5f2b779ae47db5f6783f773b79d420f6",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "b13613556868509c01af531e4d37058d5f2b779ae47db5f6783f773b79d420f6",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/bank/inspect/GUIDE.md": {
+      "sha256": "84cf21cedabf4243018d1043d65e9f50763628e148770d849b8ed759b40ff8c0",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "84cf21cedabf4243018d1043d65e9f50763628e148770d849b8ed759b40ff8c0",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/capture/GUIDE.md": {
+      "sha256": "3e39bf6c049b6c3b229999b7bf703c890855e5397df917c75f97871b6141e0e8",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "3e39bf6c049b6c3b229999b7bf703c890855e5397df917c75f97871b6141e0e8",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/checkpoint/GUIDE.md": {
+      "sha256": "3375eebb1da93c4d682c6b5ac78b3274e4e95835b359ab02e0eb48fcd4f1cef2",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "3375eebb1da93c4d682c6b5ac78b3274e4e95835b359ab02e0eb48fcd4f1cef2",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/comparison/GUIDE.md": {
+      "sha256": "54b513e42daa68a421c0f014367da7fac9a0a3c9ac61884a43bde8e5eeb53834",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "54b513e42daa68a421c0f014367da7fac9a0a3c9ac61884a43bde8e5eeb53834",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/consolidation/GUIDE.md": {
+      "sha256": "6b1830b0a52b66a959403efc25960a0f6a4e497d6e35efbc103b2ac391427399",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "6b1830b0a52b66a959403efc25960a0f6a4e497d6e35efbc103b2ac391427399",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/discovery/GUIDE.md": {
+      "sha256": "bab9358566d11f620c2f6d30a83f8f57daba002ac1b06b8be3bdad289e07f404",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "bab9358566d11f620c2f6d30a83f8f57daba002ac1b06b8be3bdad289e07f404",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/govern/GUIDE.md": {
+      "sha256": "547858788489110aafccc5e144156c5a7ff81e29d860dae32be8be719e5c9c12",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "547858788489110aafccc5e144156c5a7ff81e29d860dae32be8be719e5c9c12",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/governance/GUIDE.md": {
+      "sha256": "70265a1a1f242d249fb40a5024d50fd55dd421e493fe3b6a77c50a2b30029cca",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "70265a1a1f242d249fb40a5024d50fd55dd421e493fe3b6a77c50a2b30029cca",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/hooks/boundary-prompt.txt": {
+      "sha256": "9f7a856b1d7259f5dc169b3ad5670de155d11f4939ba2a62e3dac513191108f2",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "9f7a856b1d7259f5dc169b3ad5670de155d11f4939ba2a62e3dac513191108f2",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/hooks/boundary_ledger.py": {
+      "sha256": "10b25fd2d4ecb13d402956efbe2c7a6850727b897092f16f021de71cd77b0341",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "10b25fd2d4ecb13d402956efbe2c7a6850727b897092f16f021de71cd77b0341",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/hooks/claude_prompt.py": {
+      "sha256": "55d61c708c1054f80aba2352853eec5fda5cf980b06b8a104697a0bf93a1ca99",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "55d61c708c1054f80aba2352853eec5fda5cf980b06b8a104697a0bf93a1ca99",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/hooks/claude_source.py": {
+      "sha256": "6bf1777ae03a28e9a73f39349cb3944998f7f98eae6a30f576894f922a659648",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "6bf1777ae03a28e9a73f39349cb3944998f7f98eae6a30f576894f922a659648",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/hooks/claude_stop.py": {
+      "sha256": "b4d309cc4cc4a0350ba0da7ec1aa4ada76659e5eec584baf782f232fd4ede05d",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "b4d309cc4cc4a0350ba0da7ec1aa4ada76659e5eec584baf782f232fd4ede05d",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/hooks/codex_prompt.py": {
+      "sha256": "4ca08a799965f697b24abca9e6fa895ccee8c970312143a16a4a4903d2e8cdde",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "4ca08a799965f697b24abca9e6fa895ccee8c970312143a16a4a4903d2e8cdde",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/hooks/codex_stop.py": {
+      "sha256": "084120fada92f6073935eacd2d644127d3eab9728cdbc37f70725716b439c97d",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "084120fada92f6073935eacd2d644127d3eab9728cdbc37f70725716b439c97d",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/hooks/opencode-v1.js": {
+      "sha256": "4c1484fcf12c8b972449b5c14531104475c1b5b7ad7247b69e995eea1e0ed651",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "4c1484fcf12c8b972449b5c14531104475c1b5b7ad7247b69e995eea1e0ed651",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/hooks/opencode-v2-queue.js": {
+      "sha256": "fc2a5cebf5261725fd70db430fec3d015d9ee2e6790cb5d1d39203729c636155",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "fc2a5cebf5261725fd70db430fec3d015d9ee2e6790cb5d1d39203729c636155",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/hooks/opencode-v2.js": {
+      "sha256": "0a6f44d842940840325fb21d54df1b31e547903cd4d1dc638e6cb0c6cd0ea19a",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "0a6f44d842940840325fb21d54df1b31e547903cd4d1dc638e6cb0c6cd0ea19a",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/hooks/opencode.js": {
+      "sha256": "4ad837bef26963f8dab9302758466d6f0fee872a65a6f2952abe84e75f9176be",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "4ad837bef26963f8dab9302758466d6f0fee872a65a6f2952abe84e75f9176be",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/hooks/python3.sh": {
+      "sha256": "b2d8226d79c09290ddfb15a6ed3a9bd88e93e45b16191f425e0454f6abda8289",
+      "mode": "0o755",
+      "regular": true,
+      "git_tree_mode": "100755",
+      "source_sha256": "b2d8226d79c09290ddfb15a6ed3a9bd88e93e45b16191f425e0454f6abda8289",
+      "source_checkout_mode": "0o755"
+    },
+    "skills/agent-memory/hooks/turn_hook.py": {
+      "sha256": "af1ea9e70874caf3eb03f80d8c15280b8dd059229eb826fe5547e74a068abe9c",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "af1ea9e70874caf3eb03f80d8c15280b8dd059229eb826fe5547e74a068abe9c",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/identity/GUIDE.md": {
+      "sha256": "16cbb4e881cc36b3f51ee5f7ccade2503f75932586fa50f3384c8c22c908ba15",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "16cbb4e881cc36b3f51ee5f7ccade2503f75932586fa50f3384c8c22c908ba15",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/inactive/GUIDE.md": {
+      "sha256": "a73a1173b178e73ee00c4742f9e64787eb87d6fa35873e80ea4c4534b7df2c3e",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "a73a1173b178e73ee00c4742f9e64787eb87d6fa35873e80ea4c4534b7df2c3e",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/initialize/GUIDE.md": {
+      "sha256": "46e2fb3cb143e24a644b417d6fabdb88658d0676cd5962738b738a2464ea90ec",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "46e2fb3cb143e24a644b417d6fabdb88658d0676cd5962738b738a2464ea90ec",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/keys/allowed-signers": {
+      "sha256": "d526abc28e9d8bdb782a31ccd634e6d86d417f3ca704fa21e25fe04d18cf6d9f",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "d526abc28e9d8bdb782a31ccd634e6d86d417f3ca704fa21e25fe04d18cf6d9f",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/layout/GUIDE.md": {
+      "sha256": "638ebfe60a6ca906545beb2c4d4d4d114c2bfdd748fa8b68b39e5568d4b72030",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "638ebfe60a6ca906545beb2c4d4d4d114c2bfdd748fa8b68b39e5568d4b72030",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/lifecycle/diagnose/GUIDE.md": {
+      "sha256": "2d7e214a1ad4aa2bc6030e9dfb7742778e3bd8912985cba86a691b2f961d8978",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "2d7e214a1ad4aa2bc6030e9dfb7742778e3bd8912985cba86a691b2f961d8978",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/lifecycle/install/GUIDE.md": {
+      "sha256": "2bca450ef6197074afbad1f3b61c1b0618b95b998d19aed58aa0cf3670333947",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "2bca450ef6197074afbad1f3b61c1b0618b95b998d19aed58aa0cf3670333947",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/lifecycle/migrate/GUIDE.md": {
+      "sha256": "9ff9ce2672932170c4e96aab2f5e7945a89c7837fa0601e877736849e3d6ebb2",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "9ff9ce2672932170c4e96aab2f5e7945a89c7837fa0601e877736849e3d6ebb2",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/lifecycle/purge/GUIDE.md": {
+      "sha256": "8583e263ea90293fc6505642d57615d51e3687b03f1b1d222d49d5560c635bcb",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "8583e263ea90293fc6505642d57615d51e3687b03f1b1d222d49d5560c635bcb",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/lifecycle/uninstall/GUIDE.md": {
+      "sha256": "531d510f0fa9e843fd1e99cb7c8b9d5690e529a66829f820fbc9f1ff44acf893",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "531d510f0fa9e843fd1e99cb7c8b9d5690e529a66829f820fbc9f1ff44acf893",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/lifecycle/update/GUIDE.md": {
+      "sha256": "f9a0dc9c5c403b54857b2eaf978cfe95f9bd9e2a16bb43cc1992cafd72ac4f71",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "f9a0dc9c5c403b54857b2eaf978cfe95f9bd9e2a16bb43cc1992cafd72ac4f71",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/maintain/GUIDE.md": {
+      "sha256": "3b3bef74d931a5f5108813a52a27c01904123981983a58bd2cea4d892242f6cb",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "3b3bef74d931a5f5108813a52a27c01904123981983a58bd2cea4d892242f6cb",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/maintain/artifact/GUIDE.md": {
+      "sha256": "bb5657d676626da5e822b22f61456998aa8bf7eb53dc47745529a730bcfaae8b",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "bb5657d676626da5e822b22f61456998aa8bf7eb53dc47745529a730bcfaae8b",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/maintain/cli/GUIDE.md": {
+      "sha256": "9dc9d32582efbe6ce68e466170658c336ac440261d2a95aa009c67f8dc5d0f29",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "9dc9d32582efbe6ce68e466170658c336ac440261d2a95aa009c67f8dc5d0f29",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/maintain/pack/GUIDE.md": {
+      "sha256": "3f9dc324940cde6950e7e7b5a9d2f08be0abe413219c0bb5ad2e35ffc8e877fe",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "3f9dc324940cde6950e7e7b5a9d2f08be0abe413219c0bb5ad2e35ffc8e877fe",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/model/GUIDE.md": {
+      "sha256": "f19fc051e20836e776b7b4925746440897724c860116c3851df20318eda83ae1",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "f19fc051e20836e776b7b4925746440897724c860116c3851df20318eda83ae1",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/offline/GUIDE.md": {
+      "sha256": "c5b6fe1cbb250e0f4bce094abb3aecfa04732a9395a585db449fe8831d638934",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "c5b6fe1cbb250e0f4bce094abb3aecfa04732a9395a585db449fe8831d638934",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/projections/GUIDE.md": {
+      "sha256": "8a15867b63d1b3275a64bceebf4380d03ad1626b9831dc6da5bb9bfd636df67f",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "8a15867b63d1b3275a64bceebf4380d03ad1626b9831dc6da5bb9bfd636df67f",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/recall/GUIDE.md": {
+      "sha256": "2197bec0de12441eef0e86d50900c4a90662678f4dcee1f773d4b2caff36e3ef",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "2197bec0de12441eef0e86d50900c4a90662678f4dcee1f773d4b2caff36e3ef",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/records/GUIDE.md": {
+      "sha256": "99ce966596980c59035b71a7ba5525d66ba2b06265ecf12f17ae985a05dd9502",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "99ce966596980c59035b71a7ba5525d66ba2b06265ecf12f17ae985a05dd9502",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/resume/GUIDE.md": {
+      "sha256": "e2e8b17d7cbd9baf714a0d70b0ea4449e0fb45977f9a2129ac42bab622b9f860",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "e2e8b17d7cbd9baf714a0d70b0ea4449e0fb45977f9a2129ac42bab622b9f860",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/retrieval/GUIDE.md": {
+      "sha256": "3fc8c07c6147484ac69f31da8ace7d6d98eefc11ea70dcbe4184e5e6e82f3652",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "3fc8c07c6147484ac69f31da8ace7d6d98eefc11ea70dcbe4184e5e6e82f3652",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/schemas/authority-policy.json": {
+      "sha256": "87cc49f65ca248b0ae5abca301713628bce7e0d39489fa2b8aeeaff8bad3ec38",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "87cc49f65ca248b0ae5abca301713628bce7e0d39489fa2b8aeeaff8bad3ec38",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/schemas/bank-router.json": {
+      "sha256": "6b0a3407082a36a324967f8db0bfacb927b86eb0c9bee9969507b8ddda613815",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "6b0a3407082a36a324967f8db0bfacb927b86eb0c9bee9969507b8ddda613815",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/schemas/developers.json": {
+      "sha256": "0e8bac4afe342fe373d48a3f7b508b583f2895fc4b8fa8d9f8c3a0d4a51c161c",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "0e8bac4afe342fe373d48a3f7b508b583f2895fc4b8fa8d9f8c3a0d4a51c161c",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/schemas/history-event.json": {
+      "sha256": "39a4f30897346d949b5367463534b83dee89edb19e32ce9597a8263b8bc940fc",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "39a4f30897346d949b5367463534b83dee89edb19e32ce9597a8263b8bc940fc",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/schemas/lifecycle.json": {
+      "sha256": "3bcc178a912f3eae1938c8af4b5560505e98333b0ed631cf05cee26e5aecff68",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "3bcc178a912f3eae1938c8af4b5560505e98333b0ed631cf05cee26e5aecff68",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/schemas/migrations.json": {
+      "sha256": "0414bca02184e7c1b9ccaa2b04a10e72446455ce59e715b7c91e758b4e87598e",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "0414bca02184e7c1b9ccaa2b04a10e72446455ce59e715b7c91e758b4e87598e",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/schemas/projects.json": {
+      "sha256": "46a4aabab4c389e1934a4cc260bf15df05d53054dd1b43285ad2339a7ee1b66b",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "46a4aabab4c389e1934a4cc260bf15df05d53054dd1b43285ad2339a7ee1b66b",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/schemas/record.json": {
+      "sha256": "7052928381ff74dd72d48f5756f13a246f7d96476660c1f32ad6faf21eae68bd",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "7052928381ff74dd72d48f5756f13a246f7d96476660c1f32ad6faf21eae68bd",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/schemas/runtime-compatibility.json": {
+      "sha256": "941a77fd4719da2457ff2d107f95063dc190239680a35199e9b564f2514b133b",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "941a77fd4719da2457ff2d107f95063dc190239680a35199e9b564f2514b133b",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/schemas/scope-policy.json": {
+      "sha256": "a2742b9b6fd03a8a0fc2f05744194a176024eb9198013aabfa4e917dded7af35",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "a2742b9b6fd03a8a0fc2f05744194a176024eb9198013aabfa4e917dded7af35",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/schemas/tombstone.json": {
+      "sha256": "f5c7d9beff58a6039e70b7bbd9a54880784b309e00a2def85e32e3a30e39b197",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "f5c7d9beff58a6039e70b7bbd9a54880784b309e00a2def85e32e3a30e39b197",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/schemas/topic-index.json": {
+      "sha256": "c395f060dbacce748caf73a49a96ea16eb62df60bbf6fb0a9cfa958c494b125b",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "c395f060dbacce748caf73a49a96ea16eb62df60bbf6fb0a9cfa958c494b125b",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scope/GUIDE.md": {
+      "sha256": "a8677f705c16677916d214ddbf3a9b8cb317a4866d4bd1ecbbe4b17b8f59bccf",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "a8677f705c16677916d214ddbf3a9b8cb317a4866d4bd1ecbbe4b17b8f59bccf",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/admit_learning.py": {
+      "sha256": "50fc5cd65e524015cadb8b6e395f4db8e1d13fee59d6a04e24fe2ff2b80f80c5",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "50fc5cd65e524015cadb8b6e395f4db8e1d13fee59d6a04e24fe2ff2b80f80c5",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/__init__.py": {
+      "sha256": "83e0c35d6b88ef7d73629b1e51a791ac80e7b482b8ddc8833b8702d65a421e74",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "83e0c35d6b88ef7d73629b1e51a791ac80e7b482b8ddc8833b8702d65a421e74",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/admission.py": {
+      "sha256": "7fba5492a6354d0404030dbe38c2b1dc0a94bcde173e64153f8d4dd43a3cd1cc",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "7fba5492a6354d0404030dbe38c2b1dc0a94bcde173e64153f8d4dd43a3cd1cc",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/admission_navigation.py": {
+      "sha256": "48bada791a14c72d79b2d82bac9886aca7e8fb3052d72b4a00e434d0627566d4",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "48bada791a14c72d79b2d82bac9886aca7e8fb3052d72b4a00e434d0627566d4",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/artifact.py": {
+      "sha256": "bd9cfad65b452c37da8f1642b1a96868160998979c027c279b9ecee54fcf5ed9",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "bd9cfad65b452c37da8f1642b1a96868160998979c027c279b9ecee54fcf5ed9",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/assembly.py": {
+      "sha256": "54fceb6df13d7faad0233bc771ae86c8d0cb26a7aff7a44b059548bef3b46d48",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "54fceb6df13d7faad0233bc771ae86c8d0cb26a7aff7a44b059548bef3b46d48",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/authority.py": {
+      "sha256": "1a82adf302a9045e29a5784164ee1fb43b4c448ddab325a274c4614495d0e625",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "1a82adf302a9045e29a5784164ee1fb43b4c448ddab325a274c4614495d0e625",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/bank_contract.py": {
+      "sha256": "4d5ca8e70b4abf83fd94aecd8c9678ceeef3168a63ff2c5f10a5e221134a69c9",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "4d5ca8e70b4abf83fd94aecd8c9678ceeef3168a63ff2c5f10a5e221134a69c9",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/bank_layout.py": {
+      "sha256": "94cae5be223e723841e6c3d0a6d8373cc21e18cc6d6652024d2ac03d605e2f94",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "94cae5be223e723841e6c3d0a6d8373cc21e18cc6d6652024d2ac03d605e2f94",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/bank_observation.py": {
+      "sha256": "2b0b3c9ccb0157047775b09a3d3eaa3252c91c46d332421ea9119db4ee7029f4",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "2b0b3c9ccb0157047775b09a3d3eaa3252c91c46d332421ea9119db4ee7029f4",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/bank_state.py": {
+      "sha256": "9759905557e60a41896e52d1d1e7d8b1946b15e7b15b3842b08a390a8667ff4f",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "9759905557e60a41896e52d1d1e7d8b1946b15e7b15b3842b08a390a8667ff4f",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/bank_transactions.py": {
+      "sha256": "edaaf0b53a8f6ae3859ecd1bbfc803baa2a0a7328fbb6bced538a9f7139fa77f",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "edaaf0b53a8f6ae3859ecd1bbfc803baa2a0a7328fbb6bced538a9f7139fa77f",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/bank_writes.py": {
+      "sha256": "b7042e733cac8fc0bda9609680009726d1e1b30c91ca872115d315cfa79c1360",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "b7042e733cac8fc0bda9609680009726d1e1b30c91ca872115d315cfa79c1360",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/boundary_assessment.py": {
+      "sha256": "5178274642f344175859b8d1b8b49ed93728cbb41860098d1e540f51f57e0a2f",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "5178274642f344175859b8d1b8b49ed93728cbb41860098d1e540f51f57e0a2f",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/checkpoint.py": {
+      "sha256": "192c969da345837932840d72683c1012f750371f155b406eddcf16c50001402d",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "192c969da345837932840d72683c1012f750371f155b406eddcf16c50001402d",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/claude_boundary.py": {
+      "sha256": "8e64a6d1564ed1b894359bd34a919d2ce37cbbbbc4fa0df816c290a3f91492a2",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "8e64a6d1564ed1b894359bd34a919d2ce37cbbbbc4fa0df816c290a3f91492a2",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/claude_turns.py": {
+      "sha256": "464dd31efb437522408b6f70cd0a6821e12ad2c622c912a5601735517e0bf04b",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "464dd31efb437522408b6f70cd0a6821e12ad2c622c912a5601735517e0bf04b",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/cli.py": {
+      "sha256": "88a33c5600ab9e31b67d7fbf64d92b21ca8f2170b9acbbe0ee517ebeaddd2283",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "88a33c5600ab9e31b67d7fbf64d92b21ca8f2170b9acbbe0ee517ebeaddd2283",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/client_hooks.py": {
+      "sha256": "9939b04e25a2a78cecfb4529c36e7f4a577b6dba36e7f6267655a36641a464e6",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "9939b04e25a2a78cecfb4529c36e7f4a577b6dba36e7f6267655a36641a464e6",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/codex_boundary.py": {
+      "sha256": "97f8e9988424e9c32c77b9814e0534f3b33da0d4136a0d1fa917272e6c0da6cb",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "97f8e9988424e9c32c77b9814e0534f3b33da0d4136a0d1fa917272e6c0da6cb",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/comparison.py": {
+      "sha256": "7b95d7e4ed428bda0cb6021f17898269b33b7d006ff38b73de689813cd40fe31",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "7b95d7e4ed428bda0cb6021f17898269b33b7d006ff38b73de689813cd40fe31",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/console.py": {
+      "sha256": "19410f67490ee7e77ff67afc9bf4b8cf76a33c6e91028f888f14eb0801725019",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "19410f67490ee7e77ff67afc9bf4b8cf76a33c6e91028f888f14eb0801725019",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/consolidation.py": {
+      "sha256": "331dfaa1a48199b4271b234f6bcbb159272be9ee65fd2c06b9b9a00c078b4617",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "331dfaa1a48199b4271b234f6bcbb159272be9ee65fd2c06b9b9a00c078b4617",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/developer_identity.py": {
+      "sha256": "b3b0e0ef0a26a4805574b40d2c1bb26570a1bc350e6cd879a4305c84ff96f1fb",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "b3b0e0ef0a26a4805574b40d2c1bb26570a1bc350e6cd879a4305c84ff96f1fb",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/diagnostics.py": {
+      "sha256": "fdc44e2048e1888f7b1dc5276a8e3031dac4a72c9780cbdcebe6f7a87cfa62aa",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "fdc44e2048e1888f7b1dc5276a8e3031dac4a72c9780cbdcebe6f7a87cfa62aa",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/discovery.py": {
+      "sha256": "335a812e8d8086c1b8a64b8041cb0a653de18c5ab4dd95bb7b43927bc2c20c23",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "335a812e8d8086c1b8a64b8041cb0a653de18c5ab4dd95bb7b43927bc2c20c23",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/doctor_fix.py": {
+      "sha256": "31c954b140dd41d16e3ed45da031ccb91ebd2903a071f2ec2376817d29ff1323",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "31c954b140dd41d16e3ed45da031ccb91ebd2903a071f2ec2376817d29ff1323",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/frontmatter.py": {
+      "sha256": "636cf6701644f50154a9bcf46631a30b2e22be1f3fe9cee3bf78400fbbd601ba",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "636cf6701644f50154a9bcf46631a30b2e22be1f3fe9cee3bf78400fbbd601ba",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/governance.py": {
+      "sha256": "0335a86df6c4aef842f7feafe7179b831cba4b0d7a4e3a7df26bc0187221afbf",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "0335a86df6c4aef842f7feafe7179b831cba4b0d7a4e3a7df26bc0187221afbf",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/handoff.py": {
+      "sha256": "30ef248dcf9e08840597444789475cca5be5cbc7a000a602aac5b856732b8ea9",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "30ef248dcf9e08840597444789475cca5be5cbc7a000a602aac5b856732b8ea9",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/hook_failure.py": {
+      "sha256": "c6e42036db3c208b644b658365d296251ecdb21ab56bced69d134c47f23cc8e2",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "c6e42036db3c208b644b658365d296251ecdb21ab56bced69d134c47f23cc8e2",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/identity_git.py": {
+      "sha256": "2498a78b3938ed435a577b6ecb68e8caa4168c6ba61c17bb2ae13570c14f223c",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "2498a78b3938ed435a577b6ecb68e8caa4168c6ba61c17bb2ae13570c14f223c",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/inactive.py": {
+      "sha256": "0d80aa5b3c1d7b476d4c15cc50f83d0b399a27c5b0e2b4bedb20d9797b694a56",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "0d80aa5b3c1d7b476d4c15cc50f83d0b399a27c5b0e2b4bedb20d9797b694a56",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/initialization.py": {
+      "sha256": "928670ef76c2ccad2fe4b51e2ae8ebca87af740fdadf04402cff06f41b668d08",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "928670ef76c2ccad2fe4b51e2ae8ebca87af740fdadf04402cff06f41b668d08",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/installation.py": {
+      "sha256": "6a3e923ea4f3327c720640eb39451b557c3783be9ed12c0f2d4bdf7a7a0987b9",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "6a3e923ea4f3327c720640eb39451b557c3783be9ed12c0f2d4bdf7a7a0987b9",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/lifecycle.py": {
+      "sha256": "0bbf1aa4ff91e89dda010ab9a24ff92f9ffd8e1d730e3c83bc4f6d3de122b54b",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "0bbf1aa4ff91e89dda010ab9a24ff92f9ffd8e1d730e3c83bc4f6d3de122b54b",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/local_registry.py": {
+      "sha256": "7014a2421b1c4a1623256c5d322aa4e595ed36ffbf0cdd2829ac292bf4756497",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "7014a2421b1c4a1623256c5d322aa4e595ed36ffbf0cdd2829ac292bf4756497",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/managed_source.py": {
+      "sha256": "2890a04cfcf8d801d188eabe4d0f8f49b471068f26d24dc9d44efa0ff18fd67f",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "2890a04cfcf8d801d188eabe4d0f8f49b471068f26d24dc9d44efa0ff18fd67f",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/memory_publication.py": {
+      "sha256": "3216d1c66769d7b1fd737c20bef5e287c321e6c99bc998d3eb40a3e52b36b395",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "3216d1c66769d7b1fd737c20bef5e287c321e6c99bc998d3eb40a3e52b36b395",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/memory_refresh.py": {
+      "sha256": "6239647d2c850d373d79eca8a1c4d424ffec884a7adfe0f57196f128e1713909",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "6239647d2c850d373d79eca8a1c4d424ffec884a7adfe0f57196f128e1713909",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/migration.py": {
+      "sha256": "061b5f78d71fc19a67989a15f5d61cd573dfa28b3275333136e85dfdccc9ce34",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "061b5f78d71fc19a67989a15f5d61cd573dfa28b3275333136e85dfdccc9ce34",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/migration_codecs.py": {
+      "sha256": "7ea202991fc63b5119b65f38679efa429c009ab42e4dfdf1dce1d7d693879991",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "7ea202991fc63b5119b65f38679efa429c009ab42e4dfdf1dce1d7d693879991",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/migration_contract.py": {
+      "sha256": "4dc7c88768272aa7fba4168155babbc8337634e7d5fb24e8a87a5f87ca20cc0c",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "4dc7c88768272aa7fba4168155babbc8337634e7d5fb24e8a87a5f87ca20cc0c",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/model_reference.py": {
+      "sha256": "5548c83737112a5929b37390a32db226be0b6e2a9fce1fcc8db22553515c77ce",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "5548c83737112a5929b37390a32db226be0b6e2a9fce1fcc8db22553515c77ce",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/pack_validation.py": {
+      "sha256": "8bc0f886289197937101a42096bdde7b744546f01b4d30c330323fd8c9bcb057",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "8bc0f886289197937101a42096bdde7b744546f01b4d30c330323fd8c9bcb057",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/private_workspace.py": {
+      "sha256": "645d7c4fba2510543eba29331412c94bbf4fa119d7b4e73ef428c2ff18f280ec",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "645d7c4fba2510543eba29331412c94bbf4fa119d7b4e73ef428c2ff18f280ec",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/project_identity.py": {
+      "sha256": "47d1ed8810143960decb2c8d73678b027578f3d6eeb784e1bed1acd73b6734b9",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "47d1ed8810143960decb2c8d73678b027578f3d6eeb784e1bed1acd73b6734b9",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/projections.py": {
+      "sha256": "2cf4458f9efbdb4a5d45da3fbf6b28f8ef833586898901db9f8c8f4d222d5947",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "2cf4458f9efbdb4a5d45da3fbf6b28f8ef833586898901db9f8c8f4d222d5947",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/purging.py": {
+      "sha256": "18e29b83a13e420d044a63711b59afd8f6f8e85312d3d0b271ad8733cf7da8f5",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "18e29b83a13e420d044a63711b59afd8f6f8e85312d3d0b271ad8733cf7da8f5",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/recall_catalog.py": {
+      "sha256": "b1fadef691141211879e1f1e2f6768a90dac7019219b083479c08fd95b5f7244",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "b1fadef691141211879e1f1e2f6768a90dac7019219b083479c08fd95b5f7244",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/records.py": {
+      "sha256": "04bf692fa98337b9ee8e3fe6072d115106592c03fbdc1b237a867fa97369fb96",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "04bf692fa98337b9ee8e3fe6072d115106592c03fbdc1b237a867fa97369fb96",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/release_distribution.py": {
+      "sha256": "75415e3a00a08b0867b762582242d22774e39333be128d240784a88bf1169664",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "75415e3a00a08b0867b762582242d22774e39333be128d240784a88bf1169664",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/remote_identity.py": {
+      "sha256": "93b926dc8264e288e8a3ddfbb6dc1ef7a9534f74ddffe63238b9ecfa42c10bb9",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "93b926dc8264e288e8a3ddfbb6dc1ef7a9534f74ddffe63238b9ecfa42c10bb9",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/repository_config.py": {
+      "sha256": "34f96c83c648a27b99bbdc97e3dfaf7d50f6235a494ba6e9503513dcfe520cc3",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "34f96c83c648a27b99bbdc97e3dfaf7d50f6235a494ba6e9503513dcfe520cc3",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/retrieval.py": {
+      "sha256": "2096be570bbfa6cf8804f8cfe137049ca1e07b4904c1bfe0b6d0f3219f8c27aa",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "2096be570bbfa6cf8804f8cfe137049ca1e07b4904c1bfe0b6d0f3219f8c27aa",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/runtime_faults.py": {
+      "sha256": "faff1d65f9d15d25aef801367e6779f3a03812eac71f8d64fee4e6de0009c861",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "faff1d65f9d15d25aef801367e6779f3a03812eac71f8d64fee4e6de0009c861",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/scope_binding.py": {
+      "sha256": "fb2b3c5a4eb65406d40b3699d44542dd128b6410f751b578a935363503530a3c",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "fb2b3c5a4eb65406d40b3699d44542dd128b6410f751b578a935363503530a3c",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/scopes.py": {
+      "sha256": "db04b8a90103d45731a02e2da4a0bbfc940b5745bf5b9d72d8b1d6ee08fbad61",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "db04b8a90103d45731a02e2da4a0bbfc940b5745bf5b9d72d8b1d6ee08fbad61",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/security.py": {
+      "sha256": "f718cede417c366e9d0435d2744211de07a14808ef937b2a357a8fe69ec1d7ec",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "f718cede417c366e9d0435d2744211de07a14808ef937b2a357a8fe69ec1d7ec",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/semantic_sharing.py": {
+      "sha256": "c97a551ed7577af64d35a2654dc111d8036119c35e283d59269d81122ad5b601",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "c97a551ed7577af64d35a2654dc111d8036119c35e283d59269d81122ad5b601",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/sharing_boundary.py": {
+      "sha256": "18781fb97e252e79c9c05e6db556f6865ec0cd35efd720425edd7e3234868c16",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "18781fb97e252e79c9c05e6db556f6865ec0cd35efd720425edd7e3234868c16",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/sharing_frontier.py": {
+      "sha256": "4a6695d005a51a017b7142538507faeb87b0adf391843bc99870ffe77d859cc9",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "4a6695d005a51a017b7142538507faeb87b0adf391843bc99870ffe77d859cc9",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/sharing_hold_mapping.py": {
+      "sha256": "a5f83eb5ee7dd223ba3027189f18026c7f9267b778788d8643fd1627cb60ba5c",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "a5f83eb5ee7dd223ba3027189f18026c7f9267b778788d8643fd1627cb60ba5c",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/sharing_holds.py": {
+      "sha256": "80fa56d5797fee377e36d8fddb6a823bc43f9cf42c473b310b318c7efa7d99a8",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "80fa56d5797fee377e36d8fddb6a823bc43f9cf42c473b310b318c7efa7d99a8",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/sharing_limits.py": {
+      "sha256": "47fae8f47db2ca7aee502c7757d9fc33e41f2969dc9bc76fb97d7984fb594a89",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "47fae8f47db2ca7aee502c7757d9fc33e41f2969dc9bc76fb97d7984fb594a89",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/sharing_recovery.py": {
+      "sha256": "991a76b2fb7d7c165f932702845e9a0b2ff5dd8d9784c21188b0d03ff43c036e",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "991a76b2fb7d7c165f932702845e9a0b2ff5dd8d9784c21188b0d03ff43c036e",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/tombstones.py": {
+      "sha256": "035a33a08bbf655fc6d2613bd5b0da6b8a24bc7fbc9cb60047eae8e3e10dd1ec",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "035a33a08bbf655fc6d2613bd5b0da6b8a24bc7fbc9cb60047eae8e3e10dd1ec",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/trust_paths.py": {
+      "sha256": "d0e70480f2a05c50f5b2777b7dc2023940ebd893e1eeb34666a0874c90c35d12",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "d0e70480f2a05c50f5b2777b7dc2023940ebd893e1eeb34666a0874c90c35d12",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/turn_check.py": {
+      "sha256": "e49335bc6e866bd279d27ab51d96b1207ced22ac86dabe3d5204b8e548944255",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "e49335bc6e866bd279d27ab51d96b1207ced22ac86dabe3d5204b8e548944255",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/turn_sources.py": {
+      "sha256": "48d3b9f9c5d7f0aedb29f48e79adec0c186092ab26d7fed7a02b295b9d131edf",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "48d3b9f9c5d7f0aedb29f48e79adec0c186092ab26d7fed7a02b295b9d131edf",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/uninstallation.py": {
+      "sha256": "7c81ddc469c1338ffa6be0fedb9d637c29e9ccd17e80ae6952d8c03aff594938",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "7c81ddc469c1338ffa6be0fedb9d637c29e9ccd17e80ae6952d8c03aff594938",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/updating.py": {
+      "sha256": "874f3d00a99038370c2e50a41614018c7890eb7b20a80e9b2fc6aefb0ed93876",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "874f3d00a99038370c2e50a41614018c7890eb7b20a80e9b2fc6aefb0ed93876",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/agent_memory/validation_memo.py": {
+      "sha256": "96cbfe90938c9f58ee780bbe55d8cef993a0a34fb193afcdd2a101f6bd35bfbf",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "96cbfe90938c9f58ee780bbe55d8cef993a0a34fb193afcdd2a101f6bd35bfbf",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/am_console.py": {
+      "sha256": "3eef10908721bf56181e40d7a3f59d37adf3d8a9be3ddc2dc95e4fd6cc7bdec9",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "3eef10908721bf56181e40d7a3f59d37adf3d8a9be3ddc2dc95e4fd6cc7bdec9",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/artifact.py": {
+      "sha256": "42fe4a04afc7bb7249b6ce0286b1c7b8ca44b45a7dcb872bdc214d55e4ffe7e9",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "42fe4a04afc7bb7249b6ce0286b1c7b8ca44b45a7dcb872bdc214d55e4ffe7e9",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/assemble_context.py": {
+      "sha256": "5e3a9910aaf64d07041bf66595ef2a92db5be017ea31c43d5ebf11f66f0bc541",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "5e3a9910aaf64d07041bf66595ef2a92db5be017ea31c43d5ebf11f66f0bc541",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/authority_policy.py": {
+      "sha256": "c7a5adef1918d0a6c3834472319a41b1e07a412ec1f9a5d94c7e9d6656405487",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "c7a5adef1918d0a6c3834472319a41b1e07a412ec1f9a5d94c7e9d6656405487",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/bank_contract.py": {
+      "sha256": "b69c16b0e1543b860088465308c20fa000b41a49085fc60be1e566a75c1f1ff7",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "b69c16b0e1543b860088465308c20fa000b41a49085fc60be1e566a75c1f1ff7",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/bank_layout.py": {
+      "sha256": "8dd7768412be8f735cb5de6976f28def70b00068dbdf3a923c4f7a3fef4b6f0a",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "8dd7768412be8f735cb5de6976f28def70b00068dbdf3a923c4f7a3fef4b6f0a",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/bank_state.py": {
+      "sha256": "d29f7df56745bd4feac35ef83365e78974658c098713d38c6a7ccd189779ffaf",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "d29f7df56745bd4feac35ef83365e78974658c098713d38c6a7ccd189779ffaf",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/bank_transactions.py": {
+      "sha256": "5c43edee0a3e353e4f615d40bfa0b4e02e6c8513bf5742a41f823234f859b444",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "5c43edee0a3e353e4f615d40bfa0b4e02e6c8513bf5742a41f823234f859b444",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/bank_writes.py": {
+      "sha256": "512800551dc2a34a7098e7fc51a9557d1134faea2ef61deefea6ce4d8d0e57dc",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "512800551dc2a34a7098e7fc51a9557d1134faea2ef61deefea6ce4d8d0e57dc",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/checkpoint.py": {
+      "sha256": "7307d2e00ca8967ec7ca70363910aa3852253948e7a4ae9444a8986d05eb15a4",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "7307d2e00ca8967ec7ca70363910aa3852253948e7a4ae9444a8986d05eb15a4",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/claude_boundary.py": {
+      "sha256": "755aaf2634336f795f451f5251722bbc6603eb8a08ffaa45bbe486e6f356813e",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "755aaf2634336f795f451f5251722bbc6603eb8a08ffaa45bbe486e6f356813e",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/codex_boundary.py": {
+      "sha256": "21003d2c89301d09e67ca3a20f1cfa50a52542317b81739092c4cbf19f3e87a8",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "21003d2c89301d09e67ca3a20f1cfa50a52542317b81739092c4cbf19f3e87a8",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/compare_learning.py": {
+      "sha256": "4c7dc5ab93ed445170bae14aa92ae6d3a43893fe14de49bc4e301715ba0ca7fd",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "4c7dc5ab93ed445170bae14aa92ae6d3a43893fe14de49bc4e301715ba0ca7fd",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/consolidate_learning.py": {
+      "sha256": "6a0151e4806de773d91fc46f052a1d7a8f917ed08f57dabac83c5094852bf777",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "6a0151e4806de773d91fc46f052a1d7a8f917ed08f57dabac83c5094852bf777",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/developer_identity.py": {
+      "sha256": "8a27f0a2ba9bc282fbf223f34ea61fa48692e5f58e69764a75dfd2cb3f5bd07d",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "8a27f0a2ba9bc282fbf223f34ea61fa48692e5f58e69764a75dfd2cb3f5bd07d",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/diagnose.py": {
+      "sha256": "6a278a41f9025d1126cf509e5d09bb1a21145f8ee7085fe46a27fb9500b546f6",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "6a278a41f9025d1126cf509e5d09bb1a21145f8ee7085fe46a27fb9500b546f6",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/discover_memory.py": {
+      "sha256": "1750d40b87d411be41e816db8edc01e56a01b17a1ceb542f3e6343c6bf147c94",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "1750d40b87d411be41e816db8edc01e56a01b17a1ceb542f3e6343c6bf147c94",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/govern_memory.py": {
+      "sha256": "59fc5c0267ac8aada8d455a299b37ac3399a7ceee8d419cbe4056a3c76d50d38",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "59fc5c0267ac8aada8d455a299b37ac3399a7ceee8d419cbe4056a3c76d50d38",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/inactive_records.py": {
+      "sha256": "67c5a002a54a7a3873b3a166fe05944d22737450999b0a70d1d6bc7af68d7443",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "67c5a002a54a7a3873b3a166fe05944d22737450999b0a70d1d6bc7af68d7443",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/initialize.py": {
+      "sha256": "3ee3d258f259851f978cb5caf08b614da004881bc00995c14414f53cee524034",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "3ee3d258f259851f978cb5caf08b614da004881bc00995c14414f53cee524034",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/installer.py": {
+      "sha256": "4f49caebcca4f3ca575f713413532189ed60491414f4b27da30e646091d65cf1",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "4f49caebcca4f3ca575f713413532189ed60491414f4b27da30e646091d65cf1",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/lifecycle_model.py": {
+      "sha256": "fbda7ab7ff3a3e1c809cfd9fc5a6b14064d3bc822fdbe45b2327c3448a4f1a0d",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "fbda7ab7ff3a3e1c809cfd9fc5a6b14064d3bc822fdbe45b2327c3448a4f1a0d",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/migrate_bank.py": {
+      "sha256": "5d78b97da2e5b9600ed93c945d8084b6881ccb43d879e9597c19d48ca208a1ff",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "5d78b97da2e5b9600ed93c945d8084b6881ccb43d879e9597c19d48ca208a1ff",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/private_workspace.py": {
+      "sha256": "9620df9d532a8e84cddaacce7f29daf88e09f038318092f0171590b4e4f11eb0",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "9620df9d532a8e84cddaacce7f29daf88e09f038318092f0171590b4e4f11eb0",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/project_identity.py": {
+      "sha256": "db93902cc2db9e976d6565287ca26eacabe9cf3180d6101607b5ababa9210e8b",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "db93902cc2db9e976d6565287ca26eacabe9cf3180d6101607b5ababa9210e8b",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/projection.py": {
+      "sha256": "dcc4d89d818ef2dacc4966086589996b384a7f934fbb198866ba694f127ef077",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "dcc4d89d818ef2dacc4966086589996b384a7f934fbb198866ba694f127ef077",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/publish_memory.py": {
+      "sha256": "629e04454a36baa9b9cfb57157c0cf2d839b38138df7a66363f6f33d1c77d7fc",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "629e04454a36baa9b9cfb57157c0cf2d839b38138df7a66363f6f33d1c77d7fc",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/reconcile_memory.py": {
+      "sha256": "b38197a59d87024b38d891272aa2825f0afc40f85ccd46b0460bf77359fd8b4d",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "b38197a59d87024b38d891272aa2825f0afc40f85ccd46b0460bf77359fd8b4d",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/record_contract.py": {
+      "sha256": "35ba78b2d02fa2d3ebcc0a7e60eac625a803cfc32325510480172b73dd891a22",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "35ba78b2d02fa2d3ebcc0a7e60eac625a803cfc32325510480172b73dd891a22",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/refresh_memory.py": {
+      "sha256": "630da615f9641a87876ae0a51dd7f78f391a9a02042093b749745c550c090940",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "630da615f9641a87876ae0a51dd7f78f391a9a02042093b749745c550c090940",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/retrieve.py": {
+      "sha256": "df3a27157512b4b2b605ed1bb4b062c7a185d8ccd2ce9b62d7f1e5f354c5b3dd",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "df3a27157512b4b2b605ed1bb4b062c7a185d8ccd2ce9b62d7f1e5f354c5b3dd",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/scope_binding.py": {
+      "sha256": "cc06af9acefdfc764da285b77abbd9650ae6779404ef23977bd70fbe59025658",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "cc06af9acefdfc764da285b77abbd9650ae6779404ef23977bd70fbe59025658",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/scope_policy.py": {
+      "sha256": "264bc99e60a46664531f0e56c57fc03d9a1c489c2ba9a68b56c32ed206cae664",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "264bc99e60a46664531f0e56c57fc03d9a1c489c2ba9a68b56c32ed206cae664",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/security_policy.py": {
+      "sha256": "bc66d265df7ffe4d2677591c213ec5b5d15d6317e0cdf61808734b541976fbf5",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "bc66d265df7ffe4d2677591c213ec5b5d15d6317e0cdf61808734b541976fbf5",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/sharing_boundary.py": {
+      "sha256": "8003d5939cd05f3bcc1b5996fb1986b772f3a3b54ebacbbca2a28e39f54da8f8",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "8003d5939cd05f3bcc1b5996fb1986b772f3a3b54ebacbbca2a28e39f54da8f8",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/sharing_recovery.py": {
+      "sha256": "72f42fd0246be9d2b91ed66f29bb9b4d8d384af6aa701317396f35ccefd3fedf",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "72f42fd0246be9d2b91ed66f29bb9b4d8d384af6aa701317396f35ccefd3fedf",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/tombstones.py": {
+      "sha256": "f7bc61b202bbb6d827caa06bba1b8414f7953d3295e8a3f457d58814467d90fa",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "f7bc61b202bbb6d827caa06bba1b8414f7953d3295e8a3f457d58814467d90fa",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/uninstall_runtime.py": {
+      "sha256": "df65bc2e652babf3821a19711284978f3bebcf6dcb21af92b64525fbcb272994",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "df65bc2e652babf3821a19711284978f3bebcf6dcb21af92b64525fbcb272994",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/update_runtime.py": {
+      "sha256": "9a69f3fc9a5f72e9d33976eb6eb1d3359254d58c15e2f5eec0a58f2d46c774d8",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "9a69f3fc9a5f72e9d33976eb6eb1d3359254d58c15e2f5eec0a58f2d46c774d8",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/scripts/validate_pack.py": {
+      "sha256": "1d1d28bfe50be1cd16ee78a660905c9424893f968fa15a151a5d7769da5dac74",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "1d1d28bfe50be1cd16ee78a660905c9424893f968fa15a151a5d7769da5dac74",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/security/GUIDE.md": {
+      "sha256": "a7e3d8a1a5656730bf9c3588f29f9e59d44d37fb0da8f2c256fc48ca45447e3c",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "a7e3d8a1a5656730bf9c3588f29f9e59d44d37fb0da8f2c256fc48ca45447e3c",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/sharing/GUIDE.md": {
+      "sha256": "16fa4e1e3761cb8e86658b70add5d43a7e2419c8fa74865c380d76c64f37bfd2",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "16fa4e1e3761cb8e86658b70add5d43a7e2419c8fa74865c380d76c64f37bfd2",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/sharing/boundary/GUIDE.md": {
+      "sha256": "37ed4eb890f2c36892e2c567facc21244034903fab37618c45833945490237f2",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "37ed4eb890f2c36892e2c567facc21244034903fab37618c45833945490237f2",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/sharing/publication/GUIDE.md": {
+      "sha256": "d457227a6fe0544862913d0d984dc96d0aaa8be6345b2287ac1e5a06d3c8d0f1",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "d457227a6fe0544862913d0d984dc96d0aaa8be6345b2287ac1e5a06d3c8d0f1",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/sharing/recovery/GUIDE.md": {
+      "sha256": "0249acedcfd774fe94b3c9c214c3e2b0ddcbd7c98be96b2d4ef25e00d6d955de",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "0249acedcfd774fe94b3c9c214c3e2b0ddcbd7c98be96b2d4ef25e00d6d955de",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/sharing/refresh/GUIDE.md": {
+      "sha256": "5c70d334e30fdb9c661d7d017a96eefe8779437fdf019d423d951476aa6db0f4",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "5c70d334e30fdb9c661d7d017a96eefe8779437fdf019d423d951476aa6db0f4",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/sharing/semantic/GUIDE.md": {
+      "sha256": "e02f20a83ea8f76f99700cdc700bbd515e8382aedc37d2da12e44e9809601e7d",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "e02f20a83ea8f76f99700cdc700bbd515e8382aedc37d2da12e44e9809601e7d",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/templates/activation-markdown.example.txt": {
+      "sha256": "dfecfad23e1faca1aa70a4b7f4e977f6fe2e95933fdca52526688b10a3bf2978",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "dfecfad23e1faca1aa70a4b7f4e977f6fe2e95933fdca52526688b10a3bf2978",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/templates/record-proposal.example.json": {
+      "sha256": "87e9a441607c8ec83545ee57f157cd51b2be8b6adbc527f730f9c533e2ef4ce8",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "87e9a441607c8ec83545ee57f157cd51b2be8b6adbc527f730f9c533e2ef4ce8",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/templates/router-markdown.example.txt": {
+      "sha256": "329ab031924ff78336b8e3625a794d0829c7e7612b8b8ddabe07729e387e610d",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "329ab031924ff78336b8e3625a794d0829c7e7612b8b8ddabe07729e387e610d",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/templates/router-proposal.example.json": {
+      "sha256": "b42ae26be99dd84f3263e0adb6d3f2477cf953d2440a254b607e24df3e0a99c0",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "b42ae26be99dd84f3263e0adb6d3f2477cf953d2440a254b607e24df3e0a99c0",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/turn/GUIDE.md": {
+      "sha256": "4e7e57e4da6251d90dacd80ad0115bba1a66a86328e2563a274dee2130901e64",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "4e7e57e4da6251d90dacd80ad0115bba1a66a86328e2563a274dee2130901e64",
+      "source_checkout_mode": "0o644"
+    },
+    "skills/agent-memory/writes/GUIDE.md": {
+      "sha256": "6876acae975c15b2e6155b1f7b00a6f1ec542236fcf17924fb308c0fc993f695",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "6876acae975c15b2e6155b1f7b00a6f1ec542236fcf17924fb308c0fc993f695",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/cli_alias_fixtures.py": {
+      "sha256": "ab0fe9a288de9af91b87530d6c7a0d78b6b0c66abfe1cda09a75cdd86fe456c2",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "ab0fe9a288de9af91b87530d6c7a0d78b6b0c66abfe1cda09a75cdd86fe456c2",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts.json": {
+      "sha256": "378210f30c48f6c3a3c610fd643f35f4fc77d7f00bbcc7be0e389bda3d1842ea",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "378210f30c48f6c3a3c610fd643f35f4fc77d7f00bbcc7be0e389bda3d1842ea",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_admission.py": {
+      "sha256": "5495b5362d500a3595ceed6f708eaa686445188dac20482ab694bfcc2c61c052",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "5495b5362d500a3595ceed6f708eaa686445188dac20482ab694bfcc2c61c052",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_admission_privacy.py": {
+      "sha256": "76cdec56b7ffcba9e5f623a40ede469f9ab4c1693ca187b30df9d437e67220a4",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "76cdec56b7ffcba9e5f623a40ede469f9ab4c1693ca187b30df9d437e67220a4",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_assembly.py": {
+      "sha256": "3eaea440e6e7095adc017f219cfd67d693c868fbea182b54fafb32c1c00f7f67",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "3eaea440e6e7095adc017f219cfd67d693c868fbea182b54fafb32c1c00f7f67",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_authority_boundary.py": {
+      "sha256": "65b5a41b96a6227bbc8f4b49de899ab14a2a71669bbb12a64c7e1ed4ad8e417d",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "65b5a41b96a6227bbc8f4b49de899ab14a2a71669bbb12a64c7e1ed4ad8e417d",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_authority_policy.py": {
+      "sha256": "9dc3b919bf0b7b3eef15dd0d772ca81df0b523c25547e97f0cc437c6b0e2214d",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "9dc3b919bf0b7b3eef15dd0d772ca81df0b523c25547e97f0cc437c6b0e2214d",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_bank_layout.py": {
+      "sha256": "6e593d62fed71f2ddbd365c1e804709aa82b6d29c59cd2636c5f89ddc6267cfa",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "6e593d62fed71f2ddbd365c1e804709aa82b6d29c59cd2636c5f89ddc6267cfa",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_bank_transactions.py": {
+      "sha256": "0bbe283d62f605cceb9dd79efb92001728f724339aa2ba02e69bd527cb3029c4",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "0bbe283d62f605cceb9dd79efb92001728f724339aa2ba02e69bd527cb3029c4",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_bank_usability.py": {
+      "sha256": "8d2721fb4f2d5ac9dc3c1a4d13e78e48090c6d9d5db367200b6a073ee23d3bbe",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "8d2721fb4f2d5ac9dc3c1a4d13e78e48090c6d9d5db367200b6a073ee23d3bbe",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_bank_writes.py": {
+      "sha256": "072718a1ca1b4fe39bc9a48556835351691b1c01468d5e65d920c43f8d620b11",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "072718a1ca1b4fe39bc9a48556835351691b1c01468d5e65d920c43f8d620b11",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_boundary_assessment.py": {
+      "sha256": "ebc8134431bbea8733fee7f6be59f41ea15692a830c47ed7ca5479b5aa0b4b1d",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "ebc8134431bbea8733fee7f6be59f41ea15692a830c47ed7ca5479b5aa0b4b1d",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_bounded_bank_observation.py": {
+      "sha256": "83c2769d35b17f183893c0377111eab309b4067794bbfed8d6c7ccb3f30f3181",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "83c2769d35b17f183893c0377111eab309b4067794bbfed8d6c7ccb3f30f3181",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_bounded_resume.py": {
+      "sha256": "c0a0fee3cc1be9419c6229b37c175fc42815bfe274e2df6f79a9d41138c3369d",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "c0a0fee3cc1be9419c6229b37c175fc42815bfe274e2df6f79a9d41138c3369d",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_checkout_repair.py": {
+      "sha256": "59d7f398c250dee6256ff34d1b8184c903c8cd8575b0c1e865e9a0fa53c42c88",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "59d7f398c250dee6256ff34d1b8184c903c8cd8575b0c1e865e9a0fa53c42c88",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_checkpoint.py": {
+      "sha256": "da93fbaaa6527dfd36f229220de9e59ee7bb8cfaccc62703a6e29fef69c98975",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "da93fbaaa6527dfd36f229220de9e59ee7bb8cfaccc62703a6e29fef69c98975",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_claude_boundary.py": {
+      "sha256": "e9ad50856cbd267ec94b18408851e7b02707e6b3d855674b4d1810bdaa208595",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "e9ad50856cbd267ec94b18408851e7b02707e6b3d855674b4d1810bdaa208595",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_claude_source_turns.py": {
+      "sha256": "fe26d7dd41425e38e784776bc497766c3bfc47228c248612d5e5664271f06fa9",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "fe26d7dd41425e38e784776bc497766c3bfc47228c248612d5e5664271f06fa9",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_client_hooks.py": {
+      "sha256": "1650cf1c0c49b1234348546b5f3ac4e0345d9bd8ad1135c0f42c8e6196f68c48",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "1650cf1c0c49b1234348546b5f3ac4e0345d9bd8ad1135c0f42c8e6196f68c48",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_codex_stop.py": {
+      "sha256": "4c456c6fd682edf701b430988884994f300aa41635557e77e875f38b290f3ce5",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "4c456c6fd682edf701b430988884994f300aa41635557e77e875f38b290f3ce5",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_compact_turn_check.py": {
+      "sha256": "9f39870271ca693356deb203651de25c786328c67ef78b3e15b5bec7f903d0a6",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "9f39870271ca693356deb203651de25c786328c67ef78b3e15b5bec7f903d0a6",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_comparison.py": {
+      "sha256": "964191467e2e467c88abb2ab1ac04acb9d91cda7a6011de51267e266cb1d9cac",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "964191467e2e467c88abb2ab1ac04acb9d91cda7a6011de51267e266cb1d9cac",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_concurrent_bank_writers.py": {
+      "sha256": "c1e787ac47e5bd59eb80824114ced3cea2b7e8f93a2e78377c3a431b11e12042",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "c1e787ac47e5bd59eb80824114ced3cea2b7e8f93a2e78377c3a431b11e12042",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_consolidation.py": {
+      "sha256": "7a8a9c360bc1ffbab4048e68113a67981b5b4148d5118c419cd98fa9763410fe",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "7a8a9c360bc1ffbab4048e68113a67981b5b4148d5118c419cd98fa9763410fe",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_current_bank.py": {
+      "sha256": "8f38bc03368a9764261f43dad8bcb920351eb305309c8b8b2686937ecfb068bb",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "8f38bc03368a9764261f43dad8bcb920351eb305309c8b8b2686937ecfb068bb",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_developer_identity.py": {
+      "sha256": "b2a756cf18ef033607395f24e167280b91e088a4a1bcd38c83291699c47189ed",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "b2a756cf18ef033607395f24e167280b91e088a4a1bcd38c83291699c47189ed",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_discovery.py": {
+      "sha256": "cd9a1d673651ea5d1b9e24e89e912b51440c73a3f4da16ae5be776807adec7b8",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "cd9a1d673651ea5d1b9e24e89e912b51440c73a3f4da16ae5be776807adec7b8",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_discovery_workflow.py": {
+      "sha256": "1e0c48a2ac05dc29df8e0f13f9d3aa91f404cfeea50dc7ef523c84a0b60325f2",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "1e0c48a2ac05dc29df8e0f13f9d3aa91f404cfeea50dc7ef523c84a0b60325f2",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_doctor_fix.py": {
+      "sha256": "43bd08325cf4fa7d84456b9e75c37d96ad2813efdc76e86393bc43da9f1c49c3",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "43bd08325cf4fa7d84456b9e75c37d96ad2813efdc76e86393bc43da9f1c49c3",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_explicit_migration.py": {
+      "sha256": "0ea42bbc28119e5e793b80cfb8766eb221a14f6bf803495647f05d345030e1b3",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "0ea42bbc28119e5e793b80cfb8766eb221a14f6bf803495647f05d345030e1b3",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_gate_diagnostics.py": {
+      "sha256": "8f6dbf3b75122961943b63aa8774a346261d437851f90112298975e9e091779c",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "8f6dbf3b75122961943b63aa8774a346261d437851f90112298975e9e091779c",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_governance.py": {
+      "sha256": "04a3327bcc702c4bce2c2d5525dc7702dfc6c09501a1690621894ca02d38c94f",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "04a3327bcc702c4bce2c2d5525dc7702dfc6c09501a1690621894ca02d38c94f",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_governance_recovery.py": {
+      "sha256": "94e392139327c848d7d19368f15e59b8a0eb846c9dc76315316ed8a9d7a87635",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "94e392139327c848d7d19368f15e59b8a0eb846c9dc76315316ed8a9d7a87635",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_harness.py": {
+      "sha256": "541816b7e18699a735c05d18c31be299c71e331498fc6c2a60dfdc8c009f1d78",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "541816b7e18699a735c05d18c31be299c71e331498fc6c2a60dfdc8c009f1d78",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_hook_failure.py": {
+      "sha256": "ce657c175bc9302cb9b12c3635948c09cd9282fa4e3b4c9fb2527eb567bda9be",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "ce657c175bc9302cb9b12c3635948c09cd9282fa4e3b4c9fb2527eb567bda9be",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_hook_migration_diagnostics.py": {
+      "sha256": "f8faf58c5d0abcdaca49cf71b774e3ba166dc8029fe0923a81fbf7e4cbec93a6",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "f8faf58c5d0abcdaca49cf71b774e3ba166dc8029fe0923a81fbf7e4cbec93a6",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_identity_canaries.py": {
+      "sha256": "fee14f9980dc277eef987dface92940e348ce1ce746ef4456a64718d8c5586ee",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "fee14f9980dc277eef987dface92940e348ce1ce746ef4456a64718d8c5586ee",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_inactive_guidance.py": {
+      "sha256": "ad079c5aa55624b38cf5e71421ee6bb0c8dfe883a932a718e0e718813083b828",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "ad079c5aa55624b38cf5e71421ee6bb0c8dfe883a932a718e0e718813083b828",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_incident_evidence.py": {
+      "sha256": "3261572ea26f5aa1da79423c85a67523b5fab21b6b9400f417c0e0f958fe5fbc",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "3261572ea26f5aa1da79423c85a67523b5fab21b6b9400f417c0e0f958fe5fbc",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_independent_local_bank.py": {
+      "sha256": "cfbabfd63c9324887f00396cb29b8af58ead1a6f77431cc75255998e424f16fb",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "cfbabfd63c9324887f00396cb29b8af58ead1a6f77431cc75255998e424f16fb",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_initialization.py": {
+      "sha256": "7b0de6f38dee58b219820331fd3fab79c7e015ac502dca34033ce7f374aaadc3",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "7b0de6f38dee58b219820331fd3fab79c7e015ac502dca34033ce7f374aaadc3",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_initialization_routes.py": {
+      "sha256": "9d09feb47aeae8505b979e70d6bc880199f5fffc571d1ccf969f7da68241da5c",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "9d09feb47aeae8505b979e70d6bc880199f5fffc571d1ccf969f7da68241da5c",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_install_write_copy_after.py": {
+      "sha256": "49416bf210f3e1fda2238cf8fae1dc774a1cb597dae3bfaeb7836a21bcace296",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "49416bf210f3e1fda2238cf8fae1dc774a1cb597dae3bfaeb7836a21bcace296",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_install_write_copy_after_part_1.py": {
+      "sha256": "be2070ebc5d021256d76df96b50ad1523fcc4871f80b2902bf0846ba9e7ec1d0",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "be2070ebc5d021256d76df96b50ad1523fcc4871f80b2902bf0846ba9e7ec1d0",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_install_write_copy_after_part_2.py": {
+      "sha256": "32d333646e23b481d7fad3932eda04318222c71c2515d77a68ef274147b73bb0",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "32d333646e23b481d7fad3932eda04318222c71c2515d77a68ef274147b73bb0",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_install_write_copy_after_part_3.py": {
+      "sha256": "3b4dac199c06205434df8e3e5d962459e2d7828cc27d94d35e2ee66c343f7c57",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "3b4dac199c06205434df8e3e5d962459e2d7828cc27d94d35e2ee66c343f7c57",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_install_write_copy_before.py": {
+      "sha256": "3d11a4c6df1baac779f3a2ebabe564fa81eb10b3bb27e0f3b0833cbfdf04cb5e",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "3d11a4c6df1baac779f3a2ebabe564fa81eb10b3bb27e0f3b0833cbfdf04cb5e",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_install_write_copy_before_part_1.py": {
+      "sha256": "e73db3cc5abc3fdbfcb17b28c59e570a47d01c77345104caa620a2a0c89a3392",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "e73db3cc5abc3fdbfcb17b28c59e570a47d01c77345104caa620a2a0c89a3392",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_install_write_copy_before_part_2.py": {
+      "sha256": "d114fe27011b869e481b4970d66e2fd7a89b6265ffc69d12e5d4e2a4d9e12e64",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "d114fe27011b869e481b4970d66e2fd7a89b6265ffc69d12e5d4e2a4d9e12e64",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_install_write_copy_before_part_3.py": {
+      "sha256": "b9070214eb572e38513e7869d56ba1d17108dbbcaf11e373d9aec2fb41235957",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "b9070214eb572e38513e7869d56ba1d17108dbbcaf11e373d9aec2fb41235957",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_install_write_link_after.py": {
+      "sha256": "fb93337de8a6fb1564d37b13f8c5e7f47c97fb6d9501cfb335d079fa52f5c668",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "fb93337de8a6fb1564d37b13f8c5e7f47c97fb6d9501cfb335d079fa52f5c668",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_install_write_link_after_part_1.py": {
+      "sha256": "14cd80ba0c1b1969fe647fe3ec46871d82905a8760d3c6b32ad592727a60f322",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "14cd80ba0c1b1969fe647fe3ec46871d82905a8760d3c6b32ad592727a60f322",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_install_write_link_after_part_2.py": {
+      "sha256": "665adec56ccdcfe46307b7df266132002cbd3cacd06caa7240c229c92229b0fb",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "665adec56ccdcfe46307b7df266132002cbd3cacd06caa7240c229c92229b0fb",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_install_write_link_after_part_3.py": {
+      "sha256": "76a5a347352a68170d570f8f22e14eb6096ebe3b4acf95791886e1d605a4d132",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "76a5a347352a68170d570f8f22e14eb6096ebe3b4acf95791886e1d605a4d132",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_install_write_link_before.py": {
+      "sha256": "2a1ed8f85375b33ca32b6074b3e5f8ebdf60b93c3d123d5d37a3409660c08b59",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "2a1ed8f85375b33ca32b6074b3e5f8ebdf60b93c3d123d5d37a3409660c08b59",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_install_write_link_before_part_1.py": {
+      "sha256": "e8c130bdc75b709594e634f97d516ed31c656e9033849feff8d52cbbb044960b",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "e8c130bdc75b709594e634f97d516ed31c656e9033849feff8d52cbbb044960b",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_install_write_link_before_part_2.py": {
+      "sha256": "9a862fdaac8ea3d7710519d9bc9997ab4378c49a6d9a17d45a2af59b84894a8a",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "9a862fdaac8ea3d7710519d9bc9997ab4378c49a6d9a17d45a2af59b84894a8a",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_install_write_link_before_part_3.py": {
+      "sha256": "e3bd6dbd7d54dfb04ff6f101acfa486bb83d81acd28fd287c0a852e7fd9a9e50",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "e3bd6dbd7d54dfb04ff6f101acfa486bb83d81acd28fd287c0a852e7fd9a9e50",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_installed_bank_governance.py": {
+      "sha256": "b035b61530d772a293127386fa15d1a67046c28a96d63fbad2f60f1a49b9f942",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "b035b61530d772a293127386fa15d1a67046c28a96d63fbad2f60f1a49b9f942",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_installed_bank_initialization.py": {
+      "sha256": "157f333488abb38850a0e30461cf902438277a6a7c787ed7745609e8b256a693",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "157f333488abb38850a0e30461cf902438277a6a7c787ed7745609e8b256a693",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_installed_bank_qualified_recall.py": {
+      "sha256": "acca4c92c88bce4272382109a7b57995018585adfda0c4194ded9a7a0cdd7ba2",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "acca4c92c88bce4272382109a7b57995018585adfda0c4194ded9a7a0cdd7ba2",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_installed_bank_roundtrip.py": {
+      "sha256": "6294cfb9d476b519ddfe85541bedf3f75de2355b88cf9778c88c36f89049664e",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "6294cfb9d476b519ddfe85541bedf3f75de2355b88cf9778c88c36f89049664e",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_installed_layout.py": {
+      "sha256": "77f0435f1e3471abab5c6b399a26b6d6e9b959f26877bca8e7ad120a6c73082f",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "77f0435f1e3471abab5c6b399a26b6d6e9b959f26877bca8e7ad120a6c73082f",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_installer.py": {
+      "sha256": "3ae99f64b7490e0363b7e75ae68a58b4a0b53b0942be891f832a1be325e706ab",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "3ae99f64b7490e0363b7e75ae68a58b4a0b53b0942be891f832a1be325e706ab",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_known_hold_capacity.py": {
+      "sha256": "cd6bdaa04eb5f4903bffb7a0635868d9c4e7c437a357be8c85f14bf8a36399be",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "cd6bdaa04eb5f4903bffb7a0635868d9c4e7c437a357be8c85f14bf8a36399be",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_known_holds_v2.py": {
+      "sha256": "a29c6b96e071474f10f83f6305abd9603a109452837658590cfa790e0f262f5c",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "a29c6b96e071474f10f83f6305abd9603a109452837658590cfa790e0f262f5c",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_large_refresh_security.py": {
+      "sha256": "c8c33f5c30e94ca1d02ff1978ddf1d5a3c5d4933a79d9d183a8de77cc76b7549",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "c8c33f5c30e94ca1d02ff1978ddf1d5a3c5d4933a79d9d183a8de77cc76b7549",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_legacy_uninstall_metadata.py": {
+      "sha256": "4e9749bf6501ee0065aec2fb9679d8df27faff062ca34f31cd65789984935dcf",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "4e9749bf6501ee0065aec2fb9679d8df27faff062ca34f31cd65789984935dcf",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_lifecycle_cleanup_after.py": {
+      "sha256": "78b1df19e1bc5889f4b680d1da4309e2e295d798b0f8d86c43ae5ae2a0a0546c",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "78b1df19e1bc5889f4b680d1da4309e2e295d798b0f8d86c43ae5ae2a0a0546c",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_lifecycle_cleanup_before.py": {
+      "sha256": "e7d0645089347adacabf9c5eaeff4dc63adb1dc89f2942c2d4712f37dcb1a108",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "e7d0645089347adacabf9c5eaeff4dc63adb1dc89f2942c2d4712f37dcb1a108",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_lifecycle_lost_responses.py": {
+      "sha256": "75163f8d202f5ba3ed82534813bfc296ff51b4076b55a1114a088a44e3bd6c3c",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "75163f8d202f5ba3ed82534813bfc296ff51b4076b55a1114a088a44e3bd6c3c",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_lifecycle_model.py": {
+      "sha256": "c0b85ab4d85cbe6a4a91c050361ed4d02302c3be13ed437c46173b29bca6ebb0",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "c0b85ab4d85cbe6a4a91c050361ed4d02302c3be13ed437c46173b29bca6ebb0",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_lifecycle_partitions.py": {
+      "sha256": "36beeccad8fdf2f67af05a1338077074f76e49415ce3b14bb066e1eb7a371ad6",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "36beeccad8fdf2f67af05a1338077074f76e49415ce3b14bb066e1eb7a371ad6",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_lifecycle_security_contract.py": {
+      "sha256": "166df5696fe457d1000aa7641c77f09ac09be0ba06523daa5fee2a2c9b179898",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "166df5696fe457d1000aa7641c77f09ac09be0ba06523daa5fee2a2c9b179898",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_lifecycle_trust.py": {
+      "sha256": "ee71585d4cfc53c3e3366ec0c7664bf78b8348513b83959e2ad13d969ecfa408",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "ee71585d4cfc53c3e3366ec0c7664bf78b8348513b83959e2ad13d969ecfa408",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_managed_source_bounds.py": {
+      "sha256": "aa32d1227648b1e99b61aa435f71008444778b542e516f08faa48f1fe0950ef8",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "aa32d1227648b1e99b61aa435f71008444778b542e516f08faa48f1fe0950ef8",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_managed_source_ownership.py": {
+      "sha256": "37d3fe2d4fca75c3b979a16328e070151d643a5d9c37cf6ec1f14b39fb718b72",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "37d3fe2d4fca75c3b979a16328e070151d643a5d9c37cf6ec1f14b39fb718b72",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_manual_checkpoint.py": {
+      "sha256": "451316e9d19c6c14aa7d7e63e1b87a4787737c02d3d72313a102d83b15be6668",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "451316e9d19c6c14aa7d7e63e1b87a4787737c02d3d72313a102d83b15be6668",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_memory_publication.py": {
+      "sha256": "f69fc681d7a466a4523de0ca4cbd5bae9d92240eacd000fb04cdbc0e16f0a6f4",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "f69fc681d7a466a4523de0ca4cbd5bae9d92240eacd000fb04cdbc0e16f0a6f4",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_memory_refresh.py": {
+      "sha256": "a4f0732caece479be8b23d062038c1407a94ae9340c7cad98831487f94e5377a",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "a4f0732caece479be8b23d062038c1407a94ae9340c7cad98831487f94e5377a",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_migration_catalog.py": {
+      "sha256": "f27ae764c48ce607ce2f11ad0e09a96290be0dc4e1f29b40202f23ff8c5558c3",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "f27ae764c48ce607ce2f11ad0e09a96290be0dc4e1f29b40202f23ff8c5558c3",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_migration_runtime_rollback.py": {
+      "sha256": "5b93bab54510abcc57e40c6be683e70006f5b15fa4571baa0074789646c8db70",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "5b93bab54510abcc57e40c6be683e70006f5b15fa4571baa0074789646c8db70",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_multi_machine_compatible.py": {
+      "sha256": "6b697e878b714568eda4eebb3694410a70cb220cdd44be5354806d0f6faabc95",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "6b697e878b714568eda4eebb3694410a70cb220cdd44be5354806d0f6faabc95",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_multi_machine_conflicts.py": {
+      "sha256": "17b4256e5c80340983c9ab1cc956b2106ead88a922cd3193a6a0fa16d3dc3b46",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "17b4256e5c80340983c9ab1cc956b2106ead88a922cd3193a6a0fa16d3dc3b46",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_multi_machine_matrix.py": {
+      "sha256": "c1b1d7c63e460974b3c3e83f136b0a68ede85d6af1a5b097a7b762abf8213b7b",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "c1b1d7c63e460974b3c3e83f136b0a68ede85d6af1a5b097a7b762abf8213b7b",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_multi_machine_merge_replay.py": {
+      "sha256": "b2e10207684f95ecd55e8259f2157924829b92da92ebc2442d702a57f4bb83f9",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "b2e10207684f95ecd55e8259f2157924829b92da92ebc2442d702a57f4bb83f9",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_multi_machine_race.py": {
+      "sha256": "6baba5de134707b526b1f40fd08622e40adc910d07dac6870c80f3c2a5b147db",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "6baba5de134707b526b1f40fd08622e40adc910d07dac6870c80f3c2a5b147db",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_new_topic_merge.py": {
+      "sha256": "8c10653f7dfeb64de05383bca2d6a7a04c505bfd0cb3dbfc9f07d62bfb6e9d23",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "8c10653f7dfeb64de05383bca2d6a7a04c505bfd0cb3dbfc9f07d62bfb6e9d23",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_observation_applicability.py": {
+      "sha256": "50ccccae6c4f9df931fcd44180e30ab34070e214beacb0f46eef0bb845ff2535",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "50ccccae6c4f9df931fcd44180e30ab34070e214beacb0f46eef0bb845ff2535",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_observation_cleanup.py": {
+      "sha256": "d5da05df31f51327b8000cbd8d9deb8f11225584616ee369e3250c59f04620f9",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "d5da05df31f51327b8000cbd8d9deb8f11225584616ee369e3250c59f04620f9",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_offline_skill.py": {
+      "sha256": "5d94ca849178a8da680133d9ac5a158a98ec5d3797870db2344d3c9690879190",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "5d94ca849178a8da680133d9ac5a158a98ec5d3797870db2344d3c9690879190",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_opencode_boundary_ledger.py": {
+      "sha256": "4f8885b1a50ba257bfe1990a833005d55ba672fd4708c47f02f681f63451751c",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "4f8885b1a50ba257bfe1990a833005d55ba672fd4708c47f02f681f63451751c",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_opencode_native_boundary.py": {
+      "sha256": "79f0e251c779b9e8a4d902751b6ca2de2a5336894e97da2f3187a347c908ef92",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "79f0e251c779b9e8a4d902751b6ca2de2a5336894e97da2f3187a347c908ef92",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_opencode_queue.py": {
+      "sha256": "478d0ad6639f84bb40f72a61bf58e00847aa280196c466d1197050954d7923ff",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "478d0ad6639f84bb40f72a61bf58e00847aa280196c466d1197050954d7923ff",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_portable_artifact.py": {
+      "sha256": "eef1459ab15da5e518549f8128e60080eea4df58cd68a0afc15f4d3fe113454e",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "eef1459ab15da5e518549f8128e60080eea4df58cd68a0afc15f4d3fe113454e",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_portable_handoff.py": {
+      "sha256": "db92b4881593ac3efff40a31c75ba57c0e4bf0abff61dfad7264acd05c43d15a",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "db92b4881593ac3efff40a31c75ba57c0e4bf0abff61dfad7264acd05c43d15a",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_portable_lifecycle.py": {
+      "sha256": "b857db852a96984f18801ae771bf227f9054d55b805270128193d00e94661503",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "b857db852a96984f18801ae771bf227f9054d55b805270128193d00e94661503",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_private_workspace.py": {
+      "sha256": "ad58fd8bb0b9cb03205b9cb6ed024e2823d21fef7b46e48ea6ba986f702c4942",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "ad58fd8bb0b9cb03205b9cb6ed024e2823d21fef7b46e48ea6ba986f702c4942",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_project_identity.py": {
+      "sha256": "02801d749dcf99b7dfe8b90f0f5de05319304b351ae766681afb822b7a84cd68",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "02801d749dcf99b7dfe8b90f0f5de05319304b351ae766681afb822b7a84cd68",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_projection_contract.py": {
+      "sha256": "1cb2b267afb5556bd1d0ca38e228ded251b500bdfaa84391a8b6ed74904c35bb",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "1cb2b267afb5556bd1d0ca38e228ded251b500bdfaa84391a8b6ed74904c35bb",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_public_cli.py": {
+      "sha256": "662ba0aa73068bed2a1a6c198a0814cc5e6faadfd19998eeee8238d3c8742af4",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "662ba0aa73068bed2a1a6c198a0814cc5e6faadfd19998eeee8238d3c8742af4",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_publication_admission.py": {
+      "sha256": "32f505eb3d4652236456216ebe2c35090d708daaeeac8ebc802447d23e9b53da",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "32f505eb3d4652236456216ebe2c35090d708daaeeac8ebc802447d23e9b53da",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_publication_hold_recovery.py": {
+      "sha256": "81ce1ef2408d01d4a202c83ef71597fae907ddbfee8b2b0d700096679a572fce",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "81ce1ef2408d01d4a202c83ef71597fae907ddbfee8b2b0d700096679a572fce",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_publication_pending.py": {
+      "sha256": "07c19afd7ce8fa11947a4ae9cd6f159dfd37547a6ad802dc1a78508c3f06742a",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "07c19afd7ce8fa11947a4ae9cd6f159dfd37547a6ad802dc1a78508c3f06742a",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_publication_policy.py": {
+      "sha256": "a77c2975a087ba60fd17206787ff35ae0bdc33f0372c2d9cab84991ee233a436",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "a77c2975a087ba60fd17206787ff35ae0bdc33f0372c2d9cab84991ee233a436",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_publication_recovery.py": {
+      "sha256": "9596ac13b05ec67ef5e72e91e01822c99566640d013b8ab2d034677db330c9da",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "9596ac13b05ec67ef5e72e91e01822c99566640d013b8ab2d034677db330c9da",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_publication_restricted_actor.py": {
+      "sha256": "5dbfb951ff3ecdba75ca8ecc50eec5f7d8148eb0c6bd2f22adce28ef0edda57e",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "5dbfb951ff3ecdba75ca8ecc50eec5f7d8148eb0c6bd2f22adce28ef0edda57e",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_publication_worktree.py": {
+      "sha256": "70772effa486e7cf1bf50d71a9568979f2b5a580490ffa7e9f064ee28248261e",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "70772effa486e7cf1bf50d71a9568979f2b5a580490ffa7e9f064ee28248261e",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_purge_unlock_after.py": {
+      "sha256": "51eb059fed83642f194b245aac3f1588252539adb5a7c5afc7cd5b96b7413271",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "51eb059fed83642f194b245aac3f1588252539adb5a7c5afc7cd5b96b7413271",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_purge_unlock_before.py": {
+      "sha256": "5f9e890a467013165f08b860e3b2b5ed0a1587180f4adf9d19694275937d0803",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "5f9e890a467013165f08b860e3b2b5ed0a1587180f4adf9d19694275937d0803",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_purge_write_after.py": {
+      "sha256": "51af6f69990d4fadcd2ab62b207eacb2fd1cbd327408961372e57fe1e457d90a",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "51af6f69990d4fadcd2ab62b207eacb2fd1cbd327408961372e57fe1e457d90a",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_purge_write_before.py": {
+      "sha256": "3a25425652047d0ee22b3564f9a6cb9b153cf8fcb29a1d5c088d497554c54836",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "3a25425652047d0ee22b3564f9a6cb9b153cf8fcb29a1d5c088d497554c54836",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_quarantined_sharing_v2.py": {
+      "sha256": "7c10cf1cf0c5c11102ab9562ce3e469b62c349f38e100aca945b12d5a8a91d45",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "7c10cf1cf0c5c11102ab9562ce3e469b62c349f38e100aca945b12d5a8a91d45",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_read_only_audits.py": {
+      "sha256": "0072a220bee036c0a2ee93183f08398b3714bebf80aaef0cf7ae4e7e02a89e26",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "0072a220bee036c0a2ee93183f08398b3714bebf80aaef0cf7ae4e7e02a89e26",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_recall_catalog.py": {
+      "sha256": "fa69344eade5695b3f23fd134bbcf8c5958618fda90fbb5b6aa856e5f6835837",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "fa69344eade5695b3f23fd134bbcf8c5958618fda90fbb5b6aa856e5f6835837",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_recall_observation.py": {
+      "sha256": "cc2685f224670fde0cf8a30585e34795044e3e9bb30a5a6d9cb280b567475afd",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "cc2685f224670fde0cf8a30585e34795044e3e9bb30a5a6d9cb280b567475afd",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_records.py": {
+      "sha256": "329a2a0567c2a2bd54ebeb8e43a8e2751f9fb217709ecf0f981b2d01925cca94",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "329a2a0567c2a2bd54ebeb8e43a8e2751f9fb217709ecf0f981b2d01925cca94",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_recover_commit_write_copy_after.py": {
+      "sha256": "1d0a72d89c9aeaab7411dc2bb0b999f841a31f28081f256e81e73f7270593fcc",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "1d0a72d89c9aeaab7411dc2bb0b999f841a31f28081f256e81e73f7270593fcc",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_recover_commit_write_copy_before.py": {
+      "sha256": "1a333e2af3dde13382f2c0dde746b055cb10673b291a73c5e84451fcc5f1ee88",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "1a333e2af3dde13382f2c0dde746b055cb10673b291a73c5e84451fcc5f1ee88",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_recover_rollback_write_copy_after.py": {
+      "sha256": "ec4f652e3c804545ad551282400ec3d2c6433b350c5859d55e4688bcce7403e2",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "ec4f652e3c804545ad551282400ec3d2c6433b350c5859d55e4688bcce7403e2",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_recover_rollback_write_copy_before.py": {
+      "sha256": "68fb98381516dd8bfcfe8d6c6f5e4b453a43ad8ce367d720d0ddcde56a5b5aa2",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "68fb98381516dd8bfcfe8d6c6f5e4b453a43ad8ce367d720d0ddcde56a5b5aa2",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_refresh_conflicts.py": {
+      "sha256": "0877da40e299481d8ea271f7986b6f19d2698facc3352f3ef7b9e0f57a760cee",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "0877da40e299481d8ea271f7986b6f19d2698facc3352f3ef7b9e0f57a760cee",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_refresh_cursor.py": {
+      "sha256": "286d7ab46f9552eb36888707c8dea2cb29a37c99070304a94bd18b4ac9c3147e",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "286d7ab46f9552eb36888707c8dea2cb29a37c99070304a94bd18b4ac9c3147e",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_refresh_integration.py": {
+      "sha256": "2f8aef718008f536caa67de4cc163b017afa2ad02aaac983594beff53a7e8fc8",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "2f8aef718008f536caa67de4cc163b017afa2ad02aaac983594beff53a7e8fc8",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_refresh_invalidation.py": {
+      "sha256": "1caa8174ce60ad93e4cc26b274d918995259e99e6a56ca3c6f8aadc641acae86",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "1caa8174ce60ad93e4cc26b274d918995259e99e6a56ca3c6f8aadc641acae86",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_refresh_path_policy.py": {
+      "sha256": "98582e314f156a274ab008070d21de995b9b522b41b69755e767d469c8bab562",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "98582e314f156a274ab008070d21de995b9b522b41b69755e767d469c8bab562",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_refresh_pending.py": {
+      "sha256": "a1d234739ba9c3d53b74de551a7f0634b2c761f1f232db83425a85955ef03885",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "a1d234739ba9c3d53b74de551a7f0634b2c761f1f232db83425a85955ef03885",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_refresh_receipt_snapshot.py": {
+      "sha256": "13da9d28cb8714e8e7cd1b3878dade2b5b5f405479daad72c1a2b7d5b1c202b9",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "13da9d28cb8714e8e7cd1b3878dade2b5b5f405479daad72c1a2b7d5b1c202b9",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_refresh_recovery.py": {
+      "sha256": "072a44ddcd814e2ae3f076f8b08a6ccd91e902ad13d969a6acfc43a942caf24e",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "072a44ddcd814e2ae3f076f8b08a6ccd91e902ad13d969a6acfc43a942caf24e",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_refresh_v2.py": {
+      "sha256": "a1f879e29572f258e779626ad826c8d2ed84792e69a2d87fcea58b8a2bb648bd",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "a1f879e29572f258e779626ad826c8d2ed84792e69a2d87fcea58b8a2bb648bd",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_release_canaries.py": {
+      "sha256": "a485b25526a38ca5f4ead4ed844dcebf79c9e5fc2698f17387d3dc2067eaf8ff",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "a485b25526a38ca5f4ead4ed844dcebf79c9e5fc2698f17387d3dc2067eaf8ff",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_retrieval.py": {
+      "sha256": "181046adc1a5d782d7bcc1acd472b08ea4b8f7a14cedc1a55edd2db3f51e173c",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "181046adc1a5d782d7bcc1acd472b08ea4b8f7a14cedc1a55edd2db3f51e173c",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_router.py": {
+      "sha256": "1491fca12e4786f47e5cc9e8e3fa1eb77aa2884ab633fb0927dc6a12bdd66806",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "1491fca12e4786f47e5cc9e8e3fa1eb77aa2884ab633fb0927dc6a12bdd66806",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_runtime_diagnostics.py": {
+      "sha256": "25143a911e639e681ae954eed9d96bb666d35c098de35a293db73781e24498da",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "25143a911e639e681ae954eed9d96bb666d35c098de35a293db73781e24498da",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_runtime_purge.py": {
+      "sha256": "819433fb52746c7bab1da6baa6da53a7b771f193935ec46a3cfdb46afe4aa9e1",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "819433fb52746c7bab1da6baa6da53a7b771f193935ec46a3cfdb46afe4aa9e1",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_runtime_uninstall.py": {
+      "sha256": "05655f9420e3083458729c9cc9c69d042dab5090de4dc4e88b3a2b794c40b46c",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "05655f9420e3083458729c9cc9c69d042dab5090de4dc4e88b3a2b794c40b46c",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_runtime_update.py": {
+      "sha256": "52f5b3cabc6c7d4dcf0731c5a64726dac0482b17bafedf7252ef53912451f420",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "52f5b3cabc6c7d4dcf0731c5a64726dac0482b17bafedf7252ef53912451f420",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_scope_binding.py": {
+      "sha256": "4dfc0f385d607b4004c7fdee56e98fda9b383d20ba5bc96395be6fd1a870cfdd",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "4dfc0f385d607b4004c7fdee56e98fda9b383d20ba5bc96395be6fd1a870cfdd",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_scope_policy.py": {
+      "sha256": "610b4aa5a1bfbd5cbdb0cb70ba4905ac8a9346a92b6ee1c54aff7f57a9891979",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "610b4aa5a1bfbd5cbdb0cb70ba4905ac8a9346a92b6ee1c54aff7f57a9891979",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_security_policy.py": {
+      "sha256": "66946c94eb19d73a80b6017cc2ad8be40773a8154294bc9a726508daa01aff5c",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "66946c94eb19d73a80b6017cc2ad8be40773a8154294bc9a726508daa01aff5c",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_semantic_introductions.py": {
+      "sha256": "6e3a72ddedda4fb7071866f51e4d442a09576e8e60cd3bf2593a395adfec05c5",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "6e3a72ddedda4fb7071866f51e4d442a09576e8e60cd3bf2593a395adfec05c5",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_semantic_sharing.py": {
+      "sha256": "e2cb9fb8366844fc5bdb876a3359568b4d2b14c2382fff4773c6c40a968567fb",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "e2cb9fb8366844fc5bdb876a3359568b4d2b14c2382fff4773c6c40a968567fb",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_setup_diagnostics.py": {
+      "sha256": "93a52ecb9ee4bd5a192426ee78d44d24ab93410d4d1514ffeadab9425ca98867",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "93a52ecb9ee4bd5a192426ee78d44d24ab93410d4d1514ffeadab9425ca98867",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_shared_learning_loop.py": {
+      "sha256": "24a4a8e12fde8298d5ec90c054ccb4ecf2eb31a0595d5f863331f68982f46664",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "24a4a8e12fde8298d5ec90c054ccb4ecf2eb31a0595d5f863331f68982f46664",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_sharing_boundary.py": {
+      "sha256": "4ad0fb261a161c34c24d4ef23f212acc98811da47e90398d4f95d30a4ac61ce4",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "4ad0fb261a161c34c24d4ef23f212acc98811da47e90398d4f95d30a4ac61ce4",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_sharing_recovery.py": {
+      "sha256": "b0ff9dba46d53074a893fa71325c0f68617dc8a07effd2f75ff9ad0f293691d5",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "b0ff9dba46d53074a893fa71325c0f68617dc8a07effd2f75ff9ad0f293691d5",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_signed_release_lifecycle.py": {
+      "sha256": "d0aeea335b8292acc9758531dbd66b50e962f1140b1b978368bf9ba3d0d2b586",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "d0aeea335b8292acc9758531dbd66b50e962f1140b1b978368bf9ba3d0d2b586",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_signed_release_publisher.py": {
+      "sha256": "9b2687badee562301fbbcb527d83b4cfebe95861103fd066df556b481f0009eb",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "9b2687badee562301fbbcb527d83b4cfebe95861103fd066df556b481f0009eb",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_skill_routes.py": {
+      "sha256": "bb01eb12cd52289de2a5e8c4df76ce09cb73000987559426943f26f725e8d8a3",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "bb01eb12cd52289de2a5e8c4df76ce09cb73000987559426943f26f725e8d8a3",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_tombstones.py": {
+      "sha256": "8b00123bcec31ae1adbc1316b736b697e25865beadedb7364b03ee6f610e89ad",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "8b00123bcec31ae1adbc1316b736b697e25865beadedb7364b03ee6f610e89ad",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_turn_hook.py": {
+      "sha256": "2457850ad418445619c21c3c61ae45a5168f1ce4561c14e1473f3972c4446e40",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "2457850ad418445619c21c3c61ae45a5168f1ce4561c14e1473f3972c4446e40",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_turn_sources.py": {
+      "sha256": "050d95e50a86fb5cdba27aea0f4d45f327e19aa99e4890871ce153cf760e7933",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "050d95e50a86fb5cdba27aea0f4d45f327e19aa99e4890871ce153cf760e7933",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_unified_cli_operations.py": {
+      "sha256": "66ab85f94e2895bc26c70541aeb4e98fb2facd1cb067c9d8bb5c44a690731ab7",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "66ab85f94e2895bc26c70541aeb4e98fb2facd1cb067c9d8bb5c44a690731ab7",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_uninstall_write_copy_after.py": {
+      "sha256": "578bd12a1cb14815c5dea4fbae07f61a794ab902cf290434ce15905adb50471e",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "578bd12a1cb14815c5dea4fbae07f61a794ab902cf290434ce15905adb50471e",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_uninstall_write_copy_before.py": {
+      "sha256": "d4cf9c9f1b1ee4476d161bd5e96092d5a050cc1b6e0983b1d5457e59932622b1",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "d4cf9c9f1b1ee4476d161bd5e96092d5a050cc1b6e0983b1d5457e59932622b1",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_uninstall_write_link_after.py": {
+      "sha256": "52efd705b0c6487fd74456225f6b1983f2decc4aac3ec1c19c3109f3f3ffb04a",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "52efd705b0c6487fd74456225f6b1983f2decc4aac3ec1c19c3109f3f3ffb04a",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_uninstall_write_link_before.py": {
+      "sha256": "f0b032a388862147bb694ce23096c0be7e0f32723e8d6c50226ddc5c671497bc",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "f0b032a388862147bb694ce23096c0be7e0f32723e8d6c50226ddc5c671497bc",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_update_discovery_gaps.py": {
+      "sha256": "f85d70b741b95059b1f06b4567969b2dbbf8ea34352f3c69bd2be74fdb6434ab",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "f85d70b741b95059b1f06b4567969b2dbbf8ea34352f3c69bd2be74fdb6434ab",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_update_mutable_observations.py": {
+      "sha256": "355398449010ed79c36aec74a6c03a2b42b6bbb461172c5df366ded9ad97bb20",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "355398449010ed79c36aec74a6c03a2b42b6bbb461172c5df366ded9ad97bb20",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_update_mutable_public.py": {
+      "sha256": "b8f75ed7770e3defc4cc8448e230091402cd03161709486cb091e2710e9443ea",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "b8f75ed7770e3defc4cc8448e230091402cd03161709486cb091e2710e9443ea",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_update_parallel_inventory.py": {
+      "sha256": "1f4cdc8eb0978324bd2374674481d4122efb0fce27548a46994c47b4af22c50f",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "1f4cdc8eb0978324bd2374674481d4122efb0fce27548a46994c47b4af22c50f",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_update_write_after.py": {
+      "sha256": "34a80e4e169a18c7c9d781b575c120315823b1628b01e7d34bc4b0231e47413b",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "34a80e4e169a18c7c9d781b575c120315823b1628b01e7d34bc4b0231e47413b",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_update_write_after_part_1.py": {
+      "sha256": "f818d1f38ca5ba3646c1e4a3f59da2f4a6b28155bb3cb6af3439c14668497a44",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "f818d1f38ca5ba3646c1e4a3f59da2f4a6b28155bb3cb6af3439c14668497a44",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_update_write_after_part_2.py": {
+      "sha256": "8f8dabc2eb4455226ff12af1ec3f3b066f8d215a59e24a4c584dca26121d670a",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "8f8dabc2eb4455226ff12af1ec3f3b066f8d215a59e24a4c584dca26121d670a",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_update_write_after_part_3.py": {
+      "sha256": "9d76fad1b7a189f146bff4d3de104c3de07e3e2d302d74054a52eb963b2ae1df",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "9d76fad1b7a189f146bff4d3de104c3de07e3e2d302d74054a52eb963b2ae1df",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_update_write_before.py": {
+      "sha256": "a5f0c814e0d20e34e431f4e15daee2bd32dc66c5893c5adb5cf98c0537f8599b",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "a5f0c814e0d20e34e431f4e15daee2bd32dc66c5893c5adb5cf98c0537f8599b",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_update_write_before_part_1.py": {
+      "sha256": "44c717f536007c459165698c03995ec772d6d55afeaab1f559e8f34f95d23190",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "44c717f536007c459165698c03995ec772d6d55afeaab1f559e8f34f95d23190",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_update_write_before_part_2.py": {
+      "sha256": "6af7afaae55d21098c104d5cffd42fdbe451d89198b4cbb55a39144d6444ce2f",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "6af7afaae55d21098c104d5cffd42fdbe451d89198b4cbb55a39144d6444ce2f",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_update_write_before_part_3.py": {
+      "sha256": "f3eee43537c50da54e9b5ce32616499ef69b246ab7dd212392ac0c622d8a8f18",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "f3eee43537c50da54e9b5ce32616499ef69b246ab7dd212392ac0c622d8a8f18",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_validation_memo.py": {
+      "sha256": "b1a8b69f942298c44421f57855c50ca2c1f8edf67b540facdf4222ae1a94e0c0",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "b1a8b69f942298c44421f57855c50ca2c1f8edf67b540facdf4222ae1a94e0c0",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_worker_collection.py": {
+      "sha256": "e000a2d0d923770515d2b4013bc2cf7bedf4c5ca024aed6cd6c1456cbd9515ab",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "e000a2d0d923770515d2b4013bc2cf7bedf4c5ca024aed6cd6c1456cbd9515ab",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/contracts/test_worker_ownership.py": {
+      "sha256": "3e3481231ee848492e6272c9e0b8a5aaee39283ee74bbed9d1a5a8e169efbdb1",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "3e3481231ee848492e6272c9e0b8a5aaee39283ee74bbed9d1a5a8e169efbdb1",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/fault_partitions.py": {
+      "sha256": "3815b30d6812a68273ab67c370426779b7d1f94ef55ff7dc6984723c6fe894bd",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "3815b30d6812a68273ab67c370426779b7d1f94ef55ff7dc6984723c6fe894bd",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/fixtures/legacy-cli/README.md": {
+      "sha256": "18544aa9fc0533258fbed8626b035efc16fc0b33500610c7944c4ab797d3d232",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "18544aa9fc0533258fbed8626b035efc16fc0b33500610c7944c4ab797d3d232",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/fixtures/legacy-cli/pre-am-3af48ea.tar.gz": {
+      "sha256": "d687778a8e393ffbd1a95c79cbd41c401d7f030f91923f61a0dc73f757a6becf",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "d687778a8e393ffbd1a95c79cbd41c401d7f030f91923f61a0dc73f757a6becf",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/fixtures/legacy-cli/provenance.json": {
+      "sha256": "3676dd131752082325b778eaf14a464f0d2f396b0092c7eb3a6ba53a85a3427e",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "3676dd131752082325b778eaf14a464f0d2f396b0092c7eb3a6ba53a85a3427e",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/fixtures/v0.0.2-runtime/portable-pack.tar.gz": {
+      "sha256": "dc55a62d0ceb2a9fa8eff1332c94a09ba9f00f3ebf6fe6d131163eb83553ba50",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "dc55a62d0ceb2a9fa8eff1332c94a09ba9f00f3ebf6fe6d131163eb83553ba50",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/fixtures/v0.0.2-runtime/provenance.json": {
+      "sha256": "380f8afd89b93ae6d0cf6b15d01524fcfe305c7940842c5912ea3d1a7c6844fe",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "380f8afd89b93ae6d0cf6b15d01524fcfe305c7940842c5912ea3d1a7c6844fe",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/identity_fixtures.py": {
+      "sha256": "d15af429249e38a49f3c210e2aebe09d63202f8807ec295ad7eeba1f204988e3",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "d15af429249e38a49f3c210e2aebe09d63202f8807ec295ad7eeba1f204988e3",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/incidents.json": {
+      "sha256": "9f2c4fe21d3e8803e4e8b1b41ccce59765300032f677268319763d5507a21aaa",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "9f2c4fe21d3e8803e4e8b1b41ccce59765300032f677268319763d5507a21aaa",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/installed_cli_fixtures.py": {
+      "sha256": "757e0945e8875e3b51092c6568f287ff7fbf0de3fdaac11b6a9ac70808b6e708",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "757e0945e8875e3b51092c6568f287ff7fbf0de3fdaac11b6a9ac70808b6e708",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/lifecycle-matrix.json": {
+      "sha256": "702d8e3d61049dc6f55cc99723af97341a663f161bcee809bcecf90cdff8655f",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "702d8e3d61049dc6f55cc99723af97341a663f161bcee809bcecf90cdff8655f",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/lifecycle_cleanup_fixtures.py": {
+      "sha256": "33b9e6ffc345445e37149cea92b768dfcf4df4988e6ac91c2e3b221686dd92ed",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "33b9e6ffc345445e37149cea92b768dfcf4df4988e6ac91c2e3b221686dd92ed",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/lifecycle_fault_fixtures.py": {
+      "sha256": "101249b12d5ec76226b6312ca262d86a826efbe2008b09a71ad79dde83c42dfb",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "101249b12d5ec76226b6312ca262d86a826efbe2008b09a71ad79dde83c42dfb",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/lifecycle_unlock_fixtures.py": {
+      "sha256": "f5f716933fcfc3061a0700929b84d9f7ea64f384390ab6086ee355e0c0d91362",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "f5f716933fcfc3061a0700929b84d9f7ea64f384390ab6086ee355e0c0d91362",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/migration_fixtures.py": {
+      "sha256": "3fe894066da5a51bf2c695efae8a9b3c26814eec203c4e8719256fcc5217d04c",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "3fe894066da5a51bf2c695efae8a9b3c26814eec203c4e8719256fcc5217d04c",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/multi_machine_fixtures.py": {
+      "sha256": "284b205014052d451b73feeae2f2a7ad404de32f2f24b70845a67639ac39038a",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "284b205014052d451b73feeae2f2a7ad404de32f2f24b70845a67639ac39038a",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/publication_fixtures.py": {
+      "sha256": "c6891da534a50816f82c4ad1591d1de27723ddfbbeddc34e1ef9bd5f201785d9",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "c6891da534a50816f82c4ad1591d1de27723ddfbbeddc34e1ef9bd5f201785d9",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/publication_github.py": {
+      "sha256": "ea3b27b529526d224550b78d2e6f0ac4356f7addb37bfe8599bc6802be337728",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "ea3b27b529526d224550b78d2e6f0ac4356f7addb37bfe8599bc6802be337728",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/record_fixtures.py": {
+      "sha256": "50ff9a3e520b0138e16821224e8a02ad1e71c64ff82022250a8bae96fa5267d6",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "50ff9a3e520b0138e16821224e8a02ad1e71c64ff82022250a8bae96fa5267d6",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/refresh_fixtures.py": {
+      "sha256": "eea5ea173191297e9293b6681c5b501a6b93698a2fddeb51cd316e68e11298d0",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "eea5ea173191297e9293b6681c5b501a6b93698a2fddeb51cd316e68e11298d0",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/release_canary_fixtures.py": {
+      "sha256": "281b7c7777439794e06d643aeda6308f8da50086624b4fa616f8e95fa88b3b42",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "281b7c7777439794e06d643aeda6308f8da50086624b4fa616f8e95fa88b3b42",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/runtime_update_fixtures.py": {
+      "sha256": "afd73835db6e771247ddbfa231367728bfaf4b8c6542d48cdac1b16a72d6e0e9",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "afd73835db6e771247ddbfa231367728bfaf4b8c6542d48cdac1b16a72d6e0e9",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/runtime_update_interrupts.py": {
+      "sha256": "922524e27bd20324bb79d0d4d16f6f8df2b2fd7dc15d5d2e9d76e6b05c0d3a18",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "922524e27bd20324bb79d0d4d16f6f8df2b2fd7dc15d5d2e9d76e6b05c0d3a18",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/shared-learning-matrix.json": {
+      "sha256": "b8164868a4585ae515da2b5cb528949e705f1b87f0f3e74d2cc9e75665deb4f0",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "b8164868a4585ae515da2b5cb528949e705f1b87f0f3e74d2cc9e75665deb4f0",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/signed_publisher_fixtures.py": {
+      "sha256": "08835545c2003d2b4776dcec5f8affb623eec7981f6dd2c9ed5e072c40fb8455",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "08835545c2003d2b4776dcec5f8affb623eec7981f6dd2c9ed5e072c40fb8455",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/signed_release_fixtures.py": {
+      "sha256": "8f508250145e17b13082667a5de698f63d0ac27de64314846a0d7241b6b37694",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "8f508250145e17b13082667a5de698f63d0ac27de64314846a0d7241b6b37694",
+      "source_checkout_mode": "0o644"
+    },
+    "tests/world.py": {
+      "sha256": "6f4e78d202505872132ef4c8a5070cf550ac8993079bd79396f8b2d4614d0c5b",
+      "mode": "0o644",
+      "regular": true,
+      "git_tree_mode": "100644",
+      "source_sha256": "6f4e78d202505872132ef4c8a5070cf550ac8993079bd79396f8b2d4614d0c5b",
+      "source_checkout_mode": "0o644"
+    }
+  },
+  "all_tracked_hashes_and_modes_match_snapshot": true,
+  "mismatches": [],
+  "nonmetadata_extras_within_tracked_roots": [],
+  "clean_inventory_claimed": false,
+  "metadata_execution": "No ._* path is named by the controller, fixture helper entrypoints, or Python module imports; no metadata body is parsed/executed. These are extra files, not authenticated payload.",
+  "mode_reference": "Git tree executable/nonexecutable checkout modes, not git-archive default tar header group-write bits",
+  "source_snapshot_visibility": "Local research snapshot; every tracked helper byte is bound below independently of publication of that commit object.",
+  "archive_metadata_extra_groups": [
+    {
+      "sha256": "e8c340eaaf30002d850d887f0c85f286211117487e819af61174c0981c4d113a",
+      "mode": "0o755",
+      "size": 163,
+      "paths": [
+        "._scripts",
+        "._skills",
+        "._tests",
+        "scripts/._distribution",
+        "scripts/._evaluations",
+        "scripts/._test.sh",
+        "skills/._agent-memory",
+        "skills/agent-memory/._access",
+        "skills/agent-memory/._adapters",
+        "skills/agent-memory/._admission",
+        "skills/agent-memory/._assembly",
+        "skills/agent-memory/._authority",
+        "skills/agent-memory/._bank",
+        "skills/agent-memory/._capture",
+        "skills/agent-memory/._checkpoint",
+        "skills/agent-memory/._comparison",
+        "skills/agent-memory/._consolidation",
+        "skills/agent-memory/._discovery",
+        "skills/agent-memory/._govern",
+        "skills/agent-memory/._governance",
+        "skills/agent-memory/._hooks",
+        "skills/agent-memory/._identity",
+        "skills/agent-memory/._inactive",
+        "skills/agent-memory/._initialize",
+        "skills/agent-memory/._keys",
+        "skills/agent-memory/._layout",
+        "skills/agent-memory/._lifecycle",
+        "skills/agent-memory/._maintain",
+        "skills/agent-memory/._model",
+        "skills/agent-memory/._offline",
+        "skills/agent-memory/._projections",
+        "skills/agent-memory/._recall",
+        "skills/agent-memory/._records",
+        "skills/agent-memory/._resume",
+        "skills/agent-memory/._retrieval",
+        "skills/agent-memory/._schemas",
+        "skills/agent-memory/._scope",
+        "skills/agent-memory/._scripts",
+        "skills/agent-memory/._security",
+        "skills/agent-memory/._sharing",
+        "skills/agent-memory/._templates",
+        "skills/agent-memory/._turn",
+        "skills/agent-memory/._writes",
+        "skills/agent-memory/bank/._inspect",
+        "skills/agent-memory/hooks/._python3.sh",
+        "skills/agent-memory/lifecycle/._diagnose",
+        "skills/agent-memory/lifecycle/._install",
+        "skills/agent-memory/lifecycle/._migrate",
+        "skills/agent-memory/lifecycle/._purge",
+        "skills/agent-memory/lifecycle/._uninstall",
+        "skills/agent-memory/lifecycle/._update",
+        "skills/agent-memory/maintain/._artifact",
+        "skills/agent-memory/maintain/._cli",
+        "skills/agent-memory/maintain/._pack",
+        "skills/agent-memory/scripts/._agent_memory",
+        "skills/agent-memory/sharing/._boundary",
+        "skills/agent-memory/sharing/._publication",
+        "skills/agent-memory/sharing/._recovery",
+        "skills/agent-memory/sharing/._refresh",
+        "skills/agent-memory/sharing/._semantic",
+        "tests/._contracts",
+        "tests/._fixtures",
+        "tests/fixtures/._legacy-cli",
+        "tests/fixtures/._v0.0.2-runtime"
+      ]
+    },
+    {
+      "sha256": "e8c340eaaf30002d850d887f0c85f286211117487e819af61174c0981c4d113a",
+      "mode": "0o644",
+      "size": 163,
+      "paths": [
+        "scripts/._admit_learning.py",
+        "scripts/._artifact.py",
+        "scripts/._assemble_context.py",
+        "scripts/._authority_policy.py",
+        "scripts/._bank_contract.py",
+        "scripts/._bank_layout.py",
+        "scripts/._bank_state.py",
+        "scripts/._bank_transactions.py",
+        "scripts/._bank_writes.py",
+        "scripts/._capture_guide_examples.py",
+        "scripts/._check_execution_plan.py",
+        "scripts/._checkpoint.py",
+        "scripts/._compare_learning.py",
+        "scripts/._consolidate_learning.py",
+        "scripts/._developer_identity.py",
+        "scripts/._diagnose.py",
+        "scripts/._govern_memory.py",
+        "scripts/._guide_evidence.py",
+        "scripts/._inactive_records.py",
+        "scripts/._initialize.py",
+        "scripts/._installer.py",
+        "scripts/._lifecycle_model.py",
+        "scripts/._project_identity.py",
+        "scripts/._projection.py",
+        "scripts/._publish_memory.py",
+        "scripts/._reconcile_memory.py",
+        "scripts/._record_contract.py",
+        "scripts/._refresh_memory.py",
+        "scripts/._retrieve.py",
+        "scripts/._run_contract_suite.py",
+        "scripts/._run_incident.py",
+        "scripts/._scope_binding.py",
+        "scripts/._scope_policy.py",
+        "scripts/._security_policy.py",
+        "scripts/._sharing_boundary.py",
+        "scripts/._sharing_recovery.py",
+        "scripts/._test_gate.py",
+        "scripts/._tombstones.py",
+        "scripts/._uninstall_runtime.py",
+        "scripts/._update_runtime.py",
+        "scripts/._validate_pack.py",
+        "scripts/distribution/._README.md",
+        "scripts/distribution/._install.sh.in",
+        "scripts/distribution/._release.py",
+        "scripts/evaluations/._daily_use.py",
+        "scripts/evaluations/._labeled_recall_fixture.py",
+        "scripts/evaluations/._labeled_recall_probe.py",
+        "scripts/evaluations/._literal_growth_probe.py",
+        "scripts/evaluations/._public_release.py",
+        "scripts/evaluations/._semantic_navigation_fixture.py",
+        "scripts/evaluations/._sharing_capacity_probe.py",
+        "skills/agent-memory/._SKILL.md",
+        "skills/agent-memory/access/._GUIDE.md",
+        "skills/agent-memory/adapters/._github-publication.json",
+        "skills/agent-memory/admission/._GUIDE.md",
+        "skills/agent-memory/assembly/._GUIDE.md",
+        "skills/agent-memory/authority/._GUIDE.md",
+        "skills/agent-memory/bank/._GUIDE.md",
+        "skills/agent-memory/bank/inspect/._GUIDE.md",
+        "skills/agent-memory/capture/._GUIDE.md",
+        "skills/agent-memory/checkpoint/._GUIDE.md",
+        "skills/agent-memory/comparison/._GUIDE.md",
+        "skills/agent-memory/consolidation/._GUIDE.md",
+        "skills/agent-memory/discovery/._GUIDE.md",
+        "skills/agent-memory/govern/._GUIDE.md",
+        "skills/agent-memory/governance/._GUIDE.md",
+        "skills/agent-memory/hooks/._boundary-prompt.txt",
+        "skills/agent-memory/hooks/._boundary_ledger.py",
+        "skills/agent-memory/hooks/._claude_prompt.py",
+        "skills/agent-memory/hooks/._claude_source.py",
+        "skills/agent-memory/hooks/._claude_stop.py",
+        "skills/agent-memory/hooks/._codex_prompt.py",
+        "skills/agent-memory/hooks/._codex_stop.py",
+        "skills/agent-memory/hooks/._opencode-v1.js",
+        "skills/agent-memory/hooks/._opencode-v2-queue.js",
+        "skills/agent-memory/hooks/._opencode-v2.js",
+        "skills/agent-memory/hooks/._opencode.js",
+        "skills/agent-memory/hooks/._turn_hook.py",
+        "skills/agent-memory/identity/._GUIDE.md",
+        "skills/agent-memory/inactive/._GUIDE.md",
+        "skills/agent-memory/initialize/._GUIDE.md",
+        "skills/agent-memory/keys/._allowed-signers",
+        "skills/agent-memory/layout/._GUIDE.md",
+        "skills/agent-memory/lifecycle/diagnose/._GUIDE.md",
+        "skills/agent-memory/lifecycle/install/._GUIDE.md",
+        "skills/agent-memory/lifecycle/migrate/._GUIDE.md",
+        "skills/agent-memory/lifecycle/purge/._GUIDE.md",
+        "skills/agent-memory/lifecycle/uninstall/._GUIDE.md",
+        "skills/agent-memory/lifecycle/update/._GUIDE.md",
+        "skills/agent-memory/maintain/._GUIDE.md",
+        "skills/agent-memory/maintain/artifact/._GUIDE.md",
+        "skills/agent-memory/maintain/cli/._GUIDE.md",
+        "skills/agent-memory/maintain/pack/._GUIDE.md",
+        "skills/agent-memory/model/._GUIDE.md",
+        "skills/agent-memory/offline/._GUIDE.md",
+        "skills/agent-memory/projections/._GUIDE.md",
+        "skills/agent-memory/recall/._GUIDE.md",
+        "skills/agent-memory/records/._GUIDE.md",
+        "skills/agent-memory/resume/._GUIDE.md",
+        "skills/agent-memory/retrieval/._GUIDE.md",
+        "skills/agent-memory/schemas/._authority-policy.json",
+        "skills/agent-memory/schemas/._bank-router.json",
+        "skills/agent-memory/schemas/._developers.json",
+        "skills/agent-memory/schemas/._history-event.json",
+        "skills/agent-memory/schemas/._lifecycle.json",
+        "skills/agent-memory/schemas/._migrations.json",
+        "skills/agent-memory/schemas/._projects.json",
+        "skills/agent-memory/schemas/._record.json",
+        "skills/agent-memory/schemas/._runtime-compatibility.json",
+        "skills/agent-memory/schemas/._scope-policy.json",
+        "skills/agent-memory/schemas/._tombstone.json",
+        "skills/agent-memory/schemas/._topic-index.json",
+        "skills/agent-memory/scope/._GUIDE.md",
+        "skills/agent-memory/scripts/._admit_learning.py",
+        "skills/agent-memory/scripts/._am_console.py",
+        "skills/agent-memory/scripts/._artifact.py",
+        "skills/agent-memory/scripts/._assemble_context.py",
+        "skills/agent-memory/scripts/._authority_policy.py",
+        "skills/agent-memory/scripts/._bank_contract.py",
+        "skills/agent-memory/scripts/._bank_layout.py",
+        "skills/agent-memory/scripts/._bank_state.py",
+        "skills/agent-memory/scripts/._bank_transactions.py",
+        "skills/agent-memory/scripts/._bank_writes.py",
+        "skills/agent-memory/scripts/._checkpoint.py",
+        "skills/agent-memory/scripts/._claude_boundary.py",
+        "skills/agent-memory/scripts/._codex_boundary.py",
+        "skills/agent-memory/scripts/._compare_learning.py",
+        "skills/agent-memory/scripts/._consolidate_learning.py",
+        "skills/agent-memory/scripts/._developer_identity.py",
+        "skills/agent-memory/scripts/._diagnose.py",
+        "skills/agent-memory/scripts/._discover_memory.py",
+        "skills/agent-memory/scripts/._govern_memory.py",
+        "skills/agent-memory/scripts/._inactive_records.py",
+        "skills/agent-memory/scripts/._initialize.py",
+        "skills/agent-memory/scripts/._installer.py",
+        "skills/agent-memory/scripts/._lifecycle_model.py",
+        "skills/agent-memory/scripts/._migrate_bank.py",
+        "skills/agent-memory/scripts/._private_workspace.py",
+        "skills/agent-memory/scripts/._project_identity.py",
+        "skills/agent-memory/scripts/._projection.py",
+        "skills/agent-memory/scripts/._publish_memory.py",
+        "skills/agent-memory/scripts/._reconcile_memory.py",
+        "skills/agent-memory/scripts/._record_contract.py",
+        "skills/agent-memory/scripts/._refresh_memory.py",
+        "skills/agent-memory/scripts/._retrieve.py",
+        "skills/agent-memory/scripts/._scope_binding.py",
+        "skills/agent-memory/scripts/._scope_policy.py",
+        "skills/agent-memory/scripts/._security_policy.py",
+        "skills/agent-memory/scripts/._sharing_boundary.py",
+        "skills/agent-memory/scripts/._sharing_recovery.py",
+        "skills/agent-memory/scripts/._tombstones.py",
+        "skills/agent-memory/scripts/._uninstall_runtime.py",
+        "skills/agent-memory/scripts/._update_runtime.py",
+        "skills/agent-memory/scripts/._validate_pack.py",
+        "skills/agent-memory/scripts/agent_memory/.___init__.py",
+        "skills/agent-memory/scripts/agent_memory/._admission.py",
+        "skills/agent-memory/scripts/agent_memory/._admission_navigation.py",
+        "skills/agent-memory/scripts/agent_memory/._artifact.py",
+        "skills/agent-memory/scripts/agent_memory/._assembly.py",
+        "skills/agent-memory/scripts/agent_memory/._authority.py",
+        "skills/agent-memory/scripts/agent_memory/._bank_contract.py",
+        "skills/agent-memory/scripts/agent_memory/._bank_layout.py",
+        "skills/agent-memory/scripts/agent_memory/._bank_observation.py",
+        "skills/agent-memory/scripts/agent_memory/._bank_state.py",
+        "skills/agent-memory/scripts/agent_memory/._bank_transactions.py",
+        "skills/agent-memory/scripts/agent_memory/._bank_writes.py",
+        "skills/agent-memory/scripts/agent_memory/._boundary_assessment.py",
+        "skills/agent-memory/scripts/agent_memory/._checkpoint.py",
+        "skills/agent-memory/scripts/agent_memory/._claude_boundary.py",
+        "skills/agent-memory/scripts/agent_memory/._claude_turns.py",
+        "skills/agent-memory/scripts/agent_memory/._cli.py",
+        "skills/agent-memory/scripts/agent_memory/._client_hooks.py",
+        "skills/agent-memory/scripts/agent_memory/._codex_boundary.py",
+        "skills/agent-memory/scripts/agent_memory/._comparison.py",
+        "skills/agent-memory/scripts/agent_memory/._console.py",
+        "skills/agent-memory/scripts/agent_memory/._consolidation.py",
+        "skills/agent-memory/scripts/agent_memory/._developer_identity.py",
+        "skills/agent-memory/scripts/agent_memory/._diagnostics.py",
+        "skills/agent-memory/scripts/agent_memory/._discovery.py",
+        "skills/agent-memory/scripts/agent_memory/._doctor_fix.py",
+        "skills/agent-memory/scripts/agent_memory/._frontmatter.py",
+        "skills/agent-memory/scripts/agent_memory/._governance.py",
+        "skills/agent-memory/scripts/agent_memory/._handoff.py",
+        "skills/agent-memory/scripts/agent_memory/._hook_failure.py",
+        "skills/agent-memory/scripts/agent_memory/._identity_git.py",
+        "skills/agent-memory/scripts/agent_memory/._inactive.py",
+        "skills/agent-memory/scripts/agent_memory/._initialization.py",
+        "skills/agent-memory/scripts/agent_memory/._installation.py",
+        "skills/agent-memory/scripts/agent_memory/._lifecycle.py",
+        "skills/agent-memory/scripts/agent_memory/._local_registry.py",
+        "skills/agent-memory/scripts/agent_memory/._managed_source.py",
+        "skills/agent-memory/scripts/agent_memory/._memory_publication.py",
+        "skills/agent-memory/scripts/agent_memory/._memory_refresh.py",
+        "skills/agent-memory/scripts/agent_memory/._migration.py",
+        "skills/agent-memory/scripts/agent_memory/._migration_codecs.py",
+        "skills/agent-memory/scripts/agent_memory/._migration_contract.py",
+        "skills/agent-memory/scripts/agent_memory/._model_reference.py",
+        "skills/agent-memory/scripts/agent_memory/._pack_validation.py",
+        "skills/agent-memory/scripts/agent_memory/._private_workspace.py",
+        "skills/agent-memory/scripts/agent_memory/._project_identity.py",
+        "skills/agent-memory/scripts/agent_memory/._projections.py",
+        "skills/agent-memory/scripts/agent_memory/._purging.py",
+        "skills/agent-memory/scripts/agent_memory/._recall_catalog.py",
+        "skills/agent-memory/scripts/agent_memory/._records.py",
+        "skills/agent-memory/scripts/agent_memory/._release_distribution.py",
+        "skills/agent-memory/scripts/agent_memory/._remote_identity.py",
+        "skills/agent-memory/scripts/agent_memory/._repository_config.py",
+        "skills/agent-memory/scripts/agent_memory/._retrieval.py",
+        "skills/agent-memory/scripts/agent_memory/._runtime_faults.py",
+        "skills/agent-memory/scripts/agent_memory/._scope_binding.py",
+        "skills/agent-memory/scripts/agent_memory/._scopes.py",
+        "skills/agent-memory/scripts/agent_memory/._security.py",
+        "skills/agent-memory/scripts/agent_memory/._semantic_sharing.py",
+        "skills/agent-memory/scripts/agent_memory/._sharing_boundary.py",
+        "skills/agent-memory/scripts/agent_memory/._sharing_frontier.py",
+        "skills/agent-memory/scripts/agent_memory/._sharing_hold_mapping.py",
+        "skills/agent-memory/scripts/agent_memory/._sharing_holds.py",
+        "skills/agent-memory/scripts/agent_memory/._sharing_limits.py",
+        "skills/agent-memory/scripts/agent_memory/._sharing_recovery.py",
+        "skills/agent-memory/scripts/agent_memory/._tombstones.py",
+        "skills/agent-memory/scripts/agent_memory/._trust_paths.py",
+        "skills/agent-memory/scripts/agent_memory/._turn_check.py",
+        "skills/agent-memory/scripts/agent_memory/._turn_sources.py",
+        "skills/agent-memory/scripts/agent_memory/._uninstallation.py",
+        "skills/agent-memory/scripts/agent_memory/._updating.py",
+        "skills/agent-memory/scripts/agent_memory/._validation_memo.py",
+        "skills/agent-memory/security/._GUIDE.md",
+        "skills/agent-memory/sharing/._GUIDE.md",
+        "skills/agent-memory/sharing/boundary/._GUIDE.md",
+        "skills/agent-memory/sharing/publication/._GUIDE.md",
+        "skills/agent-memory/sharing/recovery/._GUIDE.md",
+        "skills/agent-memory/sharing/refresh/._GUIDE.md",
+        "skills/agent-memory/sharing/semantic/._GUIDE.md",
+        "skills/agent-memory/templates/._activation-markdown.example.txt",
+        "skills/agent-memory/templates/._record-proposal.example.json",
+        "skills/agent-memory/templates/._router-markdown.example.txt",
+        "skills/agent-memory/templates/._router-proposal.example.json",
+        "skills/agent-memory/turn/._GUIDE.md",
+        "skills/agent-memory/writes/._GUIDE.md",
+        "tests/._cli_alias_fixtures.py",
+        "tests/._contracts.json",
+        "tests/._fault_partitions.py",
+        "tests/._identity_fixtures.py",
+        "tests/._incidents.json",
+        "tests/._installed_cli_fixtures.py",
+        "tests/._lifecycle-matrix.json",
+        "tests/._lifecycle_cleanup_fixtures.py",
+        "tests/._lifecycle_fault_fixtures.py",
+        "tests/._lifecycle_unlock_fixtures.py",
+        "tests/._migration_fixtures.py",
+        "tests/._multi_machine_fixtures.py",
+        "tests/._publication_fixtures.py",
+        "tests/._publication_github.py",
+        "tests/._record_fixtures.py",
+        "tests/._refresh_fixtures.py",
+        "tests/._release_canary_fixtures.py",
+        "tests/._runtime_update_fixtures.py",
+        "tests/._runtime_update_interrupts.py",
+        "tests/._shared-learning-matrix.json",
+        "tests/._signed_publisher_fixtures.py",
+        "tests/._signed_release_fixtures.py",
+        "tests/._world.py",
+        "tests/contracts/._test_admission.py",
+        "tests/contracts/._test_admission_privacy.py",
+        "tests/contracts/._test_assembly.py",
+        "tests/contracts/._test_authority_boundary.py",
+        "tests/contracts/._test_authority_policy.py",
+        "tests/contracts/._test_bank_layout.py",
+        "tests/contracts/._test_bank_transactions.py",
+        "tests/contracts/._test_bank_usability.py",
+        "tests/contracts/._test_bank_writes.py",
+        "tests/contracts/._test_boundary_assessment.py",
+        "tests/contracts/._test_bounded_bank_observation.py",
+        "tests/contracts/._test_bounded_resume.py",
+        "tests/contracts/._test_checkout_repair.py",
+        "tests/contracts/._test_checkpoint.py",
+        "tests/contracts/._test_claude_boundary.py",
+        "tests/contracts/._test_claude_source_turns.py",
+        "tests/contracts/._test_client_hooks.py",
+        "tests/contracts/._test_codex_stop.py",
+        "tests/contracts/._test_compact_turn_check.py",
+        "tests/contracts/._test_comparison.py",
+        "tests/contracts/._test_concurrent_bank_writers.py",
+        "tests/contracts/._test_consolidation.py",
+        "tests/contracts/._test_current_bank.py",
+        "tests/contracts/._test_developer_identity.py",
+        "tests/contracts/._test_discovery.py",
+        "tests/contracts/._test_discovery_workflow.py",
+        "tests/contracts/._test_doctor_fix.py",
+        "tests/contracts/._test_explicit_migration.py",
+        "tests/contracts/._test_gate_diagnostics.py",
+        "tests/contracts/._test_governance.py",
+        "tests/contracts/._test_governance_recovery.py",
+        "tests/contracts/._test_harness.py",
+        "tests/contracts/._test_hook_failure.py",
+        "tests/contracts/._test_hook_migration_diagnostics.py",
+        "tests/contracts/._test_identity_canaries.py",
+        "tests/contracts/._test_inactive_guidance.py",
+        "tests/contracts/._test_incident_evidence.py",
+        "tests/contracts/._test_independent_local_bank.py",
+        "tests/contracts/._test_initialization.py",
+        "tests/contracts/._test_initialization_routes.py",
+        "tests/contracts/._test_install_write_copy_after.py",
+        "tests/contracts/._test_install_write_copy_after_part_1.py",
+        "tests/contracts/._test_install_write_copy_after_part_2.py",
+        "tests/contracts/._test_install_write_copy_after_part_3.py",
+        "tests/contracts/._test_install_write_copy_before.py",
+        "tests/contracts/._test_install_write_copy_before_part_1.py",
+        "tests/contracts/._test_install_write_copy_before_part_2.py",
+        "tests/contracts/._test_install_write_copy_before_part_3.py",
+        "tests/contracts/._test_install_write_link_after.py",
+        "tests/contracts/._test_install_write_link_after_part_1.py",
+        "tests/contracts/._test_install_write_link_after_part_2.py",
+        "tests/contracts/._test_install_write_link_after_part_3.py",
+        "tests/contracts/._test_install_write_link_before.py",
+        "tests/contracts/._test_install_write_link_before_part_1.py",
+        "tests/contracts/._test_install_write_link_before_part_2.py",
+        "tests/contracts/._test_install_write_link_before_part_3.py",
+        "tests/contracts/._test_installed_bank_governance.py",
+        "tests/contracts/._test_installed_bank_initialization.py",
+        "tests/contracts/._test_installed_bank_qualified_recall.py",
+        "tests/contracts/._test_installed_bank_roundtrip.py",
+        "tests/contracts/._test_installed_layout.py",
+        "tests/contracts/._test_installer.py",
+        "tests/contracts/._test_known_hold_capacity.py",
+        "tests/contracts/._test_known_holds_v2.py",
+        "tests/contracts/._test_large_refresh_security.py",
+        "tests/contracts/._test_legacy_uninstall_metadata.py",
+        "tests/contracts/._test_lifecycle_cleanup_after.py",
+        "tests/contracts/._test_lifecycle_cleanup_before.py",
+        "tests/contracts/._test_lifecycle_lost_responses.py",
+        "tests/contracts/._test_lifecycle_model.py",
+        "tests/contracts/._test_lifecycle_partitions.py",
+        "tests/contracts/._test_lifecycle_security_contract.py",
+        "tests/contracts/._test_lifecycle_trust.py",
+        "tests/contracts/._test_managed_source_bounds.py",
+        "tests/contracts/._test_managed_source_ownership.py",
+        "tests/contracts/._test_manual_checkpoint.py",
+        "tests/contracts/._test_memory_publication.py",
+        "tests/contracts/._test_memory_refresh.py",
+        "tests/contracts/._test_migration_catalog.py",
+        "tests/contracts/._test_migration_runtime_rollback.py",
+        "tests/contracts/._test_multi_machine_compatible.py",
+        "tests/contracts/._test_multi_machine_conflicts.py",
+        "tests/contracts/._test_multi_machine_matrix.py",
+        "tests/contracts/._test_multi_machine_merge_replay.py",
+        "tests/contracts/._test_multi_machine_race.py",
+        "tests/contracts/._test_new_topic_merge.py",
+        "tests/contracts/._test_observation_applicability.py",
+        "tests/contracts/._test_observation_cleanup.py",
+        "tests/contracts/._test_offline_skill.py",
+        "tests/contracts/._test_opencode_boundary_ledger.py",
+        "tests/contracts/._test_opencode_native_boundary.py",
+        "tests/contracts/._test_opencode_queue.py",
+        "tests/contracts/._test_portable_artifact.py",
+        "tests/contracts/._test_portable_handoff.py",
+        "tests/contracts/._test_portable_lifecycle.py",
+        "tests/contracts/._test_private_workspace.py",
+        "tests/contracts/._test_project_identity.py",
+        "tests/contracts/._test_projection_contract.py",
+        "tests/contracts/._test_public_cli.py",
+        "tests/contracts/._test_publication_admission.py",
+        "tests/contracts/._test_publication_hold_recovery.py",
+        "tests/contracts/._test_publication_pending.py",
+        "tests/contracts/._test_publication_policy.py",
+        "tests/contracts/._test_publication_recovery.py",
+        "tests/contracts/._test_publication_restricted_actor.py",
+        "tests/contracts/._test_publication_worktree.py",
+        "tests/contracts/._test_purge_unlock_after.py",
+        "tests/contracts/._test_purge_unlock_before.py",
+        "tests/contracts/._test_purge_write_after.py",
+        "tests/contracts/._test_purge_write_before.py",
+        "tests/contracts/._test_quarantined_sharing_v2.py",
+        "tests/contracts/._test_read_only_audits.py",
+        "tests/contracts/._test_recall_catalog.py",
+        "tests/contracts/._test_recall_observation.py",
+        "tests/contracts/._test_records.py",
+        "tests/contracts/._test_recover_commit_write_copy_after.py",
+        "tests/contracts/._test_recover_commit_write_copy_before.py",
+        "tests/contracts/._test_recover_rollback_write_copy_after.py",
+        "tests/contracts/._test_recover_rollback_write_copy_before.py",
+        "tests/contracts/._test_refresh_conflicts.py",
+        "tests/contracts/._test_refresh_cursor.py",
+        "tests/contracts/._test_refresh_integration.py",
+        "tests/contracts/._test_refresh_invalidation.py",
+        "tests/contracts/._test_refresh_path_policy.py",
+        "tests/contracts/._test_refresh_pending.py",
+        "tests/contracts/._test_refresh_receipt_snapshot.py",
+        "tests/contracts/._test_refresh_recovery.py",
+        "tests/contracts/._test_refresh_v2.py",
+        "tests/contracts/._test_release_canaries.py",
+        "tests/contracts/._test_retrieval.py",
+        "tests/contracts/._test_router.py",
+        "tests/contracts/._test_runtime_diagnostics.py",
+        "tests/contracts/._test_runtime_purge.py",
+        "tests/contracts/._test_runtime_uninstall.py",
+        "tests/contracts/._test_runtime_update.py",
+        "tests/contracts/._test_scope_binding.py",
+        "tests/contracts/._test_scope_policy.py",
+        "tests/contracts/._test_security_policy.py",
+        "tests/contracts/._test_semantic_introductions.py",
+        "tests/contracts/._test_semantic_sharing.py",
+        "tests/contracts/._test_setup_diagnostics.py",
+        "tests/contracts/._test_shared_learning_loop.py",
+        "tests/contracts/._test_sharing_boundary.py",
+        "tests/contracts/._test_sharing_recovery.py",
+        "tests/contracts/._test_signed_release_lifecycle.py",
+        "tests/contracts/._test_signed_release_publisher.py",
+        "tests/contracts/._test_skill_routes.py",
+        "tests/contracts/._test_tombstones.py",
+        "tests/contracts/._test_turn_hook.py",
+        "tests/contracts/._test_turn_sources.py",
+        "tests/contracts/._test_unified_cli_operations.py",
+        "tests/contracts/._test_uninstall_write_copy_after.py",
+        "tests/contracts/._test_uninstall_write_copy_before.py",
+        "tests/contracts/._test_uninstall_write_link_after.py",
+        "tests/contracts/._test_uninstall_write_link_before.py",
+        "tests/contracts/._test_update_discovery_gaps.py",
+        "tests/contracts/._test_update_mutable_observations.py",
+        "tests/contracts/._test_update_mutable_public.py",
+        "tests/contracts/._test_update_parallel_inventory.py",
+        "tests/contracts/._test_update_write_after.py",
+        "tests/contracts/._test_update_write_after_part_1.py",
+        "tests/contracts/._test_update_write_after_part_2.py",
+        "tests/contracts/._test_update_write_after_part_3.py",
+        "tests/contracts/._test_update_write_before.py",
+        "tests/contracts/._test_update_write_before_part_1.py",
+        "tests/contracts/._test_update_write_before_part_2.py",
+        "tests/contracts/._test_update_write_before_part_3.py",
+        "tests/contracts/._test_validation_memo.py",
+        "tests/contracts/._test_worker_collection.py",
+        "tests/contracts/._test_worker_ownership.py",
+        "tests/fixtures/legacy-cli/._README.md",
+        "tests/fixtures/legacy-cli/._pre-am-3af48ea.tar.gz",
+        "tests/fixtures/legacy-cli/._provenance.json",
+        "tests/fixtures/v0.0.2-runtime/._portable-pack.tar.gz",
+        "tests/fixtures/v0.0.2-runtime/._provenance.json"
+      ]
+    }
+  ],
+  "archive_metadata_extra_count": 501,
+  "public_representation": "Grouped identical metadata bodies; every observed extra path is retained."
+}
