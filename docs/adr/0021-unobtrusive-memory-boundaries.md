@@ -189,7 +189,10 @@ unsuccessful trials, and qualify provider/model compatibility explicitly.
 
 The existing `ADR-0021:recurring-bytecode-drift` follow-up SHALL retain its stable
 issue identity. Its v0.0.11 outcome is a source-bound RCA, reviewed preventive
-diagnostic guidance and independently reviewed recovery proposal. It MUST NOT
+diagnostic guidance and independently reviewed recovery proposal. Issue #238
+SHALL close only after those exact deliverables receive independent acceptance
+and release delivery. A new Backlog implementation item SHALL own any actual
+healing, with separate design/attempt/acceptance gates. Closure of #238 MUST NOT
 be presented as shipped automatic healing.
 
 The [operator adoption incident](../research/2026-10-28-v010-operator-adoption.md)
@@ -209,9 +212,10 @@ an already-present cache. An unverified installed package MUST NOT be imported
 as its own integrity verifier.
 
 The recovery proposal SHALL define verified signed payload and metadata,
-complete ordinary-file ownership/hash/mode observation, native Python cache
-format/version/header/code comparison, bounded non-executing parsing, retained
-unknown attribution, lifecycle ownership/locking, descriptor-pinned no-replace
+complete ordinary-file ownership/hash/mode observation, a verification strategy
+(conservative bytewise comparison against regenerated caches or an independently
+reviewed isolated non-executing parser) and its bounds, retained attribution
+qualifications, lifecycle ownership/locking, descriptor-pinned no-replace
 quarantine, interruption/retry semantics, specific diagnostics and trusted next
 steps. Unknown or changed payload, unproved cache contents, foreign ownership,
 links, unsupported formats and active/interrupted operations SHALL remain
@@ -253,6 +257,29 @@ An empty delta MUST NOT substitute for apply, source revalidation, authority
 freshness, relevant recall or cursor completion. `refresh_applied` can be true
 while `canonical_writes_performed` is false; publication and feature-code
 freshness remain separate. No unchanged-text comparison proves shared truth.
+
+The existing full-envelope route SHALL gain an explicit metadata-consistency
+guard before output preflight or apply side effects. All authority and source
+pins MUST derive solely from the validated inner proposal/proof. For a full
+prepare response, require its known schema, prepare operation, prepared stage,
+strict Boolean stage facts and no additional outer authority/pin fields.
+Its declared `changed_memory_paths` MUST equal the pure delta reconstructed from
+the inner observed/planned hash maps; blocked paths MUST match the inner proof.
+Conflicts remain informational data, not permission or authoritative source pins.
+An inconsistent wrapper SHALL fail as `refresh-prepared-envelope-invalid` in
+`apply.prepared-envelope`, with a fixed safe next step to preserve and use the
+original retained preparation or obtain a newly reviewed one. It MUST NOT edit
+fields automatically or bless the wrapper as a receipt.
+
+This guard MUST NOT reread live sources or run fresh semantic checks merely to
+validate report metadata: an already-applied import must retain its supported
+full-file historical retry. Existing transaction/semantic/under-lock checks
+remain responsible for actual applicability, source validity and fresh outcomes.
+Exact-inner callers retain their existing contract. Public tests SHALL first
+retain the old acceptance of contradictory outer operation/delta/repository
+fields as a baseline (no invalid inner authority was accepted), then prove all
+three are refused before receipt/cursor/Git metadata mutation. Malformed Boolean
+stage facts and other contradictory stage metadata SHALL also be refused.
 
 The full-envelope route MUST retain existing v2 private-output requirements,
 exact project/repository/operation/checkout/source pins, semantic proof,
