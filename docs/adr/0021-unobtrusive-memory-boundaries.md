@@ -184,3 +184,81 @@ model retries. Alternative source timing or native API changes require their own
 reviewed design before implementation. Actual native multi-turn qualification
 MUST count routine calls, text, source coverage and failure behavior, retain
 unsuccessful trials, and qualify provider/model compatibility explicitly.
+
+### T5: Recurring bytecode writer RCA and recovery proposal (v0.0.11)
+
+The existing `ADR-0021:recurring-bytecode-drift` follow-up SHALL retain its stable
+issue identity. Its v0.0.11 outcome is a source-bound RCA, reviewed preventive
+diagnostic guidance and independently reviewed recovery proposal. It MUST NOT
+be presented as shipped automatic healing.
+
+The [operator adoption incident](../research/2026-10-28-v010-operator-adoption.md)
+proved signed payload bytes/modes were intact and 35 additional CPython3.14
+caches caused an actual update refusal. The subsequent
+[writer investigation](../research/2026-10-28-v011-bytecode-rca.md) SHALL bind the
+actual process invocation and file evidence, distinguishing attribution from
+mere timestamp correlation and actual incidents from disposable reproductions.
+The investigation MUST NOT blame an AM-owned launcher without source evidence.
+
+Preventive guidance SHALL prefer the installed CLI or documented interpreter
+launcher. An independently necessary trusted diagnostic import MUST use `-I -B`
+before package code runs; bare Python imports of a managed package MUST NOT be
+used as a routine diagnostic shortcut. `-I` ignores the environment's no-write
+flag, while `-B` prevents writes but does not authenticate or suppress reading
+an already-present cache. An unverified installed package MUST NOT be imported
+as its own integrity verifier.
+
+The recovery proposal SHALL define verified signed payload and metadata,
+complete ordinary-file ownership/hash/mode observation, native Python cache
+format/version/header/code comparison, bounded non-executing parsing, retained
+unknown attribution, lifecycle ownership/locking, descriptor-pinned no-replace
+quarantine, interruption/retry semantics, specific diagnostics and trusted next
+steps. Unknown or changed payload, unproved cache contents, foreign ownership,
+links, unsupported formats and active/interrupted operations SHALL remain
+preserved and refused. It MUST NOT permit cache execution, integrity exclusions,
+unsigned fallback, local receipt blessing, chmod bypass or deletion shortcuts.
+A proposed repair is not a general permission to modify an installation.
+Implementation needs its own reviewed design, task and independent acceptance.
+
+Bounded public-operation fixtures on macOS and Linux SHALL demonstrate the raw
+import cache-creation/update-refusal mechanism and the ordinary guarded launcher's
+contrasting behavior, retaining source/version, observations and unchanged
+payload/receipt/bank/feature state. A smaller fixture MUST NOT be mislabeled as
+reproducing every historical module or caller. Private original records SHALL
+remain private; public evidence SHALL include only needed redacted invocations,
+hashes, provenance and outcomes. Native model reruns are not required for this
+CLI/source investigation.
+
+### T6: Direct prepared-refresh handoff (v0.0.11)
+
+The [refresh scripting RCA](../research/2026-10-28-v011-refresh-handoff-rca.md)
+identifies unnecessary extraction code around an already supported CLI input.
+Guidance SHALL retain the complete private prepare response and pass that same
+file directly to refresh apply; it SHALL distinguish that stored response from
+its concise stdout artifact summary. It MUST NOT require JavaScript extraction,
+reserialization, a private copy of the nested proposal, or an ad hoc file
+comparison solely to perform this handoff. Existing callers with the exact
+inner proposal remain compatible.
+
+Sessions SHALL use prepare's `changed_memory_paths` and the complete applied
+transaction's `receipt.changed_memory_paths` with their actual stage meanings.
+An empty delta MUST NOT substitute for apply, source revalidation, authority
+freshness, relevant recall or cursor completion. `refresh_applied` can be true
+while `canonical_writes_performed` is false; publication and feature-code
+freshness remain separate. No unchanged-text comparison proves shared truth.
+
+The full-envelope route MUST retain existing v2 private-output requirements,
+exact project/repository/operation/checkout/source pins, semantic proof,
+under-lock rechecks, idempotency and failure preservation. Public-command proof
+SHALL cover unchanged and actual imported content, exact inner-proposal
+compatibility, full-file retry, changed local/authority source or inner pins,
+artifact-summary input refusal and unsafe output refusal. Canonical memory,
+feature work and the original index/HEAD SHALL change only as the existing
+reviewed refresh operation permits. This outcome requires no new CLI schema,
+semantic engine, harness integration, MCP or cross-repository behavior.
+
+T5 and T6 are selected for bounded v0.0.11 work under the operator's current
+release instruction. Independent design approval, AWA attempt readiness,
+source-bound acceptance and actual signed release delivery remain separate.
+T4 and other deferred roadmap work remain Backlog for v0.0.12 with their original
+approval gates. The published v0.0.9 and v0.0.10 delivery histories remain intact.
