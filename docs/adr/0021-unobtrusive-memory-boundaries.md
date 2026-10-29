@@ -219,6 +219,13 @@ preserved and refused. It MUST NOT permit cache execution, integrity exclusions,
 unsigned fallback, local receipt blessing, chmod bypass or deletion shortcuts.
 A proposed repair is not a general permission to modify an installation.
 Implementation needs its own reviewed design, task and independent acceptance.
+Unsigned cache bytes MUST NOT be passed to in-process `marshal.load/loads` in a
+live verifier merely because they are owned files or have plausible headers.
+[Python's marshal contract](https://docs.python.org/3.14/library/marshal.html)
+warns that untrusted data and version-incompatible code objects are unsafe.
+A future verification strategy must be independently reviewed before that
+implementation becomes Ready; timeouts alone are not a parser security boundary.
+This v0.0.11 outcome approves no parser or automatic-repair implementation.
 
 Bounded public-operation fixtures on macOS and Linux SHALL demonstrate the raw
 import cache-creation/update-refusal mechanism and the ordinary guarded launcher's
