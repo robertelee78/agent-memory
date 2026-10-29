@@ -27,7 +27,9 @@ state. Skipping apply merely because files compare equal would lose that proof.
 
 The bounded proposed correction documents direct private-file handoff, exact
 retention of the governed result, native delta fields and stage distinctions.
-It changes no source authority, memory content, CLI schema or workflow gates.
+It changes no source authority, memory content or CLI schema and preserves the
+existing semantic/transaction gates. The newly selected metadata-consistency
+check is described below.
 Public-command qualification must cover the full envelope in v2 private output,
 legacy compatibility, unchanged and changed imports, pinned-source refusal and
 safe output paths. No tests will replay or modify the original to-auth operation.
