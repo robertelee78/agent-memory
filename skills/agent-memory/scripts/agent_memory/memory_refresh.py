@@ -37,6 +37,17 @@ class CurrentFailure(ContractError):
         self.path = path
 
 
+class PreparedEnvelopeFailure(ContractError):
+    code = 'refresh-prepared-envelope-invalid'
+    component = 'apply.prepared-envelope'
+    repair = ('Preserve the original preparation and pending evidence. Use the unchanged complete private prepare result '
+              'or its exact inner proposal. If the retained result was modified, obtain a newly source-reviewed preparation; '
+              'do not repair report fields by hand.')
+
+    def __init__(self):
+        super().__init__('Prepared refresh report metadata is inconsistent with its retained proposal.')
+
+
 def _policy_pin(value):
     return value.st_dev, value.st_ino, value.st_mode, value.st_uid
 
@@ -439,8 +450,31 @@ def save_cursor(root, p, observation, receipt, expected):
     return {'stored': True, 'authority_head': observation['authority_head'], 'content_free': True}
 
 
+def prepared_proposal(value):
+    """Check report metadata without live reads or invalidating historical retries."""
+    p = tx.proposal_value(value)
+    if not isinstance(value, dict) or 'proposal' not in value:
+        return p  # Preserve the existing exact-inner contract.
+    evidence = p.get('refresh_evidence')
+    proof = evidence.get('proof') if isinstance(evidence, dict) else None
+    if (p['operation'] != 'refresh' or not isinstance(proof, dict)
+            or not isinstance(proof.get('blocked_paths'), list)
+            or not isinstance(value.get('conflicts'), list)):
+        raise PreparedEnvelopeFailure()
+    expected = result('prepare', 'prepared',
+        conflicts=value['conflicts'],  # Informational; never authority or permission.
+        blocked_paths=proof['blocked_paths'], changed_memory_paths=tx.changed(p),
+        git_metadata_writes_performed=True, remote_freshness_verified=True)
+    metadata = {key:item for key,item in value.items() if key != 'proposal'}
+    if (set(metadata) != set(expected)
+            or any(type(metadata[key]) is not type(expected[key]) or metadata[key] != expected[key]
+                   for key in expected)):
+        raise PreparedEnvelopeFailure()
+    return p
+
+
 def apply(prepared):
-    p = tx.proposal_value(prepared)
+    p = prepared_proposal(prepared)
     if 'refresh_evidence' not in p:
         raise ContractError('The refresh operation requires its original source-bound proposal')
     root, _ = writes.bank_path(p['repo_root']); original_index = index_hash(root)
@@ -528,7 +562,7 @@ def main(argv=None):
                 output_repo = args.repo
             else:
                 input_value = read_input(args.input,version2=args.v2)
-                output_repo = tx.proposal_value(input_value)['repo_root']
+                output_repo = prepared_proposal(input_value)['repo_root']
             limits.preflight_private_output(args.output, output_repo)
         if args.operation == 'current': value = current_result(args.repo)
         elif args.operation == 'inspect': value = inspect(args.repo, args.base,version2=args.v2)
@@ -552,12 +586,13 @@ def main(argv=None):
         authority_failed=isinstance(exc,recovery.AuthorityFailure)
         output_failed=isinstance(exc,limits.PrivateOutputError)
         untracked_memory=isinstance(exc,UntrackedCanonicalMemory)
-        known=isinstance(exc,HoldFailure) or authority_failed
-        print(json.dumps(result(args.operation, 'pending-private-output' if output_failed else 'pending-inspection', canonical_writes_performed=False if output_failed or args.operation == 'current' else None,
-                                git_metadata_writes_performed=False if output_failed or untracked_memory else None,
+        envelope_failed=isinstance(exc,PreparedEnvelopeFailure)
+        known=isinstance(exc,HoldFailure) or authority_failed or envelope_failed
+        print(json.dumps(result(args.operation, 'pending-private-output' if output_failed else 'pending-inspection', canonical_writes_performed=False if output_failed or envelope_failed or args.operation == 'current' else None,
+                                git_metadata_writes_performed=False if output_failed or untracked_memory or envelope_failed else None,
                                 **({'pending_capture': 'unknown', 'pending_publication': 'unknown', 'semantic_truth_verified': False}
                                    if args.operation == 'current' else {}),
-                                failure_component='output' if output_failed else 'local-boundary' if untracked_memory else exc.component if authority_failed else 'known-dispute-state' if known else args.operation,
+                                failure_component='output' if output_failed else 'local-boundary' if untracked_memory else exc.component if authority_failed or envelope_failed else 'known-dispute-state' if known else args.operation,
                                 failure_code='private-output-invalid' if output_failed else 'canonical-memory-untracked' if untracked_memory else exc.code if known else 'refresh-unverified',
                                 reason=str(exc) if output_failed or untracked_memory or known else 'Unresolved, offline, unsafe, interrupted or changed refresh; retain the original proposal and local memory, inspect/recover before retry',
                                 repair=str(exc) if output_failed else 'Preserve local memory and feature work. Run am refresh inspect --v2 --repo REPO --output /private/path/inspection.json using an owner-only directory outside the repository, then complete the required review. Do not stage or reset memory just to pass this quick check.' if untracked_memory else exc.repair if known else 'Preserve the proposal, bank and pending evidence. Run am doctor for this repository and inspect the failed component before repeating refresh inspection; do not reset or replace the bank.')))

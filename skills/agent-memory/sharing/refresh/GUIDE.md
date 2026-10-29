@@ -117,11 +117,20 @@ canonical knowledge. Local state MUST remain outside Git and the bank.
 /bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/refresh_memory.py" prepare --v2 --repo /path/to/repo --input /private/refresh-input.json --output /private/prepared-refresh.json
 ```
 
-Only `prepared` contains a `proposal`. The session MUST save that exact proposal
-in private storage without editing its paths, proof, scope or checkout pins.
+Only `prepared` contains a `proposal`. The session MUST retain the complete
+private `prepared-refresh.json` output unchanged, including its nested proposal,
+paths, proof, scope and checkout pins. Pass that same saved file directly to
+apply; no extraction, reserialization or second proposal file is required.
+The concise stdout artifact summary is not the stored complete preparation and
+MUST NOT be substituted for it. Existing exact-inner-proposal callers remain
+compatible.
+
 The helper validates the complete three-way result and exact local source hashes.
-The full candidate map is a reviewed merge plan, not a snapshot overwrite:
-application changes only the observed delta under the existing bank lock.
+Its `changed_memory_paths` reports the planned delta; an ad hoc comparison is
+unnecessary and MUST NOT substitute for governed apply or freshness/recall proof.
+An empty delta still needs the applicable completion/cursor checks. The full
+candidate map is a reviewed merge plan, not a snapshot overwrite: application
+changes only the observed delta under the existing bank lock.
 
 Conflicts in preparation MUST show both actual claims/evidence to the current
 detecting developer. Known other-developer attribution MUST be shown with a
@@ -132,10 +141,20 @@ The session MUST retain the conflict packet while independent imports proceed.
 ## Apply
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/refresh_memory.py" apply --v2 --input /private/refresh-proposal.json --output /private/applied-refresh.json
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/refresh_memory.py" apply --v2 --input /private/prepared-refresh.json --output /private/applied-refresh.json
 ```
 
 ## Read back
+
+A full prepared response must have its known prepare schema/stage and strict
+Boolean facts. Its declared delta must match the inner observed/planned hashes,
+blocked paths must match the proof, and additional outer authority/pin fields
+are refused. Only the validated inner proposal and proof supply authority.
+`refresh-prepared-envelope-invalid` in `apply.prepared-envelope` means the
+session MUST preserve the original result and use its unchanged complete file
+or exact inner proposal; obtain a new source-reviewed preparation if it was
+modified. Do not repair report fields by hand. This metadata check performs no
+live-source reads, so valid full-file historical retries remain supported.
 
 The helper repeats semantic/source review before writing and again under its
 owned bank lock, with the actual project, local branch/revision, configured root,
@@ -151,7 +170,11 @@ completed write receipt MUST NOT be described as latest shared truth.
 
 ## Verify
 
-The session MUST distinguish `refresh_applied`, `canonical_writes_performed`,
+The session MUST read applied changed paths from the complete result's
+`receipt.changed_memory_paths`, not an invented top-level field.
+`refresh_applied: true` with no changed paths and
+`canonical_writes_performed: false` can establish checked freshness, recall and cursor state without changing
+bank bytes. The session MUST distinguish `refresh_applied`, `canonical_writes_performed`,
 `remote_freshness_verified`, `relevant_imports_read`, `conflicts_pending` and cursor
 storage. A repeat MAY return a historical receipt without reapplying bytes. A
 later local correction/import MUST survive an older retry; historical or changed
