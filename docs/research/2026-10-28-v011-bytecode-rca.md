@@ -140,7 +140,7 @@ identity setup invokes the explicit root `scripts/developer_identity.py` and
 modules and the fixture copies the known pack subtree. No `._*` filename is
 named by these imports or entrypoints, parsed as fixture metadata, or executed;
 the extras remain recorded, not silently authenticated. macOS used a complete
-clean `git archive` of `a67b8b8`, including root wrappers and without AppleDouble
+clean `git archive` of `a67b8b8d50c1bb487117705991fc3acd8a9c3459`, including root wrappers and without AppleDouble
 metadata. These controls qualify the stated functional mechanism, not a new
 release package or recovery implementation.
 
