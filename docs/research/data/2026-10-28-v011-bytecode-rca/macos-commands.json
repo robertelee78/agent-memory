@@ -1,0 +1,58 @@
+[
+  {
+    "label": "verified-signed-bootstrap-install",
+    "exit": 0,
+    "seconds": 0.8168512919946807,
+    "stdout_sha256": "83c0a934b36141e1b05df82280f13cff6c36d66b9ae3aa3ffb0d6417629f50b3",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "label": "guarded-cli-without-environment-guard",
+    "exit": 0,
+    "seconds": 1.17146875000617,
+    "stdout_sha256": "0bd68615528e8c3dc8bef2cc5ea61d31712b367a6f3e5007f50fc402b399829e",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "label": "owned-helper-without-environment-guard",
+    "exit": 0,
+    "seconds": 0.09572204200958367,
+    "stdout_sha256": "61923de90af45fc63325c3326bc2c85f755f62c47e551fd48d71fe7b0027533a",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "label": "public-inspection-before-diagnostic",
+    "exit": 0,
+    "seconds": 2.2148611250013346,
+    "stdout_sha256": "f8d5d06c6e0940b0f32c55350c9097bd0420290c0b2dfc5df96f1dfef687eacd",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "label": "same-direct-diagnostic-with-I-B",
+    "exit": 0,
+    "seconds": 5.391934416998993,
+    "stdout_sha256": "e1e3b883d31b762bfcbd34d195c9e9f204dae1f52ca48e29432f3742bbc916cf",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "label": "observed-plain-python-diagnostic",
+    "exit": 0,
+    "seconds": 7.481612874995335,
+    "stdout_sha256": "e1e3b883d31b762bfcbd34d195c9e9f204dae1f52ca48e29432f3742bbc916cf",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "label": "public-update-after-raw-import",
+    "exit": 1,
+    "seconds": 1.4393655000021681,
+    "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stderr_sha256": "8a0640f152bb01ec62e301bf2110099c6cdfaa70fb507b973146c41f13258469"
+  },
+  {
+    "label": "public-doctor-after-raw-import",
+    "exit": 1,
+    "seconds": 2.1194574999972247,
+    "stdout_sha256": "ac8249a3dc2a8a0d9ea31a0c439b9e5b333f8ea29cadd7de5408dd8f785dc2c8",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+]

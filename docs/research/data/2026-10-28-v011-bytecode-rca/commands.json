@@ -1,0 +1,96 @@
+[
+  {
+    "label": "verified-signed-bootstrap-install",
+    "exit": 0,
+    "seconds": 0.8870453368872404,
+    "argv_interpreter_flags": [
+      "/usr/bin/python3",
+      "-I",
+      "-B"
+    ],
+    "stdout_sha256": "773220a409d86fa300a814cb37bb73dfd23b5a322b09e2d346677d60c50ec1c6",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "label": "guarded-cli-without-environment-guard",
+    "exit": 0,
+    "seconds": 1.1826962460763752,
+    "argv_interpreter_flags": [
+      "am",
+      "--version"
+    ],
+    "stdout_sha256": "4b8fffb4ac3ff49b9c80908cea8f70a3e1539e96f311f910f9aada7f66abf745",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "label": "owned-helper-without-environment-guard",
+    "exit": 0,
+    "seconds": 0.10234421491622925,
+    "argv_interpreter_flags": [
+      "/usr/bin/python3",
+      "<disposable-world>/data/agent-memory/source/skills/agent-memory/scripts/reconcile_memory.py",
+      "--help"
+    ],
+    "stdout_sha256": "61923de90af45fc63325c3326bc2c85f755f62c47e551fd48d71fe7b0027533a",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "label": "public-inspection-before-diagnostic",
+    "exit": 0,
+    "seconds": 0.5688221130985767,
+    "argv_interpreter_flags": [
+      "am",
+      "semantic",
+      "inspect-v2"
+    ],
+    "stdout_sha256": "2075ee317178d5e4bb18b98f330d519a32935167b21f24c7d544c5bc100fdb34",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "label": "same-direct-diagnostic-with-I-B",
+    "exit": 0,
+    "seconds": 1.1246287231333554,
+    "argv_interpreter_flags": [
+      "/usr/bin/python3",
+      "-I",
+      "-B"
+    ],
+    "stdout_sha256": "e1e3b883d31b762bfcbd34d195c9e9f204dae1f52ca48e29432f3742bbc916cf",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "label": "observed-plain-python-diagnostic",
+    "exit": 0,
+    "seconds": 1.0927240001037717,
+    "argv_interpreter_flags": [
+      "/usr/bin/python3",
+      "-",
+      "<disposable-world>/data/agent-memory/source/skills/agent-memory/scripts"
+    ],
+    "stdout_sha256": "e1e3b883d31b762bfcbd34d195c9e9f204dae1f52ca48e29432f3742bbc916cf",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "label": "public-update-after-raw-import",
+    "exit": 1,
+    "seconds": 0.8672371238935739,
+    "argv_interpreter_flags": [
+      "am",
+      "update"
+    ],
+    "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stderr_sha256": "8a0640f152bb01ec62e301bf2110099c6cdfaa70fb507b973146c41f13258469"
+  },
+  {
+    "label": "public-doctor-after-raw-import",
+    "exit": 1,
+    "seconds": 1.974313560174778,
+    "argv_interpreter_flags": [
+      "am",
+      "--json",
+      "doctor"
+    ],
+    "stdout_sha256": "6b4e6f23909763d61ca78c157d4642fa486e22a87732592fcf9cce101e0dca63",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+]

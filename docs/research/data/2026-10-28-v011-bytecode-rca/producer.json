@@ -1,0 +1,19 @@
+{
+  "producer_identified": true,
+  "harness": "Codex",
+  "timestamp_utc": "2026-10-28T18:09:44.611Z",
+  "source_record_sha256": "9117b6bff2da72e59933b6cb284c13508ba3e64a3660a7632ab8d4c86842e3ba",
+  "command_sha256": "72c1b89057c59db1f687fc104fe33d57bda3a83acd2741aef1637e73894ad90f",
+  "actual_invoking_argv": [
+    "python3",
+    "-"
+  ],
+  "is_am_cli_or_documented_helper": false,
+  "bytecode_guard_in_command": false,
+  "redacted_command_prefix": "python3 - <<'PY'\nimport json, sys, traceback\nsys.path.insert(0, '<installed-agent-memory>/skills/agent-memory/scripts')\nfrom agent_memory import semantic_sharing\n...",
+  "direct_am_api_calls": [
+    "semantic_sharing.compact_review"
+  ],
+  "raw_records_published": false,
+  "private_source_reference": "/tmp/am-v011-cache-producer-28873qt6/matches.json, selected invocation record"
+}
