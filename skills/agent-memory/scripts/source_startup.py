@@ -40,4 +40,19 @@ if __name__ == '__main__':
         sys.argv = sys.argv[1:]
         if not sys.argv:
             raise SystemExit('Source-only startup requires a script path.')
-        runpy.run_path(sys.argv[0], run_name='__main__')
+        if sys.argv[0] == '-c':
+            if len(sys.argv) < 2:
+                raise SystemExit('Source-only startup requires code after -c.')
+            code = sys.argv[1]
+            sys.argv = ['-c', *sys.argv[2:]]
+            exec(compile(code, '<string>', 'exec'), {'__name__': '__main__'})
+        elif sys.argv[0] == '-m':
+            if len(sys.argv) < 2:
+                raise SystemExit('Source-only startup requires a module after -m.')
+            module = sys.argv[1]
+            sys.argv = sys.argv[1:]
+            runpy.run_module(module, run_name='__main__', alter_sys=True)
+        elif sys.argv[0] == '-':
+            exec(compile(sys.stdin.read(), '<stdin>', 'exec'), {'__name__': '__main__'})
+        else:
+            runpy.run_path(sys.argv[0], run_name='__main__')
