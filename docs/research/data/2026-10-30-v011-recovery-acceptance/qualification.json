@@ -1,0 +1,110 @@
+{
+  "schema": "agent-memory/v011-recovery-acceptance-v1",
+  "candidate": "fa6803b1aa7be48c2038d9d1876655d84ccc259d",
+  "runtime_sha256": {
+    "skills/agent-memory/scripts/agent_memory/cache_recovery.py": "70960edff0065488833d9de2855d88e380cf15573014b123ca97460a85e883b6",
+    "skills/agent-memory/scripts/agent_memory/updating.py": "f272d18bc61faecd927166d8f710b14aedc0f9f530533ac2741f0be79f1550da",
+    "skills/agent-memory/scripts/agent_memory/installation.py": "8d04f100338aaee8b36e73093f303614d0d10ab0c5b331209bc628903744a347",
+    "skills/agent-memory/scripts/agent_memory/memory_refresh.py": "9d2fc6923f332724020f2407d8b1e23b4fadca63f4492436f6b43dc8caf18eff",
+    "skills/agent-memory/scripts/agent_memory/console.py": "3faa3bc1ccaf5b9cf4aef18038dbdc038762ee965886b277ce470eb5d90b7073",
+    "skills/agent-memory/scripts/source_startup.py": "124aa791b1da7b236d859a1153dbd47f98d924ac713b53289e81d3c3da10bf01"
+  },
+  "reports": [
+    {
+      "name": "am-v011-independent-cache-suite.json",
+      "retained_evidence_sha256": "55bdddc1d9da21ba9f5679746f2230133d06b580b0310e4b16602117f2108418",
+      "source": "e8e6e9a+a77dac2",
+      "test_commit": "41da31c",
+      "exit": 1,
+      "seconds": 50.05956712499028
+    },
+    {
+      "name": "am-v011-independent-cache-interruption.json",
+      "retained_evidence_sha256": "174212cf623e3c82b94f2acc8262d4d1fe87955811c0e84dd20fad55564177d2",
+      "source": "e8e6e9a+a77dac2",
+      "test": "6b3d636",
+      "passed": true,
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 10.423662582994439
+    },
+    {
+      "name": "am-v011-independent-cache-boundaries.json",
+      "retained_evidence_sha256": "07d9b0e4536d37f591f766a0152f8b70e39f7f279aff79fe8dfc3bf8743fe6ba",
+      "source": "e8e6e9a+a77dac2",
+      "test": "3bfb9ef",
+      "passed": true,
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 18.363298457989004
+    },
+    {
+      "name": "am-v011-independent-cache-race-final.json",
+      "retained_evidence_sha256": "71e09fb2e135120a4765fbf8776f9e9c3db0ba5c634f5feeab1a00106ab3b20b",
+      "source": "3c95787",
+      "test": "e864220",
+      "passed": true,
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 24.967429500014987
+    },
+    {
+      "name": "am-v011-linux-final-focused-result.json",
+      "retained_evidence_sha256": "e041c7ce6aef07b8750bce20df01c604cfea82668a811b26800c48ea8a3141c9",
+      "source_commit": "e9cf344d7abc1aa18624d00cf6b3cf1b0cb5e094",
+      "passed": true,
+      "platform": "Linux-7.0.11-76070011-generic-x86_64-with-glibc2.43",
+      "python": "3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0]",
+      "archive_sha256": "980ae1c9129937709af072bab84aa1756ced10e9fc33464b8e47e300df77cc77",
+      "source_hashes": {
+        "skills/agent-memory/scripts/source_startup.py": "124aa791b1da7b236d859a1153dbd47f98d924ac713b53289e81d3c3da10bf01",
+        "skills/agent-memory/scripts/agent_memory/cache_recovery.py": "70960edff0065488833d9de2855d88e380cf15573014b123ca97460a85e883b6",
+        "skills/agent-memory/scripts/agent_memory/installation.py": "e5da01e4651dda013c8ed5292602c8dc7b82d469ebc064437f5f2a1408435504",
+        "skills/agent-memory/scripts/agent_memory/updating.py": "f272d18bc61faecd927166d8f710b14aedc0f9f530533ac2741f0be79f1550da",
+        "skills/agent-memory/hooks/python3.sh": "98da4eed678d7cf1987e39712e821f7700fca94b7b4aba42a0f9ea3c777ab926",
+        "tests/source_startup_contract.py": "5b4dbf8bea697bca1dc62d36b1e7d12af4831854b05d33dfe8005f30b53a53d5",
+        "tests/contracts/test_cache_update_recovery.py": "aef43a335f60f48cbdc2d00e1720aabf7d9e4b5362057da317f2f39207e4a123"
+      },
+      "operator_profile_writes": false,
+      "inventory_extras": []
+    },
+    {
+      "name": "am-v011-wrapper-parity.json",
+      "retained_evidence_sha256": "f5b667a13a08c0058b3e97d782d0df06c25b1b6d6223c8795e706f6131444660",
+      "old_signed_source": "76a7886408e8a295adca7f3df2536efdb1a107b7",
+      "wrapper_function_ast_identical": true,
+      "actual_linux_wrapper_bytes_identical": true,
+      "actual_sha256": "151fa166a97d92230a9bd4dcf14a04ff75e957bbd3cce54ce4095bf32121c779",
+      "generated_sha256": "151fa166a97d92230a9bd4dcf14a04ff75e957bbd3cce54ce4095bf32121c779",
+      "actual_length": 616,
+      "generated_length": 616,
+      "operator_writes": false
+    },
+    {
+      "name": "final-refresh-handoff",
+      "retained_evidence_sha256": "55f6a7352adee11a1e0d84f36902b84439c388dc3aa9d83cd65b50f376bd18e4",
+      "passed": true,
+      "source_commit": "e9cf344d7abc1aa18624d00cf6b3cf1b0cb5e094",
+      "controller_sha256": "2daa07b587f39dee5e97d0b274cbb58d7d974cfd83c6655b1f4954cd05d22532",
+      "runtime_sha256": {
+        "skills/agent-memory/scripts/agent_memory/memory_refresh.py": "9d2fc6923f332724020f2407d8b1e23b4fadca63f4492436f6b43dc8caf18eff",
+        "skills/agent-memory/scripts/agent_memory/bank_transactions.py": "edaaf0b53a8f6ae3859ecd1bbfc803baa2a0a7328fbb6bced538a9f7139fa77f"
+      },
+      "seconds": 99.8413540829788,
+      "command_count": 52,
+      "all_calls_I_B": true,
+      "actual_profile_modified": false,
+      "case_count": 33
+    }
+  ],
+  "first_suite_failed": true,
+  "initial_failures": {
+    "runtime": "Concurrent-cache writer prevented a trusted retry; fixed and independently retested.",
+    "fixture": "Retry changed configured client selection; corrected without changing runtime and independently retested."
+  },
+  "production_signatures_exercised_by_these_local_fixtures": false,
+  "public_delivery_pending": true
+}
