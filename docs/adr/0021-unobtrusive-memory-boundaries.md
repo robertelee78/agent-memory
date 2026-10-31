@@ -387,3 +387,38 @@ subprocess runs before activation, updated CLI and hook launchers never read a
 poisoned cache or write caches in the installed tree, and a source-only retry
 converges after a simulated concurrent writer ceases. Failed activation that
 restores a dirty source MUST remain unverified/pending with all old bytes intact.
+
+### T8: Honor private ancestors for cache directories (v0.0.12)
+
+Actual signed v0.0.11 adoption on Beast refused before activation: Python created
+`__pycache__` with mode 0775 under umask 0002. Its 25 cache files were 0644 and
+the current-owner source root was 0700. Source and receipts remained preserved.
+Synthetic fixtures used restrictive directory modes and missed this normal
+layout. T7's blanket prohibition on group-writable cache directories ignored
+T1's existing private-ancestor policy. This is an over-restrictive design rule,
+not evidence that signed payload changed or other principals could reach it.
+
+`ADR-0021:cache-directory-private-barrier` SHALL own the corrective v0.0.12
+outcome. It supersedes only T7's blanket extra cache-directory mode restriction.
+The qualifier SHALL use the existing T1 root-to-leaf trust policy already applied
+by its descriptor walker. A current-owner ordinary extra cache directory MAY be
+0775 or 0777 when a verified private ancestor prevents other principals from
+reaching it. Without protection, the existing T1 policy MUST still refuse unsafe
+reachable paths. Only the duplicate blanket directory-mode check SHALL be removed.
+Signature, signed payload/modes, source fingerprints, current-owner checks,
+file-mode limits, regular-file/single-link rules, cache names, inventory bounds,
+transactions, backups and race checks MUST remain unchanged. No chmod, deletion,
+receipt blessing, parsing or cache execution is authorized.
+
+A focused public regression SHALL reproduce Python cache creation under umask
+0002, establish a 0775 cache directory with 0644 cache inside the private source,
+and verify read-only preview, recovery, exact old-tree backup and a clean no-op.
+Protected 0777 directories SHALL also be covered. An unsafe-path negative SHALL
+remove all private barriers only on its disposable source branch and demonstrate
+that reachable writable cache directories remain refused without mutation;
+state/config branches retain their protections. Foreign ownership remains refused.
+Actual signed v0.0.12 adoption on Beast SHALL preserve its 25 cache files in whole
+source backups, establish a clean signed runtime and pass a normal update no-op.
+The unsuccessful v0.0.11 adoption SHALL remain retained and MUST NOT be reported
+as healed by that version. Published tags/assets MUST NOT be replaced. The eight
+remaining roadmap tasks move to v0.0.13 so this correction remains bounded.
