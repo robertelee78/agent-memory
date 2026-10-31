@@ -19,6 +19,10 @@ class SourceStartupContract(unittest.TestCase):
             target=root/'probe.py'
             target.write_text('import sys\nsys.path.insert(0,'+repr(str(pack/'scripts'))+')\nfrom agent_memory import console\nprint("source-only")\nprint(sys.pycache_prefix)\n')
             commands=[[sys.executable,'-I','-B',pack/'scripts'/name,'--help'] for name in ('installer.py','am_console.py','update_runtime.py')]
+            # Exact v0.0.10 wrapper Python body: runpy executes installer
+            # source, whose guard must run before importing the poisoned module.
+            legacy='import runpy,sys; sys.orig_argv=[sys.executable,sys.argv[1]]; sys.argv=sys.argv[1:]; runpy.run_path(sys.argv.pop(1),run_name="__main__")'
+            commands.append([sys.executable,'-I','-B','-c',legacy,root/'am',pack/'scripts/installer.py','--help'])
             commands.append(['/bin/sh',pack/'hooks/python3.sh',target])
             for command in commands:
                 with self.subTest(command=str(command[-2:])):
