@@ -2,7 +2,7 @@
 
 A portable, local-first Memory Bank for coding agents.
 
-## v0.0.11
+## v0.0.12
 
 One repository owns one shared Markdown memory bank. The skill captures durable
 learning, reads existing memory before adding it, combines duplicates without
@@ -11,10 +11,10 @@ independently of unfinished feature code and refresh into other sessions,
 worktrees and clones through the repository's existing Git rules. Contradictions
 go to the detecting developer for clarification.
 
-The [v0.0.11 release guide](docs/releases/v0.0.11.md) covers automatic signed
-update recovery from cache-only drift, source-only CLI/hook startup and a simpler
-validated memory-refresh handoff. Recovery preserves the previous runtime and
-keeps project memory separate from runtime replacement.
+The [v0.0.12 release guide](docs/releases/v0.0.12.md) covers recovery of normal
+Python cache directories beneath the runtime's private source root. Signed
+updates preserve the previous runtime and keep project memory separate from
+runtime replacement. Existing signature, ownership and path-trust checks apply.
 [Published releases](https://github.com/robertelee78/agent-memory/releases)
 hold the immutable source and actual qualification evidence for each version.
 

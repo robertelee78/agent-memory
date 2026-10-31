@@ -119,6 +119,9 @@ successful replacement MUST identify preserved source backups and report that
 cache validity was not established. A clean current installation stays a no-op.
 Only the source target and unchanged links to that exact qualified source are
 covered; independently copied client packages retain strict ownership checks.
+Extra cache directories MUST pass the shared path policy, including private
+ancestor protection. Directory mode 0775 or 0777 beneath a verified private
+barrier MAY qualify; reachable unsafe writable directories MUST still refuse.
 
 Updated launchers MUST prevent reads of existing AM bytecode before package
 imports. The first transition from an older affected updater MUST use the

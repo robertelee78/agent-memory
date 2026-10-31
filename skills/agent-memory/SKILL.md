@@ -1,7 +1,7 @@
 ---
 name: agent-memory
 description: Maintain a repository's shared Markdown memory across sessions, worktrees and machines; use to initialize, resume, recall, capture durable project learning, correct, forget or checkpoint memory.
-metadata: {"version": "0.0.11"}
+metadata: {"version": "0.0.12"}
 ---
 
 # Agent memory

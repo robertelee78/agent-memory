@@ -139,7 +139,7 @@ filter substantive model answers or alter permissions to disguise the limitation
 Failed trials MUST remain retained as failures. The original functional baseline
 is independently hash-matched to its completed native proof.
 
-Fully silent native OpenCode completion is tracked by T4 for v0.0.12. This
+Fully silent native OpenCode completion is tracked by T4 for v0.0.13. This
 exception permits only the documented control text/no-op; all v0.0.9 functional
 acceptance criteria and safety boundaries remain required.
 
@@ -170,9 +170,9 @@ instruction and the retained Opus review. Source-bound AWA readiness and
 independent implementation/delivery review remain separate requirements.
 
 
-### T4: Fully silent native OpenCode completion (v0.0.12)
+### T4: Fully silent native OpenCode completion (v0.0.13)
 
-T4 is Backlog for v0.0.12 and MUST NOT delay v0.0.9's verified functional repairs.
+T4 is Backlog for v0.0.13 and MUST NOT delay v0.0.9's verified functional repairs.
 It MUST establish a supported native mechanism for completing only the exact
 acknowledged control without extra tools, bookkeeping prose or a repeated
 business answer. It MUST preserve original task results and qualified SDK result
@@ -279,7 +279,7 @@ semantic engine, harness integration, MCP or cross-repository behavior.
 T5, T6 and T7 are selected for bounded v0.0.11 work under the operator's current
 release instruction. Independent design approval, AWA attempt readiness,
 source-bound acceptance and actual signed release delivery remain separate.
-T4 and other deferred roadmap work remain Backlog for v0.0.12 with their original
+T4 and other deferred roadmap work remain Backlog for v0.0.13 with their original
 approval gates. The published v0.0.9 and v0.0.10 delivery histories remain intact.
 
 
