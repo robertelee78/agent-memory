@@ -61,7 +61,13 @@ def observe(root):
         def walk(parent, relative, barrier):
             nonlocal total
             require(len(relative.parts) <= 64, 'source directory depth exceeds 64 components')
-            for name in sorted(os.listdir(parent)):
+            names = []
+            with os.scandir(parent) as entries:
+                for entry in entries:
+                    require(len(names) + len(observations) < 4096,
+                            'complete source tree exceeds 4096 entries')
+                    names.append(entry.name)
+            for name in sorted(names):
                 rel = (relative / name).as_posix()
                 require(len(observations) < 4096, 'complete source tree exceeds 4096 entries')
                 named = os.stat(name, dir_fd=parent, follow_symlinks=False)
