@@ -146,9 +146,9 @@ The session MUST retain the conflict packet while independent imports proceed.
 
 ## Read back
 
-A full prepared response must have its known prepare schema/stage and strict
-Boolean facts. Its declared delta must match the inner observed/planned hashes,
-blocked paths must match the proof, and additional outer authority/pin fields
+A full prepared response MUST have its known prepare schema/stage and strict
+Boolean facts. Its declared delta MUST match the inner observed/planned hashes,
+blocked paths MUST match the proof, and additional outer authority/pin fields
 are refused. Only the validated inner proposal and proof supply authority.
 `refresh-prepared-envelope-invalid` in `apply.prepared-envelope` means the
 session MUST preserve the original result and use its unchanged complete file
