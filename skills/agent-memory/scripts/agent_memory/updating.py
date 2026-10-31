@@ -85,6 +85,12 @@ def qualified_current(state, code):
         old = install.read_receipt(state)
         if not old or old['source'].get('kind') != 'release':
             raise
+        target = next((item for item in old['targets']
+                       if item['kind'] == 'source' and item['path'] == str(code)), None)
+        # An unchanged source cannot explain a wrapper/client/hook failure.
+        # Preserve that exact diagnostic instead of replacing it with a cache error.
+        if target is None or install.fingerprint(code) == target['identity']:
+            raise
         from . import cache_recovery as cache
         qualification = cache.qualify(code, old)
         return current(state, code, cache_recovery=qualification), qualification
