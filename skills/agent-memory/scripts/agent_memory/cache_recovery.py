@@ -194,7 +194,9 @@ def qualify(root, receipt):
     target = next((t for t in receipt['targets'] if t['kind'] == 'source' and t['path'] == str(root)), None)
     require(target is not None and identity(set(caches) | extra_dirs) == target['identity'],
             'original signed source metadata, directories or modes changed')
-    with tempfile.TemporaryDirectory(prefix='am-clean-old-payload-') as temporary:
+    scratch_parent = Path('/tmp').resolve(strict=True)
+    trust_paths.inspect(scratch_parent)
+    with tempfile.TemporaryDirectory(prefix='am-clean-old-payload-', dir=scratch_parent) as temporary:
         pack = Path(temporary)
         for name in signed:
             item = observed[name]; destination = pack / name[len(prefix):]

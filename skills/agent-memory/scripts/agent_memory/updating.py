@@ -286,7 +286,7 @@ def run(args):
                     and source.get('artifact_digest') == manifest['artifact_digest']
                     and source.get('version') == manifest['version']):
                 try:
-                    release.installed(code)
+                    current(state, code)
                     root = code
                 except (OSError, ValueError):
                     root = Path(temporary)/'source'; release.acquire(root, observation=observation)
