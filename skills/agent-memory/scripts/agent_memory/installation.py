@@ -467,7 +467,7 @@ def wrapper(pack):
             "  candidate=$dir/python3\n"
             "  if [ -x \"$candidate\" ] && \"$candidate\" -I -c 'import sys; sys.exit(sys.version_info < (3, 11))' >/dev/null 2>&1; then\n"
             "    IFS=$old_ifs\n"
-            "    exec \"$candidate\" -I -B -c 'import runpy,sys; sys.orig_argv=[sys.executable,sys.argv[1]]; sys.argv=sys.argv[1:]; target=sys.argv.pop(1); guard=runpy.run_path(target.rsplit(\"/\",1)[0]+\"/source_startup.py\",run_name=\"am_source_startup\")[\"isolate\"](); runpy.run_path(target,run_name=\"__main__\")' \"$0\" " + target + " \"$@\"\n"
+            "    exec \"$candidate\" -I -B -c 'import runpy,sys; sys.orig_argv=[sys.executable,sys.argv[1]]; sys.argv=sys.argv[1:]; runpy.run_path(sys.argv.pop(1),run_name=\"__main__\")' \"$0\" " + target + " \"$@\"\n"
             "  fi\n"
             "done\n"
             "IFS=$old_ifs\n"
