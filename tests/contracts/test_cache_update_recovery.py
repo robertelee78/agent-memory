@@ -297,3 +297,40 @@ class CacheUpdateRecoveryContract(unittest.TestCase):
             current = json.loads(retried.stdout)['receipt']
             self.assert_clean(w, current)
             self.assertEqual(snapshot(repo), consumer)
+
+    def test_late_signed_payload_or_other_target_change_never_receives_race_qualification(self):
+        for variant in ('signed-payload', 'other-wrapper'):
+            with self.subTest(variant=variant), World() as w, SignedRelease(w) as release:
+                receipt, repo = self.install(w, release)
+                source = Path(receipt['source']['path'])
+                self.opaque(source)
+                consumer = snapshot(repo)
+                rendezvous = w.inside('unknown-writer-rendezvous')
+                rendezvous.mkdir(mode=0o700)
+                phase = 'update-before-activate-0'
+                w.env.update(AGENT_MEMORY_FAULT_STAGE=phase, AGENT_MEMORY_FAULT_MODE='pause',
+                             AGENT_MEMORY_FAULT_DIR=str(rendezvous))
+                child = w.spawn([Path(receipt['bin_dir'])/'am', '--json', 'update'])
+                ready = rendezvous/(phase+'.ready')
+                deadline = time.monotonic()+20
+                while not ready.exists() and child.poll() is None and time.monotonic()<deadline:
+                    time.sleep(.01)
+                self.assertTrue(ready.exists(), 'Update did not reach its pre-activation boundary')
+                if variant=='signed-payload':
+                    changed = source/'skills/agent-memory/templates/router-proposal.example.json'
+                    payload = changed.read_bytes()+b'\nUnsigned concurrent payload change.\n'
+                else:
+                    changed = Path(receipt['bin_dir'])/'agent-memory'
+                    payload = changed.read_bytes()+b'\n# Concurrent external wrapper change.\n'
+                changed.write_bytes(payload)
+                (rendezvous/(phase+'.release')).touch()
+                stdout, stderr = child.communicate(timeout=120)
+                self.assertNotEqual(child.returncode, 0, stdout + stderr)
+                for key in ('AGENT_MEMORY_FAULT_STAGE','AGENT_MEMORY_FAULT_MODE','AGENT_MEMORY_FAULT_DIR'):
+                    w.env.pop(key)
+                self.assertEqual(changed.read_bytes(), payload)
+                self.assertEqual(snapshot(repo), consumer)
+                retried = release.install(presets='codex')
+                self.assertNotEqual(retried.returncode, 0, retried.stdout + retried.stderr)
+                self.assertEqual(changed.read_bytes(), payload)
+                self.assertEqual(snapshot(repo), consumer)
