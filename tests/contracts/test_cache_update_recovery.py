@@ -134,6 +134,50 @@ class CacheUpdateRecoveryContract(unittest.TestCase):
             self.assertIn(str(target), result.stdout + result.stderr)
             self.assertEqual((snapshot(source), receipt_path(w).read_bytes(), owned(receipt), snapshot(repo)), before)
 
+    def test_exact_count_and_byte_limits_allow_recovery_but_next_cache_refuses(self):
+        with World() as w, SignedRelease(w) as release:
+            receipt, repo = self.install(w, release)
+            source = Path(receipt['source']['path'])
+            consumer = snapshot(repo)
+            modules = sorted((source/'skills/agent-memory/scripts/agent_memory').glob('*.py'))
+            names = [(module, tag, suffix) for module in modules
+                     for tag in ('314','315','316') for suffix in ('','.opt-1','.opt-2')]
+            self.assertGreaterEqual(len(names), 257)
+            def populate(count):
+                for module, tag, suffix in names[:count]:
+                    directory = module.parent/'__pycache__'
+                    directory.mkdir(mode=0o700, exist_ok=True)
+                    node = directory/(module.stem+'.cpython-'+tag+suffix+'.pyc')
+                    node.write_bytes(b'x')
+                    node.chmod(0o600)
+            populate(256)
+            updated = self.cli(w, receipt, 'update')
+            self.assertTrue(updated['verified'])
+            self.assertEqual(updated['cache_recovery']['cache_count'], 256)
+            self.assertEqual(updated['cache_recovery']['cache_bytes'], 256)
+            receipt = updated['receipt']
+            self.assert_clean(w, receipt)
+            populate(257)
+            before = (snapshot(source), receipt_path(w).read_bytes(), owned(receipt), snapshot(repo))
+            self.cli(w, receipt, 'update', expected=1)
+            self.assertEqual((snapshot(source), receipt_path(w).read_bytes(), owned(receipt), snapshot(repo)), before)
+            self.assertEqual(snapshot(repo), consumer)
+        with World() as w, SignedRelease(w) as release:
+            receipt, repo = self.install(w, release)
+            source = Path(receipt['source']['path'])
+            consumer = snapshot(repo)
+            modules = sorted((source/'skills/agent-memory/scripts/agent_memory').glob('*.py'))[:8]
+            self.assertEqual(len(modules), 8)
+            for module in modules:
+                self.opaque(source, module=module.stem, raw=b'x'*(2*1024*1024))
+            dirty = snapshot(source)
+            updated = self.cli(w, receipt, 'update')
+            self.assertTrue(updated['verified'])
+            self.assertEqual(updated['cache_recovery']['cache_bytes'], 16*1024*1024)
+            self.assertEqual(snapshot(self.backups(updated['receipt'], source)[-1]), dirty)
+            self.assertEqual(snapshot(repo), consumer)
+            self.assert_clean(w, updated['receipt'])
+
     def test_unqualified_payload_cache_types_and_bounds_preserve_every_target(self):
         with World() as w, SignedRelease(w) as release:
             receipt, repo = self.install(w, release)
