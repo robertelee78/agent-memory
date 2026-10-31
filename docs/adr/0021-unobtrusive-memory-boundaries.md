@@ -2,7 +2,7 @@
 id: ADR-0021
 status: accepted
 date: 2026-10-27
-amended: 2026-10-28
+amended: 2026-10-30
 amends: [ADR-0018, ADR-0020]
 ---
 
@@ -191,9 +191,9 @@ The existing `ADR-0021:recurring-bytecode-drift` follow-up SHALL retain its stab
 issue identity. Its v0.0.11 outcome is a source-bound RCA, reviewed preventive
 diagnostic guidance and independently reviewed recovery proposal. Issue #238
 SHALL close only after those exact deliverables receive independent acceptance
-and release delivery. A new Backlog implementation item SHALL own any actual
-healing, with separate design/attempt/acceptance gates. Closure of #238 MUST NOT
-be presented as shipped automatic healing.
+and release delivery. The separate implementation item #240 SHALL own actual recovery with its own
+design, attempt and acceptance gates under T7 below. Closure of #238 alone MUST
+NOT be presented as shipped automatic recovery.
 
 The [operator adoption incident](../research/2026-10-28-v010-operator-adoption.md)
 proved signed payload bytes/modes were intact and 35 additional CPython3.14
@@ -211,25 +211,10 @@ flag, while `-B` prevents writes but does not authenticate or suppress reading
 an already-present cache. An unverified installed package MUST NOT be imported
 as its own integrity verifier.
 
-The recovery proposal SHALL define verified signed payload and metadata,
-complete ordinary-file ownership/hash/mode observation, a verification strategy
-(conservative bytewise comparison against regenerated caches or an independently
-reviewed isolated non-executing parser) and its bounds, retained attribution
-qualifications, lifecycle ownership/locking, descriptor-pinned no-replace
-quarantine, interruption/retry semantics, specific diagnostics and trusted next
-steps. Unknown or changed payload, unproved cache contents, foreign ownership,
-links, unsupported formats and active/interrupted operations SHALL remain
-preserved and refused. It MUST NOT permit cache execution, integrity exclusions,
-unsigned fallback, local receipt blessing, chmod bypass or deletion shortcuts.
-A proposed repair is not a general permission to modify an installation.
-Implementation needs its own reviewed design, task and independent acceptance.
-Unsigned cache bytes MUST NOT be passed to in-process `marshal.load/loads` in a
-live verifier merely because they are owned files or have plausible headers.
-[Python's marshal contract](https://docs.python.org/3.14/library/marshal.html)
-warns that untrusted data and version-incompatible code objects are unsafe.
-A future verification strategy must be independently reviewed before that
-implementation becomes Ready; timeouts alone are not a parser security boundary.
-This v0.0.11 outcome approves no parser or automatic-repair implementation.
+The original recovery proposal explored bytewise regeneration and isolated parsing.
+T7 supersedes that unselected strategy: unsigned cache contents are opaque evidence,
+never an input to `marshal.load/loads`, proof of benignness or runtime execution.
+The source-bound RCA and prevention work remains independently accepted as T5.
 
 Bounded public-operation fixtures on macOS and Linux SHALL demonstrate the raw
 import cache-creation/update-refusal mechanism and the ordinary guarded launcher's
@@ -291,8 +276,66 @@ feature work and the original index/HEAD SHALL change only as the existing
 reviewed refresh operation permits. This outcome requires no new CLI schema,
 semantic engine, harness integration, MCP or cross-repository behavior.
 
-T5 and T6 are selected for bounded v0.0.11 work under the operator's current
+T5, T6 and T7 are selected for bounded v0.0.11 work under the operator's current
 release instruction. Independent design approval, AWA attempt readiness,
 source-bound acceptance and actual signed release delivery remain separate.
 T4 and other deferred roadmap work remain Backlog for v0.0.12 with their original
 approval gates. The published v0.0.9 and v0.0.10 delivery histories remain intact.
+
+
+### T7: Signed update recovery from opaque cache drift (v0.0.11)
+
+On 2026-10-30 Beast again refused `am update`: 25 additional CPython3.14 cache
+files had appeared while all 189 recorded payload files still matched their
+receipt. This read-only comparison is not fresh signature verification or caller
+attribution. The operator explicitly rejected treating this as a normal failed
+update. `ADR-0021:verified-cache-healing` (#240) therefore moves from v0.0.12 to
+v0.0.11. T5's research-only outcome remains distinct.
+
+The updater SHALL recover automatically when the existing signed runtime differs
+only by a tightly bounded set of opaque cache extras. It SHALL authenticate the
+old signed manifest and signed payload inventory and the selected new signed
+release before activation. Receipt fields alone MUST NOT establish authenticity.
+Every signed path, byte and mode MUST match the authenticated old payload. Extra
+paths SHALL be restricted to ordinary current-owner directories named
+`__pycache__` beside signed Python modules and current-owner regular single-link
+recognized CPython cache files for those exact signed modules. Names, counts,
+per-file bytes, aggregate bytes and full-tree observation SHALL remain bounded.
+Foreign owners, links, special files, unrelated paths, changed/missing signed
+payload and changed signed metadata MUST refuse with specific next steps. Cache
+bytes SHALL remain opaque and untrusted: no execution, marshal parsing, cache
+validity claim, source-file repair or new receipt that blesses extra files.
+
+Before any `agent_memory` import, updated public launchers SHALL disable bytecode
+writes and route bytecode reads to a fresh private empty cache prefix, retaining
+that prefix through process exit. Startup MUST NOT import suspect installed
+package caches as its own verifier. Source entrypoints and the operator's already
+trusted interpreter/stdlib remain the installation trust base; this is not a
+sandbox or protection from arbitrary modification of the executing launcher.
+The old v0.0.10 launcher cannot retroactively acquire this protection. The public
+one-line signed installer SHALL provide the supported first transition using its
+independently acquired verified candidate; this limitation MUST be documented
+rather than claiming the old installed command already runs the new updater.
+
+Under the existing lifecycle lock the updater SHALL rebind the complete observed
+old tree and preserve it, including all opaque cache bytes, in the normal
+journaled transaction backup. It SHALL activate a clean authenticated candidate
+using ordinary installation planning, compatibility checks, target ownership,
+exchange, readback and receipt commit. Same-version signed reinstall is eligible
+when cache drift needs recovery; a clean already-current install remains a no-op.
+`--check` SHALL report planned recovery and SHALL NOT mutate active source,
+receipts, targets, bank or repository state. The installed source and client-visible
+packages MUST pass the ordinary exact inventory after activation. Opaque backup
+bytes MUST NOT become an executable rollback source without separate qualification;
+failed/interrupted activation SHALL retain evidence and a truthful recoverable or
+pending state rather than load caches or claim a healthy rollback. The backup and
+its source-binding evidence SHALL be retained and identified in the result.
+
+Independent public-command acceptance SHALL cover clean no-op, older-version
+upgrade, same-version cache recovery, read-only preview, unknown opaque cache
+contents, changed/missing signed payload, wrong path/name, foreign ownership,
+symlink/hardlink and concurrent-tree mutation, plus failed/interrupted activation
+and exact retry. macOS and Linux fixtures SHALL retain original bytes, receipt,
+index, HEAD and bank evidence. No test SHALL execute an untrusted cache. Actual
+operator repair follows the same trusted public workflow; no manual deletion,
+receipt editing, unsigned fallback or permission weakening substitutes for it.
