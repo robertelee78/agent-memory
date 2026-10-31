@@ -467,7 +467,7 @@ def wrapper(pack):
             "  candidate=$dir/python3\n"
             "  if [ -x \"$candidate\" ] && \"$candidate\" -I -c 'import sys; sys.exit(sys.version_info < (3, 11))' >/dev/null 2>&1; then\n"
             "    IFS=$old_ifs\n"
-            "    exec \"$candidate\" -I -B -c 'import runpy,sys; sys.orig_argv=[sys.executable,sys.argv[1]]; sys.argv=sys.argv[1:]; runpy.run_path(sys.argv.pop(1),run_name=\"__main__\")' \"$0\" " + target + " \"$@\"\n"
+            "    exec \"$candidate\" -I -B -c 'import runpy,sys; sys.orig_argv=[sys.executable,sys.argv[1]]; sys.argv=sys.argv[1:]; target=sys.argv.pop(1); guard=runpy.run_path(target.rsplit(\"/\",1)[0]+\"/source_startup.py\",run_name=\"am_source_startup\")[\"isolate\"](); runpy.run_path(target,run_name=\"__main__\")' \"$0\" " + target + " \"$@\"\n"
             "  fi\n"
             "done\n"
             "IFS=$old_ifs\n"
@@ -588,14 +588,20 @@ def public_plan(plan):
             'memory_data_location': 'repository-local memory-bank/; not installer-owned', 'receipt_path': str(plan['state']/'receipt.json'),
             'targets': [{k: v for k, v in item.items() if k in ('path', 'kind', 'before', 'after', 'changed')}
                         for item in plan['actions']],
+            **({'cache_recovery': plan['cache_recovery']['summary']} if plan.get('cache_recovery') is not None else {}),
             'restart_clients': plan['restart'], 'atomicity': 'per target; journaled rollback across targets'}
 
 
 @contextmanager
-def prepare(args, state, code, old, *, candidate_root=None, candidate_kind=None, repair_missing_hooks=False):
+def prepare(args, state, code, old, *, candidate_root=None, candidate_kind=None, repair_missing_hooks=False, cache_recovery=None):
     with tempfile.TemporaryDirectory(prefix='agent-memory-install-source-') as scratch:
         scratch = Path(scratch)
         saved = old['source'] if old else None
+        if cache_recovery is not None:
+            from . import cache_recovery as cache
+            require(old == cache_recovery['receipt'] and read_receipt(state) == old,
+                    'Installation receipt changed before cache recovery planning')
+            cache.recheck(cache_recovery)
         if candidate_root is not None:
             require(saved is not None and saved['kind'] in ('managed', 'release'), 'Updates require managed ownership')
             root = Path(candidate_root).resolve(strict=True)
@@ -612,10 +618,13 @@ def prepare(args, state, code, old, *, candidate_root=None, candidate_kind=None,
                or (saved['kind'] == 'managed' and saved['remote'] == DEFAULT_REMOTE and saved['ref'] == 'main'))):
             from . import release_distribution as release, updating
             if saved:
-                updating.current(state, code)
+                if cache_recovery is None:
+                    _, cache_recovery = updating.qualified_current(state, code)
+                else:
+                    updating.current(state, code, cache_recovery=cache_recovery)
             else:
                 require(not os.path.lexists(code), 'Unrelated managed-source collision: ' + str(code))
-            if saved and saved['kind'] == 'release' and BOOTSTRAP_SOURCE is None:
+            if saved and saved['kind'] == 'release' and BOOTSTRAP_SOURCE is None and cache_recovery is None:
                 root = Path(saved['path'])
             elif BOOTSTRAP_SOURCE is not None:
                 root = Path(BOOTSTRAP_SOURCE).resolve(strict=True)
@@ -625,7 +634,7 @@ def prepare(args, state, code, old, *, candidate_root=None, candidate_kind=None,
             source = source_info(root, 'release')
             if saved:
                 updating.release_transition(saved, source, root)
-                updating.compatible_surface(saved, source)
+                updating.compatible_surface(saved, source, cache_recovery=cache_recovery)
         elif saved and saved['kind'] == 'release':
             require(False, 'Git remote/ref options cannot change a signed release installation; preview an explicit uninstall/reinstall instead')
         elif saved:
@@ -699,7 +708,12 @@ def prepare(args, state, code, old, *, candidate_root=None, candidate_kind=None,
                 mode_bits = before['mode'] if before else 0o644
             elif before is not None:
                 if previous and kind == 'source' and before != previous['identity']:
-                    verify_targets([previous], source=saved)
+                    if cache_recovery is not None and path == code:
+                        from . import cache_recovery as cache
+                        cache.recheck(cache_recovery)
+                        require(before == cache_recovery['source_identity'], 'Qualified signed source changed before planning')
+                    else:
+                        verify_targets([previous], source=saved)
                     require(fingerprint(path) == before, 'Managed source changed during ownership verification')
                 else:
                     require(previous is not None and previous['identity'] == before,
@@ -753,7 +767,10 @@ def prepare(args, state, code, old, *, candidate_root=None, candidate_kind=None,
             # Do not rewrite a legacy runtime's launcher until its own updater
             # has installed a runtime that understands the current commands.
             if 'am' not in names:
-                raw = ('#!/usr/bin/env python3\nimport runpy\nimport sys\nsys.dont_write_bytecode = True\n'
+                raw = ('#!/usr/bin/env python3\nimport runpy, sys, os, stat, tempfile\nsys.dont_write_bytecode = True\n'
+                       + 'parent = os.path.realpath(\"/tmp\")\nnode = \"/\"\n'
+                       + 'for part in parent.split(\"/\"):\n    node = os.path.join(node, part)\n    value = os.lstat(node)\n    if not stat.S_ISDIR(value.st_mode) or value.st_uid != 0 or (value.st_mode & 0o022 and not value.st_mode & stat.S_ISVTX): raise RuntimeError(\"Unsafe source-only startup temporary root\")\n'
+                       + 'guard = tempfile.TemporaryDirectory(prefix=\"am-source-only-\", dir=parent)\nsys.pycache_prefix = guard.name\n'
                        + 'runpy.run_path(' + repr(str(active_pack/'scripts/installer.py')) + ", run_name='__main__')\n").encode()
             else:
                 raw = wrapper(active_pack)
@@ -784,7 +801,7 @@ def prepare(args, state, code, old, *, candidate_root=None, candidate_kind=None,
         yield {'state': state, 'source': source, 'mode': mode, 'presets': selected,
                'custom_targets': [str(absolute(t)) for t in custom], 'no_guidance': no_guidance,
                'bin_dir': str(bin_dir), 'adapters': adapters, 'actions': actions, 'restart': restart,
-               'old': old, 'pack_source': pack_source, 'shim':shim}
+               'old': old, 'pack_source': pack_source, 'shim':shim, 'cache_recovery': cache_recovery}
 
 
 def make_parents(parent, journal, state):
@@ -887,7 +904,10 @@ def rollback(state, journal):
     journal['conflicts'] = conflicts
     replace_record(state/'journal.json', journal)
     require(not conflicts, 'Recovery preserved externally modified paths; reconcile: ' + ', '.join(conflicts))
-    return {'operation': 'recover', 'verified': True, 'status': 'rolled-back',
+    return {'operation': 'recover', 'verified': not bool(journal.get('opaque_cache_recovery')),
+            'status': 'opaque-cache-recovery-pending' if journal.get('opaque_cache_recovery') else 'rolled-back',
+            **({'repair': 'The exact previous tree was restored without executing it. Its caches remain untrusted; retry from the trusted signed installer, preserving this journal and backup.'}
+               if journal.get('opaque_cache_recovery') else {}),
             'preserved_backups': [p for a in journal['actions'] for p in (a['stage'], a.get('backup'))
                                   if p is not None and fingerprint(Path(p)) is not None]}
 
@@ -936,7 +956,10 @@ def recover(state, *, for_install=False):
         for action in journal['actions']:
             require(fingerprint(Path(action['path'])) == action['before'],
                     'Rolled-back target changed; preserve and reconcile: ' + action['path'])
-        return {'operation': 'recover', 'verified': True, 'status': 'rolled-back'}
+        return {'operation': 'recover', 'verified': not bool(journal.get('opaque_cache_recovery')),
+                'status': 'opaque-cache-recovery-pending' if journal.get('opaque_cache_recovery') else 'rolled-back',
+                **({'repair': 'The previous source is preserved but its opaque caches remain untrusted. Retry using the trusted signed installer; do not execute old runtime caches.'}
+                   if journal.get('opaque_cache_recovery') else {})}
     # Receipt activation is the commit point; a lost final response must not undo it.
     receipt = state/'receipt.json'
     if journal.get('receipt_identity') is not None and fingerprint(receipt) == journal['receipt_identity']:
@@ -950,6 +973,11 @@ def install(plan, *, before_activate=None, after_activate=None):
     operation = plan.get('operation', 'install')
     state = plan['state']; old = plan['old']; changed = [a for a in plan['actions'] if a['changed']]
     trust_paths.state(state)
+    if plan.get('cache_recovery') is not None:
+        from . import cache_recovery as cache
+        require(old == plan['cache_recovery']['receipt'] and read_receipt(state) == old,
+                'Installation receipt changed after cache qualification')
+        cache.recheck(plan['cache_recovery'])
     compatibility = None
     if operation != 'uninstall':
         from . import updating
@@ -998,6 +1026,8 @@ def install(plan, *, before_activate=None, after_activate=None):
                'actions': [], 'receipt': receipt, 'receipt_identity': None, 'created_directories': [],
                'previous_compatibility': old['source']['compatibility'] if old else None,
                'rollback_repositories': plan.get('rollback_repositories', [])}
+    if plan.get('cache_recovery') is not None:
+        journal['opaque_cache_recovery'] = plan['cache_recovery']['summary']
     if os.path.lexists(state/'journal.json'):
         write_file(state/('journal-' + transaction + '.json'), (state/'journal.json').read_bytes())
     replace_record(state/'journal.json', journal)
@@ -1095,6 +1125,11 @@ def install(plan, *, before_activate=None, after_activate=None):
         fault(operation + '-after-receipt')
         journal['status'] = 'complete'; replace_record(state/'journal.json', journal)
         return {'operation': operation, 'verified': True, 'changed': True, 'receipt': receipt,
+                **({'cache_recovery': {**plan['cache_recovery']['summary'], 'planned': False,
+                                      'old_runtime_preserved': True,
+                                      'preserved_source_backups': [b['path'] for b in receipt['backups']
+                                          if b.get('original_path') == plan['cache_recovery']['root']]}}
+                   if plan.get('cache_recovery') is not None else {}),
                 'restart_clients': plan['restart'], 'receipt_path': str(receipt_path)}
     except Exception:
         # If the commit point landed, recovery verifies it; otherwise it restores old targets.
@@ -1191,9 +1226,12 @@ def main(argv=None):
         if default_release and BOOTSTRAP_SOURCE is None:
             # Prove the actual verification prerequisite before even creating
             # lifecycle lock/owner records; revalidate this staged source under lock.
+            reuse = False
             if old and old['source']['kind'] == 'release':
-                source_info(Path(old['source']['path']), 'release')
-            else:
+                from . import updating
+                _, qualification = updating.qualified_current(state, code)
+                reuse = qualification is None
+            if not reuse:
                 from . import release_distribution as release
                 with tempfile.TemporaryDirectory(prefix='am-preverified-install-') as temporary:
                     root = Path(temporary)/'source'; release.acquire(root)

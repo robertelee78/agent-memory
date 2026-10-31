@@ -28,7 +28,7 @@ def configuration(old):
                               mode=None, presets=None, target_dir=None, bin_dir=None, no_guidance=False)
 
 
-def current(state, code):
+def current(state, code, *, cache_recovery=None):
     old = install.read_receipt(state)
     install.require(old is not None and old['source'].get('kind') in ('managed', 'release'),
                     'Updates require a recorded managed installation; development sources are never modified')
@@ -41,7 +41,13 @@ def current(state, code):
                         'Managed origin differs from its recorded remote')
         install.require(install.git(root, 'symbolic-ref', '--short', 'HEAD').stdout.strip() == source['ref'],
                         'Managed branch/ref differs from its recorded channel')
-    actual = install.source_info(root, source['kind'], source['remote'], source['ref'])
+    if cache_recovery is not None:
+        from . import cache_recovery as cache
+        install.require(old == cache_recovery['receipt'], 'Installation receipt changed after cache qualification')
+        cache.recheck(cache_recovery)
+        actual = cache_recovery['source']
+    else:
+        actual = install.source_info(root, source['kind'], source['remote'], source['ref'])
     install.require(actual == source, 'Current source revision, version or artifact differs from its receipt')
     journal_path = state/'journal.json'
     if os.path.lexists(journal_path):
@@ -56,9 +62,32 @@ def current(state, code):
             path = Path(target['path'])
             install.require(path.is_file() and not path.is_symlink(), 'Activation target is missing or linked')
             install.activation(path.read_bytes(), target['block_hash'])
+        elif cache_recovery is not None and target['kind'] == 'source' and target['path'] == str(root):
+            install.require(install.fingerprint(root) == cache_recovery['source_identity'],
+                            'Qualified source changed during target verification')
+        elif (cache_recovery is not None and target['kind'] == 'link'
+              and target['identity'] == {'kind': 'link', 'target': source['pack']}):
+            path = Path(target['path']); install.trust_paths.tree(path)
+            install.require(install.fingerprint(path) == target['identity']
+                            and target.get('artifact_digest') == source['artifact_digest'],
+                            'Installed client link changed: ' + str(path))
         else:
             install.verify_targets([target], source=source)
+    if cache_recovery is not None:
+        cache.recheck(cache_recovery)
     return old
+
+
+def qualified_current(state, code):
+    try:
+        return current(state, code), None
+    except (ContractError, OSError, ValueError):
+        old = install.read_receipt(state)
+        if not old or old['source'].get('kind') != 'release':
+            raise
+        from . import cache_recovery as cache
+        qualification = cache.qualify(code, old)
+        return current(state, code, cache_recovery=qualification), qualification
 
 
 def banks(extra, compatibility, *, require_readable=False):
@@ -172,15 +201,16 @@ def release_transition(source, candidate, root):
     install.require(sys.version_info[:2] >= minimum, 'Candidate requires a newer Python interpreter')
 
 
-def compatible_surface(source, candidate):
+def compatible_surface(source, candidate, *, cache_recovery=None):
     _, commands, _ = dispatch('scripts/installer.py', inventory(Path(candidate['pack'])))
-    _, existing, _ = dispatch('scripts/installer.py', inventory(Path(source['pack'])))
+    _, existing, _ = dispatch('scripts/installer.py', cache_recovery['files'] if cache_recovery is not None
+                              else inventory(Path(source['pack'])))
     install.require({'update','install','recover'} | set(existing) <= set(commands),
                     'Candidate would remove the owned lifecycle command surface')
 
 
 @contextmanager
-def staged(old):
+def staged(old, *, cache_recovery=None):
     source = old['source']
     if source['kind'] == 'release' or (source['remote'] == install.DEFAULT_REMOTE and source['ref'] == 'main'):
         from . import release_distribution as release
@@ -191,7 +221,7 @@ def staged(old):
                 release.acquire(root)
             candidate = install.source_info(root, 'release')
             release_transition(source, candidate, root)
-            compatible_surface(source, candidate)
+            compatible_surface(source, candidate, cache_recovery=cache_recovery)
             yield root, candidate
         return
     with tempfile.TemporaryDirectory(prefix='agent-memory-update-candidate-') as temporary:
@@ -255,7 +285,11 @@ def run(args):
                     and source.get('revision') == manifest['source_commit']
                     and source.get('artifact_digest') == manifest['artifact_digest']
                     and source.get('version') == manifest['version']):
-                root = code
+                try:
+                    release.installed(code)
+                    root = code
+                except (OSError, ValueError):
+                    root = Path(temporary)/'source'; release.acquire(root, observation=observation)
             else:
                 root = Path(temporary)/'source'; release.acquire(root, observation=observation)
             install.BOOTSTRAP_SOURCE = root
@@ -271,17 +305,20 @@ def run(args):
             if hook:
                 paths.append(install.absolute(hook))
     def work():
-        old = current(state,code)
-        with staged(old) as (root, candidate):
+        old, cache_qualification = qualified_current(state,code)
+        with staged(old, cache_recovery=cache_qualification) as (root, candidate):
             summary = {'operation':'update','current':old['source'],'available':{k:v for k,v in candidate.items() if k not in ('path','pack')},
                        'channel':{'remote':old['source']['remote'],'ref':old['source']['ref']},
                        'update_available':any(candidate.get(k) != old['source'].get(k) for k in
                                               ('kind', 'revision', 'artifact_digest', 'release_manifest_sha256')),
                        'loaded_content_changes':candidate['artifact_digest']!=old['source']['artifact_digest'],
                        'atomicity':'per target; journaled rollback across targets'}
+            if cache_qualification is not None:
+                summary['cache_recovery'] = cache_qualification['summary']
             same_revision = not summary['update_available']
             with install.prepare(configuration(old),state,code,old,
-                                 candidate_root=None if same_revision else root, candidate_kind=candidate['kind']) as plan:
+                                 candidate_root=None if same_revision and cache_qualification is None else root, candidate_kind=candidate['kind'],
+                                 cache_recovery=cache_qualification) as plan:
                 plan['operation']='update'
                 # With no candidate or target changes there are no bank writes to
                 # qualify. Still verify ownership and public wrapper dispatch.
@@ -302,7 +339,7 @@ def run(args):
                 if args.check:
                     return {**summary,'check_complete':True,'eligible':True,'verified':False,
                             'installation_writes_performed':False,'restart_clients':plan['restart']}
-                if same_revision:
+                if same_revision and cache_qualification is None:
                     wrapper_readback(old)
                     # The shared planner refreshes a stale outside-text snapshot
                     # without reactivating identical code or restarting clients.
