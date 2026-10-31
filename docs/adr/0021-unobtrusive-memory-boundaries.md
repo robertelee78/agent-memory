@@ -372,8 +372,12 @@ Cache-read isolation SHALL cover the public `wrapper()` bootstrap and legacy
 raw runpy wrapper, `am_console.py`, `installer.py`, `update_runtime.py`,
 `hooks/python3.sh` (Codex/Claude prompt and Stop) and every OpenCode plugin Python
 invocation. Each process SHALL create a fresh owner-only empty temporary cache
-prefix and set `sys.pycache_prefix` with bytecode writes disabled before runpy
-or any `agent_memory` import. The prefix SHALL live for the child/process lifetime;
+prefix and set `sys.pycache_prefix` with bytecode writes disabled before
+any `agent_memory` import. Initial runpy execution of a standalone source
+bootstrap is allowed: runpy reads the installer source, whose guard MUST precede
+package imports. The current CLI wrapper SHALL retain its established source
+delegation bytes so an upgrade performed by an older updater does not require
+a second activation merely to rewrite an equivalent wrapper. The prefix SHALL live for the child/process lifetime;
 cleanup SHALL remove only that process's owned temporary directory on normal
 exit, while termination may leave an empty temporary directory. This is cache
 read isolation, not code authentication or a sandbox.

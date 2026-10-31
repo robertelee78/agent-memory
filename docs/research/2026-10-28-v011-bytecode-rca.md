@@ -1,5 +1,12 @@
 # v0.0.11 bytecode incident: producer RCA and gated recovery proposal
 
+> **2026-10-30 scope update:** The original research/proposal findings below are
+> retained as T5's history. ADR-0021 T7/#240 now selects automatic opaque-cache
+> update recovery for v0.0.11, replacing the former v0.0.12 implementation deferral.
+> It preserves cache bytes without parsing or declaring them valid, authenticates
+> the signed payload and activates a clean release through normal transaction
+> backups. The old parser/regeneration proposal is not the shipped strategy.
+
 Scope: ADR-0021 T5 / issue #238. This delivers the incident RCA, reproducible
 controls and a proposal for later recovery implementation. **Automatic cache
 healing is not implemented or approved by this document.** Current integrity
