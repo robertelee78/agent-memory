@@ -875,9 +875,57 @@ def rollback_compatibility(state, journal):
     updating.banks(repositories, compatibility, require_readable=True)
 
 
+def preserve_preexchange_cache_writer(state, journal):
+    """End only a proved unactivated source-cache race, preserving every byte."""
+    if (not journal.get('opaque_cache_recovery') or journal.get('activated', 0)
+            or journal.get('receipt_identity') is not None or not journal['actions']):
+        return
+    action = journal['actions'][0]
+    if action['kind'] != 'source' or action['before'] is None:
+        return
+    path, stage = Path(action['path']), Path(action['stage'])
+    if fingerprint(path) == action['before']:
+        return
+    old = read_receipt(state)
+    if (old is None or sha(encoded(old)) != journal['opaque_cache_recovery'].get('receipt_sha256')
+            or journal['opaque_cache_recovery'].get('old_source_identity') != action['before']
+            or path != Path(old['source']['path']) or not action.get('backup')
+            or fingerprint(stage) != action['after']
+            or fingerprint(Path(action['backup'])) != action['before']
+            or any(fingerprint(Path(item['path'])) != item['before'] for item in journal['actions'][1:])):
+        return
+    from . import cache_recovery as cache
+    try:
+        qualification = cache.qualify(path, old)
+        cache.recheck(qualification)
+    except (ContractError, OSError, ValueError):
+        return  # Unknown changes retain the existing strict conflict path.
+    if (fingerprint(stage) != action['after'] or fingerprint(Path(action['backup'])) != action['before']
+            or read_receipt(state) != old
+            or any(fingerprint(Path(item['path'])) != item['before'] for item in journal['actions'][1:])):
+        return
+    if journal.get('preserved_opaque_source', {}).get('identity') == qualification['source_identity']:
+        return
+    # Keep the exact old journal before adding separately bound race evidence.
+    prior = state/'journal.json'
+    raw = prior.read_bytes()
+    history = state/('journal-opaque-preexchange-' + journal['transaction'] + '-' + sha(raw) + '.json')
+    if not os.path.lexists(history):
+        write_file(history, raw)
+    else:
+        trust_paths.record(history)
+        require(history.read_bytes() == raw, 'Preserved preexchange journal differs; retain recovery evidence')
+    journal['preserved_opaque_source'] = {
+        'path': str(path), 'identity': qualification['source_identity'],
+        'qualification': qualification['summary'],
+        'prior_journal': {'path': str(history), 'sha256': sha(raw)},
+    }
+
+
 def rollback(state, journal):
     trust_paths.state(state)
     rollback_compatibility(state, journal)
+    preserve_preexchange_cache_writer(state, journal)
     conflicts = []
     for action in reversed(journal['actions']):
         path, stage = Path(action['path']), Path(action['stage'])
@@ -885,7 +933,9 @@ def rollback(state, journal):
         trust_paths.tree(path)
         trust_paths.tree(stage)
         current, staged = fingerprint(path), fingerprint(stage)
-        if current == action['before']:
+        preserved = journal.get('preserved_opaque_source', {})
+        if (current == action['before'] or (action['kind'] == 'source'
+                and preserved.get('path') == action['path'] and current == preserved.get('identity'))):
             continue
         if current != action['after'] or (action['before'] is not None and staged != action['before']):
             conflicts.append(str(path)); continue
@@ -954,7 +1004,10 @@ def recover(state, *, for_install=False):
         if for_install:
             return {'operation': 'recover', 'verified': False, 'status': 'install-validation-pending'}
         for action in journal['actions']:
-            require(fingerprint(Path(action['path'])) == action['before'],
+            preserved = journal.get('preserved_opaque_source', {})
+            expected = (preserved['identity'] if action['kind'] == 'source'
+                        and preserved.get('path') == action['path'] else action['before'])
+            require(fingerprint(Path(action['path'])) == expected,
                     'Rolled-back target changed; preserve and reconcile: ' + action['path'])
         return {'operation': 'recover', 'verified': not bool(journal.get('opaque_cache_recovery')),
                 'status': 'opaque-cache-recovery-pending' if journal.get('opaque_cache_recovery') else 'rolled-back',
