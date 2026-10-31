@@ -325,10 +325,12 @@ exchange, readback and receipt commit. Same-version signed reinstall is eligible
 when cache drift needs recovery; a clean already-current install remains a no-op.
 `--check` SHALL report planned recovery and SHALL NOT mutate active source,
 receipts, targets, bank or repository state. The installed source and client-visible
-packages MUST pass the ordinary exact inventory after activation. Opaque backup
-bytes MUST NOT become an executable rollback source without separate qualification;
-failed/interrupted activation SHALL retain evidence and a truthful recoverable or
-pending state rather than load caches or claim a healthy rollback. The backup and
+packages MUST pass the ordinary exact inventory after activation. Rollback MAY restore the exact pre-existing active tree through the existing
+transaction; this restores the previous state and does not qualify its caches as
+safe. Recovery MUST NOT invoke that old runtime, claim a healthy rollback or
+mark the dirty tree verified. Failed/interrupted activation SHALL preserve the
+original tree and journal and report pending recovery. A trusted source-only
+retry SHALL requalify the state rather than execute the restored cache files. The backup and
 its source-binding evidence SHALL be retained and identified in the result.
 
 Independent public-command acceptance SHALL cover clean no-op, older-version
@@ -339,3 +341,45 @@ and exact retry. macOS and Linux fixtures SHALL retain original bytes, receipt,
 index, HEAD and bank evidence. No test SHALL execute an untrusted cache. Actual
 operator repair follows the same trusted public workflow; no manual deletion,
 receipt editing, unsigned fallback or permission weakening substitutes for it.
+
+
+#### T7 implementation boundaries
+
+One explicit qualification result SHALL bind the authenticated old manifest
+digest, authenticated non-cache inventory digest, receipt/source identity and
+complete observed dirty-source fingerprint. `current`, `prepare` and the source
+`add` operation SHALL consume that same result, rechecking the bound fingerprint;
+no global integrity exclusion or general `verify_targets` relaxation is allowed.
+Only the managed signed source target is eligible. Other targets, including copy
+mode client packages, remain strict. Drift there MUST name the affected target
+and recommend trusted installation diagnosis; it MUST NOT silently bless copies.
+
+Qualified drift SHALL disable the same-manifest reuse shortcut, force fresh
+private authenticated archive acquisition even for the current version, and
+force the source replacement action. `--check` SHALL separately report planned
+recovery when `update_available` is false. No pre-activation subprocess SHALL
+invoke the old runtime (`wrapper_readback` included). Only the freshly installed
+new wrapper may be exercised during post-activation readback.
+
+The allowance SHALL be at most 256 cache files, 2 MiB per file and 16 MiB total,
+within a bounded complete tree. Accepted cache modes SHALL be 0600 or 0644, with
+current-user ownership and link count one. Directory modes SHALL exclude group
+or world write permission. Cache names SHALL be
+`<signed-module-stem>.cpython-3NN[.opt-N].pyc`, with the matching signed `.py`
+module in the parent of `__pycache__`; all other names remain refused.
+
+Cache-read isolation SHALL cover the public `wrapper()` bootstrap and legacy
+raw runpy wrapper, `am_console.py`, `installer.py`, `update_runtime.py`,
+`hooks/python3.sh` (Codex/Claude prompt and Stop) and every OpenCode plugin Python
+invocation. Each process SHALL create a fresh owner-only empty temporary cache
+prefix and set `sys.pycache_prefix` with bytecode writes disabled before runpy
+or any `agent_memory` import. The prefix SHALL live for the child/process lifetime;
+cleanup SHALL remove only that process's owned temporary directory on normal
+exit, while termination may leave an empty temporary directory. This is cache
+read isolation, not code authentication or a sandbox.
+
+Acceptance SHALL prove the acquired candidate contains no caches, no old runtime
+subprocess runs before activation, updated CLI and hook launchers never read a
+poisoned cache or write caches in the installed tree, and a source-only retry
+converges after a simulated concurrent writer ceases. Failed activation that
+restores a dirty source MUST remain unverified/pending with all old bytes intact.
