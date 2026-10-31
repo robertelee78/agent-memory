@@ -131,13 +131,20 @@ def render(data, command, prog, code):
                       f"({safe(current.get('revision', '')[:12])} -> {safe(available.get('revision', '')[:12])}).")
             else:
                 print(f"{prog} {safe(current.get('version', version))} is current at {safe(current.get('revision', revision))}.")
+            if data.get('cache_recovery', {}).get('planned'):
+                print('Cache-only runtime repair planned; the previous runtime will be preserved.')
             print('Preview only; no installation changes.')
         elif data.get('changed'):
             if data.get('update_available'):
                 print(f"Updated {prog} {safe(current.get('version'))} -> {safe(version)} "
                       f"({safe(current.get('revision', '')[:12])} -> {safe(revision[:12])}).")
             else:
-                print(f"Reconciled {prog} {safe(version)} installation ({safe(revision[:12])}).")
+                if data.get('cache_recovery'):
+                    print(f"Repaired {prog} {safe(version)} cache-only runtime drift ({safe(revision[:12])}).")
+                else:
+                    print(f"Reconciled {prog} {safe(version)} installation ({safe(revision[:12])}).")
+            if data.get('cache_recovery', {}).get('old_runtime_preserved'):
+                print('Previous runtime and cache evidence preserved in the installation backup.')
         else:
             print(f'{prog} {safe(version)} is up to date.')
     elif command in ('install', 'uninstall') and not code:

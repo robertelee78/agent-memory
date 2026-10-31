@@ -84,3 +84,25 @@ is superseded by this approval of the added consistency guard. No healing or
 parser implementation was approved. AWA verified root execution attempts for
 #238 and #239 before skill/runtime edits. Implementation and signed delivery
 require their own independent acceptance.
+
+## 2026-10-30 recovery amendment
+
+The operator rejected the recurring Beast update refusal. T7/#240 therefore moved
+into v0.0.11; T5/#238 remains the separate RCA/prevention outcome. The recurrence
+observation found 25 cache extras, 189 expected files and no changed or missing
+recorded payload. This read-only comparison did not freshly authenticate the
+publisher or identify the writer.
+
+Actual `claude -p --model opus` review of `bb4c2cdbca26e54dcecdcd13a82744fbc9da151e`
+returned BLOCK on same-version reuse, qualification handoff, old-wrapper execution,
+rollback semantics and launcher coverage. Revised source
+`1f04d727708eb745f128d9986709217ec3d102e1` received Opus ACCEPT and separate
+independent design ACCEPT. Actual review records remain private at
+`/tmp/am-v011-t7-opus-review.json` and `/tmp/am-v011-t7-opus-rereview.json`.
+Implementation acceptance and signed delivery remain separate gates.
+
+The accepted strategy preserves opaque cache bytes without parsing, executing or
+certifying them. It binds authenticated signed payload and source fingerprints,
+forces fresh acquisition even for same-version repair, and uses ordinary
+whole-runtime transaction backups. Restoring an old dirty tree after failure
+remains unverified/pending and cannot invoke it as a verification step.

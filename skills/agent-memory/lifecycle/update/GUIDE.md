@@ -102,6 +102,31 @@ migrated any bank or reloaded a running client. Running clients SHOULD restart
 only when listed because their loaded content changed. An unchanged repeat or
 an outside-package code revision produces no unnecessary restart advice.
 
+### Opaque cache drift
+
+For a recorded signed runtime, the updater MAY qualify narrowly recognized,
+owned Python cache additions when every signed payload file and metadata still
+match the authenticated old release and original receipt. It MUST preserve the
+whole old runtime, including opaque cache bytes, through the ordinary journaled
+backup and acquire a fresh authenticated candidate even for a same-version
+repair. It MUST NOT execute or parse those caches, weaken exact new-runtime
+verification, change project memory or bless the dirty source in a new receipt.
+
+A preview MUST report planned `cache_recovery` separately from
+`update_available`; the latter MAY be false for same-version recovery. It MUST
+remain read-only for active targets, receipts, banks and repository state. A
+successful replacement MUST identify preserved source backups and report that
+cache validity was not established. A clean current installation stays a no-op.
+Only the source target and unchanged links to that exact qualified source are
+covered; independently copied client packages retain strict ownership checks.
+
+Updated launchers MUST prevent reads of existing AM bytecode before package
+imports. The first transition from an older affected updater MUST use the
+operator-trusted signed one-line installer; the old process cannot acquire new
+recovery behavior retroactively. A failed transaction MAY restore its prior dirty
+source, but MUST remain unverified/pending and MUST NOT invoke that old runtime
+as a verification step. A trusted source-only retry requalifies the state.
+
 ## Failure handling
 
 The session MUST preserve a dirty source, changed origin/ref, downgrade,
