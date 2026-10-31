@@ -1,7 +1,7 @@
 ---
 schema: "agent-memory/v1"
 project-id: "add009c6-d31e-49a6-a372-b8cab316d7bb"
-router-updated: "2026-10-28T15:16:04.674650+00:00"
+router-updated: "2026-10-31T02:27:36.063703+00:00"
 canonical-remote: "repo://github.com/robertelee78/agent-memory"
 ---
 # Project memory
@@ -30,6 +30,8 @@ Router time describes this map, not every file's revision.
 | [history/events/4d451b02-97c0-4f2b-9a68-13f74b9530d3.md](<history/events/4d451b02-97c0-4f2b-9a68-13f74b9530d3.md>) | Evidence behind native callback identity and pending-source constraints | repository | active | When reviewing why callback observations retain separate provenance and assessments |
 | [topics/672d154e-be1e-4db9-a56b-dca30a9db915.md](<topics/672d154e-be1e-4db9-a56b-dca30a9db915.md>) | Signed installed-tree integrity when diagnostic imports generate executable cache files | repository | active | When diagnosing signed installation receipt mismatches or choosing a safe Python diagnostic launcher |
 | [history/events/89b6ec8a-3773-4831-8380-e239330fcd45.md](<history/events/89b6ec8a-3773-4831-8380-e239330fcd45.md>) | Evidence behind executable cache refusal and source-preserving recovery | repository | active | When reviewing cache provenance, signed payload verification or bounded quarantine evidence |
+| [topics/a1d938e4-a5a1-4fa1-a401-b0d2367368f4.md](<topics/a1d938e4-a5a1-4fa1-a401-b0d2367368f4.md>) | Unix private ancestors and Python cache-directory eligibility | repository | active | When maintaining lifecycle path trust, qualifying cache-only drift or testing ordinary Python-created cache permissions |
+| [history/events/02fae92e-c392-48c6-80c9-e76b82cca2b9.md](<history/events/02fae92e-c392-48c6-80c9-e76b82cca2b9.md>) | Evidence behind private-ancestor cache-directory qualification | repository | active | When reviewing why protected writable cache directories differ from reachable unsafe paths |
 
 ## Omitted contexts
 
