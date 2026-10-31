@@ -187,7 +187,7 @@ class CacheUpdateRecoveryContract(unittest.TestCase):
                     before = (snapshot(source), receipt_path(w).read_bytes(), owned(receipt), snapshot(repo))
                     # Independently fetched bootstrap code diagnoses even missing payload;
                     # no damaged installed source is imported as its own verifier.
-                    refused = release.install()
+                    refused = release.install(presets='codex')
                     self.assertNotEqual(refused.returncode, 0, refused.stdout + refused.stderr)
                     self.assertEqual((snapshot(source), receipt_path(w).read_bytes(), owned(receipt), snapshot(repo)), before)
 
@@ -214,7 +214,7 @@ class CacheUpdateRecoveryContract(unittest.TestCase):
             self.assertEqual(snapshot(repo), consumer)
             self.assertTrue(any(snapshot(path)==dirty for path in source.parent.iterdir()
                                 if path.is_dir() and not path.is_symlink()))
-            retried = release.install()
+            retried = release.install(presets='codex')
             self.assertEqual(retried.returncode, 0, retried.stdout + retried.stderr)
             current = json.loads(retried.stdout)['receipt']
             self.assertEqual(current['source']['version'], '0.0.4')
@@ -248,7 +248,7 @@ class CacheUpdateRecoveryContract(unittest.TestCase):
             self.assertTrue(any(path.read_bytes()==changed for path in source.parent.rglob(cache.name)
                                 if path.is_file() and not path.is_symlink()))
             self.assertEqual(snapshot(repo), consumer)
-            retried = release.install()
+            retried = release.install(presets='codex')
             self.assertEqual(retried.returncode, 0, retried.stdout + retried.stderr)
             current = json.loads(retried.stdout)['receipt']
             self.assert_clean(w, current)
