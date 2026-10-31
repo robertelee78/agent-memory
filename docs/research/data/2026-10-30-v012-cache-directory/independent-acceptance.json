@@ -1,0 +1,56 @@
+{
+  "passed": true,
+  "source_commit": "c38bf307c13e90f192bcfd9bb30ff44a0fa7d10e",
+  "runtime_sha256": {
+    "skills/agent-memory/scripts/agent_memory/cache_recovery.py": "3697647441dd77ac0b91961eb5b84063c916756aec2992fc1758a0bb5dafff39",
+    "skills/agent-memory/scripts/agent_memory/trust_paths.py": "d0e70480f2a05c50f5b2777b7dc2023940ebd893e1eeb34666a0874c90c35d12"
+  },
+  "controller_sha256": "95ea3451ce3b0f9318f551ed5cbf9511ab44b90729288572cc0d2c8a93bab782",
+  "seconds": 29.890496500011068,
+  "cases": [
+    {
+      "variant": "protected-775",
+      "producer": {
+        "cache": "/private/tmp/agent-memory-test-bblun3yp/data/agent-memory/source/skills/agent-memory/scripts/agent_memory/__pycache__/frontmatter.cpython-315.pyc",
+        "directory_mode": "0o775",
+        "file_mode": "0o644"
+      },
+      "preview_read_only": true,
+      "recovered": true,
+      "exact_old_tree_and_cache_bytes_preserved": true,
+      "clean_runtime": true,
+      "consumer_code_index_HEAD_preserved": true,
+      "clean_noop": true
+    },
+    {
+      "variant": "protected-777",
+      "producer": {
+        "cache": "/private/tmp/agent-memory-test-lthym2cw/data/agent-memory/source/skills/agent-memory/scripts/agent_memory/__pycache__/frontmatter.cpython-315.pyc",
+        "directory_mode": "0o775",
+        "file_mode": "0o644"
+      },
+      "preview_read_only": true,
+      "recovered": true,
+      "exact_old_tree_and_cache_bytes_preserved": true,
+      "clean_runtime": true,
+      "consumer_code_index_HEAD_preserved": true,
+      "clean_noop": true
+    },
+    {
+      "variant": "unprotected-775",
+      "refused": true,
+      "specific_cache_path_reported": true,
+      "all_private_source_ancestors_removed": true,
+      "state_config_branches_private": true,
+      "before_after_unchanged": true,
+      "producer": {
+        "cache": "/private/tmp/agent-memory-test-9vxq2h9b/data/agent-memory/source/skills/agent-memory/scripts/agent_memory/__pycache__/frontmatter.cpython-315.pyc",
+        "directory_mode": "0o775",
+        "file_mode": "0o644"
+      }
+    }
+  ],
+  "fixture_keys_only": true,
+  "operator_profile_writes": false,
+  "retained_evidence_sha256": "e3838e081d83f20a52deec79d6dcca2de9eb7629d2fbc1e5d3113d447b4ebaeb"
+}

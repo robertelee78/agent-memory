@@ -1,0 +1,35 @@
+{
+  "helper_source": "c38bf307c13e90f192bcfd9bb30ff44a0fa7d10e",
+  "archive_sha256": "cc651858cf451772263becfc01ace581e1ee034b63ba625e02633eab4cfdc0f6",
+  "helper_sha256": "3697647441dd77ac0b91961eb5b84063c916756aec2992fc1758a0bb5dafff39",
+  "platform": "Linux-7.0.11-76070011-generic-x86_64-with-glibc2.43",
+  "python": "3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0]",
+  "exit": 0,
+  "seconds": 3.726363775000209,
+  "source_unchanged": true,
+  "receipt_unchanged": true,
+  "project_unchanged": true,
+  "before_cache_count": 25,
+  "before_source_mode": 448,
+  "before_cache_directories": {
+    "skills/agent-memory/scripts/agent_memory/__pycache__": 509
+  },
+  "preview_schema": "agent-memory/install-plan-v1",
+  "installation_writes_performed": false,
+  "selected_candidate_version": "0.0.11",
+  "selected_candidate_kind": "release",
+  "targets_count": 13,
+  "passed": true,
+  "retained_evidence_sha256": "3f30542d566301b59c1acb8820f046e7dbe78c0ace4bb722df6e1efd15c37188",
+  "cache_count": 25,
+  "cache_bytes": 481850,
+  "compatibility_bank_count": 36,
+  "compatibility_gap_count": 0,
+  "signed_v012_delivery": false,
+  "client_readback": {
+    "all_targets_preserved": true,
+    "count": 13,
+    "operator_writes": false,
+    "retained_evidence_sha256": "2e045da9bd463007897065103a71e8876c5b917b569c4376991d813589c84c2e"
+  }
+}

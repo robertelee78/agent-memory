@@ -1,0 +1,240 @@
+{
+  "completed_public_journeys": 3,
+  "commands": 24,
+  "runtime_command_failures": 0,
+  "all_completed_passed": true,
+  "journeys": [
+    {
+      "name": "mac-fresh",
+      "result": {
+        "passed": true,
+        "actual_public_default_install": true,
+        "source_commit": "c32a48911b25e3ac70968c61908cc4b4b8672ef8",
+        "signed_publisher_verified": true,
+        "development_memory_absent": true,
+        "consumer_and_staged_code_preserved": true,
+        "client_text_restored": true,
+        "public_update_noop_verified": true,
+        "uninstalled": true,
+        "world_retained": false,
+        "platform": "macOS-27.2-arm64-arm-64bit-Mach-O",
+        "seconds": 19.483977625030093
+      },
+      "commands": [
+        {
+          "label": "fresh-one-line",
+          "exit": 0,
+          "seconds": 2.7020862080389634,
+          "stdout_sha256": "87e4f565e8aadf3c3164f15847ae2f752d41353a9cb5125b3d4ae9ccbd538242",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "fresh-version",
+          "exit": 0,
+          "seconds": 1.1714291659882292,
+          "stdout_sha256": "c30685f13f6a7c2584b79f0aec903e9b0d825b9c0cdbadbb599501fc3ddb1e89",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "fresh-version-json",
+          "exit": 0,
+          "seconds": 1.003938083013054,
+          "stdout_sha256": "4b7ee339c624ea5b52e184622cf4491cecf8a51aef06ea8cd31dd8052ec5e36d",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "fresh-update-check",
+          "exit": 0,
+          "seconds": 5.355696832993999,
+          "stdout_sha256": "b0053d3bc269d98aab12bfb8d0e8f4a633bc3f23a154b2ce2f40f8205d040dd9",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "fresh-update",
+          "exit": 0,
+          "seconds": 7.013434166961815,
+          "stdout_sha256": "6abcc833431167166e69b55a6e610ca68f3317181fbea2945cec569911b90aef",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "fresh-status",
+          "exit": 0,
+          "seconds": 0.5551917499979027,
+          "stdout_sha256": "b21cabd04c3f4cffa6f709fe1c76eee64e22890d00a1325ca5481ac0296c6bc8",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "fresh-uninstall-check",
+          "exit": 0,
+          "seconds": 0.2118193749920465,
+          "stdout_sha256": "b7ff0df8a59e12139b762751ecc0150dfe3e465356d75c68f79161896c3f4cf3",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "fresh-uninstall",
+          "exit": 0,
+          "seconds": 0.33531708299415186,
+          "stdout_sha256": "b05ae71e5710f724e94952336dcc1b9571d520688e9670bfcfd38f253411211f",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    },
+    {
+      "name": "mac-upgrade",
+      "result": {
+        "passed": true,
+        "actual_public_default_install": false,
+        "source_commit": "c32a48911b25e3ac70968c61908cc4b4b8672ef8",
+        "signed_publisher_verified": true,
+        "development_memory_absent": true,
+        "consumer_and_staged_code_preserved": true,
+        "client_text_restored": true,
+        "public_update_noop_verified": true,
+        "uninstalled": true,
+        "world_retained": false,
+        "platform": "macOS-27.2-arm64-arm-64bit-Mach-O",
+        "seconds": 21.229743665957358
+      },
+      "commands": [
+        {
+          "label": "signed-legacy-update",
+          "exit": 0,
+          "seconds": 5.721207708003931,
+          "stdout_sha256": "8396f8b89df17e79189335906538e9b438a8f0e11ad159056f0f5f186bf01f55",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "upgrade-via-cli-version",
+          "exit": 0,
+          "seconds": 0.9938111659721471,
+          "stdout_sha256": "e951437ba303903c49d44e9089edd28a36dae6a688b2e652d5a8c8ff4008f02e",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "upgrade-via-cli-version-json",
+          "exit": 0,
+          "seconds": 0.9975729999714531,
+          "stdout_sha256": "2c3bfe51adf8b9017c8247c3c6282685f1823662b69f86c1d6d4a2c36e2d7f05",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "upgrade-via-cli-update-check",
+          "exit": 0,
+          "seconds": 5.418372249987442,
+          "stdout_sha256": "61b0e768142f121bae195b94761b3f57df29af582dfdf121467a272648c931a7",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "upgrade-via-cli-update",
+          "exit": 0,
+          "seconds": 7.026413832965773,
+          "stdout_sha256": "ecae681aa66e2f5a667b59fc7a4bf8d6f9b7be6f6101251fe52059438f1eba1b",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "upgrade-via-cli-status",
+          "exit": 0,
+          "seconds": 0.5292551250313409,
+          "stdout_sha256": "8c249bf289c81db5d2fb6f977bd35af16d586d29071bb98d05fa0da637eb0a98",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "upgrade-via-cli-uninstall-check",
+          "exit": 0,
+          "seconds": 0.2035611669998616,
+          "stdout_sha256": "149c5297c2ed1a92578bfe3a139bdbf38c1adf613871e3cd4f9e4cf10314da12",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "upgrade-via-cli-uninstall",
+          "exit": 0,
+          "seconds": 0.31782024999847636,
+          "stdout_sha256": "b05ae71e5710f724e94952336dcc1b9571d520688e9670bfcfd38f253411211f",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    },
+    {
+      "name": "linux-fresh",
+      "result": {
+        "passed": true,
+        "actual_public_default_install": true,
+        "source_commit": "c32a48911b25e3ac70968c61908cc4b4b8672ef8",
+        "signed_publisher_verified": true,
+        "development_memory_absent": true,
+        "consumer_and_staged_code_preserved": true,
+        "client_text_restored": true,
+        "public_update_noop_verified": true,
+        "uninstalled": true,
+        "world_retained": false,
+        "platform": "Linux-7.0.11-76070011-generic-x86_64-with-glibc2.43",
+        "seconds": 21.461404700996354
+      },
+      "commands": [
+        {
+          "label": "fresh-one-line",
+          "exit": 0,
+          "seconds": 2.64245689001109,
+          "stdout_sha256": "c41cb2add115b14b9f7de08cf5cd421c39e01fdf9c439957c177f2e38fb62c46",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "fresh-version",
+          "exit": 0,
+          "seconds": 1.242652781002107,
+          "stdout_sha256": "1afd1688a635afc64faeda7fab2dd16c569f8e1adc340281bc191b0b9b94ff0b",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "fresh-version-json",
+          "exit": 0,
+          "seconds": 1.239163220001501,
+          "stdout_sha256": "7876c61c634436df10239bb2bc44d6d53060cbaf89ad9c197844df97fd2151cc",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "fresh-update-check",
+          "exit": 0,
+          "seconds": 6.345978810000815,
+          "stdout_sha256": "9df2b52efa23dc37b3ba8271ef09cfa68bdec0c1a84d550d22e58224cd62aef4",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "fresh-update",
+          "exit": 0,
+          "seconds": 8.149216001998866,
+          "stdout_sha256": "e966ea14e6b75aa26073e0ab54b8c4358ca7ed9c0dcf89ea3b709f084496eed9",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "fresh-status",
+          "exit": 0,
+          "seconds": 0.5886896799929673,
+          "stdout_sha256": "0fe7341bf7e09ae1671f2150afcf81458d9a143ca2ad7e1436f4df50926ba3ae",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "fresh-uninstall-check",
+          "exit": 0,
+          "seconds": 0.238073748012539,
+          "stdout_sha256": "7946589566348fd03794fa644affd6a09c05549eafc8172626cec4cfff3d05fd",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "fresh-uninstall",
+          "exit": 0,
+          "seconds": 0.3382439620036166,
+          "stdout_sha256": "b05ae71e5710f724e94952336dcc1b9571d520688e9670bfcfd38f253411211f",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    }
+  ],
+  "missing_baseline": {
+    "platform": "linux",
+    "requested": "/tmp/am-v011-linux-upgrade/retained-world.json",
+    "result": "Missing retained v0.0.10 baseline; controller refused before first CLI command. No replacement run claimed."
+  },
+  "retained_evidence_sha256": "5eca569073f9291e10de400ef75705c8ed52d6140f836d2e6c282b64f9af0182",
+  "actual_beast_adoption": "FAILED before activation: protected cache directory mode0775 rejected by v0.0.11; v0.0.12 owns correction."
+}
