@@ -163,7 +163,7 @@ def qualify(root, receipt):
         elif item['kind'] == 'directory':
             path = Path(name)
             require(path.name == '__pycache__' and name.startswith(prefix)
-                    and item['uid'] == os.geteuid() and not item['mode'] & 0o022
+                    and item['uid'] == os.geteuid()
                     and any(Path(value).parent == path.parent and value.endswith('.py') for value in signed),
                     'unrelated or unsafe extra directory ' + name)
             extra_dirs.add(name)

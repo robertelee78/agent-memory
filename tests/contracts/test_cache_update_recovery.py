@@ -134,6 +134,59 @@ class CacheUpdateRecoveryContract(unittest.TestCase):
             self.assertIn(str(target), result.stdout + result.stderr)
             self.assertEqual((snapshot(source), receipt_path(w).read_bytes(), owned(receipt), snapshot(repo)), before)
 
+    def test_python_created_group_writable_cache_directories_below_private_source_recover(self):
+        for mask, expected_mode in ((0o002, 0o775), (0o000, 0o777)):
+            with self.subTest(umask=oct(mask)), World() as w, SignedRelease(w) as release:
+                receipt, repo = self.install(w, release)
+                source = Path(receipt['source']['path'])
+                self.assertEqual(source.stat().st_mode & 0o777, 0o700)
+                module = source/'skills/agent-memory/scripts/agent_memory/console.py'
+                # Explicit py_compile writes a real native cache even under -B;
+                # it compiles signed source without importing/executing AM.
+                produced = w.run([sys.executable, '-I', '-B', '-c',
+                    'import os,py_compile,sys;os.umask(int(sys.argv[1]));'
+                    'py_compile.compile(sys.argv[2],doraise=True)', str(mask), module])
+                self.assertEqual(produced.returncode, 0)
+                caches = list(source.rglob('*.pyc'))
+                self.assertEqual(len(caches), 1)
+                self.assertEqual(caches[0].parent.stat().st_mode & 0o777, expected_mode)
+                self.assertEqual(caches[0].stat().st_mode & 0o777, 0o644)
+                before = (snapshot(source), receipt_path(w).read_bytes(), owned(receipt), snapshot(repo))
+                preview = self.cli(w, receipt, 'update', '--check')
+                self.assertTrue(preview['check_complete'])
+                self.assertFalse(preview['update_available'])
+                self.assertEqual(preview['cache_recovery']['cache_count'], 1)
+                self.assertEqual((snapshot(source), receipt_path(w).read_bytes(), owned(receipt), snapshot(repo)), before)
+                updated = self.cli(w, receipt, 'update')
+                self.assertTrue(updated['verified'])
+                self.assertTrue(updated['changed'])
+                self.assertEqual(snapshot(self.backups(updated['receipt'], source)[-1]), before[0])
+                self.assertEqual(snapshot(repo), before[3])
+                self.assert_clean(w, updated['receipt'])
+                after = (snapshot(source), receipt_path(w).read_bytes(), snapshot(repo))
+                self.assertFalse(self.cli(w, updated['receipt'], 'update')['changed'])
+                self.assertEqual((snapshot(source), receipt_path(w).read_bytes(), snapshot(repo)), after)
+
+    def test_reachable_writable_cache_directory_remains_refused(self):
+        with World() as w, SignedRelease(w) as release:
+            receipt, repo = self.install(w, release)
+            source = Path(receipt['source']['path'])
+            directory = self.opaque(source).parent
+            directory.chmod(0o775)
+            # Remove every private barrier on this disposable SOURCE branch.
+            # State, config and home branches retain their own 0700 protection.
+            for node in directory.parents:
+                if node == w.root or node.is_relative_to(w.root):
+                    node.chmod(0o755)
+            self.assertEqual(w.paths['state'].stat().st_mode & 0o777, 0o700)
+            self.assertEqual(w.paths['config'].stat().st_mode & 0o777, 0o700)
+            before = (snapshot(source), receipt_path(w).read_bytes(), owned(receipt), snapshot(repo))
+            refused = release.install(presets='codex')
+            self.assertNotEqual(refused.returncode, 0, refused.stdout + refused.stderr)
+            self.assertIn('group/other write access permits an untrusted principal', refused.stdout)
+            self.assertIn('__pycache__', refused.stdout)
+            self.assertEqual((snapshot(source), receipt_path(w).read_bytes(), owned(receipt), snapshot(repo)), before)
+
     def test_exact_count_and_byte_limits_allow_recovery_but_next_cache_refuses(self):
         with World() as w, SignedRelease(w) as release:
             receipt, repo = self.install(w, release)
@@ -203,8 +256,6 @@ class CacheUpdateRecoveryContract(unittest.TestCase):
                 node = self.opaque(source)
                 node.unlink()
                 node.symlink_to(w.inside('missing-unrelated-file'))
-            def directory_mode():
-                self.opaque(source).parent.chmod(0o777)
             def cache_mode():
                 self.opaque(source).chmod(0o755)
             def per_file():
@@ -220,7 +271,7 @@ class CacheUpdateRecoveryContract(unittest.TestCase):
                 node.write_bytes(node.read_bytes()+b' ')
             cases = {'changed-payload':changed_payload, 'missing-payload':missing_payload,
                      'wrong-name':wrong_name, 'wrong-path':wrong_path, 'hardlink':hardlink,
-                     'symlink':symlink, 'directory-mode':directory_mode, 'cache-mode':cache_mode,
+                     'symlink':symlink, 'cache-mode':cache_mode,
                      'per-file-bound':per_file, 'aggregate-bound':aggregate, 'signed-metadata':manifest}
             for label, mutate in cases.items():
                 with self.subTest(label=label):
