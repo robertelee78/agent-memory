@@ -1,0 +1,406 @@
+{
+  "source": "38f3e424471449fdd8a7caed16e81606e17beda2",
+  "public_journeys": 4,
+  "public_commands": 32,
+  "public_failures": 0,
+  "all_passed": true,
+  "journeys": [
+    {
+      "result": {
+        "passed": true,
+        "actual_public_default_install": true,
+        "source_commit": "38f3e424471449fdd8a7caed16e81606e17beda2",
+        "signed_publisher_verified": true,
+        "development_memory_absent": true,
+        "consumer_and_staged_code_preserved": true,
+        "client_text_restored": true,
+        "public_update_noop_verified": true,
+        "uninstalled": true,
+        "world_retained": false,
+        "platform": "macOS-27.2-arm64-arm-64bit-Mach-O",
+        "seconds": 27.077892791014165
+      },
+      "commands": [
+        {
+          "label": "fresh-one-line",
+          "exit": 0,
+          "seconds": 3.5230895000277087,
+          "stdout_sha256": "33f06eab7b3be21e633068f129b81f099ec3d9d4ed4dc9d6a46aa24407627b12",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "fresh-version",
+          "exit": 0,
+          "seconds": 1.5247755410382524,
+          "stdout_sha256": "148016168ec886c3a3a6dde08f69424503542f538f7da5de993436223840da8d",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "fresh-version-json",
+          "exit": 0,
+          "seconds": 1.3793663749820553,
+          "stdout_sha256": "29b1c518ce2677abb4e2697d1828ec017a6d0e2c8aee3865d4614267a1ce5425",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "fresh-update-check",
+          "exit": 0,
+          "seconds": 7.556057624984533,
+          "stdout_sha256": "6061b578aed1a889dfd3a91356401a88041ee6aab59a9eea559acbd55d94a2d1",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "fresh-update",
+          "exit": 0,
+          "seconds": 9.917140583042055,
+          "stdout_sha256": "cad4ffcca9d648c8454d8d1e4afa72fceebc8ee4432dff7e71febcfbcd563cf2",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "fresh-status",
+          "exit": 0,
+          "seconds": 0.9188396660028957,
+          "stdout_sha256": "00715723f807d1085c93a72ca55eb9dc70f784a49df2b4e35bf2022e5a2e9fb8",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "fresh-uninstall-check",
+          "exit": 0,
+          "seconds": 0.3637547909747809,
+          "stdout_sha256": "e68b034ce48fb37b0a0fc88b9829bce346da11fdcbe4792d312d2b2416a94174",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "fresh-uninstall",
+          "exit": 0,
+          "seconds": 0.5335484169772826,
+          "stdout_sha256": "b05ae71e5710f724e94952336dcc1b9571d520688e9670bfcfd38f253411211f",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "platform_label": "mac",
+      "operation": "fresh"
+    },
+    {
+      "result": {
+        "passed": true,
+        "actual_public_default_install": false,
+        "source_commit": "38f3e424471449fdd8a7caed16e81606e17beda2",
+        "signed_publisher_verified": true,
+        "development_memory_absent": true,
+        "consumer_and_staged_code_preserved": true,
+        "client_text_restored": true,
+        "public_update_noop_verified": true,
+        "uninstalled": true,
+        "world_retained": false,
+        "platform": "macOS-27.2-arm64-arm-64bit-Mach-O",
+        "seconds": 26.10960970801534
+      },
+      "commands": [
+        {
+          "label": "signed-legacy-update",
+          "exit": 0,
+          "seconds": 6.596416165994015,
+          "stdout_sha256": "85ab2becbb4c3ab55e133453773f293c8a9d7966f0407691ad3702bf64f75134",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "upgrade-via-cli-version",
+          "exit": 0,
+          "seconds": 1.016648416989483,
+          "stdout_sha256": "a58f9d82b0302c69c8793addf8694e30d79aec354c808e54dd64b8e7a5a95106",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "upgrade-via-cli-version-json",
+          "exit": 0,
+          "seconds": 1.0203893749858253,
+          "stdout_sha256": "63986153de79170352028c8c5c1dbed86842530cb313b7ebeeb063f17fa1cd3a",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "upgrade-via-cli-update-check",
+          "exit": 0,
+          "seconds": 6.269865541951731,
+          "stdout_sha256": "2e9219d7d424782455766abe2f2e8a172c432ef8823a04555b1152f3d58e21a8",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "upgrade-via-cli-update",
+          "exit": 0,
+          "seconds": 9.655541707994416,
+          "stdout_sha256": "450485ad4192dd32addf5e95175be355e108fcf39abe6065f3d5970db2da58f5",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "upgrade-via-cli-status",
+          "exit": 0,
+          "seconds": 0.7646412079920992,
+          "stdout_sha256": "cb62901cbbeea57905931bb0cfbc20a711e6a415d64c94a0943e7b4260919f97",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "upgrade-via-cli-uninstall-check",
+          "exit": 0,
+          "seconds": 0.3007530840113759,
+          "stdout_sha256": "c43d7f36881c1ebc5b254463a0c87f7283ed65499b2510a811c483e687852fff",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "upgrade-via-cli-uninstall",
+          "exit": 0,
+          "seconds": 0.4609437080216594,
+          "stdout_sha256": "b05ae71e5710f724e94952336dcc1b9571d520688e9670bfcfd38f253411211f",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "platform_label": "mac",
+      "operation": "upgrade-via-cli"
+    },
+    {
+      "result": {
+        "passed": true,
+        "actual_public_default_install": true,
+        "source_commit": "38f3e424471449fdd8a7caed16e81606e17beda2",
+        "signed_publisher_verified": true,
+        "development_memory_absent": true,
+        "consumer_and_staged_code_preserved": true,
+        "client_text_restored": true,
+        "public_update_noop_verified": true,
+        "uninstalled": true,
+        "world_retained": false,
+        "platform": "Linux-7.0.11-76070011-generic-x86_64-with-glibc2.43",
+        "seconds": 21.769768427009694
+      },
+      "commands": [
+        {
+          "label": "fresh-one-line",
+          "exit": 0,
+          "seconds": 2.5446007909922628,
+          "stdout_sha256": "160801c6480820d4bd11af571bc8599c8710e8430a2beebf86e8f32f289e112b",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "fresh-version",
+          "exit": 0,
+          "seconds": 1.2423820749972947,
+          "stdout_sha256": "b25e1311f6760cd0a7d0e4e8c7961df6e952dced70f9b4b4db979b508a04e359",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "fresh-version-json",
+          "exit": 0,
+          "seconds": 1.242505557005643,
+          "stdout_sha256": "e534b120384bb36fd5c7287420ff593b96a73f049b865ea56becdf2bf8585bf0",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "fresh-update-check",
+          "exit": 0,
+          "seconds": 6.649562285005231,
+          "stdout_sha256": "53202a416e846f8b6a6251fd26486b1e909bddf0556a116462d0f3988fd0a095",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "fresh-update",
+          "exit": 0,
+          "seconds": 8.251472387011745,
+          "stdout_sha256": "687c26ae14dc56fff34fabfb516839c73592863ace4e55376b693ebe7ddd3bf6",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "fresh-status",
+          "exit": 0,
+          "seconds": 0.5890767520031659,
+          "stdout_sha256": "edbedafc9ef3259958ee2e85d09aa6a31e19c7587f40655ebab7d1db9295e726",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "fresh-uninstall-check",
+          "exit": 0,
+          "seconds": 0.23976213100831956,
+          "stdout_sha256": "2e17549e2c34168c6a20e4726a123d3b57dcc365cac698860caa106c93952b5d",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "fresh-uninstall",
+          "exit": 0,
+          "seconds": 0.33799224899848923,
+          "stdout_sha256": "b05ae71e5710f724e94952336dcc1b9571d520688e9670bfcfd38f253411211f",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "platform_label": "linux",
+      "operation": "fresh"
+    },
+    {
+      "result": {
+        "passed": true,
+        "actual_public_default_install": false,
+        "source_commit": "38f3e424471449fdd8a7caed16e81606e17beda2",
+        "signed_publisher_verified": true,
+        "development_memory_absent": true,
+        "consumer_and_staged_code_preserved": true,
+        "client_text_restored": true,
+        "public_update_noop_verified": true,
+        "uninstalled": true,
+        "world_retained": false,
+        "platform": "Linux-7.0.11-76070011-generic-x86_64-with-glibc2.43",
+        "seconds": 24.064411490006023
+      },
+      "commands": [
+        {
+          "label": "signed-legacy-update",
+          "exit": 0,
+          "seconds": 5.597675304990844,
+          "stdout_sha256": "85ab2becbb4c3ab55e133453773f293c8a9d7966f0407691ad3702bf64f75134",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "upgrade-via-cli-version",
+          "exit": 0,
+          "seconds": 1.2409952740126755,
+          "stdout_sha256": "08b6aeba3d86c327bcdeb9818d6b6135b5e9c4b18c22b3705565777d8df1869d",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "upgrade-via-cli-version-json",
+          "exit": 0,
+          "seconds": 1.2406948800053215,
+          "stdout_sha256": "bade6602bdb5333885874f5f2813914ee1f70910d6863c1042f19012ee6bcf74",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "upgrade-via-cli-update-check",
+          "exit": 0,
+          "seconds": 6.451414854993345,
+          "stdout_sha256": "0e7e35e461090222e7262e90bbee7de98975d903b2d0ecee87bfcaabeab4fbef",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "upgrade-via-cli-update",
+          "exit": 0,
+          "seconds": 8.307107070009806,
+          "stdout_sha256": "95fe61d6bee59a85127c194b3ab7bac2defb3ccd1ff2ee294e71e0b6986daa4c",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "upgrade-via-cli-status",
+          "exit": 0,
+          "seconds": 0.640194834995782,
+          "stdout_sha256": "cc3086d8481cafaab4cef9bd540f774bf216f8240dba2c5fcb31f514cc7c6c03",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "upgrade-via-cli-uninstall-check",
+          "exit": 0,
+          "seconds": 0.23864247900201008,
+          "stdout_sha256": "8628f1dddeb730b4312fbd951933a0865c81e05ddcc7bf9de32535a60def1b88",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "upgrade-via-cli-uninstall",
+          "exit": 0,
+          "seconds": 0.3389373629906913,
+          "stdout_sha256": "b05ae71e5710f724e94952336dcc1b9571d520688e9670bfcfd38f253411211f",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "platform_label": "linux",
+      "operation": "upgrade-via-cli"
+    }
+  ],
+  "beast_adoption_sha256": "3a694a74235ec4dc8fd7a705e0b7543ef79f28b2c29d48a8bb69663307f34a53",
+  "retained_summary_sha256": "68a29fc1ee9bb0e48fe49302cd5a7f02345ba4f5f8b6dc24fc82afde16c1c431",
+  "max_public_command_seconds": 9.917140583042055,
+  "beast": {
+    "retained_evidence_sha256": "3a694a74235ec4dc8fd7a705e0b7543ef79f28b2c29d48a8bb69663307f34a53",
+    "old_version": "0.0.10",
+    "new_source": {
+      "artifact_digest": "821cc27a2f5e4b4b0397ae27fd5325b6625b4676f84cb6bad58b794e626940a4",
+      "compatibility": {
+        "git_required_for": [
+          "governed-repository-operations",
+          "git-sharing"
+        ],
+        "installed_commands": [
+          "am",
+          "agent-memory"
+        ],
+        "migration_catalog": "schemas/migrations.json",
+        "migrator_source_schemas": [],
+        "optional_adapters": [
+          "adapters/github-publication.json"
+        ],
+        "python_minimum": "3.11",
+        "readable_bank_schemas": [
+          "agent-memory/v1"
+        ],
+        "required_agent_clients": [],
+        "required_python_packages": [],
+        "schema": "agent-memory/runtime-compatibility-v1"
+      },
+      "dirty": false,
+      "kind": "release",
+      "ref": "releases/latest",
+      "release_manifest_sha256": "f5da5d802e5e9725de892b3bded0b2f158d2b051089d9a334d98d9891848084b",
+      "remote": "https://github.com/robertelee78/agent-memory.git",
+      "revision": "38f3e424471449fdd8a7caed16e81606e17beda2",
+      "signature_namespace": "agent-memory.release",
+      "signature_principal": "release@agent-memory",
+      "version": "0.0.12"
+    },
+    "cache_count": 25,
+    "cache_bytes": 481850,
+    "cache_code_executed": false,
+    "cache_validity_verified": false,
+    "old_runtime_preserved": true,
+    "exact_backup_count": 2,
+    "new_cache_count": 0,
+    "repository_snapshots_equal": true,
+    "observed_repository_count": 4,
+    "doctor_runtime_ok": true,
+    "doctor_repository_setup": "binding_required",
+    "doctor_warnings": [
+      {
+        "component": "identity.project",
+        "state": "warning"
+      },
+      {
+        "component": "identity.authority",
+        "state": "warning"
+      }
+    ],
+    "commands": [
+      {
+        "label": "signed-public-repair",
+        "exit": 0,
+        "seconds": 16.52823725900089,
+        "stdout_sha256": "eaa0f4cc5b37c476223a772d5da5139467a428458bd47bae7cd70d959464ad4c",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "label": "version",
+        "exit": 0,
+        "seconds": 1.1843739199975971,
+        "stdout_sha256": "d20e17e7755c8a415e8707a66c5735b96d00cc632d91531317b7e8afbbc92de8",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "label": "update-noop",
+        "exit": 0,
+        "seconds": 7.962634378010989,
+        "stdout_sha256": "83abb6cd04b4fd044cb790be38bb2344bb5dc462e592f7918d9d46286aaa1a96",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "label": "doctor",
+        "exit": 0,
+        "seconds": 3.584267779995571,
+        "stdout_sha256": "ddd079fa732661a9b8b7c31f125ba7a8d8609bceee34b2bc0f1cb282545908f3",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ],
+    "noop_output": "am 0.0.12 is up to date.\n"
+  }
+}
