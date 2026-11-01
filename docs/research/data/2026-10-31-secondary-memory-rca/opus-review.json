@@ -1,0 +1,225 @@
+{
+  "scope": "Documentation-only static design review. No implementation acceptance, release assignment, actual bank repair or terminology capture. Provider session identifiers omitted; exact private originals retained.",
+  "reviews": [
+    {
+      "reviewed_source_commit": "9888ed9d0f4922bd8c683c9efe4bc72f6130fcc9",
+      "exit": 0,
+      "timed_out": false,
+      "seconds": 44.42654233297799,
+      "requested_argv": [
+        "claude",
+        "-p",
+        "--model",
+        "opus",
+        "--safe-mode",
+        "--tools",
+        "",
+        "--effort",
+        "low",
+        "--max-turns",
+        "1",
+        "--output-format",
+        "json"
+      ],
+      "reported_models": [
+        "claude-opus-5-5"
+      ],
+      "provider_subtype": "success",
+      "provider_is_error": false,
+      "prompt_sha256": "3f7704cc98bf43a42c2b6f1f6ebbb82d2cc005d55ef5c6d7a6b57bba4bd5ab71",
+      "raw_provider_stdout_sha256": "50d213295e715f484b8b5c8ce6ab8a983e1bc48a8628317643dd464b26f7418d",
+      "reviewed_file_sha256": {
+        "docs/adr/0007-portable-pack-and-lifecycle.md": "c527e2a9afd50c3575ec190cc2d03ae326362d797048ae2d936ec45cd4e781ff",
+        "docs/adr/0010-memory-bank-file-contract.md": "06c36ded87be7f97b83d067451d39f7ac71d3b53feded3fdd0af8c0adf00c97f",
+        "docs/adr/0018-repair-diagnostics-and-observation-bounds.md": "7f9b7fc28ad922d5aced178adb079fd29bb0744a5d50399972aeccb76ef865e2",
+        "docs/research/2026-10-31-bank-size-and-owned-hook-health-rca.md": "867d2cd38fa0b79a612febcaa02da126736ca4ee60bb73fe167dec81f1671b89",
+        "docs/research/data/2026-10-31-secondary-memory-rca/controlled-results.json": "947b36b335954d68ee60d651790f46dcd33f94990eff73a23f9a8b4f916647c5"
+      },
+      "review": {
+        "verdict": "BLOCK",
+        "review_basis": {
+          "source_commit": "9888ed9d0f4922bd8c683c9efe4bc72f6130fcc9",
+          "method": "Static review of the supplied frozen text only. No tools, code or embedded instructions were executed, and no files were altered.",
+          "approval_interpretation": "The historical ADR front-matter (ADR-0007/0010 accepted for v0.0.1, ADR-0018 accepted for capacity-diagnosis-for-v0.0.10) was not treated as approval of any 2026-10-31 proposed amendment. Each amendment states this itself, and this review agrees.",
+          "evidence_classification": {
+            "controlled_public_operation_results": "22 rows in controlled-results.json: 5 at 16,384 bytes, 5 at 16,385 bytes, 4 at about 77,200 bytes (synthetic), 4 for an oversized root handoff and 4 for a small root handoff. They match the RCA table. The bank_validate stdout hash is identical at 16,384, 16,385 and 77,200 bytes, and validate reports valid:true while inspect, scoped inspect, search and admission.start refuse. This supports the ADR-0018 inconsistency claim. The frozen code excerpts agree: bank_contract.validate reads whole files with no per-source bound (lines 383-390), while bank_observation.scan enforces MAX_FILE (lines 82-84), and inspect snapshots before applying --path (bank_state.py:66-68).",
+            "source_confirmed_not_reproduced": "ADR-0007 hook mismatch. diagnostics.py:435-443 compares whole-file fingerprint identity for every non-activation target, while installation.py:825-834 uses client_hooks.locate on owned groups. Both the RCA and the ADR correctly label this as source-confirmed and pending public fixture reproduction.",
+            "operator_reported_retrospective": "The AGENTS.md substitution narrative and the 79,054 and 28,478-byte C2E sizes are correctly labelled as operator-supplied and unverified. The RCA does not derive a technical feature, a terminology claim or authority to delete from them. The affected checkout's unavailability is stated honestly."
+          }
+        },
+        "blockers": [
+          {
+            "id": "B1",
+            "file": "docs/adr/0010-memory-bank-file-contract.md",
+            "section": "Proposed amendment: Source-preserving layout recovery \u2192 'Separate observation and review boundary' and 'A native bounded result, without invented admission'",
+            "problem": "The recovery contract can deadlock on the very input class it targets. Three rules interact:\n1. Preparation must yield a complete bank that passes normal eligibility.\n2. No unresolved unit may disappear, and an external backup alone cannot authorize omission from current knowledge.\n3. New durable units must keep ordinary admission judgments, and recovery must not fabricate an admission receipt.\nOrdinary admission cannot run until the bank is eligible (admission.start refuses in every oversized and unsupported-layout row). So content that needs admission, such as the substance of an unsupported root handoff file or transcript-like context, has no lawful destination. It cannot stay (the bank would be ineligible), cannot be admitted (admission needs an eligible bank), and cannot be set aside (backup is not authority to omit). The design gives no defined path to completion for the reported-shape case. Acceptance could pass on trivially restructurable fixtures without ever proving the contract terminates for content that needs admission.",
+            "minimum_fix": "Specify the sequencing explicitly. Recovery may only (a) re-layout already-present canonical content without new admission, or (b) move a unit out of the canonical bank into the private recovery workspace as a typed 'pending-admission' candidate, bound to its original bytes and a reviewed reason. Ordinary admission of such candidates then runs after the bank becomes eligible. State that case (b) is a tracked deferral, not omission from knowledge, and that it remains visible in the recovery result and status until resolved or explicitly discarded. Add an acceptance case: an oversized root handoff whose content needs admission recovers to an eligible bank with that content pending, followed by a successful ordinary admission of it."
+          }
+        ],
+        "nonblocking_notes": [
+          "ADR-0018 'Read-only diagnosis\u2026Guidance SHALL point to a separately reviewed source-preserving layout recovery operation under ADR-0010'. ADR-0018 can ship independently of ADR-0010. In that case the guidance should state that recovery is not yet available and give the interim safe action (preserve the bank, report capture as pending, do no manual truncation). It should not name a command that does not exist.",
+          "ADR-0018 typed cause: consider listing `bank-source-byte-capacity` alongside a distinct aggregate cause (e.g. `bank-aggregate-byte-capacity`) and a file-count cause. The acceptance section exercises those bounds, but only the per-source cause is named.",
+          "ADR-0010 recovery workspace: 'explicit retention handling' of private originals, which may be sensitive, is unspecified (location permissions, deletion trigger, interaction with uninstall/--purge-data). This can be deferred to task design but should be named as an open item.",
+          "ADR-0010 identity: 'stronger explicit identity review' for an invalid router is directionally right, but the acceptance list does not include an invalid or ambiguous router fixture. Add one.",
+          "ADR-0007: the RCA cites runtime doctor at diagnostics.py line 356, but the supplied excerpt that shows the fingerprint fall-through is lines 424-455. Cite the exact branch (around line 436) so the reproduction binds to it.",
+          "ADR-0007: client_hooks.locate as excerpted uses full structural equality and does not itself detect duplicate JSON keys. The amendment's duplicate-key negative control therefore depends on client_hooks.parse behavior. Note that dependency so acceptance checks it explicitly rather than assuming it.",
+          "Evidence: the reproducer is bound by hash only. Independent repetition depends on the stated archive procedure, which is adequate for design review. Implementation acceptance should rerun it rather than cite these hashes."
+        ],
+        "assessment_summary": {
+          "ADR-0018 bank-validation-consistency": "Sound and evidence-backed. Its trust boundary is preserved: no limit is raised and capacity is never certified as validity. It is acceptable apart from the guidance note.",
+          "ADR-0010 source-preserving-layout-recovery": "Trust boundaries, locking, rollback, retry and the no-implicit-admission stance are well specified. It is blocked on B1, the completion path for content that needs admission.",
+          "ADR-0007 owned-hook-health": "Scope is correctly limited to receipt-owned entries. Strict checks are retained for wrappers, links, copies and OpenCode, and read-only doctor makes no mutations. Acceptance properly requires reproducing the old mismatch first. It is acceptable."
+        }
+      }
+    },
+    {
+      "reviewed_source_commit": "8d90b4a3179420a1a47135c2ca2eb04bcc3c03d1",
+      "exit": 0,
+      "timed_out": false,
+      "seconds": 35.69170491700061,
+      "requested_argv": [
+        "claude",
+        "-p",
+        "--model",
+        "opus",
+        "--safe-mode",
+        "--tools",
+        "",
+        "--effort",
+        "low",
+        "--max-turns",
+        "1",
+        "--output-format",
+        "json"
+      ],
+      "reported_models": [
+        "claude-opus-5-5"
+      ],
+      "provider_subtype": "success",
+      "provider_is_error": false,
+      "prompt_sha256": "a7f3e4c85116afb2b8b973ba61dc62ad944abad235d97a58579a1932fdec0a64",
+      "raw_provider_stdout_sha256": "ed00b44d9fe92b373bc947bc6af5329151afdb9cde3eb87b1a53243cec2a7313",
+      "reviewed_file_sha256": {
+        "docs/adr/0007-portable-pack-and-lifecycle.md": "ee9b10e0ef0f7cb7a231c01ea667222ce4336fc9b851df67e00fe21250ce2140",
+        "docs/adr/0010-memory-bank-file-contract.md": "afc4fddabffcbc8ee32c4a91710978ce7fa47bef99121af03cef53ee9faf23cb",
+        "docs/adr/0018-repair-diagnostics-and-observation-bounds.md": "3f066cf6f24d3bee8c764abd5bcde780eb1ad00dd231764a3fd4ef86d107bcfb",
+        "docs/research/2026-10-31-bank-size-and-owned-hook-health-rca.md": "405b01bb48fa4f7dd0e46c34a7a0c24a5b3c37cb7410a7f68fd7c68cb27fc57a",
+        "docs/research/data/2026-10-31-secondary-memory-rca/controlled-results.json": "947b36b335954d68ee60d651790f46dcd33f94990eff73a23f9a8b4f916647c5"
+      },
+      "review": {
+        "verdict": "ACCEPT",
+        "review_basis": {
+          "source_commit": "8d90b4a3179420a1a47135c2ca2eb04bcc3c03d1",
+          "method": "Static review of the supplied frozen text only. No code was executed, no tools were used, no files were altered, and no instructions embedded in the source text were followed.",
+          "approval_interpretation": "The historical front-matter does not approve the proposed amendments. ADR-0007 and ADR-0010 are accepted for v0.0.1 only, and ADR-0018 is accepted only for capacity-diagnosis-for-v0.0.10. Each 2026-10-31 amendment says it is outside those scopes, has its own stable work key, and has no v0.0.13 assignment. An ACCEPT here approves the design only. It does not authorize implementation, a release assignment, any bank repair or any terminology capture.",
+          "evidence_classification": {
+            "controlled_public_operation_results": "There are 22 rows: 5 at 16,384 bytes, 5 at 16,385 bytes, 4 synthetic at about 77,200 bytes, 4 for an oversized root handoff and 4 for a small root handoff. They match the RCA table. `bank validate` returns `valid:true` with an identical stdout hash at 16,384, 16,385 and 77,200 bytes. At 16,385 and 77,200 bytes, inspect, scoped inspect and `admission start` refuse; scoped search also refuses at 16,385 bytes (it was not repeated at 77,200). Every row preserves bank bytes, HEAD and index. The frozen code agrees with these results: `bank_contract.py:383-390` reads whole files with no per-source bound, while `bank_observation.py:82-84` enforces MAX_FILE. `bank_state.py:66-68` takes the snapshot before applying `--path`.",
+            "source_confirmed_not_reproduced": "The ADR-0007 mismatch is source-confirmed only. The non-activation path at `diagnostics.py:435-443` checks whole-file fingerprint equality, while `installation.py:825-834` locates the owned entry and checks stability. The ADR makes public fixture reproduction an acceptance prerequisite, which is the correct status.",
+            "operator_reported_retrospective": "Several items are labelled as operator-reported and unverified: the C2E sizes of 79,054 and 28,478 bytes, the checkout path, and the AGENTS.md substitution retrospective. The RCA does not derive a technical feature, a terminology claim, a producer attribution or deletion authority from them. The synthetic sizes are explicitly distinguished from the exact reported sizes."
+          }
+        },
+        "prior_blocker_resolution": {
+          "B1": "Resolved. The section 'Two-phase completion, without circular admission' now does five things. (1) It defines a reviewed `pending-admission` disposition, retained privately with exact bytes, provenance, a reason and stable IDs. (2) It lets layout-apply restore eligibility while reporting `layout-restored` and `semantic_recovery_complete: false`. (3) It runs ordinary admission afterwards under the unchanged rules, and requires correlation to the original unit ID before a unit counts as resolved. (4) It forbids clearing a unit by elapsed time or by repair success. (5) It forbids downgrading admitted guidance to make the layout fit. Acceptance now includes the oversized-handoff \u2192 pending \u2192 ordinary-admission \u2192 resolved case, an unconfirmed control, and pending-frontier-omission and guidance-downgrade negative controls. Deadlock is removed without inventing completion."
+        },
+        "blockers": [],
+        "nonblocking_notes": [
+          {
+            "file": "docs/adr/0010-memory-bank-file-contract.md",
+            "section": "Transaction, retry and sharing (recovery-aware publication)",
+            "note": "The pending ledger is private and local, but a published layout repair changes the shared tree. Other clones would then lose that content from shared memory with no shared signal that coverage is incomplete. The task design should pick one of two options. Option 1: publication carries a non-sensitive shared pending marker containing unit IDs, counts and the required action, with no bodies or hashes. Option 2: publication of a repair that moves units into private pending remains blocked until the units are resolved. Acceptance should then cover a second-clone recall."
+          },
+          {
+            "file": "docs/adr/0010-memory-bank-file-contract.md",
+            "section": "Two-phase completion \u2014 pending-frontier review",
+            "note": "Binding the frontier to admission proofs is correctly deferred to task design before the task becomes Ready. That design should also state how a pending unit larger than the ordinary admission request or disclosure bounds is split into separately sourced candidates without arbitrary byte splitting. Otherwise such units may stay pending indefinitely. That outcome is safe but should be visible."
+          },
+          {
+            "file": "docs/adr/0018-repair-diagnostics-and-observation-bounds.md",
+            "section": "Proposed amendment: Consistent bank-source eligibility",
+            "note": "The ADR-0018 requirement 'completeness is required for recall' fits with ADR-0010's labelled incomplete-coverage recall, because pending units sit outside the eligible bank. Still, one sentence cross-referencing the two would prevent an implementer from reading them as conflicting."
+          },
+          {
+            "file": "docs/adr/0007-portable-pack-and-lifecycle.md",
+            "section": "Proposed amendment: Entry-scoped owned-hook health",
+            "note": "Duplicate-key rejection now depends explicitly on `client_hooks.parse`, which is good. The public reproduction should confirm that behavior directly rather than inherit it, because `locate` as excerpted (`client_hooks.py:45-52`) performs only structural equality."
+          },
+          {
+            "file": "docs/research/2026-10-31-bank-size-and-owned-hook-health-rca.md",
+            "section": "Source binding and follow-up",
+            "note": "Retained hashes are correctly described as design evidence only. Implementation acceptance must rerun the frozen-source public cases rather than cite these hashes."
+          }
+        ],
+        "assessment_summary": {
+          "ADR-0018 bank-validation-consistency": "Accept. The cause is demonstrated by controlled public results. It defines a single eligibility definition, bounded reads, three typed causes, and guidance that no longer names an unavailable command. No limit is raised and capacity is never presented as validity.",
+          "ADR-0010 source-preserving-layout-recovery": "Accept. The trust boundary separates the raw observer from the ordinary snapshot. It covers identity without inference, private 0700/0600 retention, a reviewed cleanup gate, locked rebinding of source pins, rollback to exact original bytes and honest retry. Completion now terminates without fabricated admission. Cross-clone pending visibility remains a task-design item.",
+          "ADR-0007 owned-hook-health": "Accept. Health is scoped to receipt-owned entries through the shared parse/locate evaluator. Strict checks are kept for wrappers, links, copies, signed source and OpenCode. Doctor stays read-only, and reproduction is required before acceptance."
+        }
+      }
+    },
+    {
+      "reviewed_source_commit": "c8412b3fe9e1eb72f77cc8d0b92fcabd08957720",
+      "exit": 0,
+      "timed_out": false,
+      "seconds": 22.178012708958704,
+      "requested_argv": [
+        "claude",
+        "-p",
+        "--model",
+        "opus",
+        "--safe-mode",
+        "--tools",
+        "",
+        "--effort",
+        "low",
+        "--max-turns",
+        "1",
+        "--output-format",
+        "json"
+      ],
+      "reported_models": [
+        "claude-opus-5-5"
+      ],
+      "provider_subtype": "success",
+      "provider_is_error": false,
+      "prompt_sha256": "6d3a1c4e573c36ba885473c065d7e56f1a4feeadb8144f660e4996885658891b",
+      "raw_provider_stdout_sha256": "8ae5f66607fc5ac955da9c6ef5abec2f30efd87447cf1ebd4b559419a34824e1",
+      "reviewed_file_sha256": {
+        "docs/adr/0007-portable-pack-and-lifecycle.md": "ee9b10e0ef0f7cb7a231c01ea667222ce4336fc9b851df67e00fe21250ce2140",
+        "docs/adr/0010-memory-bank-file-contract.md": "7ca1186d81425915146152598d587da3eb1fd5d3e7f333d1ca9ac2e03d153c62",
+        "docs/adr/0018-repair-diagnostics-and-observation-bounds.md": "3f066cf6f24d3bee8c764abd5bcde780eb1ad00dd231764a3fd4ef86d107bcfb",
+        "docs/research/2026-10-31-bank-size-and-owned-hook-health-rca.md": "405b01bb48fa4f7dd0e46c34a7a0c24a5b3c37cb7410a7f68fd7c68cb27fc57a",
+        "docs/research/data/2026-10-31-secondary-memory-rca/controlled-results.json": "947b36b335954d68ee60d651790f46dcd33f94990eff73a23f9a8b4f916647c5"
+      },
+      "review": {
+        "verdict": "ACCEPT",
+        "review_basis": {
+          "source_commit": "c8412b3fe9e1eb72f77cc8d0b92fcabd08957720",
+          "prior_accepted_source": "8d90b4a3179420a1a47135c2ca2eb04bcc3c03d1",
+          "method": "Static review of the supplied 11-line ADR-0010 delta, the full current ADR-0010 and the prior review. No tools were used, no code was executed and no files were changed. The claim that the other files are byte-identical to the accepted source was taken as stated, not verified.",
+          "scope": "Design acceptance only. This does not authorize implementation, assign a release, repair any bank or capture any terminology. The amendment remains a 2026-10-31 proposal outside the accepted v0.0.1 scope."
+        },
+        "edge_resolution": {
+          "cross_clone_pending_visibility": "Resolved. The owner chose the prior review's Option 2. Recovery-aware publication is gated on two conditions: every private pending-admission unit has a reviewed terminal disposition, and `semantic_recovery_complete` is true. A layout-only repair that moves content into the private frontier therefore cannot reach the shared tree, so no other clone can see an apparently complete bank with silently missing coverage. The restriction adds no shared pending marker, federation or cross-machine ledger dependency, so it introduces no new private-data exposure. Acceptance now checks both halves: publication is refused while units are pending, and a second clone can inspect/recall the bank after the fully resolved result lands.",
+          "circularity_check": "No circular blocking. (1) Local layout-apply is not publication. It still restores eligibility locally with `layout-restored` and `semantic_recovery_complete: false`. (2) Ordinary admission runs against that eligible local bank, and the delta explicitly allows admission and reviewed terminal dispositions to resolve units *before* publication. (3) Resolution therefore depends on local admission or disposition receipts, not on publication, so the dependency only runs one way: local layout \u2192 admission/disposition \u2192 resolution \u2192 publication. (4) A unit that can never be confirmed leaves publication pending. That is safe and visible, and it matches the existing rule that elapsed time or repair success must not clear a unit.",
+          "freshness": "Requiring fresh authority and source pins at landing is consistent with the existing locked rebinding and the rule against a 'partial snapshot'. A long local resolution period cannot land against stale authority."
+        },
+        "blockers": [],
+        "nonblocking_notes": [
+          {
+            "section": "Two-phase completion \u2014 receipt correlation",
+            "note": "The phrase 'New admission/publication receipts SHALL be correlated with its original unit ID before status marks it resolved' could be read as requiring a publication receipt for resolution. That would conflict circularly with the new gate. The task design should state that a local admission receipt or reviewed terminal-disposition receipt is sufficient to resolve a unit, and that publication receipts are correlated afterwards."
+          },
+          {
+            "section": "Transaction, retry and sharing \u2014 scope of the restriction",
+            "note": "The restriction is placed under the authority-contains-invalid-layout path, but its sentence about 'an eligible local layout' reads more generally. The task design should confirm the case where authority is already valid and only the local bank was invalid. The ordinary ADR-0012 sharing of a locally repaired bank should either follow the same all-resolved gate or be shown harmless because the removed content was never shared."
+          },
+          {
+            "section": "Pending lifetime",
+            "note": "Since publication may now stay pending indefinitely behind an unresolvable unit, status should surface 'publication blocked by N pending units' alongside the unit IDs and required actions. The earlier note about splitting oversized pending units into separately sourced candidates becomes more important under this gate."
+          }
+        ],
+        "assessment_summary": "ACCEPT. The bounded restriction closes the cross-clone visibility edge raised in the prior review. It adds no shared state, does not block local layout restoration or ordinary admission, and adds acceptance coverage for both the refusal and the second-clone outcome. The remaining items are wording clarifications for task design."
+      }
+    }
+  ]
+}
