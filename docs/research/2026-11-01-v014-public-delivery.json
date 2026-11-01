@@ -1,0 +1,507 @@
+{
+  "schema": "agent-memory/v014-public-delivery-v1",
+  "publication": {
+    "published": true,
+    "tag": "v0.0.14",
+    "source_commit": "342448aa0d045c554c6094ca3b36d997f47f6d79",
+    "artifact_digest": "4208c18e2288bdb3f6faf6354fe44b638559ba8ec1fede2cec7ce491bea726f7",
+    "url": "https://github.com/robertelee78/agent-memory/releases/tag/v0.0.14",
+    "default_activation_performed": true,
+    "verified_main_commit": "342448aa0d045c554c6094ca3b36d997f47f6d79"
+  },
+  "accepted_functional_commit": "0440f4cc8031bacf59b0f54b7d440917b02d5d43",
+  "journeys": {
+    "linux_fresh": {
+      "result": {
+        "passed": true,
+        "actual_public_default_install": true,
+        "source_commit": "342448aa0d045c554c6094ca3b36d997f47f6d79",
+        "signed_publisher_verified": true,
+        "development_memory_absent": true,
+        "consumer_and_staged_code_preserved": true,
+        "client_text_restored": true,
+        "public_update_noop_verified": true,
+        "uninstalled": true,
+        "world_retained": false,
+        "platform": "Linux-6.8.0-100-generic-aarch64-with-glibc2.39",
+        "seconds": 18.28879602800589
+      },
+      "commands": [
+        {
+          "label": "fresh-one-line",
+          "argv": [
+            "bash",
+            "-o",
+            "pipefail",
+            "-c",
+            "curl -fsSL \"$1\" | bash",
+            "public-canary",
+            "https://raw.githubusercontent.com/robertelee78/agent-memory/main/install.sh"
+          ],
+          "exit": 0,
+          "seconds": 2.591469260005397,
+          "stdout_sha256": "46b4e4419d76be0323cf677eff67165a672489186cfe3550aa129226f632b513",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "fresh-version",
+          "argv": [
+            "/tmp/agent-memory-test-px0m8id8/home/.local/bin/am",
+            "--version"
+          ],
+          "exit": 0,
+          "seconds": 1.0302545609883964,
+          "stdout_sha256": "4d676acc0666505b3f9c09a5fb99f5dffb4f6a6bc9efab1e8bb5de6c13bf21d9",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "fresh-version-json",
+          "argv": [
+            "/tmp/agent-memory-test-px0m8id8/home/.local/bin/am",
+            "--json",
+            "version"
+          ],
+          "exit": 0,
+          "seconds": 0.9804588200058788,
+          "stdout_sha256": "10a8860d3909a22cb0aa903214cf5a8aa79da2cb3d476af9a22dcf1be9a346b8",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "fresh-update-check",
+          "argv": [
+            "/tmp/agent-memory-test-px0m8id8/home/.local/bin/am",
+            "--json",
+            "update",
+            "--check"
+          ],
+          "exit": 0,
+          "seconds": 5.445678179996321,
+          "stdout_sha256": "3dea9fd461e6bd6b0f8530091cad6035715d218c9149ac93c13fc5073823fcff",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "fresh-update",
+          "argv": [
+            "/tmp/agent-memory-test-px0m8id8/home/.local/bin/am",
+            "--json",
+            "update"
+          ],
+          "exit": 0,
+          "seconds": 6.804332523999619,
+          "stdout_sha256": "1c8c710b36833dd9bafc106fb9e250ce1b61af4c16b92de44d221042d543591a",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "fresh-status",
+          "argv": [
+            "/tmp/agent-memory-test-px0m8id8/home/.local/bin/am",
+            "status",
+            "--repo",
+            "/tmp/agent-memory-test-px0m8id8/consumer"
+          ],
+          "exit": 0,
+          "seconds": 0.48342704300011974,
+          "stdout_sha256": "bc7a02e5638cd587e3141d4d61bbbd8fb0cde34826c3f383b2b12866e985ff82",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "fresh-uninstall-check",
+          "argv": [
+            "/tmp/agent-memory-test-px0m8id8/home/.local/bin/am",
+            "--json",
+            "uninstall",
+            "--check"
+          ],
+          "exit": 0,
+          "seconds": 0.17930334400443826,
+          "stdout_sha256": "ce516bd6dd0725336027e7d8d2bc5f702583925ce9e5e7a085c849b281a3ee51",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "fresh-uninstall",
+          "argv": [
+            "/tmp/agent-memory-test-px0m8id8/home/.local/bin/am",
+            "uninstall"
+          ],
+          "exit": 0,
+          "seconds": 0.3793224409891991,
+          "stdout_sha256": "b05ae71e5710f724e94952336dcc1b9571d520688e9670bfcfd38f253411211f",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "observed_artifact_digests": [
+        "4208c18e2288bdb3f6faf6354fe44b638559ba8ec1fede2cec7ce491bea726f7",
+        "4208c18e2288bdb3f6faf6354fe44b638559ba8ec1fede2cec7ce491bea726f7"
+      ]
+    },
+    "linux_upgrade": {
+      "result": {
+        "passed": true,
+        "actual_public_default_install": false,
+        "source_commit": "342448aa0d045c554c6094ca3b36d997f47f6d79",
+        "signed_publisher_verified": true,
+        "development_memory_absent": true,
+        "consumer_and_staged_code_preserved": true,
+        "client_text_restored": true,
+        "public_update_noop_verified": true,
+        "uninstalled": true,
+        "world_retained": false,
+        "platform": "Linux-6.8.0-100-generic-aarch64-with-glibc2.39",
+        "seconds": 20.537660451998818
+      },
+      "commands": [
+        {
+          "label": "signed-legacy-update",
+          "argv": [
+            "/tmp/agent-memory-test-2hu2vdd6/home/.local/bin/am",
+            "update"
+          ],
+          "exit": 0,
+          "seconds": 5.321908409008756,
+          "stdout_sha256": "58ff95ab8f347f3a8492b2e446f123b185c00ffefa36958a7b6f6daf809d91b5",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "upgrade-via-cli-version",
+          "argv": [
+            "/tmp/agent-memory-test-2hu2vdd6/home/.local/bin/am",
+            "--version"
+          ],
+          "exit": 0,
+          "seconds": 0.9820093330054078,
+          "stdout_sha256": "585b24dc70acc5c413e3d20b6cb1dc93a14c46d65d14517b3a745b76ee830429",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "upgrade-via-cli-version-json",
+          "argv": [
+            "/tmp/agent-memory-test-2hu2vdd6/home/.local/bin/am",
+            "--json",
+            "version"
+          ],
+          "exit": 0,
+          "seconds": 0.9796151469927281,
+          "stdout_sha256": "268be2d4f523f6d2612b3ad3fc54dad65583b9df0d2cac8dc803fa4f33ab3274",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "upgrade-via-cli-update-check",
+          "argv": [
+            "/tmp/agent-memory-test-2hu2vdd6/home/.local/bin/am",
+            "--json",
+            "update",
+            "--check"
+          ],
+          "exit": 0,
+          "seconds": 5.445867433998501,
+          "stdout_sha256": "817620afb4917a639be3310dac983de4c4ab7cfd2138a33f5ab747cba9a8794d",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "upgrade-via-cli-update",
+          "argv": [
+            "/tmp/agent-memory-test-2hu2vdd6/home/.local/bin/am",
+            "--json",
+            "update"
+          ],
+          "exit": 0,
+          "seconds": 6.791657716996269,
+          "stdout_sha256": "e49d4fb5ba2b1b46b54ced0aa706315ca70fb2615a2a4999ff2588b03081493c",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "upgrade-via-cli-status",
+          "argv": [
+            "/tmp/agent-memory-test-2hu2vdd6/home/.local/bin/am",
+            "status",
+            "--repo",
+            "/tmp/agent-memory-test-2hu2vdd6/consumer"
+          ],
+          "exit": 0,
+          "seconds": 0.44714703800855204,
+          "stdout_sha256": "21ef6efc540dc523be4c2a6046a0899fde2d1e0c050039768a4917b06a0b10d5",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "upgrade-via-cli-uninstall-check",
+          "argv": [
+            "/tmp/agent-memory-test-2hu2vdd6/home/.local/bin/am",
+            "--json",
+            "uninstall",
+            "--check"
+          ],
+          "exit": 0,
+          "seconds": 0.18384592300571967,
+          "stdout_sha256": "e5e53bd49784f1561f454fba5ba4a1a377180194835c72c3423cf5797567bacd",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "upgrade-via-cli-uninstall",
+          "argv": [
+            "/tmp/agent-memory-test-2hu2vdd6/home/.local/bin/am",
+            "uninstall"
+          ],
+          "exit": 0,
+          "seconds": 0.37875985298887827,
+          "stdout_sha256": "b05ae71e5710f724e94952336dcc1b9571d520688e9670bfcfd38f253411211f",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "observed_artifact_digests": [
+        "4208c18e2288bdb3f6faf6354fe44b638559ba8ec1fede2cec7ce491bea726f7",
+        "4208c18e2288bdb3f6faf6354fe44b638559ba8ec1fede2cec7ce491bea726f7"
+      ]
+    },
+    "macos_fresh": {
+      "result": {
+        "passed": true,
+        "actual_public_default_install": true,
+        "source_commit": "342448aa0d045c554c6094ca3b36d997f47f6d79",
+        "signed_publisher_verified": true,
+        "development_memory_absent": true,
+        "consumer_and_staged_code_preserved": true,
+        "client_text_restored": true,
+        "public_update_noop_verified": true,
+        "uninstalled": true,
+        "world_retained": false,
+        "platform": "macOS-27.2-arm64-arm-64bit-Mach-O",
+        "seconds": 20.655657332972623
+      },
+      "commands": [
+        {
+          "label": "fresh-one-line",
+          "argv": [
+            "bash",
+            "-o",
+            "pipefail",
+            "-c",
+            "curl -fsSL \"$1\" | bash",
+            "public-canary",
+            "https://raw.githubusercontent.com/robertelee78/agent-memory/main/install.sh"
+          ],
+          "exit": 0,
+          "seconds": 2.8880246670451015,
+          "stdout_sha256": "7f790727bde7bc62883a06f13c1b06a5f437ffb8f9aff10032614c60ea535e2c",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "fresh-version",
+          "argv": [
+            "/private/tmp/agent-memory-test-bg4l799y/home/.local/bin/am",
+            "--version"
+          ],
+          "exit": 0,
+          "seconds": 1.2338031249819323,
+          "stdout_sha256": "025a647f3711c8b4ff31be934abbad85c29af73a84c62b4d12f471fed247a05c",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "fresh-version-json",
+          "argv": [
+            "/private/tmp/agent-memory-test-bg4l799y/home/.local/bin/am",
+            "--json",
+            "version"
+          ],
+          "exit": 0,
+          "seconds": 1.1033707500318997,
+          "stdout_sha256": "8bd5a8af7d0237bf249138febd27f018f9c865219ef147a99fe476f757f9dfde",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "fresh-update-check",
+          "argv": [
+            "/private/tmp/agent-memory-test-bg4l799y/home/.local/bin/am",
+            "--json",
+            "update",
+            "--check"
+          ],
+          "exit": 0,
+          "seconds": 5.844148417003453,
+          "stdout_sha256": "c4d81567845c384423730dee9f05d6ec33457509e2c3aa03a2c2e3dff7a9e214",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "fresh-update",
+          "argv": [
+            "/private/tmp/agent-memory-test-bg4l799y/home/.local/bin/am",
+            "--json",
+            "update"
+          ],
+          "exit": 0,
+          "seconds": 7.431310834013857,
+          "stdout_sha256": "9bda804459a0290c3391d0f41be0a7c25937392fd2ed65037aa364e9f20924c9",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "fresh-status",
+          "argv": [
+            "/private/tmp/agent-memory-test-bg4l799y/home/.local/bin/am",
+            "status",
+            "--repo",
+            "/private/tmp/agent-memory-test-bg4l799y/consumer"
+          ],
+          "exit": 0,
+          "seconds": 0.5483119580312632,
+          "stdout_sha256": "1071f6bed00ec6aa6adb7524f6c5ab652397ad65f8950c8067c7564ff8ffb9b2",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "fresh-uninstall-check",
+          "argv": [
+            "/private/tmp/agent-memory-test-bg4l799y/home/.local/bin/am",
+            "--json",
+            "uninstall",
+            "--check"
+          ],
+          "exit": 0,
+          "seconds": 0.22312266699736938,
+          "stdout_sha256": "dcfedeadf30f70bf3363ec2e0c0be7de9e9fb30bd0b4ddd409d1f1228d7cdde8",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "fresh-uninstall",
+          "argv": [
+            "/private/tmp/agent-memory-test-bg4l799y/home/.local/bin/am",
+            "uninstall"
+          ],
+          "exit": 0,
+          "seconds": 0.39161841600434855,
+          "stdout_sha256": "b05ae71e5710f724e94952336dcc1b9571d520688e9670bfcfd38f253411211f",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "observed_artifact_digests": [
+        "4208c18e2288bdb3f6faf6354fe44b638559ba8ec1fede2cec7ce491bea726f7",
+        "4208c18e2288bdb3f6faf6354fe44b638559ba8ec1fede2cec7ce491bea726f7"
+      ]
+    },
+    "macos_upgrade": {
+      "result": {
+        "passed": true,
+        "actual_public_default_install": false,
+        "source_commit": "342448aa0d045c554c6094ca3b36d997f47f6d79",
+        "signed_publisher_verified": true,
+        "development_memory_absent": true,
+        "consumer_and_staged_code_preserved": true,
+        "client_text_restored": true,
+        "public_update_noop_verified": true,
+        "uninstalled": true,
+        "world_retained": false,
+        "platform": "macOS-27.2-arm64-arm-64bit-Mach-O",
+        "seconds": 23.028761250025127
+      },
+      "commands": [
+        {
+          "label": "signed-legacy-update",
+          "argv": [
+            "/private/tmp/agent-memory-test-bp2h00kb/home/.local/bin/am",
+            "update"
+          ],
+          "exit": 0,
+          "seconds": 6.330117208010051,
+          "stdout_sha256": "58ff95ab8f347f3a8492b2e446f123b185c00ffefa36958a7b6f6daf809d91b5",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "upgrade-via-cli-version",
+          "argv": [
+            "/private/tmp/agent-memory-test-bp2h00kb/home/.local/bin/am",
+            "--version"
+          ],
+          "exit": 0,
+          "seconds": 1.090212499955669,
+          "stdout_sha256": "73caa3fa7a96e8c7e3dadc1e45c82220c956a2b5b582244847149fc6b32b25d8",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "upgrade-via-cli-version-json",
+          "argv": [
+            "/private/tmp/agent-memory-test-bp2h00kb/home/.local/bin/am",
+            "--json",
+            "version"
+          ],
+          "exit": 0,
+          "seconds": 1.0738193340366706,
+          "stdout_sha256": "c9b9c9ba137d12aac9259a0f495ad97043c85e21185c7b26a2eb1a45eede9e83",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "upgrade-via-cli-update-check",
+          "argv": [
+            "/private/tmp/agent-memory-test-bp2h00kb/home/.local/bin/am",
+            "--json",
+            "update",
+            "--check"
+          ],
+          "exit": 0,
+          "seconds": 5.995099124964327,
+          "stdout_sha256": "66b1a929e7c3cff82e89040582918c92fa13a23bb89d57817058d30af4645f42",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "upgrade-via-cli-update",
+          "argv": [
+            "/private/tmp/agent-memory-test-bp2h00kb/home/.local/bin/am",
+            "--json",
+            "update"
+          ],
+          "exit": 0,
+          "seconds": 7.355700790998526,
+          "stdout_sha256": "d4b302d96f635a4393d200ae3e7329956b0fdf88e40dd15f72e5a3349bdd6b31",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "upgrade-via-cli-status",
+          "argv": [
+            "/private/tmp/agent-memory-test-bp2h00kb/home/.local/bin/am",
+            "status",
+            "--repo",
+            "/private/tmp/agent-memory-test-bp2h00kb/consumer"
+          ],
+          "exit": 0,
+          "seconds": 0.5558429170050658,
+          "stdout_sha256": "a97a1f8a7ac71aec99f47abab6030ee2de86e22a13bfbc0cda0600c0be8b53b1",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "upgrade-via-cli-uninstall-check",
+          "argv": [
+            "/private/tmp/agent-memory-test-bp2h00kb/home/.local/bin/am",
+            "--json",
+            "uninstall",
+            "--check"
+          ],
+          "exit": 0,
+          "seconds": 0.2268351250095293,
+          "stdout_sha256": "2b2d6610cad1b624803692f0374c6b7ccf59abe72ce8a6bc7d50d00ef8c7b68a",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "label": "upgrade-via-cli-uninstall",
+          "argv": [
+            "/private/tmp/agent-memory-test-bp2h00kb/home/.local/bin/am",
+            "uninstall"
+          ],
+          "exit": 0,
+          "seconds": 0.37829924997640774,
+          "stdout_sha256": "b05ae71e5710f724e94952336dcc1b9571d520688e9670bfcfd38f253411211f",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "observed_artifact_digests": [
+        "4208c18e2288bdb3f6faf6354fe44b638559ba8ec1fede2cec7ce491bea726f7",
+        "4208c18e2288bdb3f6faf6354fe44b638559ba8ec1fede2cec7ce491bea726f7"
+      ]
+    }
+  },
+  "command_count": 32,
+  "command_failures": 0,
+  "maximum_command_seconds": 7.431310834013857,
+  "initial_publisher_attempt": {
+    "exit": 1,
+    "error": "Unsafe lifecycle trust path: /var: a trusted ordinary path must not be redirected by a symlink",
+    "disposition": "Before build/draft publication; retry used a canonical private TMPDIR without changing source/trust policy. Prior output retained."
+  },
+  "live_profiles_changed": false,
+  "original_reported_bank_accessed": false
+}
