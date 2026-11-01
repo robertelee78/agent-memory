@@ -97,11 +97,13 @@ class PreviewGuidance(unittest.TestCase):
 class ReviewRegressions(unittest.TestCase):
  def test_diagnostic_redaction_normalizes_before_matching(self):
   raw=(b'curl: Authorization: Bearer AUTH_SECRET\ntoken="SAFE_PREFIX SECRET_TAIL"\n'
-       b'CURL_CA_BUNDLE=/private/ACCOUNT_SECRET.pem\nhttps:\x00//host/path?sig=URL_SECRET')
+       b'CURL_CA_BUNDLE=/private/ACCOUNT_SECRET.pem\nhttps:\x00//host/path?sig=URL_SECRET\n'
+       b'auth_token=AUTH_TOKEN_SECRET client_secret="CLIENT SECRET_TAIL"\n'
+       b'curl: (77) error setting certificate file: /private/BARE_ACCOUNT_SECRET.pem')
   detail=r.safe_download_detail(raw)
   e=r.DownloadError({'stage':'release manifest','host':'example.com'},[{'reason':'transport','curl_exit':56,'http_status':None,'detail':detail}],0.1)
   f=Path(e.details['diagnostic_path']);text=f.read_text()+str(e)+json.dumps(e.details)+e.repair
-  for secret in ('AUTH_SECRET','SECRET_TAIL','ACCOUNT_SECRET','URL_SECRET','https://'):self.assertNotIn(secret,text)
+  for secret in ('AUTH_SECRET','SECRET_TAIL','ACCOUNT_SECRET','URL_SECRET','AUTH_TOKEN_SECRET','SECRET_TAIL','BARE_ACCOUNT_SECRET','https://'):self.assertNotIn(secret,text)
   f.unlink();f.parent.rmdir()
  def test_http_permanent_status_wins_over_transient_curl_exit(self):
   for status in (429,403,404):

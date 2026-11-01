@@ -225,10 +225,12 @@ def safe_download_detail(raw):
     text = re.sub(r'(?i)https?://\S+', '[redacted URL]', text)
     text = re.sub(r'\S+@\S+', '[redacted userinfo]', text)
     assignment = '(?:"[^"\\n]*"|\'[^\'\\n]*\'|\\S+)'
-    text = re.sub(r'(?i)\b(?:token|access_token|password|passwd|secret|api[_-]?key)\s*[:=]\s*' + assignment,
+    text = re.sub(r'(?i)\b(?:[a-z0-9_-]*(?:token|password|passwd|secret|api[_-]?key)[a-z0-9_-]*)\s*[:=]\s*' + assignment,
                   '[redacted secret]', text)
     text = re.sub(r'\b[A-Z][A-Z0-9_]*\s*=\s*' + assignment,
                   '[redacted environment value]', text)
+    text = re.sub(r"[\"']/[^\"'\n]*[\"']", '[redacted local path]', text)
+    text = re.sub(r"(?<![a-zA-Z0-9])/[^\s\"'<>]+", '[redacted local path]', text)
     return ' '.join(text.split())[:512]
 
 
