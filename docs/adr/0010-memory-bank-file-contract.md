@@ -346,6 +346,17 @@ intended authority-tree delta. It MUST NOT feed an invalid bank to a normal
 sharing proof, force-push, import code or bless a partial snapshot. Offline or
 unavailable authority SHALL leave sharing pending with local evidence intact.
 
+Recovery-aware publication MUST remain pending while any private pending-admission
+unit is unresolved or `semantic_recovery_complete` is false. An eligible local
+layout MAY support the ordinary admission and reviewed terminal dispositions
+needed to resolve those units first. It MUST NOT be published as a layout-only
+repair that silently leaves another clone without the private pending frontier.
+Only a complete reviewed result, with all units resolved and fresh authority/source
+pins, MAY land. This introduces no shared pending federation or cross-machine
+private-ledger dependency. Acceptance SHALL refuse publication while private
+units remain pending, then verify that a second clone can inspect/recall the
+complete bounded repaired bank after the fully resolved result lands.
+
 Acceptance SHALL use synthetic counterparts of the reported 79,054 and
 28,478-byte inputs, valid smaller controls, unsupported root layouts and actual
 original-content preservation ledgers. It SHALL include an oversized root handoff
