@@ -2,7 +2,7 @@
 id: ADR-0021
 status: accepted
 date: 2026-10-27
-amended: 2026-10-30
+amended: 2026-10-31
 amends: [ADR-0018, ADR-0020]
 ---
 
@@ -139,7 +139,7 @@ filter substantive model answers or alter permissions to disguise the limitation
 Failed trials MUST remain retained as failures. The original functional baseline
 is independently hash-matched to its completed native proof.
 
-Fully silent native OpenCode completion is tracked by T4 for v0.0.13. This
+Fully silent native OpenCode completion is tracked by T4 for v0.0.14. This
 exception permits only the documented control text/no-op; all v0.0.9 functional
 acceptance criteria and safety boundaries remain required.
 
@@ -170,9 +170,9 @@ instruction and the retained Opus review. Source-bound AWA readiness and
 independent implementation/delivery review remain separate requirements.
 
 
-### T4: Fully silent native OpenCode completion (v0.0.13)
+### T4: Fully silent native OpenCode completion (v0.0.14)
 
-T4 is Backlog for v0.0.13 and MUST NOT delay v0.0.9's verified functional repairs.
+T4 is Backlog for v0.0.14 and MUST NOT delay v0.0.9's verified functional repairs.
 It MUST establish a supported native mechanism for completing only the exact
 acknowledged control without extra tools, bookkeeping prose or a repeated
 business answer. It MUST preserve original task results and qualified SDK result
@@ -279,7 +279,7 @@ semantic engine, harness integration, MCP or cross-repository behavior.
 T5, T6 and T7 are selected for bounded v0.0.11 work under the operator's current
 release instruction. Independent design approval, AWA attempt readiness,
 source-bound acceptance and actual signed release delivery remain separate.
-T4 and other deferred roadmap work remain Backlog for v0.0.13 with their original
+T4 and other deferred roadmap work remain Backlog for v0.0.14 with their original
 approval gates. The published v0.0.9 and v0.0.10 delivery histories remain intact.
 
 
@@ -422,3 +422,51 @@ source backups, establish a clean signed runtime and pass a normal update no-op.
 The unsuccessful v0.0.11 adoption SHALL remain retained and MUST NOT be reported
 as healed by that version. Published tags/assets MUST NOT be replaced. The eight
 remaining roadmap tasks move to v0.0.13 so this correction remains bounded.
+
+
+### T9: Bounded signed-download recovery and operator diagnostics (v0.0.13)
+
+The operator reported curl exit56 during an inner signed-release download on
+192.168.1.46. The exact preview and all four public endpoints subsequently passed.
+The original endpoint and curl stderr were discarded; the original network cause
+MUST remain unknown. Existing code makes one attempt.
+`ADR-0021:signed-download-diagnostics` SHALL own this corrective release; eight
+remaining roadmap tasks move to v0.0.14 without changing their approval gates.
+
+The shared standalone installer/updater/generated-bootstrap downloader SHALL
+make at most three GET attempts within one monotonic30-second budget per download,
+including backoff and subprocess waits. Each transfer SHALL allow at most ten
+seconds and connection five seconds, limited further by the remaining budget.
+Retryable curl exits SHALL be5,6,7,16,18,28,52,55,56,92; retryable HTTP responses
+SHALL be408,500,502,503,504. HTTP429 SHALL stop with rate-limit guidance.
+Other HTTP, TLS/certificate, local-write, size/resource and signature/digest/schema
+failures MUST NOT be retried or bypassed. HTTPS-only redirects, size bounds and
+publisher authentication MUST remain; no protocol downgrade or unsigned fallback.
+
+Every attempt SHALL use fresh private body, status and stderr streams. Partial
+bytes MUST NOT contaminate retries or signed payloads; stderr/status consumption
+MUST be bounded and no response body/partial archive SHALL be logged. Final
+failure SHALL name safe logical stage, original hostname, curl exit, HTTP status
+when known, actual attempts and elapsed time. Bounded sanitized curl detail SHALL
+remove controls, URLs, userinfo, auth/cookie headers and secret assignments;
+redirect URLs, queries, environment values and credentials MUST NOT be retained.
+
+Final transport failure SHALL retain at most8KiB JSON in a fresh current-owner
+0700 diagnostic directory outside runtime/repository with an exclusive0600 file.
+The standalone bootstrap SHALL use a trusted canonical system temporary root and
+descriptor/no-follow checks. Report-write failure MUST NOT mask the original
+failure or claim a saved file. Human/JSON errors SHALL provide the same stage,
+reason, retained path and category-specific next steps for network/proxy/DNS,
+certificate trust/clock, access/rate limit, missing asset or local staging.
+Guidance MUST state failed bytes were not accepted for activation without
+claiming unrelated interrupted lifecycle recovery made no changes. A failed
+preview MAY retain this private report but MUST NOT alter targets, receipts,
+banks or repository work. Recovered transient failures SHOULD remain quiet.
+
+Generated bootstrap and packaged verifier SHALL remain byte-consistent. Initial
+outer curl fetching the bootstrap precedes this function and MUST NOT be claimed
+as gaining retries. Focused local tests SHALL cover56/partial→success, exhausted
+attempts/deadline, transientHTTP, non-retryableTLS/404/429/size/integrity,
+redaction/bounds/private modes, failed report writes, unchanged targets/receipts/
+banks and render parity. Actual affected-Mac preview SHALL pass before publishing;
+this test MUST NOT perform an installation on that machine.
