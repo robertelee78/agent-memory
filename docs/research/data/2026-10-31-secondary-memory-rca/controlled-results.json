@@ -1,0 +1,458 @@
+{
+  "source_commit": "38f3e424471449fdd8a7caed16e81606e17beda2",
+  "archive_sha256": "9491441b4f2ccd3503baeed7e244cc9d3d93874b767838d845a24130e380e4a5",
+  "controlled_only": true,
+  "real_bank_writes": false,
+  "real_terminology_known_or_captured": false,
+  "all_bank_HEAD_index_preserved": true,
+  "source_hashes": {
+    "bank_state.py": "9759905557e60a41896e52d1d1e7d8b1946b15e7b15b3842b08a390a8667ff4f",
+    "bank_observation.py": "2b0b3c9ccb0157047775b09a3d3eaa3252c91c46d332421ea9119db4ee7029f4",
+    "admission.py": "7fba5492a6354d0404030dbe38c2b1dc0a94bcde173e64153f8d4dd43a3cd1cc",
+    "bank_contract.py": "4d5ca8e70b4abf83fd94aecd8c9678ceeef3168a63ff2c5f10a5e221134a69c9",
+    "retrieval.py": "2096be570bbfa6cf8804f8cfe137049ca1e07b4904c1bfe0b6d0f3219f8c27aa"
+  },
+  "original_private_result_sha256": "93e8e63225de85b04651d25124ebe385c8d57b82a71e9ff7f2bcd6059c14f0c6",
+  "reproducer_sha256": "99e6ab04fbd9971460da3dffcccfda9902e89c52d068cacca98866461519218a",
+  "rows": [
+    {
+      "scenario": "boundary-16384-inspect",
+      "operation": [
+        "inspect",
+        "--repo",
+        "<disposable-repo>"
+      ],
+      "exit": 0,
+      "seconds": 0.6195383330341429,
+      "error": null,
+      "valid": null,
+      "decision": null,
+      "admission_verified": null,
+      "canonical_writes_performed": null,
+      "bank_HEAD_index_preserved": true,
+      "stdout_sha256": "23471a85f6ec97ad2b814b4e8b8c20897d563ef73108b5a6b55904854658dae1",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "scenario": "boundary-16384-scoped-inspect",
+      "operation": [
+        "inspect",
+        "--repo",
+        "<disposable-repo>",
+        "--path",
+        "projectbrief.md"
+      ],
+      "exit": 0,
+      "seconds": 0.5814038339885883,
+      "error": null,
+      "valid": null,
+      "decision": null,
+      "admission_verified": null,
+      "canonical_writes_performed": null,
+      "bank_HEAD_index_preserved": true,
+      "stdout_sha256": "a41e110bd205e2345ea74fcd4cccef3b9415db8e357c8c02c32ba678d6bf5ee7",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "scenario": "boundary-16384-capture-start",
+      "operation": [
+        "admission",
+        "start",
+        "--repo",
+        "<disposable-repo>",
+        "--input",
+        "<private-candidate.json>"
+      ],
+      "exit": 0,
+      "seconds": 1.02503133402206,
+      "error": null,
+      "valid": null,
+      "decision": "eligible",
+      "admission_verified": false,
+      "canonical_writes_performed": false,
+      "bank_HEAD_index_preserved": true,
+      "stdout_sha256": "c41bc34ab2138116d80ffe8558b95c3ac72c25fabca85b02b8f344f3578dad3b",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "scenario": "boundary-16384-bank-validate",
+      "operation": [
+        "bank",
+        "validate",
+        "--repo",
+        "<disposable-repo>"
+      ],
+      "exit": 0,
+      "seconds": 0.17738841701066121,
+      "error": null,
+      "valid": true,
+      "decision": null,
+      "admission_verified": null,
+      "canonical_writes_performed": null,
+      "bank_HEAD_index_preserved": true,
+      "stdout_sha256": "5448f10c47c066da3a31d405231bf0d7a75401c5c1161008e77d3b9a80958611",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "scenario": "boundary-16384-scoped-search",
+      "operation": [
+        "search",
+        "--repo",
+        "<disposable-repo>",
+        "--request",
+        "<private-recall.json>"
+      ],
+      "exit": 0,
+      "seconds": 0.6793997090426274,
+      "error": null,
+      "valid": null,
+      "decision": null,
+      "admission_verified": null,
+      "canonical_writes_performed": false,
+      "bank_HEAD_index_preserved": true,
+      "stdout_sha256": "2f9fa78317032de3a91bc0224171b0c29cf9ef4cbcc1db2b8ed2bfb471fb1127",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "scenario": "boundary-16385-inspect",
+      "operation": [
+        "inspect",
+        "--repo",
+        "<disposable-repo>"
+      ],
+      "exit": 1,
+      "seconds": 0.2539432500489056,
+      "error": "Canonical source exceeds 16KiB; preserve it without truncation",
+      "valid": false,
+      "decision": null,
+      "admission_verified": null,
+      "canonical_writes_performed": null,
+      "bank_HEAD_index_preserved": true,
+      "stdout_sha256": "dde2d3b8e6993c0b14c298c6dbbc95f8ee2f5af527e7e5b21988724ed4c50aff",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "scenario": "boundary-16385-scoped-inspect",
+      "operation": [
+        "inspect",
+        "--repo",
+        "<disposable-repo>",
+        "--path",
+        "projectbrief.md"
+      ],
+      "exit": 1,
+      "seconds": 0.23089095897739753,
+      "error": "Canonical source exceeds 16KiB; preserve it without truncation",
+      "valid": false,
+      "decision": null,
+      "admission_verified": null,
+      "canonical_writes_performed": null,
+      "bank_HEAD_index_preserved": true,
+      "stdout_sha256": "dde2d3b8e6993c0b14c298c6dbbc95f8ee2f5af527e7e5b21988724ed4c50aff",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "scenario": "boundary-16385-capture-start",
+      "operation": [
+        "admission",
+        "start",
+        "--repo",
+        "<disposable-repo>",
+        "--input",
+        "<private-candidate.json>"
+      ],
+      "exit": 1,
+      "seconds": 0.3634427090291865,
+      "error": "Unsafe, ineligible, unavailable or changed admission; preserve sources and repeat evidence/comparison review",
+      "valid": null,
+      "decision": null,
+      "admission_verified": false,
+      "canonical_writes_performed": false,
+      "bank_HEAD_index_preserved": true,
+      "stdout_sha256": "1b221ba165c688bc74aca4ce0f30b2f17a5562a4c71adc9176edc679cae267f0",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "scenario": "boundary-16385-bank-validate",
+      "operation": [
+        "bank",
+        "validate",
+        "--repo",
+        "<disposable-repo>"
+      ],
+      "exit": 0,
+      "seconds": 0.18201216700254008,
+      "error": null,
+      "valid": true,
+      "decision": null,
+      "admission_verified": null,
+      "canonical_writes_performed": null,
+      "bank_HEAD_index_preserved": true,
+      "stdout_sha256": "5448f10c47c066da3a31d405231bf0d7a75401c5c1161008e77d3b9a80958611",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "scenario": "boundary-16385-scoped-search",
+      "operation": [
+        "search",
+        "--repo",
+        "<disposable-repo>",
+        "--request",
+        "<private-recall.json>"
+      ],
+      "exit": 1,
+      "seconds": 0.3313852080027573,
+      "error": "Invalid, unsafe or changed recall input, scope or canonical state; preserve memory and reread before use",
+      "valid": null,
+      "decision": null,
+      "admission_verified": null,
+      "canonical_writes_performed": false,
+      "bank_HEAD_index_preserved": true,
+      "stdout_sha256": "1fcef3889bf672de51770eb3e8a00a7b9e3759e267c35ee90dc86ec7401399aa",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "scenario": "reported-active-approx-inspect",
+      "operation": [
+        "inspect",
+        "--repo",
+        "<disposable-repo>"
+      ],
+      "exit": 1,
+      "seconds": 0.23413879197323695,
+      "error": "Canonical source exceeds 16KiB; preserve it without truncation",
+      "valid": false,
+      "decision": null,
+      "admission_verified": null,
+      "canonical_writes_performed": null,
+      "bank_HEAD_index_preserved": true,
+      "stdout_sha256": "dde2d3b8e6993c0b14c298c6dbbc95f8ee2f5af527e7e5b21988724ed4c50aff",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "scenario": "reported-active-approx-scoped-inspect",
+      "operation": [
+        "inspect",
+        "--repo",
+        "<disposable-repo>",
+        "--path",
+        "projectbrief.md"
+      ],
+      "exit": 1,
+      "seconds": 0.22839225002098829,
+      "error": "Canonical source exceeds 16KiB; preserve it without truncation",
+      "valid": false,
+      "decision": null,
+      "admission_verified": null,
+      "canonical_writes_performed": null,
+      "bank_HEAD_index_preserved": true,
+      "stdout_sha256": "dde2d3b8e6993c0b14c298c6dbbc95f8ee2f5af527e7e5b21988724ed4c50aff",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "scenario": "reported-active-approx-capture-start",
+      "operation": [
+        "admission",
+        "start",
+        "--repo",
+        "<disposable-repo>",
+        "--input",
+        "<private-candidate.json>"
+      ],
+      "exit": 1,
+      "seconds": 0.4123803339898586,
+      "error": "Unsafe, ineligible, unavailable or changed admission; preserve sources and repeat evidence/comparison review",
+      "valid": null,
+      "decision": null,
+      "admission_verified": false,
+      "canonical_writes_performed": false,
+      "bank_HEAD_index_preserved": true,
+      "stdout_sha256": "1b221ba165c688bc74aca4ce0f30b2f17a5562a4c71adc9176edc679cae267f0",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "scenario": "reported-active-approx-bank-validate",
+      "operation": [
+        "bank",
+        "validate",
+        "--repo",
+        "<disposable-repo>"
+      ],
+      "exit": 0,
+      "seconds": 0.1837226659990847,
+      "error": null,
+      "valid": true,
+      "decision": null,
+      "admission_verified": null,
+      "canonical_writes_performed": null,
+      "bank_HEAD_index_preserved": true,
+      "stdout_sha256": "5448f10c47c066da3a31d405231bf0d7a75401c5c1161008e77d3b9a80958611",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "scenario": "oversized-root-handoff-inspect",
+      "operation": [
+        "inspect",
+        "--repo",
+        "<disposable-repo>"
+      ],
+      "exit": 1,
+      "seconds": 0.23100824997527525,
+      "error": "Canonical source exceeds 16KiB; preserve it without truncation",
+      "valid": false,
+      "decision": null,
+      "admission_verified": null,
+      "canonical_writes_performed": null,
+      "bank_HEAD_index_preserved": true,
+      "stdout_sha256": "dde2d3b8e6993c0b14c298c6dbbc95f8ee2f5af527e7e5b21988724ed4c50aff",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "scenario": "oversized-root-handoff-scoped-inspect",
+      "operation": [
+        "inspect",
+        "--repo",
+        "<disposable-repo>",
+        "--path",
+        "projectbrief.md"
+      ],
+      "exit": 1,
+      "seconds": 0.2327860000077635,
+      "error": "Canonical source exceeds 16KiB; preserve it without truncation",
+      "valid": false,
+      "decision": null,
+      "admission_verified": null,
+      "canonical_writes_performed": null,
+      "bank_HEAD_index_preserved": true,
+      "stdout_sha256": "dde2d3b8e6993c0b14c298c6dbbc95f8ee2f5af527e7e5b21988724ed4c50aff",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "scenario": "oversized-root-handoff-capture-start",
+      "operation": [
+        "admission",
+        "start",
+        "--repo",
+        "<disposable-repo>",
+        "--input",
+        "<private-candidate.json>"
+      ],
+      "exit": 1,
+      "seconds": 0.3727207080228254,
+      "error": "Unsafe, ineligible, unavailable or changed admission; preserve sources and repeat evidence/comparison review",
+      "valid": null,
+      "decision": null,
+      "admission_verified": false,
+      "canonical_writes_performed": false,
+      "bank_HEAD_index_preserved": true,
+      "stdout_sha256": "1b221ba165c688bc74aca4ce0f30b2f17a5562a4c71adc9176edc679cae267f0",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "scenario": "oversized-root-handoff-bank-validate",
+      "operation": [
+        "bank",
+        "validate",
+        "--repo",
+        "<disposable-repo>"
+      ],
+      "exit": 1,
+      "seconds": 0.18105570803163573,
+      "error": "Routes must name context files or optional project-record directories",
+      "valid": false,
+      "decision": null,
+      "admission_verified": null,
+      "canonical_writes_performed": null,
+      "bank_HEAD_index_preserved": true,
+      "stdout_sha256": "a638fd58224447d04424f15c4cf7c907c8c3cffeeedaea805ac2e0879c03d08e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "scenario": "small-unsupported-root-handoff-inspect",
+      "operation": [
+        "inspect",
+        "--repo",
+        "<disposable-repo>"
+      ],
+      "exit": 1,
+      "seconds": 0.2149007500265725,
+      "error": "Routes must name context files or optional project-record directories",
+      "valid": false,
+      "decision": null,
+      "admission_verified": null,
+      "canonical_writes_performed": null,
+      "bank_HEAD_index_preserved": true,
+      "stdout_sha256": "1637999621229bd9eb7653ab8831429102f5d0d4267d342c0b2528703b0ecb9a",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "scenario": "small-unsupported-root-handoff-scoped-inspect",
+      "operation": [
+        "inspect",
+        "--repo",
+        "<disposable-repo>",
+        "--path",
+        "projectbrief.md"
+      ],
+      "exit": 1,
+      "seconds": 0.23599808401195332,
+      "error": "Routes must name context files or optional project-record directories",
+      "valid": false,
+      "decision": null,
+      "admission_verified": null,
+      "canonical_writes_performed": null,
+      "bank_HEAD_index_preserved": true,
+      "stdout_sha256": "1637999621229bd9eb7653ab8831429102f5d0d4267d342c0b2528703b0ecb9a",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "scenario": "small-unsupported-root-handoff-capture-start",
+      "operation": [
+        "admission",
+        "start",
+        "--repo",
+        "<disposable-repo>",
+        "--input",
+        "<private-candidate.json>"
+      ],
+      "exit": 1,
+      "seconds": 0.40990512497955933,
+      "error": "Unsafe, ineligible, unavailable or changed admission; preserve sources and repeat evidence/comparison review",
+      "valid": null,
+      "decision": null,
+      "admission_verified": false,
+      "canonical_writes_performed": false,
+      "bank_HEAD_index_preserved": true,
+      "stdout_sha256": "1b221ba165c688bc74aca4ce0f30b2f17a5562a4c71adc9176edc679cae267f0",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "scenario": "small-unsupported-root-handoff-bank-validate",
+      "operation": [
+        "bank",
+        "validate",
+        "--repo",
+        "<disposable-repo>"
+      ],
+      "exit": 1,
+      "seconds": 0.17958787496900186,
+      "error": "Routes must name context files or optional project-record directories",
+      "valid": false,
+      "decision": null,
+      "admission_verified": null,
+      "canonical_writes_performed": null,
+      "bank_HEAD_index_preserved": true,
+      "stdout_sha256": "a638fd58224447d04424f15c4cf7c907c8c3cffeeedaea805ac2e0879c03d08e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "static_reference_hashes": {
+    "scripts/agent_memory/diagnostics.py": "fdc44e2048e1888f7b1dc5276a8e3031dac4a72c9780cbdcebe6f7a87cfa62aa",
+    "scripts/agent_memory/installation.py": "8d04f100338aaee8b36e73093f303614d0d10ab0c5b331209bc628903744a347",
+    "scripts/agent_memory/client_hooks.py": "9939b04e25a2a78cecfb4529c36e7f4a577b6dba36e7f6267655a36641a464e6",
+    "offline/GUIDE.md": "c5b6fe1cbb250e0f4bce094abb3aecfa04732a9395a585db449fe8831d638934",
+    "layout/GUIDE.md": "638ebfe60a6ca906545beb2c4d4d4d114c2bfdd748fa8b68b39e5568d4b72030",
+    "sharing/semantic/GUIDE.md": "80ffe2c2eeb05e8f94af344d87fb3c07af2f2f715e4de8b73081bc082d56975a",
+    "lifecycle/diagnose/GUIDE.md": "2d7e214a1ad4aa2bc6030e9dfb7742778e3bd8912985cba86a691b2f961d8978"
+  }
+}

@@ -1,0 +1,52 @@
+from pathlib import Path
+import hashlib,json,os,subprocess,sys,time
+OUT=Path(__file__).resolve().parent;ROOT=OUT/'source';sys.path.insert(0,str(ROOT/'tests'))
+from world import World
+from identity_fixtures import bind
+from runtime_update_fixtures import snapshot
+rows=[]
+with World() as w:
+ original=w.run
+ def safe_run(argv,*args,**kwargs):
+  argv=[str(v) for v in argv]
+  if argv and argv[0]==sys.executable and '-B' not in argv:argv.insert(1,'-B')
+  return original(argv,*args,**kwargs)
+ w.run=safe_run
+ repo=w.repository('synthetic-size-gate');bank=repo/'memory-bank';bank.mkdir()
+ project='8e0b66aa-2be5-4fa3-b47f-1245474aa7dd'
+ def active(size):
+  prefix='# Synthetic active context\n\n'
+  return prefix+'x'*(size-len(prefix.encode())-1)+'\n'
+ proposal={'project-id':project,'router-updated':'2026-10-22T17:00:00Z','contexts':{'projectbrief.md':{'body':'# Synthetic project\n\nOnly a disposable size-gate fixture.\n','purpose':'Orient the fixture','scope':'repository','lifecycle':'active','read-when':'When inspecting this fixture'},'activeContext.md':{'body':active(16384),'purpose':'Synthetic active context','scope':'repository','lifecycle':'active','read-when':'When testing active-context size gates'}},'omitted':{name:'No applicable synthetic evidence' for name in ('productContext.md','systemPatterns.md','techContext.md','progress.md')}}
+ setup=w.inside('render-input.json');setup.write_text(json.dumps(proposal))
+ rendered=json.loads(w.run([sys.executable,'-I','-B',ROOT/'scripts/bank_contract.py','render','--input',setup]).stdout)
+ for name,body in rendered['files'].items():(bank/name).write_text(body)
+ bind(w,repo);w.git('add','.',cwd=repo);w.git('commit','-m','Synthetic bounded bank',cwd=repo)
+ candidate={'task':'Check a synthetic durable-layout candidate against this disposable bank','searches':['fixture layout','synthetic source'],'candidate':{'body':'# Synthetic layout observation\n\nThis disposable fixture has a reviewed initial bank for the source-size gate experiment.\n','kind':'semantic-fact','scope':'repository','applicability':'known','conditions':{},'source':{'kind':'user','actor':'synthetic fixture author'},'evidence':['Synthetic fixture input only; no real operator terminology or project decision.'],'harness':'custom','session':'synthetic-size-gate-repro','code_state':'not-code','repository_evidence':None,'assessment':{'category':'durable-discovery','utility':'Test gate ordering in the disposable fixture, not actual project terminology.','durable':True,'evidence_confidence':'confirmed','evidence_reason':'Explicit synthetic fixture source supplied for a controlled contract experiment.','confirmed':True,'source_redundant':False,'work_state_copy':False,'review':None}}}
+ c=w.inside('candidate.json');c.write_text(json.dumps(candidate));c.chmod(0o600)
+ recall={'project_id':project,'query':'','ids':[],'paths':['projectbrief.md'],'context':{},'kinds':['semantic-fact'],'minimum_trust':'reviewed','limit':1,'include_context':True}
+ q=w.inside('recall.json');q.write_text(json.dumps(recall));q.chmod(0o600)
+ cli=[sys.executable,'-I','-B',ROOT/'skills/agent-memory/scripts/am_console.py','--json']
+ def state():
+  index=Path(w.git('rev-parse','--git-path','index',cwd=repo).stdout.strip())
+  if not index.is_absolute():index=repo/index
+  return {'bank':snapshot(bank),'HEAD':w.git('rev-parse','HEAD',cwd=repo).stdout.strip(),'index':hashlib.sha256(index.read_bytes()).hexdigest()}
+ def call(label,args):
+  before=state();start=time.monotonic();result=w.run([*cli,*args],check=False,timeout=60);elapsed=time.monotonic()-start
+  stem=str(len(rows)).zfill(2)+'-'+label
+  (OUT/(stem+'.stdout')).write_text(result.stdout);(OUT/(stem+'.stderr')).write_text(result.stderr)
+  try:value=json.loads(result.stdout)
+  except ValueError:value={}
+  row={'scenario':label,'operation':[str(a) for a in args],'exit':result.returncode,'seconds':elapsed,'error':value.get('error'),'valid':value.get('valid'),'decision':value.get('decision'),'admission_verified':value.get('admission_verified'),'canonical_writes_performed':value.get('canonical_writes_performed'),'bank_HEAD_index_preserved':state()==before,'stdout_sha256':hashlib.sha256(result.stdout.encode()).hexdigest(),'stderr_sha256':hashlib.sha256(result.stderr.encode()).hexdigest()};rows.append(row);print(json.dumps(row),flush=True)
+ for label,size,handoff in [('boundary-16384',16384,None),('boundary-16385',16385,None),('reported-active-approx',77200,None),('oversized-root-handoff',16384,27800),('small-unsupported-root-handoff',16384,100)]:
+  (bank/'activeContext.md').write_text(active(size));note=bank/'handoff-prompt.md'
+  if handoff is None:note.unlink(missing_ok=True)
+  else:note.write_text('# Synthetic handoff\n'+'n'*(handoff-len('# Synthetic handoff\n')))
+  print('SCENARIO',label,'SIZES',json.dumps({p.name:p.stat().st_size for p in bank.glob('*.md')}),flush=True)
+  call(label+'-inspect',['inspect','--repo',repo])
+  call(label+'-scoped-inspect',['inspect','--repo',repo,'--path','projectbrief.md'])
+  call(label+'-capture-start',['admission','start','--repo',repo,'--input',c])
+  call(label+'-bank-validate',['bank','validate','--repo',repo])
+  if label in ('boundary-16384','boundary-16385'):call(label+'-scoped-search',['search','--repo',repo,'--request',q])
+proof={'source_commit':'38f3e424471449fdd8a7caed16e81606e17beda2','archive_sha256':hashlib.sha256((OUT/'source.tar').read_bytes()).hexdigest(),'controlled_only':True,'real_bank_writes':False,'real_terminology_known_or_captured':False,'rows':rows,'all_bank_HEAD_index_preserved':all(r['bank_HEAD_index_preserved'] for r in rows),'source_hashes':{name:hashlib.sha256((ROOT/'skills/agent-memory/scripts/agent_memory'/name).read_bytes()).hexdigest() for name in ('bank_state.py','bank_observation.py','admission.py','bank_contract.py','retrieval.py')}}
+(OUT/'result.json').write_text(json.dumps(proof,indent=2)+'\n');print('RESULT',OUT/'result.json',flush=True)

@@ -126,6 +126,69 @@ Capacity-diagnosis delivery SHALL be an independently accepted implementation
 in the published v0.0.10 release; other outcomes retain their recorded delivery
 history rather than inheriting this new approval. For every outcome, a static review or planning document is not delivery evidence.
 
+## Proposed amendment: Consistent bank-source eligibility
+
+**Proposal dated 2026-10-31; not covered by the accepted v0.0.10 capacity scope.**
+Stable proposed work key: `ADR-0018:bank-validation-consistency`. This outcome is
+not selected for the v0.0.13 installer release. It requires independent design
+approval and separate implementation/acceptance/delivery evidence.
+
+The [secondary RCA](../research/2026-10-31-bank-size-and-owned-hook-health-rca.md)
+reproduced a native context that `am bank validate` calls valid while ordinary
+inspection, scoped recall and capture refuse the shared source-size bound.
+Format validity and source availability are different facts, but public file-
+contract success MUST NOT conceal a source limit required by every normal reader.
+
+The proposed common bank eligibility check SHALL enforce the existing complete
+inventory, path/type/alias, interruption and resource constraints before any
+normal operation reports the bank usable. The per-source upper bound SHALL
+remain **16,384 UTF-8 bytes for the complete canonical file**, including metadata;
+it is not only a router or record-body limit. Existing lower capture, record,
+request and disclosure bounds SHALL remain unchanged. Aggregate/file-count,
+router/index and schema limits SHALL NOT be increased by this amendment.
+
+`bank validate`, doctor bank checks, inspect, discovery, recall and mediated
+writer preconditions SHALL use that same eligibility definition. A renderer or
+writer preview that returns intended canonical files SHALL apply their actual
+size/layout constraints before describing the result as valid for normal use.
+Format-only subresults MAY remain separately labelled, but MUST NOT make the
+outer operational eligibility result successful while required source checks
+failed. These checks MUST be bounded while reading; validation MUST NOT first
+load an arbitrarily large source into memory.
+
+A source-size refusal SHALL preserve a typed `bank-source-byte-capacity` cause
+through the public operation's error envelope, with a fixed phase, canonical
+relative path, bound and truthful size measurement. A stable descriptor size MAY
+supply an exact byte count without reading the oversized body; otherwise the
+result SHALL state the measured lower bound or changed/unavailable observation.
+Unsafe paths, redirected/special files, active transaction evidence and changing
+sources MUST retain their existing distinct refusals. A capacity result MUST NOT
+assert that the source would otherwise be structurally or semantically valid.
+Diagnostics MUST NOT disclose memory bodies as part of the failure.
+
+An unrelated `--path`, ID or lexical selector MUST NOT skip an unreadable source
+when completeness is required for recall or pre-write comparison. A refusal
+SHALL remain **unavailable/pending**, never a successful empty bank, novelty
+proof, inferred missing terminology or fabricated no-learning assessment. Task
+answers MAY continue independently with that qualification; new governed capture
+MUST remain pending. Repeating the same operation does not repair capacity.
+
+Read-only diagnosis SHALL preserve canonical files, original index/HEAD, feature
+work and recovery evidence. Guidance SHALL point to a separately reviewed
+source-preserving layout recovery operation under ADR-0010; it MUST NOT advise
+truncation, deletion, an ignored oversized source, a raised normal cap, or
+initialization over an existing bank.
+
+Acceptance SHALL retain the old contradictory public results and exercise an
+otherwise valid native context at 16,384 and 16,385 bytes, a larger synthetic
+reported-size example, aggregate/count bounds and changed/unsafe inputs. Normal
+validation, full and scoped inspection/recall, and a small unchanged capture
+candidate SHALL agree on eligibility while retaining their separate semantic
+and mutation guarantees. Unsupported layout MUST retain its own diagnosis when
+size is within bounds. A supported validator MUST NOT claim a terminology rule
+was admitted merely because the bank is readable. Tests SHALL use disposable
+banks on macOS and Linux within the existing per-test time budget.
+
 ## Consequences
 
 Failures can become easier to diagnose without weakening ownership, currentness

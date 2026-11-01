@@ -174,6 +174,64 @@ Pack validation SHALL run before publishing and before activating an update.
 No test SHALL require real credentials or mutate the user's live client
 configuration or memory store.
 
+## Proposed amendment: Entry-scoped owned-hook health
+
+**Proposal dated 2026-10-31; outside the accepted v0.0.1 scope.** Stable proposed
+work key: `ADR-0007:owned-hook-health`. It requires its own review, task and
+acceptance; it is not implicitly part of the v0.0.13 installer release.
+
+The [secondary RCA](../research/2026-10-31-bank-size-and-owned-hook-health-rca.md)
+identifies a distinct v0.0.12 ownership inconsistency: lifecycle verification
+locates receipt-owned entries in shared hook JSON, while runtime doctor compares
+that file with an old whole-file fingerprint. This is source-confirmed; an
+independent public fixture reproduction remains an acceptance prerequisite.
+It does not establish that the unavailable reported bank had a hook defect.
+
+All health and lifecycle verification for shared entry-based targets SHALL use
+one common non-mutating ownership evaluator. For Codex and Claude hook JSON it
+SHALL validate the supported complete document shape, locate exactly one actual
+receipt-owned prompt group and every recorded Stop group, and retain the current
+path/type/owner/mode and final source-stability policy. Missing, duplicated,
+modified or ambiguously owned entries, malformed/duplicate-key JSON, unsafe
+paths and concurrent changes SHALL remain distinct failures. Equality MUST cover
+the complete recorded group, including meaningful command/type/adapter flags;
+a path substring or similar command MUST NOT establish ownership.
+
+Unrelated valid keys and hook groups in a shared configuration MAY differ from
+the historical whole-file receipt. Such a difference alone MUST NOT make intact
+owned entries unhealthy, trigger routine warnings, rewrite another tool's
+configuration, or create a new receipt to make a read-only check pass. A result
+SHALL identify its verification scope as receipt-owned entries; it MUST NOT
+claim that the entire shared document still equals the historical snapshot.
+Whole-file fingerprints SHALL remain concurrency and backup evidence when a
+reviewed transaction actually changes that file.
+
+Activation guidance SHALL continue to verify its managed sentinel block while
+preserving surrounding text. Fully owned wrappers, signed source, client copies
+and links SHALL retain their exact artifact/identity/mode checks. OpenCode's
+owned plugin-link target MUST NOT be treated as shared JSON or receive a general
+integrity exemption. A legacy receipt that lacks sufficient owned-entry evidence
+SHALL remain explicitly unverified or migration-pending rather than adopting a
+lookalike entry.
+
+Read-only doctor MUST NOT mutate configuration, ownership receipts or unrelated
+state. Any `doctor --fix` action SHALL use an independently reviewed,
+receipt-owned repair/transaction boundary and preserve all unrelated fields,
+unknown modifications and existing recovery evidence. A healthy owned-entry
+result does not establish client loading, native callback invocation, original
+source coverage, durable capture, publication or fresh imported recall; those
+claims SHALL retain their separate live evidence requirements.
+
+Acceptance SHALL first reproduce the old mismatch through public commands in
+disposable Codex/Claude configurations: add an unrelated valid key/group, retain
+exact owned entries, and show lifecycle ownership succeeds while old doctor
+fails whole-file identity. The corrected read-only doctor SHALL report healthy
+owned entries while preserving every configuration/receipt byte. Changed/missing/
+duplicate owned groups, adapter-flag changes, duplicate-key/invalid JSON,
+nonordinary paths and racing edits SHALL remain negative controls. OpenCode link,
+wrapper, signed-source and copy-mode drift SHALL remain strictly refused. No
+live client configuration, actual bank or unknown terminology SHALL be modified.
+
 ## Consequences
 
 - Installation and data survival become explicit product contracts.

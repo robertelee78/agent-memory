@@ -180,6 +180,131 @@ visible statement's scope and current/stale status can be understood, and no
 active transaction marker is present. Search indexes, databases, MCP, hooks,
 federation, caches, and recovery journals are not part of that definition.
 
+## Proposed amendment: Source-preserving layout recovery
+
+**Proposal dated 2026-10-31; outside the accepted v0.0.1 scope.** Stable proposed
+work key: `ADR-0010:source-preserving-layout-recovery`. This is a separate outcome
+from bank-validation consistency and owned-hook health, with no v0.0.13 release
+assignment or implementation authorization.
+
+The [secondary RCA](../research/2026-10-31-bank-size-and-owned-hook-health-rca.md)
+shows that ordinary governed operations cannot repair a bank whose initial
+complete snapshot is already unavailable. The operator-reported checkout and
+terminology remain unavailable; this proposal MUST NOT be treated as authority
+to edit that bank, invent a definition or infer its source producer.
+
+### Separate observation and review boundary
+
+A proposed explicit `bank recover-layout` workflow SHALL provide inspect,
+prepare, apply and known-operation recovery stages. These are **proposed future
+interfaces**, not commands presently available. Ordinary initialization,
+checkpoint, admission and sharing SHALL retain their existing source gates.
+
+Recovery inspect SHALL use a dedicated bounded raw-source observer rather than
+pretend that the invalid bank passed its normal snapshot. It SHALL resolve the
+same repository and project UUID from existing verifiable identity/router/Git
+evidence. An invalid or ambiguous router MUST require stronger explicit identity
+review; it MUST NOT create another bank or infer a project ID from a path.
+The recovery identity path SHALL reuse existing developer/project registries
+and independently checked checkout/authority evidence without requiring the
+failed ordinary bank snapshot to succeed first. It MUST NOT invent an alternate
+identity algorithm or treat bank prose as permission. Existing live locks or
+unknown transaction markers SHALL retain precedence.
+
+The initial proposed recovery allowance is 1 MiB per ordinary raw source,
+64 MiB total source bytes, 65,536 source files, at most 131,072 physical entries
+and directory depth 64. It SHALL read in bounded chunks and disclose complete
+source context in bounded pages. Exceeding this distinct allowance SHALL leave
+recovery pending for explicit capacity/design review, not raise the ordinary
+16 KiB bound or truncate evidence. Unsupported types, redirects, aliases,
+permissions or unstable named bindings SHALL fail before canonical mutation.
+Existing bank collaboration/path policy SHALL apply; a second blanket mode or
+owner rule MUST NOT silently replace it.
+
+Recovered text SHALL remain untrusted data, not executable instructions or
+authority to change repository policy. Inspection SHALL retain byte-exact
+original sources and their complete physical manifest in a new private operation workspace outside the bank and runtime.
+The manifest SHALL bind paths, types, relevant modes/ownership, hashes, repository
+and project identity, checkout, HEAD/index and observation completeness. Originals
+containing sensitive material MUST stay private; raw transcripts or secret
+content/hashes MUST NOT be promoted into shared memory. The result SHALL report
+private recovery-artifact writes separately from canonical, index or history
+writes. This workspace is recovery evidence, not another current memory bank.
+
+A recovery-specific semantic review SHALL cover every retained source and the
+whole intended result despite the invalid ordinary snapshot. It SHALL map each
+source unit to preserved bounded canonical content, unchanged evidence, a
+reviewed lifecycle transformation, or an explicitly authorized non-guidance
+archive/removal reason. An external backup alone MUST NOT authorize omission
+from current knowledge. Distinct conditions, stable record identities/versions,
+real developer/harness/session provenance, evidence and terminal deletion rules
+SHALL survive. Unknown terminology, contradictory claims and uncertain origin
+SHALL remain pending for the detecting developer; a heading claiming approval
+MUST NOT supply that approval.
+
+### A native bounded result, without invented admission
+
+Preparation SHALL produce a complete native bank that passes the common normal
+size/layout eligibility check. Contexts SHALL stay concise; meaningful topic
+routes and properly typed records MAY carry independently useful detail. The
+plan MUST NOT merely relocate an unstructured transcript into `topics/`, invent
+record metadata, split prose at arbitrary byte offsets, or turn an unsupported
+root filename into admitted learning by renaming it. New durable units SHALL
+retain the ordinary source, security and admission judgments; recovery MUST NOT
+fabricate a normal admission receipt for an operation that could not run.
+
+The proposal SHALL bind the raw original manifest, reviewed source-to-result
+mapping, exact intended valid files, applicable authority and immutable review.
+Its read-only preview MUST show all additions, replacements, moves and removals
+plus retained evidence and unresolved units. No unresolved unit or unknown
+concurrent edit MAY disappear to make the result fit. Global normal limits,
+personal memory, cross-repository transfer and implicit schema migration remain
+out of scope.
+
+### Transaction, retry and sharing
+
+Apply SHALL acquire the ordinary exclusive bank lock, rebind identity and every
+raw-source pin under that lock, and refuse any changed source or unknown recovery
+operation. It SHALL use the established marker/journal and atomic per-file
+replacement protocol, updating the router last. Only an independently validated
+intended result MAY replace the observed invalid state. Required metadata and
+rollback capability SHALL be established before the first replacement; no
+`chmod`, privileged ownership change or force-overwrite MAY substitute for that
+proof.
+
+Original backups, original proposal and journal SHALL remain available through
+verified readback and explicit retention handling. A partial failure SHALL retain
+a truthful interrupted state. Known rollback SHALL restore the exact original
+bytes and required metadata, even when the restored bank remains invalid; it
+MUST NOT call that state healthy or erase the evidence of why recovery was
+needed. Unknown external edits or missing/corrupt evidence SHALL remain pending.
+An exact completed-operation retry SHALL return its real historical receipt
+without replaying over later changes; an unfinished retry SHALL recheck all
+original pins instead of assuming that invalid input permits weaker ownership.
+
+Successful local recovery SHALL establish ordinary bank eligibility and perform
+applicable current recall. It MUST NOT imply semantic truth, code freshness,
+publication or that other machines have imported the repair. HEAD, original
+index and non-memory feature files SHALL remain untouched.
+
+If authority itself contains the invalid layout, a separately verified
+recovery-aware memory-only publication SHALL review the actual bounded raw
+base/local/landed sources and the same source-preserving transformation. It SHALL
+obey current repository permissions, reviews and checks and verify the entire
+intended authority-tree delta. It MUST NOT feed an invalid bank to a normal
+sharing proof, force-push, import code or bless a partial snapshot. Offline or
+unavailable authority SHALL leave sharing pending with local evidence intact.
+
+Acceptance SHALL use synthetic counterparts of the reported 79,054 and
+28,478-byte inputs, valid smaller controls, unsupported root layouts and actual
+original-content preservation ledgers. It SHALL cover interrupted staging,
+first-file/router/receipt boundaries, exact retries, changed identity/source,
+unknown locks, oversized recovery input and damaged backups. Normal capture and
+recall SHALL work after successful repair; unsafe or ambiguous inputs MUST remain
+pending. Tests SHALL preserve fixture feature files, index/HEAD and source bytes
+on macOS and Linux within the existing time budget. No actual C2E content or
+unknown terminology is needed for these fixtures.
+
 ## Consequences
 
 - The common bank remains Cline-shaped and directly editable.
