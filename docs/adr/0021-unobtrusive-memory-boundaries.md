@@ -485,4 +485,6 @@ renderer through the signed bootstrap preview, including negative sentinel tests
 for unrelated environment/data values. The affected Mac
 had no wrapper/receipt and its local bin was already on PATH; its missing command
 was expected preview behavior, obscured by that advice. Actual installation there
-remains pending the operator's explicit response.
+by this session remains pending the operator's explicit response. A later
+read-only preview detected an existing wrapper and receipt installed by another
+actor; this task performed no installation on that machine.
