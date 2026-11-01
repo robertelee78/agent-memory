@@ -435,8 +435,10 @@ remaining roadmap tasks move to v0.0.14 without changing their approval gates.
 
 The shared standalone installer/updater/generated-bootstrap downloader SHALL
 make at most three GET attempts within one monotonic30-second budget per download,
-including backoff and subprocess waits. Each transfer SHALL allow at most ten
-seconds and connection five seconds, limited further by the remaining budget.
+including backoff and subprocess waits. Each transfer SHALL retain the existing
+30-second allowance, limited by the remaining budget; connection time SHALL be
+at most five seconds, further limited by that budget. A slow healthy transfer
+MUST NOT gain a new ten-second cutoff merely to reserve three timeout attempts.
 Retryable curl exits SHALL be5,6,7,16,18,28,52,55,56,92; retryable HTTP responses
 SHALL be408,500,502,503,504. HTTP429 SHALL stop with rate-limit guidance.
 Other HTTP, TLS/certificate, local-write, size/resource and signature/digest/schema
