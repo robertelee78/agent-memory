@@ -12,7 +12,7 @@ import uuid
 
 from . import bank_contract as bank_contract
 from . import bank_writes as writes
-from . import bank_observation
+from . import bank_capacity, bank_observation
 from . import lifecycle, records, scope_binding, scopes, security, handoff
 from .developer_identity import digest, encoded, load, uuid_valid
 from .frontmatter import ContractError
@@ -319,10 +319,12 @@ def main(argv=None):
             raise ContractError('Recall request exceeds its bounded reader')
         print(json.dumps(retrieve(args.repo, load(raw)), indent=2, ensure_ascii=False))
         return 0
-    except (ContractError, OSError, ValueError, UnicodeError, TypeError, KeyError, AttributeError, RecursionError):
+    except (ContractError, OSError, ValueError, UnicodeError, TypeError, KeyError, AttributeError, RecursionError) as exc:
         print(json.dumps({'schema': 'agent-memory/retrieval-result-v1', 'verified': False,
             'canonical_writes_performed': False,
-            'error': 'Invalid, unsafe or changed recall input, scope or canonical state; preserve memory and reread before use'}))
+            'error': str(exc) if isinstance(exc, bank_capacity.BankCapacityError) else
+                'Invalid, unsafe or changed recall input, scope or canonical state; preserve memory and reread before use',
+            **bank_capacity.details(exc)}))
         return 1
 
 

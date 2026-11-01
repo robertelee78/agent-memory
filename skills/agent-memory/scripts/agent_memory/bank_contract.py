@@ -10,7 +10,7 @@ import sys
 import unicodedata
 import uuid
 
-from . import repository_config, validation_memo
+from . import bank_capacity, repository_config, validation_memo
 from .frontmatter import ContractError, read, unique_object, write
 from .lifecycle import MODEL, time_value
 from .remote_identity import normalize
@@ -251,6 +251,7 @@ def render(proposal):
         files[path] = body.rstrip() + "\n"
         routes.append({"path": path, **{k: context[k] for k in FIELDS[1:]}})
     files = {"MEMORY.md": router_text(metadata, routes, proposal["omitted"]), **files}
+    validate_files(files)
     return {"schema": "agent-memory/bank-contract-result-v1", "operation": "render",
             "bank_path": SPEC["x-bank-path"], "project_id": metadata["project-id"],
             "files": files, "writes_performed": False}
@@ -310,6 +311,7 @@ def file_topology(paths):
 
 
 def validate_files(files, *, parsed_records=None):
+    bank_capacity.check_files(files)
     memo = validation_memo.current()
     captured = validation_memo.map_input(files) if memo is not None and parsed_records is None else None
     if captured is None:
@@ -332,7 +334,6 @@ def _validate_files(files, *, parsed_records=None):
             path_value(path)
         if not isinstance(body, str) or not body.strip():
             raise ContractError(f"Missing or empty routed file: {path}")
-        body.encode("utf-8")
     file_topology(files)
     metadata, routes, omitted = parse_router(files["MEMORY.md"])
     for route in routes:
@@ -344,53 +345,16 @@ def _validate_files(files, *, parsed_records=None):
     from .bank_layout import inventory
     entries = inventory(files, metadata, routes, parsed_records=parsed_records)
     return {"schema": "agent-memory/bank-contract-result-v1", "operation": "validate",
-            "valid": True, "validation_scope": "router-layout-and-record-format", "project_id": metadata["project-id"],
+            "valid": True, "validation_scope": "native-layout-and-source-capacity", "project_id": metadata["project-id"],
             "router_updated": metadata["router-updated"], "routes": routes, "omitted": omitted, "entries": entries,
             "writes_performed": False}
 
 
 def validate(repo, *, owned_lock=None, owned_transaction=None):
-    bank = repository_config.bank_path(repo)
-    bank_root(bank)
-    if bank.is_symlink():
-        raise ContractError("Bank directory must not be a symlink")
-    marker = bank / ".agent-memory-transaction.md"
-    if marker.is_symlink() or (marker.exists() and (owned_transaction is None or marker.read_bytes() != owned_transaction)):
-        raise ContractError("Interrupted bank: recover the transaction before resuming")
-    lock = bank / ".agent-memory.lock"
-    if lock.is_symlink() or (lock.exists() and (owned_lock is None or lock.read_bytes() != owned_lock)):
-        raise ContractError("Busy bank: retry validation after the writer finishes")
-    router = bank / "MEMORY.md"
-    if router.is_symlink():
-        raise ContractError("Router must not be a symlink")
-    metadata, routes, omitted = parse_router(router.read_bytes().decode("utf-8"))
-    portable_aliases([*physical_paths(bank), "MEMORY.md", *[route["path"] for route in routes]])
-    for route in routes:
-        target = bank / route["path"]
-        relative = target.relative_to(bank)
-        parts = [bank.joinpath(*relative.parts[:i]) for i in range(1, len(relative.parts) + 1)]
-        if any(part.is_symlink() for part in parts) or not target.resolve().is_relative_to(bank.resolve()):
-            raise ContractError("Routed target must remain inside the bank without symlinks")
-        if not target.is_file() or not target.read_bytes().decode("utf-8").strip():
-            raise ContractError(f"Missing or empty routed file: {route['path']}")
-    for path in omitted:
-        if (bank / path).exists() or (bank / path).is_symlink():
-            raise ContractError(f"Context exists but is marked omitted: {path}")
-    from .tombstones import canonical_paths
-    deletion_paths = canonical_paths(bank)
-    # Inventory every physical Markdown source before the shared pure layout
-    # validator resolves bounded topic indices and standalone record metadata.
-    files = {"MEMORY.md": router.read_bytes().decode("utf-8")}
-    for target in bank.rglob("*"):
-        if target.is_symlink():
-            raise ContractError("Bank paths must not be symlinks")
-        relative = target.relative_to(bank).as_posix()
-        if target.is_file() and target.suffix == ".md" and not runtime_path(relative):
-            files[relative] = target.read_bytes().decode("utf-8")
-    result = validate_files(files)
-    if canonical_paths(bank) != deletion_paths:
-        raise ContractError("Deletion history changed during validation")
-    return result
+    from . import bank_observation
+    observed = bank_observation.observe(repo, owner=owned_lock, transaction=owned_transaction)
+    return {**observed.checked, "validation_scope": "canonical-bank-eligibility",
+            "source_stability_verified": True}
 
 
 def main(argv=None):
@@ -411,5 +375,6 @@ def main(argv=None):
         return 0
     except (ContractError, OSError, UnicodeError, ValueError, TypeError, KeyError) as exc:
         print(json.dumps({"schema": "agent-memory/bank-contract-result-v1", "operation": args.command,
-                          "valid": False, "error": str(exc), "writes_performed": False}))
+                          "valid": False, "error": str(exc), "writes_performed": False,
+                          **bank_capacity.details(exc)}))
         return 1

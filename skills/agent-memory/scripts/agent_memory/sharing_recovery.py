@@ -18,7 +18,7 @@ import sys
 import tempfile
 import uuid
 
-from . import bank_contract as bank, bank_layout as layout, bank_transactions as transactions
+from . import bank_capacity, bank_contract as bank, bank_layout as layout, bank_transactions as transactions
 from . import bank_writes as writes, repository_config, scope_binding, sharing_boundary, security
 from .developer_identity import digest, encoded, load
 from .frontmatter import ContractError, read, write
@@ -142,13 +142,16 @@ def tree(repo, revision, prefix, *, quarantine_records=False):
         path = path[len(prefix) + 1:]
         if path != 'MEMORY.md':
             bank.path_value(path)
-        if bank.runtime_path(path) or len(objects) >= MAX_FILES or path in objects:
-            raise ContractError('Excluded runtime artifacts or oversized bank tree require review')
+        if bank.runtime_path(path) or path in objects:
+            raise ContractError('Excluded runtime artifacts or duplicate bank tree paths require review')
+        if len(objects) >= MAX_FILES:
+            raise bank_capacity.BankCapacityError('bank-source-count-capacity', path, MAX_FILES, len(objects) + 1)
         objects[path] = oid(blob)
     # One exact batch replaces two Git children per file. Bound output before
     # allocation; each response still proves its actual object/type/size/bytes.
     unique = sorted(set(objects.values()))
     blobs = {}
+    blob_paths = {blob: path for path, blob in reversed(tuple(objects.items()))}
     if unique:
         metadata=raw_command(repo,'cat-file','--batch-check',payload=('\n'.join(unique)+'\n').encode(),limit=len(unique)*128)
         lines=metadata.decode('ascii').splitlines()
@@ -159,7 +162,11 @@ def tree(repo, revision, prefix, *, quarantine_records=False):
             if len(fields)!=3 or fields[:2]!=[expected,'blob'] or not fields[2].isdigit():
                 raise ContractError('Batch size inventory must name exact requested blobs')
             size=int(fields[2]);total+=size
-            if size>MAX_FILE or total>MAX_BYTES:raise ContractError('Shared objects exceed bounded review before payload read')
+            if size > MAX_FILE:
+                raise bank_capacity.BankCapacityError('bank-source-byte-capacity', blob_paths[expected],
+                                                      MAX_FILE, size, measurement='exact')
+            if total > MAX_BYTES:
+                raise bank_capacity.BankCapacityError('bank-aggregate-byte-capacity', '.', MAX_BYTES, total)
             sizes[expected]=size
         raw = raw_command(repo, 'cat-file', '--batch', payload=('\n'.join(unique)+'\n').encode(),
                           limit=total + len(unique) * 128)
@@ -612,9 +619,10 @@ def main(argv=None):
             if len(raw) > 65536:raise ContractError('Replay request exceeds bound')
             value = replay(args.repo, load(raw))
         print(json.dumps(value, indent=2));return 0
-    except (ContractError, OSError, ValueError, TypeError, KeyError, AttributeError, UnicodeError, RecursionError):
+    except (ContractError, OSError, ValueError, TypeError, KeyError, AttributeError, UnicodeError, RecursionError) as exc:
         print(json.dumps(result(args.operation, writes_performed=None if args.operation != 'inspect' or args.fetch else False, git_metadata_writes_performed=None if args.operation != 'inspect' or args.fetch else False, remote_freshness_verified=False, sharing_state='pending-stale',
-              error='Unresolved, changed or unsafe sharing state; retain local work and inspect before retry')))
+              error=str(exc) if isinstance(exc, bank_capacity.BankCapacityError) else 'Unresolved, changed or unsafe sharing state; retain local work and inspect before retry',
+              **bank_capacity.details(exc))))
         return 1
 
 

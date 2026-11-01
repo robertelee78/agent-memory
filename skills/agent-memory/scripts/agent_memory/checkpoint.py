@@ -7,7 +7,7 @@ from pathlib import Path
 import re
 import sys
 
-from . import repository_config
+from . import bank_capacity, repository_config
 from . import bank_contract as bank
 from . import bank_transactions as transactions
 from . import bank_writes as writes
@@ -277,7 +277,8 @@ def main(argv=None):
         else:value = preview(args.repo, load(Path(args.input).read_bytes()), prepare=args.command == 'prepare')
         print(json.dumps(value, indent=2, ensure_ascii=False));return 0
     except (ContractError, OSError, UnicodeError, ValueError, TypeError, KeyError, AttributeError) as exc:
-        print(json.dumps(result(args.command, error=str(exc), verified=False, inspection_required=True)));return 1
+        print(json.dumps(result(args.command, error=str(exc), verified=False, inspection_required=True,
+                                **bank_capacity.details(exc))));return 1
 
 
 if __name__ == '__main__':sys.exit(main())

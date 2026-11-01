@@ -1,0 +1,128 @@
+{
+  "controlled_only": true,
+  "live_config_changed": false,
+  "rows": [
+    {
+      "preset": "codex",
+      "scenario": "unrelated-edits-retained",
+      "exit": 0,
+      "hook_states": [
+        "pass"
+      ],
+      "failure_codes": [
+        null
+      ],
+      "complete_world_preserved": true,
+      "seconds": 2.861378915957175
+    },
+    {
+      "preset": "codex",
+      "scenario": "owned-prompt-missing",
+      "exit": 1,
+      "hook_states": [
+        "failure"
+      ],
+      "failure_codes": [
+        "owned_group_missing_or_changed"
+      ],
+      "complete_world_preserved": true,
+      "seconds": 3.2945556250051595
+    },
+    {
+      "preset": "codex",
+      "scenario": "owned-prompt-duplicated",
+      "exit": 1,
+      "hook_states": [
+        "failure"
+      ],
+      "failure_codes": [
+        "owned_group_duplicate"
+      ],
+      "complete_world_preserved": true,
+      "seconds": 2.9147970829508267
+    },
+    {
+      "preset": "codex",
+      "scenario": "duplicate-json-keys",
+      "exit": 1,
+      "hook_states": [
+        "failure"
+      ],
+      "failure_codes": [
+        "duplicate_json_key"
+      ],
+      "complete_world_preserved": true,
+      "seconds": 3.486074957996607
+    },
+    {
+      "preset": "codex",
+      "scenario": "explicit-uninstall-readback",
+      "verified": true,
+      "unrelated_entries_preserved": true
+    },
+    {
+      "preset": "claude",
+      "scenario": "unrelated-edits-retained",
+      "exit": 0,
+      "hook_states": [
+        "pass"
+      ],
+      "failure_codes": [
+        null
+      ],
+      "complete_world_preserved": true,
+      "seconds": 3.8871052500326186
+    },
+    {
+      "preset": "claude",
+      "scenario": "owned-prompt-missing",
+      "exit": 1,
+      "hook_states": [
+        "failure"
+      ],
+      "failure_codes": [
+        "owned_group_missing_or_changed"
+      ],
+      "complete_world_preserved": true,
+      "seconds": 5.030481916968711
+    },
+    {
+      "preset": "claude",
+      "scenario": "owned-prompt-duplicated",
+      "exit": 1,
+      "hook_states": [
+        "failure"
+      ],
+      "failure_codes": [
+        "owned_group_duplicate"
+      ],
+      "complete_world_preserved": true,
+      "seconds": 4.558866666047834
+    },
+    {
+      "preset": "claude",
+      "scenario": "duplicate-json-keys",
+      "exit": 1,
+      "hook_states": [
+        "failure"
+      ],
+      "failure_codes": [
+        "duplicate_json_key"
+      ],
+      "complete_world_preserved": true,
+      "seconds": 3.073628625017591
+    },
+    {
+      "preset": "claude",
+      "scenario": "explicit-uninstall-readback",
+      "verified": true,
+      "unrelated_entries_preserved": true
+    }
+  ],
+  "source_sha256": {
+    "installation.py": "29599c6bc474fe0b863ba74ebfa252a870fc5e2117348e8e0b52d5c76c0694e1",
+    "client_hooks.py": "d6b3e88f140216d7924dde6c8b0e89dec57d93ef9e4085586ee853de56114ec2",
+    "diagnostics.py": "75efb2b338723ddb664dd69df26691524e68aa6f748cd7fae255b671f4a473d1",
+    "uninstallation.py": "8d68fa8d716f29e569cef2ed6aa3790955072bda911b9c73fa448f08608ebe58"
+  }
+}

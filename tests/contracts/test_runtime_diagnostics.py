@@ -7,9 +7,10 @@ from pathlib import Path
 import shutil
 import sys
 import unittest
+import time
 
 from world import World
-from runtime_update_fixtures import ROOT, PACK, fixture, bank, snapshot, receipt_path
+from runtime_update_fixtures import ROOT, PACK, fixture, hook_fixture, bank, snapshot, receipt_path
 
 
 def call(world, operation, *options, receipt=None, expected=0):
@@ -28,6 +29,157 @@ def component(value, name):
 
 
 class RuntimeDiagnosticsContract(unittest.TestCase):
+    def test_shared_owned_hook_health_and_negative_controls(self):
+        for preset in ('codex', 'claude'):
+            with self.subTest(preset=preset), World() as world:
+                receipt, path = hook_fixture(world, preset)
+                original = json.loads(path.read_bytes())
+                foreign = {'hooks': [{'type': 'command', 'command': 'printf foreign'}]}
+                value = json.loads(path.read_bytes())
+                value['otherToolSetting'] = {'enabled': True}
+                value['hooks']['UserPromptSubmit'].append(foreign)
+                value['hooks']['Stop'].append(foreign)
+                path.write_text(json.dumps(value, sort_keys=True))
+                before = snapshot(world.root)
+                result = call(world, 'doctor', '--repo', world.paths['repo'])
+                check = next(c for c in component(result, 'runtime.target.hook-config') if c['path'] == str(path))
+                self.assertEqual((check['state'], check['verification_scope']), ('pass', 'receipt-owned-entries'))
+                self.assertEqual(snapshot(world.root), before)
+                preview = world.run([sys.executable, '-I', ROOT/'scripts/uninstall_runtime.py',
+                                     'uninstall', '--check'])
+                self.assertFalse(json.loads(preview.stdout)['preserved'])
+                cases = {}
+                for event in ('UserPromptSubmit', 'Stop'):
+                    missing = json.loads(json.dumps(original)); missing['hooks'][event].pop(0)
+                    duplicate = json.loads(json.dumps(original)); duplicate['hooks'][event].append(duplicate['hooks'][event][0])
+                    changed = json.loads(json.dumps(original)); changed['hooks'][event][0]['hooks'][0]['command'] += ' changed'
+                    cases.update({event+'-missing': json.dumps(missing).encode(),
+                                  event+'-duplicate': json.dumps(duplicate).encode(),
+                                  event+'-changed': json.dumps(changed).encode()})
+                altered = json.loads(json.dumps(original))
+                altered['hooks']['Stop'][0]['hooks'][0]['asyncRewake'] = 1
+                cases['flag'] = json.dumps(altered).encode()
+                altered = json.loads(json.dumps(original))
+                altered['hooks']['UserPromptSubmit'][0]['hooks'][0]['type'] = 'other'
+                cases['type'] = json.dumps(altered).encode()
+                cases['duplicate-key'] = b'{"hooks":{},"hooks":{}}'
+                cases['nested-duplicate'] = b'{"hooks":{"Stop":[{"hooks":[{"type":"command","type":"bad"}]}]}}'
+                cases['private-duplicate-key'] = b'{"secret-hook-key-784":1,"secret-hook-key-784":2}'
+                cases['malformed'] = b'{"hooks":'
+                cases['invalid-stop-shape'] = b'{"hooks":{"Stop":{}}}'
+                for label, raw in cases.items():
+                    with self.subTest(case=label):
+                        path.write_bytes(raw)
+                        before = snapshot(world.root)
+                        result = call(world, 'doctor', '--repo', world.paths['repo'], expected=1)
+                        check = component(result, 'runtime.target.hook-config')[0]
+                        self.assertEqual(check['state'], 'failure')
+                        if label in ('duplicate-key', 'nested-duplicate', 'private-duplicate-key'):
+                            code = 'duplicate_json_key'
+                        elif label.endswith('-duplicate'):
+                            code = 'owned_group_duplicate'
+                        elif label == 'malformed':
+                            code = 'malformed_json'
+                        elif label == 'invalid-stop-shape':
+                            code = 'unsupported_shape'
+                        else:
+                            code = 'owned_group_missing_or_changed'
+                        self.assertEqual(check['failure_code'], code)
+                        self.assertNotIn('secret-hook-key-784', json.dumps(result))
+                        self.assertEqual(snapshot(world.root), before)
+                path.write_text(json.dumps(original))
+                mode = path.stat().st_mode & 0o777
+                path.chmod(0o600 if mode != 0o600 else 0o644)
+                before = snapshot(world.root)
+                check = component(call(world, 'doctor', '--repo', world.paths['repo'], expected=1),
+                                  'runtime.target.hook-config')[0]
+                self.assertEqual((check['state'], check['failure_code']), ('failure', 'mode_changed'))
+                self.assertEqual(snapshot(world.root), before)
+                path.chmod(mode)
+                path.unlink(); path.symlink_to(world.paths['repo']/'missing-hook')
+                before = snapshot(world.root)
+                check = component(call(world, 'doctor', '--repo', world.paths['repo'], expected=1),
+                                  'runtime.target.hook-config')[0]
+                self.assertEqual((check['state'], check['failure_code']), ('failure', 'unsafe_path'))
+                self.assertEqual(snapshot(world.root), before)
+                path.unlink(); os.mkfifo(path)
+                before = snapshot(world.root)
+                check = component(call(world, 'doctor', '--repo', world.paths['repo'], expected=1),
+                                  'runtime.target.hook-config')[0]
+                self.assertEqual((check['state'], check['failure_code']), ('failure', 'unsafe_type'))
+                self.assertEqual(snapshot(world.root), before)
+
+    def test_hook_verification_refuses_an_edit_during_readback(self):
+        for preset in ('codex', 'claude'):
+            for change in ('bytes', 'mode'):
+                with self.subTest(preset=preset, change=change), World() as world:
+                    _, path = hook_fixture(world, preset)
+                    control = world.inside('hook-race'); control.mkdir()
+                    world.env.update(AGENT_MEMORY_FAULT_STAGE='hook-ownership-before-recheck',
+                                     AGENT_MEMORY_FAULT_MODE='pause', AGENT_MEMORY_FAULT_DIR=str(control))
+                    child = world.spawn([sys.executable, '-I', ROOT/'scripts/diagnose.py',
+                                         'doctor', '--json', '--repo', world.paths['repo']])
+                    for key in ('AGENT_MEMORY_FAULT_STAGE', 'AGENT_MEMORY_FAULT_MODE', 'AGENT_MEMORY_FAULT_DIR'):
+                        del world.env[key]
+                    ready = control/'hook-ownership-before-recheck.ready'
+                    deadline = time.monotonic() + 10
+                    while not ready.exists() and child.poll() is None and time.monotonic() < deadline:
+                        time.sleep(.01)
+                    self.assertTrue(ready.exists())
+                    receipt_before = receipt_path(world).read_bytes()
+                    if change == 'bytes':
+                        value = json.loads(path.read_bytes()); value['racingForeignKey'] = True
+                        path.write_text(json.dumps(value))
+                    else:
+                        path.chmod(0o600 if path.stat().st_mode & 0o777 != 0o600 else 0o644)
+                    expected = snapshot(path)
+                    (control/'hook-ownership-before-recheck.release').touch()
+                    stdout, stderr = child.communicate(timeout=30)
+                    self.assertEqual(child.returncode, 1, stderr)
+                    check = component(json.loads(stdout), 'runtime.target.hook-config')[0]
+                    self.assertEqual((check['state'], check['failure_code']), ('failure', 'concurrent_change'))
+                    self.assertEqual(snapshot(path), expected)
+                    self.assertEqual(receipt_path(world).read_bytes(), receipt_before)
+
+    def test_insufficient_hook_receipt_is_not_adopted_from_matching_bytes(self):
+        with World() as world:
+            _, path = hook_fixture(world, 'codex')
+            receipt_file = receipt_path(world)
+            receipt = json.loads(receipt_file.read_bytes())
+            target = next(t for t in receipt['targets'] if t['kind'] == 'hook-config')
+            del target['hook_entry']
+            raw = (json.dumps(receipt, sort_keys=True, indent=2) + '\n').encode()
+            receipt_file.write_bytes(raw)
+            journal_path = receipt_file.parent/'journal.json'
+            journal = json.loads(journal_path.read_bytes())
+            journal['receipt'] = receipt
+            journal['receipt_identity'] = {'kind': 'file', 'hash': hashlib.sha256(raw).hexdigest(),
+                                           'mode': receipt_file.stat().st_mode & 0o7777}
+            journal_path.write_text(json.dumps(journal))
+            before = snapshot(world.root)
+            result = call(world, 'doctor', '--repo', world.paths['repo'], expected=1)
+            check = component(result, 'runtime.target.hook-config')[0]
+            self.assertEqual((check['state'], check['failure_code']), ('failure', 'insufficient_receipt'))
+            self.assertEqual(snapshot(world.root), before)
+            preview = world.run([sys.executable, '-I', ROOT/'scripts/uninstall_runtime.py',
+                                 'uninstall', '--check'])
+            self.assertTrue(any(item['path'] == str(path) for item in json.loads(preview.stdout)['preserved']))
+            self.assertEqual(snapshot(world.root), before)
+
+    def test_opencode_plugin_link_remains_exact(self):
+        with World() as world:
+            channel = world.repository('opencode channel')
+            shutil.copytree(PACK, channel/'skills/agent-memory')
+            world.git('add', '.', cwd=channel); world.git('commit', '-m', 'Disposable runtime', cwd=channel)
+            installed = json.loads(world.run([sys.executable, '-I', ROOT/'scripts/installer.py', 'install',
+                                              '--remote', channel, '--presets', 'opencode']).stdout)
+            target = next(t for t in installed['receipt']['targets'] if t['kind'] == 'hook-link')
+            path = Path(target['path']); path.unlink(); path.symlink_to(world.paths['repo'])
+            before = snapshot(world.root)
+            result = call(world, 'doctor', '--repo', world.paths['repo'], expected=1)
+            self.assertEqual(component(result, 'runtime.target.hook-link')[0]['state'], 'failure')
+            self.assertEqual(snapshot(world.root), before)
+
     def test_owner_record_diagnostics_agree_with_actual_recovery_and_preserve_bad_metadata(self):
         for case in ('healthy', 'malformed', 'dangling-symlink'):
             with self.subTest(case=case), World() as world:

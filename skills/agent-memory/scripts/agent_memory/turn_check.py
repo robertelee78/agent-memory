@@ -7,6 +7,7 @@ import os
 import sys
 import uuid
 
+from . import bank_capacity
 from .frontmatter import ContractError
 
 SCHEMA = 'agent-memory/turn-check-v1'
@@ -82,7 +83,7 @@ def check(repo, value, complete, harness):
                              'failure_component': 'source-assessment', 'failure_code': 'assessment-unverified',
                              'reason': str(exc) if isinstance(exc, ContractError) else 'Original source or private assessment state is unavailable.',
                              'repair': 'Preserve the original observation and inspect the matching boundary pending inventory before retrying.',
-                             'canonical_writes_performed': False})
+                             'canonical_writes_performed': False, **bank_capacity.details(exc)})
     assessment = receipts[0] if len(receipts) == 1 else {'verified': all(r.get('verified') is True for r in receipts), 'results': receipts}
     result = combined(refresh, assessment)
     result['assessment_count'] = len(receipts)

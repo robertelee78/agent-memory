@@ -36,10 +36,8 @@ def preflight_private_output(path, repo):
 
 
 def bank_size(files):
-    if (not isinstance(files, dict) or len(files) > MAX_FILES
-            or any(not isinstance(v, str) or len(v.encode()) > MAX_FILE for v in files.values())
-            or sum(len(v.encode()) for v in files.values()) > MAX_BANK):
-        raise ContractError('Complete bank exceeds 65,536 files/64MiB or 16KiB per source; preserve sources without truncation')
+    from .bank_capacity import check_files
+    check_files(files)
 
 
 def private_bytes(value):

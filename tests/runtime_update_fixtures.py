@@ -54,6 +54,20 @@ def fixture(world, mode='copy', *, bootstrap=False):
     return channel, pack, result['receipt']
 
 
+def hook_fixture(world, preset):
+    channel = world.repository('hook channel with spaces')
+    pack = channel/'skills/agent-memory'
+    shutil.copytree(PACK, pack)
+    world.git('add', '.', cwd=channel)
+    world.git('commit', '-m', 'Disposable hook runtime', cwd=channel)
+    result = world.run([sys.executable, '-I', ROOT/'scripts/installer.py', 'install',
+                        '--remote', channel, '--ref', 'main', '--mode', 'copy',
+                        '--presets', preset], timeout=120)
+    receipt = json.loads(result.stdout)['receipt']
+    target = next(t for t in receipt['targets'] if t['kind'] == 'hook-config')
+    return receipt, Path(target['path'])
+
+
 def advance(world, channel, pack, value='1.0.1', *, shim=False):
     version(pack,value)
     (pack/'templates/new-runtime-asset.txt').write_text('Useful new runtime asset.\n')

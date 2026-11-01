@@ -7,7 +7,7 @@ from pathlib import Path, PurePosixPath
 import sys
 
 from . import bank_contract as bank
-from . import records, scopes
+from . import bank_capacity, records, scopes
 from .developer_identity import load, uuid_valid
 from .frontmatter import ContractError, read, write
 from .lifecycle import time_value
@@ -204,9 +204,11 @@ def main(argv=None):
                       'routes': parse_index(args.path, metadata, body), 'valid': True, 'writes_performed': False}
         print(json.dumps(output, indent=2, ensure_ascii=False))
         return 0
-    except (ContractError, OSError, UnicodeError, ValueError, TypeError, KeyError, AttributeError):
+    except (ContractError, OSError, UnicodeError, ValueError, TypeError, KeyError, AttributeError) as exc:
         print(json.dumps({'schema': 'agent-memory/layout-result-v1', 'valid': False, 'writes_performed': False,
-                          'error': 'Invalid optional record layout, index or canonical bank; inspect original files'}))
+                          'error': str(exc) if isinstance(exc, bank_capacity.BankCapacityError) else
+                              'Invalid optional record layout, index or canonical bank; inspect original files',
+                          **bank_capacity.details(exc)}))
         return 1
 
 

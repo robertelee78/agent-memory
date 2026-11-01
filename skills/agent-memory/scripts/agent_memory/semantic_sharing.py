@@ -16,7 +16,7 @@ from pathlib import Path, PurePosixPath
 import sys
 import uuid
 
-from . import bank_contract as bank, bank_layout as layout, bank_transactions as tx
+from . import bank_capacity, bank_contract as bank, bank_layout as layout, bank_transactions as tx
 from . import bank_writes as writes, consolidation, governance, lifecycle, records
 from . import retrieval, scope_binding, security, scopes
 from .developer_identity import digest, encoded, load
@@ -674,8 +674,9 @@ def main(argv=None):
             'publication_verified':False,'canonical_writes_performed':False,'remote_freshness_verified':False,
             'failure_component':'output' if output_failed else exc.component if authority_failed else 'known-dispute-state' if known else args.command,
             'failure_code':'private-output-invalid' if output_failed else exc.code if known else 'semantic-review-unverified',
-            'error':str(exc) if output_failed or known else 'Incomplete, changed or unsafe semantic review; retain local work and inspect actual sources',
-            'repair':str(exc) if output_failed else exc.repair if known else 'Preserve the bank, original request and pending evidence. Run am doctor for this repository, inspect the failed component, then repeat source inspection and review; do not substitute an empty bank or a compatibility judgment.'}));return 1
+            'error':str(exc) if output_failed or known or isinstance(exc, bank_capacity.BankCapacityError) else 'Incomplete, changed or unsafe semantic review; retain local work and inspect actual sources',
+            'repair':str(exc) if output_failed else exc.repair if known else 'Preserve the bank, original request and pending evidence. Run am doctor for this repository, inspect the failed component, then repeat source inspection and review; do not substitute an empty bank or a compatibility judgment.',
+            **bank_capacity.details(exc)}));return 1
 
 
 if __name__=='__main__':sys.exit(main())

@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 import sys
 
-from . import repository_config
+from . import bank_capacity, repository_config
 from . import bank_contract as bank
 from . import bank_transactions as transactions
 from . import bank_writes as writes
@@ -47,6 +47,8 @@ def status(repo, observations=(), harness=None, session=None):
         issues.extend(proj['issues'])
         if storage.paths('projects')[2].exists():
             issues.append('Project registry is locked; inspect/recover before a write')
+    except bank_capacity.BankCapacityError:
+        raise
     except (ContractError, OSError, ValueError) as exc:
         proj = {'project_id': None, 'resolved': False, 'error': str(exc)}
         issues.append(str(exc))
@@ -85,6 +87,8 @@ def capture(repo):
     """A read-only proposal can exist while setup is pending, but cannot be applied."""
     try:
         return require(repo)
+    except bank_capacity.BankCapacityError:
+        raise
     except (ContractError, OSError, ValueError):
         return None
 
@@ -304,7 +308,8 @@ def main(argv=None):
         print(json.dumps(value, indent=2, ensure_ascii=False))
         return 0
     except (ContractError, OSError, UnicodeError, ValueError, TypeError, KeyError, AttributeError) as exc:
-        print(json.dumps(result(args.command, error=str(exc), verified=False, inspection_required=True)))
+        print(json.dumps(result(args.command, error=str(exc), verified=False, inspection_required=True,
+                                **bank_capacity.details(exc))))
         return 1
 
 

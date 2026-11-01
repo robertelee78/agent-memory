@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 import sys
 
-from . import bank_writes as writes, repository_config, scope_binding, security
+from . import bank_capacity, bank_writes as writes, repository_config, scope_binding, security
 from .developer_identity import digest, encoded
 from .frontmatter import ContractError
 from .identity_git import git
@@ -27,6 +27,8 @@ def prior_deletions(root, prefix, indexed, current):
     head = git(root, 'rev-parse', '--verify', 'HEAD')
     try:
         files = recovery.tree(root, head, prefix)
+    except bank_capacity.BankCapacityError:
+        raise
     except ContractError:
         return set()
     proven = set()
@@ -153,9 +155,11 @@ def main(argv=None):
     try:
         print(json.dumps(inspect(args.repo), indent=2))
         return 0
-    except (ContractError, OSError, ValueError, UnicodeError, TypeError, KeyError, AttributeError, RecursionError):
+    except (ContractError, OSError, ValueError, UnicodeError, TypeError, KeyError, AttributeError, RecursionError) as exc:
         print(json.dumps({'schema': 'agent-memory/sharing-boundary-v1', 'verified': False,
-            'writes_performed': False, 'error': 'Unresolved, unsafe, interrupted or changed repository boundary; inspect and preserve local work'}))
+            'writes_performed': False,
+            'error': str(exc) if isinstance(exc, bank_capacity.BankCapacityError) else 'Unresolved, unsafe, interrupted or changed repository boundary; inspect and preserve local work',
+            **bank_capacity.details(exc)}))
         return 1
 
 

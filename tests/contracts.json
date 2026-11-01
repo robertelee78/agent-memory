@@ -38,6 +38,7 @@
     {"name": "manual-checkpoint", "layer": "bank", "scope": "v0.0.1", "path": "tests/contracts/test_manual_checkpoint.py"},
     {"name": "checkpoint", "layer": "bank", "scope": "v0.0.1", "path": "tests/contracts/test_checkpoint.py"},
     {"name": "bank-usability", "layer": "bank", "scope": "v0.0.1", "path": "tests/contracts/test_bank_usability.py"},
+    {"name": "bank-eligibility-writes", "layer": "bank", "scope": "v0.0.3", "path": "tests/contracts/test_bank_eligibility_writes.py"},
     {"name": "bank-transactions", "layer": "concurrency", "scope": "v0.0.1", "path": "tests/contracts/test_bank_transactions.py"},
     {"name": "tombstones", "layer": "bank", "scope": "v0.0.1", "path": "tests/contracts/test_tombstones.py"},
     {"name": "offline-skill", "layer": "pack", "scope": "v0.0.1", "path": "tests/contracts/test_offline_skill.py"},

@@ -6,7 +6,7 @@ import sys
 import unittest
 
 from world import World
-from runtime_update_fixtures import ROOT, PACK, fixture, bank, snapshot, receipt_path
+from runtime_update_fixtures import ROOT, PACK, fixture, hook_fixture, bank, snapshot, receipt_path
 
 
 def uninstall(world, receipt, *args, source=False, expected=0, env=None):
@@ -19,6 +19,50 @@ def uninstall(world, receipt, *args, source=False, expected=0, env=None):
 
 
 class RuntimeUninstallContract(unittest.TestCase):
+    def test_shared_hooks_actual_uninstall_and_committed_recovery(self):
+        for preset in ('codex', 'claude'):
+            for interrupted in (False, True):
+                for edited in ((False, True) if interrupted else (False,)):
+                    with self.subTest(preset=preset, interrupted=interrupted, edited=edited), World() as world:
+                        receipt, path = hook_fixture(world, preset)
+                        value = json.loads(path.read_bytes())
+                        foreign = {'hooks': [{'type': 'command', 'command': 'printf unrelated'}]}
+                        value['otherToolSetting'] = {'preserve': True}
+                        value['hooks']['UserPromptSubmit'].append(foreign)
+                        value['hooks']['Stop'].append(foreign)
+                        path.write_text(json.dumps(value))
+                        mode = path.stat().st_mode & 0o777
+                        before = snapshot(world.root)
+                        preview = uninstall(world, receipt, '--check')
+                        self.assertFalse(preview['preserved'])
+                        self.assertEqual(snapshot(world.root), before)
+                        if interrupted:
+                            result = world.run([Path(receipt['bin_dir'])/'agent-memory', '--json', 'uninstall'],
+                                check=False, env={'AGENT_MEMORY_FAULT_STAGE':'uninstall-after-receipt',
+                                                  'AGENT_MEMORY_FAULT_MODE':'exit'}, timeout=120)
+                            self.assertEqual(result.returncode, 86)
+                            if edited:
+                                path.write_text(path.read_text() + '\n')
+                            hook_after = snapshot(path)
+                            recovered = world.run([sys.executable, '-I', ROOT/'scripts/installer.py', 'recover'],
+                                                  check=False)
+                            self.assertEqual(recovered.returncode, 1 if edited else 0, recovered.stdout)
+                            self.assertEqual(snapshot(path), hook_after)
+                            if edited:
+                                self.assertNotEqual(json.loads((receipt_path(world).parent/'journal.json').read_text())['status'],
+                                                    'complete')
+                                continue
+                        else:
+                            result = uninstall(world, receipt)
+                            self.assertTrue(result['verified'])
+                            self.assertFalse(result['preserved'])
+                        remaining = json.loads(path.read_bytes())
+                        self.assertEqual(remaining['otherToolSetting'], {'preserve': True})
+                        self.assertEqual(remaining['hooks']['UserPromptSubmit'], [foreign])
+                        self.assertEqual(remaining['hooks']['Stop'], [foreign])
+                        self.assertEqual(path.stat().st_mode & 0o777, mode)
+                        self.assertTrue(json.loads(receipt_path(world).read_text())['uninstalled'])
+
     def test_preview_refuses_a_receipt_that_conflicts_with_its_completed_journal(self):
         for case in ('inactive-flag','active-receipt'):
             with self.subTest(case=case), World() as world:

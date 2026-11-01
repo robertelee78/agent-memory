@@ -9,7 +9,7 @@ from pathlib import Path
 import re
 import sys
 
-from . import bank_contract, bank_writes as writes, comparison, retrieval, scope_binding
+from . import bank_capacity, bank_contract, bank_writes as writes, comparison, retrieval, scope_binding
 from .developer_identity import digest, encoded, load
 from .frontmatter import ContractError
 
@@ -197,9 +197,12 @@ def main(argv=None):
         request = read_input(args.request)
         value = assemble(args.repo, request) if args.command == 'preview' else check(args.repo, request, read_input(args.counter))
         print(json.dumps(value, indent=2, ensure_ascii=False));return 0
-    except (ContractError, OSError, ValueError, UnicodeError, TypeError, KeyError, AttributeError, RecursionError):
+    except (ContractError, OSError, ValueError, UnicodeError, TypeError, KeyError, AttributeError, RecursionError) as exc:
         print(json.dumps({'schema': 'agent-memory/assembly-result-v1', 'usable_context': False,
-            'canonical_writes_performed': False, 'error': 'Incomplete, unsafe, changed or over-budget context; preserve evidence and inspect before use'}));return 1
+            'canonical_writes_performed': False,
+            'error': str(exc) if isinstance(exc, bank_capacity.BankCapacityError) else
+                'Incomplete, unsafe, changed or over-budget context; preserve evidence and inspect before use',
+            **bank_capacity.details(exc)}));return 1
 
 
 if __name__ == '__main__':

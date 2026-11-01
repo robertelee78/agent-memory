@@ -9,7 +9,7 @@ from pathlib import Path
 import sys
 import uuid
 
-from . import admission, bank_contract as bank, bank_layout, bank_transactions as tx
+from . import bank_capacity, admission, bank_contract as bank, bank_layout, bank_transactions as tx
 from . import bank_writes as writes, comparison, lifecycle, records, retrieval, scope_binding, security
 from .developer_identity import digest, encoded
 from .frontmatter import ContractError, read, write
@@ -317,11 +317,13 @@ def main(argv=None):
         value = (preview(args.repo, admission.read_input(args.input, 262144)) if args.command == 'preview'
                  else apply(admission.read_input(args.proposal, 512*1024*1024)))
         print(json.dumps(value, indent=2, ensure_ascii=False));return 0
-    except (ContractError, OSError, ValueError, UnicodeError, TypeError, KeyError, AttributeError, RecursionError):
+    except (ContractError, OSError, ValueError, UnicodeError, TypeError, KeyError, AttributeError, RecursionError) as exc:
         print(json.dumps(result(args.command, verified=False,
             canonical_writes_performed=False if args.command == 'preview' else None,
             recovery_may_be_required=args.command == 'apply',
-            error='Incomplete, unsafe, changed or unqualified maintenance; preserve evidence and inspect before retry')));return 1
+            error=str(exc) if isinstance(exc, bank_capacity.BankCapacityError) else
+                'Incomplete, unsafe, changed or unqualified maintenance; preserve evidence and inspect before retry',
+            **bank_capacity.details(exc))));return 1
 
 
 if __name__ == '__main__':sys.exit(main())

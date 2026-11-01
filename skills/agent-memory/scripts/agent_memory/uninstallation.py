@@ -65,12 +65,16 @@ def prepare(old, state, code):
         install.trust_paths.tree(path)
         before = install.fingerprint(path); raw = None
         after = None
+        if target['kind'] == 'hook-config' and before is None:
+            preserve(target, 'Client hook configuration is unavailable'); return
         if before is not None and target['kind'] == 'hook-config':
             if before['kind'] != 'file':
                 preserve(target, 'Client hook configuration is no longer an ordinary file'); return
             try:
                 from . import client_hooks
-                current = path.read_bytes()
+                checked = install.verify_hook_target(target)
+                install.require(checked['identity'] == before, 'Client hook configuration changed during planning')
+                current = checked['raw']
                 raw = client_hooks.remove(current, target['hook_entry'], target.get('originally_absent', False),
                                           target.get('hook_original_shape'))
                 if target.get('stop_entry'):
@@ -87,7 +91,7 @@ def prepare(old, state, code):
                         rebuilt = client_hooks.merge(original, None, target['hook_entry'])
                         if target.get('stop_entry'):
                             rebuilt = client_hooks.merge(rebuilt, None, target['stop_entry'], event='Stop')
-                        if client_hooks.parse(rebuilt) == client_hooks.parse(current):
+                        if client_hooks.equal(client_hooks.parse(rebuilt), client_hooks.parse(current)):
                             raw = original
                     break
             except (ContractError, UnicodeError, ValueError, KeyError):

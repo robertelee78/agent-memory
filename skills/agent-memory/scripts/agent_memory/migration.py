@@ -12,7 +12,7 @@ import sys
 import tempfile
 import uuid
 
-from . import artifact, bank_contract as bank, bank_transactions as tx, bank_writes as writes
+from . import artifact, bank_capacity, bank_contract as bank, bank_transactions as tx, bank_writes as writes
 from . import local_registry as storage, migration_contract, repository_config, scope_binding, trust_paths, security
 from .developer_identity import digest, encoded, load, uuid_valid
 from .frontmatter import ContractError, read
@@ -906,12 +906,14 @@ def main(argv=None):
         if isinstance(exc, SyntaxError) or scanned['reasons']:
             message = 'Migration source, code or recovery validation failed; unsafe details withheld.'
         may_have_changed = args.command in {'apply', 'recover'} or (args.command == 'restore' and bool(args.proposal))
-        print(json.dumps(result(args.command, state='inspection-required', verified=False,
+        value = result(args.command, state='inspection-required', verified=False,
             error=message, error_type=type(exc).__name__, canonical_writes_performed=None if may_have_changed else False,
             canonical_state_requires_inspection=may_have_changed,
             repair='Preserve the bank, visible marker, private intent/backups and retained trusted helper. '
                    'Recover only the owned dead lock, then preview the exact finish/rollback or a new completed-restoration operation. '
-                   'Do not force replacement, rebind identity or initialize another bank.')))
+                   'Do not force replacement, rebind identity or initialize another bank.')
+        value.update(bank_capacity.details(exc))
+        print(json.dumps(value))
         return 1
 
 

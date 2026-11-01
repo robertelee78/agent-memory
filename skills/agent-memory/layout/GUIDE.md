@@ -72,6 +72,18 @@ A session MUST inspect the actual router, current record metadata and existing i
 
 ## Plan
 
+Every complete canonical file, including record metadata and ordinary context,
+MUST fit 16,384 UTF-8 bytes. Complete banks MUST fit 65,536 sources and 64 MiB.
+Rendering a complete bank and writer preview/apply check the intended resulting
+map before canonical replacement. A valid isolated record/index format is not a
+claim that a complete on-disk bank is eligible for normal use.
+
+Capacity refuses normal recall/capture even when a selector names another path.
+Preserve every source and the original index/HEAD; this runtime has no supported
+source-preserving layout-recovery command. Do not truncate, delete, ignore or
+raise limits to make the check pass. The [offline guide](../offline/GUIDE.md)
+describes the typed diagnostic and pending boundary.
+
 Every project Markdown file MUST have one unambiguous route from `MEMORY.md`,
 directly or through a bounded topic index. The root router keeps its 16 KiB and
 64-route limits. A topic index MUST:

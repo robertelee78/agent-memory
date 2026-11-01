@@ -11,7 +11,7 @@ import tempfile
 import uuid
 
 from . import repository_config, validation_memo
-from . import bank_writes as writes
+from . import bank_capacity, bank_writes as writes
 from . import local_registry as storage
 from . import scope_binding as identity
 from . import tombstones
@@ -274,7 +274,7 @@ def main(argv=None):
         return 0
     except (ContractError, OSError, ValueError, UnicodeError, TypeError, KeyError, AttributeError) as exc:
         print(json.dumps({'schema': 'agent-memory/security-result-v1', 'error': str(exc),
-                          'verified': False, 'canonical_writes_performed': False}))
+                          'verified': False, 'canonical_writes_performed': False, **bank_capacity.details(exc)}))
         return 1
 
 

@@ -68,6 +68,16 @@ matching ownership. The installer never adopts a coincidentally matching
 unrelated target. Edits outside an owned sentinel block remain intact; edits
 inside it refuse. Stale/duplicate/missing blocks remain a reconciliation task.
 
+Codex and Claude share hook JSON with other tools. Lifecycle ownership verifies
+the complete receipt-owned prompt group and each recorded Stop group exactly
+once, rather than treating the historical whole-file hash as ownership of other
+settings. Malformed or duplicate-key JSON, changed or duplicate owned groups,
+unsafe paths, mode changes and concurrent edits still refuse. Insufficient legacy
+entry evidence remains unverified; a lookalike is never adopted. Transaction
+backups, activation readback and uninstall-output recovery retain exact whole-file
+identities. OpenCode's plugin link, wrappers and client artifacts retain strict
+identity checks.
+
 The authoritative receipt is
 `${XDG_STATE_HOME:-$HOME/.local/state}/agent-memory/install/receipt.json`.
 It binds the installation ID, source, artifact, enabled targets, pre/post target

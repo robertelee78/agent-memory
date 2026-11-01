@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 import sys
 
-from . import bank_contract as contract
+from . import bank_capacity, bank_contract as contract
 from . import bank_writes as writes
 from .developer_identity import digest, load, uuid_valid
 from .frontmatter import ContractError, read, write
@@ -135,11 +135,13 @@ def main(argv=None):
             output = filter_projection(args.repo, load(Path(args.input).read_bytes()))
         print(json.dumps(output, indent=2, ensure_ascii=False))
         return 0
-    except (ContractError, OSError, UnicodeError, ValueError, TypeError, KeyError, AttributeError):
+    except (ContractError, OSError, UnicodeError, ValueError, TypeError, KeyError, AttributeError) as exc:
         # Rejected memory and metadata may themselves contain the deleted secret.
         # Keep error output content-free instead of echoing an offending value.
         print(json.dumps({"schema": "agent-memory/tombstone-result-v1", "operation": args.command,
-                          "valid": False, "writes_performed": False, "error": "Invalid tombstone, source identity, projection or canonical bank; preserve input for explicit inspection"}))
+                          "valid": False, "writes_performed": False,
+                          "error": str(exc) if isinstance(exc, bank_capacity.BankCapacityError) else "Invalid tombstone, source identity, projection or canonical bank; preserve input for explicit inspection",
+                          **bank_capacity.details(exc)}))
         return 1
 
 

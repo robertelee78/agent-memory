@@ -11,7 +11,7 @@ import sys
 import tempfile
 import uuid
 
-from . import repository_config
+from . import bank_capacity, repository_config
 from . import bank_contract as contract
 from . import bank_writes as writes
 from . import local_registry as storage
@@ -630,7 +630,8 @@ def main(argv=None):
         print(json.dumps(output, indent=2, ensure_ascii=False))
         return 0
     except (ContractError, OSError, UnicodeError, ValueError, TypeError, KeyError, AttributeError) as exc:
-        print(json.dumps(result(args.command, error=str(exc), verified=False, inspection_required=True)))
+        print(json.dumps(result(args.command, error=str(exc), verified=False, inspection_required=True,
+                                **bank_capacity.details(exc))))
         return 1
 
 

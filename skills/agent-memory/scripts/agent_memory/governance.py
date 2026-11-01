@@ -10,7 +10,7 @@ import sys
 import json
 import uuid
 
-from . import admission, bank_contract as bank, bank_layout, bank_transactions as tx
+from . import bank_capacity, admission, bank_contract as bank, bank_layout, bank_transactions as tx
 from . import bank_writes as writes, comparison, inactive, lifecycle, records, retrieval
 from . import scope_binding, security, tombstones
 from .developer_identity import digest, encoded, uuid_valid
@@ -544,9 +544,12 @@ def main(argv=None, *, required_operations=None):
                 raise ContractError('The requested operation differs from the CLI intent')
         value = preview(args.repo, prepared) if args.command == 'preview' else apply(prepared)
         print(json.dumps(value, indent=2, ensure_ascii=False));return 0
-    except (ContractError, OSError, ValueError, TypeError, KeyError, AttributeError, RecursionError):
+    except (ContractError, OSError, ValueError, TypeError, KeyError, AttributeError, RecursionError) as exc:
         print(json.dumps(result(args.command, verified=False, canonical_writes_performed=False if args.command == 'preview' else None,
-            recovery_may_be_required=args.command == 'apply', error='Unqualified, ambiguous, changed or incomplete governance; preserve evidence and inspect')))
+            recovery_may_be_required=args.command == 'apply',
+            error=str(exc) if isinstance(exc, bank_capacity.BankCapacityError) else
+                'Unqualified, ambiguous, changed or incomplete governance; preserve evidence and inspect',
+            **bank_capacity.details(exc))))
         return 1
 
 

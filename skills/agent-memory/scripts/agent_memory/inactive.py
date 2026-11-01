@@ -11,7 +11,7 @@ from pathlib import Path
 import sys
 import uuid
 
-from . import bank_writes as writes
+from . import bank_capacity, bank_writes as writes
 from . import records, scope_binding, security, tombstones
 from .developer_identity import digest, load, uuid_valid
 from .frontmatter import ContractError, write
@@ -117,13 +117,13 @@ def main(argv=None):
                   else filter_projection(args.repo, load(bounded_file(args.input))))
         print(json.dumps(output, indent=2, ensure_ascii=False))
         return 0
-    except (ContractError, OSError, ValueError, UnicodeError, TypeError, KeyError, AttributeError):
+    except (ContractError, OSError, ValueError, UnicodeError, TypeError, KeyError, AttributeError) as exc:
         # Invalid metadata, paths and even parser exceptions may carry deleted
         # content. Refusals never quote it or compute a content hash for output.
         print(json.dumps({'schema': 'agent-memory/inactive-result-v1', 'operation': args.command,
-            'error': 'Invalid or unsafe inactive representation, scope, canonical state or derived input; preserve original state for inspection',
+            'error': str(exc) if isinstance(exc, bank_capacity.BankCapacityError) else 'Invalid or unsafe inactive representation, scope, canonical state or derived input; preserve original state for inspection',
             'verified': False, **({'writes_performed': False} if args.command == 'compact' else {}),
-            'canonical_writes_performed': False}))
+            'canonical_writes_performed': False, **bank_capacity.details(exc)}))
         return 1
 
 

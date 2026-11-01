@@ -52,5 +52,22 @@ A nonblocking resource clarification notes that `MAX_CONFIG + 1` bounds JSON
 reading, while existing `fingerprint` separately permits reads through its
 64-MiB managed-file guard. No whole-evaluator 1-MiB IO claim is justified.
 
-The blocked verdict remains retained. #243 requires an actual independent
-re-review of the corrected immutable design before Ready or implementation.
+The blocked verdict remains retained. The corrected design was independently
+re-reviewed before #243 became Ready or implementation began.
+
+## #243: corrected DESIGN ACCEPT
+
+Reviewer: `HookDesignReview014`. Reviewed immutable revision:
+`5cc3a3edc57cc9a64781fb14f0ca2dcb655153fc`.
+Actual verdict: **DESIGN ACCEPT**, no remaining blockers, confidence 0.96.
+
+Active receipt targets require exact owned-entry verification without a
+historical whole-file fallback. Only explicit internal `uninstall_output=True`
+calls at activation/committed-receipt recovery verify exact planned post-removal
+identities. Recovery requires the uninstall journal operation and uninstalled
+receipt markers to agree. The corrected design separates the 1-MiB JSON-read
+bound from the existing independent fingerprint I/O guard.
+
+Approval evidence:
+[#245 design](https://github.com/robertelee78/agent-memory/issues/245#issuecomment-6560637810)
+and [#243 corrected design](https://github.com/robertelee78/agent-memory/issues/243#issuecomment-6560674143).

@@ -10,7 +10,7 @@ import shutil
 import sys
 import uuid
 
-from . import repository_config
+from . import bank_capacity, repository_config
 from . import authority
 from . import bank_contract as bank
 from . import bank_transactions as transactions
@@ -143,6 +143,8 @@ def inspect(repo, awa_path=None, selected=None):
             try:
                 checked, existing = writes.snapshot(root)
                 project_id, bank_state = checked['project_id'], 'usable'
+            except bank_capacity.BankCapacityError:
+                raise
             except (ContractError, OSError, ValueError) as exc:
                 bank_state, error = 'needs-inspection', str(exc)
         else:
@@ -150,6 +152,8 @@ def inspect(repo, awa_path=None, selected=None):
     if project_id is None:
         try:
             project_id = identity.project.status(root)['project_id']
+        except bank_capacity.BankCapacityError:
+            raise
         except (ContractError, OSError, ValueError):
             pass
     sources, gaps = local_sources(root, selected)
@@ -509,7 +513,8 @@ def main(argv=None):
         print(json.dumps(value, indent=2, ensure_ascii=False))
         return 0
     except (ContractError, OSError, UnicodeError, ValueError, TypeError, KeyError, AttributeError) as exc:
-        print(json.dumps(result(args.command, error=str(exc), verified=False, inspection_required=True)))
+        print(json.dumps(result(args.command, error=str(exc), verified=False, inspection_required=True,
+                                **bank_capacity.details(exc))))
         return 1
 
 

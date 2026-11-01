@@ -11,7 +11,7 @@ import subprocess
 import sys
 import uuid
 
-from . import repository_config
+from . import bank_capacity, repository_config
 from .bank_contract import parse_router
 from .developer_identity import digest, encoded, load, text, uuid_valid
 from .frontmatter import ContractError
@@ -297,7 +297,7 @@ def apply(prepared):
             try:
                 current_status = status(proposal["evidence"]["repo_root"])
             except (ContractError, OSError) as exc:
-                current_status = {"resolved": False, "issues": [str(exc)]}
+                current_status = {"resolved": False, "issues": [str(exc)], **bank_capacity.details(exc)}
             return result("apply", operation_id=proposal["operation_id"], project_id=known["project_id"],
                           already_applied=True, registry_path=str(registry), writes_performed=False, verified=True,
                           binding_status=current_status)
@@ -375,7 +375,7 @@ def main(argv=None):
         print(json.dumps(receipt, indent=2, ensure_ascii=False))
         return 0
     except (ContractError, OSError, UnicodeError, ValueError, TypeError, KeyError, AttributeError, subprocess.TimeoutExpired) as exc:
-        print(json.dumps(result(args.command, error=str(exc), verified=False)))
+        print(json.dumps(result(args.command, error=str(exc), verified=False, **bank_capacity.details(exc))))
         return 1
 
 

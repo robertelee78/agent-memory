@@ -11,7 +11,7 @@ from pathlib import Path
 import sys
 import uuid
 
-from . import bank_contract, bank_transactions as tx, bank_writes as writes
+from . import bank_capacity, bank_contract, bank_transactions as tx, bank_writes as writes
 from . import comparison, lifecycle, records, scope_binding, security
 from .developer_identity import digest, encoded, load, uuid_valid
 from .frontmatter import ContractError, write
@@ -398,8 +398,11 @@ def main(argv=None):
         else:value = apply(read_input(args.proposal, sharing_limits.MAX_PRIVATE))
         print(json.dumps(value, indent=2, ensure_ascii=False));return 0
     except (ContractError, OSError, ValueError, UnicodeError, TypeError, KeyError, AttributeError, RecursionError) as exc:
-        error = ('Admission input must be a protected file in an owner-only directory. Use am private create and am private put; preserve the existing input.' if isinstance(exc, PrivateInputError) else 'Unsafe, ineligible, unavailable or changed admission; preserve sources and repeat evidence/comparison review')
-        print(json.dumps(result(args.command, admission_verified=False, canonical_writes_performed=False, error=error)))
+        error = (str(exc) if isinstance(exc, bank_capacity.BankCapacityError) else
+                 'Admission input must be a protected file in an owner-only directory. Use am private create and am private put; preserve the existing input.' if isinstance(exc, PrivateInputError) else
+                 'Unsafe, ineligible, unavailable or changed admission; preserve sources and repeat evidence/comparison review')
+        print(json.dumps(result(args.command, admission_verified=False, canonical_writes_performed=False,
+                                error=error, **bank_capacity.details(exc))))
         return 1
 
 

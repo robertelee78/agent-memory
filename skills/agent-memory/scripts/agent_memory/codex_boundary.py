@@ -9,7 +9,7 @@ import stat
 import sys
 import uuid
 
-from . import bank_writes, memory_publication, scope_binding, sharing_limits, sharing_recovery, trust_paths
+from . import bank_capacity, bank_writes, memory_publication, scope_binding, sharing_limits, sharing_recovery, trust_paths
 from .developer_identity import load
 from .frontmatter import ContractError
 
@@ -197,9 +197,10 @@ def main(argv=None):
         from . import turn_check
         return turn_check.emit(result,args.quiet)
     except (OSError,ValueError,TypeError,KeyError,UnicodeError) as exc:
-        reason=str(exc) if isinstance(exc,ContractError) and ('inventory exceeds' in str(exc)) else 'Boundary completion remains pending; preserve evidence and inspect the failure.'
+        reason=str(exc) if isinstance(exc,bank_capacity.BankCapacityError) or (isinstance(exc,ContractError) and ('inventory exceeds' in str(exc))) else 'Boundary completion remains pending; preserve evidence and inspect the failure.'
         failure={'verified':False,'publication_verified':False,'canonical_writes_performed':False,
-                 'reason':reason,'repair':'Preserve boundary records; inspect retained completed and pending evidence before retrying.'}
+                 'reason':reason,'repair':'Preserve boundary records; inspect retained completed and pending evidence before retrying.',
+                 **bank_capacity.details(exc)}
         if args.quiet:
             print('am: source assessment pending: '+reason+' '+failure['repair'],file=sys.stderr)
         else:print(json.dumps(failure))

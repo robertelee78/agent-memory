@@ -9,7 +9,7 @@ import stat
 import sys
 import uuid
 
-from . import bank_writes, memory_publication, scope_binding, sharing_limits, sharing_recovery, trust_paths
+from . import bank_capacity, bank_writes, memory_publication, scope_binding, sharing_limits, sharing_recovery, trust_paths
 from .developer_identity import load
 from .frontmatter import ContractError
 
@@ -158,11 +158,13 @@ def main(argv=None):
         return turn_check.emit(result,args.quiet)
     except (OSError,ValueError,TypeError,KeyError,UnicodeError) as exc:
         reason = str(exc) if isinstance(exc, ContractError) else 'Original source or pending record is unavailable or unsafe; preserve the retained observation.'
+        failure={'verified':False,'publication_verified':False,'canonical_writes_performed':False,
+                 'reason':reason,'repair':'Inspect am claude-boundary --list-pending. Current hook observations require top-level session,prompt,observation_id,source_sha256,outcome,assessment; assessment.source_id is observation_id. Legacy source_uuid applies only to legacy boundaries. Preserve original sources; read turn/GUIDE.md before retrying.',
+                 **bank_capacity.details(exc)}
         if args.refresh and args.quiet:
-            print('am: source assessment pending: '+reason+' Preserve the original observation; inspect the matching boundary pending inventory.',file=sys.stderr)
+            print('am: source assessment pending: '+reason+' '+failure['repair'],file=sys.stderr)
             return 1
-        print(json.dumps({'verified':False,'publication_verified':False,'canonical_writes_performed':False,
-                          'reason':reason,'repair':'Inspect am claude-boundary --list-pending. Current hook observations require top-level session,prompt,observation_id,source_sha256,outcome,assessment; assessment.source_id is observation_id. Legacy source_uuid applies only to legacy boundaries. Preserve original sources; read turn/GUIDE.md before retrying.'}));return 1
+        print(json.dumps(failure));return 1
 
 
 if __name__ == '__main__':

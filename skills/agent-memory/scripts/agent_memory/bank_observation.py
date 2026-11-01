@@ -8,14 +8,18 @@ import stat
 from . import bank_contract as contract, bank_writes as writes, sharing_limits
 from .developer_identity import digest, uuid_valid
 from .frontmatter import ContractError
+from .bank_capacity import BankCapacityError
 
-MAX_FILES=65536
-MAX_BYTES=64*1024*1024
+MAX_FILES=sharing_limits.MAX_FILES
+MAX_BYTES=sharing_limits.MAX_BANK
 
 
 def read_source(bank, relative, limit):
-    """Pin each directory and refuse replacement links while reading bounded bytes."""
+    """Read bounded bytes and pin the named file and every opened parent."""
     descriptors=[]
+    def signature(info):
+        return (info.st_dev,info.st_ino,info.st_size,info.st_mtime_ns,
+                info.st_ctime_ns,info.st_mode)
     try:
         descriptors.append(os.open(bank, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW))
         parts=Path(relative).parts
@@ -29,10 +33,21 @@ def read_source(bank, relative, limit):
                 raise ContractError('Canonical source is no longer ordinary')
             raw=stream.read(limit+1)
             after=os.fstat(stream.fileno())
-            if (before.st_size <= limit and len(raw) != before.st_size) or (
-                    before.st_dev,before.st_ino,before.st_size,before.st_mtime_ns,before.st_ctime_ns) != (
-                    after.st_dev,after.st_ino,after.st_size,after.st_mtime_ns,after.st_ctime_ns):
+            named=os.stat(parts[-1],dir_fd=descriptors[-1],follow_symlinks=False)
+            if ((before.st_size <= limit and len(raw) != before.st_size)
+                    or signature(before)!=signature(after)
+                    or signature(after)!=signature(named)):
                 raise ContractError('Canonical source changed during bounded observation')
+            for index,descriptor in enumerate(descriptors):
+                current=(os.stat(bank,follow_symlinks=False) if index==0 else
+                         os.stat(parts[index-1],dir_fd=descriptors[index-1],follow_symlinks=False))
+                opened=os.fstat(descriptor)
+                if (not stat.S_ISDIR(current.st_mode)
+                        or (current.st_dev,current.st_ino)!=(opened.st_dev,opened.st_ino)):
+                    raise ContractError('Canonical source parent changed during bounded observation')
+            if before.st_size>sharing_limits.MAX_FILE:
+                raise BankCapacityError('bank-source-byte-capacity',relative,
+                                        sharing_limits.MAX_FILE,before.st_size,measurement='exact')
             return raw
     except OSError as exc:
         raise ContractError('Canonical source or parent changed, became unsafe, or cannot be read; preserve it and retry') from exc
@@ -41,8 +56,8 @@ def read_source(bank, relative, limit):
             os.close(fd)
 
 
-def markers(bank,owner):
-    for name,expected in (('.agent-memory.lock',owner),('.agent-memory-transaction.md',None)):
+def markers(bank,owner,transaction=None):
+    for name,expected in (('.agent-memory.lock',owner),('.agent-memory-transaction.md',transaction)):
         target=bank/name
         try:mode=target.lstat().st_mode
         except FileNotFoundError:
@@ -51,12 +66,25 @@ def markers(bank,owner):
         if expected is None:
             raise ContractError('Bank is busy/interrupted; preserve the operation and retry after recovery')
         if not stat.S_ISREG(mode):raise ContractError('Owned bank marker is not an ordinary record')
-        fd=os.open(target,os.O_RDONLY|getattr(os,'O_NOFOLLOW',0)|getattr(os,'O_NONBLOCK',0))
-        with os.fdopen(fd,'rb') as stream:
-            if not stat.S_ISREG(os.fstat(stream.fileno()).st_mode):raise ContractError('Owned marker type changed')
-            raw=stream.read(4097)
-        if len(raw)>4096 or raw!=expected:
-            raise ContractError('Bank ownership changed; preserve work and retry with actual ownership')
+        directory=os.open(bank,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW)
+        try:
+            fd=os.open(name,os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK,dir_fd=directory)
+            with os.fdopen(fd,'rb') as stream:
+                before=os.fstat(stream.fileno())
+                if not stat.S_ISREG(before.st_mode):raise ContractError('Owned marker type changed')
+                raw=stream.read(len(expected)+1)
+                after=os.fstat(stream.fileno())
+                named=os.stat(name,dir_fd=directory,follow_symlinks=False)
+            fields=('st_dev','st_ino','st_size','st_mtime_ns','st_ctime_ns','st_mode')
+            if any(getattr(before,key)!=getattr(after,key) or
+                   getattr(after,key)!=getattr(named,key) for key in fields):
+                raise ContractError('Bank ownership changed during bounded observation')
+            current=os.stat(bank,follow_symlinks=False);opened=os.fstat(directory)
+            if (not stat.S_ISDIR(current.st_mode) or
+                    (current.st_dev,current.st_ino)!=(opened.st_dev,opened.st_ino) or raw!=expected):
+                raise ContractError('Bank ownership changed; preserve work and retry with actual ownership')
+        finally:
+            os.close(directory)
 
 
 def scan(bank,*,read_sources,metrics=None,require_router=True):
@@ -75,15 +103,15 @@ def scan(bank,*,read_sources,metrics=None,require_router=True):
             if path.suffix!='.md' or contract.runtime_path(relative):continue
             if not stat.S_ISREG(mode):
                 raise ContractError('Canonical Markdown source must be an ordinary file')
-            if len(hashes)>=MAX_FILES:raise ContractError('Complete canonical bank exceeds its finite file budget')
             # The read limit includes the remaining aggregate budget: no large
             # source is loaded even when it races after the initial lstat.
             remaining=MAX_BYTES-total
             raw=read_source(bank,relative,min(sharing_limits.MAX_FILE,remaining))
-            if len(raw)>sharing_limits.MAX_FILE:
-                raise ContractError('Canonical source exceeds 16KiB; preserve it without truncation')
+            if len(hashes)>=MAX_FILES:
+                raise BankCapacityError('bank-source-count-capacity',relative,MAX_FILES,len(hashes)+1)
             total+=len(raw)
-            if total>MAX_BYTES:raise ContractError('Complete canonical bank exceeds 64MiB; preserve it without truncation')
+            if total>MAX_BYTES:
+                raise BankCapacityError('bank-aggregate-byte-capacity',relative,MAX_BYTES,total)
             hashes[relative]=hashlib.sha256(raw).hexdigest()
             if read_sources:sources[relative]=raw
     if require_router and 'MEMORY.md' not in hashes:
@@ -104,8 +132,9 @@ def physical_contract(physical):
 
 class Observation:
     """Constructed internally from actual reads; retrieve accepts no such input."""
-    def __init__(self,root,bank,owner,physical,hashes,sources,checked,parsed):
+    def __init__(self,root,bank,owner,physical,hashes,sources,checked,parsed,transaction=None):
         self.root,self.bank,self.owner=root,bank,owner
+        self.transaction=transaction
         self.physical,self.hashes,self.sources=physical,hashes,sources
         self.checked,self.parsed=checked,parsed
         self.payload_bytes_read=sum(len(raw) for raw in sources.values())
@@ -115,18 +144,18 @@ class Observation:
         writes.fault(stage)
         root,bank=writes.bank_path(self.root)
         if root!=self.root or bank!=self.bank:raise ContractError('Canonical repository/bank location changed')
-        markers(bank,self.owner)
+        markers(bank,self.owner,self.transaction)
         metrics={};physical,hashes,_=scan(bank,read_sources=False,metrics=metrics)
         if physical!=self.physical or hashes!=self.hashes:
             raise ContractError('Canonical sources/topology changed; reread before using recall')
         self.payload_bytes_read+=metrics['payload_bytes']
         self.payload_file_reads+=metrics['file_reads']
-        markers(bank,self.owner)
+        markers(bank,self.owner,self.transaction)
 
 
-def observe(repo,owner=None):
+def observe(repo,owner=None,transaction=None):
     root,bank=writes.bank_path(repo)
-    markers(bank,owner)
+    markers(bank,owner,transaction)
     physical,hashes,sources=scan(bank,read_sources=True)
     physical_contract(physical)
     writes.fault('recall-after-source-read')
@@ -136,6 +165,6 @@ def observe(repo,owner=None):
         target=bank/path
         if target.exists() or target.is_symlink():
             raise ContractError('An omitted context path is physically occupied; inspect it instead of inferring absence')
-    observed=Observation(root,bank,owner,physical,hashes,sources,checked,parsed)
+    observed=Observation(root,bank,owner,physical,hashes,sources,checked,parsed,transaction)
     observed.recheck('recall-initial-source-recheck')
     return observed

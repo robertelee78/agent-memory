@@ -14,7 +14,7 @@ import sys
 import uuid
 import copy
 
-from . import bank_contract, bank_layout, bank_observation, bank_writes as writes
+from . import bank_capacity, bank_contract, bank_layout, bank_observation, bank_writes as writes
 from . import repository_config, scope_binding, security
 from .developer_identity import digest, encoded, load, uuid_valid
 from .frontmatter import ContractError, read
@@ -74,16 +74,7 @@ def trace_value(trace,*,completed=True):
 
 
 def bounded_source(bank,path):
-    target=bank/path
-    if any(p.is_symlink() for p in (target,*target.parents)) or not target.resolve().is_relative_to(bank.resolve()):
-        raise ContractError('Discovery reads only canonical ordinary bank paths')
-    fd=os.open(target,os.O_RDONLY|getattr(os,'O_NOFOLLOW',0)|getattr(os,'O_NONBLOCK',0))
-    with os.fdopen(fd,'rb') as stream:
-        if not stat.S_ISREG(os.fstat(stream.fileno()).st_mode):raise ContractError('Discovery source is not an ordinary file')
-        raw=stream.read(MAX_FILE+1)
-    if len(raw)>MAX_FILE:raise DiscoveryFailure('source-over-bound','A navigation node or selected source exceeds the 16KiB reader bound.',
-        'Inspect the source through the governed maintenance workflow and split or compact it; retain its conditions/provenance and retry without truncation.')
-    return raw
+    return bank_observation.read_source(bank,path,MAX_FILE)
 
 
 def check_trace(repo,trace,checked,observed,scope,*,intent,selected_paths,owned_lock=None,context=None):
@@ -321,12 +312,13 @@ def main(argv=None):
                 result=qualified_read(args.repo,trace,request,args.rationale)
         print(json.dumps(result,indent=2));return 0
     except Exception as exc:
-        known=isinstance(exc,DiscoveryFailure)
+        known=isinstance(exc,(DiscoveryFailure,bank_capacity.BankCapacityError))
         print(json.dumps({'schema':'agent-memory/discovery-result-v1','operation':args.command,
             'canonical_writes_performed':False,'semantic_completeness_verified':False,
             'error':str(exc) if known else 'Cannot validate this navigation/input against the current canonical bank; no guidance or novelty is certified.',
             'failure_code':exc.code if known else 'discovery-unverified','failure_component':phase,
-            'repair':exc.repair if known else 'Preserve the bank and input. Run am doctor for the selected repository, inspect its failed component, then restart navigation from MEMORY.md; do not initialize an empty replacement.'}));return 1
+            'repair':exc.repair if known else 'Preserve the bank and input. Run am doctor for the selected repository, inspect its failed component, then restart navigation from MEMORY.md; do not initialize an empty replacement.',
+            **bank_capacity.details(exc)}));return 1
 
 
 if __name__=='__main__':sys.exit(main())

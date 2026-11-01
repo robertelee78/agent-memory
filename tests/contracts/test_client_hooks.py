@@ -35,5 +35,18 @@ class ClientHookContract(unittest.TestCase):
         with self.assertRaises(ContractError): client_hooks.merge(b'{"hooks":{},"hooks":{}}', None, client_hooks.entry('x'))
         with self.assertRaises(ContractError): client_hooks.merge(b'{"hooks":[]}', None, client_hooks.entry('x'))
 
+    def test_stop_shape_and_json_boolean_are_not_coerced(self):
+        owned = {'hooks': [{'type': 'command', 'command': 'stop', 'asyncRewake': True}]}
+        raw = json.dumps({'hooks': {'Stop': [owned]}}).encode()
+        self.assertEqual(client_hooks.locate(client_hooks.parse(raw), owned, 'Stop'), 0)
+        changed = json.loads(raw)
+        changed['hooks']['Stop'][0]['hooks'][0]['asyncRewake'] = 1
+        with self.assertRaises(ContractError):
+            client_hooks.locate(changed, owned, 'Stop')
+        with self.assertRaises(ContractError):
+            client_hooks.parse(b'{"hooks":{"Stop":{}}}')
+        with self.assertRaises(ContractError):
+            client_hooks.parse(b'{"hooks":{"Stop":[{"hooks":[{"type":"command","type":"other"}]}]}}')
+
 
 if __name__ == '__main__': unittest.main()

@@ -13,7 +13,7 @@ import stat
 import subprocess
 import sys
 
-from . import artifact, bank_contract, bank_writes, developer_identity, installation
+from . import artifact, bank_capacity, bank_contract, bank_writes, developer_identity, installation
 from . import local_registry, project_identity, projections, repository_config
 from .frontmatter import ContractError
 from .identity_git import git
@@ -130,6 +130,10 @@ class Report:
     def attempt(self, component, function, repair, path=None):
         try:
             return function()
+        except bank_capacity.BankCapacityError as exc:
+            self.add(component, 'failure', str(exc), exc.repair, path)
+            self.value['checks'][-1].update(exc.details())
+            return None
         except DiagnosticFailure as exc:
             self.add(component, 'failure', str(exc), repair, path)
             return None
@@ -425,13 +429,22 @@ def runtime_doctor(report, active):
                     continue  # Source identity and channel are checked above, without copying Git metadata.
                 path = Path(target['path'])
                 def check_target():
-                    installation.trust_paths.tree(path)
+                    if target['kind'] != 'hook-config':
+                        installation.trust_paths.tree(path)
                     if target['kind'] == 'activation':
                         raw = read(path)
                         try:
                             installation.activation(raw, target['block_hash'])
                         except (ContractError, UnicodeError):
                             raise DiagnosticFailure('Activation block is missing, malformed, duplicated or differs from its recorded block hash; outside text is preserved.') from None
+                    elif target['kind'] == 'hook-config':
+                        try:
+                            installation.verify_hook_target(target)
+                        except installation.HookOwnershipError as exc:
+                            report.add('runtime.target.hook-config', 'failure', str(exc),
+                                       'Preserve the configuration and receipt; inspect ownership evidence before explicit reconciliation.', path)
+                            report.value['checks'][-1]['failure_code'] = exc.code
+                            return
                     else:
                         observed = installation.fingerprint(path)
                         if observed != target['identity']:
@@ -447,7 +460,12 @@ def runtime_doctor(report, active):
                         if target['kind'] == 'wrapper':
                             installation.require(read(path) == installation.wrapper(Path(active['source']['pack'])) and
                                                  os.access(path, os.X_OK), 'Wrapper is not the owned executable entrypoint')
-                    report.add('runtime.target.' + target['kind'], 'pass', 'Owned target is intact; surrounding activation text may differ.', path=path)
+                    if target['kind'] == 'hook-config':
+                        report.add('runtime.target.hook-config', 'pass',
+                                   'Receipt-owned prompt and recorded Stop entries are intact; other configuration may differ.', path=path)
+                        report.value['checks'][-1]['verification_scope'] = 'receipt-owned-entries'
+                    else:
+                        report.add('runtime.target.' + target['kind'], 'pass', 'Owned target is intact; surrounding activation text may differ.', path=path)
                 report.attempt('runtime.target.' + target['kind'], check_target,
                                'Preserve user edits and backups; compare this path with the ownership receipt. Preview reinstall from a trusted helper after explicit reconciliation; do not force replacement.', path)
                 if target['kind'] != 'activation':
@@ -718,6 +736,11 @@ def execute(args):
             value = doctor_fix.run(getattr(args, 'repo', '.'), getattr(args, 'projection', None))
         else:
             value = run(args.command, getattr(args, 'repo', '.'), getattr(args, 'projection', None))
+    except bank_capacity.BankCapacityError as exc:
+        report = Report(args.command)
+        report.add('bank.inspection', 'failure', str(exc), exc.repair)
+        report.value['checks'][-1].update(exc.details())
+        value = report.finish()
     except ERRORS:
         report = Report(args.command)
         report.add('diagnostic.inputs', 'failure', 'Diagnostic input or local layout cannot be inspected safely.',

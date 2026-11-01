@@ -10,7 +10,7 @@ import shutil
 import subprocess
 import sys
 
-from . import repository_config
+from . import bank_capacity, repository_config
 from . import bank_contract as contract
 from . import bank_writes as writes
 from .frontmatter import ContractError
@@ -124,7 +124,7 @@ def main(argv=None):
         return 0
     except (ContractError, OSError, UnicodeError, ValueError, TypeError, KeyError, AttributeError) as exc:
         print(json.dumps({'schema': 'agent-memory/current-bank-view-v1', 'valid': False,
-                          'writes_performed': False, 'error': str(exc)}))
+                          'writes_performed': False, 'error': str(exc), **bank_capacity.details(exc)}))
         return 1
 
 

@@ -78,9 +78,11 @@ main MUST NOT make conditional guidance universal. Route lifecycle names are
 candidate, quarantined, active, superseded, revoked, expired and deleted;
 a route's existence MUST NOT imply its content is current guidance.
 
-The router MUST stay within 16 KiB and 64 direct routes. Larger bodies belong
-in project context or bounded topic indexes. The shared layout validator follows
-up to two nested topic indexes and validates standalone record metadata.
+Every complete canonical file MUST fit 16,384 UTF-8 bytes, including metadata;
+the complete bank MUST fit 65,536 sources and 64 MiB. The router also retains
+its 64-direct-route limit. The shared layout validator follows up to two nested
+topic indexes and validates standalone record metadata. Larger source bodies
+cannot bypass eligibility by living in an ordinary context file.
 It MUST reject traversal, absolute paths, duplicate
 routes, symlinks, runtime/hidden targets, missing/empty files and orphan Markdown.
 Ordinary path spaces use angle-bracket link destinations. Paths MUST NOT contain
@@ -114,6 +116,22 @@ transaction markers and locks MUST NOT be routes or enter shared commits.
 A validator seeing an active transaction MUST report interruption and route to
 recovery. A visible lock MUST stop validation until the writer finishes rather
 than claim a stable current snapshot.
+
+`bank validate` uses the same bounded complete filesystem observation as normal
+readers and mediated writer preconditions; it remains usable without Git or
+identity setup. Success identifies `canonical-bank-eligibility` and a verified
+point-in-time source recheck, not semantic truth or continuing authorization.
+Complete proposed maps/rendering identify `native-layout-and-source-capacity`;
+writer apply revalidates the intended complete result before replacement.
+
+Capacity refusals retain `bank-source-byte-capacity`,
+`bank-aggregate-byte-capacity` or `bank-source-count-capacity`, the fixed
+`bank-eligibility` phase, canonical relative path, limit, observed amount, unit
+and `exact`/`at-least` measurement. Unsafe, changing, interrupted or unsupported
+inputs retain their own refusals. No body is included in capacity diagnostics.
+Recall/capture remain pending; source-preserving layout recovery is not shipped.
+Preserve sources, feature work, original index/HEAD and recovery evidence rather
+than truncating, deleting, skipping, raising limits or initializing over them.
 
 ## Public file workflow
 

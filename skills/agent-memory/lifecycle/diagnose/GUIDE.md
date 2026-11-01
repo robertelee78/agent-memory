@@ -162,6 +162,16 @@ Doctor checks actual source revision/channel/digest, the portable route graph,
 receipt/journal integrity, existing lifecycle lock state, owned wrappers and
 client links/copies, activation block hashes, directory/backup permissions and
 the established one-bank locator. Outside activation text may differ safely.
+For Codex and Claude shared hook JSON, a passing `receipt-owned-entries` check
+verifies only the complete recorded prompt and Stop groups, not the historical
+whole document. Unrelated valid settings may differ. Missing, duplicate or changed
+owned groups, malformed JSON, unsafe paths, changed modes and concurrent edits
+remain failures; insufficient legacy receipt evidence remains unverified.
+Read-only doctor MUST preserve configuration and receipts. OpenCode plugin links,
+wrappers, signed source and client copies retain their exact identity checks.
+Hook ownership MUST NOT be interpreted as proof of client loading, callback
+execution, source coverage, capture, publication or fresh recall.
+
 It validates canonical Markdown, topic indices, records, history and tombstones,
 and checks a selected projection against current hashes and active references.
 The session MUST retain applicability checks in ordinary recall; a structurally

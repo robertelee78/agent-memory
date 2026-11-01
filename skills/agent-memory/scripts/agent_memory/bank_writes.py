@@ -12,7 +12,7 @@ import tempfile
 import time
 import uuid
 
-from . import repository_config
+from . import bank_capacity, repository_config
 from . import bank_contract as contract
 from . import local_registry as storage
 from .developer_identity import digest, encoded, load, uuid_valid
@@ -66,14 +66,23 @@ def result(operation, **fields):
     return {"schema": "agent-memory/write-result-v1", "operation": operation, **fields}
 
 
+def validate_replacement(observation, path, content):
+    files = {name: raw.decode('utf-8') for name, raw in observation.sources.items()}
+    files[path] = content
+    contract.validate_files(files)
+
+
 def preview(repo, path, content, operation="replace"):
+    from . import bank_observation
     from .scope_binding import capture
     root, _ = bank_path(repo)
-    checked, observed = snapshot(root)
+    observation = bank_observation.observe(root)
+    checked, observed = observation.checked, observation.hashes
     proposal = {"schema": "agent-memory/write-proposal-v1", "operation_id": str(uuid.uuid4()), "operation": operation,
                 "repo_root": str(root), "project_id": checked["project_id"], "observed_hashes": observed,
                 "path": path, "content": content, "scope_context": capture(root)}
     proposal_value(proposal)
+    validate_replacement(observation, path, content)
     return result("preview", proposal=proposal, writes_performed=False, verified=False, changed_memory_paths=[])
 
 
@@ -184,7 +193,9 @@ def _apply(prepared, *, check_identity):
     with storage.exclusive(bank / ".agent-memory.lock", proposal["operation_id"], "bank-" + proposal["operation"]) as owner:
         fault("locked-before-inventory")
         check_identity(owner)
-        checked, observed = snapshot(root, owner)
+        from . import bank_observation
+        observation = bank_observation.observe(root, owner)
+        checked, observed = observation.checked, observation.hashes
         if checked["project_id"] != proposal["project_id"]:
             raise ContractError("Bank project identity changed after preview")
         if receipt_path.exists():
@@ -199,6 +210,8 @@ def _apply(prepared, *, check_identity):
         already_present = observed == expected
         if observed != proposal["observed_hashes"] and not already_present:
             raise ContractError("Bank changed after preview; validate the external edit and prepare a fresh proposal")
+        if not already_present:
+            validate_replacement(observation, proposal['path'], proposal['content'])
         wrote = False
         try:
             if not already_present:
@@ -277,7 +290,9 @@ def main(argv=None):
         print(json.dumps(receipt, indent=2, ensure_ascii=False))
         return 0
     except (ContractError, OSError, UnicodeError, ValueError, TypeError, KeyError, AttributeError) as exc:
-        print(json.dumps(result(args.command, error=str(exc), verified=False, inspection_required=args.command == "apply")))
+        print(json.dumps(result(args.command, error=str(exc), verified=False,
+                                inspection_required=args.command == "apply",
+                                **bank_capacity.details(exc))))
         return 1
 
 

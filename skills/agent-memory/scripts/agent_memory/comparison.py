@@ -7,7 +7,7 @@ from pathlib import Path
 import sys
 import uuid
 
-from . import bank_contract, bank_writes as writes, records, retrieval, scope_binding, security
+from . import bank_capacity, bank_contract, bank_writes as writes, records, retrieval, scope_binding, security
 from .developer_identity import digest, encoded, load, uuid_valid
 from .frontmatter import ContractError, write
 
@@ -276,10 +276,12 @@ def main(argv=None):
             else check(args.repo, request, read_input(args.proof)))
         print(json.dumps(value, indent=2, ensure_ascii=False))
         return 0
-    except (ContractError, OSError, ValueError, UnicodeError, TypeError, KeyError, AttributeError, RecursionError):
+    except (ContractError, OSError, ValueError, UnicodeError, TypeError, KeyError, AttributeError, RecursionError) as exc:
         print(json.dumps({'schema': 'agent-memory/comparison-result-v1', 'verified': False,
             'canonical_writes_performed': False, 'comparison_read_complete': False,
-            'error': 'Incomplete, unsafe, unavailable or changed comparison; preserve sources and do not infer novelty'}))
+            'error': str(exc) if isinstance(exc, bank_capacity.BankCapacityError) else
+                'Incomplete, unsafe, unavailable or changed comparison; preserve sources and do not infer novelty',
+            **bank_capacity.details(exc)}))
         return 1
 
 

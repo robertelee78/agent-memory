@@ -106,13 +106,14 @@ memory. It does not implement semantic contradiction detection.
 
 ## Shared bounded observation
 
-Each candidate reader is bounded to 16 KiB. An active typed record under an
-applicable route that exceeds that bound MUST fail the whole recall: its
-uninspected metadata might invalidate an older lesson. The session MUST inspect
-and safely split/compact that source through the governed write protocol, or
-resolve its relevance manually with the same gates, before retrying. Unknown
-replacement metadata MUST NOT count as absence. Oversized ordinary orientation
-prose may be omitted because it supplies no typed invalidation relations.
+Every complete canonical source, including frontmatter and ordinary orientation
+prose, MUST fit 16,384 UTF-8 bytes before recall can use the bank. An oversized
+source fails the complete observation even when an unrelated path, ID or lexical
+selector is requested; it is never silently omitted or treated as absent.
+Unknown replacement metadata MUST NOT count as absence. Ordinary recall and new
+capture remain pending. This runtime has no supported source-preserving
+layout-recovery command; preserve the bank, feature work, original index/HEAD and
+recovery evidence. Do not truncate, delete, skip sources or raise normal limits.
 Whole selected payloads together are
 bounded to 64 KiB, with no truncation of conditions, evidence or body. A candidate
 that cannot fit is excluded; later smaller candidates may still fit. The JSON
@@ -134,9 +135,14 @@ distinct durable lessons.
 
 The complete canonical observation has finite limits of 65,536 files and 64 MiB,
 separate from per-candidate and returned-context bounds. Physical topology also
-has a finite inventory budget. A capacity refusal MUST remain unavailable and
-preserve canonical data; the session MUST NOT truncate sources, remove unknown
-markers or report an empty successful bank to bypass it. An omitted context path
+has a finite inventory budget. The typed causes are
+`bank-source-byte-capacity`, `bank-aggregate-byte-capacity` and
+`bank-source-count-capacity`, with the fixed `bank-eligibility` phase, relative
+path, bound, measurement and unit. Stable descriptor sizes can be exact; partial
+inventories/bounded reads report truthful lower bounds. These causes do not
+certify otherwise valid layout or semantics. A capacity refusal MUST remain
+unavailable and preserve canonical data; the session MUST NOT truncate sources,
+remove unknown markers or report an empty successful bank to bypass it. An omitted context path
 occupied by a directory/FIFO is unresolved state. Unknown present markers are
 refused without consuming their content; an owned lock MUST remain present with
 its exact owner record while recall governs a mutation.

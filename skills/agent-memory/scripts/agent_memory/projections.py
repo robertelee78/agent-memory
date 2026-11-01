@@ -7,7 +7,7 @@ from pathlib import Path
 import re
 import sys
 
-from . import bank_writes as writes
+from . import bank_capacity, bank_writes as writes
 from . import inactive, scope_binding
 from .developer_identity import encoded, load, uuid_valid
 from .frontmatter import ContractError
@@ -105,10 +105,11 @@ def main(argv=None):
         result = build(args.repo, request) if args.command == 'build' else check(args.repo, request)
         print(json.dumps(result, indent=2, ensure_ascii=False))
         return 0
-    except (ContractError, OSError, ValueError, UnicodeError, TypeError, KeyError, AttributeError, RecursionError):
+    except (ContractError, OSError, ValueError, UnicodeError, TypeError, KeyError, AttributeError, RecursionError) as exc:
         print(json.dumps({'schema': 'agent-memory/projection-result-v1', 'operation': args.command,
             'valid': False, 'canonical_writes_performed': False,
-            'error': 'Invalid, stale or unauthorized projection/input; preserve canonical memory and rebuild before use'}))
+            'error': str(exc) if isinstance(exc, bank_capacity.BankCapacityError) else 'Invalid, stale or unauthorized projection/input; preserve canonical memory and rebuild before use',
+            **bank_capacity.details(exc)}))
         return 1
 
 

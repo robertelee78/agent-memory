@@ -690,13 +690,24 @@ def prepare(args, state, code, old, *, candidate_root=None, candidate_kind=None,
                 from . import client_hooks
                 require(before is None or before['kind'] == 'file', 'Client hook configuration collision: ' + str(path))
                 require(previous is None or previous['kind'] == kind, 'Client hook ownership changed: ' + str(path))
-                original_raw = path.read_bytes() if before else b''
-                document = client_hooks.parse(original_raw)
+                missing_owned = bool(repair_missing_hooks and previous and before is None)
+                if previous and not missing_owned:
+                    checked = verify_hook_target(previous)
+                    require(checked['identity'] == before, 'Client hook configuration changed during planning')
+                    original_raw, document = checked['raw'], checked['document']
+                else:
+                    if previous:
+                        prompt = previous.get('hook_entry')
+                        client_hooks.locate({'hooks': {client_hooks.EVENT: [prompt]}}, prompt)
+                        if 'stop_entry' in previous:
+                            stop = previous['stop_entry']
+                            client_hooks.locate({'hooks': {'Stop': [stop]}}, stop, event='Stop')
+                    original_raw = path.read_bytes() if before else b''
+                    document = client_hooks.parse(original_raw)
                 original_shape = previous.get('hook_original_shape', {}) if previous else {
                     'hooks_present': 'hooks' in document,
                     'event_present': 'UserPromptSubmit' in document.get('hooks', {}),
                 }
-                missing_owned = bool(repair_missing_hooks and previous and before is None)
                 raw = client_hooks.merge(original_raw,
                                          previous.get('hook_entry') if previous and not missing_owned else None, hook_entry)
                 stop_shape = previous.get('stop_original_shape', {}) if previous and previous.get('stop_entry') else {
@@ -816,22 +827,98 @@ def make_parents(parent, journal, state):
     runtime_faults.mutate('target-parent-directory', create)
 
 
-def verify_targets(targets, *, source=None):
+class HookOwnershipError(ContractError):
+    """A bounded, non-sensitive owned-hook verification failure."""
+    MESSAGES = {
+        'insufficient_receipt': 'The receipt lacks sufficient owned-hook evidence.',
+        'unsafe_path': 'The hook path does not meet the ownership trust policy.',
+        'unsafe_type': 'The hook target is not an ordinary file.',
+        'mode_changed': 'The hook target mode differs from its receipt.',
+        'config_unavailable': 'The hook configuration is unavailable or exceeds its bound.',
+        'malformed_json': 'The hook configuration is not valid JSON.',
+        'duplicate_json_key': 'The hook configuration contains duplicate JSON keys.',
+        'unsupported_shape': 'The hook configuration has an unsupported shape.',
+        'owned_group_missing_or_changed': 'A recorded hook group is missing or changed.',
+        'owned_group_duplicate': 'A recorded hook group is duplicated.',
+        'concurrent_change': 'The hook configuration changed during verification.',
+    }
+
+    def __init__(self, code):
+        self.code = code if code in self.MESSAGES else 'config_unavailable'
+        super().__init__(self.MESSAGES[self.code])
+
+
+def verify_hook_target(target):
+    """Verify exact receipt-owned groups in one stable, trusted shared file."""
+    from . import client_hooks
+    try:
+        path = Path(target['path'])
+        valid_path = (target['kind'] == 'hook-config' and path.is_absolute()
+                      and '..' not in path.parts and path.parent.resolve() == path.parent)
+    except (OSError, ValueError, TypeError, KeyError):
+        raise HookOwnershipError('unsafe_path') from None
+    if not valid_path:
+        raise HookOwnershipError('unsafe_path')
+    identity = target.get('identity')
+    if not (isinstance(identity, dict) and identity.get('kind') == 'file'
+            and type(identity.get('mode')) is int and 0 <= identity['mode'] <= 0o7777
+            and 'hook_entry' in target):
+        raise HookOwnershipError('insufficient_receipt')
+    try:
+        trust_paths.inspect(path)
+    except trust_paths.TrustPathError:
+        try:
+            mode = path.lstat().st_mode
+            code = 'unsafe_type' if not stat.S_ISREG(mode) and not stat.S_ISLNK(mode) else 'unsafe_path'
+        except OSError:
+            code = 'unsafe_path'
+        raise HookOwnershipError(code) from None
+    except OSError:
+        raise HookOwnershipError('unsafe_path') from None
+    try:
+        observed = fingerprint(path)
+    except (OSError, ContractError):
+        raise HookOwnershipError('config_unavailable') from None
+    if observed is None:
+        raise HookOwnershipError('config_unavailable')
+    if observed.get('kind') != 'file':
+        raise HookOwnershipError('unsafe_type')
+    if observed['mode'] != identity['mode']:
+        raise HookOwnershipError('mode_changed')
+    error = None
+    try:
+        with path.open('rb') as stream:
+            raw = stream.read(client_hooks.MAX_CONFIG + 1)
+        document = client_hooks.parse(raw)
+        client_hooks.locate(document, target['hook_entry'])
+        if 'stop_entry' in target:
+            client_hooks.locate(document, target['stop_entry'], event='Stop')
+    except client_hooks.HookError as exc:
+        error = exc.code
+    except OSError:
+        raise HookOwnershipError('concurrent_change') from None
+    fault('hook-ownership-before-recheck')
+    try:
+        trust_paths.inspect(path)
+        stable = fingerprint(path) == observed
+    except (OSError, ContractError):
+        stable = False
+    if not stable:
+        raise HookOwnershipError('concurrent_change')
+    if error is not None:
+        raise HookOwnershipError(error)
+    return {'scope': 'receipt-owned-entries', 'identity': observed, 'raw': raw, 'document': document}
+
+
+def verify_targets(targets, *, source=None, uninstall_output=False):
     qualifications = []
     for target in targets:
         path = Path(target['path'])
+        if target['kind'] == 'hook-config' and not uninstall_output:
+            verify_hook_target(target)
+            continue
         trust_paths.tree(path)
         observed = fingerprint(path)
-        if target['kind'] == 'hook-config' and 'hook_entry' in target:
-            from . import client_hooks
-            require(observed is not None and observed['kind'] == 'file',
-                    'Client hook configuration is unavailable: ' + str(path))
-            document = client_hooks.parse(path.read_bytes())
-            client_hooks.locate(document, target.get('hook_entry'))
-            if target.get('stop_entry'):
-                client_hooks.locate(document, target['stop_entry'], event='Stop')
-            require(fingerprint(path) == observed, 'Client hook configuration changed during verification')
-            continue
         if observed != target['identity']:
             require(target['kind'] == 'source' and source and source.get('kind') == 'managed'
                     and observed and target['identity']
@@ -1016,7 +1103,10 @@ def recover(state, *, for_install=False):
     # Receipt activation is the commit point; a lost final response must not undo it.
     receipt = state/'receipt.json'
     if journal.get('receipt_identity') is not None and fingerprint(receipt) == journal['receipt_identity']:
-        verify_targets(journal['receipt']['targets'])
+        uninstall_output = journal.get('operation') == 'uninstall'
+        require(uninstall_output == (journal['receipt'].get('uninstalled') is True),
+                'Lifecycle journal and receipt operation differ')
+        verify_targets(journal['receipt']['targets'], uninstall_output=uninstall_output)
         journal['status'] = 'complete'; replace_record(path, journal)
         return {'operation': 'recover', 'verified': True, 'status': 'complete'}
     return rollback(state, journal)
@@ -1156,7 +1246,7 @@ def install(plan, *, before_activate=None, after_activate=None):
             require(fingerprint(path) == action['after']
                     and fingerprint(stage) == action['before'], 'Activation identity readback failed')
             journal['activated'] = index + 1; replace_record(state/'journal.json', journal)
-        verify_targets(targets)
+        verify_targets(targets, uninstall_output=operation == 'uninstall')
         if after_activate:
             after_activate()
         if compatibility is not None:

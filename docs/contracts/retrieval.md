@@ -12,8 +12,13 @@ Ordinary context is an explicit orientation option, separately labeled with
 unknown trust. It does not fabricate typed admission. Selected content retains
 conditions, evidence, source hashes and origin identity across clones. Source
 labels are unverified data. A quarantined replacement cannot reactivate its
-obsolete predecessor. An oversized active typed record fails the whole recall
-rather than hiding a possible invalidator behind a content limit. Terminal tombstones cannot be bypassed by old cached
+obsolete predecessor. Complete canonical eligibility precedes selection: every
+source, including ordinary context and metadata, fits 16,384 UTF-8 bytes; the bank
+fits 65,536 sources and 64 MiB. An unrelated selector cannot hide an oversized
+source or a possible invalidator. Capacity is typed and unavailable/pending, not
+an empty successful recall or novelty proof. Source-preserving layout recovery
+is not available in this runtime; preserve the bank, original index/HEAD, feature
+work and recovery evidence. Terminal tombstones cannot be bypassed by old cached
 content. Exclusion counts do not disclose withheld bodies or names.
 
 The helper checks canonical observations again, reports actual evaluation time

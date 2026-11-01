@@ -29,10 +29,13 @@ are mechanical guards; they do not qualify an assertion as true or current.
 
 A session SHOULD start with the smallest useful set. It MUST explicitly omit
 unsupported/irrelevant contexts with reasons rather than create empty files.
-The router MUST remain within 16 KiB and 64 direct routes. Every canonical
-Markdown file MUST be reachable under the supported routing contract. The
-[offline guide](../offline/GUIDE.md) covers the actual manual setup/checkpoint
-recipe; governed evidence-based initialization remains a separate operation.
+Every complete canonical Markdown file MUST fit 16,384 UTF-8 bytes, including
+frontmatter; the bank MUST fit 65,536 sources and 64 MiB. These are refusal
+bounds, not measured capacity or recall-quality guarantees. The router also
+retains its 64-direct-route limit. Every canonical Markdown file MUST be reachable
+under the supported routing contract. The [offline guide](../offline/GUIDE.md)
+covers manual setup/checkpoint and capacity refusals; governed evidence-based
+initialization remains a separate operation.
 
 A session MUST link stronger project evidence rather than duplicate requirements,
 tracker state or ownership claims. It MUST distinguish observed behavior from

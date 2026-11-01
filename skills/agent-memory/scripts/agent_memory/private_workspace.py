@@ -8,7 +8,7 @@ import stat
 import sys
 import uuid
 
-from . import bank_writes, local_registry as storage, scope_binding, trust_paths
+from . import bank_capacity, bank_writes, local_registry as storage, scope_binding, trust_paths
 from .developer_identity import encoded, load
 from .frontmatter import ContractError
 
@@ -136,5 +136,6 @@ def main(argv=None):
         print(json.dumps(result));return 0
     except (ContractError, OSError, ValueError, TypeError, UnicodeError) as exc:
         print(json.dumps({'operation':'private-'+args.command,'verified':False,'canonical_writes_performed':False,
-                          'error':str(exc),'repair':'Preserve existing private artifacts and inspect the reported workspace before retrying.'}))
+                          'error':str(exc),'repair':'Preserve existing private artifacts and inspect the reported workspace before retrying.',
+                          **bank_capacity.details(exc)}))
         return 1

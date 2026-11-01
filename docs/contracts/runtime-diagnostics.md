@@ -30,6 +30,33 @@ Actual applicability remains a normal governed-retrieval decision. Native API
 detection is not a filesystem write probe; actual native switch capability is
 established by the lifecycle operation's verified activation.
 
+Doctor bank checks use complete canonical eligibility: 16,384 UTF-8 bytes per
+complete source including metadata, 65,536 sources and 64 MiB. Capacity failures
+retain the fixed `bank-eligibility` phase, typed source/aggregate/count code,
+bank-relative path, actual bound and exact or lower-bound measurement in the
+failed check. They do not certify the remaining layout/semantics. The diagnostic
+preserves files and existing recovery evidence, reports ordinary recall/capture
+pending, and states that source-preserving layout recovery is not available.
+
+For Codex and Claude hook JSON, doctor reports `verification_scope` as
+`receipt-owned-entries`: the exact recorded prompt and any recorded Stop groups
+must appear once, with all command and adapter fields unchanged. Unrelated valid
+settings or groups may differ without warning; doctor does not rewrite that file
+or its receipt. Missing, changed or duplicate entries, malformed or duplicate-key
+JSON, unsafe paths, changed modes and concurrent edits fail. A legacy receipt
+without sufficient entry evidence remains unverified. This is not a claim that
+the entire shared document matches its historical fingerprint. OpenCode's plugin
+link, wrappers, signed source and client copies retain exact checks. Passing
+ownership does not prove client loading, callback execution, source coverage,
+capture, publication or fresh recall.
+Hook failures include a bounded `failure_code`: `insufficient_receipt`,
+`unsafe_path`, `unsafe_type`, `mode_changed`, `config_unavailable`,
+`malformed_json`, `duplicate_json_key`, `unsupported_shape`,
+`owned_group_missing_or_changed`, `owned_group_duplicate`, or
+`concurrent_change`. Missing and changed groups cannot safely be distinguished
+by guessing ownership of a lookalike. Codes and fixed details never include hook
+commands, JSON keys or other raw configuration.
+
 The existing lifecycle lock is inspected with a nonblocking shared flock; no
 lock file or owner metadata is created. A live writer defers ownership checks.
 The same pure owner-record validator used by lifecycle recovery checks any

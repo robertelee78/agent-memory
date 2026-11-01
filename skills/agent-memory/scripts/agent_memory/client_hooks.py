@@ -14,18 +14,28 @@ EVENT = 'UserPromptSubmit'
 MAX_CONFIG = 1024 * 1024
 
 
+class HookError(ContractError):
+    """Fixed hook verification classification; never retain configuration text."""
+    def __init__(self, code):
+        self.code = code
+        super().__init__(code)
+
+
 def parse(raw):
     if not isinstance(raw, bytes) or len(raw) > MAX_CONFIG:
-        raise ContractError('Client hook configuration is unavailable or too large')
+        raise HookError('config_unavailable')
     try:
         value = json.loads(raw.decode('utf-8'), object_pairs_hook=unique_object) if raw else {}
-    except (UnicodeError, ValueError) as exc:
-        raise ContractError('Client hook configuration must be a unique-key JSON object') from exc
+    except ContractError:
+        raise HookError('duplicate_json_key') from None
+    except (UnicodeError, ValueError):
+        raise HookError('malformed_json') from None
     if not isinstance(value, dict):
-        raise ContractError('Client hook configuration must be a JSON object')
+        raise HookError('unsupported_shape')
     hooks = value.get('hooks', {})
-    if not isinstance(hooks, dict) or not isinstance(hooks.get(EVENT, []), list):
-        raise ContractError('Existing client hook configuration has an unsupported shape')
+    if (not isinstance(hooks, dict) or not isinstance(hooks.get(EVENT, []), list)
+            or not isinstance(hooks.get('Stop', []), list)):
+        raise HookError('unsupported_shape')
     return value
 
 
@@ -42,13 +52,29 @@ def entry(command):
     return {'hooks': [{'type': 'command', 'command': command}]}
 
 
+def equal(left, right):
+    """Compare JSON without Python's boolean/number coercion."""
+    return (json.dumps(left, sort_keys=True, ensure_ascii=False)
+            == json.dumps(right, sort_keys=True, ensure_ascii=False))
+
+
 def locate(document, owned, event=EVENT):
-    if not isinstance(owned, dict) or set(owned) != {'hooks'}:
-        raise ContractError('Invalid owned hook receipt')
+    if (not isinstance(owned, dict) or set(owned) != {'hooks'}
+            or not isinstance(owned['hooks'], list) or not owned['hooks']
+            or any(not isinstance(item, dict) or item.get('type') != 'command'
+                   or not isinstance(item.get('command'), str) or not item['command'].strip()
+                   or len(item['command'].encode('utf-8')) > 4096 for item in owned['hooks'])):
+        raise HookError('insufficient_receipt')
     groups = document.get('hooks', {}).get(event, [])
-    matches = [i for i, item in enumerate(groups) if item == owned]
+    if not isinstance(groups, list):
+        raise HookError('unsupported_shape')
+    expected = json.dumps(owned, sort_keys=True, ensure_ascii=False)
+    matches = [i for i, item in enumerate(groups)
+               if json.dumps(item, sort_keys=True, ensure_ascii=False) == expected]
+    if not matches:
+        raise HookError('owned_group_missing_or_changed')
     if len(matches) != 1:
-        raise ContractError('Owned hook is missing, duplicated or changed; preserve client configuration')
+        raise HookError('owned_group_duplicate')
     return matches[0]
 
 

@@ -13,7 +13,7 @@ import tempfile
 from urllib.parse import quote, urlsplit, parse_qs
 import uuid
 
-from . import bank_contract as bank, bank_transactions as tx, bank_writes as writes, local_registry as storage
+from . import bank_capacity, bank_contract as bank, bank_transactions as tx, bank_writes as writes, local_registry as storage
 from . import scope_binding, semantic_sharing as semantic, sharing_recovery as recovery
 from .developer_identity import digest, encoded
 from .frontmatter import ContractError
@@ -452,7 +452,7 @@ def land(repo, request):
                       remote_freshness_verified=True, git_metadata_writes_performed=True)
     try:
         reviewed = semantic.check(root, request['proof'])
-    except HoldFailure:
+    except (HoldFailure, bank_capacity.BankCapacityError):
         raise
     except ContractError:
         return result('land', 'pending-reconciliation', reason='Sources or authority changed; inventory, deduplicate and review the new source set',
@@ -515,6 +515,11 @@ def main(argv=None):
         if args.output:
             outcome=limits.write_private(args.output,outcome,args.repo)
         print(json.dumps(outcome, indent=2)); return 0
+    except bank_capacity.BankCapacityError as exc:
+        print(json.dumps(result(args.operation, 'pending-inspection', reason=str(exc),
+                                git_metadata_writes_performed=None, remote_freshness_verified=False,
+                                **exc.details())))
+        return 1
     except HoldFailure as exc:
         print(json.dumps(result(args.operation, 'pending-inspection', reason=str(exc),
                                 failure_component='known-dispute-state', failure_code=exc.code,

@@ -9,7 +9,7 @@ import stat
 import sys
 import uuid
 
-from . import bank_transactions as tx, bank_writes as writes, local_registry as storage
+from . import bank_capacity, bank_transactions as tx, bank_writes as writes, local_registry as storage
 from . import retrieval, scope_binding, semantic_sharing as semantic, sharing_recovery as recovery
 from .developer_identity import digest, encoded, load, uuid_valid
 from .frontmatter import ContractError
@@ -343,7 +343,7 @@ def current(repo):
             raise CurrentFailure('current-source-changed',
                 'Memory, index, identity or recovery state changed during the observation; obtain fresh source review.',
                 component='current.final-recheck')
-    except (CurrentFailure, recovery.AuthorityFailure, HoldFailure):
+    except (CurrentFailure, recovery.AuthorityFailure, HoldFailure, bank_capacity.BankCapacityError):
         raise
     except (ContractError, OSError, ValueError, UnicodeError, TypeError, KeyError,
             AttributeError, RecursionError):
@@ -378,6 +378,8 @@ def current_result(repo):
         if isinstance(exc, (CurrentFailure, recovery.AuthorityFailure, HoldFailure)):
             component = exc.component if hasattr(exc, 'component') else 'current.known-disputes'
             code, reason, repair = exc.code, str(exc), exc.repair
+        elif isinstance(exc, bank_capacity.BankCapacityError):
+            component, code, reason, repair = 'canonical-bank', exc.code, str(exc), exc.repair
         elif isinstance(exc, UntrackedCanonicalMemory):
             component, code = 'current.local-boundary', 'canonical-memory-untracked'
             reason = 'Locally untracked canonical memory lacks a completed snapshot witness and requires full review.'
@@ -393,6 +395,7 @@ def current_result(repo):
             reason = 'A local bank, identity or snapshot prerequisite could not be verified.'
             repair = 'Preserve the bank and pending evidence. Run am doctor, then am refresh inspect --v2 --repo REPO --output /private/path/inspection.json to inspect the failed prerequisite before retrying.'
         values = {'failure_component': component, 'failure_code': code, 'reason': reason, 'repair': repair}
+        values.update(bank_capacity.details(exc))
         if isinstance(exc, CurrentFailure) and exc.path is not None:
             values['failure_path'] = exc.path
         return result('current', 'pending-inspection', canonical_writes_performed=False,
@@ -499,6 +502,9 @@ def apply(prepared):
     # turn a mechanically completed import into a claim of latest shared truth.
     try:
         observation = recovery.observe(root,quarantine_records=proof['schema']=='agent-memory/semantic-sharing-proof-v2')
+    except bank_capacity.BankCapacityError as exc:
+        return result('apply', 'pending-stale', **{**common, 'git_metadata_writes_performed': None},
+                      reason=str(exc), **exc.details())
     except ContractError:
         return result('apply', 'pending-stale', **{**common, 'git_metadata_writes_performed': None},
                       reason='Import is consistent but latest authority could not be verified; inspect again before shared recall')
@@ -588,14 +594,16 @@ def main(argv=None):
         untracked_memory=isinstance(exc,UntrackedCanonicalMemory)
         envelope_failed=isinstance(exc,PreparedEnvelopeFailure)
         known=isinstance(exc,HoldFailure) or authority_failed or envelope_failed
-        print(json.dumps(result(args.operation, 'pending-private-output' if output_failed else 'pending-inspection', canonical_writes_performed=False if output_failed or envelope_failed or args.operation == 'current' else None,
+        value = result(args.operation, 'pending-private-output' if output_failed else 'pending-inspection', canonical_writes_performed=False if output_failed or envelope_failed or args.operation == 'current' else None,
                                 git_metadata_writes_performed=False if output_failed or untracked_memory or envelope_failed else None,
                                 **({'pending_capture': 'unknown', 'pending_publication': 'unknown', 'semantic_truth_verified': False}
                                    if args.operation == 'current' else {}),
                                 failure_component='output' if output_failed else 'local-boundary' if untracked_memory else exc.component if authority_failed or envelope_failed else 'known-dispute-state' if known else args.operation,
                                 failure_code='private-output-invalid' if output_failed else 'canonical-memory-untracked' if untracked_memory else exc.code if known else 'refresh-unverified',
-                                reason=str(exc) if output_failed or untracked_memory or known else 'Unresolved, offline, unsafe, interrupted or changed refresh; retain the original proposal and local memory, inspect/recover before retry',
-                                repair=str(exc) if output_failed else 'Preserve local memory and feature work. Run am refresh inspect --v2 --repo REPO --output /private/path/inspection.json using an owner-only directory outside the repository, then complete the required review. Do not stage or reset memory just to pass this quick check.' if untracked_memory else exc.repair if known else 'Preserve the proposal, bank and pending evidence. Run am doctor for this repository and inspect the failed component before repeating refresh inspection; do not reset or replace the bank.')))
+                                reason=str(exc) if output_failed or untracked_memory or known or isinstance(exc, bank_capacity.BankCapacityError) else 'Unresolved, offline, unsafe, interrupted or changed refresh; retain the original proposal and local memory, inspect/recover before retry',
+                                repair=str(exc) if output_failed else 'Preserve local memory and feature work. Run am refresh inspect --v2 --repo REPO --output /private/path/inspection.json using an owner-only directory outside the repository, then complete the required review. Do not stage or reset memory just to pass this quick check.' if untracked_memory else exc.repair if known else 'Preserve the proposal, bank and pending evidence. Run am doctor for this repository and inspect the failed component before repeating refresh inspection; do not reset or replace the bank.')
+        value.update(bank_capacity.details(exc))
+        print(json.dumps(value))
         return 1
 
 
