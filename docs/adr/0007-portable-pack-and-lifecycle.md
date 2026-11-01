@@ -189,7 +189,9 @@ It does not establish that the unavailable reported bank had a hook defect.
 
 All health and lifecycle verification for shared entry-based targets SHALL use
 one common non-mutating ownership evaluator. For Codex and Claude hook JSON it
-SHALL validate the supported complete document shape, locate exactly one actual
+SHALL reuse `client_hooks.parse` for supported shape and duplicate-key rejection,
+then `client_hooks.locate` for exact owned-entry matching. It SHALL locate exactly
+one actual
 receipt-owned prompt group and every recorded Stop group, and retain the current
 path/type/owner/mode and final source-stability policy. Missing, duplicated,
 modified or ambiguously owned entries, malformed/duplicate-key JSON, unsafe

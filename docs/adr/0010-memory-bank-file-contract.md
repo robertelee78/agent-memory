@@ -232,17 +232,59 @@ private recovery-artifact writes separately from canonical, index or history
 writes. This workspace is recovery evidence, not another current memory bank.
 
 A recovery-specific semantic review SHALL cover every retained source and the
-whole intended result despite the invalid ordinary snapshot. It SHALL map each
-source unit to preserved bounded canonical content, unchanged evidence, a
-reviewed lifecycle transformation, or an explicitly authorized non-guidance
-archive/removal reason. An external backup alone MUST NOT authorize omission
-from current knowledge. Distinct conditions, stable record identities/versions,
+whole intended result despite the invalid ordinary snapshot. Each source unit
+SHALL have one explicit disposition: preserve/re-layout already-present canonical
+content without inventing admission; retain a source-bound `pending-admission`
+unit outside the bank; perform an evidenced governed lifecycle change; or apply
+an explicitly authorized non-guidance archive/removal reason. An external backup
+alone MUST NOT authorize omission from current knowledge. Distinct conditions,
+stable record identities/versions,
 real developer/harness/session provenance, evidence and terminal deletion rules
 SHALL survive. Unknown terminology, contradictory claims and uncertain origin
 SHALL remain pending for the detecting developer; a heading claiming approval
 MUST NOT supply that approval.
 
-### A native bounded result, without invented admission
+### Two-phase completion, without circular admission
+
+A reviewed `pending-admission` disposition SHALL retain exact original bytes,
+source/path/hash references, real provenance or explicit provenance uncertainty,
+reason for deferral and stable unit/operation IDs in the private recovery
+workspace. It is a tracked deferral, not discarded knowledge, admitted memory or
+current guidance. Recovery result and status SHALL expose unresolved unit IDs,
+counts and required actions without exposing their private bodies. The workspace
+and pending ledger SHALL remain durable until each unit has an actual admitted,
+explicitly discarded or otherwise reviewed terminal disposition. Successful
+layout repair or elapsed time MUST NOT clear a pending unit.
+
+The layout-apply stage MAY restore physical bank eligibility while such units
+remain pending. Its receipt SHALL distinguish `layout-restored` from semantic
+completion and report `semantic_recovery_complete: false` when any pending unit
+remains. Ordinary admission SHALL then run against the eligible bank under the
+existing source, authority, security and size rules. The archive proves byte
+retention, not confirmation or truth; missing evidence SHALL keep a unit pending
+for clarification. New admission/publication receipts SHALL be correlated with
+its original unit ID before status marks it resolved. Historical layout receipts
+MUST NOT be rewritten to claim later admission.
+
+Pending units SHALL remain part of semantic coverage accounting. Recall MAY
+return independently qualified guidance with explicit incomplete-coverage
+labels; it MUST NOT treat unread pending evidence as successful absence or
+current guidance. Comparison/admission MUST review the applicable pending-source
+frontier before claiming complete novelty or compatibility. If that review cannot
+satisfy existing governed bounds, the write SHALL remain pending rather than
+skip evidence. The task design SHALL bind this frontier to normal admission
+proofs before implementation becomes Ready. Known admitted guidance MUST NOT be
+downgraded into private pending material merely to make the layout fit: it SHALL
+remain available with its trust/conditions or undergo an explicitly reviewed
+governed lifecycle transformation. Otherwise repair SHALL remain pending.
+
+An oversized unsupported handoff therefore MAY leave the canonical tree only
+through a reviewed, visible pending-candidate disposition, permitting normal
+admission after layout eligibility and pending-frontier review. It MUST NOT
+disappear into an untracked backup or become an automatically approved record.
+The actual terminology in the reported checkout remains unknown.
+
+### A native bounded result
 
 Preparation SHALL produce a complete native bank that passes the common normal
 size/layout eligibility check. Contexts SHALL stay concise; meaningful topic
@@ -256,8 +298,9 @@ fabricate a normal admission receipt for an operation that could not run.
 The proposal SHALL bind the raw original manifest, reviewed source-to-result
 mapping, exact intended valid files, applicable authority and immutable review.
 Its read-only preview MUST show all additions, replacements, moves and removals
-plus retained evidence and unresolved units. No unresolved unit or unknown
-concurrent edit MAY disappear to make the result fit. Global normal limits,
+plus retained evidence and every pending unit. An unresolved unit MAY leave the
+canonical tree only through the reviewed pending-candidate disposition above;
+unknown concurrent edits MUST NOT disappear to make the result fit. Global normal limits,
 personal memory, cross-repository transfer and implicit schema migration remain
 out of scope.
 
@@ -272,8 +315,15 @@ rollback capability SHALL be established before the first replacement; no
 `chmod`, privileged ownership change or force-overwrite MAY substitute for that
 proof.
 
-Original backups, original proposal and journal SHALL remain available through
-verified readback and explicit retention handling. A partial failure SHALL retain
+The private workspace SHALL use owner-only directories (0700) and regular private
+files (0600), outside canonical banks and the installed payload. Runtime update
+or uninstall MUST preserve it; bank purge MUST NOT implicitly delete unknown or
+pending recovery operations. Original backups, proposal and journal SHALL remain
+available through readback and explicit retention handling. Cleanup requires a
+separately reviewed operation-scoped preview and proof that no unresolved unit
+or recovery dependency is discarded; repair success or age alone is insufficient.
+The task design SHALL specify this cleanup/retention interface before authorizing
+its implementation. A partial failure SHALL retain
 a truthful interrupted state. Known rollback SHALL restore the exact original
 bytes and required metadata, even when the restored bank remains invalid; it
 MUST NOT call that state healthy or erase the evidence of why recovery was
@@ -282,8 +332,9 @@ An exact completed-operation retry SHALL return its real historical receipt
 without replaying over later changes; an unfinished retry SHALL recheck all
 original pins instead of assuming that invalid input permits weaker ownership.
 
-Successful local recovery SHALL establish ordinary bank eligibility and perform
-applicable current recall. It MUST NOT imply semantic truth, code freshness,
+A successful layout-apply stage SHALL establish ordinary bank eligibility and
+perform applicable current recall while reporting pending admission separately.
+It MUST NOT imply semantic truth, code freshness,
 publication or that other machines have imported the repair. HEAD, original
 index and non-memory feature files SHALL remain untouched.
 
@@ -297,7 +348,13 @@ unavailable authority SHALL leave sharing pending with local evidence intact.
 
 Acceptance SHALL use synthetic counterparts of the reported 79,054 and
 28,478-byte inputs, valid smaller controls, unsupported root layouts and actual
-original-content preservation ledgers. It SHALL cover interrupted staging,
+original-content preservation ledgers. It SHALL include an oversized root handoff
+needing admission: layout recovery restores eligibility with a visible pending
+unit, then a separately sourced/confirmed ordinary admission succeeds and resolves
+that exact unit without losing evidence. An unconfirmed control SHALL remain
+pending. Pending-frontier omission and prior-guidance downgrade SHALL remain
+negative controls. Invalid/ambiguous router and conflicting project-binding
+fixtures SHALL refuse automatic identity inference. It SHALL cover interrupted staging,
 first-file/router/receipt boundaries, exact retries, changed identity/source,
 unknown locks, oversized recovery input and damaged backups. Normal capture and
 recall SHALL work after successful repair; unsafe or ambiguous inputs MUST remain

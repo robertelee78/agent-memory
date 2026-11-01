@@ -156,7 +156,9 @@ outer operational eligibility result successful while required source checks
 failed. These checks MUST be bounded while reading; validation MUST NOT first
 load an arbitrarily large source into memory.
 
-A source-size refusal SHALL preserve a typed `bank-source-byte-capacity` cause
+Source, aggregate-byte and canonical-file-count refusals SHALL respectively
+preserve typed `bank-source-byte-capacity`, `bank-aggregate-byte-capacity` and
+`bank-source-count-capacity` causes
 through the public operation's error envelope, with a fixed phase, canonical
 relative path, bound and truthful size measurement. A stable descriptor size MAY
 supply an exact byte count without reading the oversized body; otherwise the
@@ -174,8 +176,10 @@ answers MAY continue independently with that qualification; new governed capture
 MUST remain pending. Repeating the same operation does not repair capacity.
 
 Read-only diagnosis SHALL preserve canonical files, original index/HEAD, feature
-work and recovery evidence. Guidance SHALL point to a separately reviewed
-source-preserving layout recovery operation under ADR-0010; it MUST NOT advise
+work and recovery evidence. Guidance SHALL point to separately reviewed
+source-preserving layout recovery under ADR-0010 only when actually available.
+Until then it SHALL state that recovery is unavailable, preserve the bank and
+report capture pending instead of naming a nonexistent command. It MUST NOT advise
 truncation, deletion, an ignored oversized source, a raised normal cap, or
 initialization over an existing bank.
 

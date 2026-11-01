@@ -115,7 +115,7 @@ Proposed outcome: [ADR-0010 recovery amendment](../adr/0010-memory-bank-file-con
 This is a separate static code finding in published v0.0.12, not an observed
 C2E bank-size effect. `diagnostics.runtime_doctor` verifies an activation target's
 managed block, but a `hook-config` target falls through to equality with the
-receipt's **whole-file** fingerprint. In contrast,
+receipt's **whole-file** fingerprint (`diagnostics.py:436–443`). In contrast,
 `installation.verify_targets` parses that shared JSON and uses
 `client_hooks.locate` to require exactly one receipt-owned prompt entry and any
 recorded Stop entry, retaining a final source-stability check. Uninstall also
@@ -167,12 +167,15 @@ The frozen source references are:
 - `admission.py`: `classify` line 65; `start` line 161.
 - `bank_contract.py`: `render` line 229; pure format validation line 324;
   filesystem validation line 352.
-- `diagnostics.py`: runtime doctor line 356; bank doctor line 496.
+- `diagnostics.py`: runtime doctor line 356, exact whole-file branch lines
+  436–443; bank doctor line 496.
 - `installation.py`: `verify_targets` line 819.
 - `client_hooks.py`: exact owned-entry `locate` line 45.
 
 Each proposed ADR outcome needs its own immutable design review, scoped task,
 public acceptance and delivery evidence. They must not inherit approval or a
-release assignment from the v0.0.13 installer work. Actual terminology admission
+release assignment from the v0.0.13 installer work. Retained fixture hashes are
+design evidence, not acceptance of a future implementation; its frozen-source
+public cases must run again. Actual terminology admission
 requires the original rule and source evidence after the actual checkout is
 located; this RCA supplies neither.
