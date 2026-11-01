@@ -8,6 +8,8 @@ import tempfile
 import unittest
 from unittest import mock
 
+from world import World
+
 SPEC = importlib.util.spec_from_file_location('boundary_ledger', Path(__file__).resolve().parents[2] / 'skills/agent-memory/hooks/boundary_ledger.py')
 ledger = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(ledger)
@@ -133,9 +135,14 @@ class BoundaryLedgerTest(unittest.TestCase):
             (Path(root) / 'experimental-boundary').symlink_to(other, target_is_directory=True)
             with self.assertRaises(OSError): ledger.reserve(os.path.realpath(root), 'session', 'turn')
             self.assertEqual(list(Path(other).iterdir()), [])
-        with tempfile.TemporaryDirectory() as root:
+        with World() as world:
+            root = world.root
             os.chmod(root, 0o777)
-            with self.assertRaises(ValueError): ledger.reserve(os.path.realpath(root), 'session', 'turn')
+            try:
+                with self.assertRaises(ValueError):
+                    ledger.reserve(str(root), 'session', 'turn')
+            finally:
+                os.chmod(root, 0o700)
 
 if __name__ == '__main__': unittest.main()
 
