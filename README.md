@@ -2,7 +2,7 @@
 
 A portable, local-first Memory Bank for coding agents.
 
-## v0.0.13
+## v0.0.14
 
 One repository owns one shared Markdown memory bank. The skill captures durable
 learning, reads existing memory before adding it, combines duplicates without
@@ -11,10 +11,12 @@ independently of unfinished feature code and refresh into other sessions,
 worktrees and clones through the repository's existing Git rules. Contradictions
 go to the detecting developer for clarification.
 
-The [v0.0.13 release guide](docs/releases/v0.0.13.md) covers bounded retries and
-private, actionable diagnostics for signed-release downloads. Installation previews
-explicitly say they do not install `am` and explain how to apply the same command.
-Publisher authentication and runtime ownership checks remain in force.
+The [v0.0.14 release guide](docs/releases/v0.0.14.md) covers consistent bounded
+bank eligibility and entry-scoped Codex/Claude hook health. Unreadable sources
+cannot be bypassed by an unrelated selector; capture remains pending without
+source-preserving layout recovery. Unrelated valid hook settings no longer
+cause a whole-file ownership failure. Signed-download diagnostics, publisher
+authentication and strict managed-runtime ownership checks remain in force.
 [Published releases](https://github.com/robertelee78/agent-memory/releases)
 hold the immutable source and actual qualification evidence for each version.
 
