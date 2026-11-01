@@ -1,0 +1,1258 @@
+{
+  "schema": "agent-memory/v014-qualification-v1",
+  "implementation_candidate": "0440f4cc8031bacf59b0f54b7d440917b02d5d43",
+  "prepared_release_source": "7daf40220f7ef842b01f7ec8baef4648836c9a03",
+  "prepared_artifact_digest": "4208c18e2288bdb3f6faf6354fe44b638559ba8ec1fede2cec7ce491bea726f7",
+  "runtime_files_sha256": {
+    "__init__.py": "83e0c35d6b88ef7d73629b1e51a791ac80e7b482b8ddc8833b8702d65a421e74",
+    "admission.py": "c25809a1594f32968fb9f13f01a2a629aafef8e39634c4cd775ae368f3b101f1",
+    "admission_navigation.py": "48bada791a14c72d79b2d82bac9886aca7e8fb3052d72b4a00e434d0627566d4",
+    "artifact.py": "bd9cfad65b452c37da8f1642b1a96868160998979c027c279b9ecee54fcf5ed9",
+    "assembly.py": "4ade242809288a0a21dd242af6c2f0640d8bba941501b03b95a5fe59015c9279",
+    "authority.py": "1a82adf302a9045e29a5784164ee1fb43b4c448ddab325a274c4614495d0e625",
+    "bank_capacity.py": "5ff4e94f20e54dc0cad3dc17cd04846209edea27f5166efc83a716a4c589943c",
+    "bank_contract.py": "73525b5648e179b178221470cac5a9bbe1115c80ac2db600746babaa63fae7b1",
+    "bank_layout.py": "d71fb7d9a893ac6cab47c933ecf7305a9476957e45e59a84f5d6f126d814f19e",
+    "bank_observation.py": "1b0cf4d5feed58ea4177d1650671ebec08c7cbef8fa0f57a6791207f5c606afc",
+    "bank_state.py": "719aaf5f797b920567c51adb95dbc06f174edb70df563767bd6bc4ba0c9c458a",
+    "bank_transactions.py": "179b767a1a2f0f93a136a4e021e7ffae33fbf3ab5ff56138e536ef322b30c13c",
+    "bank_writes.py": "e0ac369db82b2e309d92e1406532f55c5b5fa279721d698d7c76aae18850b3e1",
+    "boundary_assessment.py": "5178274642f344175859b8d1b8b49ed93728cbb41860098d1e540f51f57e0a2f",
+    "cache_recovery.py": "3697647441dd77ac0b91961eb5b84063c916756aec2992fc1758a0bb5dafff39",
+    "checkpoint.py": "f4f42a33c405322a736387cdc10d8071e4fc234f61ba44491d00d55de70a41a2",
+    "claude_boundary.py": "b915a864a6ddca91fb08deaa7ec07394b0d78a039ae7052105d9e578f4e32724",
+    "claude_turns.py": "464dd31efb437522408b6f70cd0a6821e12ad2c622c912a5601735517e0bf04b",
+    "cli.py": "88a33c5600ab9e31b67d7fbf64d92b21ca8f2170b9acbbe0ee517ebeaddd2283",
+    "client_hooks.py": "d6b3e88f140216d7924dde6c8b0e89dec57d93ef9e4085586ee853de56114ec2",
+    "codex_boundary.py": "14b79fe846278fc714e91e97fd5c4fd6d873491c832b21f5475e1866dac4f6e6",
+    "comparison.py": "bd699478e028e683750c2c37611bdb343cccdf71a620ad93136b1d877825e6e4",
+    "console.py": "7a8209c51e3f6c4ed74461e17402538e973816a20ef486c2f3098b9f9774a72c",
+    "consolidation.py": "37e9c314bef1b6ce479c6980c25b126063528f7a152ddcc5d8c4d86c826fd4da",
+    "developer_identity.py": "b3b0e0ef0a26a4805574b40d2c1bb26570a1bc350e6cd879a4305c84ff96f1fb",
+    "diagnostics.py": "75efb2b338723ddb664dd69df26691524e68aa6f748cd7fae255b671f4a473d1",
+    "discovery.py": "99ec6730bfaf95fcbf6dc0fe9b3d232457fc782f76b64146e948d500c368bbea",
+    "doctor_fix.py": "31c954b140dd41d16e3ed45da031ccb91ebd2903a071f2ec2376817d29ff1323",
+    "frontmatter.py": "636cf6701644f50154a9bcf46631a30b2e22be1f3fe9cee3bf78400fbbd601ba",
+    "governance.py": "35a1a784bc225bacad5edac48aedbf2520313339b09ad5e0d0c2163c026a611c",
+    "handoff.py": "30ef248dcf9e08840597444789475cca5be5cbc7a000a602aac5b856732b8ea9",
+    "hook_failure.py": "c6e42036db3c208b644b658365d296251ecdb21ab56bced69d134c47f23cc8e2",
+    "identity_git.py": "2498a78b3938ed435a577b6ecb68e8caa4168c6ba61c17bb2ae13570c14f223c",
+    "inactive.py": "38bcacc5ea3b31aa6328f591a812edc17557bf6af54f75f68f352b42a583c13c",
+    "initialization.py": "c77fd04836e552b2b282e4931552647f81a0c2e165266ef865332c73e962076f",
+    "installation.py": "29599c6bc474fe0b863ba74ebfa252a870fc5e2117348e8e0b52d5c76c0694e1",
+    "lifecycle.py": "0bbf1aa4ff91e89dda010ab9a24ff92f9ffd8e1d730e3c83bc4f6d3de122b54b",
+    "local_registry.py": "7014a2421b1c4a1623256c5d322aa4e595ed36ffbf0cdd2829ac292bf4756497",
+    "managed_source.py": "2890a04cfcf8d801d188eabe4d0f8f49b471068f26d24dc9d44efa0ff18fd67f",
+    "memory_publication.py": "af0c941322d2dadc7b7c470e3574399ca69a83a21319a963b1ebe11048b45e07",
+    "memory_refresh.py": "20a4ec092251519c77188c891246b93b93249a4266a0df5d69a33857d760f60a",
+    "migration.py": "1314211bdbfa2527d944267fc8c484f1df07854b0c1054a28b712700fb59d749",
+    "migration_codecs.py": "7ea202991fc63b5119b65f38679efa429c009ab42e4dfdf1dce1d7d693879991",
+    "migration_contract.py": "4dc7c88768272aa7fba4168155babbc8337634e7d5fb24e8a87a5f87ca20cc0c",
+    "model_reference.py": "5548c83737112a5929b37390a32db226be0b6e2a9fce1fcc8db22553515c77ce",
+    "pack_validation.py": "8bc0f886289197937101a42096bdde7b744546f01b4d30c330323fd8c9bcb057",
+    "private_workspace.py": "4e4eae49efa51f76305d81146b2ba2e140419a931c80a83c9e11cc3effea1370",
+    "project_identity.py": "66590d14d00046ba6462b9a80cb9395156902e59d6e772ff0f3b56a87fef94d4",
+    "projections.py": "ec65c4dee7f1151ac9390dc0be17297660c472fcc3727eac5ca135f772e0802d",
+    "purging.py": "18e29b83a13e420d044a63711b59afd8f6f8e85312d3d0b271ad8733cf7da8f5",
+    "recall_catalog.py": "b1fadef691141211879e1f1e2f6768a90dac7019219b083479c08fd95b5f7244",
+    "records.py": "04bf692fa98337b9ee8e3fe6072d115106592c03fbdc1b237a867fa97369fb96",
+    "release_distribution.py": "93f748f0cbaa4f5212bfd0929f2da16c25a994ef146c4fca9428dc6483663398",
+    "remote_identity.py": "93b926dc8264e288e8a3ddfbb6dc1ef7a9534f74ddffe63238b9ecfa42c10bb9",
+    "repository_config.py": "34f96c83c648a27b99bbdc97e3dfaf7d50f6235a494ba6e9503513dcfe520cc3",
+    "retrieval.py": "a5f6857fcee15653d68545e3fea8742eac2de3bb8974529e10b6489b59cb93e6",
+    "runtime_faults.py": "faff1d65f9d15d25aef801367e6779f3a03812eac71f8d64fee4e6de0009c861",
+    "scope_binding.py": "026a93b5e253abbf8ec7501cf8437990238eda9af1ea1771d3a918bd74e40468",
+    "scopes.py": "db04b8a90103d45731a02e2da4a0bbfc940b5745bf5b9d72d8b1d6ee08fbad61",
+    "security.py": "768a91fad491ed3996defae434a41b983c2aa42dacc4aede5ab3009226a5c5d8",
+    "semantic_sharing.py": "895af198c9898f9290061efdeac9a480e68bed8318a3d5bd9c3a121ca557ad58",
+    "sharing_boundary.py": "2548281d9c9a17dce2096a8cd131dd45dd2a4416852eafa0d44409acc8066011",
+    "sharing_frontier.py": "4a6695d005a51a017b7142538507faeb87b0adf391843bc99870ffe77d859cc9",
+    "sharing_hold_mapping.py": "a5f83eb5ee7dd223ba3027189f18026c7f9267b778788d8643fd1627cb60ba5c",
+    "sharing_holds.py": "80fa56d5797fee377e36d8fddb6a823bc43f9cf42c473b310b318c7efa7d99a8",
+    "sharing_limits.py": "a9b0fcc835c9b6438a4349c6a0eaf2abc2eeaeeef0df79b90852d127a32fc0f7",
+    "sharing_recovery.py": "ecefaaf086ec249d2832780f117650df006dc64a70b67fd1429f2b6371ace3cd",
+    "tombstones.py": "3c001ac52d4830340372e143a02cbb723644e1a22978f1606ee0c495e605cd0a",
+    "trust_paths.py": "d0e70480f2a05c50f5b2777b7dc2023940ebd893e1eeb34666a0874c90c35d12",
+    "turn_check.py": "f5ec8eccc87607e0dd5842d40d2e55ea35099249fbac330a2f0c525f52480c33",
+    "turn_sources.py": "48d3b9f9c5d7f0aedb29f48e79adec0c186092ab26d7fed7a02b295b9d131edf",
+    "uninstallation.py": "8d68fa8d716f29e569cef2ed6aa3790955072bda911b9c73fa448f08608ebe58",
+    "updating.py": "7a6fdb115fab4b2c9ddb4e0afc1b4310ae9ea0637635aff1e097cac3c72ef488",
+    "validation_memo.py": "96cbfe90938c9f58ee780bbe55d8cef993a0a34fb193afcdd2a101f6bd35bfbf"
+  },
+  "runtime_hashes_equal_across_qualification_receipts": true,
+  "macos": {
+    "tests": 167,
+    "suites": [
+      {
+        "suite": "test_bounded_bank_observation",
+        "exit": 0,
+        "seconds": 1.4735339159960859,
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 12,
+        "unexpected_successes": 0,
+        "candidate": "0440f4cc8031bacf59b0f54b7d440917b02d5d43"
+      },
+      {
+        "suite": "test_bank_eligibility_writes",
+        "exit": 0,
+        "seconds": 16.427853791043162,
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 9,
+        "unexpected_successes": 0,
+        "candidate": "0440f4cc8031bacf59b0f54b7d440917b02d5d43"
+      },
+      {
+        "suite": "test_bank_writes",
+        "exit": 0,
+        "seconds": 17.59182483301265,
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 15,
+        "unexpected_successes": 0,
+        "candidate": "0440f4cc8031bacf59b0f54b7d440917b02d5d43"
+      },
+      {
+        "suite": "test_bank_transactions",
+        "exit": 0,
+        "seconds": 88.89101058302913,
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 21,
+        "unexpected_successes": 0,
+        "candidate": "0440f4cc8031bacf59b0f54b7d440917b02d5d43"
+      },
+      {
+        "suite": "test_client_hooks",
+        "exit": 0,
+        "seconds": 0.06983591703465208,
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 4,
+        "unexpected_successes": 0,
+        "candidate": "0440f4cc8031bacf59b0f54b7d440917b02d5d43"
+      },
+      {
+        "suite": "test_sharing_recovery",
+        "exit": 0,
+        "seconds": 95.19707837497117,
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 18,
+        "unexpected_successes": 0,
+        "candidate": "0440f4cc8031bacf59b0f54b7d440917b02d5d43"
+      },
+      {
+        "suite": "test_discovery",
+        "exit": 0,
+        "seconds": 30.25717437500134,
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 8,
+        "unexpected_successes": 0,
+        "candidate": "0440f4cc8031bacf59b0f54b7d440917b02d5d43"
+      },
+      {
+        "suite": "test_turn_hook",
+        "exit": 0,
+        "seconds": 0.45519770798273385,
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 5,
+        "unexpected_successes": 0,
+        "candidate": "0440f4cc8031bacf59b0f54b7d440917b02d5d43"
+      },
+      {
+        "suite": "test_opencode_boundary_ledger",
+        "exit": 0,
+        "seconds": 29.395716083003208,
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 13,
+        "unexpected_successes": 0,
+        "candidate": "0440f4cc8031bacf59b0f54b7d440917b02d5d43"
+      },
+      {
+        "suite": "test_runtime_diagnostics",
+        "exit": 0,
+        "seconds": 203.18154712498654,
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 21,
+        "unexpected_successes": 0,
+        "candidate": "0440f4cc8031bacf59b0f54b7d440917b02d5d43"
+      },
+      {
+        "suite": "test_runtime_uninstall",
+        "exit": 0,
+        "seconds": 88.38630449998891,
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 11,
+        "unexpected_successes": 0,
+        "candidate": "0440f4cc8031bacf59b0f54b7d440917b02d5d43"
+      },
+      {
+        "suite": "test_runtime_update",
+        "exit": 0,
+        "seconds": 296.42550754197873,
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 15,
+        "unexpected_successes": 0,
+        "candidate": "0440f4cc8031bacf59b0f54b7d440917b02d5d43"
+      },
+      {
+        "suite": "test_doctor_fix",
+        "exit": 0,
+        "seconds": 123.33212300000014,
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 9,
+        "unexpected_successes": 0,
+        "candidate": "0440f4cc8031bacf59b0f54b7d440917b02d5d43"
+      },
+      {
+        "suite": "test_setup_diagnostics",
+        "exit": 0,
+        "seconds": 125.49620133300778,
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 6,
+        "unexpected_successes": 0,
+        "candidate": "0440f4cc8031bacf59b0f54b7d440917b02d5d43"
+      }
+    ]
+  },
+  "linux": {
+    "tests": 167,
+    "coverage_kind": "composed passing suites with demonstrated unchanged relevant runtime/test bytes",
+    "suites": [
+      {
+        "suite": "test_bounded_bank_observation",
+        "exit": 0,
+        "seconds": 0.5856903159874491,
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 12,
+        "unexpected_successes": 0,
+        "candidate": "20a1ec69acac479a261b62c4b5e1e71de15f2172"
+      },
+      {
+        "suite": "test_bank_eligibility_writes",
+        "exit": 0,
+        "seconds": 6.066165699012345,
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 9,
+        "unexpected_successes": 0,
+        "candidate": "20a1ec69acac479a261b62c4b5e1e71de15f2172"
+      },
+      {
+        "suite": "test_bank_writes",
+        "exit": 0,
+        "seconds": 7.737418610995519,
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 15,
+        "unexpected_successes": 0,
+        "candidate": "20a1ec69acac479a261b62c4b5e1e71de15f2172"
+      },
+      {
+        "suite": "test_bank_transactions",
+        "exit": 0,
+        "seconds": 32.627958892000606,
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 21,
+        "unexpected_successes": 0,
+        "candidate": "20a1ec69acac479a261b62c4b5e1e71de15f2172"
+      },
+      {
+        "suite": "test_client_hooks",
+        "exit": 0,
+        "seconds": 0.044882451999001205,
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 4,
+        "unexpected_successes": 0,
+        "candidate": "20a1ec69acac479a261b62c4b5e1e71de15f2172"
+      },
+      {
+        "suite": "test_runtime_diagnostics",
+        "exit": 0,
+        "seconds": 119.92460619000485,
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 21,
+        "unexpected_successes": 0,
+        "candidate": "20a1ec69acac479a261b62c4b5e1e71de15f2172"
+      },
+      {
+        "suite": "test_runtime_uninstall",
+        "exit": 0,
+        "seconds": 58.96103653599857,
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 11,
+        "unexpected_successes": 0,
+        "candidate": "20a1ec69acac479a261b62c4b5e1e71de15f2172"
+      },
+      {
+        "suite": "test_setup_diagnostics",
+        "exit": 0,
+        "seconds": 67.03138238599058,
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 6,
+        "unexpected_successes": 0,
+        "candidate": "20a1ec69acac479a261b62c4b5e1e71de15f2172"
+      },
+      {
+        "suite": "test_discovery",
+        "exit": 0,
+        "seconds": 6.669310768003925,
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 8,
+        "unexpected_successes": 0,
+        "candidate": "20a1ec69acac479a261b62c4b5e1e71de15f2172"
+      },
+      {
+        "suite": "test_doctor_fix",
+        "exit": 0,
+        "seconds": 67.69918078000774,
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 9,
+        "unexpected_successes": 0,
+        "candidate": "20a1ec69acac479a261b62c4b5e1e71de15f2172"
+      },
+      {
+        "suite": "test_sharing_recovery",
+        "exit": 0,
+        "seconds": 16.6326311659941,
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 18,
+        "unexpected_successes": 0,
+        "candidate": "20a1ec69acac479a261b62c4b5e1e71de15f2172"
+      },
+      {
+        "suite": "test_runtime_update",
+        "exit": 0,
+        "seconds": 187.84140835799917,
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 15,
+        "unexpected_successes": 0,
+        "candidate": "55276fcf60fead0ceda54bcb91b550e09922eeba"
+      },
+      {
+        "suite": "test_turn_hook",
+        "exit": 0,
+        "seconds": 0.18946416200196836,
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 5,
+        "unexpected_successes": 0,
+        "candidate": "0440f4cc8031bacf59b0f54b7d440917b02d5d43"
+      },
+      {
+        "suite": "test_opencode_boundary_ledger",
+        "exit": 0,
+        "seconds": 3.3909584490029374,
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 13,
+        "unexpected_successes": 0,
+        "candidate": "0440f4cc8031bacf59b0f54b7d440917b02d5d43"
+      }
+    ],
+    "javascript_prerequisite": {
+      "version": "v22.23.4",
+      "archive_sha256": "6287aa46b6c375d816e63ae66d024fbbfd70404825aabdfdf898a970871d2f4b",
+      "location": "disposable release directory; no system/profile installation"
+    }
+  },
+  "public_eligibility": {
+    "macos": [
+      {
+        "scenario": "boundary-16384-inspect",
+        "exit": 0,
+        "failure_code": null,
+        "seconds": 0.5511733749881387,
+        "bank_feature_HEAD_index_state_preserved": true,
+        "stdout_sha256": "13be6b772ac8ec31e55d56780c52fe59733b967397dd3f5949ab78f761f4594e"
+      },
+      {
+        "scenario": "boundary-16384-scoped-inspect",
+        "exit": 0,
+        "failure_code": null,
+        "seconds": 0.5423404169850983,
+        "bank_feature_HEAD_index_state_preserved": true,
+        "stdout_sha256": "a41e110bd205e2345ea74fcd4cccef3b9415db8e357c8c02c32ba678d6bf5ee7"
+      },
+      {
+        "scenario": "boundary-16384-capture-start",
+        "exit": 0,
+        "failure_code": null,
+        "seconds": 0.9588952499907464,
+        "bank_feature_HEAD_index_state_preserved": true,
+        "stdout_sha256": "d11b3584ee9644a23969f8ee4e4ac054ebf695f009ccad41990d25aa5d0d6246"
+      },
+      {
+        "scenario": "boundary-16384-validate",
+        "exit": 0,
+        "failure_code": null,
+        "seconds": 0.22943479201057926,
+        "bank_feature_HEAD_index_state_preserved": true,
+        "stdout_sha256": "3c42c389a76d97be56173c8208098dff2b1177371b85d1267db20677864cd98a"
+      },
+      {
+        "scenario": "boundary-16384-scoped-search",
+        "exit": 0,
+        "failure_code": null,
+        "seconds": 0.5935275420197286,
+        "bank_feature_HEAD_index_state_preserved": true,
+        "stdout_sha256": "57d3e5de43ea51f78736c700a84bfcb6aec9a0bf3981747e9ba96d106b626cf0"
+      },
+      {
+        "scenario": "boundary-16384-full-search",
+        "exit": 0,
+        "failure_code": null,
+        "seconds": 0.5900466250022873,
+        "bank_feature_HEAD_index_state_preserved": true,
+        "stdout_sha256": "f432eac7fc2fb098015d6dc762a93dd057f33ad1cde292b436087fd5b4470c04"
+      },
+      {
+        "scenario": "boundary-16385-inspect",
+        "exit": 1,
+        "failure_code": "bank-source-byte-capacity",
+        "seconds": 0.22780020895879716,
+        "bank_feature_HEAD_index_state_preserved": true,
+        "stdout_sha256": "12c1c23c9ecfb60ab5f800444bad9eaaa8fe4c7c7e52db5b942e7ae6ba458d99"
+      },
+      {
+        "scenario": "boundary-16385-scoped-inspect",
+        "exit": 1,
+        "failure_code": "bank-source-byte-capacity",
+        "seconds": 0.22736412496306002,
+        "bank_feature_HEAD_index_state_preserved": true,
+        "stdout_sha256": "12c1c23c9ecfb60ab5f800444bad9eaaa8fe4c7c7e52db5b942e7ae6ba458d99"
+      },
+      {
+        "scenario": "boundary-16385-capture-start",
+        "exit": 1,
+        "failure_code": "bank-source-byte-capacity",
+        "seconds": 0.3966230409569107,
+        "bank_feature_HEAD_index_state_preserved": true,
+        "stdout_sha256": "56077ed9536c314ac4acf4b0565531b2aaf3bed1a4e79fd4cb31ee459f5d230e"
+      },
+      {
+        "scenario": "boundary-16385-validate",
+        "exit": 1,
+        "failure_code": "bank-source-byte-capacity",
+        "seconds": 0.18297520803753287,
+        "bank_feature_HEAD_index_state_preserved": true,
+        "stdout_sha256": "7b47de301bd836e79be23887885c87abcc8144891191334db23486f1d091e4f6"
+      },
+      {
+        "scenario": "boundary-16385-scoped-search",
+        "exit": 1,
+        "failure_code": "bank-source-byte-capacity",
+        "seconds": 0.310947916994337,
+        "bank_feature_HEAD_index_state_preserved": true,
+        "stdout_sha256": "db46d07b6d9bf3229778836a05f6666458ee497358633c05c0eedcc85b1a2a8f"
+      },
+      {
+        "scenario": "boundary-16385-full-search",
+        "exit": 1,
+        "failure_code": "bank-source-byte-capacity",
+        "seconds": 0.3239593749749474,
+        "bank_feature_HEAD_index_state_preserved": true,
+        "stdout_sha256": "db46d07b6d9bf3229778836a05f6666458ee497358633c05c0eedcc85b1a2a8f"
+      },
+      {
+        "scenario": "boundary-16385-doctor",
+        "exit": 1,
+        "failure_code": "bank-source-byte-capacity",
+        "seconds": 0.9839511250029318,
+        "bank_feature_HEAD_index_state_preserved": true,
+        "stdout_sha256": "67a5dc2f18903acf68bc051942fbeba2cd69fdd2d0958ca9be2ad95fbb3a04da"
+      },
+      {
+        "scenario": "reported-size-79054-inspect",
+        "exit": 1,
+        "failure_code": "bank-source-byte-capacity",
+        "seconds": 0.22479795798426494,
+        "bank_feature_HEAD_index_state_preserved": true,
+        "stdout_sha256": "dd174033e94791fd6882a5905f45b2940442a6d5ff1f44ebc8af30c61938f0ce"
+      },
+      {
+        "scenario": "reported-size-79054-scoped-inspect",
+        "exit": 1,
+        "failure_code": "bank-source-byte-capacity",
+        "seconds": 0.22782341699348763,
+        "bank_feature_HEAD_index_state_preserved": true,
+        "stdout_sha256": "dd174033e94791fd6882a5905f45b2940442a6d5ff1f44ebc8af30c61938f0ce"
+      },
+      {
+        "scenario": "reported-size-79054-capture-start",
+        "exit": 1,
+        "failure_code": "bank-source-byte-capacity",
+        "seconds": 0.3812162500107661,
+        "bank_feature_HEAD_index_state_preserved": true,
+        "stdout_sha256": "fbccbd6ef9e38e33931b9995c01690548722a2ec9ae19984d634d5865e4c0d32"
+      },
+      {
+        "scenario": "reported-size-79054-validate",
+        "exit": 1,
+        "failure_code": "bank-source-byte-capacity",
+        "seconds": 0.1955001670285128,
+        "bank_feature_HEAD_index_state_preserved": true,
+        "stdout_sha256": "0216812db768b2e122db27a8f8628d649d2fbda77206bcc1a4a0b7c6467c82a3"
+      },
+      {
+        "scenario": "reported-size-79054-scoped-search",
+        "exit": 1,
+        "failure_code": "bank-source-byte-capacity",
+        "seconds": 0.32470674999058247,
+        "bank_feature_HEAD_index_state_preserved": true,
+        "stdout_sha256": "03c09bbc42405ce31edda11fe778a9251702a3411ebd4ea5799daa608f1fd0af"
+      },
+      {
+        "scenario": "reported-size-79054-full-search",
+        "exit": 1,
+        "failure_code": "bank-source-byte-capacity",
+        "seconds": 0.31324833299731836,
+        "bank_feature_HEAD_index_state_preserved": true,
+        "stdout_sha256": "03c09bbc42405ce31edda11fe778a9251702a3411ebd4ea5799daa608f1fd0af"
+      },
+      {
+        "scenario": "reported-size-79054-doctor",
+        "exit": 1,
+        "failure_code": "bank-source-byte-capacity",
+        "seconds": 0.8427274999557994,
+        "bank_feature_HEAD_index_state_preserved": true,
+        "stdout_sha256": "c40a24611a1a03cfe6df335e25715df960875b9a9d635f304b205ea567bf7260"
+      },
+      {
+        "scenario": "within-bound-unsupported-layout",
+        "exit": 1,
+        "failure_code": null,
+        "seconds": 0.1858849169802852,
+        "bank_feature_HEAD_index_state_preserved": true,
+        "stdout_sha256": "a638fd58224447d04424f15c4cf7c907c8c3cffeeedaea805ac2e0879c03d08e"
+      },
+      {
+        "scenario": "real-aggregate-excess",
+        "exit": 1,
+        "failure_code": "bank-aggregate-byte-capacity",
+        "seconds": 0.5506626249989495,
+        "bank_feature_HEAD_index_state_preserved": true,
+        "stdout_sha256": "a6960ebde70967f7fdb59830c7f4a97a508040c27ecf69e7127322598845751c"
+      },
+      {
+        "scenario": "real-source-count-excess",
+        "exit": 1,
+        "failure_code": "bank-source-count-capacity",
+        "seconds": 5.663286041002721,
+        "bank_feature_HEAD_index_state_preserved": true,
+        "stdout_sha256": "04b08fdaabcf48d2eefd30c510e7d673a1065d0faae76ceba4535edf47d2b865"
+      }
+    ],
+    "linux": [
+      {
+        "scenario": "boundary-16384-inspect",
+        "exit": 0,
+        "failure_code": null,
+        "seconds": 0.12482684898714069,
+        "bank_feature_HEAD_index_state_preserved": true,
+        "stdout_sha256": "2c18ca671260b14bde76d99e51b0c6af4c5fc85b9339384a54720cdb6634233e"
+      },
+      {
+        "scenario": "boundary-16384-scoped-inspect",
+        "exit": 0,
+        "failure_code": null,
+        "seconds": 0.12467930599814281,
+        "bank_feature_HEAD_index_state_preserved": true,
+        "stdout_sha256": "a41e110bd205e2345ea74fcd4cccef3b9415db8e357c8c02c32ba678d6bf5ee7"
+      },
+      {
+        "scenario": "boundary-16384-capture-start",
+        "exit": 0,
+        "failure_code": null,
+        "seconds": 0.17680761200608686,
+        "bank_feature_HEAD_index_state_preserved": true,
+        "stdout_sha256": "dee556afaf72f7fd219721ad2a79f9d9e537f2a4b0f2a790dc4c004906cf967d"
+      },
+      {
+        "scenario": "boundary-16384-validate",
+        "exit": 0,
+        "failure_code": null,
+        "seconds": 0.09843536000698805,
+        "bank_feature_HEAD_index_state_preserved": true,
+        "stdout_sha256": "3c42c389a76d97be56173c8208098dff2b1177371b85d1267db20677864cd98a"
+      },
+      {
+        "scenario": "boundary-16384-scoped-search",
+        "exit": 0,
+        "failure_code": null,
+        "seconds": 0.14173035000567324,
+        "bank_feature_HEAD_index_state_preserved": true,
+        "stdout_sha256": "7bcd56431e60ab614af7f8d9b1a0a461f1058c87cce19c87f182c292c84555a1"
+      },
+      {
+        "scenario": "boundary-16384-full-search",
+        "exit": 0,
+        "failure_code": null,
+        "seconds": 0.14651676100038458,
+        "bank_feature_HEAD_index_state_preserved": true,
+        "stdout_sha256": "5dba48ad33ae1e1a5b426eb2776bb3230dfa4f1fc9f10bb98cb03a3426dba84a"
+      },
+      {
+        "scenario": "boundary-16385-inspect",
+        "exit": 1,
+        "failure_code": "bank-source-byte-capacity",
+        "seconds": 0.0998399959935341,
+        "bank_feature_HEAD_index_state_preserved": true,
+        "stdout_sha256": "12c1c23c9ecfb60ab5f800444bad9eaaa8fe4c7c7e52db5b942e7ae6ba458d99"
+      },
+      {
+        "scenario": "boundary-16385-scoped-inspect",
+        "exit": 1,
+        "failure_code": "bank-source-byte-capacity",
+        "seconds": 0.09927961599896662,
+        "bank_feature_HEAD_index_state_preserved": true,
+        "stdout_sha256": "12c1c23c9ecfb60ab5f800444bad9eaaa8fe4c7c7e52db5b942e7ae6ba458d99"
+      },
+      {
+        "scenario": "boundary-16385-capture-start",
+        "exit": 1,
+        "failure_code": "bank-source-byte-capacity",
+        "seconds": 0.12113932099600788,
+        "bank_feature_HEAD_index_state_preserved": true,
+        "stdout_sha256": "56077ed9536c314ac4acf4b0565531b2aaf3bed1a4e79fd4cb31ee459f5d230e"
+      },
+      {
+        "scenario": "boundary-16385-validate",
+        "exit": 1,
+        "failure_code": "bank-source-byte-capacity",
+        "seconds": 0.09528358599345665,
+        "bank_feature_HEAD_index_state_preserved": true,
+        "stdout_sha256": "7b47de301bd836e79be23887885c87abcc8144891191334db23486f1d091e4f6"
+      },
+      {
+        "scenario": "boundary-16385-scoped-search",
+        "exit": 1,
+        "failure_code": "bank-source-byte-capacity",
+        "seconds": 0.10968344399589114,
+        "bank_feature_HEAD_index_state_preserved": true,
+        "stdout_sha256": "db46d07b6d9bf3229778836a05f6666458ee497358633c05c0eedcc85b1a2a8f"
+      },
+      {
+        "scenario": "boundary-16385-full-search",
+        "exit": 1,
+        "failure_code": "bank-source-byte-capacity",
+        "seconds": 0.10896202200092375,
+        "bank_feature_HEAD_index_state_preserved": true,
+        "stdout_sha256": "db46d07b6d9bf3229778836a05f6666458ee497358633c05c0eedcc85b1a2a8f"
+      },
+      {
+        "scenario": "boundary-16385-doctor",
+        "exit": 1,
+        "failure_code": "bank-source-byte-capacity",
+        "seconds": 0.4650655549921794,
+        "bank_feature_HEAD_index_state_preserved": true,
+        "stdout_sha256": "3603736b7388fc601727b24bd24ba32c6553153be3fc0ecfe36d4ab537dc527a"
+      },
+      {
+        "scenario": "reported-size-79054-inspect",
+        "exit": 1,
+        "failure_code": "bank-source-byte-capacity",
+        "seconds": 0.09651426199707203,
+        "bank_feature_HEAD_index_state_preserved": true,
+        "stdout_sha256": "dd174033e94791fd6882a5905f45b2940442a6d5ff1f44ebc8af30c61938f0ce"
+      },
+      {
+        "scenario": "reported-size-79054-scoped-inspect",
+        "exit": 1,
+        "failure_code": "bank-source-byte-capacity",
+        "seconds": 0.09712193299492355,
+        "bank_feature_HEAD_index_state_preserved": true,
+        "stdout_sha256": "dd174033e94791fd6882a5905f45b2940442a6d5ff1f44ebc8af30c61938f0ce"
+      },
+      {
+        "scenario": "reported-size-79054-capture-start",
+        "exit": 1,
+        "failure_code": "bank-source-byte-capacity",
+        "seconds": 0.11739712599955965,
+        "bank_feature_HEAD_index_state_preserved": true,
+        "stdout_sha256": "fbccbd6ef9e38e33931b9995c01690548722a2ec9ae19984d634d5865e4c0d32"
+      },
+      {
+        "scenario": "reported-size-79054-validate",
+        "exit": 1,
+        "failure_code": "bank-source-byte-capacity",
+        "seconds": 0.09496520900574978,
+        "bank_feature_HEAD_index_state_preserved": true,
+        "stdout_sha256": "0216812db768b2e122db27a8f8628d649d2fbda77206bcc1a4a0b7c6467c82a3"
+      },
+      {
+        "scenario": "reported-size-79054-scoped-search",
+        "exit": 1,
+        "failure_code": "bank-source-byte-capacity",
+        "seconds": 0.11402793500747066,
+        "bank_feature_HEAD_index_state_preserved": true,
+        "stdout_sha256": "03c09bbc42405ce31edda11fe778a9251702a3411ebd4ea5799daa608f1fd0af"
+      },
+      {
+        "scenario": "reported-size-79054-full-search",
+        "exit": 1,
+        "failure_code": "bank-source-byte-capacity",
+        "seconds": 0.11422397701244336,
+        "bank_feature_HEAD_index_state_preserved": true,
+        "stdout_sha256": "03c09bbc42405ce31edda11fe778a9251702a3411ebd4ea5799daa608f1fd0af"
+      },
+      {
+        "scenario": "reported-size-79054-doctor",
+        "exit": 1,
+        "failure_code": "bank-source-byte-capacity",
+        "seconds": 0.4736400770052569,
+        "bank_feature_HEAD_index_state_preserved": true,
+        "stdout_sha256": "5f3777cdef3c9720174036f683169a2de41b77f55259b00071544530edb47bed"
+      },
+      {
+        "scenario": "within-bound-unsupported-layout",
+        "exit": 1,
+        "failure_code": null,
+        "seconds": 0.09367719900910743,
+        "bank_feature_HEAD_index_state_preserved": true,
+        "stdout_sha256": "a638fd58224447d04424f15c4cf7c907c8c3cffeeedaea805ac2e0879c03d08e"
+      },
+      {
+        "scenario": "real-aggregate-excess",
+        "exit": 1,
+        "failure_code": "bank-aggregate-byte-capacity",
+        "seconds": 0.31587027400382794,
+        "bank_feature_HEAD_index_state_preserved": true,
+        "stdout_sha256": "38c9ef80787912398012d2dd5b13c8820d5d584a079db149a9f584c6c0bb6491"
+      },
+      {
+        "scenario": "real-source-count-excess",
+        "exit": 1,
+        "failure_code": "bank-source-count-capacity",
+        "seconds": 2.7948676670057466,
+        "bank_feature_HEAD_index_state_preserved": true,
+        "stdout_sha256": "9ad5a102b0ee119920f7cd0362258fe75002c0a5b8be164672441ba0b1b10a8b"
+      }
+    ]
+  },
+  "public_hook_health": {
+    "macos": [
+      {
+        "preset": "codex",
+        "scenario": "unrelated-edits-retained",
+        "exit": 0,
+        "hook_states": [
+          "pass"
+        ],
+        "failure_codes": [
+          null
+        ],
+        "complete_world_preserved": true,
+        "seconds": 2.7357202919665724
+      },
+      {
+        "preset": "codex",
+        "scenario": "owned-prompt-missing",
+        "exit": 1,
+        "hook_states": [
+          "failure"
+        ],
+        "failure_codes": [
+          "owned_group_missing_or_changed"
+        ],
+        "complete_world_preserved": true,
+        "seconds": 2.624145707988646
+      },
+      {
+        "preset": "codex",
+        "scenario": "owned-prompt-duplicated",
+        "exit": 1,
+        "hook_states": [
+          "failure"
+        ],
+        "failure_codes": [
+          "owned_group_duplicate"
+        ],
+        "complete_world_preserved": true,
+        "seconds": 2.6336965420050547
+      },
+      {
+        "preset": "codex",
+        "scenario": "duplicate-json-keys",
+        "exit": 1,
+        "hook_states": [
+          "failure"
+        ],
+        "failure_codes": [
+          "duplicate_json_key"
+        ],
+        "complete_world_preserved": true,
+        "seconds": 2.671343041001819
+      },
+      {
+        "preset": "codex",
+        "scenario": "explicit-uninstall-readback",
+        "verified": true,
+        "unrelated_entries_preserved": true
+      },
+      {
+        "preset": "claude",
+        "scenario": "unrelated-edits-retained",
+        "exit": 0,
+        "hook_states": [
+          "pass"
+        ],
+        "failure_codes": [
+          null
+        ],
+        "complete_world_preserved": true,
+        "seconds": 2.762253457971383
+      },
+      {
+        "preset": "claude",
+        "scenario": "owned-prompt-missing",
+        "exit": 1,
+        "hook_states": [
+          "failure"
+        ],
+        "failure_codes": [
+          "owned_group_missing_or_changed"
+        ],
+        "complete_world_preserved": true,
+        "seconds": 2.6447295419638976
+      },
+      {
+        "preset": "claude",
+        "scenario": "owned-prompt-duplicated",
+        "exit": 1,
+        "hook_states": [
+          "failure"
+        ],
+        "failure_codes": [
+          "owned_group_duplicate"
+        ],
+        "complete_world_preserved": true,
+        "seconds": 2.6146892920369282
+      },
+      {
+        "preset": "claude",
+        "scenario": "duplicate-json-keys",
+        "exit": 1,
+        "hook_states": [
+          "failure"
+        ],
+        "failure_codes": [
+          "duplicate_json_key"
+        ],
+        "complete_world_preserved": true,
+        "seconds": 2.6038938750280067
+      },
+      {
+        "preset": "claude",
+        "scenario": "explicit-uninstall-readback",
+        "verified": true,
+        "unrelated_entries_preserved": true
+      }
+    ],
+    "linux": [
+      {
+        "preset": "codex",
+        "scenario": "unrelated-edits-retained",
+        "exit": 0,
+        "hook_states": [
+          "pass"
+        ],
+        "failure_codes": [
+          null
+        ],
+        "complete_world_preserved": true,
+        "seconds": 1.2308570780005539
+      },
+      {
+        "preset": "codex",
+        "scenario": "owned-prompt-missing",
+        "exit": 1,
+        "hook_states": [
+          "failure"
+        ],
+        "failure_codes": [
+          "owned_group_missing_or_changed"
+        ],
+        "complete_world_preserved": true,
+        "seconds": 1.2310429089993704
+      },
+      {
+        "preset": "codex",
+        "scenario": "owned-prompt-duplicated",
+        "exit": 1,
+        "hook_states": [
+          "failure"
+        ],
+        "failure_codes": [
+          "owned_group_duplicate"
+        ],
+        "complete_world_preserved": true,
+        "seconds": 1.2182173939945642
+      },
+      {
+        "preset": "codex",
+        "scenario": "duplicate-json-keys",
+        "exit": 1,
+        "hook_states": [
+          "failure"
+        ],
+        "failure_codes": [
+          "duplicate_json_key"
+        ],
+        "complete_world_preserved": true,
+        "seconds": 1.2479614870098885
+      },
+      {
+        "preset": "codex",
+        "scenario": "explicit-uninstall-readback",
+        "verified": true,
+        "unrelated_entries_preserved": true
+      },
+      {
+        "preset": "claude",
+        "scenario": "unrelated-edits-retained",
+        "exit": 0,
+        "hook_states": [
+          "pass"
+        ],
+        "failure_codes": [
+          null
+        ],
+        "complete_world_preserved": true,
+        "seconds": 1.2033955619990593
+      },
+      {
+        "preset": "claude",
+        "scenario": "owned-prompt-missing",
+        "exit": 1,
+        "hook_states": [
+          "failure"
+        ],
+        "failure_codes": [
+          "owned_group_missing_or_changed"
+        ],
+        "complete_world_preserved": true,
+        "seconds": 1.2166221149964258
+      },
+      {
+        "preset": "claude",
+        "scenario": "owned-prompt-duplicated",
+        "exit": 1,
+        "hook_states": [
+          "failure"
+        ],
+        "failure_codes": [
+          "owned_group_duplicate"
+        ],
+        "complete_world_preserved": true,
+        "seconds": 1.1994421510025859
+      },
+      {
+        "preset": "claude",
+        "scenario": "duplicate-json-keys",
+        "exit": 1,
+        "hook_states": [
+          "failure"
+        ],
+        "failure_codes": [
+          "duplicate_json_key"
+        ],
+        "complete_world_preserved": true,
+        "seconds": 1.2118540329975076
+      },
+      {
+        "preset": "claude",
+        "scenario": "explicit-uninstall-readback",
+        "verified": true,
+        "unrelated_entries_preserved": true
+      }
+    ]
+  },
+  "legacy_receipt_edges": {
+    "macos": [
+      {
+        "preset": "codex",
+        "scenario": "prompt-only-legacy",
+        "exit": 0,
+        "hook_state": "pass",
+        "failure_code": null,
+        "complete_world_preserved": true
+      },
+      {
+        "preset": "codex",
+        "scenario": "null-stop-evidence",
+        "exit": 1,
+        "hook_state": "failure",
+        "failure_code": "insufficient_receipt",
+        "complete_world_preserved": true
+      },
+      {
+        "preset": "codex",
+        "scenario": "empty-stop-evidence",
+        "exit": 1,
+        "hook_state": "failure",
+        "failure_code": "insufficient_receipt",
+        "complete_world_preserved": true
+      },
+      {
+        "preset": "claude",
+        "scenario": "prompt-only-legacy",
+        "exit": 0,
+        "hook_state": "pass",
+        "failure_code": null,
+        "complete_world_preserved": true
+      },
+      {
+        "preset": "claude",
+        "scenario": "null-stop-evidence",
+        "exit": 1,
+        "hook_state": "failure",
+        "failure_code": "insufficient_receipt",
+        "complete_world_preserved": true
+      },
+      {
+        "preset": "claude",
+        "scenario": "empty-stop-evidence",
+        "exit": 1,
+        "hook_state": "failure",
+        "failure_code": "insufficient_receipt",
+        "complete_world_preserved": true
+      }
+    ],
+    "linux": [
+      {
+        "preset": "codex",
+        "scenario": "prompt-only-legacy",
+        "exit": 0,
+        "hook_state": "pass",
+        "failure_code": null,
+        "complete_world_preserved": true
+      },
+      {
+        "preset": "codex",
+        "scenario": "null-stop-evidence",
+        "exit": 1,
+        "hook_state": "failure",
+        "failure_code": "insufficient_receipt",
+        "complete_world_preserved": true
+      },
+      {
+        "preset": "codex",
+        "scenario": "empty-stop-evidence",
+        "exit": 1,
+        "hook_state": "failure",
+        "failure_code": "insufficient_receipt",
+        "complete_world_preserved": true
+      },
+      {
+        "preset": "claude",
+        "scenario": "prompt-only-legacy",
+        "exit": 0,
+        "hook_state": "pass",
+        "failure_code": null,
+        "complete_world_preserved": true
+      },
+      {
+        "preset": "claude",
+        "scenario": "null-stop-evidence",
+        "exit": 1,
+        "hook_state": "failure",
+        "failure_code": "insufficient_receipt",
+        "complete_world_preserved": true
+      },
+      {
+        "preset": "claude",
+        "scenario": "empty-stop-evidence",
+        "exit": 1,
+        "hook_state": "failure",
+        "failure_code": "insufficient_receipt",
+        "complete_world_preserved": true
+      }
+    ]
+  },
+  "fetched_capacity": {
+    "macos_before": {
+      "candidate": "7be0c25ac5c9479162937686dfc8a17a243c2064",
+      "expected": "before",
+      "exit": 0,
+      "failure_code": null,
+      "local_bank_still_valid": true,
+      "bank_feature_HEAD_index_preserved": true,
+      "body_not_disclosed": true,
+      "source_sha256": "3f624dade2d5bfaf2c465268ce46ce6feaf3dccd12d0308dc193113aa4608029"
+    },
+    "macos_after": {
+      "candidate": "20a1ec69acac479a261b62c4b5e1e71de15f2172",
+      "expected": "after",
+      "exit": 1,
+      "failure_code": "bank-source-byte-capacity",
+      "local_bank_still_valid": true,
+      "bank_feature_HEAD_index_preserved": true,
+      "body_not_disclosed": true,
+      "source_sha256": "ecefaaf086ec249d2832780f117650df006dc64a70b67fd1429f2b6371ace3cd"
+    },
+    "linux_before": {
+      "candidate": "7be0c25ac5c9479162937686dfc8a17a243c2064",
+      "expected": "before",
+      "exit": 0,
+      "failure_code": null,
+      "local_bank_still_valid": true,
+      "bank_feature_HEAD_index_preserved": true,
+      "body_not_disclosed": true,
+      "source_sha256": "3f624dade2d5bfaf2c465268ce46ce6feaf3dccd12d0308dc193113aa4608029"
+    },
+    "linux_after": {
+      "candidate": "20a1ec69acac479a261b62c4b5e1e71de15f2172",
+      "expected": "after",
+      "exit": 1,
+      "failure_code": "bank-source-byte-capacity",
+      "local_bank_still_valid": true,
+      "bank_feature_HEAD_index_preserved": true,
+      "body_not_disclosed": true,
+      "source_sha256": "ecefaaf086ec249d2832780f117650df006dc64a70b67fd1429f2b6371ace3cd"
+    }
+  },
+  "independent_implementation_acceptance": {
+    "245": "https://github.com/robertelee78/agent-memory/issues/245#issuecomment-6563093415",
+    "243": "https://github.com/robertelee78/agent-memory/issues/243#issuecomment-6563118387"
+  },
+  "limits_and_retained_failures": {
+    "historical_complete_gate": "Stopped optional run; not a pass. Captured logs contain elision; no complete-matrix coverage is claimed. README275-285 permits focused release qualification.",
+    "concurrent_macos_update_suite": "55276fc standalone update-suite attempt timed out at300seconds during concurrent broad qualification; not counted passing. Serial0440f4c update15 suite subsequently passed in296.42550754197873seconds.",
+    "linux_initial_node_unavailable": "Initial boundary attempt skipped2JavaScript tests and is not counted passing; isolated verified Node prerequisite enabled a subsequent5+13 passing zero-skip run.",
+    "older_linux_update_receipts": "7be launcher tried Python runpy on the shell wrapper;20a invocation omitted--json. Those failures remain retained; corrected552 update15 result supplies passing coverage.",
+    "installer_suite": {
+      "candidate": "0440f4cc8031bacf59b0f54b7d440917b02d5d43",
+      "tests": 33,
+      "passed": 31,
+      "failed": 2,
+      "unchanged_baseline": "c43f80f06cecc49898d6eb5122452f5f18879d27 (runtimeab1d86e)",
+      "baseline_failed_cases": 2,
+      "same_assertions": [
+        "still_old.changed expectedFalse butTrue before candidate upgrade",
+        "bootstrap expectedfirstfailingPython torefuse butlater supportedPython was found"
+      ],
+      "claimed_fixed": false
+    },
+    "released_v002_updater": {
+      "baseline": "c43f80f06cecc49898d6eb5122452f5f18879d27",
+      "candidate": "0440f4cc8031bacf59b0f54b7d440917b02d5d43",
+      "exit": 1,
+      "same_baseline_and_candidate_result": {
+        "operation": "update",
+        "verified": false,
+        "error": "Only the quoted SKILL_DIR helper path may expand",
+        "repair": "Preserve the receipt, source and bank; correct the reported channel/ownership/compatibility issue. For an interrupted activation, use the trusted installer helper recover before retrying."
+      },
+      "claimed_compatible": false
+    }
+  },
+  "controlled_only": true,
+  "original_reported_bank_accessed": false,
+  "real_terminology_captured": false,
+  "public_signed_release_delivery_verified": false
+}
