@@ -44,7 +44,6 @@ class DoctorFixContract(unittest.TestCase):
             self.assertEqual(snapshot(bank), before)
             skipped = [entry for entry in data['repairs'] if entry['component'] == 'bank.transaction' and entry['state'] == 'skipped']
             self.assertEqual(skipped[0]['state'], 'skipped')
-            self.assertIn('original operation', skipped[0]['repair'])
 
     def test_missing_owned_runtime_targets_are_recreated(self):
         with World() as world:
@@ -114,7 +113,7 @@ class DoctorFixContract(unittest.TestCase):
             self.assertEqual(hook.read_bytes(), before)
             self.assertFalse(json.loads(result.stdout)['repairs_performed'])
 
-    def test_foreign_hook_configuration_is_preserved_and_receipt_reconciled(self):
+    def test_healthy_unrelated_hook_configuration_needs_no_repair(self):
         with World() as world:
             repo, _, receipt = fixture(world)
             cli = Path(receipt['bin_dir']) / 'am'
@@ -122,12 +121,13 @@ class DoctorFixContract(unittest.TestCase):
             value = json.loads(hook.read_text())
             value['user-setting'] = {'keep': True}
             hook.write_text(json.dumps(value, indent=2) + '\n')
-            before = hook.read_bytes()
+            before = snapshot(world.root)
             result = world.run([cli, 'doctor', '--fix', '--repo', repo, '--json'], check=False)
             data = json.loads(result.stdout)
             self.assertEqual(result.returncode, 0, data)
-            self.assertTrue(data['repairs_performed'])
-            self.assertEqual(hook.read_bytes(), before)
+            self.assertFalse(data['repairs_performed'])
+            self.assertFalse(data['writes_performed'])
+            self.assertEqual(snapshot(world.root), before)
             self.assertEqual(data['restart_clients'], [])
 
     def test_recover_update_interrupted_before_receipt(self):

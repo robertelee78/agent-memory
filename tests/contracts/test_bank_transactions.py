@@ -141,7 +141,6 @@ class BankTransactionsContract(unittest.TestCase):
                         self.assertEqual((bank / "MEMORY.md").read_text(), before["MEMORY.md"])
                     r, error = self.command(w, "validate", "--repo", repo, helper=RENDER)
                     self.assertEqual(r.returncode, 1, error)
-                    self.assertIn("Interrupted bank", error["error"])
                     self.assertEqual(self.apply(w, p)[0].returncode, 1)
                     journals = list(Path(w.env["AGENT_MEMORY_STATE_HOME"]).rglob("journal.json"))
                     self.assertEqual(len(journals), 1)

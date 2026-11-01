@@ -359,6 +359,8 @@ def inspect(repo, fetch=False):
                       local_memory_available=True, boundary=boundary)
     try:
         observation = observe(repo)
+    except bank_capacity.BankCapacityError:
+        raise
     except ContractError:
         return result('inspect', writes_performed=None, git_metadata_writes_performed=None, sharing_state='pending-stale', remote_freshness_verified=False,
                       local_memory_available=True, boundary=boundary,

@@ -166,6 +166,44 @@ class RuntimeDiagnosticsContract(unittest.TestCase):
             self.assertTrue(any(item['path'] == str(path) for item in json.loads(preview.stdout)['preserved']))
             self.assertEqual(snapshot(world.root), before)
 
+    def test_prompt_only_legacy_and_invalid_present_stop_receipts(self):
+        for preset in ('codex', 'claude'):
+            with self.subTest(preset=preset), World() as world:
+                _, path = hook_fixture(world, preset)
+                receipt_file = receipt_path(world)
+                original = json.loads(receipt_file.read_bytes())
+                journal_path = receipt_file.parent/'journal.json'
+                journal = json.loads(journal_path.read_bytes())
+                document = json.loads(path.read_bytes())
+                document['unrelated-setting'] = {'preserve': True}
+                path.write_text(json.dumps(document))
+                for case in ('absent', 'null', 'empty'):
+                    with self.subTest(stop_evidence=case):
+                        receipt = json.loads(json.dumps(original))
+                        target = next(t for t in receipt['targets'] if t['kind'] == 'hook-config')
+                        if case == 'absent':
+                            del target['stop_entry']
+                        else:
+                            target['stop_entry'] = None if case == 'null' else {}
+                        raw = (json.dumps(receipt, sort_keys=True, indent=2) + '\n').encode()
+                        receipt_file.write_bytes(raw)
+                        journal['receipt'] = receipt
+                        journal['receipt_identity'] = {
+                            'kind': 'file', 'hash': hashlib.sha256(raw).hexdigest(),
+                            'mode': receipt_file.stat().st_mode & 0o7777}
+                        journal_path.write_text(json.dumps(journal))
+                        before = snapshot(world.root)
+                        result = call(world, 'doctor', '--repo', world.paths['repo'],
+                                      expected=0 if case == 'absent' else 1)
+                        check = component(result, 'runtime.target.hook-config')[0]
+                        if case == 'absent':
+                            self.assertEqual(check['state'], 'pass')
+                            self.assertEqual(check['verification_scope'], 'receipt-owned-entries')
+                        else:
+                            self.assertEqual((check['state'], check['failure_code']),
+                                             ('failure', 'insufficient_receipt'))
+                        self.assertEqual(snapshot(world.root), before)
+
     def test_opencode_plugin_link_remains_exact(self):
         with World() as world:
             channel = world.repository('opencode channel')

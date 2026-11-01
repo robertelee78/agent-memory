@@ -76,6 +76,28 @@ class SharingRecoveryContract(unittest.TestCase):
             self.assertTrue(online['remote_freshness_verified']);self.assertEqual(before,self.state(w,repo,bank))
             self.assertEqual(w.git('for-each-ref','--format=%(refname)','refs/agent-memory',cwd=repo).stdout.strip(),'')
 
+    def test_fetched_capacity_preserves_typed_cause_and_local_feature_state(self):
+        with World() as w:
+            repo, bank, peer, _ = self.fixture(w)
+            body = '# PRIVATE_REMOTE_BODY_CANARY\n' + 'x' * 16356
+            self.assertEqual(len(body.encode('utf-8')), 16385)
+            self.publish(w, peer, 'memory-bank/activeContext.md', body)
+            before = self.state(w, repo, bank)
+            process, value = self.call(w, 'inspect', '--repo', repo, '--fetch')
+            self.assertEqual(process.returncode, 1, value)
+            self.assertEqual(value['sharing_state'], 'pending-stale')
+            self.assertFalse(value['remote_freshness_verified'])
+            self.assertFalse(value['canonical_writes_performed'])
+            self.assertEqual(value['failure_code'], 'bank-source-byte-capacity')
+            self.assertEqual(value['failure_phase'], 'bank-eligibility')
+            self.assertEqual(value['failure_path'], 'activeContext.md')
+            self.assertEqual((value['capacity_limit'], value['capacity_observed'],
+                              value['capacity_measurement']), (16384, 16385, 'exact'))
+            self.assertNotIn('PRIVATE_REMOTE_BODY_CANARY', process.stdout + process.stderr)
+            self.assertEqual(self.state(w, repo, bank), before)
+            self.assertEqual(w.git('for-each-ref', '--format=%(refname)',
+                                  'refs/agent-memory', cwd=repo).stdout.strip(), '')
+
     def test_lost_success_response_and_squash_readback_do_not_require_a_duplicate_push(self):
         with World() as w:
             repo,bank,peer,base=self.fixture(w);before=self.state(w,repo,bank)

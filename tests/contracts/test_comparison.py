@@ -32,7 +32,7 @@ class ComparisonContract(unittest.TestCase):
         r,v=self.call(w,helper,*args);self.assertEqual(r.returncode,0,v or r.stderr);return v
 
     def save(self,w,value,name='request.json'):
-        p=w.inside(name);p.write_text(json.dumps(value));return p
+        p=w.inside(name);p.write_text(json.dumps(value));p.chmod(0o600);return p
 
     def fixture(self,w):
         self.pack=w.inside('portable comparison pack');shutil.copytree(ROOT/'skills/agent-memory',self.pack,ignore=shutil.ignore_patterns('__pycache__'))
