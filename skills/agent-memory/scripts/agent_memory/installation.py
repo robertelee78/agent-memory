@@ -1190,8 +1190,15 @@ def install(plan, *, before_activate=None, after_activate=None):
         raise
 
 
+def failure_details(exc):
+    from .release_distribution import DownloadError
+    return {'download': exc.details} if isinstance(exc, DownloadError) else {}
+
+
 def failure_repair(exc):
-    from .release_distribution import DistributionError
+    from .release_distribution import DistributionError, DownloadError
+    if isinstance(exc, DownloadError):
+        return exc.repair
     if isinstance(exc, DistributionError):
         return ('Preserve the active runtime and receipts. Check the trusted release, curl and OpenSSH '
                 'signature support from an operator-trusted installer; never fall back to unsigned bytes.')
@@ -1313,6 +1320,6 @@ def main(argv=None):
                         result = install(plan)
         runtime_faults.response(args.command, result)
     except (OSError, ValueError, TypeError, KeyError, UnicodeError, subprocess.SubprocessError) as exc:
-        result = {'operation': args.command, 'verified': False, 'error': str(exc), 'repair': failure_repair(exc)}
+        result = {'operation': args.command, 'verified': False, 'error': str(exc), 'repair': failure_repair(exc), **failure_details(exc)}
     print(json.dumps(result, indent=2))
     return 0 if result.get('verified') or result.get('schema') == 'agent-memory/install-plan-v1' else 1

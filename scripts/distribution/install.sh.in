@@ -98,9 +98,11 @@ try:
     raise SystemExit(bootstrap())
 except (OSError, ValueError, KeyError, TypeError, RecursionError, subprocess.SubprocessError) as error:
     if '--json' in sys.argv:
-        print(json.dumps({'operation': 'install', 'verified': False, 'error': str(error)}))
+        print(json.dumps({'operation': 'install', 'verified': False, 'error': str(error),
+                          **({'download': error.details, 'repair': error.repair} if isinstance(error, DownloadError) else {})}))
     else:
         print('am: ' + str(error), file=sys.stderr)
+        if isinstance(error, DownloadError): print(error.repair, file=sys.stderr)
     raise SystemExit(2 if isinstance(error, UsageError) else 1)
 AM_VERIFIED_INSTALLER
 fi

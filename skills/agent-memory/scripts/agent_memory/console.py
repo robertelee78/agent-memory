@@ -150,6 +150,8 @@ def render(data, command, prog, code):
     elif command in ('install', 'uninstall') and not code:
         preview = data.get('check_complete') or data.get('schema') == 'agent-memory/install-plan-v1'
         if preview:
+            if command == 'install':
+                print('Preview only: this command does not install am. Rerun the same installer without --check or --dry-run to apply.')
             print(('Installation' if command == 'install' else 'Uninstall') + ' preview; no changes made:')
             for target in data.get('targets', []):
                 action = ('change' if command == 'install' else 'remove') if target.get('changed') else 'keep'
@@ -217,7 +219,7 @@ def render(data, command, prog, code):
                 print('  ' + safe(item['repair']), file=sys.stderr if level == 'failures' else sys.stdout)
     if code and data.get('repair'):
         print(safe(data['repair']), file=sys.stderr)
-    if not code and data.get('restart_clients'):
+    if not code and data.get('restart_clients') and not (data.get('check_complete') or data.get('schema') == 'agent-memory/install-plan-v1'):
         print('Restart running agent sessions to load the changed skill.')
 
 

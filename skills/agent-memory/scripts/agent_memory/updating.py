@@ -370,7 +370,7 @@ def execute(args):
         runtime_faults.response('update', result)
     except (OSError, ValueError, TypeError, KeyError, UnicodeError, SyntaxError, RecursionError, subprocess.SubprocessError) as exc:
         result = {'operation':'update','verified':False,'error':str(exc),
-                  'repair':install.failure_repair(exc)}
+                  'repair':install.failure_repair(exc), **install.failure_details(exc)}
     print(json.dumps(result,indent=2))
     return 0 if result.get('verified') or result.get('check_complete') else 1
 

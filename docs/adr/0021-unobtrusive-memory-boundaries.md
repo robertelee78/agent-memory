@@ -472,3 +472,17 @@ attempts/deadline, transientHTTP, non-retryableTLS/404/429/size/integrity,
 redaction/bounds/private modes, failed report writes, unchanged targets/receipts/
 banks and render parity. Actual affected-Mac preview SHALL pass before publishing;
 this test MUST NOT perform an installation on that machine.
+
+
+T9 also SHALL correct successful preview guidance: `--check`/`--dry-run` MUST
+explicitly say the command did not install `am` and instruct rerunning the same
+installer without preview flags, preserving custom options. Guidance MUST NOT
+reconstruct the command or echo credentials/environment values; it SHALL refer
+to the original invocation. The existing planned-target path list remains necessary
+for review and MAY display an explicitly selected target path. A preview MUST NOT print restart-session or PATH advice for
+changes not applied. Focused tests SHALL verify the wording and the same packaged
+renderer through the signed bootstrap preview, including negative sentinel tests
+for unrelated environment/data values. The affected Mac
+had no wrapper/receipt and its local bin was already on PATH; its missing command
+was expected preview behavior, obscured by that advice. Actual installation there
+remains pending the operator's explicit response.
