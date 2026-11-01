@@ -263,7 +263,7 @@ class RuntimeUpdateContract(unittest.TestCase):
             _,_,receipt=fixture(world); before=owned(receipt); raw=receipt_path(world).read_bytes()
             launcher=world.inside('private-umask-launch.py')
             launcher.write_text("import os,sys\nos.umask(0o077)\nentry=sys.argv.pop(1)\nos.execv(entry,[entry,*sys.argv[1:]])\n")
-            command=[sys.executable,'-I',launcher,Path(receipt['bin_dir'])/'agent-memory','update']
+            command=[sys.executable,'-I',launcher,Path(receipt['bin_dir'])/'agent-memory','--json','update']
             result=world.run(command)
             value=json.loads(result.stdout)
             self.assertTrue(value['verified']); self.assertFalse(value['changed'])
