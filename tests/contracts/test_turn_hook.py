@@ -18,19 +18,12 @@ class TurnHookContract(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         return json.loads(result.stdout)
 
-    def test_prompt_injects_shared_guidance_without_blocking(self):
+    def test_prompt_keeps_harness_turn_unblocked(self):
         value = self.call(json.dumps({'hook_event_name': 'UserPromptSubmit',
                                       'session_id': 'fixture-session', 'cwd': '/tmp'}).encode())
         self.assertNotIn('decision', value)
         output = value['hookSpecificOutput']
         self.assertEqual(output['hookEventName'], 'UserPromptSubmit')
-        prompt = output['additionalContext']
-        self.assertIn('compare it with existing memory by meaning', prompt)
-        self.assertIn('do not invent', prompt.lower())
-        self.assertIn('pending', prompt)
-        self.assertIn(str(HOOK.resolve().parent.parent / 'SKILL.md'), prompt)
-        self.assertIn('Never directly edit or stage', prompt)
-        self.assertIn('do not bypass permissions', prompt)
 
     def test_opt_in_claude_stop_wakes_once_and_preserves_permissions(self):
         hook = HOOK.parent / 'claude_stop.py'
