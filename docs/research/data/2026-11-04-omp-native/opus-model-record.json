@@ -1,0 +1,13 @@
+[
+  {
+    "type": "model_change",
+    "id": "8ebba64d",
+    "parentId": null,
+    "timestamp": "2026-11-04T04:15:24.095Z",
+    "runtime": {
+      "version": "18.16.0"
+    },
+    "model": "anthropic/claude-opus-5-5",
+    "resolvedModelIsFallback": false
+  }
+]
