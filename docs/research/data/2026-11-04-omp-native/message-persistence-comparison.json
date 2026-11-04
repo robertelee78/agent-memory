@@ -1,0 +1,42 @@
+{
+  "projection_keys": [
+    "role",
+    "attribution",
+    "content",
+    "timestamp",
+    "toolCallId",
+    "toolName",
+    "isError",
+    "details"
+  ],
+  "pairs": [
+    {
+      "role": "user",
+      "native_id": "ee906442",
+      "projection_equal": true
+    },
+    {
+      "role": "assistant",
+      "native_id": "5d11501d",
+      "projection_equal": true
+    },
+    {
+      "role": "assistant",
+      "native_id": "4f912881",
+      "projection_equal": true
+    },
+    {
+      "role": "toolResult",
+      "native_id": "f138ce55",
+      "projection_equal": true
+    },
+    {
+      "role": "assistant",
+      "native_id": "fe9093d5",
+      "projection_equal": true
+    }
+  ],
+  "message_end_precedes_tree_append": true,
+  "full_assistant_raw_equality": false,
+  "limit": "Observed capture-order fixture only; no all-message-class or full memory coverage claim"
+}

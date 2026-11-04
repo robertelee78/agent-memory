@@ -1,0 +1,1269 @@
+{
+  "schema": "agent-memory/omp-native-feasibility-evidence-v1",
+  "scope": "Native API/fixture feasibility, not agent-memory qualification",
+  "binary_sha256": "d4a10d97488d6054d2b18198bd24f461079952c7e0fb75ba66336ca0df0cb99e",
+  "projection_fields": [
+    "role",
+    "attribution",
+    "content",
+    "timestamp",
+    "toolCallId",
+    "toolName",
+    "isError",
+    "details"
+  ],
+  "excluded": "Credential pin records, provider payload/internal context metadata and model thinking are not exported; original raw outputs retained locally with digests",
+  "invariants": [
+    {
+      "scenario": "headless-denial",
+      "checks": {
+        "native_exit_zero": true,
+        "original_answer_once": true,
+        "agent_attributed_continuations": true,
+        "continuation_count": true,
+        "sentinel_correct": true,
+        "settled": true,
+        "no_execution_after_refusal": true
+      },
+      "sessionId": "01a1a499-4c38-7499-9239-eb9c0cb237b7",
+      "limit": "Native fixture/API feasibility only; not agent-memory end-to-end qualification"
+    },
+    {
+      "scenario": "allowed",
+      "checks": {
+        "native_exit_zero": true,
+        "original_answer_once": true,
+        "agent_attributed_continuations": true,
+        "continuation_count": true,
+        "sentinel_correct": true,
+        "settled": true
+      },
+      "sessionId": "01a1a49a-1b43-767a-be36-60a083bcda51",
+      "limit": "Native fixture/API feasibility only; not agent-memory end-to-end qualification"
+    },
+    {
+      "scenario": "rejected",
+      "checks": {
+        "native_exit_zero": true,
+        "original_answer_once": true,
+        "agent_attributed_continuations": true,
+        "continuation_count": true,
+        "sentinel_correct": true,
+        "settled": true,
+        "no_execution_after_refusal": true
+      },
+      "sessionId": "01a1a49a-50cf-7737-88e4-0960e64955f7",
+      "limit": "Native fixture/API feasibility only; not agent-memory end-to-end qualification"
+    },
+    {
+      "scenario": "cancel",
+      "checks": {
+        "native_exit_zero": true,
+        "original_answer_once": true,
+        "agent_attributed_continuations": true,
+        "continuation_count": true,
+        "sentinel_correct": true,
+        "settled": true,
+        "actual_tool_aborted": true
+      },
+      "sessionId": "01a1a49a-6d08-7248-899b-c4b0e98b00e0",
+      "limit": "Native fixture/API feasibility only; not agent-memory end-to-end qualification"
+    },
+    {
+      "scenario": "steer",
+      "checks": {
+        "native_exit_zero": true,
+        "original_answer_once": true,
+        "agent_attributed_continuations": true,
+        "continuation_count": true,
+        "sentinel_correct": true,
+        "settled": true,
+        "new_input_and_answer_preserved": true
+      },
+      "sessionId": "01a1a49a-9d6d-70cd-8f97-7744294aa0e9",
+      "limit": "Native fixture/API feasibility only; not agent-memory end-to-end qualification"
+    },
+    {
+      "scenario": "offline",
+      "checks": {
+        "native_exit_zero": true,
+        "original_answer_once": true,
+        "agent_attributed_continuations": true,
+        "continuation_count": true,
+        "sentinel_correct": true,
+        "settled": true,
+        "injected_failure_reported": true
+      },
+      "sessionId": "01a1a49a-c50a-709c-ab16-1625cd4d3e36",
+      "limit": "Native fixture/API feasibility only; not agent-memory end-to-end qualification"
+    },
+    {
+      "scenario": "capture-order",
+      "checks": {
+        "native_exit_zero": true,
+        "original_answer_once": true,
+        "agent_attributed_continuations": true,
+        "continuation_count": true,
+        "sentinel_correct": true,
+        "settled": true,
+        "no_execution_after_refusal": true
+      },
+      "sessionId": "01a1a49c-9bca-7712-b6ab-893df76dbce9",
+      "limit": "Native fixture/API feasibility only; not agent-memory end-to-end qualification"
+    },
+    {
+      "scenario": "cap",
+      "checks": {
+        "native_exit_zero": true,
+        "original_answer_once": true,
+        "agent_attributed_continuations": true,
+        "continuation_count": true,
+        "sentinel_correct": true,
+        "settled": true
+      },
+      "sessionId": "01a1a49c-ec24-72e7-9f44-2c9f58834bdb",
+      "limit": "Native fixture/API feasibility only; not agent-memory end-to-end qualification"
+    }
+  ],
+  "scenarios": [
+    {
+      "scenario": "headless-denial",
+      "native_session": {
+        "sessionId": "01a1a499-4c38-7499-9239-eb9c0cb237b7",
+        "sessionFile": "/tmp/agent-memory-omp-native/headless-denial/sessions/2026-11-04T03-27-52-376Z_01a1a499-4c38-7499-9239-eb9c0cb237b7.jsonl",
+        "isSettled": true,
+        "queuedMessages": {
+          "steering": [],
+          "followUp": [],
+          "liveSteered": 0
+        },
+        "messageCount": 6
+      },
+      "exit": 0,
+      "sentinel_present": false,
+      "entries_projection": [
+        {
+          "id": "10294436",
+          "parentId": "35dcb676",
+          "type": "message",
+          "message": {
+            "role": "user",
+            "attribution": "user",
+            "content": [
+              {
+                "type": "text",
+                "text": "Return exactly MAIN_ANSWER_249 and do not call any tool. This is the substantive original task."
+              }
+            ],
+            "timestamp": 1793762872539
+          }
+        },
+        {
+          "id": "c55654c4",
+          "parentId": "8d977b6f",
+          "type": "message",
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "text",
+                "text": "MAIN_ANSWER_249",
+                "textSignature": "{\"v\":1,\"id\":\"msg_09d88923140c45db016aeaa63aa1c887d0b64b81c6d9d317aa\",\"phase\":\"final_answer\"}"
+              }
+            ],
+            "timestamp": 1793762872551
+          }
+        },
+        {
+          "id": "53368a31",
+          "parentId": "1060d1bc",
+          "type": "custom_message",
+          "customType": "session-stop-continuation",
+          "content": "Native interface probe only. Your substantive task answer is already delivered; do not repeat it. Call probe_boundary_action exactly once with {\"label\":\"SOURCE_249\"}. If refused, unavailable or cancelled, do not use any alternative tool or execution path. Then give only a brief boundary status. This is agent-attributed integration context, not a new human instruction.",
+          "display": false,
+          "attribution": "agent"
+        },
+        {
+          "id": "3492972f",
+          "parentId": "53368a31",
+          "type": "message",
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "toolCall",
+                "id": "call_ac5885ea4ea24637ae089928dad47cf5|fc_09d88923140c45db016aeaa63c6b9087d0b3f798259aa70c87",
+                "name": "probe_boundary_action",
+                "arguments": {
+                  "i": "Run the requested disposable native-interface boundary probe.",
+                  "label": "SOURCE_249"
+                },
+                "intent": "Run the requested disposable native-interface boundary probe"
+              }
+            ],
+            "timestamp": 1793762874764
+          }
+        },
+        {
+          "id": "f84bc586",
+          "parentId": "fc1c672c",
+          "type": "message",
+          "message": {
+            "role": "toolResult",
+            "content": [
+              {
+                "type": "text",
+                "text": "Tool \"probe_boundary_action\" requires approval but no interactive UI available.\nOptions:\n  1. Set tools.approvalMode: yolo in /settings\n  2. Add tools.approval.probe_boundary_action: allow to config\n  3. Use an interactive UI to approve the tool call"
+              }
+            ],
+            "timestamp": 1793762876849,
+            "toolCallId": "call_ac5885ea4ea24637ae089928dad47cf5|fc_09d88923140c45db016aeaa63c6b9087d0b3f798259aa70c87",
+            "toolName": "probe_boundary_action",
+            "isError": true,
+            "details": {}
+          }
+        },
+        {
+          "id": "a9ebd050",
+          "parentId": "f84bc586",
+          "type": "message",
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "text",
+                "text": "Probe blocked: approval required, but no interactive UI is available. No alternative attempted.",
+                "textSignature": "{\"v\":1,\"id\":\"msg_09d88923140c45db016aeaa63ddeac87d0b717df58690da43c\",\"phase\":\"final_answer\"}"
+              }
+            ],
+            "timestamp": 1793762876850
+          }
+        }
+      ],
+      "raw_stdout_sha256": "c98c31f299aa7c85e984b7bf6446d9e07a42a2e7ae3f314856fe578ee789d8fb",
+      "raw_observations_sha256": "2947c1b3c8b48e75ed7af16388473d139a124952393d3e4c09d160e89e787627"
+    },
+    {
+      "scenario": "allowed",
+      "native_session": {
+        "sessionId": "01a1a49a-1b43-767a-be36-60a083bcda51",
+        "sessionFile": "/tmp/agent-memory-omp-native/allowed/sessions/2026-11-04T03-28-45-379Z_01a1a49a-1b43-767a-be36-60a083bcda51.jsonl",
+        "isSettled": true,
+        "queuedMessages": {
+          "steering": [],
+          "followUp": [],
+          "liveSteered": 0
+        },
+        "messageCount": 6
+      },
+      "exit": 0,
+      "sentinel_present": true,
+      "entries_projection": [
+        {
+          "id": "7421cae2",
+          "parentId": "143a9dc6",
+          "type": "message",
+          "message": {
+            "role": "user",
+            "attribution": "user",
+            "content": [
+              {
+                "type": "text",
+                "text": "Return exactly MAIN_ANSWER_249 and do not call any tool. This is the substantive original task."
+              }
+            ],
+            "timestamp": 1793762925588
+          }
+        },
+        {
+          "id": "14af75c8",
+          "parentId": "ca716c09",
+          "type": "message",
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "text",
+                "text": "MAIN_ANSWER_249",
+                "textSignature": "{\"v\":1,\"id\":\"msg_0b703c06cd2ea0e8016aeaa66fcb5c87d0828aaea9e6dedf5b\",\"phase\":\"final_answer\"}"
+              }
+            ],
+            "timestamp": 1793762925600
+          }
+        },
+        {
+          "id": "3efa2241",
+          "parentId": "73e266e1",
+          "type": "custom_message",
+          "customType": "session-stop-continuation",
+          "content": "Native interface probe only. Your substantive task answer is already delivered; do not repeat it. Call probe_boundary_action exactly once with {\"label\":\"SOURCE_249\"}. If refused, unavailable or cancelled, do not use any alternative tool or execution path. Then give only a brief boundary status. This is agent-attributed integration context, not a new human instruction.",
+          "display": false,
+          "attribution": "agent"
+        },
+        {
+          "id": "8bc5cbd3",
+          "parentId": "3efa2241",
+          "type": "message",
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "thinking",
+                "thinking": "",
+                "thinkingSignature": "{\"type\":\"reasoning\",\"id\":\"rs_0b703c06cd2ea0e8016aeaa6725ea487d09b6bc231f2166a90\",\"metadata\":{\"turn_id\":\"e2808a0c-e531-4b65-9b2e-86e319487a2c\"},\"internal_chat_message_metadata_passthrough\":{\"turn_id\":\"e2808a0c-e531-4b65-9b2e-86e319487a2c\"},\"summary\":[],\"content\":[],\"encrypted_content\":\"gAAAAABq6qZ0coKElU4Ph6ui6gYPzuYDjxqWN3fO71Sd6-JgKdDedNhARqqHIxX9l1awhF5WOTTDpaBYPCIpBnrdJKOB5yrgMzTEbtNdGLsCKpWXaVDtMJMCjI79pwRsjwc-QomwfaK19UEeJeI3H7uf1Un6H7qG_gXU9Ad3ckV-p3YHKGCavjfs1FkPBuZ-jV1WWwVt-rpFtiXXCkpmf3-fieVTaZ7HgV0UNjliHckwhCF3ubpq1YLWConSO60-Qroi25BTIUfSL_9C4hXeZWzcnpAcMuYIdmtJRNfaVW3TJ7TA73dHjblmoqWVnKxaFZqurgRrdGc9g9Wfg-wqaSIUJfBLsv2b-zPOnrr1h4wsUeiZggUijhSl0lu8-pWRU8Wy5zwvn7D6mC385EGjKi8vJ32NK1qIyBewvZ3X-0Kfxq1Yj83pqVUAOXgOA3qGRpGX9aWJnVbmJ4ZBHfIdvgKKJhd0kKbRSbZN43ButUFQZyVCmtYIPeHDCCSXn00T0NujIztT87VfIAruNaKeX7-ZJctjM9yKFSJU2ui-lfYVBFOOxxU3QQKKFOWwEnVYMhmt14GBlK3m-a269O_Pkbry-doyuITJ5InVuMZq6w3cmwoOSkvV4nxLmRkMd8wXGhaAeOqZZGtBd5CKuw6bFjPwiNpvKzk0aboe7Z5QeSOSgDKgGrTBnNjzQ_5yS_4Vz7BsFi1ciNdYHFSRz240fVpcLGRVKHdke6nQ4aUxsN0wbTON-KO0gWhoSR2GiEZLKpschp1YtPpwtGKekhkxnVhW5oDYRp-IuRbQGIs5H3OCxM-I-yONwZfwlHuA5AFED_tSvjJgjBQKCPbtsBVdtnTeyqRiPiWrdhPcPTwOMx1XwLO0cGoRNZyimKlViIKeU7scKtGJABtvsFbzvn5O5kSYDKyGBl8Xv1614zVuKVkUBqcsbCRffdqOyT9Z5uHR-kwy9-Lyv6FuXIp3okfV79XFNlYDV63uEFRc91lUpjWe-ztK3P7ZfyyWUNOCzQWjFef9dG51F5i8FzOUU7HnPXWekKEd8sR3ndRAwqKoxz5gizRo9kZN_tZpN9c3tuoNdAh3vGs9YrRN8hPV1iM9APMaGIx2ClUS-S1GmJPLFSsYqNF0LPx26anifrKEHSMqj0l4cu9rB2lxbj6zd8YtC-CkkbkE1yCkuV6k4iPZWMzRNVcyZdjq7POrpKC2iXt4Oc-x807TaaXolg7rgUOVeI6_ytpgR67X7zGraLqq4hv7ASvHtSYUbBQAjtYHIV8RXht8n60sP1aaHZeev7scgN7PGKbZifViO2n4PiDB4V9qQhQreqqa12uXn3XbG5qYP7ctNj2mQJbnLtTo_unWjuINeymfQjHGib5RfwuvDfpeMrpDlFgCsNqi37hUc-T8yqOX9jVf5RTvdFvYtnk6ebfjbFX56HqNGk_2kHGSMrt52Y9ovBoREM4PqGw__RsET_Czim2qB8FQ3vvrQe5i45xL_jEW82osjd3XywgwWA9PcKeeRQQiiq2QjhEkXStmuTTKjSJp26tWOFc0va_O01PSESGbp3lgb_G7nBL87rne8x8rT19p4zgbY2fQaAMzknxVna_t8aPwpPF8gAToJ8JZcvb7QdqUFA==\"}",
+                "summary": false
+              },
+              {
+                "type": "toolCall",
+                "id": "call_5139a81350474fba89245d160cbf29e6|fc_0b703c06cd2ea0e8016aeaa674a12887d0b41b81c60fc20869",
+                "name": "probe_boundary_action",
+                "arguments": {
+                  "i": "Run the disposable native boundary probe.",
+                  "label": "SOURCE_249"
+                },
+                "intent": "Run the disposable native boundary probe"
+              }
+            ],
+            "timestamp": 1793762928220
+          }
+        },
+        {
+          "id": "3a05bc5c",
+          "parentId": "33944c63",
+          "type": "message",
+          "message": {
+            "role": "toolResult",
+            "content": [
+              {
+                "type": "text",
+                "text": "PROBE_BOUNDARY_ACTION_COMPLETED SOURCE_249"
+              }
+            ],
+            "timestamp": 1793762932762,
+            "toolCallId": "call_5139a81350474fba89245d160cbf29e6|fc_0b703c06cd2ea0e8016aeaa674a12887d0b41b81c60fc20869",
+            "toolName": "probe_boundary_action",
+            "isError": false,
+            "details": {
+              "probeOnly": true
+            }
+          }
+        },
+        {
+          "id": "e3815bda",
+          "parentId": "3a05bc5c",
+          "type": "message",
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "text",
+                "text": "Boundary probe completed.",
+                "textSignature": "{\"v\":1,\"id\":\"msg_0b703c06cd2ea0e8016aeaa675fc7887d09aeeb152953ee305\",\"phase\":\"final_answer\"}"
+              }
+            ],
+            "timestamp": 1793762932763
+          }
+        }
+      ],
+      "raw_stdout_sha256": "fa5002c39f83a8bca8a4e106f40bb1e1952250eb1152395df92918bde992eea3",
+      "raw_observations_sha256": "4104790594d34d4449eb1c337fdf500d64d7ff52cef5645b8c55d7d5b278ade2"
+    },
+    {
+      "scenario": "rejected",
+      "native_session": {
+        "sessionId": "01a1a49a-50cf-7737-88e4-0960e64955f7",
+        "sessionFile": "/tmp/agent-memory-omp-native/rejected/sessions/2026-11-04T03-28-59-087Z_01a1a49a-50cf-7737-88e4-0960e64955f7.jsonl",
+        "isSettled": true,
+        "queuedMessages": {
+          "steering": [],
+          "followUp": [],
+          "liveSteered": 0
+        },
+        "messageCount": 6
+      },
+      "exit": 0,
+      "sentinel_present": false,
+      "entries_projection": [
+        {
+          "id": "2a887dbc",
+          "parentId": "49b3d171",
+          "type": "message",
+          "message": {
+            "role": "user",
+            "attribution": "user",
+            "content": [
+              {
+                "type": "text",
+                "text": "Return exactly MAIN_ANSWER_249 and do not call any tool. This is the substantive original task."
+              }
+            ],
+            "timestamp": 1793762939297
+          }
+        },
+        {
+          "id": "1d91433c",
+          "parentId": "37bd6b69",
+          "type": "message",
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "text",
+                "text": "MAIN_ANSWER_249",
+                "textSignature": "{\"v\":1,\"id\":\"msg_018267d1fad8dc75016aeaa67d817887d081fdd51ed90887cb\",\"phase\":\"final_answer\"}"
+              }
+            ],
+            "timestamp": 1793762939310
+          }
+        },
+        {
+          "id": "0d89e877",
+          "parentId": "2654cb1a",
+          "type": "custom_message",
+          "customType": "session-stop-continuation",
+          "content": "Native interface probe only. Your substantive task answer is already delivered; do not repeat it. Call probe_boundary_action exactly once with {\"label\":\"SOURCE_249\"}. If refused, unavailable or cancelled, do not use any alternative tool or execution path. Then give only a brief boundary status. This is agent-attributed integration context, not a new human instruction.",
+          "display": false,
+          "attribution": "agent"
+        },
+        {
+          "id": "40758aab",
+          "parentId": "0d89e877",
+          "type": "message",
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "toolCall",
+                "id": "call_0c15c196c8594e0d9456f78991c1a5e9|fc_018267d1fad8dc75016aeaa67ffdcc87d09d206b0b15af9449",
+                "name": "probe_boundary_action",
+                "arguments": {
+                  "i": "Run the disposable native boundary probe.",
+                  "label": "SOURCE_249"
+                },
+                "intent": "Run the disposable native boundary probe"
+              }
+            ],
+            "timestamp": 1793762942552
+          }
+        },
+        {
+          "id": "b6b0f228",
+          "parentId": "dde2953b",
+          "type": "message",
+          "message": {
+            "role": "toolResult",
+            "content": [
+              {
+                "type": "text",
+                "text": "Tool call denied by user: probe_boundary_action"
+              }
+            ],
+            "timestamp": 1793762944731,
+            "toolCallId": "call_0c15c196c8594e0d9456f78991c1a5e9|fc_018267d1fad8dc75016aeaa67ffdcc87d09d206b0b15af9449",
+            "toolName": "probe_boundary_action",
+            "isError": true,
+            "details": {}
+          }
+        },
+        {
+          "id": "3addcbf9",
+          "parentId": "b6b0f228",
+          "type": "message",
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "text",
+                "text": "Boundary probe denied; no alternative action taken.",
+                "textSignature": "{\"v\":1,\"id\":\"msg_018267d1fad8dc75016aeaa681d72487d0991e5209740b3a67\",\"phase\":\"final_answer\"}"
+              }
+            ],
+            "timestamp": 1793762944732
+          }
+        }
+      ],
+      "raw_stdout_sha256": "22dd2bc7efa93a99f4c1b5dbf134cb226b6bf6002e09a6d14f0306dc92514c1d",
+      "raw_observations_sha256": "1e941deb1f457478a221a3f813cb6fe87d540452beb8a57ed855503d22489fc2"
+    },
+    {
+      "scenario": "cancel",
+      "native_session": {
+        "sessionId": "01a1a49a-6d08-7248-899b-c4b0e98b00e0",
+        "sessionFile": "/tmp/agent-memory-omp-native/cancel/sessions/2026-11-04T03-29-06-312Z_01a1a49a-6d08-7248-899b-c4b0e98b00e0.jsonl",
+        "isSettled": true,
+        "queuedMessages": {
+          "steering": [],
+          "followUp": [],
+          "liveSteered": 0
+        },
+        "messageCount": 6
+      },
+      "exit": 0,
+      "sentinel_present": false,
+      "entries_projection": [
+        {
+          "id": "d96e1de5",
+          "parentId": "248c88c6",
+          "type": "message",
+          "message": {
+            "role": "user",
+            "attribution": "user",
+            "content": [
+              {
+                "type": "text",
+                "text": "Return exactly MAIN_ANSWER_249 and do not call any tool. This is the substantive original task."
+              }
+            ],
+            "timestamp": 1793762946522
+          }
+        },
+        {
+          "id": "101692d8",
+          "parentId": "25d2f5fb",
+          "type": "message",
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "text",
+                "text": "MAIN_ANSWER_249",
+                "textSignature": "{\"v\":1,\"id\":\"msg_02053bf9fbf39a42016aeaa68492b087d096333fa3892221f8\",\"phase\":\"final_answer\"}"
+              }
+            ],
+            "timestamp": 1793762946534
+          }
+        },
+        {
+          "id": "5683a543",
+          "parentId": "05e00eb7",
+          "type": "custom_message",
+          "customType": "session-stop-continuation",
+          "content": "Native interface probe only. Your substantive task answer is already delivered; do not repeat it. Call probe_boundary_action exactly once with {\"label\":\"SOURCE_249\"}. If refused, unavailable or cancelled, do not use any alternative tool or execution path. Then give only a brief boundary status. This is agent-attributed integration context, not a new human instruction.",
+          "display": false,
+          "attribution": "agent"
+        },
+        {
+          "id": "460b0f9d",
+          "parentId": "5683a543",
+          "type": "message",
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "toolCall",
+                "id": "call_7adadfb7596548d5b3dbb556e3b6c53a|fc_02053bf9fbf39a42016aeaa686788487d0a67aa435879f4eb7",
+                "name": "probe_boundary_action",
+                "arguments": {
+                  "i": "Run the disposable native-interface boundary probe.",
+                  "label": "SOURCE_249"
+                },
+                "intent": "Run the disposable native-interface boundary probe"
+              }
+            ],
+            "timestamp": 1793762948720
+          }
+        },
+        {
+          "id": "2a2f0ada",
+          "parentId": "14393981",
+          "type": "message",
+          "message": {
+            "role": "toolResult",
+            "content": [
+              {
+                "type": "text",
+                "text": "probe cancelled before sentinel"
+              }
+            ],
+            "timestamp": 1793762950960,
+            "toolCallId": "call_7adadfb7596548d5b3dbb556e3b6c53a|fc_02053bf9fbf39a42016aeaa686788487d0a67aa435879f4eb7",
+            "toolName": "probe_boundary_action",
+            "isError": true,
+            "details": {}
+          }
+        },
+        {
+          "id": "acb53104",
+          "parentId": "2a2f0ada",
+          "type": "message",
+          "message": {
+            "role": "assistant",
+            "content": [],
+            "timestamp": 1793762950964
+          }
+        }
+      ],
+      "raw_stdout_sha256": "09df5df55d694a98425bc81fa58852c32b7f4b92d1b8d8a63d4c220ea3f11f6d",
+      "raw_observations_sha256": "279707680c9948cc49b5008acd3c0b8767948e4eee78cda0bfd91a268d40740d"
+    },
+    {
+      "scenario": "steer",
+      "native_session": {
+        "sessionId": "01a1a49a-9d6d-70cd-8f97-7744294aa0e9",
+        "sessionFile": "/tmp/agent-memory-omp-native/steer/sessions/2026-11-04T03-29-18-701Z_01a1a49a-9d6d-70cd-8f97-7744294aa0e9.jsonl",
+        "isSettled": true,
+        "queuedMessages": {
+          "steering": [],
+          "followUp": [],
+          "liveSteered": 0
+        },
+        "messageCount": 7
+      },
+      "exit": 0,
+      "sentinel_present": true,
+      "entries_projection": [
+        {
+          "id": "618df64f",
+          "parentId": "f210372d",
+          "type": "message",
+          "message": {
+            "role": "user",
+            "attribution": "user",
+            "content": [
+              {
+                "type": "text",
+                "text": "Return exactly MAIN_ANSWER_249 and do not call any tool. This is the substantive original task."
+              }
+            ],
+            "timestamp": 1793762958911
+          }
+        },
+        {
+          "id": "a821753b",
+          "parentId": "de23c051",
+          "type": "message",
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "text",
+                "text": "MAIN_ANSWER_249",
+                "textSignature": "{\"v\":1,\"id\":\"msg_0e8630b71a00fa88016aeaa690c92c87d099f21a66b82354db\",\"phase\":\"final_answer\"}"
+              }
+            ],
+            "timestamp": 1793762958925
+          }
+        },
+        {
+          "id": "09d5ce9d",
+          "parentId": "e8660e1e",
+          "type": "custom_message",
+          "customType": "session-stop-continuation",
+          "content": "Native interface probe only. Your substantive task answer is already delivered; do not repeat it. Call probe_boundary_action exactly once with {\"label\":\"SOURCE_249\"}. If refused, unavailable or cancelled, do not use any alternative tool or execution path. Then give only a brief boundary status. This is agent-attributed integration context, not a new human instruction.",
+          "display": false,
+          "attribution": "agent"
+        },
+        {
+          "id": "8737c59d",
+          "parentId": "09d5ce9d",
+          "type": "message",
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "thinking",
+                "thinking": "",
+                "thinkingSignature": "{\"type\":\"reasoning\",\"id\":\"rs_0e8630b71a00fa88016aeaa692ee5487d0a94b48044aa9536f\",\"metadata\":{\"turn_id\":\"c09a10fa-97b1-4e58-96e3-25f6854f47a7\"},\"internal_chat_message_metadata_passthrough\":{\"turn_id\":\"c09a10fa-97b1-4e58-96e3-25f6854f47a7\"},\"summary\":[],\"content\":[],\"encrypted_content\":\"gAAAAABq6qaUfHXRfTcYFfQYLHLei265A-r5J0TG7NtSbRwXhhRd7r-6qStjp8xtzdNlix_MclOudXc-A2WewNzJGTtMsG4L0rO8UItW-uiQhil3Z0fofZ-ECOsYndzd7Vun2FXKm77isrppCMeY_JFt1ZUmVFkdGj3HH0gIT7Ak2WgGL-lZE3Pf9q-hcJRP7lcu254xdkSg3YbPob4ihaMEC7c6uogDltvKVHnufasBWrUppPmWsLP_mhB3qOzUKeUdzfy17ltK2m28YxS5co8I6DrZuO2LhUc4sJm9bgpiBPuK_-j0m1juB8yxypVPLXxgPG5EkSb8xPQYFsjnRmIx269K2NN4NCxYmrDMUfyGXsuUu8JLCg9KUcWOHUjsAepdgjRoD0de1IulQDGPTZ6NuDJqWVJrCr5Ig9igDTvwICWhCC2_8YtFc4ISaT9Bl2ZJC921ikcfmqIvHfxSvYLf-WrpT6WIJPw-Zr-qLDSxAu0LvgJrgGxLQ2lafWVeiLnyBZ8EDbt7YdNmW7EDV3HeDAfQE1-EBUmqAYnpHSuJDPg7bceGYxghy6Rg2GUeWUXXg2w9LImuJy_wzmp2oBA1KNCQ8le55zkpsEbG11uvQQQmIpZ8I1llfcR9staxEZNIjOYVbnw2rgzsL3BZ9ORlWfgpVyQSgRrtuYBzl2BmQq23KZYHjqC-1WqGOCn9-2aLsWhj699Zg3SqHopsG9WKEUwrEUqxhMLYZ3mrnDvCyYlIBnUcS4hlEROl45JW8oW_nant6DcqrySLYjN5l6dsJNOq7355rxnjPPSomFXsx04MvClJuXBqYDGNFHN5q4My_cibkQEeEL-k4Zm3eWq6lWUiFEP7aBNajdEclKQv3OnOtrKTzPpp-G-dZERQkF2XZ0mzOc2SCgbE8r8MaeYeYgQ63tc3HP4sVDysED3PE1CsWEd6EICQafmrfpA6L43SC_-pWY6RwQeJP0h7a-oyuY1N43NpX7P-gPCpRtuxs2iAg37KEW_zJoot32YQw47fvqReECEUqkcp8c0IsN_y1kuZbx7wQEXq1V6L86fb0cOe2ew6z9jv0HA60JF-KuS0Msx39KVqLBIm85P1RfGIW_YtFZVgPOgjVcR0TRl86VBh1ZoVrPSWBQMz3hMsOUauqFHxMhV1JQ048sSdw1C-c3Tg8Y_a7ifvY9HS9SexRdtwq8S0dfu_gUgTRGo8mhdTUzx53GWor3eyn4gILT3XRPl42Vtwzzt9RmcjYtFY6I7AycMsLZwFlobR-2Pg2pchVpnGByxH9PSezlG0uGYpBy8bDU7AdC2TKDMV5zaapkJnznzwfZAQSX3lAff0QbU_jvmmH89eA62xZQS4SmE6fprd6T_e73sAk7QT83xB8vy2_7OiIS0E_y1VbhKfJwqIU6ExHKy_vEzFU5y_H9oMFXZZML0X1yTmy1wGHt9UKXLJJsqoS5LjiwqwXMFYX6jgUDnrI4EyybY1TVe1_zARCZESj4sQva1kDIr20eWXPoTU1zN2VaZb3tteLVBLuBmZwYh6ZoqXzSnpd0e8L0FUIAYx3IyU-rkEm23CAQRj4dUjlpJRySVePeJm1-KY81EqvAOIMFrfPyIcS282biHCJKuqP4SdS7T4MzNtrwZCVbCmSjPnN-9k9E3kuR5mvxpBMMvdk9Otz5VyLY5QDAM2Myo5O_iSLQ==\"}",
+                "summary": false
+              },
+              {
+                "type": "toolCall",
+                "id": "call_c877eff3e02f4986adf14a72f6ecb9c8|fc_0e8630b71a00fa88016aeaa69492e487d0890c4a457b15bcb6",
+                "name": "probe_boundary_action",
+                "arguments": {
+                  "i": "Run the disposable native boundary probe.",
+                  "label": "SOURCE_249"
+                },
+                "intent": "Run the disposable native boundary probe"
+              }
+            ],
+            "timestamp": 1793762961404
+          }
+        },
+        {
+          "id": "85f12769",
+          "parentId": "fc5d06e4",
+          "type": "message",
+          "message": {
+            "role": "toolResult",
+            "content": [
+              {
+                "type": "text",
+                "text": "PROBE_BOUNDARY_ACTION_COMPLETED SOURCE_249"
+              }
+            ],
+            "timestamp": 1793762967225,
+            "toolCallId": "call_c877eff3e02f4986adf14a72f6ecb9c8|fc_0e8630b71a00fa88016aeaa69492e487d0890c4a457b15bcb6",
+            "toolName": "probe_boundary_action",
+            "isError": false,
+            "details": {
+              "probeOnly": true
+            }
+          }
+        },
+        {
+          "id": "371fc995",
+          "parentId": "85f12769",
+          "type": "message",
+          "message": {
+            "role": "user",
+            "attribution": "user",
+            "content": [
+              {
+                "type": "text",
+                "text": "NEW_HUMAN_INPUT_249: Preserve my earlier answer and acknowledge this new instruction once as STEERING_PRESERVED_249. Do not repeat MAIN_ANSWER_249."
+              }
+            ],
+            "timestamp": 1793762964721
+          }
+        },
+        {
+          "id": "ed2773fa",
+          "parentId": "371fc995",
+          "type": "message",
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "text",
+                "text": "STEERING_PRESERVED_249",
+                "textSignature": "{\"v\":1,\"id\":\"msg_0e8630b71a00fa88016aeaa698886c87d080b593aee0e5a5d0\",\"phase\":\"final_answer\"}"
+              }
+            ],
+            "timestamp": 1793762967229
+          }
+        }
+      ],
+      "raw_stdout_sha256": "c89928fe98d4d29ed1b5548703587ef66cd06b58778faf2cd371902ce9519242",
+      "raw_observations_sha256": "db13143fac51807a66b9c2788f6425d6debc59729be685e5b5b7f2a5d53b75e7"
+    },
+    {
+      "scenario": "offline",
+      "native_session": {
+        "sessionId": "01a1a49a-c50a-709c-ab16-1625cd4d3e36",
+        "sessionFile": "/tmp/agent-memory-omp-native/offline/sessions/2026-11-04T03-29-28-842Z_01a1a49a-c50a-709c-ab16-1625cd4d3e36.jsonl",
+        "isSettled": true,
+        "queuedMessages": {
+          "steering": [],
+          "followUp": [],
+          "liveSteered": 0
+        },
+        "messageCount": 6
+      },
+      "exit": 0,
+      "sentinel_present": false,
+      "entries_projection": [
+        {
+          "id": "a6b6b475",
+          "parentId": "500a73dd",
+          "type": "message",
+          "message": {
+            "role": "user",
+            "attribution": "user",
+            "content": [
+              {
+                "type": "text",
+                "text": "Return exactly MAIN_ANSWER_249 and do not call any tool. This is the substantive original task."
+              }
+            ],
+            "timestamp": 1793762969052
+          }
+        },
+        {
+          "id": "cf11e074",
+          "parentId": "f63f838a",
+          "type": "message",
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "text",
+                "text": "MAIN_ANSWER_249",
+                "textSignature": "{\"v\":1,\"id\":\"msg_055e2aab260c2deb016aeaa69b6c8c87d0b31a65dee2dddaa9\",\"phase\":\"final_answer\"}"
+              }
+            ],
+            "timestamp": 1793762969065
+          }
+        },
+        {
+          "id": "d51b2d21",
+          "parentId": "df57035f",
+          "type": "custom_message",
+          "customType": "session-stop-continuation",
+          "content": "Native interface probe only. Your substantive task answer is already delivered; do not repeat it. Call probe_boundary_action exactly once with {\"label\":\"SOURCE_249\"}. If refused, unavailable or cancelled, do not use any alternative tool or execution path. Then give only a brief boundary status. This is agent-attributed integration context, not a new human instruction.",
+          "display": false,
+          "attribution": "agent"
+        },
+        {
+          "id": "5e423b5e",
+          "parentId": "d51b2d21",
+          "type": "message",
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "toolCall",
+                "id": "call_c901b245d0504cc48314fd4eb417fdfb|fc_055e2aab260c2deb016aeaa69db7a487d0906c853160c923d4",
+                "name": "probe_boundary_action",
+                "arguments": {
+                  "i": "Run the disposable native interface boundary probe.",
+                  "label": "SOURCE_249"
+                },
+                "intent": "Run the disposable native interface boundary probe"
+              }
+            ],
+            "timestamp": 1793762971788
+          }
+        },
+        {
+          "id": "8d956dd0",
+          "parentId": "0e6a3cff",
+          "type": "message",
+          "message": {
+            "role": "toolResult",
+            "content": [
+              {
+                "type": "text",
+                "text": "probe authority unavailable; original source remains pending"
+              }
+            ],
+            "timestamp": 1793762974214,
+            "toolCallId": "call_c901b245d0504cc48314fd4eb417fdfb|fc_055e2aab260c2deb016aeaa69db7a487d0906c853160c923d4",
+            "toolName": "probe_boundary_action",
+            "isError": true,
+            "details": {}
+          }
+        },
+        {
+          "id": "189bcf0b",
+          "parentId": "8d956dd0",
+          "type": "message",
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "text",
+                "text": "Probe authority unavailable; no alternative attempted.",
+                "textSignature": "{\"v\":1,\"id\":\"msg_055e2aab260c2deb016aeaa69f65fc87d08569f4264f10e240\",\"phase\":\"final_answer\"}"
+              }
+            ],
+            "timestamp": 1793762974216
+          }
+        }
+      ],
+      "raw_stdout_sha256": "fffc030e5efa5e55392c12c5f56e7919789fc7877b471edb83433dbdb5053373",
+      "raw_observations_sha256": "387faa1b6f8e5ebee6b1c23fbb8a75c7b9dda1ea6e732f40a48e303bbc565f40"
+    },
+    {
+      "scenario": "capture-order",
+      "native_session": {
+        "sessionId": "01a1a49c-9bca-7712-b6ab-893df76dbce9",
+        "sessionFile": "/tmp/agent-memory-omp-native/capture-order/sessions/2026-11-04T03-31-29-354Z_01a1a49c-9bca-7712-b6ab-893df76dbce9.jsonl",
+        "isSettled": true,
+        "queuedMessages": {
+          "steering": [],
+          "followUp": [],
+          "liveSteered": 0
+        },
+        "messageCount": 6
+      },
+      "exit": 0,
+      "sentinel_present": false,
+      "entries_projection": [
+        {
+          "id": "ee906442",
+          "parentId": "db2fc191",
+          "type": "message",
+          "message": {
+            "role": "user",
+            "attribution": "user",
+            "content": [
+              {
+                "type": "text",
+                "text": "Return exactly MAIN_ANSWER_249 and do not call any tool. This is the substantive original task."
+              }
+            ],
+            "timestamp": 1793763089576
+          }
+        },
+        {
+          "id": "5d11501d",
+          "parentId": "5324b8b7",
+          "type": "message",
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "text",
+                "text": "MAIN_ANSWER_249",
+                "textSignature": "{\"v\":1,\"id\":\"msg_050ff0f37044bc94016aeaa7135a0887d09cfe329aa96cd632\",\"phase\":\"final_answer\"}"
+              }
+            ],
+            "timestamp": 1793763089589
+          }
+        },
+        {
+          "id": "29c02cc3",
+          "parentId": "d9a1644d",
+          "type": "custom_message",
+          "customType": "session-stop-continuation",
+          "content": "Native interface probe only. Your substantive task answer is already delivered; do not repeat it. Call probe_boundary_action exactly once with {\"label\":\"SOURCE_249\"}. If refused, unavailable or cancelled, do not use any alternative tool or execution path. Then give only a brief boundary status. This is agent-attributed integration context, not a new human instruction.",
+          "display": false,
+          "attribution": "agent"
+        },
+        {
+          "id": "4f912881",
+          "parentId": "29c02cc3",
+          "type": "message",
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "toolCall",
+                "id": "call_110c046af9704f57ae3b5351cf07d365|fc_050ff0f37044bc94016aeaa7150ee487d0a3661b02c89099fe",
+                "name": "probe_boundary_action",
+                "arguments": {
+                  "i": "Run the disposable native boundary probe.",
+                  "label": "SOURCE_249"
+                },
+                "intent": "Run the disposable native boundary probe"
+              }
+            ],
+            "timestamp": 1793763091498
+          }
+        },
+        {
+          "id": "f138ce55",
+          "parentId": "8c45dc12",
+          "type": "message",
+          "message": {
+            "role": "toolResult",
+            "content": [
+              {
+                "type": "text",
+                "text": "Tool \"probe_boundary_action\" requires approval but no interactive UI available.\nOptions:\n  1. Set tools.approvalMode: yolo in /settings\n  2. Add tools.approval.probe_boundary_action: allow to config\n  3. Use an interactive UI to approve the tool call"
+              }
+            ],
+            "timestamp": 1793763093479,
+            "toolCallId": "call_110c046af9704f57ae3b5351cf07d365|fc_050ff0f37044bc94016aeaa7150ee487d0a3661b02c89099fe",
+            "toolName": "probe_boundary_action",
+            "isError": true,
+            "details": {}
+          }
+        },
+        {
+          "id": "fe9093d5",
+          "parentId": "f138ce55",
+          "type": "message",
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "text",
+                "text": "Boundary probe unavailable: approval required, but no interactive UI is available. No alternative attempted.",
+                "textSignature": "{\"v\":1,\"id\":\"msg_050ff0f37044bc94016aeaa716b0b487d0ae692c65de622df6\",\"phase\":\"final_answer\"}"
+              }
+            ],
+            "timestamp": 1793763093484
+          }
+        }
+      ],
+      "raw_stdout_sha256": "6550357717487f14d929a03f54f6704315c46b9b557284de96ef5bc33907d8c2",
+      "raw_observations_sha256": "ec999c3a765a7cb3916c2f9c0555259d75d3ac57d6d0c074baa3f1921f01bb7a"
+    },
+    {
+      "scenario": "cap",
+      "native_session": {
+        "sessionId": "01a1a49c-ec24-72e7-9f44-2c9f58834bdb",
+        "sessionFile": "/tmp/agent-memory-omp-native/cap/sessions/2026-11-04T03-31-49-924Z_01a1a49c-ec24-72e7-9f44-2c9f58834bdb.jsonl",
+        "isSettled": true,
+        "queuedMessages": {
+          "steering": [],
+          "followUp": [],
+          "liveSteered": 0
+        },
+        "messageCount": 18
+      },
+      "exit": 0,
+      "sentinel_present": false,
+      "entries_projection": [
+        {
+          "id": "97c70439",
+          "parentId": "855a5698",
+          "type": "message",
+          "message": {
+            "role": "user",
+            "attribution": "user",
+            "content": [
+              {
+                "type": "text",
+                "text": "Return exactly MAIN_ANSWER_249 and do not call any tool. This is the substantive original task."
+              }
+            ],
+            "timestamp": 1793763110172
+          }
+        },
+        {
+          "id": "43c2e3e6",
+          "parentId": "ffe51319",
+          "type": "message",
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "text",
+                "text": "MAIN_ANSWER_249",
+                "textSignature": "{\"v\":1,\"id\":\"msg_0afa1f52573d22ee016aeaa72806e087d0ac08c7c991837ebd\",\"phase\":\"final_answer\"}"
+              }
+            ],
+            "timestamp": 1793763110187
+          }
+        },
+        {
+          "id": "e4f67be4",
+          "parentId": "1908bd07",
+          "type": "custom_message",
+          "customType": "session-stop-continuation",
+          "content": "Advisory cap research probe. Reply exactly CAP_TICK_249. Do not call tools or repeat the original substantive answer.",
+          "display": false,
+          "attribution": "agent"
+        },
+        {
+          "id": "7c4095d1",
+          "parentId": "e4f67be4",
+          "type": "message",
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "text",
+                "text": "CAP_TICK_249",
+                "textSignature": "{\"v\":1,\"id\":\"msg_0afa1f52573d22ee016aeaa729b92887d0b86e076d2cd288cc\",\"phase\":\"final_answer\"}"
+              }
+            ],
+            "timestamp": 1793763112298
+          }
+        },
+        {
+          "id": "c899b511",
+          "parentId": "7c4095d1",
+          "type": "custom_message",
+          "customType": "session-stop-continuation",
+          "content": "Advisory cap research probe. Reply exactly CAP_TICK_249. Do not call tools or repeat the original substantive answer.",
+          "display": false,
+          "attribution": "agent"
+        },
+        {
+          "id": "ad6d7c22",
+          "parentId": "c899b511",
+          "type": "message",
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "text",
+                "text": "CAP_TICK_249",
+                "textSignature": "{\"v\":1,\"id\":\"msg_0afa1f52573d22ee016aeaa72b47f487d096d3e3dc2518ab90\",\"phase\":\"final_answer\"}"
+              }
+            ],
+            "timestamp": 1793763113891
+          }
+        },
+        {
+          "id": "b3db115e",
+          "parentId": "ad6d7c22",
+          "type": "custom_message",
+          "customType": "session-stop-continuation",
+          "content": "Advisory cap research probe. Reply exactly CAP_TICK_249. Do not call tools or repeat the original substantive answer.",
+          "display": false,
+          "attribution": "agent"
+        },
+        {
+          "id": "a5ae5fb0",
+          "parentId": "b3db115e",
+          "type": "message",
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "text",
+                "text": "CAP_TICK_249",
+                "textSignature": "{\"v\":1,\"id\":\"msg_0afa1f52573d22ee016aeaa72d53a087d0bf5d45b8b59ac23f\",\"phase\":\"final_answer\"}"
+              }
+            ],
+            "timestamp": 1793763115748
+          }
+        },
+        {
+          "id": "1bc86d56",
+          "parentId": "a5ae5fb0",
+          "type": "custom_message",
+          "customType": "session-stop-continuation",
+          "content": "Advisory cap research probe. Reply exactly CAP_TICK_249. Do not call tools or repeat the original substantive answer.",
+          "display": false,
+          "attribution": "agent"
+        },
+        {
+          "id": "3692a8cb",
+          "parentId": "1bc86d56",
+          "type": "message",
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "text",
+                "text": "CAP_TICK_249",
+                "textSignature": "{\"v\":1,\"id\":\"msg_0afa1f52573d22ee016aeaa72f792887d097c63bd904a38121\",\"phase\":\"final_answer\"}"
+              }
+            ],
+            "timestamp": 1793763117467
+          }
+        },
+        {
+          "id": "17fc3752",
+          "parentId": "3692a8cb",
+          "type": "custom_message",
+          "customType": "session-stop-continuation",
+          "content": "Advisory cap research probe. Reply exactly CAP_TICK_249. Do not call tools or repeat the original substantive answer.",
+          "display": false,
+          "attribution": "agent"
+        },
+        {
+          "id": "8be81c33",
+          "parentId": "17fc3752",
+          "type": "message",
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "text",
+                "text": "CAP_TICK_249",
+                "textSignature": "{\"v\":1,\"id\":\"msg_0afa1f52573d22ee016aeaa73130c087d0945f9d544cc40a82\",\"phase\":\"final_answer\"}"
+              }
+            ],
+            "timestamp": 1793763119613
+          }
+        },
+        {
+          "id": "0fc76f7f",
+          "parentId": "8be81c33",
+          "type": "custom_message",
+          "customType": "session-stop-continuation",
+          "content": "Advisory cap research probe. Reply exactly CAP_TICK_249. Do not call tools or repeat the original substantive answer.",
+          "display": false,
+          "attribution": "agent"
+        },
+        {
+          "id": "07bce526",
+          "parentId": "0fc76f7f",
+          "type": "message",
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "text",
+                "text": "CAP_TICK_249",
+                "textSignature": "{\"v\":1,\"id\":\"msg_0afa1f52573d22ee016aeaa732dcd487d0be3e1f811e0a1e96\",\"phase\":\"final_answer\"}"
+              }
+            ],
+            "timestamp": 1793763121354
+          }
+        },
+        {
+          "id": "cdb313d7",
+          "parentId": "07bce526",
+          "type": "custom_message",
+          "customType": "session-stop-continuation",
+          "content": "Advisory cap research probe. Reply exactly CAP_TICK_249. Do not call tools or repeat the original substantive answer.",
+          "display": false,
+          "attribution": "agent"
+        },
+        {
+          "id": "940096df",
+          "parentId": "cdb313d7",
+          "type": "message",
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "text",
+                "text": "CAP_TICK_249",
+                "textSignature": "{\"v\":1,\"id\":\"msg_0afa1f52573d22ee016aeaa734c13487d085b9e54a48044fa6\",\"phase\":\"final_answer\"}"
+              }
+            ],
+            "timestamp": 1793763123033
+          }
+        },
+        {
+          "id": "f821765e",
+          "parentId": "940096df",
+          "type": "custom_message",
+          "customType": "session-stop-continuation",
+          "content": "Advisory cap research probe. Reply exactly CAP_TICK_249. Do not call tools or repeat the original substantive answer.",
+          "display": false,
+          "attribution": "agent"
+        },
+        {
+          "id": "4f9762b2",
+          "parentId": "f821765e",
+          "type": "message",
+          "message": {
+            "role": "assistant",
+            "content": [
+              {
+                "type": "text",
+                "text": "CAP_TICK_249",
+                "textSignature": "{\"v\":1,\"id\":\"msg_0afa1f52573d22ee016aeaa7367bdc87d0bf4f4c8cd6cbb363\",\"phase\":\"final_answer\"}"
+              }
+            ],
+            "timestamp": 1793763124901
+          }
+        }
+      ],
+      "raw_stdout_sha256": "3e6aa4e81087d1e332097597fc09dd10d0e1328b15b87593efbd678ce2bb4b97",
+      "raw_observations_sha256": "42898eeaa987264101603bd06633c26637a444178bd1569270c71932d0cc0b54"
+    }
+  ],
+  "persistence_comparison": {
+    "projection_keys": [
+      "role",
+      "attribution",
+      "content",
+      "timestamp",
+      "toolCallId",
+      "toolName",
+      "isError",
+      "details"
+    ],
+    "pairs": [
+      {
+        "role": "user",
+        "native_id": "ee906442",
+        "projection_equal": true
+      },
+      {
+        "role": "assistant",
+        "native_id": "5d11501d",
+        "projection_equal": true
+      },
+      {
+        "role": "assistant",
+        "native_id": "4f912881",
+        "projection_equal": true
+      },
+      {
+        "role": "toolResult",
+        "native_id": "f138ce55",
+        "projection_equal": true
+      },
+      {
+        "role": "assistant",
+        "native_id": "fe9093d5",
+        "projection_equal": true
+      }
+    ],
+    "message_end_precedes_tree_append": true,
+    "full_assistant_raw_equality": false,
+    "limit": "Observed capture-order fixture only; no all-message-class or full memory coverage claim"
+  }
+}
