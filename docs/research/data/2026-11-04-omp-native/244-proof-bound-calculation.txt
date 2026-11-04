@@ -1,0 +1,16 @@
+Design-only sizing calculation; run: python3 -I -B /tmp/agent-memory-v15-readiness/244-proof-bound-calculator.py
+Serializer matches developer_identity.encoded: json.dumps(sort_keys=True, ensure_ascii=False, indent=2, allow_nan=False) + newline; UTF-8 byte count.
+Calculator uses valid native record metadata and scope ['repository']; its repeated extremal rows/claims are sizing placeholders, not a valid semantic proof or qualification run. Actual unique UUIDs and reviewed ranges/refs have fixed-width representation. Separately the pinned records.record(metadata) returned normally: metadata format-only diagnostic, not admitted knowledge or behavioral acceptance.
+
+path bytes: 64
+encoded metadata: 803
+encoded scope chain: 19
+actual target proof-nested metadata contribution: 1000
+actual target proof-nested scope contribution: 30
+H serialized with 10 observations and 8 unit IDs: 8220
+pending proof marginal: 5532
+canonical decision plus full target marginal: 5723
+P=8 C=2 serialized=63888 bound=8500+8*5532+2*5723=64202 slack=1334
+P=7 C=3 serialized=64077 bound=8500+7*5532+3*5723=64393 slack=1143
+
+Disclosure fixture ceilings separately: 8*4500+2*5000=46000; 7*4500+3*5000=46500. Exact behavior, actual proof schema/output and full source preservation must be checked in future implementation acceptance. This is a sizing calculation, not a permanent product test.
