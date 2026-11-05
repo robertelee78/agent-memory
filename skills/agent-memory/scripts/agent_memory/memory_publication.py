@@ -330,7 +330,17 @@ def request_value(root, value):
     return binding
 
 
-def publication_pr(root, request, observed_policy):
+def publication_sources(root, binding, recovery_context=None):
+    if recovery_context is None:
+        semantic.final_sources(root, binding, binding)
+    else:
+        from .layout_recovery_publication import RecoveryPublicationContext
+        if type(recovery_context) is not RecoveryPublicationContext:
+            raise ContractError('Recovery landing needs its internally verified typed source context')
+        recovery_context.check(root, binding)
+
+
+def publication_pr(root, request, observed_policy, *, recovery_context=None):
     """Create/reuse a memory-only PR; never approve it or enable an unpinned merge."""
     binding = request['proof']['judgment']['binding']; name = observed_policy['repository']; owner = name.split('/')[0]
     branch = 'agent-memory/'+request['project_id']+'/'+request['candidate']
@@ -340,9 +350,11 @@ def publication_pr(root, request, observed_policy):
     if not isinstance(existing, list) or len(existing) > 1:
         raise ContractError('Publication PR identity is ambiguous; inspect before retry')
     if not existing:
+        if recovery_context is not None:
+            publication_sources(root, binding, recovery_context)
         git_write(root, 'push', '--porcelain', '--no-follow-tags', '--recurse-submodules=no', '--',
                   remote, request['candidate']+':refs/heads/'+branch, network=True)
-        semantic.final_sources(root, binding, binding)
+        publication_sources(root, binding, recovery_context)
         # A lost create response is recovered by the exact same head/base query.
         value = api(endpoint, method='POST', body={
             'title': 'Maintain shared project memory', 'head': branch, 'base': binding['authority_branch'],
@@ -402,8 +414,8 @@ def required_checks_pass(name, head, merged, requirements):
     return True
 
 
-def protected_candidate(root, request, observed_policy):
-    pr = publication_pr(root, request, observed_policy); number = pr['number']
+def protected_candidate(root, request, observed_policy, *, recovery_context=None):
+    pr = publication_pr(root, request, observed_policy, recovery_context=recovery_context); number = pr['number']
     name = observed_policy['repository']; owner, repo_name = name.split('/')
     query = '''query($owner:String!,$repo:String!,$number:Int!){repository(owner:$owner,name:$repo){pullRequest(number:$number){state isDraft headRefOid baseRefOid reviewDecision mergeStateStatus commits(last:1){nodes{commit{oid statusCheckRollup{state}}}} reviewThreads(first:100){pageInfo{hasNextPage} nodes{isResolved}}}}}'''
     data = api('graphql', method='POST', body={'query': query, 'variables': {'owner': owner, 'repo': repo_name, 'number': number}})

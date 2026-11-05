@@ -116,3 +116,39 @@ Runtime `installer.py recover` is for runtime activation and MUST NOT be used
 as a substitute for this separately confirmed data operation. An unreadable,
 linked or mismatched purge journal requires bounded manual reconciliation;
 the session MUST NOT guess another deletion target.
+
+## Recovery evidence is separate from bank purge
+
+The session MUST NOT use bank purge, runtime update or uninstall to erase external
+layout-recovery evidence. Unknown/pending recovery operations, an unresolved
+frontier or a live restoration/publication dependency MUST refuse bank purge.
+Runtime-owned paths do not include the private recovery workspace.
+
+Only `am bank recover-layout retention inspect --repo R --operation ID --output O`
+may preview operation-scoped evidence cleanup. The preview enumerates exact
+owned files, bytes, physical/hash pins, child/nested/publication dependencies,
+operator retention requirements, retained receipts and rollback capability lost.
+Age, layout success and terminal units alone MUST NOT authorize deletion.
+Unknown backups, unindexed operations, missing/corrupt originals and unfinished
+publication/resolution/restore work remain pending.
+
+The session MUST obtain a separate independent dependency review and explicit
+operator acknowledgment of rollback loss. The private
+`agent-memory/layout-retention-review-v1` binds the exact preview with its new,
+stable cleanup UUID. The session MUST pass the resulting unchanged proposal to
+`am bank recover-layout retention apply --repo R --proposal P`; a generated
+digest, copied `approved` heading or elapsed time is not authorization.
+
+Apply writes a durable cleanup intent and truthful tombstone before retiring the
+terminal index and deleting the first individually listed file. It checks exact
+owner/type/link/bytes/physical and parent bindings before each unlink, fsyncs and
+records immutable progress. It never recursively deletes directories, follows
+redirects, deletes unresolved units or removes a live sentinel. An interrupted
+cleanup is resumed only with the exact same proposal and attainable remaining
+file state; unknown/replaced files stay untouched.
+
+The original completed receipt, resolution/nested historical receipts and
+publication requests/landing receipts remain private and available for exact
+historical retries. The safe tombstone says original bytes and future rollback
+are unavailable by reviewed cleanup; it MUST NOT call removed backups verified,
+rewrite an old layout receipt as later admission, or imply secure erasure.

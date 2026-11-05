@@ -83,3 +83,69 @@ The trusted support checkout includes root `scripts/` wrappers as well as
 `tests/` and `skills/`; copying only the package and tests cannot run the identity
 fixtures. A setup error before a product assertion is apparatus evidence, not a
 runtime pass or failure. Python diagnostic/test launchers use `-I -B`.
+
+## Disposable #244 publication and retention qualification
+
+The recovery publication/retention suites use the packaged public CLI, exact
+79,054-byte synthetic authority context, real bare Git transport, source ledgers,
+separate review inputs, original feature/index/HEAD checks, and a second clone
+with an empty private recovery profile. The offline GitHub protocol adapter is
+only apparatus for exercising policy branches: **it is not actual hosted
+permissions, independent semantic acceptance, macOS/Linux qualification or a
+release-delivery receipt**. These commands are a runnable recipe, not a claim
+that this revision has passed.
+
+From the trusted frozen checkout, run the two registered workers inside a valid
+disposable World (the runner deliberately refuses a bare invocation):
+
+```sh
+python3 -I -B - <<'PY'
+from pathlib import Path
+import sys
+root = Path.cwd().resolve()
+sys.path.insert(0, str(root / 'tests'))
+from world import World
+for name in ('test_layout_recovery_publication.py', 'test_layout_recovery_retention.py'):
+    with World() as world:
+        completed = world.run(
+            [sys.executable, '-I', '-B', root / 'scripts/run_contract_suite.py',
+             root / 'tests/contracts' / name],
+            check=False, timeout=300)
+        print(completed.stdout)
+        print(completed.stderr, file=sys.stderr)
+        if completed.returncode:
+            raise SystemExit(completed.returncode)
+PY
+```
+
+The publication test repairs the local layout first; retains independently
+source-bound all-side review; refuses an omitted source, unresolved frontier,
+offline authority and stale local result; builds the exact authority-derived
+memory candidate; lands through the existing policy engine; inventories exact
+retry; and inspects/recalls in a separately bound empty-profile second clone.
+Raw-source controls separately prove that oversized/unsupported sources can be
+observed without a successful normal snapshot and reject overflow, portable
+aliases, redirects and committed runtime holds. Candidate controls inspect the
+entire tree delta and preserve the original index.
+
+The retention test uses a completed real layout receipt, separately reviews an
+exact dependency/file preview, injects an unlink-before-progress failure,
+resumes the same cleanup UUID, and reads the actual historical layout/cleanup
+receipts. Pending units, unknown backups (including empty directories), unsafe
+modes/aliases, changed private bytes and impossible missing-file states refuse.
+Cleanup is not recursive and never claims removed originals remain verified.
+
+For final acceptance, retain exact commands, source/runtime identity, stdout,
+stderr, exits and private preservation manifests on **both macOS and Linux**.
+Repeat the publication flow in a controlled real hosted repository using its
+actual permissions, reviews and checks; required human approval MUST remain
+pending until genuinely supplied. Never use the protocol adapter, mock network
+responses or a passing small primitive test as that hosted-policy evidence.
+Use a fresh second clone/profile with no copied publisher ledger, no committed
+runtime marker and normal explicit project binding. Verify qualified recall and
+ordinary capture after fully terminal publication; local repair alone is not
+publication or cross-machine import.
+
+The standard release gate remains `scripts/test.sh --release --json` on the
+integrated immutable candidate. Do not run these workers concurrently with
+milestone performance/stress qualification or enlarge their existing deadlines.
