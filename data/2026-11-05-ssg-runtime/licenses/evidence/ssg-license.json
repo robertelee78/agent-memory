@@ -1,0 +1,13 @@
+{
+ "argv": [
+  "sh",
+  "-c",
+  "shasum -a 256 LICENSE Cargo.toml Cargo.lock && cat LICENSE"
+ ],
+ "cwd": "/opt/ssg",
+ "exit": 0,
+ "seconds": 0.017,
+ "started_at": "2026-11-05T16:52:22.855624+00:00",
+ "stderr": "",
+ "stdout": "f0975c1358e36e7a2fc02c75c2d969785facdf3e977bc0091b17315c3b08c0d1  LICENSE\n6d86467628ec23947daf382467e51c6a85d2e6434c4eff093220fd327bca964f  Cargo.toml\n72ee72364658cf849421fad732327a3aea6e408f6d96576673c812cf49d9c878  Cargo.lock\nMIT OR Apache-2.0\n\nThis project is dual-licensed under the MIT license and the Apache License 2.0, at your option.\n"
+}
