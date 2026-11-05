@@ -64,6 +64,13 @@ The shared lock order is lifecycle, bank source barrier, native transport
 registration, source completion in stable namespace order, then bank write.
 The source barrier is reentrant for shared operations; a shared-to-exclusive
 upgrade refuses rather than deadlocking or dropping a sibling capability.
+Before accessing the shared source index, all source operations also read the
+private `turn-sources-compat-v1.json` marker through the same bounded stable
+reader. Only the exact known `omp-harness-v1` declaration is accepted;
+malformed, redirected or unknown markers refuse Codex, Claude and omp readers.
+The check is repeated after barrier acquisition and before successful return.
+Generic absence does not certify an omp drain: the native producer and
+lifecycle capability inventory retain their separate bound-drain obligations.
 The held-enrollment contract suite uses actual checked filesystem state and
 real hook processes; its synthetic event fields are not native-provider or
 macOS/Linux release acceptance evidence.

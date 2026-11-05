@@ -288,6 +288,53 @@ class HeldSourceEnrollment(unittest.TestCase):
             self.assertEqual((directory / original['blob']).read_bytes(), body)
             self.assertEqual(self.snapshot(world, repo, bank), before)
 
+    def test_all_shared_readers_refuse_unknown_compatibility_before_source_index_access(self):
+        with World() as world, patch.dict(os.environ, world.env, clear=True):
+            helper = test_admission.AdmissionContract()
+            repo, bank = helper.fixture(world)
+            session, lifecycle = uid(), uid()
+            observed = sources.register(repo, 'codex', session, lifecycle, 'a' * 64)
+            _, _, base, turn, identity = sources.namespace(repo, 'codex', session, lifecycle)
+            current = sources.inspect(repo, 'codex', session, lifecycle)
+            assessment = {'observation_id':observed['observation_id'],'source_sha256':'a' * 64,
+                'outcome':'no-learning','assessment':{'source_id':observed['observation_id'],
+                'source_review':'Actual synthetic temporary source review','candidates':[]}}
+            receipt = sources.verify_assessment(repo, assessment, observed['observation_id'])
+            marker = base.parent / 'turn-sources-compat-v1.json'
+            valid = {'schema':'agent-memory/turn-sources-compat-v1',
+                     'minimum_reader':'omp-harness-v1','harnesses':['omp']}
+            source_before = (turn / 'source-0.json').read_bytes()
+            index_before = {path.name:path.read_bytes() for path in (base / 'pending').iterdir()}
+            operations = (
+                lambda:sources.register(repo, 'codex', session, lifecycle, 'b' * 64),
+                lambda:sources.inspect(repo, 'codex', session, lifecycle),
+                lambda:sources.backlog(repo),
+                lambda:sources.pending_notice(repo, 'codex', session, lifecycle),
+                lambda:sources.verify_assessment(repo, assessment, observed['observation_id']),
+                lambda:sources.reserve_wake(repo, 'codex', session, lifecycle, current['fingerprint'], 'b' * 64),
+                lambda:sources.complete(repo, 'codex', session, lifecycle, observed['observation_id'], 'a' * 64, receipt))
+            for raw_marker in (b'{partial', encoded({'schema':'unknown'}),
+                               encoded({**valid,'minimum_reader':'future-reader'}),
+                               encoded({**valid,'harnesses':['omp','codex']})):
+                marker.write_bytes(raw_marker); marker.chmod(0o600)
+                for operation in operations:
+                    with self.assertRaises((ValueError, OSError)):
+                        operation()
+                self.assertEqual(marker.read_bytes(), raw_marker)
+                self.assertEqual((turn / 'source-0.json').read_bytes(), source_before)
+                self.assertEqual({path.name:path.read_bytes() for path in (base / 'pending').iterdir()}, index_before)
+                self.assertFalse(list(turn.glob('*.done')))
+            marker.write_bytes(encoded(valid)); marker.chmod(0o600)
+            self.assertEqual(len(sources.inspect(repo, 'codex', session, lifecycle)['sources']), 1)
+            with self.assertRaises(ValueError):
+                with sources.source_barrier(repo):
+                    marker.write_bytes(encoded({'schema':'unknown'}))
+            self.assertEqual(marker.read_bytes(), encoded({'schema':'unknown'}))
+            marker.unlink()
+            # Generic absence is allowed; native retained-state drain proof is
+            # independently owned and is not fabricated by this shared reader.
+            self.assertEqual(len(sources.inspect(repo, 'codex', session, lifecycle)['sources']), 1)
+
     def test_real_codex_claude_hooks_keep_task_active_but_boundaries_pending(self):
         with World() as world, patch.dict(os.environ, world.env, clear=True):
             helper, repo, bank, operation, directory, original, body = self.fixture(world)

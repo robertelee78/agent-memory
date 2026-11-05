@@ -69,20 +69,35 @@ def private_lock(path, *, shared=False):
     finally:os.close(fd)
 
 
+def check_source_compatibility(base):
+    """Understand shared source metadata, never infer a native drain proof."""
+    path=base/'turn-sources-compat-v1.json'
+    try:value=read(path,MAX_SOURCE)
+    except FileNotFoundError:return
+    if value!={'schema':'agent-memory/turn-sources-compat-v1',
+               'minimum_reader':'omp-harness-v1','harnesses':['omp']}:
+        raise ContractError('Unknown or malformed shared source compatibility marker; preserve pending evidence')
+
+
 @contextmanager
 def source_barrier(repo, *, exclusive=False):
     """First source lock family; reentrant reads cannot upgrade to writers."""
     from . import layout_recovery_state
     root,bank,recovery_base,_=layout_recovery_state.paths(repo)
     base=recovery_base.parent
+    check_source_compatibility(base)
     known=_barriers.get()
     if str(base) in known:
         if exclusive and not known[str(base)]:raise ContractError('Cannot upgrade an active shared source barrier')
         yield
+        check_source_compatibility(base)
         return
     with private_lock(base/'source-barrier.lock',shared=not exclusive):
+        check_source_compatibility(base)
         token=_barriers.set({**known,str(base):exclusive})
-        try:yield
+        try:
+            yield
+            check_source_compatibility(base)
         finally:_barriers.reset(token)
 
 
@@ -721,6 +736,7 @@ def backlog(repo,harness=None,offset=0,legacy_offset=0,enrollment_offset=0):
     return result
 
 
+@source_operation
 def verify_assessment(repo,value,source_id):
     """Verify existing assessment/publication gates; input flags grant nothing."""
     from . import boundary_assessment, memory_publication, sharing_recovery

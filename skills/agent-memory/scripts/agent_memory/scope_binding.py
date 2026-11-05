@@ -144,8 +144,9 @@ class PrivateEnrollmentContext:
 
 def private_enrollment_context(repo):
     """Allow only private source retention through an exact verified hold."""
-    from . import layout_recovery_state, recovery_frontier
+    from . import layout_recovery_state, recovery_frontier, turn_sources
     root, bank = writes.bank_path(repo)
+    turn_sources.check_source_compatibility(layout_recovery_state.paths(root)[2].parent)
     hold = recovery_frontier.verified_hold(root)
     scope = dict(hold.scope) if hold is not None else require(root)
     # The ordinary path also checks the private index, so a removed hold is not
