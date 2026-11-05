@@ -152,3 +152,8 @@ publication requests/landing receipts remain private and available for exact
 historical retries. The safe tombstone says original bytes and future rollback
 are unavailable by reviewed cleanup; it MUST NOT call removed backups verified,
 rewrite an old layout receipt as later admission, or imply secure erasure.
+
+Known typed partial-staging metadata MUST remain retained with
+`observation_complete:false`, even when a later complete manifest exists.
+It MUST NOT become authority for semantic completion or be silently deleted.
+Malformed, foreign or unknown staging metadata remains a cleanup refusal.

@@ -65,6 +65,22 @@ class LayoutRetentionContract(unittest.TestCase):
                                  directory, json.dumps(names))
             self.assertTrue(all(json.loads(output.stdout).values()))
 
+    def test_owned_incomplete_staging_is_retained_not_promoted_to_complete(self):
+        with World() as w:
+            directory, _, _ = self.fixture(w)
+            value = {'schema': 'agent-memory/layout-recovery-staging-v1',
+                     'operation_id': str(uuid.uuid4()), 'project_id': str(uuid.uuid4()),
+                     'repo_root': str(w.paths['repo']), 'bank_path': str(w.paths['repo']/'memory-bank'),
+                     'identity': {}, 'observation_complete': False}
+            stage = directory/'staging.json'
+            stage.write_text(json.dumps(value)); stage.chmod(0o600)
+            output = self.module(w, 'root=Path(sys.argv[1]);inventory=r._inventory(root);'
+                                 'print(json.dumps({"retained":r._retained("staging.json"),'
+                                 '"present":"staging.json" in inventory["files"],'
+                                 '"complete":json.loads((root/"staging.json").read_text())["observation_complete"]}))',
+                                 directory)
+            self.assertEqual(json.loads(output.stdout), {'retained': True, 'present': True, 'complete': False})
+
     def test_symlink_hardlink_and_unsafe_mode_never_gain_cleanup_ownership(self):
         for kind in ('symlink', 'hardlink', 'mode'):
             with self.subTest(kind=kind), World() as w:

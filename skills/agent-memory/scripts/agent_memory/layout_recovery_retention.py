@@ -15,7 +15,7 @@ import uuid
 from . import bank_writes as writes, local_registry as storage, scope_binding
 from . import layout_recovery_state as state, recovery_frontier as frontier
 from . import layout_recovery_publication as publication
-from .developer_identity import digest, encoded, uuid_valid
+from .developer_identity import digest, encoded, load, uuid_valid
 from .frontmatter import ContractError
 from . import trust_paths
 
@@ -25,7 +25,7 @@ MAX_ENTRIES = 262144
 MAX_TOTAL = 512 * 1024 * 1024
 ROOT_FILES = {'manifest.json', 'manifest.sha256', 'unit-map.json', 'journal.json', 'receipt.json',
               'ledger-head.json', 'tombstone.json', 'retention-requirements.json',
-              'rollback-plan.json', 'child-rollback-plan.json', 'quiescence-attestations.json'}
+              'rollback-plan.json', 'child-rollback-plan.json', 'quiescence-attestations.json', 'staging.json'}
 UUID = r'[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}'
 OWNED = re.compile(
     r'(?:originals|intended)/'+UUID+r'\.bin|'
@@ -88,6 +88,15 @@ def _inventory(directory):
                     require(key in ROOT_FILES or OWNED.fullmatch(key) is not None,
                             'Unknown private recovery artifact; dependency inventory remains pending')
                     raw = state.read_bytes(path/name)
+                    if key == 'staging.json':
+                        staging = load(raw)
+                        publication.exact(staging, {'schema', 'operation_id', 'repo_root', 'bank_path',
+                                                    'project_id', 'identity', 'observation_complete'},
+                                          'agent-memory/layout-recovery-staging-v1')
+                        require(staging['observation_complete'] is False
+                                and uuid_valid(staging['operation_id']) and uuid_valid(staging['project_id'])
+                                and isinstance(staging['identity'], dict),
+                                'Unknown/inconsistent partial staging evidence must remain pending')
                     total += len(raw)
                     require(total <= MAX_TOTAL, 'Recovery cleanup inventory exceeds the private review allowance')
                     after = os.stat(name, dir_fd=fd, follow_symlinks=False)
@@ -133,6 +142,10 @@ def _dependencies(root, operation_id, base, directory, *, cleanup_id=None):
                 continue
             if name.endswith('.json'):
                 value = state.read(other/name)
+                if name == 'staging.json':
+                    require(value['operation_id'] == other_id and value['project_id'] == row['project_id']
+                            and value['repo_root'] == str(root) and value['bank_path'] == index['bank_path'],
+                            'Partial staging evidence belongs to another operation or checkout')
                 if other_id != operation_id and _references(value, operation_id, directory):
                     # A cleaned child has surrendered rollback and keeps only
                     # historical receipts; a live child still owns a dependency.
@@ -164,7 +177,7 @@ def _dependencies(root, operation_id, base, directory, *, cleanup_id=None):
 
 
 def _retained(name):
-    return (name in {'receipt.json', 'retention-requirements.json', 'quiescence-attestations.json'}
+    return (name in {'receipt.json', 'retention-requirements.json', 'quiescence-attestations.json', 'staging.json'}
             or name.startswith(('retention/', 'resolutions/', 'nested/', 'proposals/', 'recovery/', 'revisions/',
                                 'coverage-reviews/', 'union-reviews/', 'discard-reviews/', 'ledger-transitions/',
                                 'quiescence-reviews/'))
