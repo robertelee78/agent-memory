@@ -1,0 +1,271 @@
+{
+  "part1_current_behavior": {
+    "O10_router_identity_disclosure": {
+      "canonical_remote_in_router": true,
+      "project_id_in_router": true
+    },
+    "O11_recall_policy_command_in_source": [],
+    "O1_distinct_random_project_ids": {
+      "alpha_is_uuid4": true,
+      "alpha_ne_beta": true,
+      "beta_is_uuid4": true
+    },
+    "O2_remote_normalization": {
+      "git@git.example.invalid:example-org/alpha-sdk.git": "repo://git.example.invalid/example-org/alpha-sdk",
+      "https://GitHub.com/Example-Org/Alpha-SDK.git": "repo://github.com/example-org/alpha-sdk",
+      "https://git.example.invalid/example-org/alpha-sdk-fork": "repo://git.example.invalid/example-org/alpha-sdk-fork",
+      "https://other.example.invalid/example-org/alpha-sdk": "repo://other.example.invalid/example-org/alpha-sdk",
+      "https://user:***@git.example.invalid/example-org/alpha-sdk.git/": "repo://git.example.invalid/example-org/alpha-sdk",
+      "ssh://git@git.example.invalid/example-org/alpha-sdk": "repo://git.example.invalid/example-org/alpha-sdk"
+    },
+    "O3_linked_worktree": {
+      "project_id": "PROJECT_ALPHA",
+      "resolved": true
+    },
+    "O4_independent_clone": {
+      "issues": [
+        "Independent checkout is not registered; explicitly bind or link, or fork to a new project"
+      ],
+      "link_preview_rc": 0,
+      "link_writes_performed": false,
+      "project_id": "PROJECT_ALPHA",
+      "resolved": false
+    },
+    "O5_fork_or_migration": {
+      "fork_id_is_new": true,
+      "fork_preview_rc": 0,
+      "fork_writes_performed": false,
+      "issues": [
+        "Independent checkout is not registered; explicitly bind or link, or fork to a new project",
+        "Unexpected authority remote change; explicit rebind or fork decision required",
+        "Bank authority evidence differs or is missing; explicitly bind/rebind/fork and update bank identity"
+      ],
+      "resolved": false
+    },
+    "O6_same_basename_no_remote": {
+      "distinct": true
+    },
+    "O7_federation_scope_variants_rejected": {
+      "{\"federation_consent\": true}": {
+        "rc": 1,
+        "valid": false
+      },
+      "{\"scope\": \"personal\"}": {
+        "rc": 1,
+        "valid": false
+      },
+      "{\"scope\": \"project:PROJECT_BETA\"}": {
+        "rc": 1,
+        "valid": false
+      }
+    },
+    "O7_scope_decide_cross_project": {
+      "applicable": false,
+      "identity_authenticated": false,
+      "rc": 0,
+      "reasons": [
+        "different-project"
+      ]
+    },
+    "O8_foreign_project_id_against_beta_with_discovery": {
+      "beta_body_disclosed": false,
+      "beta_id_disclosed": false,
+      "error": "Invalid, unsafe or changed recall input, scope or canonical state; preserve memory and reread before use",
+      "rc": 1
+    },
+    "O8_foreign_project_id_against_beta_without_discovery": {
+      "beta_body_disclosed": false,
+      "beta_id_disclosed": false,
+      "error": "Invalid, unsafe or changed recall input, scope or canonical state; preserve memory and reread before use",
+      "rc": 1
+    },
+    "O8_own_project_retrieval": {
+      "excluded_counts_keys": [
+        "selector-or-text-mismatch"
+      ],
+      "metrics_keys": [
+        "bounded_candidate_bytes_read",
+        "candidate_count_scope",
+        "canonical_observation_file_reads",
+        "canonical_observation_payload_bytes_read",
+        "catalog_updated",
+        "elapsed_seconds",
+        "entries",
+        "inspected_entries",
+        "inventory_files",
+        "operation_local_observation_used",
+        "parsed_records",
+        "qualified_candidates",
+        "ranked",
+        "result_bytes",
+        "selected"
+      ],
+      "only_alpha_canary": true,
+      "rc": 0,
+      "result_count": 1,
+      "result_envelope_keys": [
+        "audit",
+        "audit_writes_performed",
+        "bank_observation_sha256",
+        "canonical_writes_performed",
+        "code_working_bytes_verified",
+        "context",
+        "derived_cache_writes_performed",
+        "evaluated_at",
+        "excluded_counts",
+        "metrics",
+        "optional_indexes_used",
+        "project_id",
+        "publication_verified",
+        "results",
+        "schema",
+        "scope_context",
+        "source_assertions_verified",
+        "validation_scope"
+      ]
+    },
+    "O9_same_developer_two_projects": {
+      "identity_authenticated": [
+        false,
+        false
+      ],
+      "projects_distinct": true,
+      "same_developer": true,
+      "security_boundary": "Repository and OS permissions govern access. Developer IDs provide provenance, not authentication, memory ACLs or personal memory namespaces."
+    }
+  },
+  "part2_proposed_rule_arithmetic": {
+    "allowed_cells_missing_any_of_MDRXE": 0,
+    "allowed_per_direction": {
+      "private->private": 4,
+      "private->public": 4,
+      "public->private": 4,
+      "public->public": 4
+    },
+    "cells": 2048,
+    "decision_independent_of_repository_visibility": true,
+    "decisions": {
+      "allowed": 12,
+      "allowed-literal-only": 4,
+      "denied": 2000,
+      "unavailable": 32
+    },
+    "denied_or_unavailable_cells_with_foreign_read_or_disclosure": 0,
+    "expected_allowed_cells": 16,
+    "scope_note": "Consistency check of the brief proposal encoding; not a runtime, security or feature pass."
+  },
+  "part3_proposed_scenarios": [
+    {
+      "decision": "allowed",
+      "direction": "public->public",
+      "foreign_metadata_disclosed": true,
+      "foreign_reads": 1,
+      "matches_expected": true,
+      "scenario": "UC-a public SDK asks public server compatibility notes"
+    },
+    {
+      "decision": "denied",
+      "direction": "public->public",
+      "foreign_metadata_disclosed": false,
+      "foreign_reads": 0,
+      "matches_expected": true,
+      "scenario": "UC-a same, server never exported the record (X absent)"
+    },
+    {
+      "decision": "allowed",
+      "direction": "private->private",
+      "foreign_metadata_disclosed": true,
+      "foreign_reads": 1,
+      "matches_expected": true,
+      "scenario": "UC-b private app asks private deploy repo ownership contract"
+    },
+    {
+      "decision": "denied",
+      "direction": "private->public",
+      "foreign_metadata_disclosed": false,
+      "foreign_reads": 0,
+      "matches_expected": true,
+      "scenario": "UC-c public library expands toward private consumer it cannot see (D absent)"
+    },
+    {
+      "decision": "allowed",
+      "direction": "public->private",
+      "foreign_metadata_disclosed": true,
+      "foreign_reads": 1,
+      "matches_expected": true,
+      "scenario": "UC-c private consumer reads public library export"
+    },
+    {
+      "decision": "local-only",
+      "foreign_reads": 0,
+      "matches_expected": true,
+      "scenario": "UC-d second worktree of same project (not foreign; local scope)"
+    },
+    {
+      "decision": "denied",
+      "direction": "public->public",
+      "foreign_metadata_disclosed": false,
+      "foreign_reads": 0,
+      "matches_expected": true,
+      "scenario": "UC-e fork without explicit membership of new UUID (M absent)"
+    },
+    {
+      "decision": "denied",
+      "direction": "private->private",
+      "foreign_metadata_disclosed": false,
+      "foreign_reads": 0,
+      "matches_expected": true,
+      "scenario": "UC-f project removed from federation (revocation observed)"
+    },
+    {
+      "decision": "unavailable",
+      "direction": "private->private",
+      "foreign_metadata_disclosed": false,
+      "foreign_reads": 0,
+      "matches_expected": true,
+      "scenario": "UC-f offline, current membership version unknown"
+    },
+    {
+      "decision": "unavailable",
+      "direction": "private->private",
+      "foreign_metadata_disclosed": false,
+      "foreign_reads": 0,
+      "matches_expected": true,
+      "scenario": "UC-f cached grant version older than known current"
+    },
+    {
+      "decision": "denied",
+      "direction": "private->private",
+      "foreign_metadata_disclosed": false,
+      "foreign_reads": 0,
+      "matches_expected": true,
+      "scenario": "D4 operator denied or cancelled expansion prompt (E absent)"
+    },
+    {
+      "decision": "denied",
+      "direction": "private->private",
+      "foreign_metadata_disclosed": false,
+      "foreign_reads": 0,
+      "matches_expected": true,
+      "scenario": "D4 allow-without-asking but destination not a member (M absent)"
+    },
+    {
+      "decision": "allowed-literal-only",
+      "direction": "private->private",
+      "foreign_metadata_disclosed": true,
+      "foreign_reads": 1,
+      "matches_expected": true,
+      "scenario": "R3 remote embedding endpoint without provider approval (P absent)"
+    },
+    {
+      "decision": "denied",
+      "direction": "public->private",
+      "foreign_metadata_disclosed": false,
+      "foreign_reads": 0,
+      "matches_expected": true,
+      "scenario": "Reader in destination lacks read/acceptance (R absent)"
+    }
+  ],
+  "schema": "am-v015-246-walkthrough-v1",
+  "source_revision": "ce8660aecdbd40c8b11fb409d6cafc5cb15fbb3e"
+}
