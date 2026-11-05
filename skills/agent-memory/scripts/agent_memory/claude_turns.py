@@ -21,12 +21,16 @@ def complete(repo, value):
     return result
 
 
-def pending(repo, session=None, prompt=None):
+def pending(repo, session=None, prompt=None, *, offset=0, legacy_offset=0, enrollment_offset=0):
     if (session is None) != (prompt is None):
         raise ContractError('Select both native session and prompt, or neither')
     if session is None:
-        return turn_sources.backlog(repo, harness='claude')
+        return turn_sources.backlog(repo, harness='claude', offset=offset, legacy_offset=legacy_offset,
+                                    enrollment_offset=enrollment_offset)
+    if offset or legacy_offset or enrollment_offset:
+        raise ContractError('Page offsets select the full pending inventory, not a single native source')
     state = turn_sources.inspect(repo, 'claude', session, prompt)
     return {'verified': True, 'pending': [{k: x[k] for k in ('session', 'lifecycle', 'observation_id', 'source_sha256')}
                                         for x in state['pending']], 'faults': state['faults'],
-            'canonical_writes_performed': False}
+            'recovery_pending':state.get('recovery_pending',False),
+            'unidentified_input_ids':state.get('unidentified_input_ids',[]), 'canonical_writes_performed': False}

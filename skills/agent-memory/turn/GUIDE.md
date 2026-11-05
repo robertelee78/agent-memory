@@ -183,6 +183,46 @@ The adapter only supplies invocation context. The agent can still fail to follow
 it; no hook proves that capture or refresh occurred. Report unsupported adapters,
 missing trust, model failure and interrupted operations as pending.
 
+### Verified layout-recovery hold
+
+A checked persistent layout hold permits **private source enrollment only**.
+The prompt hook can let the substantive human task continue with a genuine
+pending observation; this is not source assessment, admitted guidance, refresh,
+no-learning or publication. Canonical writes and boundary acknowledgement remain
+inactive while held. Stop hooks report `recovery-pending` without repeatedly
+waking an agent to perform an acknowledgement that cannot succeed. Unknown,
+missing, corrupt, foreign or changing hold/private identity evidence still
+refuses input; do not force continuation or manufacture a receipt.
+
+Held enrollment requires the actual native event identity as well as session and
+lifecycle. An exact retry reuses its durable enrollment intent and observation
+UUID, even after a lost response or a source/index write followed by a failed
+identity recheck. Distinct steering events in one turn require distinct native
+event IDs. Changed source, registry, hold or ledger pins remain unverified and
+retain their original private evidence rather than allocating another slot.
+
+Claude supplies its existing native `prompt_id` and transcript reference. The
+Codex adapter accepts an actual unambiguous `event_id` or `prompt_id` when the
+provider supplies it; `turn_id` alone is a lifecycle, not a steering-event ID.
+Synthetic hook fixtures supplying those fields do **not** establish that an
+unexercised Codex provider emits them. Without an unambiguous native ID, a held
+Codex prompt is refused, its exact bounded prompt bytes and available original
+transcript reference are retained owner-only as an **unidentified input**, and
+the failure reports its opaque retention ID. That ID is not an observation or
+native identity. No body-digest deduplication, source completion or automatic
+association with a later identical prompt is permitted. Missing references stay
+explicitly unknown. Preserve the native original and restore verifiable event
+identity before enrolling; uncertain retained originals remain pending.
+
+The retained private bodies must not be pasted into public diagnostics, memory
+records or tracker evidence. Pending inventory exposes unidentified retention
+IDs and faults, never their bodies. It also discovers an enrollment intent
+whose source or pending-index publication was interrupted. Use
+`next_enrollment_offset` with `--enrollment-offset` on either boundary pending
+inventory to retrieve additional orphan-intent pages. Ordinary source/legacy
+pagination retains its existing independent offsets.
+
+
 ## Diagnostic fallback
 
 Preserve the bank, feature work and pending operations. Custom harnesses may

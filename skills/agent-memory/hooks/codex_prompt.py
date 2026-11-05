@@ -17,6 +17,7 @@ def diagnostic(repo, stage=None, reason=None):
 
 def main():
     diagnostic_repo = None
+    retained_input=None
     stage, reason = "event", "event.invalid"
     try:
         raw=sys.stdin.buffer.read(65537)
@@ -32,28 +33,40 @@ def main():
             print('{}');return 0
         root=Path(result.stdout.strip()).resolve(strict=True);diagnostic_repo=root;pack=Path(__file__).resolve().parent.parent
         sys.path.insert(0,str(pack/'scripts'))
-        from agent_memory import bank_writes,repository_config,scope_binding,trust_paths
+        from agent_memory import repository_config,scope_binding
         if not os.path.lexists(repository_config.bank_path(root)):
             diagnostic(root);print('{}');return 0
-        stage,reason='identity','identity.unresolved'
-        context=scope_binding.require(root);
-        stage,reason='boundary','state.unavailable'
-        _,bank=bank_writes.bank_path(root)
         from agent_memory import turn_sources
-        observation=turn_sources.register(root,'codex',session,turn,hashlib.sha256(text.encode()).hexdigest())
+        enrollment=scope_binding.private_enrollment_context(root)
+        stage,reason='boundary','state.unavailable'
+        native_ids=[event[key] for key in ('event_id','prompt_id') if event.get(key) is not None]
+        native=(native_ids[0] if native_ids and all(isinstance(value,str) and value and len(value.encode())<=512
+                and not any(ord(char)<32 for char in value) for value in native_ids) and len(set(native_ids))==1 else None)
+        reference=event.get('transcript_path')
+        if not isinstance(reference,str) or not Path(reference).is_absolute() or len(reference.encode())>2048 or any(ord(char)<32 for char in reference):
+            reference=None
+        if enrollment.held and native is None:
+            retained_input=turn_sources.retain_unidentified_input(root,'codex',session,turn,text.encode(),reference)
+            stage,reason='native-event','identity.unavailable'
+            raise ValueError('Retained source lacks an unambiguous native event identity')
+        observation=turn_sources.register(root,'codex',session,turn,hashlib.sha256(text.encode()).hexdigest(),native_source_id=native,source_reference=reference)
         stage,reason='guidance','guidance.unavailable'
         guidance=(pack/'hooks'/'boundary-prompt.txt').read_text(encoding='utf-8').strip().replace('{{SKILL_DIR}}',str(pack))
         guidance += (' Observation '+observation['observation_id']+'; session='+session+'; prompt='+turn+'; source_sha256='+observation['source_sha256']+'. Before final use one am codex-boundary --repo REPO --stdin --refresh --quiet with top-level session,prompt,observation_id,source_sha256,outcome,assessment; for no-learning assessment requires source_id=this observation ID, source_review=actual review, candidates=authored list (empty only if none). Never substitute a later input. Earlier pending IDs: am codex-boundary --repo REPO --list-pending.')
+        if enrollment.held:
+            guidance += ' Recovery-pending: this input is privately retained; continue the human task. Canonical admission, refresh and source acknowledgement remain inactive until the verified hold is resolved. Never fabricate no-learning or publication.'
         try:notice=turn_sources.pending_notice(root,'codex',session,turn)
         except (OSError,ValueError):notice=True  # Optional notice bookkeeping cannot veto durable source registration.
         if notice:guidance += ' Earlier pending work exists; inspect am codex-boundary --list-pending to recover original identifiers. Never substitute this input for an earlier source.'
         if observation['control_origin_hint']:guidance += ' Retained generated-control hint: these instructions are not a new operator decision; still assess this observation explicitly.'
         if len(guidance.encode())>2048:raise ValueError('guidance exceeds bound')
+        scope_binding.recheck_private_enrollment(enrollment)
         diagnostic(root)
         print(json.dumps({'hookSpecificOutput':{'hookEventName':'UserPromptSubmit','additionalContext':guidance}}));return 0
     except (OSError,ValueError,TypeError,KeyError,UnicodeError,ImportError,subprocess.SubprocessError):
         diagnostic(diagnostic_repo,stage,reason)
-        print(json.dumps({'decision':'block','reason':f'Agent Memory input not accepted [{stage}/{reason}]. Preserve work; run am doctor and am codex-boundary --list-pending for this repository, then retry this input after resolving the fault.'}));return 0
+        retained=(' Unidentified input retained privately as '+retained_input['retention_id']+'; it is not an observation. Restore the original native event ID/reference before enrollment.' if retained_input else '')
+        print(json.dumps({'decision':'block','reason':f'Agent Memory input not accepted [{stage}/{reason}]. Preserve work; run am doctor and am codex-boundary --list-pending for this repository, then retry this input after resolving the fault.'+retained}));return 0
 
     except Exception:
         diagnostic(diagnostic_repo,stage,'internal.unexpected')

@@ -32,12 +32,22 @@ def requests(value):
 
 
 def notice_required(repo, harness, session, refresh, assessment_failures=None):
+    from . import turn_sources
+    try:
+        with turn_sources.source_barrier(repo):
+            return _notice_required(repo, harness, session, refresh, assessment_failures)
+    except (OSError, ValueError, TypeError, KeyError):
+        return True
+
+
+def _notice_required(repo, harness, session, refresh, assessment_failures=None):
     """Advisory failure deduplication; never a capture or completion receipt."""
     from . import turn_sources
     if not isinstance(session, str) or not session or len(session.encode()) > 512:
         return True
     try:
-        _, _, _, directory, _ = turn_sources.namespace(repo, harness, session, 'refresh-notice', True)
+        from . import scope_binding
+        _, context, _, directory, _ = turn_sources.private_namespace(repo, harness, session, 'refresh-notice', True)
         with turn_sources.locked(directory):
             path = directory / 'notice.json'
             try:
@@ -48,7 +58,9 @@ def notice_required(repo, harness, session, refresh, assessment_failures=None):
                 old = None
             if refresh.get('sharing_state') == 'bank-synchronized' and refresh.get('remote_freshness_verified') is True and not assessment_failures:
                 if old is not None:
+                    scope_binding.recheck_private_enrollment(context)
                     path.unlink(); turn_sources.sync(directory)
+                    scope_binding.recheck_private_enrollment(context)
                 return True
             cause = {'refresh': {key:refresh.get(key) for key in ('sharing_state','failure_component','failure_code','failure_path','reason','repair')} if refresh.get('sharing_state') != 'bank-synchronized' or refresh.get('remote_freshness_verified') is not True else None,
                      'source_assessments': assessment_failures or []}
@@ -58,8 +70,11 @@ def notice_required(repo, harness, session, refresh, assessment_failures=None):
                 return False
             temp = directory / (str(uuid.uuid4()) + '.tmp')
             try:
+                scope_binding.recheck_private_enrollment(context)
                 turn_sources.exclusive(temp, value, 4096)
+                scope_binding.recheck_private_enrollment(context)
                 os.replace(temp, path); turn_sources.sync(directory)
+                scope_binding.recheck_private_enrollment(context)
             finally:
                 if os.path.lexists(temp): temp.unlink()
             return True
@@ -70,13 +85,21 @@ def notice_required(repo, harness, session, refresh, assessment_failures=None):
 def check(repo, value, complete, harness):
     """Refresh and retain explicit reviews, without authorship or promotion."""
     values = requests(value)
-    from . import memory_refresh
-    refresh = memory_refresh.current_result(repo)
+    from . import memory_refresh, scope_binding
+    context = scope_binding.private_enrollment_context(repo)
+    refresh = ({'sharing_state':'recovery-pending','active':False,'remote_freshness_verified':False,
+                'failure_component':'layout-recovery','failure_code':'incomplete-recovery',
+                'reason':'A verified private recovery hold keeps refresh and source acknowledgement inactive.',
+                'repair':'Continue the human task; retain original pending observations and inspect am bank recover-layout status.',
+                'canonical_writes_performed':False}
+               if context.held else memory_refresh.current_result(repo))
     if not isinstance(refresh, dict):
         raise ContractError('The refresh observation is unavailable; preserve original sources')
     receipts = []
     for source in values:
         try:
+            if context.held:
+                raise ContractError('Recovery-pending: the original source is retained; acknowledgement is inactive, not no-learning or published')
             receipts.append(complete(repo, source))
         except (OSError, ValueError, TypeError, KeyError, UnicodeError) as exc:
             receipts.append({'verified': False, 'outcome': 'pending',
@@ -92,6 +115,7 @@ def check(repo, value, complete, harness):
                  'failure_code':receipt.get('failure_code','assessment-unverified'), 'reason':receipt.get('reason')}
                 for source,receipt in zip(values,receipts) if receipt.get('verified') is not True]
     result['notice_required'] = notice_required(repo, harness, values[0].get('session'), refresh, failures)
+    scope_binding.recheck_private_enrollment(context)
     return result
 
 
