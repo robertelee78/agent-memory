@@ -13,12 +13,27 @@ go to the detecting developer for clarification.
 
 The [v0.0.14 release guide](docs/releases/v0.0.14.md) covers consistent bounded
 bank eligibility and entry-scoped Codex/Claude hook health. Unreadable sources
-cannot be bypassed by an unrelated selector; capture remains pending without
-source-preserving layout recovery. Unrelated valid hook settings no longer
+cannot be bypassed by an unrelated selector. Source-preserving recovery is
+documented separately below. Unrelated valid hook settings no longer
 cause a whole-file ownership failure. Signed-download diagnostics, publisher
 authentication and strict managed-runtime ownership checks remain in force.
 [Published releases](https://github.com/robertelee78/agent-memory/releases)
 hold the immutable source and actual qualification evidence for each version.
+
+### Source-preserving layout recovery (#244)
+
+`am bank recover-layout` now provides bounded private raw inspection/pages,
+independently reviewed full-source/native-result preparation, journaled
+router-last apply, status, exact known recovery and distinct child restoration.
+It does not increase normal limits or manufacture admission: recovered
+unadmitted units remain durably private with an explicit incomplete-coverage
+hold, all-source comparison and real receipt-bound resolution. Rollback retains
+those obligations. Publication and retention have separate reviewed paths.
+
+Read the [workflow, schema requirements and disposable synthetic smoke recipe](skills/agent-memory/bank/GUIDE.md#source-preserving-layout-recovery).
+Layout eligibility, semantic completion, qualified recall, publication and
+other-machine import are independent claims; only exercised evidence establishes
+each. The synthetic 79,054/28,478-byte fixtures are not the original incident.
 
 ## Install and first use
 

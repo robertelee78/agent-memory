@@ -12,10 +12,11 @@ import uuid
 
 from . import bank_contract as contract, bank_observation, bank_writes as writes
 from . import layout_recovery_state as state, local_registry, repository_config
-from . import project_identity, scope_binding
+from . import artifact, project_identity, scope_binding
 from .developer_identity import digest, encoded, uuid_valid
 from .frontmatter import ContractError
 from .identity_git import git
+from .sharing_limits import MAX_PRIVATE
 
 MAX_FILE = 1048576
 MAX_BYTES = 67108864
@@ -60,19 +61,23 @@ def metadata_supported(path):
         libc.acl_get_file.restype = ctypes.c_void_p
         libc.acl_get_entry.argtypes = [ctypes.c_void_p, ctypes.c_int, ctypes.POINTER(ctypes.c_void_p)]
         libc.acl_free.argtypes = [ctypes.c_void_p]
+        ctypes.set_errno(0)
         acl = libc.acl_get_file(os.fsencode(path), 0x100)
         if not acl:
+            if ctypes.get_errno() in {errno.ENOENT, getattr(errno, 'ENODATA', errno.ENOENT)}:
+                return
             raise ContractError('pending-metadata-preservation')
         try:
             entry = ctypes.c_void_p()
+            ctypes.set_errno(0)
             result = libc.acl_get_entry(acl, 0, ctypes.byref(entry))
-            if result == 0 or (result == -1 and ctypes.get_errno() != errno.EINVAL):
+            if result == 0 or (result == -1 and ctypes.get_errno() not in {errno.EINVAL, errno.ENOENT}):
                 raise ContractError('pending-metadata-preservation')
         finally:
             libc.acl_free(acl)
 
 
-def read_source(bank, relative, limit=MAX_FILE):
+def read_source(bank, relative, limit=MAX_FILE, *, hash_only=False):
     """Chunked no-follow read with exact named binding and all parent pins."""
     path_value(relative)
     descriptors = []
@@ -93,7 +98,7 @@ def read_source(bank, relative, limit=MAX_FILE):
                 raise ContractError('Recovery requires ordinary single-link sources')
             if before.st_size > limit:
                 raise RawCapacityError('source-bytes', limit, before.st_size, 'exact')
-            blocks = []; measured = 0
+            blocks = []; measured = 0; hasher = hashlib.sha256()
             while True:
                 block = stream.read(min(CHUNK, limit + 1 - measured))
                 if not block:
@@ -101,7 +106,9 @@ def read_source(bank, relative, limit=MAX_FILE):
                 measured += len(block)
                 if measured > limit:
                     raise RawCapacityError('source-bytes', limit, measured)
-                blocks.append(block)
+                hasher.update(block)
+                if not hash_only:
+                    blocks.append(block)
             after = os.fstat(stream.fileno())
             named = os.stat(parts[-1], dir_fd=descriptors[-1], follow_symlinks=False)
             if signature(before) != signature(after) or signature(after) != signature(named) or measured != before.st_size:
@@ -112,7 +119,7 @@ def read_source(bank, relative, limit=MAX_FILE):
             if (signature(named) != before_parents[index]
                     or signature(os.fstat(descriptor)) != before_parents[index]):
                 raise ContractError('Raw source parent changed during observation')
-        return b''.join(blocks), signature(before)
+        return (hasher.hexdigest() if hash_only else b''.join(blocks)), signature(before)
     except OSError as exc:
         raise ContractError('Raw source binding/type/permissions changed; preserve evidence') from exc
     finally:
@@ -136,12 +143,16 @@ def git_pins(root):
                 'common_git_dir': None, 'common_identity': None}
     common_path = (root / common).resolve()
     index_name = git(root, 'rev-parse', '--git-path', 'index')
-    index_path = (root / index_name).resolve()
-    # An index is not a raw memory source, but is still a bounded stable pin.
-    raw, facts = read_source(index_path.parent, index_path.name, 64 * 1024 * 1024) if index_path.exists() else (None, None)
+    index_path = Path(os.path.abspath(root / index_name))
+    if any(part.is_symlink() for part in (index_path, *index_path.parents)):
+        raise ContractError('Original Git index must not follow redirected bindings')
+    # The original index is not a memory source. Hash its observed exact size
+    # in chunks without copying it or imposing the raw-source file allowance.
+    index_sha, facts = (read_source(index_path.parent, index_path.name, index_path.lstat().st_size, hash_only=True)
+                        if index_path.exists() else (None, None))
     return {'head': git(root, 'rev-parse', '--verify', 'HEAD', optional=True),
             'branch': git(root, 'symbolic-ref', '-q', 'HEAD', optional=True),
-            'index': {'path': str(index_path), 'sha256': digest(raw), 'facts': facts},
+            'index': {'path': str(index_path), 'sha256': index_sha, 'facts': facts},
             'configuration': digest(os.fsencode(git(root, 'config', '--null', '--list'))),
             'common_git_dir': str(common_path),
             'common_identity': {'dev': common_path.stat().st_dev, 'ino': common_path.stat().st_ino}}
@@ -149,46 +160,81 @@ def git_pins(root):
 
 def identity(repo, raw, review=None, *, owner=None, transaction=None):
     token = project_identity.RawIdentityEvidence.observe(repo, raw, review)
-    dev = scope_binding.principal(repo)
+    context = scope_binding.raw_recovery_context(repo, token, owner=owner, transaction=transaction)
     proj = project_identity.status(repo, owned_lock=owner, owned_transaction=transaction, raw_identity=token)
     if local_registry.paths('projects')[2].exists() or not proj['resolved']:
         raise ContractError('pending-identity-review')
     proof = proj['evidence']
-    context = {'developer_id': dev['developer_id'], 'project_id': proj['project_id'],
-               'developer_sha256': dev['observed_sha256'], 'project_sha256': proj['observed_sha256'],
-               'checkout_key': proof['checkout_key'],
-               'repository_settings_sha256': digest(encoded(proof['repository_settings'])),
-               'initialization_only': False}
     return {'scope_context': context, 'project_evidence': proof, 'identity_review': token.review}
 
 
-def inventory(bank, *, retain_directory=None, prior_sources=None):
-    physical = []; sources = []; totals = {'source_bytes': 0, 'source_files': 0, 'physical_entries': 0, 'depth': 0}
+class ManifestBudget:
+    """Exact nested JSON byte accounting before collecting another row."""
+    def __init__(self, envelope, totals):
+        self.fixed = len(encoded({**envelope, 'physical_entries': [], 'sources': [], 'totals': {}}))
+        self.totals = totals
+        self.rows = 0
+        self.counts = {'physical_entries': 0, 'sources': 0}
+        self.check()
+
+    def check(self):
+        totals = encoded(self.totals)
+        total_delta = len(totals) - 1 + 2 * (len(totals.splitlines()) - 1) - 2
+        measured = self.fixed + self.rows + total_delta
+        if measured > MAX_PRIVATE:
+            raise RawCapacityError('encoded-manifest-bytes', MAX_PRIVATE, measured)
+
+    def add(self, kind, row):
+        body = encoded(row)
+        nested = len(body) - 1 + 4 * len(body.splitlines())
+        self.rows += nested + (4 if self.counts[kind] == 0 else 2)
+        self.counts[kind] += 1
+        self.check()
+
+
+def inventory(bank, *, retain_directory=None, prior_sources=None, allow_temporaries=False, envelope=None):
+    physical = []; sources = []
+    totals = {'source_bytes': 0, 'source_files': 0, 'physical_entries': 0, 'depth': 0}
+    budget = ManifestBudget(envelope or {}, totals)
+    metadata_supported(bank)
     old = {row['path']: row for row in (prior_sources or [])}
+
+    def names_at(descriptor, expected=None, prefix=''):
+        names = []
+        with os.scandir(descriptor) as entries:
+            for entry in entries:
+                if expected is None and not (not prefix and entry.name == '.agent-memory.lock'):
+                    totals['physical_entries'] += 1
+                    if totals['physical_entries'] > MAX_ENTRIES:
+                        raise RawCapacityError('physical-entries', MAX_ENTRIES, totals['physical_entries'])
+                    budget.check()
+                elif expected is not None and len(names) >= expected:
+                    raise ContractError('Raw directory grew during observation')
+                names.append(entry.name)
+        names.sort()
+        return names
+
     def walk(descriptor, prefix, depth):
         before = signature(os.fstat(descriptor))
-        names = sorted(os.listdir(descriptor))
+        names = names_at(descriptor, prefix=prefix)
         for name in names:
+            if not prefix and name == '.agent-memory.lock':
+                continue
             relative = path_value(prefix + name)
             level = depth + 1
             if level > MAX_DEPTH:
                 raise RawCapacityError('depth', MAX_DEPTH, level)
             totals['depth'] = max(totals['depth'], level)
-            totals['physical_entries'] += 1
-            if totals['physical_entries'] > MAX_ENTRIES:
-                raise RawCapacityError('physical-entries', MAX_ENTRIES, totals['physical_entries'])
+            budget.check()
             info = os.stat(name, dir_fd=descriptor, follow_symlinks=False)
             kind = 'directory' if stat.S_ISDIR(info.st_mode) else 'file' if stat.S_ISREG(info.st_mode) else 'unsupported'
             if kind == 'unsupported' or (kind == 'file' and info.st_nlink != 1):
                 raise ContractError('Unsupported raw source type/alias; preserve the bank')
             metadata_supported(bank / relative)
             runtime = contract.runtime_path(relative)
-            # The exclusive owner marker is checked separately; do not bind its
-            # ephemeral inode/timestamps into long-lived source evidence.
-            if relative == '.agent-memory.lock':
-                continue
+            if runtime and any(part.startswith('.agent-memory-layout-') for part in Path(relative).parts) and not allow_temporaries:
+                raise ContractError('Unknown layout staging artifact requires its known operation recovery')
             if runtime and ('transaction' in relative or 'recovery' in relative):
-                # Only exact owned markers may pass the outer marker guard.
                 if relative not in ('.agent-memory-transaction.md', '.agent-memory-recovery.md'):
                     raise ContractError('Unknown runtime recovery artifact')
             row = {'path': relative, 'type': kind, 'runtime': runtime, **signature(info)}
@@ -197,32 +243,38 @@ def inventory(bank, *, retain_directory=None, prior_sources=None):
                 try:
                     if signature(os.fstat(child)) != signature(info):
                         raise ContractError('Raw directory binding changed')
+                    budget.add('physical_entries', row)
                     physical.append(row)
                     walk(child, relative + '/', level)
                 finally:
                     os.close(child)
             else:
-                raw, facts = read_source(bank, relative)
+                body, facts = read_source(bank, relative)
                 if facts != signature(info):
                     raise ContractError('Raw named source changed')
-                row['sha256'] = digest(raw)
+                row['sha256'] = digest(body)
+                budget.add('physical_entries', row)
                 physical.append(row)
                 if not runtime:
                     totals['source_files'] += 1
-                    totals['source_bytes'] += len(raw)
+                    totals['source_bytes'] += len(body)
                     if totals['source_files'] > MAX_FILES:
                         raise RawCapacityError('source-files', MAX_FILES, totals['source_files'])
                     if totals['source_bytes'] > MAX_BYTES:
                         raise RawCapacityError('aggregate-bytes', MAX_BYTES, totals['source_bytes'])
                     source_id = old[relative]['source_id'] if relative in old else str(uuid.uuid4())
                     blob = 'originals/' + source_id + '.bin'
+                    source = {'source_id': source_id, 'path': relative, 'byte_count': len(body),
+                              'sha256': row['sha256'], 'blob': blob}
+                    budget.add('sources', source)
                     if retain_directory is not None:
-                        state.put_bytes(retain_directory / blob, raw)
+                        state.put_bytes(retain_directory / blob, body)
+                    sources.append(source)
+                    if retain_directory is not None:
                         writes.fault('layout-recovery-partial-original-staging')
-                    sources.append({'source_id': source_id, 'path': relative, 'byte_count': len(raw),
-                                    'sha256': row['sha256'], 'blob': blob})
-        if signature(os.fstat(descriptor)) != before or sorted(os.listdir(descriptor)) != names:
+        if signature(os.fstat(descriptor)) != before or names_at(descriptor, len(names), prefix) != names:
             raise ContractError('Raw directory changed during inventory')
+
     root_fd = os.open(bank, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
     try:
         root_info = os.fstat(root_fd)
@@ -236,7 +288,7 @@ def inventory(bank, *, retain_directory=None, prior_sources=None):
     return sorted(physical, key=lambda row: row['path']), sorted(sources, key=lambda row: row['path']), totals
 
 
-def observe(repo, operation_id, *, owner=None, transaction=None, retain=True, identity_review=None):
+def observe(repo, operation_id, *, owner=None, transaction=None, retain=True, identity_review=None, predecessor=None):
     if not uuid_valid(operation_id):
         raise ContractError('Recovery operation requires a canonical UUIDv4')
     root, bank = locate(repo)
@@ -246,20 +298,29 @@ def observe(repo, operation_id, *, owner=None, transaction=None, retain=True, id
     router, _ = read_source(bank, 'MEMORY.md')
     resolved = identity(root, router, identity_review, owner=owner, transaction=transaction)
     directory = state.paths(root, operation_id)[3] if retain else None
+    if directory is not None:
+        state.write_once(directory / 'staging.json', {'schema': 'agent-memory/layout-recovery-staging-v1',
+            'operation_id': operation_id, 'repo_root': str(root), 'bank_path': str(bank),
+            'project_id': resolved['scope_context']['project_id'], 'identity': resolved,
+            'observation_complete': False})
     before_git = git_pins(root)
-    physical, sources, totals = inventory(bank, retain_directory=directory)
-    after, after_sources, measured = inventory(bank, prior_sources=sources)
+    measured_runtime = artifact.inspect(artifact.PACK)
+    runtime_identity = {key: measured_runtime[key] for key in ('artifact_digest', 'version')}
+    runtime_identity['private_state_capabilities'] = measured_runtime['compatibility'].get('private_state_capabilities', [])
+    envelope = {'schema': 'agent-memory/layout-source-manifest-v1', 'operation_id': operation_id,
+                'inspected_at': local_registry.now(), 'repo_root': str(root), 'bank_path': str(bank),
+                'project_id': resolved['scope_context']['project_id'], 'identity': resolved, 'observation_complete': True,
+                'git': before_git, 'runtime_artifact': runtime_identity, 'predecessor': predecessor,
+                'metadata_policy': 'ordinary-modes-ownership-no-acl-xattr-flags',
+                'bank_binding': {key: signature(bank.stat())[key] for key in ('dev', 'ino', 'mode', 'uid', 'gid')}}
+    physical, sources, totals = inventory(bank, retain_directory=directory, envelope=envelope)
+    after, after_sources, measured = inventory(bank, prior_sources=sources, envelope=envelope)
     if (after, after_sources, measured) != (physical, sources, totals) or git_pins(root) != before_git:
         raise ContractError('Recovery observation changed; preserve staged evidence')
     if identity(root, router, identity_review, owner=owner, transaction=transaction) != resolved:
         raise ContractError('Recovery identity changed')
     bank_observation.markers(bank, owner, transaction)
-    return {'schema': 'agent-memory/layout-source-manifest-v1', 'operation_id': operation_id,
-            'inspected_at': local_registry.now(), 'repo_root': str(root), 'bank_path': str(bank),
-            'project_id': resolved['scope_context']['project_id'], 'identity': resolved,
-            'observation_complete': True, 'physical_entries': physical, 'sources': sources,
-            'totals': totals, 'git': before_git,
-            'bank_binding': {key: signature(bank.stat())[key] for key in ('dev', 'ino', 'mode', 'uid', 'gid')}}
+    return {**envelope, 'physical_entries': physical, 'sources': sources, 'totals': totals}
 
 
 def recheck(repo, manifest, owner=None, transaction=None):

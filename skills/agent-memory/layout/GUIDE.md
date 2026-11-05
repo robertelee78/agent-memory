@@ -79,10 +79,11 @@ map before canonical replacement. A valid isolated record/index format is not a
 claim that a complete on-disk bank is eligible for normal use.
 
 Capacity refuses normal recall/capture even when a selector names another path.
-Preserve every source and the original index/HEAD; this runtime has no supported
-source-preserving layout-recovery command. Do not truncate, delete, ignore or
-raise limits to make the check pass. The [offline guide](../offline/GUIDE.md)
-describes the typed diagnostic and pending boundary.
+Use the [source-preserving recovery workflow](../bank/GUIDE.md#source-preserving-layout-recovery)
+to inspect and independently review a complete bounded transformation. Preserve
+every original, condition, stable identity, feature file and original index/HEAD.
+Do not truncate, ignore sources or raise normal limits. Layout eligibility is
+not semantic completion; unadmitted material remains durably private/pending.
 
 Every project Markdown file MUST have one unambiguous route from `MEMORY.md`,
 directly or through a bounded topic index. The root router keeps its 16 KiB and

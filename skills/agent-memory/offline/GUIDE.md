@@ -94,10 +94,12 @@ eligibility. Exit 1 means preserve the input and inspect the reported problem.
 Capacity failures identify `bank-source-byte-capacity`,
 `bank-aggregate-byte-capacity` or `bank-source-count-capacity`, a bank-relative
 path, limit and exact or lower-bound measurement. Ordinary recall and new capture
-remain pending. This runtime has no supported source-preserving layout-recovery
-command. Preserve the bank, feature work, original index/HEAD and recovery
-evidence. Do not truncate, delete or skip sources, raise normal limits or
-initialize over the bank; repeating the operation is not repair.
+remain pending until the prerequisite is repaired. The packaged
+[source-preserving layout recovery](../bank/GUIDE.md#source-preserving-layout-recovery)
+workflow separately observes/reviews raw sources without widening normal bounds.
+Preserve the bank, feature work, original index/HEAD and private recovery evidence.
+Do not truncate, delete/skip sources or initialize over the bank. A cooperative
+manual edit is not a verified recovery receipt or semantic admission.
 
 ## Plan
 

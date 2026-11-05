@@ -359,9 +359,18 @@ def validate(repo, *, owned_lock=None, owned_transaction=None):
             "source_stability_verified": True}
 
 
+MEMORY_ROUTES = {'recover-layout': ('recover_layout.py', ())}
+
+
 def main(argv=None):
+    from . import cli
+    import sys
+    argv = cli.arguments(sys.argv[1:] if argv is None else argv)
+    if argv and argv[0] in MEMORY_ROUTES:
+        return cli.execute(argv[0], argv[1:], MEMORY_ROUTES[argv[0]])
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
+    commands.add_parser('recover-layout', help='Explicit source-preserving layout recovery; use recover-layout --help')
     renderer = commands.add_parser("render", help="emit a file proposal; write nothing")
     renderer.add_argument("--input", required=True, help="JSON file, or - for stdin")
     checker = commands.add_parser("validate", help="inspect the repository-root memory-bank")

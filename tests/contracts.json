@@ -1,6 +1,7 @@
 {
   "schema": "agent-memory/test-contracts-v1",
   "suites": [
+    {"name": "layout-recovery", "layer": "bank", "scope": "v0.0.15", "path": "tests/contracts/test_layout_recovery.py"},
     {"name": "layout-recovery-publication", "layer": "concurrency", "scope": "v0.0.15", "path": "tests/contracts/test_layout_recovery_publication.py"},
     {"name": "layout-recovery-retention", "layer": "bank", "scope": "v0.0.15", "path": "tests/contracts/test_layout_recovery_retention.py"},
     {"name": "layout-recovery-frontier", "layer": "bank", "scope": "v0.0.15", "path": "tests/contracts/test_layout_recovery_frontier.py"},

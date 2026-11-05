@@ -73,17 +73,17 @@ class RawIdentityEvidence:
         value = object.__new__(cls)
         value.repo_root, value.bank_path = str(root), str(bank)
         value.router_sha256, value.metadata = digest(raw), dict(metadata)
-        value.review, value._seal = retained_review, _RAW_IDENTITY_SEAL
+        value.review, value._seal = retained_review, _raw_identity_seal
         return value
 
     def checked(self, root, bank, raw):
-        if (self._seal is not _RAW_IDENTITY_SEAL or self.repo_root != str(root)
+        if (self._seal is not _raw_identity_seal or self.repo_root != str(root)
                 or self.bank_path != str(bank) or self.router_sha256 != digest(raw)):
             raise ContractError('Raw recovery identity evidence changed')
         return dict(self.metadata)
 
 
-_RAW_IDENTITY_SEAL = object()
+_raw_identity_seal = object()
 
 
 
@@ -145,10 +145,14 @@ def discover(repo, authority=None, *, owned_lock=None, owned_transaction=None, m
     router = bank / "MEMORY.md"
     if bank.is_symlink() or router.is_symlink():
         raise ContractError("Bank/router must not be symlinks")
-    for name, owned in ((".agent-memory.lock", owned_lock), (".agent-memory-transaction.md", owned_transaction)):
-        path = bank / name
-        if path.is_symlink() or (path.exists() and (owned is None or path.read_bytes() != owned)):
-            raise ContractError("Bank busy or interrupted; inspect/recover before resolving identity")
+    if raw_identity is not None:
+        from . import bank_observation
+        bank_observation.markers(bank, owned_lock, owned_transaction)
+    else:
+        for name, owned in ((".agent-memory.lock", owned_lock), (".agent-memory-transaction.md", owned_transaction)):
+            path = bank / name
+            if path.is_symlink() or (path.exists() and (owned is None or path.read_bytes() != owned)):
+                raise ContractError("Bank busy or interrupted; inspect/recover before resolving identity")
     if raw_identity is not None:
         from .layout_recovery_observation import read_source
         raw, _ = read_source(bank, 'MEMORY.md', 1048576)

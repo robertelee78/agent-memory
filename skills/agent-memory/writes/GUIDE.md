@@ -122,6 +122,17 @@ Initialization finish MUST revalidate original source evidence; identity-change
 transactions MUST resume through their original binding bundle. A session MUST
 preserve unknown markers or missing journals for explicit inspection.
 
+An invalid/oversized source cannot use an ordinary valid-base transaction.
+Route to [source-preserving layout recovery](../bank/GUIDE.md#source-preserving-layout-recovery)
+and its literal `am bank recover-layout` helper instead. Its typed raw read-set
+is internal, not a caller-selected normal-reader bypass. Its initial layout
+journal, pending ledger and immutable receipt are separate from admission.
+The persistent recovery hold is not a legacy transaction ID; ordinary recovery
+MUST NOT steal or retire it. Use `recover-nested` for a held ordinary transaction:
+rollback only before its canonical receipt, finish only after it. Completed
+layout restoration requires the distinct parent-receipt-bound child restore;
+pending units and their hold survive rollback until genuinely resolved.
+
 ## Diagnostic fallback
 
 If the ordinary protocol cannot establish safe completion or rollback, the session MUST retain original proposals, current bank bytes and recovery evidence for explicit inspection. It MAY inspect their bounded metadata and stronger source files, but MUST NOT steal unknown/live/foreign locks, delete a marker to force success or overwrite an unexpected external edit.

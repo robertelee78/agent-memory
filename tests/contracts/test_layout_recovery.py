@@ -1,0 +1,237 @@
+"""Public recovery behavior against disposable synthetic sources, never incident data."""
+import base64
+import copy
+import json
+import os
+from pathlib import Path
+import stat
+import unittest
+import uuid
+
+from world import World
+import layout_recovery_fixtures as fixture
+
+
+class LayoutRecoveryContract(unittest.TestCase):
+    def setup_repair(self, world, *, pending=False):
+        command, source = fixture.installed(world)
+        repo, bank, native = fixture.memory(world, oversized=True, handoff=pending)
+        originals = {path.relative_to(bank).as_posix(): path.read_bytes()
+                     for path in bank.rglob('*') if path.is_file()}
+        return command, source, repo, bank, native, originals
+
+    def private_directory(self, world, bank, operation):
+        return (Path(world.env['AGENT_MEMORY_STATE_HOME']) / 'writes'
+                / fixture.sha(str(bank).encode()) / 'layout-recovery' / operation)
+
+    def test_reported_sizes_fail_normal_gate_and_public_pages_reconstruct_every_original(self):
+        with World() as world:
+            command, _, repo, bank, _, originals = self.setup_repair(world, pending=True)
+            self.assertEqual(len(originals['activeContext.md']), 79054)
+            self.assertEqual(len(originals['handoff-prompt.md']), 28478)
+            normal = world.run([command, 'bank', 'validate', '--repo', repo], check=False)
+            self.assertNotEqual(normal.returncode, 0)
+            safe, inspected = fixture.inspect(world, command, repo)
+            self.assertFalse(safe['canonical_eligibility'])
+            self.assertNotIn('manifest', safe)
+            self.assertNotIn('sha256', json.dumps(safe))
+            reconstructed = {row['path']: bytearray() for row in inspected['manifest']['sources']}
+            for number in range(safe['page_count']):
+                output = world.inside('page-' + str(number) + '.json')
+                envelope = fixture.call(world, command, 'inspect', '--repo', repo,
+                    '--operation', safe['operation_id'], '--page', number, '--output', output)
+                self.assertNotIn('body', envelope)
+                raw = output.read_bytes()
+                self.assertLessEqual(len(raw), 65536)
+                page = json.loads(raw)
+                self.assertEqual(page['offset'], len(reconstructed[page['path']]))
+                reconstructed[page['path']].extend(base64.b64decode(page['body'], validate=True))
+                self.assertEqual(page['operation_id'], safe['operation_id'])
+            self.assertEqual({path: bytes(raw) for path, raw in reconstructed.items()}, originals)
+            self.assertEqual({path.relative_to(bank).as_posix(): path.read_bytes()
+                              for path in bank.rglob('*') if path.is_file()}, originals)
+
+    def test_all_preserve_apply_keeps_metadata_feature_head_and_exact_original_index(self):
+        with World() as world:
+            command, source, repo, bank, native, originals = self.setup_repair(world)
+            feature = repo / 'feature.txt'; feature.write_text('Committed baseline\n')
+            world.git('add', 'feature.txt', cwd=repo); world.git('commit', '-m', 'Synthetic feature baseline', cwd=repo)
+            feature.write_text('Staged unfinished feature\n'); world.git('add', 'feature.txt', cwd=repo)
+            feature.write_text('Unstaged unfinished feature\n')
+            untracked = repo / 'untracked.txt'; untracked.write_bytes(b'Untracked feature\n')
+            before_index = (repo / '.git/index').read_bytes()
+            before_head = world.git('rev-parse', 'HEAD', cwd=repo).stdout
+            before_modes = {path.relative_to(bank).as_posix(): stat.S_IMODE(path.stat().st_mode)
+                            for path in bank.rglob('*') if path.is_file()}
+            safe, inspected = fixture.inspect(world, command, repo)
+            proposal, prepared = fixture.prepare(world, command, source, repo, inspected, native)
+            self.assertFalse(prepared['canonical_writes_performed'])
+            applied = fixture.call(world, command, 'apply', '--repo', repo,
+                '--operation', safe['operation_id'], '--proposal', proposal)
+            self.assertTrue(applied['canonical_eligibility'])
+            self.assertTrue(applied['semantic_recovery_complete'])
+            self.assertFalse(applied['original_index_writes_performed'])
+            self.assertEqual((repo / '.git/index').read_bytes(), before_index)
+            self.assertEqual(world.git('rev-parse', 'HEAD', cwd=repo).stdout, before_head)
+            self.assertEqual(feature.read_text(), 'Unstaged unfinished feature\n')
+            self.assertEqual(untracked.read_bytes(), b'Untracked feature\n')
+            self.assertEqual({path: (bank / path).read_text() for path in native}, native)
+            self.assertEqual({path: stat.S_IMODE((bank / path).stat().st_mode) for path in native}, before_modes)
+            directory = self.private_directory(world, bank, safe['operation_id'])
+            for row in inspected['manifest']['sources']:
+                self.assertEqual((directory / row['blob']).read_bytes(), originals[row['path']])
+            self.assertFalse((bank / '.agent-memory-transaction.md').exists())
+            self.assertFalse((bank / '.agent-memory-recovery.md').exists())
+            self.assertEqual(world.run([command, 'bank', 'validate', '--repo', repo], check=False).returncode, 0)
+
+    def test_exact_retry_is_historical_and_never_overwrites_later_context(self):
+        with World() as world:
+            command, source, repo, bank, native, _ = self.setup_repair(world)
+            safe, inspected = fixture.inspect(world, command, repo)
+            proposal, _ = fixture.prepare(world, command, source, repo, inspected, native)
+            fixture.call(world, command, 'apply', '--repo', repo, '--proposal', proposal)
+            changed = native['activeContext.md'] + '\nLater independently retained context.\n'
+            (bank / 'activeContext.md').write_text(changed)
+            retry = fixture.call(world, command, 'apply', '--repo', repo, '--proposal', proposal)
+            self.assertTrue(retry['already_applied'])
+            self.assertTrue(retry['receipt_is_historical'])
+            self.assertFalse(retry['current_receipt_match'])
+            self.assertFalse(retry['semantic_recovery_complete'])
+            self.assertEqual((bank / 'activeContext.md').read_text(), changed)
+            fixture.call(world, command, 'rollback', '--repo', repo, '--operation', safe['operation_id'],
+                         '--output', world.inside('stale-child.json'), expected=1)
+            self.assertEqual((bank / 'activeContext.md').read_text(), changed)
+
+    def test_prepare_requires_full_coverage_independent_review_real_identity_and_safe_output(self):
+        with World() as world:
+            command, source, repo, bank, native, originals = self.setup_repair(world, pending=True)
+            safe, inspected = fixture.inspect(world, command, repo)
+            good = fixture.review_request(world, command, source, repo, inspected, native)
+            variants = []
+            same_reviewer = copy.deepcopy(good); same_reviewer['review']['reviewer'] = same_reviewer['author']; variants.append(same_reviewer)
+            missing = copy.deepcopy(good); missing['unit_map']['units'].pop(); variants.append(missing)
+            gap = copy.deepcopy(good); gap['unit_map']['units'][0]['source_ranges'][0]['end'] -= 1; variants.append(gap)
+            wrong_target = copy.deepcopy(good); wrong_target['unit_map']['units'][0]['targets'][0]['sha256'] = '0' * 64; variants.append(wrong_target)
+            fake_identity = copy.deepcopy(good); fake_identity['author']['developer_id'] = str(uuid.uuid4()); variants.append(fake_identity)
+            no_attestation = copy.deepcopy(good); no_attestation['quiescence_attestation'] = None; variants.append(no_attestation)
+            unknown = copy.deepcopy(good); unknown['skip_security'] = True; variants.append(unknown)
+            for request in variants:
+                with self.subTest(request=request.keys()):
+                    fixture.call(world, command, 'prepare', '--repo', repo, '--operation', safe['operation_id'],
+                        '--input', fixture.save(world, request), '--output', world.inside(str(uuid.uuid4()) + '.json'), expected=1)
+            self.assertEqual({path.relative_to(bank).as_posix(): path.read_bytes()
+                              for path in bank.rglob('*') if path.is_file()}, originals)
+            self.assertFalse((bank / '.agent-memory-transaction.md').exists())
+            self.assertFalse((bank / '.agent-memory-recovery.md').exists())
+
+    def test_changed_source_or_metadata_invalidates_apply_before_any_canonical_replacement(self):
+        for change in ('bytes', 'mode', 'index'):
+            with self.subTest(change=change), World() as world:
+                command, source, repo, bank, native, _ = self.setup_repair(world)
+                _, inspected = fixture.inspect(world, command, repo)
+                proposal, _ = fixture.prepare(world, command, source, repo, inspected, native)
+                target = bank / 'activeContext.md'
+                if change == 'bytes':
+                    target.write_bytes(target.read_bytes() + b'Later source\n')
+                elif change == 'mode':
+                    target.chmod(0o600)
+                else:
+                    (repo / 'staged.txt').write_text('Different original index\n'); world.git('add', 'staged.txt', cwd=repo)
+                before = {path.relative_to(bank).as_posix(): path.read_bytes() for path in bank.rglob('*') if path.is_file()}
+                fixture.call(world, command, 'apply', '--repo', repo, '--proposal', proposal, expected=1)
+                self.assertEqual({path.relative_to(bank).as_posix(): path.read_bytes() for path in bank.rglob('*') if path.is_file()}, before)
+
+    def test_raw_file_limit_is_inclusive_and_unsupported_aliases_never_hang_or_mutate(self):
+        with World() as world:
+            command, _, repo, bank, _, _ = self.setup_repair(world)
+            opaque = bank / 'opaque.bin'; opaque.write_bytes(b'x' * 1048576)
+            _, observed = fixture.inspect(world, command, repo)
+            self.assertEqual(next(row['byte_count'] for row in observed['manifest']['sources'] if row['path'] == 'opaque.bin'), 1048576)
+            opaque.write_bytes(b'x' * 1048577)
+            overflow = fixture.call(world, command, 'inspect', '--repo', repo,
+                '--output', world.inside('overflow.json'), expected=1)
+            self.assertEqual(overflow['failure_code'], 'pending-recovery-capacity')
+            self.assertEqual(overflow['capacity']['limit'], 1048576)
+            opaque.unlink()
+            for kind in ('symlink', 'hardlink', 'fifo'):
+                with self.subTest(kind=kind):
+                    if kind == 'symlink':
+                        opaque.symlink_to(bank / 'MEMORY.md')
+                    elif kind == 'hardlink':
+                        os.link(bank / 'MEMORY.md', opaque)
+                    else:
+                        os.mkfifo(opaque)
+                    refused = fixture.call(world, command, 'inspect', '--repo', repo,
+                        '--output', world.inside(kind + '.json'), expected=1)
+                    self.assertFalse(refused['canonical_writes_performed'])
+                    opaque.unlink()
+
+    def test_raw_depth_boundary_and_unknown_marker_precedence(self):
+        with World() as world:
+            command, _, repo, bank, _, _ = self.setup_repair(world)
+            deepest = bank
+            for _ in range(63):
+                deepest = deepest / 'd'; deepest.mkdir()
+            (deepest / 'leaf.bin').write_bytes(b'opaque private fixture')
+            _, observed = fixture.inspect(world, command, repo)
+            self.assertEqual(observed['manifest']['totals']['depth'], 64)
+            (deepest / 'too-deep').mkdir(); (deepest / 'too-deep' / 'leaf.bin').write_bytes(b'x')
+            refused = fixture.call(world, command, 'inspect', '--repo', repo,
+                '--output', world.inside('depth-refused.json'), expected=1)
+            self.assertEqual(refused['failure_code'], 'pending-recovery-capacity')
+            self.assertEqual(refused['capacity']['dimension'], 'depth')
+            marker = bank / '.agent-memory-transaction.md'; marker.write_bytes(b'unknown-owner')
+            marker.chmod(0o600)
+            busy = fixture.call(world, command, 'inspect', '--repo', repo,
+                '--output', world.inside('busy.json'), expected=1)
+            self.assertNotIn('capacity', busy)
+            self.assertEqual(marker.read_bytes(), b'unknown-owner')
+
+    def test_known_finish_and_rollback_follow_exact_journal_boundaries(self):
+        for mode in ('finish', 'rollback'):
+            for stage in ('layout-recovery-after-journal', 'layout-recovery-after-marker',
+                          'layout-recovery-after-router', 'layout-recovery-after-receipt'):
+                if mode == 'rollback' and stage == 'layout-recovery-after-receipt':
+                    continue  # A durable layout receipt requires a distinct child restore instead.
+                with self.subTest(mode=mode, stage=stage), World() as world:
+                    command, source, repo, bank, native, originals = self.setup_repair(world)
+                    safe, inspected = fixture.inspect(world, command, repo)
+                    proposal, _ = fixture.prepare(world, command, source, repo, inspected, native)
+                    fixture.call(world, command, 'apply', '--repo', repo, '--proposal', proposal, expected=1,
+                        env={'AGENT_MEMORY_FAULT_STAGE': stage})
+                    output = world.inside('known-preview.json')
+                    fixture.call(world, command, 'recover', '--repo', repo, '--operation', safe['operation_id'],
+                        '--mode', mode, '--output', output)
+                    outcome = fixture.call(world, command, 'recover', '--repo', repo, '--proposal', output)
+                    self.assertTrue(outcome['verified'])
+                    wanted = {path: body.encode() for path, body in native.items()} if mode == 'finish' else originals
+                    self.assertEqual({path.relative_to(bank).as_posix(): path.read_bytes()
+                                      for path in bank.rglob('*') if path.is_file()}, wanted)
+                    again = fixture.call(world, command, 'recover', '--repo', repo, '--proposal', output)
+                    self.assertTrue(again['receipt_is_historical'])
+
+    def test_completed_restore_has_distinct_child_and_keeps_parent_historical_receipt(self):
+        with World() as world:
+            command, source, repo, bank, native, originals = self.setup_repair(world)
+            safe, inspected = fixture.inspect(world, command, repo)
+            proposal, _ = fixture.prepare(world, command, source, repo, inspected, native)
+            fixture.call(world, command, 'apply', '--repo', repo, '--proposal', proposal)
+            directory = self.private_directory(world, bank, safe['operation_id'])
+            before_receipt = (directory / 'receipt.json').read_bytes()
+            output = world.inside('restore.json')
+            preview = fixture.call(world, command, 'rollback', '--repo', repo,
+                '--operation', safe['operation_id'], '--output', output)
+            self.assertNotEqual(preview['operation_id'], safe['operation_id'])
+            restored = fixture.call(world, command, 'rollback', '--repo', repo, '--proposal', output)
+            self.assertFalse(restored['canonical_eligibility'])
+            self.assertFalse(restored['semantic_recovery_complete'])
+            self.assertEqual((directory / 'receipt.json').read_bytes(), before_receipt)
+            self.assertEqual({path.relative_to(bank).as_posix(): path.read_bytes()
+                              for path in bank.rglob('*') if path.is_file()}, originals)
+            historical = fixture.call(world, command, 'apply', '--repo', repo, '--proposal', proposal)
+            self.assertTrue(historical['receipt_is_historical'])
+            self.assertFalse(historical['current_receipt_match'])
+
+
+if __name__ == '__main__':
+    unittest.main()
