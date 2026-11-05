@@ -58,8 +58,16 @@ class RecoveryFrontierContract(unittest.TestCase):
     def recall(self, world, command, repo, project):
         request = {'project_id': project, 'query': '', 'ids': [], 'paths': [], 'context': {},
             'kinds': [], 'minimum_trust': 'reviewed', 'limit': 8, 'include_context': True}
-        result = world.run([command, 'search', '--repo', repo, '--request', recovery.save(world, request)],
-            check=False, env={'AGENT_MEMORY_NO_RECALL_CATALOG': '1'}, timeout=60)
+        previous = world.env.get('AGENT_MEMORY_NO_RECALL_CATALOG')
+        world.env['AGENT_MEMORY_NO_RECALL_CATALOG'] = '1'
+        try:
+            result = world.run([command, 'search', '--repo', repo, '--request', recovery.save(world, request)],
+                check=False, timeout=60)
+        finally:
+            if previous is None:
+                world.env.pop('AGENT_MEMORY_NO_RECALL_CATALOG')
+            else:
+                world.env['AGENT_MEMORY_NO_RECALL_CATALOG'] = previous
         return result, json.loads(result.stdout)
 
     def test_reported_size_pending_repair_retains_exact_private_originals_and_qualified_recall(self):
