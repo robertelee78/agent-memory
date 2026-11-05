@@ -317,8 +317,19 @@ def verified_hold(repo, owner=None, transaction=None):
     directory, _, current = ledger(root, marker['operation_id'], row)
     manifest, proposal = evidence(directory, current, row)
     expected = manifest['identity']['scope_context']
-    context = scope_binding.require(root, token['project_id'], expected=expected,
-        owned_lock=owner, owned_transaction=raw)
+    if row['state'] == 'rolled-back':
+        from . import layout_recovery_observation as raw_observer, project_identity
+        router, _ = raw_observer.read_source(bank, 'MEMORY.md')
+        original = next((source for source in manifest['sources'] if source['path'] == 'MEMORY.md'), None)
+        if original is None or len(router) != original['byte_count'] or digest(router) != original['sha256']:
+            raise ContractError('Rolled-back identity requires the exact reviewed original raw router')
+        identity = project_identity.RawIdentityEvidence.observe(root, router, manifest['identity'].get('identity_review'))
+        context = scope_binding.raw_recovery_context(root, identity, owner, raw)
+        if context != expected:
+            raise ContractError('Rolled-back raw identity differs from the independently reviewed original scope')
+    else:
+        context = scope_binding.require(root, token['project_id'], expected=expected,
+            owned_lock=owner, owned_transaction=raw)
     if context['checkout_key'] != state.bindings()['bindings'][marker['operation_id']]['checkout_key']:
         raise ContractError('Recovery checkout continuity changed')
     from .recovery_quiescence import selected_attestation

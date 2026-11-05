@@ -199,6 +199,9 @@ def nested_preview(repo, operation_id, nested_id, mode, owner=None):
     legal_partial(p, journal['base_files'], observed)
     _, receipt_path = tx.locations(root, bank, nested_id)
     receipt = nested_receipt(journal, receipt_path)
+    frontier_token = frontier.observe(root, owner, marker)
+    if receipt is None:
+        frontier.check(journal['frontier'], root, owner, marker)
     if receipt is None and mode != 'rollback':
         raise ContractError('Unfinished governed nested learning permits rollback only, then fresh evidence')
     if receipt is not None and (receipt['outcome'] not in {'finished', 'replaced', 'already-present'} or mode != 'finish' or observed != receipt['resulting_hashes']):
@@ -207,7 +210,7 @@ def nested_preview(repo, operation_id, nested_id, mode, owner=None):
         'repo_root': str(root), 'operation_id': operation_id, 'nested_id': nested_id, 'mode': mode,
         'journal_sha256': digest(encoded(journal)), 'marker_sha256': digest(marker), 'observed_hashes': observed,
         'canonical_receipt_sha256': digest(encoded(receipt)) if receipt else None,
-        'ledger_head': state.read(directory / 'ledger-head.json')}
+        'ledger_head': state.read(directory / 'ledger-head.json'), 'recovery_frontier': frontier_token}
 
 
 def recover_nested(repo, operation_id=None, nested_id=None, mode=None, proposal=None):
