@@ -25,7 +25,8 @@ MAX_ENTRIES = 262144
 MAX_TOTAL = 512 * 1024 * 1024
 ROOT_FILES = {'manifest.json', 'manifest.sha256', 'unit-map.json', 'journal.json', 'receipt.json',
               'ledger-head.json', 'tombstone.json', 'retention-requirements.json',
-              'rollback-plan.json', 'child-rollback-plan.json', 'quiescence-attestations.json', 'staging.json'}
+              'rollback-plan.json', 'child-rollback-plan.json', 'quiescence-attestations.json', 'staging.json',
+              'retirement.json', 'reference-map.json'}
 UUID = r'[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}'
 OWNED = re.compile(
     r'(?:originals|intended)/'+UUID+r'\.bin|'
@@ -35,14 +36,15 @@ OWNED = re.compile(
     r'progress/(?:apply|finish|rollback)-[0-9]{8}\.json|'
     r'recovery/'+UUID+r'(?:\.receipt)?\.json|'
     r'revisions/'+UUID+r'/(?:proposal|review|receipt|journal|unit-map)\.json|'
-    r'nested/'+UUID+r'/(?:journal|receipt|proposal|resolution)\.json|'
+    r'nested/'+UUID+r'/(?:journal|receipt|proposal|resolution|completion)\.json|'
+    r'nested/'+UUID+r'/progress/[0-9]{8}\.json|'
     r'publication/'+UUID+r'/(?:observation|request|receipt)\.json|'
     r'publication/'+UUID+r'/originals/'+UUID+r'\.bin|'
     r'retention/'+UUID+r'/(?:intent|proposal|receipt|progress/[0-9]{8})\.json\Z')
 OWNED_DIRECTORY = re.compile(
     r'(?:originals|intended|proposals|reviews|attestations|resolutions|ledger|progress|recovery|unit-maps|revisions|nested|publication|retention|coverage-reviews|union-reviews|discard-reviews|ledger-transitions|quiescence-reviews)|'
     r'(?:revisions|nested|publication|retention)/'+UUID+r'|'
-    r'publication/'+UUID+r'/originals|retention/'+UUID+r'/progress')
+    r'publication/'+UUID+r'/originals|retention/'+UUID+r'/progress|nested/'+UUID+r'/progress')
 
 
 def require(condition, message):
@@ -260,9 +262,21 @@ def _dependencies(root, operation_id, base, directory, *, cleanup_id=None):
                     if row['state'] != 'cleaned' and not (row.get('kind') == 'child-restore' and row['completed']):
                         blockers.append({'kind': 'child-or-referencing-operation', 'operation_id': other_id, 'artifact': name})
                 if other_id == operation_id and name.startswith('nested/') and name.endswith('/journal.json'):
-                    receipt_name = name[:-len('journal.json')]+'receipt.json'
-                    receipt = state.read(other/receipt_name, missing=True)
-                    if receipt is None or receipt.get('outcome') not in {'finished', 'rolled-back'} or receipt.get('verified') is not True:
+                    from . import bank_transactions, recovery_transactions
+                    nested_id = PurePosixPath(name).parts[1]
+                    completion_name = name[:-len('journal.json')]+'completion.json'
+                    completion = state.read(other/completion_name, missing=True)
+                    complete = (completion is not None and completion.get('schema') == 'agent-memory/layout-nested-completion-v1'
+                        and completion.get('operation_id') == other_id and completion.get('nested_id') == nested_id
+                        and completion.get('verified') is True)
+                    if complete and completion.get('outcome') == 'rolled-back':
+                        complete = completion.keys() == {'schema', 'operation_id', 'nested_id', 'outcome', 'verified'}
+                    elif complete:
+                        _, canonical_path = bank_transactions.locations(root, Path(index['bank_path']), nested_id)
+                        receipt = recovery_transactions.nested_receipt(value, canonical_path)
+                        complete = (receipt is not None and completion.get('canonical_receipt_sha256') == digest(encoded(receipt))
+                            and receipt['operation_id'] == nested_id and receipt['project_id'] == row['project_id'])
+                    if not complete:
                         blockers.append({'kind': 'unfinished-nested-transaction', 'artifact': name})
                 if other_id == operation_id and name.startswith('publication/') and name.endswith('/request.json'):
                     receipt_name = name[:-len('request.json')]+'receipt.json'
@@ -288,7 +302,8 @@ def _dependencies(root, operation_id, base, directory, *, cleanup_id=None):
 
 
 def _retained(name):
-    return (name in {'receipt.json', 'retention-requirements.json', 'quiescence-attestations.json', 'staging.json'}
+    return (name in {'receipt.json', 'retention-requirements.json', 'quiescence-attestations.json', 'staging.json',
+                    'retirement.json', 'reference-map.json'}
             or name.startswith(('retention/', 'resolutions/', 'nested/', 'proposals/', 'recovery/', 'revisions/',
                                 'coverage-reviews/', 'union-reviews/', 'discard-reviews/', 'ledger-transitions/',
                                 'quiescence-reviews/', 'attestations/', 'reviews/'))

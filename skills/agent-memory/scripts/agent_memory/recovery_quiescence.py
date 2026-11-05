@@ -91,20 +91,35 @@ def validate(repo, value, *, runtime_artifact_digest, required_routes=(), publis
     comparison.safe_text(review['rationale'], 4096)
     comparison.safe_text(review['reviewer_harness'], 256)
     comparison.safe_text(review['reviewer_session'], 256)
+    from . import bank_observation, scope_binding
+    live = frontier.observe(root, owner)
+    marker = frontier.marker_bytes(bank)
+    marker_value = frontier.marker_value(marker) if marker is not None else None
+    if marker_value is None or marker_value['schema'] != frontier.HOLD or marker_value['operation_id'] != operation_id:
+        raise ContractError('Quiescence renewal requires the exact persistent hold, not an interrupted transaction')
+    bank_observation.markers(bank, owner, marker)
+    scope_binding.require(root, manifest['project_id'], expected=manifest['identity']['scope_context'],
+        owned_lock=owner, owned_transaction=marker)
+    executing = artifact.inspect(artifact.PACK)
+    if (selected_attestation(root, operation_id, proposal, executing['artifact_digest']) is None
+            and executing['artifact_digest'] != runtime_artifact_digest):
+        raise ContractError('The executing verifier is neither the reviewed existing runtime nor the reviewed replacement')
+    frontier.check(live, root, owner)
     if publish:
         if owner is None:
             with storage.exclusive(bank / '.agent-memory.lock', str(uuid.uuid4()), 'bank-recover') as owned:
                 return validate(root, value, runtime_artifact_digest=runtime_artifact_digest,
                     required_routes=required_routes, publish=True, owner=owned)
-        frontier.verified_hold(root, owner)
         state.write_once(directory / 'attestations' / (attestation['attestation_id'] + '.json'), attestation)
         state.write_once(directory / 'quiescence-reviews' / (review['review_id'] + '.json'), review)
         heads_path = directory / 'quiescence-attestations.json'
         heads = state.read(heads_path, missing=True) or {}
         old = digest(state.read_bytes(heads_path, missing=True))
-        heads[runtime_artifact_digest] = {'attestation_id': attestation['attestation_id'],
+        next_head = {'attestation_id': attestation['attestation_id'],
             'sha256': digest(encoded(attestation)), 'review_id': review['review_id'], 'review_sha256': digest(encoded(review))}
-        state.replace(heads_path, heads, old)
-        frontier.invalidate(root)
+        if heads.get(runtime_artifact_digest) != next_head:
+            heads[runtime_artifact_digest] = next_head
+            state.replace(heads_path, heads, old)
+            frontier.invalidate(root)
     return {'operation_id': operation_id, 'runtime_artifact_digest': runtime_artifact_digest,
         'attestation_sha256': digest(encoded(attestation)), 'invocation_routes': attestation['declared_invocation_routes']}

@@ -89,7 +89,7 @@ def required_private_state_capabilities(installation, target_artifact, operation
     target_compatibility = target_artifact.get('compatibility', target_artifact) if target_artifact else {}
     receipt_schema = installation.get('schema') if installation else None
     readable_receipts = target_compatibility.get('installation_receipt_schemas', ['agent-memory/install-receipt-v1'])
-    if receipt_schema == 'agent-memory/install-receipt-v2' and receipt_schema not in readable_receipts:
+    if operation != 'uninstall' and receipt_schema == 'agent-memory/install-receipt-v2' and receipt_schema not in readable_receipts:
         unknown.append({'source': 'installation-receipt', 'reason': 'target cannot read retained v2 ownership receipt'})
     from . import recovery_frontier, bank_writes
     try:
@@ -132,17 +132,25 @@ def required_private_state_capabilities(installation, target_artifact, operation
                 layout_required = token['hold_sha256'] is not None or any(
                     row['state'] in {'active', 'interrupted'} for row in indexed['operations'].values())
                 if layout_required:
-                    recovery_frontier.verified_hold(root)
                     capabilities.add('layout-frontier-v1')
                     target_digest = target_artifact.get('artifact_digest') if target_artifact else None
+                    frontier_operation = next(operation_id for operation_id, indexed_row in indexed['operations'].items()
+                        if indexed_row['state'] in {'active', 'interrupted'})
+                    override = target_artifact.get('layout_quiescence_overrides', {}).get(frontier_operation) if target_artifact else None
+                    if override is not None:
+                        recovery_frontier.validate_quiescence(root, override, runtime_artifact_digest=target_digest,
+                            required_routes=target_artifact.get('layout_required_routes', ()))
+                    else:
+                        recovery_frontier.verified_hold(root)
                     if target_digest is not None:
                         from .recovery_quiescence import selected_attestation
-                        frontier_operation = next(operation_id for operation_id, indexed_row in indexed['operations'].items()
-                            if indexed_row['state'] in {'active', 'interrupted'})
                         directory, _, ledger_value = recovery_frontier.ledger(root, frontier_operation, indexed['operations'][frontier_operation])
                         _, proposal = recovery_frontier.evidence(directory, ledger_value, indexed['operations'][frontier_operation])
-                        if selected_attestation(root, frontier_operation, proposal, target_digest) is None:
+                        selected = selected_attestation(root, frontier_operation, proposal, target_digest)
+                        if selected is None and override is None:
                             raise ContractError('Target capable runtime has no renewed bank-bound quiescence attestation')
+                        if override is None and selected is not None and not set(target_artifact.get('layout_required_routes', ())).issubset(selected['declared_invocation_routes']):
+                            raise ContractError('Target capable reader has an invocation route omitted from quiescence')
                 if not capabilities.issubset(TOKENS):
                     raise ContractError('A private-state producer returned an unknown capability')
                 requirements[str(bank)] = sorted(capabilities)
@@ -211,3 +219,44 @@ def activation_guard(installation, target_artifact, operation, transition=None):
             require_compatible(installation, target_artifact, operation, expected=proof)
         finally:
             _barriers.reset(bound)
+
+
+def public_summary(value):
+    """Never serialize private ledger/source/proof digests into lifecycle stdout."""
+    return {key: value[key] for key in ('decision', 'required_capabilities', 'target_capabilities', 'missing_capabilities')} | {
+        'observed_banks': len(value['requirements']), 'unknown_private_states': len(value['unknown_state'])}
+
+
+def prepare_lifecycle(plan, check=False):
+    """Consume explicit private renewals; check mode never publishes state."""
+    from . import admission, recovery_frontier
+    selected = plan.get('preserved_private_state_reader') if plan.get('operation') == 'uninstall' else plan['source']
+    target = dict(selected) if selected is not None else None
+    supplied = plan.get('layout_quiescence', []) or []
+    if not isinstance(supplied, list) or len(supplied) > 1024 or any(not isinstance(path, str) for path in supplied):
+        raise ContractError('Lifecycle quiescence inputs must be explicit protected-file paths')
+    if target is None and supplied:
+        raise ContractError('Uninstall renewal needs an actually preserved capable reader')
+    if target is None:
+        return None
+    routes = list(target.get('reader_invocation_routes', ()))
+    if not routes:
+        routes = [action['path'] for action in plan['actions'] if action.get('changed')
+            and action.get('after') is not None
+            and action['kind'] in {'wrapper', 'hook-link', 'hook-config', 'copy', 'link', 'activation'}]
+    target['layout_required_routes'] = routes
+    overrides = {}
+    for path in supplied:
+        value = admission.read_input(path, 65536)
+        if not isinstance(value, dict) or set(value) != {'attestation', 'review'}:
+            raise ContractError('Lifecycle renewal uses the exact attestation/independent-review envelope')
+        operation = value['attestation'].get('operation_id')
+        repo = value['attestation'].get('repo_root')
+        if operation in overrides and overrides[operation] != value:
+            raise ContractError('Conflicting runtime quiescence declarations cannot select a winner')
+        recovery_frontier.validate_quiescence(repo, value,
+            runtime_artifact_digest=target['artifact_digest'], required_routes=routes, publish=not check)
+        overrides[operation] = value
+    if check:
+        target['layout_quiescence_overrides'] = overrides
+    return target

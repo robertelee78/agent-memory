@@ -47,6 +47,14 @@ The explicit selection is
 The helper rechecks that separate active ownership receipt, measured package
 and every owned target, and refuses overlap with the removal set. Supplying a
 path or capability boolean without a verified active installation is insufficient.
+When the selected reader's digest or actual invocation routes need a new bound
+review, supply repeatable `--layout-quiescence /private/path/renewal.json`
+files alongside that selection. The envelope contains the exact recovery
+attestation and independent review; `--check` validates it without publication.
+Apply rechecks the reader receipt, all targets, the bank frontier and the
+reviewed routes under the source barriers. No separate reader selection is
+needed only when the complete private-state union is genuinely empty.
+
 
 
 

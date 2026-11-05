@@ -50,7 +50,9 @@ class RefreshPendingContract(RefreshFixture):
             changed = copy.deepcopy(proposal); changed['files'][path] += '\nUnreviewed extra claim.\n'
             other = copy.deepcopy(proposal); other['refresh_evidence']['recall']['project_id'] = str(uuid.uuid4())
             wrong_branch = copy.deepcopy(proposal); wrong_branch['refresh_evidence']['recall']['context']['branch'] = 'unobserved-branch'
-            for value in (changed, other, wrong_branch):
+            missing_frontier = copy.deepcopy(proposal); missing_frontier['refresh_evidence'].pop('recovery_frontier_token')
+            stale_frontier = copy.deepcopy(proposal); stale_frontier['refresh_evidence']['recovery_frontier_token']['index_sha256'] = 'f'*64
+            for value in (changed, other, wrong_branch, missing_frontier, stale_frontier):
                 p, failed = self.call(w, 'refresh_memory.py', 'apply', '--input', self.save(w, value))
                 self.assertEqual(p.returncode, 1); self.assertEqual(before, self.state(w, repo, bank))
             self.assertFalse((bank/'.agent-memory-transaction.md').exists())

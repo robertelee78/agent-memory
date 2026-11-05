@@ -1083,11 +1083,14 @@ def read_journal(state):
 
 
 def recover(state, *, for_install=False):
-    if not for_install and os.path.lexists(state/'omp-transition.json'):
-        from . import omp_boundary
-        omp_boundary.recover_native_binding(state)
     path = state/'journal.json'
     journal = read_journal(state)
+    def restore_native():
+        if not for_install and os.path.lexists(state/'omp-transition.json'):
+            from . import omp_boundary
+            omp_boundary.recover_native_binding(state)
+    if journal is None or journal['status'] in {'complete', 'rolled-back'}:
+        restore_native()
     if journal is None:
         return {'operation': 'recover', 'verified': True, 'status': 'no-pending-transaction'}
     if journal['status'] == 'complete':
@@ -1120,25 +1123,33 @@ def recover(state, *, for_install=False):
         uninstall_output = journal.get('operation') == 'uninstall'
         require(uninstall_output == (journal['receipt'].get('uninstalled') is True),
                 'Lifecycle journal and receipt operation differ')
-        verify_targets(journal['receipt']['targets'], uninstall_output=uninstall_output)
         journal['status'] = 'complete'; replace_record(path, journal)
+        restore_native()
+        verify_targets(journal['receipt']['targets'], uninstall_output=uninstall_output)
         return {'operation': 'recover', 'verified': True, 'status': 'complete'}
-    return rollback(state, journal)
+    result = rollback(state, journal)
+    restore_native()
+    return result
 
 
 def install(plan, *, before_activate=None, after_activate=None):
     from . import private_state
     installation = {**(plan.get('old') or {}), 'rollback_repositories': plan.get('rollback_repositories', [])}
-    target = plan.get('preserved_private_state_reader') if plan.get('operation') == 'uninstall' else plan['source']
-    transition = None
-    if plan.get('omp_transition') or plan.get('omp_binding'):
-        from . import omp_boundary
-        def transition():
+    selected = plan.get('preserved_private_state_reader') if plan.get('operation') == 'uninstall' else plan['source']
+    target = dict(selected) if selected is not None else None
+    def transition():
+        if plan.get('omp_transition') or plan.get('omp_binding'):
+            from . import omp_boundary
             if plan.get('omp_transition'):
                 omp_boundary.native_transition(plan, check=False)
-            if plan.get('omp_binding'):
-                omp_boundary.native_activation(plan, check=False)
-    with private_state.activation_guard(installation, target, plan.get('operation', 'install'), transition=transition):
+        prepared = private_state.prepare_lifecycle(plan, check=False)
+        if target is not None:
+            target.clear()
+            target.update(prepared)
+        if plan.get('omp_binding'):
+            omp_boundary.native_activation(plan, check=False)
+    with private_state.activation_guard(installation, target, plan.get('operation', 'install'), transition=transition) as proof:
+        plan['private_state_evidence'] = proof
         return _install(plan, before_activate=before_activate, after_activate=after_activate)
 
 
@@ -1199,6 +1210,7 @@ def _install(plan, *, before_activate=None, after_activate=None):
                'actions': [], 'receipt': receipt, 'receipt_identity': None, 'created_directories': [],
                'previous_compatibility': old['source']['compatibility'] if old else None,
                'previous_artifact_digest': old['source']['artifact_digest'] if old else None,
+               'private_state_evidence': plan.get('private_state_evidence'),
                'rollback_repositories': plan.get('rollback_repositories', [])}
     if plan.get('cache_recovery') is not None:
         journal['opaque_cache_recovery'] = plan['cache_recovery']['summary']

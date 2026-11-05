@@ -183,7 +183,7 @@ def banks(extra, compatibility, *, require_readable=False):
     private_compatibility = private_state.require_compatible(
         {'observed_repositories': observed_roots, 'banks': result}, compatibility, 'rollback' if require_readable else 'activate')
     return {'banks':result, 'discovery_gaps':gaps, 'observed_repositories':observed_roots,
-            'private_state': private_compatibility,
+            'private_state': private_state.public_summary(private_compatibility),
             'bank_writes_performed':False,
             'implicit_migration_performed':False}
 

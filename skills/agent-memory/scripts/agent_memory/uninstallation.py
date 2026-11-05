@@ -163,7 +163,9 @@ def preserved_reader(path, plan):
     install.require(any(target['kind'] in {'wrapper', 'hook-link', 'hook-config'} for target in other['targets']),
                     'Preserved runtime must retain an actually active executable invocation route')
     return {**other['source'], 'compatibility': runtime['compatibility'], 'already_active_verified': True,
-            'reader_receipt_path': str(supplied), 'reader_receipt_sha256': install.sha(layout_recovery_state.read_bytes(supplied))}
+            'reader_receipt_path': str(supplied), 'reader_receipt_sha256': install.sha(layout_recovery_state.read_bytes(supplied)),
+            'reader_invocation_routes': [target['path'] for target in other['targets']
+                if target['kind'] in {'wrapper', 'hook-link', 'hook-config'}]}
 
 
 def run(args):
@@ -184,12 +186,14 @@ def run(args):
         selection = getattr(args, 'preserve_capable_runtime', None)
         if selection:
             plan['preserved_private_state_reader'] = preserved_reader(selection, plan)
+        plan['layout_quiescence'] = list(getattr(args, 'layout_quiescence', None) or [])
         if args.check:
             from . import private_state
             if plan.get('omp_transition'):
                 from . import omp_boundary
                 omp_boundary.native_transition(plan, check=True)
-            private_state.require_compatible(current, plan.get('preserved_private_state_reader'), 'uninstall')
+            target = private_state.prepare_lifecycle(plan, check=True)
+            private_state.require_compatible(current, target, 'uninstall')
             return {'operation':'uninstall', 'verified':False, 'check_complete':True,
                     'installation_writes_performed':False,
                     'targets':[{k:v for k,v in a.items() if k not in ('raw','mode_bits')} for a in plan['actions']],
@@ -234,6 +238,7 @@ def main(argv=None):
     uninstall.add_argument('--check', '--dry-run', action='store_true')
     uninstall.add_argument('--omp-writers-quiesced', action='store_true')
     uninstall.add_argument('--preserve-capable-runtime')
+    uninstall.add_argument('--layout-quiescence', action='append', default=[])
     purge = commands.add_parser('purge-data')
     purge.add_argument('--repo', required=True)
     purge.add_argument('--path', required=True)

@@ -68,6 +68,13 @@ invocation routes. Update, recovery and exact rollback recheck these pins before
 activation and readback. An incapable old rollback target MUST NOT be activated
 merely to finish a lifecycle journal. External recovery originals and ledgers
 are not installer-owned and remain intact.
+Use repeatable `--layout-quiescence /private/path/renewal.json` for each affected
+bank when the measured candidate or invocation routes differ from the retained
+review. Each protected file contains the exact `attestation` and independent
+`review` envelope described by layout recovery. Check mode validates without
+publishing renewals; apply durably retains them under the same source barriers
+before the final capability check. A capability declaration alone is not renewal.
+
 
 
 ## Apply

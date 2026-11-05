@@ -187,7 +187,7 @@ def nested_preview(repo, operation_id, nested_id, mode, owner=None):
     receipt = nested_receipt(journal, receipt_path)
     if receipt is None and mode != 'rollback':
         raise ContractError('Unfinished governed nested learning permits rollback only, then fresh evidence')
-    if receipt is not None and (receipt['outcome'] != 'finished' or mode != 'finish' or observed != receipt['resulting_hashes']):
+    if receipt is not None and (receipt['outcome'] not in {'finished', 'replaced', 'already-present'} or mode != 'finish' or observed != receipt['resulting_hashes']):
         raise ContractError('A durably receipted canonical transaction is finish-only and cannot replay over later edits')
     return {'schema': 'agent-memory/layout-nested-recovery-v1', 'recovery_id': str(uuid.uuid4()),
         'repo_root': str(root), 'operation_id': operation_id, 'nested_id': nested_id, 'mode': mode,
@@ -247,7 +247,7 @@ def nested_receipt(journal, path):
             or receipt.get('verified') is not True or receipt.get('resulting_hashes') != expected
             or receipt.get('outcome') not in {'replaced', 'already-present'}):
         raise ContractError('Held checkpoint receipt is unknown or differs from its actual write proposal')
-    return {**receipt, 'outcome': 'finished'}
+    return receipt
 
 
 def apply_checkpoint(prepared):
