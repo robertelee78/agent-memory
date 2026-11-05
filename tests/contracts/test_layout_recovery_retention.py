@@ -8,6 +8,7 @@ import unittest
 import uuid
 
 from world import World
+from layout_recovery_fixtures import encoded
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -21,7 +22,7 @@ class LayoutRetentionContract(unittest.TestCase):
         source = directory/'originals'/(str(uuid.uuid4())+'.bin')
         source.write_bytes(b'Original exact bytes and conditions.\n'); source.chmod(0o600)
         receipt = directory/'receipt.json'
-        receipt.write_text('{"outcome":"layout-restored"}\n'); receipt.chmod(0o600)
+        receipt.write_bytes(encoded({'outcome': 'layout-restored'})); receipt.chmod(0o600)
         return directory, source, receipt
 
     def module(self, w, code, *args, check=True):
@@ -37,7 +38,7 @@ class LayoutRetentionContract(unittest.TestCase):
                 directory, source, receipt = self.fixture(w)
                 unknown = directory/('staging.json' if kind == 'incomplete-staging' else 'unknown-backup')
                 if kind != 'directory':
-                    unknown.write_bytes(b'{"observation_complete":false}\n' if kind == 'incomplete-staging' else b'Unowned evidence\n')
+                    unknown.write_bytes(encoded({'observation_complete': False}) if kind == 'incomplete-staging' else b'Unowned evidence\n')
                     unknown.chmod(0o600)
                 else:
                     unknown.mkdir(mode=0o700)
@@ -60,7 +61,7 @@ class LayoutRetentionContract(unittest.TestCase):
             for name in names:
                 target = directory/name
                 target.parent.mkdir(mode=0o700, exist_ok=True)
-                target.write_text('{}\n'); target.chmod(0o600)
+                target.write_bytes(encoded({})); target.chmod(0o600)
             output = self.module(w, 'root=Path(sys.argv[1]);inventory=r._inventory(root);'
                                  'names=json.loads(sys.argv[2]);'
                                  'print(json.dumps({name:r._retained(name) and name in inventory["files"] for name in names}))',
@@ -75,7 +76,7 @@ class LayoutRetentionContract(unittest.TestCase):
                      'repo_root': str(w.paths['repo']), 'bank_path': str(w.paths['repo']/'memory-bank'),
                      'identity': {}, 'observation_complete': False}
             stage = directory/'staging.json'
-            stage.write_text(json.dumps(value)); stage.chmod(0o600)
+            stage.write_bytes(encoded(value)); stage.chmod(0o600)
             output = self.module(w, 'root=Path(sys.argv[1]);inventory=r._inventory(root);'
                                  'print(json.dumps({"retained":r._retained("staging.json"),'
                                  '"present":"staging.json" in inventory["files"],'
@@ -104,7 +105,7 @@ class LayoutRetentionContract(unittest.TestCase):
             directory, source, receipt = self.fixture(w)
             inventory = self.module(w, 'print(json.dumps(r._inventory(Path(sys.argv[1]))))', directory)
             pins = json.loads(inventory.stdout)
-            review = w.inside('exact inventory.json'); review.write_text(json.dumps(pins))
+            review = w.inside('exact inventory.json'); review.write_bytes(encoded(pins))
             relative = source.relative_to(directory).as_posix()
             source.write_bytes(b'External replacement must survive.\n')
             rejected = self.module(w, 'root=Path(sys.argv[1]);pins=json.loads(Path(sys.argv[3]).read_text());'
@@ -113,7 +114,7 @@ class LayoutRetentionContract(unittest.TestCase):
             self.assertNotEqual(rejected.returncode, 0)
             self.assertEqual(source.read_bytes(), b'External replacement must survive.\n')
             current = self.module(w, 'print(json.dumps(r._inventory(Path(sys.argv[1]))))', directory)
-            review.write_text(current.stdout)
+            review.write_bytes(encoded(json.loads(current.stdout)))
             self.module(w, 'root=Path(sys.argv[1]);pins=json.loads(Path(sys.argv[3]).read_text());'
                         'r._remove(root,sys.argv[2],pins["files"][sys.argv[2]],pins["directories"])',
                         directory, relative, review)
@@ -128,7 +129,7 @@ class LayoutRetentionContract(unittest.TestCase):
             inventory = json.loads(self.module(w, 'print(json.dumps(r._inventory(Path(sys.argv[1]))))', directory).stdout)
             proposal = {'delete': {name: pin for name, pin in inventory['files'].items() if name.startswith('originals/')},
                         'retain': {'receipt.json': inventory['files']['receipt.json']}}
-            path = w.inside('resume proposal.json'); path.write_text(json.dumps(proposal))
+            path = w.inside('resume proposal.json'); path.write_bytes(encoded(proposal))
             ordered = sorted(proposal['delete'])
             (directory/ordered[0]).unlink()
             self.module(w, 'root=Path(sys.argv[1]);proposal=json.loads(Path(sys.argv[2]).read_text());'
