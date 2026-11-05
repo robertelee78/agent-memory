@@ -46,14 +46,22 @@ def snapshot(repo, owned_lock=None):
     return observed.checked, observed.hashes
 
 
-def state_paths(repo, bank, operation_id):
+def state_root(repo=None):
     raw = os.environ.get("AGENT_MEMORY_STATE_HOME")
     root = Path(raw or str(Path(os.environ.get("XDG_STATE_HOME", str(Path.home() / ".local/state"))) / "agent-memory")).expanduser()
     if (not root.is_absolute() or any(p.is_symlink() for p in (root, *root.parents))
-            or root.resolve().is_relative_to(repo)):
+            or (repo is not None and root.resolve().is_relative_to(repo))):
         raise ContractError("Write receipts require a canonical absolute state root outside the repository")
+    for part in (root, *root.parents):
+        if part.exists() and not part.is_dir():
+            raise ContractError("Write receipt directories must be canonical directories without symlinks")
+    return root
+
+
+def state_paths(repo, bank, operation_id):
+    root = state_root(repo)
     directory = root / "writes" / digest(str(bank).encode()) / "operations"
-    for part in (directory, *directory.parents):
+    for part in (directory, directory.parent, directory.parent.parent):
         if part.is_symlink() or (part.exists() and not part.is_dir()):
             raise ContractError("Write receipt directories must be canonical directories without symlinks")
     receipt = directory / (operation_id + ".json")

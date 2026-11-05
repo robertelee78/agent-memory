@@ -34,6 +34,18 @@ the evidence rules below. Multiple current observations may use
 `{"schema":"agent-memory/turn-check-request-v1","assessments":[...]}`;
 retain their distinct IDs and one actual session/lifecycle.
 
+Native omp uses `am omp-boundary --repo REPO --stdin --quiet --refresh` with
+exactly one observation, replacing `prompt` with its supplied `lifecycle`.
+It MUST NOT accept the compact assessment-array wrapper. Each substantive native
+segment has at most an admission source plus one sealed manifest; inspect both
+exact sources, and use two explicit commands/receipts when both need assessment.
+The native tool retains ordinary approval. An admission cannot finish before its
+segment is registered, and no-learning or publication MUST NOT waive a substantive
+coverage gap. Use `am omp-boundary --repo REPO --list-pending --offset N` and
+`--source ACTUAL_ID_OR_REFERENCE --session ACTUAL_SESSION --lifecycle ACTUAL_LIFECYCLE`
+for source-qualified recovery. Unregistered sources retain original references,
+not invented observation IDs. A pending page does not prove full coverage.
+
 The combined `agent-memory/turn-check-v1` response keeps mechanical freshness and
 source assessment separate. Successful quiet checks emit nothing. A real source
 assessment can finish while freshness remains pending: overall verification is
