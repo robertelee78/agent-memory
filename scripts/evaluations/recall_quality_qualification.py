@@ -19,8 +19,12 @@ import time
 import traceback
 
 sys.dont_write_bytecode = True
-from labeled_recall_probe import source, inventory
-from recall_comparison_builds import encoded, save, sha, stamp
+# Reject caches before the first local import, including the binding helper.
+for _directory in ('tests', 'scripts', 'skills/agent-memory'):
+    for _cache in (Path(__file__).resolve().parents[2] / _directory).rglob('*.py[co]'):
+        raise ValueError('Qualification helper bytecode is not source-bound: ' + str(_cache))
+from recall_comparison_builds import encoded, save, sha, source, stamp
+from labeled_recall_probe import inventory
 
 SEMANTIC_SOURCE = 'docs/research/data/2026-10-25-recall-final/semantic-controller-v5.py'
 EXCLUDED = {'timeout-v1', 'cache-v1', 'cache-replacement', 'quota-v1', 'quota-replacement',
@@ -32,6 +36,87 @@ ACTION_SCHEMA = {'type': 'object', 'properties': {'action': {'enum': ['read-node
     'complete': {'type': 'boolean'}, 'clarification_required': {'type': 'boolean'}, 'rationale': {'type': 'string'}},
     'required': ['action'], 'additionalProperties': False}
 
+# Held-out outcome labels: complete means the question's evidence/limits are
+# resolved, not that ambiguous or unavailable guidance can be used as authority.
+# These never enter model instructions, schemas, guides or conversations.
+SEMANTIC_OUTCOMES = {
+    'retry-paraphrase': (True, False), 'pagination': (True, False),
+    'wrong-component': (True, False), 'unknown-prerequisite': (False, True),
+    'known-prerequisite': (True, False), 'corrected-deadline': (True, False),
+    'development-retention': (True, False), 'production-retention': (True, False),
+    'duplicate-evidence': (True, False), 'wall-disagreement': (True, True),
+    'no-match': (True, False), 'unknown-session': (False, True),
+    'hidden-replacement': (False, True), 'unsafe-source': (False, True),
+    'expired-source': (True, False), 'head-vs-staged': (True, False),
+}
+# The retained first-party Claude receipt binds this exact provider spelling:
+# docs/research/data/2026-10-25-recall-final/semantic-1000/wall-disagreement.json.
+# No prefix stripping, fuzzy aliases, route/effort stripping or fallback models.
+CLAUDE_IDENTITIES = {'anthropic/claude-opus-5-5': 'claude-opus-5-5'}
+
+
+def semantic_outcome_checks(name, finish):
+    complete, clarification = SEMANTIC_OUTCOMES[name]
+    return {'semantic_completeness': finish['complete'] is complete,
+            'semantic_clarification': finish['clarification_required'] is clarification}
+
+
+def complete_provider_evidence(call, requested):
+    if call['usage'] is None or call['reported_cost_usd'] is None:
+        return False
+    identities = []
+    if call.get('model') is not None:
+        if not isinstance(call['model'], str) or not call['model']:
+            return False
+        identities.append(call['model'])
+    usage = call.get('model_usage')
+    if usage is not None:
+        if not isinstance(usage, dict) or not usage:
+            return False
+        for identity, details in usage.items():
+            if not isinstance(identity, str) or not identity or not isinstance(details, dict):
+                return False
+            identities.append(identity)
+            if 'canonicalModel' in details:
+                identities.append(details['canonicalModel'])
+    if identities and all(identity == requested for identity in identities):
+        return True
+    mapped = CLAUDE_IDENTITIES.get(requested)
+    return bool(mapped and identities and all(identity == mapped for identity in identities)
+        and usage and all(details.get('provider') == 'firstParty' and details.get('canonicalModel') == mapped
+                          for details in usage.values()))
+
+
+def public_projection(result):
+    """Ordered native records and authority/coverage, excluding allowed metrics."""
+    return {key: copy.deepcopy(result.get(key)) for key in (
+        'results', 'selection_state', 'semantic_coverage', 'pending_recovery_units',
+        'pending_recovery_unit_ids', 'recovery_required_actions', 'code_working_bytes_verified')}
+
+
+def quality_projection(row):
+    """Keep native public ordering distinct from set-based relevance scoring."""
+    return {key: row[key] for key in ('selected', 'selected_qualified', 'public_results',
+                                      'missed', 'unexpected', 'finish_outcome')}
+
+
+def quality_outcomes(observations, counts, names, mode):
+    regressions = []
+    for count in counts:
+        for name in names:
+            cell = {r['build']: r for r in observations if r['count'] == count and r['case'] == name}
+            if set(cell) != {'A', 'B', 'C'}:
+                regressions.append({'count': count, 'case': name, 'reason': 'missing actual observation'})
+                continue
+            for build in ('B', 'C'):
+                if quality_projection(cell[build]) != quality_projection(cell['A']):
+                    regressions.append({'count': count, 'case': name, 'build': build,
+                                        'reason': 'public source/quality outcome differs from A'})
+    passed = not regressions and len(observations) == len(counts) * 3 * len(names) and all(
+        not r['failure'] and all(r['checks'].values()) and not r['unexpected'] and
+        (not r['missed'] or (mode == 'literal' and r['case'] == 'no-shared-terms-paraphrase')) for r in observations)
+    return regressions, passed
+
 
 def semantic_cases(path):
     tree = ast.parse(path.read_text())
@@ -42,6 +127,8 @@ def semantic_cases(path):
     cases = ast.literal_eval(nodes[0].value)
     if len(cases) != 16:
         raise ValueError('All 16 frozen meaning-based cases are mandatory')
+    if {case[0] for case in cases} != set(SEMANTIC_OUTCOMES):
+        raise ValueError('Frozen semantic cases and held-out outcome oracle differ')
     return cases
 
 
@@ -76,6 +163,13 @@ def main():
     out.mkdir(mode=0o700, exist_ok=False)
     save(out / 'builds.json', manifest)
     cases = semantic_cases(root / SEMANTIC_SOURCE)
+    # Freeze the private oracle before any invocation; it is never model input.
+    outcome_oracle = {'schema': 'agent-memory/recall-semantic-outcomes-v1',
+        'outcomes': {name: {'complete': complete, 'clarification_required': clarification}
+                     for name, (complete, clarification) in SEMANTIC_OUTCOMES.items()}}
+    outcome_oracle['sha256'] = sha(encoded(outcome_oracle['outcomes']))
+    if args.mode == 'semantic':
+        save(out / 'semantic-outcome-labels.json', outcome_oracle)
     model_argv = json.loads(args.model_command.read_text()) if args.model_command else None
     if args.mode == 'semantic' and model_argv is None:
         model_argv = ['claude', '-p', '--tools', '', '--no-session-persistence', '--output-format', 'json',
@@ -96,6 +190,7 @@ def main():
         'argv': sys.argv, 'python': sys.version, 'controller_sha256': sha(Path(__file__).read_bytes()),
         'semantic_case_source': {'path': SEMANTIC_SOURCE, 'sha256': sha((root / SEMANTIC_SOURCE).read_bytes())},
         'semantic_cases_sha256': sha(encoded(cases)), 'model_requested': args.model, 'model_command': model_argv,
+        'semantic_outcome_oracle_sha256': outcome_oracle['sha256'] if args.mode == 'semantic' else None,
         'build_manifest_sha256': sha(args.builds.read_bytes()), 'observations': observations, 'failures': failures,
         'performance_acceptance_claimed': False, 'quality_passed': False}
     def persist():
@@ -181,11 +276,13 @@ def main():
                     for name, question, context, expected in active:
                         started, first = time.perf_counter(), len(commands)
                         model_calls, selected, qualified, finish = [], [], {}, None
+                        public_results = []
                         error = None
                         try:
                             if args.mode == 'literal':
                                 request = expected['request']
                                 result, raw = public('retrieve.py', '--repo', repo, '--request', write(request, 'literal-request'))
+                                public_results.append(public_projection(result))
                                 qualified = {r['path']: r for r in result['results']}
                                 selected = sorted(qualified)
                                 expected_paths = sorted(expected['relevant_paths'])
@@ -251,6 +348,7 @@ def main():
                                             '--input', write(state['discovery'], 'navigation'), '--request', write(request, 'semantic-request'),
                                             '--rationale', action['rationale'])
                                         result = state['qualification']
+                                        public_results.append(public_projection(result))
                                         qualified.update({r['path']: r for r in result['results']})
                                         conversation.append({'role': 'tool', 'content': state})
                                     elif action.get('action') == 'finish':
@@ -278,8 +376,9 @@ def main():
                                 if name == 'orientation-and-typed':
                                     checks['orientation_separate'] = any(r['selection_class'] == 'orientation-only' and r['trust'] is None for r in qualified.values())
                             if args.mode == 'semantic':
-                                checks['complete_provider_evidence'] = all(m['usage'] is not None and m['reported_cost_usd'] is not None
-                                    and (m['model'] or m['model_usage']) for m in model_calls)
+                                checks.update(semantic_outcome_checks(name, finish))
+                                checks['complete_provider_evidence'] = bool(model_calls) and all(
+                                    complete_provider_evidence(m, args.model) for m in model_calls)
                         except Exception as exc:
                             error = repr(exc); checks = {}; expected_paths = sorted(expected['relevant_paths']) if args.mode == 'literal' else sorted(
                                 r['path'] for r in rows if r['label'] in expected)
@@ -288,6 +387,8 @@ def main():
                         row = {'build': build, 'count': count, 'case': name, 'question': question, 'context': context,
                             'expected': expected_paths, 'selected': selected, 'missed': sorted(desired - actual), 'unexpected': sorted(actual - desired),
                             'qualified': qualified, 'finish': finish, 'failure': error, 'checks': checks,
+                            'public_results': public_results,
+                            'finish_outcome': {key: finish[key] for key in ('complete', 'clarification_required')} if finish else None,
                             'selected_qualified': {p: qualified[p] for p in selected if p in qualified},
                             'found_relevant': sorted(actual & desired),
                             'precision': len(actual & desired) / len(actual) if actual else None,
@@ -306,23 +407,10 @@ def main():
                 except Exception as exc:
                     failures.append({'count': count, 'build': build, 'error': repr(exc)})
                     (directory / 'failure.txt').write_text(traceback.format_exc()); persist()
-    regressions = []
-    for count in args.counts:
-        for name, *_ in active:
-            cell = {r['build']: r for r in observations if r['count'] == count and r['case'] == name}
-            if set(cell) != {'A', 'B', 'C'}:
-                regressions.append({'count': count, 'case': name, 'reason': 'missing actual observation'}); continue
-            baseline = cell['A']
-            for build in ('B', 'C'):
-                candidate = cell[build]
-                if (candidate['selected'] != baseline['selected'] or candidate['selected_qualified'] != baseline['selected_qualified']
-                        or candidate['missed'] != baseline['missed'] or candidate['unexpected'] != baseline['unexpected']):
-                    regressions.append({'count': count, 'case': name, 'build': build, 'reason': 'public source/quality outcome differs from A'})
+    regressions, outcomes_passed = quality_outcomes(observations, args.counts, [case[0] for case in active], args.mode)
     summary['regressions'] = regressions
     summary['sources_preserved'] = all(source(path) == manifest['builds'][label]['source'] for label, path in roots.items())
-    summary['quality_passed'] = not (failures or regressions) and summary['sources_preserved'] and len(observations) == len(args.counts) * 3 * len(active) and all(
-        not r['failure'] and all(r['checks'].values()) and not r['unexpected'] and
-        (not r['missed'] or (args.mode == 'literal' and r['case'] == 'no-shared-terms-paraphrase')) for r in observations)
+    summary['quality_passed'] = not failures and summary['sources_preserved'] and outcomes_passed
     summary['finished_at'] = stamp(); persist()
     print(json.dumps({'quality_passed': summary['quality_passed'], 'evidence': str(out / 'observations.json')}))
     return 0 if summary['quality_passed'] else 1

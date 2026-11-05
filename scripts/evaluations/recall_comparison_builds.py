@@ -13,10 +13,22 @@ import sys
 from datetime import datetime, timezone
 
 sys.dont_write_bytecode = True
-from labeled_recall_probe import source
+# This bootstrap must use only stdlib: -B does not prevent cached helper reads.
+for _directory in ('tests', 'scripts', 'skills/agent-memory'):
+    for _cache in (Path(__file__).resolve().parents[2] / _directory).rglob('*.py[co]'):
+        raise ValueError('Qualification helper bytecode is not source-bound: ' + str(_cache))
+from labeled_recall_probe import source as _source
 
 RUNTIME = 'skills/agent-memory/scripts/agent_memory/'
 DELTA_FILES = {RUNTIME + name for name in ('recall_catalog.py', 'retrieval.py', 'validation_memo.py')}
+
+def source(root):
+    """Bind helper execution as well as portable source, before local imports."""
+    for directory in ('tests', 'scripts', 'skills/agent-memory'):
+        for cache in (root / directory).rglob('*.py[co]'):
+            raise ValueError('Qualification helper bytecode is not source-bound: ' + str(cache))
+    return _source(root)
+
 
 
 def encoded(value):

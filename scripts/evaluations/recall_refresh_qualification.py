@@ -20,8 +20,12 @@ import time
 import traceback
 
 sys.dont_write_bytecode = True
-from labeled_recall_probe import inventory, source
-from recall_comparison_builds import encoded, save, sha, stamp
+# Reject caches before the first local import, including the binding helper.
+for _directory in ('tests', 'scripts', 'skills/agent-memory'):
+    for _cache in (Path(__file__).resolve().parents[2] / _directory).rglob('*.py[co]'):
+        raise ValueError('Qualification helper bytecode is not source-bound: ' + str(_cache))
+from recall_comparison_builds import encoded, save, sha, source, stamp
+from labeled_recall_probe import inventory
 
 CONDITIONS = ('primed-unchanged', 'no-catalog', 'import-invalidated', 'held-conflict')
 QUESTION = 'How often may a temporary network error be attempted again?'
@@ -77,7 +81,7 @@ def public_projection(result):
     return {key: result.get(key) for key in ('refresh_applied', 'remote_freshness_verified',
         'relevant_imports_read', 'conflicts_pending', 'blocked_paths', 'sharing_state', 'failure_code')} | {
         'recall': {key: recall.get(key) for key in ('results', 'semantic_coverage', 'pending_recovery_units',
-            'pending_recovery_unit_ids', 'pending_recovery_actions', 'code_working_bytes_verified')}}
+            'pending_recovery_unit_ids', 'recovery_required_actions', 'code_working_bytes_verified')}}
 
 
 def hits(path):

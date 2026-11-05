@@ -12,9 +12,14 @@ import time
 from datetime import datetime, timezone
 
 sys.dont_write_bytecode = True
+# Reject caches before the first local import, including the binding helper.
+for _directory in ('tests', 'scripts', 'skills/agent-memory'):
+    for _cache in (Path(__file__).resolve().parents[2] / _directory).rglob('*.py[co]'):
+        raise ValueError('Qualification helper bytecode is not source-bound: ' + str(_cache))
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
-from labeled_recall_probe import source, inventory
+from recall_comparison_builds import source
+from labeled_recall_probe import inventory
 
 
 def main():
@@ -32,12 +37,12 @@ def main():
     if out.is_relative_to(root) or root.is_relative_to(out):
         parser.error('Output must be outside source')
     out.mkdir(mode=0o700, parents=False, exist_ok=False)
+    before_source = source(root)
     sys.path.insert(0, str(root / 'tests'))
     sys.path.insert(0, str(root / 'scripts/evaluations'))
     from world import World
     from identity_fixtures import bind
     from semantic_navigation_fixture import corpus
-    before_source = source(root)
     (out / 'source-before.json').write_text(json.dumps(before_source, indent=2))
     commands, observations = [], []
     summary = {'platform': platform.platform(), 'python': sys.version, 'argv': sys.argv,

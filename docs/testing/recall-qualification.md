@@ -50,8 +50,12 @@ outside the three reviewed #206 runtime paths must be byte/mode-identical. In
 particular it never removes #244/#249 dependencies or copies the repair into A.
 The controllers, frozen labels and every non-#206 feature remain identical. A
 source/inventory change invalidates the evidence and requires a new frozen
-comparison; do not carry forward old ratios. Source checks reject ignored
-portable bytecode too; they never delete it from an operator's checkout.
+comparison; do not carry forward old ratios. Before any local helper import,
+controllers reject bytecode anywhere under `tests/`, `scripts/` and the portable
+pack in the controller checkout; each target build receives the same check
+before fixture imports or source binding. `-B` alone only prevents writes and
+does not authenticate execution. Caches are never deleted or repaired: use a
+new bytecode-free source-equivalent clone instead.
 
 ## Complete serial commands
 
@@ -75,8 +79,26 @@ stdout must contain `action` (a full action object, or top-level action plus its
 fields), `model`, `usage`, and `reported_cost_usd`, or the actual Claude
 `structured_output`/`modelUsage`/`total_cost_usd` fields. `provider_version` is
 retained when reported. Missing identity/usage/cost prevents quality acceptance.
-The controller does not generate a synthetic model response or hide a model
-failure. The adapter must invoke the actual selected model, not use labels.
+Every reported model and model-usage identity must equal the requested exact
+identity. The sole provider spelling mapping is `anthropic/claude-opus-5-5` to
+`claude-opus-5-5`, validated against the retained first-party Claude receipt;
+it additionally requires `modelUsage` entries with that exact `canonicalModel`
+and `provider: firstParty`. Wrong/mixed identities, unvalidated aliases and
+effort/route suffix removal cannot qualify. The controller does not generate a
+synthetic model response or hide a model failure. The adapter must invoke the
+actual selected model, not use labels.
+
+Quality observations retain ordered native public results separately from
+sorted relevance accounting. A/B/C parity compares that order, source records,
+coverage, recovery IDs/count/`recovery_required_actions`, working-byte authority,
+and semantic finish outcomes. The private semantic outcome oracle is frozen and
+hashed before any model call, never included in adapter input. Resolved cases
+and true no-match require complete coverage; wall disagreement also requires
+clarification. Unknown prerequisite/session and hidden/unsafe guidance require
+incomplete coverage and clarification, not false no-match or permission to
+reveal withheld data. HEAD evidence never certifies staged/working bytes.
+Both absolute scoring and A/B/C parity enforce these flags; old unscored
+observations are not retroactively passing qualification.
 
 The same stages can be invoked individually, in serial host slots, without
 repeating previously retained observations:
