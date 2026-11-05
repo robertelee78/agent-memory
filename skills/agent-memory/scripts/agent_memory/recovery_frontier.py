@@ -747,7 +747,8 @@ def verified_child_transaction(repo, owner, transaction, indexed):
     row = indexed['operations'].get(parent)
     if row is None or row['project_id'] != marker['project_id']:
         raise ContractError('Child recovery cannot infer an absent or foreign parent operation')
-    parent_directory, head, _ = ledger(root, parent, row)
+    parent_directory, head, parent_ledger = ledger(root, parent, row)
+    parent_manifest, _ = evidence(parent_directory, parent_ledger, row)
     receipt = state.read(parent_directory / 'receipt.json')
     if (digest(encoded(receipt)) != p['parent_receipt_sha256'] or receipt.get('verified') is not True
             or digest(encoded(head)) != p['parent_ledger_head_sha256']):
@@ -755,7 +756,12 @@ def verified_child_transaction(repo, owner, transaction, indexed):
     child_manifest = state.read(directory / 'manifest.json')
     if digest(encoded(child_manifest)) != p['manifest_sha256'] or p['scope_context'] != child_manifest['identity']['scope_context']:
         raise ContractError('Child recovery identity evidence is missing or changed')
-    scope_binding.require(root, marker['project_id'], expected=p['scope_context'], owned_lock=owner, owned_transaction=transaction)
+    from . import layout_recovery_observation as raw_observer, project_identity
+    router, _ = raw_observer.read_source(bank, 'MEMORY.md')
+    identity = project_identity.RawIdentityEvidence.observe(root, router, parent_manifest['identity'].get('identity_review'))
+    context = scope_binding.raw_recovery_context(root, identity, owner, transaction)
+    if context != p['scope_context'] or context['project_id'] != marker['project_id']:
+        raise ContractError('Owned child restore raw identity differs from its exact reviewed parent scope')
     markers(bank, owner, transaction)
     return parent
 
