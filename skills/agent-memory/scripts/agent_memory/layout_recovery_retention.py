@@ -26,7 +26,7 @@ MAX_TOTAL = 512 * 1024 * 1024
 ROOT_FILES = {'manifest.json', 'manifest.sha256', 'unit-map.json', 'journal.json', 'receipt.json',
               'ledger-head.json', 'tombstone.json', 'retention-requirements.json',
               'rollback-plan.json', 'child-rollback-plan.json', 'quiescence-attestations.json', 'staging.json',
-              'retirement.json', 'reference-map.json'}
+              'retirement.json', 'reference-map.json', 'source-context.json'}
 UUID = r'[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}'
 OWNED = re.compile(
     r'(?:originals|intended)/'+UUID+r'\.bin|'

@@ -108,6 +108,30 @@ class RecoveryFrontierContract(unittest.TestCase):
             self.assertNotIn('results', value)
             self.assertTrue((bank / '.agent-memory-transaction.md').exists())
 
+    def test_rolled_back_pending_units_keep_private_ledger_and_legacy_hold(self):
+        with World() as world:
+            command, source = recovery.installed(world)
+            repo, bank, native = recovery.memory(world, oversized=True, handoff=True)
+            first, observed = recovery.inspect(world, command, repo)
+            proposal, _ = recovery.prepare(world, command, source, repo, observed, native)
+            applied = recovery.call(world, command, 'apply', '--repo', repo,
+                '--operation', first['operation_id'], '--proposal', proposal)
+            old_ids = set(applied['pending_unit_ids'])
+            self.assertEqual(len(old_ids), 8)
+            restore = world.inside('child-restore.json')
+            recovery.call(world, command, 'rollback', '--repo', repo,
+                '--operation', first['operation_id'], '--output', restore)
+            rolled_back = recovery.call(world, command, 'rollback', '--repo', repo, '--proposal', restore)
+            self.assertFalse(rolled_back['semantic_recovery_complete'])
+            self.assertTrue((bank / '.agent-memory-transaction.md').exists())
+            self.assertTrue((bank / '.agent-memory-recovery.md').exists())
+            status = recovery.call(world, command, 'status', '--repo', repo,
+                '--operation', first['operation_id'])
+            self.assertFalse(status['semantic_recovery_complete'])
+            self.assertEqual(set(status['pending_unit_ids']), old_ids)
+            blocked = world.run([command, 'bank', 'validate', '--repo', repo], check=False, timeout=60)
+            self.assertNotEqual(blocked.returncode, 0)
+
 
 if __name__ == '__main__':
     unittest.main()

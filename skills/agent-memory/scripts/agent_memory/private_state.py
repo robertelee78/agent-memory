@@ -129,28 +129,35 @@ def required_private_state_capabilities(installation, target_artifact, operation
                     capabilities.update(producer(root))
                 token = recovery_frontier.observe(root)
                 indexed = state.index(root)
-                layout_required = token['hold_sha256'] is not None or any(
-                    row['state'] in {'active', 'interrupted'} for row in indexed['operations'].values())
-                if layout_required:
+                layout_operations = []
+                for operation_id, indexed_row in indexed['operations'].items():
+                    if indexed_row['state'] in {'active', 'interrupted', 'rolled-back'}:
+                        _, _, value = recovery_frontier.ledger(root, operation_id, indexed_row)
+                        if indexed_row['state'] != 'rolled-back' or any(unit['state'] == 'pending-admission' for unit in value['units']):
+                            layout_operations.append(operation_id)
+                active_layout = [operation_id for operation_id in layout_operations
+                    if indexed['operations'][operation_id]['state'] in {'active', 'interrupted'}]
+                if active_layout:
+                    layout_operations = active_layout
+                if layout_operations:
                     capabilities.add('layout-frontier-v1')
                     target_digest = target_artifact.get('artifact_digest') if target_artifact else None
-                    frontier_operation = next(operation_id for operation_id, indexed_row in indexed['operations'].items()
-                        if indexed_row['state'] in {'active', 'interrupted'})
-                    override = target_artifact.get('layout_quiescence_overrides', {}).get(frontier_operation) if target_artifact else None
-                    if override is not None:
-                        recovery_frontier.validate_quiescence(root, override, runtime_artifact_digest=target_digest,
-                            required_routes=target_artifact.get('layout_required_routes', ()))
-                    else:
-                        recovery_frontier.verified_hold(root)
-                    if target_digest is not None:
-                        from .recovery_quiescence import selected_attestation
-                        directory, _, ledger_value = recovery_frontier.ledger(root, frontier_operation, indexed['operations'][frontier_operation])
-                        _, proposal = recovery_frontier.evidence(directory, ledger_value, indexed['operations'][frontier_operation])
-                        selected = selected_attestation(root, frontier_operation, proposal, target_digest)
-                        if selected is None and override is None:
-                            raise ContractError('Target capable runtime has no renewed bank-bound quiescence attestation')
-                        if override is None and selected is not None and not set(target_artifact.get('layout_required_routes', ())).issubset(selected['declared_invocation_routes']):
-                            raise ContractError('Target capable reader has an invocation route omitted from quiescence')
+                    for frontier_operation in layout_operations:
+                        override = target_artifact.get('layout_quiescence_overrides', {}).get(frontier_operation) if target_artifact else None
+                        if override is not None:
+                            recovery_frontier.validate_quiescence(root, override, runtime_artifact_digest=target_digest,
+                                required_routes=target_artifact.get('layout_required_routes', ()))
+                        elif indexed['operations'][frontier_operation]['state'] in {'active', 'interrupted'}:
+                            recovery_frontier.verified_hold(root)
+                        if target_digest is not None:
+                            from .recovery_quiescence import selected_attestation
+                            directory, _, ledger_value = recovery_frontier.ledger(root, frontier_operation, indexed['operations'][frontier_operation])
+                            _, proposal = recovery_frontier.evidence(directory, ledger_value, indexed['operations'][frontier_operation])
+                            selected = selected_attestation(root, frontier_operation, proposal, target_digest)
+                            if selected is None and override is None:
+                                raise ContractError('Target capable runtime has no renewed bank-bound quiescence attestation')
+                            if override is None and selected is not None and not set(target_artifact.get('layout_required_routes', ())).issubset(selected['declared_invocation_routes']):
+                                raise ContractError('Target capable reader has an invocation route omitted from quiescence')
                 if not capabilities.issubset(TOKENS):
                     raise ContractError('A private-state producer returned an unknown capability')
                 requirements[str(bank)] = sorted(capabilities)

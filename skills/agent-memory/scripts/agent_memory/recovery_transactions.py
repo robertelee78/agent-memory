@@ -50,38 +50,50 @@ def credited_rows(repo, token, claims, owner=None, marker=None):
 
 def resolution_plan(p, held, claims, review):
     indexed = state.index(p['repo_root'])
-    directory, head, current = frontier.ledger(p['repo_root'], held.operation_id, indexed['operations'][held.operation_id])
-    units = copy.deepcopy(current['units'])
+    remaining = {claim['unit_id']: claim for claim in claims if claim['coverage'] != 'none'}
     plans = []
-    for claim in claims:
-        if claim['coverage'] == 'none':
+    for operation_id, row in sorted(indexed['operations'].items()):
+        if row['state'] not in {'active', 'rolled-back'}:
             continue
-        unit = next(unit for unit in units if unit['unit_id'] == claim['unit_id'])
-        identity = str(uuid.UUID(hex=digest(encoded([p['operation_id'], unit['unit_id']]))[:32], version=4))
-        terminal_state = ('admitted' if 'admission_evidence' in p else 'governed-terminal') if claim['coverage'] == 'full' else 'pending-admission'
-        plans.append({'resolution_id': identity, 'unit_id': unit['unit_id'], 'claim': claim,
-            'terminal_state': terminal_state, 'review_sha256': digest(encoded(review))})
-    return {'previous_head': head, 'units': units, 'resolutions': plans}
+        _, head, current = frontier.ledger(p['repo_root'], operation_id, row)
+        units = copy.deepcopy(current['units'])
+        resolutions = []
+        for unit in units:
+            claim = remaining.pop(unit['unit_id'], None)
+            if claim is None:
+                continue
+            if unit['state'] != 'pending-admission':
+                raise ContractError('A coverage claim cannot reterminalize a historical unit')
+            identity = str(uuid.UUID(hex=digest(encoded([p['operation_id'], unit['unit_id']]))[:32], version=4))
+            terminal_state = ('admitted' if 'admission_evidence' in p else 'governed-terminal') if claim['coverage'] == 'full' else 'pending-admission'
+            resolutions.append({'resolution_id': identity, 'unit_id': unit['unit_id'], 'claim': claim,
+                'terminal_state': terminal_state, 'review_sha256': digest(encoded(review))})
+        if resolutions:
+            plans.append({'operation_id': operation_id, 'previous_head': head, 'units': units, 'resolutions': resolutions})
+    if remaining:
+        raise ContractError('Coverage claim omitted its exact retained ledger')
+    return {'ledgers': plans}
 
 
 def terminalize(root, operation_id, nested_id, journal, receipt, owner, marker):
     directory = state.paths(root, operation_id)[3]
-    plan = journal['resolution_plan']
-    units = copy.deepcopy(plan['units'])
-    for item in plan['resolutions']:
-        record = {'schema': 'agent-memory/layout-resolution-receipt-v1',
-            'resolution_id': item['resolution_id'], 'operation_id': operation_id, 'unit_id': item['unit_id'],
-            'generation': plan['previous_head']['generation'], 'nested_id': nested_id,
-            'request_sha256': digest(encoded(journal['proposal'])), 'canonical_operation_id': nested_id,
-            'canonical_receipt_sha256': digest(encoded(receipt)), 'terminal_state': item['terminal_state'],
-            'claims': [item['claim']], 'independent_review_sha256': item['review_sha256'], 'verified': True}
-        state.write_once(directory / 'resolutions' / (item['resolution_id'] + '.json'), record)
-        unit = next(unit for unit in units if unit['unit_id'] == item['unit_id'])
-        unit['state'] = item['terminal_state']
-        unit['terminal_receipts'].append({'resolution_id': item['resolution_id'], 'sha256': digest(encoded(record))})
-    writes.fault('layout-recovery-admission-receipt-before-resolution')
-    if plan['resolutions']:
-        resolution.advance_ledger(root, operation_id, units, plan['previous_head'], owner, marker)
+    for plan in journal['resolution_plan']['ledgers']:
+        resolved_operation = plan['operation_id']
+        resolved_directory = state.paths(root, resolved_operation)[3]
+        units = copy.deepcopy(plan['units'])
+        for item in plan['resolutions']:
+            record = {'schema': 'agent-memory/layout-resolution-receipt-v1',
+                'resolution_id': item['resolution_id'], 'operation_id': resolved_operation, 'unit_id': item['unit_id'],
+                'generation': plan['previous_head']['generation'], 'nested_id': nested_id,
+                'request_sha256': digest(encoded(journal['proposal'])), 'canonical_operation_id': nested_id,
+                'canonical_receipt_sha256': digest(encoded(receipt)), 'terminal_state': item['terminal_state'],
+                'claims': [item['claim']], 'independent_review_sha256': item['review_sha256'], 'verified': True}
+            state.write_once(resolved_directory / 'resolutions' / (item['resolution_id'] + '.json'), record)
+            unit = next(unit for unit in units if unit['unit_id'] == item['unit_id'])
+            unit['state'] = item['terminal_state']
+            unit['terminal_receipts'].append({'resolution_id': item['resolution_id'], 'sha256': digest(encoded(record))})
+        writes.fault('layout-recovery-admission-receipt-before-resolution')
+        resolution.advance_ledger(root, resolved_operation, units, plan['previous_head'], owner, marker)
     token = frontier.observe(root, owner, marker)
     pending = frontier.pending_rows(root, token, owner, marker)
     frontier.reservation(journal['proposal']['files'], pending, token)
@@ -112,8 +124,10 @@ def apply_transaction(prepared):
         claims, review = validate(p, owner)
         token = held.token
         remaining = credited_rows(root, token, claims, owner)
-        capacity_token = frontier.successor_token(token, [row['unit_id'] for row in remaining],
-            operation_id=held.operation_id, generation_change=any(claim['coverage'] != 'none' for claim in claims))
+        capacity_token = token
+        for ledger_plan in resolution_plan(p, held, claims, review)['ledgers']:
+            capacity_token = frontier.successor_token(capacity_token, [row['unit_id'] for row in remaining],
+                operation_id=ledger_plan['operation_id'])
         frontier.reservation(p['files'], remaining, capacity_token)
         base_files = tx.files_at(bank)
         tx.preflight(bank, p)
@@ -278,12 +292,10 @@ def apply_checkpoint(prepared):
             'repo_root': str(root), 'project_id': write['project_id'], 'observed_hashes': write['observed_hashes'],
             'files': files, 'scope_context': write['scope_context']}
         marker = marker_for(held, write['operation_id'])
-        indexed = state.index(root)
-        _, head, current = frontier.ledger(root, held.operation_id, indexed['operations'][held.operation_id])
         journal = {'schema': 'agent-memory/layout-nested-journal-v1', 'operation_id': held.operation_id,
             'nested_id': write['operation_id'], 'marker': marker, 'hold': frontier.marker_value(held.marker),
             'proposal': p, 'proposal_sha256': digest(encoded(p)), 'base_files': base, 'write_proposal': write,
-            'frontier': held.token, 'resolution_plan': {'previous_head': head, 'units': current['units'], 'resolutions': []}}
+            'frontier': held.token, 'resolution_plan': {'ledgers': []}}
         directory = state.paths(root, held.operation_id)[3] / 'nested' / write['operation_id']
         state.write_once(directory / 'journal.json', journal)
         security.guarded_start(root, write['operation_id'], held.scope, {write['path']: write['content']},

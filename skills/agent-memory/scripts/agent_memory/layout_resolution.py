@@ -84,8 +84,8 @@ def restore_hold(repo, operation_id, owner, transaction):
     root, bank, _, _ = state.paths(repo, operation_id)
     token = frontier.observe(root, owner, transaction)
     row = state.index(root)['operations'][operation_id]
-    if row['state'] != 'active':
-        raise ContractError('Only an active checked recovery operation can restore its hold')
+    if row['state'] not in {'active', 'rolled-back'}:
+        raise ContractError('Only an active or retained rolled-back recovery operation can restore its hold')
     marker = encoded({'schema': frontier.HOLD, 'project_id': row['project_id'],
         'operation_id': operation_id, 'hold_id': row['hold_id']})
     writes.fault('layout-recovery-before-hold-restore')
@@ -103,6 +103,8 @@ def retire(repo, operation_id, owner, transaction=None):
     _, head, current = frontier.ledger(root, operation_id, row)
     if any(unit['state'] == 'pending-admission' for unit in current['units']):
         raise ContractError('Unresolved source units cannot retire their recovery safeguard')
+    if frontier.observe(root, owner, transaction)['unit_ids']:
+        raise ContractError('Other retained same-bank source units still require this recovery safeguard')
     receipt = state.read(directory / 'receipt.json')
     if receipt.get('verified') is not True:
         raise ContractError('Recovery retirement needs the immutable verified layout receipt')
@@ -237,10 +239,14 @@ def resolve(repo, operation_id=None, unit_id=None, terminal=None, proposal=None)
             record['state'] = p['terminal_state']
             record['terminal_receipts'].append({'resolution_id': resolution_id, 'sha256': digest(encoded(receipt))})
             successor = advance_ledger(root, operation_id, units, head, owner)
-            if not any(unit['state'] == 'pending-admission' for unit in units):
-                retire(root, operation_id, owner)
+            token = frontier.observe(root, owner)
+            if token['coverage_complete']:
+                held = frontier.verified_hold(root, owner)
+                if held is None:
+                    raise ContractError('Terminal resolution lost the exact same-bank recovery hold')
+                retire(root, held.operation_id, owner)
             return {'receipt': receipt, 'ledger_head': successor['head'], 'writes_performed': True,
-                'semantic_recovery_complete': not any(unit['state'] == 'pending-admission' for unit in units)}
+                'semantic_recovery_complete': token['coverage_complete']}
     return {'proposal': _resolution_preview(root, operation_id, unit_id, terminal, str(uuid.uuid4())),
         'canonical_writes_performed': False, 'writes_performed': False}
 
@@ -248,10 +254,14 @@ def resolve(repo, operation_id=None, unit_id=None, terminal=None, proposal=None)
 def _resolution_preview(repo, operation_id, unit_id, terminal, resolution_id, owner=None):
     root, bank, _, directory = state.paths(repo, operation_id)
     held = frontier.verified_hold(root, owner)
-    if held is None or held.operation_id != operation_id:
+    if held is None:
         raise ContractError('Resolution needs the exact persistent hold, never an interrupted nested marker')
     indexed = state.index(root)
-    _, head, current = frontier.ledger(root, operation_id, indexed['operations'][operation_id])
+    row = indexed['operations'].get(operation_id)
+    if row is None or row['project_id'] != held.token['project_id'] or (
+            operation_id != held.operation_id and row['state'] != 'rolled-back'):
+        raise ContractError('Resolution may name only the active or explicitly retained rolled-back same-bank ledger')
+    _, head, current = frontier.ledger(root, operation_id, row)
     unit = next((unit for unit in current['units'] if unit['unit_id'] == unit_id), None)
     if unit is None or unit['state'] != 'pending-admission':
         raise ContractError('Resolution must name one actual unresolved source unit')
@@ -304,7 +314,7 @@ def _resolution_preview(repo, operation_id, unit_id, terminal, resolution_id, ow
         [row['unit_id'] for row in remaining], operation_id=operation_id))
     return {'schema': 'agent-memory/layout-resolution-proposal-v1', 'resolution_id': resolution_id,
         'operation_id': operation_id, 'unit_id': unit_id, 'repo_root': str(root), 'ledger_head': head,
-        'terminal': terminal, **selected}
+        'recovery_frontier': held.token, 'terminal': terminal, **selected}
 
 
 def accumulated_coverage(repo, operation_id, unit, head, ledger, terminal, files):

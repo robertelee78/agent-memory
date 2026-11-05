@@ -1111,6 +1111,11 @@ def recover(state, *, for_install=False):
             preserved = journal.get('preserved_opaque_source', {})
             expected = (preserved['identity'] if action['kind'] == 'source'
                         and preserved.get('path') == action['path'] else action['before'])
+            if action['kind'] == 'wrapper' and action['before'] is None and os.path.lexists(state/'omp-transition.json'):
+                from . import omp_boundary
+                restored = omp_boundary.native_recovery_expected(state, action['path'])
+                if restored is not None:
+                    expected = restored
             require(fingerprint(Path(action['path'])) == expected,
                     'Rolled-back target changed; preserve and reconcile: ' + action['path'])
         return {'operation': 'recover', 'verified': not bool(journal.get('opaque_cache_recovery')),

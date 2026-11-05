@@ -201,8 +201,13 @@ def observe(repo, owner=None, transaction=None):
     index = state.index(root)
     raw = marker_bytes(bank)
     sentinel_raw = marker_bytes(bank, '.agent-memory-recovery.md')
+    raw_value = load(raw) if raw is not None else {}
+    if not isinstance(raw_value, dict):
+        raise ContractError('Recovery observation found a malformed canonical transaction marker')
+    marker_operation = raw_value.get('operation_id')
     active = [(operation, row) for operation, row in index['operations'].items()
-              if row['state'] in {'active', 'interrupted'}]
+              if row['state'] in {'active', 'interrupted'} or (
+                  row['state'] == 'rolled-back' and operation == marker_operation)]
     if len(active) > 1:
         raise ContractError('Competing recovery operations require explicit reconciliation')
     child_parent = None
@@ -235,7 +240,7 @@ def observe(repo, owner=None, transaction=None):
         raise ContractError('Orphan recovery marker has no verified private ledger')
     ledgers, unit_ids, source_pins, project_ids, reference_maps = [], [], [], set(), {}
     for operation, row in sorted(index['operations'].items()):
-        if row['state'] in {'rolled-back', 'cleaned'}:
+        if row['state'] == 'cleaned':
             continue
         directory, head, current = ledger(root, operation, row)
         manifest, proposal = evidence(directory, current, row)
@@ -246,14 +251,15 @@ def observe(repo, owner=None, transaction=None):
             reference_maps[operation] = mapping
         project_ids.add(row['project_id'])
         pending = [unit for unit in current['units'] if unit['state'] == 'pending-admission']
-        if pending and row['state'] != 'active':
+        if pending and row['state'] not in {'active', 'rolled-back'}:
             raise ContractError('Recovery index falsely declares unresolved evidence terminal')
         unit_ids.extend(unit['unit_id'] for unit in pending)
         ledgers.append({'operation_id': operation, 'generation': head['generation'], 'sha256': head['sha256']})
         source_pins.append({'operation_id': operation, 'manifest_sha256': current['manifest_sha256'],
             'unit_map_sha256': current['unit_map_sha256'], 'units': pending,
             'quiescence_heads_sha256': digest(state.read_bytes(directory / 'quiescence-attestations.json', missing=True))})
-        if row['state'] in {'active', 'interrupted'}:
+        if row['state'] in {'active', 'interrupted'} or (
+                row['state'] == 'rolled-back' and operation == marker_operation):
             binding = state.bindings()['bindings'].get(operation)
             if binding is None or binding['project_id'] != row['project_id']:
                 raise ContractError('Recovery private-state binding is missing')
@@ -264,6 +270,8 @@ def observe(repo, owner=None, transaction=None):
                 nested = state.read(directory / 'nested' / marker['nested_id'] / 'journal.json')
                 if nested.get('marker') != marker or nested.get('operation_id') != operation:
                     raise ContractError('Nested recovery marker has no exact typed private journal')
+    if unit_ids and not active:
+        raise ContractError('Retained unresolved source units lost their fail-closed recovery hold')
     if len(project_ids) > 1:
         raise ContractError('Recovery private state conflicts on project identity')
     if project_ids:
@@ -325,6 +333,16 @@ def verified_hold(repo, owner=None, transaction=None):
     return VerifiedHold(root, bank, raw, token, context, marker['operation_id'], measured_runtime['artifact_digest'])
 
 
+def rolled_back_predecessor(repo, owner=None):
+    """Typed continuation authority; never accepts an arbitrary expected marker."""
+    held = verified_hold(repo, owner)
+    if held is None:
+        return None
+    if state.index(repo)['operations'][held.operation_id]['state'] != 'rolled-back':
+        raise ContractError('Only a completed exact rollback may hand its hold to a fresh reviewed repair')
+    return held
+
+
 def require_scope(repo, project_id=None, *, expected=None, owned_lock=None, owned_transaction=None, **kwargs):
     from . import scope_binding
     root, bank = writes.bank_path(repo)
@@ -349,7 +367,7 @@ def pending_rows(repo, token, owner=None, transaction=None):
     check(token, repo, owner, transaction)
     rows = []
     for operation, indexed in sorted(state.index(repo)['operations'].items()):
-        if indexed['state'] != 'active':
+        if indexed['state'] not in {'active', 'rolled-back'}:
             continue
         directory, _, current = ledger(repo, operation, indexed)
         manifest, _ = evidence(directory, current, indexed)
@@ -374,6 +392,34 @@ def pending_rows(repo, token, owner=None, transaction=None):
     if {row['unit_id'] for row in rows} != set(token['unit_ids']):
         raise ContractError('Pending frontier disclosure omitted or substituted a source unit')
     check(token, repo, owner, transaction)
+    return rows
+
+
+def inherited_pending_rows(repo):
+    """Read exact rolled-back obligations without trusting an invalid router."""
+    rows = []
+    indexed = state.index(repo)
+    for operation, row in sorted(indexed['operations'].items()):
+        if row['state'] != 'rolled-back':
+            continue
+        directory, _, current = ledger(repo, operation, row)
+        manifest, _ = evidence(directory, current, row)
+        sources = {source['source_id']: source for source in manifest['sources']}
+        for unit in current['units']:
+            if unit['state'] != 'pending-admission':
+                continue
+            body = b''.join(state.read_bytes(directory / 'originals' / (part['source_id'] + '.bin'), 1048576)[part['start']:part['end']]
+                for part in unit['source_ranges'])
+            if len(body) > sharing_limits.MAX_FILE:
+                raise ContractError('Retained rolled-back unit exceeds the complete comparison reader')
+            text = body.decode('utf-8')
+            security.ensure_safe({'pending-source.md': text})
+            rows.append({'unit_id': unit['unit_id'], 'operation_id': operation, 'body': text,
+                'source_ranges': unit['source_ranges'], 'provenance': unit['provenance'],
+                'reason': unit['reason'], 'selection_class': 'comparison-only-not-current-guidance',
+                'source_assertions_verified': False})
+    if len({row['unit_id'] for row in rows}) != len(rows):
+        raise ContractError('Retained recovery units have conflicting opaque identities')
     return rows
 
 
@@ -402,10 +448,15 @@ def invalidate(repo):
         return 'deferred-to-live-frontier-check'
 
 
-def install(repo, operation_id, proposal, pending_ledger, hold_id, owner):
+def install(repo, operation_id, proposal, pending_ledger, hold_id, owner, *, predecessor=None):
     from .bank_observation import markers
     root, bank, base, directory = state.paths(repo, operation_id)
-    markers(bank, owner)
+    if predecessor is None:
+        markers(bank, owner)
+    else:
+        if type(predecessor) is not VerifiedHold or rolled_back_predecessor(root, owner) != predecessor:
+            raise ContractError('Recovery predecessor must be the exact internally verified rolled-back hold')
+        markers(bank, owner, predecessor.marker)
     if not uuid_valid(hold_id) or pending_ledger['operation_id'] != operation_id:
         raise ContractError('Recovery installation needs exact operation/hold identities')
     previous = state.index(root)
@@ -698,7 +749,7 @@ def verified_child_transaction(repo, owner, transaction, indexed):
     return parent
 
 
-def prospective_token(repo, manifest, pending_units):
+def prospective_token(repo, manifest, pending_units, *, predecessor=None):
     """Capacity witness only: include all checked prior terminal private state."""
     root, bank, _, _ = state.paths(repo)
     if (manifest.get('observation_complete') is not True or manifest.get('repo_root') != str(root)
@@ -708,15 +759,19 @@ def prospective_token(repo, manifest, pending_units):
     index = state.index(root)
     if any(row['state'] in {'active', 'interrupted'} for row in index['operations'].values()):
         raise ContractError('A prospective repair cannot omit a competing private recovery frontier')
-    if marker_bytes(bank) is not None or marker_bytes(bank, '.agent-memory-recovery.md') is not None:
-        raise ContractError('A prospective repair cannot replace an unknown transaction or sentinel')
+    if predecessor is None:
+        if marker_bytes(bank) is not None or marker_bytes(bank, '.agent-memory-recovery.md') is not None:
+            raise ContractError('A prospective repair cannot replace an unknown transaction or sentinel')
+    elif type(predecessor) is not VerifiedHold or rolled_back_predecessor(root) != predecessor:
+        raise ContractError('A prospective continuation must retain the exact checked rollback frontier')
     operations, heads, references = [], [], {}
     for operation, row in sorted(index['operations'].items()):
-        if row['state'] in {'cleaned', 'rolled-back'}:
+        if row['state'] == 'cleaned':
             continue
         directory, head, current = ledger(root, operation, row)
         evidence(directory, current, row)
-        if row['project_id'] != manifest['project_id'] or any(unit['state'] == 'pending-admission' for unit in current['units']):
+        if row['project_id'] != manifest['project_id'] or (row['state'] != 'rolled-back'
+                and any(unit['state'] == 'pending-admission' for unit in current['units'])):
             raise ContractError('Prior private recovery evidence is foreign, unresolved or falsely terminal')
         mapping = state.read(directory / 'reference-map.json', missing=True)
         if mapping:
@@ -728,7 +783,8 @@ def prospective_token(repo, manifest, pending_units):
         raise ContractError('A new raw reservation cannot reuse an existing recovery operation')
     operations.append(operation)
     heads.append({'operation_id': operation, 'generation': 0, 'sha256': 'f' * 64})
-    unit_ids = sorted(unit['unit_id'] for unit in pending_units if unit.get('state', 'pending-admission') == 'pending-admission')
+    unit_ids = sorted([unit['unit_id'] for unit in pending_units if unit.get('state', 'pending-admission') == 'pending-admission']
+        + [row['unit_id'] for row in inherited_pending_rows(root)])
     return {'bank_path': str(bank), 'project_id': manifest['project_id'], 'operation_ids': sorted(operations),
         'ledger_heads': sorted(heads, key=lambda row: row['operation_id']), 'frontier_digest': 'f' * 64,
         'coverage_complete': not unit_ids, 'unit_ids': unit_ids, 'reference_map_sha256': digest(encoded(references)),
