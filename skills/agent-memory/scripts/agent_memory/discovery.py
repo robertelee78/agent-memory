@@ -15,13 +15,13 @@ import uuid
 import copy
 
 from . import bank_capacity, bank_contract, bank_layout, bank_observation, bank_writes as writes
-from . import repository_config, scope_binding, security
+from . import repository_config, scope_binding, security, recovery_frontier, sharing_limits
 from .developer_identity import digest, encoded, load, uuid_valid
 from .frontmatter import ContractError, read
 
 SCHEMA='agent-memory/discovery-v1'
 FIELDS={'schema','task','intent','binding','nodes','sources','complete','rationale'}
-BINDING={'repo_root','bank_root','project_id','scope_context','context','git_context','inventory_sha256'}
+BINDING={'repo_root','bank_root','project_id','scope_context','context','git_context','inventory_sha256','recovery_frontier'}
 MAX_INPUT=65536
 MAX_FILE=16384
 
@@ -83,7 +83,8 @@ def check_trace(repo,trace,checked,observed,scope,*,intent,selected_paths,owned_
     root,bank=writes.bank_path(repo)
     actual,git=retrieval.observed_context(root,trace['binding']['context'] if context is None else context)
     expected={'repo_root':str(root),'bank_root':bank.relative_to(root).as_posix(),'project_id':checked['project_id'],
-        'scope_context':scope,'context':actual,'git_context':git,'inventory_sha256':digest(encoded(observed))}
+        'scope_context':scope,'context':actual,'git_context':git,'inventory_sha256':digest(encoded(observed)),
+        'recovery_frontier':recovery_frontier.observe(root,owned_lock)}
     if trace['intent']!=intent or trace['binding']!=expected:
         raise changed()
     entries={entry['path']:entry for entry in checked['entries']}
@@ -113,13 +114,15 @@ def check_trace(repo,trace,checked,observed,scope,*,intent,selected_paths,owned_
     for path,sha in sources.items():
         if path not in children or observed.get(path)!=sha or entries.get(path,{}).get('format') not in {'standalone-record','context-prose'}:
             raise ContractError('A selected source changed or lacks its visited canonical parent route')
-    scope_binding.require(root,checked['project_id'],expected=scope,owned_lock=owned_lock)
+    recovery_frontier.require_scope(root,checked['project_id'],expected=scope,owned_lock=owned_lock)
     return {'trace_sha256':digest(encoded(trace)),'semantic_interpreter':'invoking-harness',
         'semantic_completeness_verified':False,'visited_nodes':len(tables),'selected_sources':len(sources)}
 
 
 def navigation_observation(root,bank):
-    bank_observation.markers(bank,None)
+    token=recovery_frontier.observe(root)
+    held=recovery_frontier.verified_hold(root) if token['hold_sha256'] is not None else None
+    bank_observation.markers(bank,None,held.marker if held is not None else None)
     metrics={};physical,hashes,_=bank_observation.scan(bank,read_sources=False,metrics=metrics)
     bank_observation.physical_contract(physical)
     raw=bounded_source(bank,'MEMORY.md')
@@ -130,7 +133,9 @@ def navigation_observation(root,bank):
             'A context declared absent is physically present in the bank.',
             'Run am doctor, inspect that context and reconcile its route/omission before retrying; preserve the existing file.')
     checked={'project_id':metadata['project-id'],'omitted':omitted,'entries':[]}
-    observed=bank_observation.Observation(root,bank,None,physical,hashes,{'MEMORY.md':raw},checked,{})
+    observed=bank_observation.Observation(root,bank,None,physical,hashes,{'MEMORY.md':raw},checked,{},
+        held.marker if held is not None else None)
+    observed.recovery_frontier=token
     observed.payload_bytes_read=metrics['payload_bytes'];observed.payload_file_reads=metrics['file_reads']
     return observed
 
@@ -140,7 +145,8 @@ def start(repo,task,intent,context=None):
     text(task,1024)
     if intent not in {'recall','comparison','sharing'}:raise ContractError('Choose the actual discovery intent')
     root,bank=writes.bank_path(repo)
-    scope=scope_binding.require(root)
+    scope=recovery_frontier.require_scope(root)
+    frontier=recovery_frontier.observe(root)
     actual,git=retrieval.observed_context(root,context or {})
     cached=False
     try:
@@ -154,18 +160,22 @@ def start(repo,task,intent,context=None):
     body=raw.decode('utf-8');security.ensure_safe({'MEMORY.md':body})
     trace={'schema':SCHEMA,'task':task,'intent':intent,
         'binding':{'repo_root':str(root),'bank_root':bank.relative_to(root).as_posix(),'project_id':scope['project_id'],
-            'scope_context':scope,'context':actual,'git_context':git,'inventory_sha256':digest(encoded(observation.hashes))},
+            'scope_context':scope,'context':actual,'git_context':git,'inventory_sha256':digest(encoded(observation.hashes)),
+            'recovery_frontier':frontier},
         'nodes':[{'path':'MEMORY.md','sha256':observation.hashes['MEMORY.md']}],
         'sources':[],'complete':False,'rationale':None}
     trace_value(trace,completed=False)
     if cached:
-        bank_observation.markers(bank,None)
+        from .recall_catalog import checked_markers
+        checked_markers(root,bank)
     else:
         observation.recheck('discovery-final-source-recheck')
-    scope_binding.require(root,scope['project_id'],expected=scope)
+    recovery_frontier.require_scope(root,scope['project_id'],expected=scope)
+    recovery_frontier.check(frontier,root)
     if retrieval.observed_context(root,context or {})!=(actual,git):raise ContractError('Checkout context changed during discovery')
     audit=security.audit(root,str(uuid.uuid4()),'retrieval','checked',scope,['external'])
     return {'schema':'agent-memory/discovery-result-v1','operation':'start','discovery':trace,
+        **recovery_frontier.public_coverage(frontier),
         'node':{'path':'MEMORY.md','sha256':observation.hashes['MEMORY.md'],'body':body,'untrusted_data':True},
         'usable_as_current_guidance':False,'semantic_interpreter':'invoking-harness','semantic_completeness_verified':False,
         'canonical_writes_performed':False,'audit_writes_performed':True,'audit':audit,
@@ -180,8 +190,9 @@ def start(repo,task,intent,context=None):
 def navigation_tables(repo,trace):
     from . import retrieval,scopes
     trace_value(trace,completed=False)
-    root,bank=writes.bank_path(repo);bank_observation.markers(bank,None)
-    scope=scope_binding.require(root,trace['binding']['project_id'])
+    root,bank=writes.bank_path(repo)
+    scope=recovery_frontier.require_scope(root,trace['binding']['project_id'])
+    recovery_frontier.check(trace['binding']['recovery_frontier'],root)
     scopes.conditions(trace['binding']['context'])
     actual,git=retrieval.observed_context(root,trace['binding']['context'])
     binding=trace['binding']
@@ -285,10 +296,13 @@ def main(argv=None):
     parser=argparse.ArgumentParser(description=__doc__);commands=parser.add_subparsers(dest='command',required=True)
     p=commands.add_parser('start');p.add_argument('--repo',required=True);p.add_argument('--task',required=True)
     p.add_argument('--intent',choices=('recall','comparison','sharing'),required=True);p.add_argument('--context')
+    p.add_argument('--private-output')
     p=commands.add_parser('node');p.add_argument('--repo',required=True);p.add_argument('--input',required=True)
     p.add_argument('--path',required=True)
+    p.add_argument('--private-output')
     p=commands.add_parser('read');p.add_argument('--repo',required=True);p.add_argument('--input',required=True)
     p.add_argument('--request',required=True);p.add_argument('--rationale',required=True)
+    p.add_argument('--private-output')
     args=parser.parse_args(argv)
     phase='input'
     def input_file(path):
@@ -297,6 +311,11 @@ def main(argv=None):
             'Keep only the current bounded navigation trace and selected-source request; use map nodes rather than embedding source bodies.')
         return load(raw)
     try:
+        frontier=recovery_frontier.observe(args.repo)
+        if args.private_output:
+            sharing_limits.preflight_private_output(args.private_output,args.repo)
+        if frontier['unit_ids'] and not args.private_output:
+            raise ContractError('Pending recovery navigation requires private output for its source-bound trace')
         if args.command=='start':
             context=input_file(args.context) if args.context else {}
             from . import scopes
@@ -310,6 +329,10 @@ def main(argv=None):
             else:
                 request=input_file(args.request);phase='canonical-qualification'
                 result=qualified_read(args.repo,trace,request,args.rationale)
+        if frontier['unit_ids']:
+            result={'schema':'agent-memory/discovery-result-v1','operation':args.command,
+                'private_artifact':sharing_limits.write_private(args.private_output,result,args.repo),
+                'pending_recovery_units':len(frontier['unit_ids']),'canonical_writes_performed':False}
         print(json.dumps(result,indent=2));return 0
     except Exception as exc:
         known=isinstance(exc,(DiscoveryFailure,bank_capacity.BankCapacityError))

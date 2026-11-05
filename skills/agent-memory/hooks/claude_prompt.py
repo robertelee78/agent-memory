@@ -26,7 +26,7 @@ def main(event=None):
         repo = Path(found.stdout.strip()).resolve(strict=True)
         pack = Path(__file__).resolve().parent.parent
         sys.path.insert(0, str(pack / 'scripts'))
-        from agent_memory import repository_config, turn_sources
+        from agent_memory import repository_config, scope_binding, turn_sources
         if not os.path.lexists(repository_config.bank_path(repo)):
             print('{}'); return 0
         text, session, prompt = event['prompt'], event['session_id'], event['prompt_id']
@@ -35,6 +35,7 @@ def main(event=None):
             raise ValueError('native source unavailable')
         # The transcript may not exist yet. Store its native reference without
         # claiming a transcript UUID or requiring a premature transcript read.
+        enrollment = scope_binding.private_enrollment_context(repo)
         obs = turn_sources.register(repo, 'claude', session, prompt, hashlib.sha256(text.encode()).hexdigest(),
                                     native_source_id=prompt, source_reference=str(Path(reference).resolve()))
         guide = (pack / 'hooks/boundary-prompt.txt').read_text().strip().replace('{{SKILL_DIR}}', str(pack))
@@ -43,11 +44,14 @@ def main(event=None):
                    '. Before final submit top-level session,prompt,observation_id,source_sha256,outcome,assessment '
                    'via one am claude-boundary --repo REPO --input - --refresh --quiet for no-learning; assessment requires source_id=observation_id, source_review=actual review, candidates=authored list (empty only if none). '
                    'Use actual source attribution. On routine success, output only the task response: no announcement of reading guides, assessments, no-learning or saved/unsaved memory, in progress or final.')
-        prior = turn_sources.backlog(repo, harness='claude')
-        if any(t.get('session') != session or t.get('lifecycle') != prompt for t in prior.get('turns', [])) or prior.get('legacy'):
-            context += ' Earlier memory work remains pending; inspect am claude-boundary --list-pending before assessing an original source.'
+        if enrollment.held:
+            context += ' Recovery-pending: input retained privately; continue the human task. Refresh, acknowledgement and canonical writes stay inactive; never fabricate no-learning or publication.'
+        prior = turn_sources.pending_notice(repo, 'claude', session, prompt)
+        if prior:
+            context += ' Earlier or recovery-pending work remains; inspect am claude-boundary --list-pending before assessing an original source.'
         if len(context.encode()) > 2048:
             raise ValueError('guidance bound')
+        scope_binding.recheck_private_enrollment(enrollment)
         print(json.dumps({'hookSpecificOutput': {'hookEventName': 'UserPromptSubmit', 'additionalContext': context}}))
         return 0
     except Exception:

@@ -959,6 +959,8 @@ def rollback_compatibility(state, journal):
             and all(isinstance(p, str) and absolute(p) == Path(p) for p in repositories),
             'Malformed rollback repository inventory')
     from . import updating
+    from . import private_state
+    private_state.require_compatible({'rollback_repositories': repositories}, compatibility, 'rollback')
     updating.banks(repositories, compatibility, require_readable=True)
 
 
@@ -1010,6 +1012,15 @@ def preserve_preexchange_cache_writer(state, journal):
 
 
 def rollback(state, journal):
+    from . import private_state
+    installation = {**(read_receipt(state) or {}), 'rollback_repositories': journal.get('rollback_repositories', [])}
+    target = {'compatibility': journal.get('previous_compatibility') or {},
+        'artifact_digest': journal.get('previous_artifact_digest')}
+    with private_state.activation_guard(installation, target, 'rollback'):
+        return _rollback(state, journal)
+
+
+def _rollback(state, journal):
     trust_paths.state(state)
     rollback_compatibility(state, journal)
     preserve_preexchange_cache_writer(state, journal)
@@ -1074,6 +1085,12 @@ def read_journal(state):
 def recover(state, *, for_install=False):
     path = state/'journal.json'
     journal = read_journal(state)
+    def restore_native():
+        if not for_install and os.path.lexists(state/'omp-transition.json'):
+            from . import omp_boundary
+            omp_boundary.recover_native_binding(state)
+    if journal is None or journal['status'] in {'complete', 'rolled-back'}:
+        restore_native()
     if journal is None:
         return {'operation': 'recover', 'verified': True, 'status': 'no-pending-transaction'}
     if journal['status'] == 'complete':
@@ -1094,6 +1111,11 @@ def recover(state, *, for_install=False):
             preserved = journal.get('preserved_opaque_source', {})
             expected = (preserved['identity'] if action['kind'] == 'source'
                         and preserved.get('path') == action['path'] else action['before'])
+            if action['kind'] == 'wrapper' and action['before'] is None and os.path.lexists(state/'omp-transition.json'):
+                from . import omp_boundary
+                restored = omp_boundary.native_recovery_expected(state, action['path'])
+                if restored is not None:
+                    expected = restored
             require(fingerprint(Path(action['path'])) == expected,
                     'Rolled-back target changed; preserve and reconcile: ' + action['path'])
         return {'operation': 'recover', 'verified': not bool(journal.get('opaque_cache_recovery')),
@@ -1106,13 +1128,37 @@ def recover(state, *, for_install=False):
         uninstall_output = journal.get('operation') == 'uninstall'
         require(uninstall_output == (journal['receipt'].get('uninstalled') is True),
                 'Lifecycle journal and receipt operation differ')
-        verify_targets(journal['receipt']['targets'], uninstall_output=uninstall_output)
         journal['status'] = 'complete'; replace_record(path, journal)
+        restore_native()
+        verify_targets(journal['receipt']['targets'], uninstall_output=uninstall_output)
         return {'operation': 'recover', 'verified': True, 'status': 'complete'}
-    return rollback(state, journal)
+    result = rollback(state, journal)
+    restore_native()
+    return result
 
 
 def install(plan, *, before_activate=None, after_activate=None):
+    from . import private_state
+    installation = {**(plan.get('old') or {}), 'rollback_repositories': plan.get('rollback_repositories', [])}
+    selected = plan.get('preserved_private_state_reader') if plan.get('operation') == 'uninstall' else plan['source']
+    target = dict(selected) if selected is not None else None
+    def transition():
+        if plan.get('omp_transition') or plan.get('omp_binding'):
+            from . import omp_boundary
+            if plan.get('omp_transition'):
+                omp_boundary.native_transition(plan, check=False)
+        prepared = private_state.prepare_lifecycle(plan, check=False)
+        if target is not None:
+            target.clear()
+            target.update(prepared)
+        if plan.get('omp_binding'):
+            omp_boundary.native_activation(plan, check=False)
+    with private_state.activation_guard(installation, target, plan.get('operation', 'install'), transition=transition) as proof:
+        plan['private_state_evidence'] = proof
+        return _install(plan, before_activate=before_activate, after_activate=after_activate)
+
+
+def _install(plan, *, before_activate=None, after_activate=None):
     operation = plan.get('operation', 'install')
     state = plan['state']; old = plan['old']; changed = [a for a in plan['actions'] if a['changed']]
     trust_paths.state(state)
@@ -1168,6 +1214,8 @@ def install(plan, *, before_activate=None, after_activate=None):
     journal = {'schema': JOURNAL_SCHEMA, 'operation': operation, 'transaction': transaction, 'status': 'staging',
                'actions': [], 'receipt': receipt, 'receipt_identity': None, 'created_directories': [],
                'previous_compatibility': old['source']['compatibility'] if old else None,
+               'previous_artifact_digest': old['source']['artifact_digest'] if old else None,
+               'private_state_evidence': plan.get('private_state_evidence'),
                'rollback_repositories': plan.get('rollback_repositories', [])}
     if plan.get('cache_recovery') is not None:
         journal['opaque_cache_recovery'] = plan['cache_recovery']['summary']
@@ -1267,6 +1315,9 @@ def install(plan, *, before_activate=None, after_activate=None):
         require(fingerprint(receipt_path) == journal['receipt_identity'], 'Receipt readback failed')
         fault(operation + '-after-receipt')
         journal['status'] = 'complete'; replace_record(state/'journal.json', journal)
+        if plan.get('omp_transition') or plan.get('omp_binding'):
+            from . import omp_boundary
+            omp_boundary.finish_native_transition(plan)
         return {'operation': operation, 'verified': True, 'changed': True, 'receipt': receipt,
                 **({'cache_recovery': {**plan['cache_recovery']['summary'], 'planned': False,
                                       'old_runtime_preserved': True,

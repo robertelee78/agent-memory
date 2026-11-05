@@ -56,12 +56,15 @@ def main():
         from agent_memory import repository_config,scope_binding,turn_sources,bank_writes
         if not os.path.lexists(repository_config.bank_path(repo)):
             diagnostic(repo);print('{}');return 0
-        stage,reason='identity','identity.unresolved';context=scope_binding.require(repo)
+        stage,reason='identity','identity.unresolved'
         stage,reason='boundary','state.unavailable'
         current=turn_sources.inspect(repo,'codex',session,turn)
+        if current.get('recovery_pending') is True:
+            print(json.dumps({'systemMessage':'Agent Memory recovery-pending: preserve the native original and private pending evidence. Continue the human task; refresh and acknowledgement are inactive, not no-learning or published. Inspect am bank recover-layout status and am codex-boundary --list-pending.'}));return 0
         if current['complete']:return quiet(repo,session,turn,current['fingerprint'])
         _,_,_,state_directory,_=turn_sources.namespace(repo,'codex',session,turn)
         if not state_directory.exists():
+            context=scope_binding.require(repo)
             operations,_=bank_writes.state_paths(repo,repository_config.bank_path(repo),str(uuid.uuid4()))
             key=hashlib.sha256((session+':'+turn).encode()).hexdigest()
             legacy=operations.parent/'codex-boundaries'

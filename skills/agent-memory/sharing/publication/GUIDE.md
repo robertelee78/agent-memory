@@ -198,3 +198,60 @@ supply the write/readback and race evidence. Tests MUST NOT require real
 credentials or alter live client/repository policy.
 
 If normal publication cannot establish verified authority readback, the session MUST keep the request, local memory and feature state intact. It MAY inspect bounded actual policy, first-parent trees and operation receipts, but MUST NOT force a push, bypass review/checks or infer success from candidate reachability alone.
+
+## Source-preserving layout publication
+
+An eligible local repair MUST NOT be described as publication. Both ordinary
+publication and `am bank recover-layout publish inspect|prepare|land` MUST remain
+pending while any private recovery unit is unresolved, a hold is unverified, or
+terminal evidence is missing. A backup is not a terminal semantic disposition.
+No pending ledger is federated to another clone.
+
+When authority contains an invalid layout, the session MUST use the separate
+recovery publication route, not an invalid input to semantic-sharing-v2.
+Inspection retains bounded complete raw **base, local and landed** manifests and
+exact bytes privately. It also observes network authority, Git objects and
+disposable observation refs; it MUST NOT be called filesystem read-only.
+Raw allowances are 1 MiB/source, 64 MiB/side, 65,536 sources, 131,072 physical
+entries and depth 64. Ordinary native limits remain unchanged.
+
+Preparation requires `agent-memory/layout-publication-prepare-v1` with the actual
+`observation_id`, complete `intended_files`, and an independently authored
+`agent-memory/layout-publication-review-v1`. The review MUST bind the exact
+observation/result digests, author/reviewer developer+harness+session and retained
+review evidence, every source byte range on all three sides, its preservation or
+actual terminal disposition, exact destination hashes, every added output and
+each side's project/authority identity. Newly discovered authority-only material
+needing admission or clarification MUST stop publication. Preserved typed
+records/history retain their real IDs, versions, conditions and provenance;
+non-guidance labels MUST NOT dispose of admitted guidance. A malformed router
+needs stronger independently checked existing registry/checkout and authority
+ancestry evidence, not a UUID guessed from a path.
+
+The session MUST save the exact returned private request for `publish land`.
+Landing reuses current permissions, PR/review/check and non-forced push policy.
+It validates the entire candidate tree delta, not only a memory pathspec.
+Offline authority, changed sources/policy/frontier, unsupported rules and required
+human reviews remain pending without discarding local work. No agent approval,
+force mode, feature ancestry or original-index scratch space is authorized.
+The `semantic-sharing-judgment-v2` and `semantic-sharing-proof-v2` schemas are
+unchanged; this raw-source review is a distinct proof.
+
+Verified landing means a real complete authority-tree witness. Exact lost-response
+retry inventories authority first and returns historical evidence without another
+push, even if a later correction makes the intended delta no longer current.
+It MUST NOT claim that another machine imported the result. Qualification MUST
+use a fresh second clone/profile with no publisher private workspace and ordinary
+bank inspect/qualified recall against the complete bounded landed bank.
+Self-reported reviewer identity and semantic judgments are fallible attestations,
+not authenticated truth or substitutes for repository authorization.
+
+The complete raw local side MUST include non-Markdown/opaque ordinary occupants
+and physical metadata, even though the separate normal canonical observation
+does not make them current guidance. Inspection retains them privately and
+rechecks the full raw inventory. An unsupported source name MUST NOT gain
+admission by mapping it to a native output path: preservation requires the
+original reviewed existing-guidance disposition or actual terminal admitted
+ranges, including reviewed revision children. Newly discovered unsupported or
+unconfirmed material needs explicit recovery/admission review; a publication
+rename or retained backup cannot supply it.

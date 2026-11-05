@@ -130,7 +130,7 @@ def object_router_bytes(root, expression, cache):
     return raw
 
 
-def git_roots(root, *, router_reader=None):
+def git_roots(root, *, router_reader=None, raw_locations=False):
     # Git's fixed glob covers this one basename at every depth, including
     # case variants. Status tags distinguish indexed versus untracked names
     # without a second listing or parsing filename whitespace as metadata.
@@ -165,6 +165,14 @@ def git_roots(root, *, router_reader=None):
     for path in paths:
         if path.is_absolute() or '..' in path.parts:
             raise ContractError('Invalid possible repository memory locator')
+        if raw_locations:
+            parts = [root.joinpath(*path.parts[:n]) for n in range(1, len(path.parts) + 1)]
+            if any(part.is_symlink() for part in parts):
+                raise ContractError('A raw recovery locator crosses a symlink')
+            if not (root / path).is_file() and path.as_posix() not in indexed_paths | committed_paths:
+                raise ContractError('Existing raw memory locator disappeared')
+            roots.add(path.parent.as_posix())
+            continue
         raw = router_bytes(root, path)
         versions = [raw] if raw is not None else []
         if path.as_posix() in indexed_paths:
@@ -178,7 +186,7 @@ def git_roots(root, *, router_reader=None):
     return roots
 
 
-def physical_others(root, selected, *, router_reader=None):
+def physical_others(root, selected, *, router_reader=None, raw_locations=False):
     """Only when no selected router is present: include ignored/untracked banks."""
     from .bank_contract import CONTEXTS
     examined, routers = 0, 0
@@ -208,13 +216,17 @@ def physical_others(root, selected, *, router_reader=None):
             target = directory / name
             if target.is_symlink():
                 raise ContractError('A possible existing memory locator is a symlink; inspect it explicitly')
+            if raw_locations:
+                if directory != selected:
+                    raise ContractError('Existing memory lies outside the selected bank; configure its location explicitly')
+                continue
             with target.open('rb') as stream:
                 raw = stream.read(16385)
             if (router_reader or router_kind)(raw) and directory != selected:
                 raise ContractError('Existing memory lies outside the selected bank; configure its location before initialization')
 
 
-def settings(repo, *, router_reader=None):
+def settings(repo, *, router_reader=None, raw_locations=False):
     root = Path(repo).resolve()
     top = git(root, 'rev-parse', '--show-toplevel', optional=True)
     if top is None and (root / '.git').exists():
@@ -225,7 +237,7 @@ def settings(repo, *, router_reader=None):
     explicit = configured.get('agent-memory.bankroot')
     if explicit is not None:
         validate_root(explicit)
-    roots = git_roots(root, router_reader=router_reader) if top is not None else set()
+    roots = git_roots(root, router_reader=router_reader, raw_locations=raw_locations) if top is not None else set()
     if len(roots) > 1 or (explicit is not None and any(value != explicit for value in roots)):
         raise ContractError('Competing memory bank locations require explicit reconciliation; preserve every source')
     relative = explicit or (next(iter(roots)) if roots else 'memory-bank')
@@ -241,11 +253,20 @@ def settings(repo, *, router_reader=None):
         if current.is_symlink() or (current.exists() and not current.is_dir()):
             raise ContractError('Configured bank directory cannot follow symlinks or occupied files')
     if not (current / 'MEMORY.md').is_file():
-        physical_others(root, current, router_reader=router_reader)
+        physical_others(root, current, router_reader=router_reader, raw_locations=raw_locations)
     branch = configured.get('agent-memory.authoritybranch')
     if branch is not None:
         validate_branch(branch)
     return {'bank_root': relative, 'authority_branch': branch}
+
+
+def recovery_settings(repo):
+    """Locate raw banks by existing names/configuration, without reading bodies.
+
+    Identity is separately established after lock/marker precedence. Ordinary
+    settings retain their original schema-aware locator and discovery rules.
+    """
+    return settings(repo, raw_locations=True)
 
 
 def bank_path(repo):

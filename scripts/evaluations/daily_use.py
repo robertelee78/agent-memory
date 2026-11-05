@@ -210,9 +210,10 @@ def capture(s,round_number,role=None):
  observed=public(w,pack,'discover_memory.py','read','--repo',repo,'--input',save(w,trace,tag+'-navigation-state'),
   '--request',save(w,compared,tag+'-comparison'),'--rationale','Read actual project orientation and the existing authored archive partition policy; seed partition counters are a separate fixture subject. This is a scripted mechanical coverage assertion.')
  compared=observed['request'];inspection=observed['inspection']
+ assert inspection['observation']['recovery_frontier']['coverage_complete'] and not inspection['pending_matches'],inspection
  judgment={'observation':inspection['observation'],'decisions':[{'path':row['path'],'classification':'distinct-knowledge',
   'rationale':'The authored archive partition/policy dimension differs; retain each identity, condition and independent evidence.'} for row in inspection['matches']],
-  'rationale':'Read all plausible authored partition-policy sources before capture; no model semantic-understanding claim.'}
+  'pending_decisions':[],'rationale':'Read all plausible authored partition-policy sources before capture; no model semantic-understanding claim.'}
  checked=public(w,pack,'compare_learning.py','review','--repo',repo,'--request',save(w,compared,tag+'-comparison'),
   '--judgment',save(w,judgment,tag+'-comparison-judgment'))
  node='topics/archive/partition-'+str(s['number'])+'.md' if role is None else ('topics/workspace/room-claims.md' if role.startswith('wall-') else 'topics/reliability/retry-claims.md')
@@ -220,7 +221,7 @@ def capture(s,round_number,role=None):
   'history':{'parent':node,'purpose':'Source and admission evidence for '+subject,'read-when':'When inspecting policy provenance'},
   'indexes':[] if (repo/'memory-bank'/node).exists() else [{'parent':'MEMORY.md','path':node,'scope':'repository','purpose':subject+' policy and evidence','read-when':'When working on this archive partition'}]}
  prepared=public(w,pack,'admit_learning.py','preview','--repo',repo,'--capture',save(w,captured,tag+'-captured'),
-  '--request',save(w,compared,tag+'-comparison'),'--proof',save(w,{'schema':'agent-memory/comparison-result-v1','proof':checked['proof']},tag+'-comparison-proof'),
+  '--request',save(w,compared,tag+'-comparison'),'--proof',save(w,checked,tag+'-comparison-proof'),
   '--navigation',save(w,navigation,tag+'-navigation'))
  done=public(w,pack,'admit_learning.py','apply','--proposal',save(w,prepared['proposal'],tag+'-admission'))
  assert done['admission_verified'] and state(s)==s['feature'],done
@@ -414,7 +415,8 @@ def correction_and_consolidation(all_sessions):
  capture=public(w,pack,'admit_learning.py','capture','--repo',repo,'--request',save(w,request,'clarified-wall-capture'))['capture']
  compared={'project_id':s['project'],'candidate':capture['request']['candidate'],'searches':['atrium wall color','paint specification'],'read_paths':[previous['path']]}
  inspected=public(w,pack,'compare_learning.py','inspect','--repo',repo,'--request',save(w,compared,'clarified-wall-comparison'))
- judgment={'observation':inspected['observation'],'decisions':[{'path':row['path'],'classification':'contradiction' if row['path']==previous['path'] else 'related-context','rationale':'Predeclared synthetic detecting-developer clarification confirms blue and explicitly corrects this yellow claim.'} for row in inspected['matches']],'rationale':'Preserve old yellow origin and all conditions; synthetic fixture clarification is not a real operator color decision.'}
+ assert inspected['observation']['recovery_frontier']['coverage_complete'] and not inspected['pending_matches'],inspected
+ judgment={'observation':inspected['observation'],'decisions':[{'path':row['path'],'classification':'contradiction' if row['path']==previous['path'] else 'related-context','rationale':'Predeclared synthetic detecting-developer clarification confirms blue and explicitly corrects this yellow claim.'} for row in inspected['matches']],'pending_decisions':[],'rationale':'Preserve old yellow origin and all conditions; synthetic fixture clarification is not a real operator color decision.'}
  checked=public(w,pack,'compare_learning.py','review','--repo',repo,'--request',save(w,compared,'clarified-wall-comparison'),'--judgment',save(w,judgment,'clarified-wall-judgment'))
  gov=GovernanceContract();gov.pid=s['project'];gov.actor=s['actor'];value=gov.request(bank,old,previous['path'],'correct')
  value['authority'].update(evidence=['user:fixture-wall-blue-clarification'],reason='Synthetic detecting developer A clarifies the atrium wall is blue after consulting the independently attributed developer B source.')

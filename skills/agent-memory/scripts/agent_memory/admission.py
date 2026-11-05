@@ -12,7 +12,7 @@ import sys
 import uuid
 
 from . import bank_capacity, bank_contract, bank_transactions as tx, bank_writes as writes
-from . import comparison, lifecycle, records, scope_binding, security
+from . import comparison, lifecycle, records, scope_binding, security, recovery_frontier, layout_resolution
 from .developer_identity import digest, encoded, load, uuid_valid
 from .frontmatter import ContractError, write
 from .identity_git import git
@@ -23,7 +23,8 @@ ASSESSMENT = {'category', 'utility', 'durable', 'evidence_confidence', 'evidence
               'confirmed', 'source_redundant', 'work_state_copy', 'review'}
 CATEGORIES = {'durable-discovery', 'verified-fix', 'failed-approach', 'user-correction', 'confirmed-decision'}
 CAPTURE = {'schema', 'request', 'scope_context', 'source_observation', 'decision', 'reasons'}
-EVIDENCE = {'capture', 'comparison_request', 'comparison_proof', 'recorded_at'}
+EVIDENCE = {'capture', 'comparison_request', 'comparison_proof', 'recorded_at',
+    'unit_resolution_claims', 'comparison_proof_sha256', 'reference_map_sha256'}
 
 
 def result(operation, **value):
@@ -65,7 +66,7 @@ def request_value(request):
 def classify(repo, request, *, owned_lock=None):
     metadata = request_value(request)
     root, _ = writes.bank_path(repo)
-    context = scope_binding.require(root, request['project_id'], owned_lock=owned_lock)
+    context = recovery_frontier.require_scope(root, request['project_id'], owned_lock=owned_lock)
     if metadata['origin']['developer-id'] != context['developer_id']:
         raise ContractError('A new capture must name the actual detecting developer; existing provenance belongs to consolidation')
     checked, observed = writes.snapshot(root, owned_lock=owned_lock)
@@ -103,7 +104,7 @@ def classify(repo, request, *, owned_lock=None):
         decision, reasons = 'review-required', ['stronger-source-review-required']
     else:
         decision = 'eligible'
-    scope_binding.require(root, checked['project_id'], expected=context, owned_lock=owned_lock)
+    recovery_frontier.require_scope(root, checked['project_id'], expected=context, owned_lock=owned_lock)
     if writes.snapshot(root, owned_lock=owned_lock)[1] != observed:
         raise ContractError('Memory changed during capture; reread before classification')
     if source is not None:
@@ -115,12 +116,15 @@ def classify(repo, request, *, owned_lock=None):
 
 
 def capture(repo, request):
+    frontier = recovery_frontier.observe(repo)
     proof = classify(repo, request)
     metadata = request['candidate']['metadata']
     event = security.audit(repo, str(uuid.uuid4()), 'admission', 'checked', proof['scope_context'],
         [request['source_class']], [r for r in proof['reasons'] if r in security.REASONS], [metadata['id']])
     # Unsafe/discarded content is never copied to a proposal, shared file or audit.
+    recovery_frontier.check(frontier, repo)
     return result('capture', decision=proof['decision'], reasons=proof['reasons'],
+        **recovery_frontier.public_coverage(frontier),
         capture=proof if proof['decision'] in {'eligible', 'review-required'} else None,
         source_bytes_observed=request['repository_evidence'] is not None,
         candidate_is_unconfirmed=proof['decision'] != 'eligible', admission_verified=False,
@@ -255,7 +259,7 @@ def evidence_value(value):
     return value
 
 
-def preview(repo, captured, request, proof, navigation=None):
+def preview(repo, captured, request, proof, navigation=None, *, operation_id=None, recorded_at=None):
     captured = capture_value(repo, captured)
     proof = proof.get('proof', proof) if isinstance(proof, dict) else proof
     if encoded(request['candidate']) != encoded(captured['request']['candidate']):
@@ -269,11 +273,14 @@ def preview(repo, captured, request, proof, navigation=None):
             recommend_other_developer_clarification=compared['recommend_other_developer_clarification'])
     root, bank = writes.bank_path(repo)
     evidence = evidence_value({'capture': captured, 'comparison_request': request, 'comparison_proof': proof,
-                              'recorded_at': datetime.now(timezone.utc).isoformat()})
+                              'recorded_at': recorded_at or datetime.now(timezone.utc).isoformat(),
+                              **layout_resolution.evidence_fields(proof)})
     if navigation is not None:
         evidence['navigation']=navigation
         evidence_value(evidence)
-    operation_id = str(uuid.uuid4())
+    operation_id = operation_id or str(uuid.uuid4())
+    if not uuid_valid(operation_id):
+        raise ContractError('Admission planning requires a canonical operation UUIDv4')
     base = tx.files_at(bank)
     p = tx.preview(root, desired(base, evidence, operation_id), 'capture')['proposal']
     p.update(operation_id=operation_id, admission_evidence=evidence)
@@ -294,7 +301,8 @@ def validate_transaction(p, *, owned_lock=None):
     base = tx.files_at(bank)
     if tx.file_hashes(base) != p['observed_hashes'] or encoded(desired(base, evidence, p['operation_id'])) != encoded(p['files']):
         raise ContractError('Admission proposal changed canonical content, provenance or the observed bank')
-    scope_binding.require(root, p['project_id'], expected=p['scope_context'], owned_lock=owned_lock)
+    recovery_frontier.require_scope(root, p['project_id'], expected=p['scope_context'], owned_lock=owned_lock)
+    layout_resolution.claims_for(p, owner=owned_lock)
 
 
 def check_sources(p, *, owner=None, marker=None):
@@ -302,8 +310,10 @@ def check_sources(p, *, owner=None, marker=None):
     evidence = evidence_value(p['admission_evidence'])
     captured = evidence['capture']
     root = Path(p['repo_root'])
-    scope_binding.require(root, p['project_id'], expected=p['scope_context'],
+    recovery_frontier.require_scope(root, p['project_id'], expected=p['scope_context'],
                           owned_lock=owner, owned_transaction=marker)
+    recovery_frontier.check(evidence['comparison_proof']['judgment']['observation']['recovery_frontier'],
+        root, owner, marker)
     current = {'head': git(root, 'rev-parse', '--verify', 'HEAD', optional=True),
                'branch': git(root, 'symbolic-ref', '--quiet', '--short', 'HEAD', optional=True),
                'repository_evidence': captured['request']['repository_evidence']}
@@ -388,14 +398,18 @@ def main(argv=None):
     p = commands.add_parser('preview');p.add_argument('--repo', required=True)
     for flag in ('capture', 'request', 'proof'):p.add_argument('--' + flag, required=True)
     p.add_argument('--navigation')
+    p.add_argument('--operation-id');p.add_argument('--recorded-at')
+    p.add_argument('--private-output')
     a = commands.add_parser('apply');a.add_argument('--proposal', required=True)
     args = parser.parse_args(argv)
     try:
         if args.command == 'draft':value = draft(args.repo, read_input(args.input, 16384))
         elif args.command == 'start':value = start(args.repo, read_input(args.input, 16384))
         elif args.command == 'capture':value = capture(args.repo, read_input(args.request, 16384))
-        elif args.command == 'preview':value = preview(args.repo, read_input(args.capture), read_input(args.request), read_input(args.proof),read_input(args.navigation,16384) if args.navigation else None)
+        elif args.command == 'preview':value = preview(args.repo, read_input(args.capture), read_input(args.request), read_input(args.proof),read_input(args.navigation,16384) if args.navigation else None, operation_id=args.operation_id, recorded_at=args.recorded_at)
         else:value = apply(read_input(args.proposal, sharing_limits.MAX_PRIVATE))
+        if args.command == 'preview':
+            value = recovery_frontier.private_preview(args.repo, value, args.private_output)
         print(json.dumps(value, indent=2, ensure_ascii=False));return 0
     except (ContractError, OSError, ValueError, UnicodeError, TypeError, KeyError, AttributeError, RecursionError) as exc:
         error = (str(exc) if isinstance(exc, bank_capacity.BankCapacityError) else

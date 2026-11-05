@@ -34,7 +34,9 @@ MAX_NAMESPACE=256
 ENGINE_ROOTS=('frontmatter','developer_identity','scopes','lifecycle','records','bank_capacity','bank_contract','bank_layout',
     'bank_observation','bank_writes','repository_config','scope_binding','project_identity','local_registry',
     'security','handoff','discovery','retrieval','recall_catalog','bank_transactions','tombstones',
-    'identity_git','remote_identity','trust_paths','checkpoint','sharing_limits','validation_memo')
+    'identity_git','remote_identity','trust_paths','checkpoint','sharing_limits','validation_memo',
+    'recovery_frontier','layout_recovery_state','layout_resolution','recovery_transactions','recovery_quiescence','turn_sources',
+    'artifact','pack_validation','migration_contract')
 
 
 class CacheMiss(Exception):
@@ -345,6 +347,36 @@ def invalidate_after_change(repo,current_hashes):
         return 'deferred-to-canonical-fallback'
 
 
+def invalidate_frontier_transition(repo):
+    """Invalidate only the exact authenticated owned generation, even if bytes match."""
+    root,bank,directory=locations(repo)
+    if not directory.exists():return 'not-present'
+    with publication_lock(directory):
+        value,expected=pointer(directory)
+        secret=key(directory)
+        raw=read_private(directory/value['file'],MAX_CACHE+MAX_HEADER+1)
+        if raw is None:raise CacheMiss('catalog generation missing')
+        first,separator,_=raw.partition(b'\n')
+        if not separator or len(first)>MAX_HEADER:raise CacheMiss('catalog header bound')
+        project=json.loads(first)['binding']['project_id']
+        authenticate(raw,root,bank,project,secret)
+        if read_private(directory/'current.json',4096)!=expected:
+            raise CacheMiss('catalog pointer changed during frontier invalidation')
+        (directory/'current.json').unlink()
+        writes_directory=os.open(directory,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW)
+        try:os.fsync(writes_directory)
+        finally:os.close(writes_directory)
+        collect_owned(directory,root,bank,project,secret)
+        return 'invalidated-frontier-transition'
+
+
+def checked_markers(root,bank,owner=None):
+    from . import recovery_frontier
+    token=recovery_frontier.observe(root,owner)
+    held=recovery_frontier.verified_hold(root,owner) if token['hold_sha256'] is not None else None
+    bank_observation.markers(bank,owner,held.marker if held is not None else None)
+
+
 class Catalog:
     def __init__(self,root,bank,engine,data,header,pointer_raw):
         self.root,self.bank,self.engine,self.data,self.header=root,bank,engine,data,header
@@ -383,7 +415,7 @@ class Catalog:
         writes.fault('catalog-final-source-recheck')
         root,bank=writes.bank_path(self.root)
         if root!=self.root or bank!=self.bank:raise CacheMiss('bank location changed')
-        bank_observation.markers(bank,owner)
+        checked_markers(root,bank,owner)
         metrics={};physical,hashes,_=bank_observation.scan(bank,read_sources=False,metrics=metrics)
         bank_observation.physical_contract(physical)
         if hashes!=self.hashes or normalized_physical(physical)!=self.data['physical']:
@@ -394,14 +426,14 @@ class Catalog:
         current_physical,current_stamps=physical_inventory(bank)
         if current_physical!=self.data['physical'] or current_stamps!=self.data['stamps']:
             raise CacheMiss('late source change')
-        bank_observation.markers(bank,owner)
+        checked_markers(root,bank,owner)
         coherent(self.engine)
         return metrics
 
 
 def load_catalog(repo,project,*,owner=None):
     if os.environ.get('AGENT_MEMORY_NO_RECALL_CATALOG')=='1':raise CacheMiss('disabled')
-    root,bank,directory=locations(repo);bank_observation.markers(bank,owner);engine=generation()
+    root,bank,directory=locations(repo);checked_markers(root,bank,owner);engine=generation()
     value,pointer_raw=pointer(directory);secret=key(directory);raw=read_private(directory/value['file'],MAX_CACHE+MAX_HEADER+1)
     if raw is None:raise CacheMiss('catalog generation missing')
     header,payload=authenticate(raw,root,bank,project,secret)
@@ -416,7 +448,7 @@ def load_catalog(repo,project,*,owner=None):
     physical,stamps=physical_inventory(bank)
     if physical!=data['physical'] or stamps!=data['stamps']:
         invalidate(repo,project,pointer_raw);raise CacheMiss('catalog source hint changed')
-    bank_observation.markers(bank,owner)
+    checked_markers(root,bank,owner)
     return Catalog(root,bank,engine,data,header,pointer_raw)
 
 
@@ -453,7 +485,7 @@ def publish(observation,engine):
         header['mac']=hmac.new(secret,compact(header)+b'\n'+payload,hashlib.sha256).hexdigest()
         record=compact(header)+b'\n'+payload
         coherent(engine)
-        bank_observation.markers(bank,observation.owner)
+        bank_observation.markers(bank,observation.owner,observation.transaction)
         name='g-'+uuid.uuid4().hex+'.catalog'
         storage.replace(directory/name,record,None)
         storage.replace(directory/'current.json',compact({'schema':SCHEMA,'file':name}),digest(old))

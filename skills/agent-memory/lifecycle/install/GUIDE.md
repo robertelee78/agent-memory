@@ -63,6 +63,16 @@ custom discovery directories. `--no-guidance` omits activation shims.
 Managed code lives under the XDG data root, while receipts, journals and receipt
 backups live under the XDG state root. Project memory stays in its repository.
 The session MUST preserve those separate ownership domains.
+Installation and reinstall also discover retained private recovery/source state.
+For a pending layout frontier, the actual candidate must support
+`layout-frontier-v1` and retain the bound external state. Repeat
+`--layout-quiescence /private/path/renewal.json` for each bank whose independently
+reviewed operator attestation must bind a new measured runtime or invocation
+route. Each file contains the exact attestation/independent-review envelope;
+check mode is nonpublishing, and apply publishes only after complete validation
+under the bank source barriers. Installing a capable binary alone does not
+authorize legacy routes or erase unresolved source obligations.
+
 
 ## Plan
 

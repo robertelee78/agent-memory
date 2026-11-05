@@ -69,6 +69,7 @@ retain the separately previewed installation operation.
 | --- | --- | --- |
 | `developer`, `project`, `identity` | `developer_identity.py`, `project_identity.py`, `scope_binding.py` | Explicit developer setup and repository binding |
 | `init`, `inspect`, `bank` | `initialize.py`, `bank_state.py inspect`, `bank_contract.py` | Evidence-based initialization and file contract inspection |
+| `bank recover-layout` | `recover_layout.py` | Bounded raw-source inspection/review, transactional layout repair, durable pending units and known recovery; separate publication/retention |
 | `search`, `get`, `explain` | `retrieve.py` | The same qualified recall engine; request text, IDs or paths and inspect inclusion/exclusion evidence |
 | `discover` | `discover_memory.py` | Bounded meaning-based navigation and source qualification by the invoking harness |
 | `context` | `assemble_context.py` | Bounded, source-labeled context preview/check |
@@ -87,10 +88,14 @@ operation in both request and proposal. `forget` accepts explicit expiration,
 retention or deletion requests; it MUST NOT infer deletion consent. The generic
 `govern` group also exposes reactivation under the existing governance rules.
 
-For new shared-memory work, the owning semantic/refresh/publication guides MUST
-use their explicit v2 interfaces and private output artifacts. Legacy v1 proof
-entry points remain supported for existing bounded callers. A stdout artifact
-summary is not the stored complete manifest, judgment, proof or proposal.
+For new shared-memory work, follow the owning semantic/refresh/publication
+guides' explicit private-output interfaces. Ordinary learning comparison uses
+comparison-v2, including an explicit checked empty frontier; omitted frontier
+fields or unfinished v1 proofs cannot authorize writes. Semantic-sharing-v2
+remains a separate unchanged schema. A stdout summary is not the stored complete
+manifest, judgment, proof or proposal. See the
+[recovery workflow](../../bank/GUIDE.md#source-preserving-layout-recovery)
+for all-source review, source pages, independent attestation and recovery states.
 
 ### Natural turn boundaries
 

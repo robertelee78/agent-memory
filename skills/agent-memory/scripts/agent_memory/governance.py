@@ -12,7 +12,7 @@ import uuid
 
 from . import bank_capacity, admission, bank_contract as bank, bank_layout, bank_transactions as tx
 from . import bank_writes as writes, comparison, inactive, lifecycle, records, retrieval
-from . import scope_binding, security, tombstones
+from . import scope_binding, security, tombstones, recovery_frontier, layout_resolution
 from .developer_identity import digest, encoded, uuid_valid
 from .frontmatter import ContractError, read, write
 
@@ -102,7 +102,7 @@ def request_value(value):
 def observe(repo, request, *, owned_lock=None):
     authority = request_value(request)
     root, bank_path = writes.bank_path(repo)
-    scope = scope_binding.require(root, request['project_id'], owned_lock=owned_lock)
+    scope = recovery_frontier.require_scope(root, request['project_id'], owned_lock=owned_lock)
     checked, observed = writes.snapshot(root, owned_lock=owned_lock)
     base = tx.files_at(bank_path)
     if tx.file_hashes(base) != observed:raise ContractError('Bank changed during governance review')
@@ -463,13 +463,16 @@ def preview(repo, request):
     p = tx.preview(observation['root'], files, WRITE_ACTION[request['operation']])['proposal']
     p.update(operation_id=operation_id, governance_evidence={'request': request, 'recorded_at': at,
                                                           'git_context': observation['git_context']})
+    from . import layout_resolution
+    compared = request['comparison']['proof'] if request['comparison'] is not None else None
+    p['governance_evidence'].update(layout_resolution.evidence_fields(compared))
     validate_transaction(p)
     return result('preview', disposition=request['operation'], proposal=p, canonical_writes_performed=False)
 
 
 def validate_transaction(p, *, owned_lock=None):
     evidence = p['governance_evidence']
-    if not isinstance(evidence, dict) or set(evidence) != {'request', 'recorded_at', 'git_context'}:
+    if not isinstance(evidence, dict) or set(evidence) != {'request', 'recorded_at', 'git_context', 'unit_resolution_claims', 'comparison_proof_sha256', 'reference_map_sha256'}:
         raise ContractError('Governance needs its exact request and observed event context')
     at = evidence['recorded_at'];lifecycle.time_value(at)
     if lifecycle.time_value(at) > lifecycle.time_value(datetime.now(timezone.utc).isoformat()):raise ContractError('Governance event cannot be future dated')
@@ -482,19 +485,25 @@ def validate_transaction(p, *, owned_lock=None):
     files, deferred = desired(observation, request, p['operation_id'], at)
     if deferred or observation['observed'] != p['observed_hashes'] or encoded(files) != encoded(p['files']):
         raise ContractError('Governance must apply its exact observed canonical delta')
-    scope_binding.require(p['repo_root'], request['project_id'], expected=p['scope_context'], owned_lock=owned_lock)
+    from . import recovery_frontier, layout_resolution
+    recovery_frontier.require_scope(p['repo_root'], request['project_id'], expected=p['scope_context'], owned_lock=owned_lock)
+    layout_resolution.claims_for(p, owner=owned_lock)
     check_sources(p, owner=owned_lock)
 
 
 def check_sources(p, *, owner=None, marker=None):
     evidence = p['governance_evidence'];request = evidence['request'];root = Path(p['repo_root'])
-    scope_binding.require(root, request['project_id'], expected=p['scope_context'], owned_lock=owner, owned_transaction=marker)
+    from . import recovery_frontier
+    recovery_frontier.require_scope(root, request['project_id'], expected=p['scope_context'], owned_lock=owner, owned_transaction=marker)
+    if request['comparison'] is not None:
+        recovery_frontier.check(request['comparison']['proof']['judgment']['observation']['recovery_frontier'], root, owner, marker)
     if encoded(retrieval.git_context(root)) != encoded(evidence['git_context']):raise ContractError('Checkout changed during governance')
     source = request['authority']['repository_evidence']
     if source is not None:security.repository_source(root, source)
     if request['capture'] is not None:
         admission_evidence = {'capture': request['capture'], 'comparison_request': request['comparison']['request'],
-            'comparison_proof': request['comparison']['proof'], 'recorded_at': evidence['recorded_at']}
+            'comparison_proof': request['comparison']['proof'], 'recorded_at': evidence['recorded_at'],
+            **{key: evidence[key] for key in ('unit_resolution_claims', 'comparison_proof_sha256', 'reference_map_sha256')}}
         admission.check_sources({**p, 'admission_evidence': admission_evidence}, owner=owner, marker=marker)
     if request['operation'] == 'reactivate':
         _, metadata, _ = records.parse(p['files'][request['target']['path']]);now = lifecycle.time_value(datetime.now(timezone.utc).isoformat())
@@ -532,6 +541,7 @@ def apply(prepared):
 def main(argv=None, *, required_operations=None):
     parser = argparse.ArgumentParser(description=__doc__);commands = parser.add_subparsers(dest='command', required=True)
     sub = commands.add_parser('preview');sub.add_argument('--repo', required=True);sub.add_argument('--request', required=True)
+    sub.add_argument('--private-output')
     sub = commands.add_parser('apply');sub.add_argument('--proposal', required=True)
     args = parser.parse_args(argv)
     try:
@@ -543,6 +553,8 @@ def main(argv=None, *, required_operations=None):
             if request['operation'] not in required_operations:
                 raise ContractError('The requested operation differs from the CLI intent')
         value = preview(args.repo, prepared) if args.command == 'preview' else apply(prepared)
+        if args.command == 'preview':
+            value = recovery_frontier.private_preview(args.repo, value, args.private_output)
         print(json.dumps(value, indent=2, ensure_ascii=False));return 0
     except (ContractError, OSError, ValueError, TypeError, KeyError, AttributeError, RecursionError) as exc:
         print(json.dumps(result(args.command, verified=False, canonical_writes_performed=False if args.command == 'preview' else None,

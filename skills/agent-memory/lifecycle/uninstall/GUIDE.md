@@ -35,6 +35,29 @@ owned targets when managed source is missing, but MUST NOT guess targets when
 the ownership receipt is missing or invalid. Explicit developer sources remain
 outside removal ownership.
 
+Uninstall MUST refuse target removal while unknown or unresolved private
+recovery/source requirements would lose their capable reader/writer. An already
+active independently verified equivalent capable runtime must be explicitly
+selected and preserved before that removal can proceed. Quiescence, complete
+private-state discovery and the union capability preflight are separate from
+file ownership. Removing executable bindings does not resolve source units,
+publish memory or authorize deletion of external recovery evidence.
+The explicit selection is
+`--preserve-capable-runtime /absolute/other-install-state/receipt.json`.
+The helper rechecks that separate active ownership receipt, measured package
+and every owned target, and refuses overlap with the removal set. Supplying a
+path or capability boolean without a verified active installation is insufficient.
+When the selected reader's digest or actual invocation routes need a new bound
+review, supply repeatable `--layout-quiescence /private/path/renewal.json`
+files alongside that selection. The envelope contains the exact recovery
+attestation and independent review; `--check` validates it without publication.
+Apply rechecks the reader receipt, all targets, the bank frontier and the
+reviewed routes under the source barriers. No separate reader selection is
+needed only when the complete private-state union is genuinely empty.
+
+
+
+
 ## Plan
 
 The session MUST preview removal before applying it:

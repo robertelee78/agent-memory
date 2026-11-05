@@ -132,6 +132,7 @@ def legacy_complete(repo, value):
 def complete(repo,value):
     from . import turn_sources
     if not isinstance(value,dict):raise ContractError('Explicit source assessment required')
+    scope_binding.require(repo)
     if 'observation_id' not in value:return legacy_complete(repo,value)
     required={'session','prompt','observation_id','source_sha256','outcome','assessment'}
     if set(value) not in (required,required|{'publication_request'}):raise ContractError('Use exact observation-bound assessment fields')
@@ -144,9 +145,10 @@ def complete(repo,value):
 
 
 def legacy_list_pending(repo):
-    root,bank=bank_writes.bank_path(repo);context=scope_binding.require(root)
+    root,bank=bank_writes.bank_path(repo);context=scope_binding.private_enrollment_context(root)
     operations,_=bank_writes.state_paths(root,bank,str(uuid.uuid4()));directory=operations.parent/'codex-boundaries'
     if not os.path.lexists(directory):
+        scope_binding.recheck_private_enrollment(context)
         return {'operation':'pending','verified':True,'pending':[],'canonical_writes_performed':False}
     trust_paths.state(directory);dfd=os.open(directory,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW)
     entries=[]
@@ -162,26 +164,27 @@ def legacy_list_pending(repo):
                     if not stat.S_ISREG(info.st_mode) or info.st_uid!=os.geteuid() or info.st_nlink!=1 or info.st_mode&0o077 or info.st_size>4096:raise ContractError('Unsafe pending record')
                     with os.fdopen(fd,'rb',closefd=False) as f:record=load(f.read(4097))
                 finally:os.close(fd)
-                if (not isinstance(record,dict) or set(record)!={'schema','project_id','session','turn','source_uuid','source_sha256'} or record['schema']!='agent-memory/codex-boundary-pending-v1' or record['project_id']!=context['project_id'] or not UUID.fullmatch(record['session']) or not UUID.fullmatch(record['turn']) or record['source_uuid']!=record['turn'] or not re.fullmatch('[0-9a-f]{64}',record['source_sha256']) or entry.name!=hashlib.sha256((record['session']+':'+record['turn']).encode()).hexdigest()+'.pending'):
+                if (not isinstance(record,dict) or set(record)!={'schema','project_id','session','turn','source_uuid','source_sha256'} or record['schema']!='agent-memory/codex-boundary-pending-v1' or record['project_id']!=context.project_id or not UUID.fullmatch(record['session']) or not UUID.fullmatch(record['turn']) or record['source_uuid']!=record['turn'] or not re.fullmatch('[0-9a-f]{64}',record['source_sha256']) or entry.name!=hashlib.sha256((record['session']+':'+record['turn']).encode()).hexdigest()+'.pending'):
                     raise ContractError('Pending record is malformed or belongs to another project')
                 entries.append(record)
-        scope_binding.require(root,context['project_id'],expected=context)
+        scope_binding.recheck_private_enrollment(context)
     finally:os.close(dfd)
     return {'operation':'pending','verified':True,'pending':entries,'canonical_writes_performed':False,'source_completeness_verified':False}
 
 
-def list_pending(repo,offset=0,legacy_offset=0):
+def list_pending(repo,offset=0,legacy_offset=0,enrollment_offset=0):
     from . import turn_sources
-    backlog=turn_sources.backlog(repo,'codex',offset,legacy_offset)
+    backlog=turn_sources.backlog(repo,'codex',offset,legacy_offset,enrollment_offset)
     return {'operation':'pending','verified':True,'pending':[x['source'] for x in backlog['legacy']],**backlog,'canonical_writes_performed':False}
 
 
 def main(argv=None):
-    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--repo',required=True);parser.add_argument('--input');parser.add_argument('--list-pending',action='store_true');parser.add_argument('--stdin',action='store_true');parser.add_argument('--offset',type=int,default=0);parser.add_argument('--legacy-offset',type=int,default=0);parser.add_argument('--quiet',action='store_true');parser.add_argument('--refresh',action='store_true');args=parser.parse_args(argv)
+    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--repo',required=True);parser.add_argument('--input');parser.add_argument('--list-pending',action='store_true');parser.add_argument('--stdin',action='store_true');parser.add_argument('--offset',type=int,default=0);parser.add_argument('--legacy-offset',type=int,default=0);parser.add_argument('--quiet',action='store_true');parser.add_argument('--refresh',action='store_true')
+    parser.add_argument('--enrollment-offset',type=int,default=0);args=parser.parse_args(argv)
     try:
         if args.list_pending:
             if args.input or args.stdin or args.quiet or args.refresh:raise ContractError('Select either pending inventory or acknowledgement')
-            result=list_pending(args.repo,args.offset,args.legacy_offset)
+            result=list_pending(args.repo,args.offset,args.legacy_offset,args.enrollment_offset)
         else:
             if bool(args.input)==bool(args.stdin):raise ContractError('Select one file or bounded stdin assessment')
             if args.stdin:

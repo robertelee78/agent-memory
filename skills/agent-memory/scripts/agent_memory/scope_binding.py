@@ -83,6 +83,100 @@ def require(repo, project_id=None, *, expected=None, initialize=False, owned_loc
     return context
 
 
+def raw_recovery_context(repo, raw_identity, owner=None, transaction=None):
+    """Resolve the ordinary scope from independently checked raw-router evidence."""
+    if type(raw_identity) is not project.RawIdentityEvidence:
+        raise ContractError('Recovery scope requires internally observed raw identity evidence')
+    root = Path(repo).resolve()
+    if raw_identity.repo_root != str(root):
+        raise ContractError('Raw identity belongs to another checkout')
+    dev = principal(root)
+    proj = project.status(root, owned_lock=owner, owned_transaction=transaction, raw_identity=raw_identity)
+    if storage.paths('projects')[2].exists() or not proj['resolved']:
+        raise ContractError('Recovery project identity is unresolved; retain the original evidence')
+    proof = proj['evidence']
+    context = {'developer_id': dev['developer_id'], 'project_id': proj['project_id'],
+               'developer_sha256': dev['observed_sha256'], 'project_sha256': proj['observed_sha256'],
+               'checkout_key': proof['checkout_key'],
+               'repository_settings_sha256': digest(encoded(proof['repository_settings'])),
+               'initialization_only': False}
+    context_value(context)
+    return context
+
+
+_enrollment_seal = object()
+
+
+class PrivateEnrollmentContext:
+    """Purpose-limited live identity; never a serialized scope or write proof."""
+    __slots__ = ('root', 'bank', '_scope', 'hold', 'context_digest', '_pins', '_seal')
+
+    def __init__(self, *args, **kwargs):
+        raise ContractError('Private enrollment context must be independently observed')
+
+    @property
+    def scope(self):
+        return dict(self._scope)
+
+    @property
+    def project_id(self):
+        return self._scope['project_id']
+
+    @property
+    def developer_id(self):
+        return self._scope['developer_id']
+
+    @property
+    def held(self):
+        return self.hold is not None
+
+    def __reduce_ex__(self, protocol):
+        raise TypeError('Private enrollment context cannot be serialized')
+
+    def __enter__(self):
+        return recheck_private_enrollment(self)
+
+    def __exit__(self, kind, value, traceback):
+        if kind is None:
+            recheck_private_enrollment(self)
+        return False
+
+
+def private_enrollment_context(repo):
+    """Allow only private source retention through an exact verified hold."""
+    from . import layout_recovery_state, recovery_frontier, turn_sources
+    root, bank = writes.bank_path(repo)
+    turn_sources.check_source_compatibility(layout_recovery_state.paths(root)[2].parent)
+    hold = recovery_frontier.verified_hold(root)
+    scope = dict(hold.scope) if hold is not None else require(root)
+    # The ordinary path also checks the private index, so a removed hold is not
+    # an empty frontier. No caller supplies marker bytes or an owned lock.
+    token = hold.token if hold is not None else recovery_frontier.observe(root)
+    pins = {'scope': scope, 'frontier': token,
+            'binding': [[str(path), info.st_dev, info.st_ino, info.st_uid, info.st_gid, info.st_mode]
+                        for path in (root, bank.parent, bank) for info in [path.lstat()]],
+            'marker': digest(hold.marker) if hold is not None else None}
+    if hold is not None:
+        directory = layout_recovery_state.paths(root, hold.operation_id)[3]
+        pins.update(runtime_artifact_digest=hold.runtime_artifact_digest,
+                    private_bindings_sha256=digest(layout_recovery_state.read_bytes(
+                        storage.paths('layout-recovery-bindings')[1])),
+                    journal_sha256=digest(layout_recovery_state.read_bytes(directory / 'journal.json')))
+    context = object.__new__(PrivateEnrollmentContext)
+    context.root, context.bank, context._scope, context.hold = root, bank, scope, hold
+    context._pins, context.context_digest, context._seal = pins, digest(encoded(pins)), _enrollment_seal
+    return context
+
+
+def recheck_private_enrollment(context):
+    if type(context) is not PrivateEnrollmentContext or context._seal is not _enrollment_seal:
+        raise ContractError('Private enrollment requires an internally constructed live context')
+    current = private_enrollment_context(context.root)
+    if current._pins != context._pins or current.context_digest != context.context_digest:
+        raise ContractError('Private enrollment identity or recovery hold changed; retain the original pending source')
+    return context
+
+
 def capture(repo):
     """A read-only proposal can exist while setup is pending, but cannot be applied."""
     try:

@@ -74,13 +74,13 @@ def validate_replacement(observation, path, content):
 
 def preview(repo, path, content, operation="replace"):
     from . import bank_observation
-    from .scope_binding import capture
+    from .recovery_frontier import capture_scope
     root, _ = bank_path(repo)
     observation = bank_observation.observe(root)
     checked, observed = observation.checked, observation.hashes
     proposal = {"schema": "agent-memory/write-proposal-v1", "operation_id": str(uuid.uuid4()), "operation": operation,
                 "repo_root": str(root), "project_id": checked["project_id"], "observed_hashes": observed,
-                "path": path, "content": content, "scope_context": capture(root)}
+                "path": path, "content": content, "scope_context": capture_scope(root)}
     proposal_value(proposal)
     validate_replacement(observation, path, content)
     return result("preview", proposal=proposal, writes_performed=False, verified=False, changed_memory_paths=[])
@@ -154,6 +154,9 @@ def record(receipt_path, payload):
 def apply(prepared):
     from .scope_binding import require
     proposal = proposal_value(prepared)
+    from . import recovery_frontier, recovery_transactions
+    if recovery_frontier.observe(proposal['repo_root'])['hold_sha256'] is not None:
+        return recovery_transactions.apply_checkpoint(proposal)
     if proposal['scope_context'] is None:
         raise ContractError('Proposal has no resolved scope; finish identity setup and preview again')
     context = require(proposal['repo_root'], proposal['project_id'], expected=proposal['scope_context'])

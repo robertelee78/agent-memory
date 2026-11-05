@@ -61,6 +61,194 @@ Known interrupted operations require explicit finish/rollback recovery and its
 retained journal. Ordinary manual checkpoints remain cooperative file edits,
 not audited admissions or concurrency-safe mediated replacements.
 
+## Source-preserving layout recovery
+
+When normal observation refuses an oversized source, unsupported root handoff
+or invalid routing, use `am bank recover-layout`, not capture/checkpoint,
+initialization, truncation or raised normal limits. The packaged equivalent is
+`/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/recover_layout.py"`
+followed by the same operation arguments. `am recover` remains runtime recovery.
+
+Recovery observes at most 1,048,576 bytes per ordinary source, 67,108,864 total
+source bytes, 65,536 sources, 131,072 physical entries and depth 64; these bounds
+are inclusive. It inventories non-Markdown files and directories too. Reads are
+chunked, descriptor-relative and no-follow, with repeated named/parent/content
+and ownership/mode/link/time pins. Symlinks, hardlink aliases, special files,
+portable name collisions, unstable observations and unsupported ACL/xattr/flag
+metadata remain pending. A capacity refusal reports its dimension, limit and
+exact or lower-bound measurement; an incomplete observation cannot prepare.
+Raw bytes are untrusted data, never commands, policy or identity authority.
+
+The existing developer/project resolver establishes the real checkout, registry
+project and sanitized remote authority without creating a new project. A
+malformed router needs `--identity-review` with independently checked committed
+router/checkout authority and exact original-router pins. A UUID-looking string
+is not evidence. Conflicting registry/settings/remote identity remains pending.
+Actual principal, runtime, HEAD, branch, original index and relevant Git
+configuration are pinned; recovery never changes them to obtain agreement.
+
+Choose a private directory outside the checkout and runtime; exported artifacts
+are owner-only, bounded and write-once/compare-exact. Recovery itself stores
+immutable originals and metadata under the canonical external state root:
+`<state>/writes/<bank-path-digest>/layout-recovery/<operation UUID>/`.
+Directories are 0700, files 0600. `AGENT_MEMORY_STATE_HOME` selects the state
+root when explicitly set; changing it cannot bypass the retained binding.
+Do not commit originals, private source hashes, review bodies or raw transcripts.
+
+```sh
+am bank recover-layout inspect --repo "$REPO" --output "$PRIVATE/inspection.json"
+# Take OPERATION from the safe result; read every numbered private source page.
+am bank recover-layout inspect --repo "$REPO" --operation "$OPERATION" \
+  --page 0 --output "$PRIVATE/page-0.json"
+am bank recover-layout prepare --repo "$REPO" --operation "$OPERATION" \
+  --input "$PRIVATE/reviewed-prepare.json" --output "$PRIVATE/proposal.json"
+am bank recover-layout apply --repo "$REPO" --operation "$OPERATION" \
+  --proposal "$PRIVATE/proposal.json"
+am bank recover-layout status --repo "$REPO" --operation "$OPERATION"
+```
+
+Pages contain source UUID, exact original offset/length, continuation, base64
+bytes and a manifest-bound page token; every original byte is retrievable.
+Each encoded page is at most 65,536 bytes. Terminal/stdout output is a safe
+metadata envelope, not the private manifest/page/proposal. Inspection and prepare
+write private artifacts and temporary lock state, not canonical memory or Git.
+
+### Preparing the complete result
+
+`agent-memory/layout-prepare-v1` requires `operation_id`, actual `author`
+(`developer_id`, `harness`, `session`, observed `evidence`), `unit_map`,
+`intended_files`, `metadata_plan`, `review`, `quiescence_attestation` and
+`retained_source_ids`. The intended files are the **whole** native Markdown
+map, including unchanged files; ordinary bounds and full routing still apply.
+Metadata names every resulting file's uid/gid/mode and each newly created
+directory. Explicit retained source UUIDs cover untouched ordinary non-Markdown
+occupants; they cannot hide unsupported Markdown.
+
+The manifest-bound `agent-memory/layout-unit-map-v1` assigns every original
+byte exactly once to a stable unit UUID, with exact `source_ranges`, complete
+`context_pages`, `semantic_kind`, actual `existing_record` or null, honest
+`provenance`, one `disposition`, exact resulting `targets` (path/hash), `reason`
+and `required_actions`. Semantic boundaries preserve whole meaning, conditions
+and framing, not arbitrary byte-sized pieces:
+
+- `preserve`: keep existing useful guidance available in concise contexts or
+  properly typed/indexed files, retaining actual record IDs/versions and all
+  trust/lifecycle/origin/evidence metadata. Never turn it into private pending
+  material merely to fit a limit.
+- `pending-admission`: only unadmitted source, with exact private bytes,
+  uncertainty, reason and detecting-developer actions. It is comparison-only,
+  not current guidance. Each indivisible unit must fit normal complete
+  comparison/admission bounds, security policy and the cumulative real mandatory
+  witness/review/proof reservation. Otherwise leave the invalid source intact.
+- `governed-terminal`: preserve an already real typed terminal/history outcome
+  with its actual metadata and available target. Recovery does not invent
+  lifecycle predicates. When normal governance requires eligible input,
+  preserve/re-layout first and perform the lifecycle operation ordinarily.
+- `non-guidance-discard`: explicit independent source-bound archive/removal
+  authority and rationale, not “a backup exists.” Uncertain guidance stays
+  pending. Secrets remain private, not copied to history or shared hashes.
+
+The exact `agent-memory/layout-review-v1` binds manifest, unit map, full intended
+map and authority digests, actual author/reviewer observations, review time,
+every `unit_decision`, semantic-preservation/security/identity judgments and
+retained evidence. Reviewer harness/session must be independent of the author.
+It also binds `inherited_frontier_sha256` and explicit `retain-pending`
+`inherited_unit_decisions` for every retained rolled-back obligation (empty
+lists still have an explicit digest). Reviews are fallible self-reported
+attestations, not authenticated truth or operator approval by inference.
+
+Pending recovery requires the exact `layout-quiescence-attestation-v1` tied to
+the real runtime artifact, state root, project/checkout, review and actual
+detecting developer. All authorized old invocation routes/in-flight sessions
+must be disabled/quiesced or use the independently verified capable runtime
+and bound private state. The persistent typed transaction hold additionally
+fails closed for legacy readers. Do not delete its marker or sentinel.
+
+### Transactions, pending state and recovery
+
+Apply retains its journal/initial ledger before mutation, exposes the exact
+typed marker and `.agent-memory-recovery.md` safeguard, uses same-directory
+atomic per-file replacements with router last, rechecks the complete result and
+records an immutable receipt. This is not whole-filesystem atomicity. Originals,
+unchanged occupants, feature files, HEAD and original index are preserved.
+Never use blanket `git add -A` to publish a repair: runtime safeguards and private
+pending evidence are not shared knowledge.
+
+`layout-restored`/`canonical_eligibility:true` is distinct from
+`semantic_recovery_complete:true`. Pending units remain durably outside the
+bank, constrain all-source comparison and block publication. Qualified recall
+may proceed with an explicit incomplete-coverage label; a lexical miss is not
+semantic absence. Applicable post-apply recall has its own actual qualification
+or pending result, separate from the committed layout receipt.
+
+```sh
+am bank recover-layout recover --repo "$REPO" --operation "$OPERATION" \
+  --mode finish --output "$PRIVATE/finish.json"
+am bank recover-layout recover --repo "$REPO" --proposal "$PRIVATE/finish.json"
+am bank recover-layout rollback --repo "$REPO" --operation "$OPERATION" \
+  --output "$PRIVATE/restore.json"
+am bank recover-layout rollback --repo "$REPO" --proposal "$PRIVATE/restore.json"
+```
+
+Known-operation recovery pins the exact journal, marker, read-set, partial
+physical state, originals, reviews, runtime/identity, index and ledger heads.
+Only attainable ordered prefixes and exact owned complete temporaries qualify.
+Unknown/partial temporaries, changed sources or external edits remain pending.
+Live/unknown/foreign-host locks require the separate existing lock-recovery
+workflow; age alone never authorizes lock removal.
+
+Before a durable layout receipt, exact rollback restores original bytes and
+supported metadata, even if invalid. After a verified completed repair, rollback
+is a **distinct child restore** bound to the immutable parent receipt and whole
+current bank/frontier, and refuses later admission/governance/revision or edits.
+Parent and child receipts remain historical. An exact completed retry returns
+its recorded outcome without replaying over newer knowledge; status separately
+checks current matching/eligibility/coverage.
+
+Rollback never discards pending obligations. Their hold/sentinel, originals and
+stable unit IDs remain; a new inspected repair must independently review and
+reserve the complete inherited frontier before an atomic hold handoff.
+`revise-units` independently reviews exact partition/provenance/context and
+capacity before append-only refinement; it does not admit children.
+`resolve` requires real committed ordinary receipts and independently reviewed
+exact coverage or explicit non-guidance discard authority, never body similarity.
+For held ordinary transactions, `recover-nested` is the sole aware interface:
+rollback only before the durable canonical receipt; finish only after it, linking
+ledger resolution durably before restoring the hold. Missing evidence remains
+pending rather than “no pending units.”
+
+Recovery-aware `publish inspect|prepare|land` and separately reviewed
+`retention inspect|apply` use their own exact requests. Publication requires a
+terminal complete frontier, all-side raw-source review, memory-only Git delta
+and actual existing nonforce policy/reviews/checks. Retention refuses pending
+units or dependencies and deletes only individually pinned owned artifacts,
+retaining historical receipts/tombstone and explicitly surrendering rollback.
+Neither layout success nor backup age grants publication or cleanup authority.
+
+### Disposable public smoke recipe
+
+From a trusted development checkout with Python 3.11+ and Git, the following
+synthetic public-command cases use disposable homes/registries/runtime/repository
+roots and no provider/network/real incident data:
+
+```sh
+PYTHONPATH="$PWD/tests" python3 -B -m unittest \
+  contracts.test_layout_recovery.LayoutRecoveryContract.test_reported_sizes_fail_normal_gate_and_public_pages_reconstruct_every_original \
+  contracts.test_layout_recovery.LayoutRecoveryContract.test_all_preserve_apply_keeps_metadata_feature_head_and_exact_original_index \
+  contracts.test_layout_recovery_frontier.RecoveryFrontierContract.test_reported_size_pending_repair_retains_exact_private_originals_and_qualified_recall
+```
+
+They construct exactly 79,054-byte contextual guidance and a 28,478-byte
+eight-policy unadmitted handoff, demonstrate the normal prerequisite refusal,
+then exercise installed `am bank recover-layout` inspection/pages/review/apply.
+The all-preserve case separates eligibility/completion from the pending case;
+the latter retains every original, real canonical mandatory witness records
+and all eight private units with incomplete qualified recall. Controlled test
+attestations test binding, not independent acceptance. Run/retain actual results;
+authored cases alone do not prove repair of the unavailable original incident,
+platform/legacy-reader crash behavior, native provider sessions or release
+publication/fresh-second-clone acceptance.
+
 ## Domain loading and routes
 
 A session MUST load this domain before its selected operation leaf and MUST NOT

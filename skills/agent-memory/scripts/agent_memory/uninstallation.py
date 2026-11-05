@@ -142,6 +142,32 @@ def prepare(old, state, code):
             'actions': actions, 'restart': [], 'preserved': preserved, 'reinstall': reinstall(old)}
 
 
+def preserved_reader(path, plan):
+    """Select a real separate already-active installation, not a capability flag."""
+    from . import artifact, layout_recovery_state
+    supplied = install.absolute(path)
+    install.require(supplied.name == 'receipt.json' and supplied.is_file() and not supplied.is_symlink(),
+                    'Select the existing receipt.json of the capable installation to preserve')
+    other = install.read_receipt(supplied.parent)
+    install.require(other is not None and other['installation_id'] != plan['old']['installation_id'],
+                    'The preserved capable reader must be a separate active installation')
+    install.verify_targets(other['targets'], source=other['source'])
+    runtime = artifact.inspect(other['source']['pack'])
+    install.require(runtime['artifact_digest'] == other['source']['artifact_digest'],
+                    'Preserved runtime changed from its actual owned artifact')
+    removals = [Path(action['path']) for action in plan['actions'] if action['changed']]
+    protected = [Path(other['source']['path']), *(Path(target['path']) for target in other['targets']), supplied.parent]
+    install.require(not any(left.is_relative_to(right) or right.is_relative_to(left)
+                    for left in removals for right in protected),
+                    'Uninstall would remove part of the selected preserved capable runtime')
+    install.require(any(target['kind'] in {'wrapper', 'hook-link', 'hook-config'} for target in other['targets']),
+                    'Preserved runtime must retain an actually active executable invocation route')
+    return {**other['source'], 'compatibility': runtime['compatibility'], 'already_active_verified': True,
+            'reader_receipt_path': str(supplied), 'reader_receipt_sha256': install.sha(layout_recovery_state.read_bytes(supplied)),
+            'reader_invocation_routes': [target['path'] for target in other['targets']
+                if target['kind'] in {'wrapper', 'hook-link', 'hook-config'}]}
+
+
 def run(args):
     state, code = install.locations()
     old = install.read_receipt(state)
@@ -155,7 +181,19 @@ def run(args):
                     'changed':False, 'uninstalled':True, 'receipt':historical,
                     'preserved':historical['preserved'], 'reinstall':historical['reinstall']}
         plan = prepare(current, state, code)
+        if getattr(args, 'omp_writers_quiesced', False):
+            plan['omp_transition'] = {'writers_quiesced': True, 'check': bool(args.check)}
+        selection = getattr(args, 'preserve_capable_runtime', None)
+        if selection:
+            plan['preserved_private_state_reader'] = preserved_reader(selection, plan)
+        plan['layout_quiescence'] = list(getattr(args, 'layout_quiescence', None) or [])
         if args.check:
+            from . import private_state
+            if plan.get('omp_transition'):
+                from . import omp_boundary
+                omp_boundary.native_transition(plan, check=True)
+            target = private_state.prepare_lifecycle(plan, check=True)
+            private_state.require_compatible(current, target, 'uninstall')
             return {'operation':'uninstall', 'verified':False, 'check_complete':True,
                     'installation_writes_performed':False,
                     'targets':[{k:v for k,v in a.items() if k not in ('raw','mode_bits')} for a in plan['actions']],
@@ -198,6 +236,9 @@ def main(argv=None):
     commands = parser.add_subparsers(dest='command', required=True)
     uninstall = commands.add_parser('uninstall')
     uninstall.add_argument('--check', '--dry-run', action='store_true')
+    uninstall.add_argument('--omp-writers-quiesced', action='store_true')
+    uninstall.add_argument('--preserve-capable-runtime')
+    uninstall.add_argument('--layout-quiescence', action='append', default=[])
     purge = commands.add_parser('purge-data')
     purge.add_argument('--repo', required=True)
     purge.add_argument('--path', required=True)

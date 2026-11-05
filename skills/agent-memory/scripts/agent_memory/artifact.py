@@ -65,6 +65,13 @@ def inspect(pack):
             and spec.get('required_agent_clients') == [],
             'Compatibility must declare bounded schema/tool lists and a client-neutral standard-library core')
     command_names(spec)
+    require(strings(spec.get('private_state_capabilities', []), allow_empty=True)
+            and set(spec.get('private_state_capabilities', [])) <= {'layout-frontier-v1', 'omp-harness-v1'},
+            'Private-state capabilities must be explicit unique supported tokens')
+    require(strings(spec.get('installation_receipt_schemas', ['agent-memory/install-receipt-v1']))
+            and set(spec.get('installation_receipt_schemas', ['agent-memory/install-receipt-v1'])) <=
+                {'agent-memory/install-receipt-v1', 'agent-memory/install-receipt-v2'},
+            'Installation receipt readers must be explicit unique supported schemas')
     from . import migration_contract
     migrations = migration_contract.inspect(root, spec, files)
     router = declaration(root, 'schemas/bank-router.json', files)

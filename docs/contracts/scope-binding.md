@@ -32,3 +32,45 @@ developer changes between preview and write and during the bank lock, torn-write
 recovery, stale read-set refusal, copied artifacts and ambient Git redirection.
 These are foundation checks; full installation, admission, initialization,
 publication and cross-machine release suites have separate delivery gates.
+
+## Private enrollment during layout recovery
+
+`scope_binding.require` remains the ordinary guard and refuses a transaction
+marker. The internal `private_enrollment_context(repo)` factory returns a
+nonmapping, nonserializable `PrivateEnrollmentContext`, not a `scope_context`.
+It consumes the frontier owner's exact verified persistent hold, live project
+and actual developer registries, checkout/settings/authority pins, private
+ledger/journal/index binding and capable-runtime check. A removed hold with a
+surviving active binding is not an empty frontier. `recheck_private_enrollment`
+independently reobserves the same pins; a frontier-only change invalidates the
+context even when canonical bank bytes are unchanged.
+
+Only private enrollment, pending inventory and bounded notice/wake bookkeeping
+use this context. Source assessment, completion, refresh acknowledgement and
+canonical/publication proofs retain their ordinary authority checks. All
+Codex/Claude prompt and stop boundaries use the same shared turn-source
+namespace, as does the native omp consumer; no adapter has another identity
+algorithm or a caller-supplied held-authority flag.
+
+Held registration durably records a native-event-bound enrollment intent before
+source/index publication. Source/index fsync and readback, intent transitions
+and final successful return recheck the original context. Interrupted or late
+unverified writes remain retained and pending. Exact retries reconcile the
+same observation ID and source slot, never a digest-only deduplication. A
+missing native event ID instead retains a bounded unidentified private input,
+with explicit uncertainty and no observation/completion authority.
+
+The shared lock order is lifecycle, bank source barrier, native transport
+registration, source completion in stable namespace order, then bank write.
+The source barrier is reentrant for shared operations; a shared-to-exclusive
+upgrade refuses rather than deadlocking or dropping a sibling capability.
+Before accessing the shared source index, all source operations also read the
+private `turn-sources-compat-v1.json` marker through the same bounded stable
+reader. Only the exact known `omp-harness-v1` declaration is accepted;
+malformed, redirected or unknown markers refuse Codex, Claude and omp readers.
+The check is repeated after barrier acquisition and before successful return.
+Generic absence does not certify an omp drain: the native producer and
+lifecycle capability inventory retain their separate bound-drain obligations.
+The held-enrollment contract suite uses actual checked filesystem state and
+real hook processes; its synthetic event fields are not native-provider or
+macOS/Linux release acceptance evidence.

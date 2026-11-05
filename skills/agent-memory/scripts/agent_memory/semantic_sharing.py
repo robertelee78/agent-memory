@@ -37,6 +37,8 @@ def safe_text(value, bound=4096):
 
 def snapshots(repo, base=None, *, owned_lock=None, quarantine_records=False):
     from . import sharing_recovery as recovery
+    from . import recovery_frontier
+    recovery_frontier.require_complete(repo, owned_lock)
     observation = recovery.observe(repo, owned_lock=owned_lock,quarantine_records=quarantine_records);root=Path(observation['repo_root']);head=observation['authority_head']
     if base is None:
         values=recovery.command(root,'merge-base','--all',observation['local_head'],head).splitlines()
@@ -118,6 +120,8 @@ def inspect(repo,base=None, *, owned_lock=None):
 
 def final_sources(root,observation,binding, *, owned_lock=None):
     from . import sharing_recovery as recovery
+    from . import recovery_frontier
+    recovery_frontier.require_complete(root, owned_lock)
     scope_binding.require(root,observation['project_id'],expected=observation['scope_context'],owned_lock=owned_lock)
     if (recovery.server(root,observation['authority_remote'],observation['authority_branch'])!=observation['authority_head']
             or writes.snapshot(root,owned_lock=owned_lock)[1]!=binding['source_hashes']['local'] or git(root,'rev-parse','--verify','HEAD')!=observation['local_head']):
