@@ -35,6 +35,38 @@ def atomic_marker(bank, expected, replacement, owner):
             temporary.unlink()
 
 
+def interrupted_successor(repo, operation_id, units, expected_head, *, unit_map_sha256=None):
+    """Validate, but never publish, one exact journal-bound head/index gap."""
+    root, _, _, directory = state.paths(repo, operation_id)
+    indexed = state.index(root)
+    row = indexed['operations'][operation_id]
+    observed = state.read(directory / 'ledger-head.json', 4096)
+    generation = expected_head['generation'] + 1
+    previous = state.read(directory / 'ledger' / (str(expected_head['generation']).zfill(8) + '.json'))
+    if (expected_head != {'schema': 'agent-memory/layout-ledger-head-v1', 'operation_id': operation_id,
+            'generation': previous['generation'], 'sha256': digest(encoded(previous))}
+            or previous['operation_id'] != operation_id or previous['project_id'] != row['project_id']):
+        raise ContractError('Ledger reconciliation lost its exact immutable predecessor')
+    successor = {**copy.deepcopy(previous), 'units': units, 'generation': generation,
+        'previous_generation_sha256': expected_head['sha256']}
+    if unit_map_sha256 is not None:
+        successor['unit_map_sha256'] = unit_map_sha256
+    head = {'schema': expected_head['schema'], 'operation_id': operation_id,
+        'generation': generation, 'sha256': digest(encoded(successor))}
+    transition = state.read(directory / 'ledger-transitions' / (str(generation).zfill(8) + '.json'))
+    if (observed != head or transition != {'schema': 'agent-memory/layout-ledger-transition-v1',
+            'operation_id': operation_id, 'previous_head': expected_head, 'head': head,
+            'units_sha256': digest(encoded(units))}
+            or row['ledger_head_sha256'] not in {digest(encoded(expected_head)), digest(encoded(head))}):
+        raise ContractError('Ledger retry does not match its exact journaled successor')
+    projected = {**row, 'ledger_head_sha256': digest(encoded(head))}
+    _, verified_head, current = frontier.ledger(root, operation_id, projected)
+    if verified_head != head or current != successor:
+        raise ContractError('Journaled ledger successor differs from retained immutable evidence')
+    frontier.evidence(directory, current, projected)
+    return projected, head, current
+
+
 def advance_ledger(repo, operation_id, units, expected_head, owner, transaction=None, *, unit_map_sha256=None):
     from .bank_observation import markers
     root, bank, base, directory = state.paths(repo, operation_id)
@@ -46,14 +78,13 @@ def advance_ledger(repo, operation_id, units, expected_head, owner, transaction=
     generation = expected_head['generation'] + 1
     transition_path = directory / 'ledger-transitions' / (str(generation).zfill(8) + '.json')
     if observed_head != expected_head:
-        transition = state.read(transition_path)
-        if (transition['previous_head'] != expected_head or transition['head'] != observed_head
-                or transition['units_sha256'] != digest(encoded(units))
-                or row['ledger_head_sha256'] not in {digest(encoded(expected_head)), digest(encoded(observed_head))}):
-            raise ContractError('Ledger retry does not match its exact interrupted successor')
-        row['ledger_head_sha256'] = digest(encoded(observed_head))
+        projected, _, _ = interrupted_successor(root, operation_id, units, expected_head,
+            unit_map_sha256=unit_map_sha256)
+        row.update(projected)
+        markers(bank, owner, marker)
         state.set_index(root, indexed, digest(state.read_bytes(base / 'index.json')))
         _, head, current = frontier.ledger(root, operation_id, row)
+        frontier.invalidate(root)
         return {'head': head, 'ledger': current, 'already_applied': True}
     _, head, current = frontier.ledger(root, operation_id, row)
     successor = {**copy.deepcopy(current), 'units': units, 'generation': generation,
@@ -103,7 +134,19 @@ def retire(repo, operation_id, owner, transaction=None):
     _, head, current = frontier.ledger(root, operation_id, row)
     if any(unit['state'] == 'pending-admission' for unit in current['units']):
         raise ContractError('Unresolved source units cannot retire their recovery safeguard')
-    if frontier.observe(root, owner, transaction)['unit_ids']:
+    retirement = state.read(directory / 'retirement.json', missing=True)
+    if row['state'] == 'terminal':
+        if retirement is None or retirement.get('ledger_head') != head:
+            raise ContractError('Only the exact durable retirement may finish a terminal safeguard')
+        for other_id, other_row in indexed['operations'].items():
+            if other_row['state'] == 'cleaned':
+                continue
+            other_directory, _, other = frontier.ledger(root, other_id, other_row)
+            frontier.evidence(other_directory, other, other_row)
+            if (any(unit['state'] == 'pending-admission' for unit in other['units'])
+                    or (other_id != operation_id and other_row['state'] in {'active', 'interrupted'})):
+                raise ContractError('A retained same-bank dependency still requires its safeguard')
+    elif frontier.observe(root, owner, transaction)['unit_ids']:
         raise ContractError('Other retained same-bank source units still require this recovery safeguard')
     receipt = state.read(directory / 'receipt.json')
     if receipt.get('verified') is not True:
@@ -119,30 +162,47 @@ def retire(repo, operation_id, owner, transaction=None):
     marker = transaction or frontier.marker_bytes(bank)
     if marker is not None:
         value = frontier.marker_value(marker)
-        if value['operation_id'] != operation_id:
+        if (value['operation_id'] != operation_id or value['project_id'] != row['project_id']
+                or value.get('hold_id') != row['hold_id'] or value['schema'] not in {frontier.HOLD, frontier.NESTED}):
             raise ContractError('Recovery retirement cannot remove another operation marker')
         markers(bank, owner, marker)
     sentinel = encoded({'schema': frontier.SENTINEL, 'project_id': row['project_id'], 'operation_id': operation_id})
     current_sentinel = frontier.marker_bytes(bank, '.agent-memory-recovery.md')
     if current_sentinel not in (None, sentinel):
         raise ContractError('Recovery retirement found a changed companion sentinel')
+    dependencies = (retirement['dependencies'] if retirement is not None else [
+        {'operation_id': key, 'ledger_head_sha256': value['ledger_head_sha256']}
+        for key, value in sorted(indexed['operations'].items()) if value['state'] in {'active', 'rolled-back'}])
+    if operation_id not in {item['operation_id'] for item in dependencies}:
+        raise ContractError('Retirement omitted the exact holding operation')
+    for item in dependencies:
+        dependent = indexed['operations'].get(item['operation_id'])
+        if (dependent is None or dependent['project_id'] != row['project_id']
+                or dependent['ledger_head_sha256'] != item['ledger_head_sha256']
+                or dependent['state'] not in {'active', 'rolled-back', 'terminal'}):
+            raise ContractError('Retirement dependency changed after durable terminal review')
     state.write_once(directory / 'retirement.json', {'schema': 'agent-memory/layout-retirement-v1',
         'operation_id': operation_id, 'ledger_head': head, 'receipt_sha256': digest(encoded(receipt)),
-        'verified': True})
-    row['state'] = 'terminal'
+        'dependencies': dependencies, 'verified': True})
+    for item in dependencies:
+        indexed['operations'][item['operation_id']]['state'] = 'terminal'
     state.set_index(root, indexed, digest(state.read_bytes(base / 'index.json')))
-    state.bind(root, operation_id, row['project_id'], receipt.get('checkout_key',
-        state.read(directory / 'manifest.json')['identity']['scope_context']['checkout_key']), 'terminal')
+    for item in dependencies:
+        dependent_manifest = state.read(state.paths(root, item['operation_id'])[3] / 'manifest.json')
+        state.bind(root, item['operation_id'], row['project_id'],
+            dependent_manifest['identity']['scope_context']['checkout_key'], 'terminal')
     writes.fault('layout-recovery-sentinel-retirement')
     if marker is not None:
         markers(bank, owner, marker)
         (bank / tx.MARKER).unlink()
         tx.flush_directory(bank)
+        writes.fault('layout-recovery-retirement-after-marker-removal')
     if current_sentinel is not None:
         if frontier.marker_bytes(bank, '.agent-memory-recovery.md') != sentinel:
             raise ContractError('Recovery sentinel changed before terminal retirement')
         (bank / '.agent-memory-recovery.md').unlink()
         tx.flush_directory(bank)
+        writes.fault('layout-recovery-retirement-after-sentinel-removal')
     frontier.invalidate(root)
     return {'operation_id': operation_id, 'semantic_recovery_complete': True,
         'pending_unit_ids': [], 'safeguard_retired': True}
@@ -205,50 +265,104 @@ def evidence_fields(proof):
         'reference_map_sha256': proof['judgment']['observation']['recovery_frontier']['reference_map_sha256']}
 
 
+def resolution_receipt(p):
+    return {'schema': 'agent-memory/layout-resolution-receipt-v1', 'resolution_id': p['resolution_id'],
+        'operation_id': p['operation_id'], 'unit_id': p['unit_id'], 'generation': p['ledger_head']['generation'],
+        'request_sha256': digest(encoded(p)), 'terminal_state': p['terminal_state'],
+        'canonical_operation_id': p['canonical_operation_id'], 'canonical_receipt_sha256': p['canonical_receipt_sha256'],
+        'claims': p['claims'], 'independent_review_sha256': p['independent_review_sha256'], 'verified': True}
+
+
+def resolution_units(directory, p, receipt):
+    previous = state.read(directory / 'ledger' / (str(p['ledger_head']['generation']).zfill(8) + '.json'))
+    if digest(encoded(previous)) != p['ledger_head']['sha256']:
+        raise ContractError('Resolution lost its exact immutable original ledger generation')
+    units = copy.deepcopy(previous['units'])
+    record = next(unit for unit in units if unit['unit_id'] == p['unit_id'])
+    if record['state'] != 'pending-admission':
+        raise ContractError('Resolution cannot replace an already terminal unit')
+    record['state'] = p['terminal_state']
+    record['terminal_receipts'].append({'resolution_id': p['resolution_id'], 'sha256': digest(encoded(receipt))})
+    return units
+
+
 def resolve(repo, operation_id=None, unit_id=None, terminal=None, proposal=None):
-    """Preview or apply a full committed claim; never infer admission from similarity."""
-    if proposal is not None:
-        proposal = proposal.get('proposal', proposal)
-    root, bank, _, directory = state.paths(repo, operation_id if proposal is None else proposal['operation_id'])
-    if proposal is not None:
-        p = proposal.get('proposal', proposal)
-        if p.get('schema') != 'agent-memory/layout-resolution-proposal-v1' or p['repo_root'] != str(root):
-            raise ContractError('Use the exact private source-bound resolution proposal')
-        resolution_id = p['resolution_id']
-        operation_id = p['operation_id']
-        directory = state.paths(root, operation_id)[3]
-        known = state.read(directory / 'resolutions' / (resolution_id + '.json'), missing=True)
-        if known is not None:
-            if known['request_sha256'] != digest(encoded(p)):
-                raise ContractError('Resolution ID was reused with a different request')
-            return {'receipt': known, 'already_applied': True, 'writes_performed': False}
-        with storage.exclusive(bank / '.agent-memory.lock', resolution_id, 'bank-recover') as owner:
+    """A durable receipt resumes linkage/retirement; completion alone is historical."""
+    if proposal is None:
+        return {'proposal': _resolution_preview(repo, operation_id, unit_id, terminal, str(uuid.uuid4())),
+            'canonical_writes_performed': False, 'writes_performed': False}
+    p = proposal.get('proposal', proposal)
+    root, bank, _, directory = state.paths(repo, p['operation_id'])
+    if (p.get('schema') != 'agent-memory/layout-resolution-proposal-v1' or p['repo_root'] != str(root)
+            or not uuid_valid(p['resolution_id'])):
+        raise ContractError('Use the exact private source-bound resolution proposal')
+    resolution_id = p['resolution_id']
+    operation_id = p['operation_id']
+    receipt = resolution_receipt(p)
+    known = state.read(directory / 'resolutions' / (resolution_id + '.json'), missing=True)
+    if known is not None and known != receipt:
+        raise ContractError('Resolution ID was reused with different evidence or receipt bytes')
+    completion_path = directory / 'resolution-completions' / (resolution_id + '.json')
+    completed = state.read(completion_path, missing=True)
+    journal_path = directory / 'resolution-journals' / (resolution_id + '.json')
+    journal = state.read(journal_path, missing=True)
+    if completed is not None:
+        if (known is None or journal is None or journal['proposal'] != p
+                or completed != {'schema': 'agent-memory/layout-resolution-completion-v1',
+                    'resolution_id': resolution_id, 'receipt_sha256': digest(encoded(receipt)),
+                    'journal_sha256': digest(encoded(journal)), 'verified': True}):
+            raise ContractError('Historical resolution lost its exact completion/linkage evidence')
+        from . import layout_history
+        layout_history.check(root, journal['scope_context'], p['recovery_frontier']['project_id'])
+        return {'receipt': known, 'already_applied': True, 'receipt_is_historical': True, 'writes_performed': False}
+    with storage.exclusive(bank / '.agent-memory.lock', resolution_id, 'bank-recover') as owner:
+        units = resolution_units(directory, p, receipt)
+        if known is None:
             fresh = _resolution_preview(root, operation_id, p['unit_id'], p['terminal'], resolution_id, owner)
             if fresh != p:
                 raise ContractError('Resolution evidence changed after preview')
-            indexed = state.index(root)
-            _, head, current = frontier.ledger(root, operation_id, indexed['operations'][operation_id])
-            units = copy.deepcopy(current['units'])
-            record = next(unit for unit in units if unit['unit_id'] == p['unit_id'])
-            receipt = {'schema': 'agent-memory/layout-resolution-receipt-v1', 'resolution_id': resolution_id,
-                'operation_id': operation_id, 'unit_id': p['unit_id'], 'generation': head['generation'],
-                'request_sha256': digest(encoded(p)), 'terminal_state': p['terminal_state'],
-                'canonical_operation_id': p['canonical_operation_id'], 'canonical_receipt_sha256': p['canonical_receipt_sha256'],
-                'claims': p['claims'], 'independent_review_sha256': p['independent_review_sha256'], 'verified': True}
+            held = frontier.verified_hold(root, owner)
+            expected_journal = {'schema': 'agent-memory/layout-resolution-journal-v1', 'proposal': p,
+                'units': units, 'hold': frontier.marker_value(held.marker), 'scope_context': held.scope}
+            state.write_once(journal_path, expected_journal)
+            journal = expected_journal
             state.write_once(directory / 'resolutions' / (resolution_id + '.json'), receipt)
-            record['state'] = p['terminal_state']
-            record['terminal_receipts'].append({'resolution_id': resolution_id, 'sha256': digest(encoded(receipt))})
-            successor = advance_ledger(root, operation_id, units, head, owner)
-            token = frontier.observe(root, owner)
-            if token['coverage_complete']:
-                held = frontier.verified_hold(root, owner)
-                if held is None:
-                    raise ContractError('Terminal resolution lost the exact same-bank recovery hold')
-                retire(root, held.operation_id, owner)
-            return {'receipt': receipt, 'ledger_head': successor['head'], 'writes_performed': True,
-                'semantic_recovery_complete': token['coverage_complete']}
-    return {'proposal': _resolution_preview(root, operation_id, unit_id, terminal, str(uuid.uuid4())),
-        'canonical_writes_performed': False, 'writes_performed': False}
+            writes.fault('layout-recovery-resolution-after-receipt')
+        if (journal is None or set(journal) != {'schema', 'proposal', 'units', 'hold', 'scope_context'}
+                or journal['schema'] != 'agent-memory/layout-resolution-journal-v1'
+                or journal['proposal'] != p or journal['units'] != units):
+            raise ContractError('Resolution retry requires its exact durable source-bound journal')
+        from . import bank_observation, layout_history
+        layout_history.check(root, journal['scope_context'], p['recovery_frontier']['project_id'])
+        marker = frontier.marker_bytes(bank)
+        hold_operation = journal['hold']['operation_id']
+        retirement = state.read(state.paths(root, hold_operation)[3] / 'retirement.json', missing=True)
+        if marker != encoded(journal['hold']) and not (marker is None and retirement is not None):
+            raise ContractError('Standalone resolution cannot bypass a nested, foreign or missing hold')
+        bank_observation.markers(bank, owner, marker)
+        indexed = state.index(root)
+        observed = state.read(directory / 'ledger-head.json')
+        if observed['generation'] <= p['ledger_head']['generation'] + 1:
+            successor = advance_ledger(root, operation_id, units, p['ledger_head'], owner, marker)
+        else:
+            expected = state.read(directory / 'ledger' / (str(p['ledger_head']['generation'] + 1).zfill(8) + '.json'))
+            if expected['units'] != units or expected['previous_generation_sha256'] != p['ledger_head']['sha256']:
+                raise ContractError('Historical resolution linkage differs from its exact successor')
+            frontier.ledger(root, operation_id, indexed['operations'][operation_id])
+            successor = {'head': observed}
+        if state.index(root)['operations'][hold_operation]['state'] == 'terminal':
+            retire(root, hold_operation, owner)
+        token = frontier.observe(root, owner)
+        if token['coverage_complete'] and frontier.marker_bytes(bank) is not None:
+            held = frontier.verified_hold(root, owner)
+            if held is None or held.operation_id != hold_operation:
+                raise ContractError('Terminal resolution lost its exact same-bank recovery hold')
+            retire(root, hold_operation, owner)
+        state.write_once(completion_path, {'schema': 'agent-memory/layout-resolution-completion-v1',
+            'resolution_id': resolution_id, 'receipt_sha256': digest(encoded(receipt)),
+            'journal_sha256': digest(encoded(journal)), 'verified': True})
+        return {'receipt': receipt, 'ledger_head': successor['head'], 'writes_performed': True,
+            'already_applied': known is not None, 'semantic_recovery_complete': token['coverage_complete']}
 
 
 def _resolution_preview(repo, operation_id, unit_id, terminal, resolution_id, owner=None):

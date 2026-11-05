@@ -68,6 +68,12 @@ def save(world, value, name=None):
 
 
 def installed(world):
+    # Darwin's /private/tmp can inherit a group the test principal cannot
+    # reproduce on replacement. Select a realizable group before any original
+    # bank/source exists; production preservation checks remain unchanged.
+    for directory in [world.root, *(path for path in world.root.rglob('*') if path.is_dir())]:
+        if directory.stat().st_gid != os.getegid():
+            os.chown(directory, -1, os.getegid())
     return install_fixture(world, codecs=False)
 
 
@@ -149,7 +155,7 @@ def review_request(world, command, source, repo, inspected, intended):
     units = []
     page_cursor = 0
     for original in manifest['sources']:
-        lengths = [3560] * 7 + [3558] if original['path'] == 'handoff-prompt.md' else [original['byte_count']]
+        lengths = [3560] * 7 + [3558] if original['path'] == 'handoff-prompt.md' and original['byte_count'] == 28478 else [original['byte_count']]
         offset = 0
         source_pages = list(range(page_cursor, page_cursor + max(1, (original['byte_count'] + 24575) // 24576)))
         page_cursor += len(source_pages)
@@ -214,3 +220,123 @@ def prepare(world, command, source, repo, inspected, intended):
     call(world, command, 'prepare', '--repo', repo, '--operation', inspected['operation_id'],
          '--input', save(world, request), '--output', output)
     return output, json.loads(output.read_text())
+
+
+def public(world, command, *args, expected=0, env=None):
+    completed = world.run([command, *args], check=False, env=env, timeout=30)
+    value = json.loads(completed.stdout) if completed.stdout else None
+    if completed.returncode != expected:
+        raise AssertionError((list(map(str, args)), completed.returncode, value, completed.stderr))
+    return value
+
+
+def private_directory(world, bank, operation_id):
+    return (Path(world.env['AGENT_MEMORY_STATE_HOME']) / 'writes' / sha(str(bank).encode())
+            / 'layout-recovery' / operation_id)
+
+
+def small_pending(world, body=None):
+    command, source = installed(world)
+    repo, directory, native = memory(world)
+    (directory / 'handoff-prompt.md').write_text(body if body is not None else policy_body(0))
+    (repo / 'synthetic-policy.md').write_text(policy_body(0))
+    _, inspected = inspect(world, command, repo)
+    proposal, _ = prepare(world, command, source, repo, inspected, native)
+    applied = call(world, command, 'apply', '--repo', repo, '--proposal', proposal)
+    return command, source, repo, directory, native, inspected, applied
+
+
+def unlock(world, command, repo):
+    preview = public(world, command, 'writes', 'recover', '--repo', repo)
+    if preview.get('proposal'):
+        public(world, command, 'writes', 'recover', '--repo', repo, '--proposal', save(world, preview))
+
+
+def discard_proposal(world, command, repo, bank, inspected, unit_id):
+    directory = private_directory(world, bank, inspected['operation_id'])
+    head = json.loads((directory / 'ledger-head.json').read_text())
+    ledger = json.loads((directory / 'ledger' / (str(head['generation']).zfill(8) + '.json')).read_text())
+    unit = next(row for row in ledger['units'] if row['unit_id'] == unit_id)
+    authority = {'schema': 'agent-memory/layout-nonguidance-discard-v1', 'review_id': str(uuid.uuid4()),
+        'operation_id': inspected['operation_id'], 'unit_id': unit_id,
+        'manifest_sha256': ledger['manifest_sha256'], 'unit_map_sha256': ledger['unit_map_sha256'],
+        'ledger_head_sha256': head['sha256'], 'source_ranges': unit['source_ranges'],
+        'author_harness': 'controlled-source-author', 'author_session': 'scratch-author',
+        'reviewer_developer_id': inspected['manifest']['identity']['scope_context']['developer_id'],
+        'reviewer_harness': 'controlled-independent-reviewer', 'reviewer_session': 'scratch-reviewer',
+        'review_time': inspected['manifest']['inspected_at'], 'non_guidance': True,
+        'reason': 'Explicit controlled authority for disposable scratch work-state; not guidance or an age-based discard.',
+        'decision': 'discard'}
+    output = world.inside('resolution-' + str(uuid.uuid4()) + '.json')
+    call(world, command, 'resolve', '--repo', repo, '--operation', inspected['operation_id'],
+         '--unit', unit_id, '--input', save(world, {'discard_authority': authority}), '--output', output)
+    return output
+
+
+def admission_proposal(world, command, source, repo, bank, inspected, *, full):
+    """Construct controlled attestations; actual installed consumers verify them."""
+    from contracts.test_admission import AdmissionContract
+    helper = AdmissionContract('runTest')
+    helper.pid = inspected['manifest']['project_id']
+    helper.actor = inspected['manifest']['identity']['scope_context']['developer_id']
+    request = helper.request('verified-repository', 'durable-discovery')
+    request['repository_evidence'] = {'path': 'synthetic-policy.md', 'sha256': sha((repo / 'synthetic-policy.md').read_bytes())}
+    request['assessment']['review'] = 'Controlled review of actual independently readable repository evidence.'
+    request['candidate']['body'] = policy_body(0)
+    request['candidate']['metadata']['evidence'] = ['synthetic-policy.md']
+    captured = public(world, command, 'capture', '--repo', repo, '--request', save(world, request))['capture']
+    compared = {'project_id': helper.pid, 'candidate': captured['request']['candidate'],
+                'searches': ['offline delivery queue', 'retain items after failure'], 'read_paths': []}
+    inspection_file = world.inside('comparison-' + str(uuid.uuid4()) + '.json')
+    public(world, command, 'compare', 'inspect', '--repo', repo, '--request', save(world, compared),
+           '--private-output', inspection_file)
+    view = json.loads(inspection_file.read_text())
+    nested_id = str(uuid.uuid4())
+    stamp = inspected['manifest']['inspected_at']
+    # Pure intended-map construction, not a substitute receipt or mocked writer.
+    builder = (
+        "import sys,json;sys.dont_write_bytecode=True;from pathlib import Path;sys.path.insert(0,sys.argv[1]);"
+        "from agent_memory import admission,bank_transactions;"
+        "print(json.dumps(admission.desired(bank_transactions.files_at(Path(sys.argv[2])),"
+        "{'capture':json.load(open(sys.argv[3])),'recorded_at':sys.argv[4]},sys.argv[5])))")
+    built = world.run([sys.executable, '-I', '-c', builder, source / 'scripts', bank,
+                       save(world, captured), stamp, nested_id], timeout=30)
+    intended = json.loads(built.stdout)
+    target = 'topics/' + captured['request']['candidate']['metadata']['id'] + '.md'
+    pending = []
+    for number, row in enumerate(view['pending_matches']):
+        credited = full and number == 0
+        claim = {'unit_id': row['unit_id'], 'coverage': 'full' if credited else 'none',
+            'covered_source_ranges': row['source_ranges'] if credited else [],
+            'target_record_refs': [{'id': captured['request']['candidate']['metadata']['id'], 'version': 1,
+                'path': target, 'resulting_sha256': sha(intended[target].encode())}] if credited else []}
+        pending.append({'unit_id': row['unit_id'], 'classification': 'distinct-knowledge',
+            'rationale': 'Controlled complete source meaning and conditions reviewed independently.',
+            'coverage_claim': claim})
+    judgment = {'observation': view['observation'],
+        'decisions': [{'path': row['path'], 'classification': 'distinct-knowledge',
+            'rationale': 'Different independently inspected prior meaning.'} for row in view['matches']],
+        'pending_decisions': pending, 'rationale': 'Complete controlled comparison, not a product acceptance verdict.'}
+    proof = {'schema': 'agent-memory/comparison-proof-v2', 'judgment': judgment,
+             'disposition': 'create-distinct', 'targets': []}
+    directory = private_directory(world, bank, inspected['operation_id'])
+    head = json.loads((directory / 'ledger-head.json').read_text())
+    ledger = json.loads((directory / 'ledger' / (str(head['generation']).zfill(8) + '.json')).read_text())
+    review = {'schema': 'agent-memory/layout-coverage-review-v1', 'review_id': str(uuid.uuid4()),
+        'operation_id': inspected['operation_id'], 'reviewer_developer_id': helper.actor,
+        'reviewer_harness': 'controlled-coverage-reviewer', 'reviewer_session': 'coverage-' + nested_id,
+        'review_time': stamp, 'manifest_sha256': ledger['manifest_sha256'],
+        'unit_map_sha256': ledger['unit_map_sha256'], 'ledger_head_sha256': head['sha256'],
+        'comparison_proof_input_sha256': sha(encoded(proof)), 'intended_output_sha256': sha(encoded(intended)),
+        'claims': [row['coverage_claim'] for row in pending],
+        'rationale': 'Controlled distinct-session review of full original ranges and complete intended result.',
+        'decision': 'approve'}
+    proof_file = world.inside('proof-' + str(uuid.uuid4()) + '.json')
+    public(world, command, 'compare', 'review', '--repo', repo, '--request', save(world, compared),
+           '--judgment', save(world, judgment), '--coverage-review', save(world, review),
+           '--private-output', proof_file)
+    output = world.inside('admission-' + str(uuid.uuid4()) + '.json')
+    public(world, command, 'admission', 'preview', '--repo', repo, '--capture', save(world, captured),
+           '--request', save(world, compared), '--proof', proof_file, '--operation-id', nested_id,
+           '--recorded-at', stamp, '--private-output', output)
+    return output, json.loads(output.read_text())['proposal'], target

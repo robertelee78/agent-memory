@@ -212,6 +212,20 @@ rollback only before the durable canonical receipt; finish only after it, linkin
 ledger resolution durably before restoring the hold. Missing evidence remains
 pending rather than “no pending units.”
 
+Nested previews take the ordinary scoped bank lock without changing canonical
+bytes or publishing ledger/index changes. An active owner remains a refusal.
+Only the known journal and durable canonical receipt can explain a ledger-head
+publication interrupted before its index update; ordinary frontier observers
+remain strict. Before a canonical receipt, rollback retains its exact initial
+state and ordered restoration plan before the first write, so a fresh preview
+can resume a rename that completed before its progress record.
+
+A standalone resolution receipt is durable evidence, not proof that its ledger
+linkage or safeguard retirement finished. Retry the exact resolution proposal
+after separately recovering any dead owned lock; recovery completes the same
+linkage/retirement without appending another resolution. Historical success is
+returned only after durable completion, never by discarding a remaining hold.
+
 Recovery-aware `publish inspect|prepare|land` and separately reviewed
 `retention inspect|apply` use their own exact requests. Publication requires a
 terminal complete frontier, all-side raw-source review, memory-only Git delta

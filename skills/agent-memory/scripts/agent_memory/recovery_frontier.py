@@ -196,9 +196,52 @@ def evidence(directory, current, row):
     return manifest, proposal
 
 
+def retained_handoff(root, operation, row, manifest, current_operation, index):
+    """A retained obligation needs its own hold or an exact reviewed successor."""
+    seen = set()
+    successor = current_operation
+    while successor != operation:
+        if successor is None or successor in seen:
+            raise ContractError('Retained rolled-back dependency lost its verified successor hold')
+        seen.add(successor)
+        successor_row = index['operations'].get(successor)
+        if successor_row is None:
+            raise ContractError('Recovery handoff names an absent successor')
+        directory, _, current = ledger(root, successor, successor_row)
+        source, proposal = evidence(directory, current, successor_row)
+        predecessor = source.get('predecessor')
+        if (not isinstance(predecessor, dict) or set(predecessor) != {'operation_id', 'marker_sha256', 'frontier'}
+                or proposal.get('predecessor') != predecessor):
+            raise ContractError('Retained rollback has no exact independently reviewed handoff')
+        previous = predecessor['operation_id']
+        previous_row = index['operations'].get(previous)
+        if previous_row is None or previous_row['state'] != 'rolled-back':
+            raise ContractError('Recovery handoff predecessor is absent or no longer retained')
+        expected_marker = encoded({'schema': HOLD, 'project_id': previous_row['project_id'],
+            'operation_id': previous, 'hold_id': previous_row['hold_id']})
+        pinned = predecessor['frontier']
+        heads = [head for head in pinned['ledger_heads'] if head['operation_id'] == previous]
+        if (predecessor['marker_sha256'] != digest(expected_marker)
+                or pinned['hold_sha256'] != digest(expected_marker)
+                or pinned['bank_path'] != str(state.paths(root)[1])
+                or pinned['project_id'] != row['project_id'] or len(heads) != 1
+                or source['identity']['scope_context'] != manifest['identity']['scope_context']):
+            raise ContractError('Recovery handoff changed its predecessor identity or frontier evidence')
+        old = state.read(state.paths(root, previous)[3] / 'ledger' / (str(heads[0]['generation']).zfill(8) + '.json'))
+        if digest(encoded(old)) != heads[0]['sha256'] or old['operation_id'] != previous:
+            raise ContractError('Recovery handoff lost its exact retained predecessor generation')
+        successor = previous
+
+
+
+
 def observe(repo, owner=None, transaction=None):
+    return _observe_index(repo, owner, transaction, state.index(repo))
+
+
+def _observe_index(repo, owner, transaction, index):
+    """Internal read-only view after exact known-transition validation only."""
     root, bank, base, _ = state.paths(repo)
-    index = state.index(root)
     raw = marker_bytes(bank)
     sentinel_raw = marker_bytes(bank, '.agent-memory-recovery.md')
     raw_value = load(raw) if raw is not None else {}
@@ -221,7 +264,7 @@ def observe(repo, owner=None, transaction=None):
             continue
         indexed_row = index['operations'].get(bound_id)
         known_child = child_parent is not None and transaction is not None and marker_value(transaction)['operation_id'] == bound_id
-        if not known_child and (indexed_row is None or indexed_row['state'] not in {'active', 'interrupted'}):
+        if not known_child and (indexed_row is None or indexed_row['state'] not in {'active', 'interrupted', 'rolled-back'}):
             raise ContractError('An active bound recovery dependency is missing from the operation index')
     marker = marker_value(raw) if raw is not None and (active or sentinel_raw is not None or child_parent is not None) else None
     if child_parent is not None:
@@ -258,15 +301,21 @@ def observe(repo, owner=None, transaction=None):
         source_pins.append({'operation_id': operation, 'manifest_sha256': current['manifest_sha256'],
             'unit_map_sha256': current['unit_map_sha256'], 'units': pending,
             'quiescence_heads_sha256': digest(state.read_bytes(directory / 'quiescence-attestations.json', missing=True))})
+        binding = state.bindings()['bindings'].get(operation)
         if row['state'] in {'active', 'interrupted'} or (
-                row['state'] == 'rolled-back' and operation == marker_operation):
-            binding = state.bindings()['bindings'].get(operation)
-            if binding is None or binding['project_id'] != row['project_id']:
-                raise ContractError('Recovery private-state binding is missing')
+                row['state'] == 'rolled-back' and (pending or operation == marker_operation
+                    or (binding is not None and binding['lifecycle_state'] in {'active', 'interrupted'}))):
+            if (binding is None or binding['project_id'] != row['project_id']
+                    or binding['lifecycle_state'] not in {'active', 'interrupted'}
+                    or binding['checkout_key'] != manifest['identity']['scope_context']['checkout_key']):
+                raise ContractError('Recovery private-state binding is missing or changed')
             journal = state.read(directory / 'journal.json')
-            if journal.get('operation_id') != operation or journal.get('proposal_sha256') != current['proposal_sha256']:
+            if (journal.get('operation_id') != operation or journal.get('proposal_sha256') != current['proposal_sha256']
+                    or journal.get('manifest_sha256') != current['manifest_sha256']):
                 raise ContractError('Recovery journal does not bind the exact reviewed operation')
-            if marker['schema'] == NESTED:
+            if row['state'] == 'rolled-back':
+                retained_handoff(root, operation, row, manifest, marker['operation_id'] if marker else None, index)
+            if marker is not None and marker['schema'] == NESTED and marker['operation_id'] == operation:
                 nested = state.read(directory / 'nested' / marker['nested_id'] / 'journal.json')
                 if nested.get('marker') != marker or nested.get('operation_id') != operation:
                     raise ContractError('Nested recovery marker has no exact typed private journal')
@@ -280,6 +329,8 @@ def observe(repo, owner=None, transaction=None):
         from .bank_observation import read_source
         project_id = bank_contract.parse_router(read_source(bank, 'MEMORY.md', 16384).decode('utf-8'))[0]['project-id']
     index_raw = state.read_bytes(base / 'index.json', missing=True)
+    if index_raw is not None:
+        index_raw = encoded(index)
     token = {'bank_path': str(bank), 'project_id': project_id, 'operation_ids': [row['operation_id'] for row in ledgers],
         'ledger_heads': ledgers, 'frontier_digest': digest(encoded(source_pins)), 'coverage_complete': not unit_ids,
         'unit_ids': sorted(unit_ids), 'reference_map_sha256': digest(encoded(reference_maps)), 'review_digest': None,
@@ -346,12 +397,35 @@ def verified_hold(repo, owner=None, transaction=None):
 
 def rolled_back_predecessor(repo, owner=None):
     """Typed continuation authority; never accepts an arbitrary expected marker."""
+    root, bank, _, _ = state.paths(repo)
+    if marker_bytes(bank) is None:
+        from .bank_observation import markers
+        markers(bank, owner)
+        indexed = state.index(root)
+        if marker_bytes(bank, '.agent-memory-recovery.md') is not None or any(
+                binding['bank_path'] == str(bank) and binding['lifecycle_state'] in {'active', 'interrupted'}
+                for binding in state.bindings()['bindings'].values()):
+            raise ContractError('Recovery inspection found an orphaned private dependency or sentinel')
+        for operation, row in indexed['operations'].items():
+            if row['state'] == 'cleaned':
+                continue
+            directory, _, current = ledger(root, operation, row)
+            evidence(directory, current, row)
+            if row['state'] in {'active', 'interrupted'} or any(
+                    unit['state'] == 'pending-admission' for unit in current['units']):
+                raise ContractError('Recovery inspection cannot omit a retained frontier without its hold')
+        return None
     held = verified_hold(repo, owner)
     if held is None:
         return None
     if state.index(repo)['operations'][held.operation_id]['state'] != 'rolled-back':
         raise ContractError('Only a completed exact rollback may hand its hold to a fresh reviewed repair')
     return held
+
+
+def same_hold(first, second):
+    return (type(first) is VerifiedHold and type(second) is VerifiedHold
+        and all(getattr(first, name) == getattr(second, name) for name in VerifiedHold.__slots__))
 
 
 def require_scope(repo, project_id=None, *, expected=None, owned_lock=None, owned_transaction=None, **kwargs):
@@ -465,7 +539,7 @@ def install(repo, operation_id, proposal, pending_ledger, hold_id, owner, *, pre
     if predecessor is None:
         markers(bank, owner)
     else:
-        if type(predecessor) is not VerifiedHold or rolled_back_predecessor(root, owner) != predecessor:
+        if not same_hold(rolled_back_predecessor(root, owner), predecessor):
             raise ContractError('Recovery predecessor must be the exact internally verified rolled-back hold')
         markers(bank, owner, predecessor.marker)
     if not uuid_valid(hold_id) or pending_ledger['operation_id'] != operation_id:
@@ -779,7 +853,7 @@ def prospective_token(repo, manifest, pending_units, *, predecessor=None, owner=
     if predecessor is None:
         if marker_bytes(bank) is not None or marker_bytes(bank, '.agent-memory-recovery.md') is not None:
             raise ContractError('A prospective repair cannot replace an unknown transaction or sentinel')
-    elif type(predecessor) is not VerifiedHold or rolled_back_predecessor(root, owner) != predecessor:
+    elif not same_hold(rolled_back_predecessor(root, owner), predecessor):
         raise ContractError('A prospective continuation must retain the exact checked rollback frontier')
     operations, heads, references = [], [], {}
     for operation, row in sorted(index['operations'].items()):

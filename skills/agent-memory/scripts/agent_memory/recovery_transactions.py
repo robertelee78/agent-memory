@@ -75,23 +75,49 @@ def resolution_plan(p, held, claims, review):
     return {'ledgers': plans}
 
 
+def planned_resolution(plan, journal, receipt, nested_id):
+    resolved_operation = plan['operation_id']
+    previous = state.read(state.paths(journal['proposal']['repo_root'], resolved_operation)[3]
+        / 'ledger' / (str(plan['previous_head']['generation']).zfill(8) + '.json'))
+    if (digest(encoded(previous)) != plan['previous_head']['sha256'] or previous['units'] != plan['units']
+            or {'operation_id': resolved_operation, 'generation': plan['previous_head']['generation'],
+                'sha256': plan['previous_head']['sha256']} not in journal['frontier']['ledger_heads']):
+        raise ContractError('Nested resolution plan changed its exact original ledger evidence')
+    evidence, proof, _ = resolution.transaction_evidence(journal['proposal'])
+    claims = evidence['unit_resolution_claims'] if evidence is not None else []
+    units, records = copy.deepcopy(plan['units']), []
+    for item in plan['resolutions']:
+        expected_id = str(uuid.UUID(hex=digest(encoded([nested_id, item['unit_id']]))[:32], version=4))
+        terminal_state = ('admitted' if 'admission_evidence' in journal['proposal'] else 'governed-terminal'
+            ) if item['claim']['coverage'] == 'full' else 'pending-admission'
+        if (item['resolution_id'] != expected_id or item['claim'] not in claims
+                or item['claim']['unit_id'] != item['unit_id'] or item['claim']['coverage'] == 'none'
+                or item['terminal_state'] != terminal_state or proof is None
+                or item['review_sha256'] != proof['judgment']['observation']['recovery_frontier']['review_digest']):
+            raise ContractError('Nested resolution lost its exact proof-bound claim and independent review')
+        record = {'schema': 'agent-memory/layout-resolution-receipt-v1',
+            'resolution_id': item['resolution_id'], 'operation_id': resolved_operation, 'unit_id': item['unit_id'],
+            'generation': plan['previous_head']['generation'], 'nested_id': nested_id,
+            'request_sha256': digest(encoded(journal['proposal'])), 'canonical_operation_id': nested_id,
+            'canonical_receipt_sha256': digest(encoded(receipt)), 'terminal_state': item['terminal_state'],
+            'claims': [item['claim']], 'independent_review_sha256': item['review_sha256'], 'verified': True}
+        unit = next(unit for unit in units if unit['unit_id'] == item['unit_id'])
+        if unit['state'] != 'pending-admission':
+            raise ContractError('Nested resolution cannot replace a historical terminal unit')
+        unit['state'] = item['terminal_state']
+        unit['terminal_receipts'].append({'resolution_id': item['resolution_id'], 'sha256': digest(encoded(record))})
+        records.append(record)
+    return units, records
+
+
 def terminalize(root, operation_id, nested_id, journal, receipt, owner, marker):
     directory = state.paths(root, operation_id)[3]
     for plan in journal['resolution_plan']['ledgers']:
         resolved_operation = plan['operation_id']
         resolved_directory = state.paths(root, resolved_operation)[3]
-        units = copy.deepcopy(plan['units'])
-        for item in plan['resolutions']:
-            record = {'schema': 'agent-memory/layout-resolution-receipt-v1',
-                'resolution_id': item['resolution_id'], 'operation_id': resolved_operation, 'unit_id': item['unit_id'],
-                'generation': plan['previous_head']['generation'], 'nested_id': nested_id,
-                'request_sha256': digest(encoded(journal['proposal'])), 'canonical_operation_id': nested_id,
-                'canonical_receipt_sha256': digest(encoded(receipt)), 'terminal_state': item['terminal_state'],
-                'claims': [item['claim']], 'independent_review_sha256': item['review_sha256'], 'verified': True}
-            state.write_once(resolved_directory / 'resolutions' / (item['resolution_id'] + '.json'), record)
-            unit = next(unit for unit in units if unit['unit_id'] == item['unit_id'])
-            unit['state'] = item['terminal_state']
-            unit['terminal_receipts'].append({'resolution_id': item['resolution_id'], 'sha256': digest(encoded(record))})
+        units, records = planned_resolution(plan, journal, receipt, nested_id)
+        for record in records:
+            state.write_once(resolved_directory / 'resolutions' / (record['resolution_id'] + '.json'), record)
         writes.fault('layout-recovery-admission-receipt-before-resolution')
         resolution.advance_ledger(root, resolved_operation, units, plan['previous_head'], owner, marker)
     token = frontier.observe(root, owner, marker)
@@ -159,7 +185,7 @@ def apply_transaction(prepared):
         receipt = {'schema': 'agent-memory/transaction-receipt-v1', 'operation_id': p['operation_id'],
             'request_sha256': digest(encoded(p)), 'bank_path': str(bank), 'project_id': p['project_id'],
             'observed_hashes': p['observed_hashes'], 'resulting_hashes': tx.file_hashes(p['files']),
-            'outcome': 'finished', 'changed_memory_paths': [bank.relative_to(root).as_posix() + '/' + path for path in paths],
+            'outcome': 'finished', 'changed_memory_paths': [bank.relative_to(root).as_posix() + '/' + path for path in tx.changed(p)],
             'readback_at': storage.now(), 'verified': True}
         writes.record(receipt_path, encoded(receipt))
         writes.fault('layout-recovery-nested-after-receipt')
@@ -184,38 +210,101 @@ def legal_partial(p, base, observed):
     raise ContractError('Nested recovery found an impossible ordered partial state or an external edit')
 
 
+def rollback_plan(directory, journal, observed):
+    path = directory / 'rollback-plan.json'
+    known = state.read(path, missing=True)
+    initial = observed if known is None else known['initial_hashes']
+    legal_partial(journal['proposal'], journal['base_files'], initial)
+    expected = tx.file_hashes(journal['base_files'])
+    actions = [{'path': name, 'after': expected.get(name)}
+        for name in sorted(set(initial) | set(expected), key=lambda name: (name == 'MEMORY.md', name))
+        if initial.get(name) != expected.get(name)]
+    plan = {'schema': 'agent-memory/layout-nested-rollback-v1', 'operation_id': journal['operation_id'],
+        'nested_id': journal['nested_id'], 'journal_sha256': digest(encoded(journal)),
+        'initial_hashes': initial, 'actions': actions}
+    if known is not None and known != plan:
+        raise ContractError('Nested rollback lost its exact durable original state/action plan')
+    running = dict(initial)
+    for boundary in range(len(actions) + 1):
+        if running == observed:
+            return plan, boundary
+        if boundary < len(actions):
+            action = actions[boundary]
+            if action['after'] is None:
+                running.pop(action['path'], None)
+            else:
+                running[action['path']] = action['after']
+    raise ContractError('Nested rollback found an impossible ordered boundary or external edit')
+
+
 def nested_preview(repo, operation_id, nested_id, mode, owner=None):
     root, bank, _, directory = state.paths(repo, operation_id)
     if mode not in {'finish', 'rollback'} or not uuid_valid(nested_id):
         raise ContractError('Known nested recovery needs the exact operation, UUID and finish/rollback mode')
     journal = state.read(directory / 'nested' / nested_id / 'journal.json')
+    fields = {'schema', 'operation_id', 'nested_id', 'marker', 'hold', 'proposal', 'proposal_sha256',
+              'base_files', 'frontier', 'resolution_plan'}
+    if not isinstance(journal, dict) or set(journal) not in (fields, fields | {'write_proposal'}):
+        raise ContractError('Nested recovery requires the exact typed retained journal')
     if (journal.get('schema') != 'agent-memory/layout-nested-journal-v1' or journal.get('operation_id') != operation_id
             or journal.get('nested_id') != nested_id or journal.get('proposal_sha256') != digest(encoded(journal['proposal']))):
         raise ContractError('Unknown, foreign or damaged nested recovery journal')
     marker = encoded(journal['marker'])
     bank_observation.markers(bank, owner, marker)
     p = tx.proposal_value(journal['proposal'])
+    original_hold = frontier.marker_value(encoded(journal['hold']))
+    expected_marker = {'schema': frontier.NESTED, 'project_id': p['project_id'],
+        'operation_id': operation_id, 'nested_id': nested_id, 'hold_id': original_hold.get('hold_id')}
+    if (journal['marker'] != expected_marker or original_hold['schema'] != frontier.HOLD
+            or original_hold['operation_id'] != operation_id or original_hold['project_id'] != p['project_id']
+            or p['operation_id'] != nested_id or p['repo_root'] != str(root)
+            or tx.file_hashes(journal['base_files']) != p['observed_hashes']
+            or journal['frontier']['project_id'] != p['project_id'] or journal['frontier']['bank_path'] != str(bank)):
+        raise ContractError('Nested journal changed its canonical base, marker or exact held scope')
     observed = writes.hashes(bank)
-    legal_partial(p, journal['base_files'], observed)
+    nested_directory = directory / 'nested' / nested_id
+    rollback = None
+    if state.read(nested_directory / 'rollback-plan.json', missing=True) is not None:
+        if mode != 'rollback':
+            raise ContractError('A durable pre-receipt nested rollback cannot become a finish')
+        rollback, _ = rollback_plan(nested_directory, journal, observed)
+    else:
+        legal_partial(p, journal['base_files'], observed)
     _, receipt_path = tx.locations(root, bank, nested_id)
     receipt = nested_receipt(journal, receipt_path)
-    frontier_token = frontier.observe(root, owner, marker)
+    indexed = state.index(root)
+    original_index_sha256 = digest(state.read_bytes(directory.parent / 'index.json'))
+    if receipt is not None:
+        for plan in journal['resolution_plan']['ledgers']:
+            resolved_directory = state.paths(root, plan['operation_id'])[3]
+            head = state.read(resolved_directory / 'ledger-head.json')
+            if head != plan['previous_head']:
+                units, _ = planned_resolution(plan, journal, receipt, nested_id)
+                projected, _, _ = resolution.interrupted_successor(root, plan['operation_id'], units, plan['previous_head'])
+                indexed['operations'][plan['operation_id']] = projected
+    frontier_token = frontier._observe_index(root, owner, marker, indexed)
     if receipt is None:
         frontier.check(journal['frontier'], root, owner, marker)
     if receipt is None and mode != 'rollback':
         raise ContractError('Unfinished governed nested learning permits rollback only, then fresh evidence')
     if receipt is not None and (receipt['outcome'] not in {'finished', 'replaced', 'already-present'} or mode != 'finish' or observed != receipt['resulting_hashes']):
         raise ContractError('A durably receipted canonical transaction is finish-only and cannot replay over later edits')
+    if receipt is None:
+        rollback, _ = rollback_plan(nested_directory, journal, observed)
     return {'schema': 'agent-memory/layout-nested-recovery-v1', 'recovery_id': str(uuid.uuid4()),
         'repo_root': str(root), 'operation_id': operation_id, 'nested_id': nested_id, 'mode': mode,
         'journal_sha256': digest(encoded(journal)), 'marker_sha256': digest(marker), 'observed_hashes': observed,
         'canonical_receipt_sha256': digest(encoded(receipt)) if receipt else None,
-        'ledger_head': state.read(directory / 'ledger-head.json'), 'recovery_frontier': frontier_token}
+        'ledger_head': state.read(directory / 'ledger-head.json'), 'recovery_frontier': frontier_token,
+        'ledger_index_sha256': original_index_sha256, 'rollback_plan': rollback}
 
 
 def recover_nested(repo, operation_id=None, nested_id=None, mode=None, proposal=None):
     if proposal is None:
-        return {'proposal': nested_preview(repo, operation_id, nested_id, mode), 'writes_performed': False}
+        root, bank, _, _ = state.paths(repo, operation_id)
+        with storage.exclusive(bank / '.agent-memory.lock', nested_id, 'bank-recover') as owner:
+            preview = nested_preview(root, operation_id, nested_id, mode, owner)
+        return {'proposal': preview, 'writes_performed': False, 'temporary_lock_writes_performed': True}
     p = proposal.get('proposal', proposal)
     root, bank, _, directory = state.paths(repo, p['operation_id'])
     with storage.exclusive(bank / '.agent-memory.lock', p['recovery_id'], 'bank-recover') as owner:
@@ -231,17 +320,27 @@ def recover_nested(repo, operation_id=None, nested_id=None, mode=None, proposal=
             receipt = nested_receipt(journal, receipt_path)
             terminalize(root, p['operation_id'], p['nested_id'], journal, receipt, owner, marker)
         else:
+            nested_directory = directory / 'nested' / p['nested_id']
+            plan, boundary = rollback_plan(nested_directory, journal, p['observed_hashes'])
+            if plan != p['rollback_plan']:
+                raise ContractError('Nested rollback changed its exact reviewed initial/action pins')
+            state.write_once(nested_directory / 'rollback-plan.json', plan)
+            writes.fault('layout-recovery-nested-rollback-after-plan')
             running = dict(p['observed_hashes'])
             expected = tx.file_hashes(journal['base_files'])
-            for path in sorted(set(running) | set(expected), key=lambda path: (path == 'MEMORY.md', path)):
-                if running.get(path) == expected.get(path):
-                    continue
+            for number, action in enumerate(plan['actions'][boundary:], boundary):
+                path = action['path']
                 tx.replace_file(bank, path, journal['base_files'].get(path), running, marker,
-                    set(original['observed_hashes']) | set(original['files']))
+                    set(original['observed_hashes']) | set(original['files']),
+                    before_replace=lambda: frontier.check(journal['frontier'], root, owner, marker))
                 if path in expected:
                     running[path] = expected[path]
                 else:
                     running.pop(path, None)
+                writes.fault('layout-recovery-nested-rollback-after-rename:' + path)
+                state.write_once(nested_directory / 'rollback-progress' / (str(number).zfill(8) + '.json'),
+                    {'path': path, 'hashes': running})
+                writes.fault('layout-recovery-nested-rollback-after-progress:' + path)
             bank_contract.validate(root, owned_lock=owner, owned_transaction=marker)
             state.write_once(directory / 'nested' / p['nested_id'] / 'completion.json', {
                 'schema': 'agent-memory/layout-nested-completion-v1', 'operation_id': p['operation_id'],

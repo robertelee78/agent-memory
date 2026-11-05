@@ -30,21 +30,21 @@ ROOT_FILES = {'manifest.json', 'manifest.sha256', 'unit-map.json', 'journal.json
 UUID = r'[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}'
 OWNED = re.compile(
     r'(?:originals|intended)/'+UUID+r'\.bin|'
-    r'(?:proposals|reviews|attestations|resolutions|union-reviews|discard-reviews|quiescence-reviews)/'+UUID+r'\.json|'
+    r'(?:proposals|reviews|attestations|resolutions|resolution-journals|resolution-completions|union-reviews|discard-reviews|quiescence-reviews)/'+UUID+r'\.json|'
     r'(?:coverage-reviews|unit-maps)/[0-9a-f]{64}\.json|'
     r'(?:ledger|progress|ledger-transitions)/[0-9]{8}\.json|'
     r'progress/(?:apply|finish|rollback)-[0-9]{8}\.json|'
     r'recovery/'+UUID+r'(?:\.receipt)?\.json|'
     r'revisions/'+UUID+r'/(?:proposal|review|receipt|journal|unit-map)\.json|'
-    r'nested/'+UUID+r'/(?:journal|receipt|proposal|resolution|completion)\.json|'
-    r'nested/'+UUID+r'/progress/[0-9]{8}\.json|'
+    r'nested/'+UUID+r'/(?:journal|receipt|proposal|resolution|completion|rollback-plan)\.json|'
+    r'nested/'+UUID+r'/(?:progress|rollback-progress)/[0-9]{8}\.json|'
     r'publication/'+UUID+r'/(?:observation|request|receipt)\.json|'
     r'publication/'+UUID+r'/originals/'+UUID+r'\.bin|'
     r'retention/'+UUID+r'/(?:intent|proposal|receipt|progress/[0-9]{8})\.json\Z')
 OWNED_DIRECTORY = re.compile(
-    r'(?:originals|intended|proposals|reviews|attestations|resolutions|ledger|progress|recovery|unit-maps|revisions|nested|publication|retention|coverage-reviews|union-reviews|discard-reviews|ledger-transitions|quiescence-reviews)|'
+    r'(?:originals|intended|proposals|reviews|attestations|resolutions|resolution-journals|resolution-completions|ledger|progress|recovery|unit-maps|revisions|nested|publication|retention|coverage-reviews|union-reviews|discard-reviews|ledger-transitions|quiescence-reviews)|'
     r'(?:revisions|nested|publication|retention)/'+UUID+r'|'
-    r'publication/'+UUID+r'/originals|retention/'+UUID+r'/progress|nested/'+UUID+r'/progress')
+    r'publication/'+UUID+r'/originals|retention/'+UUID+r'/progress|nested/'+UUID+r'/(?:progress|rollback-progress)')
 
 
 def require(condition, message):
@@ -278,6 +278,16 @@ def _dependencies(root, operation_id, base, directory, *, cleanup_id=None):
                             and receipt['operation_id'] == nested_id and receipt['project_id'] == row['project_id'])
                     if not complete:
                         blockers.append({'kind': 'unfinished-nested-transaction', 'artifact': name})
+                if other_id == operation_id and name.startswith('resolution-journals/'):
+                    resolution_id = PurePosixPath(name).stem
+                    completion = state.read(other / 'resolution-completions' / (resolution_id + '.json'), missing=True)
+                    receipt = state.read(other / 'resolutions' / (resolution_id + '.json'), missing=True)
+                    expected = {'schema': 'agent-memory/layout-resolution-completion-v1',
+                        'resolution_id': resolution_id, 'receipt_sha256': digest(encoded(receipt)),
+                        'journal_sha256': digest(encoded(value)), 'verified': True}
+                    if (receipt is None or completion != expected or value.get('proposal', {}).get('operation_id') != operation_id
+                            or receipt.get('request_sha256') != digest(encoded(value['proposal']))):
+                        blockers.append({'kind': 'unfinished-resolution', 'artifact': name})
                 if other_id == operation_id and name.startswith('publication/') and name.endswith('/request.json'):
                     receipt_name = name[:-len('request.json')]+'receipt.json'
                     receipt = state.read(other/receipt_name, missing=True)
@@ -304,7 +314,8 @@ def _dependencies(root, operation_id, base, directory, *, cleanup_id=None):
 def _retained(name):
     return (name in {'receipt.json', 'retention-requirements.json', 'quiescence-attestations.json', 'staging.json',
                     'retirement.json', 'reference-map.json'}
-            or name.startswith(('retention/', 'resolutions/', 'nested/', 'proposals/', 'recovery/', 'revisions/',
+            or name.startswith(('retention/', 'resolutions/', 'resolution-journals/', 'resolution-completions/',
+                                'nested/', 'proposals/', 'recovery/', 'revisions/',
                                 'coverage-reviews/', 'union-reviews/', 'discard-reviews/', 'ledger-transitions/',
                                 'quiescence-reviews/', 'attestations/', 'reviews/'))
             or (name.startswith('publication/') and '/originals/' not in name))
