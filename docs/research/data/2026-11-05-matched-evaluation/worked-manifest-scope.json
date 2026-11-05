@@ -7,7 +7,9 @@
   "repository": {
     "url": "https://github.com/robertelee78/agent-memory",
     "license_status": "no LICENSE/COPYING/NOTICE file tracked at base; redistribution of derived fixtures requires operator decision U3",
-    "self_hosting": true
+    "self_hosting": true,
+    "primary_eligible": false,
+    "primary_ineligibility_reason": "No sealed runtime or both-arm answer-source canary proof exists; not a qualified task"
   },
   "base": {
     "commit": "ce8660aecdbd40c8b11fb409d6cafc5cb15fbb3e",
@@ -42,7 +44,7 @@
     "full_gate_invocation": "scripts/test.sh --release --json (as .github/workflows/contracts.yml)",
     "pass_rule": "returncode 0 AND counts.passed true AND counts.tests == 4 AND zero failures/errors/skipped/expected_failures/unexpected_successes AND every module in the baseline-green regression set still passes AND no prohibited path changed",
     "baseline_green_regression_set": {"status": "not measured in #248", "rule": "modules passing at the clean base on the same grader host/Python during qualification; a module failing at base is reported, never counted as solver regression"},
-    "grading_copy": "separate copy: solver diff applied to the ORIGINAL base tree (oracle module, registry, memory-bank restored by blob); never returns hidden test text to the solver"
+    "grading_copy": "separate original-base copy; apply only allowlisted product-code diff, never canonical/private memory deltas; restore oracle/registry/bank by blob; retain memory changes separately as S3 evidence; never return hidden test text"
   },
   "seed_patch": {"status": "not-authored", "author": "independent task author (unassigned)", "sha256": null, "qualification": "must make target_test fail on the seeded tree; not executed in #248"},
   "reference_repair": {"status": "not-authored", "author": "author separate from seed author (unassigned)", "sha256": null, "qualification": "must pass the complete oracle module and baseline-green set; not executed in #248"},
@@ -52,6 +54,7 @@
       {"path": "tests/contracts/test_scope_policy.py", "blob": "aa59ba7c8cfb361ba9803fb3189fe892447ce620", "reason": "hidden oracle"},
       {"path": "docs/research/v0.0.15-matched-evaluation-protocol.md", "blob": null, "reason": "names the task's oracle and target module; blob bound after review"},
       {"path": "docs/research/data/2026-11-05-matched-evaluation/", "blob": null, "reason": "this manifest and calculation data are answer-bearing"},
+      {"path": "docs/design/v0.0.15-248-research.md", "blob": null, "reason": "approved study plan names oracle/seed; remove and bind blob if present at release re-pin"},
       {"path": "memory-bank/MEMORY.md", "blob": "c4b769638fd802a6e6a8290a3c46090101d0aad9", "reason": "committed project bank (self-hosting isolation)"},
       {"path": "memory-bank/activeContext.md", "blob": "abd9f5565cddcadbb384972983e55c791d7bd400", "reason": "committed project bank"},
       {"path": "memory-bank/history/events/02fae92e-c392-48c6-80c9-e76b82cca2b9.md", "blob": "51380b87e86dd3000576daacb212715707c28346", "reason": "committed project bank"},
@@ -92,5 +95,20 @@
   "visible_smoke": {"status": "not-authored", "requirements": "exercises scope_policy decide on a non-hidden input; must not contain the hidden condition matrix; registered or runnable through the same World wrapper"},
   "assignment_text": {"status": "not-authored", "requirements": "describe the user-visible symptom only; no file, function or oracle name"},
   "environment": {"python_min": "3.11 (scripts/test_gate.py main)", "git": "required by tests/world.py", "network": "none required by the oracle; World sets GIT_ALLOW_PROTOCOL=file"},
-  "memory_on_bank": {"status": "not-authored", "requirements": "independently labeled safe project-scoped records from earlier independent tasks; relevant/irrelevant/stale/conflicting/revoked/no-help cases; never the target fix or hidden oracle"}
+  "memory_on_bank": {"status": "not-authored", "requirements": "independently labeled safe project-scoped records from earlier independent tasks; relevant/irrelevant/stale/conflicting/revoked/no-help cases; never the target fix or hidden oracle"},
+  "runtime_answer_source_isolation": {
+    "status": "not-authored",
+    "runtime_artifact_hashes": null,
+    "agent_visible_roots": null,
+    "os_or_broker_boundary": null,
+    "blocked_source_debug_process_trace_routes": null,
+    "both_arm_planted_answer_source_canary_results": null,
+    "requirements": "Protocol section 6.6: source-hash and content checks including installed AM source, caches, archives, history, process/debug/network routes; accessible answer or uninspectable route excludes self-hosted task from P"
+  },
+  "grading_diff_boundary": {
+    "product_code_allowlist": null,
+    "excluded_memory_roots": ["memory-bank/", "all private AM runtime/config/state roots from the run manifest"],
+    "memory_delta_evidence": {"status": "not-authored", "requirements": "retain canonical/private memory changes separately for S3/lifecycle; legitimate memory writes are not a coding failure"},
+    "prohibited_changes": ["hidden oracle", "grader", "registry outside declared rewrite", "CI"]
+  }
 }

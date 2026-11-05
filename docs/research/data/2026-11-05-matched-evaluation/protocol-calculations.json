@@ -232,6 +232,23 @@
       "runs": 160
     }
   },
+  "evidence_run": {
+    "argv": [
+      "/Users/robert.lee/.pyenv/versions/3.13.12/bin/python3",
+      "-I",
+      "-B",
+      "docs/research/data/2026-11-05-matched-evaluation/protocol_calculations.py"
+    ],
+    "exit": 0,
+    "machine": "arm64",
+    "platform": "macOS-27.2-arm64-arm-64bit-Mach-O",
+    "python": "3.13.12",
+    "scope": "Research-only disposable scenarios/arithmetic; no production feature qualification",
+    "script_sha256": "557813828435f746a963f8b9c2a559b157a7f0b923e82b4bad1222651b613912",
+    "seconds": 1.0705160420038737,
+    "source_revision": "a5ccf6bb2a87b8159e48107f095782d4c87d6c05",
+    "started_at": "2026-11-05T04:39:40.808478+00:00"
+  },
   "few_cluster_sign_flip": [
     {
       "can_reject_at_0.05": false,

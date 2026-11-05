@@ -1,4 +1,21 @@
 {
+  "evidence_run": {
+    "argv": [
+      "/Users/robert.lee/.pyenv/versions/3.13.12/bin/python3",
+      "-I",
+      "-B",
+      "docs/research/data/2026-11-05-federation-catalog/walkthrough.py"
+    ],
+    "exit": 0,
+    "machine": "arm64",
+    "platform": "macOS-27.2-arm64-arm-64bit-Mach-O",
+    "python": "3.13.12",
+    "scope": "Research-only disposable scenarios/arithmetic; no production feature qualification",
+    "script_sha256": "3d37c81d79b897eee4ac34fdd41a0927a9e0806f8926a40574cc556cbd193f1d",
+    "seconds": 9.151367500016931,
+    "source_revision": "a5ccf6bb2a87b8159e48107f095782d4c87d6c05",
+    "started_at": "2026-11-05T04:39:15.013195+00:00"
+  },
   "part1_current_behavior": {
     "O10_router_identity_disclosure": {
       "canonical_remote_in_router": true,
@@ -152,6 +169,11 @@
     },
     "denied_or_unavailable_cells_with_foreign_read_or_disclosure": 0,
     "expected_allowed_cells": 16,
+    "public_request_outcomes": {
+      "approval-required": 16,
+      "available": 16,
+      "unavailable": 2016
+    },
     "scope_note": "Consistency check of the brief proposal encoding; not a runtime, security or feature pass."
   },
   "part3_proposed_scenarios": [
@@ -161,6 +183,7 @@
       "foreign_metadata_disclosed": true,
       "foreign_reads": 1,
       "matches_expected": true,
+      "public_request_outcome": "available",
       "scenario": "UC-a public SDK asks public server compatibility notes"
     },
     {
@@ -169,6 +192,7 @@
       "foreign_metadata_disclosed": false,
       "foreign_reads": 0,
       "matches_expected": true,
+      "public_request_outcome": "unavailable",
       "scenario": "UC-a same, server never exported the record (X absent)"
     },
     {
@@ -177,6 +201,7 @@
       "foreign_metadata_disclosed": true,
       "foreign_reads": 1,
       "matches_expected": true,
+      "public_request_outcome": "available",
       "scenario": "UC-b private app asks private deploy repo ownership contract"
     },
     {
@@ -185,6 +210,7 @@
       "foreign_metadata_disclosed": false,
       "foreign_reads": 0,
       "matches_expected": true,
+      "public_request_outcome": "unavailable",
       "scenario": "UC-c public library expands toward private consumer it cannot see (D absent)"
     },
     {
@@ -193,6 +219,7 @@
       "foreign_metadata_disclosed": true,
       "foreign_reads": 1,
       "matches_expected": true,
+      "public_request_outcome": "available",
       "scenario": "UC-c private consumer reads public library export"
     },
     {
@@ -207,6 +234,7 @@
       "foreign_metadata_disclosed": false,
       "foreign_reads": 0,
       "matches_expected": true,
+      "public_request_outcome": "unavailable",
       "scenario": "UC-e fork without explicit membership of new UUID (M absent)"
     },
     {
@@ -215,6 +243,7 @@
       "foreign_metadata_disclosed": false,
       "foreign_reads": 0,
       "matches_expected": true,
+      "public_request_outcome": "unavailable",
       "scenario": "UC-f project removed from federation (revocation observed)"
     },
     {
@@ -223,6 +252,7 @@
       "foreign_metadata_disclosed": false,
       "foreign_reads": 0,
       "matches_expected": true,
+      "public_request_outcome": "unavailable",
       "scenario": "UC-f offline, current membership version unknown"
     },
     {
@@ -231,6 +261,7 @@
       "foreign_metadata_disclosed": false,
       "foreign_reads": 0,
       "matches_expected": true,
+      "public_request_outcome": "unavailable",
       "scenario": "UC-f cached grant version older than known current"
     },
     {
@@ -239,6 +270,7 @@
       "foreign_metadata_disclosed": false,
       "foreign_reads": 0,
       "matches_expected": true,
+      "public_request_outcome": "approval-required",
       "scenario": "D4 operator denied or cancelled expansion prompt (E absent)"
     },
     {
@@ -247,6 +279,7 @@
       "foreign_metadata_disclosed": false,
       "foreign_reads": 0,
       "matches_expected": true,
+      "public_request_outcome": "unavailable",
       "scenario": "D4 allow-without-asking but destination not a member (M absent)"
     },
     {
@@ -255,6 +288,7 @@
       "foreign_metadata_disclosed": true,
       "foreign_reads": 1,
       "matches_expected": true,
+      "public_request_outcome": "available",
       "scenario": "R3 remote embedding endpoint without provider approval (P absent)"
     },
     {
@@ -263,9 +297,10 @@
       "foreign_metadata_disclosed": false,
       "foreign_reads": 0,
       "matches_expected": true,
+      "public_request_outcome": "unavailable",
       "scenario": "Reader in destination lacks read/acceptance (R absent)"
     }
   ],
   "schema": "am-v015-246-walkthrough-v1",
-  "source_revision": "ce8660aecdbd40c8b11fb409d6cafc5cb15fbb3e"
+  "source_revision": "a5ccf6bb2a87b8159e48107f095782d4c87d6c05"
 }

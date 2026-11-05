@@ -1,4 +1,21 @@
 {
+  "evidence_run": {
+    "argv": [
+      "/Users/robert.lee/.pyenv/versions/3.13.12/bin/python3",
+      "-I",
+      "-B",
+      "docs/research/data/2026-11-05-export-governance/local_invariant_scenarios.py"
+    ],
+    "exit": 0,
+    "machine": "arm64",
+    "platform": "macOS-27.2-arm64-arm-64bit-Mach-O",
+    "python": "3.13.12",
+    "scope": "Research-only disposable scenarios/arithmetic; no production feature qualification",
+    "script_sha256": "91d247fdb288a9f45e7c8c967a84699cf193a3d6de6df6d8160d09aa09e8246f",
+    "seconds": 16.642067999986466,
+    "source_revision": "a5ccf6bb2a87b8159e48107f095782d4c87d6c05",
+    "started_at": "2026-11-05T04:39:24.165477+00:00"
+  },
   "part_a_current_source": {
     "A1_local_eligibility": {
       "excluded_count_keys": [
@@ -62,7 +79,7 @@
       "exit": 0,
       "remaining": [
         {
-          "id": "313cf02a-ac84-47af-8ee3-5c803867bcfa",
+          "id": "be98ac3c-1dca-48d9-bc4f-dac16d0923bf",
           "path": "topics/active.md",
           "version": 1
         }
@@ -95,7 +112,7 @@
           ],
           "exit": 0,
           "kept_ids": [
-            "acb17942-9235-4dc1-8aec-9beecef9da85"
+            "1b27d9f3-0657-4ab8-bef0-4159679e9124"
           ],
           "suppressed": 1
         },
@@ -106,7 +123,7 @@
           ],
           "exit": 0,
           "kept_ids": [
-            "acb17942-9235-4dc1-8aec-9beecef9da85"
+            "1b27d9f3-0657-4ab8-bef0-4159679e9124"
           ],
           "suppressed": 1
         },
@@ -117,7 +134,7 @@
           ],
           "exit": 0,
           "kept_ids": [
-            "acb17942-9235-4dc1-8aec-9beecef9da85"
+            "1b27d9f3-0657-4ab8-bef0-4159679e9124"
           ],
           "suppressed": 1
         }

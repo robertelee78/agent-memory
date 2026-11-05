@@ -207,7 +207,7 @@ STATES = ('verified-current', 'stale-local-version', 'offline-unknown', 'revocat
 
 
 def proposed(grants, direction, authority_state, provider_remote):
-    """Return (decision, foreign_reads, foreign_metadata_disclosed) under the brief's proposal.
+    """Return private internal (decision, foreign_reads, disclosed) for research arithmetic.
 
     Local manifest/grant/receipt checks run first; a foreign bank/index/graph is
     opened only when every local check passes and authority is currently verified.
@@ -224,8 +224,17 @@ def proposed(grants, direction, authority_state, provider_remote):
     return 'allowed', 1, True
 
 
+def public_outcome(grants, authority_state):
+    """One request-level envelope; no destination IDs or distinguishing reasons."""
+    if authority_state != 'verified-current' or not all(grants[k] for k in ('M', 'D', 'R', 'X')):
+        return 'unavailable'
+    if not grants['E']:
+        return 'approval-required'
+    return 'available'
+
+
 def truth_table():
-    decisions, per_direction = {}, {d: 0 for d in DIRECTIONS}
+    decisions, public_decisions, per_direction = {}, {}, {d: 0 for d in DIRECTIONS}
     cells = allowed_missing = denied_with_reads = 0
     for bits in itertools.product((False, True), repeat=len(AUTH)):
         grants = dict(zip(AUTH, bits))
@@ -235,6 +244,8 @@ def truth_table():
                     cells += 1
                     decision, reads, disclosed = proposed(grants, direction, state, provider_remote)
                     decisions[decision] = decisions.get(decision, 0) + 1
+                    public = public_outcome(grants, state)
+                    public_decisions[public] = public_decisions.get(public, 0) + 1
                     if decision.startswith('allowed'):
                         per_direction[direction] += 1
                         allowed_missing += not all(grants[k] for k in ('M', 'D', 'R', 'X', 'E'))
@@ -245,6 +256,7 @@ def truth_table():
         for bits in itertools.product((False, True), repeat=len(AUTH)) for d in DIRECTIONS
         for s in STATES for p in (False, True))
     return {'cells': cells, 'decisions': decisions, 'allowed_per_direction': per_direction,
+            'public_request_outcomes': public_decisions,
             'allowed_cells_missing_any_of_MDRXE': allowed_missing,
             'denied_or_unavailable_cells_with_foreign_read_or_disclosure': denied_with_reads,
             'decision_independent_of_repository_visibility': invariant,
@@ -280,6 +292,7 @@ def scenarios():
             continue
         decision, reads, disclosed = proposed(grants, direction, state, remote)
         rows.append({'scenario': name, 'direction': direction, 'decision': decision, 'foreign_reads': reads,
+                     'public_request_outcome': public_outcome(grants, state),
                      'foreign_metadata_disclosed': disclosed, 'matches_expected': decision == expected})
     return rows
 
