@@ -102,9 +102,19 @@ def ledger(repo, operation_id, row):
         if current['previous_generation_sha256'] is not None:
             raise ContractError('Initial recovery ledger cannot replace prior history')
     else:
-        previous = state.read(directory / 'ledger' / (str(head['generation'] - 1).zfill(8) + '.json'))
-        if digest(encoded(previous)) != current['previous_generation_sha256']:
-            raise ContractError('Recovery ledger successor lost its immutable predecessor')
+        expected_previous = current['previous_generation_sha256']
+        remaining = sharing_limits.MAX_PRIVATE - len(encoded(current))
+        for generation in range(head['generation'] - 1, -1, -1):
+            raw_previous = state.read_bytes(directory / 'ledger' / (str(generation).zfill(8) + '.json'), remaining)
+            remaining -= len(raw_previous)
+            previous = load(raw_previous)
+            if (digest(raw_previous) != expected_previous or encoded(previous) != raw_previous
+                    or previous.get('generation') != generation or previous.get('operation_id') != operation_id
+                    or previous.get('project_id') != row['project_id']):
+                raise ContractError('Recovery ledger successor lost its complete immutable predecessor chain')
+            expected_previous = previous.get('previous_generation_sha256')
+        if expected_previous is not None:
+            raise ContractError('Recovery ledger history does not terminate at its original generation')
     seen = set()
     for unit in current['units']:
         extra = {'child_unit_ids'} if unit.get('state') == 'superseded-by-revision' else set()
@@ -201,6 +211,13 @@ def observe(repo, owner=None, transaction=None):
         if (isinstance(candidate_marker, dict) and candidate_marker.get('schema') == TRANSACTION
                 and candidate_marker.get('operation_id') not in index['operations']):
             child_parent = verified_child_transaction(root, owner, raw, index)
+    for bound_id, binding in state.bindings()['bindings'].items():
+        if binding['bank_path'] != str(bank) or binding['lifecycle_state'] not in {'active', 'interrupted'}:
+            continue
+        indexed_row = index['operations'].get(bound_id)
+        known_child = child_parent is not None and transaction is not None and marker_value(transaction)['operation_id'] == bound_id
+        if not known_child and (indexed_row is None or indexed_row['state'] not in {'active', 'interrupted'}):
+            raise ContractError('An active bound recovery dependency is missing from the operation index')
     marker = marker_value(raw) if raw is not None and (active or sentinel_raw is not None or child_parent is not None) else None
     if child_parent is not None:
         marker = {**marker, 'operation_id': child_parent}
@@ -679,3 +696,58 @@ def verified_child_transaction(repo, owner, transaction, indexed):
     scope_binding.require(root, marker['project_id'], expected=p['scope_context'], owned_lock=owner, owned_transaction=transaction)
     markers(bank, owner, transaction)
     return parent
+
+
+def prospective_token(repo, manifest, pending_units):
+    """Capacity witness only: include all checked prior terminal private state."""
+    root, bank, _, _ = state.paths(repo)
+    if (manifest.get('observation_complete') is not True or manifest.get('repo_root') != str(root)
+            or manifest.get('bank_path') != str(bank) or not uuid_valid(manifest.get('operation_id'))
+            or manifest['identity']['scope_context']['project_id'] != manifest['project_id']):
+        raise ContractError('Recovery reservation requires the actual complete independently bound raw manifest')
+    index = state.index(root)
+    if any(row['state'] in {'active', 'interrupted'} for row in index['operations'].values()):
+        raise ContractError('A prospective repair cannot omit a competing private recovery frontier')
+    if marker_bytes(bank) is not None or marker_bytes(bank, '.agent-memory-recovery.md') is not None:
+        raise ContractError('A prospective repair cannot replace an unknown transaction or sentinel')
+    operations, heads, references = [], [], {}
+    for operation, row in sorted(index['operations'].items()):
+        if row['state'] in {'cleaned', 'rolled-back'}:
+            continue
+        directory, head, current = ledger(root, operation, row)
+        evidence(directory, current, row)
+        if row['project_id'] != manifest['project_id'] or any(unit['state'] == 'pending-admission' for unit in current['units']):
+            raise ContractError('Prior private recovery evidence is foreign, unresolved or falsely terminal')
+        mapping = state.read(directory / 'reference-map.json', missing=True)
+        if mapping:
+            references[operation] = mapping
+        operations.append(operation)
+        heads.append({'operation_id': operation, 'generation': head['generation'], 'sha256': head['sha256']})
+    operation = manifest['operation_id']
+    if operation in index['operations']:
+        raise ContractError('A new raw reservation cannot reuse an existing recovery operation')
+    operations.append(operation)
+    heads.append({'operation_id': operation, 'generation': 0, 'sha256': 'f' * 64})
+    unit_ids = sorted(unit['unit_id'] for unit in pending_units if unit.get('state', 'pending-admission') == 'pending-admission')
+    return {'bank_path': str(bank), 'project_id': manifest['project_id'], 'operation_ids': sorted(operations),
+        'ledger_heads': sorted(heads, key=lambda row: row['operation_id']), 'frontier_digest': 'f' * 64,
+        'coverage_complete': not unit_ids, 'unit_ids': unit_ids, 'reference_map_sha256': digest(encoded(references)),
+        'review_digest': None, 'index_sha256': 'f' * 64, 'hold_sha256': 'f' * 64 if unit_ids else None,
+        'sentinel_sha256': 'f' * 64 if unit_ids else None}
+
+
+def successor_token(token, pending_unit_ids, *, operation_id, generation_change=True):
+    """A capacity-only successor; it is never accepted as an observed proof."""
+    result = copy.deepcopy(token)
+    result['unit_ids'] = sorted(pending_unit_ids)
+    result['coverage_complete'] = not pending_unit_ids
+    if generation_change:
+        for head in result['ledger_heads']:
+            if head['operation_id'] == operation_id:
+                head['generation'] += 1
+                head['sha256'] = 'f' * 64
+    if not pending_unit_ids:
+        result['hold_sha256'] = None
+        result['sentinel_sha256'] = None
+    result['review_digest'] = None
+    return result

@@ -23,7 +23,7 @@ MAX_INTENT=8192
 INTENT_SCHEMA='agent-memory/hold-source-enrollment-v1'
 UNIDENTIFIED_SCHEMA='agent-memory/unidentified-private-input-v1'
 MAX_RETAINED_INPUT=131072
-_BARRIERS=ContextVar('agent_memory_source_barriers',default={})
+_barriers=ContextVar('agent_memory_source_barriers',default={})
 
 
 class VerifiedReceipt(dict):
@@ -75,15 +75,15 @@ def source_barrier(repo, *, exclusive=False):
     from . import layout_recovery_state
     root,bank,recovery_base,_=layout_recovery_state.paths(repo)
     base=recovery_base.parent
-    known=_BARRIERS.get()
+    known=_barriers.get()
     if str(base) in known:
         if exclusive and not known[str(base)]:raise ContractError('Cannot upgrade an active shared source barrier')
         yield
         return
     with private_lock(base/'source-barrier.lock',shared=not exclusive):
-        token=_BARRIERS.set({**known,str(base):exclusive})
+        token=_barriers.set({**known,str(base):exclusive})
         try:yield
-        finally:_BARRIERS.reset(token)
+        finally:_barriers.reset(token)
 
 
 def source_operation(function):

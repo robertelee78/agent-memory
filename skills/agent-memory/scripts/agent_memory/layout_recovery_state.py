@@ -63,7 +63,12 @@ def read_bytes(path, maximum=sharing_limits.MAX_PRIVATE, *, missing=False):
 
 def read(path, maximum=sharing_limits.MAX_PRIVATE, *, missing=False):
     raw = read_bytes(path, maximum, missing=missing)
-    return None if raw is None else load(raw)
+    if raw is None:
+        return None
+    value = load(raw)
+    if encoded(value) != raw:
+        raise ContractError('Immutable recovery JSON is not its exact canonical encoded record')
+    return value
 
 
 def private_parent(path):

@@ -353,7 +353,9 @@ def _validate_files(files, *, parsed_records=None):
 def validate(repo, *, owned_lock=None, owned_transaction=None):
     from . import bank_observation
     observed = bank_observation.observe(repo, owner=owned_lock, transaction=owned_transaction)
+    from .recovery_frontier import public_coverage
     return {**observed.checked, "validation_scope": "canonical-bank-eligibility",
+            **public_coverage(observed.recovery_frontier),
             "source_stability_verified": True}
 
 

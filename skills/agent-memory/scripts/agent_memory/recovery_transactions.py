@@ -112,7 +112,9 @@ def apply_transaction(prepared):
         claims, review = validate(p, owner)
         token = held.token
         remaining = credited_rows(root, token, claims, owner)
-        frontier.reservation(p['files'], remaining, {**token, 'unit_ids': [row['unit_id'] for row in remaining]})
+        capacity_token = frontier.successor_token(token, [row['unit_id'] for row in remaining],
+            operation_id=held.operation_id, generation_change=any(claim['coverage'] != 'none' for claim in claims))
+        frontier.reservation(p['files'], remaining, capacity_token)
         base_files = tx.files_at(bank)
         tx.preflight(bank, p)
         security.guarded_start(root, p['operation_id'], held.scope,

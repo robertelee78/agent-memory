@@ -14,7 +14,7 @@ from .identity_git import git
 TOKENS = {'layout-frontier-v1', 'omp-harness-v1'}
 
 
-_BARRIERS = ContextVar('private-state-lifecycle-barriers', default=None)
+_barriers = ContextVar('private-state-lifecycle-barriers', default=None)
 def compatibility(target):
     if target is None:
         return set()
@@ -28,6 +28,9 @@ def compatibility(target):
 def repository_inventory(installation=None):
     """Discovery is a union, not an intersection with currently available banks."""
     roots, unknown = set(), []
+    cwd = Path.cwd().resolve()
+    top = git(cwd, 'rev-parse', '--show-toplevel', optional=True)
+    roots.add(Path(top).resolve() if top else cwd)
     registry, registry_sha = project_identity.observe()
     for entry in registry['checkouts'].values():
         for location in entry['locations']:
@@ -112,20 +115,18 @@ def required_private_state_capabilities(installation, target_artifact, operation
                 operations, _ = bank_writes.state_paths(root, bank, '00000000-0000-4000-8000-000000000000')
                 source_marker = operations.parent / 'turn-sources-compat-v1.json'
                 source_tree = operations.parent / 'omp-source-v1'
-                held = _BARRIERS.get()
+                held = _barriers.get()
                 if held is not None and str(root) not in held:
                     raise ContractError('A bank joined the private-state inventory after lifecycle quiescence')
-                if omp_boundary is not None and hasattr(omp_boundary, 'source_barrier'):
-                    if held is None:
-                        stack.enter_context(omp_boundary.source_barrier(root, exclusive=True))
-                    producer = getattr(omp_boundary, 'required_source_capabilities', None)
-                    if producer is None:
-                        if os.path.lexists(source_marker) or os.path.lexists(source_tree):
-                            raise ContractError('Private source requirement cannot be completely observed')
-                    else:
-                        capabilities.update(producer(root))
-                elif os.path.lexists(source_marker) or os.path.lexists(source_tree):
-                    raise ContractError('Private native source state requires its capable source observer')
+                from .turn_sources import source_barrier
+                if held is None:
+                    stack.enter_context(source_barrier(root, exclusive=True))
+                producer = getattr(omp_boundary, 'required_source_capabilities', None)
+                if producer is None:
+                    if os.path.lexists(source_marker) or os.path.lexists(source_tree):
+                        raise ContractError('Private native source requirement cannot be completely observed')
+                else:
+                    capabilities.update(producer(root))
                 token = recovery_frontier.observe(root)
                 indexed = state.index(root)
                 layout_required = token['hold_sha256'] is not None or any(
@@ -151,6 +152,14 @@ def required_private_state_capabilities(installation, target_artifact, operation
                 unknown.append({'source': 'private-state', 'location': str(root),
                     'reason': 'private state is missing, inaccessible, interrupted, malformed or changed'})
     required = set().union(*(set(values) for values in requirements.values())) if requirements else set()
+    if isinstance(target_artifact, dict) and target_artifact.get('already_active_verified') is True:
+        from . import installation as install
+        receipt_path = Path(target_artifact['reader_receipt_path'])
+        other = install.read_receipt(receipt_path.parent)
+        if (other is None or digest(state.read_bytes(receipt_path)) != target_artifact['reader_receipt_sha256']
+                or other['source']['artifact_digest'] != target_artifact['artifact_digest']):
+            raise ContractError('Selected preserved capable runtime receipt changed or is no longer active')
+        install.verify_targets(other['targets'], source=other['source'])
     missing = required - supported
     if operation == 'uninstall' and required:
         # An explicit equivalent already-active runtime must be passed as target.
@@ -176,7 +185,7 @@ def require_compatible(installation, target_artifact, operation, expected=None):
 @contextmanager
 def activation_guard(installation, target_artifact, operation, transition=None):
     """Retain the common source barriers through activation and exact rollback."""
-    existing = _BARRIERS.get()
+    existing = _barriers.get()
     if existing is not None:
         if transition is not None:
             transition()
@@ -187,15 +196,13 @@ def activation_guard(installation, target_artifact, operation, transition=None):
     roots, unknown, _ = repository_inventory(installation)
     if unknown:
         raise ContractError('Private-state bank inventory is unavailable; preserve the active runtime')
-    try:
-        from . import omp_boundary
-    except ImportError:
-        omp_boundary = None
+    from .turn_sources import source_barrier
     with ExitStack() as stack:
         for root in sorted(roots, key=str):
-            if omp_boundary is not None and hasattr(omp_boundary, 'source_barrier'):
-                stack.enter_context(omp_boundary.source_barrier(root, exclusive=True))
-        bound = _BARRIERS.set({str(root) for root in roots})
+            settings = repository_config.recovery_settings(root)
+            if (root / settings['bank_root']).is_dir():
+                stack.enter_context(source_barrier(root, exclusive=True))
+        bound = _barriers.set({str(root) for root in roots})
         try:
             if transition is not None:
                 transition()
@@ -203,4 +210,4 @@ def activation_guard(installation, target_artifact, operation, transition=None):
             yield proof
             require_compatible(installation, target_artifact, operation, expected=proof)
         finally:
-            _BARRIERS.reset(bound)
+            _barriers.reset(bound)

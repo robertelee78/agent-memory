@@ -35,7 +35,7 @@ ENGINE_ROOTS=('frontmatter','developer_identity','scopes','lifecycle','records',
     'bank_observation','bank_writes','repository_config','scope_binding','project_identity','local_registry',
     'security','handoff','discovery','retrieval','recall_catalog','bank_transactions','tombstones',
     'identity_git','remote_identity','trust_paths','checkpoint','sharing_limits','validation_memo',
-    'recovery_frontier','layout_recovery_state','layout_resolution','recovery_transactions','recovery_quiescence',
+    'recovery_frontier','layout_recovery_state','layout_resolution','recovery_transactions','recovery_quiescence','turn_sources',
     'artifact','pack_validation','migration_contract')
 
 

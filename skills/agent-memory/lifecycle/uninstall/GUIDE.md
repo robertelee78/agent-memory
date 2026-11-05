@@ -42,6 +42,12 @@ selected and preserved before that removal can proceed. Quiescence, complete
 private-state discovery and the union capability preflight are separate from
 file ownership. Removing executable bindings does not resolve source units,
 publish memory or authorize deletion of external recovery evidence.
+The explicit selection is
+`--preserve-capable-runtime /absolute/other-install-state/receipt.json`.
+The helper rechecks that separate active ownership receipt, measured package
+and every owned target, and refuses overlap with the removal set. Supplying a
+path or capability boolean without a verified active installation is insufficient.
+
 
 
 ## Plan

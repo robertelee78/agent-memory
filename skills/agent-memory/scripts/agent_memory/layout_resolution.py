@@ -300,7 +300,8 @@ def _resolution_preview(repo, operation_id, unit_id, terminal, resolution_id, ow
     else:
         raise ContractError('Unknown terminal resolution evidence')
     remaining = [row for row in frontier.pending_rows(root, held.token, owner) if row['unit_id'] != unit_id]
-    frontier.reservation(files, remaining, {**held.token, 'unit_ids': [row['unit_id'] for row in remaining]})
+    frontier.reservation(files, remaining, frontier.successor_token(held.token,
+        [row['unit_id'] for row in remaining], operation_id=operation_id))
     return {'schema': 'agent-memory/layout-resolution-proposal-v1', 'resolution_id': resolution_id,
         'operation_id': operation_id, 'unit_id': unit_id, 'repo_root': str(root), 'ledger_head': head,
         'terminal': terminal, **selected}
