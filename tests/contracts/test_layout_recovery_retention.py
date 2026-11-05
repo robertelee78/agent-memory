@@ -32,12 +32,13 @@ class LayoutRetentionContract(unittest.TestCase):
                       str(self.pack/'scripts'), *map(str, args)], check=check)
 
     def test_unknown_backup_even_empty_directory_is_not_disposable(self):
-        for kind in ('file', 'directory'):
+        for kind in ('file', 'directory', 'incomplete-staging'):
             with self.subTest(kind=kind), World() as w:
                 directory, source, receipt = self.fixture(w)
-                unknown = directory/'unknown-backup'
-                if kind == 'file':
-                    unknown.write_bytes(b'Unowned evidence\n'); unknown.chmod(0o600)
+                unknown = directory/('staging.json' if kind == 'incomplete-staging' else 'unknown-backup')
+                if kind != 'directory':
+                    unknown.write_bytes(b'{"observation_complete":false}\n' if kind == 'incomplete-staging' else b'Unowned evidence\n')
+                    unknown.chmod(0o600)
                 else:
                     unknown.mkdir(mode=0o700)
                 before = source.read_bytes(), receipt.read_bytes()
@@ -45,6 +46,24 @@ class LayoutRetentionContract(unittest.TestCase):
                 self.assertNotEqual(process.returncode, 0)
                 self.assertEqual(before, (source.read_bytes(), receipt.read_bytes()))
                 self.assertTrue(unknown.exists())
+
+    def test_resolution_and_quiescence_metadata_remain_retained(self):
+        with World() as w:
+            directory, _, _ = self.fixture(w)
+            names = ['coverage-reviews/'+'a'*64+'.json',
+                     'union-reviews/'+str(uuid.uuid4())+'.json',
+                     'discard-reviews/'+str(uuid.uuid4())+'.json',
+                     'quiescence-reviews/'+str(uuid.uuid4())+'.json',
+                     'ledger-transitions/00000001.json', 'quiescence-attestations.json']
+            for name in names:
+                target = directory/name
+                target.parent.mkdir(mode=0o700, exist_ok=True)
+                target.write_text('{}\n'); target.chmod(0o600)
+            output = self.module(w, 'root=Path(sys.argv[1]);inventory=r._inventory(root);'
+                                 'names=json.loads(sys.argv[2]);'
+                                 'print(json.dumps({name:r._retained(name) and name in inventory["files"] for name in names}))',
+                                 directory, json.dumps(names))
+            self.assertTrue(all(json.loads(output.stdout).values()))
 
     def test_symlink_hardlink_and_unsafe_mode_never_gain_cleanup_ownership(self):
         for kind in ('symlink', 'hardlink', 'mode'):

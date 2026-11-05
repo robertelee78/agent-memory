@@ -25,22 +25,22 @@ MAX_ENTRIES = 262144
 MAX_TOTAL = 512 * 1024 * 1024
 ROOT_FILES = {'manifest.json', 'manifest.sha256', 'unit-map.json', 'journal.json', 'receipt.json',
               'ledger-head.json', 'tombstone.json', 'retention-requirements.json',
-              'rollback-plan.json', 'child-rollback-plan.json'}
+              'rollback-plan.json', 'child-rollback-plan.json', 'quiescence-attestations.json'}
 UUID = r'[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}'
 OWNED = re.compile(
     r'(?:originals|intended)/'+UUID+r'\.bin|'
-    r'(?:proposals|reviews|attestations|resolutions)/'+UUID+r'\.json|'
-    r'(?:ledger|progress)/[0-9]{8}\.json|'
+    r'(?:proposals|reviews|attestations|resolutions|union-reviews|discard-reviews|quiescence-reviews)/'+UUID+r'\.json|'
+    r'(?:coverage-reviews|unit-maps)/[0-9a-f]{64}\.json|'
+    r'(?:ledger|progress|ledger-transitions)/[0-9]{8}\.json|'
     r'progress/(?:apply|finish|rollback)-[0-9]{8}\.json|'
     r'recovery/'+UUID+r'(?:\.receipt)?\.json|'
-    r'unit-maps/[0-9a-f]{64}\.json|'
     r'revisions/'+UUID+r'/(?:proposal|review|receipt|journal|unit-map)\.json|'
     r'nested/'+UUID+r'/(?:journal|receipt|proposal|resolution)\.json|'
     r'publication/'+UUID+r'/(?:observation|request|receipt)\.json|'
     r'publication/'+UUID+r'/originals/'+UUID+r'\.bin|'
     r'retention/'+UUID+r'/(?:intent|proposal|receipt|progress/[0-9]{8})\.json\Z')
 OWNED_DIRECTORY = re.compile(
-    r'(?:originals|intended|proposals|reviews|attestations|resolutions|ledger|progress|recovery|unit-maps|revisions|nested|publication|retention)|'
+    r'(?:originals|intended|proposals|reviews|attestations|resolutions|ledger|progress|recovery|unit-maps|revisions|nested|publication|retention|coverage-reviews|union-reviews|discard-reviews|ledger-transitions|quiescence-reviews)|'
     r'(?:revisions|nested|publication|retention)/'+UUID+r'|'
     r'publication/'+UUID+r'/originals|retention/'+UUID+r'/progress')
 
@@ -164,8 +164,10 @@ def _dependencies(root, operation_id, base, directory, *, cleanup_id=None):
 
 
 def _retained(name):
-    return (name == 'receipt.json' or name == 'retention-requirements.json'
-            or name.startswith(('retention/', 'resolutions/', 'nested/', 'proposals/', 'recovery/', 'revisions/'))
+    return (name in {'receipt.json', 'retention-requirements.json', 'quiescence-attestations.json'}
+            or name.startswith(('retention/', 'resolutions/', 'nested/', 'proposals/', 'recovery/', 'revisions/',
+                                'coverage-reviews/', 'union-reviews/', 'discard-reviews/', 'ledger-transitions/',
+                                'quiescence-reviews/'))
             or (name.startswith('publication/') and '/originals/' not in name))
 
 
