@@ -9,6 +9,7 @@ import shutil
 import subprocess
 import sys
 import time
+from datetime import datetime, timezone
 
 sys.dont_write_bytecode = True
 HERE = Path(__file__).resolve().parent
@@ -47,6 +48,13 @@ def main():
     def save_summary():
         (out / 'observations.json').write_text(json.dumps(summary, indent=2))
     with World() as w:
+        original_run = w.run
+        def run(argv, **kwargs):
+            argv = list(map(str, argv))
+            if argv[0] == sys.executable and '-B' not in argv:
+                argv.insert(1, '-B')
+            return original_run(argv, **kwargs)
+        w.run = run
         pack = w.inside('portable pack')
         shutil.copytree(root / 'skills/agent-memory', pack, ignore=shutil.ignore_patterns('__pycache__'))
         repo = w.repository()
@@ -63,6 +71,9 @@ def main():
         summary['setup_seconds'] = time.perf_counter() - setup
         summary['fixture'] = stats
         summary['fixture_sha256'] = hashlib.sha256(json.dumps(files, sort_keys=True).encode()).hexdigest()
+        (out / 'fixture.json').write_text(json.dumps({'bank': inventory(bank),
+            'fixture_sha256': summary['fixture_sha256'],
+            'fixture_source_sha256': hashlib.sha256((root / 'scripts/evaluations/semantic_navigation_fixture.py').read_bytes()).hexdigest()}, indent=2))
         initial = inventory(bank); index = (repo / '.git/index').read_bytes()
         head = w.git('rev-parse', 'HEAD', cwd=repo).stdout
         selected = next(row['path'] for row in rows if row['label'] == 'retry-limit')
@@ -74,6 +85,13 @@ def main():
             number = len(commands) + 1
             argv = [str(x) for x in (sys.executable, '-I', '-B', pack/'scripts'/helper, *arguments)]
             started = time.perf_counter()
+            began = datetime.now(timezone.utc).isoformat()
+            inputs = {}
+            for value in argv:
+                path = Path(value)
+                if path.is_absolute() and path.is_file() and path.suffix == '.json':
+                    raw = path.read_bytes(); digest = hashlib.sha256(raw).hexdigest()
+                    (out / (digest + '.input.json')).write_bytes(raw); inputs[value] = digest
             try:
                 result = w.run(argv, check=False, timeout=args.timeout, group=True)
                 stdout, stderr, code, error = result.stdout, result.stderr, result.returncode, None
@@ -83,7 +101,9 @@ def main():
                 stderr = stderr.decode(errors='replace') if isinstance(stderr, bytes) else stderr
                 code, error = None, repr(exc)
             (out / f'{number}.stdout').write_text(stdout); (out / f'{number}.stderr').write_text(stderr)
-            commands.append({'argv': argv, 'exit': code, 'seconds': time.perf_counter()-started, 'error': error})
+            commands.append({'argv': argv, 'exit': code, 'seconds': time.perf_counter()-started, 'error': error,
+                             'started_at': began, 'finished_at': datetime.now(timezone.utc).isoformat(),
+                             'input_sha256': inputs})
             (out / 'commands.json').write_text(json.dumps(commands, indent=2))
             if code != 0:
                 raise RuntimeError(f'Public command {number} failed: {error or code}')
@@ -109,7 +129,9 @@ def main():
                     raise RuntimeError('Selected path changed; retain this failure')
         finally:
             summary['bank_index_head_preserved'] = (initial == inventory(bank) and index == (repo / '.git/index').read_bytes()
-                and head == w.git('rev-parse', 'HEAD', cwd=repo).stdout)
+                and head == w.git('rev-parse', 'HEAD', cwd=repo).stdout
+                and (repo / 'feature.py').read_text() == 'VALUE = 2  # staged\n'
+                and inventory(pack) == before_source['portable'])
             save_summary()
     after_source = source(root)
     (out / 'source-after.json').write_text(json.dumps(after_source, indent=2))

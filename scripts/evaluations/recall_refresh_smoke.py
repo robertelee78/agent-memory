@@ -13,6 +13,16 @@ from refresh_fixtures import RefreshFixture
 from contracts.test_retrieval import RetrievalContract
 
 
+def completed_request(trace, bank, paths, question='', *, include_context=False):
+    """Complete an actually observed trace; never invent post-import discovery."""
+    trace = dict(trace)
+    trace.update(complete=True, rationale='Read the actual authored sources reached through their parent maps.',
+                 sources=[{'path': path, 'sha256': hashlib.sha256((bank / path).read_bytes()).hexdigest()}
+                          for path in paths])
+    return RetrievalContract().request(trace['binding']['project_id'], paths=list(paths), query=question,
+                                       include_context=include_context, discovery=trace)
+
+
 def main():
     with World() as world:
         fixture = RefreshFixture()
@@ -20,10 +30,7 @@ def main():
         path = 'projectbrief.md'
         trace = fixture.good(world, 'discover_memory.py', 'start', '--repo', repo,
                              '--intent', 'recall', '--task', 'Read project orientation.')['discovery']
-        trace.update(complete=True, rationale='Read the observed project orientation.',
-                     sources=[{'path': path, 'sha256': hashlib.sha256((bank / path).read_bytes()).hexdigest()}])
-        request = RetrievalContract().request(trace['binding']['project_id'], paths=[path], query='',
-                                              include_context=True, discovery=trace)
+        request = completed_request(trace, bank, [path], include_context=True)
         primed = fixture.good(world, 'retrieve.py', '--repo', repo, '--request', fixture.save(world, request))
         assert primed['metrics']['catalog_updated'] and not primed['optional_indexes_used'], primed
         pointer = next(world.paths['state'].rglob('recall-catalog-v1/current.json'))

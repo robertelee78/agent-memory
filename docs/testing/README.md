@@ -60,6 +60,12 @@ The [baseline retrieval contract](../contracts/retrieval.md) adds public recall
 cases for hard filters before ranking, exact/text explanations, nested conditions,
 optional-index loss, safe source handling and independently bound local clones.
 
+The [source-bound recall qualification controllers](recall-qualification.md)
+freeze integrated A/B/C builds, run the four-condition refresh and exact-input
+48-operation memo protocol, and retain the unchanged literal/semantic quality
+cases with separate native/model timing. Their receipts are platform-specific;
+controller availability is not an acceptance or release claim.
+
 The [sharing boundary contract](../contracts/sharing-boundary.md) exercises a
 configured bank through public identity, initialization, checkpoint, observed
 writes and interrupted recovery, plus Git path eligibility without exchange.
