@@ -582,13 +582,15 @@ def lifecycle_paths(args, state, code, old):
     if args.command == 'install':
         cfg = configuration(args, old)
         paths.extend(cfg['bin_dir'] / name for name in COMMAND_NAMES)
-        for name, target, guidance in presets(cfg['presets']):
+        for name, target, guidance in presets(cfg['presets'], (cfg['omp_binding'] or {}).get('agent_dir')):
             paths.append(absolute(target / 'agent-memory'))
             if guidance and not cfg['no_guidance']:
                 paths.append(absolute(guidance))
             hook = hook_paths(name)
             if hook and not cfg['no_guidance']:
                 paths.append(absolute(hook))
+            if name == 'omp':
+                paths.append(Path(cfg['omp_binding']['extension_target']))
         paths.extend(absolute(target) / 'agent-memory' for target in cfg['custom_targets'])
     return paths
 

@@ -41,6 +41,11 @@ preserves the saved root. Reinstalling into a different root, or selecting
 owned uninstall/reinstall. Modified/unowned files are preserved. An older
 runtime cannot adopt v2 ownership as if it were v1, even after sources drain.
 
+The apply path uses that same explicit/saved root when validating lifecycle
+write boundaries, including the extension destination. Qualification MUST
+exercise actual application in both copy and link modes; a successful
+`--check` does not prove installation or native extension loading.
+
 Enabling a new native route during a layout recovery hold additionally needs
 `--omp-layout-quiescence /absolute/private-envelope.json`. This is the existing
 independently reviewed layout-quiescence attestation/review envelope, bound to

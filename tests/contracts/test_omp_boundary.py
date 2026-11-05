@@ -222,6 +222,32 @@ class StoredBatchControls(unittest.TestCase):
 
 
 class ExplicitNativeOwnership(unittest.TestCase):
+    def test_explicit_native_install_applies_preview_for_copy_and_link(self):
+        source = Path(__file__).resolve().parents[2]
+        for mode in ('copy', 'link'):
+            with self.subTest(mode=mode), World() as world:
+                root = world.inside('explicit native root')
+                root.mkdir()
+                bin_dir = world.inside('owned bin')
+                command = [sys.executable, '-I', '-B',
+                           source / 'skills/agent-memory/scripts/installer.py',
+                           'install', '--development-source', source, '--presets', 'omp',
+                           '--omp-agent-dir', root, '--omp-peers-upgraded',
+                           '--mode', mode, '--bin-dir', bin_dir]
+                preview = json.loads(world.run(command + ['--check'], timeout=30).stdout)
+                self.assertFalse(preview['installation_writes_performed'])
+                self.assertFalse((root / 'extensions/agent-memory.ts').exists())
+                applied = json.loads(world.run(command, timeout=30).stdout)
+                self.assertTrue(applied['verified'])
+                receipt = applied['receipt']
+                self.assertEqual(receipt['omp_binding'], preview['omp']['binding'])
+                self.assertEqual(receipt['schema'], 'agent-memory/install-receipt-v2')
+                for target in preview['targets']:
+                    self.assertTrue(Path(target['path']).exists(), target['path'])
+                self.assertEqual(json.loads(world.run(
+                    [bin_dir / 'am', '--json', 'version'], timeout=30).stdout)['executing_source']['version'],
+                    receipt['source']['version'])
+
     def test_all_never_enables_omp_and_root_is_required(self):
         self.assertNotIn('omp', {name for name, _, _ in installation.presets('all')})
         with self.assertRaises(ValueError):
