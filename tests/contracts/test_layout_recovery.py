@@ -32,6 +32,7 @@ class LayoutRecoveryContract(unittest.TestCase):
             normal = world.run([command, 'bank', 'validate', '--repo', repo], check=False)
             self.assertNotEqual(normal.returncode, 0)
             safe, inspected = fixture.inspect(world, command, repo)
+            self.assertIsNone(inspected['manifest']['predecessor'])
             self.assertFalse(safe['canonical_eligibility'])
             self.assertNotIn('manifest', safe)
             self.assertNotIn('sha256', json.dumps(safe))
@@ -115,6 +116,8 @@ class LayoutRecoveryContract(unittest.TestCase):
             fake_identity = copy.deepcopy(good); fake_identity['author']['developer_id'] = str(uuid.uuid4()); variants.append(fake_identity)
             no_attestation = copy.deepcopy(good); no_attestation['quiescence_attestation'] = None; variants.append(no_attestation)
             unknown = copy.deepcopy(good); unknown['skip_security'] = True; variants.append(unknown)
+            for field in ('inherited_frontier_sha256', 'inherited_unit_decisions'):
+                omitted = copy.deepcopy(good); omitted['review'].pop(field); variants.append(omitted)
             for request in variants:
                 with self.subTest(request=request.keys()):
                     fixture.call(world, command, 'prepare', '--repo', repo, '--operation', safe['operation_id'],

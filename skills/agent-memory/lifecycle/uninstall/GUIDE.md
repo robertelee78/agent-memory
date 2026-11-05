@@ -37,7 +37,7 @@ outside removal ownership.
 
 Uninstall MUST refuse target removal while unknown or unresolved private
 recovery/source requirements would lose their capable reader/writer. An already
-active independently verified equivalent capable runtime must be explicitly
+active independently verified equivalent capable runtime MUST be explicitly
 selected and preserved before that removal can proceed. Quiescence, complete
 private-state discovery and the union capability preflight are separate from
 file ownership. Removing executable bindings does not resolve source units,

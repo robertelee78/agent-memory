@@ -213,12 +213,12 @@ identity recheck. Distinct steering events in one turn require distinct native
 event IDs. Changed source, registry, hold or ledger pins remain unverified and
 retain their original private evidence rather than allocating another slot.
 
-Claude supplies its existing native `prompt_id` and transcript reference. The
-Codex adapter accepts an actual unambiguous `event_id` or `prompt_id` when the
+The `claude` adapter supplies its existing native `prompt_id` and transcript
+reference. The `codex` adapter accepts an actual unambiguous `event_id` or `prompt_id` when the
 provider supplies it; `turn_id` alone is a lifecycle, not a steering-event ID.
 Synthetic hook fixtures supplying those fields do **not** establish that an
-unexercised Codex provider emits them. Without an unambiguous native ID, a held
-Codex prompt is refused, its exact bounded prompt bytes and available original
+unexercised `codex` provider emits them. Without an unambiguous native ID, a held
+`codex` prompt is refused, its exact bounded prompt bytes and available original
 transcript reference are retained owner-only as an **unidentified input**, and
 the failure reports its opaque retention ID. That ID is not an observation or
 native identity. No body-digest deduplication, source completion or automatic
@@ -226,7 +226,7 @@ association with a later identical prompt is permitted. Missing references stay
 explicitly unknown. Preserve the native original and restore verifiable event
 identity before enrolling; uncertain retained originals remain pending.
 
-The retained private bodies must not be pasted into public diagnostics, memory
+The retained private bodies MUST NOT be pasted into public diagnostics, memory
 records or tracker evidence. Pending inventory exposes unidentified retention
 IDs and faults, never their bodies. It also discovers an enrollment intent
 whose source or pending-index publication was interrupted. Use

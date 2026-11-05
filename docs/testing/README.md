@@ -124,3 +124,28 @@ observes quoted CLI examples in isolated worlds, and verifies explicit normative
 rule maps and route preservation against preserved old sources. Meaning changes
 still require actual independent review; a mechanical checker does not prove
 English equivalence or replace AWA's delivery evidence.
+
+### Disposable public smoke recipe
+
+From a trusted development checkout with Python 3.11+ and Git, the following
+synthetic public-command cases use disposable homes/registries/runtime/repository
+roots and no provider/network/real incident data:
+
+```sh
+PYTHONPATH="$PWD/tests" python3 -B -m unittest \
+  contracts.test_layout_recovery.LayoutRecoveryContract.test_reported_sizes_fail_normal_gate_and_public_pages_reconstruct_every_original \
+  contracts.test_layout_recovery.LayoutRecoveryContract.test_all_preserve_apply_keeps_metadata_feature_head_and_exact_original_index \
+  contracts.test_layout_recovery_frontier.RecoveryFrontierContract.test_reported_size_pending_repair_retains_exact_private_originals_and_qualified_recall
+```
+
+They construct exactly 79,054-byte contextual guidance and a 28,478-byte
+eight-policy unadmitted handoff, demonstrate the normal prerequisite refusal,
+then exercise installed `am bank recover-layout` inspection/pages/review/apply.
+The all-preserve case separates eligibility/completion from the pending case;
+the latter retains every original, real canonical mandatory witness records
+and all eight private units with incomplete qualified recall. Controlled test
+attestations test binding, not independent acceptance. Run/retain actual results;
+authored cases alone do not prove repair of the unavailable original incident,
+platform/legacy-reader crash behavior, native provider sessions or release
+publication/fresh-second-clone acceptance.
+

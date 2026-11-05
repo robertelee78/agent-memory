@@ -117,7 +117,7 @@ as a substitute for this separately confirmed data operation. An unreadable,
 linked or mismatched purge journal requires bounded manual reconciliation;
 the session MUST NOT guess another deletion target.
 
-## Recovery evidence is separate from bank purge
+### Recovery evidence is separate from bank purge
 
 The session MUST NOT use bank purge, runtime update or uninstall to erase external
 layout-recovery evidence. Unknown/pending recovery operations, an unresolved

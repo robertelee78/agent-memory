@@ -199,7 +199,7 @@ credentials or alter live client/repository policy.
 
 If normal publication cannot establish verified authority readback, the session MUST keep the request, local memory and feature state intact. It MAY inspect bounded actual policy, first-parent trees and operation receipts, but MUST NOT force a push, bypass review/checks or infer success from candidate reachability alone.
 
-## Source-preserving layout publication
+### Source-preserving layout publication
 
 An eligible local repair MUST NOT be described as publication. Both ordinary
 publication and `am bank recover-layout publish inspect|prepare|land` MUST remain

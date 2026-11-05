@@ -86,7 +86,7 @@ def operation(repo, operation_id):
     manifest = state.read(directory / 'manifest.json')
     fields(manifest, {'schema', 'operation_id', 'inspected_at', 'repo_root', 'bank_path', 'project_id', 'identity',
                       'observation_complete', 'physical_entries', 'sources', 'totals', 'git', 'runtime_artifact',
-                      'metadata_policy', 'bank_binding'}, 'agent-memory/layout-source-manifest-v1')
+                      'metadata_policy', 'bank_binding', 'predecessor'}, 'agent-memory/layout-source-manifest-v1')
     if (not uuid_valid(manifest['project_id']) or not isinstance(manifest['sources'], list)
             or len(manifest['sources']) > raw.MAX_FILES or not isinstance(manifest['physical_entries'], list)
             or len(manifest['physical_entries']) > raw.MAX_ENTRIES
@@ -1387,16 +1387,24 @@ def main(argv=None):
             command.add_argument('--nested')
         if name == 'resolve':
             command.add_argument('--unit')
-    for name, stages in (('retention', ('inspect', 'apply')), ('publish', ('inspect', 'prepare', 'land'))):
-        group = commands.add_parser(name)
-        children = group.add_subparsers(dest='stage', required=True)
-        for stage in stages:
-            child = children.add_parser(stage)
-            child.add_argument('--repo', required=True)
-            child.add_argument('--operation')
-            child.add_argument('--input')
-            child.add_argument('--proposal')
-            child.add_argument('--output')
+    retention = commands.add_parser('retention')
+    retention_stages = retention.add_subparsers(dest='stage', required=True)
+    for stage in ('inspect', 'apply'):
+        child = retention_stages.add_parser(stage)
+        child.add_argument('--repo', required=True)
+        child.add_argument('--operation')
+        child.add_argument('--input')
+        child.add_argument('--proposal')
+        child.add_argument('--output')
+    publication = commands.add_parser('publish')
+    publication_stages = publication.add_subparsers(dest='stage', required=True)
+    for stage in ('inspect', 'prepare', 'land'):
+        child = publication_stages.add_parser(stage)
+        child.add_argument('--repo', required=True)
+        child.add_argument('--operation')
+        child.add_argument('--input')
+        child.add_argument('--proposal')
+        child.add_argument('--output')
     args = parser.parse_args(argv)
     value = None
     execution_started = False

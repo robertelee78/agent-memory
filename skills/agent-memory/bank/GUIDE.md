@@ -96,15 +96,12 @@ root when explicitly set; changing it cannot bypass the retained binding.
 Do not commit originals, private source hashes, review bodies or raw transcripts.
 
 ```sh
-am bank recover-layout inspect --repo "$REPO" --output "$PRIVATE/inspection.json"
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/recover_layout.py" inspect --repo REPO --output PRIVATE_INSPECTION_JSON
 # Take OPERATION from the safe result; read every numbered private source page.
-am bank recover-layout inspect --repo "$REPO" --operation "$OPERATION" \
-  --page 0 --output "$PRIVATE/page-0.json"
-am bank recover-layout prepare --repo "$REPO" --operation "$OPERATION" \
-  --input "$PRIVATE/reviewed-prepare.json" --output "$PRIVATE/proposal.json"
-am bank recover-layout apply --repo "$REPO" --operation "$OPERATION" \
-  --proposal "$PRIVATE/proposal.json"
-am bank recover-layout status --repo "$REPO" --operation "$OPERATION"
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/recover_layout.py" inspect --repo REPO --operation OPERATION_UUID --page 0 --output PRIVATE_PAGE_JSON
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/recover_layout.py" prepare --repo REPO --operation OPERATION_UUID --input PRIVATE_REVIEW_JSON --output PRIVATE_PROPOSAL_JSON
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/recover_layout.py" apply --repo REPO --operation OPERATION_UUID --proposal PRIVATE_PROPOSAL_JSON
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/recover_layout.py" status --repo REPO --operation OPERATION_UUID
 ```
 
 Pages contain source UUID, exact original offset/length, continuation, base64
@@ -137,7 +134,7 @@ and framing, not arbitrary byte-sized pieces:
   material merely to fit a limit.
 - `pending-admission`: only unadmitted source, with exact private bytes,
   uncertainty, reason and detecting-developer actions. It is comparison-only,
-  not current guidance. Each indivisible unit must fit normal complete
+  not current guidance. Each indivisible unit MUST fit normal complete
   comparison/admission bounds, security policy and the cumulative real mandatory
   witness/review/proof reservation. Otherwise leave the invalid source intact.
 - `governed-terminal`: preserve an already real typed terminal/history outcome
@@ -151,7 +148,7 @@ and framing, not arbitrary byte-sized pieces:
 The exact `agent-memory/layout-review-v1` binds manifest, unit map, full intended
 map and authority digests, actual author/reviewer observations, review time,
 every `unit_decision`, semantic-preservation/security/identity judgments and
-retained evidence. Reviewer harness/session must be independent of the author.
+retained evidence. Reviewer harness/session MUST be independent of the author.
 It also binds `inherited_frontier_sha256` and explicit `retain-pending`
 `inherited_unit_decisions` for every retained rolled-back obligation (empty
 lists still have an explicit digest). Reviews are fallible self-reported
@@ -160,7 +157,7 @@ attestations, not authenticated truth or operator approval by inference.
 Pending recovery requires the exact `layout-quiescence-attestation-v1` tied to
 the real runtime artifact, state root, project/checkout, review and actual
 detecting developer. All authorized old invocation routes/in-flight sessions
-must be disabled/quiesced or use the independently verified capable runtime
+MUST be disabled/quiesced or use the independently verified capable runtime
 and bound private state. The persistent typed transaction hold additionally
 fails closed for legacy readers. Do not delete its marker or sentinel.
 
@@ -182,12 +179,10 @@ semantic absence. Applicable post-apply recall has its own actual qualification
 or pending result, separate from the committed layout receipt.
 
 ```sh
-am bank recover-layout recover --repo "$REPO" --operation "$OPERATION" \
-  --mode finish --output "$PRIVATE/finish.json"
-am bank recover-layout recover --repo "$REPO" --proposal "$PRIVATE/finish.json"
-am bank recover-layout rollback --repo "$REPO" --operation "$OPERATION" \
-  --output "$PRIVATE/restore.json"
-am bank recover-layout rollback --repo "$REPO" --proposal "$PRIVATE/restore.json"
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/recover_layout.py" recover --repo REPO --operation OPERATION_UUID --mode finish --output PRIVATE_FINISH_JSON
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/recover_layout.py" recover --repo REPO --proposal PRIVATE_FINISH_JSON
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/recover_layout.py" rollback --repo REPO --operation OPERATION_UUID --output PRIVATE_RESTORE_JSON
+/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/recover_layout.py" rollback --repo REPO --proposal PRIVATE_RESTORE_JSON
 ```
 
 Known-operation recovery pins the exact journal, marker, read-set, partial
@@ -206,7 +201,7 @@ its recorded outcome without replaying over newer knowledge; status separately
 checks current matching/eligibility/coverage.
 
 Rollback never discards pending obligations. Their hold/sentinel, originals and
-stable unit IDs remain; a new inspected repair must independently review and
+stable unit IDs remain; a new inspected repair MUST independently review and
 reserve the complete inherited frontier before an atomic hold handoff.
 `revise-units` independently reviews exact partition/provenance/context and
 capacity before append-only refinement; it does not admit children.
@@ -224,30 +219,9 @@ and actual existing nonforce policy/reviews/checks. Retention refuses pending
 units or dependencies and deletes only individually pinned owned artifacts,
 retaining historical receipts/tombstone and explicitly surrendering rollback.
 Neither layout success nor backup age grants publication or cleanup authority.
+The [development smoke recipe](https://github.com/robertelee78/agent-memory/blob/main/docs/testing/README.md#disposable-public-smoke-recipe)
+uses disposable synthetic sources and is not implementation acceptance.
 
-### Disposable public smoke recipe
-
-From a trusted development checkout with Python 3.11+ and Git, the following
-synthetic public-command cases use disposable homes/registries/runtime/repository
-roots and no provider/network/real incident data:
-
-```sh
-PYTHONPATH="$PWD/tests" python3 -B -m unittest \
-  contracts.test_layout_recovery.LayoutRecoveryContract.test_reported_sizes_fail_normal_gate_and_public_pages_reconstruct_every_original \
-  contracts.test_layout_recovery.LayoutRecoveryContract.test_all_preserve_apply_keeps_metadata_feature_head_and_exact_original_index \
-  contracts.test_layout_recovery_frontier.RecoveryFrontierContract.test_reported_size_pending_repair_retains_exact_private_originals_and_qualified_recall
-```
-
-They construct exactly 79,054-byte contextual guidance and a 28,478-byte
-eight-policy unadmitted handoff, demonstrate the normal prerequisite refusal,
-then exercise installed `am bank recover-layout` inspection/pages/review/apply.
-The all-preserve case separates eligibility/completion from the pending case;
-the latter retains every original, real canonical mandatory witness records
-and all eight private units with incomplete qualified recall. Controlled test
-attestations test binding, not independent acceptance. Run/retain actual results;
-authored cases alone do not prove repair of the unavailable original incident,
-platform/legacy-reader crash behavior, native provider sessions or release
-publication/fresh-second-clone acceptance.
 
 ## Domain loading and routes
 
