@@ -45,6 +45,12 @@ MUST NOT reuse a single-view discovery trace from the pre-import bank: importing
 new memory changes that trace's inventory. A later new recall question MUST use
 fresh local semantic discovery against the actual resulting bank.
 
+When an unchanged inventory has an already primed optional recall catalog, a
+discovery-qualified recall within refresh MAY reuse it after checking the current
+canonical sources, scope, applicability and safety. Cache loss or an unusable
+catalog falls back to the complete reader; refresh does not publish a catalog.
+The catalog does not establish semantic completeness or freshness by itself.
+
 The session SHOULD use copied-pack public refresh, pending/conflict, recovery,
 linked-worktree and normal-integration workflows for changes here. Tests MUST
 use isolated repositories, homes and credentials with no live client changes.

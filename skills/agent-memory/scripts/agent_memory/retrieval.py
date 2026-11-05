@@ -215,13 +215,14 @@ def retrieve(repo, request, *, owned_lock=None, deferred_paths=()):
         if path != 'MEMORY.md':
             bank_contract.path_value(path)
     deferred_paths = frozenset(deferred_paths)
-    from . import recall_catalog
+    from . import recall_catalog, validation_memo
     # An optional accelerator cannot turn loss/corruption into failed memory.
     # Its complete frame is discarded before the authoritative fallback runs.
     if 'discovery' in request:
         try:
-            cached=recall_catalog.load_catalog(repo,request['project_id'],owner=owned_lock)
-            return _retrieve(repo,request,owned_lock,deferred_paths,started,cached=cached)
+            with validation_memo.suspended():
+                cached=recall_catalog.load_catalog(repo,request['project_id'],owner=owned_lock)
+                return _retrieve(repo,request,owned_lock,deferred_paths,started,cached=cached)
         except Exception:
             cached=None
     engine=None

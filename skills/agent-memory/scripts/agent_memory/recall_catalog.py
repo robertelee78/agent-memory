@@ -31,7 +31,7 @@ SCHEMA='agent-memory/recall-catalog-v1'
 MAX_CACHE=256*1024*1024
 MAX_HEADER=16384
 MAX_NAMESPACE=256
-ENGINE_ROOTS=('frontmatter','developer_identity','scopes','lifecycle','records','bank_contract','bank_layout',
+ENGINE_ROOTS=('frontmatter','developer_identity','scopes','lifecycle','records','bank_capacity','bank_contract','bank_layout',
     'bank_observation','bank_writes','repository_config','scope_binding','project_identity','local_registry',
     'security','handoff','discovery','retrieval','recall_catalog','bank_transactions','tombstones',
     'identity_git','remote_identity','trust_paths','checkpoint','sharing_limits','validation_memo')

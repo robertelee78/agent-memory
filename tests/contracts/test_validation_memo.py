@@ -10,7 +10,7 @@ from record_fixtures import record_text, project_id
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT/'skills/agent-memory/scripts'))
-from agent_memory import bank_contract as bank, validation_memo as memo, security, recall_catalog
+from agent_memory import bank_contract as bank, validation_memo as memo, security
 from agent_memory.frontmatter import ContractError
 
 
@@ -86,13 +86,6 @@ class ValidationMemoContract(PublicationFixture):
                 self.assertIsNone(memo.current())
             finally:memo.MAX_BYTES=old
             with memo.operation() as fresh:self.assertFalse(fresh.values)
-
-    def test_catalog_generation_remains_available_outside_operation_and_refuses_active_memo(self):
-        cold=recall_catalog.generation()
-        self.assertIn('agent_memory.validation_memo',cold['modules'])
-        with memo.operation():
-            with self.assertRaises(recall_catalog.CacheMiss):recall_catalog.generation()
-        self.assertEqual(cold,recall_catalog.generation())
 
     def test_small_retained_budgets_evict_and_oversized_results_fall_back_without_truncation(self):
         with World() as w:

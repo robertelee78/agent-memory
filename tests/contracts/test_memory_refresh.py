@@ -277,6 +277,43 @@ with patch('os.mkdir',swap): private_mkdir(sys.argv[4])
             response=w.run([sys.executable,'-I','-c',script,self.pack/'scripts',target,repo],check=False)
             self.assertEqual(response.returncode,0,response.stderr)
 
+    def test_primed_unchanged_refresh_uses_catalog_and_matches_canonical_recall(self):
+        selections = []
+        for disabled in (False, True):
+            with self.subTest(disabled=disabled), World() as w:
+                repo, bank, peer, base = self.fixture(w)
+                path = 'projectbrief.md'
+                started = self.good(w, 'discover_memory.py', 'start', '--repo', repo,
+                                    '--intent', 'recall', '--task', 'Read project orientation.')
+                trace = started['discovery']
+                trace.update(complete=True, rationale='Read the observed project orientation.',
+                             sources=[{'path': path, 'sha256': hashlib.sha256((bank/path).read_bytes()).hexdigest()}])
+                recall = retrieval_helpers.RetrievalContract().request(
+                    trace['binding']['project_id'], paths=[path], query='', include_context=True)
+                recall['discovery'] = trace
+                primed = self.good(w, 'retrieve.py', '--repo', repo, '--request', self.save(w, recall))
+                self.assertTrue(primed['metrics']['catalog_updated'])
+                pointer = next(w.paths['state'].rglob('recall-catalog-v1/current.json'))
+                snapshot = pointer.read_bytes()
+                before = self.state(w, repo, bank)
+                proposal = self.prepared_refresh(w, repo, recall=recall)
+                if disabled:
+                    w.env['AGENT_MEMORY_NO_RECALL_CATALOG'] = '1'
+                done = self.apply_refresh(w, proposal)
+                self.assertTrue(done['refresh_applied'])
+                self.assertTrue(done['relevant_imports_read'])
+                self.assertEqual(done['recall']['optional_indexes_used'], not disabled)
+                self.assertIsNot(done['recall']['derived_cache_writes_performed'], True)
+                selections.append([(r['path'], r['body'], r['source_sha256']) for r in done['recall']['results']])
+                self.assertEqual(pointer.read_bytes(), snapshot)
+                self.assertEqual(before, self.state(w, repo, bank))
+                w.env.pop('AGENT_MEMORY_NO_RECALL_CATALOG', None)
+                later = self.good(w, 'retrieve.py', '--repo', repo, '--request', self.save(w, recall))
+                self.assertTrue(later['optional_indexes_used'])
+                self.assertFalse(later['metrics']['catalog_updated'])
+                self.assertEqual(pointer.read_bytes(), snapshot)
+        self.assertEqual(selections[0], selections[1])
+
     def test_second_clone_import_is_recalled_with_conditions_without_code_index_or_local_learning_loss(self):
         with World() as w:
             repo, bank, peer, base = self.fixture(w)

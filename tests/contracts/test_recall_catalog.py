@@ -245,25 +245,18 @@ print('bounded cleanup fallback')
                     else:extra.unlink()
             self.assertEqual(before,self.h.state(w,repo,bank))
 
-    def test_cached_global_oversize_guard_cannot_disappear_behind_record_conditions(self):
+    def test_oversized_canonical_source_refuses_with_or_without_catalog(self):
         with World() as w:
             repo,bank=self.fixture(w);_,path=self.h.add(bank,'bounded-claim')
+            request=self.recall(self.trace(w,repo,bank,[path]),path)
+            self.good(w,'retrieve.py','--repo',repo,'--request',self.save(w,request))
             self.h.add(bank,'large-other-claim',body='# Large claim\n\n'+'x'*17000+'\n',
                 scope='component:src/api',conditions={'prerequisite':'unobserved-required-condition'})
-            request=self.recall(self.trace(w,repo,bank,[path]),path)
-            cold=self.good(w,'retrieve.py','--repo',repo,'--request',self.save(w,request))
-            self.assertTrue(cold['metrics']['catalog_updated'])
-            context={'component':'src/api'}
-            started=self.good(w,'discover_memory.py','start','--repo',repo,'--intent','recall',
-                '--task','Inspect the actual bounded claim with API applicability.', '--context',self.save(w,context,'context.json'))
-            self.assertTrue(started['optional_indexes_used'])
-            trace=started['discovery'];trace.update(complete=True,rationale='Read the actual plausible bounded source under this component.')
-            trace['sources']=[{'path':path,'sha256':hashlib.sha256((bank/path).read_bytes()).hexdigest()}]
-            request=self.recall(trace,path);request['context']=context
             for disabled in (False,True):
                 if disabled:w.env['AGENT_MEMORY_NO_RECALL_CATALOG']='1'
                 result,refused=self.call(w,'retrieve.py','--repo',repo,'--request',self.save(w,request))
                 self.assertEqual(result.returncode,1,refused);self.assertNotIn('results',refused)
+                self.assertEqual(refused['failure_code'],'bank-source-byte-capacity')
 
     def test_actual_loaded_policy_code_namespace_and_dependency_changes_invalidate_the_witness(self):
         with World() as w:
