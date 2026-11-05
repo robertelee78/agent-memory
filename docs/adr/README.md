@@ -36,11 +36,14 @@ MUST NOT be treated as evidence that a guide is semantically complete.
 | [0014](0014-useful-shared-memory-quality.md) | Useful shared memory and lifecycle assurance | Accepted scope (v0.0.3) |
 | [0015](0015-signed-release-channel.md) | Signed release channel refinement for existing task #49 | Accepted scope (v0.0.3 #49) |
 | [0016](0016-incremental-sharing-review.md) | Changed-learning sharing review for existing task #99 | Accepted scope (v0.0.3 #99) |
-| [0017](0017-standalone-semantic-search.md) | Standalone semantic terminal search after v0.0.3 | Proposed (later release) |
+| [0017](0017-standalone-semantic-search.md) | Standalone semantic terminal recall with shared graph/model runtime | Accepted architecture; v0.0.16 execution gated on ADR-0024 G1 |
 | [0018](0018-repair-diagnostics-and-observation-bounds.md) | Repair diagnostics and bounded observation | Proposed (v0.0.4) |
 | [0019](0019-stable-checkout-binding-and-hook-diagnostics.md) | Checkout continuity and actionable hook diagnostics | Accepted (v0.0.7) |
 | [0020](0020-repeatable-turn-boundaries.md) | Repeated steering, refresh and quiet completion | Accepted (v0.0.8) |
 | [0021](0021-unobtrusive-memory-boundaries.md) | Unobtrusive boundaries and truthful operation health | Accepted (corrective v0.0.9; delivery pending) |
+| [0022](0022-restricted-push-publication.md) | Publish memory as an explicitly allowed push actor | Accepted (v0.0.10) |
+| [0023](0023-guided-progressive-recall.md) | Guided progressive recall and explicit cross-project expansion | Accepted architecture; task execution designs gated |
+| [0024](0024-ssg-graph-embedding-runtime.md) | SSG-derived graph database, embedding model, and retrieval runtime | Accepted architecture/G1 research; v0.0.16 execution gated on G1 |
 
 [ADR-0013](0013-public-cli-and-corrective-releases.md) defines the corrective
 `v0.0.2` public command contract and the current future-release mapping. Older
