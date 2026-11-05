@@ -766,7 +766,7 @@ def verified_child_transaction(repo, owner, transaction, indexed):
     return parent
 
 
-def prospective_token(repo, manifest, pending_units, *, predecessor=None):
+def prospective_token(repo, manifest, pending_units, *, predecessor=None, owner=None):
     """Capacity witness only: include all checked prior terminal private state."""
     root, bank, _, _ = state.paths(repo)
     if (manifest.get('observation_complete') is not True or manifest.get('repo_root') != str(root)
@@ -779,7 +779,7 @@ def prospective_token(repo, manifest, pending_units, *, predecessor=None):
     if predecessor is None:
         if marker_bytes(bank) is not None or marker_bytes(bank, '.agent-memory-recovery.md') is not None:
             raise ContractError('A prospective repair cannot replace an unknown transaction or sentinel')
-    elif type(predecessor) is not VerifiedHold or rolled_back_predecessor(root) != predecessor:
+    elif type(predecessor) is not VerifiedHold or rolled_back_predecessor(root, owner) != predecessor:
         raise ContractError('A prospective continuation must retain the exact checked rollback frontier')
     operations, heads, references = [], [], {}
     for operation, row in sorted(index['operations'].items()):
