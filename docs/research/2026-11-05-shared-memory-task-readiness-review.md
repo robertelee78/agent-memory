@@ -137,7 +137,29 @@ that decision. Destination authority, normal admission and hard source exclusion
 remain required.
 
 This resolves former ADR-0025 decision 7; it is not a new execution-design approval
-or consent to perform an export now. #57/#62 source-authority criteria and gates,
-the research addendum, and all affected ADR-0025 refinement bindings require
-reconciliation to the new source. The table and hashes above retain the exact
-earlier reviewed snapshot rather than backdating the later decision.
+or consent to perform an export now. Independent Opus source-delta review and
+task-delta review returned **PASS** after removing a residual separate-source-grant
+ambiguity from #57's standing-policy criterion. None of the tasks became Ready.
+
+The authoritative amendment is commit
+`c8e9d5925b19ffbc3f66e46f4d61eeceef767091`, blob
+`35b55a630696f901cda920aa71cca5a17fcd76f8`. All six refinement bindings were
+replaced with that exact source. #55's source-release interface, #57's export
+criteria/validation and #62's authority controls explicitly use operator approval
+without a project-level grant or veto. The former decision 7 was removed from
+pending gates, while trusted verification remains an execution-design obligation.
+
+The regenerated extraction again passed 12 existing keys/33 material paragraphs.
+Fresh draft/dry-run/apply receipts for roots #53/#251/#199/#58 returned
+`verified:true`; all six tasks are **Designing / Blocked / Current**. Live titles,
+bodies, source bindings and preserved AWA-owned lines were read back. Unchanged
+primary/prior-refinement blobs were compared with default branch
+`2a0d7cbd73d425fb39cfa347d9262fcc8a8bc13e`; the new ADR remains published on the
+integration branch, not claimed main-integrated or released.
+
+Operator-decision receipts are recorded on
+[#55](https://github.com/robertelee78/agent-memory/issues/55#issuecomment-6671447589),
+[#57](https://github.com/robertelee78/agent-memory/issues/57#issuecomment-6671448457)
+and [#62](https://github.com/robertelee78/agent-memory/issues/62#issuecomment-6671449314).
+The table and hashes above retain the exact earlier reviewed snapshot rather
+than backdating this later policy and source cutover.
