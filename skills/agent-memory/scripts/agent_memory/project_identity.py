@@ -23,7 +23,71 @@ PACK = Path(__file__).resolve().parents[2]
 SPEC = json.loads((PACK / "schemas/projects.json").read_text())
 
 
-def discover(repo, authority=None, *, owned_lock=None, owned_transaction=None, migration_reader=None):
+class RawIdentityEvidence:
+    """Internal raw-router extraction, never a request-selected identity bypass."""
+    __slots__ = ('repo_root', 'bank_path', 'router_sha256', 'metadata', 'review', '_seal')
+
+    def __init__(self, *args, **kwargs):
+        raise ContractError('Raw identity evidence must be independently observed')
+
+    @classmethod
+    def observe(cls, repo, raw, review=None):
+        root = Path(repo).resolve()
+        settings = repository_config.recovery_settings(root)
+        bank = root / settings['bank_root']
+        if not isinstance(raw, bytes) or len(raw) > 1048576:
+            raise ContractError('Recovery identity requires complete bounded router bytes')
+        try:
+            metadata = parse_router(raw.decode('utf-8'))[0]
+            retained_review = None
+        except (ContractError, UnicodeError):
+            fields = {'schema', 'review_id', 'project_id', 'repo_root', 'checkout_key',
+                      'router_sha256', 'committed_router', 'committed_router_sha256',
+                      'reviewer_developer_id', 'reviewer_harness', 'reviewer_session',
+                      'author_session', 'reviewed_at', 'rationale', 'decision'}
+            if (not isinstance(review, dict) or set(review) != fields
+                    or review['schema'] != 'agent-memory/layout-identity-review-v1'
+                    or review['decision'] != 'accept' or not uuid_valid(review['review_id'])
+                    or not uuid_valid(review['project_id']) or not uuid_valid(review['reviewer_developer_id'])
+                    or review['repo_root'] != str(root) or review['router_sha256'] != digest(raw)
+                    or not review['reviewer_session'] or review['reviewer_session'] == review['author_session']
+                    or not review['reviewer_harness'] or not review['rationale']):
+                raise ContractError('pending-identity-review')
+            storage.time_value(review['reviewed_at'])
+            expression = review['committed_router']
+            if (not isinstance(expression, str)
+                    or not re.fullmatch(r'[0-9a-f]{40}(?:[0-9a-f]{24})?:' + re.escape(settings['bank_root'] + '/MEMORY.md'), expression)):
+                raise ContractError('Identity review requires an exact immutable committed router')
+            committed = repository_config.object_router_bytes(root, expression, {})
+            metadata = parse_router(committed.decode('utf-8'))[0]
+            common = (root / git(root, 'rev-parse', '--git-common-dir')).resolve()
+            info = common.stat()
+            registry, _ = observe()
+            checkout = registry['checkouts'].get(review['checkout_key'])
+            if (review['committed_router_sha256'] != digest(committed)
+                    or review['checkout_key'] != f'{info.st_dev}:{info.st_ino}'
+                    or not checkout or checkout['project_id'] != review['project_id']
+                    or metadata['project-id'] != review['project_id']):
+                raise ContractError('Identity review does not establish the existing checkout/project')
+            retained_review = copy.deepcopy(review)
+        value = object.__new__(cls)
+        value.repo_root, value.bank_path = str(root), str(bank)
+        value.router_sha256, value.metadata = digest(raw), dict(metadata)
+        value.review, value._seal = retained_review, _RAW_IDENTITY_SEAL
+        return value
+
+    def checked(self, root, bank, raw):
+        if (self._seal is not _RAW_IDENTITY_SEAL or self.repo_root != str(root)
+                or self.bank_path != str(bank) or self.router_sha256 != digest(raw)):
+            raise ContractError('Raw recovery identity evidence changed')
+        return dict(self.metadata)
+
+
+_RAW_IDENTITY_SEAL = object()
+
+
+
+def discover(repo, authority=None, *, owned_lock=None, owned_transaction=None, migration_reader=None, raw_identity=None):
     repo = Path(repo).resolve()
     if not repo.is_dir():
         raise ContractError("Repository location must be an existing directory")
@@ -73,7 +137,10 @@ def discover(repo, authority=None, *, owned_lock=None, owned_transaction=None, m
             issues.append("Authority fetch/push URLs do not identify one repository; repair or explicitly bind a consistent remote")
     # Keep one coherent settings observation with the router read below.
     # Callers still rediscover at their final source/lock boundaries.
-    repo_settings = repository_config.settings(root, router_reader=migration_reader)
+    if raw_identity is not None and (type(raw_identity) is not RawIdentityEvidence or migration_reader is not None):
+        raise ContractError('Recovery identity requires internally observed typed evidence')
+    repo_settings = (repository_config.recovery_settings(root) if raw_identity is not None
+                     else repository_config.settings(root, router_reader=migration_reader))
     bank = root / repo_settings['bank_root']
     router = bank / "MEMORY.md"
     if bank.is_symlink() or router.is_symlink():
@@ -82,9 +149,14 @@ def discover(repo, authority=None, *, owned_lock=None, owned_transaction=None, m
         path = bank / name
         if path.is_symlink() or (path.exists() and (owned is None or path.read_bytes() != owned)):
             raise ContractError("Bank busy or interrupted; inspect/recover before resolving identity")
-    raw = router.read_bytes() if router.exists() else None
-    metadata = ((migration_reader(raw) if migration_reader else parse_router(raw.decode("utf-8"))[0])
-                if raw is not None else {})
+    if raw_identity is not None:
+        from .layout_recovery_observation import read_source
+        raw, _ = read_source(bank, 'MEMORY.md', 1048576)
+        metadata = raw_identity.checked(root, bank, raw)
+    else:
+        raw = router.read_bytes() if router.exists() else None
+        metadata = ((migration_reader(raw) if migration_reader else parse_router(raw.decode("utf-8"))[0])
+                    if raw is not None else {})
     if metadata is None:
         raise ContractError('Existing bank router is not a supported migration source')
     return {"repo_root": str(root), "is_git": is_git, "common_git_dir": str(common) if is_git else None,

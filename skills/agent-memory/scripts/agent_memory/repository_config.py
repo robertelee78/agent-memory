@@ -248,6 +248,18 @@ def settings(repo, *, router_reader=None):
     return {'bank_root': relative, 'authority_branch': branch}
 
 
+def recovery_locator(raw):
+    """Locate an existing physical router without deriving any identity from it."""
+    if not isinstance(raw, bytes):
+        raise ContractError('Recovery locator requires actual existing router bytes')
+    return True
+
+
+def recovery_settings(repo):
+    """Recovery-only location observation; callers must separately prove identity."""
+    return settings(repo, router_reader=recovery_locator)
+
+
 def bank_path(repo):
     return Path(repo).resolve() / settings(repo)['bank_root']
 
