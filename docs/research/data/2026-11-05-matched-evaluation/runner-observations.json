@@ -1,0 +1,228 @@
+{
+  "schema": "agent-memory/248-runner-observations-v0",
+  "status": "observed single samples on one host; candidate-catalog baseline status only, not seeded-task qualification, not performance measurements",
+  "observed_at_utc": "2026-11-05",
+  "host": {
+    "os": "macOS 27.2 (26B5091g)",
+    "arch": "arm64",
+    "python": "3.13.12",
+    "git": "2.55.0"
+  },
+  "source": {
+    "commit": "ce8660aecdbd40c8b11fb409d6cafc5cb15fbb3e",
+    "tree": "10181f7ec224d0b66e36107e4230dd5ed9f278a6",
+    "integrated_main": "2a0d7cbd73d425fb39cfa347d9262fcc8a8bc13e"
+  },
+  "invocation": "fresh tests/world.py World(); world.run([sys.executable,'-I',ROOT/'scripts/run_contract_suite.py',ROOT/<module>],check=False,timeout=300,group=True), mirroring scripts/test_gate.py per-suite execution; modules run sequentially, no concurrent heavy work",
+  "runs": [
+    {
+      "module": "tests/contracts/test_scope_policy.py",
+      "tree": "base",
+      "returncode": 0,
+      "counts": {
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 4,
+        "unexpected_successes": 0
+      },
+      "elapsed_seconds": 2.288,
+      "non_ok_tests": []
+    },
+    {
+      "module": "tests/contracts/test_tombstones.py",
+      "tree": "base",
+      "returncode": 0,
+      "counts": {
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 7,
+        "unexpected_successes": 0
+      },
+      "elapsed_seconds": 5.372,
+      "non_ok_tests": []
+    },
+    {
+      "module": "tests/contracts/test_bank_usability.py",
+      "tree": "base",
+      "returncode": 1,
+      "counts": {
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 1,
+        "passed": false,
+        "skipped": 0,
+        "tests": 2,
+        "unexpected_successes": 0
+      },
+      "elapsed_seconds": 0.69,
+      "non_ok_tests": [
+        "test_deleting_generated_state_does_not_make_an_interrupted_bank_usable_or_repair_it"
+      ]
+    },
+    {
+      "module": "tests/contracts/test_project_identity.py",
+      "tree": "base",
+      "returncode": 0,
+      "counts": {
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 26,
+        "unexpected_successes": 0
+      },
+      "elapsed_seconds": 30.566,
+      "non_ok_tests": []
+    },
+    {
+      "module": "tests/contracts/test_assembly.py",
+      "tree": "base",
+      "returncode": 0,
+      "counts": {
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 7,
+        "unexpected_successes": 0
+      },
+      "elapsed_seconds": 28.962,
+      "non_ok_tests": []
+    },
+    {
+      "module": "tests/contracts/test_retrieval.py",
+      "tree": "base",
+      "returncode": 1,
+      "counts": {
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 1,
+        "passed": false,
+        "skipped": 0,
+        "tests": 13,
+        "unexpected_successes": 0
+      },
+      "elapsed_seconds": 32.72,
+      "non_ok_tests": [
+        "test_oversized_possible_replacements_fail_recall_instead_of_resurrecting_old_guidance"
+      ]
+    },
+    {
+      "module": "tests/contracts/test_governance.py",
+      "tree": "base",
+      "returncode": 0,
+      "counts": {
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 21,
+        "unexpected_successes": 0
+      },
+      "elapsed_seconds": 156.281,
+      "non_ok_tests": []
+    },
+    {
+      "module": "tests/contracts/test_release_canaries.py",
+      "tree": "base",
+      "returncode": 0,
+      "counts": {
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 6,
+        "unexpected_successes": 0
+      },
+      "elapsed_seconds": 18.487,
+      "non_ok_tests": []
+    },
+    {
+      "module": "tests/contracts/test_identity_canaries.py",
+      "tree": "base",
+      "returncode": 0,
+      "counts": {
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 3,
+        "unexpected_successes": 0
+      },
+      "elapsed_seconds": 13.902,
+      "non_ok_tests": []
+    },
+    {
+      "module": "tests/contracts/test_inactive_guidance.py",
+      "tree": "base",
+      "returncode": 0,
+      "counts": {
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 7,
+        "unexpected_successes": 0
+      },
+      "elapsed_seconds": 9.973,
+      "non_ok_tests": []
+    }
+  ],
+  "failure_details": {
+    "tests/contracts/test_bank_usability.py": "test_deleting_generated_state_does_not_make_an_interrupted_bank_usable_or_repair_it: assertIn('Interrupted bank', receipt['error']) failed; observed error 'Bank is busy/interrupted; preserve the operation and retry after recovery' (raised at skills/agent-memory/scripts/agent_memory/bank_observation.py:67)",
+    "tests/contracts/test_retrieval.py": "test_oversized_possible_replacements_fail_recall_instead_of_resurrecting_old_guidance: setup bank_contract.py validate returned failure_code bank-source-byte-capacity (capacity_observed 17834 > capacity_limit 16384, failure_path topics/replacement.md) at test_retrieval.py:207"
+  },
+  "self_hosting_scenarios": [
+    {
+      "tree": "base with tests/contracts/test_scope_policy.py and memory-bank/ removed (git archive extraction)",
+      "check": "scripts/test_gate.py registry()",
+      "result": "invalid: Invalid suite path: scope-policy"
+    },
+    {
+      "tree": "same, tests/contracts.json entries scope-policy and bounded-bank-observation dropped (168 -> 166 suites)",
+      "check": "scripts/test_gate.py registry()",
+      "result": "valid (166 suites)"
+    },
+    {
+      "tree": "base with memory-bank/ removed",
+      "module": "tests/contracts/test_bounded_bank_observation.py",
+      "returncode": 1,
+      "counts": {
+        "tests": 12,
+        "errors": 12,
+        "failures": 0,
+        "passed": false
+      },
+      "note": "module copies ROOT/memory-bank"
+    },
+    {
+      "tree": "base",
+      "module": "tests/contracts/test_bounded_bank_observation.py",
+      "returncode": 0,
+      "counts": {
+        "tests": 12,
+        "errors": 0,
+        "failures": 0,
+        "passed": true
+      },
+      "elapsed_seconds": 1.657
+    }
+  ],
+  "not_run": [
+    "full gate scripts/test.sh --release --json (heavy; baseline-green regression set unmeasured)",
+    "any seeded bug or reference repair",
+    "any agent, harness or model invocation"
+  ]
+}
