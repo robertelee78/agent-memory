@@ -344,6 +344,12 @@ Acceptance Criteria:
   embeddings, model-change rebuild, local-default/approved-remote disclosure,
   private credentials, managed versus bring-your-own ownership, and automatic
   source-change maintenance without canonical-write blocking.
+- G1 MUST also freeze ADR-0017's machine response/exit-code schemas, supported
+  profiles, and measured tolerances; provide the exact image license bill of
+  materials, core-Memgraph comparison, and local/distribution/hosted assessments;
+  compare serving options and recommend a managed profile; evaluate probe-at-fill
+  cost/tolerance, automatic-maintenance rate/batch/cost limits, eligible exact
+  cosine versus ANN recall, and SSG's transient code workspace/evidence critic.
 - The study MUST retain reference/scratch measurements at the three named sizes
   or explicit missing prerequisites, independently authored query/relationship
   suites, and operator disposition of frozen resource/latency targets. It MUST
@@ -362,9 +368,13 @@ Why: Literal matching misses useful lessons expressed differently; external
 semantic ordering currently does not survive native path selection and budgets.
 
 What: Implement R1/R3's reviewed real embedding service adapter, source-bound
-vector generation/cache/index, and post-qualification native ranking seam.
-Integrate R4's generation/ownership protocol with G3, the plain-terminal #200
-surface, and ADR-0023's guided retrieval rather than creating a parallel reader.
+vector generation/cache/store, and post-qualification native ranking seam.
+G2 owns AM-managed embedding-model setup, verified acquisition, status,
+start/stop, diagnose, and purge, using G3's shared generation/ownership contract.
+Its acceptance surface is structured `am search --repo REPO --request REQUEST`
+with an explicit semantic-ranking request policy frozen by G1. It MUST provide
+that shared contract to later #200 and P1; #200 owns the human-friendly
+`am search --semantic QUERY` and `am related` surfaces, not a G2 prerequisite.
 
 Acceptance Criteria:
 
@@ -384,6 +394,13 @@ Acceptance Criteria:
   memory/query embedding, changed-model rebuild, and automatic updates after
   memory changes. BYO use MUST NOT require AM-managed model installation or
   change the agent's reasoning model; credentials MUST remain undisclosed.
+- G2 MUST exercise verified managed-model setup/download, explicit start/stop,
+  status, diagnose, purge/uninstall, and ownership-safe BYO operation. Remote
+  provider/destination approval MUST be separate from federation export;
+  retention terms or unknown retention MUST be disclosed. Maintenance MUST NOT
+  send secret-bearing, quarantined, deleted, or unadmitted content or start
+  services. Model/database computation MUST NOT hold bank-write locks, and
+  query vectors MUST NOT be retained by default.
 - Source/model/index identity, disclosure, resource costs, build latency, and
   retrieval quality MUST be retained at the agreed sizes and frozen tolerances;
   unavailable or literal-fallback results MUST NOT masquerade as semantic success.
@@ -406,9 +423,10 @@ runtime inside one project, independently of unscheduled federation features.
 
 What: Implement R2's local projection/templates (1)/(2) and R4's complete
 generation, freshness, deletion/fencing, isolation, service ownership, and public
-setup/status/build/rebuild/diagnose/purge operations using G1's reviewed database
-profile. Provide the shared generation interfaces consumed by G2 and P1/#200.
-Template (3) and foreign authority remain with #56/#55/#57/P2.
+setup/start/stop/status/build/rebuild/diagnose/purge operations using G1's reviewed
+database profile. Provide shared generation/ownership interfaces consumed by G2
+and P1/#200; G2 owns model-specific managed setup/lifecycle. Template (3) and
+foreign authority remain with #56/#55/#57/P2.
 
 Acceptance Criteria:
 
@@ -423,12 +441,19 @@ Acceptance Criteria:
   after generated-state removal, equivalent authorized rebuild, non-resurrection
   including engine logs/snapshots/volumes and stale workers, project isolation,
   and usable checkpoint/resume during graph/model outage.
-- Installed setup/status/diagnose/stop/purge/uninstall MUST respect verified
-  artifact identity, explicit resource/download consent, ownership, supported
-  macOS/Linux profiles, and unrelated user/SSG/other-project services.
+- Installed setup/start/stop/status/build/rebuild/diagnose/purge/uninstall MUST
+  respect verified artifact identity, explicit resource/download consent,
+  ownership, supported macOS/Linux profiles, and unrelated user/SSG/other-project
+  services.
+- Graph projection upkeep MUST run automatically at safe source-change
+  boundaries without blocking canonical writes or holding bank-write locks
+  during database/model computation. It MUST apply native indexing eligibility,
+  never start stopped services, and report pending/stale updates honestly.
 - G1's actual reviewed profile/contract MUST precede implementation Ready.
   Independent local implementation and fault acceptance MUST precede signed
   v0.0.16 delivery; #56/#62/P2 federation gates MUST NOT block this local outcome.
+
+## Existing integration stories
 
 Existing #56 retains the integrated within- and cross-project motivating queries,
 including R2's template (3), and depends on G3, #55/#57 and ADR-0023 P2.
