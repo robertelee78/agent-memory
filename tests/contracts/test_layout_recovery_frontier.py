@@ -45,7 +45,8 @@ class RecoveryFrontierContract(unittest.TestCase):
     def pending(self, world):
         command, source = recovery.installed(world)
         repo, bank, native = recovery.memory(world, oversized=True, handoff=True)
-        originals = {path.name: path.read_bytes() for path in bank.iterdir() if path.is_file()}
+        originals = {path.relative_to(bank).as_posix(): path.read_bytes()
+            for path in bank.rglob('*') if path.is_file()}
         safe, inspected = recovery.inspect(world, command, repo)
         proposal_file, prepared = recovery.prepare(world, command, source, repo, inspected, native)
         applied = recovery.call(world, command, 'apply', '--repo', repo,
