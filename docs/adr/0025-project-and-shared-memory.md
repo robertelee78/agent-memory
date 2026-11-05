@@ -174,10 +174,16 @@ and escalate without imposing a mandatory second human gate on otherwise
 authorized ordinary admission.
 These checks constrain AM-mediated changes, not arbitrary Git pushes. The
 admission-provenance and governance-verification design belongs to #57.
-For a multi-developer source bank, who may release another collaborator's learning
-remains unresolved. For such a bank, operator confirmation or standing policy
-MUST NOT itself establish authority to release another collaborator's learning
-beyond independently verified source policy.
+The operator selected **Operator approval is sufficient** for source export
+authority, including eligible learning contributed by collaborators. For eligible
+current-project memory the operator is authorized to access, trusted operator
+confirmation or an explicitly configured bounded standing policy MUST supply
+source release authority. AM MUST NOT require an additional project-level export
+grant or treat source-project export restrictions as a veto of that operator
+decision. Readability/configuration alone MUST NOT count as export consent.
+Destination contribution/admission/governance and hard source exclusions remain
+required. This is AM's product permission model, not a determination of external
+legal or contractual rights.
 
 Unadmitted observations, quarantined material, secrets, and deleted content MUST
 NOT enter shared memory merely because they are locally available. Rewriting or
@@ -357,6 +363,12 @@ and independently observable RFC 2119 Acceptance Criteria before execution.
   refused. Automatic export MUST still fail closed for ineligible content,
   out-of-scope destinations/audiences, missing release/contribution/provider
   permission, or revoked policy. Destination admission MUST still run.
+- Eligible memory the operator is authorized to access MUST be exportable under
+  trusted operator approval or a matching explicit standing policy without an
+  additional project-level export grant, including collaborator-authored lessons.
+  A source-project export restriction MUST NOT override that operator decision.
+  Missing operator approval/policy, missing destination authority, unsafe source
+  material, or failed admission MUST still prevent publication.
 - An authorized contribution MUST pass ordinary comparison/evidence/admission
   without mandatory second human maintainer approval. Insufficient evidence or an
   unresolved admission conflict MUST prevent accepted shared guidance and reach
@@ -410,8 +422,14 @@ and independently observable RFC 2119 Acceptance Criteria before execution.
    treatment of independent shared corrections and downstream derivations.
 6. Source release terms and authority over remote-provider disclosure of shared
    content; shared derivation and re-export permissions.
-7. Source release authority for multi-developer project memory, including lessons
-   attributed to other collaborators.
 
 These choices MUST be resolved through bounded PM questions and independently
 reviewed task designs; this ADR MUST NOT invent operator answers.
+
+### Resolved source-release policy
+
+Former decision 7 is resolved: **Operator approval is sufficient**, including
+collaborator-authored eligible learning. The source project has no additional
+export-permission gate or veto. Trusted approval/standing-policy verification,
+source eligibility and destination authority remain execution-design obligations.
+

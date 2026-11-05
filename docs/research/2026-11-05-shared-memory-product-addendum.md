@@ -48,6 +48,12 @@ The 5 November PM discussion established:
 - After independent Opus review of the proposal and task map, the operator
   selected **Adopt the architecture**, preserving execution-design and release
   gates rather than approving implementation or real exports.
+- The operator subsequently selected **Operator approval is sufficient** for
+  source export authority, including eligible collaborator-authored learning
+  the operator may access. AM does not require an extra project-level export
+  grant or give source-project export restrictions a veto of that decision.
+  Trusted approval/standing policy, destination authority, ordinary admission
+  and hard source exclusions still apply.
 
 The final PM statement clarified the previous association question rather than
 selecting either of its offered project-enrollment options. It must not be
@@ -67,9 +73,11 @@ provisioning, or automatic propagation of private installation settings.
 | Project-level association | Private, per-user installation selection applies across projects on that computer. Collaborators do not inherit configuration or credentials through a project. |
 
 The research's separation of read, export, contribution/admission, and provider
-permission remains useful. Neither an export confirmation nor a standing export
-policy establishes otherwise missing source release authority. Multi-developer
-source release policy remains unresolved.
+permission remains useful. Under the later operator decision, trusted export
+confirmation or matching explicit standing policy supplies source release
+authority for eligible accessible project memory, including collaborator-authored
+lessons. Read/configuration access alone does not authorize export. An additional
+source-project export grant or veto is not part of AM's selected product policy.
 
 ## Guarantees retained, without overstating Git controls
 
@@ -93,9 +101,11 @@ cover the outcomes: #55 configuration/shared source; #57 exports/admission;
 #253 local-plus-shared recall; #56 integrated graph queries; #62 qualification.
 The v0.0.16 local runtime/recall stories remain independently deliverable.
 
-The addendum does not make any of those tasks Ready. Standing export policy,
-source release authority, admission/governance receipts, safe escalation,
-local/shared merge budgets, Git access/freshness handling, shared lifecycle,
-provider disclosure, and derivation/re-export require their own reviewed designs.
+The addendum does not make any task Ready. Standing-policy and trusted-approval
+verification, admission/governance receipts, safe escalation, local/shared merge
+budgets, Git access/freshness, shared lifecycle, provider disclosure and derivation/
+re-export require reviewed execution designs. The policy question of who may
+authorize accessible source exports is resolved; it MUST NOT remain a false
+pending project-permission gate.
 No production export, shared recall, graph integration, or cross-machine behavior
 was implemented or exercised by this addendum.

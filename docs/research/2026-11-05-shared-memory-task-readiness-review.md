@@ -3,7 +3,7 @@
 ## Source and operator disposition
 
 The operator adopted [ADR-0025](../adr/0025-project-and-shared-memory.md) for
-architecture only. Its accepted source is commit
+architecture only. The independently reviewed snapshot source is commit
 `5e7a5ffcdc5b2c25bf0cd65a03e741b74d652bc9`, blob
 `1a7addbff7d46e48ba2db2f9d3b919e8d0e57912`.
 The [architecture review](2026-11-05-shared-memory-architecture-review.md) and
@@ -32,7 +32,7 @@ Acceptance Criteria, validation, exclusions, supersession history, delivery
 boundary and explicit readiness gates. A writeup pass is not execution-design
 approval, implementation acceptance or delivery.
 
-| Existing issue/key suffix | Independent writeup verdict | Execution gates retained |
+| Existing issue/key suffix | Independent writeup verdict | Execution gates at the reviewed snapshot |
 | --- | --- | --- |
 | [#55](https://github.com/robertelee78/agent-memory/issues/55) `ADR-0008:federation-catalog` | PASS | ADR-0025 decision 4; operator/Vince consultation disposition; own execution design; #246/#247; scheduling. No release scheduled. |
 | [#57](https://github.com/robertelee78/agent-memory/issues/57) `ADR-0008:export-and-degradation` | PASS | #55/#247; decisions 1/2/5/6/7; consultation disposition; trusted confirmation, admission/provenance/governance/escalation/lifecycle/source-release design; scheduling. No release scheduled. |
@@ -125,3 +125,19 @@ runtime qualification is unchanged; its contract's sharing assumptions are
 reconciled without claiming G1 complete. #249/#244/#206/#248 are not narrowed.
 No implementation, production sharing, export consent, signed release or task
 completion is established by this architecture/task reconciliation.
+
+## Subsequent source-export authority decision
+
+After the recorded live review, the operator selected **Operator approval is
+sufficient**: trusted approval or an explicit bounded standing policy supplies
+source release authority for eligible project memory the operator may access,
+including collaborator-authored lessons. AM does not require an additional
+project-level export grant or allow source-project export restrictions to veto
+that decision. Destination authority, normal admission and hard source exclusions
+remain required.
+
+This resolves former ADR-0025 decision 7; it is not a new execution-design approval
+or consent to perform an export now. #57/#62 source-authority criteria and gates,
+the research addendum, and all affected ADR-0025 refinement bindings require
+reconciliation to the new source. The table and hashes above retain the exact
+earlier reviewed snapshot rather than backdating the later decision.
