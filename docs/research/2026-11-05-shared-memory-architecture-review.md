@@ -84,7 +84,27 @@ The optional difference that the addendum summarizes approval as content and
 destination while the ADR also names audience is non-blocking: the selected Git
 repository defines its audience. The ADR remains the normative source.
 
-Operator architecture disposition, immutable source publication, and source-bound
-tracker reconciliation still follow these reviews. No task is promoted to Ready
-or delivered by this record. The original seven v0.0.15 tasks remain subject to
-their own independent acceptance, integration, and signed-release requirements.
+At the time of the final technical reviews, operator architecture disposition,
+immutable source publication, and source-bound tracker reconciliation remained
+outstanding. No task was promoted to Ready or delivered by those reviews.
+The original seven v0.0.15 tasks retain their separate independent acceptance,
+integration, and signed-release requirements.
+
+## Subsequent operator architecture disposition
+
+The proposal and these reviews were published at
+`be999d93ea41703182f0ec35798a01138bcef1a6`. The operator then selected
+**Adopt the architecture**, explicitly preserving execution-design and release
+gates. ADR-0025 is therefore accepted for architecture only, not implementation.
+
+The operator additionally clarified: this is **not necessarily developer-specific;
+it can also be developer-specific**. The accepted source makes per-install
+configuration distinct from dataset ownership/audience: one operator, a team,
+an organization, or an ecosystem may use the same dataset model. Multiple
+authorized accounts/installations may select the same repository; developer
+identity is not its storage or eligibility key.
+
+The exact proposal blobs above remain the inputs to the recorded independent
+reviews. The later acceptance metadata and explicit audience clarification are
+subsequent source revisions, not a claim that Opus reviewed bytes before they
+existed. Reconciled tasks require their own source-bound readiness review.

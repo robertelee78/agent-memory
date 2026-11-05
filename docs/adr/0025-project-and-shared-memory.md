@@ -1,6 +1,7 @@
 ---
 id: ADR-0025
-status: proposed
+status: accepted
+approval-scope: architecture-only; task execution requires independent design approval
 date: 2026-11-05
 amends: [ADR-0001, ADR-0008, ADR-0017, ADR-0023, ADR-0024]
 depends-on: [ADR-0002, ADR-0005, ADR-0006, ADR-0011]
@@ -34,6 +35,9 @@ The operator further specified **once-per-computer installation configuration**:
 select the shared repository once for that user's AM installation on each
 computer, using the operator's existing account access. That installation uses
 the configured repository across projects without per-project connection steps.
+The operator clarified that the dataset is **not necessarily developer-specific**:
+it MAY serve one operator, a team, an organization, or an ecosystem. Per-install
+selection is configuration scope, not dataset ownership or audience scope.
 
 A live catalog of other repositories and request-time access to their private
 banks solves a different problem. Treating that as the primary sharing model
@@ -41,10 +45,12 @@ creates unnecessary discovery, permission, availability, and disclosure coupling
 The shared dataset is deliberately published knowledge, not an automatically
 searchable union of member banks.
 
-This draft records that product direction for independent review. It MUST NOT
-be treated as task-specific implementation approval, production export consent,
-or permission to change the release scope of an existing task. Technical design,
-remaining product decisions, and source-bound task reconciliation remain gates.
+The operator selected **Adopt the architecture** after the independent Opus
+[proposed-architecture and task-map reviews](../research/2026-11-05-shared-memory-architecture-review.md).
+This acceptance MUST NOT be treated as task-specific implementation approval,
+production export consent, or permission to change an existing release scope.
+Remaining policy choices and independently reviewed task designs remain gates;
+source-bound task reconciliation MUST preserve that distinction.
 Requirement terms use [RFC 2119](https://www.rfc-editor.org/info/rfc2119/).
 
 ## S1: Two authoritative memory scopes
@@ -97,6 +103,13 @@ MAY use different shared repositories or none. A collaborator MUST have both
 access to the selected shared repository and their own installation configuration
 selecting it before AM reads its lessons. Project membership MUST NOT grant that
 access or automatically select another operator's dataset.
+The configured shared repository MUST NOT be bound to one developer identity.
+Different authorized people/accounts and installations MAY select the same
+repository and consume the same admitted shared lessons. A team- or
+organization-owned repository and an operator-only repository MUST both be
+supported by the same dataset model; personal ownership MUST NOT be required.
+Per-install private configuration determines selection, while repository
+permissions and admission/governance determine the dataset's audience and use.
 
 Bindings MUST use stable identities, not infer membership from directory
 proximity, repository readability, recent work, or knowing another project exists.
@@ -369,6 +382,11 @@ and independently observable RFC 2119 Acceptance Criteria before execution.
   admitted shared lessons after equivalent configuration and authorized Git
   synchronization. Private installation configuration MUST NOT be copied through
   project Git.
+- Different authorized developer identities and accounts MUST be able to select
+  the same team/ecosystem repository and retrieve its same admitted record
+  versions. Shared identity, storage, and eligibility MUST NOT require that
+  dataset to belong to one developer. Different selection per operator MUST
+  remain possible without making developer identity a dataset key.
 - Source or destination denial, changed candidate content/audience, unauthorized
   attribution, unsafe source material, and stale approval MUST fail closed without
   weakening local operation. Exact confirmation and receipt semantics MUST be

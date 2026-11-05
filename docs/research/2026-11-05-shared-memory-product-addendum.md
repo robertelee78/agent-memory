@@ -3,7 +3,7 @@
 ## Scope and evidence boundary
 
 This addendum records later operator input for
-[proposed ADR-0025](../adr/0025-project-and-shared-memory.md). It does not rewrite
+[accepted architecture ADR-0025](../adr/0025-project-and-shared-memory.md). It does not rewrite
 or add acceptance requirements to the independently reviewed #246/#247 research
 candidate at commit
 [`175d21fa26bbef41f8ec859b463876934e16db79`](https://github.com/robertelee78/agent-memory/commit/175d21fa26bbef41f8ec859b463876934e16db79).
@@ -42,6 +42,12 @@ The 5 November PM discussion established:
   computer, using existing authorized accounts. No per-project connection step
   is required. Another operator in the same project needs both shared-repository
   access and their own AM installation configuration to use that dataset.
+- The shared repository is not necessarily developer-specific. It may serve an
+  operator, team, organization, or ecosystem; per-install selection does not bind
+  dataset ownership or audience to a developer identity.
+- After independent Opus review of the proposal and task map, the operator
+  selected **Adopt the architecture**, preserving execution-design and release
+  gates rather than approving implementation or real exports.
 
 The final PM statement clarified the previous association question rather than
 selecting either of its offered project-enrollment options. It must not be
@@ -82,7 +88,7 @@ silently disclose private source-project identity, paths, or evidence.
 
 ## Work mapping and remaining gates
 
-ADR-0025 contains the proposed source-of-truth task reconciliation. Existing keys
+ADR-0025 contains the source-of-truth task reconciliation. Existing keys
 cover the outcomes: #55 configuration/shared source; #57 exports/admission;
 #253 local-plus-shared recall; #56 integrated graph queries; #62 qualification.
 The v0.0.16 local runtime/recall stories remain independently deliverable.
