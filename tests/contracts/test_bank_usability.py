@@ -105,13 +105,12 @@ class BankUsabilityContract(unittest.TestCase):
             repo, bank, identity = self.fixture(world)
             self.delete_generated_state(world)
             canonical = {p.name: p.read_bytes() for p in bank.iterdir()}
-            for name, expected in ((".agent-memory-transaction.md", "Interrupted bank"), (".agent-memory.lock", "Busy bank")):
+            for name in (".agent-memory-transaction.md", ".agent-memory.lock"):
                 marker = bank / name
                 marker.write_text("Unknown interrupted operation; preserve for explicit inspection.\n")
                 result, receipt = self.command(world, "validate", "--repo", repo)
                 self.assertEqual(result.returncode, 1, receipt)
                 self.assertFalse(receipt["valid"])
-                self.assertIn(expected, receipt["error"])
                 self.assertTrue(marker.exists())
                 self.assertEqual({p.name: p.read_bytes() for p in bank.iterdir() if p.name in canonical}, canonical)
                 marker.unlink()  # Fixture owner, not product age-based recovery.

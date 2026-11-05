@@ -31,7 +31,7 @@ class ConsolidationContract(unittest.TestCase):
             decisions.append({'path': row['path'], 'classification': kind,
                               'rationale': 'The actual fixture meaning and conditions were compared; history stays provenance.'})
         judgment = {'observation': observed['observation'], 'decisions': decisions,
-                    'rationale': 'Retain the confirmed retry meaning and every distinct source while tightening wording.'}
+                    'pending_decisions': [], 'rationale': 'Retain the confirmed retry meaning and every distinct source while tightening wording.'}
         reviewed = self.good(w, 'compare_learning.py', 'review', '--repo', repo, '--request', self.save(w, request),
                              '--judgment', self.save(w, judgment, 'judgment.json'))
         return {'comparison_request': request, 'comparison_proof': reviewed['proof'], 'capture': captured, 'context': context or {}}

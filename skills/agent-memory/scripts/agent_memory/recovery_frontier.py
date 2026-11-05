@@ -27,11 +27,12 @@ UNIT_FIELDS = {'unit_id', 'source_ranges', 'provenance', 'reason', 'required_act
 
 class VerifiedHold:
     """Internal descriptor-derived context, deliberately not a mapping/proof."""
-    __slots__ = ('root', 'bank', 'marker', 'token', 'scope', 'operation_id')
+    __slots__ = ('root', 'bank', 'marker', 'token', 'scope', 'operation_id', 'runtime_artifact_digest')
 
-    def __init__(self, root, bank, marker, token, scope, operation_id):
+    def __init__(self, root, bank, marker, token, scope, operation_id, runtime_artifact_digest):
         self.root, self.bank, self.marker = root, bank, marker
         self.token, self.scope, self.operation_id = token, scope, operation_id
+        self.runtime_artifact_digest = runtime_artifact_digest
 
 
 def marker_bytes(bank, name='.agent-memory-transaction.md'):
@@ -125,8 +126,12 @@ def ledger(repo, operation_id, row):
                     raise ContractError('Recovery terminal receipt linkage is invalid')
                 terminal = state.read(directory / 'resolutions' / (receipt['resolution_id'] + '.json'))
                 if (digest(encoded(terminal)) != receipt['sha256'] or terminal.get('unit_id') != unit['unit_id']
-                        or terminal.get('operation_id') != operation_id or terminal.get('terminal_state') != unit['state']):
+                        or terminal.get('operation_id') != operation_id
+                        or terminal.get('terminal_state') not in {unit['state'], 'pending-admission'}):
                     raise ContractError('Recovery terminal receipt is missing or mismatched')
+            if not any(state.read(directory / 'resolutions' / (receipt['resolution_id'] + '.json')).get('terminal_state') == unit['state']
+                    for receipt in unit['terminal_receipts']):
+                raise ContractError('Partial coverage receipts cannot falsely declare a whole unit terminal')
         if extra and (not isinstance(unit['child_unit_ids'], list) or not unit['child_unit_ids']
                 or any(not uuid_valid(child) for child in unit['child_unit_ids'])):
             raise ContractError('Recovery unit revision is incomplete')
@@ -147,6 +152,8 @@ def range_value(value):
 def evidence(directory, current, row):
     manifest = state.read(directory / 'manifest.json')
     unit_map = state.read(directory / 'unit-map.json')
+    if digest(encoded(unit_map)) != current['unit_map_sha256']:
+        unit_map = state.read(directory / 'unit-maps' / (current['unit_map_sha256'] + '.json'))
     proposal = state.read(directory / 'proposals' / (row['proposal_id'] + '.json'))
     for value, key in ((manifest, 'manifest_sha256'), (unit_map, 'unit_map_sha256'), (proposal, 'proposal_sha256')):
         if digest(encoded(value)) != current[key]:
@@ -188,7 +195,15 @@ def observe(repo, owner=None, transaction=None):
               if row['state'] in {'active', 'interrupted'}]
     if len(active) > 1:
         raise ContractError('Competing recovery operations require explicit reconciliation')
-    marker = marker_value(raw) if raw is not None and (active or sentinel_raw is not None) else None
+    child_parent = None
+    if raw is not None and owner is not None and transaction == raw:
+        candidate_marker = load(raw)
+        if (isinstance(candidate_marker, dict) and candidate_marker.get('schema') == TRANSACTION
+                and candidate_marker.get('operation_id') not in index['operations']):
+            child_parent = verified_child_transaction(root, owner, raw, index)
+    marker = marker_value(raw) if raw is not None and (active or sentinel_raw is not None or child_parent is not None) else None
+    if child_parent is not None:
+        marker = {**marker, 'operation_id': child_parent}
     if active:
         operation, row = active[0]
         if (marker is None or marker['operation_id'] != operation or marker['project_id'] != row['project_id']
@@ -199,14 +214,19 @@ def observe(repo, owner=None, transaction=None):
         expected_sentinel = {'schema': SENTINEL, 'operation_id': operation, 'project_id': row['project_id']}
         if sentinel_raw != encoded(expected_sentinel):
             raise ContractError('Recovery sentinel/index pair is missing, orphaned or changed')
-    elif sentinel_raw is not None or (raw is not None and load(raw).get('schema') in {HOLD, NESTED, TRANSACTION}):
+    elif child_parent is None and (sentinel_raw is not None or (raw is not None and load(raw).get('schema') in {HOLD, NESTED, TRANSACTION})):
         raise ContractError('Orphan recovery marker has no verified private ledger')
-    ledgers, unit_ids, source_pins, project_ids = [], [], [], set()
+    ledgers, unit_ids, source_pins, project_ids, reference_maps = [], [], [], set(), {}
     for operation, row in sorted(index['operations'].items()):
         if row['state'] in {'rolled-back', 'cleaned'}:
             continue
         directory, head, current = ledger(root, operation, row)
         manifest, proposal = evidence(directory, current, row)
+        mapping = state.read(directory / 'reference-map.json', missing=True)
+        if mapping:
+            if not isinstance(mapping, dict):
+                raise ContractError('Private recovery reference map is malformed')
+            reference_maps[operation] = mapping
         project_ids.add(row['project_id'])
         pending = [unit for unit in current['units'] if unit['state'] == 'pending-admission']
         if pending and row['state'] != 'active':
@@ -214,7 +234,8 @@ def observe(repo, owner=None, transaction=None):
         unit_ids.extend(unit['unit_id'] for unit in pending)
         ledgers.append({'operation_id': operation, 'generation': head['generation'], 'sha256': head['sha256']})
         source_pins.append({'operation_id': operation, 'manifest_sha256': current['manifest_sha256'],
-            'unit_map_sha256': current['unit_map_sha256'], 'units': pending})
+            'unit_map_sha256': current['unit_map_sha256'], 'units': pending,
+            'quiescence_heads_sha256': digest(state.read_bytes(directory / 'quiescence-attestations.json', missing=True))})
         if row['state'] in {'active', 'interrupted'}:
             binding = state.bindings()['bindings'].get(operation)
             if binding is None or binding['project_id'] != row['project_id']:
@@ -231,15 +252,15 @@ def observe(repo, owner=None, transaction=None):
     if project_ids:
         project_id = next(iter(project_ids))
     else:
-        router = bank / 'MEMORY.md'
-        project_id = bank_contract.parse_router(router.read_text())[0]['project-id']
+        from .bank_observation import read_source
+        project_id = bank_contract.parse_router(read_source(bank, 'MEMORY.md', 16384).decode('utf-8'))[0]['project-id']
     index_raw = state.read_bytes(base / 'index.json', missing=True)
     token = {'bank_path': str(bank), 'project_id': project_id, 'operation_ids': [row['operation_id'] for row in ledgers],
         'ledger_heads': ledgers, 'frontier_digest': digest(encoded(source_pins)), 'coverage_complete': not unit_ids,
-        'unit_ids': sorted(unit_ids), 'reference_map_sha256': digest(encoded({})), 'review_digest': None,
+        'unit_ids': sorted(unit_ids), 'reference_map_sha256': digest(encoded(reference_maps)), 'review_digest': None,
         'index_sha256': digest(index_raw), 'hold_sha256': (digest(encoded({
             'schema': HOLD, 'project_id': marker['project_id'], 'operation_id': marker['operation_id'],
-            'hold_id': index['operations'][marker['operation_id']]['hold_id']})) if marker is not None else None),
+            'hold_id': index['operations'][marker['operation_id']]['hold_id']})) if marker is not None and active else None),
         'sentinel_sha256': digest(sentinel_raw)}
     return token
 
@@ -263,7 +284,8 @@ def verified_hold(repo, owner=None, transaction=None):
     marker = marker_value(raw)
     if marker['schema'] != HOLD and transaction != raw:
         raise ContractError('Only an internally checked persistent hold permits qualified canonical access')
-    capabilities = artifact.inspect(artifact.PACK)['compatibility'].get('private_state_capabilities', [])
+    measured_runtime = artifact.inspect(artifact.PACK)
+    capabilities = measured_runtime['compatibility'].get('private_state_capabilities', [])
     if 'layout-frontier-v1' not in capabilities:
         raise ContractError('Active runtime cannot enforce the private recovery frontier')
     row = state.index(root)['operations'][marker['operation_id']]
@@ -274,15 +296,16 @@ def verified_hold(repo, owner=None, transaction=None):
         owned_lock=owner, owned_transaction=raw)
     if context['checkout_key'] != state.bindings()['bindings'][marker['operation_id']]['checkout_key']:
         raise ContractError('Recovery checkout continuity changed')
-    attestation = proposal.get('quiescence_attestation')
-    if attestation is None or digest(encoded(attestation)) != proposal.get('quiescence_attestation_sha256'):
-        raise ContractError('Recovery hold has no exact operator quiescence attestation')
+    from .recovery_quiescence import selected_attestation
+    attestation = selected_attestation(root, marker['operation_id'], proposal, measured_runtime['artifact_digest'])
+    if attestation is None:
+        raise ContractError('Recovery hold has no independently reviewed attestation for the measured executing runtime')
     if (attestation.get('operation_id') != marker['operation_id'] or attestation.get('project_id') != token['project_id']
             or attestation.get('repo_root') != str(root) or attestation.get('bank_path') != str(bank)
             or attestation.get('checkout_key') != context['checkout_key']):
         raise ContractError('Recovery quiescence attestation has stale identity or route pins')
     check(token, root, owner, transaction)
-    return VerifiedHold(root, bank, raw, token, context, marker['operation_id'])
+    return VerifiedHold(root, bank, raw, token, context, marker['operation_id'], measured_runtime['artifact_digest'])
 
 
 def require_scope(repo, project_id=None, *, expected=None, owned_lock=None, owned_transaction=None, **kwargs):
@@ -442,9 +465,9 @@ def proof_input(proof):
     return digest(encoded(value))
 
 
-def validate_comparison_review(repo, proof, owner=None):
+def validate_comparison_review(repo, proof, owner=None, transaction=None):
     token = proof['judgment']['observation']['recovery_frontier']
-    check(token, repo, owner)
+    check(token, repo, owner, transaction)
     claims = [decision['coverage_claim'] for decision in proof['judgment']['pending_decisions']]
     if not token['unit_ids']:
         if token['review_digest'] is not None or claims:
@@ -533,7 +556,7 @@ def reservation(files, pending, token):
                         'path': '"' * 64, 'resulting_sha256': 'f' * 64}] * 2}})
         skeleton = {'schema': 'agent-memory/comparison-proof-v2', 'judgment': {'observation': observation,
             'decisions': [{'path': row['path'], 'classification': 'distinct-conditions', 'rationale': '"' * 2048}
-                for row in mandatory], 'pending_decisions': fragments, 'rationale': '"' * 4096},
+                for row in mandatory], 'pending_decisions': fragments, 'rationale': '"' * 2046},
             'disposition': 'provenance-identity-review-required',
             'targets': [{'path': row['path'], 'sha256': row['sha256'], 'id': row['metadata']['id'],
                 'version': row['metadata']['version'], 'required_preserved_metadata': row['metadata'],
@@ -545,3 +568,114 @@ def reservation(files, pending, token):
         if proof_bytes >= maximum['proof_bytes']:
             maximum = {'rows': count, 'disclosure_bytes': disclosure, 'proof_bytes': proof_bytes, 'witness_identity': identity}
     return maximum
+
+
+def advance_ledger(repo, operation_id, units, expected_head, owner, transaction=None, *, unit_map_sha256=None):
+    from .layout_resolution import advance_ledger as advance
+    return advance(repo, operation_id, units, expected_head, owner, transaction, unit_map_sha256=unit_map_sha256)
+
+
+def restore_hold(repo, operation_id, owner, transaction):
+    from .layout_resolution import restore_hold as restore
+    return restore(repo, operation_id, owner, transaction)
+
+
+def retire(repo, operation_id, owner, transaction=None):
+    from .layout_resolution import retire as finish
+    return finish(repo, operation_id, owner, transaction)
+
+
+def resolve(repo, operation_id=None, unit_id=None, terminal=None, proposal=None):
+    from .layout_resolution import resolve as resolution
+    return resolution(repo, operation_id, unit_id, terminal, proposal)
+
+
+def resolve_reference(repo, reference):
+    found = []
+    for operation, row in state.index(repo)['operations'].items():
+        if row['state'] not in {'active', 'terminal'}:
+            continue
+        directory = state.paths(repo, operation)[3]
+        mapping = state.read(directory / 'reference-map.json', missing=True) or {}
+        if reference['path'] in mapping:
+            actual = mapping[reference['path']]
+            if (not isinstance(actual, dict) or set(actual) != {'id', 'version', 'path', 'resulting_sha256'}
+                    or actual['id'] != reference['id'] or actual['resulting_sha256'] != reference['resulting_sha256']
+                    or type(actual['version']) is not int or actual['version'] < 1 or reference['version'] != 1):
+                raise ContractError('Private reference locator does not bind its real record identity/version/hash')
+            bank_contract.path_value(actual['path'])
+            found.append(actual)
+    if len(found) != 1:
+        raise ContractError('Private record reference is missing, ambiguous or foreign')
+    return found[0]
+
+
+def recover_nested(repo, operation_id=None, nested_id=None, mode=None, proposal=None):
+    from .recovery_transactions import recover_nested as recover
+    return recover(repo, operation_id, nested_id, mode, proposal)
+
+
+def capture_scope(repo):
+    """Preserve advisory unbound previews, never weaken a visible recovery hold."""
+    from .bank_capacity import BankCapacityError
+    try:
+        return require_scope(repo)
+    except BankCapacityError:
+        raise
+    except (ContractError, OSError, ValueError):
+        root, bank, _, _ = state.paths(repo)
+        if marker_bytes(bank) is not None or any(row['state'] in {'active', 'interrupted'}
+                for row in state.index(root)['operations'].values()):
+            raise
+        return None
+
+
+def private_preview(repo, value, output=None):
+    token = observe(repo)
+    if value.get('proposal') is not None and token['unit_ids']:
+        if output is None:
+            raise ContractError('Recovery-bound proposal contains private coverage claims; use checked --private-output')
+        return {'schema': value['schema'], 'operation': value['operation'],
+            'private_artifact': sharing_limits.write_private(output, value, repo),
+            'pending_recovery_units': len(token['unit_ids']), 'canonical_writes_performed': False}
+    return value
+
+
+def validate_quiescence(repo, value, *, runtime_artifact_digest, required_routes=(), publish=False, owner=None):
+    from .recovery_quiescence import validate
+    return validate(repo, value, runtime_artifact_digest=runtime_artifact_digest,
+        required_routes=required_routes, publish=publish, owner=owner)
+
+
+def verified_child_transaction(repo, owner, transaction, indexed):
+    """Allow only exact owned child readback, never an ordinary semantic reader."""
+    from .bank_observation import markers
+    from . import scope_binding
+    marker = marker_value(transaction)
+    root, bank, _, directory = state.paths(repo, marker['operation_id'])
+    markers(bank, owner, transaction)
+    journal = state.read(directory / 'journal.json')
+    p = state.read(directory / 'proposals' / (journal['proposal_id'] + '.json'))
+    if (journal.get('schema') != 'agent-memory/layout-recovery-journal-v1'
+            or journal.get('operation_id') != marker['operation_id'] or journal.get('marker') != marker
+            or p.get('schema') != 'agent-memory/layout-child-restore-v1'
+            or p.get('operation_id') != marker['operation_id'] or digest(encoded(p)) != journal.get('proposal_sha256')
+            or p.get('manifest_sha256') != journal.get('manifest_sha256')
+            or p.get('parent_operation_id') != journal.get('parent_operation_id')
+            or p.get('parent_receipt_sha256') != journal.get('parent_receipt_sha256')):
+        raise ContractError('Child recovery marker lacks its exact typed source-bound parent journal')
+    parent = p['parent_operation_id']
+    row = indexed['operations'].get(parent)
+    if row is None or row['project_id'] != marker['project_id']:
+        raise ContractError('Child recovery cannot infer an absent or foreign parent operation')
+    parent_directory, head, _ = ledger(root, parent, row)
+    receipt = state.read(parent_directory / 'receipt.json')
+    if (digest(encoded(receipt)) != p['parent_receipt_sha256'] or receipt.get('verified') is not True
+            or digest(encoded(head)) != p['parent_ledger_head_sha256']):
+        raise ContractError('Child recovery parent receipt or ledger dependency changed')
+    child_manifest = state.read(directory / 'manifest.json')
+    if digest(encoded(child_manifest)) != p['manifest_sha256'] or p['scope_context'] != child_manifest['identity']['scope_context']:
+        raise ContractError('Child recovery identity evidence is missing or changed')
+    scope_binding.require(root, marker['project_id'], expected=p['scope_context'], owned_lock=owner, owned_transaction=transaction)
+    markers(bank, owner, transaction)
+    return parent

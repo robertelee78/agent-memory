@@ -65,7 +65,7 @@ class ComparisonContract(unittest.TestCase):
     def judgment(self,inspection,classification='equivalent'):
         return {'observation':inspection['observation'],'decisions':[{'path':row['path'],'classification':classification,
             'rationale':'The inspected statement has the classified meaning under its retained conditions and evidence.'} for row in inspection['matches']],
-            'rationale':'Compared the complete plausible matches and their provenance; these source observations do not prove truth.'}
+            'pending_decisions':[],'rationale':'Compared the complete plausible matches and their provenance; these source observations do not prove truth.'}
 
     def review(self,w,repo,request,judgment):
         return self.call(w,'compare_learning.py','review','--repo',repo,'--request',self.save(w,request),'--judgment',self.save(w,judgment,'judgment.json'))

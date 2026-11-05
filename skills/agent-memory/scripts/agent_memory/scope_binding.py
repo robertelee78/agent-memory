@@ -104,7 +104,7 @@ def raw_recovery_context(repo, raw_identity, owner=None, transaction=None):
     return context
 
 
-_ENROLLMENT_SEAL = object()
+_enrollment_seal = object()
 
 
 class PrivateEnrollmentContext:
@@ -163,12 +163,12 @@ def private_enrollment_context(repo):
                     journal_sha256=digest(layout_recovery_state.read_bytes(directory / 'journal.json')))
     context = object.__new__(PrivateEnrollmentContext)
     context.root, context.bank, context._scope, context.hold = root, bank, scope, hold
-    context._pins, context.context_digest, context._seal = pins, digest(encoded(pins)), _ENROLLMENT_SEAL
+    context._pins, context.context_digest, context._seal = pins, digest(encoded(pins)), _enrollment_seal
     return context
 
 
 def recheck_private_enrollment(context):
-    if type(context) is not PrivateEnrollmentContext or context._seal is not _ENROLLMENT_SEAL:
+    if type(context) is not PrivateEnrollmentContext or context._seal is not _enrollment_seal:
         raise ContractError('Private enrollment requires an internally constructed live context')
     current = private_enrollment_context(context.root)
     if current._pins != context._pins or current.context_digest != context.context_digest:

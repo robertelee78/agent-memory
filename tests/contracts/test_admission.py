@@ -101,7 +101,7 @@ class AdmissionContract(unittest.TestCase):
         inspected=self.good(w,'compare_learning.py','inspect','--repo',repo,'--request',self.save(w,request))
         judgment={'observation':inspected['observation'],'decisions':[{'path':row['path'],'classification':classification,
                   'rationale':'The fixture meaning has been assessed with its evidence and conditions.'} for row in inspected['matches']],
-                  'rationale':'Read the actual bounded plausible sources before deciding novelty.'}
+                  'pending_decisions':[],'rationale':'Read the actual bounded plausible sources before deciding novelty.'}
         reviewed=self.good(w,'compare_learning.py','review','--repo',repo,'--request',self.save(w,request),
                            '--judgment',self.save(w,judgment,'judgment.json'))
         return request,reviewed['proof']
@@ -113,7 +113,7 @@ class AdmissionContract(unittest.TestCase):
     def prepared(self,w,repo,request=None):
         captured=self.capture(w,repo,request or self.request())
         compared,proof=self.compared(w,repo,captured['capture'])
-        r,v=self.preview(w,repo,captured,compared,{'schema':'agent-memory/comparison-result-v1','proof':proof});self.assertEqual(r.returncode,0,v)
+        r,v=self.preview(w,repo,captured,compared,{'schema':'agent-memory/comparison-result-v2','proof':proof});self.assertEqual(r.returncode,0,v)
         self.assertIsNotNone(v['proposal']);return v['proposal']
 
     def apply(self,w,proposal):

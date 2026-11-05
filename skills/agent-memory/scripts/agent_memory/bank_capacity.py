@@ -6,8 +6,8 @@ from .frontmatter import ContractError
 
 REPAIR = (
     'Preserve the bank, feature work, original index/HEAD and all recovery evidence. '
-    'Ordinary recall and new capture remain pending. This runtime has no supported '
-    'source-preserving layout-recovery command. Do not truncate, delete, skip a '
+    'Ordinary recall and new capture remain pending. Use am bank recover-layout inspect '
+    'with a private output path for explicit source-preserving review. Do not truncate, delete, skip a '
     'source, raise normal limits or initialize over existing memory; repeating the '
     'same operation does not repair capacity.'
 )

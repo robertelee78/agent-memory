@@ -959,6 +959,8 @@ def rollback_compatibility(state, journal):
             and all(isinstance(p, str) and absolute(p) == Path(p) for p in repositories),
             'Malformed rollback repository inventory')
     from . import updating
+    from . import private_state
+    private_state.require_compatible({'rollback_repositories': repositories}, compatibility, 'rollback')
     updating.banks(repositories, compatibility, require_readable=True)
 
 
@@ -1010,6 +1012,15 @@ def preserve_preexchange_cache_writer(state, journal):
 
 
 def rollback(state, journal):
+    from . import private_state
+    installation = {**(read_receipt(state) or {}), 'rollback_repositories': journal.get('rollback_repositories', [])}
+    target = {'compatibility': journal.get('previous_compatibility') or {},
+        'artifact_digest': journal.get('previous_artifact_digest')}
+    with private_state.activation_guard(installation, target, 'rollback'):
+        return _rollback(state, journal)
+
+
+def _rollback(state, journal):
     trust_paths.state(state)
     rollback_compatibility(state, journal)
     preserve_preexchange_cache_writer(state, journal)
@@ -1072,6 +1083,9 @@ def read_journal(state):
 
 
 def recover(state, *, for_install=False):
+    if not for_install and os.path.lexists(state/'omp-transition.json'):
+        from . import omp_boundary
+        omp_boundary.recover_native_binding(state)
     path = state/'journal.json'
     journal = read_journal(state)
     if journal is None:
@@ -1113,6 +1127,22 @@ def recover(state, *, for_install=False):
 
 
 def install(plan, *, before_activate=None, after_activate=None):
+    from . import private_state
+    installation = {**(plan.get('old') or {}), 'rollback_repositories': plan.get('rollback_repositories', [])}
+    target = plan.get('preserved_private_state_reader') if plan.get('operation') == 'uninstall' else plan['source']
+    transition = None
+    if plan.get('omp_transition') or plan.get('omp_binding'):
+        from . import omp_boundary
+        def transition():
+            if plan.get('omp_transition'):
+                omp_boundary.native_transition(plan, check=False)
+            if plan.get('omp_binding'):
+                omp_boundary.native_activation(plan, check=False)
+    with private_state.activation_guard(installation, target, plan.get('operation', 'install'), transition=transition):
+        return _install(plan, before_activate=before_activate, after_activate=after_activate)
+
+
+def _install(plan, *, before_activate=None, after_activate=None):
     operation = plan.get('operation', 'install')
     state = plan['state']; old = plan['old']; changed = [a for a in plan['actions'] if a['changed']]
     trust_paths.state(state)
@@ -1168,6 +1198,7 @@ def install(plan, *, before_activate=None, after_activate=None):
     journal = {'schema': JOURNAL_SCHEMA, 'operation': operation, 'transaction': transaction, 'status': 'staging',
                'actions': [], 'receipt': receipt, 'receipt_identity': None, 'created_directories': [],
                'previous_compatibility': old['source']['compatibility'] if old else None,
+               'previous_artifact_digest': old['source']['artifact_digest'] if old else None,
                'rollback_repositories': plan.get('rollback_repositories', [])}
     if plan.get('cache_recovery') is not None:
         journal['opaque_cache_recovery'] = plan['cache_recovery']['summary']
@@ -1267,6 +1298,9 @@ def install(plan, *, before_activate=None, after_activate=None):
         require(fingerprint(receipt_path) == journal['receipt_identity'], 'Receipt readback failed')
         fault(operation + '-after-receipt')
         journal['status'] = 'complete'; replace_record(state/'journal.json', journal)
+        if plan.get('omp_transition') or plan.get('omp_binding'):
+            from . import omp_boundary
+            omp_boundary.finish_native_transition(plan)
         return {'operation': operation, 'verified': True, 'changed': True, 'receipt': receipt,
                 **({'cache_recovery': {**plan['cache_recovery']['summary'], 'planned': False,
                                       'old_runtime_preserved': True,

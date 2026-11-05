@@ -69,7 +69,7 @@ class GovernanceContract(unittest.TestCase):
         judgment = {'observation': observed['observation'], 'decisions': [
             {'path': row['path'], 'classification': 'contradiction' if row['path'] == p1 else 'equivalent' if row['path'] == p2 else 'related-context',
              'rationale': 'The new confirmed source resolves the wrong claim; the replacement is read unchanged.'} for row in observed['matches']],
-            'rationale': 'Use the independently evidenced existing correction without inventing a third claim.'}
+            'pending_decisions': [], 'rationale': 'Use the independently evidenced existing correction without inventing a third claim.'}
         reviewed = self.good(w, 'compare_learning.py', 'review', '--repo', repo, '--request', self.save(w, request),
             '--judgment', self.save(w, judgment, 'judgment.json'))
         value = self.request(bank, old, p1, 'supersede')

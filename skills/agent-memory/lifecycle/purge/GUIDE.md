@@ -35,6 +35,15 @@ installation state, Git history and external backups. Deleting this local bank
 does not erase remote copies, other branches, other worktrees or Git history;
 the session MUST explain that scope when presenting the deletion request.
 
+Purge MUST also inspect the private recovery index and state binding before
+preview and under the bank lock. Unknown, interrupted or unresolved recovery
+dependencies refuse deletion even if a safeguard was removed manually. Purge
+MUST NOT delete external originals or resolve pending knowledge. Terminal
+recovery evidence requires the separate reviewed operation-scoped
+`am bank recover-layout retention inspect|apply` workflow; age and layout
+success alone are insufficient.
+
+
 ## Plan
 
 The session MUST obtain a read-only exact preview, with `SKILL_DIR` resolved to

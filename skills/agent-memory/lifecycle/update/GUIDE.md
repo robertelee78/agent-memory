@@ -54,6 +54,22 @@ MUST prevent activation. Initial v1 declares no migrators. Unavailable registere
 locations remain explicit discovery gaps, and later ordinary bank use still
 requires its own schema guard.
 
+Compatibility MUST also preserve the union of every discovered bank's active
+`private_state_capabilities`, including `layout-frontier-v1` and any independent
+native source requirement. Missing legacy capability metadata means an empty
+set, never inferred support. The inventory includes local projects, saved
+bindings, recovery indexes/holds and native source registries; inaccessible,
+offline or corrupt private state leaves activation pending. Clearing one
+feature's requirement MUST NOT clear another's.
+
+A pending layout frontier requires the exact bound state and independently
+reviewed operator quiescence for the measured target runtime and all same-bank
+invocation routes. Update, recovery and exact rollback recheck these pins before
+activation and readback. An incapable old rollback target MUST NOT be activated
+merely to finish a lifecycle journal. External recovery originals and ledgers
+are not installer-owned and remain intact.
+
+
 ## Apply
 
 After an acceptable authorized check, the session MUST invoke the same trusted

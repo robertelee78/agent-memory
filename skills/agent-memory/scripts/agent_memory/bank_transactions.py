@@ -90,12 +90,12 @@ def proposal_value(prepared):
 
 
 def preview(repo, files, operation="compact"):
-    from .scope_binding import capture
+    from .recovery_frontier import capture_scope
     root, bank = writes.bank_path(repo)
     checked, hashes = writes.snapshot(root)
     p = proposal_value({"schema": SCHEMA, "operation_id": str(uuid.uuid4()), "operation": operation,
                         "repo_root": str(root), "project_id": checked["project_id"], "observed_hashes": hashes,
-                        "files": files, "scope_context": capture(root)})
+                        "files": files, "scope_context": capture_scope(root)})
     preflight(bank, p)
     return result("preview", proposal=p, writes_performed=False, verified=False)
 
@@ -354,6 +354,9 @@ def validate_outcome(root, bank, desired, p, owner, marker, *, admission_sources
     if admission_sources and 'consolidation_evidence' in p and desired == p['files']:
         from .consolidation import check_sources as check_consolidation_sources
         check_consolidation_sources(p, owner=owner, marker=marker)
+    if admission_sources and 'refresh_evidence' in p and desired == p['files']:
+        from .memory_refresh import check_sources as check_refresh_sources
+        check_refresh_sources(p, owner=owner, marker=marker)
     if not desired and p['operation'] == 'initialize' and p['observed_hashes'] == {}:
         if contract.physical_paths(bank) or writes.hashes(bank):
             raise ContractError('Uninitialized rollback has an unexpected occupant; preserve it')
@@ -364,6 +367,9 @@ def validate_outcome(root, bank, desired, p, owner, marker, *, admission_sources
 def apply(prepared):
     from .scope_binding import require
     p = proposal_value(prepared)
+    from . import recovery_frontier, recovery_transactions
+    if p['operation'] != 'initialize' and recovery_frontier.observe(p['repo_root'])['hold_sha256'] is not None:
+        return recovery_transactions.apply_transaction(p)
     if p['operation'] == 'bind':
         raise ContractError('Identity changes require scope_binding preview/apply, not an ordinary bank transaction')
     if p['scope_context'] is None:

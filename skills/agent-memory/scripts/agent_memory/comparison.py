@@ -8,6 +8,7 @@ import sys
 import uuid
 
 from . import bank_capacity, bank_contract, bank_writes as writes, records, retrieval, scope_binding, security
+from . import recovery_frontier, sharing_limits
 from .developer_identity import digest, encoded, load, uuid_valid
 from .frontmatter import ContractError, write
 
@@ -50,7 +51,9 @@ def request_value(request):
 def inspect(repo, request, *, owned_lock=None):
     metadata = request_value(request)
     root, bank = writes.bank_path(repo)
-    context = scope_binding.require(root, request['project_id'], owned_lock=owned_lock)
+    context = recovery_frontier.require_scope(root, request['project_id'], owned_lock=owned_lock)
+    frontier = recovery_frontier.observe(root, owned_lock)
+    pending = recovery_frontier.review_for_comparison(root, frontier, owned_lock)
     checked, observed = writes.snapshot(root, owned_lock=owned_lock)
     discovered_paths=set()
     if 'discovery' in request:
@@ -94,7 +97,9 @@ def inspect(repo, request, *, owned_lock=None):
     if digest(router) != observed['MEMORY.md']:
         raise ContractError('Router changed during comparison')
     security.ensure_safe({'MEMORY.md': router.decode('utf-8')})
-    matches, used = [], 0
+    matches, used = [], sum(len(encoded(row)) for row in pending)
+    if len(pending) > 64 or used > LIMIT:
+        raise ContractError('Pending frontier exceeds complete bounded review; recovery remains pending')
     for path, entry in entries.items():
         if entry['format'] not in {'standalone-record', 'context-prose'}:
             continue
@@ -122,27 +127,31 @@ def inspect(repo, request, *, owned_lock=None):
                'matched_searches': query_hits, 'selection_class': 'comparison-only-not-current-guidance',
                'source_assertions_verified': False}
         used += len(encoded(row))
-        if len(matches) >= 64 or used > LIMIT:
+        if len(matches) + len(pending) >= 64 or used > LIMIT:
             raise ContractError('Plausible matches exceed a complete bounded review; refine and inspect before writing')
         matches.append(row)
     matches.sort(key=lambda row: row['path'])
-    scope_binding.require(root, checked['project_id'], expected=context, owned_lock=owned_lock)
+    recovery_frontier.require_scope(root, checked['project_id'], expected=context, owned_lock=owned_lock)
     if writes.snapshot(root, owned_lock=owned_lock)[1] != observed:
         raise ContractError('Canonical memory changed during comparison; repeat searches and read new matches')
-    observation = {'schema': 'agent-memory/comparison-observation-v1', 'project_id': checked['project_id'],
+    recovery_frontier.check(frontier, root, owned_lock)
+    observation = {'schema': 'agent-memory/comparison-observation-v2', 'project_id': checked['project_id'],
         'request_sha256': digest(encoded(request)),
         'bank_observation_sha256': digest(encoded({'project_id': checked['project_id'], 'sources': observed})),
         'router_sha256': observed['MEMORY.md'],
+        'recovery_frontier': frontier,
         'matches': [{'path': row['path'], 'sha256': row['sha256']} for row in matches]}
     ids = sorted({row['metadata']['id'] for row in matches if row['metadata'] is not None})
     audit = security.audit(root, str(uuid.uuid4()), 'retrieval', 'checked', context, ['external'], record_ids=ids)
-    scope_binding.require(root, checked['project_id'], expected=context, owned_lock=owned_lock)
+    recovery_frontier.require_scope(root, checked['project_id'], expected=context, owned_lock=owned_lock)
     if writes.snapshot(root, owned_lock=owned_lock)[1] != observed:
         raise ContractError('Memory changed before comparison readback; do not use an earlier novelty judgment')
-    return {'schema': 'agent-memory/comparison-result-v1', 'operation': 'inspect', 'observation': observation,
+    recovery_frontier.check(frontier, root, owned_lock)
+    return {'schema': 'agent-memory/comparison-result-v2', 'operation': 'inspect', 'observation': observation,
         'capture_identity_owners': sorted(capture_owners),
         'capture_identity_review_paths': sorted(capture_identity_review_paths),
         'router': router.decode('utf-8'), 'matches': matches, 'candidate': request['candidate'],
+        'pending_matches': pending,
         'detecting_developer_id': context['developer_id'], 'audit': audit, 'comparison_read_complete': True,
         'semantic_completeness_verified': False, 'source_assertions_verified': False,
         'main_freshness_verified': False, 'publication_verified': False, 'admission_verified': False,
@@ -151,10 +160,16 @@ def inspect(repo, request, *, owned_lock=None):
 
 
 def judge(inspection, request, judgment):
-    if (not isinstance(judgment, dict) or set(judgment) != {'observation', 'decisions', 'rationale'}
-            or judgment['observation'] != inspection['observation'] or not isinstance(judgment['decisions'], list)):
+    if (not isinstance(judgment, dict) or set(judgment) != {'observation', 'decisions', 'pending_decisions', 'rationale'}
+            or not isinstance(judgment['pending_decisions'], list) or not isinstance(judgment['decisions'], list)):
+        raise ContractError('Judgment must review the complete v2 canonical and private pending observation')
+    normalized = {**judgment['observation'], 'recovery_frontier': {
+        **judgment['observation']['recovery_frontier'], 'review_digest': None}}
+    if normalized != inspection['observation']:
         raise ContractError('Judgment must name the actual read observation; changed bank requires a new comparison')
-    safe_text(judgment['rationale'])
+    safe_text(judgment['rationale'], 4096)
+    if len(encoded(judgment['rationale'])) > 4096:
+        raise ContractError('Top-level comparison rationale exceeds its complete encoded bound')
     decisions = judgment['decisions']
     if any(not isinstance(d, dict) or set(d) != {'path', 'classification', 'rationale'}
            or not isinstance(d['path'], str) or d['classification'] not in CLASSES for d in decisions):
@@ -199,6 +214,23 @@ def judge(inspection, request, judgment):
                 'required_preserved_metadata': existing, 'scope_chain': row['scope_chain']})
             if row['lifecycle'] != 'active':
                 inactive.append(row['path'])
+    pending_by_id = {row['unit_id']: row for row in inspection['pending_matches']}
+    if (len(judgment['pending_decisions']) != len(pending_by_id)
+            or {row.get('unit_id') for row in judgment['pending_decisions']} != set(pending_by_id)):
+        raise ContractError('Every unresolved same-bank unit requires exactly one pending decision')
+    for decision in judgment['pending_decisions']:
+        if (not isinstance(decision, dict) or set(decision) != {'unit_id', 'classification', 'rationale', 'coverage_claim'}
+                or decision['classification'] not in CLASSES):
+            raise ContractError('Pending comparison requires classified source-bound coverage claims')
+        safe_text(decision['rationale'])
+        recovery_frontier.claim_value(decision['coverage_claim'], pending_by_id[decision['unit_id']])
+        if decision['classification'] in {'contradiction', 'uncertain', 'scope-correction'}:
+            if decision['coverage_claim']['coverage'] != 'none':
+                raise ContractError('Unclarified pending meaning cannot receive terminal coverage credit')
+        if decision['classification'] == 'contradiction':
+            conflicts.append('unit:' + decision['unit_id'])
+        elif decision['classification'] in {'uncertain', 'scope-correction'}:
+            uncertain.append('unit:' + decision['unit_id'])
     if conflicts:
         disposition = 'clarification-required'
     elif inspection['capture_identity_review_paths']:
@@ -216,7 +248,7 @@ def judge(inspection, request, judgment):
     if disposition == 'create-distinct' and (inspection['capture_identity_owners'] or any(
             row['metadata'] and row['metadata']['id'] == candidate['id'] for row in inspection['matches'])):
         raise ContractError('Distinct new knowledge must use a separate stable identity, not reuse an existing one')
-    proof = {'schema': 'agent-memory/comparison-proof-v1', 'judgment': judgment,
+    proof = {'schema': 'agent-memory/comparison-proof-v2', 'judgment': judgment,
              'disposition': disposition, 'targets': targets}
     if len(encoded(proof)) > LIMIT:
         raise ContractError('Complete comparison proof exceeds its reader budget; review smaller independent learning units')
@@ -228,12 +260,24 @@ def judge(inspection, request, judgment):
         'admission_verified': False, 'publication_verified': False}
 
 
-def review(repo, request, judgment, *, owned_lock=None):
-    return judge(inspect(repo, request, owned_lock=owned_lock), request, judgment)
+def review(repo, request, judgment, *, owned_lock=None, coverage_review=None):
+    if coverage_review is not None:
+        operation = coverage_review.get('operation_id')
+        if not uuid_valid(operation):
+            raise ContractError('Coverage review must name its actual existing recovery operation')
+        review_sha256 = digest(encoded(coverage_review))
+        judgment = {**judgment, 'observation': {**judgment['observation'], 'recovery_frontier': {
+            **judgment['observation']['recovery_frontier'], 'review_digest': review_sha256}}}
+        from . import layout_recovery_state
+        directory = layout_recovery_state.paths(repo, operation)[3]
+        layout_recovery_state.write_once(directory / 'coverage-reviews' / (review_sha256 + '.json'), coverage_review)
+    result = judge(inspect(repo, request, owned_lock=owned_lock), request, judgment)
+    recovery_frontier.validate_comparison_review(repo, result['proof'], owner=owned_lock)
+    return result
 
 
 def check(repo, request, proof, *, owned_lock=None):
-    if not isinstance(proof, dict) or set(proof) != {'schema', 'judgment', 'disposition', 'targets'} or proof['schema'] != 'agent-memory/comparison-proof-v1':
+    if not isinstance(proof, dict) or set(proof) != {'schema', 'judgment', 'disposition', 'targets'} or proof['schema'] != 'agent-memory/comparison-proof-v2':
         raise ContractError('Revalidation requires the exact original comparison proof')
     result = review(repo, request, proof['judgment'], owned_lock=owned_lock)
     if encoded(result['proof']) != encoded(proof):
@@ -251,9 +295,9 @@ def read_input(path):
 
 def cli_judgment(value):
     """Accept the inspect envelope as shorthand; proofs still use the exact observation."""
-    if isinstance(value, dict) and set(value) == {'observation', 'decisions', 'rationale'}:
+    if isinstance(value, dict) and set(value) == {'observation', 'decisions', 'pending_decisions', 'rationale'}:
         observed = value['observation']
-        if (isinstance(observed, dict) and observed.get('schema') == 'agent-memory/comparison-result-v1'
+        if (isinstance(observed, dict) and observed.get('schema') == 'agent-memory/comparison-result-v2'
                 and observed.get('operation') == 'inspect' and observed.get('comparison_read_complete') is True):
             return {**value, 'observation': observed.get('observation')}
     return value
@@ -266,18 +310,33 @@ def main(argv=None):
         sub = commands.add_parser(name)
         sub.add_argument('--repo', required=True)
         sub.add_argument('--request', required=True)
-        if name == 'review': sub.add_argument('--judgment', required=True)
+        sub.add_argument('--private-output')
+        if name == 'review':
+            sub.add_argument('--judgment', required=True)
+            sub.add_argument('--coverage-review')
         if name == 'check': sub.add_argument('--proof', required=True)
     args = parser.parse_args(argv)
     try:
+        if args.private_output:
+            sharing_limits.preflight_private_output(args.private_output, args.repo)
+        token = recovery_frontier.observe(args.repo)
+        if token['unit_ids'] and not args.private_output:
+            raise ContractError('A pending recovery frontier requires checked --private-output; bodies cannot be printed')
         request = read_input(args.request)
         value = inspect(args.repo, request) if args.command == 'inspect' else (
-            review(args.repo, request, cli_judgment(read_input(args.judgment))) if args.command == 'review'
+            review(args.repo, request, cli_judgment(read_input(args.judgment)),
+                coverage_review=read_input(args.coverage_review) if args.coverage_review else None) if args.command == 'review'
             else check(args.repo, request, read_input(args.proof)))
-        print(json.dumps(value, indent=2, ensure_ascii=False))
+        if value['observation']['recovery_frontier']['unit_ids']:
+            artifact = sharing_limits.write_private(args.private_output, value, args.repo)
+            print(json.dumps({'schema': 'agent-memory/comparison-result-v2', 'operation': args.command,
+                'private_artifact': artifact, 'operation_ids': token['operation_ids'],
+                'pending_units': len(token['unit_ids']), 'canonical_writes_performed': False}))
+        else:
+            print(json.dumps(value, indent=2, ensure_ascii=False))
         return 0
     except (ContractError, OSError, ValueError, UnicodeError, TypeError, KeyError, AttributeError, RecursionError) as exc:
-        print(json.dumps({'schema': 'agent-memory/comparison-result-v1', 'verified': False,
+        print(json.dumps({'schema': 'agent-memory/comparison-result-v2', 'verified': False,
             'canonical_writes_performed': False, 'comparison_read_complete': False,
             'error': str(exc) if isinstance(exc, bank_capacity.BankCapacityError) else
                 'Incomplete, unsafe, unavailable or changed comparison; preserve sources and do not infer novelty',

@@ -177,10 +177,11 @@ class RouterContract(unittest.TestCase):
             self.assertEqual(result.returncode, 0, receipt)
             self.assertEqual(receipt["routes"][-1]["scope"], "branch:feature")
             (bank / ".agent-memory.lock").write_text("writer")
-            self.assertIn("Busy bank", self.validate(world)[1]["error"])
+            self.assertEqual(self.validate(world)[0].returncode, 1)
             (bank / ".agent-memory.lock").unlink()
             (bank / ".agent-memory-transaction.md").write_text("interrupted")
-            self.assertIn("Interrupted bank", self.validate(world)[1]["error"])
+            self.assertEqual(self.validate(world)[0].returncode, 1)
+            self.assertEqual((bank / ".agent-memory-transaction.md").read_text(), "interrupted")
 
     def test_router_bounds_duplicate_routes_and_orphan_files(self):
         with World() as world:

@@ -140,7 +140,12 @@ def bindings():
 
 
 def paths(repo, operation_id=None):
-    root, bank = writes.bank_path(repo)
+    from . import bank_contract, repository_config
+    root = Path(repo).resolve()
+    bank = root / repository_config.recovery_settings(root)['bank_root']
+    bank_contract.bank_root(bank)
+    if bank.is_symlink() or not bank.is_dir():
+        raise ContractError('Recovery requires the existing configured ordinary bank directory')
     operations, _ = writes.state_paths(root, bank, operation_id or str(uuid.uuid4()))
     base = operations.parent / 'layout-recovery'
     runtime = Path(__file__).resolve().parents[2]
@@ -197,7 +202,8 @@ def bind(repo, operation_id, project_id, checkout_key, lifecycle_state):
     existing = current['bindings'].get(operation_id)
     if existing and any(existing[name] != row[name] for name in row if name != 'lifecycle_state'):
         raise ContractError('Recovery binding cannot move or change identity')
-    with storage.exclusive(lock, operation_id, 'layout-recovery-bind'):
-        current['bindings'][operation_id] = row
-        replace(target, current, old)
+    # Bank writers serialize one bank; compare-and-replace also prevents a
+    # concurrent different-bank binding from being lost without a stale lock.
+    current['bindings'][operation_id] = row
+    replace(target, current, old)
     return row

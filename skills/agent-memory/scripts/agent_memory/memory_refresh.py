@@ -224,6 +224,17 @@ def cursor(root):
 
 def inspect(repo, base=None, *, version2=False):
     root, _ = writes.bank_path(repo)
+    from . import recovery_frontier, records
+    frontier = recovery_frontier.observe(root)
+    if not frontier['coverage_complete'] or frontier['hold_sha256'] is not None:
+        recovery_frontier.require_scope(root, frontier['project_id'])
+        recalled = retrieval.retrieve(root, {'project_id': frontier['project_id'], 'query': '', 'ids': [], 'paths': [],
+            'context': {}, 'kinds': list(records.MODEL['properties']['kind']['enum']),
+            'minimum_trust': 'reviewed', 'limit': 64, 'include_context': True})
+        recovery_frontier.check(frontier, root)
+        return result('inspect', 'pending-recovery', recall=recalled,
+            **recovery_frontier.public_coverage(frontier), remote_freshness_verified=False,
+            git_metadata_writes_performed=False, refresh_applied=False)
     observed_context = retrieval.git_context(root)
     previous, _, state = cursor(root)
     chosen = base if base is not None else previous['authority_head'] if previous else None
@@ -245,6 +256,8 @@ def inspect(repo, base=None, *, version2=False):
 def current(repo):
     """Prove only a point-in-time equal bank, never semantic truth or no pending work."""
     from . import records, sharing_boundary, sharing_holds
+    from . import recovery_frontier
+    recovery_frontier.require_complete(repo)
     root, bank = writes.bank_path(repo)
     before_index = index_hash(root)
     before_git = retrieval.git_context(root)
@@ -407,8 +420,12 @@ def current_result(repo):
 def validate_transaction(p, *, owned_lock=None):
     evidence = p.get('refresh_evidence')
     if (p.get('operation') != 'refresh' or not isinstance(evidence, dict)
-            or set(evidence) != {'proof', 'recall', 'git_context'}):
+            or set(evidence) != {'proof', 'recall', 'git_context', 'recovery_frontier_token'}):
         raise ContractError('Source-bound refresh requires the exact semantic proof, recall and checkout context')
+    from . import recovery_frontier
+    current_frontier = recovery_frontier.require_complete(p['repo_root'], owned_lock)
+    if evidence['recovery_frontier_token'] != current_frontier:
+        raise ContractError('Refresh outer recovery frontier token is missing, stale or changed')
     retrieval.request_value(evidence['recall'])
     retrieval.observed_context(p['repo_root'], evidence['recall']['context'])
     binding = evidence['proof']['judgment']['binding']
@@ -428,9 +445,11 @@ def prepare(repo, request):
         raise ContractError('Prepare refresh with complete proof and an explicit relevant recall request')
     retrieval.request_value(request['recall'])
     root, _ = writes.bank_path(repo); before = index_hash(root)
+    from . import recovery_frontier
+    frontier = recovery_frontier.require_complete(root)
     reviewed = semantic.check(root, request['proof'])
     p = tx.preview(root, reviewed['refresh_files'], operation='refresh')['proposal']
-    p['refresh_evidence'] = {**request, 'git_context': retrieval.git_context(root)}
+    p['refresh_evidence'] = {**request, 'git_context': retrieval.git_context(root), 'recovery_frontier_token': frontier}
     validate_transaction(p)
     if index_hash(root) != before:
         raise ContractError('Original index changed during preparation; preserve it and inspect')
@@ -527,6 +546,19 @@ def apply(prepared):
                   observed_authority_head=observation['authority_head'], cursor=stored,
                   source_assertions_verified=False, semantic_truth_verified=False,
                   feature_history_changed=False, unrelated_working_files_changed=False)
+
+
+def check_sources(p, *, owner=None, marker=None):
+    from . import recovery_frontier
+    evidence = p['refresh_evidence']
+    token = recovery_frontier.require_complete(p['repo_root'], owner, marker)
+    if evidence.get('recovery_frontier_token') != token:
+        raise ContractError('Recovery frontier changed during refresh final readback')
+    if retrieval.git_context(p['repo_root']) != evidence['git_context']:
+        raise ContractError('Checkout changed during refresh')
+    binding = evidence['proof']['judgment']['binding']
+    if recovery.server(Path(p['repo_root']), binding['authority_remote'], binding['authority_branch']) != binding['authority_head']:
+        raise ContractError('Authority advanced during refresh final source recheck')
 
 
 def read_input(path, *, version2=False):

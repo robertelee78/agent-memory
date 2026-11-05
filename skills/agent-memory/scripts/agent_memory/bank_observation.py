@@ -138,12 +138,16 @@ class Observation:
         self.physical,self.hashes,self.sources=physical,hashes,sources
         self.checked,self.parsed=checked,parsed
         self.payload_bytes_read=sum(len(raw) for raw in sources.values())
+        self.recovery_frontier = None
         self.payload_file_reads=len(hashes)
 
     def recheck(self,stage='recall-final-source-recheck'):
         writes.fault(stage)
         root,bank=writes.bank_path(self.root)
         if root!=self.root or bank!=self.bank:raise ContractError('Canonical repository/bank location changed')
+        if self.recovery_frontier is not None:
+            from . import recovery_frontier
+            recovery_frontier.check(self.recovery_frontier, self.root, self.owner, self.transaction)
         markers(bank,self.owner,self.transaction)
         metrics={};physical,hashes,_=scan(bank,read_sources=False,metrics=metrics)
         if physical!=self.physical or hashes!=self.hashes:
@@ -155,6 +159,11 @@ class Observation:
 
 def observe(repo,owner=None,transaction=None):
     root,bank=writes.bank_path(repo)
+    from . import recovery_frontier
+    frontier = recovery_frontier.observe(root, owner, transaction)
+    if transaction is None and frontier['hold_sha256'] is not None:
+        held = recovery_frontier.verified_hold(root, owner)
+        transaction = held.marker
     markers(bank,owner,transaction)
     physical,hashes,sources=scan(bank,read_sources=True)
     physical_contract(physical)
@@ -166,5 +175,6 @@ def observe(repo,owner=None,transaction=None):
         if target.exists() or target.is_symlink():
             raise ContractError('An omitted context path is physically occupied; inspect it instead of inferring absence')
     observed=Observation(root,bank,owner,physical,hashes,sources,checked,parsed,transaction)
+    observed.recovery_frontier = frontier
     observed.recheck('recall-initial-source-recheck')
     return observed

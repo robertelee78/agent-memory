@@ -10,12 +10,12 @@ import sys
 import uuid
 
 from . import bank_capacity, admission, bank_contract as bank, bank_layout, bank_transactions as tx
-from . import bank_writes as writes, comparison, lifecycle, records, retrieval, scope_binding, security
+from . import bank_writes as writes, comparison, lifecycle, records, retrieval, scope_binding, security, recovery_frontier, layout_resolution
 from .developer_identity import digest, encoded
 from .frontmatter import ContractError, read, write
 
 INPUT = {'comparison_request', 'comparison_proof', 'capture', 'context'}
-EVIDENCE = INPUT | {'recorded_at', 'git_context'}
+EVIDENCE = INPUT | {'recorded_at', 'git_context', 'unit_resolution_claims', 'comparison_proof_sha256', 'reference_map_sha256'}
 AXES = ('kind', 'scope', 'conditions', 'applicability', 'valid-from', 'valid-until', 'trust', 'visibility')
 
 
@@ -247,6 +247,7 @@ def preview(repo, value):
     root, _ = writes.bank_path(repo)
     evidence = {**copy.deepcopy(value), 'recorded_at': datetime.now(timezone.utc).isoformat(), 'git_context': retrieval.git_context(root)}
     if isinstance(evidence['comparison_proof'], dict):evidence['comparison_proof'] = evidence['comparison_proof'].get('proof', evidence['comparison_proof'])
+    evidence.update(layout_resolution.evidence_fields(evidence['comparison_proof']))
     if isinstance(evidence['capture'], dict):evidence['capture'] = evidence['capture'].get('capture', evidence['capture'])
     compared, plan, captured = inspect(repo, evidence)
     if plan is None:
@@ -276,17 +277,21 @@ def validate_transaction(p, *, owned_lock=None):
     desired = build(base, evidence, p['operation_id'], plan, captured)
     if tx.file_hashes(base) != p['observed_hashes'] or encoded(desired) != encoded(p['files']):
         raise ContractError('Maintenance proposal changed its exact canonical delta or source provenance')
-    scope_binding.require(root, p['project_id'], expected=p['scope_context'], owned_lock=owned_lock)
+    recovery_frontier.require_scope(root, p['project_id'], expected=p['scope_context'], owned_lock=owned_lock)
+    layout_resolution.claims_for(p, owner=owned_lock)
 
 
 def check_sources(p, *, owner=None, marker=None):
     evidence = p['consolidation_evidence']
-    scope_binding.require(p['repo_root'], p['project_id'], expected=p['scope_context'], owned_lock=owner, owned_transaction=marker)
+    recovery_frontier.require_scope(p['repo_root'], p['project_id'], expected=p['scope_context'], owned_lock=owner, owned_transaction=marker)
+    recovery_frontier.check(evidence['comparison_proof']['judgment']['observation']['recovery_frontier'],
+        p['repo_root'], owner, marker)
     if encoded(retrieval.git_context(Path(p['repo_root']))) != encoded(evidence['git_context']):
         raise ContractError('Checkout context changed during maintenance')
     if evidence['capture'] is not None:
         admission_evidence = {key: evidence[key] for key in
-            ('capture', 'comparison_request', 'comparison_proof', 'recorded_at')}
+            ('capture', 'comparison_request', 'comparison_proof', 'recorded_at',
+             'unit_resolution_claims', 'comparison_proof_sha256', 'reference_map_sha256')}
         admission.check_sources({**p, 'admission_evidence': admission_evidence}, owner=owner, marker=marker)
     context, _ = retrieval.observed_context(Path(p['repo_root']), evidence['context'])
     for path, body in p['files'].items():
@@ -311,11 +316,14 @@ def apply(prepared):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__);commands = parser.add_subparsers(dest='command', required=True)
     sub = commands.add_parser('preview');sub.add_argument('--repo', required=True);sub.add_argument('--input', required=True)
+    sub.add_argument('--private-output')
     sub = commands.add_parser('apply');sub.add_argument('--proposal', required=True)
     args = parser.parse_args(argv)
     try:
         value = (preview(args.repo, admission.read_input(args.input, 262144)) if args.command == 'preview'
                  else apply(admission.read_input(args.proposal, 512*1024*1024)))
+        if args.command == 'preview':
+            value = recovery_frontier.private_preview(args.repo, value, args.private_output)
         print(json.dumps(value, indent=2, ensure_ascii=False));return 0
     except (ContractError, OSError, ValueError, UnicodeError, TypeError, KeyError, AttributeError, RecursionError) as exc:
         print(json.dumps(result(args.command, verified=False,

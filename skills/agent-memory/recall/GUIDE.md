@@ -111,9 +111,10 @@ prose, MUST fit 16,384 UTF-8 bytes before recall can use the bank. An oversized
 source fails the complete observation even when an unrelated path, ID or lexical
 selector is requested; it is never silently omitted or treated as absent.
 Unknown replacement metadata MUST NOT count as absence. Ordinary recall and new
-capture remain pending. This runtime has no supported source-preserving
-layout-recovery command; preserve the bank, feature work, original index/HEAD and
-recovery evidence. Do not truncate, delete, skip sources or raise normal limits.
+capture remain pending. Use explicit `am bank recover-layout inspect` with a
+private output path to retain and review all originals; preserve feature work,
+the original index/HEAD and recovery evidence. Do not truncate, delete, skip
+sources or raise normal limits.
 Whole selected payloads together are
 bounded to 64 KiB, with no truncation of conditions, evidence or body. A candidate
 that cannot fit is excluded; later smaller candidates may still fit. The JSON
@@ -121,6 +122,25 @@ envelope and its metrics are additional bytes. The helper validates/hashes the
 complete canonical bank, so bounded candidate reads do not imply bounded total
 disk I/O or a constant latency guarantee. Metrics expose inventory size, selected
 payload bytes, bounded candidate bytes and elapsed time for later measurement.
+
+After a source-preserving repair, qualified canonical recall MAY continue under
+an internally verified recovery hold. It MUST report
+`semantic_coverage: incomplete-recovery`, safe pending IDs/count and required
+actions while any original unit is unresolved. An empty search then means no
+qualified canonical match, not semantic absence. Missing/corrupt/foreign
+hold, sentinel, binding, state root or ledger refuses; it never means an empty
+frontier. Every enabled/disabled catalog path checks live coverage before and
+after selection. Coverage is not stored in the optional catalog or reused
+across public invocations; ledger-only transitions affect the next result.
+
+Runtime updates, exact rollback and uninstall MUST preserve the union of active
+private-state requirements. Legacy declarations omit the capability array and
+therefore support no private frontier. A verified hold needs a measured
+`layout-frontier-v1` runtime plus the original state binding and operator
+quiescence declaration. Adding a same-bank invocation route or changing runtime
+requires a fresh independently reviewed exact route/runtime declaration; a
+boolean “upgraded” assertion does not replace it.
+
 
 The operation keeps one invocation-local observation of exact source bytes and
 validated metadata; it does not consume a persistent index or caller-provided

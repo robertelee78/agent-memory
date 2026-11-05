@@ -282,6 +282,8 @@ def candidate(root, binding, files, *, quarantine_records=False):
 
 
 def prepare(repo, proof):
+    from . import recovery_frontier
+    recovery_frontier.require_complete(repo)
     reviewed = semantic.check(repo, proof)
     binding = proof['judgment']['binding']; root = Path(binding['repo_root'])
     original_index = index_bytes(root)
@@ -440,6 +442,8 @@ def protected_candidate(root, request, observed_policy):
 
 
 def land(repo, request):
+    from . import recovery_frontier
+    recovery_frontier.require_complete(repo)
     root, _ = writes.bank_path(repo); binding = request_value(root, request)
     original_index = index_bytes(root)
     # Inventory before any retry. A prior success stays historical if later

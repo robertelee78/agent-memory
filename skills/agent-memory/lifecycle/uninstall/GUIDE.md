@@ -35,6 +35,15 @@ owned targets when managed source is missing, but MUST NOT guess targets when
 the ownership receipt is missing or invalid. Explicit developer sources remain
 outside removal ownership.
 
+Uninstall MUST refuse target removal while unknown or unresolved private
+recovery/source requirements would lose their capable reader/writer. An already
+active independently verified equivalent capable runtime must be explicitly
+selected and preserved before that removal can proceed. Quiescence, complete
+private-state discovery and the union capability preflight are separate from
+file ownership. Removing executable bindings does not resolve source units,
+publish memory or authorize deletion of external recovery evidence.
+
+
 ## Plan
 
 The session MUST preview removal before applying it:

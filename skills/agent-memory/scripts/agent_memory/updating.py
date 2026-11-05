@@ -101,6 +101,10 @@ def banks(extra, compatibility, *, require_readable=False):
     from concurrent.futures import ThreadPoolExecutor
     from . import migration, bank_transactions
     roots = set(); gaps = []
+    from . import private_state, recovery_frontier
+    private_roots, unknown_private, _ = private_state.repository_inventory({'rollback_repositories': list(extra)})
+    install.require(not unknown_private, 'Private-state bank inventory is unknown; preserve the active capable runtime')
+    roots.update(private_roots)
     cwd = Path.cwd().resolve()
     top = install.git(cwd, 'rev-parse', '--show-toplevel', check=False)
     roots.add(Path(top.stdout.strip()).resolve() if top.returncode==0 else cwd)
@@ -138,9 +142,12 @@ def banks(extra, compatibility, *, require_readable=False):
         install.require(not bank.is_symlink() and not router.is_symlink() and router.is_file(),
                         'Discovered bank/router must be an ordinary readable path')
         def idle():
-            install.require(not any(os.path.lexists(bank/name) for name in
-                            ('.agent-memory.lock', bank_transactions.MARKER)),
-                            'Compatibility requires an idle bank; preserve its pending operation: ' + str(bank))
+            install.require(not os.path.lexists(bank/'.agent-memory.lock'),
+                            'Compatibility requires an idle bank; preserve its live writer')
+            if os.path.lexists(bank/bank_transactions.MARKER):
+                held = recovery_frontier.verified_hold(root)
+                install.require(held is not None and 'layout-frontier-v1' in private_state.compatibility(compatibility),
+                                'Target runtime cannot enforce the verified private recovery hold')
         idle()
         raw, _ = migration.read_regular(bank, 'MEMORY.md', 16384)
         metadata = migration.router_metadata(raw)
@@ -173,7 +180,10 @@ def banks(extra, compatibility, *, require_readable=False):
             if record and Path(record['bank']).resolve() not in seen:
                 seen.add(Path(record['bank']).resolve())
                 result.append(record)
+    private_compatibility = private_state.require_compatible(
+        {'observed_repositories': observed_roots, 'banks': result}, compatibility, 'rollback' if require_readable else 'activate')
     return {'banks':result, 'discovery_gaps':gaps, 'observed_repositories':observed_roots,
+            'private_state': private_compatibility,
             'bank_writes_performed':False,
             'implicit_migration_performed':False}
 
