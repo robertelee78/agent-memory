@@ -167,3 +167,7 @@ retains its dependencies. After verified child completion, separately reviewed
 cleanup may surrender its rollback bytes while retaining both historical
 proposals/receipts. Retention success itself MUST NOT claim semantic recovery
 completion or make a restored invalid bank healthy.
+
+Quiescence heads, their referenced attestations and original/renewal reviews
+MUST remain retained together; cleanup MUST NOT leave a retained head pointing
+at evidence it removed.

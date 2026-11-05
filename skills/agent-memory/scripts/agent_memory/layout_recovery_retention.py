@@ -291,7 +291,7 @@ def _retained(name):
     return (name in {'receipt.json', 'retention-requirements.json', 'quiescence-attestations.json', 'staging.json'}
             or name.startswith(('retention/', 'resolutions/', 'nested/', 'proposals/', 'recovery/', 'revisions/',
                                 'coverage-reviews/', 'union-reviews/', 'discard-reviews/', 'ledger-transitions/',
-                                'quiescence-reviews/'))
+                                'quiescence-reviews/', 'attestations/', 'reviews/'))
             or (name.startswith('publication/') and '/originals/' not in name))
 
 

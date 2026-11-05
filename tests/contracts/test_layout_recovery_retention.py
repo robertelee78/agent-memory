@@ -54,6 +54,8 @@ class LayoutRetentionContract(unittest.TestCase):
                      'union-reviews/'+str(uuid.uuid4())+'.json',
                      'discard-reviews/'+str(uuid.uuid4())+'.json',
                      'quiescence-reviews/'+str(uuid.uuid4())+'.json',
+                     'attestations/'+str(uuid.uuid4())+'.json',
+                     'reviews/'+str(uuid.uuid4())+'.json',
                      'ledger-transitions/00000001.json', 'quiescence-attestations.json']
             for name in names:
                 target = directory/name
