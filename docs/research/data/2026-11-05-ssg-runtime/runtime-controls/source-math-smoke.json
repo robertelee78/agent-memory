@@ -1,0 +1,88 @@
+{
+  "database_requests": 0,
+  "elapsed_seconds": 0.019185249984730035,
+  "float64_normalization_error": 2.220446049250313e-16,
+  "json_parse": {
+    "execution-manifest.json": true,
+    "host-config.json": true,
+    "prior-observations.json": true
+  },
+  "mutations": {
+    "controls": {
+      "boolean-index": {
+        "exit": 1,
+        "expected": "response-index-coverage",
+        "matched": true,
+        "reason": "response-index-coverage",
+        "status": "refused"
+      },
+      "duplicate-index": {
+        "exit": 1,
+        "expected": "response-index-coverage",
+        "matched": true,
+        "reason": "response-index-coverage",
+        "status": "refused"
+      },
+      "extra-row": {
+        "exit": 1,
+        "expected": "response-count-mismatch",
+        "matched": true,
+        "reason": "response-count-mismatch",
+        "status": "refused"
+      },
+      "missing-row": {
+        "exit": 1,
+        "expected": "response-count-mismatch",
+        "matched": true,
+        "reason": "response-count-mismatch",
+        "status": "refused"
+      },
+      "nonfinite": {
+        "exit": 1,
+        "expected": "response-nonfinite-or-nonnumeric",
+        "matched": true,
+        "reason": "response-nonfinite-or-nonnumeric",
+        "status": "refused"
+      },
+      "wrong-dimension": {
+        "exit": 1,
+        "expected": "response-dimension-mismatch",
+        "matched": true,
+        "reason": "response-dimension-mismatch",
+        "status": "refused"
+      },
+      "wrong-model": {
+        "exit": 1,
+        "expected": "response-model-mismatch",
+        "matched": true,
+        "reason": "response-model-mismatch",
+        "status": "refused"
+      }
+    },
+    "evidence_class": "protocol-simulation-not-provider-behavior"
+  },
+  "network_requests": 0,
+  "nonloopback_refused": true,
+  "runtime_services_started": false,
+  "schema": "am255/source-math-smoke-v1",
+  "scope": "AST/JSON parsing and pure normalization/validator simulation using an inherited actual response; not runtime API/crash/platform qualification",
+  "sources": {
+    "common.py": {
+      "ast_parse": true,
+      "sha256": "788a93404d84b1c19c29f572ebd2395e7e1a5306c99c78b4b004243ac13d7e10"
+    },
+    "endpoint_controls.py": {
+      "ast_parse": true,
+      "sha256": "689ad1637b16278fc9b1ddd59fa2706472f0ab2df0540dccb5608e20611538cc"
+    },
+    "graph_controls.py": {
+      "ast_parse": true,
+      "sha256": "2273b7caf34dd849a69d17b97fb0bc2c47fe1ade6bd539cb5f9d8d992a912013"
+    },
+    "managed_endpoints.py": {
+      "ast_parse": true,
+      "sha256": "a68c3102bb3bd9a02a61dc0122565d4f93cf542d7ec4fb575d78d0fdf9c82a13"
+    }
+  },
+  "url_root_and_custom_prefix": true
+}
