@@ -122,21 +122,129 @@ def _references(value, operation_id, directory):
     return isinstance(value, str) and (value == str(directory) or value.startswith(str(directory)+'/'))
 
 
+def _child_info(root, operation_id, base, index, inventory, *, complete=False):
+    """A child restore has real parent evidence, never a fabricated ledger."""
+    from . import layout_restore
+    directory = base/operation_id
+    candidates = [state.read(directory/name) for name in inventory['files']
+                  if name.startswith('proposals/') and name.endswith('.json')]
+    candidates = [p for p in candidates if p.get('schema') == layout_restore.SCHEMA]
+    require(len(candidates) == 1, 'Unindexed operation is not one known typed child restore')
+    proposal = layout_restore.value(root, candidates[0])
+    require(proposal['operation_id'] == operation_id, 'Child restore identity was substituted')
+    parent_id = proposal['parent_operation_id']
+    require(parent_id in index['operations'], 'Child restore has no real indexed parent')
+    parent_row = index['operations'][parent_id]
+    parent_directory = base/parent_id
+    parent_receipt = state.read(parent_directory/'receipt.json')
+    require(parent_receipt.get('schema') == 'agent-memory/layout-recovery-receipt-v1'
+            and parent_receipt.get('verified') is True and parent_receipt.get('operation_id') == parent_id
+            and parent_receipt.get('outcome') == 'layout-restored'
+            and digest(encoded(parent_receipt)) == proposal['parent_receipt_sha256'],
+            'Child restore parent receipt is missing, changed or not a real completed repair')
+    parent_proposal = state.read(parent_directory/'proposals'/(parent_receipt['proposal_id']+'.json'))
+    require(digest(encoded(parent_proposal)) == proposal['parent_proposal_sha256']
+            and parent_receipt['request_sha256'] == digest(encoded(parent_proposal))
+            and parent_row['project_id'] == proposal['project_id'] == parent_receipt['project_id']
+            and proposal['parent_index_row']['ledger_head_sha256'] == proposal['parent_ledger_head_sha256']
+            and proposal['parent_index_row']['proposal_id'] == parent_proposal['proposal_id'],
+            'Child restore does not bind the original parent proposal and reviewed ledger head')
+    # The existing child contract only restores generation zero. Its actual
+    # completed receipt binds that checked head even after later parent cleanup.
+    original_ledger = layout_restore.recovery.ledger_value(parent_proposal)
+    original_head = {'schema': 'agent-memory/layout-ledger-head-v1', 'operation_id': parent_id,
+                     'generation': 0, 'sha256': digest(encoded(original_ledger))}
+    require(digest(encoded(original_head)) == proposal['parent_ledger_head_sha256'],
+            'Child restore parent head is not the original actual layout generation')
+    binding = state.bindings()['bindings'].get(operation_id)
+    receipt = state.read(directory/'receipt.json', missing=True)
+    completed = receipt is not None
+    if completed:
+        require(receipt.get('schema') == 'agent-memory/layout-recovery-receipt-v1'
+                and receipt.get('operation_id') == operation_id and receipt.get('proposal_id') == proposal['proposal_id']
+                and receipt.get('project_id') == proposal['project_id'] and receipt.get('verified') is True
+                and receipt.get('request_sha256') == digest(encoded(proposal))
+                and receipt.get('parent_operation_id') == parent_id
+                and receipt.get('parent_receipt_sha256') == proposal['parent_receipt_sha256']
+                and (receipt.get('restore_mode'), receipt.get('outcome')) in {
+                    ('finish', 'rolled-back'), ('rollback', 'layout-restored')},
+                'Unknown or incomplete child restoration receipt')
+        require(binding is not None and binding['lifecycle_state'] in {'terminal', 'cleaned'}
+                and binding['project_id'] == proposal['project_id']
+                and binding['repo_root'] == str(root) and binding['bank_path'] == index['bank_path']
+                and binding['checkout_key'] == proposal['scope_context']['checkout_key'],
+                'Child restore still has an interrupted private binding')
+        journal = state.read(directory/'journal.json', missing=True)
+        if journal is not None:
+            require(journal.get('schema') == 'agent-memory/layout-recovery-journal-v1'
+                    and journal.get('operation_id') == operation_id
+                    and journal.get('proposal_sha256') == digest(encoded(proposal))
+                    and journal.get('parent_operation_id') == parent_id
+                    and journal.get('parent_receipt_sha256') == proposal['parent_receipt_sha256'],
+                    'Child restore journal is not its actual parent-bound operation')
+        else:
+            require(binding['lifecycle_state'] == 'cleaned'
+                    and state.read(directory/'tombstone.json')['operation_id'] == operation_id,
+                    'Child restore journal disappeared without reviewed cleanup')
+    if complete:
+        require(completed and parent_row['state'] in {'terminal', 'rolled-back', 'cleaned'},
+                'Unfinished child or active parent still depends on restoration evidence')
+    return {'kind': 'child-restore', 'state': binding['lifecycle_state'] if binding else 'interrupted',
+            'project_id': proposal['project_id'], 'parent_operation_id': parent_id,
+            'completed': completed, 'receipt_sha256': digest(encoded(receipt)) if completed else None}, proposal
+
+
+def _operation_evidence(repo, operation_id, *, owner=None):
+    root, bank, base, directory = state.paths(repo, operation_id)
+    index = state.index(root)
+    if operation_id in index['operations']:
+        return publication.operation_evidence(root, operation_id, owner=owner)
+    inventory = _inventory(directory)
+    child, proposal = _child_info(root, operation_id, base, index, inventory, complete=True)
+    token = frontier.observe(root, owner=owner)
+    require(token['coverage_complete'] and not token['unit_ids'], 'Pending recovery frontier prevents cleanup')
+    manifest = state.read(directory/'manifest.json')
+    require(manifest.get('observation_complete') is True and manifest.get('operation_id') == operation_id
+            and digest(encoded(manifest)) == proposal['manifest_sha256'], 'Child original observation is incomplete or corrupt')
+    for source in manifest['sources']:
+        require(uuid_valid(source['source_id']) and source['blob'] == 'originals/'+source['source_id']+'.bin',
+                'Child original source locator is not owned by this operation')
+        body = state.read_bytes(directory/'originals'/(source['source_id']+'.bin'), publication.MAX_FILE)
+        require(len(body) == source['byte_count'] and digest(body) == source['sha256'],
+                'Child restore original backup is missing or corrupt')
+    return root, bank, base, directory, {
+        'kind': 'child-restore', 'frontier_token': token, 'project_id': proposal['project_id'],
+        'receipt_sha256': child['receipt_sha256'], 'index_sha256': digest(encoded(index)),
+        'parent_operation_id': proposal['parent_operation_id'],
+        'parent_receipt_sha256': proposal['parent_receipt_sha256'],
+        'parent_ledger_head_sha256': proposal['parent_ledger_head_sha256']}
+
+
 def _dependencies(root, operation_id, base, directory, *, cleanup_id=None):
     index = state.index(root)
-    # A complete physical operation inventory must agree with the registry. An
-    # unindexed operation is not assumed disposable or dependency-free.
+    # Union registry and physical discovery; a typed child need not invent an
+    # index row/ledger, but no missing bound operation is considered absent.
+    bindings = state.bindings()
+    bound = {key: row for key, row in bindings['bindings'].items()
+             if row['repo_root'] == str(root) or row['bank_path'] == index['bank_path']}
     trust_paths.state(base)
     names = sorted(os.listdir(base))
     require(all(name == 'index.json' or uuid_valid(name) for name in names),
             'Unknown recovery workspace occupant prevents a complete dependency proof')
     physical = {name for name in names if name != 'index.json'}
-    require(physical == set(index['operations']), 'Unindexed/missing recovery operation; retain all private evidence')
+    require(set(index['operations']) | set(bound) <= physical,
+            'Missing indexed/bound recovery operation; retain all private evidence')
+    inventories = {key: _inventory(base/key) for key in sorted(physical)}
+    rows = dict(index['operations'])
+    for key in sorted(physical-set(rows)):
+        rows[key], _ = _child_info(root, key, base, index, inventories[key])
     pins, blockers = {}, []
     for other_id in sorted(physical):
         other = base/other_id
-        inventory = _inventory(other)
-        row = index['operations'][other_id]
+        inventory = inventories[other_id]
+        row = rows[other_id]
+        if row.get('kind') == 'child-restore' and not row['completed']:
+            blockers.append({'kind': 'unfinished-child-restore', 'operation_id': other_id})
         for name, pin in inventory['files'].items():
             if other_id == operation_id and (name.startswith('retention/') or name == 'tombstone.json'):
                 continue
@@ -149,7 +257,7 @@ def _dependencies(root, operation_id, base, directory, *, cleanup_id=None):
                 if other_id != operation_id and _references(value, operation_id, directory):
                     # A cleaned child has surrendered rollback and keeps only
                     # historical receipts; a live child still owns a dependency.
-                    if row['state'] != 'cleaned':
+                    if row['state'] != 'cleaned' and not (row.get('kind') == 'child-restore' and row['completed']):
                         blockers.append({'kind': 'child-or-referencing-operation', 'operation_id': other_id, 'artifact': name})
                 if other_id == operation_id and name.startswith('nested/') and name.endswith('/journal.json'):
                     receipt_name = name[:-len('journal.json')]+'receipt.json'
@@ -171,8 +279,11 @@ def _dependencies(root, operation_id, base, directory, *, cleanup_id=None):
                         blockers.append({'kind': 'operator-retention-requirement', 'count': len(value['requirements'])})
             if other_id != operation_id:
                 pins[other_id+'/'+name] = pin
+    require(state.index(root) == index and state.bindings() == bindings and sorted(os.listdir(base)) == names,
+            'Recovery dependency discovery changed during its complete inventory')
     return {'schema': 'agent-memory/layout-retention-dependencies-v1',
-            'operations': {k: v for k, v in index['operations'].items() if k != operation_id},
+            'operations': {k: v for k, v in rows.items() if k != operation_id},
+            'bindings': {k: v for k, v in bound.items() if k != operation_id},
             'artifact_pins': pins, 'blockers': blockers}
 
 
@@ -185,9 +296,10 @@ def _retained(name):
 
 
 def _preview(root, operation_id, cleanup_id, *, owner=None):
-    root, bank, base, directory, terminal = publication.operation_evidence(root, operation_id, owner=owner)
-    require(state.index(root)['operations'][operation_id]['state'] in {'terminal', 'rolled-back'},
-            'Cleanup cannot retire an active/interrupted recovery operation')
+    root, bank, base, directory, terminal = _operation_evidence(root, operation_id, owner=owner)
+    if terminal.get('kind') != 'child-restore':
+        require(state.index(root)['operations'][operation_id]['state'] in {'terminal', 'rolled-back'},
+                'Cleanup cannot retire an active/interrupted recovery operation')
     context = scope_binding.require(root, terminal['project_id'], owned_lock=owner)
     inventory = _inventory(directory)
     dependencies = _dependencies(root, operation_id, base, directory, cleanup_id=cleanup_id)
@@ -213,7 +325,7 @@ def inspect(repo, operation_id, input=None):
     return publication.result('retention-inspect', operation_id, 'retention-preview', proposal=proposal,
                               cleanup_id=cleanup_id, deletion_bytes=sum(p['bytes'] for p in proposal['delete'].values()),
                               rollback_capability_surrendered=True, canonical_eligibility='unavailable',
-                              semantic_recovery_complete=True)
+                              semantic_recovery_complete=False)
 
 
 def _review(proposal):
@@ -337,9 +449,12 @@ def apply(repo, proposal):
         dependencies = _dependencies(root, operation_id, base, directory, cleanup_id=cleanup_id)
         require(dependencies == proposal['dependencies'], 'Cleanup dependency graph changed; preserve remaining artifacts')
         index = state.index(root)
-        row = index['operations'][operation_id]
-        require(row['state'] in {'terminal', 'rolled-back', 'cleaned'}, 'A pending operation can never be cleaned')
-        if row['state'] != 'cleaned':
+        row = index['operations'].get(operation_id)
+        require(row is None or row['state'] in {'terminal', 'rolled-back', 'cleaned'},
+                'A pending operation can never be cleaned')
+        if row is None:
+            _child_info(root, operation_id, base, index, _inventory(directory), complete=True)
+        elif row['state'] != 'cleaned':
             # Durable tombstone and historical receipt precede the state change.
             # Readers must stop expecting deleted raw evidence before unlink.
             index['operations'][operation_id]['state'] = 'cleaned'
@@ -384,4 +499,4 @@ def apply(repo, proposal):
     return publication.result('retention-apply', operation_id, 'retention-cleaned', cleanup_id=cleanup_id,
                               receipt=receipt, private_artifact_writes_performed=True,
                               private_artifact_deletions_performed=True, original_bytes_available=False,
-                              rollback_available=False, semantic_recovery_complete=True, derived_cache_state=cache_state)
+                              rollback_available=False, semantic_recovery_complete=False, derived_cache_state=cache_state)

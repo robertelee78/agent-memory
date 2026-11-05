@@ -157,3 +157,13 @@ Known typed partial-staging metadata MUST remain retained with
 `observation_complete:false`, even when a later complete manifest exists.
 It MUST NOT become authority for semantic completion or be silently deleted.
 Malformed, foreign or unknown staging metadata remains a cleanup refusal.
+
+A completed child restore MUST be checked through its typed child proposal and
+real parent/child receipts and original parent-head pins. It has no invented
+child pending ledger or canonical admission. Dependency discovery inventories the
+union of physical operations, private bindings and the real operation index;
+missing/unknown entries and unfinished children refuse cleanup. An active parent
+retains its dependencies. After verified child completion, separately reviewed
+cleanup may surrender its rollback bytes while retaining both historical
+proposals/receipts. Retention success itself MUST NOT claim semantic recovery
+completion or make a restored invalid bank healthy.

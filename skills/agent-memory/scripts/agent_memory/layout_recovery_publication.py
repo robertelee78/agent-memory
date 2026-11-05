@@ -316,16 +316,15 @@ def _observe(repo, operation_id, observation_id=None):
         variants[side] = observe_tree(root, revision, settings['bank_root'], directory, expected=expected)
     if not variants['landed']['sources']:
         git.first_bank_history(root, authority)
-    local_sources = []
-    prior = {s['path']: s for s in existing['variants']['local']['sources']} if existing else {}
-    for path, raw in sorted(local.sources.items()):
-        sid = prior[path]['source_id'] if path in prior else str(uuid.uuid4())
-        source = {'source_id': sid, 'path': path, 'byte_count': len(raw), 'sha256': digest(raw),
-                  'blob': 'originals/'+sid+'.bin'}
-        state.put_bytes(directory/source['blob'], raw)
-        local_sources.append(source)
+    prior = existing['variants']['local']['sources'] if existing else None
+    local_physical, local_sources, local_totals = raw_sources.inventory(
+        bank_path, retain_directory=directory, prior_sources=prior)
+    raw_hashes = {source['path']: source['sha256'] for source in local_sources}
+    require(all(raw_hashes.get(path) == sha for path, sha in local.hashes.items()),
+            'Canonical and complete raw local observations disagree')
     variants['local'] = {'schema': 'agent-memory/layout-publication-local-v1', 'revision': head,
-                         'observation_complete': True, 'sources': local_sources}
+                         'observation_complete': True, 'sources': local_sources,
+                         'physical_entries': local_physical, 'totals': local_totals}
     indexed = _local_boundary(root, local.hashes, manifest)
     binding = {'repo_root': str(root), 'project_id': checked['project_id'], 'bank_root': settings['bank_root'],
                'authority_remote': remote, 'authority_branch': branch, 'authority_head': authority,
@@ -337,12 +336,51 @@ def _observe(repo, operation_id, observation_id=None):
              'index_entries_sha256': indexed, 'repository_policy': observed_policy,
              'runtime_artifact_digest': _runtime_digest()}
     local.recheck()
+    raw_readback = raw_sources.inventory(bank_path, prior_sources=local_sources)
+    require(raw_readback == (local_physical, local_sources, local_totals),
+            'Complete local raw bytes, occupants or physical metadata changed during publication observation')
     frontier.check(terminal['frontier_token'], root)
     scope_binding.require(root, checked['project_id'], expected=context)
     require(publication.index_bytes(root) == index and git.server(root, remote, branch) == authority,
             'Local index or advertised authority changed during publication observation')
     state.write_once(directory/'observation.json', value)
     return root, directory, value, files
+
+
+def _preservable_source(observation, source, publication_unit):
+    """Unsupported source names do not acquire admission merely by relocation."""
+    if source['path'] == 'MEMORY.md':
+        return
+    try:
+        bank.path_value(source['path'])
+        return
+    except ContractError:
+        pass
+    root = observation['binding']['repo_root']
+    operation_id = observation['operation_id']
+    row = state.index(root)['operations'][operation_id]
+    directory, _, ledger = frontier.ledger(root, operation_id, row)
+    manifest, _ = frontier.evidence(directory, ledger, row)
+    original = next((s for s in manifest['sources'] if s['path'] == source['path']
+                     and s['sha256'] == source['sha256'] and s['byte_count'] == source['byte_count']), None)
+    require(original is not None,
+            'New unsupported authority/local source needs explicit recovery/admission review before publication')
+    unit_map = state.read(directory/'unit-map.json')
+    entitled = [unit for unit in unit_map['units'] if unit['disposition'] == 'preserve'
+                and unit.get('semantic_kind') != 'unadmitted-source']
+    # Revised pending parents remain historical. Actual admitted terminal child
+    # ranges, not a superseded parent assertion, establish their entitlement.
+    entitled.extend(unit for unit in ledger['units'] if unit['state'] in {'admitted', 'governed-terminal'})
+    spans = sorted((max(r['start'], publication_unit['start']), min(r['end'], publication_unit['end']))
+                   for unit in entitled for r in unit['source_ranges']
+                   if r['source_id'] == original['source_id']
+                   and r['end'] > publication_unit['start'] and r['start'] < publication_unit['end'])
+    cursor = publication_unit['start']
+    for start, end in spans:
+        require(start <= cursor, 'A publication preservation range contains unadmitted source material')
+        cursor = max(cursor, end)
+    require(bool(spans) and cursor == publication_unit['end'],
+        'Retained opaque, unknown or unconfirmed source is not admitted guidance by a publication rename')
 
 
 def _runtime_digest():
@@ -409,6 +447,7 @@ def _review(observation, review, files, directory):
         if disposition == 'preserve':
             require(bool(unit['targets']) and unit['terminal_evidence'] is None,
                     'Preserved knowledge must remain available, not merely backed up')
+            _preservable_source(observation, source, unit)
         elif disposition == 'governed-terminal':
             _governed_evidence(observation, unit, source, files, directory)
         else:

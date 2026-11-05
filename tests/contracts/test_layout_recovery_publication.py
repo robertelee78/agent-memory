@@ -240,6 +240,56 @@ class LayoutPublicationContract(PublicationFixture):
                  '--input', save(w, request), '--output', w.inside('stale publication.json'), expected=1)
             self.assertEqual(changed, self.state(w, repo, bank))
 
+    def test_complete_raw_local_side_includes_opaque_nonmarkdown_occupants(self):
+        from layout_recovery_fixtures import call
+        with World() as w:
+            command, _, repo, bank, _, operation_id, _ = self.public_repair(w)
+            body = b'Non-guidance opaque fixture bytes: \xff\x00\n'
+            (bank/'opaque-source.bin').write_bytes(body)
+            before = self.state(w, repo, bank)
+            output = w.inside('complete raw local observation.json')
+            call(w, command, 'publish', 'inspect', '--repo', repo, '--operation', operation_id, '--output', output)
+            value = json.loads(output.read_text())
+            sources = {row['path']: row for row in value['observation']['variants']['local']['sources']}
+            self.assertIn('opaque-source.bin', sources)
+            private = Path(value['observation_path']).parent
+            self.assertEqual((private/sources['opaque-source.bin']['blob']).read_bytes(), body)
+            self.assertEqual(before, self.state(w, repo, bank))
+
+    def test_new_unsupported_authority_source_cannot_be_admitted_by_publication_mapping(self):
+        import copy
+        import uuid
+        from layout_recovery_fixtures import call, save, sha, encoded
+        with World() as w:
+            command, _, repo, bank, remote, operation_id, intended = self.public_repair(w)
+            peer = w.clone(str(remote), 'new-source-authority')
+            handoff = peer/'memory-bank/new-handoff.md'
+            handoff.write_text('# Unconfirmed source\n\nThis new source requires separate detecting-developer admission.\n')
+            w.git('add', 'memory-bank/new-handoff.md', cwd=peer)
+            w.git('commit', '-m', 'Controlled newly discovered source', cwd=peer)
+            w.git('push', 'origin', 'HEAD:main', cwd=peer)
+            output = w.inside('new authority source observation.json')
+            call(w, command, 'publish', 'inspect', '--repo', repo, '--operation', operation_id, '--output', output)
+            observation = json.loads(output.read_text())['observation']
+            filtered = copy.deepcopy(observation)
+            new = next(s for s in filtered['variants']['landed']['sources'] if s['path'] == 'new-handoff.md')
+            filtered['variants']['landed']['sources'].remove(new)
+            review = self.publication_review(filtered, intended)
+            review['observation_sha256'] = sha(encoded(observation))
+            review['source_units'].append({'unit_id': str(uuid.uuid4()), 'side': 'landed',
+                'source_id': new['source_id'], 'start': 0, 'end': new['byte_count'], 'disposition': 'preserve',
+                'targets': [{'path': 'activeContext.md', 'sha256': sha(intended['activeContext.md'].encode())}],
+                'rationale': 'Controlled invalid attempt to relabel unconfirmed source as already admitted guidance',
+                'terminal_evidence': None})
+            request = {'schema': 'agent-memory/layout-publication-prepare-v1',
+                       'observation_id': observation['observation_id'], 'intended_files': intended, 'review': review}
+            before = self.state(w, repo, bank)
+            head = w.git('ls-remote', 'origin', 'refs/heads/main', cwd=repo).stdout
+            call(w, command, 'publish', 'prepare', '--repo', repo, '--operation', operation_id,
+                 '--input', save(w, request), '--output', w.inside('unsupported authority refusal.json'), expected=1)
+            self.assertEqual(before, self.state(w, repo, bank))
+            self.assertEqual(head, w.git('ls-remote', 'origin', 'refs/heads/main', cwd=repo).stdout)
+
 
 if __name__ == '__main__':
     unittest.main()

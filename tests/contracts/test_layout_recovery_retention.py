@@ -149,7 +149,7 @@ class LayoutRetentionContract(unittest.TestCase):
     def reviewed_cleanup(self, w, command, repo, observed, layout_proposal):
         from datetime import datetime, timezone
         from layout_recovery_fixtures import call, save, sha, encoded
-        output = w.inside('retention preview.json')
+        output = w.inside('retention-preview-'+str(uuid.uuid4())+'.json')
         call(w, command, 'retention', 'inspect', '--repo', repo, '--operation', observed['operation_id'], '--output', output)
         proposal = json.loads(output.read_text())['proposal']
         author = layout_proposal['proposal']['author']
@@ -163,7 +163,7 @@ class LayoutRetentionContract(unittest.TestCase):
                       'evidence': 'Controlled disposable authorization; not independent release acceptance',
                       'statement': 'Delete only this exact reviewed terminal evidence list; surrender future rollback'},
                   'rationale': 'Complete controlled dependency inventory has no pending source or live restoration/publication dependency'}
-        reviewed = w.inside('reviewed retention proposal.json')
+        reviewed = w.inside('reviewed-retention-'+str(uuid.uuid4())+'.json')
         call(w, command, 'retention', 'inspect', '--repo', repo, '--operation', observed['operation_id'],
              '--input', save(w, {'cleanup_id': proposal['cleanup_id'], 'review': review}), '--output', reviewed)
         return reviewed, json.loads(reviewed.read_text())['proposal']
@@ -201,6 +201,28 @@ class LayoutRetentionContract(unittest.TestCase):
             call(w, command, 'retention', 'inspect', '--repo', repo, '--operation', observed['operation_id'],
                  '--output', w.inside('refused retention.json'), expected=1)
             self.assertEqual(before, {p.relative_to(bank).as_posix(): p.read_bytes() for p in bank.rglob('*') if p.is_file()})
+
+    def test_public_child_restore_cleanup_uses_real_parent_receipts_without_child_ledger(self):
+        from layout_recovery_fixtures import call
+        with World() as w:
+            command, _, repo, bank, observed, _, layout_proposal, _ = self.public_repair(w)
+            child_path = w.inside('child restore preview.json')
+            child = call(w, command, 'rollback', '--repo', repo, '--operation', observed['operation_id'], '--output', child_path)
+            child_id = child['operation_id']
+            call(w, command, 'retention', 'inspect', '--repo', repo, '--operation', observed['operation_id'],
+                 '--output', w.inside('unfinished child refusal.json'), expected=1)
+            call(w, command, 'rollback', '--repo', repo, '--proposal', child_path)
+            current = {p.relative_to(bank).as_posix(): p.read_bytes() for p in bank.rglob('*') if p.is_file()}
+            reviewed, proposal = self.reviewed_cleanup(w, command, repo, {'operation_id': child_id}, layout_proposal)
+            self.assertEqual(proposal['terminal']['kind'], 'child-restore')
+            call(w, command, 'retention', 'apply', '--repo', repo, '--operation', child_id, '--proposal', reviewed)
+            # A completed child has no remaining canonical dependency. Parent
+            # cleanup may surrender originals while both real receipts survive.
+            parent_review, _ = self.reviewed_cleanup(w, command, repo, observed, layout_proposal)
+            call(w, command, 'retention', 'apply', '--repo', repo, '--operation', observed['operation_id'], '--proposal', parent_review)
+            historical = call(w, command, 'rollback', '--repo', repo, '--proposal', child_path)
+            self.assertTrue(historical['receipt_is_historical'])
+            self.assertEqual(current, {p.relative_to(bank).as_posix(): p.read_bytes() for p in bank.rglob('*') if p.is_file()})
 
 
 if __name__ == '__main__':

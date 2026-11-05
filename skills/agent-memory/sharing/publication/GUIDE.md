@@ -245,3 +245,13 @@ use a fresh second clone/profile with no publisher private workspace and ordinar
 bank inspect/qualified recall against the complete bounded landed bank.
 Self-reported reviewer identity and semantic judgments are fallible attestations,
 not authenticated truth or substitutes for repository authorization.
+
+The complete raw local side MUST include non-Markdown/opaque ordinary occupants
+and physical metadata, even though the separate normal canonical observation
+does not make them current guidance. Inspection retains them privately and
+rechecks the full raw inventory. An unsupported source name MUST NOT gain
+admission by mapping it to a native output path: preservation requires the
+original reviewed existing-guidance disposition or actual terminal admitted
+ranges, including reviewed revision children. Newly discovered unsupported or
+unconfirmed material needs explicit recovery/admission review; a publication
+rename or retained backup cannot supply it.
