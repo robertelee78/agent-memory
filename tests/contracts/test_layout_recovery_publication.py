@@ -115,6 +115,16 @@ class LayoutPublicationContract(PublicationFixture):
         repo, bank, peer, _ = self.fixture(w)
         remote = Path(w.git('remote', 'get-url', 'origin', cwd=repo).stdout.strip())
         self.github(w, repo, bank, peer)
+        # Establish the same verified authority in the common Git ancestry,
+        # rather than asking publication to merge a file:// -> GitHub identity
+        # change as if it were a layout repair.
+        w.git('commit', '--only', '-m', 'Fixture existing authority identity', '--', 'memory-bank/MEMORY.md', cwd=repo)
+        w.git('commit', '-m', 'Fixture unfinished feature ancestor', cwd=repo)
+        w.git('fetch', 'origin', 'main', cwd=repo)
+        w.git('merge', '--no-edit', 'FETCH_HEAD', cwd=repo)
+        (repo/'code.py').write_text('VALUE = 3  # staged feature sentinel\n')
+        w.git('add', 'code.py', cwd=repo)
+        (repo/'code.py').write_text('VALUE = 4  # unstaged feature sentinel\n')
         original = (bank/'activeContext.md').read_text()
         sentence = 'Under the synthetic condition preserve the original source before acting.\n'
         raw = original + sentence * ((79054-len(original.encode()))//len(sentence.encode()))
@@ -150,9 +160,122 @@ class LayoutPublicationContract(PublicationFixture):
         return {'schema': 'agent-memory/layout-publication-review-v1', 'review_id': str(uuid.uuid4()),
                 'observation_sha256': sha(encoded(observation)), 'intended_files_sha256': sha(encoded(files)),
                 'author': author, 'reviewer': {**author, 'harness': 'controlled-reviewer', 'session': str(uuid.uuid4())},
-                'reviewed_at': datetime.now(timezone.utc).isoformat(), 'source_units': units, 'added_paths': [],
+                'reviewed_at': datetime.now(timezone.utc).isoformat(), 'source_units': units,
+                'added_paths': [], 'record_evidence': [],
                 'identity_decisions': {side: 'Checked original same-project router and authority' for side in ('base', 'local', 'landed')},
                 'semantic_preservation': True, 'security': True, 'decision': 'approve'}
+
+    def fabricated_record(self, intended):
+        from record_fixtures import record_text, project_id
+        from contracts.test_comparison import unpack, render
+        files = dict(intended)
+        metadata, body = unpack(record_text(
+            '# Invented policy\n\nIn the synthetic environment, act on this never-admitted new guidance.\n',
+            project_id(files['MEMORY.md'])))
+        path = 'topics/' + metadata['id'] + '.md'
+        files[path] = render(metadata, body)
+        files['MEMORY.md'] = files['MEMORY.md'].replace(
+            '\n## Omitted contexts',
+            '| [' + path + '](<' + path + '>) | Invented active policy | repository | active | '
+            'In the synthetic environment |\n\n## Omitted contexts')
+        return files, path
+
+    def test_publication_review_cannot_admit_fabricated_outputs_or_local_sources(self):
+        from layout_recovery_fixtures import call, save
+        with World() as w:
+            command, _, repo, bank, _, operation_id, intended = self.public_repair(w)
+            remote = w.git('ls-remote', 'origin', 'refs/heads/main', cwd=repo).stdout
+            files, path = self.fabricated_record(intended)
+            for local_source in (False, True):
+                with self.subTest(local_source=local_source):
+                    if local_source:
+                        (bank/path).parent.mkdir(exist_ok=True)
+                        (bank/path).write_text(files[path])
+                        (bank/'MEMORY.md').write_text(files['MEMORY.md'])
+                    before = self.state(w, repo, bank)
+                    output = w.inside('fabrication-observation-' + str(local_source) + '.json')
+                    call(w, command, 'publish', 'inspect', '--repo', repo, '--operation', operation_id, '--output', output)
+                    observation = json.loads(output.read_text())['observation']
+                    review = self.publication_review(observation, files)
+                    review['added_paths'] = [] if local_source else [path]
+                    request = {'schema': 'agent-memory/layout-publication-prepare-v1',
+                               'observation_id': observation['observation_id'], 'intended_files': files, 'review': review}
+                    refused = call(w, command, 'publish', 'prepare', '--repo', repo, '--operation', operation_id,
+                                   '--input', save(w, request), '--output',
+                                   w.inside('refused-fabrication-' + str(local_source) + '.json'), expected=1)
+                    self.assertFalse(refused['publication_verified'])
+                    self.assertEqual(before, self.state(w, repo, bank))
+                    self.assertEqual(remote, w.git('ls-remote', 'origin', 'refs/heads/main', cwd=repo).stdout)
+
+    def test_current_committed_admission_addition_and_receipt_source_fence(self):
+        from contracts.test_admission import AdmissionContract
+        from layout_recovery_fixtures import call, save, sha, encoded
+        with World() as w:
+            command, source, repo, bank, _, operation_id, base = self.public_repair(w)
+            helper = AdmissionContract()
+            helper.pack = source
+            scope = helper.good(w, 'scope_binding.py', 'status', '--repo', repo)
+            helper.pid, helper.actor = scope['project_id'], scope['developer_id']
+            evidence_body = '# Confirmed synthetic repository result\n\nUse at most three attempts for this fixture.\n'
+            (repo/'evidence.md').write_text(evidence_body)
+            captured = helper.request('verified-repository', 'verified-fix')
+            captured['repository_evidence'] = {'path': 'evidence.md', 'sha256': sha(evidence_body.encode())}
+            captured['assessment']['review'] = 'Checked the complete disposable repository source and its conditions.'
+            proposal = helper.prepared(w, repo, captured)
+            # A valid proposal copied into local memory still is not admission.
+            for path, body in proposal['files'].items():
+                target = bank/path
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text(body)
+            output = w.inside('uncommitted-addition-observation.json')
+            call(w, command, 'publish', 'inspect', '--repo', repo, '--operation', operation_id, '--output', output)
+            observation = json.loads(output.read_text())['observation']
+            review = self.publication_review(observation, proposal['files'])
+            review['record_evidence'] = [{'operation_id': proposal['operation_id'], 'receipt_sha256': '0'*64, 'proposal': proposal}]
+            attempted = {'schema': 'agent-memory/layout-publication-prepare-v1',
+                         'observation_id': observation['observation_id'], 'intended_files': proposal['files'], 'review': review}
+            before = self.state(w, repo, bank)
+            remote = w.git('ls-remote', 'origin', 'refs/heads/main', cwd=repo).stdout
+            call(w, command, 'publish', 'prepare', '--repo', repo, '--operation', operation_id,
+                 '--input', save(w, attempted), '--output', w.inside('uncommitted-addition-refused.json'), expected=1)
+            self.assertEqual(before, self.state(w, repo, bank))
+            # Restore only this throwaway uncommitted candidate to its exact
+            # proposal base, then use the real ordinary admission interface.
+            for path in set(proposal['files']) - set(proposal['observed_hashes']):
+                (bank/path).unlink()
+            for path, body in base.items():
+                (bank/path).write_text(body)
+            response, admitted = helper.apply(w, proposal)
+            self.assertEqual(response.returncode, 0, admitted)
+            self.assertTrue(admitted['admission_verified'])
+            receipt_path = Path(admitted['receipt_path'])
+            receipt_bytes = receipt_path.read_bytes()
+            receipt = json.loads(receipt_bytes)
+            output = w.inside('committed-addition-observation.json')
+            call(w, command, 'publish', 'inspect', '--repo', repo, '--operation', operation_id, '--output', output)
+            observation = json.loads(output.read_text())['observation']
+            review = self.publication_review(observation, proposal['files'])
+            review['record_evidence'] = [{'operation_id': proposal['operation_id'],
+                                          'receipt_sha256': sha(encoded(receipt)), 'proposal': proposal}]
+            request = {'schema': 'agent-memory/layout-publication-prepare-v1',
+                       'observation_id': observation['observation_id'], 'intended_files': proposal['files'], 'review': review}
+            prepared_path = w.inside('committed-addition-prepared.json')
+            before = self.state(w, repo, bank)
+            call(w, command, 'publish', 'prepare', '--repo', repo, '--operation', operation_id,
+                 '--input', save(w, request), '--output', prepared_path)
+            prepared = json.loads(prepared_path.read_text())['request']
+            receipt_path.unlink()
+            call(w, command, 'publish', 'land', '--repo', repo, '--operation', operation_id,
+                 '--input', save(w, prepared), '--output', w.inside('changed-receipt-refused.json'), expected=1)
+            self.assertEqual(before, self.state(w, repo, bank))
+            self.assertEqual(remote, w.git('ls-remote', 'origin', 'refs/heads/main', cwd=repo).stdout)
+            receipt_path.write_bytes(receipt_bytes)
+            receipt_path.chmod(0o600)
+            landed_path = w.inside('committed-addition-landed.json')
+            call(w, command, 'publish', 'land', '--repo', repo, '--operation', operation_id,
+                 '--input', save(w, prepared), '--output', landed_path)
+            self.assertTrue(json.loads(landed_path.read_text())['publication_verified'])
+            self.assertEqual(before, self.state(w, repo, bank))
 
     def test_public_raw_authority_publication_and_empty_profile_second_clone(self):
         from layout_recovery_fixtures import call, save

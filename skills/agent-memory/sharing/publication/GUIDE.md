@@ -228,6 +228,20 @@ non-guidance labels MUST NOT dispose of admitted guidance. A malformed router
 needs stronger independently checked existing registry/checkout and authority
 ancestry evidence, not a UUID guessed from a path.
 
+The review MUST include `record_evidence`, an explicit list (empty when no new
+record authority is needed) of `{operation_id, receipt_sha256, proposal}`.
+Each proposal MUST be the exact actual ordinary admission, governance or
+consolidation transaction, and its digest MUST match a verified `finished`
+receipt read from the canonical private operation store. Its changed record
+outputs MUST still match the freshly observed local bank. The helper rechecks
+these receipt/source bindings through the final pre-push guard; a caller-supplied
+receipt, uncommitted proposal or rolled-back operation MUST NOT confer admission.
+Every resulting typed identity/version, metadata and body MUST derive from
+observed admitted original/base/landed sources or that committed evidence.
+`added_paths`, mapping a new local file as preserved, and publication-only
+semantic approval MUST NOT create authority. Legitimate reviewed context,
+layout and route additions remain permitted without inventing typed guidance.
+
 The session MUST save the exact returned private request for `publish land`.
 Landing reuses current permissions, PR/review/check and non-forced push policy.
 It validates the entire candidate tree delta, not only a memory pathspec.

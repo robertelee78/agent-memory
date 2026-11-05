@@ -403,7 +403,7 @@ def inspect(repo, operation_id, input=None):
 
 def _review(observation, review, files, directory):
     exact(review, {'schema', 'review_id', 'observation_sha256', 'intended_files_sha256',
-                   'author', 'reviewer', 'reviewed_at', 'source_units', 'added_paths',
+                   'author', 'reviewer', 'reviewed_at', 'source_units', 'added_paths', 'record_evidence',
                    'identity_decisions', 'semantic_preservation', 'security', 'decision'}, REVIEW)
     require(uuid_valid(review['review_id']) and review['observation_sha256'] == digest(encoded(observation))
             and review['intended_files_sha256'] == digest(encoded(files)) and review['decision'] == 'approve'
@@ -473,7 +473,7 @@ def _review(observation, review, files, directory):
     require(len({u['unit_id'] for u in review['source_units']}) == len(review['source_units']), 'Duplicate publication unit ID')
     require(isinstance(review['added_paths'], list) and len(set(review['added_paths'])) == len(review['added_paths'])
             and set(review['added_paths']) == set(files)-targets,
-            'Independent review must account for every intended output, including newly admitted additions')
+            'Independent review must account for every intended output; path accounting does not admit records')
     decisions = review['identity_decisions']
     require(isinstance(decisions, dict) and set(decisions) == {'base', 'local', 'landed'}, 'Review all three project/authority identities')
     for side, variant in observation['variants'].items():
@@ -496,6 +496,7 @@ def _review(observation, review, files, directory):
                 'Recovery publication cannot choose between conflicting project/authority identities')
         text(decisions[side])
     _preserve_records(observation, files, review, directory)
+    _record_authority(observation, files, review, directory)
 
 
 def _identity_review(observation, variant, router, decision, intended):
@@ -563,6 +564,84 @@ def _preserve_records(observation, files, review, directory):
             target = output.get((metadata.get('id'), metadata.get('version')))
             require(target is not None and target[0] == metadata and records.parse(target[1])[2] == body,
                     'Existing typed identities, provenance, conditions and history cannot be rewritten by layout publication')
+
+
+def _typed_record(body):
+    from . import records
+    try:
+        kind, metadata, text = records.parse(body)
+    except (ContractError, UnicodeError):
+        return None
+    if kind not in {'standalone-record', 'tombstone', 'optional-history-event'}:
+        return None
+    return kind, metadata, text
+
+
+def _record_authority(observation, files, review, directory):
+    """Publication preserves admitted identities; it cannot create admission.
+
+    A new local active file is not evidence of its own admission. Its authority
+    must precede this repair (originals or observed Git sides), or come from an
+    exact finished ordinary transaction whose changed record is still current.
+    The same check runs through the final landing source guard.
+    """
+    root = Path(observation['binding']['repo_root'])
+    project_id = observation['binding']['project_id']
+    _, _, _, operation = state.paths(root, observation['operation_id'])
+    manifest = state.read(operation/'manifest.json')
+    require(digest(encoded(manifest)) == observation['original_manifest_sha256'],
+            'Original admitted-source evidence changed during publication review')
+    admitted = set()
+    for source_directory, sources in [
+            (operation, manifest['sources']),
+            *[(directory, observation['variants'][side]['sources']) for side in ('base', 'landed')]]:
+        for source in sources:
+            if source_directory == directory:
+                try:
+                    bank.path_value(source['path'])
+                except ContractError:
+                    continue
+            try:
+                record = _typed_record(_raw_body(source_directory, source).decode('utf-8'))
+            except UnicodeError:
+                continue
+            if record is not None:
+                kind, metadata, _ = record
+                require((metadata.get('scope') if kind == 'tombstone' else metadata.get('project-id')) == project_id
+                        and metadata.get('status') not in {'candidate', 'quarantined'},
+                        'Unadmitted or foreign source records cannot confer publication authority')
+                admitted.add(digest(encoded(record)))
+    evidence_rows = review['record_evidence']
+    require(isinstance(evidence_rows, list), 'Publication needs explicit committed evidence for new local records')
+    seen = set()
+    local_hashes = observation['local_hashes']
+    for evidence in evidence_rows:
+        exact(evidence, {'operation_id', 'receipt_sha256', 'proposal'})
+        proposal = tx.proposal_value(evidence['proposal'])
+        operation_id = evidence['operation_id']
+        require(operation_id == proposal['operation_id'] and operation_id not in seen
+                and proposal['repo_root'] == str(root) and proposal['project_id'] == project_id
+                and any(key in proposal for key in ('admission_evidence', 'governance_evidence', 'consolidation_evidence')),
+                'New record authority needs its actual same-project ordinary admission/governance operation')
+        seen.add(operation_id)
+        _, receipt_path = writes.state_paths(root, root/observation['binding']['bank_root'], operation_id)
+        stored = state.read(receipt_path)
+        receipt = tx.receipt_value(receipt_path, proposal)
+        require(receipt is not None and receipt == stored and receipt['outcome'] == 'finished'
+                and digest(encoded(receipt)) == evidence['receipt_sha256'],
+                'Caller assertions, proposed or rolled-back transactions do not admit publication records')
+        current = set()
+        for path in tx.changed(proposal):
+            body = proposal['files'].get(path)
+            record = _typed_record(body) if body is not None else None
+            if record is not None and local_hashes.get(path) == receipt['resulting_hashes'].get(path):
+                current.add(digest(encoded(record)))
+        require(bool(current), 'Committed evidence must identify exact changed records still present in the observed bank')
+        admitted.update(current)
+    for body in files.values():
+        record = _typed_record(body)
+        require(record is None or digest(encoded(record)) in admitted,
+                'Every publication record identity/version and body needs observed admitted source or exact current committed admission/governance evidence')
 
 
 def _candidate(root, binding, before, files):
