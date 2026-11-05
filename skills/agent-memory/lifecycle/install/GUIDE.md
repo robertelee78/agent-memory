@@ -60,6 +60,17 @@ Defaults activate generic Agent Skills, Codex, Claude and OpenCode discovery;
 `--presets none` disables those links, and repeated `--target-dir` options add
 custom discovery directories. `--no-guidance` omits activation shims.
 
+Native omp is explicitly excluded from `all`. The session MAY select a reviewed
+native binding only with `--presets omp --omp-agent-dir ABSOLUTE_ROOT
+--omp-peers-upgraded`, after quiescing same-bank private-state writers and
+upgrading their peer readers. The session MUST inspect the preview's executable
+observer authority, retention limits and exact owned skill/extension/activation
+targets. It MUST NOT infer an omp root from HOME/XDG/profile settings, change
+permissions/provider settings, or treat a disk receipt as actual native support.
+The [source-bound native setup and qualification matrix](https://github.com/robertelee78/agent-memory/blob/main/docs/testing/omp-native-qualification.md)
+defines that separate evidence gate. `--no-guidance` omits the optional Markdown
+activation block, not the explicitly selected native extension.
+
 Managed code lives under the XDG data root, while receipts, journals and receipt
 backups live under the XDG state root. Project memory stays in its repository.
 The session MUST preserve those separate ownership domains.

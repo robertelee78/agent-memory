@@ -63,6 +63,8 @@ Lifecycle and diagnostics print readable results by default.
 Use --json for complete machine results; --verbose adds diagnostic detail.
 Memory commands retain structured proposals/results: init, search, context,
 capture, checkpoint, publish, refresh and the other documented operations.
+Native omp is explicitly opt-in: install --presets omp --omp-agent-dir ABSOLUTE_ROOT
+--omp-peers-upgraded. It is excluded from all; source work uses omp-boundary.
 Use {prog} COMMAND --help for its options. Uninstall preserves project memory.
 '''
 

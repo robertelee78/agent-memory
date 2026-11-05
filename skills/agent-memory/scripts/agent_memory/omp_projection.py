@@ -11,12 +11,16 @@ from .frontmatter import ContractError
 
 MAX_SOURCE = 16 * 1024 * 1024
 EXCLUSIONS = ('provider-metadata', 'reasoning-and-signatures')
-ROLES = {'user', 'developer', 'assistant', 'toolResult', 'bashExecution', 'pythonExecution', 'fileMention'}
+ROLES = {'user', 'developer', 'assistant', 'toolResult', 'bashExecution', 'pythonExecution', 'fileMention', 'custom', 'hookMessage'}
 
 
 FORBIDDEN_KEYS = {'providerPayload', 'provider_payload', 'thinking', 'reasoning',
                   'thinkingSignature', 'textSignature', 'signature', 'auth',
                   'credentials', 'credential', 'config', 'contextSnapshot'}
+
+
+class UnsafeSource(ContractError):
+    pass
 
 
 def _safe_tree(value):
@@ -25,14 +29,14 @@ def _safe_tree(value):
         return
     if isinstance(value, str):
         if any(re.search(pattern, value) for _, pattern in (*security.SECRETS, *security.SUSPICIOUS)):
-            raise ContractError('Unsafe native source')
+            raise UnsafeSource('Unsafe native source')
         return
     if isinstance(value, list):
         for child in value:
             _safe_tree(child)
         return
     if isinstance(value, dict):
-        if value.get('type') in ('image', 'image_url', 'input_image', 'reasoning', 'thinking'):
+        if value.get('type') in ('image', 'image_url', 'input_image', 'reasoning', 'thinking', 'unavailable'):
             raise ContractError('Opaque native source')
         for key, child in value.items():
             if not isinstance(key, str) or key in FORBIDDEN_KEYS:
@@ -69,7 +73,7 @@ def _blocks(value):
                 raise ContractError('Native tool arguments are unavailable')
             call['arguments'] = arguments
             blocks.append(call)
-        elif kind in ('thinking', 'reasoning'):
+        elif kind in ('thinking', 'reasoning', 'redactedThinking'):
             continue
         else:
             # Images, references and unknown blocks need independently checked
@@ -107,10 +111,38 @@ def project(entry):
                     else:
                         _text(value)
                     result[key] = value
-            content, gap = _blocks(message.get('content'))
-            result['content'] = content
-            if role == 'toolResult' and 'details' in message:
-                result['details'] = message['details']
+            if role in {'bashExecution', 'pythonExecution'}:
+                command_key = 'command' if role == 'bashExecution' else 'code'
+                result[command_key] = _text(message.get(command_key))
+                result['output'] = _text(message.get('output'))
+                gap = bool(message.get('truncated')) or bool(message.get('images'))
+                for key in ('cancelled', 'truncated', 'excludeFromContext'):
+                    if key in message:
+                        if type(message[key]) is not bool:
+                            raise ContractError('Invalid native execution flag')
+                        result[key] = message[key]
+                code = message.get('exitCode')
+                if code is not None and type(code) is not int:
+                    raise ContractError('Invalid native exit code')
+                result['exitCode'] = code
+            elif role == 'fileMention':
+                files = message.get('files')
+                if not isinstance(files, list) or len(files) > 1024:
+                    raise ContractError('Unavailable native file mention')
+                result['files'] = []
+                gap = False
+                for item in files:
+                    if not isinstance(item, dict) or item.get('skippedReason') or item.get('image'):
+                        gap = True
+                        continue
+                    result['files'].append({'path': _text(item.get('path')), 'content': _text(item.get('content'))})
+            else:
+                content, gap = _blocks(message.get('content'))
+                result['content'] = content
+                if role == 'toolResult' and 'details' in message:
+                    result['details'] = message['details']
+                if role in {'custom', 'hookMessage'}:
+                    result['customType'] = _text(message.get('customType'))
         else:
             result = {'carrier': 'custom_message', 'native_entry_id': native_id,
                       'native_parent_id': parent, 'customType': _text(entry.get('customType'))}
@@ -128,5 +160,7 @@ def project(entry):
         if gap:
             return {'gap': 'missing-payload'}
         return {'snapshot': result, 'exclusions': list(EXCLUSIONS)}
+    except UnsafeSource:
+        return {'gap': 'unsafe-representation'}
     except (ContractError, TypeError, ValueError, UnicodeError, RecursionError):
         return {'gap': 'missing-payload'}

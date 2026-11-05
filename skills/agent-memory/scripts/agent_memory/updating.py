@@ -25,7 +25,8 @@ def version_key(value):
 
 def configuration(old):
     return argparse.Namespace(command='install', development_source=None, remote=None, ref=None,
-                              mode=None, presets=None, target_dir=None, bin_dir=None, no_guidance=False)
+                              mode=None, presets=None, target_dir=None, bin_dir=None, no_guidance=False,
+                              omp_agent_dir=None, omp_peers_upgraded=False)
 
 
 def current(state, code, *, cache_recovery=None):
@@ -306,7 +307,7 @@ def run(args):
     paths = [state, code, *(Path(t['path']) for t in before['targets']),
              *(Path(before['bin_dir'])/name for name in install.COMMAND_NAMES)]
     if not before.get('no_guidance', False):
-        for name, _, _ in install.presets(before['presets']):
+        for name, _, _ in install.presets(before['presets'], (before.get('omp_binding') or {}).get('agent_dir')):
             hook = install.hook_paths(name)
             if hook:
                 paths.append(install.absolute(hook))
@@ -326,9 +327,13 @@ def run(args):
                                  candidate_root=None if same_revision and cache_qualification is None else root, candidate_kind=candidate['kind'],
                                  cache_recovery=cache_qualification) as plan:
                 plan['operation']='update'
+                plan['omp_layout_quiescence'] = getattr(args, 'omp_layout_quiescence', None)
+                plan['layout_quiescence'] = getattr(args, 'layout_quiescence', None) or []
+                if getattr(args, 'omp_writers_quiesced', False):
+                    plan['omp_transition'] = {'writers_quiesced': True}
                 # With no candidate or target changes there are no bank writes to
                 # qualify. Still verify ownership and public wrapper dispatch.
-                if (not args.check and not args.repo and same_revision and old['source'] == plan['source']
+                if (not args.check and not args.repo and not plan.get('omp_transition') and same_revision and old['source'] == plan['source']
                         and not plan['restart'] and len(plan['actions']) == len(old['targets'])
                         and not any(a['changed'] for a in plan['actions'])
                         and all(t['identity'] == next(a['after'] for a in plan['actions'] if a['path'] == t['path'])
@@ -342,7 +347,17 @@ def run(args):
                 compatibility = banks(args.repo,candidate['compatibility'])
                 summary['compatibility'] = compatibility
                 plan['rollback_repositories'] = compatibility['observed_repositories']
+                if args.check and plan.get('omp_transition'):
+                    from .omp_boundary import native_transition
+                    summary['native_transition'] = native_transition(plan, check=True)
+                if args.check and plan.get('omp_binding'):
+                    from .omp_boundary import native_activation
+                    summary['native_activation'] = native_activation(plan, check=True)
                 if args.check:
+                    from . import private_state
+                    target = private_state.prepare_lifecycle(plan, check=True)
+                    summary['private_compatibility'] = private_state.public_summary(
+                        private_state.require_compatible(old, target, 'update'))
                     return {**summary,'check_complete':True,'eligible':True,'verified':False,
                             'installation_writes_performed':False,'restart_clients':plan['restart']}
                 if same_revision and cache_qualification is None:
@@ -380,6 +395,9 @@ def main(argv=None):
     parser.add_argument('operation',choices=('update',))
     parser.add_argument('--check',action='store_true')
     parser.add_argument('--repo',action='append',default=[])
+    parser.add_argument('--omp-writers-quiesced',action='store_true')
+    parser.add_argument('--omp-layout-quiescence',action='append')
+    parser.add_argument('--layout-quiescence',action='append',default=[])
     args = parser.parse_args(argv)
     args.command='update'
     return execute(args)
