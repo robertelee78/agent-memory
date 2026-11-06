@@ -1,0 +1,156 @@
+{
+  "actual_command": "/tmp/am-v15-delivery/qualification-venv/bin/python docs/research/data/2026-11-05-ssg-runtime/workspace-critic/qualify.py run --out actual-20261106-authored",
+  "actual_execution_freeze_commit": "cd4f4ee2485bd3362322c45555654d4709c2cc61",
+  "actual_exit": 0,
+  "am_baseline": "483adede202bac2dc3a69856a73b16533190ebb7",
+  "critic_run": false,
+  "initial_fixture_freeze_commit": "d12fad02b564608b08c46792658136011dda4e25",
+  "raw_receipt_commit": "faf6a12220e47def418357c2caa5f3e5e83612c7",
+  "receipts": {
+    "actual-20261106-authored/actual-source-profile.json": {
+      "bytes": 311,
+      "sha256": "a2f50b4bd1da67cbeaea4f6e738de968b3614438064412b940bf37ac3ea4a499"
+    },
+    "actual-20261106-authored/actual-tmpfs-process-posture.json": {
+      "bytes": 6188,
+      "sha256": "ce592d52ba42ebd5721f3ee3d7be08f02db067ab5bef6b2709f729630259fb90"
+    },
+    "actual-20261106-authored/assessment.json": {
+      "bytes": 2881,
+      "sha256": "4e1b4c86d659682c0d4cb4d8697d5a4c8c4e3fa6418fd961fdb90033e55adbf2"
+    },
+    "actual-20261106-authored/cached-fingerprint.json": {
+      "bytes": 15551,
+      "sha256": "5d0626ca1d9fbe5810d09ea19c65961aa596a1698209ab42ee0c53f5586b69a9"
+    },
+    "actual-20261106-authored/cached-graph.json": {
+      "bytes": 11704,
+      "sha256": "eda0fd914185eba5d0c1cf025b1ad8c1379b742679a771a44247b1ce340c76d8"
+    },
+    "actual-20261106-authored/cached-graph.json.audit.json": {
+      "bytes": 14342,
+      "sha256": "ed70779fcbfdfe2b2a5317c11209a5116b58958ecd93e071f601ea466a60d7a1"
+    },
+    "actual-20261106-authored/cleanup.json": {
+      "bytes": 210370,
+      "sha256": "99c1b1623fc5451f2a2447bcb0bfc67f8eff6cd2e495f186e9bf9c745b0c7052"
+    },
+    "actual-20261106-authored/commands.json": {
+      "bytes": 122933,
+      "sha256": "e11dcb32e3fec46f8841b0f3aa7c279d9b02dcecf82791943f11cac5cca547d3"
+    },
+    "actual-20261106-authored/container-inspect.json": {
+      "bytes": 11590,
+      "sha256": "d843bad924a2860a9debd4ead190845f85ddf6b97da6f25e9f0b001382cb9285"
+    },
+    "actual-20261106-authored/evidence-controls.json": {
+      "bytes": 202,
+      "sha256": "8e8b307df2ed5187146c15723bed923ee588d484fc60a4f5465bdb6e0fae46c7"
+    },
+    "actual-20261106-authored/mutation.json": {
+      "bytes": 193,
+      "sha256": "a0d1b9a68317057609b684b65b2a29e767eb785b07ca45d85afc6e575a8a7df6"
+    },
+    "actual-20261106-authored/observations.json": {
+      "bytes": 783,
+      "sha256": "c816677077ee99123524f8b1b4e70635f4303ba64c672e31417dec13cd2cb799"
+    },
+    "actual-20261106-authored/owner.json": {
+      "bytes": 109,
+      "sha256": "5c1af21d06950d201d3e17d8e4b1943509270a1de50db3a2a550836e475df721"
+    },
+    "actual-20261106-authored/paths-after-source-mutation.json": {
+      "bytes": 3420,
+      "sha256": "78cbb3606059871b63a7ad6e6979f3c44135440910a3fa06e4c7040b6c937998"
+    },
+    "actual-20261106-authored/paths-default.json": {
+      "bytes": 3420,
+      "sha256": "78cbb3606059871b63a7ad6e6979f3c44135440910a3fa06e4c7040b6c937998"
+    },
+    "actual-20261106-authored/paths-high.json": {
+      "bytes": 3421,
+      "sha256": "fcd905c6d4493e1e45d9e70f5d03ec6899f2703f3166eea1cd9ecd786edb6e82"
+    },
+    "actual-20261106-authored/paths-test.json": {
+      "bytes": 2223,
+      "sha256": "3b00e6565a77c0450406c2afef5b61858924650234b5e4722743b9e3abc0ea25"
+    },
+    "actual-20261106-authored/paths-zero-hops.json": {
+      "bytes": 2190,
+      "sha256": "07efc22d864ec39c3bd4f7af9b87d778dad22ea8b32b5c56d58697e46e29d28c"
+    },
+    "actual-20261106-authored/profile-default.json": {
+      "bytes": 20328,
+      "sha256": "4c01efcc54f156263a226fcbe3774003f30d0f07ef29e458b72fc09817e3790a"
+    },
+    "actual-20261106-authored/stored-graph-facts.json": {
+      "bytes": 2716,
+      "sha256": "4883eedd8700212a0f055636680f5a4ec11445554a79c7b39cf7f5d5164b0b03"
+    },
+    "actual-20261106-authored/workspace-load.json": {
+      "bytes": 512,
+      "sha256": "aacc6a2b2b2b9528e5abb65c8dce5966a413fcb8598bf3a3db765eee0391f495"
+    },
+    "actual-20261106-diagnostic/cleanup.json": {
+      "bytes": 1509,
+      "sha256": "e7b952f1d946341a0957164208137580ee8e16989463aa89827406a53ba9d324"
+    },
+    "actual-20261106-final/cleanup.json": {
+      "bytes": 6899,
+      "sha256": "5e0b6d788a1dab0b80c26d495185fade296adb2a8e0758f226a294f1280c9f6c"
+    },
+    "actual-20261106-podman/cleanup.json": {
+      "bytes": 1073,
+      "sha256": "7e92fb38de8ba3cd3b917f370dc306e88be73ae0a4062ddd58bee0fab2b01aff"
+    },
+    "actual-20261106/cleanup.json": {
+      "bytes": 541,
+      "sha256": "ea0342fd060e0562f3ffca23b1e43c11ae3e4498d751f371863c5080e1a3ece2"
+    },
+    "evaluation.json": {
+      "bytes": 11594,
+      "sha256": "86925f6c3a64cdd989af50f48da4971efc182a96acbd90548be4c96d129d22c6"
+    },
+    "expected-facts.json": {
+      "bytes": 3077,
+      "sha256": "1250b59517c6958537403109abf053c66c4e752736e019f106a13350f24d5114"
+    },
+    "fixture/app.py": {
+      "bytes": 502,
+      "sha256": "79ed5803edaa76b23088bf17c4cf3f1e527c7be7582a47bdfd5b6b50ebace6a8"
+    },
+    "fixture/requirements.txt": {
+      "bytes": 91,
+      "sha256": "1daca92b63eaa7fdc8f61a8386a13d4a8a8d351b8dd16b98154fc7e4877d1788"
+    },
+    "fixture/tests/test_routes.py": {
+      "bytes": 226,
+      "sha256": "bbe6a781a45a28a8fa673580d012b6c1e00b3bacf9a20e1717da2e83f118c0ee"
+    },
+    "freeze.json": {
+      "bytes": 133411,
+      "sha256": "630edf4bd9dc6ce2591466a816eaba47385b91f8f162b09491fa0860fb2dc671"
+    },
+    "profile.json": {
+      "bytes": 1575,
+      "sha256": "d18800a912c1caca9df00882f36de496bf3e4d0db2bbab1e275e98f7a06bdc26"
+    },
+    "qualify.py": {
+      "bytes": 19649,
+      "sha256": "807d67925efd59be1c9640ff50723dcb0f6fa20349d0c42535ef41ca3057e123"
+    },
+    "source-analysis.json": {
+      "bytes": 12178,
+      "sha256": "9f71077a6edf2382fd513107fdad1a6a1461bffc9b68802683f67bf19ad31eb7"
+    }
+  },
+  "rerun_constraints": "Parent serial reservation required. Keep old frozen inputs/outputs immutable and choose a new direct-child output directory. Frozen host and authoring-checkout identity is explicit; a different checkout/host requires a new preserved freeze rather than silently substituting paths/artifacts.",
+  "schema": "am255/workspace-critic-index-v1",
+  "scope": "Actual authored-only synthetic workspace fixture; full-advisory2GiB OOM and unchanged-workspace-up portability remain non-passes; critic source-only.",
+  "serial_slot_released_at_utc": "2026-11-06T20:37:12Z",
+  "slot_release_announced_to": [
+    "Main",
+    "Linux255Qualification"
+  ],
+  "ssg_commit": "9c4fd08c29f37bffe89ecdf75b069a6baeb8a5e0"
+}

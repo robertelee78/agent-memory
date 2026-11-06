@@ -1,0 +1,59 @@
+{
+  "schema": "am255/workspace-critic-evaluation-v1",
+  "scope_verdict": "Actual bounded authored-only code workspace and typed evidence surfaces exercised; critic source analyzed only. Not full SSG runtime qualification or AM production adoption.",
+  "frozen_execution_commit": "cd4f4ee2485bd3362322c45555654d4709c2cc61",
+  "raw_evidence_commit": "faf6a12220e47def418357c2caa5f3e5e83612c7",
+  "ssg_commit": "9c4fd08c29f37bffe89ecdf75b069a6baeb8a5e0",
+  "ssg_binary_sha256": "d87fe302f3c93f3a2bd71f89ee888b3df6b71a6a51be158956288409d49d864b",
+  "cgg_version": "0.11.2",
+  "independent_expected_facts_sha256": "1250b59517c6958537403109abf053c66c4e752736e019f106a13350f24d5114",
+  "expectations_unchanged_since_initial_freeze": "Initial commit d12fad02b564608b08c46792658136011dda4e25 and final pre-run freeze bind the same expected-facts and fixture byte hashes. No labels were read from model/graph outputs to retune them.",
+  "actual_profile": {
+    "identity": "profile.json plus freeze.json authored_input_sha256",
+    "private_source_view": "Byte-identical scratch copy of all974 expertise files and11 queries, no bulk OSV advisory feed",
+    "workspace": "974 authored units;0 advisories;0 embeddings;9 loaded callables;9 call edges;4 entries;2 fingerprinted dependencies;0 unresolved entries",
+    "canonical_cgg": "13 callables/13 edges;2 Python source files,0 failed parses;Flask recognized with4 entries",
+    "synthetic_fixture_git_commit": "e76f4612b9f2a63eae5d43625275d108beeb856d",
+    "content_blake3": "1076719aebc636ae9a37c11893bcaf0f4eedac7c5a12b9a01d6ffdffa8cdbd59",
+    "expertise_build_blake3": "1451d11ae7477d6571d36489b1e5703b5950c69146da9bc7250151200b87a36a",
+    "resources": "One exact new loopback17749 graph;2CPU/2147483648bytes cap;tmpfs data/logs;WALfalse/snapshot interval0/snapshot on exitfalse;manual exact cleanup after logs",
+    "startup": "Research adapter starts a root init only to chown two new owned tmpfs roots, sets HOME to the data tmpfs, clears supplementary groups and execs Memgraph as101:103. Actual /proc/1 status shows UID/GID101:103 with no effective capabilities;both roots mode0700. Not default nonroot startup or unchanged workspace-up qualification."
+  },
+  "controls": [
+    {"id": "direct-path", "observation": "Default and high-confidence paths contain app.direct->app.evaluate_text, then eval at app.py:9;one first-party hop,high confidence.", "result": "Observed structural positive", "receipt": "actual-20261106-authored/paths-default.json"},
+    {"id": "constant-false-positive", "observation": "app.constant is also a reached eval sink at app.py:19,even though its source argument is the literal1+1. It remains reached with zero allowed first-party hops.", "result": "Observed semantic boundary: reachability is not injection", "receipt": "actual-20261106-authored/paths-zero-hops.json"},
+    {"id": "safe-lookalike", "observation": "app.literal is an entry but not one of the4 eval sink sites. Profile returns lang/python/safe/literal-eval as a proposed safe_lookalike at rank4/reached app.py:24.", "result": "Observed negative code-execution-sink control;resource safety not evaluated", "receipt": "actual-20261106-authored/profile-default.json"},
+    {"id": "orphan-unreached", "observation": "app.orphan eval app.py:28 is unreached under default entry selection.", "result": "Observed coverage negative,not safety", "receipt": "actual-20261106-authored/paths-default.json"},
+    {"id": "test-trust", "observation": "Default selection uses3 network entries and excludes1 test entry. test_routes.test_only is unreached by default and is the sole reached site with explicit --trust test.", "result": "Observed trust-domain control", "receipt": "actual-20261106-authored/paths-test.json"},
+    {"id": "positive-evidence", "observation": "assess claim exit0 stores a numbered app.py:8-14 excerpt with full-file blake3,a high-confidence app.direct->app.evaluate_text path at line14,and proposed fact lang/python/sink/eval-exec with unit/build digests.", "result": "Observed typed evidence/provenance resolution", "receipt": "actual-20261106-authored/assessment.json"},
+    {"id": "missing-code", "observation": "exit2:missing.py absent,no excerpt invented", "result": "Observed refusal", "receipt": "actual-20261106-authored/commands.json"},
+    {"id": "invalid-range", "observation": "exit2:line0 refused;code excerpt lines must be1-based,ascending,at most60", "result": "Observed refusal", "receipt": "actual-20261106-authored/commands.json"},
+    {"id": "missing-fact", "observation": "exit2:synthetic/does-not-exist names no unit", "result": "Observed refusal", "receipt": "actual-20261106-authored/commands.json"},
+    {"id": "unconnected-path", "observation": "exit2:app.direct->app.orphan has no call path within12 hops", "result": "Observed refusal", "receipt": "actual-20261106-authored/commands.json"},
+    {"id": "changed-code", "observation": "After replacing both return eval(text) lines with return text without refingerprinting,code evidence resolution exits3:app.py changed since fingerprint.", "result": "Observed current-byte evidence guard for this indexed relative path", "receipt": "actual-20261106-authored/commands.json"},
+    {"id": "stale-path-boundary", "observation": "The same source mutation does not invalidate workspace paths:exit0 and byte-identical path output SHA25678cbb3606059871b63a7ad6e6979f3c44135440910a3fa06e4c7040b6c937998 before/after.", "result": "Observed freshness failure boundary;not a freshness pass", "receipt": "actual-20261106-authored/paths-after-source-mutation.json"},
+    {"id": "unsupported-claim-boundary", "observation": "Storage exit0 accepts the deliberately false coverage statement every application path has been proven safe with only the constant function excerpt. No critic was invoked.", "result": "Observed shape/reference acceptance is not claim verification", "receipt": "actual-20261106-authored/assessment.json"},
+    {"id": "disposal", "observation": "Exact container3634d8e3a9c35d88b7748924e7e2d7c14a732f30dc8aa404387e2faa1915e50a removed successfully;authoritative name listing and inspect-after verify absence;loopback listener17749 and owned scratch source/repo/cache absent. Synthetic raw evidence intentionally remains.", "result": "Observed owned logical disposal only", "receipt": "actual-20261106-authored/cleanup.json"}
+  ],
+  "additional_observed_boundaries": [
+    "Graph paths show sources_on_route empty even on the request.args direct route;the relevant source is visible in resolved code. A graph-source-facet count is not a complete input-flow enumeration.",
+    "Profile elevates eval facet to reached while retaining4 total example sites but only2 reached sites;proposed status remains visible. Ranking is evidence navigation,not a truth score.",
+    "Zero-hop route selection still reports sinks called directly inside entries;hop count counts first-party route edges,not the final external sink edge.",
+    "No live second/shared graph was used or touched. Configured shared sentinel is127.0.0.1:1 during workspace operations;endpoint separation is structural,not a demonstrated authorization/alias boundary."
+  ],
+  "preserved_failed_attempts": [
+    {"directory": "actual-20261106", "freeze": "freeze-attempt-1.json", "recipe_commit": "d12fad02b564608b08c46792658136011dda4e25", "failure": "Podman rejects Docker-style uid=101/gid=103 tmpfs options before creation. This is a portability finding for SSG's launch syntax;unchanged workspace up was not successfully qualified."},
+    {"directory": "actual-20261106-podman", "freeze": "freeze-attempt-2.json", "recipe_commit": "576ac538746995b2cffdb2ffb8cf048f550dcbfd", "failure": "Root-init graph exited before readiness and --rm removed exit logs;no root cause claim assigned to this receipt alone."},
+    {"directory": "actual-20261106-diagnostic", "freeze": "freeze-attempt-3.json", "recipe_commit": "b788ddfc9623df66de43c656a86b0b10a8739e0e", "failure": "Retained exact container exit133 and stderr:filesystem permission denied /root/.memgraph/config after UID drop,inherited HOME=/root. Corrected only to owned data tmpfs HOME."},
+    {"directory": "actual-20261106-final", "freeze": "freeze-attempt-4.json", "recipe_commit": "df94833cf271b7cf9b96431c7f61c89529676c4d", "failure": "Full-source initial SSG graph build with bulk advisory feed exceeded fixed2GiB:build exit10/unexpected EOF;container OOMKilled=true/exit137. Authored-only success does not qualify full-source build at2GiB."}
+  ],
+  "critic": {
+    "execution": "Not run: no appropriate completion endpoint/model/profile supplied or spend authorized. No embedding-model substitution and no Claude/OMP/Codex/default critic invocation.",
+    "source_coverage": "source-analysis.json maps critic/system.md,defender.md,arbiter.md,trace/evidence.rs,trace.rs,assessment typed evidence and critic dispatch/quote/grammar guards.",
+    "quality_verdict": "Unmeasured. Source/prompt inspection does not establish accuracy,robustness,cost,independence or claim-verification quality."
+  },
+  "recommendation": "Reuse AM design principles: typed graph navigation,source/generation/hash/confidence provenance,proposed-versus-reviewed status,immutable evidence resolution and input-bound claims/critic results. Do not adopt whole SSG runtime/security schema,endpoint inequality as isolation,cached-fingerprint freshness,graph reachability as dataflow or safety,or grammar-valid critic prose as truth. Keep transient source graphs/caches/completion disclosure separate from persistent authorized project/shared memory and inventory every owned disposal plane.",
+  "limits": ["Tiny synthetic Python/Flask code is parsed only,never imported,served or executed.", "No actual trace/critic completion quality,no advisory/version constraints,no callback/dynamic dispatch/guard/dataflow completeness,no real proprietary repository and no CVE exploitation.", "Shared-host timings are descriptive only;parent native/recovery work was concurrent.", "Disposal is engine-visible logical removal,not forensic RAM/VM swap/crash-dump/backup/provider erasure.", "Broader #255 acceptance,production implementation,legal/profile selection and operator dispositions remain with parent."],
+  "checks_exercised": "The frozen actual fixture controller was the only smoke workload;no repository build/lint/tests/formatters or fixture application execution. SSG build here means the actual graph research workload.",
+  "proposed_parent_brief_paragraph": "An unchanged SSG binary at9c4fd08,with cgg0.11.2,loaded a frozen synthetic Python/Flask repository against974 byte-identical authored expertise files and11 queries in one2CPU/2GiB,tmpfs,loopback workspace. Real path/profile/evidence surfaces distinguished reachable/unreached/test entries and a literal-eval safe lookalike;typed evidence retained code hashes,path confidence and proposed-unit/build provenance,and rejected missing/invalid/stale code references. It also exposed two semantic boundaries:a constant eval remains a reached sink,and paths remain byte-identical after unrefingerprinted source mutation even though code evidence refuses it;unsupported claim prose can be stored without semantic validation. Reuse provenance,typed navigation and independently resolved evidence,not SSG's whole runtime or reachability-as-truth assumptions. Critic prompts/guards were source-reviewed only:no authorized completion endpoint,no solver-quality claim. Preserve Podman tmpfs syntax incompatibility and full-advisory2GiB OOM as explicit non-passes;exact owned graph/cache/repo disposal was verified."
+}
