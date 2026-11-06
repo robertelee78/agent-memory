@@ -154,7 +154,9 @@ def run(out):
                 "[os.chown(p,101,103) for p in ('/var/lib/memgraph','/var/log/memgraph')]; "
                 "os.setgroups([]); os.setgid(103); os.setuid(101); "
                 "os.execv('/usr/lib/memgraph/memgraph',['memgraph']+sys.argv[1:])")
-        r = need(command('owned-create', ['podman', 'run', '-d', '--rm', '--pull=never',
+        # Retain exit logs until exact ownership-checked cleanup; unlike SSG up,
+        # this diagnostic launcher deliberately uses manual removal, not --rm.
+        r = need(command('owned-create', ['podman', 'run', '-d', '--pull=never',
             '--name', CONTAINER, '--label', LABEL + '=' + run_id, '--cpus=2', '--memory=2g',
             '-p', '127.0.0.1:' + str(PORT) + ':7687', '--user', '0:0',
             '--tmpfs', '/var/lib/memgraph:rw,mode=0700',
@@ -178,6 +180,7 @@ def run(out):
             except Exception as e:
                 startup_errors.append(str(e))
                 if time.monotonic() > deadline:
+                    save(out / 'startup-probes.json', startup_errors)
                     raise RuntimeError('Owned graph startup deadline exceeded') from e
                 time.sleep(.25)
         save(out / 'startup-probes.json', startup_errors)
@@ -272,6 +275,7 @@ def run(out):
             if result['exit'] == 0:
                 desc = json.loads(result['stdout'])[0]
                 if desc['Id'] == created and desc['Config']['Labels'].get(LABEL) == run_id:
+                    command('owned-logs-before-disposal', ['podman', 'logs', created])
                     cleanup['remove'] = command('cleanup-owned-remove', ['podman', 'rm', '-f', created])
                 else:
                     cleanup['refused'] = 'Ownership/identity changed; no removal attempted'
