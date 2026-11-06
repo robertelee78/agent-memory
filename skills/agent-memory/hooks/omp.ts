@@ -4,7 +4,7 @@ import { realpathSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { randomUUID } from 'node:crypto';
-import { VERSION, type ExtensionAPI, type ExtensionContext } from '@oh-my-pi/pi-coding-agent';
+import type { ExtensionAPI, ExtensionContext } from '@oh-my-pi/pi-coding-agent';
 
 type Binding = { artifact: string; agentDir: string; rolloutAttested: true };
 type Admission = { schema: string; session: string; lifecycle: string; capture_id: string;
@@ -87,7 +87,7 @@ export default function nativeMemory(pi: ExtensionAPI, binding?: Binding) {
   };
   const get = (event: unknown, ctx: ExtensionContext): State | undefined => {
     if (!eligible(event, ctx)) return;
-    if (VERSION !== '18.16.0' || !binding?.rolloutAttested || !/^[0-9a-f]{64}$/.test(binding.artifact)) {
+    if (pi.pi.VERSION !== '18.16.0' || !binding?.rolloutAttested || !/^[0-9a-f]{64}$/.test(binding.artifact)) {
       warn(ctx, 'inactive: unsupported version or missing explicit installed binding'); return;
     }
     const session = ctx.sessionManager.getSessionId();
