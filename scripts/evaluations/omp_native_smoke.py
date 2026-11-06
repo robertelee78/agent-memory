@@ -21,7 +21,6 @@ class PendingObservations(RuntimeError):
     """Read-only qualification must await asynchronous observer publication."""
 
 
-
 def run(argv, *, cwd, env, timeout=30):
     result = subprocess.run(argv, cwd=cwd, env=env, capture_output=True, text=True, timeout=timeout)
     if result.returncode:
@@ -33,6 +32,14 @@ def run(argv, *, cwd, env, timeout=30):
                 and pending.get('status') == 'pending'
                 and pending.get('canonical_writes_performed') is False):
             raise PendingObservations('Native readback remains pending')
+        if (isinstance(pending, dict)
+                and pending.get('schema') == 'agent-memory/diagnostic-result-v1'
+                and pending.get('operation') == 'status'):
+            failures = pending.get('failures')
+            if (isinstance(failures, list) and failures
+                    and all(isinstance(item, dict) and item.get('component') == 'omp.native_boundary'
+                            for item in failures)):
+                raise PendingObservations('Native diagnostic readback is not stable yet')
         raise RuntimeError('Command failed: ' + argv[0] + ' (exit ' + str(result.returncode)
                            + '; retained smoke remains unqualified)')
     return result.stdout
@@ -314,6 +321,8 @@ def main():
                 observations = current_observations(
                     args.am, repo, root, result['session_id'], result['native_session_file'],
                     prompts, result['status_readback'], env)
+                if time.monotonic() >= deadline:
+                    raise PendingObservations('Native observations completed after the readback deadline')
                 break
             except PendingObservations:
                 if time.monotonic() >= deadline or process.poll() is not None:
