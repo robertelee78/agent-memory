@@ -6,8 +6,9 @@
   "upstream_commit": "6b4e4bd582e457a47ee7cd498058495f47fee228",
   "archive": "/Users/robert.lee/.omp/wt/tbebd39362/m/docs/research/data/2026-11-05-ssg-runtime/linux-portability/.acquired/llama-b9360-bin-ubuntu-arm64.tar.gz",
   "archive_sha256": "ff85fef9c91027d8037c182cdb5a6f3d29ea0a12b31557338188810308b112dc",
-  "carrier_image": "3792294abf9a035895d8db16cbc56146d48a9fa1d379be6581631fdeae525c4f",
-  "carrier_manifest": "sha256:334cd2a524cdb05bb68310c8338c91de8d44d2998a7aa0349a6de9674824846d",
+  "carrier_image": "44b5244a3622425584cae52b0cdf1ea1690ebb98e27110b3adfd1af7ab8227a9",
+  "carrier_manifest": "sha256:fe2f37e45e263225129bcb6955612ac9956dea0e8db614f9c39eb74b105c6c39",
+  "carrier_selection": "Exact release DT_NEEDED requires libgomp.so.1; existing core BOM lacks libgomp1, existing MAGE BOM declares 14.2.0-4ubuntu2~24.04.1. MAGE carrier runs no graphservice. No package install; all MAGE legal unknowns remain.",
   "backend": "CPU / Linux-arm64 container in Podman AppleHV VM, not baremetal",
   "profile_scope": "Upstream b9360 serving exact existing reference/alternate weights; not equivalence to the SSG 9341 fork profile",
   "profiles": {
