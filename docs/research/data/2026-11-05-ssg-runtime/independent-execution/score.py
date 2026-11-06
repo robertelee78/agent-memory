@@ -799,8 +799,8 @@ def score_case(case, observation, store, generation, catalog, profile_hash, orac
         require(generation is not None and binding.get('generation_id') == generation['generation_id'] and
                 binding.get('canonical_sha256') == generation['canonical_sha256'] and
                 binding.get('profile_sha256') == profile_hash, 'Wrong per-case native source/profile/generation identity')
-        digest(native.get('context_sha256'), 'native context')
         if native.get('request_valid') is True:
+            digest(native.get('context_sha256'), 'native context')
             context = native.get('context')
             require(isinstance(context, dict), 'Native qualification lacks actual observed context')
             require(sha(compact(context).encode()) == native['context_sha256'], 'Native context digest mismatch')
@@ -823,7 +823,10 @@ def score_case(case, observation, store, generation, catalog, profile_hash, orac
         truth = case['context_truth']
         if generation.get('mutation') != truth['mutation'] or generation.get('stage') != truth['stage']:
             failures.append('Canonical mutation/stage differs from requested case transition')
-        classes['native'] = metric(True, failures=failures, request_valid=native['request_valid'])
+        if truth['stage'] == 'before-rebuild':
+            classes['native'] = metric(prerequisite='Actual stale-generation transition lacks a reviewed receipt verifier')
+        else:
+            classes['native'] = metric(True, failures=failures, request_valid=native['request_valid'])
     else:
         classes['native'] = unexecuted(observation, 'native', 'Native request/context qualification not run')
     if observation['semantic'].get('executed') or observation['typed'].get('executed'):

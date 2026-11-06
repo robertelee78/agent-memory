@@ -388,7 +388,9 @@ def run_size(root, prepared, fixtures, inputs, spec, config, profile, run_id):
                         native['literal'] = fixtures.literal(bank, case, context)
                 observation = {'schema': 'am255/independent-case-observation-v1', 'case_ordinal': case['case_ordinal'],
                     'size': prepared['size'], 'variant': variant, 'operation': case['operation'],
-                    'executed': semantic['executed'] or typed['executed'] or native.get('literal', {}).get('executed', False),
+                    # Native request validation and provider accounting ran even
+                    # when semantic/typed mechanisms were refused or unavailable.
+                    'executed': isinstance(native.get('request_valid'), bool) or provider['executed'],
                     'prerequisites': [prerequisite] if prerequisite else [],
                     'native': native, 'semantic': semantic, 'typed': typed, 'outcome': {'executed': False, 'prerequisite': MAPPER},
                     'caveats': {'executed': False, 'prerequisite': MAPPER}, 'provider': provider, 'costs': costs}
