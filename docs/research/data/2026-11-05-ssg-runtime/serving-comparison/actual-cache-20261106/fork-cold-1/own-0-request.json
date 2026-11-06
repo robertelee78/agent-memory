@@ -1,0 +1,16 @@
+{
+  "at": "2026-11-06T19:49:45.208990+00:00",
+  "body": {
+    "input": [
+      "Retry a temporary synthetic transport failure at most three times.",
+      "Continue a synthetic paginated scan whenever a next cursor exists, even after an empty page.",
+      "Publish a synthetic generation only after every required vector and graph node is complete.",
+      "A synthetic privacy epoch fences stale builders before deleted content can be republished.",
+      "The synthetic compiler pipeline parses input before lowering its intermediate representation.",
+      "The synthetic cafeteria menu rotates fruit on Thursdays."
+    ],
+    "model": "qwen3-embedding-8b-q8_0-d20ddc71e8a5"
+  },
+  "name": "own-0",
+  "route": "/v1/embeddings"
+}
