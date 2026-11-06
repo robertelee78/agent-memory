@@ -536,22 +536,26 @@ for line in sys.stdin:
     elif value['type'] == 'get_state':
         if MODE == 'missing-session':
             path.unlink()
+        late = value['id'].startswith(('observer-progress-', 'observer-final-'))
+        if MODE == 'late-duplicate' and late:
+            print(json.dumps({'type': 'message_end', 'message': {'role': 'assistant', 'content': sentinel}}), flush=True)
         print(json.dumps({'type': 'response', 'id': value['id'], 'data': {
-            'sessionId': session, 'sessionFile': str(path), 'isSettled': True}}), flush=True)
+            'sessionId': session, 'sessionFile': str(path),
+            'isSettled': not (MODE == 'late-unsettled' and late)}}), flush=True)
 ''')
         path.chmod(0o700)
         return path
 
-    def smoke(self, world, repo, receipt, receipt_path, binary):
+    def smoke(self, world, repo, receipt, receipt_path, binary, *, expected=1, timeout=5):
         from runtime_update_fixtures import ROOT
         output = world.inside('controlled-smoke')
         completed = world.run([sys.executable, '-I', '-B', ROOT / 'scripts/evaluations/omp_native_smoke.py',
             '--binary', binary, '--am', Path(receipt['bin_dir']) / 'am', '--receipt', receipt_path,
             '--repo', repo, '--output', output, '--model', 'controlled/no-provider',
-            '--timeout', '5'], check=False, timeout=30)
-        self.assertEqual(completed.returncode, 1, completed.stdout + completed.stderr)
+            '--timeout', str(timeout)], check=False, timeout=max(30, timeout * 4 + 15))
+        self.assertEqual(completed.returncode, expected, completed.stdout + completed.stderr)
         report = json.loads((output / 'report.json').read_text())
-        self.assertFalse(report['qualified'])
+        self.assertEqual(report['qualified'], expected == 0)
         self.assertFalse(report['full_native_qualification'])
         return report
 
@@ -661,3 +665,18 @@ for line in sys.stdin:
             evidence = smoke.current_observations(am, repo, root, session, str(path), [prompt], status, world.env)
             self.assertEqual([row['native_entry_id'] for row in evidence], ['registration-human'])
             self.assertEqual([row['human_root'] for row in evidence], [lifecycle])
+
+    def test_late_native_frames_cannot_reuse_initial_answer_or_settled_proof(self):
+        for mode in ('complete', 'late-duplicate', 'late-unsettled'):
+            with self.subTest(mode=mode), World() as world:
+                repo, receipt, path = self.fixture(world)
+                report = self.smoke(world, repo, receipt, path,
+                    self.binary(world, receipt, mode=mode),
+                    expected=0 if mode == 'complete' else 1, timeout=30)
+                if mode == 'complete':
+                    self.assertEqual(len(report['current_human_observations']), 2)
+                    self.assertEqual(len({row['human_root'] for row in report['current_human_observations']}), 2)
+                elif mode == 'late-duplicate':
+                    self.assertTrue(any(count > 1 for count in report['task_sentinels'].values()))
+                else:
+                    self.assertFalse(report['native_is_settled'])

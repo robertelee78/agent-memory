@@ -21,8 +21,18 @@ class PendingObservations(RuntimeError):
     """Read-only qualification must await asynchronous observer publication."""
 
 
-def run(argv, *, cwd, env, timeout=30):
-    result = subprocess.run(argv, cwd=cwd, env=env, capture_output=True, text=True, timeout=timeout)
+def bounded_timeout(deadline, maximum):
+    if deadline is None:
+        return maximum
+    remaining = deadline - time.monotonic()
+    if remaining <= 0:
+        raise PendingObservations('Native readback deadline expired')
+    return min(maximum, remaining)
+
+
+def run(argv, *, cwd, env, timeout=30, deadline=None):
+    result = subprocess.run(argv, cwd=cwd, env=env, capture_output=True, text=True,
+                            timeout=bounded_timeout(deadline, timeout))
     if result.returncode:
         try:
             pending = json.loads(result.stdout)
@@ -89,7 +99,7 @@ def current_humans(repo, root, session, session_file, prompts):
     return humans
 
 
-def current_observations(am, repo, root, session, session_file, prompts, status, env):
+def current_observations(am, repo, root, session, session_file, prompts, status, env, *, deadline=None):
     """Read back source-bound observations for BOTH current stored human turns.
 
     Private enrollment files locate completed as well as pending observations;
@@ -125,7 +135,7 @@ def current_observations(am, repo, root, session, session_file, prompts, status,
                 raise RuntimeError('Current human enrollment lifecycle differs from its retained namespace')
             value = json.loads(run([am, 'omp-boundary', '--repo', str(repo), '--source',
                                     enrollment['source_reference'], '--session', session,
-                                    '--lifecycle', lifecycle], cwd=repo, env=env))
+                                    '--lifecycle', lifecycle], cwd=repo, env=env, deadline=deadline))
             source = value.get('source', {})
             observation = value.get('observation')
             origin = value.get('origin', {})
@@ -228,11 +238,12 @@ def main():
     prompts = []
     def send(value):
         process.stdin.write(json.dumps(value) + '\n'); process.stdin.flush()
-    def until(kind, identifier=None):
-        deadline = time.monotonic() + args.timeout
+    def until(kind, identifier=None, *, deadline=None):
+        if deadline is None:
+            deadline = time.monotonic() + args.timeout
         while time.monotonic() < deadline:
             try:
-                frame = frames.get(timeout=1)
+                frame = frames.get(timeout=bounded_timeout(deadline, 1))
             except queue.Empty:
                 if process.poll() is not None:
                     raise RuntimeError('Real native process exited before ' + kind)
@@ -316,33 +327,47 @@ def main():
         while True:
             result['readback_attempts'] += 1
             try:
+                bounded_timeout(deadline, args.timeout)
                 # Readback locks are nonblocking. Do not contend with the native
                 # helper and make its one-shot durable observation fail ourselves.
                 identifier = 'observer-progress-' + str(result['readback_attempts'])
                 send({'id': identifier, 'type': 'get_state'})
-                progress = until('response', identifier)
+                progress = until('response', identifier, deadline=deadline)
                 if progress.get('data', {}).get('sessionId') != result['session_id']:
                     raise RuntimeError('Native session changed while awaiting its observer')
                 processes = subprocess.run(['ps', '-axo', 'pid=,ppid='], env=env,
-                                           capture_output=True, text=True, check=True, timeout=5)
+                                           capture_output=True, text=True, check=True,
+                                           timeout=bounded_timeout(deadline, 5))
                 children = [line for line in processes.stdout.splitlines()
                             if len(line.split()) == 2 and int(line.split()[1]) == process.pid]
                 quiet_samples = 0 if children else quiet_samples + 1
                 if quiet_samples < 2:
                     if time.monotonic() >= deadline:
                         raise PendingObservations('Native observer helpers did not become idle before the deadline')
-                    time.sleep(0.1)
+                    time.sleep(bounded_timeout(deadline, 0.5))
                     continue
                 result['pending_readback'] = json.loads(run(
-                    [args.am, 'omp-boundary', '--repo', str(repo), '--list-pending'], cwd=repo, env=env))
+                    [args.am, 'omp-boundary', '--repo', str(repo), '--list-pending'],
+                    cwd=repo, env=env, deadline=deadline))
                 result['status_readback'] = json.loads(run(
-                    [args.am, '--json', 'status', '--repo', str(repo)], cwd=repo, env=env))
+                    [args.am, '--json', 'status', '--repo', str(repo)],
+                    cwd=repo, env=env, deadline=deadline))
                 native = result['status_readback'].get('omp', {})
                 if native.get('binding') != binding or native.get('owned_disk_integrity') != 'verified':
                     raise RuntimeError('Current installed native ownership is not verified')
                 observations = current_observations(
                     args.am, repo, root, result['session_id'], result['native_session_file'],
-                    prompts, result['status_readback'], env)
+                    prompts, result['status_readback'], env, deadline=deadline)
+                identifier = 'observer-final-' + str(result['readback_attempts'])
+                send({'id': identifier, 'type': 'get_state'})
+                latest = until('response', identifier, deadline=deadline).get('data', {})
+                if latest.get('sessionId') != result['session_id']:
+                    raise RuntimeError('Native session changed before final qualification')
+                result['native_is_settled'] = latest.get('isSettled')
+                if any(result['task_sentinels'].get(sentinel) != 1 for sentinel in sentinels):
+                    raise RuntimeError('Substantive answer was missing or duplicated during observer waiting')
+                if result['native_is_settled'] is not True:
+                    raise PendingObservations('Native work resumed while awaiting observer evidence')
                 if time.monotonic() >= deadline:
                     raise PendingObservations('Native observations completed after the readback deadline')
                 break
@@ -353,6 +378,10 @@ def main():
                 time.sleep(min(0.5, max(0, deadline - time.monotonic())))
         result['observer_wait_seconds'] = time.monotonic() - waiting
         result['current_human_observations'] = observations
+        if hashlib.sha256(receipt_path.read_bytes()).hexdigest() != result['receipt_sha256']:
+            raise RuntimeError('Installed ownership receipt changed before final qualification')
+        if hashlib.sha256(extension.read_bytes()).hexdigest() != owned['identity']['hash']:
+            raise RuntimeError('Installed native extension changed before final qualification')
         result['qualified'] = True
         result['limits'] = ['Smoke proves only the recorded real installed multi-turn/source journey.',
                             'Inspect individual source assessments, refresh and publication separately.',
