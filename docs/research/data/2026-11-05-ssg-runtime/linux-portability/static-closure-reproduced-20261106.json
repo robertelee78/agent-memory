@@ -1,0 +1,361 @@
+{
+  "schema": "am255/release-static-elf-needed-v1",
+  "archive_sha256": "ff85fef9c91027d8037c182cdb5a6f3d29ea0a12b31557338188810308b112dc",
+  "elf_files": [
+    {
+      "path": "llama-b9360/libggml-rpc.so",
+      "bytes": 162696,
+      "sha256": "4d9fa941800ee3daf6da730de2b9c3346b5431b898135106315418f46021085f",
+      "elf_machine": 183,
+      "needed": [
+        "libggml-base.so.0",
+        "libstdc++.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6",
+        "ld-linux-aarch64.so.1"
+      ]
+    },
+    {
+      "path": "llama-b9360/libllama.so.0.0.9360",
+      "bytes": 3442624,
+      "sha256": "e7d141f5739e04b9ba399403b606601756b0569d669acff90be70bdf0b17a3f3",
+      "elf_machine": 183,
+      "needed": [
+        "libggml.so.0",
+        "libggml-base.so.0",
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6",
+        "ld-linux-aarch64.so.1"
+      ]
+    },
+    {
+      "path": "llama-b9360/libllama-fit-params-impl.so",
+      "bytes": 73808,
+      "sha256": "47c0b2c9d47f8c107f0f1dcc378502b0aecdefb81e1f481ac043b4850ddd9739",
+      "elf_machine": 183,
+      "needed": [
+        "libllama-common.so.0",
+        "libllama.so.0",
+        "libggml-base.so.0",
+        "libstdc++.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6",
+        "ld-linux-aarch64.so.1"
+      ]
+    },
+    {
+      "path": "llama-b9360/libmtmd.so.0.0.9360",
+      "bytes": 1237392,
+      "sha256": "d44ed104c491f4a86de752c5a9f935288a0d2dc3ff4f5baa9e3224f434ad8645",
+      "elf_machine": 183,
+      "needed": [
+        "libllama.so.0",
+        "libggml.so.0",
+        "libggml-base.so.0",
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6",
+        "ld-linux-aarch64.so.1"
+      ]
+    },
+    {
+      "path": "llama-b9360/libllama-perplexity-impl.so",
+      "bytes": 156928,
+      "sha256": "b2998223a2b4ff40f30531aeb6f4b3b9fead414bb129552f0cd3fc94ef430d55",
+      "elf_machine": 183,
+      "needed": [
+        "libllama-common.so.0",
+        "libllama.so.0",
+        "libggml-base.so.0",
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6",
+        "ld-linux-aarch64.so.1"
+      ]
+    },
+    {
+      "path": "llama-b9360/libggml-cpu-armv8.0_1.so",
+      "bytes": 928584,
+      "sha256": "79ebd8e2656dffa65b9026892bbe2fe251c937095a7b08c15b4dc2da7c3a8216",
+      "elf_machine": 183,
+      "needed": [
+        "libggml-base.so.0",
+        "libgomp.so.1",
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6",
+        "ld-linux-aarch64.so.1"
+      ]
+    },
+    {
+      "path": "llama-b9360/libllama-bench-impl.so",
+      "bytes": 466056,
+      "sha256": "456389fdc5942846f9a593202870b057d6f5d20cd4a5e39fbf44093b63c241ae",
+      "elf_machine": 183,
+      "needed": [
+        "libllama-common.so.0",
+        "libllama.so.0",
+        "libggml.so.0",
+        "libggml-base.so.0",
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6",
+        "ld-linux-aarch64.so.1"
+      ]
+    },
+    {
+      "path": "llama-b9360/llama-server",
+      "bytes": 72480,
+      "sha256": "adbb49e64da9b0ff6dad1665c4b11b0a7a00405cefa1f358e1ac8b503c90f7b1",
+      "elf_machine": 183,
+      "needed": [
+        "libllama-server-impl.so",
+        "libstdc++.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6",
+        "ld-linux-aarch64.so.1"
+      ]
+    },
+    {
+      "path": "llama-b9360/libggml-cpu-armv8.6_1.so",
+      "bytes": 930600,
+      "sha256": "f7cdf32a3beecae044de18ca736e43333b37029f22c452a372ebb22d11b746b4",
+      "elf_machine": 183,
+      "needed": [
+        "libggml-base.so.0",
+        "libgomp.so.1",
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6",
+        "ld-linux-aarch64.so.1"
+      ]
+    },
+    {
+      "path": "llama-b9360/libggml-cpu-armv9.2_1.so",
+      "bytes": 996184,
+      "sha256": "f2940593b5e91d21ee4b3a8f7e0267e401d2aec28a67ef945990325afe461076",
+      "elf_machine": 183,
+      "needed": [
+        "libggml-base.so.0",
+        "libgomp.so.1",
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6",
+        "ld-linux-aarch64.so.1"
+      ]
+    },
+    {
+      "path": "llama-b9360/libllama-common.so.0.0.9360",
+      "bytes": 5129936,
+      "sha256": "9b1671dfab59a2fbe70cb40694d9ff5d21ce1deab51e34c5cf37d0f7a4e90bec",
+      "elf_machine": 183,
+      "needed": [
+        "libllama.so.0",
+        "libssl.so.3",
+        "libcrypto.so.3",
+        "libggml.so.0",
+        "libggml-base.so.0",
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6",
+        "ld-linux-aarch64.so.1"
+      ]
+    },
+    {
+      "path": "llama-b9360/libggml-cpu-armv8.6_2.so",
+      "bytes": 930624,
+      "sha256": "78b6e30b4985ad52ab24cdd526e1ae8cf4ce4a715689b219a69717085b0a6db8",
+      "elf_machine": 183,
+      "needed": [
+        "libggml-base.so.0",
+        "libgomp.so.1",
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6",
+        "ld-linux-aarch64.so.1"
+      ]
+    },
+    {
+      "path": "llama-b9360/libggml-cpu-armv8.2_1.so",
+      "bytes": 995432,
+      "sha256": "1408547b81280a19642f2dfd1fef03a5db2c97299a7183b136a1677a4e97efd2",
+      "elf_machine": 183,
+      "needed": [
+        "libggml-base.so.0",
+        "libgomp.so.1",
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6",
+        "ld-linux-aarch64.so.1"
+      ]
+    },
+    {
+      "path": "llama-b9360/libggml-cpu-armv8.2_2.so",
+      "bytes": 995432,
+      "sha256": "11d7f5b6a2684063d517eab509f6c5d9f79fa53a1b02ba3ab0c2450b09ffb056",
+      "elf_machine": 183,
+      "needed": [
+        "libggml-base.so.0",
+        "libgomp.so.1",
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6",
+        "ld-linux-aarch64.so.1"
+      ]
+    },
+    {
+      "path": "llama-b9360/libllama-cli-impl.so",
+      "bytes": 1628360,
+      "sha256": "0a2c968e6ba016f159bd1ee36beadf741fca88f572783339ae75fa67dc8938a2",
+      "elf_machine": 183,
+      "needed": [
+        "libllama-common.so.0",
+        "libmtmd.so.0",
+        "libllama.so.0",
+        "libggml.so.0",
+        "libggml-base.so.0",
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6",
+        "ld-linux-aarch64.so.1"
+      ]
+    },
+    {
+      "path": "llama-b9360/libggml-cpu-armv9.2_2.so",
+      "bytes": 996184,
+      "sha256": "e5f4243480fb39405ee05b328fecb11472d1a86ebd1d3900d4f8b4c7b9ffad34",
+      "elf_machine": 183,
+      "needed": [
+        "libggml-base.so.0",
+        "libgomp.so.1",
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6",
+        "ld-linux-aarch64.so.1"
+      ]
+    },
+    {
+      "path": "llama-b9360/libggml-base.so.0.13.0",
+      "bytes": 799320,
+      "sha256": "f475ecfd1175d7d1ddac00f9009724d20cb8c2a4c72290eeef01ad1741648a84",
+      "elf_machine": 183,
+      "needed": [
+        "libgomp.so.1",
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6",
+        "ld-linux-aarch64.so.1"
+      ]
+    },
+    {
+      "path": "llama-b9360/libggml-cpu-armv8.2_3.so",
+      "bytes": 930344,
+      "sha256": "b9cd47fb5269bdff79d8f28932b92cf0ecbc65e8f8f626b16a6e6028fbcba799",
+      "elf_machine": 183,
+      "needed": [
+        "libggml-base.so.0",
+        "libgomp.so.1",
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6",
+        "ld-linux-aarch64.so.1"
+      ]
+    },
+    {
+      "path": "llama-b9360/libllama-batched-bench-impl.so",
+      "bytes": 75000,
+      "sha256": "2ee21e3714872196609ee19d383084c757820483b458518428203c955de6b5ae",
+      "elf_machine": 183,
+      "needed": [
+        "libllama-common.so.0",
+        "libllama.so.0",
+        "libggml-base.so.0",
+        "libstdc++.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6",
+        "ld-linux-aarch64.so.1"
+      ]
+    },
+    {
+      "path": "llama-b9360/libggml.so.0.13.0",
+      "bytes": 77400,
+      "sha256": "da7a5729a5f39de75a490c1c839fa6bf62f73471cc03fac75ae2d5eaba7a69d1",
+      "elf_machine": 183,
+      "needed": [
+        "libggml-base.so.0",
+        "libstdc++.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6",
+        "ld-linux-aarch64.so.1"
+      ]
+    },
+    {
+      "path": "llama-b9360/libllama-quantize-impl.so",
+      "bytes": 148864,
+      "sha256": "7cd5099a7d440341372ba2a690c6232fc49d0c6604fadf53d0b3d924f6fdc6ce",
+      "elf_machine": 183,
+      "needed": [
+        "libllama-common.so.0",
+        "libllama.so.0",
+        "libggml-base.so.0",
+        "libstdc++.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6",
+        "ld-linux-aarch64.so.1"
+      ]
+    },
+    {
+      "path": "llama-b9360/libllama-server-impl.so",
+      "bytes": 9171496,
+      "sha256": "819eb8aa02fc7731e1fe4056cd3f3d298f0388c8df99d1b38be0fc6f98a99c59",
+      "elf_machine": 183,
+      "needed": [
+        "libllama-common.so.0",
+        "libmtmd.so.0",
+        "libllama.so.0",
+        "libggml.so.0",
+        "libggml-base.so.0",
+        "libssl.so.3",
+        "libcrypto.so.3",
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6",
+        "ld-linux-aarch64.so.1"
+      ]
+    },
+    {
+      "path": "llama-b9360/libllama-completion-impl.so",
+      "bytes": 148872,
+      "sha256": "5f07414672a589a423395283e2303dd254ebfd38f186b25cf345d8f23afd8971",
+      "elf_machine": 183,
+      "needed": [
+        "libllama-common.so.0",
+        "libllama.so.0",
+        "libggml.so.0",
+        "libggml-base.so.0",
+        "libstdc++.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6",
+        "ld-linux-aarch64.so.1"
+      ]
+    }
+  ],
+  "scope": "Static DT_NEEDED from pinned archive bytes; no executable loading or full runtime closure"
+}

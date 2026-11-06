@@ -7,6 +7,15 @@
     "ssg": "9c4fd08c29f37bffe89ecdf75b069a6baeb8a5e0",
     "upstream": "6b4e4bd582e457a47ee7cd498058495f47fee228"
   },
+  "evidence_lineage": "../evidence-commit-map.json; fetch refs/heads/evidence/v015-255-linux-20261106, then checkout the recorded original source SHA. Do not substitute a later integrated date for a pre-output freeze.",
+  "post_review_corrections": "post-review-corrections-20261106.json",
+  "reuse_run_reconstruction": {
+    "provenance": "Equivalent argv reconstructed from frozen parser, retained output/source bindings and core-reuse/mage-reuse receipts; the original full collector/summary invocation was not separately retained. These are not fabricated command receipts.",
+    "collector": ["python3", "-B", "image_contents.py", "--bindings", "discovery-20261106/image-bindings.json", "--output", "NEW_QUALIFIED_CONTENTS", "--acquisition", ".acquired/amd64", "--reuse-acquisition", "--reserved-host-slot"],
+    "summary": ["python3", "-B", "summarize.py", "--contents", "NEW_QUALIFIED_CONTENTS", "--arm64", "../core-comparison/observed-20261106", "--output", "NEW_ARCHITECTURE_COMPARISON.json"],
+    "limit": "Reuse requires the exact already acquired layers before their owned disposal. Today reacquire the pinned layers first; no old disposed cache is assumed present."
+  },
+  "offline_derivations": "derive_evidence.py compare/static; exact new-output argv and actual reproduction results are recorded in post-review-corrections-20261106.json. Static derivation reads archive members without extracting or executing them; comparison uses retained JSON with relative source paths.",
   "requirements": [
     "Explicit serial shared-host resource assignment; do not run heavy recipes concurrently",
     "Existing Linux-arm64 Podman VM and already present exact MAGE carrier image ID from recipe.json; no package installation, random latest, user-store or default-connection change",

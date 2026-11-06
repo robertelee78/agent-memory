@@ -6,6 +6,9 @@
   "finalizer_executed_source": "81231e5e82bddaccfa0c84726ae9325e9b112cf0",
   "ssg": "9c4fd08c29f37bffe89ecdf75b069a6baeb8a5e0",
   "upstream": "6b4e4bd582e457a47ee7cd498058495f47fee228",
+  "evidence_lineage": "../evidence-commit-map.json; refs/heads/evidence/v015-255-linux-20261106 preserves original pre-output history. Integrated dates are not freeze dates.",
+  "post_review_corrections": "post-review-corrections-20261106.json",
+  "index_scope": "Updated interpretation/handoff index; original raw run-index.json and finalizer outputs are unchanged.",
   "primary_reports": [
     "actual-20261106/report.json",
     "linux-interpretation.json",
@@ -769,8 +772,8 @@
     },
     {
       "path": "attempt-lineage.json",
-      "bytes": 2906,
-      "sha256": "8cd93f1895a2173a0261d8bb2a9bce2efd4454e2e0da55bc129ed8a544669afd"
+      "bytes": 3396,
+      "sha256": "86eb08732f7252ddeaff5dcb71f3837ae414d248e8e34633335dddd6f4a61d77"
     },
     {
       "path": "carrier-decision.json",
@@ -1029,8 +1032,8 @@
     },
     {
       "path": "reproduction.json",
-      "bytes": 3261,
-      "sha256": "90358997572f9bc0c976257370d45917b5a8d64f84473dd2615a9fa9e5f23dde"
+      "bytes": 4753,
+      "sha256": "d9e3809b1863c74495dd05bccc55fa6ac8881ed37928ee18517eadc7e23078f6"
     },
     {
       "path": "run-index.json",
@@ -1076,6 +1079,26 @@
       "path": "unexecuted-core-recipe.json",
       "bytes": 4814,
       "sha256": "aab63e3cb1104cf058d766edb533f736928b9dfd2a6d9da105413cb4920467c8"
+    },
+    {
+      "path": "derive_evidence.py",
+      "bytes": 5628,
+      "sha256": "f04194d058ff987935d347f03cf2819ca9629a64d38f5aa8003f09ebc17ad2cf"
+    },
+    {
+      "path": "byte-comparison-reproduced-20261106.json",
+      "bytes": 2554,
+      "sha256": "05a9bdc95568e90c75a40e652759935e4620306a8f196c235f540e273a05ec15"
+    },
+    {
+      "path": "static-closure-reproduced-20261106.json",
+      "bytes": 9845,
+      "sha256": "242aa164ba5cfce5fa64e22ef26c64153c8514ed9d96ad4218fdbe773a122111"
+    },
+    {
+      "path": "post-review-corrections-20261106.json",
+      "bytes": 4115,
+      "sha256": "e5c254cc93b10d71665f7b91ce174b1349d9ebde60223a42153b7813affe0dcb"
     }
   ]
 }
