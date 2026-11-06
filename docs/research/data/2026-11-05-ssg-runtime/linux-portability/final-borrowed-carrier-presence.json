@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "podman",
+    "image",
+    "exists",
+    "44b5244a3622425584cae52b0cdf1ea1690ebb98e27110b3adfd1af7ab8227a9"
+  ],
+  "duration_seconds": 0.07130575180053711,
+  "exit": 0,
+  "start_unix": 1793998192.0357,
+  "stderr": "",
+  "stdout": ""
+}
