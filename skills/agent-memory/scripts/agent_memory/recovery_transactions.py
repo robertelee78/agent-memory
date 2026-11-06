@@ -144,6 +144,7 @@ def apply_transaction(prepared):
             writes_performed=False, already_applied=True, receipt_is_historical=True,
             still_current=None, receipt_path=str(receipt_path), interrupted=frontier.marker_bytes(bank) is not None)
     with storage.exclusive(bank / '.agent-memory.lock', p['operation_id'], 'bank-' + p['operation']) as owner:
+        resolution.require_completed_resolutions(root)
         held = frontier.verified_hold(root, owner)
         if held is None or held.scope != p['scope_context'] or writes.snapshot(root, owner)[1] != p['observed_hashes']:
             raise ContractError('Held transaction scope or complete canonical base changed after preview')
@@ -237,6 +238,69 @@ def rollback_plan(directory, journal, observed):
     raise ContractError('Nested rollback found an impossible ordered boundary or external edit')
 
 
+def retired_nested(root, operation_id, nested_id, journal, receipt, indexed, owner):
+    """Recognize only the terminal prefix of this journal's durable retirement."""
+    from . import layout_history
+    _, bank, _, directory = state.paths(root, operation_id)
+    row = indexed['operations'][operation_id]
+    _, head, _ = frontier.ledger(root, operation_id, row)
+    retirement = state.read(directory / 'retirement.json')
+    canonical = state.read(directory / 'receipt.json')
+    completion = state.read(directory / 'nested' / nested_id / 'completion.json')
+    expected_completion = {'schema': 'agent-memory/layout-nested-completion-v1',
+        'operation_id': operation_id, 'nested_id': nested_id,
+        'canonical_receipt_sha256': digest(encoded(receipt)),
+        'ledger_head_sha256': digest(encoded(head)), 'verified': True}
+    if (receipt is None or completion != expected_completion or canonical.get('verified') is not True
+            or not isinstance(retirement, dict)
+            or set(retirement) != {'schema', 'operation_id', 'ledger_head', 'receipt_sha256', 'dependencies', 'verified'}
+            or retirement['schema'] != 'agent-memory/layout-retirement-v1'
+            or retirement['operation_id'] != operation_id or retirement['ledger_head'] != head
+            or retirement['receipt_sha256'] != digest(encoded(canonical)) or retirement['verified'] is not True
+            or not isinstance(retirement['dependencies'], list) or journal['hold']['hold_id'] != row['hold_id']):
+        raise ContractError('Terminal nested recovery needs its exact completed linkage and durable retirement')
+    dependencies = set()
+    bindings = state.bindings()['bindings']
+    for item in retirement['dependencies']:
+        if (not isinstance(item, dict) or set(item) != {'operation_id', 'ledger_head_sha256'}
+                or item['operation_id'] in dependencies):
+            raise ContractError('Nested retirement has an unknown or duplicated dependency')
+        dependency = indexed['operations'].get(item['operation_id'])
+        binding = bindings.get(item['operation_id'])
+        manifest = state.read(state.paths(root, item['operation_id'])[3] / 'manifest.json')
+        if (dependency is None or dependency['state'] != 'terminal' or dependency['project_id'] != row['project_id']
+                or dependency['ledger_head_sha256'] != item['ledger_head_sha256']
+                or binding is None or binding['lifecycle_state'] != 'terminal'
+                or binding['project_id'] != row['project_id']
+                or binding['checkout_key'] != manifest['identity']['scope_context']['checkout_key']):
+            raise ContractError('Nested retirement dependency no longer matches its terminal binding and ledger')
+        dependencies.add(item['operation_id'])
+    if operation_id not in dependencies:
+        raise ContractError('Nested retirement omitted its exact holding operation')
+    for other_id, other_row in indexed['operations'].items():
+        if other_row['state'] == 'cleaned':
+            continue
+        other_directory, _, current = frontier.ledger(root, other_id, other_row)
+        frontier.evidence(other_directory, current, other_row)
+        if (other_row['project_id'] != row['project_id'] or other_row['state'] in {'active', 'interrupted'}
+                or any(unit['state'] == 'pending-admission' for unit in current['units'])):
+            raise ContractError('Retained same-bank recovery evidence still requires its safeguard')
+    if any(binding['bank_path'] == str(bank) and binding['lifecycle_state'] in {'active', 'interrupted'}
+            for binding in bindings.values()):
+        raise ContractError('An active bound dependency prevents nested retirement recovery')
+    scoped = journal.get('write_proposal', journal['proposal'])
+    layout_history.check(root, scoped['scope_context'], row['project_id'])
+    marker = frontier.marker_bytes(bank)
+    sentinel = frontier.marker_bytes(bank, '.agent-memory-recovery.md')
+    expected_sentinel = encoded({'schema': frontier.SENTINEL, 'project_id': row['project_id'], 'operation_id': operation_id})
+    if (marker not in (None, encoded(journal['marker'])) or sentinel not in (None, expected_sentinel)
+            or (marker is not None and sentinel is None)):
+        raise ContractError('Nested retirement found a foreign safeguard or impossible removal order')
+    bank_observation.markers(bank, owner, marker)
+    return {'retirement_sha256': digest(encoded(retirement)), 'completion_sha256': digest(encoded(completion)),
+        'marker_sha256': digest(marker), 'sentinel_sha256': digest(sentinel)}
+
+
 def nested_preview(repo, operation_id, nested_id, mode, owner=None):
     root, bank, _, directory = state.paths(repo, operation_id)
     if mode not in {'finish', 'rollback'} or not uuid_valid(nested_id):
@@ -250,7 +314,8 @@ def nested_preview(repo, operation_id, nested_id, mode, owner=None):
             or journal.get('nested_id') != nested_id or journal.get('proposal_sha256') != digest(encoded(journal['proposal']))):
         raise ContractError('Unknown, foreign or damaged nested recovery journal')
     marker = encoded(journal['marker'])
-    bank_observation.markers(bank, owner, marker)
+    # Only the exact receipt/completion/retirement path below may recognize an
+    # already removed nested marker; ordinary frontier observers remain strict.
     p = tx.proposal_value(journal['proposal'])
     original_hold = frontier.marker_value(encoded(journal['hold']))
     expected_marker = {'schema': frontier.NESTED, 'project_id': p['project_id'],
@@ -282,7 +347,14 @@ def nested_preview(repo, operation_id, nested_id, mode, owner=None):
                 units, _ = planned_resolution(plan, journal, receipt, nested_id)
                 projected, _, _ = resolution.interrupted_successor(root, plan['operation_id'], units, plan['previous_head'])
                 indexed['operations'][plan['operation_id']] = projected
-    frontier_token = frontier._observe_index(root, owner, marker, indexed)
+    retirement = None
+    if indexed['operations'][operation_id]['state'] == 'terminal':
+        retirement = retired_nested(root, operation_id, nested_id, journal, receipt, indexed, owner)
+        marker = frontier.marker_bytes(bank)
+        frontier_token = None
+    else:
+        bank_observation.markers(bank, owner, marker)
+        frontier_token = frontier._observe_index(root, owner, marker, indexed)
     if receipt is None:
         frontier.check(journal['frontier'], root, owner, marker)
     if receipt is None and mode != 'rollback':
@@ -296,7 +368,7 @@ def nested_preview(repo, operation_id, nested_id, mode, owner=None):
         'journal_sha256': digest(encoded(journal)), 'marker_sha256': digest(marker), 'observed_hashes': observed,
         'canonical_receipt_sha256': digest(encoded(receipt)) if receipt else None,
         'ledger_head': state.read(directory / 'ledger-head.json'), 'recovery_frontier': frontier_token,
-        'ledger_index_sha256': original_index_sha256, 'rollback_plan': rollback}
+        'ledger_index_sha256': original_index_sha256, 'rollback_plan': rollback, 'retirement': retirement}
 
 
 def recover_nested(repo, operation_id=None, nested_id=None, mode=None, proposal=None):
@@ -318,7 +390,10 @@ def recover_nested(repo, operation_id=None, nested_id=None, mode=None, proposal=
         _, receipt_path = tx.locations(root, bank, p['nested_id'])
         if p['mode'] == 'finish':
             receipt = nested_receipt(journal, receipt_path)
-            terminalize(root, p['operation_id'], p['nested_id'], journal, receipt, owner, marker)
+            if p['retirement'] is not None:
+                resolution.retire(root, p['operation_id'], owner, frontier.marker_bytes(bank))
+            else:
+                terminalize(root, p['operation_id'], p['nested_id'], journal, receipt, owner, marker)
         else:
             nested_directory = directory / 'nested' / p['nested_id']
             plan, boundary = rollback_plan(nested_directory, journal, p['observed_hashes'])
@@ -381,6 +456,7 @@ def apply_checkpoint(prepared):
         return writes.result('apply', **{key: value for key, value in known.items() if key != 'schema'},
             already_applied=True, writes_performed=False, still_current=None, receipt_path=str(receipt_path))
     with storage.exclusive(bank / '.agent-memory.lock', write['operation_id'], 'bank-checkpoint') as owner:
+        resolution.require_completed_resolutions(root)
         held = frontier.verified_hold(root, owner)
         if held is None or held.scope != write['scope_context'] or writes.snapshot(root, owner)[1] != write['observed_hashes']:
             raise ContractError('Held checkpoint scope or source changed after preview')

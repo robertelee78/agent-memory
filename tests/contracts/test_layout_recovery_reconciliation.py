@@ -16,6 +16,44 @@ def bank_bytes(bank):
             if path.is_file() and not path.name.startswith('.agent-memory')}
 
 
+def retained(directory):
+    return {path.relative_to(directory).as_posix(): path.read_bytes() for path in directory.rglob('*') if path.is_file()}
+
+
+def revision_request(world, bank, inspected, unit_id):
+    directory = f.private_directory(world, bank, inspected['operation_id'])
+    head = json.loads((directory / 'ledger-head.json').read_text())
+    ledger = json.loads((directory / 'ledger' / (str(head['generation']).zfill(8) + '.json')).read_text())
+    unit_map = json.loads((directory / 'unit-map.json').read_text())
+    if f.sha(f.encoded(unit_map)) != ledger['unit_map_sha256']:
+        unit_map = json.loads((directory / 'unit-maps' / (ledger['unit_map_sha256'] + '.json')).read_text())
+    parent = next(unit for unit in unit_map['units'] if unit['unit_id'] == unit_id)
+    span = parent['source_ranges'][0]
+    middle = (span['start'] + span['end']) // 2
+    children = [{'unit_id': str(uuid.uuid4()),
+        'source_ranges': [{**span, 'start': start, 'end': end}],
+        'semantic_rationale': 'Controlled reviewed partition retains all original source conditions.',
+        'provenance': parent['provenance'], 'reason': parent['reason'],
+        'required_actions': parent['required_actions']} for start, end in ((span['start'], middle), (middle, span['end']))]
+    replacements = [{'parent_unit_id': unit_id, 'source_ranges': parent['source_ranges'], 'new_units': children,
+        'semantic_rationale': 'Controlled independent refinement of the original complete synthetic source.'}]
+    revised_map = {**unit_map, 'units': [unit for unit in unit_map['units'] if unit['unit_id'] != unit_id]
+        + [{**parent, **{key: child[key] for key in ('unit_id', 'source_ranges', 'provenance', 'reason', 'required_actions')}}
+           for child in children]}
+    actor = {'developer_id': inspected['manifest']['identity']['scope_context']['developer_id'],
+        'harness': 'controlled-revision-author', 'session': 'revision-author', 'evidence': 'Controlled exact source review.'}
+    review = {'schema': 'agent-memory/layout-unit-revision-review-v1', 'review_id': str(uuid.uuid4()),
+        'operation_id': inspected['operation_id'], 'author': actor,
+        'reviewer': {**actor, 'harness': 'controlled-independent-reviewer', 'session': 'revision-reviewer'},
+        'parent_unit_map_sha256': ledger['unit_map_sha256'], 'parent_ledger_head_sha256': f.sha(f.encoded(head)),
+        'manifest_sha256': f.sha(f.encoded(inspected['manifest'])), 'replacements_sha256': f.sha(f.encoded(replacements)),
+        'intended_unit_map_sha256': f.sha(f.encoded(revised_map)), 'reviewed_at': inspected['manifest']['inspected_at'],
+        'decision': 'approve', 'rationale': 'Controlled full-source partition and native reservation review.',
+        'evidence': 'Every original source byte is retained in exactly one child.'}
+    return {'schema': 'agent-memory/layout-unit-revision-request-v1', 'operation_id': inspected['operation_id'],
+        'replacements': replacements, 'review': review}
+
+
 class RecoveryReconciliationContract(unittest.TestCase):
     def originals(self, world, bank, inspected, wanted):
         directory = f.private_directory(world, bank, inspected['operation_id'])
@@ -154,6 +192,98 @@ class RecoveryReconciliationContract(unittest.TestCase):
                 self.assertFalse(history['writes_performed'])
                 self.assertEqual(bank_bytes(bank), canonical)
                 self.originals(world, bank, inspected, originals)
+
+    def test_unfinished_resolution_excludes_new_resolutions_nested_admission_and_revision(self):
+        for fault_mode in ('error', 'exit'):
+            with self.subTest(mode=fault_mode), World() as world:
+                command, source = f.installed(world)
+                repo, bank, native = f.memory(world)
+                (bank / 'handoff-prompt.md').write_text(SCRATCH + f.policy_body(0))
+                (repo / 'synthetic-policy.md').write_text(f.policy_body(0))
+                original = bank_bytes(bank)
+                _, inspected = f.inspect(world, command, repo)
+                operation = inspected['operation_id']
+                request = f.review_request(world, command, source, repo, inspected, native)
+                pending = next(unit for unit in request['unit_map']['units'] if unit['disposition'] == 'pending-admission')
+                span = pending['source_ranges'][0]
+                units = [{**pending, 'unit_id': str(uuid.uuid4()), 'source_ranges': [{**span, 'start': start, 'end': end}]}
+                    for start, end in ((0, len(SCRATCH.encode())), (len(SCRATCH.encode()), span['end']))]
+                request['unit_map']['units'] = [unit for unit in request['unit_map']['units'] if unit != pending] + units
+                request['review']['unit_map_sha256'] = f.sha(f.encoded(request['unit_map']))
+                request['review']['unit_decisions'] = [{'unit_id': unit['unit_id'], 'disposition': unit['disposition'],
+                    'rationale': unit['reason']} for unit in request['unit_map']['units']]
+                layout = world.inside('paired-layout.json')
+                f.call(world, command, 'prepare', '--repo', repo, '--operation', operation,
+                    '--input', f.save(world, request), '--output', layout)
+                f.call(world, command, 'apply', '--repo', repo, '--proposal', layout)
+                directory = f.private_directory(world, bank, operation)
+                first = f.discard_proposal(world, command, repo, bank, inspected, units[0]['unit_id'])
+                first_p = json.loads(first.read_text())['proposal']
+                second = f.discard_proposal(world, command, repo, bank, inspected, units[1]['unit_id'])
+                second_p = json.loads(second.read_text())['proposal']
+                admission, _, _ = f.admission_proposal(world, command, source, repo, bank, inspected, full=True)
+                revision_input = f.save(world, revision_request(world, bank, inspected, units[1]['unit_id']))
+                revision = world.inside('blocked-revision.json')
+                f.call(world, command, 'revise-units', '--repo', repo, '--operation', operation,
+                    '--input', revision_input, '--output', revision)
+                fault = world.run([command, 'bank', 'recover-layout', 'resolve', '--repo', repo, '--proposal', first],
+                    check=False, timeout=30, env={'AGENT_MEMORY_FAULT_STAGE': 'layout-recovery-resolution-after-receipt',
+                        'AGENT_MEMORY_FAULT_MODE': fault_mode})
+                self.assertEqual(fault.returncode, 86 if fault_mode == 'exit' else 1, fault.stdout + fault.stderr)
+                if fault_mode == 'exit':
+                    f.unlock(world, command, repo)
+                canonical = bank_bytes(bank)
+                safeguards = {name: (bank / name).read_bytes() for name in
+                    ('.agent-memory-transaction.md', '.agent-memory-recovery.md')}
+                private = retained(directory)
+                index = (directory.parent / 'index.json').read_bytes()
+                for p in (first_p, second_p):
+                    f.call(world, command, 'resolve', '--repo', repo, '--operation', operation, '--unit', p['unit_id'],
+                        '--input', f.save(world, p['terminal']), '--output', world.inside(str(uuid.uuid4()) + '.json'), expected=1)
+                f.call(world, command, 'resolve', '--repo', repo, '--proposal', second, expected=1)
+                f.public(world, command, 'admission', 'apply', '--proposal', admission, expected=1)
+                f.call(world, command, 'revise-units', '--repo', repo, '--proposal', revision, expected=1)
+                f.call(world, command, 'revise-units', '--repo', repo, '--operation', operation,
+                    '--input', revision_input, '--output', world.inside('new-blocked-revision.json'), expected=1)
+                self.assertEqual(retained(directory), private)
+                self.assertEqual((directory.parent / 'index.json').read_bytes(), index)
+                self.assertEqual(bank_bytes(bank), canonical)
+                self.assertEqual({name: (bank / name).read_bytes() for name in safeguards}, safeguards)
+                completion = directory / 'resolution-completions' / (first_p['resolution_id'] + '.json')
+                completion.parent.mkdir(mode=0o700, exist_ok=True)
+                completion.write_bytes(f.encoded({'verified': True})); completion.chmod(0o600)
+                corrupt = retained(directory)
+                f.call(world, command, 'resolve', '--repo', repo, '--proposal', first, expected=1)
+                f.call(world, command, 'resolve', '--repo', repo, '--proposal', second, expected=1)
+                f.public(world, command, 'admission', 'apply', '--proposal', admission, expected=1)
+                f.call(world, command, 'revise-units', '--repo', repo, '--proposal', revision, expected=1)
+                self.assertEqual(retained(directory), corrupt)
+                self.assertEqual((directory.parent / 'index.json').read_bytes(), index)
+                self.assertEqual(bank_bytes(bank), canonical)
+                completion.unlink()
+                f.call(world, command, 'resolve', '--repo', repo, '--proposal', first)
+                self.assertEqual(json.loads((directory / 'ledger-head.json').read_text())['generation'], 1)
+                self.assertEqual((directory / 'resolutions' / (first_p['resolution_id'] + '.json')).read_bytes(),
+                    private['resolutions/' + first_p['resolution_id'] + '.json'])
+                refreshed = f.save(world, revision_request(world, bank, inspected, units[1]['unit_id']))
+                refined = world.inside('refined.json')
+                f.call(world, command, 'revise-units', '--repo', repo, '--operation', operation,
+                    '--input', refreshed, '--output', refined)
+                f.call(world, command, 'revise-units', '--repo', repo, '--proposal', refined)
+                fresh_admission, _, _ = f.admission_proposal(world, command, source, repo, bank, inspected, full=True)
+                f.public(world, command, 'admission', 'apply', '--proposal', fresh_admission)
+                status = f.call(world, command, 'status', '--repo', repo, '--operation', operation)
+                self.assertEqual(len(status['pending_unit_ids']), 1)
+                final = f.discard_proposal(world, command, repo, bank, inspected, status['pending_unit_ids'][0])
+                f.call(world, command, 'resolve', '--repo', repo, '--proposal', final)
+                self.assertEqual(json.loads((directory / 'ledger-head.json').read_text())['generation'], 4)
+                self.assertTrue(f.call(world, command, 'status', '--repo', repo, '--operation', operation)['semantic_recovery_complete'])
+                f.call(world, command, 'retention', 'inspect', '--repo', repo, '--operation', operation,
+                    '--output', world.inside('retention.json'))
+                self.assertFalse((bank / '.agent-memory-transaction.md').exists())
+                self.assertFalse((bank / '.agent-memory-recovery.md').exists())
+                self.originals(world, bank, inspected, original)
+
 
 
 if __name__ == '__main__':

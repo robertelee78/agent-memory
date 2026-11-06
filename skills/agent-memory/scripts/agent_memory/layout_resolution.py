@@ -273,6 +273,44 @@ def resolution_receipt(p):
         'claims': p['claims'], 'independent_review_sha256': p['independent_review_sha256'], 'verified': True}
 
 
+def resolution_completion(resolution_id, receipt, journal):
+    return {'schema': 'agent-memory/layout-resolution-completion-v1',
+        'resolution_id': resolution_id, 'receipt_sha256': digest(encoded(receipt)),
+        'journal_sha256': digest(encoded(journal)), 'verified': True}
+
+
+def require_completed_resolutions(repo, retry=None):
+    """Under the bank lock, reserve every unfinished journal for its exact retry."""
+    root, _, base, _ = state.paths(repo)
+    for operation_id, row in state.index(root)['operations'].items():
+        if row['state'] == 'cleaned':
+            continue
+        directory = base / operation_id
+        journals = directory / 'resolution-journals'
+        if not journals.exists():
+            continue
+        for path in journals.iterdir():
+            resolution_id = path.stem
+            journal = state.read(path)
+            p = journal.get('proposal', {}) if isinstance(journal, dict) else {}
+            if (path.name != resolution_id + '.json' or not uuid_valid(resolution_id)
+                    or not isinstance(journal, dict)
+                    or set(journal) != {'schema', 'proposal', 'units', 'hold', 'scope_context'}
+                    or journal['schema'] != 'agent-memory/layout-resolution-journal-v1'
+                    or not isinstance(p, dict) or p.get('operation_id') != operation_id
+                    or p.get('resolution_id') != resolution_id or p.get('repo_root') != str(root)):
+                raise ContractError('Unknown resolution journal prevents a new recovery action')
+            receipt = state.read(directory / 'resolutions' / path.name, missing=True)
+            completion = state.read(directory / 'resolution-completions' / path.name, missing=True)
+            if receipt is not None and receipt != resolution_receipt(p):
+                raise ContractError('Resolution journal lost its exact source-bound receipt')
+            if completion is not None:
+                if receipt is None or completion != resolution_completion(resolution_id, receipt, journal):
+                    raise ContractError('Resolution completion differs from its exact journal and receipt')
+            elif retry != p:
+                raise ContractError('An unfinished resolution journal requires its exact proposal retry before new recovery actions')
+
+
 def resolution_units(directory, p, receipt):
     previous = state.read(directory / 'ledger' / (str(p['ledger_head']['generation']).zfill(8) + '.json'))
     if digest(encoded(previous)) != p['ledger_head']['sha256']:
@@ -289,8 +327,12 @@ def resolution_units(directory, p, receipt):
 def resolve(repo, operation_id=None, unit_id=None, terminal=None, proposal=None):
     """A durable receipt resumes linkage/retirement; completion alone is historical."""
     if proposal is None:
-        return {'proposal': _resolution_preview(repo, operation_id, unit_id, terminal, str(uuid.uuid4())),
-            'canonical_writes_performed': False, 'writes_performed': False}
+        resolution_id = str(uuid.uuid4())
+        root, bank, _, _ = state.paths(repo, operation_id)
+        with storage.exclusive(bank / '.agent-memory.lock', resolution_id, 'bank-recover') as owner:
+            preview = _resolution_preview(root, operation_id, unit_id, terminal, resolution_id, owner)
+        return {'proposal': preview, 'canonical_writes_performed': False, 'writes_performed': False,
+            'temporary_lock_writes_performed': True}
     p = proposal.get('proposal', proposal)
     root, bank, _, directory = state.paths(repo, p['operation_id'])
     if (p.get('schema') != 'agent-memory/layout-resolution-proposal-v1' or p['repo_root'] != str(root)
@@ -308,14 +350,13 @@ def resolve(repo, operation_id=None, unit_id=None, terminal=None, proposal=None)
     journal = state.read(journal_path, missing=True)
     if completed is not None:
         if (known is None or journal is None or journal['proposal'] != p
-                or completed != {'schema': 'agent-memory/layout-resolution-completion-v1',
-                    'resolution_id': resolution_id, 'receipt_sha256': digest(encoded(receipt)),
-                    'journal_sha256': digest(encoded(journal)), 'verified': True}):
+                or completed != resolution_completion(resolution_id, receipt, journal)):
             raise ContractError('Historical resolution lost its exact completion/linkage evidence')
         from . import layout_history
         layout_history.check(root, journal['scope_context'], p['recovery_frontier']['project_id'])
         return {'receipt': known, 'already_applied': True, 'receipt_is_historical': True, 'writes_performed': False}
     with storage.exclusive(bank / '.agent-memory.lock', resolution_id, 'bank-recover') as owner:
+        require_completed_resolutions(root, retry=p)
         units = resolution_units(directory, p, receipt)
         if known is None:
             fresh = _resolution_preview(root, operation_id, p['unit_id'], p['terminal'], resolution_id, owner)
@@ -358,15 +399,16 @@ def resolve(repo, operation_id=None, unit_id=None, terminal=None, proposal=None)
             if held is None or held.operation_id != hold_operation:
                 raise ContractError('Terminal resolution lost its exact same-bank recovery hold')
             retire(root, hold_operation, owner)
-        state.write_once(completion_path, {'schema': 'agent-memory/layout-resolution-completion-v1',
-            'resolution_id': resolution_id, 'receipt_sha256': digest(encoded(receipt)),
-            'journal_sha256': digest(encoded(journal)), 'verified': True})
+        state.write_once(completion_path, resolution_completion(resolution_id, receipt, journal))
         return {'receipt': receipt, 'ledger_head': successor['head'], 'writes_performed': True,
             'already_applied': known is not None, 'semantic_recovery_complete': token['coverage_complete']}
 
 
 def _resolution_preview(repo, operation_id, unit_id, terminal, resolution_id, owner=None):
     root, bank, _, directory = state.paths(repo, operation_id)
+    journal = state.read(directory / 'resolution-journals' / (resolution_id + '.json'), missing=True)
+    retry = journal['proposal'] if journal is not None else None
+    require_completed_resolutions(root, retry=retry)
     held = frontier.verified_hold(root, owner)
     if held is None:
         raise ContractError('Resolution needs the exact persistent hold, never an interrupted nested marker')

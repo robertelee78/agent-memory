@@ -4,7 +4,7 @@ import copy
 import uuid
 from . import layout_recovery as recovery, layout_recovery_state as state
 from . import recovery_frontier as frontier, local_registry as storage, bank_transactions as tx
-from . import bank_writes as writes
+from . import bank_writes as writes, layout_resolution as resolution
 from .developer_identity import digest, encoded, uuid_valid
 from .frontmatter import ContractError
 
@@ -74,10 +74,17 @@ def map_at(directory, current):
 
 
 def preview(repo, operation_id, request):
+    root, bank, _, _ = state.paths(repo, operation_id)
+    with storage.exclusive(bank / '.agent-memory.lock', operation_id, 'bank-recover') as owner:
+        return _preview(root, operation_id, request, owner)
+
+
+def _preview(repo, operation_id, request, owner):
+    resolution.require_completed_resolutions(repo)
     recovery.fields(request, {'schema', 'operation_id', 'replacements', 'review'}, 'agent-memory/layout-unit-revision-request-v1')
     if request['operation_id'] != operation_id:
         raise ContractError('Unit revision belongs to another operation')
-    held = frontier.verified_hold(repo)
+    held = frontier.verified_hold(repo, owner)
     if held is None or held.operation_id != operation_id:
         raise ContractError('Unit revision requires the exact persistent checked hold')
     root, _, _, directory, manifest = recovery.operation(repo, operation_id)
@@ -102,7 +109,7 @@ def preview(repo, operation_id, request):
         raise ContractError('Unit refinement needs independent full-source/disposition review')
     files = tx.files_at(held.bank)
     pending = [unit for unit in units if unit['state'] == 'pending-admission']
-    other_rows = [row for row in frontier.pending_rows(root, held.token) if row['operation_id'] != operation_id]
+    other_rows = [row for row in frontier.pending_rows(root, held.token, owner) if row['operation_id'] != operation_id]
     rows = recovery.pending_rows(directory, manifest, pending) + other_rows
     token = frontier.successor_token(held.token, [row['unit_id'] for row in rows], operation_id=operation_id)
     frontier.reservation(files, rows, token)
@@ -120,9 +127,9 @@ def preview(repo, operation_id, request):
         'operation_id': operation_id, 'proposal_sha256': digest(encoded(proposal)), 'parent_head': head,
         'successor': successor, 'hold_sha256': digest(held.marker), 'frontier': held.token,
         'bank_hashes': tx.file_hashes(files)})
-    frontier.check(held.token, root)
+    frontier.check(held.token, root, owner)
     return recovery.result('revise-units', operation_id, state='unit-revision-preview', verified=True,
-                           proposal=proposal, private_artifact_writes_performed=True,
+                           proposal=proposal, private_artifact_writes_performed=True, temporary_lock_writes_performed=True,
                            pending_unit_ids=token['unit_ids'], pending_units=len(token['unit_ids']))
 
 
@@ -148,6 +155,7 @@ def apply(repo, supplied):
             or digest(encoded(manifest)) != proposal['manifest_sha256']):
         raise ContractError('Revision source/review/journal evidence changed')
     with storage.exclusive(bank / '.agent-memory.lock', proposal['revision_id'], 'bank-recover') as owner:
+        resolution.require_completed_resolutions(root)
         marker = frontier.marker_bytes(bank)
         if digest(marker) != journal['hold_sha256']:
             raise ContractError('Revision hold changed or a nested transaction is interrupted')

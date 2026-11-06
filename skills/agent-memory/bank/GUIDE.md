@@ -220,11 +220,24 @@ remain strict. Before a canonical receipt, rollback retains its exact initial
 state and ordered restoration plan before the first write, so a fresh preview
 can resume a rename that completed before its progress record.
 
-A standalone resolution receipt is durable evidence, not proof that its ledger
-linkage or safeguard retirement finished. Retry the exact resolution proposal
-after separately recovering any dead owned lock; recovery completes the same
-linkage/retirement without appending another resolution. Historical success is
-returned only after durable completion, never by discarding a remaining hold.
+If nested terminalization already committed retirement but stopped before
+removing its marker or companion sentinel, exact `recover-nested --mode finish`
+can complete those recorded removals. Its locked preview pins the canonical
+receipt/current bytes, completion, immutable ledger successor, retirement,
+same-bank terminal dependencies, scope and remaining safeguards. Rollback,
+changed canonical bytes, foreign replacement markers/sentinels or mismatched
+completion evidence remain refusals. Ordinary bank observers are not allowed
+to interpret an orphan safeguard as a completed recovery.
+
+A standalone resolution journal reserves its exact ledger successor until its
+receipt, linkage and safeguard retirement have an exact durable completion.
+New resolutions, held transactions and unit revisions refuse under the ordinary
+bank lock while any same-bank resolution journal remains unfinished; merely
+creating a completion file does not release that reservation. Retry the exact
+resolution proposal after separately recovering any dead owned lock. Recovery
+completes the same linkage/retirement without appending another resolution.
+Historical success is returned only after durable completion, never by
+discarding a remaining hold.
 
 Recovery-aware `publish inspect|prepare|land` and separately reviewed
 `retention inspect|apply` use their own exact requests. Publication requires a
