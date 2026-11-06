@@ -1,15 +1,20 @@
-"""Public recovery behavior against disposable synthetic sources, never incident data."""
+"""Public recovery and real-count observation against disposable synthetic sources."""
 import base64
 import copy
+import hashlib
 import json
 import os
 from pathlib import Path
 import stat
+import sys
 import unittest
 import uuid
 
 from world import World
 import layout_recovery_fixtures as fixture
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'skills/agent-memory/scripts'))
+from agent_memory import layout_recovery_observation as raw_observation
 
 
 class LayoutRecoveryContract(unittest.TestCase):
@@ -234,6 +239,69 @@ class LayoutRecoveryContract(unittest.TestCase):
             historical = fixture.call(world, command, 'apply', '--repo', repo, '--proposal', proposal)
             self.assertTrue(historical['receipt_is_historical'])
             self.assertFalse(historical['current_receipt_match'])
+
+
+class LayoutRecoveryInventoryBounds(unittest.TestCase):
+    def test_actual_aggregate_boundary_preserves_all_sources_on_overflow(self):
+        with World() as world:
+            bank = world.inside('raw-aggregate'); bank.mkdir()
+            body = b'raw-source-canary\n' + b'x' * (1048576 - len(b'raw-source-canary\n'))
+            expected = {f'{number:02d}.bin': hashlib.sha256(body).hexdigest() for number in range(64)}
+            for name in expected:
+                (bank / name).write_bytes(body)
+            _, sources, totals = raw_observation.inventory(bank)
+            self.assertEqual(totals['source_bytes'], 67108864)
+            self.assertEqual({row['path']: row['sha256'] for row in sources}, expected)
+            overflow = bank / 'overflow.bin'; overflow.write_bytes(b'!')
+            with self.assertRaises(raw_observation.RawCapacityError) as caught:
+                raw_observation.inventory(bank)
+            self.assertEqual(caught.exception.details, {
+                'dimension': 'aggregate-bytes', 'limit': 67108864, 'measured': 67108865,
+                'measurement': 'lower-bound', 'observation_complete': False})
+            self.assertEqual({path.name: hashlib.sha256(path.read_bytes()).hexdigest()
+                              for path in bank.iterdir()},
+                             {**expected, 'overflow.bin': hashlib.sha256(b'!').hexdigest()})
+
+    def test_actual_source_count_boundary_does_not_drop_or_change_excess_source(self):
+        with World() as world:
+            bank = world.inside('raw-source-count'); bank.mkdir()
+            expected = {}
+            for number in range(65536):
+                name = f'{number:05d}.bin'; body = f'raw-source-{number}'.encode()
+                (bank / name).write_bytes(body)
+                expected[name] = hashlib.sha256(body).hexdigest()
+            _, sources, totals = raw_observation.inventory(bank)
+            self.assertEqual(totals['source_files'], 65536)
+            self.assertEqual({row['path']: row['sha256'] for row in sources}, expected)
+            overflow = bank / 'overflow.bin'; overflow.write_bytes(b'!')
+            with self.assertRaises(raw_observation.RawCapacityError) as caught:
+                raw_observation.inventory(bank)
+            self.assertEqual(caught.exception.details, {
+                'dimension': 'source-files', 'limit': 65536, 'measured': 65537,
+                'measurement': 'lower-bound', 'observation_complete': False})
+            self.assertEqual({path.name: hashlib.sha256(path.read_bytes()).hexdigest()
+                              for path in bank.iterdir()},
+                             {**expected, 'overflow.bin': hashlib.sha256(b'!').hexdigest()})
+
+    def test_actual_physical_entry_boundary_preserves_every_directory_on_overflow(self):
+        with World() as world:
+            bank = world.inside('raw-physical-count'); bank.mkdir()
+            expected = {f'd{number:06d}' for number in range(131072)}
+            for name in expected:
+                (bank / name).mkdir()
+            physical, sources, totals = raw_observation.inventory(bank)
+            self.assertEqual(totals['physical_entries'], 131072)
+            self.assertEqual(totals['source_files'], 0)
+            self.assertEqual(sources, [])
+            self.assertEqual({row['path'] for row in physical if row['type'] == 'directory'}, expected)
+            (bank / 'overflow').mkdir()
+            with self.assertRaises(raw_observation.RawCapacityError) as caught:
+                raw_observation.inventory(bank)
+            self.assertEqual(caught.exception.details, {
+                'dimension': 'physical-entries', 'limit': 131072, 'measured': 131073,
+                'measurement': 'lower-bound', 'observation_complete': False})
+            self.assertEqual({path.name for path in bank.iterdir()}, expected | {'overflow'})
+            self.assertTrue(all(path.is_dir() and not any(path.iterdir()) for path in bank.iterdir()))
 
 
 if __name__ == '__main__':

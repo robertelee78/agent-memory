@@ -168,6 +168,14 @@ authored cases alone do not prove repair of the unavailable original incident,
 platform/legacy-reader crash behavior, native provider sessions or release
 publication/fresh-second-clone acceptance.
 
+`LayoutRecoveryInventoryBounds` in the same module exercises the actual raw
+observer with 67,108,864 source bytes, 65,536 ordinary source files and 131,072
+physical directory entries, then one over each limit. It checks the complete
+accepted inventory and that refusal preserves every source/directory. These
+real-count API checks do not lower constants, substitute fake counts or prove
+installed/native/hosted publication. The existing public file/depth tests
+separately cover those dimensions.
+
 The [2026-11-06 partial recovery record](../research/data/2026-11-06-layout-recovery/qualification.json)
 retains the public recovery, frontier/comparison and combined
 reconciliation/nested/publication/retention results. The combined run passed all

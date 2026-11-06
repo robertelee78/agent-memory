@@ -34,6 +34,22 @@
       "provenance": "Observed auto-delivered output and completed-job readback; transient process record expired after readback, not reconstructed as a raw log."
     },
     {
+      "group": "real-count-raw-observer-boundaries",
+      "methods": 3,
+      "passed": true,
+      "elapsed_seconds": 44.128419249958824,
+      "timeout_seconds": 300,
+      "boundaries": {
+        "source_bytes": [67108864, 67108865],
+        "source_files": [65536, 65537],
+        "physical_entries": [131072, 131073]
+      },
+      "test_source_sha256": "5127257cc7c226b236255d0d4e313845825570a707478b0e5195a424f6763d52",
+      "receipt_sha256": "89c9e78ca5e4fe08f447ddc9a548ea372f7a7420465c53284f870cc2bf42bfaa",
+      "source_scope": "Test file was uncommitted over bf7722a at invocation; bound by its exact hash, not retroattested as committed bf7722a source. Product observer unchanged.",
+      "limit": "Real raw-observer API and preservation only; not installed public command, native provider, combined registered-suite budget or full original acceptance."
+    },
+    {
       "group": "outer-reservation-and-retirement-focused",
       "methods": 2,
       "subcases": 3,
