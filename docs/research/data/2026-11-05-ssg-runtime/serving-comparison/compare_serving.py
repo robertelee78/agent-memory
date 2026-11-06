@@ -391,8 +391,6 @@ def launch(root, kind, number, bound, frozen):
                   "empty_input_status": responses["empty-input"]["status"], "invalid_input_status": responses["invalid-input"]["status"],
                   "batch_statuses": {str(n): responses["batch-" + str(n)]["status"] for n in (1, 4, 8, 9)},
                   "scope": "Observed short batches and one over-context input; no maximum-batch or universal no-truncation proof"}
-        closure = loaded_closure(work, kind, bound)
-        cache = cache_evidence(work, frozen, traces)
         result = {"kind": kind, "launch": number, "path": work.name, "responses": responses, "repeated": repeated,
                   "rankings": ranks, "own_to_relationship": {"vectors": delta(vectors["own-0"], vectors["relationship-0"]),
                                                             "repeated_ranks": {name: rank_delta(ranks[name], ranking(vectors["queries-1"], vectors[name + "-1"], frozen)) for name in ("own", "relationship")},
@@ -401,11 +399,8 @@ def launch(root, kind, number, bound, frozen):
                                "unknown_alias_in_catalog": frozen["spec"]["unknown_alias"] in catalog,
                                "metadata_unknown_refusal": metadata_unknown_refusal,
                                "unknown_alias_http": unknown["status"], "unknown_alias_vector_comparison": unknown_comparison,
-                               "unknown_alias_is_identity_proof": False, "identity_authority": "Owned launch + exact weight/binary/observed dependency closure; not response model echo",
-                               "observed_closure_sha256": closure["complete_observed_image_identity_sha256"]},
-                  "limits": limits, "costs": costs, "cache_evidence": cache}
-        save(work / "result.json", result)
-        return result, vectors
+                               "unknown_alias_is_identity_proof": False, "identity_authority": "Owned launch + exact weight/binary/observed dependency closure; not response model echo"},
+                  "limits": limits, "costs": costs}
     finally:
         if process.poll() is None:
             process.terminate()
@@ -417,6 +412,13 @@ def launch(root, kind, number, bound, frozen):
         save(work / "reaped.json", {"pid": process.pid, "exit": process.returncode, "reaped": True,
                                    "only_owned_popen_signaled": True, "at": timestamp(),
                                    "stdout_sha256": sha(work / "server-stdout.log"), "stderr_sha256": sha(work / "server-stderr.log")})
+    # The logger may still be draining after the final HTTP response. Parse only
+    # the finalized stream after reaping, never a live log snapshot.
+    closure = loaded_closure(work, kind, bound)
+    result["identity"]["observed_closure_sha256"] = closure["complete_observed_image_identity_sha256"]
+    result["cache_evidence"] = cache_evidence(work, frozen, traces)
+    save(work / "result.json", result)
+    return result, vectors
 
 
 def run(output, frozen_path):
@@ -503,7 +505,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("action", choices=("freeze", "run"))
     parser.add_argument("--output", type=Path)
-    parser.add_argument("--freeze-file", type=Path, default=HERE / "cache-frozen-inputs-logfix.json")
+    parser.add_argument("--freeze-file", type=Path, default=HERE / "cache-frozen-inputs-finalized.json")
     args = parser.parse_args()
     if args.action == "freeze":
         freeze(args.freeze_file)

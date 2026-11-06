@@ -1,0 +1,11 @@
+{
+  "at": "2026-11-06T19:53:31.099689+00:00",
+  "body": {
+    "input": [
+      "Synthetic complete input with an unmistakable terminal marker AM255_END."
+    ],
+    "model": "qwen3-embedding-8b-q8_0-d20ddc71e8a5"
+  },
+  "name": "short",
+  "route": "/v1/embeddings"
+}
