@@ -1,0 +1,19 @@
+{
+  "body": {
+    "error": {
+      "code": 500,
+      "message": "\"prompt\" must not be empty",
+      "type": "server_error"
+    }
+  },
+  "duration_seconds": 0.0008561611175537109,
+  "headers": {
+    "Access-Control-Allow-Origin": "",
+    "Connection": "close",
+    "Content-Length": "85",
+    "Content-Type": "application/json; charset=utf-8",
+    "Server": "llama.cpp"
+  },
+  "raw_body": "{\"error\":{\"code\":500,\"message\":\"\\\"prompt\\\" must not be empty\",\"type\":\"server_error\"}}",
+  "status": 500
+}

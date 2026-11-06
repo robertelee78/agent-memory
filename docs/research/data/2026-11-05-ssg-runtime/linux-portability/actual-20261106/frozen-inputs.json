@@ -1,0 +1,146 @@
+{
+  "am_baseline": "483adede202bac2dc3a69856a73b16533190ebb7",
+  "config": {
+    "am_baseline": "483adede202bac2dc3a69856a73b16533190ebb7",
+    "archive": "/Users/robert.lee/.omp/wt/tbebd39362/m/docs/research/data/2026-11-05-ssg-runtime/linux-portability/.acquired/llama-b9360-bin-ubuntu-arm64.tar.gz",
+    "archive_sha256": "ff85fef9c91027d8037c182cdb5a6f3d29ea0a12b31557338188810308b112dc",
+    "backend": "CPU / Linux-arm64 container in Podman AppleHV VM, not baremetal",
+    "carrier_image": "44b5244a3622425584cae52b0cdf1ea1690ebb98e27110b3adfd1af7ab8227a9",
+    "carrier_manifest": "sha256:fe2f37e45e263225129bcb6955612ac9956dea0e8db614f9c39eb74b105c6c39",
+    "carrier_selection": "Exact release DT_NEEDED requires libgomp.so.1; existing core BOM lacks libgomp1, existing MAGE BOM declares 14.2.0-4ubuntu2~24.04.1. MAGE carrier runs no graphservice. No package install; all MAGE legal unknowns remain.",
+    "commands": {
+      "contents": [
+        "python3",
+        "-B",
+        "image_contents.py",
+        "--bindings",
+        "discovery-20261106/image-bindings.json",
+        "--output",
+        "amd64-contents-20261106",
+        "--acquisition",
+        ".acquired/amd64",
+        "--reserved-host-slot"
+      ],
+      "linux": [
+        "python3",
+        "-B",
+        "qualify_linux.py",
+        "--config",
+        "recipe.json",
+        "--output",
+        "actual-20261106",
+        "--reserved-host-slot"
+      ]
+    },
+    "policy": {
+      "aggregate_tokens": 8192,
+      "max_inputs": 8,
+      "observed_server_batch9_is_not_policy_acceptance": true
+    },
+    "probe_origin": "Existing synthetic serving-comparison probes, frozen unchanged before Linux output; no independent-suite labels read or retuned",
+    "probes": {
+      "batch_rows": [
+        "Synthetic batch row 0",
+        "Synthetic batch row 1",
+        "Synthetic batch row 2",
+        "Synthetic batch row 3",
+        "Synthetic batch row 4",
+        "Synthetic batch row 5",
+        "Synthetic batch row 6",
+        "Synthetic batch row 7",
+        "Synthetic batch row 8"
+      ],
+      "documents": [
+        {
+          "id": "retry",
+          "neighbor": "pagination",
+          "own": "Retry a temporary synthetic transport failure at most three times."
+        },
+        {
+          "id": "pagination",
+          "neighbor": "retry",
+          "own": "Continue a synthetic paginated scan whenever a next cursor exists, even after an empty page."
+        },
+        {
+          "id": "publication",
+          "neighbor": "deletion",
+          "own": "Publish a synthetic generation only after every required vector and graph node is complete."
+        },
+        {
+          "id": "deletion",
+          "neighbor": "publication",
+          "own": "A synthetic privacy epoch fences stale builders before deleted content can be republished."
+        },
+        {
+          "id": "orientation",
+          "neighbor": "retry",
+          "own": "The synthetic compiler pipeline parses input before lowering its intermediate representation."
+        },
+        {
+          "id": "unrelated",
+          "neighbor": "pagination",
+          "own": "The synthetic cafeteria menu rotates fruit on Thursdays."
+        }
+      ],
+      "over_context": {
+        "count": 8256,
+        "repeat": " synthetic",
+        "suffix": " AM255_DIFFERENT_END"
+      },
+      "queries": [
+        {
+          "expected": "retry",
+          "text": "How many times may a transient failure be tried again?"
+        },
+        {
+          "expected": "pagination",
+          "text": "Does an empty page end a scan if continuation remains?"
+        },
+        {
+          "expected": "publication",
+          "text": "When is an unfinished graph safe to activate?"
+        },
+        {
+          "expected": "deletion",
+          "text": "What stops an old worker restoring removed guidance?"
+        }
+      ],
+      "query_prefix": "Instruct: Retrieve applicable saved project guidance for the question.\nQuery: ",
+      "relationship_separator": "\nRelated title: ",
+      "short": "Synthetic complete input with an unmistakable terminal marker AM255_END.",
+      "unknown_alias": "am255-synthetic-unknown-weight-alias"
+    },
+    "profile_scope": "Upstream b9360 serving exact existing reference/alternate weights; not equivalence to the SSG 9341 fork profile",
+    "profiles": {
+      "alternate": {
+        "alias": "qwen3-embedding-06b-q8_0-06507c7b4268",
+        "bytes": 639150592,
+        "context": 4096,
+        "dimension": 1024,
+        "sha256": "06507c7b42688469c4e7298b0a1e16deff06caf291cf0a5b278c308249c3e439",
+        "weight": "/tmp/am-v15-delivery/Qwen3-Embedding-0.6B-Q8_0.gguf"
+      },
+      "reference": {
+        "alias": "qwen3-embedding-8b-q8_0-d20ddc71e8a5",
+        "bytes": 8047105824,
+        "context": 8192,
+        "dimension": 4096,
+        "sha256": "d20ddc71e8a5c4344f2343481e242233a997dc5eaff442427a945836c97b4deb",
+        "weight": "/tmp/am-v15-delivery/Qwen3-Embedding-8B-Q8_0.gguf"
+      }
+    },
+    "resource_reservation": "Main approved serial slot AFTER Workspace exact cleanup; <=4 CPU/12 GiB each, no graphservice; public 11MB acquisition while waiting approved",
+    "schema": "am255/linux-arm64-portability-recipe-v1",
+    "ssg": "9c4fd08c29f37bffe89ecdf75b069a6baeb8a5e0",
+    "upstream_commit": "6b4e4bd582e457a47ee7cd498058495f47fee228",
+    "upstream_release": "b9360"
+  },
+  "config_sha256": "c0d535590be9f4bf7f79cb68721281704815b860cf2a7cf421711eae31f8e600",
+  "executed_source_commit": "3cca42a1760fd8c72fb3549f66243c48601b1e14",
+  "helper_sha256": "055173938c8b33761d7d987a75c69327240bf0ccf1a39b6148614ecd1294a595",
+  "limits": "shared Darwin host; Linux-arm64 CPU container in AppleHV VM; not bare metal or clean performance",
+  "owner": "302b5222e537",
+  "script_sha256": "4355b0f4571e79965f68944396eddda55668559c27bb5959004f327c3f56f1d9",
+  "ssg": "9c4fd08c29f37bffe89ecdf75b069a6baeb8a5e0",
+  "start_unix": 1793997536.0442119
+}

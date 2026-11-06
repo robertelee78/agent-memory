@@ -1,0 +1,338 @@
+[
+  {
+    "bytes": 1078,
+    "path": "LICENSE",
+    "sha256": "94f29bbed6a22c35b992c5c6ebf0e7c92f13b836b90f36f461c9cf2f0f1d010d",
+    "symlink": false
+  },
+  {
+    "bytes": 799320,
+    "path": "libggml-base.so",
+    "sha256": "f475ecfd1175d7d1ddac00f9009724d20cb8c2a4c72290eeef01ad1741648a84",
+    "symlink": true
+  },
+  {
+    "bytes": 799320,
+    "path": "libggml-base.so.0",
+    "sha256": "f475ecfd1175d7d1ddac00f9009724d20cb8c2a4c72290eeef01ad1741648a84",
+    "symlink": true
+  },
+  {
+    "bytes": 799320,
+    "path": "libggml-base.so.0.13.0",
+    "sha256": "f475ecfd1175d7d1ddac00f9009724d20cb8c2a4c72290eeef01ad1741648a84",
+    "symlink": false
+  },
+  {
+    "bytes": 928584,
+    "path": "libggml-cpu-armv8.0_1.so",
+    "sha256": "79ebd8e2656dffa65b9026892bbe2fe251c937095a7b08c15b4dc2da7c3a8216",
+    "symlink": false
+  },
+  {
+    "bytes": 995432,
+    "path": "libggml-cpu-armv8.2_1.so",
+    "sha256": "1408547b81280a19642f2dfd1fef03a5db2c97299a7183b136a1677a4e97efd2",
+    "symlink": false
+  },
+  {
+    "bytes": 995432,
+    "path": "libggml-cpu-armv8.2_2.so",
+    "sha256": "11d7f5b6a2684063d517eab509f6c5d9f79fa53a1b02ba3ab0c2450b09ffb056",
+    "symlink": false
+  },
+  {
+    "bytes": 930344,
+    "path": "libggml-cpu-armv8.2_3.so",
+    "sha256": "b9cd47fb5269bdff79d8f28932b92cf0ecbc65e8f8f626b16a6e6028fbcba799",
+    "symlink": false
+  },
+  {
+    "bytes": 930600,
+    "path": "libggml-cpu-armv8.6_1.so",
+    "sha256": "f7cdf32a3beecae044de18ca736e43333b37029f22c452a372ebb22d11b746b4",
+    "symlink": false
+  },
+  {
+    "bytes": 930624,
+    "path": "libggml-cpu-armv8.6_2.so",
+    "sha256": "78b6e30b4985ad52ab24cdd526e1ae8cf4ce4a715689b219a69717085b0a6db8",
+    "symlink": false
+  },
+  {
+    "bytes": 996184,
+    "path": "libggml-cpu-armv9.2_1.so",
+    "sha256": "f2940593b5e91d21ee4b3a8f7e0267e401d2aec28a67ef945990325afe461076",
+    "symlink": false
+  },
+  {
+    "bytes": 996184,
+    "path": "libggml-cpu-armv9.2_2.so",
+    "sha256": "e5f4243480fb39405ee05b328fecb11472d1a86ebd1d3900d4f8b4c7b9ffad34",
+    "symlink": false
+  },
+  {
+    "bytes": 162696,
+    "path": "libggml-rpc.so",
+    "sha256": "4d9fa941800ee3daf6da730de2b9c3346b5431b898135106315418f46021085f",
+    "symlink": false
+  },
+  {
+    "bytes": 77400,
+    "path": "libggml.so",
+    "sha256": "da7a5729a5f39de75a490c1c839fa6bf62f73471cc03fac75ae2d5eaba7a69d1",
+    "symlink": true
+  },
+  {
+    "bytes": 77400,
+    "path": "libggml.so.0",
+    "sha256": "da7a5729a5f39de75a490c1c839fa6bf62f73471cc03fac75ae2d5eaba7a69d1",
+    "symlink": true
+  },
+  {
+    "bytes": 77400,
+    "path": "libggml.so.0.13.0",
+    "sha256": "da7a5729a5f39de75a490c1c839fa6bf62f73471cc03fac75ae2d5eaba7a69d1",
+    "symlink": false
+  },
+  {
+    "bytes": 75000,
+    "path": "libllama-batched-bench-impl.so",
+    "sha256": "2ee21e3714872196609ee19d383084c757820483b458518428203c955de6b5ae",
+    "symlink": false
+  },
+  {
+    "bytes": 466056,
+    "path": "libllama-bench-impl.so",
+    "sha256": "456389fdc5942846f9a593202870b057d6f5d20cd4a5e39fbf44093b63c241ae",
+    "symlink": false
+  },
+  {
+    "bytes": 1628360,
+    "path": "libllama-cli-impl.so",
+    "sha256": "0a2c968e6ba016f159bd1ee36beadf741fca88f572783339ae75fa67dc8938a2",
+    "symlink": false
+  },
+  {
+    "bytes": 5129936,
+    "path": "libllama-common.so",
+    "sha256": "9b1671dfab59a2fbe70cb40694d9ff5d21ce1deab51e34c5cf37d0f7a4e90bec",
+    "symlink": true
+  },
+  {
+    "bytes": 5129936,
+    "path": "libllama-common.so.0",
+    "sha256": "9b1671dfab59a2fbe70cb40694d9ff5d21ce1deab51e34c5cf37d0f7a4e90bec",
+    "symlink": true
+  },
+  {
+    "bytes": 5129936,
+    "path": "libllama-common.so.0.0.9360",
+    "sha256": "9b1671dfab59a2fbe70cb40694d9ff5d21ce1deab51e34c5cf37d0f7a4e90bec",
+    "symlink": false
+  },
+  {
+    "bytes": 148872,
+    "path": "libllama-completion-impl.so",
+    "sha256": "5f07414672a589a423395283e2303dd254ebfd38f186b25cf345d8f23afd8971",
+    "symlink": false
+  },
+  {
+    "bytes": 73808,
+    "path": "libllama-fit-params-impl.so",
+    "sha256": "47c0b2c9d47f8c107f0f1dcc378502b0aecdefb81e1f481ac043b4850ddd9739",
+    "symlink": false
+  },
+  {
+    "bytes": 156928,
+    "path": "libllama-perplexity-impl.so",
+    "sha256": "b2998223a2b4ff40f30531aeb6f4b3b9fead414bb129552f0cd3fc94ef430d55",
+    "symlink": false
+  },
+  {
+    "bytes": 148864,
+    "path": "libllama-quantize-impl.so",
+    "sha256": "7cd5099a7d440341372ba2a690c6232fc49d0c6604fadf53d0b3d924f6fdc6ce",
+    "symlink": false
+  },
+  {
+    "bytes": 9171496,
+    "path": "libllama-server-impl.so",
+    "sha256": "819eb8aa02fc7731e1fe4056cd3f3d298f0388c8df99d1b38be0fc6f98a99c59",
+    "symlink": false
+  },
+  {
+    "bytes": 3442624,
+    "path": "libllama.so",
+    "sha256": "e7d141f5739e04b9ba399403b606601756b0569d669acff90be70bdf0b17a3f3",
+    "symlink": true
+  },
+  {
+    "bytes": 3442624,
+    "path": "libllama.so.0",
+    "sha256": "e7d141f5739e04b9ba399403b606601756b0569d669acff90be70bdf0b17a3f3",
+    "symlink": true
+  },
+  {
+    "bytes": 3442624,
+    "path": "libllama.so.0.0.9360",
+    "sha256": "e7d141f5739e04b9ba399403b606601756b0569d669acff90be70bdf0b17a3f3",
+    "symlink": false
+  },
+  {
+    "bytes": 1237392,
+    "path": "libmtmd.so",
+    "sha256": "d44ed104c491f4a86de752c5a9f935288a0d2dc3ff4f5baa9e3224f434ad8645",
+    "symlink": true
+  },
+  {
+    "bytes": 1237392,
+    "path": "libmtmd.so.0",
+    "sha256": "d44ed104c491f4a86de752c5a9f935288a0d2dc3ff4f5baa9e3224f434ad8645",
+    "symlink": true
+  },
+  {
+    "bytes": 1237392,
+    "path": "libmtmd.so.0.0.9360",
+    "sha256": "d44ed104c491f4a86de752c5a9f935288a0d2dc3ff4f5baa9e3224f434ad8645",
+    "symlink": false
+  },
+  {
+    "bytes": 72640,
+    "path": "llama",
+    "sha256": "407d3f2e1e258c4fb03c12b2d33d29f24431a4fb3b10798191349be47ea746e1",
+    "symlink": false
+  },
+  {
+    "bytes": 70304,
+    "path": "llama-batched-bench",
+    "sha256": "09f20becdca03300c4555159035ee35a89c6592a88cbe0ece2c16586a5c4ebc4",
+    "symlink": false
+  },
+  {
+    "bytes": 72480,
+    "path": "llama-bench",
+    "sha256": "b5e9b048596a9ac608f7deefd33f3e5137b2c6e9b51e653a5f47385127c1df2f",
+    "symlink": false
+  },
+  {
+    "bytes": 72472,
+    "path": "llama-cli",
+    "sha256": "a6685ad9645932f21ae37951e0424459ecc6cb462da596abf77e82f0dfecaa9b",
+    "symlink": false
+  },
+  {
+    "bytes": 70304,
+    "path": "llama-completion",
+    "sha256": "e7d50fd11ccc28b19d9d9868204455f10a723a78c75e93f44bb158e0dd553c93",
+    "symlink": false
+  },
+  {
+    "bytes": 249320,
+    "path": "llama-debug-template-parser",
+    "sha256": "62fc6e22aca585ec569106891f885f2fdbf0381cdb49840a6f617e1ff1f5e5fc",
+    "symlink": false
+  },
+  {
+    "bytes": 70304,
+    "path": "llama-fit-params",
+    "sha256": "80d389805a2eaecf2adb5da7e8d257735f1b6754b78c022780577ddad590e692",
+    "symlink": false
+  },
+  {
+    "bytes": 71432,
+    "path": "llama-gemma3-cli",
+    "sha256": "b4e5891316104e12a491d69c52a7e95faece98fe978ec1caeba9de3830fbfb1c",
+    "symlink": false
+  },
+  {
+    "bytes": 77896,
+    "path": "llama-gguf-split",
+    "sha256": "dc93918d85d3ebb17a727ea805beba0f55ee695e906247316bd0825d95c89e7b",
+    "symlink": false
+  },
+  {
+    "bytes": 325952,
+    "path": "llama-imatrix",
+    "sha256": "ddc3fe14dda45cfcadf0fc3261c8380ec2b81faf4f7a406bcb93015c3906004f",
+    "symlink": false
+  },
+  {
+    "bytes": 71432,
+    "path": "llama-llava-cli",
+    "sha256": "b4e5891316104e12a491d69c52a7e95faece98fe978ec1caeba9de3830fbfb1c",
+    "symlink": false
+  },
+  {
+    "bytes": 71432,
+    "path": "llama-minicpmv-cli",
+    "sha256": "b4e5891316104e12a491d69c52a7e95faece98fe978ec1caeba9de3830fbfb1c",
+    "symlink": false
+  },
+  {
+    "bytes": 79496,
+    "path": "llama-mtmd-cli",
+    "sha256": "7757413bb8774ccde842ba8b656a01f463bb1ef6b96a5692b534277fdfca75ae",
+    "symlink": false
+  },
+  {
+    "bytes": 76344,
+    "path": "llama-mtmd-debug",
+    "sha256": "6887317aee235f8fc836d2414df6caf9811740bd9218b09e0350493d6d04362c",
+    "symlink": false
+  },
+  {
+    "bytes": 70304,
+    "path": "llama-perplexity",
+    "sha256": "e014db4ceefbc248dccfe4fb698adbcf41bdda97df6a994d56b914aecf7d9b3c",
+    "symlink": false
+  },
+  {
+    "bytes": 72480,
+    "path": "llama-quantize",
+    "sha256": "a1280512ca58d938d64200955ff5635fc2b15f8a4901ffb7704f339352f17706",
+    "symlink": false
+  },
+  {
+    "bytes": 71432,
+    "path": "llama-qwen2vl-cli",
+    "sha256": "b4e5891316104e12a491d69c52a7e95faece98fe978ec1caeba9de3830fbfb1c",
+    "symlink": false
+  },
+  {
+    "bytes": 75856,
+    "path": "llama-results",
+    "sha256": "1cf3a512fd0470639963813083278cdf2d2853da449e8bd30f6b920f3dd44381",
+    "symlink": false
+  },
+  {
+    "bytes": 72480,
+    "path": "llama-server",
+    "sha256": "adbb49e64da9b0ff6dad1665c4b11b0a7a00405cefa1f358e1ac8b503c90f7b1",
+    "symlink": false
+  },
+  {
+    "bytes": 236352,
+    "path": "llama-template-analysis",
+    "sha256": "50282c41e892b1fcb656af48cc4ce2d8959772f03005417a15daafbbddacaca7",
+    "symlink": false
+  },
+  {
+    "bytes": 73904,
+    "path": "llama-tokenize",
+    "sha256": "e57ef24d462189fe6300c5f9a7a5ab94b484890d8de7226f2f1745e75b2b53ec",
+    "symlink": false
+  },
+  {
+    "bytes": 409072,
+    "path": "llama-tts",
+    "sha256": "e3375efa2ea95fa8f95e7347068e0ae498ee36ea1c8c15d55f76d32a553ae5ea",
+    "symlink": false
+  },
+  {
+    "bytes": 244848,
+    "path": "rpc-server",
+    "sha256": "6b6ce71a18a23f84323f43514b5e15435e194dbde817e662a2e9c0b47bc70a1c",
+    "symlink": false
+  }
+]

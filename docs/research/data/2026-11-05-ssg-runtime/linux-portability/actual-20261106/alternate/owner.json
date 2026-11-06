@@ -1,0 +1,12 @@
+{
+  "borrowed_read_only": [
+    "44b5244a3622425584cae52b0cdf1ea1690ebb98e27110b3adfd1af7ab8227a9",
+    "/Users/robert.lee/.omp/wt/tbebd39362/m/docs/research/data/2026-11-05-ssg-runtime/linux-portability/.acquired/extracted-302b5222e537/llama-b9360",
+    "/private/tmp/am-v15-delivery/Qwen3-Embedding-0.6B-Q8_0.gguf"
+  ],
+  "id": "79acf5e099bb8be917b3694e71973ba4d1bf8b5ae956161177d905cddec2b4aa",
+  "label": "302b5222e537",
+  "name": "am255-linux-302b5222e537-alternate",
+  "network": "loopback publication; default container network is NOT egress isolation",
+  "physical_resources": "new container overlay + bounded tmpfs; no volume, graph, user-store, or persistent provider cache"
+}

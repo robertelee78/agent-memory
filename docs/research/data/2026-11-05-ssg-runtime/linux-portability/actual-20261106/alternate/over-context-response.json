@@ -1,0 +1,21 @@
+{
+  "body": {
+    "error": {
+      "code": 400,
+      "message": "request (4169 tokens) exceeds the available context size (4096 tokens), try increasing it",
+      "n_ctx": 4096,
+      "n_prompt_tokens": 4169,
+      "type": "exceed_context_size_error"
+    }
+  },
+  "duration_seconds": 0.009263992309570312,
+  "headers": {
+    "Access-Control-Allow-Origin": "",
+    "Connection": "close",
+    "Content-Length": "195",
+    "Content-Type": "application/json; charset=utf-8",
+    "Server": "llama.cpp"
+  },
+  "raw_body": "{\"error\":{\"code\":400,\"message\":\"request (4169 tokens) exceeds the available context size (4096 tokens), try increasing it\",\"type\":\"exceed_context_size_error\",\"n_prompt_tokens\":4169,\"n_ctx\":4096}}",
+  "status": 400
+}

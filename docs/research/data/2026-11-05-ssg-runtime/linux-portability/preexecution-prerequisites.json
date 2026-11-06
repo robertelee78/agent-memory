@@ -1,0 +1,37 @@
+{
+  "disk": {
+    "argv": [
+      "df",
+      "-h",
+      "/Users/robert.lee/.omp/wt/tbebd39362/m/docs/research/data/2026-11-05-ssg-runtime/linux-portability"
+    ],
+    "exit": 0,
+    "stdout": "Filesystem      Size    Used   Avail Capacity iused ifree %iused  Mounted on\n/dev/disk3s5   3.6Ti   3.3Ti   260Gi    93%     43M  2.7G    2%   /System/Volumes/Data\n",
+    "stderr": ""
+  },
+  "host_load": {
+    "argv": [
+      "uptime"
+    ],
+    "exit": 0,
+    "stdout": "12:27  up 4 days, 17:49, 1 user, load averages: 5.04 5.22 5.19\n",
+    "stderr": ""
+  },
+  "ssg_revision": {
+    "argv": [
+      "git",
+      "-C",
+      "/opt/ssg",
+      "rev-parse",
+      "HEAD"
+    ],
+    "exit": 0,
+    "stdout": "9c4fd08c29f37bffe89ecdf75b069a6baeb8a5e0\n",
+    "stderr": ""
+  },
+  "policy": {
+    "still_queued_for_workspace_release": true,
+    "no_server_or_layer_extraction_started": true,
+    "sha_bound_release_download_only": true
+  }
+}
