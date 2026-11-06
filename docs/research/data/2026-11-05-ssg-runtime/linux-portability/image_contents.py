@@ -12,6 +12,7 @@ import hashlib
 import io
 import json
 from pathlib import Path, PurePosixPath
+import posixpath
 import tarfile
 import time
 from discover import command, save, sha
@@ -27,6 +28,28 @@ def selected(path):
 
 def binary(path):
     return path in ("usr/lib/memgraph/memgraph", "usr/bin/mgconsole") or ".so" in path.rsplit("/", 1)[-1] or path.startswith("usr/lib/memgraph/query_modules/")
+
+
+def resolve_entry(files, requested):
+    """Resolve logical image symlink-directory/hardlink paths, never host paths."""
+    path = requested
+    for _ in range(40):
+        parts = PurePosixPath(path).parts
+        for end in range(1, len(parts) + 1):
+            prefix = "/".join(parts[:end])
+            entry = files.get(prefix)
+            if entry and entry["type"] in ("symlink", "hardlink"):
+                link = entry["link"]
+                target = link.lstrip("/") if link.startswith("/") else (
+                    link if entry["type"] == "hardlink" else posixpath.join(posixpath.dirname(prefix), link))
+                path = posixpath.normpath(posixpath.join(target, *parts[end:]))
+                if path == ".." or path.startswith("../"):
+                    raise ValueError("Image metadata symlink escapes root")
+                break
+        else:
+            entry = files.get(path)
+            return None if entry is None else {**entry, "requested_path": requested, "resolved_path": path}
+    raise ValueError("Image metadata symlink loop")
 
 
 def scan(directory, output, binding):
@@ -112,22 +135,30 @@ def scan(directory, output, binding):
             copyright_path = "usr/share/doc/" + package + "/copyright"
             packages.append({"name": package, "version": fields.get("Version"), "status": fields.get("Status"),
                  "architecture": fields.get("Architecture"), "maintainer": fields.get("Maintainer"),
-                 "copyright": files.get(copyright_path)})
+                 "copyright": resolve_entry(files, copyright_path)})
     python = []
+    vendored_python = []
     for name, data in sorted(texts.items()):
         if name.endswith(".dist-info/METADATA"):
             meta = email.message_from_bytes(data, policy=policy.default)
             base = name.rsplit("/", 1)[0]
             licenses = [v for k, v in files.items() if k.startswith(base + "/") and any(x in k.lower() for x in ("license", "copying", "notice"))]
-            python.append({"name": meta.get("Name"), "version": meta.get("Version"), "license": meta.get("License"),
+            record = {"name": meta.get("Name"), "version": meta.get("Version"), "license": meta.get("License"),
                  "license_expression": meta.get("License-Expression"), "classifiers": meta.get_all("Classifier", []),
-                 "metadata": files[name], "license_files": licenses})
+                 "metadata": files[name], "license_files": licenses}
+            relative = name.split("/site-packages/", 1)[-1].rsplit("/", 1)[0]
+            if "/" in relative:
+                vendored_python.append(record)
+            else:
+                python.append(record)
     modules = [entry for name, entry in sorted(files.items()) if name.startswith("usr/lib/memgraph/query_modules/")]
     vendored = [entry for name, entry in sorted(files.items()) if "site-packages/" in name and ".so" in name.rsplit("/", 1)[-1]]
     save(output / "contents.json", {"schema": "am255/nonexecuting-image-contents-v1", "binding": binding, "config": config,
          "acquired_manifest_sha256": sha(manifest_path), "layers": layers, "file_count": len(files),
          "regular_file_bytes": sum(x["bytes"] for x in files.values() if x["type"] == "file"),
          "packages": packages, "python_distributions": python, "query_modules": modules, "python_native_files": vendored,
+         "vendored_python_metadata": vendored_python,
+         "python_inventory_scope": "Direct site-packages distributions are comparable to prior importlib.metadata inventory; nested vendored .dist-info records are separate and not a cross-architecture distribution difference",
          "memgraph_binary": files.get("usr/lib/memgraph/memgraph"), "mgconsole": files.get("usr/bin/mgconsole"),
          "legal_files": [v for k,v in sorted(files.items()) if k.startswith("usr/share/doc/memgraph/")],
          "selected_text_archive": {"sha256": sha(output / "selected-texts.tar.gz"), "files": len(texts)},
