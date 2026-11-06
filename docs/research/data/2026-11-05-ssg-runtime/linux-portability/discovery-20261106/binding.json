@@ -1,0 +1,9 @@
+{
+  "am_baseline": "483adede202bac2dc3a69856a73b16533190ebb7",
+  "platform": "macOS-27.2-arm64-arm-64bit-Mach-O",
+  "schema": "am255/linux-discovery-v1",
+  "scope": "metadata only; no image layers acquired and no containers started",
+  "script_sha256": "055173938c8b33761d7d987a75c69327240bf0ccf1a39b6148614ecd1294a595",
+  "ssg": "9c4fd08c29f37bffe89ecdf75b069a6baeb8a5e0",
+  "upstream": "6b4e4bd582e457a47ee7cd498058495f47fee228"
+}
