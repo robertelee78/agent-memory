@@ -1,0 +1,15 @@
+{
+  "body": {
+    "error": {
+      "code": 400,
+      "message": "request (8265 tokens) exceeds the available context size (8192 tokens), try increasing it",
+      "n_ctx": 8192,
+      "n_prompt_tokens": 8265,
+      "type": "exceed_context_size_error"
+    }
+  },
+  "response_bytes": 195,
+  "response_sha256": "77c119dd82048d38fec651284907fa86f3441063748074a8502e1506efd0bc15",
+  "seconds": 0.015326791966799647,
+  "status": 400
+}
