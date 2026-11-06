@@ -329,7 +329,9 @@ class Graph:
             if name == 'co-routed':
                 route = next(n for n in self.projected['routes'] if n['key'] == row['key'])
                 entry = bank.entry_of[route['index_path']]
-                if not fixtures.native.retrieval.scope_reasons(fixtures.pid, entry, self.context):
+                safe = not fixtures.native.security.scan(bank.files[route['index_path']] + '\n' +
+                    json.dumps({'path': route['index_path'], 'scope_chain': entry['scope_chain']}, ensure_ascii=False))['reasons']
+                if safe and entry['lifecycle'] == 'active' and not fixtures.native.retrieval.scope_reasons(fixtures.pid, entry, self.context):
                     pointers.append(row['key'])
                 continue
             path = row['p']
