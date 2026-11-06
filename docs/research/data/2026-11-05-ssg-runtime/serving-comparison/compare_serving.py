@@ -40,7 +40,7 @@ def timestamp():
     return datetime.now(timezone.utc).isoformat()
 
 
-def freeze():
+def freeze(path):
     spec = load(HERE / "cache-probe-spec.json")
     by_id = {d["id"]: d["own"] for d in spec["documents"]}
     rendered = {"probes": spec["probes"],
@@ -52,7 +52,6 @@ def freeze():
     for key in ("over_context", "aggregate_budget"):
         item = spec[key]
         rendered[key] = item["repeat"] * item["count"] + item["suffix"]
-    path = HERE / "cache-frozen-inputs.json"
     if path.exists():
         raise ValueError("Refusing to overwrite frozen inputs")
     pinned = artifacts()
@@ -60,6 +59,7 @@ def freeze():
                 "spec": spec, "spec_sha256": sha(HERE / "cache-probe-spec.json"),
                 "pre_output_artifacts": pinned,
                 "pre_output_artifact_identity": artifact_identity(pinned),
+                "script_sha256": sha(Path(__file__)), "common_sha256": sha(HERE.parent / "runtime-controls/common.py"),
                 "rendered": rendered, "canonical_rendered_sha256": digest(rendered),
                 "rendered_group_sha256": {k: digest(v) for k, v in rendered.items()},
                 "canonicalization": "UTF-8 json.dumps(sort_keys=True,separators=(',',':'),allow_nan=False); ensure_ascii default true",
@@ -205,27 +205,33 @@ def loaded_closure(work, kind, bound):
 
 def cache_evidence(work, frozen, traces):
     text = (work / "server-stderr.log").read_text()
-    rows = []
+    # HTTP completion can race with unrelated trailing log writes. Match actual
+    # task IDs over the retained stream, then group the strictly serial requests.
+    prefixes = {int(task): {"task_id": int(task), "cached_prefix_tokens": int(a), "memory_start": int(b)}
+                for task, a, b in re.findall(r"task\s+(\d+)\s+\| n_tokens = (\d+), memory_seq_rm \[(\d+), end\)", text)}
+    completed = [{"task_id": int(task), "total_tokens": int(a), "evaluated_batch_tokens": int(b)}
+                 for task, a, b in re.findall(r"task\s+(\d+)\s+\| prompt processing done, n_tokens = (\d+), batch.n_tokens = (\d+)", text)]
+    rows, offset = [], 0
     for trace in traces:
-        excerpt = text[trace["stderr_start"]:trace["stderr_end"]]
-        splits = [{"cached_prefix_tokens": int(a), "memory_start": int(b)}
-                  for a, b in re.findall(r"n_tokens = (\d+), memory_seq_rm \[(\d+), end\)", excerpt)]
-        completed = [{"total_tokens": int(a), "evaluated_batch_tokens": int(b)}
-                     for a, b in re.findall(r"prompt processing done, n_tokens = (\d+), batch.n_tokens = (\d+)", excerpt)]
-        rows.append(trace | {"prefix_splits": splits, "completed_prompts": completed,
-                             "scope": "Serial parallel1 embedding tasks; batch token count is actual evaluation, not HTTP-field support"})
-    expected = sum(trace["expected_rows"] for trace in traces)
-    observed = sum(len(row["completed_prompts"]) for row in rows)
-    if "prompt cache is disabled" not in text or "prompt cache is enabled" in text:
-        raise ValueError("Chosen --cache-ram 0 was not confirmed by actual server logs")
-    if observed != expected or any(len(row["prefix_splits"]) != row["expected_rows"] for row in rows):
-        raise ValueError("Incomplete actual token/cache log coverage")
-    report = {"frozen_profile": frozen["spec"]["cache_profile"], "ram_cache_disabled_log_confirmed": True,
+        done = completed[offset:offset + trace["expected_rows"]]
+        splits = [prefixes[row["task_id"]] for row in done]
+        rows.append(trace | {"prefix_splits": splits, "completed_prompts": done,
+                             "scope": "Actual task-ID-bound token logs, grouped in serial request order; not inferred from HTTP-field acceptance"})
+        offset += trace["expected_rows"]
+    expected, observed = offset, len(completed)
+    report = {"frozen_profile": frozen["spec"]["cache_profile"],
+              "ram_cache_disabled_log_confirmed": "prompt cache is disabled" in text and "prompt cache is enabled" not in text,
               "successful_embedding_rows": expected, "logged_completed_prompts": observed, "requests": rows,
               "slot_prefix_reuse_observed": any(s["cached_prefix_tokens"] > 0 for row in rows for s in row["prefix_splits"]),
               "per_request_cache_field_support_claimed": False,
-              "scope": "The embedding handler does not parse cache_prompt; the field is deliberately absent. RAM cache disabled does not disable slot-local prefix reuse. Actual prefix/evaluated-token logs define the effective cache path."}
+              "scope": "Reference embedding source does not parse cache_prompt; field deliberately absent on both servers. RAM cache disabled does not disable slot-local reuse. Actual prefix/evaluated-token logs define upstream behavior independently."}
     save(work / "cache-evidence.json", report)
+    if not report["ram_cache_disabled_log_confirmed"]:
+        raise ValueError("Chosen --cache-ram 0 was not confirmed by actual server logs")
+    if observed != expected or len(prefixes) != expected or any(
+            split["cached_prefix_tokens"] + done["evaluated_batch_tokens"] != done["total_tokens"]
+            for row in rows for split, done in zip(row["prefix_splits"], row["completed_prompts"])):
+        raise ValueError("Incomplete or inconsistent actual token/cache log coverage")
     return report
 
 
@@ -305,10 +311,9 @@ def launch(root, kind, number, bound, frozen):
         return answer
 
     def embedding(name, texts, model=None):
-        before = len((work / "server-stderr.log").read_text())
+        request_inputs_sha256 = digest(texts)
         answer = call(name, "/v1/embeddings", {"input": texts, "model": model or settings["alias"]})
-        traces.append({"name": name, "expected_rows": len(texts), "stderr_start": before,
-                       "stderr_end": len((work / "server-stderr.log").read_text())})
+        traces.append({"name": name, "expected_rows": len(texts), "input_sha256": request_inputs_sha256})
         validate(answer, model or settings["alias"], len(texts), settings["dimension"])
         # Preserve provider coordinates verbatim; common.validate returns normalized copies.
         values = [row["embedding"] for row in sorted(answer["body"]["data"], key=lambda row: row["index"])]
@@ -414,11 +419,13 @@ def launch(root, kind, number, bound, frozen):
                                    "stdout_sha256": sha(work / "server-stdout.log"), "stderr_sha256": sha(work / "server-stderr.log")})
 
 
-def run(output):
-    frozen_path, spec_path = HERE / "cache-frozen-inputs.json", HERE / "cache-probe-spec.json"
+def run(output, frozen_path):
+    spec_path = HERE / "cache-probe-spec.json"
     frozen = load(frozen_path)
     if frozen["spec_sha256"] != sha(spec_path) or frozen["canonical_rendered_sha256"] != digest(frozen["rendered"]):
         raise ValueError("Frozen inputs changed")
+    if frozen["script_sha256"] != sha(Path(__file__)) or frozen["common_sha256"] != sha(HERE.parent / "runtime-controls/common.py"):
+        raise ValueError("Freeze the executable and helper before producing new outputs")
     source_paths = [Path(__file__).resolve(), HERE.parent / "runtime-controls/common.py", frozen_path, spec_path]
     command(["git", "ls-files", "--error-unmatch", "--", *source_paths])
     command(["git", "diff", "--exit-code", "HEAD", "--", *source_paths])
@@ -496,13 +503,14 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("action", choices=("freeze", "run"))
     parser.add_argument("--output", type=Path)
+    parser.add_argument("--freeze-file", type=Path, default=HERE / "cache-frozen-inputs-logfix.json")
     args = parser.parse_args()
     if args.action == "freeze":
-        freeze()
+        freeze(args.freeze_file)
     elif args.output is None:
         parser.error("run requires --output (new private evidence directory)")
     else:
-        run(args.output)
+        run(args.output, args.freeze_file)
 
 
 if __name__ == "__main__":

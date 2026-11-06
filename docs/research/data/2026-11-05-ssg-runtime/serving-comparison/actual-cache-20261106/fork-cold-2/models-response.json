@@ -1,0 +1,58 @@
+{
+  "body": {
+    "data": [
+      {
+        "aliases": [
+          "qwen3-embedding-8b-q8_0-d20ddc71e8a5"
+        ],
+        "created": 1793994589,
+        "id": "qwen3-embedding-8b-q8_0-d20ddc71e8a5",
+        "meta": {
+          "n_ctx": 8192,
+          "n_ctx_train": 40960,
+          "n_embd": 4096,
+          "n_params": 7567295488,
+          "n_vocab": 151665,
+          "size": 8041156864,
+          "vocab_type": 2
+        },
+        "object": "model",
+        "owned_by": "llamacpp",
+        "tags": []
+      }
+    ],
+    "models": [
+      {
+        "capabilities": [
+          "completion"
+        ],
+        "description": "",
+        "details": {
+          "families": [
+            ""
+          ],
+          "family": "",
+          "format": "gguf",
+          "parameter_size": "",
+          "parent_model": "",
+          "quantization_level": ""
+        },
+        "digest": "",
+        "model": "qwen3-embedding-8b-q8_0-d20ddc71e8a5",
+        "modified_at": "",
+        "name": "qwen3-embedding-8b-q8_0-d20ddc71e8a5",
+        "parameters": "",
+        "size": "",
+        "tags": [
+          ""
+        ],
+        "type": "model"
+      }
+    ],
+    "object": "list"
+  },
+  "response_bytes": 674,
+  "response_sha256": "ea2b743d3411fcf733d581b1c9994698fa64b122a4d467e47539549810345ada",
+  "seconds": 0.004031583026517183,
+  "status": 200
+}

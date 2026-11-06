@@ -1,0 +1,87 @@
+{
+  "OMP_NUM_THREADS": "4",
+  "argv": [
+    "/private/tmp/am-v15-delivery/llama-reference-build/bin/llama-server",
+    "--model",
+    "/private/tmp/am-v15-delivery/Qwen3-Embedding-8B-Q8_0.gguf",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "56884",
+    "--alias",
+    "qwen3-embedding-8b-q8_0-d20ddc71e8a5",
+    "--embedding",
+    "--pooling",
+    "last",
+    "--ctx-size",
+    "8192",
+    "--parallel",
+    "1",
+    "--threads",
+    "4",
+    "--threads-batch",
+    "4",
+    "--threads-http",
+    "4",
+    "--batch-size",
+    "8192",
+    "--ubatch-size",
+    "8192",
+    "--device",
+    "MTL0",
+    "--gpu-layers",
+    "99",
+    "--flash-attn",
+    "off",
+    "--fit",
+    "off",
+    "--offline",
+    "--no-webui",
+    "--cache-ram",
+    "0",
+    "--log-verbosity",
+    "5"
+  ],
+  "at": "2026-11-06T19:49:42.658574+00:00",
+  "binary_sha256": "b57ea6bb97b43a4f74b5a5ab71f1cc2ef292899d83c0e45ddfa9290b169598b5",
+  "cache_profile": {
+    "cli": [
+      "--cache-ram",
+      "0",
+      "--log-verbosity",
+      "5"
+    ],
+    "not_prompt_cache_disabled": true,
+    "per_request_settings": {
+      "cache_prompt": "omitted on every embedding request; not assumed honored"
+    },
+    "purpose": "Pre-output diagnostic serving configuration only; not a managed profile or ADR freeze",
+    "ram_prompt_cache": "disabled by explicit CLI; must be confirmed by actual server log",
+    "request_sequence": "three probe batches; two query batches; two own batches; two relationship batches; tokenize short/over_context/aggregate_budget; short; over-context diagnostic; unknown alias single; known alias single; empty and malformed diagnostics; batch1/4/8/9 diagnostics",
+    "slot_local_prefix_reuse": "enabled task default; must retain actual prefix/evaluated-token logs per successful embedding row",
+    "source_evidence": {
+      "default_lines": "52; bool cache_prompt = true",
+      "default_path": "tools/server/server-task.h",
+      "default_sha256": "d41d2c681a3a3e02b4826decbd592769690cc6acc45477cdc6dea15790b6c92a",
+      "embedding_handler_lines": "4452-4547; tasks created directly at4512, only res_type/embd_normalize set at4518-4519; body.cache_prompt never parsed here",
+      "limit": "Direct source evidence is for the reference fork; upstream behavior must be established from new actual logs, not inferred from an accepted unknown HTTP field",
+      "path": "tools/server/server-context.cpp",
+      "ram_cache_lines": "958-969; --cache-ram0 disables the RAM prompt cache object, not slot-local reuse",
+      "sha256": "4c8bee10fa5629fb35d1f80c50ef56d9d0d04219c8afc6950bdf76684d4afb2b",
+      "slot_cache_lines": "2473-2475; task.params.cache_prompt enables longest-common-prefix reuse",
+      "source_commit": "a578bb6b94529b7b2721d0ee49eaea5dbb2c6d07"
+    }
+  },
+  "canonical_inputs_sha256": "5e7d61a18511bc8182685e04ae4777f260d737fe6e80ead901bb0be3ac0d9645",
+  "cold_definition": "New process/model load; OS file cache not purged; normal shared host load",
+  "observability_environment": {
+    "DYLD_PRINT_LIBRARIES": "1"
+  },
+  "removed_environment_prefixes": [
+    "LLAMA_",
+    "GGML_",
+    "TURBO_",
+    "DYLD_"
+  ],
+  "weight_sha256": "d20ddc71e8a5c4344f2343481e242233a997dc5eaff442427a945836c97b4deb"
+}
