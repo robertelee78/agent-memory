@@ -56,7 +56,9 @@ def dependencies(binary):
                 elif name.startswith('@executable_path/'):
                     candidates = [binary.parent / name[len('@executable_path/'):]]
                 else:
-                    candidates = [p for p in files if p.name == Path(name).name]
+                    candidates = [path.parent / Path(name).name]
+                    candidates += [root / Path(name).name for root in roots]
+                    candidates += [p for p in files if p.name == Path(name).name]
                 candidates = [p.resolve(strict=True) for p in candidates if p.is_file()]
                 if not candidates:
                     raise ValueError('Unresolved local dependency: ' + name)
