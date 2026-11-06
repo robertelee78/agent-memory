@@ -241,6 +241,10 @@ current run's persistent session and source-bound observer evidence. Completed
 observations count only after the installed public source verifier checks their
 enrollment and stored digests. A historical `omp-source-v1` directory, a
 `status` label or a manual shared registration cannot qualify a new session.
+The native session may begin with title metadata; qualification requires one
+matching session header after that prologue, not a header at physical line one.
+Only fixed AM diagnostic codes are retained from native UI events; arbitrary
+notification/display text remains excluded.
 The report retains source/binary/receipt identity and current human observation
 references without copying arbitrary display payloads:
 

@@ -50,11 +50,15 @@ def current_humans(repo, root, session, session_file, prompts):
     if not path.is_relative_to(root / 'sessions'):
         raise RuntimeError('Native session file is outside this smoke run')
     entries = [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
-    if not entries or entries[0].get('type') != 'session' or entries[0].get('id') != session:
+    headers = [(index, entry) for index, entry in enumerate(entries) if entry.get('type') == 'session']
+    if len(headers) != 1 or headers[0][1].get('id') != session:
         raise RuntimeError('Native session header differs from current RPC state')
-    if Path(entries[0].get('cwd', '')).resolve() != repo or entries[0].get('parentSession'):
+    header_index, header = headers[0]
+    if any(entry.get('type') != 'title' for entry in entries[:header_index]):
+        raise RuntimeError('Unexpected native records precede the session header')
+    if Path(header.get('cwd', '')).resolve() != repo or header.get('parentSession'):
         raise RuntimeError('Native session is not a fresh session of the selected repository')
-    humans = [entry for entry in entries[1:] if entry.get('type') == 'message'
+    humans = [entry for entry in entries[header_index + 1:] if entry.get('type') == 'message'
               and entry.get('message', {}).get('role') == 'user'
               and entry['message'].get('attribution') == 'user']
     if [content_text(entry['message'].get('content')) for entry in humans] != prompts:
@@ -174,7 +178,8 @@ def main():
               'installed_source': receipt['source'], 'receipt_sha256': hashlib.sha256(receipt_path.read_bytes()).hexdigest(),
               'extension_sha256': owned['identity']['hash'], 'command': argv,
               'model': args.model, 'approval_mode': args.approval_mode or 'native-existing-default',
-              'native_requests': [], 'refused_ui_requests': 0, 'task_sentinels': {}, 'failures': []}
+              'native_requests': [], 'refused_ui_requests': 0, 'task_sentinels': {}, 'failures': [],
+              'native_adapter_diagnostics': []}
     frames = queue.Queue()
     process = None
     def stdout():
@@ -203,6 +208,15 @@ def main():
                     raise RuntimeError('Real native process exited before ' + kind)
                 continue
             if frame.get('type') == 'extension_ui_request':
+                # Retain only fixed owned-adapter codes, never arbitrary UI text.
+                for code in ('inactive: unsupported version or missing explicit installed binding',
+                             'duplicate-binding', 'observer pending', 'metadata-capacity coverage gap',
+                             'observer wait ended; retained work pending'):
+                    values = (frame.get('message'), frame.get('text'))
+                    if ('am: ' + code in values or
+                            'Agent Memory: ' + code + '; sources remain pending. Use am status/doctor and am omp-boundary --list-pending.' in values):
+                        if code not in result['native_adapter_diagnostics']:
+                            result['native_adapter_diagnostics'].append(code)
                 # An unattended driver cannot grant the person's approval. Refusal
                 # is preserved, not routed around through another execution path.
                 result['refused_ui_requests'] += 1

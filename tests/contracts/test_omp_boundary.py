@@ -593,6 +593,8 @@ for line in sys.stdin:
             humans = [helper.entry('current-first', 'user', prompts[0], attribution='user'),
                       helper.entry('current-second', 'user', prompts[1], attribution='user', parent='current-first')]
             path.write_text('\n'.join(json.dumps(value) for value in [
+                {'type': 'title', 'v': 1, 'title': 'Controlled native session title',
+                 'pad': '', 'updatedAt': '2026-11-06T00:00:00.000Z'},
                 {'type': 'session', 'id': session, 'cwd': str(repo)}, *humans]) + '\n')
             with patch.dict(os.environ, world.env, clear=True):
                 # A manual shared registration in this exact session still has
