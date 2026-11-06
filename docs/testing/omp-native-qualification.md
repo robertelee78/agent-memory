@@ -51,6 +51,12 @@ Enabling a new native route during a layout recovery hold additionally needs
 independently reviewed layout-quiescence attestation/review envelope, bound to
 the candidate artifact and including the exact owned native extension path in
 `invocation_routes`; a second boolean is not a replacement for that review.
+Preview forwards that validated native envelope into the common private-state
+compatibility check without publishing it. The common check still requires the
+exact bank/artifact, independent review and **all** newly enabled invocation
+routes, not just the native extension. Apply retains the existing guarded
+publication ordering; preview never renews the bank's saved attestation.
+
 
 ## Authority, privacy and coverage
 
@@ -179,6 +185,16 @@ incompatible activation. A failed drain keeps its owned binding disabled and
 its recovery journal/evidence; use a capable trusted runtime to inspect and
 complete real work, then retry. Recovery never restores an incapable reader.
 
+The quiescence selection is the same exact writer assertion in preview and
+apply; preview/apply is a separate controller mode. A preview does not publish a
+drain proof or clear the actual capability marker, so common compatibility can
+still refuse removal of the last reader even when the drain phase is planned.
+An unchanged or changed managed/signed update verifies the native extension's
+receipt-owned bytes and mode on disk. Public dispatch readback executes only
+the saved bin directory's `am` and `agent-memory`, never the non-executable
+TypeScript extension.
+
+
 A successful drain leaves immutable completed snapshots intact, writes a
 private proof bound to the exact repository/private-state inventory and
 verified completion state, durably removes the marker and reads it back.
@@ -195,10 +211,17 @@ omp-unaware peers; mixed-reader use on one protected index is unsupported.
 Prepare a disposable existing bank/clone through the normal identity/init
 skill. Do not point a smoke at production project memory. Install this exact
 candidate into an explicit isolated native root, preserving real provider access
-and normal native permissions. The following driver discovers the actual
-installed binding, uses two real RPC human turns and the real model/tools,
-checks original answers once, inspects retained observer evidence and retains
-source/binary/receipt identity without copying arbitrary display payloads:
+and normal native permissions. The following driver verifies that the exact
+selected binary reports **18.16.0 before launching RPC or using a provider/model**.
+It discovers the actual installed binding, uses two real RPC human turns and
+the real model/tools, checks original answers once, and requires both exact
+submitted texts and their distinct stored native human IDs/roots in the
+current run's persistent session and source-bound observer evidence. Completed
+observations count only after the installed public source verifier checks their
+enrollment and stored digests. A historical `omp-source-v1` directory, a
+`status` label or a manual shared registration cannot qualify a new session.
+The report retains source/binary/receipt identity and current human observation
+references without copying arbitrary display payloads:
 
 ```sh
 python3 scripts/evaluations/omp_native_smoke.py --binary /absolute/omp --am /absolute/owned/bin/am --receipt /absolute/install/receipt.json --repo /absolute/disposable/project --output /absolute/new/private-smoke-output --model actual-provider/actual-model

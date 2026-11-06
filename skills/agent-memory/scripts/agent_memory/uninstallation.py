@@ -182,7 +182,7 @@ def run(args):
                     'preserved':historical['preserved'], 'reinstall':historical['reinstall']}
         plan = prepare(current, state, code)
         if getattr(args, 'omp_writers_quiesced', False):
-            plan['omp_transition'] = {'writers_quiesced': True, 'check': bool(args.check)}
+            plan['omp_transition'] = {'writers_quiesced': True}
         selection = getattr(args, 'preserve_capable_runtime', None)
         if selection:
             plan['preserved_private_state_reader'] = preserved_reader(selection, plan)

@@ -273,8 +273,11 @@ def staged(old, *, cache_recovery=None):
 
 
 def wrapper_readback(old, targets=None):
+    commands = {str(Path(old['bin_dir']) / name) for name in install.COMMAND_NAMES}
+    owned = {target['path'] for target in old['targets']
+             if target['kind'] == 'wrapper' and target['path'] in commands}
     for target in old['targets'] if targets is None else targets:
-        if target['kind'] != 'wrapper':
+        if target['kind'] != 'wrapper' or target['path'] not in owned:
             continue
         for args in (('--help',), ('update','--help')):
             result = subprocess.run([target['path'],*args], text=True, capture_output=True, timeout=30)

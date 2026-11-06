@@ -25,6 +25,114 @@ def run(argv, *, cwd, env, timeout=30):
     return result.stdout
 
 
+SUPPORTED_VERSION = '18.16.0'
+
+
+def source_digest(value):
+    raw = json.dumps(value, sort_keys=True, separators=(',', ':'), ensure_ascii=False).encode()
+    return hashlib.sha256(raw).hexdigest()
+
+
+def content_text(content):
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list) and all(isinstance(block, dict) and block.get('type') == 'text'
+                                         and isinstance(block.get('text'), str) for block in content):
+        return ''.join(block['text'] for block in content)
+    return None
+
+
+def current_humans(repo, root, session, session_file, prompts):
+    """Bind the submitted text to this run's stored native IDs, not RPC IDs."""
+    if not isinstance(session, str) or str(uuid.UUID(session)) != session or not session_file:
+        raise RuntimeError('Current persistent native session identity is unavailable')
+    path = Path(session_file).resolve(strict=True)
+    if not path.is_relative_to(root / 'sessions'):
+        raise RuntimeError('Native session file is outside this smoke run')
+    entries = [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
+    if not entries or entries[0].get('type') != 'session' or entries[0].get('id') != session:
+        raise RuntimeError('Native session header differs from current RPC state')
+    if Path(entries[0].get('cwd', '')).resolve() != repo or entries[0].get('parentSession'):
+        raise RuntimeError('Native session is not a fresh session of the selected repository')
+    humans = [entry for entry in entries[1:] if entry.get('type') == 'message'
+              and entry.get('message', {}).get('role') == 'user'
+              and entry['message'].get('attribution') == 'user']
+    if [content_text(entry['message'].get('content')) for entry in humans] != prompts:
+        raise RuntimeError('Both exact submitted human turns must be retained in the current native session')
+    ids = [entry.get('id') for entry in humans]
+    if any(not isinstance(identifier, str) or not identifier for identifier in ids) or len(set(ids)) != len(prompts):
+        raise RuntimeError('Native human entry IDs are missing or duplicated')
+    return humans
+
+
+def current_observations(am, repo, root, session, session_file, prompts, status, env):
+    """Read back source-bound observations for BOTH current stored human turns.
+
+    Private enrollment files locate completed as well as pending observations;
+    only the installed public source verifier qualifies them. A historical tree,
+    orphan/manual shared registration or status label cannot establish this.
+    """
+    humans = current_humans(repo, root, session, session_file, prompts)
+    bank = Path(status['bank']['path'])
+    state = Path(env.get('AGENT_MEMORY_STATE_HOME') or
+                 str(Path(env.get('XDG_STATE_HOME', str(Path.home() / '.local/state'))) / 'agent-memory')).expanduser()
+    base = state / 'writes' / hashlib.sha256(str(bank).encode()).hexdigest()
+    binding = json.loads((base / 'omp-bank-binding-v1.json').read_text())
+    if (binding.get('schema') != 'agent-memory/omp-bank-binding-v1'
+            or binding.get('repository') != str(repo) or binding.get('bank_path') != str(bank)
+            or binding.get('private_base') != str(base)
+            or binding.get('project_id') != status['bank'].get('project_id')):
+        raise RuntimeError('Retained native sources are not bound to this repository/bank')
+    directory = base / 'omp-source-v1' / hashlib.sha256(session.encode()).hexdigest()
+    if not directory.is_dir():
+        raise RuntimeError('Current native session has no retained observer evidence')
+    evidence = []
+    for human in humans:
+        matches = []
+        for path in directory.glob('*/enrollments/*.json'):
+            enrollment = json.loads(path.read_text())
+            if enrollment.get('kind') != 'admission' or enrollment.get('native_source_id') != human['id']:
+                continue
+            lifecycle = enrollment['lifecycle']
+            if str(uuid.UUID(lifecycle)) != lifecycle or path.parent.parent != directory / lifecycle:
+                raise RuntimeError('Current human enrollment lifecycle differs from its retained namespace')
+            value = json.loads(run([am, 'omp-boundary', '--repo', str(repo), '--source',
+                                    enrollment['source_reference'], '--session', session,
+                                    '--lifecycle', lifecycle], cwd=repo, env=env))
+            source = value.get('source', {})
+            observation = value.get('observation') or {}
+            origin = value.get('origin', {})
+            digest = source_digest(source)
+            captures = [capture for capture in value.get('captures', [])
+                        if capture.get('native_entry_id') == human['id']]
+            if (not value.get('verified') or value.get('faults') or value.get('enrollment') != enrollment
+                    or enrollment.get('session') != session or enrollment.get('source_sha256') != digest
+                    or source.get('carrier') != 'message' or source.get('native_entry_id') != human['id']
+                    or source.get('native_parent_id') != human.get('parentId') or source.get('role') != 'user'
+                    or source.get('attribution') != 'user'
+                    or content_text(source.get('content')) != content_text(human['message'].get('content'))
+                    or origin.get('kind') != 'genuine-user' or origin.get('human_root') != lifecycle
+                    or origin.get('native_trigger') not in {'human', 'human-with-own-guidance'}
+                    or value.get('retained_directory') != str(directory / lifecycle)
+                    or len(captures) != 1 or captures[0].get('mapping') != 'verified'
+                    or captures[0].get('snapshot_sha256') != digest
+                    or observation.get('harness') != 'omp' or observation.get('session') != session
+                    or observation.get('lifecycle') != lifecycle or not observation.get('observation_id')
+                    or observation.get('source_reference') != enrollment['source_reference']
+                    or observation.get('source_sha256') != digest):
+                raise RuntimeError('Current human observer evidence failed exact source/root/digest binding')
+            matches.append({'native_entry_id': human['id'], 'human_root': lifecycle,
+                            'observation_id': observation['observation_id'],
+                            'source_reference': enrollment['source_reference'], 'source_sha256': digest,
+                            'mapping': captures[0]['mapping']})
+        if len(matches) != 1:
+            raise RuntimeError('Each current human turn needs exactly one retained source-bound observation')
+        evidence.append(matches[0])
+    if len({item['human_root'] for item in evidence}) != len(humans):
+        raise RuntimeError('Distinct current human turns cannot share an observer root')
+    return evidence
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--binary', required=True)
@@ -49,6 +157,9 @@ def main():
     owned = next(t for t in receipt['targets'] if t['path'] == str(extension))
     if hashlib.sha256(extension.read_bytes()).hexdigest() != owned['identity']['hash']:
         raise RuntimeError('Installed native extension differs from receipt')
+    if Path(args.am).resolve(strict=True) not in {
+            Path(receipt['bin_dir']) / name for name in ('am', 'agent-memory')}:
+        raise RuntimeError('Smoke must use an exact receipt-owned public command')
     env = {key: value for key, value in os.environ.items()
            if not key.startswith(('PI_SESSION', 'PI_TOOL_BRIDGE', 'PI_ARTIFACT', 'PI_EVAL', 'VOX_'))}
     env['PI_CODING_AGENT_DIR'] = binding['agent_dir']
@@ -59,14 +170,13 @@ def main():
     result = {'schema': 'agent-memory/omp-installed-smoke-v1', 'qualified': False,
               'full_native_qualification': False, 'platform': sys.platform,
               'binary_sha256': hashlib.sha256(binary.read_bytes()).hexdigest(),
-              'native_version': run([str(binary), '--version'], cwd=repo, env=env).strip(),
+              'native_version': None, 'supported_version': SUPPORTED_VERSION,
               'installed_source': receipt['source'], 'receipt_sha256': hashlib.sha256(receipt_path.read_bytes()).hexdigest(),
               'extension_sha256': owned['identity']['hash'], 'command': argv,
               'model': args.model, 'approval_mode': args.approval_mode or 'native-existing-default',
               'native_requests': [], 'refused_ui_requests': 0, 'task_sentinels': {}, 'failures': []}
     frames = queue.Queue()
-    process = subprocess.Popen(argv, cwd=repo, env=env, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                               stderr=subprocess.PIPE, text=True, bufsize=1)
+    process = None
     def stdout():
         for line in process.stdout:
             try:
@@ -78,10 +188,9 @@ def main():
     def stderr():
         for _ in process.stderr:
             pass
-    readers = [threading.Thread(target=stdout, daemon=True), threading.Thread(target=stderr, daemon=True)]
-    for reader in readers:
-        reader.start()
+    readers = []
     sentinels = ['OMP_SMOKE_FIRST_' + uuid.uuid4().hex, 'OMP_SMOKE_SECOND_' + uuid.uuid4().hex]
+    prompts = []
     def send(value):
         process.stdin.write(json.dumps(value) + '\n'); process.stdin.flush()
     def until(kind, identifier=None):
@@ -109,17 +218,28 @@ def main():
                 return frame
         raise TimeoutError('Real native ' + kind + ' was not observed')
     try:
+        # This gate precedes process launch, provider/model use and human turns.
+        result['native_version'] = run([str(binary), '--version'], cwd=repo, env=env).strip()
+        if result['native_version'] != SUPPORTED_VERSION:
+            raise RuntimeError('Unsupported omp binary: require exactly ' + SUPPORTED_VERSION
+                               + ', observed ' + result['native_version'])
+        process = subprocess.Popen(argv, cwd=repo, env=env, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE, text=True, bufsize=1)
+        readers = [threading.Thread(target=stdout, daemon=True), threading.Thread(target=stderr, daemon=True)]
+        for reader in readers:
+            reader.start()
         until('ready')
         for i, sentinel in enumerate(sentinels):
             identifier = 'human-' + str(i + 1)
             result['native_requests'].append(identifier)
-            send({'id': identifier, 'type': 'prompt', 'message':
-                  'This is a disposable real-native Agent Memory smoke, not durable project learning. '
+            prompt = ('This is a disposable real-native Agent Memory smoke, not durable project learning. '
                   'Calculate ' + ('19 + 23' if i == 0 else '7 * 8') + ' and return exactly ' + sentinel + '. '
                   'Preserve this substantive answer once. Use the installed Agent Memory skill for ordinary initial recall. '
                   'Do not manually invoke boundary bookkeeping before answering; allow the installed native adapter to request it. '
                   'Under normal tool permissions, review actual retained sources before any no-learning assessment; never fake a receipt. '
-                  'If memory is refused/unavailable, finish the task and leave memory pending.'})
+                  'If memory is refused/unavailable, finish the task and leave memory pending.')
+            prompts.append(prompt)
+            send({'id': identifier, 'type': 'prompt', 'message': prompt})
             until('session_settled')
         send({'id': 'state', 'type': 'get_state'})
         state = until('response', 'state')
@@ -131,9 +251,18 @@ def main():
         result['status_readback'] = json.loads(run([args.am, '--json', 'status', '--repo', str(repo)], cwd=repo, env=env))
         if any(result['task_sentinels'].get(sentinel) != 1 for sentinel in sentinels):
             raise RuntimeError('Substantive answer was missing or duplicated')
+        if result['native_is_settled'] is not True:
+            raise RuntimeError('Current native session is not settled')
+        if hashlib.sha256(receipt_path.read_bytes()).hexdigest() != result['receipt_sha256']:
+            raise RuntimeError('Installed ownership receipt changed during this smoke')
+        if hashlib.sha256(extension.read_bytes()).hexdigest() != owned['identity']['hash']:
+            raise RuntimeError('Installed native extension changed during this smoke')
         native = result['status_readback'].get('omp', {})
-        if native.get('observer_evidence') != 'retained':
-            raise RuntimeError('Installed source observer did not retain real evidence')
+        if native.get('binding') != binding or native.get('owned_disk_integrity') != 'verified':
+            raise RuntimeError('Current installed native ownership is not verified')
+        result['current_human_observations'] = current_observations(
+            args.am, repo, root, result['session_id'], result['native_session_file'],
+            prompts, result['status_readback'], env)
         result['qualified'] = True
         result['limits'] = ['Smoke proves only the recorded real installed multi-turn/source journey.',
                             'Inspect individual source assessments, refresh and publication separately.',
@@ -142,12 +271,13 @@ def main():
     except Exception as error:
         result['failures'].append(type(error).__name__ + ': ' + str(error))
     finally:
-        process.stdin.close()
-        try:
-            process.wait(timeout=15)
-        except subprocess.TimeoutExpired:
-            process.terminate(); process.wait(timeout=15)
-        result['native_exit'] = process.returncode
+        if process is not None:
+            process.stdin.close()
+            try:
+                process.wait(timeout=15)
+            except subprocess.TimeoutExpired:
+                process.terminate(); process.wait(timeout=15)
+            result['native_exit'] = process.returncode
         for reader in readers:
             reader.join(timeout=3)
         path = root / 'report.json'

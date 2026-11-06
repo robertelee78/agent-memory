@@ -253,8 +253,10 @@ def prepare_lifecycle(plan, check=False):
             and action['kind'] in {'wrapper', 'hook-link', 'hook-config', 'copy', 'link', 'activation'}]
     target['layout_required_routes'] = routes
     overrides = {}
-    for path in supplied:
-        value = admission.read_input(path, 65536)
+    renewals = [admission.read_input(path, 65536) for path in supplied]
+    if check:
+        renewals.extend(plan.get('native_layout_quiescence_overrides', ()))
+    for value in renewals:
         if not isinstance(value, dict) or set(value) != {'attestation', 'review'}:
             raise ContractError('Lifecycle renewal uses the exact attestation/independent-review envelope')
         operation = value['attestation'].get('operation_id')

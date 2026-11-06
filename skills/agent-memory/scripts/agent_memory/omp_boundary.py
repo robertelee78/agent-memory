@@ -401,6 +401,7 @@ def native_activation(plan, check=False):
         trust_paths.record(path)
         values.append(load(turn_sources.read_bytes(path, 65536)))
     results = []
+    renewals = []
     for repo in _enrolled_repositories(old):
         with (nullcontext() if check else source_barrier(repo, exclusive=True)):
             context = scope_binding.private_enrollment_context(repo)
@@ -412,6 +413,9 @@ def native_activation(plan, check=False):
                 results.append(recovery_frontier.validate_quiescence(
                     repo, matching[0], runtime_artifact_digest=plan['source']['artifact_digest'],
                     required_routes=(route,), publish=not check))
+                renewals.append(matching[0])
+    if check:
+        plan['native_layout_quiescence_overrides'] = renewals
     return results
 
 
