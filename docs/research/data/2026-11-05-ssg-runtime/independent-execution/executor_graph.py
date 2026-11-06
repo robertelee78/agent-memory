@@ -288,14 +288,19 @@ class Graph:
                     'index_build_seconds': build_seconds}, 'domain_sha256': domain,
                     'interpretation': 'Perfect native-prefilter per-context ANN upper bound; not deployable eligible ANN. Raw SSG similarity is not accepted signed cosine.'}
         finally:
-            if created:
-                self.query('DROP VECTOR INDEX ' + index)
-            self.query('MATCH (n:AM255Eligible) REMOVE n:AM255Eligible')
-            receipts['indexes_after_drop'] = self.query('CALL vector_search.show_index_info() YIELD * RETURN *')
-            receipts['label_count_after_removal'] = self.query('MATCH (n:AM255Eligible) RETURN count(n) AS count')[0]['count']
-            if receipts['label_count_after_removal'] != 0 or any(index in str(row) for row in receipts['indexes_after_drop']):
-                raise ValueError('Owned domain index/label disposal incomplete')
-            save(self.root / ('ann-disposal-' + str(ordinal) + '.json'), receipts)
+            try:
+                if created:
+                    self.query('DROP VECTOR INDEX ' + index)
+                self.query('MATCH (n:AM255Eligible) REMOVE n:AM255Eligible')
+                receipts['indexes_after_drop'] = self.query('CALL vector_search.show_index_info() YIELD * RETURN *')
+                receipts['label_count_after_removal'] = self.query('MATCH (n:AM255Eligible) RETURN count(n) AS count')[0]['count']
+                if receipts['label_count_after_removal'] != 0 or any(index in str(row) for row in receipts['indexes_after_drop']):
+                    raise ValueError('Owned domain index/label disposal incomplete')
+            except BaseException as exc:
+                receipts['disposal_error'] = {'type': type(exc).__name__, 'reason': str(exc)}
+                raise
+            finally:
+                save(self.root / ('ann-disposal-' + str(ordinal) + '.json'), receipts)
 
     def typed(self, fixtures, bank, case, native, templates):
         params = case['template']

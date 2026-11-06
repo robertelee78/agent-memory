@@ -15,7 +15,7 @@
     "recorded-related": {
       "max_hops": 2,
       "max_rows": 32,
-      "cypher": "MATCH p=(seed:RecordVersion {key:$seed})-[*1..2]-(target) WHERE ALL(n IN nodes(p) WHERE NOT n:RecordVersion OR n.key IN $qualified) AND ALL(r IN relationships(p) WHERE type(r) IN $relations AND r.asserted_by IN $qualified) RETURN p ORDER BY target.key SKIP $offset LIMIT 32"
+      "cypher": "MATCH p=(seed:RecordVersion {key:$seed})-[:CORRECTS|SUPERSEDES|SUPERSEDED_BY|DERIVED_FROM|SUPPORTED_BY|IN_SCOPE|HAS_CONDITION*1..2]-(target) WHERE ALL(n IN nodes(p) WHERE NOT n:RecordVersion OR n.key IN $qualified) AND ALL(r IN relationships(p) WHERE type(r) IN $relations AND r.asserted_by IN $qualified) RETURN p ORDER BY target.key SKIP $offset LIMIT 32"
     },
     "co-routed": {
       "max_hops": 2,

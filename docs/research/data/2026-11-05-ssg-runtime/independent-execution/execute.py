@@ -413,6 +413,10 @@ def run_size(root, prepared, fixtures, inputs, spec, config, profile, run_id):
         except BaseException as exc:
             stop_error = {'type': type(exc).__name__, 'reason': str(exc)}
             save(model_root / 'finalization-failure.json', stop_error)
+            result['missing_prerequisites'].append({
+                'phase': 'model-finalization',
+                'prerequisite': 'Actual loaded-closure/token/cache finalization failed; model-derived metrics unqualified',
+                'failure': stop_error})
         try:
             actual_graph_metrics = graph.metrics()
         except Exception as exc:
@@ -425,12 +429,19 @@ def run_size(root, prepared, fixtures, inputs, spec, config, profile, run_id):
                            'disk_bytes': sum(p.stat().st_size for p in work.rglob('*') if p.is_file() and not p.is_symlink())}
         task_path = model_root / 'cache-evidence.json'
         for observation in observations:
+            if stop_error is not None:
+                reason = 'Actual model dependency/token/cache finalization failed; retained raw vectors are unqualified'
+                observation['semantic'].update(executed=False, prerequisite=reason)
+                observation['semantic']['ann'] = {'executed': False, 'prerequisite': reason}
+                observation['provider'].update(executed=False, prerequisite=reason)
             if task_path.is_file() and stop_error is None:
                 observation['provider']['task_evidence'] = {'executed': True, **pointer(root, task_path)}
             else:
                 observation['provider']['task_evidence'] = {'executed': False, 'prerequisite': 'Complete actual finalized task/cache parser evidence unavailable; retain launch/failure logs'}
             result['observations'].append(write_observation(root, prepared, observation))
         save(work / 'size-manifest.json', result)
+    if stop_error is not None:
+        raise RuntimeError('Owned model finalization failed; partial observations retained as unqualified')
     return result
 
 
@@ -466,6 +477,7 @@ def main():
     def interrupted(signum, frame):
         raise KeyboardInterrupt('Controller terminated; owned finally cleanup required')
     signal.signal(signal.SIGTERM, interrupted)
+    size_in_progress = None
     try:
         receipt, fixtures, prepared, inputs, spec, config, profile = freeze(args, root)
         manifest['source_bindings'] = receipt['source_bindings']
@@ -482,6 +494,7 @@ def main():
         # and other independent owned graphs; no external service is adopted.
         for item in prepared:
             try:
+                size_in_progress = item['size']
                 result = run_size(root, item, fixtures, inputs, spec, config, profile, run_id)
                 manifest['sizes'].append(result)
                 manifest['cleanup'] = {'status': 'disposed' if all(
@@ -489,6 +502,7 @@ def main():
                     and not s['cleanup']['model_finalization_error'] for s in manifest['sizes']) else 'erasure-pending',
                     'sizes': [s['cleanup'] for s in manifest['sizes']]}
                 save(root / 'manifest.json', manifest)
+                size_in_progress = None
             except BaseException:
                 retained = item['root'] / 'size-manifest.json'
                 if retained.is_file():
@@ -499,7 +513,7 @@ def main():
     except BaseException as exc:
         save(root / 'failure.json', {'type': type(exc).__name__, 'reason': str(exc),
              'qualification_scope': SCOPE, 'retain_failed_attempt': True})
-        manifest['cleanup'] = {'status': 'erasure-pending' if any(
+        manifest['cleanup'] = {'status': 'erasure-pending' if size_in_progress is not None or any(
             s.get('cleanup', {}).get('graph', {}).get('status') != 'disposed'
             or not s.get('cleanup', {}).get('model')
             or s.get('cleanup', {}).get('model_finalization_error') for s in manifest['sizes']) else 'no-unowned-disposal',
