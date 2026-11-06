@@ -284,6 +284,21 @@ preserved. Source completeness, assessment, refresh and publication were **not**
 qualified. The synthetic late-frame regression separately passed its normal,
 late-duplicate and late-unsettled subcases.
 
+The separate [Linux offline startup receipts](../research/data/2026-11-06-omp-native/linux-startup.json)
+bind the actual upstream arm64 binary and pinned Python 3.11.18/3.15.2
+bookworm carriers. Python, Git, shell, `omp --version` and `--help` each exited 0
+with networking disabled, read-only roots, nonroot identity and dropped
+capabilities; all ten owned containers were absent afterward. No AM
+installation/extension, model, provider or session ran. These checks establish
+available executable prerequisites, **not Linux native integration support**.
+
+The [registered-worker receipts](../research/data/2026-11-06-omp-native/registered-worker-batches.json)
+retain all 26 unchanged native transport/lifecycle/smoke-driver-control methods
+in seven disjoint, exhaustive batches at `bf7722a`. Every actual worker passed
+within the unchanged 300-second deadline, with no skips or removed subcases.
+The original unsplit timeout remains a failed attempt. This qualifies the
+worker grouping, not the real provider/platform/peer matrix below.
+
 ## Full independent native release matrix
 
 Retain immutable source/artifact/binary/provider/platform pins and actual

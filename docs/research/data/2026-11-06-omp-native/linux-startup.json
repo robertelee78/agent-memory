@@ -1,0 +1,62 @@
+{
+  "schema": "agent-memory/omp-linux-offline-startup-v1",
+  "recorded_date_utc": "2026-11-06",
+  "scope": "Real Linux arm64 VM-container executable startup only. No AM fixture/install/extension/model/provider/session/memory work; not native integration or platform/release acceptance.",
+  "binary": {
+    "url": "https://github.com/can1357/oh-my-pi/releases/download/v18.16.0/omp-linux-arm64",
+    "version": "omp/18.16.0",
+    "bytes": 236702712,
+    "sha256": "c2be1ea85ce17c4270854b57efff2a7ea1d5a03c7557fd08721f2b9bb32698de"
+  },
+  "carrier_manifests": {
+    "3.11": "docker.io/library/python@sha256:745246f656c3003b62fa182fcce49fbb83c6caee3871a4d4ef9e183c5d54d782",
+    "3.15": "docker.io/library/python@sha256:1ad74dbefc00f66c4694756feecadd5cdfe54fdcbce1c78c74357b6660916960"
+  },
+  "observed": [
+    {
+      "python_series": "3.11",
+      "image_config_id": "9a1bb53d5a98d5917820d4379ef47073e6af0790b325173f2fe9b3e0ebd250f4",
+      "receipt": {
+        "path": "linux-preflight-3.11-51dc693d1a02c589.json",
+        "sha256": "3e6ad6b95e0310f034d90f757b3b4dcf84f155e8ee3ba0dd9df8259c5b828560"
+      },
+      "commands": 5,
+      "all_command_exit_zero": true,
+      "all_owned_container_absence_exit_one": true
+    },
+    {
+      "python_series": "3.15",
+      "image_config_id": "0d539227a5680f3930ee694bba8b37d8d990f7ff247ae834668096df4af5a294",
+      "receipt": {
+        "path": "linux-preflight-3.15-e46a454ee7a6b38a.json",
+        "sha256": "6e1372afdec0c2584dfba9d4189094323fab538470851ca639aeeef072f459bf"
+      },
+      "commands": 5,
+      "all_command_exit_zero": true,
+      "all_owned_container_absence_exit_one": true
+    }
+  ],
+  "constraints": {
+    "cpus": 2,
+    "memory_bytes": 1073741824,
+    "memory_swap_bytes": 1073741824,
+    "pids": 128,
+    "network": "none",
+    "rootfs": "read-only",
+    "uid_gid": "502:20",
+    "user_namespace": "keep-id",
+    "capabilities": "ALL dropped",
+    "no_new_privileges": true,
+    "tmpfs_bytes": 268435456,
+    "mounts": "Exact verified binary read-only; no host HOME/config/provider credentials or sockets"
+  },
+  "cleanup": "All ten exact owned container names absent after command; no claim about unrelated containers/images or forensic erasure. Acquired images and binary remain retained for later qualification.",
+  "unexecuted": [
+    "AM installed binding/activation",
+    "Real provider/model",
+    "RPC/print/TUI memory workflows",
+    "Source assessment/refresh/publication/peer",
+    "Full macOS/Linux matrix",
+    "Signed v0.0.15 delivery"
+  ]
+}

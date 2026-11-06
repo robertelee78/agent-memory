@@ -1,0 +1,111 @@
+{
+  "schema": "agent-memory/omp-registered-worker-batches-v1",
+  "source_commit": "bf7722a99f8a8405ba105137adebeb5aba43238b",
+  "scope": "Seven actual registered transport/installed-CLI/smoke-driver-control batches; unchanged26methods and subcases, each worker300seconds. Not actual full native/provider/platform/peer matrix or release acceptance.",
+  "passed": true,
+  "methods": 26,
+  "timeout_seconds_per_worker": 300,
+  "skipped": 0,
+  "batch_coverage": [
+    {
+      "path": "tests/contracts/test_omp_boundary.py",
+      "batches": 7,
+      "cases": [
+        "contract_suite.ExplicitNativeOwnership.test_all_never_enables_omp_and_root_is_required",
+        "contract_suite.ExplicitNativeOwnership.test_explicit_native_install_applies_preview_for_copy_and_link",
+        "contract_suite.ExplicitNativeOwnership.test_explicit_root_and_peer_attestation_never_come_from_environment",
+        "contract_suite.ExplicitNativeOwnership.test_saved_root_changes_and_implicit_all_removal_refuse",
+        "contract_suite.NativeLifecyclePublic.test_held_native_preview_consumes_reviewed_envelope_without_publishing",
+        "contract_suite.NativeLifecyclePublic.test_managed_native_updates_read_back_only_owned_public_commands",
+        "contract_suite.NativeLifecyclePublic.test_public_uninstall_keeps_pending_sources_and_disabled_owned_binding",
+        "contract_suite.NativeLifecyclePublic.test_public_uninstall_requires_quiescence_and_actually_drains_completed_sources",
+        "contract_suite.NativeLifecyclePublic.test_signed_native_updates_preserve_extension_integrity",
+        "contract_suite.NativeSmokeQualification.test_both_exact_current_human_turns_and_persistent_session_are_required",
+        "contract_suite.NativeSmokeQualification.test_historical_observers_cannot_qualify_disabled_current_extension",
+        "contract_suite.NativeSmokeQualification.test_late_native_frames_cannot_reuse_initial_answer_or_settled_proof",
+        "contract_suite.NativeSmokeQualification.test_source_verifier_binds_completed_human_ids_text_roots_and_digests",
+        "contract_suite.NativeSmokeQualification.test_source_verifier_waits_for_fault_free_shared_registration",
+        "contract_suite.NativeSmokeQualification.test_unsupported_binary_refuses_before_native_launch_or_human_turns",
+        "contract_suite.NativeSources.test_admission_requires_sealed_registered_segment",
+        "contract_suite.NativeSources.test_capacity_retains_arrival_then_reuses_reference_after_capacity_frees",
+        "contract_suite.NativeSources.test_completed_snapshots_require_bound_drain_proof_after_marker_removal",
+        "contract_suite.NativeSources.test_exact_own_hidden_batch_does_not_open_a_source_successor",
+        "contract_suite.NativeSources.test_gap_refuses_both_assessment_outcomes_and_preserves_marker",
+        "contract_suite.NativeSources.test_late_native_tool_result_recovers_original_sealed_gap_without_reopening",
+        "contract_suite.NativeSources.test_long_segment_uses_two_shared_observations_and_ingest_is_idempotent",
+        "contract_suite.NativeSources.test_manual_marker_delete_cannot_hide_unregistered_source",
+        "contract_suite.NativeSources.test_protected_private_root_cannot_silently_move_or_lose_binding",
+        "contract_suite.NativeSources.test_root_wake_is_once_and_later_human_carries_unassessed_old_source",
+        "contract_suite.StoredBatchControls.test_foreign_companions_and_human_input_never_become_own_maintenance"
+      ]
+    }
+  ],
+  "batches": [
+    {
+      "name": "omp-native-source-admission",
+      "tests": 6,
+      "elapsed_seconds": 170.47022899996955,
+      "receipt": {
+        "path": "omp-native-source-admission.json",
+        "sha256": "6961060ce281cd80831627f97e5371c0e257e9e0c7642774bc2fc889d5375efe"
+      }
+    },
+    {
+      "name": "omp-native-source-reconciliation",
+      "tests": 5,
+      "elapsed_seconds": 162.60887887503486,
+      "receipt": {
+        "path": "omp-native-source-reconciliation.json",
+        "sha256": "b19d0c20c474368c7637fff3f9fdde3db69bd9017689eae2fa4b6bfbb65455bf"
+      }
+    },
+    {
+      "name": "omp-native-public-lifecycle",
+      "tests": 9,
+      "elapsed_seconds": 247.64147804200184,
+      "receipt": {
+        "path": "omp-native-public-lifecycle.json",
+        "sha256": "a5ccc8c35f0777a41c6983fa5a243da25b9bdf1acb3efb5ea7557e09fb7e66e8"
+      }
+    },
+    {
+      "name": "omp-native-smoke-human-identity",
+      "tests": 1,
+      "elapsed_seconds": 161.11346800002502,
+      "receipt": {
+        "path": "omp-native-smoke-human-identity.json",
+        "sha256": "92f8f15cfd85c49d0275b2afb521af12c3127f8fafb7516b8bf99d5e0dc352af"
+      }
+    },
+    {
+      "name": "omp-native-smoke-source-verifier",
+      "tests": 2,
+      "elapsed_seconds": 169.19732466700953,
+      "receipt": {
+        "path": "omp-native-smoke-source-verifier.json",
+        "sha256": "06418478b68495731018625e0fae05a507697a208549f1bceee160021d6b663b"
+      }
+    },
+    {
+      "name": "omp-native-smoke-profile-refusals",
+      "tests": 2,
+      "elapsed_seconds": 46.95773675001692,
+      "receipt": {
+        "path": "omp-native-smoke-profile-refusals.json",
+        "sha256": "ceae8eea3f23503296c6b930d457d41d887739fdbe48b5941809b809a3ef209b"
+      }
+    },
+    {
+      "name": "omp-native-smoke-late-frames",
+      "tests": 1,
+      "elapsed_seconds": 245.22279083298054,
+      "receipt": {
+        "path": "omp-native-smoke-late-frames.json",
+        "sha256": "93c3b3635bcba34b2a46836e06cba89ecaeac05d60c64e79f5f516ab8f44ced7"
+      }
+    }
+  ],
+  "independent_source_review": "CaseBatchWorkerOpus and CaseBatchGateOpus scoped source PASS atbf7722a; reviewers ran no checks. Runtime timing evidence is the separate actual worker receipts.",
+  "failed_attempt_preserved": "Original unsplit26method worker timed out at300.038986seconds before this split. Original20method grouped648.109second pass was not300second budget proof. Neither is relabeled.",
+  "gate_limits": "Existing300second worker timeout and180minuteCI budget unchanged; no test bodies, assertions, subcases or required suites removed."
+}
