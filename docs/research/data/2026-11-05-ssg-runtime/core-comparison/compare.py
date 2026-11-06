@@ -48,6 +48,12 @@ IMAGES = {
 FLAGS = ["--telemetry-enabled=false", "--storage-properties-on-edges=true",
          "--storage-wal-enabled=true", "--storage-snapshot-interval-sec=300",
          "--storage-snapshot-on-exit=true", "--log-level=WARNING", "--also-log-to-stderr=true"]
+VECTOR_CONTROLS = {
+    "index_capacity": 2048,  # SSG: next_power_of_two(max(needed, 1000) * 2).
+    "ann_k": 12,
+    "nonunit_query_vector": [2.0, 0.0, 0.0, 0.0],
+    "scope": "Exhaustive seven-vector diagnostic, not eligible ANN recall or production AM exact cosine.",
+}
 
 
 def digest(value):
@@ -234,23 +240,34 @@ def exercise(run, role, driver, fixture, ssg):
     query("graph-coverage", "MATCH (n) RETURN count(n) AS nodes")
     query("edge-coverage", "MATCH ()-[r]->() RETURN count(r) AS edges")
     query("create-vector-index", "CREATE VECTOR INDEX ssg_embedding ON :Embedded(embedding) WITH CONFIG "
-          + json.dumps({"dimension": 4, "capacity": 32, "metric": "cos"}))
+          + json.dumps({"dimension": 4, "capacity": VECTOR_CONTROLS["index_capacity"], "metric": "cos"}))
     query("indexinfo", "CALL vector_search.show_index_info() YIELD * RETURN *")
-    ann = query("vector-search", "CALL vector_search.search('ssg_embedding', 12, $v) YIELD node,similarity RETURN node.key AS key,similarity ORDER BY similarity DESC,key", {"v": fixture["query_vector"]})
-    exact = query("ssg-exact-cosine", "MATCH (n:Embedded) RETURN n.key AS key,vector_search.cosine_similarity(n.embedding,$v) AS similarity ORDER BY similarity DESC,key", {"v": fixture["query_vector"]})
-    host = sorted([{"key": n["properties"]["key"], "similarity": math.fsum(a*b for a,b in zip(n["properties"]["embedding"], fixture["query_vector"])) / math.sqrt(math.fsum(x*x for x in n["properties"]["embedding"]))}
-                   for n in fixture["nodes"] if "embedding" in n["properties"]], key=lambda x: (-x["similarity"], x["key"]))
-    if (len(ann) != len(host) or {r["key"] for r in ann} != {r["key"] for r in host}
-            or len(exact) != len(host) or [r["key"] for r in exact] != [r["key"] for r in host]):
-        raise ValueError("Vector coverage or exact rank differs from frozen control")
-    if any(abs(a["similarity"] - b["similarity"]) > 1e-5 for a,b in zip(exact,host)):
-        raise ValueError("Cosine control mismatch")
-    # ANN score equivalence is an observed comparison, not a premise. Retain
-    # deviations (including the negative-cosine control) rather than normalize
-    # engine output or mistake successful execution for exact ranking parity.
-    ann_deviations = [{"key": row["key"], "ann_similarity": row["similarity"],
-                       "host_exact_similarity": next(r["similarity"] for r in host if r["key"] == row["key"])}
-                      for row in ann if abs(row["similarity"] - next(r["similarity"] for r in host if r["key"] == row["key"])) > 1e-5]
+    controls = {}
+    for name, vector in (("unit", fixture["query_vector"]), ("nonunit", VECTOR_CONTROLS["nonunit_query_vector"])):
+        suffix = "" if name == "unit" else "-nonunit"
+        # No ORDER BY: retain engine arrival order and both returned score columns.
+        ann = query("vector-search" + suffix, "CALL vector_search.search('ssg_embedding', $k, $v) YIELD node,similarity,distance RETURN node.key AS key,similarity,distance",
+                    {"v": vector, "k": VECTOR_CONTROLS["ann_k"]})
+        exact = query("ssg-exact-cosine" + suffix, "MATCH (n:Embedded) RETURN n.key AS key,vector_search.cosine_similarity(n.embedding,$v) AS similarity ORDER BY similarity DESC,key", {"v": vector})
+        query_norm = math.sqrt(math.fsum(x*x for x in vector))
+        host = sorted([{"key": n["properties"]["key"], "similarity":
+                        math.fsum(a*b for a,b in zip(n["properties"]["embedding"], vector)) /
+                        (math.sqrt(math.fsum(x*x for x in n["properties"]["embedding"])) * query_norm)}
+                       for n in fixture["nodes"] if "embedding" in n["properties"]], key=lambda x: (-x["similarity"], x["key"]))
+        if (len(ann) != len(host) or {r["key"] for r in ann} != {r["key"] for r in host}
+                or len(exact) != len(host) or [r["key"] for r in exact] != [r["key"] for r in host]):
+            raise ValueError("Vector coverage or exact rank differs from frozen control")
+        if any(abs(a["similarity"] - b["similarity"]) > 1e-5 for a,b in zip(exact,host)):
+            raise ValueError("Controller cosine control mismatch")
+        controls[name] = {
+            "query_vector": vector, "query_norm": query_norm,
+            "controller_exact_cosine": host,
+            "raw_engine_order": [row["key"] for row in ann],
+            "ann_exact_score_deviations": [
+                {"key": row["key"], "ann_similarity": row["similarity"], "ann_distance": row["distance"],
+                 "controller_exact_similarity": next(r["similarity"] for r in host if r["key"] == row["key"])}
+                for row in ann if abs(row["similarity"] - next(r["similarity"] for r in host if r["key"] == row["key"])) > 1e-5],
+        }
     typed = {
         "replacement-evidence": ("MATCH p=(n:RecordVersion {key:$seed})-[:CORRECTS|SUPERSEDES|SUPPORTED_BY*1..4]-(x) RETURN x.key AS key,[r IN relationships(p)|{type:type(r),source:r.asserting_source,hash:r.asserting_hash,channel:r.channel}] AS provenance,[r IN relationships(p)|type(r)] AS types ORDER BY key,types LIMIT 64", {"seed": "record:old:1"}),
         "component-attempts": ("MATCH (s:Scope {key:$scope})<-[:IN_SCOPE]-(n:RecordVersion) OPTIONAL MATCH (n)-[:SUPPORTED_BY|ATTRIBUTED_TO|DERIVED_FROM]->(x) RETURN n.key AS key,collect(x.key) AS context ORDER BY key LIMIT 64", {"scope": "scope:parser"}),
@@ -269,7 +286,10 @@ def exercise(run, role, driver, fixture, ssg):
         rows = query("ssg-template-" + name, text, params, read_bound=True)
         if not rows:
             raise ValueError("Empty SSG template control")
-    return {"records": records, "am_host_exact_cosine": host, "ann_exact_score_deviations": ann_deviations,
+    search = tomllib.loads((ssg / "queries/search.toml").read_text())["cypher"]
+    query("ssg-template-search-nonunit", search, {"text": VECTOR_CONTROLS["nonunit_query_vector"]}, read_bound=True)
+    return {"records": records, "controller_reference": "Controller Python signed cosine, normalizing both query and stored vector; not AM's normalized-float32 vector-store implementation.",
+            "vector_controls": controls, "ann_exact_score_deviations": controls["unit"]["ann_exact_score_deviations"],
             "fixture_nodes": len(fixture["nodes"]), "fixture_edges": len(fixture["edges"])}
 
 
@@ -315,6 +335,7 @@ def main():
              "common_sha256":sha(HERE.parent / "runtime-controls/common.py"),
              "am_template_contract_sha256":sha(REPO / "docs/design/v0.0.16-graph-embedding-execution.md"),
              "ssg_templates":{n:sha(args.ssg / "queries" / (n + ".toml")) for n in ("search","nearby","class","investigation")},
+             "vector_controls":VECTOR_CONTROLS,"ssg_index_source_sha256":sha(args.ssg / "crates/ssg/src/embed.rs"),
              "python":sys.executable,"python_version":platform.python_version(),"neo4j_version":importlib.metadata.version("neo4j"),
              "clone":str(REPO),"platform":platform.platform()})
         run.podman("version", "version")
@@ -348,7 +369,11 @@ def main():
                     raise RuntimeError("Owned cleanup incomplete; no next graph permitted")
             save(root / "report.json", report)
         a,b = (report["roles"][r] for r in ("core","mage"))
-        select = lambda r: {x["name"]: x["rows"] for x in r["queries"]["records"] if x["name"] in ("replacement-evidence","component-attempts","recorded-related","ssg-exact-cosine","vector-search","ssg-template-search","ssg-template-nearby","ssg-template-class","ssg-template-investigation")}
+        selected_names = ("replacement-evidence","component-attempts","recorded-related","ssg-exact-cosine","vector-search","ssg-template-search","ssg-template-nearby","ssg-template-class","ssg-template-investigation")
+        # Canonicalize only the parity comparison's ANN rowset, never raw evidence.
+        # Tied engine arrival order is reported separately and is not a pass gate.
+        select = lambda r: {x["name"]: sorted(x["rows"], key=lambda row: row["key"]) if x["name"] == "vector-search" else x["rows"]
+                            for x in r["queries"]["records"] if x["name"] in selected_names}
         if select(a) != select(b):
             raise ValueError("Core/MAGE query results differ; inspect raw evidence")
         report["comparison"] = {"identical_selected_query_outputs":True,"selected_query_names":sorted(select(a)),
@@ -357,12 +382,18 @@ def main():
             "vector_search_equal":a["bom_summary"]["vector_search_binary"]["sha256"] == b["bom_summary"]["vector_search_binary"]["sha256"],
             "memgraph_notice_sets_equal":a["bom_summary"]["memgraph_license_files"] == b["bom_summary"]["memgraph_license_files"]}
         report["comparison"]["ann_exact_score_deviations"] = {r:report["roles"][r]["queries"]["ann_exact_score_deviations"] for r in IMAGES}
-        report["comparison"]["ann_score_warning"] = "Raw ANN similarity is not assumed equivalent to exact signed cosine; negative-vector deviation remains a qualification finding, not silently corrected."
-        report["recommendation"] = {"candidate":"core is sufficient for these bounded observed query capabilities and has a smaller observed dependency/image surface",
-            "not_adopted":"Parent retains profile/ADR decisions; ADR-0024 amendment and independent review required",
-            "am_exact_cosine":"AM-side host calculation; MAGE is not required for AM exact cosine",
+        report["comparison"]["ann_score_warning"] = "The unmodified SSG search template inherits the antiparallel ANN error (most dissimilar vector first). Nine matching selected outputs prove image parity, not ANN score/ranking correctness."
+        report["comparison"]["ann_parity_order"] = "Canonical key-sorted rowset only; raw engine arrival order and distance are retained in query records and vector_controls."
+        report["comparison"]["vector_controls"] = {r:report["roles"][r]["queries"]["vector_controls"] for r in IMAGES}
+        report["recommendation"] = {"candidate":"arm64 core is sufficient only for the bounded observed graph/query-call capabilities, excluding ANN score/ranking correctness; smaller observed dependency/image surface",
+            "not_adopted":"Parent retains profile/ADR decisions; G1 not accepted, no ADR/profile cutover; ADR-0024 amendment and independent review required",
+            "controller_exact_cosine":"Controller reference normalizes query and stored vector; not AM's exact-cosine implementation or an eligible vector-store baseline",
             "legal":"Core retains BSL/MEL/APL and AUG restrictions; smaller image does not confer legal clearance",
-            "remaining_closure":["amd64 contents", "complete rootfs ownership audit", "third-party versions/linkage and reproducible origins", "per-file MAGE license headers", "Python wheel-vendored native licenses", "custom OpenSSL origin/missing notices (both images)", "distribution/hosted/operator/counsel disposition", "production template/ACL/native-reader qualification", "clean performance and independent G1 quality gates"]}
+            "remaining_closure":["eligible exact-cosine baseline in AM's persisted vector store",
+                "ANN recall versus eligible exact cosine with k<N and resource comparison",
+                "raw engine ordering/score semantics, antiparallel and nonunit controls, and exact rescoring",
+                "physical project/generation domain isolation and eligibility filtering/completeness; global top-K then filtering is not a completeness proof",
+                "amd64 contents", "complete rootfs ownership audit", "third-party versions/linkage and reproducible origins", "per-file MAGE license headers", "Python wheel-vendored native licenses", "custom OpenSSL origin/missing notices (both images)", "distribution/hosted/operator/counsel disposition", "production template/ACL/native-reader qualification", "clean performance and independent G1 quality gates"]}
         report["success"] = True
     except BaseException as e:
         report.update(success=False, error=type(e).__name__ + ": " + str(e))
