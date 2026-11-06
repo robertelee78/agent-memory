@@ -140,6 +140,11 @@ label-only isolation. At most two graph containers are live. Each is bounded to
 index searches validate their entire returned project/generation domain; a
 separate foreign physical instance contains an explicit foreign canary.
 Wrong-project reads refuse; mismatched checkout bank-state reads are stale.
+WAL is enabled together with a 300-second periodic snapshot interval and
+snapshot-on-exit. The pinned server requires periodic snapshots for WAL;
+disabling the interval is not a supported durability profile. Startup failure
+retains the exact owned container inspection and stderr/log output before
+resource disposal, rather than retaining only a connection timeout.
 This is scratch routing/binding, not the native reader's production authority.
 
 The actual SSG binary builds a tiny authored synthetic class with **all eleven

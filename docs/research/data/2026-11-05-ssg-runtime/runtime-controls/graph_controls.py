@@ -92,7 +92,8 @@ class Stores:
             "--memory=2g", "--cpus=2", "-p", "127.0.0.1:" + str(port) + ":7687",
             "-v", name + "-data:/var/lib/memgraph", "-v", name + "-logs:/var/log/memgraph", IMAGE,
             "--telemetry-enabled=false", "--storage-properties-on-edges=true", "--storage-wal-enabled=true",
-            "--storage-snapshot-interval-sec=0", "--storage-snapshot-on-exit=true", "--log-level=WARNING")
+            "--storage-snapshot-interval-sec=300", "--storage-snapshot-on-exit=true",
+            "--log-level=WARNING", "--also-log-to-stderr=true")
         d = self.inspect(container)
         container["id"] = d["Id"]
         self.owner = owned_run(self.root)
@@ -105,8 +106,13 @@ class Stores:
                 query(uri, "RETURN 1 AS ok")
                 break
             except Exception:
-                if time.monotonic() > limit:
-                    raise RuntimeError("Owned graph did not become available in 45 seconds")
+                observed = self.inspect(container)
+                running = observed is not None and observed.get("State", {}).get("Running") is True
+                if not running or time.monotonic() > limit:
+                    save(self.root / (name + "-startup-inspect.json"), observed)
+                    save(self.root / (name + "-startup-logs.json"),
+                         self.call("logs", container["id"], check=False))
+                    raise RuntimeError("Owned graph did not become available; exact startup evidence retained")
                 time.sleep(.2)
         instance = {"role": role, "name": name, "container_id": container["id"], "uri": uri,
                     "data_volume": name + "-data", "log_volume": name + "-logs", "image": d["Image"]}
