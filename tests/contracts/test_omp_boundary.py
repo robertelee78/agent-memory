@@ -632,3 +632,32 @@ for line in sys.stdin:
             snapshot.write_text(snapshot.read_text().replace(prompts[1], 'Tampered source digest.'))
             with self.assertRaises(RuntimeError):
                 smoke.current_observations(am, repo, root, session, str(path), prompts, status, world.env)
+
+    def test_source_verifier_waits_for_fault_free_shared_registration(self):
+        from runtime_update_fixtures import ROOT
+        spec = importlib.util.spec_from_file_location('omp_native_smoke', ROOT / 'scripts/evaluations/omp_native_smoke.py')
+        smoke = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(smoke)
+        with World() as world:
+            repo, receipt, _ = self.fixture(world)
+            root = world.inside('registration-verifier-run')
+            (root / 'sessions').mkdir(parents=True)
+            session, lifecycle = str(uuid.uuid4()), str(uuid.uuid4())
+            prompt = 'Controlled ephemeral source awaiting registration.'
+            human = NativeSources().entry('registration-human', 'user', prompt, attribution='user')
+            path = root / 'sessions/current.jsonl'
+            path.write_text('\n'.join(json.dumps(value) for value in [
+                {'type': 'session', 'id': session, 'cwd': str(repo)}, human]) + '\n')
+            am = str(Path(receipt['bin_dir']) / 'am')
+            status = json.loads(world.run([am, '--json', 'status', '--repo', repo], timeout=30).stdout)
+            with patch.dict(os.environ, world.env, clear=True):
+                directory, cursor = transport.new_segment(repo, session, lifecycle, lifecycle, 'human', 1)
+                captured = transport.capture(directory, cursor, human)
+                transport.enroll_admission(directory, cursor, captured)
+            with self.assertRaises(smoke.PendingObservations):
+                smoke.current_observations(am, repo, root, session, str(path), [prompt], status, world.env)
+            with patch.dict(os.environ, world.env, clear=True):
+                NativeSources().observe(repo, session, lifecycle, [human])
+            evidence = smoke.current_observations(am, repo, root, session, str(path), [prompt], status, world.env)
+            self.assertEqual([row['native_entry_id'] for row in evidence], ['registration-human'])
+            self.assertEqual([row['human_root'] for row in evidence], [lifecycle])

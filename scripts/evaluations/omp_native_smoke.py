@@ -127,7 +127,7 @@ def current_observations(am, repo, root, session, session_file, prompts, status,
                                     enrollment['source_reference'], '--session', session,
                                     '--lifecycle', lifecycle], cwd=repo, env=env))
             source = value.get('source', {})
-            observation = value.get('observation') or {}
+            observation = value.get('observation')
             origin = value.get('origin', {})
             digest = source_digest(source)
             captures = [capture for capture in value.get('captures', [])
@@ -142,8 +142,12 @@ def current_observations(am, repo, root, session, session_file, prompts, status,
                     or origin.get('native_trigger') not in {'human', 'human-with-own-guidance'}
                     or value.get('retained_directory') != str(directory / lifecycle)
                     or len(captures) != 1 or captures[0].get('mapping') != 'verified'
-                    or captures[0].get('snapshot_sha256') != digest
-                    or observation.get('harness') != 'omp' or observation.get('session') != session
+                    or captures[0].get('snapshot_sha256') != digest):
+                raise RuntimeError('Current human retained source failed exact source/root/digest binding')
+            if 'observation' in value and observation is None:
+                raise PendingObservations('Verified current source is awaiting shared registration')
+            if (not isinstance(observation, dict) or observation.get('harness') != 'omp'
+                    or observation.get('session') != session
                     or observation.get('lifecycle') != lifecycle or not observation.get('observation_id')
                     or observation.get('source_reference') != enrollment['source_reference']
                     or observation.get('source_sha256') != digest):
@@ -237,7 +241,7 @@ def main():
                 method = frame.get('method')
                 known_methods = {'select', 'confirm', 'input', 'editor', 'ask', 'cancel',
                                  'notify', 'setStatus', 'setWidget', 'setWorkingMessage',
-                                 'setTitle', 'setEditorText', 'openUrl'}
+                                 'setTitle', 'set_editor_text', 'open_url'}
                 label = method if method in known_methods else 'unknown'
                 result['native_ui_methods'][label] = result['native_ui_methods'].get(label, 0) + 1
                 # Retain only fixed owned-adapter codes, never arbitrary UI text.
@@ -308,9 +312,27 @@ def main():
         # Wait read-only, with a deadline; never manufacture or acknowledge sources.
         waiting = time.monotonic()
         deadline = waiting + args.timeout
+        quiet_samples = 0
         while True:
             result['readback_attempts'] += 1
             try:
+                # Readback locks are nonblocking. Do not contend with the native
+                # helper and make its one-shot durable observation fail ourselves.
+                identifier = 'observer-progress-' + str(result['readback_attempts'])
+                send({'id': identifier, 'type': 'get_state'})
+                progress = until('response', identifier)
+                if progress.get('data', {}).get('sessionId') != result['session_id']:
+                    raise RuntimeError('Native session changed while awaiting its observer')
+                processes = subprocess.run(['ps', '-axo', 'pid=,ppid='], env=env,
+                                           capture_output=True, text=True, check=True, timeout=5)
+                children = [line for line in processes.stdout.splitlines()
+                            if len(line.split()) == 2 and int(line.split()[1]) == process.pid]
+                quiet_samples = 0 if children else quiet_samples + 1
+                if quiet_samples < 2:
+                    if time.monotonic() >= deadline:
+                        raise PendingObservations('Native observer helpers did not become idle before the deadline')
+                    time.sleep(0.1)
+                    continue
                 result['pending_readback'] = json.loads(run(
                     [args.am, 'omp-boundary', '--repo', str(repo), '--list-pending'], cwd=repo, env=env))
                 result['status_readback'] = json.loads(run(
@@ -325,6 +347,7 @@ def main():
                     raise PendingObservations('Native observations completed after the readback deadline')
                 break
             except PendingObservations:
+                quiet_samples = 0
                 if time.monotonic() >= deadline or process.poll() is not None:
                     raise PendingObservations('Current human observer evidence did not complete before the readback deadline')
                 time.sleep(min(0.5, max(0, deadline - time.monotonic())))
