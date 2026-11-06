@@ -140,9 +140,13 @@ class RawRoot:
                 next_fd = os.open(part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=fd)
                 os.close(fd)
                 fd = next_fd
-            result = os.open(path.name, os.O_RDONLY | os.O_NOFOLLOW, dir_fd=fd)
-            require(stat.S_ISREG(os.fstat(result).st_mode), 'Artifact is not a regular file: ' + name)
-            return os.fdopen(result, 'rb')
+            result = os.open(path.name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=fd)
+            try:
+                require(stat.S_ISREG(os.fstat(result).st_mode), 'Artifact is not a regular file: ' + name)
+                return os.fdopen(result, 'rb')
+            except BaseException:
+                os.close(result)
+                raise
         except OSError as exc:
             raise IntegrityError('Missing/symlink/nonregular artifact: ' + name) from exc
         finally:
@@ -248,6 +252,8 @@ def source_identity(store, manifest, expected_source_commit):
     require(isinstance(bindings.get('recipe'), dict) and
             bindings['recipe'].get('source_commit', expected_source_commit) == expected_source_commit,
             'Recipe source must bind the trusted reviewed freeze, not the separate native authoring commit')
+    require(bindings['recipe'].get('repository_path') == prefix + 'execute.py',
+            'Recipe must bind the reviewed executor source execute.py')
     seen = set()
     for pointer in code:
         store.verify(pointer)
@@ -267,6 +273,7 @@ def source_identity(store, manifest, expected_source_commit):
     require(bindings['recipe'].get('commit') == expected_source_commit,
             'Recipe commit differs from externally trusted expected source commit')
     profile = store.json(bindings.get('runtime_profile'))
+    require(isinstance(profile, dict), 'Runtime profile must be an object')
     require(profile.get('source_commit') == expected_source_commit and
             bindings['runtime_profile'].get('source_commit') == expected_source_commit,
             'Runtime profile source_commit differs from externally trusted source freeze')
@@ -291,6 +298,7 @@ def bind_raw(store, manifest_path, expected_source_commit):
     observations, size_rows, generations = {}, {}, {}
     paths = set()
     for row in manifest['sizes']:
+        require(isinstance(row, dict), 'Manifest size row must be an object')
         size = row.get('size')
         require(integer(size) and size in SIZES and size not in size_rows, 'Duplicate/foreign size')
         size_rows[size] = row
@@ -327,6 +335,7 @@ def bind_raw(store, manifest_path, expected_source_commit):
     # any oracle field. Hash binding is not an assertion that a model ran honestly.
     for identity, pointer in observations.items():
         observation = store.json(pointer)
+        require(isinstance(observation, dict), 'Observation must be an object')
         require(observation.get('schema') == 'am255/independent-case-observation-v1', 'Unknown observation schema')
         require((observation.get('size'), observation.get('variant'), observation.get('case_ordinal')) == identity,
                 'Observation source/size/variant/ordinal identity mismatch')
@@ -589,7 +598,7 @@ def semantic_metrics(case, observation, catalog, oracle):
         failures.append('Native-forbidden record ranked as current primary')
     if observation['native']['request_valid'] is not True:
         failures.append('Semantic ranking ran after native request refusal')
-    if observation['native'].get('crosscheck', {}).get('matched') is not True:
+    if (observation['native'].get('crosscheck') or {}).get('matched') is not True:
         failures.append('Actual native eligible-domain crosscheck not matched')
     return metric(True, failures=failures, k=k, requested_k=max(3, len(required) + 1),
                   domain_size=len(ranking), k_domain_class='k<N' if k < len(ranking) else 'exhaustive-k',
@@ -607,7 +616,7 @@ def edge_matches(actual, expected, oracle):
     for field in ('from', 'to', 'asserted_by', 'via'):
         if field in expected and actual.get(field) != oracle.resolve(expected[field]):
             return False
-    default_channels = ('recorded', 'navigation') if expected['rel'] == 'co-routed' else ('recorded',)
+    default_channels = ('recorded', 'navigation', 'provenance')
     channels = (expected['channel'],) if 'channel' in expected else default_channels
     return relation_name(actual.get('rel')) == expected['rel'] and actual.get('channel', 'recorded') in channels
 
@@ -693,9 +702,13 @@ def typed_metrics(case, observation, catalog, oracle):
     required = case['relationships']['required']
     found = [item for item in required if any(edge_matches(edge, item, oracle) and
              canonical_assertion(edge, catalog, oracle) is True for edge in edges)]
-    missing = [item for item in required if item not in found]
+    provenance_unexecuted_required = [item for item in required if item not in found and any(
+        edge_matches(edge, item, oracle) and canonical_assertion(edge, catalog, oracle) is None
+        for edge in edges)]
+    missing = [item for item in required if item not in found and item not in provenance_unexecuted_required]
+    executed_required = len(required) - len(provenance_unexecuted_required)
     if missing:
-        failures.append('Required recorded typed path missing/unverified')
+        failures.append('Required recorded typed path missing')
     candidates = typed.get('primary_candidates', [])
     require(isinstance(candidates, list) and all(isinstance(key, str) for key in candidates) and
             len(candidates) == len(set(candidates)), 'Duplicate/noncanonical typed primary candidates')
@@ -724,7 +737,9 @@ def typed_metrics(case, observation, catalog, oracle):
     if route_missing:
         failures.append('Required recorded route pointer missing')
     return metric(True, failures=sorted(set(failures)), required_paths=len(required), matched_required_paths=len(found),
-                  required_path_recall=len(found) / len(required) if required else None,
+                  executed_required_paths=executed_required,
+                  required_path_recall=len(found) / executed_required if executed_required else None,
+                  provenance_unexecuted_required=provenance_unexecuted_required,
                   missing_required_paths=missing, disallowed_paths=disallowed,
                   relation_label_accuracy=valid / len(edges) if edges and not provenance_missing else None,
                   actual_edges=len(edges), provenance_unexecuted=len(provenance_missing),
@@ -739,6 +754,7 @@ def provider_metrics(case, observation, store, oracle):
         return metric(prerequisite='No complete actual provider-send accounting surface')
     if not provider.get('executed', False):
         return metric(prerequisite=provider.get('prerequisite', 'No complete actual provider-send accounting surface'))
+    require(observation['executed'], 'Provider output on an unexecuted observation')
     require(isinstance(provider.get('document_sends'), list), 'Missing provider document request list')
     sent, query_count, requests = set(), 0, set()
     for pointer in provider['document_sends']:
@@ -797,7 +813,7 @@ def score_case(case, observation, store, generation, catalog, profile_hash, orac
             failures.append('Frozen native-forbidden current source in eligible domain')
         if native['request_valid'] != (case['availability']['outcome'] != 'invalid-request'):
             failures.append('Actual native request gate differs from frozen validation expectation')
-        if native['request_valid'] and native.get('crosscheck', {}).get('matched') is not True:
+        if native['request_valid'] and (native.get('crosscheck') or {}).get('matched') is not True:
             failures.append('Native evaluate_sources crosscheck absent/unmatched')
         truth = case['context_truth']
         if generation.get('mutation') != truth['mutation'] or generation.get('stage') != truth['stage']:
@@ -807,8 +823,16 @@ def score_case(case, observation, store, generation, catalog, profile_hash, orac
         classes['native'] = unexecuted(observation, 'native', 'Native request/context qualification not run')
     if observation['semantic'].get('executed') or observation['typed'].get('executed'):
         require(exercised, 'Semantic/typed outputs without a source-bound native gate')
-    classes['semantic'] = semantic_metrics(case, observation, catalog, oracle)
-    classes['typed'] = typed_metrics(case, observation, catalog, oracle)
+    runtime_state = case['context_truth']['runtime_state']
+    if runtime_state != 'ready-complete-generation' or case['context_truth']['stage'] == 'before-rebuild':
+        # This scorer has no reviewed state-transition receipt verifier. A reused
+        # ready-generation vector cannot qualify a remote/stopped/stale state.
+        reason = 'Actual runtime/generation transition lacks a reviewed receipt verifier: ' + runtime_state
+        classes['semantic'] = metric(prerequisite=reason, ann=metric(prerequisite=reason))
+        classes['typed'] = metric(prerequisite=reason)
+    else:
+        classes['semantic'] = semantic_metrics(case, observation, catalog, oracle)
+        classes['typed'] = typed_metrics(case, observation, catalog, oracle)
     classes['provider_canaries'] = provider_metrics(case, observation, store, oracle)
     for name, reason in (
             ('outcome', 'No separately reviewed/frozen semantic-result outcome mapper'),
@@ -817,7 +841,7 @@ def score_case(case, observation, store, generation, catalog, profile_hash, orac
             ('literal_status', 'No reviewed native literal/status/exit/no-match comparison mapper'),
             ('abstention', 'No calibration-only cutoff frozen; raw ranking is not abstention')):
         classes[name] = unexecuted(observation, name, reason)
-        if observation.get(name, {}).get('executed'):
+        if isinstance(observation.get(name), dict) and observation[name].get('executed'):
             classes[name]['unsupported_raw_execution_claim'] = True
             classes[name]['prerequisites'] = [reason]
     return classes
@@ -866,13 +890,14 @@ def summarize(cells):
                                if any(v['exact_rescored_top_k_overlap'] is not None for v in measured) else None}
     output['ann']['unexecuted'] = len(cells) - sum(v['ann']['executed'] for v in semantic)
     typed = [cell['classes']['typed'] for cell in cells if cell['classes']['typed']['executed']]
-    required_paths = sum(value['required_paths'] for value in typed)
+    required_paths = sum(value['executed_required_paths'] for value in typed)
     edges = sum(value['actual_edges'] for value in typed if not value['provenance_unexecuted'])
     output['typed_raw_paths'] = {
         'matched_required_paths': sum(value['matched_required_paths'] for value in typed),
         'executed_required_path_denominator': required_paths,
         'intended_required_path_denominator': sum(cell['required_path_count'] for cell in cells),
-        'unexecuted_required_path_count': sum(cell['required_path_count'] for cell in cells if not cell['classes']['typed']['executed']),
+        'unexecuted_required_path_count': sum(cell['required_path_count'] for cell in cells if not cell['classes']['typed']['executed']) +
+                                          sum(len(value['provenance_unexecuted_required']) for value in typed),
         'micro_required_path_recall': sum(value['matched_required_paths'] for value in typed) / required_paths if required_paths else None,
         'fully_provenanced_edge_denominator': edges,
         'micro_relation_label_accuracy': sum(value['valid_canonical_edges'] for value in typed
@@ -911,7 +936,10 @@ def score(suite_path, map_path, raw_root, manifest_path, expected_source_commit)
                         continue
                     pointer = observations.get((size, variant, ordinal))
                     observation = store.json(pointer) if pointer else None
-                    gid = observation.get('native', {}).get('source_binding', {}).get('generation_id') if observation else None
+                    native = observation.get('native', {}) if observation else {}
+                    binding = native.get('source_binding')
+                    require(binding is None or isinstance(binding, dict), 'Native source binding must be an object or null')
+                    gid = binding.get('generation_id') if binding else None
                     generation = generations.get((size, gid))
                     require(generation is None or generation['variant'] == variant, 'Foreign variant generation source')
                     classes = score_case(case, observation, store, generation, catalogs.get((size, gid), {}),
@@ -985,7 +1013,7 @@ def main():
     try:
         report = score(args.suite, args.scorer_map, args.raw_root, args.manifest, args.expected_source_commit)
         result = 0
-    except (IntegrityError, OSError, KeyError, TypeError, ValueError) as exc:
+    except (IntegrityError, OSError, KeyError, TypeError, ValueError, AttributeError, RecursionError) as exc:
         report = {'schema': 'am255/independent-offline-score-v1', 'status': 'integrity-rejected',
                   'error': str(exc), 'error_type': type(exc).__name__, 'model_graph_llm_calls': 0,
                   'qualification_scope': 'No quality claims from rejected evidence'}
