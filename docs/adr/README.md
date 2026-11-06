@@ -41,6 +41,7 @@ MUST NOT be treated as evidence that a guide is semantically complete.
 | [0019](0019-stable-checkout-binding-and-hook-diagnostics.md) | Checkout continuity and actionable hook diagnostics | Accepted (v0.0.7) |
 | [0020](0020-repeatable-turn-boundaries.md) | Repeated steering, refresh and quiet completion | Accepted (v0.0.8) |
 | [0021](0021-unobtrusive-memory-boundaries.md) | Unobtrusive boundaries and truthful operation health | Accepted (corrective v0.0.9; delivery pending) |
+| [0025](0025-source-bound-sharing-performance.md) | Source-bound sharing performance for existing #209 | Proposed; RCA/research and Fable review required |
 
 [ADR-0013](0013-public-cli-and-corrective-releases.md) defines the corrective
 `v0.0.2` public command contract and the current future-release mapping. Older
