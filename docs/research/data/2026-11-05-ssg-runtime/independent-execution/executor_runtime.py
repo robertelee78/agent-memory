@@ -49,14 +49,21 @@ def dependencies(binary):
                     files.add(resolved)
                     pending.append(resolved)
             elif name.startswith('@'):
-                # The build stores its loader-relative dylibs beside the executable.
-                candidate = binary.parent / Path(name).name
-                if not candidate.is_file():
+                # Pin the complete candidate closure; the retained dyld parser
+                # verifies the actual resolved image before any embedding send.
+                if name.startswith('@loader_path/'):
+                    candidates = [path.parent / name[len('@loader_path/'):]]
+                elif name.startswith('@executable_path/'):
+                    candidates = [binary.parent / name[len('@executable_path/'):]]
+                else:
+                    candidates = [p for p in files if p.name == Path(name).name]
+                candidates = [p.resolve(strict=True) for p in candidates if p.is_file()]
+                if not candidates:
                     raise ValueError('Unresolved local dependency: ' + name)
-                resolved = candidate.resolve(strict=True)
-                if resolved not in files:
-                    files.add(resolved)
-                    pending.append(resolved)
+                for resolved in candidates:
+                    if resolved not in files:
+                        files.add(resolved)
+                        pending.append(resolved)
     return [{'path': str(p), 'sha256': sha(p), 'bytes': p.stat().st_size} for p in sorted(files)]
 
 
@@ -91,9 +98,13 @@ def artifacts(config, spec):
     image = json.loads(inspect['stdout'])[0]
     if image.get('Architecture') != 'arm64' or image.get('Id', '').removeprefix('sha256:') != spec['graph_profile']['config_image']:
         raise ValueError('Actual local MAGE image/config/architecture differs')
+    # Podman reports the requested multi-platform digest in Digest and retains
+    # the selected architecture manifest separately in RepoDigests.
     image_digest = image.get('Digest')
-    if image_digest != spec['graph_profile']['arm64_manifest']:
-        raise ValueError('Actual local MAGE arm64 manifest differs')
+    platform_reference = spec['graph_profile']['image'].split('@', 1)[0] + '@' + spec['graph_profile']['arm64_manifest']
+    if image_digest != spec['graph_profile']['image'].split('@', 1)[1] or platform_reference not in image.get('RepoDigests', []):
+        raise ValueError('Actual local MAGE index/arm64 manifest bindings differ: ' +
+                         compact({'Digest': image_digest, 'RepoDigests': image.get('RepoDigests', [])}))
     return {'schema': 'am255/independent-runtime-profile-v1', 'reference_source_commit': revision,
             'binary': str(binary), 'binary_sha256': sha(binary), 'version': version,
             'weight': {'path': str(weight), 'sha256': spec['profile']['reference_weight_sha256'], 'bytes': weight.stat().st_size},
