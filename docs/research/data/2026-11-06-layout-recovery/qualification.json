@@ -1,0 +1,52 @@
+{
+  "schema": "agent-memory/layout-recovery-partial-qualification-v1",
+  "recorded_date_utc": "2026-11-06",
+  "scope": "Actual disposable installed CLI/source preservation, reconciliation, publication and retention contracts only; not original incident recovery or full #244/platform/lifecycle/release acceptance.",
+  "source_fixes": {
+    "reservation_and_retirement": "97469a6",
+    "retention_fixture_and_crash_assertions": "8a581a9"
+  },
+  "source_scope": "Recovery/runtime/contract bytes were unchanged during these runs; concurrent edits affected only #255 research files and documentation.",
+  "runs": [
+    {
+      "group": "public-recovery",
+      "methods": 9,
+      "passed": true,
+      "elapsed_seconds": 188.3250562499743,
+      "receipt_sha256": "01dc88527878e96f2e8b15cef0c1c878bc7caa40bfdb0bf6fd28a261c6598e9c"
+    },
+    {
+      "group": "private-frontier-plus-imported-comparison",
+      "frontier_methods": 4,
+      "imported_comparison_methods": 12,
+      "passed": true,
+      "elapsed_seconds": 158.052,
+      "job": "bg_168"
+    },
+    {
+      "group": "reconciliation-nested-publication-retention-combined",
+      "methods": 28,
+      "passed": true,
+      "elapsed_seconds": 1557.593,
+      "job": "bg_170",
+      "release_budget_qualification": false,
+      "budget_limit": "Longer combined harness; does not prove each registered suite fits unchanged300second worker deadline. No timeout budget was changed.",
+      "provenance": "Observed auto-delivered output and completed-job readback; transient process record expired after readback, not reconstructed as a raw log."
+    },
+    {
+      "group": "outer-reservation-and-retirement-focused",
+      "methods": 2,
+      "subcases": 3,
+      "passed": true,
+      "elapsed_seconds": 162.353
+    },
+    {
+      "group": "separate-installed-cli-reservation-smoke",
+      "passed": true,
+      "elapsed_seconds": 28.684
+    }
+  ],
+  "superseded_attempt_not_erased": "Earlier28-method run had27passes/one retention-fixture error and failed overall. Final combined run above passed after fixture corrections; this does not rewrite that earlier result.",
+  "independent_review": "Opus scoped source PASS for97469a6 reservation/retirement delta only; no full acceptance verdict.",
+  "remaining": "Full original admission/capacity/platform/metadata/legacy-reader/doctor/migration/stale-lock/multi-transaction/revision/catalog/deferred-invalidation/mixed-native-capability/hosted-CI/signed-release criteria remain separate obligations."
+}

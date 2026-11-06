@@ -27,6 +27,9 @@ failures and checked-out commit/tree evidence for each cell.
 
 Each suite retains its 300-second worker deadline. The complete sequential
 gate has a separate 180-minute CI job budget.
+The registry explicitly recognizes the implemented `v0.0.15` feature suites;
+their version scope does not make them optional or exempt them from that
+deadline. Registry validation alone does not execute a suite.
 
 For expensive independent interruption cases, the gate requires every declared
 batch and aggregates actual fault proofs before reporting completeness. The
@@ -154,4 +157,11 @@ attestations test binding, not independent acceptance. Run/retain actual results
 authored cases alone do not prove repair of the unavailable original incident,
 platform/legacy-reader crash behavior, native provider sessions or release
 publication/fresh-second-clone acceptance.
+
+The [2026-11-06 partial recovery record](../research/data/2026-11-06-layout-recovery/qualification.json)
+retains the public recovery, frontier/comparison and combined
+reconciliation/nested/publication/retention results. The combined run passed all
+28 methods but used a longer group harness; it does **not** prove each registered
+suite fits its unchanged 300-second release deadline. Full platform,
+story-specific and signed-delivery evidence remains separate.
 
