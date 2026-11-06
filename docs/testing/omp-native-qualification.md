@@ -252,6 +252,15 @@ The native session may begin with title metadata; qualification requires one
 matching session header after that prologue, not a header at physical line one.
 Only fixed AM diagnostic codes are retained from native UI events; arbitrary
 notification/display text remains excluded.
+Readback waits for background observer publication within one shared absolute
+deadline (default 240 seconds), distinct from the 950 ms callback-await bound.
+Known verified pending/null-observation states remain pending; malformed or
+misbound source evidence still refuses. Before public readback, the driver uses
+numeric PID/PPID child-quiescence samples to avoid contending with one-shot
+observer writes. This is a scheduling heuristic, not proof that native queues
+are empty. It rechecks the latest native settled state and both answer counts
+after late frames; an earlier settled response cannot qualify a later duplicate
+or unsettled session.
 The report retains source/binary/receipt identity and current human observation
 references without copying arbitrary display payloads:
 
@@ -263,6 +272,17 @@ The driver never auto-approves. Headless UI requests are refused and preserved
 as such. A smoke pass is not a durable-capture/Git-exchange, full-mode,
 platform-wide, peer-client or release acceptance pass. Its report explicitly
 keeps `full_native_qualification:false`.
+
+The [2026-11-06 minimal macOS RPC evidence](../research/data/2026-11-06-omp-native/minimal-smoke.json)
+records an actual pass on source `90d822b42e41b96b27682ebca2bcf405c6a26bfc`,
+installed artifact `c8c4a03280d7c34e2eb975dfc4157a8a5999409790a0973a5d020ea3166a55b5`,
+the fixed 18.16.0 binary and `openai-codex/gpt-6.1-sol`. Both current human
+entries mapped to distinct source-bound observations, each answer occurred
+once, and the latest native state settled. Observer wait was 116.08 seconds;
+the callback's pending warning and unresolved coverage/tool rows remain
+preserved. Source completeness, assessment, refresh and publication were **not**
+qualified. The synthetic late-frame regression separately passed its normal,
+late-duplicate and late-unsettled subcases.
 
 ## Full independent native release matrix
 
