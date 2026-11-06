@@ -1,0 +1,49 @@
+{
+  "schema": "am255/research-execution-io-design-v1",
+  "status": "Proposed executable research interface; not a production AM API or a G1 pass",
+  "executor_input": {
+    "compiled": "am255/oracle-separated-inputs-v1 from compile_inputs.py; only opaque case_ordinal, never descriptive case_id, split, expected guidance, relationships, caveats, disclosure or availability",
+    "spec": "Exact spec.json bytes/hash, actual fixed authoring AM175 checkout, runtime host configuration and a fresh owned output root",
+    "prohibited_reads": "Executor MUST NOT open suite.json, freeze label/oracle catalogs, expanded oracles, scorer-only map or prior retrieval/model outputs. It may import the separately hash-pinned native fixture/overlay/mutator functions and actual AM175 native readers."
+  },
+  "executor_cli": "execute.py --am-root AUTHORING175 --inputs COMPILED --spec SPEC --host-config HOST_CONFIG --sizes 1000 10000 50000 --output NEW_ROOT; optional explicit separate freeze-only/run phases are permitted. No implicit service start by a read-only diagnose operation.",
+  "source_identity": "Before model/graph outputs, freeze exact recipe/helper/source/renderer/template bytes, compiled input hash, requested profile and actual artifacts/dependencies. Reuse existing source-only guards. Retain all failed attempts and exact owned-resource receipts. Actual source/profile identity differs from operator acceptance.",
+  "key_convention": {
+    "record": "record:<project UUID>:<record UUID>:<integer version>",
+    "context": "context:<project UUID>:<canonical relative path>",
+    "evidence": "evidence:<project UUID>:<verbatim canonical evidence reference>",
+    "scope": "scope:<project UUID>:<verbatim canonical scope expression>",
+    "condition": "condition:<project UUID>:<canonical JSON [key,value]>",
+    "origin": "origin:<project UUID>:<canonical JSON [field,value]>",
+    "route": "route:<project UUID>:<canonical index path>:<target path>:<ordinal>",
+    "visibility": "Physical project/generation namespaces remain mandatory; tagged keys do not grant visibility or scope. No excluded node/path/title/evidence in public diagnostic summaries."
+  },
+  "manifest": {
+    "schema": "am255/independent-raw-manifest-v1",
+    "required": ["schema", "input_sha256", "spec_sha256", "io_sha256", "source_bindings", "sizes", "cleanup", "qualification_scope"],
+    "sizes": "List of {size, canonical_sha256, profile_sha256, observations:[{case_ordinal,variant,path,sha256}], generation_artifacts, costs, missing_prerequisites}; paths are relative to exact owned output root; observation uniqueness is(size,variant,case_ordinal), with88 base/101 overlay controls per size",
+    "qualification_scope": "Raw scratch mechanism/quality observations only; production outcome/caveat coverage and all unexecuted cells remain explicit. No operator/legal/profile/G1 acceptance.",
+    "cleanup": "Exact resource disposal receipts; partial failures keep erasure-pending and cannot be converted to overall pass. Borrowed artifacts/services must remain unchanged."
+  },
+  "case_observation": {
+    "schema": "am255/independent-case-observation-v1",
+    "required": ["schema", "case_ordinal", "size", "variant", "operation", "executed", "prerequisites", "native", "semantic", "typed", "outcome", "caveats", "provider", "costs"],
+    "executed": "Boolean for whether any real requested mechanism ran, not whether all oracle classes passed",
+    "native": "{request_valid, context_sha256, eligible:[{key,path,id?,version?}], source_binding, crosscheck}; exact native gates precede model/ranking/template disclosure. Source keys and exclusions stay in private synthetic scientific evidence, not an asserted production diagnostic surface.",
+    "semantic": "{executed, prerequisite?, exact_ranking:[{key,path,id?,version?,cosine}], ann:{executed,domain_size,candidate_budget,reported_capacity,raw_rows:[{key,distance,similarity}],exact_rescored:[{key,cosine}],costs,interpretation}, query_sha256?, vector_sha256?}; ranking contains actual full eligible exact ordering, not oracle-selected primaries or label-derived truncation.",
+    "typed": "{executed,prerequisite?,edges:[{from,rel,to,asserted_by,source_sha256,channel,via?}],primary_candidates:[key],route_pointers:[key],costs}; rel uses recorded contract relation names, channel recorded or inferred, and provenance is canonical. Any virtual co-routed/origin view is explicitly labeled navigation/provenance, not a new durable lesson assertion.",
+    "outcome": "{executed:false,prerequisite} unless a separately reviewed contract-derived real research outcome mapper is frozen. Never copy expected status/exit/no-match into output. Actual service/state transition observations may be retained separately without manufacturing semantic outcomes.",
+    "caveats": "{executed:false,prerequisite} unless native/reviewed research caveat assembly actually ran; no expected-caveat echoes",
+    "provider": "Actual source/rendered request hashes, document/query sends, task IDs, token usage and cached/evaluated splits; raw request data only synthetic and owner-private. Scoring canaries never filter a request.",
+    "costs": "Actual measured elapsed/token/RAM/disk/index-build quantities and sampling conditions; shared-host measurements never become clean performance passes."
+  },
+  "scorer_cli": "score.py --suite SUITE --scorer-map MAP --raw-root ROOT --manifest MANIFEST --output NEW_OUTPUT; scorer never starts services, creates embeddings, changes labels, rewrites raw outputs or calls an LLM.",
+  "scorer_rules": {
+    "integrity": "Verify exact frozen suite and scorer-map input binding, compiled input/spec/IO hashes, every observation pointer/hash and source/size/variant/ordinal. Reject traversal/symlinks/duplicate or unknown identity tuples. Base cases execute in both variants; overlay-only cases never count in base. Missing cells are unexecuted, never implicit passes. Counterpart variants are not additional independent labels.",
+    "separation": "Load oracle fields only after raw manifests/observations are durably hash-bound. Executor gets no scorer map or descriptive case IDs. Scorer resolves refs from frozen canonical metadata; native results may not be recomputed into expected answers.",
+    "top_k": "For scoring ONLY, k=max(3,number_of_required_primaries+1), bounded by actual domain; report each size and variant independently, calibration and held-out independently, empty-required and unexecuted separately. ANN breadth stays16 regardless of expected labels; exhaustive candidate cases do not count as k<N recall.",
+    "cutoff": "Raw per-case files let the scorer read calibration observations first, derive any explicitly candidate-only cutoff from calibration alone, fsync that method/value before opening held-out scores, then report held-out abstention. If calibration separation is infeasible, report infeasibility; do not tune held-out or relax thresholds. A no-cutoff raw-recall report is allowed but abstention remains unexecuted.",
+    "typed": "Compare actual canonical relation triples/provenance/channel and required/forbidden paths; no guessed edges for missing templates. Disclosure/body/caveat/status classes only count where a real output surface was exercised.",
+    "result": "Machine report names measured cells, failed predicates and exact unexecuted classes/prerequisites. Proposed suite quality/resource thresholds may be shown as proposals, not operator-frozen acceptance or feature/release pass. No synthesized answers or coding-benefit claim."
+  }
+}

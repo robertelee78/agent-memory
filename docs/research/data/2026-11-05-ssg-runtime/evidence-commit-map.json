@@ -1,0 +1,236 @@
+{
+  "schema": "am255/original-and-integrated-evidence-lineage-v1",
+  "recorded_at": "2026-11-06T21:09:45.670041+00:00",
+  "repository": "https://github.com/robertelee78/agent-memory",
+  "purpose": "Preserve original pre-output freeze history separately from later cherry-pick integration dates; original measured/raw files remain unchanged. Git dates are recorded provenance, not independently signed timestamps.",
+  "published_refs": [
+    {
+      "ref": "refs/heads/evidence/v015-255-core-initial-20261106",
+      "tip": "41ff29cdbb2c3fd615daa7e9fbff1394a98472ba"
+    },
+    {
+      "ref": "refs/heads/evidence/v015-255-core-corrections-20261106",
+      "tip": "1f049be75e1a7f43fc65c1249e2422c196323544"
+    },
+    {
+      "ref": "refs/heads/evidence/v015-255-serving-initial-20261106",
+      "tip": "4b19e23f24fe7a8dfbcd2cfd70e20cad8a974c11"
+    },
+    {
+      "ref": "refs/heads/evidence/v015-255-serving-corrections-20261106",
+      "tip": "5feec049468ca87e193a7f112c9d9315cc6b5dbe"
+    },
+    {
+      "ref": "refs/heads/evidence/v015-255-workspace-20261106",
+      "tip": "1cf03133ec2c59b25a01a3c4b9a53052dc0a51d5"
+    },
+    {
+      "ref": "refs/heads/evidence/v015-255-linux-20261106",
+      "tip": "3e1f38379932a54b74f66379c1549b5a446c15e0"
+    }
+  ],
+  "mapping": [
+    {
+      "subtree": "docs/research/data/2026-11-05-ssg-runtime/workspace-critic",
+      "original_commit": "d12fad02b564608b08c46792658136011dda4e25",
+      "integrated_commit": "87f87034d357b46e0b791e235842188365f8f970",
+      "identical_subtree_tree": "4504f1bb930224e761848ec3a0d62d630c75ebb9",
+      "published_original_ref": "refs/heads/evidence/v015-255-workspace-20261106",
+      "original_commit_url": "https://github.com/robertelee78/agent-memory/commit/d12fad02b564608b08c46792658136011dda4e25"
+    },
+    {
+      "subtree": "docs/research/data/2026-11-05-ssg-runtime/workspace-critic",
+      "original_commit": "576ac538746995b2cffdb2ffb8cf048f550dcbfd",
+      "integrated_commit": "2feecfc748b53dcdaa691a9b5251f9524aa8bee7",
+      "identical_subtree_tree": "46e7fa7bc1fd0b74806611deeebc1e9dedbabe6f",
+      "published_original_ref": "refs/heads/evidence/v015-255-workspace-20261106",
+      "original_commit_url": "https://github.com/robertelee78/agent-memory/commit/576ac538746995b2cffdb2ffb8cf048f550dcbfd"
+    },
+    {
+      "subtree": "docs/research/data/2026-11-05-ssg-runtime/workspace-critic",
+      "original_commit": "b788ddfc9623df66de43c656a86b0b10a8739e0e",
+      "integrated_commit": "ddab838829199bbf71bbf6b89cf64fa7625175e9",
+      "identical_subtree_tree": "b2abab7122ae78b12d8d7504f3cc95c481433572",
+      "published_original_ref": "refs/heads/evidence/v015-255-workspace-20261106",
+      "original_commit_url": "https://github.com/robertelee78/agent-memory/commit/b788ddfc9623df66de43c656a86b0b10a8739e0e"
+    },
+    {
+      "subtree": "docs/research/data/2026-11-05-ssg-runtime/workspace-critic",
+      "original_commit": "df94833cf271b7cf9b96431c7f61c89529676c4d",
+      "integrated_commit": "eee7f06cccedb47d817004f766a90c7fe85c7fd3",
+      "identical_subtree_tree": "caaaaa22710cdd50a3376bfad844aa6aa39c285e",
+      "published_original_ref": "refs/heads/evidence/v015-255-workspace-20261106",
+      "original_commit_url": "https://github.com/robertelee78/agent-memory/commit/df94833cf271b7cf9b96431c7f61c89529676c4d"
+    },
+    {
+      "subtree": "docs/research/data/2026-11-05-ssg-runtime/workspace-critic",
+      "original_commit": "cd4f4ee2485bd3362322c45555654d4709c2cc61",
+      "integrated_commit": "54c28c8ac67b3d3ba6223fb3bbd95b236d7e06fb",
+      "identical_subtree_tree": "b33618c190f0da7ace4383b772f63b236d76b4c0",
+      "published_original_ref": "refs/heads/evidence/v015-255-workspace-20261106",
+      "original_commit_url": "https://github.com/robertelee78/agent-memory/commit/cd4f4ee2485bd3362322c45555654d4709c2cc61"
+    },
+    {
+      "subtree": "docs/research/data/2026-11-05-ssg-runtime/workspace-critic",
+      "original_commit": "faf6a12220e47def418357c2caa5f3e5e83612c7",
+      "integrated_commit": "46fb47a673d793339b39b7da7186463c3a58b189",
+      "identical_subtree_tree": "9c2cf2ff914779f624ec2a632987b685a01d6702",
+      "published_original_ref": "refs/heads/evidence/v015-255-workspace-20261106",
+      "original_commit_url": "https://github.com/robertelee78/agent-memory/commit/faf6a12220e47def418357c2caa5f3e5e83612c7"
+    },
+    {
+      "subtree": "docs/research/data/2026-11-05-ssg-runtime/workspace-critic",
+      "original_commit": "1cf03133ec2c59b25a01a3c4b9a53052dc0a51d5",
+      "integrated_commit": "94316e7544eafa41116a7403a90b63027028b071",
+      "identical_subtree_tree": "a556e340afdab2d70a6ee6fdd098506749901485",
+      "published_original_ref": "refs/heads/evidence/v015-255-workspace-20261106",
+      "original_commit_url": "https://github.com/robertelee78/agent-memory/commit/1cf03133ec2c59b25a01a3c4b9a53052dc0a51d5"
+    },
+    {
+      "subtree": "docs/research/data/2026-11-05-ssg-runtime/linux-portability",
+      "original_commit": "a50f494ec2943f607d5c9e45d3bf24c8002b9573",
+      "integrated_commit": "1bd057bb70f679f89b44b647f8b019556b1a9e1b",
+      "identical_subtree_tree": "4d04ef013aa2fb8bb5ff84f8a4012da7267f9ed8",
+      "published_original_ref": "refs/heads/evidence/v015-255-linux-20261106",
+      "original_commit_url": "https://github.com/robertelee78/agent-memory/commit/a50f494ec2943f607d5c9e45d3bf24c8002b9573"
+    },
+    {
+      "subtree": "docs/research/data/2026-11-05-ssg-runtime/linux-portability",
+      "original_commit": "5b3d04855257ff518497430465f6043904c3a900",
+      "integrated_commit": "e66784fa02d17baf1bcf598026d9ddb7f90e951f",
+      "identical_subtree_tree": "3c99c4ff113698a61d7b0d294c3ca1950d196aac",
+      "published_original_ref": "refs/heads/evidence/v015-255-linux-20261106",
+      "original_commit_url": "https://github.com/robertelee78/agent-memory/commit/5b3d04855257ff518497430465f6043904c3a900"
+    },
+    {
+      "subtree": "docs/research/data/2026-11-05-ssg-runtime/linux-portability",
+      "original_commit": "3cca42a1760fd8c72fb3549f66243c48601b1e14",
+      "integrated_commit": "bc0876e1e4c7f6d3af08b81ee0baea91dab57664",
+      "identical_subtree_tree": "01bde810dca3ecd841d7a14bc3c068447cbb2a27",
+      "published_original_ref": "refs/heads/evidence/v015-255-linux-20261106",
+      "original_commit_url": "https://github.com/robertelee78/agent-memory/commit/3cca42a1760fd8c72fb3549f66243c48601b1e14"
+    },
+    {
+      "subtree": "docs/research/data/2026-11-05-ssg-runtime/linux-portability",
+      "original_commit": "4d43197784b5a5ee0539cc36b3994d0a70ddd6c0",
+      "integrated_commit": "e71ec6d52883a42075f1b5337448dd9450a42935",
+      "identical_subtree_tree": "3e6ff83bf3006e28c9a3774154ca5ff12ae31e2d",
+      "published_original_ref": "refs/heads/evidence/v015-255-linux-20261106",
+      "original_commit_url": "https://github.com/robertelee78/agent-memory/commit/4d43197784b5a5ee0539cc36b3994d0a70ddd6c0"
+    },
+    {
+      "subtree": "docs/research/data/2026-11-05-ssg-runtime/linux-portability",
+      "original_commit": "79196277e281f9bfa3faa96cc76fc19dee62c666",
+      "integrated_commit": "568ec723dd4a02c94220639eee4ea1a7d943e3b4",
+      "identical_subtree_tree": "755620a8ac2d91a71d7f30f4bc11b689394f253a",
+      "published_original_ref": "refs/heads/evidence/v015-255-linux-20261106",
+      "original_commit_url": "https://github.com/robertelee78/agent-memory/commit/79196277e281f9bfa3faa96cc76fc19dee62c666"
+    },
+    {
+      "subtree": "docs/research/data/2026-11-05-ssg-runtime/linux-portability",
+      "original_commit": "81231e5e82bddaccfa0c84726ae9325e9b112cf0",
+      "integrated_commit": "3c804575f674ad054226ae50890cc72d27d0aea2",
+      "identical_subtree_tree": "0e443848d9f39532c33f788103c81bcf140aeeb9",
+      "published_original_ref": "refs/heads/evidence/v015-255-linux-20261106",
+      "original_commit_url": "https://github.com/robertelee78/agent-memory/commit/81231e5e82bddaccfa0c84726ae9325e9b112cf0"
+    },
+    {
+      "subtree": "docs/research/data/2026-11-05-ssg-runtime/linux-portability",
+      "original_commit": "68434a46f116da26f73f2649d61ae00ff890d1db",
+      "integrated_commit": "8b6ddc416fe3aaabd9f5a190e64d20c11280ebbd",
+      "identical_subtree_tree": "58c02f0d215300eac77d8c12dee26e42a067d99a",
+      "published_original_ref": "refs/heads/evidence/v015-255-linux-20261106",
+      "original_commit_url": "https://github.com/robertelee78/agent-memory/commit/68434a46f116da26f73f2649d61ae00ff890d1db"
+    },
+    {
+      "subtree": "docs/research/data/2026-11-05-ssg-runtime/linux-portability",
+      "original_commit": "3e1f38379932a54b74f66379c1549b5a446c15e0",
+      "integrated_commit": "4464e987b269df2e4f57c1d548d3eeb30bfbdd9c",
+      "identical_subtree_tree": "210faff47af6cd5fa546ad6fcaea730e31b6719d",
+      "published_original_ref": "refs/heads/evidence/v015-255-linux-20261106",
+      "original_commit_url": "https://github.com/robertelee78/agent-memory/commit/3e1f38379932a54b74f66379c1549b5a446c15e0"
+    },
+    {
+      "subtree": "docs/research/data/2026-11-05-ssg-runtime/serving-comparison",
+      "original_commit": "1a691593183ec5e43301819e0c1312c8bf8115d4",
+      "integrated_commit": "fef1fd4d1a6bd0fcb89109fc504bd60297caa9c8",
+      "identical_subtree_tree": "2cc50e785eb1fb55a44ec0393c67cf8f8dd51c51",
+      "published_original_ref": "refs/heads/evidence/v015-255-serving-corrections-20261106",
+      "original_commit_url": "https://github.com/robertelee78/agent-memory/commit/1a691593183ec5e43301819e0c1312c8bf8115d4"
+    },
+    {
+      "subtree": "docs/research/data/2026-11-05-ssg-runtime/serving-comparison",
+      "original_commit": "7e29afa5a12f02cbe130115f96c01ef0eb322c18",
+      "integrated_commit": "4c216b75022ac4ea507efe717071225b7eee5485",
+      "identical_subtree_tree": "1bb0a19f375b9ade05feb84f3b453eea57715217",
+      "published_original_ref": "refs/heads/evidence/v015-255-serving-corrections-20261106",
+      "original_commit_url": "https://github.com/robertelee78/agent-memory/commit/7e29afa5a12f02cbe130115f96c01ef0eb322c18"
+    },
+    {
+      "subtree": "docs/research/data/2026-11-05-ssg-runtime/serving-comparison",
+      "original_commit": "4e41939c651135abbce920eb87a1ac9a3a56ffe5",
+      "integrated_commit": "3a49d6f3aa4269b5d0acd0de1e600ee0c4e63b05",
+      "identical_subtree_tree": "c4bfbe31859653ca30b2a0847b9d36aeb30ad5e5",
+      "published_original_ref": "refs/heads/evidence/v015-255-serving-corrections-20261106",
+      "original_commit_url": "https://github.com/robertelee78/agent-memory/commit/4e41939c651135abbce920eb87a1ac9a3a56ffe5"
+    },
+    {
+      "subtree": "docs/research/data/2026-11-05-ssg-runtime/serving-comparison",
+      "original_commit": "db0fd417be79c3ae0491b8b69b41b338c6d0871b",
+      "integrated_commit": "1e7b085c327a49b726b3c925ab19fed1c3bf661c",
+      "identical_subtree_tree": "5b3471a3b2ecc35e4bd6090be9f981825eeadfd8",
+      "published_original_ref": "refs/heads/evidence/v015-255-serving-corrections-20261106",
+      "original_commit_url": "https://github.com/robertelee78/agent-memory/commit/db0fd417be79c3ae0491b8b69b41b338c6d0871b"
+    },
+    {
+      "subtree": "docs/research/data/2026-11-05-ssg-runtime/serving-comparison",
+      "original_commit": "5feec049468ca87e193a7f112c9d9315cc6b5dbe",
+      "integrated_commit": "b491064ab006a1df152c153a945030c24a8dbbe7",
+      "identical_subtree_tree": "31b1c7fe1a04dbbe70ac8f6fdb39d0fa8599dd75",
+      "published_original_ref": "refs/heads/evidence/v015-255-serving-corrections-20261106",
+      "original_commit_url": "https://github.com/robertelee78/agent-memory/commit/5feec049468ca87e193a7f112c9d9315cc6b5dbe"
+    },
+    {
+      "subtree": "docs/research/data/2026-11-05-ssg-runtime/core-comparison",
+      "original_commit": "f7746eb3c86b96a41e58144c17fb971fc9da97d8",
+      "integrated_commit": "8068a232dc46edffe48a48a129e75ac14368427e",
+      "identical_subtree_tree": "e8b182e73c524e49a715be2176d0a193373654c7",
+      "published_original_ref": "refs/heads/evidence/v015-255-core-corrections-20261106",
+      "original_commit_url": "https://github.com/robertelee78/agent-memory/commit/f7746eb3c86b96a41e58144c17fb971fc9da97d8"
+    },
+    {
+      "subtree": "docs/research/data/2026-11-05-ssg-runtime/core-comparison",
+      "original_commit": "1f049be75e1a7f43fc65c1249e2422c196323544",
+      "integrated_commit": "38e0b9faa5d325988df5af6bdcfbe13063a276c3",
+      "identical_subtree_tree": "202bd6c91ae9ebfb16fc5a26bf0230eaae67213d",
+      "published_original_ref": "refs/heads/evidence/v015-255-core-corrections-20261106",
+      "original_commit_url": "https://github.com/robertelee78/agent-memory/commit/1f049be75e1a7f43fc65c1249e2422c196323544"
+    },
+    {
+      "subtree": "docs/research/data/2026-11-05-ssg-runtime/core-comparison",
+      "original_commit": "41ff29cdbb2c3fd615daa7e9fbff1394a98472ba",
+      "integrated_commit": "c267b0071d6869bb2e5fc1ea368cf6d38374b3cc",
+      "identical_subtree_tree": "a347ca9a8778b02d994e72f55ebba7779ac79b3d",
+      "published_original_ref": "refs/heads/evidence/v015-255-core-initial-20261106",
+      "original_commit_url": "https://github.com/robertelee78/agent-memory/commit/41ff29cdbb2c3fd615daa7e9fbff1394a98472ba"
+    },
+    {
+      "subtree": "docs/research/data/2026-11-05-ssg-runtime/serving-comparison",
+      "original_commit": "fef68d07d0a8617220c3f332b0de7694cec7ad20",
+      "integrated_commit": "94249d8ee08ddf3b5b21572025b18cbec1fbf8a0",
+      "identical_subtree_tree": "2164be7e466f40645af62fb1dbfd2a45a8390519",
+      "published_original_ref": "refs/heads/evidence/v015-255-serving-initial-20261106",
+      "original_commit_url": "https://github.com/robertelee78/agent-memory/commit/fef68d07d0a8617220c3f332b0de7694cec7ad20"
+    },
+    {
+      "subtree": "docs/research/data/2026-11-05-ssg-runtime/serving-comparison",
+      "original_commit": "4b19e23f24fe7a8dfbcd2cfd70e20cad8a974c11",
+      "integrated_commit": "c31411070d365a3420882c7922e19f567969b2f1",
+      "identical_subtree_tree": "86e56917efda6524fbb8695383022b0f75a1cf23",
+      "published_original_ref": "refs/heads/evidence/v015-255-serving-initial-20261106",
+      "original_commit_url": "https://github.com/robertelee78/agent-memory/commit/4b19e23f24fe7a8dfbcd2cfd70e20cad8a974c11"
+    }
+  ],
+  "reproduce_original": "git fetch origin <published original ref>; git switch --detach <original commit>. A single-branch clone must fetch the named evidence ref.",
+  "no_acceptance": "Durable reachability and tree equality do not establish G1/profile/legal/production acceptance."
+}
