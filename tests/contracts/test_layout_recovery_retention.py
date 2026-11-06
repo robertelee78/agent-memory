@@ -172,20 +172,23 @@ class LayoutRetentionContract(unittest.TestCase):
         return reviewed, json.loads(reviewed.read_text())['proposal']
 
     def test_public_terminal_cleanup_crash_resume_and_real_historical_retry(self):
-        from layout_recovery_fixtures import call
+        from layout_recovery_fixtures import call, private_directory
         with World() as w:
             command, _, repo, bank, observed, layout_path, layout_proposal, applied = self.public_repair(w)
             self.assertTrue(applied['semantic_recovery_complete'])
             before_bank = {p.relative_to(bank).as_posix(): p.read_bytes() for p in bank.rglob('*') if p.is_file()}
             index_path = Path(w.git('rev-parse', '--path-format=absolute', '--git-path', 'index', cwd=repo).stdout.strip())
             before_index = index_path.read_bytes() if index_path.exists() else None
-            before_head = w.git('rev-parse', 'HEAD', cwd=repo).stdout
+            head = w.git('rev-parse', '--verify', '--quiet', 'HEAD', cwd=repo, check=False)
+            before_head = head.returncode, head.stdout
             reviewed_path, reviewed = self.reviewed_cleanup(w, command, repo, observed, layout_proposal)
             call(w, command, 'retention', 'apply', '--repo', repo, '--operation', observed['operation_id'],
                  '--proposal', reviewed_path, expected=1,
-                 env={**w.env, 'AGENT_MEMORY_FAULT_STAGE': 'layout-recovery-retention-after-delete-0'})
-            status = call(w, command, 'status', '--repo', repo, '--operation', observed['operation_id'])
-            self.assertFalse(status.get('original_evidence_available', False))
+                 env={'AGENT_MEMORY_FAULT_STAGE': 'layout-recovery-retention-after-delete-0'})
+            directory = private_directory(w, bank, observed['operation_id'])
+            removed, *remaining = sorted(reviewed['delete'])
+            self.assertFalse((directory / removed).exists())
+            self.assertTrue(all((directory / name).is_file() for name in remaining))
             call(w, command, 'retention', 'apply', '--repo', repo, '--operation', observed['operation_id'], '--proposal', reviewed_path)
             again = call(w, command, 'retention', 'apply', '--repo', repo, '--operation', observed['operation_id'], '--proposal', reviewed_path)
             self.assertTrue(again.get('receipt_is_historical'))
@@ -193,7 +196,8 @@ class LayoutRetentionContract(unittest.TestCase):
             self.assertTrue(historical['receipt_is_historical'])
             self.assertEqual(before_bank, {p.relative_to(bank).as_posix(): p.read_bytes() for p in bank.rglob('*') if p.is_file()})
             self.assertEqual(before_index, index_path.read_bytes() if index_path.exists() else None)
-            self.assertEqual(before_head, w.git('rev-parse', 'HEAD', cwd=repo).stdout)
+            head = w.git('rev-parse', '--verify', '--quiet', 'HEAD', cwd=repo, check=False)
+            self.assertEqual(before_head, (head.returncode, head.stdout))
 
     def test_public_pending_units_cannot_be_deleted_by_retention(self):
         from layout_recovery_fixtures import call
