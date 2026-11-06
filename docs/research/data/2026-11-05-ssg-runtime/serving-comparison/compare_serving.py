@@ -12,6 +12,7 @@ import math
 import os
 from pathlib import Path
 import platform
+import re
 import socket
 import subprocess
 import sys
@@ -21,7 +22,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent / "runtime-controls"))
 from common import choose_model, command, create_run, digest, inventory, load, request, save, sha, validate
 
-BASE = "ba0087a129fed6dcda03ff4aa25060289531014a"
+BASE = "c267b0071d6869bb2e5fc1ea368cf6d38374b3cc"
 WEIGHT = Path("/tmp/am-v15-delivery/Qwen3-Embedding-8B-Q8_0.gguf")
 WEIGHT_SHA = "d20ddc71e8a5c4344f2343481e242233a997dc5eaff442427a945836c97b4deb"
 SERVERS = {
@@ -40,7 +41,7 @@ def timestamp():
 
 
 def freeze():
-    spec = load(HERE / "probe-spec.json")
+    spec = load(HERE / "cache-probe-spec.json")
     by_id = {d["id"]: d["own"] for d in spec["documents"]}
     rendered = {"probes": spec["probes"],
                 "queries": [spec["query_prefix"] + q["text"] for q in spec["queries"]],
@@ -51,11 +52,14 @@ def freeze():
     for key in ("over_context", "aggregate_budget"):
         item = spec[key]
         rendered[key] = item["repeat"] * item["count"] + item["suffix"]
-    path = HERE / "frozen-inputs.json"
+    path = HERE / "cache-frozen-inputs.json"
     if path.exists():
         raise ValueError("Refusing to overwrite frozen inputs")
-    save(path, {"schema": "am255/serving-input-freeze-v1", "frozen_at": timestamp(),
-                "spec": spec, "spec_sha256": sha(HERE / "probe-spec.json"),
+    pinned = artifacts()
+    save(path, {"schema": "am255/serving-input-freeze-v2", "frozen_at": timestamp(),
+                "spec": spec, "spec_sha256": sha(HERE / "cache-probe-spec.json"),
+                "pre_output_artifacts": pinned,
+                "pre_output_artifact_identity": artifact_identity(pinned),
                 "rendered": rendered, "canonical_rendered_sha256": digest(rendered),
                 "rendered_group_sha256": {k: digest(v) for k, v in rendered.items()},
                 "canonicalization": "UTF-8 json.dumps(sort_keys=True,separators=(',',':'),allow_nan=False); ensure_ascii default true",
@@ -92,12 +96,14 @@ def no_servers():
     return result
 
 
-def artifacts(root):
+def artifacts(root=None):
     weight = WEIGHT.resolve(strict=True)
     if weight.stat().st_size != 8047105824 or sha(weight) != WEIGHT_SHA:
         raise ValueError("Exact approved 8B weight is required")
     report = {"weight": {"path": str(weight), "bytes": weight.stat().st_size, "sha256": WEIGHT_SHA},
-              "servers": {}, "dynamic_library_scope": "Hashed local package/build dylibs and Metal resources; not a reproducible-build or legal attestation"}
+              "os_identity": {"sw_vers": command(["sw_vers"])["stdout"], "kernel": command(["uname", "-a"])["stdout"]},
+              "dynamic_library_scope": "Pre-output candidate file pins, checked against actual dyld-loaded images per launch; system shared-cache images are UUID/OS-bound, not standalone-file hashes. No reproduced-build or legal attestation.",
+              "servers": {}}
     for key, configured in SERVERS.items():
         binary = Path(configured["binary"]).resolve(strict=True)
         if sha(binary) != configured["binary_sha256"]:
@@ -108,11 +114,29 @@ def artifacts(root):
             raise ValueError("Serving build/source version mismatch: " + key)
         item = dict(configured, resolved_binary=str(binary), version=version,
                     linkage=command(["otool", "-L", binary]))
-        roots = [binary.parent] if key == "fork" else [binary.parent.parent / "lib", Path("/opt/homebrew/opt/ggml/lib")]
-        roots += [Path("/opt/homebrew/opt/openssl@4/lib" if key == "fork" else "/opt/homebrew/opt/openssl@3/lib")]
-        files = set()
+        roots = [binary.parent] if key == "fork" else [
+            binary.parent.parent / "lib", Path("/opt/homebrew/opt/ggml/lib"),
+            Path("/opt/homebrew/opt/ggml/libexec")]
+        roots += [Path("/opt/homebrew/opt/openssl@4/lib" if key == "fork" else "/opt/homebrew/opt/openssl@3/lib"),
+                  Path("/opt/homebrew/opt/libomp/lib")]
+        files = {binary}
         for libroot in roots:
-            files.update(p.resolve() for p in libroot.rglob("*") if p.is_file() and p.suffix in (".dylib", ".metallib", ".metal"))
+            files.update(p.resolve() for p in libroot.rglob("*") if p.is_file()
+                         and p.suffix in (".dylib", ".so", ".metallib", ".metal"))
+        # Follow concrete transitive dependencies as well as backend candidates.
+        pending = list(files)
+        while pending:
+            path = pending.pop()
+            if path.suffix in (".metal", ".metallib"):
+                continue
+            linkage = command(["otool", "-L", path])["stdout"]
+            for line in linkage.splitlines()[1:]:
+                dependency = line.strip().split(" (", 1)[0]
+                if dependency.startswith("/") and Path(dependency).is_file():
+                    resolved = Path(dependency).resolve(strict=True)
+                    if resolved not in files:
+                        files.add(resolved)
+                        pending.append(resolved)
         item["local_library_inventory"] = [{"path": str(p), "sha256": sha(p), "bytes": p.stat().st_size} for p in sorted(files)]
         if key == "fork":
             item["observed_source_revision"] = command(["git", "-C", configured["source"], "rev-parse", "HEAD"])
@@ -128,16 +152,89 @@ def artifacts(root):
                 raise ValueError("Upstream package receipt source changed")
             item["package_provenance"] = {str(p): {"sha256": sha(p), "content": p.read_text()}
                                           for p in (receipt, formula, prefix / "sbom.spdx.json")}
-            item["source_identity_limit"] = "Installed bottle receipt/formula plus runtime version; upstream source checkout/build not reproduced"
+            ggml_prefix = Path("/opt/homebrew/opt/ggml").resolve(strict=True)
+            item["ggml_runtime_package"] = {
+                "prefix": str(ggml_prefix),
+                "receipt_sha256": sha(ggml_prefix / "INSTALL_RECEIPT.json"),
+                "receipt": load(ggml_prefix / "INSTALL_RECEIPT.json"),
+                "build_time_ggml_version": "0.13.0",
+                "installed_ggml_version": load(ggml_prefix / "INSTALL_RECEIPT.json")["source"]["versions"]["stable"]}
+            item["source_identity_limit"] = "b9360 bottle built against ggml 0.13.0; this run pins installed ggml and verifies actual loaded backend paths. The old run did not hash its backend modules and is not retroactively attested."
         report["servers"][key] = item
-    save(root / "artifacts.json", report)
+    if root is not None:
+        save(root / "artifacts.json", report)
+    return report
+
+
+def artifact_identity(bound):
+    return digest({"weight": bound["weight"], "os_identity": bound["os_identity"],
+                   "servers": {key: item["local_library_inventory"] for key, item in bound["servers"].items()}})
+
+
+def loaded_closure(work, kind, bound):
+    """Bind observed loads, including dlopen backends, rather than guessing lib roots."""
+    text = (work / "server-stderr.log").read_text()
+    pins = {item["path"]: item for item in bound["servers"][kind]["local_library_inventory"]}
+    images = {}
+    for uuid, name in re.findall(r"dyld\[\d+\]:\s+<([0-9A-Fa-f-]+)>\s+(/[^\n]+)", text):
+        path = Path(name)
+        if path.is_file():
+            resolved = str(path.resolve(strict=True))
+            observed = {"path": resolved, "sha256": sha(path), "bytes": path.stat().st_size}
+            system_image = name.startswith(("/System/", "/usr/lib/"))
+            if not system_image and (resolved not in pins or observed != pins[resolved]):
+                raise ValueError("Unfrozen or changed dynamically loaded image: " + resolved)
+            images[resolved] = observed | {"dyld_uuid": uuid, "observed_path": name,
+                                          "pre_output_binding": "OS build" if system_image else "exact file hash"}
+        else:
+            if not name.startswith(("/System/", "/usr/lib/")):
+                raise ValueError("Unresolved non-system dynamically loaded image: " + name)
+            images[name] = {"path": name, "dyld_uuid": uuid, "binding": "OS dyld shared-cache image; not an independently hashable file"}
+    local = [row for row in images.values() if "sha256" in row]
+    for backend in ("ggml-metal", "ggml-cpu", "ggml-blas"):
+        if not any(backend in row["path"] for row in local):
+            raise ValueError("Actual loaded backend not observed: " + backend)
+    closure = {"schema": "am255/observed-dyld-closure-v1", "images": sorted(images.values(), key=lambda row: row["path"]),
+               "local_file_closure_sha256": digest(sorted(local, key=lambda row: row["path"])),
+               "complete_observed_image_identity_sha256": digest(sorted(images.values(), key=lambda row: row["path"])),
+               "os": command(["sw_vers"]), "kernel": command(["uname", "-a"]),
+               "scope": "Every DYLD_PRINT_LIBRARIES image observed through all requests. Local executable/dependency/backend bytes pinned before outputs; OS shared-cache images UUID/build-bound. Metal embedded-library status is in retained logs; no cross-host/driver/reproducible-build attestation."}
+    save(work / "loaded-closure.json", closure)
+    return closure
+
+
+def cache_evidence(work, frozen, traces):
+    text = (work / "server-stderr.log").read_text()
+    rows = []
+    for trace in traces:
+        excerpt = text[trace["stderr_start"]:trace["stderr_end"]]
+        splits = [{"cached_prefix_tokens": int(a), "memory_start": int(b)}
+                  for a, b in re.findall(r"n_tokens = (\d+), memory_seq_rm \[(\d+), end\)", excerpt)]
+        completed = [{"total_tokens": int(a), "evaluated_batch_tokens": int(b)}
+                     for a, b in re.findall(r"prompt processing done, n_tokens = (\d+), batch.n_tokens = (\d+)", excerpt)]
+        rows.append(trace | {"prefix_splits": splits, "completed_prompts": completed,
+                             "scope": "Serial parallel1 embedding tasks; batch token count is actual evaluation, not HTTP-field support"})
+    expected = sum(trace["expected_rows"] for trace in traces)
+    observed = sum(len(row["completed_prompts"]) for row in rows)
+    if "prompt cache is disabled" not in text or "prompt cache is enabled" in text:
+        raise ValueError("Chosen --cache-ram 0 was not confirmed by actual server logs")
+    if observed != expected or any(len(row["prefix_splits"]) != row["expected_rows"] for row in rows):
+        raise ValueError("Incomplete actual token/cache log coverage")
+    report = {"frozen_profile": frozen["spec"]["cache_profile"], "ram_cache_disabled_log_confirmed": True,
+              "successful_embedding_rows": expected, "logged_completed_prompts": observed, "requests": rows,
+              "slot_prefix_reuse_observed": any(s["cached_prefix_tokens"] > 0 for row in rows for s in row["prefix_splits"]),
+              "per_request_cache_field_support_claimed": False,
+              "scope": "The embedding handler does not parse cache_prompt; the field is deliberately absent. RAM cache disabled does not disable slot-local prefix reuse. Actual prefix/evaluated-token logs define the effective cache path."}
+    save(work / "cache-evidence.json", report)
     return report
 
 
 def policy(counts, spec):
     if len(counts) > spec["maintenance_policy"]["max_inputs"]:
         return "maintenance-batch-input-limit"
-    if any(n > spec["settings"]["context"] for n in counts) or sum(counts) > spec["maintenance_policy"]["aggregate_tokens"]:
+    if any(n > spec["settings"]["context"] for n in counts):
+        return "maintenance-single-input-context-limit"
+    if sum(counts) > spec["maintenance_policy"]["aggregate_tokens"]:
         return "maintenance-aggregate-token-limit"
     return "accepted"
 
@@ -179,12 +276,16 @@ def launch(root, kind, number, bound, frozen):
             "--embedding", "--pooling", settings["pooling"], "--ctx-size", str(settings["context"]),
             "--parallel", "1", "--threads", "4", "--threads-batch", "4", "--threads-http", "4",
             "--batch-size", "8192", "--ubatch-size", "8192", "--device", settings["device"], "--gpu-layers", "99",
-            "--flash-attn", "off", "--fit", "off", "--offline", "--no-webui"]
+            "--flash-attn", "off", "--fit", "off", "--offline", "--no-webui",
+            "--cache-ram", str(settings["cache_ram_mib"]), "--log-verbosity", str(settings["log_verbosity"])]
     env = {k: v for k, v in os.environ.items() if not (k.startswith("LLAMA_") or k.startswith("GGML_") or k.startswith("TURBO_") or k.startswith("DYLD_") or k in ("OPENAI_API_KEY", "HF_TOKEN"))}
     env["OMP_NUM_THREADS"] = "4"
+    env["DYLD_PRINT_LIBRARIES"] = "1"
     save(work / "launch.json", {"argv": argv, "at": timestamp(), "canonical_inputs_sha256": frozen["canonical_rendered_sha256"],
                                "weight_sha256": bound["weight"]["sha256"], "binary_sha256": bound["servers"][kind]["binary_sha256"],
                                "removed_environment_prefixes": ["LLAMA_", "GGML_", "TURBO_", "DYLD_"], "OMP_NUM_THREADS": "4",
+                               "observability_environment": {"DYLD_PRINT_LIBRARIES": "1"},
+                               "cache_profile": frozen["spec"]["cache_profile"],
                                "cold_definition": "New process/model load; OS file cache not purged; normal shared host load"})
     start = time.monotonic()
     with (work / "server-stdout.log").open("xb") as out, (work / "server-stderr.log").open("xb") as err:
@@ -193,16 +294,21 @@ def launch(root, kind, number, bound, frozen):
         process = subprocess.Popen(argv, env=env, stdout=out, stderr=err)
     save(work / "owner.json", {"pid": process.pid, "argv": argv, "uid": os.getuid(), "root": str(work),
                                "ps": command(["ps", "-p", str(process.pid), "-o", "lstart=", "-o", "command="], check=False)})
-    responses, vectors = {}, {}
+    responses, vectors, traces = {}, {}, []
 
     def call(name, route, value=None):
+        sent = {"name": name, "route": route, "body": value, "at": timestamp()}
+        save(work / (name + "-request.json"), sent)
         answer = request(base + route, "", value, timeout=180)
         save(work / (name + "-response.json"), answer)
         responses[name] = brief(answer)
         return answer
 
     def embedding(name, texts, model=None):
+        before = len((work / "server-stderr.log").read_text())
         answer = call(name, "/v1/embeddings", {"input": texts, "model": model or settings["alias"]})
+        traces.append({"name": name, "expected_rows": len(texts), "stderr_start": before,
+                       "stderr_end": len((work / "server-stderr.log").read_text())})
         validate(answer, model or settings["alias"], len(texts), settings["dimension"])
         # Preserve provider coordinates verbatim; common.validate returns normalized copies.
         values = [row["embedding"] for row in sorted(answer["body"]["data"], key=lambda row: row["index"])]
@@ -253,20 +359,14 @@ def launch(root, kind, number, bound, frozen):
             token_counts[name] = len(tokens)
         embedding("short", [frozen["rendered"]["short"]])
         over = call("over-context", "/v1/embeddings", {"model": settings["alias"], "input": [frozen["rendered"]["over_context"]]})
-        unknown = call("unknown-model", "/v1/embeddings", {"model": frozen["spec"]["unknown_alias"], "input": frozen["rendered"]["probes"][:1]})
-        unknown_comparison = None
-        if unknown["status"] == 200:
-            validate(unknown, frozen["spec"]["unknown_alias"], 1, settings["dimension"])
-            unknown_vectors = [row["embedding"] for row in sorted(unknown["body"]["data"], key=lambda row: row["index"])]
-            known = embedding("known-single", frozen["rendered"]["probes"][:1])
-            unknown_comparison = delta(known, unknown_vectors)
+        unknown_vectors = embedding("unknown-model", frozen["rendered"]["probes"][:1], frozen["spec"]["unknown_alias"])
+        unknown = responses["unknown-model"]
+        known = embedding("known-single", frozen["rendered"]["probes"][:1])
+        unknown_comparison = delta(known, unknown_vectors)
         for name, value in (("empty-input", []), ("invalid-input", {"synthetic": "invalid type"})):
             call(name, "/v1/embeddings", {"model": settings["alias"], "input": value})
         for count in (1, 4, 8, 9):
-            answer = call("batch-" + str(count), "/v1/embeddings",
-                          {"model": settings["alias"], "input": frozen["rendered"]["batch_rows"][:count]})
-            if answer["status"] == 200:
-                validate(answer, settings["alias"], count, settings["dimension"])
+            embedding("batch-" + str(count), frozen["rendered"]["batch_rows"][:count])
         ranks = {name: ranking(vectors["queries-0"], vectors[name + "-0"], frozen) for name in ("own", "relationship")}
         probe_mean = sum(responses["probes-" + str(i)]["seconds"] for i in range(3)) / 3
         costs = {"startup_seconds": startup, "probe_mean_seconds": probe_mean,
@@ -277,14 +377,17 @@ def launch(root, kind, number, bound, frozen):
                  "own_fill_tokens": responses["own-0"]["usage"], "relationship_fill_tokens": responses["relationship-0"]["usage"],
                  "performance_acceptance": False}
         limits = {"token_counts": token_counts, "over_context_refused": token_counts["over_context"] > 8192 and over["status"] in (400, 413, 422),
-                  "maintenance_policy": {"evidence_class": "local policy using actual tokenizer, not provider maxima",
-                                         "nine_inputs": policy([token_counts["short"]] * 9, frozen["spec"]),
+                  "maintenance_policy": {"evidence_class": "Offline draft policy using actual tokenizer; would refuse, not an implemented AM client or blocked request",
+                                         "nine_inputs_would_refuse": policy([token_counts["short"]] * 9, frozen["spec"]),
                                          "two_input_aggregate_tokens": token_counts["aggregate_budget"] * 2,
-                                         "aggregate_refusal": policy([token_counts["aggregate_budget"]] * 2, frozen["spec"]),
+                                         "aggregate_would_refuse": policy([token_counts["aggregate_budget"]] * 2, frozen["spec"]),
+                                         "nine_input_embedding_request_sent": True,
                                          "large_aggregate_embedding_request_sent": False},
                   "empty_input_status": responses["empty-input"]["status"], "invalid_input_status": responses["invalid-input"]["status"],
                   "batch_statuses": {str(n): responses["batch-" + str(n)]["status"] for n in (1, 4, 8, 9)},
                   "scope": "Observed short batches and one over-context input; no maximum-batch or universal no-truncation proof"}
+        closure = loaded_closure(work, kind, bound)
+        cache = cache_evidence(work, frozen, traces)
         result = {"kind": kind, "launch": number, "path": work.name, "responses": responses, "repeated": repeated,
                   "rankings": ranks, "own_to_relationship": {"vectors": delta(vectors["own-0"], vectors["relationship-0"]),
                                                             "repeated_ranks": {name: rank_delta(ranks[name], ranking(vectors["queries-1"], vectors[name + "-1"], frozen)) for name in ("own", "relationship")},
@@ -293,8 +396,9 @@ def launch(root, kind, number, bound, frozen):
                                "unknown_alias_in_catalog": frozen["spec"]["unknown_alias"] in catalog,
                                "metadata_unknown_refusal": metadata_unknown_refusal,
                                "unknown_alias_http": unknown["status"], "unknown_alias_vector_comparison": unknown_comparison,
-                               "unknown_alias_is_identity_proof": False, "identity_authority": "Owned launch + exact weight/binary hashes; not response model echo"},
-                  "limits": limits, "costs": costs}
+                               "unknown_alias_is_identity_proof": False, "identity_authority": "Owned launch + exact weight/binary/observed dependency closure; not response model echo",
+                               "observed_closure_sha256": closure["complete_observed_image_identity_sha256"]},
+                  "limits": limits, "costs": costs, "cache_evidence": cache}
         save(work / "result.json", result)
         return result, vectors
     finally:
@@ -311,24 +415,32 @@ def launch(root, kind, number, bound, frozen):
 
 
 def run(output):
-    frozen = load(HERE / "frozen-inputs.json")
-    if frozen["spec_sha256"] != sha(HERE / "probe-spec.json") or frozen["canonical_rendered_sha256"] != digest(frozen["rendered"]):
+    frozen_path, spec_path = HERE / "cache-frozen-inputs.json", HERE / "cache-probe-spec.json"
+    frozen = load(frozen_path)
+    if frozen["spec_sha256"] != sha(spec_path) or frozen["canonical_rendered_sha256"] != digest(frozen["rendered"]):
         raise ValueError("Frozen inputs changed")
-    # Require the input freeze to be durable before any actual output is created.
-    freeze_commit = command(["git", "log", "-1", "--format=%H", "--", HERE / "frozen-inputs.json"])["stdout"].strip()
+    source_paths = [Path(__file__).resolve(), HERE.parent / "runtime-controls/common.py", frozen_path, spec_path]
+    command(["git", "ls-files", "--error-unmatch", "--", *source_paths])
+    command(["git", "diff", "--exit-code", "HEAD", "--", *source_paths])
+    freeze_commit = command(["git", "log", "-1", "--format=%H", "--", frozen_path])["stdout"].strip()
     if not freeze_commit:
-        raise ValueError("Commit the input freeze before executing comparisons")
-    root = create_run(output, "same-weight-serving-comparison")
+        raise ValueError("Commit the input/cache/artifact freeze before executing comparisons")
+    root = create_run(output, "same-weight-explicit-cache-serving-comparison")
     save(root / "source-bindings.json", {"base_commit": BASE, "freeze_commit": freeze_commit,
          "execution_commit": command(["git", "rev-parse", "HEAD"])["stdout"].strip(),
          "clone": str(Path.cwd()), "script_sha256": sha(Path(__file__)), "common_sha256": sha(HERE.parent / "runtime-controls/common.py"),
-         "frozen_inputs_file_sha256": sha(HERE / "frozen-inputs.json"), "canonical_inputs_sha256": frozen["canonical_rendered_sha256"],
+         "frozen_inputs_file_sha256": sha(frozen_path), "spec_sha256": sha(spec_path),
+         "canonical_inputs_sha256": frozen["canonical_rendered_sha256"],
+         "pre_output_artifact_identity": frozen["pre_output_artifact_identity"],
+         "committed_source_paths_clean_before_outputs": True,
          "started_at": timestamp(), "platform": platform.platform(), "python": platform.python_version(),
          "contention": "Normal shared host load; graph comparison/other ordinary jobs may overlap. No clean timing reservation or OS cache purge.",
          "host": command(["sysctl", "hw.model", "hw.memsize", "hw.ncpu"]), "load_before": os.getloadavg()})
     bound = artifacts(root)
     reports, values, cross = [], {}, []
     try:
+        if artifact_identity(bound) != frozen["pre_output_artifact_identity"]:
+            raise ValueError("Candidate dependencies changed after pre-output freeze")
         for kind, number in (("fork", 1), ("fork", 2), ("upstream", 1), ("upstream", 2)):
             result, vectors = launch(root, kind, number, bound, frozen)
             reports.append(result)
@@ -346,24 +458,32 @@ def run(output):
         deltas += [d for item in cross for d in item["vectors"].values()]
         stable = all(d["max_abs_coordinate"] <= tolerances["coordinate_tolerance"] and d["max_cosine_distance"] <= tolerances["cosine_distance_tolerance"] for d in deltas)
         ranks_stable = all(d["changed_query_orders"] == 0 for item in cross for d in item["ranks"].values())
-        compatible = all(r["limits"]["over_context_refused"] and r["limits"]["invalid_input_status"] in (400, 422) for r in reports)
-        candidate = "upstream-b9360-qualified-synthetic-candidate" if stable and ranks_stable and compatible else "explicit-prerequisite-no-serving-cutover"
-        result = {"schema": "am255/same-weight-serving-comparison-v1", "status": "actual-comparison-complete", "launches": reports,
+        coordinate_ok = all(d["max_abs_coordinate"] <= tolerances["coordinate_tolerance"] for d in deltas)
+        cosine_ok = all(d["max_cosine_distance"] <= tolerances["cosine_distance_tolerance"] for d in deltas)
+        result = {"schema": "am255/same-weight-serving-comparison-v2", "status": "actual-comparison-complete", "launches": reports,
                   "cross_comparisons": cross, "canonical_inputs_sha256": frozen["canonical_rendered_sha256"],
                   "diagnostic_tolerances_frozen_before_execution": tolerances,
-                  "within_diagnostic_coordinate_cosine_tolerance": stable, "cross_rank_orders_unchanged": ranks_stable,
-                  "bounded_api_compatible": compatible,
-                  "recommendation": {"candidate": candidate,
-                    "rationale": "Prefer ordinary installed upstream serving software over the reference fork only if these frozen synthetic compatibility diagnostics pass; no observed application need for fork-specific serving modifications is established by this slice.",
-                    "identity_guard": "Enforce independently configured/catalogued alias and owned weight/binary identity; accepting or echoing unknown model aliases is never weight identity.",
-                    "text_profile": "Own versus relationship is a measured synthetic control, not a final representation choice or held-out quality verdict.",
-                    "prerequisites": ["Parent reviews exact observed deltas/API behavior and proposes any profile change", "Independent full quality/held-out and legal/distribution review remain open", "Backend/platform requalification required outside this exact host and dependency bundle", "Do not reuse old persisted vectors across a serving change without the profile/fingerprint decision"]},
+                  "diagnostic_outcome": {"coordinate_within_1e_5": coordinate_ok, "cosine_within_1e_5": cosine_ok,
+                                         "coordinate_and_cosine_within_diagnostic": stable, "cross_rank_orders_unchanged": ranks_stable,
+                                         "eligibility_or_upstream_usability_verdict": False},
+                  "api_observations": {"all_over_context_refused": all(r["limits"]["over_context_refused"] for r in reports),
+                                       "empty_input_statuses": [r["limits"]["empty_input_status"] for r in reports],
+                                       "malformed_input_statuses": [r["limits"]["invalid_input_status"] for r in reports],
+                                       "server_cutover_blocker_inferred_from_empty_malformed": False},
+                  "candidate_identity": {"status": "source-and-observed-kernel-closure-bound-synthetic-candidate-only",
+                                         "upstream_build": "9360", "installed_ggml": bound["servers"]["upstream"]["ggml_runtime_package"]["installed_ggml_version"],
+                                         "observed_launch_closures": {r["path"]: r["identity"]["observed_closure_sha256"] for r in reports}},
+                  "client_contract_draft": {"implemented_in_actual_am_production_client": False,
+                    "input_preflight": "Would refuse empty/non-string input, >8 rows, >8192 individual/aggregate tokens before sending; treat every non-2xx or invalid vector response as failure. This comparator deliberately sends invalid/batch9 diagnostic requests.",
+                    "generic_byo_api": "URL plus optional key; explicit model only if discovery is ambiguous. No universal provider-specific cache fields.",
+                    "identity_guard": "Local candidate uses owned launch/weight/binary/dependency closure, never the alias echo.",
+                    "scope": "Applies to all serving profiles; HTTP500 without vectors fails closed and is not comparative evidence against upstream usability."},
+                  "decision_authority": "Diagnostics only. Parent owns profile/fingerprint, persisted-vector rebuild/reuse, ADR and G1. No acceptance criterion is created or relaxed.",
                   "excluded_claims": ["G1 accepted", "final ADR/profile freeze", "Linux pass", "clean timing", "performance pass", "full quality pass", "legal pass", "production implementation", "0.6B comparison"],
-                  "proposed_shared_doc_additions": ["Four serial cold-process launches compare exact fork b9341 and upstream b9360 using the same SHA-bound 8B Q8_0 GGUF, 4 threads, ctx8192, last pooling and Metal; canonical frozen synthetic probes, own/relationship text, vectors, ranks, metadata, refusals and raw logs are retained under serving-comparison.", "Startup/probe/tiny-fill observations are under ordinary shared load with warm OS cache possible; they are not clean timing, throughput or latency acceptance. Source/binary/weight bindings, not provider model echoes, establish identity. The result is only a qualified serving-software candidate or explicit prerequisite, not G1/ADR/legal/quality adoption."],
                   "finished_at": timestamp(), "load_after": os.getloadavg()}
         save(root / "results.json", result)
-        print("Actual comparison:", candidate)
-        print("Coordinate/cosine stable:", stable, "rank stable:", ranks_stable, "bounded API:", compatible)
+        print("Actual comparison: diagnostic-only; no eligibility or usability verdict")
+        print("Coordinate/cosine diagnostic:", stable, "rank unchanged:", ranks_stable)
     except BaseException as error:
         save(root / "failure.json", {"type": type(error).__name__, "error": str(error), "at": timestamp(), "completed_launches": len(reports)})
         raise

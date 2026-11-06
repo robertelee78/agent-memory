@@ -1,6 +1,6 @@
 {
   "schema": "am255/same-weight-serving-interpretation-v1",
-  "evidence_class": "Post-run factual interpretation of retained actual synthetic runtime results; no new launches or tolerance tuning",
+  "evidence_class": "Corrected post-run factual interpretation of immutable actual-20261106 receipts; not retroactive attestation. New explicit-cache/dependency-bound execution is separately retained.",
   "raw_results": "actual-20261106/results.json",
   "raw_results_sha256": "6c03de5ba220e73c851dd754aee96d4bf166ec98894842709e41af669aba3cf5",
   "executed_source_commit": "fef68d07d0a8617220c3f332b0de7694cec7ad20",
@@ -16,19 +16,19 @@
   },
   "software_identity": {
     "fork": {"build": "9341", "ordinary_upstream_release": false, "source_commit": "a578bb6b94529b7b2721d0ee49eaea5dbb2c6d07", "binary_sha256": "b57ea6bb97b43a4f74b5a5ab71f1cc2ef292899d83c0e45ddfa9290b169598b5", "source_binding": "Existing checkout HEAD, existing binary version/hash and local dylib hashes; no reproduced build"},
-    "upstream": {"build": "9360", "tag": "b9360", "source_commit": "6b4e4bd582e457a47ee7cd498058495f47fee228", "binary_sha256": "619eff2bb5fa47bbcaec8804c5659ef426fa4a9aceb4e30ed33bc9d63a82d203", "source_binding": "Installed Homebrew receipt/formula SCM revision and version/hash; separate ggml 0.13.0 bundle, not a byte-identical upstream source build"},
+    "upstream": {"build": "9360", "tag": "b9360", "source_commit": "6b4e4bd582e457a47ee7cd498058495f47fee228", "binary_sha256": "619eff2bb5fa47bbcaec8804c5659ef426fa4a9aceb4e30ed33bc9d63a82d203", "source_binding": "b9360 Homebrew bottle built against ggml0.13.0, executed with installed ggml0.22.0. Metal/CPU/BLAS modules were loaded but not inventoried/hashed in this old run. The old output kernel closure is not pinned and cannot be retroactively attested by hashing files now."},
     "weight": {"sha256": "d20ddc71e8a5c4344f2343481e242233a997dc5eaff442427a945836c97b4deb", "bytes": 8047105824, "same_for_all_four_launches": true},
     "provider_echo_is_weight_identity": false
   },
   "observed": {
     "cold_process_launches": 4,
     "cold_process_launches_per_binary": 2,
-    "settings": "4 CPU generation/batch/HTTP threads; ctx8192; batch8192; ubatch8192; parallel1; last pooling; MTL0 Metal; gpu-layers99; flash-attn off; fit off; offline; same alias for document/query embedding",
+    "settings": "4 CPU generation/batch/HTTP threads; ctx8192; batch8192; ubatch8192; parallel1; last pooling; MTL0 Metal; gpu-layers99; flash-attn off; fit off; offline; same alias for document/query embedding. Cache CLI/request fields were not frozen; actual logs show default RAM prompt cache8192MiB and slot-prefix reuse.",
     "dimension": 4096,
     "cross_restart_baseline_coordinates": "Exactly equal for probes, queries, six own documents and six relationship documents for each binary",
     "immediate_repeat_max_abs_coordinate": {"fork": 0.00009326823055744171, "upstream": 0.00012361444532871246},
     "immediate_repeat_max_cosine_distance": {"fork": 0.000000328853894560055, "upstream": 0.00000036924480295574824},
-    "immediate_repeat_scope": "First probe batch versus the next two immediate probe batches differed; query/own/relationship repeated batches were exactly equal. Cause was not isolated; no warmup/backend/cache cause is claimed.",
+    "immediate_repeat_scope": "Only probe row0 differs between the first probe batch and the next two: the cold9-token evaluation changes to2 cached prefix tokens plus7 evaluated tokens. Same cache splits are bit-for-bit equal across restarts, probes1/probes2, and unknown-alias versus probes1 row0. The known-single request takes a near-full cache-hit path and differs by3.6e-6 fork/4.6e-6 upstream. Thus alias comparison is cache-path-confounded, not evidence of alias-induced differences. Log correlation establishes history dependence; it does not prove a particular kernel-level cause.",
     "cross_server_max_abs_coordinate": 0.00011330842971801758,
     "cross_server_max_cosine_distance": 0.00000023421633865705616,
     "frozen_coordinate_tolerance": 0.00001,
@@ -43,9 +43,9 @@
       "catalog_aliases": 1,
       "unknown_request_alias": "HTTP200 and echoed by both binaries despite absent independent metadata; local metadata selection refused model-not-in-independent-metadata",
       "over_context": "Both binaries explicitly returned HTTP400 with actual8265 prompt tokens and8192 available context tokens, on both launches",
-      "empty_and_invalid_input": "Both binaries returned HTTP500 with explicit errors and no vectors; this is refusal, but not the controller's expected client-error4xx compatibility behavior",
+      "empty_and_invalid_input": "Both binaries returned HTTP500 with explicit errors and no vectors. This fails closed and is a draft client-preflight item for ALL profiles, not a server-cutover blocker or evidence against upstream usability.",
       "short_batch_sizes_observed_http200": [1, 4, 8, 9],
-      "local_maintenance_policy": "Max8 inputs and aggregate8192 tokens; local preflight refuses9 inputs and two4161-token inputs (8322 aggregate). This policy is not a provider maximum. The large aggregate was tokenized but not submitted to embeddings."
+      "local_maintenance_policy": "Offline policy function would refuse9 inputs and two4161-token inputs (8322 aggregate), using max8 inputs/aggregate8192 tokens. No actual AM production preflight exists here and no request was blocked: batch9 was sent and returned200. Large aggregate was tokenized but not submitted."
     },
     "costs_seconds": {
       "fork_startup": [1.483089542016387, 1.059384333959315],
@@ -64,20 +64,20 @@
     "cleanup": "All four owned Popen processes terminated/reaped with retained per-launch receipts/stdout/stderr; final pgrep -x llama-server exit1/no matches. No unrelated process was signaled."
   },
   "recommendation": {
-    "status": "explicit-prerequisite-no-serving-cutover",
-    "decision": "Do not call upstream9360 a drop-in vector-identical replacement or mark the frozen stability/API diagnostics passed. Do not retain the fork as a production default merely because the comparator failed.",
-    "boring_candidate_if_prerequisites_are_later_resolved": "Pinned ordinary upstream llama.cpp serving the exact approved GGUF, rather than the non-mainline fork; no fork-specific application capability is established by these probes.",
+    "status": "diagnostic-only-no-eligibility-or-usability-verdict",
+    "decision": "The frozen1e-5 coordinate diagnostic was exceeded by both binaries, while the cosine/rank diagnostics were met. The old composite candidate label combined binary-independent repeat drift and identical invalid-input500 behavior; it is not an eligibility criterion or evidence against ordinary upstream usability.",
+    "boring_candidate_if_prerequisites_are_later_resolved": "Ordinary pinned upstream is a serving candidate, not an adopted profile; this old run is not dependency-closure-qualified because its backend modules were not hashed.",
     "prerequisites": [
-      "Parent/independent profile review must disposition raw-coordinate drift exceeding the predeclared1e-5 diagnostic, including immediate repeated probes on BOTH binaries. Do not relax the threshold against these outputs or held-out answers merely to obtain a pass.",
-      "Disposition the observed malformed/empty-input HTTP500 behavior and unknown-alias acceptance at the profile/client-contract boundary; model echo cannot establish identity.",
-      "Any serving cutover needs an explicit profile/fingerprint and vector-store rebuild/reuse decision; unchanged rank on four synthetic questions is not persisted-vector compatibility or held-out quality evidence.",
+      "A new source-bound run must freeze explicit RAM-cache/request settings and actual dependency/backend pins before outputs, then retain observed loaded paths and token/cache histories. No retroactive closure claim for this old run.",
+      "Draft client contract for every profile: refuse empty/non-string inputs before sending; enforce chosen local token/batch limits and fail on every non-2xx or invalid vector response. This is NOT an implemented AM production client. Generic BYO remains URL plus optional key and explicit model only when discovery is ambiguous; provider-specific cache fields are not universal requirements.",
+      "Parent owns the profile/fingerprint and persisted-vector rebuild/reuse decision. Four synthetic unchanged rankings are neither persisted-vector compatibility nor held-out quality acceptance. Diagnostic1e-5 is not an adoption threshold and is not relaxed.",
       "Full quality, legal/distribution and other-platform qualification remain independently open. Parent alone owns final ADR/profile/G1 decisions."
     ],
     "own_vs_relationship": "For the narrow synthetic control, own text is the boring lower-token baseline and relationship text materially changes vectors/ranking tails without changing top1. This does not decide the production representation or establish full quality."
   },
   "proposed_parent_doc_additions": {
-    "legal_runtime_brief_sections4_and7": "The actual same-weight run under serving-comparison/actual-20261106 compares two cold process launches each of fork build9341(a578bb6b94529b7b2721d0ee49eaea5dbb2c6d07; not ordinary upstream b9341) and installed upstream b9360(6b4e4bd582e457a47ee7cd498058495f47fee228), using the identical SHA-d20ddc71e8a5c4344f2343481e242233a997dc5eaff442427a945836c97b4deb 8B weight, 4 threads, ctx8192, last pooling and Metal. All vectors had4096 dimensions. Cross-restart baselines were exactly equal; cross-server max coordinate drift1.1330842971801758e-4 and immediate repeated-probe drift up to1.2361444532871246e-4 exceed the frozen1e-5 coordinate diagnostic, despite cosine distances below3.7e-7 and unchanged synthetic rank orders. Both servers echo unknown aliases, explicitly refuse8265-token input against8192 context with HTTP400, and return HTTP500 for malformed/empty input. Result: explicit prerequisite, not a drop-in replacement, G1 pass or profile/ADR freeze.",
-    "runtime_controls_readme": "Same-weight serving-comparison/ now retains an executable, pre-output canonical input freeze, exact binary/weight/package bindings, four serial real-launch receipts, raw private synthetic vectors/stdout/stderr, own/relationship rank controls and observed startup/probe/tiny-fill costs. interpretation-results.json explains the failed frozen coordinate/client-error diagnostics; no tolerance was retuned, no0.6B substitute used, and no clean timing/performance/full-quality/legal/Linux/production/G1 claim is made."
+    "legal_runtime_brief_sections4_and7": "The immutable old run compares fork9341 against b9360 built with ggml0.13.0 but executed with installed0.22.0; the old Metal/CPU/BLAS modules were not hashed. Default8192MiB RAM prompt cache was enabled and probe repeat drift correlates with cache-prefix splits; alias differences are cache-path-confounded. The1e-5 result is diagnostic only, not a verdict against upstream usability. Empty/malformed500 with no vectors belongs to the draft AM preflight for all profiles. Offline policy would refuse batch9, which was actually sent and returned200. No actual AM production client, profile/ADR freeze, G1, quality/legal/Linux or clean-performance claim.",
+    "runtime_controls_readme": "Old raw/frozen serving-comparison receipts remain immutable. Corrected interpretation records installed ggml0.22.0, unhashed old backends, cache-history-confounded drift and diagnostic-only semantics. The new cache-probe-spec/cache-frozen-inputs and separate actual-cache execution bind explicit --cache-ram0 with slot-prefix reuse still enabled, actual dyld backend closure and per-row token histories; no provider-specific field is imposed on generic BYO."
   },
   "tracker_and_shared_files": "Parent owns GitHub/Vox, shared prose and profile/G1 decisions; no tracker/shared-file edits by this slice."
 }
