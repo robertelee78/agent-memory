@@ -182,4 +182,10 @@ reconciliation/nested/publication/retention results. The combined run passed all
 28 methods but used a longer group harness; it does **not** prove each registered
 suite fits its unchanged 300-second release deadline. Full platform,
 story-specific and signed-delivery evidence remains separate.
+The separate [original-worker checks](../research/data/2026-11-06-layout-recovery/original-worker-budgets.json)
+passed publication and retention within 300 seconds but timed out both
+reconciliation modules. The expanded public recovery suite, including three
+real-count boundary methods, separately passed all 12 methods in 216.71 seconds.
+The failed modules require complete-case rebatching and new actual receipts;
+their earlier long-group success does not waive the release deadline.
 

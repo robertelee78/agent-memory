@@ -1,0 +1,21 @@
+{
+  "source_commit": "2732df8bd2d11dfbc4999469cbdd0cd372427b60",
+  "source_root": "/private/tmp/am-v15-delivery/244-capacity-qualified-source",
+  "timeout_seconds": 300,
+  "started_at": "2026-11-06T23:32:50.789577+00:00",
+  "passed": true,
+  "command": [
+    "/tmp/am-v15-delivery/qualification-venv/bin/python",
+    "-I",
+    "-B",
+    "/private/tmp/am-v15-delivery/244-capacity-qualified-source/scripts/run_contract_suite.py",
+    "/private/tmp/am-v15-delivery/244-capacity-qualified-source/tests/contracts/test_layout_recovery_retention.py",
+    "--suite",
+    "layout-recovery-retention"
+  ],
+  "exit": 0,
+  "stdout": "{\"errors\": 0, \"expected_failures\": 0, \"failures\": 0, \"passed\": true, \"skipped\": 0, \"tests\": 9, \"unexpected_successes\": 0}\n",
+  "stderr": "test_individual_unlink_keeps_receipt_and_directories_and_checks_changed_bytes (contract_suite.LayoutRetentionContract.test_individual_unlink_keeps_receipt_and_directories_and_checks_changed_bytes) ... ok\ntest_owned_incomplete_staging_is_retained_not_promoted_to_complete (contract_suite.LayoutRetentionContract.test_owned_incomplete_staging_is_retained_not_promoted_to_complete) ... ok\ntest_public_child_restore_cleanup_uses_real_parent_receipts_without_child_ledger (contract_suite.LayoutRetentionContract.test_public_child_restore_cleanup_uses_real_parent_receipts_without_child_ledger) ... ok\ntest_public_pending_units_cannot_be_deleted_by_retention (contract_suite.LayoutRetentionContract.test_public_pending_units_cannot_be_deleted_by_retention) ... ok\ntest_public_terminal_cleanup_crash_resume_and_real_historical_retry (contract_suite.LayoutRetentionContract.test_public_terminal_cleanup_crash_resume_and_real_historical_retry) ... ok\ntest_resolution_and_quiescence_metadata_remain_retained (contract_suite.LayoutRetentionContract.test_resolution_and_quiescence_metadata_remain_retained) ... ok\ntest_resume_accepts_only_the_one_unlink_before_progress_boundary (contract_suite.LayoutRetentionContract.test_resume_accepts_only_the_one_unlink_before_progress_boundary) ... ok\ntest_symlink_hardlink_and_unsafe_mode_never_gain_cleanup_ownership (contract_suite.LayoutRetentionContract.test_symlink_hardlink_and_unsafe_mode_never_gain_cleanup_ownership) ... ok\ntest_unknown_backup_even_empty_directory_is_not_disposable (contract_suite.LayoutRetentionContract.test_unknown_backup_even_empty_directory_is_not_disposable) ... ok\n\n----------------------------------------------------------------------\nRan 9 tests in 59.792s\n\nOK\n",
+  "timed_out": false,
+  "elapsed_seconds": 59.882440874993335
+}

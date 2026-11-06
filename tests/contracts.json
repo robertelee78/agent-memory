@@ -183,7 +183,11 @@
     {"name": "recall-catalog", "layer": "bank", "scope": "v0.0.3", "path": "tests/contracts/test_recall_catalog.py"},
     {"name": "semantic-discovery-workflow", "layer": "bank", "scope": "v0.0.3", "path": "tests/contracts/test_discovery_workflow.py"},
     {"name": "recall-qualification", "layer": "bank", "scope": "v0.0.15", "path": "tests/contracts/test_recall_qualification.py"},
-    {"name": "layout-recovery-reconciliation", "layer": "bank", "scope": "v0.0.15", "path": "tests/contracts/test_layout_recovery_reconciliation.py"},
+    {"name": "layout-recovery-router-identity", "layer": "bank", "scope": "v0.0.15", "path": "tests/contracts/test_layout_recovery_reconciliation.py", "tests": ["RecoveryReconciliationContract.test_raw_router_bootstrap_uses_checked_committed_identity_not_normal_router_limits"]},
+    {"name": "layout-recovery-rollback-handoff", "layer": "bank", "scope": "v0.0.15", "path": "tests/contracts/test_layout_recovery_reconciliation.py", "tests": ["RecoveryReconciliationContract.test_retained_rollback_repair_handoff_keeps_both_independent_obligations"]},
+    {"name": "layout-recovery-resolution-retirement", "layer": "bank", "scope": "v0.0.15", "path": "tests/contracts/test_layout_recovery_reconciliation.py", "tests": ["RecoveryReconciliationContract.test_standalone_receipt_retry_finishes_exact_linkage_and_retirement"]},
+    {"name": "layout-recovery-resolution-exclusion", "layer": "bank", "scope": "v0.0.15", "path": "tests/contracts/test_layout_recovery_reconciliation.py", "tests": ["RecoveryReconciliationContract.test_unfinished_resolution_excludes_new_resolutions_nested_admission_and_revision"]},
+    {"name": "layout-recovery-rollback-exclusion", "layer": "bank", "scope": "v0.0.15", "path": "tests/contracts/test_layout_recovery_reconciliation.py", "tests": ["RecoveryReconciliationContract.test_unfinished_rolled_back_resolution_excludes_outer_repair_handoff"]},
     {"name": "layout-nested-reconciliation", "layer": "concurrency", "scope": "v0.0.15", "path": "tests/contracts/test_layout_nested_reconciliation.py"},
     {"name": "semantic-discovery", "layer": "bank", "scope": "v0.0.3", "path": "tests/contracts/test_discovery.py"}
   ]
