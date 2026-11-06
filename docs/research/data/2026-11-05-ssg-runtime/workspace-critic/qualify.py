@@ -152,6 +152,7 @@ def run(out):
         # these two private tmpfs roots, then drops to the pinned memgraph UID/GID.
         init = ("import os,sys; "
                 "[os.chown(p,101,103) for p in ('/var/lib/memgraph','/var/log/memgraph')]; "
+                "os.environ['HOME']='/var/lib/memgraph'; "
                 "os.setgroups([]); os.setgid(103); os.setuid(101); "
                 "os.execv('/usr/lib/memgraph/memgraph',['memgraph']+sys.argv[1:])")
         # Retain exit logs until exact ownership-checked cleanup; unlike SSG up,

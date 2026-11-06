@@ -1,0 +1,42 @@
+{
+  "container_absent": true,
+  "container_created": "355248b6094e763431c37c8b99d8005f0c4eba7ea93d604627d15c9f932bc690",
+  "guarantee_limits": "Engine-visible absence, tmpfs config and local scratch removal only; not forensic RAM/VM swap/crash-dump/backup erasure.",
+  "inspect_after": {
+    "argv": [
+      "podman",
+      "inspect",
+      "355248b6094e763431c37c8b99d8005f0c4eba7ea93d604627d15c9f932bc690"
+    ],
+    "cwd": "/Users/robert.lee/.omp/wt/tcb265d0cb/m/docs/research/data/2026-11-05-ssg-runtime/workspace-critic",
+    "elapsed_seconds_shared_host": 0.08497708395589143,
+    "exit": 125,
+    "stderr": "Error: no such object: \"355248b6094e763431c37c8b99d8005f0c4eba7ea93d604627d15c9f932bc690\"\n",
+    "stdout": "[]\n"
+  },
+  "loopback_listener_absent": true,
+  "precreation_absence_proven": true,
+  "remove": {
+    "argv": [
+      "podman",
+      "rm",
+      "-f",
+      "355248b6094e763431c37c8b99d8005f0c4eba7ea93d604627d15c9f932bc690"
+    ],
+    "cwd": "/Users/robert.lee/.omp/wt/tcb265d0cb/m/docs/research/data/2026-11-05-ssg-runtime/workspace-critic",
+    "elapsed_seconds_shared_host": 0.0861077499575913,
+    "exit": 0,
+    "stderr": "",
+    "stdout": "355248b6094e763431c37c8b99d8005f0c4eba7ea93d604627d15c9f932bc690\n"
+  },
+  "scratch_absent": true,
+  "scratch_inventory": [
+    {
+      "bytes": 32,
+      "path": "owner",
+      "sha256": "ede8a6b646df2e9b74634b84067a6c941711880f5a9dbf2d86b69cdaeb0b55fc"
+    }
+  ],
+  "slot_released": true,
+  "synthetic_raw_evidence_retained": true
+}
