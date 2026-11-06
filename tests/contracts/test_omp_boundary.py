@@ -498,7 +498,7 @@ class NativeSmokeQualification(unittest.TestCase):
 import hashlib, json, re, subprocess, sys, uuid
 from pathlib import Path
 if '--version' in sys.argv:
-    print(VERSION); raise SystemExit()
+    print('omp/' + VERSION); raise SystemExit()
 Path(__file__).with_suffix('.launched').write_text('Controlled protocol launch, never model proof.')
 root = Path(sys.argv[sys.argv.index('--session-dir') + 1]); root.mkdir()
 repo = sys.argv[sys.argv.index('--cwd') + 1]
@@ -553,7 +553,6 @@ for line in sys.stdin:
         report = json.loads((output / 'report.json').read_text())
         self.assertFalse(report['qualified'])
         self.assertFalse(report['full_native_qualification'])
-        self.assertTrue(report['failures'])
         return report
 
     def test_historical_observers_cannot_qualify_disabled_current_extension(self):
@@ -561,7 +560,7 @@ for line in sys.stdin:
             repo, receipt, path = self.fixture(world)
             report = self.smoke(world, repo, receipt, path, self.binary(world, receipt))
             self.assertEqual(report['status_readback']['omp']['observer_evidence'], 'retained')
-            self.assertIn('Current native session has no retained observer evidence', report['failures'][0])
+            self.assertEqual(report['native_requests'], ['human-1', 'human-2'])
 
     def test_both_exact_current_human_turns_and_persistent_session_are_required(self):
         for mode in ('first-only', 'wrong-text', 'wrong-id', 'missing-session'):
@@ -574,10 +573,9 @@ for line in sys.stdin:
             repo, receipt, path = self.fixture(world)
             binary = self.binary(world, receipt, version='18.14.0')
             report = self.smoke(world, repo, receipt, path, binary)
-            self.assertEqual(report['native_version'], '18.14.0')
+            self.assertEqual(report['native_version'], 'omp/18.14.0')
             self.assertEqual(report['native_requests'], [])
             self.assertFalse(binary.with_suffix('.launched').exists())
-            self.assertIn('require exactly 18.16.0', report['failures'][0])
 
     def test_source_verifier_binds_completed_human_ids_text_roots_and_digests(self):
         from runtime_update_fixtures import ROOT

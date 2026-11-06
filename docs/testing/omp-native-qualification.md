@@ -214,7 +214,7 @@ Prepare a disposable existing bank/clone through the normal identity/init
 skill. Do not point a smoke at production project memory. Install this exact
 candidate into an explicit isolated native root, preserving real provider access
 and normal native permissions. The following driver verifies that the exact
-selected binary reports **18.16.0 before launching RPC or using a provider/model**.
+selected binary reports exactly **`omp/18.16.0` before launching RPC or using a provider/model**.
 It discovers the actual installed binding, uses two real RPC human turns and
 the real model/tools, checks original answers once, and requires both exact
 submitted texts and their distinct stored native human IDs/roots in the

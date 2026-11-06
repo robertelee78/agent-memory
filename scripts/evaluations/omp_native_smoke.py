@@ -220,8 +220,9 @@ def main():
     try:
         # This gate precedes process launch, provider/model use and human turns.
         result['native_version'] = run([str(binary), '--version'], cwd=repo, env=env).strip()
-        if result['native_version'] != SUPPORTED_VERSION:
-            raise RuntimeError('Unsupported omp binary: require exactly ' + SUPPORTED_VERSION
+        expected_version = 'omp/' + SUPPORTED_VERSION
+        if result['native_version'] != expected_version:
+            raise RuntimeError('Unsupported omp binary: require exactly ' + expected_version
                                + ', observed ' + result['native_version'])
         process = subprocess.Popen(argv, cwd=repo, env=env, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE, text=True, bufsize=1)
