@@ -1,0 +1,344 @@
+[
+  {
+    "bytes": 0,
+    "link": "",
+    "path": "llama-b9360",
+    "type": "b'5'"
+  },
+  {
+    "bytes": 162696,
+    "link": "",
+    "path": "llama-b9360/libggml-rpc.so",
+    "type": "b'0'"
+  },
+  {
+    "bytes": 3442624,
+    "link": "",
+    "path": "llama-b9360/libllama.so.0.0.9360",
+    "type": "b'0'"
+  },
+  {
+    "bytes": 70304,
+    "link": "",
+    "path": "llama-b9360/llama-completion",
+    "type": "b'0'"
+  },
+  {
+    "bytes": 73808,
+    "link": "",
+    "path": "llama-b9360/libllama-fit-params-impl.so",
+    "type": "b'0'"
+  },
+  {
+    "bytes": 1237392,
+    "link": "",
+    "path": "llama-b9360/libmtmd.so.0.0.9360",
+    "type": "b'0'"
+  },
+  {
+    "bytes": 0,
+    "link": "libllama-common.so.0.0.9360",
+    "path": "llama-b9360/libllama-common.so.0",
+    "type": "b'2'"
+  },
+  {
+    "bytes": 0,
+    "link": "libmtmd.so.0",
+    "path": "llama-b9360/libmtmd.so",
+    "type": "b'2'"
+  },
+  {
+    "bytes": 325952,
+    "link": "",
+    "path": "llama-b9360/llama-imatrix",
+    "type": "b'0'"
+  },
+  {
+    "bytes": 156928,
+    "link": "",
+    "path": "llama-b9360/libllama-perplexity-impl.so",
+    "type": "b'0'"
+  },
+  {
+    "bytes": 76344,
+    "link": "",
+    "path": "llama-b9360/llama-mtmd-debug",
+    "type": "b'0'"
+  },
+  {
+    "bytes": 928584,
+    "link": "",
+    "path": "llama-b9360/libggml-cpu-armv8.0_1.so",
+    "type": "b'0'"
+  },
+  {
+    "bytes": 72640,
+    "link": "",
+    "path": "llama-b9360/llama",
+    "type": "b'0'"
+  },
+  {
+    "bytes": 70304,
+    "link": "",
+    "path": "llama-b9360/llama-batched-bench",
+    "type": "b'0'"
+  },
+  {
+    "bytes": 72480,
+    "link": "",
+    "path": "llama-b9360/llama-bench",
+    "type": "b'0'"
+  },
+  {
+    "bytes": 71432,
+    "link": "",
+    "path": "llama-b9360/llama-qwen2vl-cli",
+    "type": "b'0'"
+  },
+  {
+    "bytes": 70304,
+    "link": "",
+    "path": "llama-b9360/llama-perplexity",
+    "type": "b'0'"
+  },
+  {
+    "bytes": 466056,
+    "link": "",
+    "path": "llama-b9360/libllama-bench-impl.so",
+    "type": "b'0'"
+  },
+  {
+    "bytes": 72480,
+    "link": "",
+    "path": "llama-b9360/llama-server",
+    "type": "b'0'"
+  },
+  {
+    "bytes": 71432,
+    "link": "",
+    "path": "llama-b9360/llama-minicpmv-cli",
+    "type": "b'0'"
+  },
+  {
+    "bytes": 73904,
+    "link": "",
+    "path": "llama-b9360/llama-tokenize",
+    "type": "b'0'"
+  },
+  {
+    "bytes": 930600,
+    "link": "",
+    "path": "llama-b9360/libggml-cpu-armv8.6_1.so",
+    "type": "b'0'"
+  },
+  {
+    "bytes": 0,
+    "link": "libmtmd.so.0.0.9360",
+    "path": "llama-b9360/libmtmd.so.0",
+    "type": "b'2'"
+  },
+  {
+    "bytes": 79496,
+    "link": "",
+    "path": "llama-b9360/llama-mtmd-cli",
+    "type": "b'0'"
+  },
+  {
+    "bytes": 0,
+    "link": "libggml.so.0.13.0",
+    "path": "llama-b9360/libggml.so.0",
+    "type": "b'2'"
+  },
+  {
+    "bytes": 996184,
+    "link": "",
+    "path": "llama-b9360/libggml-cpu-armv9.2_1.so",
+    "type": "b'0'"
+  },
+  {
+    "bytes": 5129936,
+    "link": "",
+    "path": "llama-b9360/libllama-common.so.0.0.9360",
+    "type": "b'0'"
+  },
+  {
+    "bytes": 930624,
+    "link": "",
+    "path": "llama-b9360/libggml-cpu-armv8.6_2.so",
+    "type": "b'0'"
+  },
+  {
+    "bytes": 0,
+    "link": "libllama.so.0.0.9360",
+    "path": "llama-b9360/libllama.so.0",
+    "type": "b'2'"
+  },
+  {
+    "bytes": 995432,
+    "link": "",
+    "path": "llama-b9360/libggml-cpu-armv8.2_1.so",
+    "type": "b'0'"
+  },
+  {
+    "bytes": 995432,
+    "link": "",
+    "path": "llama-b9360/libggml-cpu-armv8.2_2.so",
+    "type": "b'0'"
+  },
+  {
+    "bytes": 71432,
+    "link": "",
+    "path": "llama-b9360/llama-llava-cli",
+    "type": "b'0'"
+  },
+  {
+    "bytes": 236352,
+    "link": "",
+    "path": "llama-b9360/llama-template-analysis",
+    "type": "b'0'"
+  },
+  {
+    "bytes": 1628360,
+    "link": "",
+    "path": "llama-b9360/libllama-cli-impl.so",
+    "type": "b'0'"
+  },
+  {
+    "bytes": 0,
+    "link": "libggml.so.0",
+    "path": "llama-b9360/libggml.so",
+    "type": "b'2'"
+  },
+  {
+    "bytes": 0,
+    "link": "libllama-common.so.0",
+    "path": "llama-b9360/libllama-common.so",
+    "type": "b'2'"
+  },
+  {
+    "bytes": 0,
+    "link": "libllama.so.0",
+    "path": "llama-b9360/libllama.so",
+    "type": "b'2'"
+  },
+  {
+    "bytes": 996184,
+    "link": "",
+    "path": "llama-b9360/libggml-cpu-armv9.2_2.so",
+    "type": "b'0'"
+  },
+  {
+    "bytes": 0,
+    "link": "libggml-base.so.0",
+    "path": "llama-b9360/libggml-base.so",
+    "type": "b'2'"
+  },
+  {
+    "bytes": 409072,
+    "link": "",
+    "path": "llama-b9360/llama-tts",
+    "type": "b'0'"
+  },
+  {
+    "bytes": 799320,
+    "link": "",
+    "path": "llama-b9360/libggml-base.so.0.13.0",
+    "type": "b'0'"
+  },
+  {
+    "bytes": 0,
+    "link": "libggml-base.so.0.13.0",
+    "path": "llama-b9360/libggml-base.so.0",
+    "type": "b'2'"
+  },
+  {
+    "bytes": 75856,
+    "link": "",
+    "path": "llama-b9360/llama-results",
+    "type": "b'0'"
+  },
+  {
+    "bytes": 70304,
+    "link": "",
+    "path": "llama-b9360/llama-fit-params",
+    "type": "b'0'"
+  },
+  {
+    "bytes": 930344,
+    "link": "",
+    "path": "llama-b9360/libggml-cpu-armv8.2_3.so",
+    "type": "b'0'"
+  },
+  {
+    "bytes": 75000,
+    "link": "",
+    "path": "llama-b9360/libllama-batched-bench-impl.so",
+    "type": "b'0'"
+  },
+  {
+    "bytes": 77400,
+    "link": "",
+    "path": "llama-b9360/libggml.so.0.13.0",
+    "type": "b'0'"
+  },
+  {
+    "bytes": 244848,
+    "link": "",
+    "path": "llama-b9360/rpc-server",
+    "type": "b'0'"
+  },
+  {
+    "bytes": 148864,
+    "link": "",
+    "path": "llama-b9360/libllama-quantize-impl.so",
+    "type": "b'0'"
+  },
+  {
+    "bytes": 71432,
+    "link": "",
+    "path": "llama-b9360/llama-gemma3-cli",
+    "type": "b'0'"
+  },
+  {
+    "bytes": 72472,
+    "link": "",
+    "path": "llama-b9360/llama-cli",
+    "type": "b'0'"
+  },
+  {
+    "bytes": 249320,
+    "link": "",
+    "path": "llama-b9360/llama-debug-template-parser",
+    "type": "b'0'"
+  },
+  {
+    "bytes": 72480,
+    "link": "",
+    "path": "llama-b9360/llama-quantize",
+    "type": "b'0'"
+  },
+  {
+    "bytes": 77896,
+    "link": "",
+    "path": "llama-b9360/llama-gguf-split",
+    "type": "b'0'"
+  },
+  {
+    "bytes": 9171496,
+    "link": "",
+    "path": "llama-b9360/libllama-server-impl.so",
+    "type": "b'0'"
+  },
+  {
+    "bytes": 148872,
+    "link": "",
+    "path": "llama-b9360/libllama-completion-impl.so",
+    "type": "b'0'"
+  },
+  {
+    "bytes": 1078,
+    "link": "",
+    "path": "llama-b9360/LICENSE",
+    "type": "b'0'"
+  }
+]

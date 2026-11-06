@@ -7,6 +7,7 @@ All downloaded bytes remain below the explicitly named new acquisition directory
 from __future__ import annotations
 import argparse
 import email
+from email import policy
 import hashlib
 import io
 import json
@@ -105,7 +106,7 @@ def scan(directory, output, binding):
     status = texts.get("var/lib/dpkg/status", b"").decode(errors="replace")
     packages = []
     for stanza in status.split("\n\n"):
-        fields = email.message_from_string(stanza)
+        fields = email.message_from_string(stanza, policy=policy.default)
         if fields.get("Package"):
             package = fields["Package"]
             copyright_path = "usr/share/doc/" + package + "/copyright"
@@ -115,7 +116,7 @@ def scan(directory, output, binding):
     python = []
     for name, data in sorted(texts.items()):
         if name.endswith(".dist-info/METADATA"):
-            meta = email.message_from_bytes(data)
+            meta = email.message_from_bytes(data, policy=policy.default)
             base = name.rsplit("/", 1)[0]
             licenses = [v for k, v in files.items() if k.startswith(base + "/") and any(x in k.lower() for x in ("license", "copying", "notice"))]
             python.append({"name": meta.get("Name"), "version": meta.get("Version"), "license": meta.get("License"),
@@ -144,10 +145,16 @@ def main():
     parser.add_argument("--bindings", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--acquisition", type=Path, required=True)
+    parser.add_argument("--reuse-acquisition", action="store_true",
+                        help="Reuse only existing byte-verified pinned layers from the retained failed attempt")
     parser.add_argument("--reserved-host-slot", action="store_true", required=True)
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=False)
-    args.acquisition.mkdir(parents=True, exist_ok=False)
+    if args.reuse_acquisition:
+        if args.acquisition.is_symlink() or not args.acquisition.is_dir():
+            raise ValueError("Existing owned acquisition directory required")
+    else:
+        args.acquisition.mkdir(parents=True, exist_ok=False)
     source = command(args.output, "execution-source", ["git", "rev-parse", "HEAD"])
     save(args.output / "freeze.json", {"bindings_sha256": sha(args.bindings), "script_sha256": sha(__file__),
          "helper_sha256": sha(Path(__file__).with_name("discover.py")), "start_unix": time.time(),
@@ -157,10 +164,14 @@ def main():
     for name, spec in json.loads(args.bindings.read_text()).items():
         binding = next(x for x in spec["children"] if x["platform"]["architecture"] == "amd64")
         acquired = args.acquisition / name
-        copied = command(args.output, name + "-acquire", ["skopeo", "copy", "--preserve-digests", "docker://" + binding["reference"], "dir:" + str(acquired.resolve())], timeout=1200)
-        if copied["exit"] != 0:
-            results.append({"name": name, "missing_prerequisite": "Exact pinned layers unavailable; inspect retained acquisition failure"})
-            continue
+        if args.reuse_acquisition and acquired.is_dir() and not acquired.is_symlink():
+            save(args.output / (name + "-reuse.json"), {"path": str(acquired.resolve()),
+                 "source": "retained prior acquired layers; every manifest/config/layer hash revalidated by scan"})
+        else:
+            copied = command(args.output, name + "-acquire", ["skopeo", "copy", "--preserve-digests", "docker://" + binding["reference"], "dir:" + str(acquired.resolve())], timeout=1200)
+            if copied["exit"] != 0:
+                results.append({"name": name, "missing_prerequisite": "Exact pinned layers unavailable; inspect retained acquisition failure"})
+                continue
         results.append({"name": name, **scan(acquired, args.output / name, binding)})
     save(args.output / "report.json", {"results": results, "native_amd64_execution": False, "any_foreign_code_execution": False,
          "production": False, "license_acceptance": False})

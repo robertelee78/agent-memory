@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "podman",
+    "stop",
+    "--time",
+    "15",
+    "b4693cf2a509c4c828b0adb918facc0716525b23b54f9a6f632f43f17ec09b48"
+  ],
+  "duration_seconds": 0.33971476554870605,
+  "exit": 0,
+  "start_unix": 1793997562.7691772,
+  "stderr": "",
+  "stdout": "b4693cf2a509c4c828b0adb918facc0716525b23b54f9a6f632f43f17ec09b48\n"
+}

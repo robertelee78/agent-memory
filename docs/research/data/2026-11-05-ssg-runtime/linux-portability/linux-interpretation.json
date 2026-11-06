@@ -1,0 +1,203 @@
+{
+  "schema": "am255/linux-portability-interpretation-v1",
+  "actual_report_sha256": "a55d6988596971a4f0e5077f178f9cd3e9b0f1237823b901cb4aa3eb4b3e8f78",
+  "observations": [
+    {
+      "profile": "reference",
+      "linux_uname": [
+        "Linux",
+        "b4693cf2a509",
+        "7.1.10-200.fc44.aarch64",
+        "#1 SMP PREEMPT_DYNAMIC Sun Aug 23 16:21:29 UTC 2026",
+        "aarch64"
+      ],
+      "uid": 101,
+      "loaded_paths": 18,
+      "unhashable_loaded_files": [],
+      "actual_cpu_backend": [
+        {
+          "mapped_path": "/release/libggml-cpu-armv8.2_2.so",
+          "real_path": "/release/libggml-cpu-armv8.2_2.so",
+          "sha256": "11d7f5b6a2684063d517eab509f6c5d9f79fa53a1b02ba3ab0c2450b09ffb056",
+          "bytes": 995432
+        }
+      ],
+      "unknown_request_response_model": "am255-synthetic-unknown-weight-alias",
+      "unknown_alias_coordinate_delta_max": 0.001070275902748108,
+      "alias_delta_limit": "History/cache path not independently controlled; this difference cannot be attributed to alias or weight identity",
+      "resource_config": {
+        "Memory": 12884901888,
+        "MemorySwap": 12884901888,
+        "NanoCpus": 4000000000,
+        "CpuQuota": 400000,
+        "CpuPeriod": 100000,
+        "ReadonlyRootfs": true,
+        "CapDrop": [
+          "CAP_CHOWN",
+          "CAP_DAC_OVERRIDE",
+          "CAP_FOWNER",
+          "CAP_FSETID",
+          "CAP_KILL",
+          "CAP_NET_BIND_SERVICE",
+          "CAP_SETFCAP",
+          "CAP_SETGID",
+          "CAP_SETPCAP",
+          "CAP_SETUID",
+          "CAP_SYS_CHROOT"
+        ],
+        "SecurityOpt": [
+          "no-new-privileges"
+        ],
+        "PidsLimit": 128
+      },
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/private/tmp/am-v15-delivery/Qwen3-Embedding-8B-Q8_0.gguf",
+          "Destination": "/model.gguf",
+          "Driver": "",
+          "Mode": "",
+          "Options": [
+            "rbind"
+          ],
+          "RW": false,
+          "Propagation": "rprivate"
+        },
+        {
+          "Type": "bind",
+          "Source": "/Users/robert.lee/.omp/wt/tbebd39362/m/docs/research/data/2026-11-05-ssg-runtime/linux-portability/.acquired/extracted-302b5222e537/llama-b9360",
+          "Destination": "/release",
+          "Driver": "",
+          "Mode": "",
+          "Options": [
+            "rbind"
+          ],
+          "RW": false,
+          "Propagation": "rprivate"
+        }
+      ],
+      "stats": {
+        "argv": [
+          "podman",
+          "stats",
+          "--no-stream",
+          "--format",
+          "json",
+          "b4693cf2a509c4c828b0adb918facc0716525b23b54f9a6f632f43f17ec09b48"
+        ],
+        "duration_seconds": 0.10403585433959961,
+        "exit": 0,
+        "start_unix": 1793997562.47708,
+        "stderr": "",
+        "stdout": "[\n {\n  \"id\": \"b4693cf2a509\",\n  \"name\": \"am255-linux-302b5222e537-reference\",\n  \"cpu_time\": \"47.533446s\",\n  \"cpu_percent\": \"210.84%\",\n  \"avg_cpu\": \"210.84%\",\n  \"mem_usage\": \"9.454GB / 12.88GB\",\n  \"mem_percent\": \"73.37%\",\n  \"net_io\": \"1.354kB / 698B\",\n  \"block_io\": \"8.524MB / 0B\",\n  \"pids\": \"17\"\n }\n]\n"
+      }
+    },
+    {
+      "profile": "alternate",
+      "linux_uname": [
+        "Linux",
+        "79acf5e099bb",
+        "7.1.10-200.fc44.aarch64",
+        "#1 SMP PREEMPT_DYNAMIC Sun Aug 23 16:21:29 UTC 2026",
+        "aarch64"
+      ],
+      "uid": 101,
+      "loaded_paths": 18,
+      "unhashable_loaded_files": [],
+      "actual_cpu_backend": [
+        {
+          "mapped_path": "/release/libggml-cpu-armv8.2_2.so",
+          "real_path": "/release/libggml-cpu-armv8.2_2.so",
+          "sha256": "11d7f5b6a2684063d517eab509f6c5d9f79fa53a1b02ba3ab0c2450b09ffb056",
+          "bytes": 995432
+        }
+      ],
+      "unknown_request_response_model": "am255-synthetic-unknown-weight-alias",
+      "unknown_alias_coordinate_delta_max": 0.002750903367996216,
+      "alias_delta_limit": "History/cache path not independently controlled; this difference cannot be attributed to alias or weight identity",
+      "resource_config": {
+        "Memory": 12884901888,
+        "MemorySwap": 12884901888,
+        "NanoCpus": 4000000000,
+        "CpuQuota": 400000,
+        "CpuPeriod": 100000,
+        "ReadonlyRootfs": true,
+        "CapDrop": [
+          "CAP_CHOWN",
+          "CAP_DAC_OVERRIDE",
+          "CAP_FOWNER",
+          "CAP_FSETID",
+          "CAP_KILL",
+          "CAP_NET_BIND_SERVICE",
+          "CAP_SETFCAP",
+          "CAP_SETGID",
+          "CAP_SETPCAP",
+          "CAP_SETUID",
+          "CAP_SYS_CHROOT"
+        ],
+        "SecurityOpt": [
+          "no-new-privileges"
+        ],
+        "PidsLimit": 128
+      },
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/Users/robert.lee/.omp/wt/tbebd39362/m/docs/research/data/2026-11-05-ssg-runtime/linux-portability/.acquired/extracted-302b5222e537/llama-b9360",
+          "Destination": "/release",
+          "Driver": "",
+          "Mode": "",
+          "Options": [
+            "rbind"
+          ],
+          "RW": false,
+          "Propagation": "rprivate"
+        },
+        {
+          "Type": "bind",
+          "Source": "/private/tmp/am-v15-delivery/Qwen3-Embedding-0.6B-Q8_0.gguf",
+          "Destination": "/model.gguf",
+          "Driver": "",
+          "Mode": "",
+          "Options": [
+            "rbind"
+          ],
+          "RW": false,
+          "Propagation": "rprivate"
+        }
+      ],
+      "stats": {
+        "argv": [
+          "podman",
+          "stats",
+          "--no-stream",
+          "--format",
+          "json",
+          "79acf5e099bb8be917b3694e71973ba4d1bf8b5ae956161177d905cddec2b4aa"
+        ],
+        "duration_seconds": 0.0729057788848877,
+        "exit": 0,
+        "start_unix": 1793997566.305299,
+        "stderr": "",
+        "stdout": "[\n {\n  \"id\": \"79acf5e099bb\",\n  \"name\": \"am255-linux-302b5222e537-alternate\",\n  \"cpu_time\": \"5.143999s\",\n  \"cpu_percent\": \"194.08%\",\n  \"avg_cpu\": \"194.08%\",\n  \"mem_usage\": \"1.062GB / 12.88GB\",\n  \"mem_percent\": \"8.24%\",\n  \"net_io\": \"516B / 558B\",\n  \"block_io\": \"0B / 0B\",\n  \"pids\": \"17\"\n }\n]\n"
+      }
+    }
+  ],
+  "observed": [
+    "b9360 actual Linux aarch64 version banner and byte-hashed loaded closure",
+    "Exact 8B 4096d and 0.6B 1024d finite nonzero real embeddings",
+    "Single-model discovery; unknown model alias accepted, not a client identity check",
+    "Actual batches 1/4/8/9 all 200; max8 is declared client policy, not demonstrated adapter enforcement",
+    "Overcontext 8265/8192 and 4169/4096 both HTTP400 without vectors",
+    "Empty/malformed inputs HTTP500 without vectors",
+    "Own-versus-relationship synthetic text effects retained independently from frozen held-out suite"
+  ],
+  "explicit_unavailable_or_unqualified": [
+    "Native Linux baremetal and Linux-amd64 model execution",
+    "Complete G1 independent quality/scale/profile/resource tolerances",
+    "Aggregate token budget acceptance at CPU maximum context; no heavy fill/throughput qualification performed",
+    "Complete embedded dependency attribution/source reproducibility, custom OpenSSL provenance and counsel/operator deployment disposition",
+    "Generic BYO endpoint discovery/auth/truncation behavior; no BYO user store adopted"
+  ],
+  "limits": "Shared Darwin host/Linux VM CPU observations only. Existing MAGE is a runtime carrier, not an approved managed server profile; SSG fork equivalence, inherited macOS quality, clean latency or G1 acceptance are not claimed."
+}

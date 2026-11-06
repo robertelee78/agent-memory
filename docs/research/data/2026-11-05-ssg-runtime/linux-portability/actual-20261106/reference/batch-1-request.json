@@ -1,0 +1,11 @@
+{
+  "body": {
+    "encoding_format": "float",
+    "input": [
+      "Synthetic batch row 0"
+    ],
+    "model": "qwen3-embedding-8b-q8_0-d20ddc71e8a5"
+  },
+  "method": "POST",
+  "url": "http://127.0.0.1:59909/v1/embeddings"
+}

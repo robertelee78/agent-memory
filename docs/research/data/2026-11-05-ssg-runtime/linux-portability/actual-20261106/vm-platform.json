@@ -1,0 +1,15 @@
+{
+  "argv": [
+    "podman",
+    "machine",
+    "ssh",
+    "podman-machine-default",
+    "uname",
+    "-a"
+  ],
+  "duration_seconds": 0.1527550220489502,
+  "exit": 0,
+  "start_unix": 1793997536.2135,
+  "stderr": "",
+  "stdout": "Linux localhost.localdomain 7.1.10-200.fc44.aarch64 #1 SMP PREEMPT_DYNAMIC Sun Aug 23 16:21:29 UTC 2026 aarch64 GNU/Linux\n"
+}
