@@ -1,0 +1,21 @@
+{
+  "argv": [
+    "podman",
+    "exec",
+    "693aa286afdc98ea2f6c0753dcf17f3d9d680129082e307ddbc1a4ce83e9f71a",
+    "tar",
+    "-C",
+    "/usr/share/doc/memgraph",
+    "-cf",
+    "-",
+    "."
+  ],
+  "cwd": "/Users/robert.lee/.omp/wt/t09a3471e4/m",
+  "exit": 0,
+  "seconds": 0.08846108301077038,
+  "started_at": "2026-11-06T19:48:03.915943+00:00",
+  "stderr": "",
+  "stdout_artifact": "024-core-legal-texts.tar",
+  "stdout_bytes": 378880,
+  "stdout_sha256": "6cfef139b650eed516fec04fc2d9844caf818c0214eed36637852443a4437cf1"
+}

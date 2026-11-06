@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "git",
+    "rev-parse",
+    "HEAD"
+  ],
+  "cwd": "/Users/robert.lee/.omp/wt/t09a3471e4/m",
+  "exit": 0,
+  "seconds": 0.006082333042286336,
+  "started_at": "2026-11-06T19:48:01.253597+00:00",
+  "stderr": "",
+  "stdout": "f7746eb3c86b96a41e58144c17fb971fc9da97d8\n"
+}
