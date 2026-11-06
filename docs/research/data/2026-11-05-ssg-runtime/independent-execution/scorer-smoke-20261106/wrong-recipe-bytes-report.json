@@ -1,0 +1,8 @@
+{
+  "error": "Wrong frozen recipe/helper source: docs/research/data/2026-11-05-ssg-runtime/independent-execution/score.py",
+  "error_type": "IntegrityError",
+  "model_graph_llm_calls": 0,
+  "qualification_scope": "No quality claims from rejected evidence",
+  "schema": "am255/independent-offline-score-v1",
+  "status": "integrity-rejected"
+}

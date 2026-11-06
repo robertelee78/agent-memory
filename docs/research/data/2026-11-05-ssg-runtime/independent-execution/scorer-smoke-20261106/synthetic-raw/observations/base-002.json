@@ -1,0 +1,107 @@
+{
+  "case_ordinal": 2,
+  "caveats": {
+    "executed": false,
+    "prerequisite": "No reviewed caveat assembler"
+  },
+  "costs": {},
+  "executed": true,
+  "native": {
+    "context": {
+      "branch": "main"
+    },
+    "context_sha256": "6461b20cebcb7034bd8b13089d21a90cf5ce300bd7d74eb625c7a342cf6ccdac",
+    "crosscheck": {
+      "matched": true,
+      "scope": "SYNTHETIC assertion for scorer control flow, not native qualification"
+    },
+    "eligible": [
+      {
+        "id": "6993a696-6d7b-49ea-a918-2d815377ce45",
+        "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:6993a696-6d7b-49ea-a918-2d815377ce45:1",
+        "path": "topics/r/6993a696-6d7b-49ea-a918-2d815377ce45-v1.md",
+        "version": 1
+      },
+      {
+        "id": "c7b17274-e5ae-433f-a9f9-a0a2198a1c67",
+        "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:c7b17274-e5ae-433f-a9f9-a0a2198a1c67:1",
+        "path": "topics/r/c7b17274-e5ae-433f-a9f9-a0a2198a1c67-v1.md",
+        "version": 1
+      }
+    ],
+    "request_valid": true,
+    "source_binding": {
+      "canonical_sha256": "66e81470aa7f2c50591d9e6478cee36da7ed927b2cf802eeefce9c10884e0994",
+      "generation_id": "synthetic-base",
+      "profile_sha256": "ebbe3638d181babf56b36018f1dc2c24fb218cd134f03bd64c746c23f4d0e63f"
+    }
+  },
+  "operation": "semantic-recall",
+  "outcome": {
+    "executed": false,
+    "prerequisite": "No reviewed outcome mapper"
+  },
+  "prerequisites": [
+    "EXPLICITLY SYNTHETIC scorer/math fixture; never a model/graph/native qualification"
+  ],
+  "provider": {
+    "executed": false,
+    "prerequisite": "Synthetic scorer smoke sends nothing to a provider"
+  },
+  "schema": "am255/independent-case-observation-v1",
+  "semantic": {
+    "ann": {
+      "candidate_budget": 16,
+      "costs": {},
+      "domain_size": 2,
+      "exact_rescored": [
+        {
+          "cosine": 0.25,
+          "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:6993a696-6d7b-49ea-a918-2d815377ce45:1"
+        },
+        {
+          "cosine": -0.5,
+          "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:c7b17274-e5ae-433f-a9f9-a0a2198a1c67:1"
+        }
+      ],
+      "executed": true,
+      "interpretation": "SYNTHETIC engine inversion preserved, exact signed cosine authoritative",
+      "raw_rows": [
+        {
+          "distance": 3.0,
+          "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:c7b17274-e5ae-433f-a9f9-a0a2198a1c67:1",
+          "similarity": 9.0
+        },
+        {
+          "distance": 3.0,
+          "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:6993a696-6d7b-49ea-a918-2d815377ce45:1",
+          "similarity": 9.0
+        }
+      ],
+      "reported_capacity": 2
+    },
+    "exact_ranking": [
+      {
+        "cosine": 0.25,
+        "id": "6993a696-6d7b-49ea-a918-2d815377ce45",
+        "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:6993a696-6d7b-49ea-a918-2d815377ce45:1",
+        "path": "topics/r/6993a696-6d7b-49ea-a918-2d815377ce45-v1.md",
+        "version": 1
+      },
+      {
+        "cosine": -0.5,
+        "id": "c7b17274-e5ae-433f-a9f9-a0a2198a1c67",
+        "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:c7b17274-e5ae-433f-a9f9-a0a2198a1c67:1",
+        "path": "topics/r/c7b17274-e5ae-433f-a9f9-a0a2198a1c67-v1.md",
+        "version": 1
+      }
+    ],
+    "executed": true
+  },
+  "size": 1000,
+  "typed": {
+    "executed": false,
+    "prerequisite": "Synthetic case has no typed execution"
+  },
+  "variant": "base"
+}
