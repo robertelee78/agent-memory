@@ -1,0 +1,492 @@
+{
+  "schema": "cgg.graph.v2",
+  "cgg_version": "0.11.2",
+  "callables": {
+    "Cwmuawhhryb": {
+      "id": "Cwmuawhhryb",
+      "qualified_name": "app.evaluate_text",
+      "simple_name": "evaluate_text",
+      "kind": "function",
+      "language": "python",
+      "file": "F1qt74rokzq",
+      "start_line": 8,
+      "end_line": 9,
+      "start_byte": 153,
+      "end_byte": 199,
+      "signature_hint": "def evaluate_text(text)",
+      "vis": "public"
+    },
+    "Ctqzjact8fo": {
+      "id": "Ctqzjact8fo",
+      "qualified_name": "app.direct",
+      "simple_name": "direct",
+      "kind": "function",
+      "language": "python",
+      "file": "F1qt74rokzq",
+      "start_line": 13,
+      "end_line": 14,
+      "start_byte": 222,
+      "end_byte": 293,
+      "signature_hint": "def direct()",
+      "attributes": [
+        "@app.get(\"/direct\")"
+      ],
+      "vis": "public"
+    },
+    "Cfy4bsgphiq": {
+      "id": "Cfy4bsgphiq",
+      "qualified_name": "app.constant",
+      "simple_name": "constant",
+      "kind": "function",
+      "language": "python",
+      "file": "F1qt74rokzq",
+      "start_line": 18,
+      "end_line": 19,
+      "start_byte": 318,
+      "end_byte": 363,
+      "signature_hint": "def constant()",
+      "attributes": [
+        "@app.get(\"/constant\")"
+      ],
+      "vis": "public"
+    },
+    "Czkn4j52qli": {
+      "id": "Czkn4j52qli",
+      "qualified_name": "app.literal",
+      "simple_name": "literal",
+      "kind": "function",
+      "language": "python",
+      "file": "F1qt74rokzq",
+      "start_line": 23,
+      "end_line": 24,
+      "start_byte": 387,
+      "end_byte": 459,
+      "signature_hint": "def literal()",
+      "attributes": [
+        "@app.get(\"/literal\")"
+      ],
+      "vis": "public"
+    },
+    "C12d7bu7p3xs": {
+      "id": "C12d7bu7p3xs",
+      "qualified_name": "app.orphan",
+      "simple_name": "orphan",
+      "kind": "function",
+      "language": "python",
+      "file": "F1qt74rokzq",
+      "start_line": 27,
+      "end_line": 28,
+      "start_byte": 462,
+      "end_byte": 501,
+      "signature_hint": "def orphan(text)",
+      "vis": "public"
+    },
+    "C17ieaknug9o": {
+      "id": "C17ieaknug9o",
+      "qualified_name": "test_routes.test_only",
+      "simple_name": "test_only",
+      "kind": "function",
+      "language": "python",
+      "file": "F10w99o8on24",
+      "start_line": 8,
+      "end_line": 9,
+      "start_byte": 165,
+      "end_byte": 225,
+      "signature_hint": "def test_only()",
+      "attributes": [
+        "@app.get(\"/test-only\")"
+      ],
+      "vis": "public",
+      "test_role": "case"
+    },
+    "C14vl0z79xa8": {
+      "id": "C14vl0z79xa8",
+      "qualified_name": "<stdlib>::eval",
+      "simple_name": "eval",
+      "kind": "function",
+      "language": "python",
+      "file": "F1ns81xzn7p",
+      "start_line": 0,
+      "end_line": 0,
+      "start_byte": 0,
+      "end_byte": 0,
+      "attributes": [
+        "stdlib"
+      ],
+      "synthetic": true
+    },
+    "C15dn909n0as": {
+      "id": "C15dn909n0as",
+      "qualified_name": "<stdlib>::str",
+      "simple_name": "str",
+      "kind": "function",
+      "language": "python",
+      "file": "F1ns81xzn7p",
+      "start_line": 0,
+      "end_line": 0,
+      "start_byte": 0,
+      "end_byte": 0,
+      "attributes": [
+        "stdlib"
+      ],
+      "synthetic": true
+    },
+    "C15ulh2x3ma": {
+      "id": "C15ulh2x3ma",
+      "qualified_name": "<stdlib>::ast::literal_eval",
+      "simple_name": "literal_eval",
+      "kind": "function",
+      "language": "python",
+      "file": "F1ns81xzn7p",
+      "start_line": 0,
+      "end_line": 0,
+      "start_byte": 0,
+      "end_byte": 0,
+      "attributes": [
+        "stdlib"
+      ],
+      "synthetic": true
+    },
+    "Ctdoe5yl48e": {
+      "id": "Ctdoe5yl48e",
+      "qualified_name": "<framework-entry>::network::flask::get(\"/direct\")",
+      "simple_name": "get(\"/direct\")",
+      "kind": "function",
+      "language": "python",
+      "file": "Fn7kcdjzuh1",
+      "start_line": 0,
+      "end_line": 0,
+      "start_byte": 0,
+      "end_byte": 0,
+      "attributes": [
+        "framework-entry",
+        "@app.get(\"/direct\")"
+      ],
+      "synthetic": true,
+      "framework_entry": "network"
+    },
+    "C8tlrp1j1dk": {
+      "id": "C8tlrp1j1dk",
+      "qualified_name": "<framework-entry>::network::flask::get(\"/constant\")",
+      "simple_name": "get(\"/constant\")",
+      "kind": "function",
+      "language": "python",
+      "file": "Fn7kcdjzuh1",
+      "start_line": 0,
+      "end_line": 0,
+      "start_byte": 0,
+      "end_byte": 0,
+      "attributes": [
+        "framework-entry",
+        "@app.get(\"/constant\")"
+      ],
+      "synthetic": true,
+      "framework_entry": "network"
+    },
+    "Ciyrxsdu5ps": {
+      "id": "Ciyrxsdu5ps",
+      "qualified_name": "<framework-entry>::network::flask::get(\"/literal\")",
+      "simple_name": "get(\"/literal\")",
+      "kind": "function",
+      "language": "python",
+      "file": "Fn7kcdjzuh1",
+      "start_line": 0,
+      "end_line": 0,
+      "start_byte": 0,
+      "end_byte": 0,
+      "attributes": [
+        "framework-entry",
+        "@app.get(\"/literal\")"
+      ],
+      "synthetic": true,
+      "framework_entry": "network"
+    },
+    "Cwc6bcdpiu0": {
+      "id": "Cwc6bcdpiu0",
+      "qualified_name": "<framework-entry>::network::flask::get(\"/test-only\")",
+      "simple_name": "get(\"/test-only\")",
+      "kind": "function",
+      "language": "python",
+      "file": "Fn7kcdjzuh1",
+      "start_line": 0,
+      "end_line": 0,
+      "start_byte": 0,
+      "end_byte": 0,
+      "attributes": [
+        "framework-entry",
+        "@app.get(\"/test-only\")"
+      ],
+      "synthetic": true,
+      "framework_entry": "network"
+    }
+  },
+  "files": {
+    "F1qt74rokzq": {
+      "id": "F1qt74rokzq",
+      "path": "./app.py",
+      "language": "python",
+      "detected_via": "extension:.py",
+      "blake3": "fc94bde7d82c40ee56b19cc531fbf4d4bb018e2aa73ee68f573d91a92f133f64",
+      "size_bytes": 502,
+      "lines": 28,
+      "parse_ms": 0.38575000000000004,
+      "parse_status": "ok"
+    },
+    "F10w99o8on24": {
+      "id": "F10w99o8on24",
+      "path": "./tests/test_routes.py",
+      "language": "python",
+      "detected_via": "extension:.py",
+      "blake3": "4d670960eb99119d84deb1cc6743652c65e0de3b524f25e1393073e3b15de0b1",
+      "size_bytes": 226,
+      "lines": 9,
+      "parse_ms": 0.35975,
+      "parse_status": "ok",
+      "test_role": "file-name"
+    },
+    "F1ns81xzn7p": {
+      "id": "F1ns81xzn7p",
+      "path": "<stdlib>",
+      "language": "stdlib",
+      "detected_via": "synthesized",
+      "blake3": "0000000000000000000000000000000000000000000000000000000000000000",
+      "size_bytes": 0,
+      "lines": 0,
+      "parse_ms": 0.0,
+      "parse_status": "synthetic"
+    },
+    "Fn7kcdjzuh1": {
+      "id": "Fn7kcdjzuh1",
+      "path": "<framework-entry>",
+      "language": "framework-entry",
+      "detected_via": "synthesized",
+      "blake3": "0000000000000000000000000000000000000000000000000000000000000000",
+      "size_bytes": 0,
+      "lines": 0,
+      "parse_ms": 0.0,
+      "parse_status": "synthetic"
+    }
+  },
+  "edges": [
+    {
+      "src": "Ctqzjact8fo",
+      "dst": "Cwmuawhhryb",
+      "site_line": 14,
+      "site_byte": 251,
+      "confidence": "high",
+      "via": {
+        "kind": "direct"
+      },
+      "resolver": "intra-file"
+    },
+    {
+      "src": "Cwmuawhhryb",
+      "dst": "C14vl0z79xa8",
+      "site_line": 9,
+      "site_byte": 189,
+      "confidence": "low",
+      "via": {
+        "kind": "stdlib"
+      },
+      "resolver": "exit-node"
+    },
+    {
+      "src": "Ctqzjact8fo",
+      "dst": "C15dn909n0as",
+      "site_line": 14,
+      "site_byte": 247,
+      "confidence": "low",
+      "via": {
+        "kind": "stdlib"
+      },
+      "resolver": "exit-node"
+    },
+    {
+      "src": "Cfy4bsgphiq",
+      "dst": "C15dn909n0as",
+      "site_line": 19,
+      "site_byte": 345,
+      "confidence": "low",
+      "via": {
+        "kind": "stdlib"
+      },
+      "resolver": "exit-node"
+    },
+    {
+      "src": "Cfy4bsgphiq",
+      "dst": "C14vl0z79xa8",
+      "site_line": 19,
+      "site_byte": 349,
+      "confidence": "low",
+      "via": {
+        "kind": "stdlib"
+      },
+      "resolver": "exit-node"
+    },
+    {
+      "src": "Czkn4j52qli",
+      "dst": "C15dn909n0as",
+      "site_line": 24,
+      "site_byte": 413,
+      "confidence": "low",
+      "via": {
+        "kind": "stdlib"
+      },
+      "resolver": "exit-node"
+    },
+    {
+      "src": "Czkn4j52qli",
+      "dst": "C15ulh2x3ma",
+      "site_line": 24,
+      "site_byte": 417,
+      "confidence": "low",
+      "via": {
+        "kind": "stdlib"
+      },
+      "resolver": "exit-node"
+    },
+    {
+      "src": "C12d7bu7p3xs",
+      "dst": "C14vl0z79xa8",
+      "site_line": 28,
+      "site_byte": 491,
+      "confidence": "low",
+      "via": {
+        "kind": "stdlib"
+      },
+      "resolver": "exit-node"
+    },
+    {
+      "src": "C17ieaknug9o",
+      "dst": "C14vl0z79xa8",
+      "site_line": 9,
+      "site_byte": 193,
+      "confidence": "low",
+      "via": {
+        "kind": "stdlib"
+      },
+      "resolver": "exit-node"
+    },
+    {
+      "src": "Ctdoe5yl48e",
+      "dst": "Ctqzjact8fo",
+      "site_line": 13,
+      "site_byte": 0,
+      "confidence": "low",
+      "via": {
+        "kind": "framework_entry",
+        "family": "flask"
+      },
+      "resolver": "framework-entry"
+    },
+    {
+      "src": "C8tlrp1j1dk",
+      "dst": "Cfy4bsgphiq",
+      "site_line": 18,
+      "site_byte": 0,
+      "confidence": "low",
+      "via": {
+        "kind": "framework_entry",
+        "family": "flask"
+      },
+      "resolver": "framework-entry"
+    },
+    {
+      "src": "Ciyrxsdu5ps",
+      "dst": "Czkn4j52qli",
+      "site_line": 23,
+      "site_byte": 0,
+      "confidence": "low",
+      "via": {
+        "kind": "framework_entry",
+        "family": "flask"
+      },
+      "resolver": "framework-entry"
+    },
+    {
+      "src": "Cwc6bcdpiu0",
+      "dst": "C17ieaknug9o",
+      "site_line": 8,
+      "site_byte": 0,
+      "confidence": "low",
+      "via": {
+        "kind": "framework_entry",
+        "family": "flask"
+      },
+      "resolver": "framework-entry"
+    }
+  ],
+  "unresolved": [
+    {
+      "src": null,
+      "file": "F1qt74rokzq",
+      "site_line": 5,
+      "site_byte": 141,
+      "name": "__name__",
+      "reason": {
+        "stage": "value-ref-no-enclosing"
+      }
+    },
+    {
+      "src": null,
+      "file": "F10w99o8on24",
+      "site_line": 4,
+      "site_byte": 130,
+      "name": "__name__",
+      "reason": {
+        "stage": "value-ref-no-enclosing"
+      }
+    }
+  ],
+  "file_audits": [],
+  "metrics": {
+    "wall_ms": 4.628209,
+    "phases": {
+      "walk_ms": 1.521041,
+      "parse_ms": 0.7455,
+      "extract_ms": 2.332833,
+      "resolve_ms": 0.0,
+      "link_ms": 0.981209,
+      "query_ms": 0.0,
+      "format_ms": 0.0
+    },
+    "files_discovered": 32,
+    "files_analyzed": 2,
+    "files_skipped": 30,
+    "files_errored": 0,
+    "bytes_processed": 728,
+    "callables": 13,
+    "edges": 13,
+    "unresolved_calls": 2,
+    "stdlib_calls": 8,
+    "external_calls": 6,
+    "ffi_detected": 0,
+    "ffi_resolved": 0,
+    "peak_rss_bytes": 0,
+    "by_language": {
+      "python": {
+        "files": 2,
+        "callables": 6,
+        "edges": 1,
+        "unresolved": 2,
+        "stdlib": 8,
+        "external": 6
+      },
+      "skip:builtin": {
+        "files": 29,
+        "callables": 0,
+        "edges": 0,
+        "unresolved": 0,
+        "stdlib": 0,
+        "external": 0
+      }
+    },
+    "cycles": [],
+    "longest_path_len": 0,
+    "confidence_histogram": {
+      "high": 1,
+      "medium": 0,
+      "low": 0
+    }
+  }
+}

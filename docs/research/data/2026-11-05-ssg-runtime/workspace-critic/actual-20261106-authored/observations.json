@@ -1,0 +1,21 @@
+{
+  "controls": {
+    "changed-code": 3,
+    "invalid-range": 2,
+    "missing-code": 2,
+    "missing-fact": 2,
+    "positive-evidence": 0,
+    "stale-path-boundary": 0,
+    "unconnected-path": 2,
+    "unsupported-claim-boundary": 0
+  },
+  "critic_executed": false,
+  "critic_quality": "unmeasured",
+  "raw_receipts": "commands.json",
+  "run_id": "1c0ece8aa94641d68556dd5878bb26b0",
+  "schema": "am255/workspace-critic-observations-v1",
+  "shared_graph_isolation": "No existing shared graph touched; structural endpoint separation only, not credential-based isolation or alias-proofing.",
+  "status": "observed",
+  "stored_graph_claim_boundary": "No critic/model verdicts computed; unsupported statement control is intentionally false.",
+  "timings": "shared host descriptive only"
+}

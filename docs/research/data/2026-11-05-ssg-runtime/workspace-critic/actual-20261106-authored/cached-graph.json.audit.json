@@ -1,0 +1,638 @@
+[
+  {
+    "event": "run_started",
+    "cgg_version": "0.11.2",
+    "argv": [
+      "cgg",
+      ".",
+      "--include-external",
+      "--include-stdlib",
+      "-t",
+      "json",
+      "-q",
+      "-o",
+      "/Users/robert.lee/.omp/wt/tcb265d0cb/m/docs/research/data/2026-11-05-ssg-runtime/workspace-critic/actual-20261106-authored/scratch/cache/repos/86d44bff1f90242f/tmp-18642/graph.json"
+    ]
+  },
+  {
+    "event": "file_discovered",
+    "path": "./app.py"
+  },
+  {
+    "event": "file_discovered",
+    "path": "./requirements.txt"
+  },
+  {
+    "event": "file_skipped",
+    "path": "./requirements.txt",
+    "reason": {
+      "kind": "unknown-extension"
+    }
+  },
+  {
+    "event": "file_discovered",
+    "path": "./tests/test_routes.py"
+  },
+  {
+    "event": "file_analyzed",
+    "file": "F1qt74rokzq",
+    "path": "./app.py",
+    "language": "python",
+    "detected_via": "extension:.py",
+    "blake3": "fc94bde7d82c40ee56b19cc531fbf4d4bb018e2aa73ee68f573d91a92f133f64",
+    "size_bytes": 502,
+    "lines": 28,
+    "parse_ms": 0.38575000000000004,
+    "parse_status": "ok",
+    "callables": [
+      {
+        "id": "Cwmuawhhryb",
+        "qualified_name": "app.evaluate_text",
+        "kind": "freefunction",
+        "start_line": 8,
+        "end_line": 9,
+        "start_byte": 153,
+        "end_byte": 199
+      },
+      {
+        "id": "Ctqzjact8fo",
+        "qualified_name": "app.direct",
+        "kind": "freefunction",
+        "start_line": 13,
+        "end_line": 14,
+        "start_byte": 222,
+        "end_byte": 293
+      },
+      {
+        "id": "Cfy4bsgphiq",
+        "qualified_name": "app.constant",
+        "kind": "freefunction",
+        "start_line": 18,
+        "end_line": 19,
+        "start_byte": 318,
+        "end_byte": 363
+      },
+      {
+        "id": "Czkn4j52qli",
+        "qualified_name": "app.literal",
+        "kind": "freefunction",
+        "start_line": 23,
+        "end_line": 24,
+        "start_byte": 387,
+        "end_byte": 459
+      },
+      {
+        "id": "C12d7bu7p3xs",
+        "qualified_name": "app.orphan",
+        "kind": "freefunction",
+        "start_line": 27,
+        "end_line": 28,
+        "start_byte": 462,
+        "end_byte": 501
+      }
+    ],
+    "unresolved_calls": [
+      {
+        "src": null,
+        "file": "F1qt74rokzq",
+        "site_line": 5,
+        "site_byte": 141,
+        "name": "__name__",
+        "reason": {
+          "stage": "value-ref-no-enclosing"
+        }
+      }
+    ],
+    "stdlib_calls": [
+      {
+        "src": "Cwmuawhhryb",
+        "file": "F1qt74rokzq",
+        "site_line": 9,
+        "site_byte": 189,
+        "name": "eval",
+        "reason": {
+          "stage": "no-candidate-in-file"
+        },
+        "name_screen_applied": "stdlib"
+      },
+      {
+        "src": "Ctqzjact8fo",
+        "file": "F1qt74rokzq",
+        "site_line": 14,
+        "site_byte": 247,
+        "name": "str",
+        "reason": {
+          "stage": "no-candidate-in-file"
+        },
+        "name_screen_applied": "stdlib"
+      },
+      {
+        "src": "Cfy4bsgphiq",
+        "file": "F1qt74rokzq",
+        "site_line": 19,
+        "site_byte": 345,
+        "name": "str",
+        "reason": {
+          "stage": "no-candidate-in-file"
+        },
+        "name_screen_applied": "stdlib"
+      },
+      {
+        "src": "Cfy4bsgphiq",
+        "file": "F1qt74rokzq",
+        "site_line": 19,
+        "site_byte": 349,
+        "name": "eval",
+        "reason": {
+          "stage": "no-candidate-in-file"
+        },
+        "name_screen_applied": "stdlib"
+      },
+      {
+        "src": "Czkn4j52qli",
+        "file": "F1qt74rokzq",
+        "site_line": 24,
+        "site_byte": 413,
+        "name": "str",
+        "reason": {
+          "stage": "no-candidate-in-file"
+        },
+        "name_screen_applied": "stdlib"
+      },
+      {
+        "src": "Czkn4j52qli",
+        "file": "F1qt74rokzq",
+        "site_line": 24,
+        "site_byte": 417,
+        "name": "literal_eval",
+        "receiver_hint": "ast",
+        "reason": {
+          "stage": "no-candidate-in-file"
+        },
+        "name_screen_applied": "stdlib"
+      },
+      {
+        "src": "C12d7bu7p3xs",
+        "file": "F1qt74rokzq",
+        "site_line": 28,
+        "site_byte": 491,
+        "name": "eval",
+        "reason": {
+          "stage": "no-candidate-in-file"
+        },
+        "name_screen_applied": "stdlib"
+      }
+    ],
+    "external_calls": [
+      {
+        "src": null,
+        "file": "F1qt74rokzq",
+        "site_line": 5,
+        "site_byte": 135,
+        "name": "Flask",
+        "reason": {
+          "stage": "no-candidate-in-file"
+        },
+        "name_screen_applied": "external"
+      },
+      {
+        "src": null,
+        "file": "F1qt74rokzq",
+        "site_line": 12,
+        "site_byte": 203,
+        "name": "get",
+        "receiver_hint": "Flask",
+        "reason": {
+          "stage": "no-candidate-in-file"
+        },
+        "name_screen_applied": "external"
+      },
+      {
+        "src": null,
+        "file": "F1qt74rokzq",
+        "site_line": 17,
+        "site_byte": 297,
+        "name": "get",
+        "receiver_hint": "Flask",
+        "reason": {
+          "stage": "no-candidate-in-file"
+        },
+        "name_screen_applied": "external"
+      },
+      {
+        "src": null,
+        "file": "F1qt74rokzq",
+        "site_line": 22,
+        "site_byte": 367,
+        "name": "get",
+        "receiver_hint": "Flask",
+        "reason": {
+          "stage": "no-candidate-in-file"
+        },
+        "name_screen_applied": "external"
+      }
+    ]
+  },
+  {
+    "event": "file_analyzed",
+    "file": "F10w99o8on24",
+    "path": "./tests/test_routes.py",
+    "language": "python",
+    "detected_via": "extension:.py",
+    "blake3": "4d670960eb99119d84deb1cc6743652c65e0de3b524f25e1393073e3b15de0b1",
+    "size_bytes": 226,
+    "lines": 9,
+    "parse_ms": 0.35975,
+    "parse_status": "ok",
+    "test_role": "file-name",
+    "callables": [
+      {
+        "id": "C17ieaknug9o",
+        "qualified_name": "test_routes.test_only",
+        "kind": "freefunction",
+        "start_line": 8,
+        "end_line": 9,
+        "start_byte": 165,
+        "end_byte": 225
+      }
+    ],
+    "unresolved_calls": [
+      {
+        "src": null,
+        "file": "F10w99o8on24",
+        "site_line": 4,
+        "site_byte": 130,
+        "name": "__name__",
+        "reason": {
+          "stage": "value-ref-no-enclosing"
+        }
+      }
+    ],
+    "stdlib_calls": [
+      {
+        "src": "C17ieaknug9o",
+        "file": "F10w99o8on24",
+        "site_line": 9,
+        "site_byte": 193,
+        "name": "eval",
+        "reason": {
+          "stage": "no-candidate-in-file"
+        },
+        "name_screen_applied": "stdlib"
+      }
+    ],
+    "external_calls": [
+      {
+        "src": null,
+        "file": "F10w99o8on24",
+        "site_line": 4,
+        "site_byte": 124,
+        "name": "Flask",
+        "reason": {
+          "stage": "no-candidate-in-file"
+        },
+        "name_screen_applied": "external"
+      },
+      {
+        "src": null,
+        "file": "F10w99o8on24",
+        "site_line": 7,
+        "site_byte": 143,
+        "name": "get",
+        "receiver_hint": "Flask",
+        "reason": {
+          "stage": "no-candidate-in-file"
+        },
+        "name_screen_applied": "external"
+      }
+    ]
+  },
+  {
+    "event": "file_skipped",
+    "path": "./.git/COMMIT_EDITMSG",
+    "reason": {
+      "kind": "builtin",
+      "detail": ".git"
+    }
+  },
+  {
+    "event": "file_skipped",
+    "path": "./.git/HEAD",
+    "reason": {
+      "kind": "builtin",
+      "detail": ".git"
+    }
+  },
+  {
+    "event": "file_skipped",
+    "path": "./.git/config",
+    "reason": {
+      "kind": "builtin",
+      "detail": ".git"
+    }
+  },
+  {
+    "event": "file_skipped",
+    "path": "./.git/description",
+    "reason": {
+      "kind": "builtin",
+      "detail": ".git"
+    }
+  },
+  {
+    "event": "file_skipped",
+    "path": "./.git/hooks/applypatch-msg.sample",
+    "reason": {
+      "kind": "builtin",
+      "detail": ".git"
+    }
+  },
+  {
+    "event": "file_skipped",
+    "path": "./.git/hooks/commit-msg.sample",
+    "reason": {
+      "kind": "builtin",
+      "detail": ".git"
+    }
+  },
+  {
+    "event": "file_skipped",
+    "path": "./.git/hooks/fsmonitor-watchman.sample",
+    "reason": {
+      "kind": "builtin",
+      "detail": ".git"
+    }
+  },
+  {
+    "event": "file_skipped",
+    "path": "./.git/hooks/post-update.sample",
+    "reason": {
+      "kind": "builtin",
+      "detail": ".git"
+    }
+  },
+  {
+    "event": "file_skipped",
+    "path": "./.git/hooks/pre-applypatch.sample",
+    "reason": {
+      "kind": "builtin",
+      "detail": ".git"
+    }
+  },
+  {
+    "event": "file_skipped",
+    "path": "./.git/hooks/pre-commit.sample",
+    "reason": {
+      "kind": "builtin",
+      "detail": ".git"
+    }
+  },
+  {
+    "event": "file_skipped",
+    "path": "./.git/hooks/pre-merge-commit.sample",
+    "reason": {
+      "kind": "builtin",
+      "detail": ".git"
+    }
+  },
+  {
+    "event": "file_skipped",
+    "path": "./.git/hooks/pre-push.sample",
+    "reason": {
+      "kind": "builtin",
+      "detail": ".git"
+    }
+  },
+  {
+    "event": "file_skipped",
+    "path": "./.git/hooks/pre-rebase.sample",
+    "reason": {
+      "kind": "builtin",
+      "detail": ".git"
+    }
+  },
+  {
+    "event": "file_skipped",
+    "path": "./.git/hooks/pre-receive.sample",
+    "reason": {
+      "kind": "builtin",
+      "detail": ".git"
+    }
+  },
+  {
+    "event": "file_skipped",
+    "path": "./.git/hooks/prepare-commit-msg.sample",
+    "reason": {
+      "kind": "builtin",
+      "detail": ".git"
+    }
+  },
+  {
+    "event": "file_skipped",
+    "path": "./.git/hooks/push-to-checkout.sample",
+    "reason": {
+      "kind": "builtin",
+      "detail": ".git"
+    }
+  },
+  {
+    "event": "file_skipped",
+    "path": "./.git/hooks/sendemail-validate.sample",
+    "reason": {
+      "kind": "builtin",
+      "detail": ".git"
+    }
+  },
+  {
+    "event": "file_skipped",
+    "path": "./.git/hooks/update.sample",
+    "reason": {
+      "kind": "builtin",
+      "detail": ".git"
+    }
+  },
+  {
+    "event": "file_skipped",
+    "path": "./.git/index",
+    "reason": {
+      "kind": "builtin",
+      "detail": ".git"
+    }
+  },
+  {
+    "event": "file_skipped",
+    "path": "./.git/info/exclude",
+    "reason": {
+      "kind": "builtin",
+      "detail": ".git"
+    }
+  },
+  {
+    "event": "file_skipped",
+    "path": "./.git/logs/HEAD",
+    "reason": {
+      "kind": "builtin",
+      "detail": ".git"
+    }
+  },
+  {
+    "event": "file_skipped",
+    "path": "./.git/logs/refs/heads/main",
+    "reason": {
+      "kind": "builtin",
+      "detail": ".git"
+    }
+  },
+  {
+    "event": "file_skipped",
+    "path": "./.git/objects/18/a8664ea4287c12673927fd726430896ba87a50",
+    "reason": {
+      "kind": "builtin",
+      "detail": ".git"
+    }
+  },
+  {
+    "event": "file_skipped",
+    "path": "./.git/objects/43/a96fd289c3d21f6b1fef9f5198cc0d7a2bca40",
+    "reason": {
+      "kind": "builtin",
+      "detail": ".git"
+    }
+  },
+  {
+    "event": "file_skipped",
+    "path": "./.git/objects/4b/61f41c3d6431da2293bf81e6395d81bebd7007",
+    "reason": {
+      "kind": "builtin",
+      "detail": ".git"
+    }
+  },
+  {
+    "event": "file_skipped",
+    "path": "./.git/objects/d3/0737ec165ada57cff4863a1e273bf7d57aeed5",
+    "reason": {
+      "kind": "builtin",
+      "detail": ".git"
+    }
+  },
+  {
+    "event": "file_skipped",
+    "path": "./.git/objects/e5/170c2d8c55d19748c0a22774e7599a46a16197",
+    "reason": {
+      "kind": "builtin",
+      "detail": ".git"
+    }
+  },
+  {
+    "event": "file_skipped",
+    "path": "./.git/objects/e7/6f4612b9f2a63eae5d43625275d108beeb856d",
+    "reason": {
+      "kind": "builtin",
+      "detail": ".git"
+    }
+  },
+  {
+    "event": "file_skipped",
+    "path": "./.git/refs/heads/main",
+    "reason": {
+      "kind": "builtin",
+      "detail": ".git"
+    }
+  },
+  {
+    "event": "framework_coverage",
+    "coverage": {
+      "disclaimer": "BEST EFFORT — ENTRY NODES ARE INFERRED, NOT OBSERVED. cgg synthesizes these from framework markers it recognises: a decorator, a base type, a registration call. Nothing in your source states that the call happens. Coverage is partial — a framework cgg does not recognise contributes no entry nodes at all, and its handlers will still appear unreferenced. The coverage table states exactly which frameworks were recognised and which imports were seen but not understood. Absence of an entry node is not evidence that no entry exists.",
+      "recognised": [
+        {
+          "id": "flask",
+          "language": "python",
+          "kind": "network",
+          "entries": 4
+        }
+      ],
+      "seen_no_rules": [],
+      "no_markers": [
+        {
+          "language": "stdlib",
+          "files": 1
+        }
+      ],
+      "nodes_minted": 4,
+      "root_marks_only": 0
+    }
+  },
+  {
+    "event": "unresolved_by_module",
+    "modules": [
+      {
+        "module": "(unattributed)",
+        "count": 6,
+        "sample": [
+          "__name__",
+          "get"
+        ]
+      },
+      {
+        "module": "flask",
+        "count": 2,
+        "sample": [
+          "Flask"
+        ]
+      }
+    ]
+  },
+  {
+    "event": "run_finished",
+    "metrics": {
+      "wall_ms": 4.628209,
+      "phases": {
+        "walk_ms": 1.521041,
+        "parse_ms": 0.7455,
+        "extract_ms": 2.332833,
+        "resolve_ms": 0.0,
+        "link_ms": 0.981209,
+        "query_ms": 0.0,
+        "format_ms": 0.0
+      },
+      "files_discovered": 32,
+      "files_analyzed": 2,
+      "files_skipped": 30,
+      "files_errored": 0,
+      "bytes_processed": 728,
+      "callables": 13,
+      "edges": 13,
+      "unresolved_calls": 2,
+      "stdlib_calls": 8,
+      "external_calls": 6,
+      "ffi_detected": 0,
+      "ffi_resolved": 0,
+      "peak_rss_bytes": 0,
+      "by_language": {
+        "python": {
+          "files": 2,
+          "callables": 6,
+          "edges": 1,
+          "unresolved": 2,
+          "stdlib": 8,
+          "external": 6
+        },
+        "skip:builtin": {
+          "files": 29,
+          "callables": 0,
+          "edges": 0,
+          "unresolved": 0,
+          "stdlib": 0,
+          "external": 0
+        }
+      },
+      "cycles": [],
+      "longest_path_len": 0,
+      "confidence_histogram": {
+        "high": 1,
+        "medium": 0,
+        "low": 0
+      }
+    }
+  }
+]
