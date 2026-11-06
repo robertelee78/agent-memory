@@ -25,6 +25,7 @@ retrieval, embedding, graph or ranking code.
 | `g1_relationship_overlay.py` | Suite-owned canonical overlay: episodic attempts, decisions, results, `derived-from`, shared evidence, unknown/task conditions, hidden/unsafe/injected endpoints |
 | `validate_suite.py` | Light native validator (see below) |
 | `validation-1000.json` | Actual validator report at 1,000 lessons, both variants |
+| `validation-10000-50000.json` | Actual full native validator report for 10,000/50,000 lessons, both variants; original authoring AM source only |
 | `--emit-oracles` output | Not committed (regenerable, ~0.6 MB at 1,000): expanded per-case required paths/IDs, forbidden primary paths and forbidden disclosure strings for the parent harness |
 | `freeze.json` | Artifact hashes, source pins and independence attestation |
 
@@ -72,9 +73,15 @@ python3 -B validate_suite.py --am-root AM --sizes 10000 50000 --crosscheck-sizes
 
 Observed: 1,000 full run valid in 8.2 s; a 10,000 targeted subset
 (`--cases c-journaling-7 r-journaling-component r-retry-co-routed ov-batch-attempts
-h16-hidden-replacement`, native cross-check on) valid in 20.5 s. Full 10,000 and
-50,000 validation were not run here (host reserved; ≤30 s smoke limit) and remain
-an explicit prerequisite for the parent.
+h16-hidden-replacement`, native cross-check on) valid in 20.5 s.
+The parent subsequently completed full 10,000/50,000 validation, both variants,
+with `--crosscheck-sizes 10000 50000`, valid for all 101 authored cases.
+The retained report binds unchanged suite/validator/overlay hashes to the frozen
+authoring source `175d21fa26bbef41f8ec859b463876934e16db79`, not the changed
+integration runtime. This proves label/native-eligibility consistency at those
+sizes, not current-runtime compatibility, embedding/graph quality or timing.
+Execution against a new runtime needs a separately reviewed source binding;
+the authoring hash checks MUST NOT be bypassed to claim that qualification.
 
 ## Open contract decisions surfaced (not decided by this suite)
 
