@@ -335,6 +335,54 @@
   "retained_raw_root": "/private/tmp/am-v15-delivery/255-integrated-allsize-preflight-20261106",
   "later_source_boundary": {
     "final_reviewed_source": "8577e1f3756f0b18c328081bfbd006f64ff6d169",
-    "changes": "Controller/graph/template finalization/disposal guards changed after3187629. Native/render/catalog code unchanged; this earlier preflight is not retroattested to8577e1f. Fresh all-size freeze at8577e1f is running separately."
-  }
+    "changes": "Controller/graph/template finalization/disposal guards changed after3187629. Native/render/catalog code unchanged; this earlier preflight is not retroattested to8577e1f. The subsequent freeze and failed actual run are recorded below."
+  },
+  "later_attempts": [
+    {
+      "source_commit": "8577e1f3756f0b18c328081bfbd006f64ff6d169",
+      "preflight": {
+        "observed_exit": 0,
+        "elapsed_seconds": 947.79,
+        "freeze_sha256": "b99d759270c6d9a46d981054edb2cf30dcf8ce59ba92780b51fa8d2f53732e53",
+        "retained_root": "/private/tmp/am-v15-delivery/255-final-allsize-freeze-20261106"
+      },
+      "canonical_catalog_score": {
+        "observed_exit": 0,
+        "elapsed_seconds": 18.7267,
+        "report_sha256": "cc6109a8a1fa79bf3cf99180a9bf0f2bfca0ede2526fc073b295a560661c11e1",
+        "expected_cells": 567,
+        "observation_cells": 0,
+        "all_quality_unexecuted": true,
+        "earlier_rejected_attempt_retained": "The first score used a symlinked /tmp source path and was integrity-rejected; the separate canonical /private/tmp score passed. Neither executed model or graph queries."
+      },
+      "actual_run": {
+        "observed_exit": 1,
+        "elapsed_seconds": 933.2873498749686,
+        "retained_root": "/private/tmp/am-v15-delivery/255-independent-actual-20261106",
+        "controller_root": "/private/tmp/am-v15-delivery/255-independent-actual-controller-20261106",
+        "services_started": false,
+        "failure": "Retained independently reviewed freeze differs: source_fixture_identity_sha256",
+        "diagnosis": "Only runtime profile version.stderr changed: Metal load timing0.028s versus0.027s. Source, inputs, spec, IO, schedules and catalogs were unchanged. This is an identity-construction defect, not query-quality evidence."
+      }
+    },
+    {
+      "source_commit": "35f27906120221ebbc06093c1e11fb6ec722e586",
+      "change": "Retain the full untouched version command as a hash-bound runtime_observations pointer outside source_fixture_identity. Stable profile retains exact build/revision/compiler, verified executable/weight/library inventory, dependencies, image, OS and kernel facts. No warning or diagnostic is suppressed.",
+      "actual_artifact_smoke": {
+        "passed": true,
+        "elapsed_seconds": 7.663295375008602,
+        "profiles_byte_equal": true,
+        "profile_sha256": "1e3b9069db08f068e6bfcc9ee6c92d787e73551fc4e510db2cd772c1983db407",
+        "raw_observation_sha256": [
+          "f93750a7b41278b68befc57f7ba4e43ccbc176af492246d3af846d325710cf82",
+          "c81295a22dc082dffc66cddb420d29f0dabcd97ad14a6d8441378b45f441ca86"
+        ],
+        "retained_root": "/private/tmp/am-v15-delivery/255-stable-runtime-identity-smoke-20261107",
+        "services_started": false,
+        "limit": "Two real artifact probes only; not a new all-size freeze, graph smoke or query-quality result."
+      },
+      "independent_review": "Executor255RuntimeOpus and Executor255ControllerOpus: scoped source PASS at35f2790, actual probe receipts inspected; reviewers ran no workloads. No G1/legal/profile/quality/release acceptance.",
+      "residual": "The retained uname -a identity includes the host name; a host-name change still fails closed and requires a new reviewed freeze."
+    }
+  ]
 }
