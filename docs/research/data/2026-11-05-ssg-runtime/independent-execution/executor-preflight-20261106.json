@@ -1,0 +1,271 @@
+{
+  "input_sha256": "1986071901b4004618310b15f2ebcbf6f03e6ee7afc9e113eca6d4deff893ef2",
+  "io_sha256": "b771a629c02b19d5e306eac748eb975e904d3d96c0578fc51f13072a5f9a5ed4",
+  "missing_prerequisites": [
+    "Final independent scorer must be integrated and frozen at the externally reviewed source commit before actual run"
+  ],
+  "model_or_graph_started": false,
+  "native_fixture_checks_executed": true,
+  "oracles_or_scorer_map_opened": false,
+  "qualification_scope": "Raw private synthetic scratch mechanisms only; no production P1/G3 API, semantic outcome, caveat, operator, license, profile, G1, feature, or release acceptance. Shared host measurements are not clean performance passes.",
+  "qualified_for_actual_run": false,
+  "schema": "am255/independent-freeze-preflight-v1",
+  "semantic_query_executed": false,
+  "sizes": [
+    {
+      "generations": [
+        {
+          "canonical_sha256": "fe470421f76be2112a58780588bc17d53475296f4a437c96625c7e61dd2c72e8",
+          "catalog": {
+            "path": "sizes/1000/g-1000-base-fe470421f76be2112a58/catalog.json",
+            "sha256": "b1201f0b87c823e4350998f53914ec3c109d06fee1ba008107c3c463caeadff0"
+          },
+          "generation_id": "g-1000-base-fe470421f76be2112a58",
+          "mutation": null,
+          "projection": {
+            "path": "sizes/1000/g-1000-base-fe470421f76be2112a58/projection.json",
+            "sha256": "bc7cd6002eff3b410045042c3eb665e7c950965cf3aee6ed13dc80292047e690"
+          },
+          "stage": null,
+          "variant": "base"
+        },
+        {
+          "canonical_sha256": "c8034c687a059a6fd9e7b3c94ed52473104c4bc31b5039fed7aaf73a42d4ea01",
+          "catalog": {
+            "path": "sizes/1000/g-1000-overlay-c8034c687a059a6fd9e7/catalog.json",
+            "sha256": "803ac01e385cdbd5a92ef95eab350edd622316fd6927ab96ef4fef8d841d39cf"
+          },
+          "generation_id": "g-1000-overlay-c8034c687a059a6fd9e7",
+          "mutation": null,
+          "projection": {
+            "path": "sizes/1000/g-1000-overlay-c8034c687a059a6fd9e7/projection.json",
+            "sha256": "b713d83667e83010797acda310489b1fd7fd41b40e23e3eb9a733005b368e289"
+          },
+          "stage": null,
+          "variant": "overlay"
+        },
+        {
+          "canonical_sha256": "8a36f9421cae99ecf0992043cf1888a289ddb1a6c59650eed7673f31b5245539",
+          "catalog": {
+            "path": "sizes/1000/g-1000-base-8a36f9421cae99ecf099/catalog.json",
+            "sha256": "33413b55eb5b6048790a8d75a94e022e3a731199243413aaae9cbd634e9ccc61"
+          },
+          "generation_id": "g-1000-base-8a36f9421cae99ecf099",
+          "mutation": "correct-retry-limit",
+          "projection": {
+            "path": "sizes/1000/g-1000-base-8a36f9421cae99ecf099/projection.json",
+            "sha256": "0bf473dff5ae44ec6926040f67c10d898b13e12dd4c51519c33006c2afece538"
+          },
+          "stage": "after-rebuild",
+          "variant": "base"
+        },
+        {
+          "canonical_sha256": "fe7071a9e5520733d5c3500a6a40e993daa71f8a49619e889162f1394ccf3bb4",
+          "catalog": {
+            "path": "sizes/1000/g-1000-overlay-fe7071a9e5520733d5c3/catalog.json",
+            "sha256": "8cf9f302d97d51c57e884e701e7257017335a0ef8b3409e20b211a24f54bbd20"
+          },
+          "generation_id": "g-1000-overlay-fe7071a9e5520733d5c3",
+          "mutation": "correct-retry-limit",
+          "projection": {
+            "path": "sizes/1000/g-1000-overlay-fe7071a9e5520733d5c3/projection.json",
+            "sha256": "8f9503fdb7d408bcf91fa6a84d8c06b3d154a67c22ef92aa84298182d256311b"
+          },
+          "stage": "after-rebuild",
+          "variant": "overlay"
+        },
+        {
+          "canonical_sha256": "78b8cb458802ab779d3a5c5e802f8c425b8e36cf310e697f63fc735c0d1a483c",
+          "catalog": {
+            "path": "sizes/1000/g-1000-base-78b8cb458802ab779d3a/catalog.json",
+            "sha256": "393b017c408be7de0342aea1d31a73be8cc2b2e37cf75c4e086ceec3393cd3f9"
+          },
+          "generation_id": "g-1000-base-78b8cb458802ab779d3a",
+          "mutation": "revoke-deployment-queue",
+          "projection": {
+            "path": "sizes/1000/g-1000-base-78b8cb458802ab779d3a/projection.json",
+            "sha256": "09fe24fd1c2ed904548f2b43416c53136720b9f71a46b1ceaabac6447516d198"
+          },
+          "stage": "after-rebuild",
+          "variant": "base"
+        },
+        {
+          "canonical_sha256": "077c4e0de3ad52811b0fa00060891ceb95aa9a477a1ab197f26a3245729d5d77",
+          "catalog": {
+            "path": "sizes/1000/g-1000-overlay-077c4e0de3ad52811b0f/catalog.json",
+            "sha256": "512da4863997879d8d0e42b34e3f2f2832fa91e23592d1b64878e481c29603f9"
+          },
+          "generation_id": "g-1000-overlay-077c4e0de3ad52811b0f",
+          "mutation": "revoke-deployment-queue",
+          "projection": {
+            "path": "sizes/1000/g-1000-overlay-077c4e0de3ad52811b0f/projection.json",
+            "sha256": "d0b2c08fc53603162f748920c741f9caecc153906c76c8917f02fa1a1e5b3eeb"
+          },
+          "stage": "after-rebuild",
+          "variant": "overlay"
+        },
+        {
+          "canonical_sha256": "69c85bc67e5fd111e4d0be0c203190808e6bb887763d524bff5cb449383ae017",
+          "catalog": {
+            "path": "sizes/1000/g-1000-base-69c85bc67e5fd111e4d0/catalog.json",
+            "sha256": "38cebb1a5b320fdb1d9829cd226d8c86a5d5c984a9aef055e1ebcd7df7a058dd"
+          },
+          "generation_id": "g-1000-base-69c85bc67e5fd111e4d0",
+          "mutation": "delete-receipt-b",
+          "projection": {
+            "path": "sizes/1000/g-1000-base-69c85bc67e5fd111e4d0/projection.json",
+            "sha256": "2894eedd62d7e34a4ef369c8d2860523ec6d45de6ed38b7ef12adba3e0b70bbf"
+          },
+          "stage": "after-rebuild",
+          "variant": "base"
+        },
+        {
+          "canonical_sha256": "d5064fe72e4a92bee5347776aedf2be3d64fe13cb4ebc39aac325990f03e621f",
+          "catalog": {
+            "path": "sizes/1000/g-1000-overlay-d5064fe72e4a92bee534/catalog.json",
+            "sha256": "1ac1852fe1f2cc44ad4e8e7f381087300c42a9bbcb4d137af9d8f8fb7b3493b8"
+          },
+          "generation_id": "g-1000-overlay-d5064fe72e4a92bee534",
+          "mutation": "delete-receipt-b",
+          "projection": {
+            "path": "sizes/1000/g-1000-overlay-d5064fe72e4a92bee534/projection.json",
+            "sha256": "c29085132516160fb87bec70062a6160577ba2e611c9332fc939f021139dea40"
+          },
+          "stage": "after-rebuild",
+          "variant": "overlay"
+        }
+      ],
+      "schedule": {
+        "path": "sizes/1000/schedule.json",
+        "sha256": "8710fc8438bd7be7c31fd92f0a10dc852a9e8c2a289386a8029eb8af21a83466"
+      },
+      "size": 1000
+    }
+  ],
+  "source_bindings": {
+    "authoring_am": {
+      "commit": "175d21fa26bbef41f8ec859b463876934e16db79",
+      "files": 86,
+      "native_tree_sha256": "9bd89d0e341ee8984db9e5082936807a49f1368a05a40ce026193f7b34e88ef3",
+      "roots": [
+        "skills/agent-memory/scripts/agent_memory",
+        "skills/agent-memory/schemas"
+      ]
+    },
+    "helpers": [
+      {
+        "path": "source/docs/research/data/2026-11-05-ssg-runtime/independent-execution/executor_native.py",
+        "repository_path": "docs/research/data/2026-11-05-ssg-runtime/independent-execution/executor_native.py",
+        "sha256": "17986b3c0c8574b98ee79cbbeffa92bfa7be0500c3c753805cb96f26738e103d",
+        "source_commit": "faa8e3e7e11222088f366a1e6e2c4e326f4ac729"
+      },
+      {
+        "path": "source/docs/research/data/2026-11-05-ssg-runtime/independent-execution/executor_runtime.py",
+        "repository_path": "docs/research/data/2026-11-05-ssg-runtime/independent-execution/executor_runtime.py",
+        "sha256": "0cf239e228cc28e1a6b4d061ad36f5823d40d5b72499792efa2abf48c3aaa468",
+        "source_commit": "faa8e3e7e11222088f366a1e6e2c4e326f4ac729"
+      },
+      {
+        "path": "source/docs/research/data/2026-11-05-ssg-runtime/independent-execution/executor_graph.py",
+        "repository_path": "docs/research/data/2026-11-05-ssg-runtime/independent-execution/executor_graph.py",
+        "sha256": "549595dde01bd91870bdf19a79de3c8921ea3b3a3e4e7c20acfd3f3c6011835a",
+        "source_commit": "faa8e3e7e11222088f366a1e6e2c4e326f4ac729"
+      },
+      {
+        "path": "source/docs/research/data/2026-11-05-ssg-runtime/independent-execution/executor_render.py",
+        "repository_path": "docs/research/data/2026-11-05-ssg-runtime/independent-execution/executor_render.py",
+        "sha256": "17b4d90a23ad9ab441f908d5aa1de4ad47463f976aae2de1a7f73e45240a42d8",
+        "source_commit": "faa8e3e7e11222088f366a1e6e2c4e326f4ac729"
+      },
+      {
+        "path": "source/docs/research/data/2026-11-05-ssg-runtime/independent-execution/executor_templates.json",
+        "repository_path": "docs/research/data/2026-11-05-ssg-runtime/independent-execution/executor_templates.json",
+        "sha256": "97c26c5dc914ed3e7b81df48af32d1d4a0c0c7b41bdb01f57342d21739d11058",
+        "source_commit": "faa8e3e7e11222088f366a1e6e2c4e326f4ac729"
+      },
+      {
+        "path": "source/docs/research/data/2026-11-05-ssg-runtime/independent-execution/compile_inputs.py",
+        "repository_path": "docs/research/data/2026-11-05-ssg-runtime/independent-execution/compile_inputs.py",
+        "sha256": "584c5f2d3d3b1972d17ea77088e79bff8f2d50e68a174aded08c33782b1ea1c9",
+        "source_commit": "faa8e3e7e11222088f366a1e6e2c4e326f4ac729"
+      },
+      {
+        "path": "source/skills/agent-memory/scripts/source_startup.py",
+        "repository_path": "skills/agent-memory/scripts/source_startup.py",
+        "sha256": "124aa791b1da7b236d859a1153dbd47f98d924ac713b53289e81d3c3da10bf01",
+        "source_commit": "faa8e3e7e11222088f366a1e6e2c4e326f4ac729"
+      },
+      {
+        "path": "source/docs/research/data/2026-11-05-ssg-runtime/independent-suite/validate_suite.py",
+        "repository_path": "docs/research/data/2026-11-05-ssg-runtime/independent-suite/validate_suite.py",
+        "sha256": "5b47a20c573d1cbbf093016f6ef33b42c72196d7140990c5d569a773d0c552a4",
+        "source_commit": "faa8e3e7e11222088f366a1e6e2c4e326f4ac729"
+      },
+      {
+        "path": "source/docs/research/data/2026-11-05-ssg-runtime/independent-suite/g1_relationship_overlay.py",
+        "repository_path": "docs/research/data/2026-11-05-ssg-runtime/independent-suite/g1_relationship_overlay.py",
+        "sha256": "69127e95964ba5e9ee46ff5ce1a616aebe5172f624923445e7cc5714279f993a",
+        "source_commit": "faa8e3e7e11222088f366a1e6e2c4e326f4ac729"
+      },
+      {
+        "path": "source/docs/research/data/2026-11-05-ssg-runtime/runtime-controls/common.py",
+        "repository_path": "docs/research/data/2026-11-05-ssg-runtime/runtime-controls/common.py",
+        "sha256": "f08cb242284c91c8fb91445ff560bc2a1ea0e655844c66800eaa6c099cb9b6ab",
+        "source_commit": "faa8e3e7e11222088f366a1e6e2c4e326f4ac729"
+      },
+      {
+        "path": "source/docs/research/data/2026-11-05-ssg-runtime/serving-comparison/compare_serving.py",
+        "repository_path": "docs/research/data/2026-11-05-ssg-runtime/serving-comparison/compare_serving.py",
+        "sha256": "621c58ac9672a84b099d094e59658a263b733220d0ae5005ca1de4d12491f672",
+        "source_commit": "faa8e3e7e11222088f366a1e6e2c4e326f4ac729"
+      },
+      {
+        "path": "authoring-source/scripts/evaluations/labeled_recall_fixture.py",
+        "repository_path": "scripts/evaluations/labeled_recall_fixture.py",
+        "sha256": "dded27f037c0770edbf3127eb8f8b944ce29d05b331d4cf0782c2389e627e2a9",
+        "source_commit": "175d21fa26bbef41f8ec859b463876934e16db79"
+      },
+      {
+        "path": "authoring-source/scripts/evaluations/semantic_navigation_fixture.py",
+        "repository_path": "scripts/evaluations/semantic_navigation_fixture.py",
+        "sha256": "a1b8cfae9a269ba79c6ae0e29e287dfd6c6c57c64bb7f88ab03927dd5ce9963f",
+        "source_commit": "175d21fa26bbef41f8ec859b463876934e16db79"
+      },
+      {
+        "path": "authoring-source/skills/agent-memory/templates/record-proposal.example.json",
+        "repository_path": "skills/agent-memory/templates/record-proposal.example.json",
+        "sha256": "87e9a441607c8ec83545ee57f157cd51b2be8b6adbc527f730f9c533e2ef4ce8",
+        "source_commit": "175d21fa26bbef41f8ec859b463876934e16db79"
+      }
+    ],
+    "inputs": {
+      "path": "inputs.json",
+      "repository_path": "docs/research/data/2026-11-05-ssg-runtime/independent-execution/authored-inputs-20261106.json",
+      "sha256": "1986071901b4004618310b15f2ebcbf6f03e6ee7afc9e113eca6d4deff893ef2"
+    },
+    "io": {
+      "path": "execution-io.json",
+      "repository_path": "docs/research/data/2026-11-05-ssg-runtime/independent-execution/execution-io.json",
+      "sha256": "b771a629c02b19d5e306eac748eb975e904d3d96c0578fc51f13072a5f9a5ed4"
+    },
+    "recipe": {
+      "commit": "faa8e3e7e11222088f366a1e6e2c4e326f4ac729",
+      "path": "source/docs/research/data/2026-11-05-ssg-runtime/independent-execution/execute.py",
+      "repository_path": "docs/research/data/2026-11-05-ssg-runtime/independent-execution/execute.py",
+      "sha256": "2e7dae4484221628b7d9e910f18e634b4c3b1f357cf759ea4b06cae99718626f"
+    },
+    "runtime_profile": {
+      "path": "runtime-profile.json",
+      "sha256": "fb9df31df0f7edb94dbfd9faa462bdc1a78405d3e7bd7a5d0590bee05c5521d6",
+      "source_commit": "faa8e3e7e11222088f366a1e6e2c4e326f4ac729"
+    },
+    "spec": {
+      "path": "spec.json",
+      "repository_path": "docs/research/data/2026-11-05-ssg-runtime/independent-execution/spec.json",
+      "sha256": "8c34c17b844bc9b80fe43bab20e88437f123fb1c17ab8ea1522f81d3986b4f44"
+    }
+  },
+  "source_commit": "faa8e3e7e11222088f366a1e6e2c4e326f4ac729",
+  "source_fixture_identity_sha256": "52e853f74c24ee293724a211c863e3de33397e5f94545e61ee8d62406aaf56c4",
+  "spec_sha256": "8c34c17b844bc9b80fe43bab20e88437f123fb1c17ab8ea1522f81d3986b4f44"
+}

@@ -1,0 +1,103 @@
+{
+  "actual_loaded_dependency_closure": "Unexecuted until independently reviewed owned model launch; preflight pins candidate files only",
+  "attempts": [
+    {
+      "freeze_sha256": "178f67aadf322e166ffb0311e16ce26b6d782b42c653f4c4d651f295673f012d",
+      "missing_prerequisites": [
+        "Runtime identity precondition: Actual local MAGE arm64 manifest differs",
+        "Final independent scorer must be integrated and frozen at the externally reviewed source commit before actual run"
+      ],
+      "root": "/Users/robert.lee/.omp/wt/ta4b409cc5/m/.independent255-executor-preflight-20261106"
+    },
+    {
+      "freeze_sha256": "10dea1d65d2d6bbfb93293a3f95febd403a7e75d13574354e27cb0a3c347e0f7",
+      "missing_prerequisites": [
+        "Runtime identity precondition: Unresolved local dependency: @rpath/libggml.0.dylib",
+        "Final independent scorer must be integrated and frozen at the externally reviewed source commit before actual run"
+      ],
+      "root": "/Users/robert.lee/.omp/wt/ta4b409cc5/m/.independent255-executor-preflight-final-20261106"
+    },
+    {
+      "freeze_sha256": "893a2164223a400b6dea3a833a47b19a035d48993838dcd8fb717818db13963b",
+      "missing_prerequisites": [
+        "Final independent scorer must be integrated and frozen at the externally reviewed source commit before actual run"
+      ],
+      "root": "/Users/robert.lee/.omp/wt/ta4b409cc5/m/.independent255-executor-preflight-sourcecomplete-20261106"
+    }
+  ],
+  "command": [
+    "/tmp/am-v15-delivery/qualification-venv/bin/python",
+    "-B",
+    "docs/research/data/2026-11-05-ssg-runtime/independent-execution/execute.py",
+    "--am-root",
+    "/tmp/am-v15-delivery/independent-authored-source",
+    "--inputs",
+    "docs/research/data/2026-11-05-ssg-runtime/independent-execution/authored-inputs-20261106.json",
+    "--spec",
+    "docs/research/data/2026-11-05-ssg-runtime/independent-execution/spec.json",
+    "--host-config",
+    "docs/research/data/2026-11-05-ssg-runtime/runtime-controls/host-config.json",
+    "--sizes",
+    "1000",
+    "--output",
+    ".independent255-executor-preflight-sourcecomplete-20261106",
+    "--freeze-only"
+  ],
+  "code_commit": "faa8e3e7e11222088f366a1e6e2c4e326f4ac729",
+  "code_files": {
+    "execute.py": "2e7dae4484221628b7d9e910f18e634b4c3b1f357cf759ea4b06cae99718626f",
+    "executor_graph.py": "549595dde01bd91870bdf19a79de3c8921ea3b3a3e4e7c20acfd3f3c6011835a",
+    "executor_native.py": "17986b3c0c8574b98ee79cbbeffa92bfa7be0500c3c753805cb96f26738e103d",
+    "executor_render.py": "17b4d90a23ad9ab441f908d5aa1de4ad47463f976aae2de1a7f73e45240a42d8",
+    "executor_runtime.py": "0cf239e228cc28e1a6b4d061ad36f5823d40d5b72499792efa2abf48c3aaa468",
+    "executor_templates.json": "97c26c5dc914ed3e7b81df48af32d1d4a0c0c7b41bdb01f57342d21739d11058"
+  },
+  "commits": {
+    "1b575f6": "1b575f6b0826e93161ecfaf61c047c5747775c83",
+    "f6640fe": "f6640fe2e45c53f9f995916d00db49fa7c4eb9fe",
+    "faa8e3e": "faa8e3e7e11222088f366a1e6e2c4e326f4ac729"
+  },
+  "final_receipt": {
+    "repository_path": "docs/research/data/2026-11-05-ssg-runtime/independent-execution/executor-preflight-20261106.json",
+    "retained_raw_root": "/Users/robert.lee/.omp/wt/ta4b409cc5/m/.independent255-executor-preflight-sourcecomplete-20261106",
+    "sha256": "893a2164223a400b6dea3a833a47b19a035d48993838dcd8fb717818db13963b"
+  },
+  "model_or_graph_started": false,
+  "observed_native": {
+    "crosschecks_matched": 183,
+    "first_allowed_query_count": 73,
+    "generation_count": 8,
+    "requests_valid": 183,
+    "size": 1000,
+    "variant_observations": {
+      "base": 88,
+      "overlay": 101
+    }
+  },
+  "observed_profile": {
+    "binary_sha256": "b57ea6bb97b43a4f74b5a5ab71f1cc2ef292899d83c0e45ddfa9290b169598b5",
+    "dependency_versions": {
+      "neo4j": "5.28.2",
+      "numpy": "2.2.6"
+    },
+    "graph_image_config": "44b5244a3622425584cae52b0cdf1ea1690ebb98e27110b3adfd1af7ab8227a9",
+    "graph_repo_digests": [
+      "docker.io/memgraph/memgraph-mage@sha256:e8e03640071c57de6a13f2f4c5f9ed1789797dc5e8e771bbe62203b20e1b8c27",
+      "docker.io/memgraph/memgraph-mage@sha256:fe2f37e45e263225129bcb6955612ac9956dea0e8db614f9c39eb74b105c6c39"
+    ],
+    "local_library_file_count": 13,
+    "reference_source_commit": "a578bb6b94529b7b2721d0ee49eaea5dbb2c6d07",
+    "weight_sha256": "d20ddc71e8a5c4344f2343481e242233a997dc5eaff442427a945836c97b4deb"
+  },
+  "qualification_scope": "Raw private synthetic scratch mechanisms only; no production P1/G3 API, semantic outcome, caveat, operator, license, profile, G1, feature, or release acceptance. Shared host measurements are not clean performance passes.",
+  "schema": "am255/executor-native-preflight-proof-v1",
+  "semantic_query_executed": false,
+  "vm_memory": {
+    "actual_bytes": {
+      "MemAvailable": 28086001664,
+      "MemTotal": 33567637504
+    },
+    "required_available_bytes": 12884901888,
+    "satisfied": true
+  }
+}
