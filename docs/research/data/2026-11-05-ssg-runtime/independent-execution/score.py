@@ -231,9 +231,8 @@ def source_identity(store, manifest, expected_source_commit):
                 'Manifest source hash mismatch: ' + key)
         expected_repository_path = prefix + {'inputs': 'authored-inputs-20261106.json',
                                              'spec': 'spec.json', 'io': 'execution-io.json'}[key]
-        if key != 'inputs':
-            require(pointer.get('repository_path') == expected_repository_path,
-                    'Wrong repository path for source binding: ' + key)
+        require(pointer.get('repository_path', expected_repository_path if key == 'inputs' else None) == expected_repository_path,
+                'Wrong repository path for source binding: ' + key)
         require(sha(git_source(expected_repository_path, expected_source_commit)) == expected,
                 'Input/spec/IO bytes differ from trusted freeze commit: ' + key)
     inputs = store.json(bindings['inputs'])
@@ -246,6 +245,9 @@ def source_identity(store, manifest, expected_source_commit):
             'Compiler/source-only guard identity mismatch')
     require(isinstance(bindings.get('helpers'), list), 'Missing frozen helper source list')
     code = [bindings.get('recipe'), *bindings['helpers']]
+    require(isinstance(bindings.get('recipe'), dict) and
+            bindings['recipe'].get('source_commit', expected_source_commit) == expected_source_commit,
+            'Recipe source must bind the trusted reviewed freeze, not the separate native authoring commit')
     seen = set()
     for pointer in code:
         store.verify(pointer)
