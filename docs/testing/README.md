@@ -53,6 +53,16 @@ test. An enabled but missing, empty, skipped, timed-out or failing suite MUST
 fail both modes. Tests SHOULD invoke the shipped CLI, scripts and ordinary
 files; direct calls to internal algorithms alone are not acceptance evidence.
 
+An expensive contract file MAY be registered as several named batches using
+`tests`, a nonempty array of TestCase class or `Class.test_method` selectors.
+The worker's `--suite NAME` selects the registered batch. Before any test runs,
+the worker MUST verify that all batches for that file are disjoint and cover
+every discovered case; omissions, overlaps, empty or unknown selectors refuse.
+The gate independently aggregates the actual per-batch case inventories and
+execution counts before reporting completeness. Existing lifecycle write-fault
+proofs remain separately required. Batching MUST NOT change assertions, omit
+subcases, introduce skips or increase the 300-second worker deadline.
+
 The [first-release safety canaries](canaries.md) cover structural routes,
 lifecycle selection, project isolation, shared developer attribution,
 terminal deletion and poisoned imports through a copied portable skill.

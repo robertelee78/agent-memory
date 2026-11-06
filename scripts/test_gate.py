@@ -57,6 +57,36 @@ def registry():
     return entries
 
 
+def case_batch_coverage(entries, suites):
+    by_name = {suite["name"]: suite for suite in suites}
+    paths = {entry["path"] for entry in entries if "tests" in entry}
+    summaries = []
+    for path in sorted(paths):
+        complete, executed = None, set()
+        batches = [entry for entry in entries if entry.get("path") == path]
+        for entry in batches:
+            result = by_name.get(entry["name"], {})
+            selection = result.get("case_selection")
+            if result.get("status") != "passed" or not isinstance(selection, dict):
+                raise ValueError("Missing successful registered case batch: " + entry["name"])
+            inventory, selected = selection.get("complete"), selection.get("selected")
+            if (selection.get("batch") != entry["name"] or not isinstance(inventory, list)
+                    or not inventory or any(not isinstance(case, str) for case in inventory)
+                    or len(inventory) != len(set(inventory)) or not isinstance(selected, list)
+                    or not selected or any(not isinstance(case, str) for case in selected)
+                    or len(selected) != len(set(selected)) or result.get("tests") != len(selected)):
+                raise ValueError("Invalid registered case-batch proof")
+            if complete is None:
+                complete = set(inventory)
+            if set(inventory) != complete or executed.intersection(selected):
+                raise ValueError("Registered case batches disagree or overlap")
+            executed.update(selected)
+        if executed != complete:
+            raise ValueError("Registered case batches omit actual tests")
+        summaries.append({"path": path, "batches": len(batches), "cases": sorted(executed)})
+    return summaries
+
+
 def main(argv=None):
     if sys.version_info < (3, 11):
         print("The offline contract gate requires Python 3.11+", file=sys.stderr)
@@ -92,7 +122,8 @@ def main(argv=None):
                     try:
                         stage = 'suite-execution-and-collection'
                         result = world.run([sys.executable, "-I", ROOT / "scripts/run_contract_suite.py",
-                                            ROOT / entry["path"]], check=False, timeout=300, group=True)
+                                            ROOT / entry["path"], "--suite", entry["name"]],
+                                           check=False, timeout=300, group=True)
                         sys.stderr.write(result.stderr)
                         stage = 'result-readback'
                         counts = json.loads(result.stdout)
@@ -107,6 +138,8 @@ def main(argv=None):
             report["suites"].append(item)
         active = 'lifecycle-fault-partitions'; stage = 'coverage-aggregation'
         report['fault_partition_coverage'] = partition_coverage(report['suites'])
+        active = 'registered-case-batches'
+        report['case_batch_coverage'] = case_batch_coverage(entries, report['suites'])
         pending = any(s["status"] == "pending" for s in report["suites"])
         failed = any(s["status"] == "failed" for s in report["suites"])
         report["release_complete"] = not pending and not failed

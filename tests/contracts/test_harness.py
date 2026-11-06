@@ -167,6 +167,47 @@ for name,group in GROUPS.items():
             self.assertNotEqual(result.returncode, 0)
             self.assertIn("every mandatory contract", json.loads(result.stdout)["error"])
 
+    def test_registered_batches_cannot_omit_duplicate_or_invent_executed_cases(self):
+        with World() as world:
+            checkout = world.inside("case batch checkout")
+            (checkout / "scripts").mkdir(parents=True)
+            (checkout / "tests/contracts").mkdir(parents=True)
+            shutil.copy2(ROOT / "scripts/run_contract_suite.py", checkout / "scripts/run_contract_suite.py")
+            shutil.copy2(ROOT / "tests/world.py", checkout / "tests/world.py")
+            log = world.inside("actually-executed-cases")
+            target = checkout / "tests/contracts/controlled.py"
+            target.write_text(
+                "import unittest\nfrom pathlib import Path\n"
+                "class Controlled(unittest.TestCase):\n"
+                " def test_a(self):\n"
+                f"  with Path({str(log)!r}).open('a') as output: output.write('a')\n"
+                " def test_b(self):\n"
+                f"  with Path({str(log)!r}).open('a') as output: output.write('b')\n")
+            entries = [
+                {"name": "first", "path": "tests/contracts/controlled.py", "tests": ["Controlled.test_a"]},
+                {"name": "second", "path": "tests/contracts/controlled.py", "tests": ["Controlled.test_b"]}]
+            manifest = checkout / "tests/contracts.json"
+            manifest.write_text(json.dumps({"suites": entries}))
+            command = [sys.executable, "-I", checkout / "scripts/run_contract_suite.py", target, "--suite"]
+            for name in ("first", "second"):
+                result = world.run([*command, name], check=False)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertTrue(json.loads(result.stdout)["passed"])
+            self.assertEqual(log.read_text(), "ab")
+            corruptions = [
+                entries[:1],
+                [entries[0], {**entries[1], "tests": ["Controlled"]}],
+                [entries[0], {**entries[1], "tests": ["Controlled.test_missing"]}],
+                [entries[0], {**entries[1], "tests": []}]]
+            for bad in corruptions:
+                with self.subTest(batch=bad):
+                    log.unlink(missing_ok=True)
+                    manifest.write_text(json.dumps({"suites": bad}))
+                    result = world.run([*command, "first"], check=False)
+                    self.assertNotEqual(result.returncode, 0)
+                    self.assertFalse(log.exists(), "Invalid coverage must refuse before running even a valid batch")
+
+
 
 if __name__ == "__main__":
     unittest.main()
