@@ -1,0 +1,13 @@
+{
+  "body": {
+    "error": {
+      "code": 500,
+      "message": "\"prompt\" must not be empty",
+      "type": "server_error"
+    }
+  },
+  "response_bytes": 85,
+  "response_sha256": "8fb89c8161aa96cee2e0a56fe93656f37cdcc789759fd459a458cf112b9cf170",
+  "seconds": 0.004199667018838227,
+  "status": 500
+}

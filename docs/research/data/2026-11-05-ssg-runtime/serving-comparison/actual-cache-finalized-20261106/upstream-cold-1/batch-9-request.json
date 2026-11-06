@@ -1,0 +1,19 @@
+{
+  "at": "2026-11-06T19:56:10.976713+00:00",
+  "body": {
+    "input": [
+      "Synthetic batch row 0",
+      "Synthetic batch row 1",
+      "Synthetic batch row 2",
+      "Synthetic batch row 3",
+      "Synthetic batch row 4",
+      "Synthetic batch row 5",
+      "Synthetic batch row 6",
+      "Synthetic batch row 7",
+      "Synthetic batch row 8"
+    ],
+    "model": "qwen3-embedding-8b-q8_0-d20ddc71e8a5"
+  },
+  "name": "batch-9",
+  "route": "/v1/embeddings"
+}

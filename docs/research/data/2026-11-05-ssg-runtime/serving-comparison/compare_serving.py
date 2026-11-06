@@ -205,12 +205,33 @@ def loaded_closure(work, kind, bound):
 
 def cache_evidence(work, frozen, traces):
     text = (work / "server-stderr.log").read_text()
-    # HTTP completion can race with unrelated trailing log writes. Match actual
-    # task IDs over the retained stream, then group the strictly serial requests.
-    prefixes = {int(task): {"task_id": int(task), "cached_prefix_tokens": int(a), "memory_start": int(b)}
-                for task, a, b in re.findall(r"task\s+(\d+)\s+\| n_tokens = (\d+), memory_seq_rm \[(\d+), end\)", text)}
-    completed = [{"task_id": int(task), "total_tokens": int(a), "evaluated_batch_tokens": int(b)}
-                 for task, a, b in re.findall(r"task\s+(\d+)\s+\| prompt processing done, n_tokens = (\d+), batch.n_tokens = (\d+)", text)]
+    # Both binaries log actual decode batches and task release; their optional
+    # "cached" prefix and prompt-completion wording differ. parallel1 makes the
+    # decoder's batch record unambiguously belong to the current task.
+    prefixes, completed, batches, active = {}, [], {}, None
+    for line in text.splitlines():
+        prefix = re.search(r"task\s+(\d+)\s+\| (?:cached )?n_tokens = (\d+), memory_seq_rm \[(\d+), end\)", line)
+        decoded = re.search(r"srv\s+update_slots: decoding batch, n_tokens = (\d+)", line)
+        released = re.search(r"task\s+(\d+)\s+\| stop processing: n_tokens = (\d+), truncated = (\d+)", line)
+        if prefix:
+            task, cached, memory = map(int, prefix.groups())
+            if active is not None:
+                raise ValueError("Cache parser observed overlapping active embedding tasks")
+            prefixes[task] = {"task_id": task, "cached_prefix_tokens": cached, "memory_start": memory}
+            batches[task] = []
+            active = task
+        elif decoded and int(decoded[1]) > 0:
+            if active is None:
+                raise ValueError("Decode batch has no observed active task")
+            batches[active].append(int(decoded[1]))
+        elif released:
+            task, total, truncated = map(int, released.groups())
+            if task in prefixes:
+                if active != task or truncated:
+                    raise ValueError("Unexpected task release or truncated embedding input")
+                completed.append({"task_id": task, "total_tokens": total,
+                                  "evaluated_batch_tokens": sum(batches[task]), "actual_decode_batches": batches[task]})
+                active = None
     rows, offset = [], 0
     for trace in traces:
         done = completed[offset:offset + trace["expected_rows"]]
@@ -222,6 +243,7 @@ def cache_evidence(work, frozen, traces):
     report = {"frozen_profile": frozen["spec"]["cache_profile"],
               "ram_cache_disabled_log_confirmed": "prompt cache is disabled" in text and "prompt cache is enabled" not in text,
               "successful_embedding_rows": expected, "logged_completed_prompts": observed, "requests": rows,
+              "logged_prefix_records": len(prefixes),
               "slot_prefix_reuse_observed": any(s["cached_prefix_tokens"] > 0 for row in rows for s in row["prefix_splits"]),
               "per_request_cache_field_support_claimed": False,
               "scope": "Reference embedding source does not parse cache_prompt; field deliberately absent on both servers. RAM cache disabled does not disable slot-local reuse. Actual prefix/evaluated-token logs define upstream behavior independently."}
@@ -505,7 +527,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("action", choices=("freeze", "run"))
     parser.add_argument("--output", type=Path)
-    parser.add_argument("--freeze-file", type=Path, default=HERE / "cache-frozen-inputs-finalized.json")
+    parser.add_argument("--freeze-file", type=Path, default=HERE / "cache-frozen-inputs-observed.json")
     args = parser.parse_args()
     if args.action == "freeze":
         freeze(args.freeze_file)
