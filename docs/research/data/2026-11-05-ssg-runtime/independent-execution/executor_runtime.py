@@ -66,7 +66,7 @@ def dependencies(binary):
                     if resolved not in files:
                         files.add(resolved)
                         pending.append(resolved)
-    return [{'path': str(p), 'sha256': sha(p), 'bytes': p.stat().st_size} for p in sorted(files)]
+    return [{'host_path': str(p), 'sha256': sha(p), 'bytes': p.stat().st_size} for p in sorted(files)]
 
 
 def identity_command(argv):
@@ -109,7 +109,7 @@ def artifacts(config, spec):
                          compact({'Digest': image_digest, 'RepoDigests': image.get('RepoDigests', [])}))
     return {'schema': 'am255/independent-runtime-profile-v1', 'reference_source_commit': revision,
             'binary': str(binary), 'binary_sha256': sha(binary), 'version': version,
-            'weight': {'path': str(weight), 'sha256': spec['profile']['reference_weight_sha256'], 'bytes': weight.stat().st_size},
+            'weight': {'host_path': str(weight), 'sha256': spec['profile']['reference_weight_sha256'], 'bytes': weight.stat().st_size},
             'local_library_inventory': dependencies(binary), 'dependencies': versions,
             'graph_image': image, 'graph_profile': spec['graph_profile'], 'profile': spec['profile'],
             'os': identity_command(['sw_vers']), 'kernel': identity_command(['uname', '-a']),
@@ -158,7 +158,7 @@ class Model:
 
     def start(self):
         p = self.profile
-        argv = [p['binary'], '--model', p['weight']['path'], '--host', '127.0.0.1', '--port', self.base.rsplit(':', 1)[1],
+        argv = [p['binary'], '--model', p['weight']['host_path'], '--host', '127.0.0.1', '--port', self.base.rsplit(':', 1)[1],
                 '--alias', self.alias, '--embedding', '--pooling', 'last', '--ctx-size', '8192', '--parallel', '1',
                 '--threads', '4', '--threads-batch', '4', '--threads-http', '4', '--batch-size', '8192', '--ubatch-size', '8192',
                 '--device', 'Metal', '--gpu-layers', '99', '--flash-attn', 'off', '--fit', 'off', '--offline', '--no-webui',
@@ -187,8 +187,15 @@ class Model:
         metadata = request(self.base + '/v1', '/models')
         save(self.root / 'models.json', metadata)
         choose_model(metadata, self.alias)
-        bound = {'servers': {'fork': {'local_library_inventory': p['local_library_inventory']}}}
-        self.parser.loaded_closure(self.root, 'fork', bound)
+        self.verify_loaded_closure()
+
+    def verify_loaded_closure(self):
+        # The retained serving parser names host identities "path"; the raw
+        # manifest reserves path+sha256 for owned relative artifact pointers.
+        inventory = [{'path': item['host_path'], 'sha256': item['sha256'], 'bytes': item['bytes']}
+                     for item in self.profile['local_library_inventory']]
+        self.parser.loaded_closure(self.root, 'fork', {
+            'servers': {'fork': {'local_library_inventory': inventory}}})
 
     def embed(self, texts, kind, source_keys, case_ordinal=None):
         if self.process is None or self.process.poll() is not None:
@@ -235,8 +242,7 @@ class Model:
                 self.process.wait(timeout=10)
         receipt = {'pid': self.process.pid, 'run_id': self.run_id, 'exit': self.process.returncode, 'reaped': True}
         save(self.root / 'process-stop.json', receipt)
-        bound = {'servers': {'fork': {'local_library_inventory': self.profile['local_library_inventory']}}}
-        self.parser.loaded_closure(self.root, 'fork', bound)
+        self.verify_loaded_closure()
         self.parser.cache_evidence(self.root, {'spec': {'cache_profile': {'ram_cache_mib': 0, 'slot_prefix_reuse': 'enabled and measured'}}}, self.traces)
         return receipt
 

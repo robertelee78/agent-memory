@@ -93,6 +93,10 @@ class Fixtures:
                 source.update(key=self.record_key(meta), id=meta['id'], version=meta['version'],
                               metadata=meta, status=meta['status'], visibility=meta['visibility'],
                               fixture_label=bank.label_of[path])
+                if mutation and expected and path == expected['path']:
+                    # new_ref is a private mutator handle, not an authored
+                    # canonical fixture label. Identity remains id/version/path.
+                    source.pop('fixture_label')
             else:
                 body = files[path]
                 source['key'] = 'context:' + self.pid + ':' + path

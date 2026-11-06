@@ -204,7 +204,9 @@ def freeze(args, root):
     if args.reviewed_source_commit and revision != args.reviewed_source_commit:
         raise ValueError('Actual source HEAD differs from externally reviewed commit')
     files = [pin_source(root, p, revision) for p in source_files()]
-    bindings = {'authoring_am': native_identity(args.am_root, inputs),
+    authoring_identity = native_identity(args.am_root, inputs)
+    save(root / 'authoring-native-identity.json', authoring_identity)
+    bindings = {'authoring_am': {key: authoring_identity[key] for key in ('commit', 'native_tree_sha256')},
                 'inputs': copy_input(root, args.inputs, 'inputs.json'),
                 'spec': copy_input(root, args.spec, 'spec.json'),
                 'io': copy_input(root, HERE / 'execution-io.json', 'execution-io.json'),
@@ -339,13 +341,16 @@ def run_size(root, prepared, fixtures, inputs, spec, config, profile, run_id):
                 bank = generation['bank']
                 native, context = fixtures.qualify(bank, case)
                 native['source_binding']['profile_sha256'] = profile_sha
-                prerequisite = mechanism_prerequisite(case)
+                state_prerequisite = mechanism_prerequisite(case)
+                prerequisite = state_prerequisite
                 if not native['request_valid']:
                     prerequisite = native.get('refusal', native.get('prerequisite', 'Native request/context precondition failed'))
                 unavailable = {'executed': False, 'prerequisite': prerequisite or 'This case requests a different mechanism'}
                 semantic = unavailable | {'exact_ranking': [], 'ann': {'executed': False, 'prerequisite': prerequisite or 'No semantic mechanism requested'}}
                 typed = unavailable | {'edges': [], 'primary_candidates': [], 'route_pointers': [], 'costs': {}}
-                provider = {'executed': True, 'document_sends': document_sends, 'query_send': None,
+                provider = {'executed': state_prerequisite is None,
+                            'prerequisite': state_prerequisite,
+                            'document_sends': document_sends, 'query_send': None,
                             'documents_sent': len(prepared['ordered']), 'queries_sent': 0,
                             'task_evidence': {'executed': False, 'prerequisite': 'Finalized actual owned-server task logs are attached after process stop'}}
                 costs = {}
@@ -479,8 +484,10 @@ def main():
             try:
                 result = run_size(root, item, fixtures, inputs, spec, config, profile, run_id)
                 manifest['sizes'].append(result)
-                manifest['cleanup'] = {'status': 'disposed' if result['cleanup']['graph']['status'] == 'disposed' and result['cleanup']['model'] and not result['cleanup']['model_finalization_error'] else 'erasure-pending',
-                                       'sizes': [s['cleanup'] for s in manifest['sizes']]}
+                manifest['cleanup'] = {'status': 'disposed' if all(
+                    s['cleanup']['graph']['status'] == 'disposed' and s['cleanup']['model']
+                    and not s['cleanup']['model_finalization_error'] for s in manifest['sizes']) else 'erasure-pending',
+                    'sizes': [s['cleanup'] for s in manifest['sizes']]}
                 save(root / 'manifest.json', manifest)
             except BaseException:
                 retained = item['root'] / 'size-manifest.json'
