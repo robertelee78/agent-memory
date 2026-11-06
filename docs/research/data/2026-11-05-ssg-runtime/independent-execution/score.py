@@ -266,10 +266,15 @@ def source_identity(store, manifest, expected_source_commit):
         require(sha(git_source(source_name, commit, compare_local=commit == expected_source_commit)) == pointer['sha256'],
                 'Wrong frozen recipe/helper source: ' + source_name)
         seen.add(identity)
-    required_sources = {prefix + 'score.py', prefix + 'compile_inputs.py',
-                        STARTUP.relative_to(REPO).as_posix()}
+    required_sources = {prefix + name for name in (
+        'execute.py', 'score.py', 'compile_inputs.py', 'executor_native.py',
+        'executor_runtime.py', 'executor_graph.py', 'executor_render.py', 'executor_templates.json')}
+    required_sources.update((HERE.parent / name).relative_to(REPO).as_posix() for name in (
+        'independent-suite/validate_suite.py', 'independent-suite/g1_relationship_overlay.py',
+        'runtime-controls/common.py', 'serving-comparison/compare_serving.py'))
+    required_sources.add(STARTUP.relative_to(REPO).as_posix())
     require({(expected_source_commit, name) for name in required_sources} <= seen,
-            'Scorer/compiler/source-only guard absent from frozen source set')
+            'Required executor/scorer/helper source absent from frozen source set')
     require(bindings['recipe'].get('commit') == expected_source_commit,
             'Recipe commit differs from externally trusted expected source commit')
     profile = store.json(bindings.get('runtime_profile'))
