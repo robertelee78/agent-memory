@@ -1,0 +1,29 @@
+{
+  "container_absent": true,
+  "container_created": "470ea14b1dca87744071894af307fc6a87787bf98b3955d0c59f7546b032d1e9",
+  "guarantee_limits": "Engine-visible absence, tmpfs config and local scratch removal only; not forensic RAM/VM swap/crash-dump/backup erasure.",
+  "inspect_after": {
+    "argv": [
+      "podman",
+      "inspect",
+      "470ea14b1dca87744071894af307fc6a87787bf98b3955d0c59f7546b032d1e9"
+    ],
+    "cwd": "/Users/robert.lee/.omp/wt/tcb265d0cb/m/docs/research/data/2026-11-05-ssg-runtime/workspace-critic",
+    "elapsed_seconds_shared_host": 0.08449395798379555,
+    "exit": 125,
+    "stderr": "Error: no such object: \"470ea14b1dca87744071894af307fc6a87787bf98b3955d0c59f7546b032d1e9\"\n",
+    "stdout": "[]\n"
+  },
+  "loopback_listener_absent": true,
+  "precreation_absence_proven": true,
+  "scratch_absent": true,
+  "scratch_inventory": [
+    {
+      "bytes": 32,
+      "path": "owner",
+      "sha256": "7225f2f070fc388edb862c5be9a0121ea106db8241a93f65b65c37cc8501821f"
+    }
+  ],
+  "slot_released": true,
+  "synthetic_raw_evidence_retained": true
+}
