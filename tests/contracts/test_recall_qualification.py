@@ -1,6 +1,7 @@
 """Offline controller gates over real public results; no model/performance claim."""
 import copy
 import importlib.util
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -290,6 +291,48 @@ source(Path(sys.argv[2]))
 ''', cycle)
             self.assertNotEqual(process.returncode, 0)
             self.assertIn('Qualification helper bytecode is not source-bound', process.stderr)
+
+    def test_source_binding_hashes_data_link_bytes_without_following_or_executing_links(self):
+        with World() as world:
+            controller = self.stage(world)
+            target = world.repository('linked-data-source')
+            data = target / 'docs/research/data'
+            data.mkdir(parents=True)
+            link = data / 'dangling.json'
+            link.symlink_to('missing-target.json')
+            world.git('add', '.', cwd=target); world.git('commit', '-m', 'Retain negative data fixture', cwd=target)
+            program = '''
+import json
+from pathlib import Path
+from recall_comparison_builds import source
+try:
+ binding=source(Path(sys.argv[2]))
+except ValueError:
+ raise SystemExit(2)
+print(json.dumps(binding))
+'''
+            first = json.loads(self.assert_controller(world, controller, program, target).stdout)
+            entry = first['tracked']['docs/research/data/dangling.json']
+            self.assertEqual(entry['kind'], 'symlink')
+            self.assertEqual(entry['sha256'], hashlib.sha256(b'missing-target.json').hexdigest())
+            self.assertFalse((data / 'missing-target.json').exists())
+            link.unlink(); link.symlink_to('different-missing-target.json')
+            refused = self.controller(world, controller, program, target)
+            self.assertEqual(refused.returncode, 2, refused.stderr)
+            world.git('add', '.', cwd=target); world.git('commit', '-m', 'Changed fixture link identity', cwd=target)
+            second = json.loads(self.assert_controller(world, controller, program, target).stdout)
+            self.assertNotEqual(second['tracked']['docs/research/data/dangling.json'], entry)
+            for directory in ('tests', 'scripts', 'skills/agent-memory'):
+                with self.subTest(executable_root=directory):
+                    executable = target / directory / 'linked.py'
+                    executable.parent.mkdir(parents=True, exist_ok=True)
+                    executable.symlink_to('missing-executable.py')
+                    world.git('add', '.', cwd=target); world.git('commit', '-m', 'Untrusted executable link', cwd=target)
+                    refused = self.controller(world, controller, program, target)
+                    self.assertEqual(refused.returncode, 2, refused.stderr)
+                    self.assertFalse((executable.parent / 'missing-executable.py').exists())
+                    executable.unlink()
+                    world.git('add', '.', cwd=target); world.git('commit', '-m', 'Remove executable link control', cwd=target)
 
     def test_independent_pagination_batches_compare_every_equivalent_exact_native_request(self):
         with World() as world:

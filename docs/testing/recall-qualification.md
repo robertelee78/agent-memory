@@ -60,6 +60,13 @@ them: a matching stale helper cache can otherwise be read before source binding.
 links are never deleted or repaired: use a new bytecode-free source-equivalent
 clone instead.
 
+Tracked symlinks are permitted only as archived data under
+`docs/research/data/`, where negative fixtures intentionally include them.
+The source inventory hashes their literal link-target bytes against the Git
+blob and records their symlink type; it never opens the target. Dirty links
+still refuse. Symlinks anywhere in executable `tests/`, `scripts/` or the
+portable pack remain unsupported; no fixture exception relaxes those guards.
+
 ## Complete serial commands
 
 With the host slot and a permitted exact model selected, the complete controller
