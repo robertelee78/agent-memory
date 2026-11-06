@@ -6,6 +6,7 @@
   "critic_run": false,
   "initial_fixture_freeze_commit": "d12fad02b564608b08c46792658136011dda4e25",
   "raw_receipt_commit": "faf6a12220e47def418357c2caa5f3e5e83612c7",
+  "evidence_lineage": "../evidence-commit-map.json; fetch refs/heads/evidence/v015-255-workspace-20261106 to retain original pre-output commit history. Integrated subtree mappings preserve bytes, not original commit dates.",
   "receipts": {
     "actual-20261106-authored/actual-source-profile.json": {
       "bytes": 311,
@@ -108,8 +109,12 @@
       "sha256": "ea0342fd060e0562f3ffca23b1e43c11ae3e4498d751f371863c5080e1a3ece2"
     },
     "evaluation.json": {
-      "bytes": 11594,
-      "sha256": "86925f6c3a64cdd989af50f48da4971efc182a96acbd90548be4c96d129d22c6"
+      "bytes": 13326,
+      "sha256": "32549594ad0e22d1e07ff777596585988e8cad09f5ae290522a6792e14ec6d77"
+    },
+    "failed-attempt-inventory.json": {
+      "bytes": 5096,
+      "sha256": "c9e34aa5848b7d6b8c84000f383499ab9ad12c260decdc197b18bdf76068b25c"
     },
     "expected-facts.json": {
       "bytes": 3077,
@@ -146,7 +151,7 @@
   },
   "rerun_constraints": "Parent serial reservation required. Keep old frozen inputs/outputs immutable and choose a new direct-child output directory. Frozen host and authoring-checkout identity is explicit; a different checkout/host requires a new preserved freeze rather than silently substituting paths/artifacts.",
   "schema": "am255/workspace-critic-index-v1",
-  "scope": "Actual authored-only synthetic workspace fixture; full-advisory2GiB OOM and unchanged-workspace-up portability remain non-passes; critic source-only.",
+  "scope": "Actual authored-only synthetic workspace via root-init/HOME adapter, not unchanged workspace-up. No embeddings/similarity edges or critic completion. Four preserved failures include Podman syntax refusal, lost exit logs, inherited-HOME permission failure and full-advisory2GiB OOM. Indexed app.py freshness refusal is not all-path confinement; cached paths remain stale. Disposal is owned logical absence only; swap/PIDs/tmpfs/hardening limits remain explicit in evaluation.json.",
   "serial_slot_released_at_utc": "2026-11-06T20:37:12Z",
   "slot_release_announced_to": [
     "Main",
