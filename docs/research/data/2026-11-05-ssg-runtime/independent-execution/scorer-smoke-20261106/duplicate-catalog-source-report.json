@@ -1,0 +1,8 @@
+{
+  "error": "Duplicate/missing catalog source key",
+  "error_type": "IntegrityError",
+  "model_graph_llm_calls": 0,
+  "qualification_scope": "No quality claims from rejected evidence",
+  "schema": "am255/independent-offline-score-v1",
+  "status": "integrity-rejected"
+}
