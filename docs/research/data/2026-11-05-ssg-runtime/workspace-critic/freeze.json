@@ -7,7 +7,7 @@
       "--version"
     ],
     "cwd": "/Users/robert.lee/.omp/wt/tcb265d0cb/m/docs/research/data/2026-11-05-ssg-runtime/workspace-critic",
-    "elapsed_seconds_shared_host": 0.5144094580318779,
+    "elapsed_seconds_shared_host": 0.004589791991747916,
     "exit": 0,
     "stderr": "",
     "stdout": "cgg 0.11.2\n"
@@ -23,7 +23,7 @@
     "fixture/app.py": "79ed5803edaa76b23088bf17c4cf3f1e527c7be7582a47bdfd5b6b50ebace6a8",
     "fixture/requirements.txt": "1daca92b63eaa7fdc8f61a8386a13d4a8a8d351b8dd16b98154fc7e4877d1788",
     "fixture/tests/test_routes.py": "bbe6a781a45a28a8fa673580d012b6c1e00b3bacf9a20e1717da2e83f118c0ee",
-    "qualify.py": "b260dc04e1f2130c2855cb46c5344451168b491e994553c3ff2f9ca69f9fc289",
+    "qualify.py": "6cedc6a6c6628a7b5e852517099626b732ce7201f0a233c20a0e1536eb946af9",
     "source-analysis.json": "9f71077a6edf2382fd513107fdad1a6a1461bffc9b68802683f67bf19ad31eb7"
   },
   "resources": {

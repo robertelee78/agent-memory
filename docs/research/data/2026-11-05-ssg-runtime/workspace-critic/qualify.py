@@ -148,13 +148,18 @@ def run(out):
             s.bind(('127.0.0.1', PORT))
         absence_proven = True
         save(out / 'precreation.json', {'name_absent': True, 'port_available': True})
-        # Do not use workspace up: its source does not bound CPU/memory. Reproduce its
-        # tmpfs/WAL/snapshot posture with explicit resource caps and the pinned image.
+        # Podman rejects Docker's tmpfs uid/gid options. Own root init touches only
+        # these two private tmpfs roots, then drops to the pinned memgraph UID/GID.
+        init = ("import os,sys; "
+                "[os.chown(p,101,103) for p in ('/var/lib/memgraph','/var/log/memgraph')]; "
+                "os.setgroups([]); os.setgid(103); os.setuid(101); "
+                "os.execv('/usr/lib/memgraph/memgraph',['memgraph']+sys.argv[1:])")
         r = need(command('owned-create', ['podman', 'run', '-d', '--rm', '--pull=never',
             '--name', CONTAINER, '--label', LABEL + '=' + run_id, '--cpus=2', '--memory=2g',
-            '-p', '127.0.0.1:' + str(PORT) + ':7687',
-            '--tmpfs', '/var/lib/memgraph:rw,mode=0700,uid=101,gid=103',
-            '--tmpfs', '/var/log/memgraph:rw,mode=0700,uid=101,gid=103', IMAGE,
+            '-p', '127.0.0.1:' + str(PORT) + ':7687', '--user', '0:0',
+            '--tmpfs', '/var/lib/memgraph:rw,mode=0700',
+            '--tmpfs', '/var/log/memgraph:rw,mode=0700',
+            '--entrypoint', '/usr/bin/python3', IMAGE, '-c', init,
             '--telemetry-enabled=false', '--storage-properties-on-edges=true',
             '--storage-wal-enabled=false', '--storage-snapshot-interval-sec=0',
             '--storage-snapshot-on-exit=false', '--log-level=WARNING']))
@@ -176,6 +181,13 @@ def run(out):
                     raise RuntimeError('Owned graph startup deadline exceeded') from e
                 time.sleep(.25)
         save(out / 'startup-probes.json', startup_errors)
+        posture = need(command('actual-tmpfs-process-posture', ['podman', 'exec', '--user', '0:0',
+            created, '/usr/bin/python3', '-c',
+            "import os,json; print(json.dumps({'pid1_status':open('/proc/1/status').read(),"
+            "'mounts':open('/proc/mounts').read(),'directories':"
+            "{p:{'uid':os.stat(p).st_uid,'gid':os.stat(p).st_gid,'mode':oct(os.stat(p).st_mode & 0o777)}"
+            " for p in ('/var/lib/memgraph','/var/log/memgraph')}}))"]))
+        save(out / 'actual-tmpfs-process-posture.json', json.loads(posture['stdout']))
         repo = scratch / 'repo'
         shutil.copytree(ROOT / 'fixture', repo)
         git_env = dict(env, GIT_CONFIG_NOSYSTEM='1', GIT_CONFIG_GLOBAL='/dev/null',
