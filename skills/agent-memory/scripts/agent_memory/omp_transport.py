@@ -3,7 +3,6 @@ import hashlib
 import os
 from pathlib import Path
 import re
-import time
 import uuid
 
 from . import omp_control, omp_projection, scope_binding, trust_paths, turn_sources
@@ -497,8 +496,7 @@ def all_segments(repo, errors=None):
     return result
 
 
-def registration(repo, directory, cursor, enrollment, *, perform=False, deadline=None):
-    _, _, base, shared, identity = _shared(repo, cursor)
+def registration(repo, directory, cursor, enrollment, *, perform=False):
     state = turn_sources.inspect(repo, 'omp', cursor['session'], cursor['lifecycle'])
     matches = [s for s in state['sources'] if s['source_reference'] == enrollment['source_reference']]
     if matches:
@@ -517,6 +515,7 @@ def registration(repo, directory, cursor, enrollment, *, perform=False, deadline
         return None, ['registration-fault-retained']
     if not perform:
         return None, []
+    _, _, base, shared, identity = _shared(repo, cursor)
     pending = base / 'pending'
     occupied = 0; exists = False
     if pending.exists():
@@ -532,8 +531,6 @@ def registration(repo, directory, cursor, enrollment, *, perform=False, deadline
         return None, []
     from .omp_boundary import ensure_marker
     ensure_marker(repo)
-    if deadline is not None and time.monotonic() >= deadline:
-        return None, []
     # Recover successful lost responses above; never repeat an unknown attempt
     # whose shared failure could not itself be durably written (e.g. disk full).
     retain(attempt_path, attempt, 4096)
@@ -551,12 +548,16 @@ def registration(repo, directory, cursor, enrollment, *, perform=False, deadline
     return found[0], checked['faults']
 
 
-def drain_enrollments(repo, deadline):
+def drain_enrollments(repo):
+    """Finish at most eight eligible enrollments, independently of capture time.
+
+    Inventory and each selected registration must finish their durable work:
+    elapsed-time cutoffs after scope/inspection can otherwise starve every
+    callback. The native adapter bounds its await, not this helper's writes.
+    """
     attempts = 0
     records = []
     for directory, cursor in all_segments(repo, []):
-        if time.monotonic() >= deadline:
-            return
         try:
             if (directory / 'segment.json').exists():
                 enroll_sealed(directory, cursor, manifest_value(directory, cursor))
@@ -566,13 +567,13 @@ def drain_enrollments(repo, deadline):
         except (OSError, ValueError, TypeError, KeyError):
             continue  # Joined inventory retains the exact fault; no retry of register.
     for _, _, directory, cursor, enrollment in sorted(records, key=lambda value: (value[0], value[1])):
-        if attempts >= 8 or time.monotonic() >= deadline:
+        if attempts >= 8:
             return
         try:
             observation, faults = registration(repo, directory, cursor, enrollment)
             if observation is None and not faults:
                 attempts += 1
-                registration(repo, directory, cursor, enrollment, perform=True, deadline=deadline)
+                registration(repo, directory, cursor, enrollment, perform=True)
         except (OSError, ValueError, TypeError, KeyError):
             continue
 
@@ -986,7 +987,6 @@ def observe(repo, value):
     if value['schema'] != 'agent-memory/omp-observer-request-v1' or value['action'] not in {'admit', 'ingest', 'seal', 'wake'}:
         raise ContractError('Unsupported native observer operation')
     session = turn_sources.bounded(value['session']); canonical_uuid(value['lifecycle'])
-    deadline = time.monotonic() + 0.8
     with source_barrier(repo), private_lock(_base(repo) / 'omp-transport.lock'):
         with scope_binding.private_enrollment_context(repo) as context:
             ensure_marker(repo)
@@ -1279,7 +1279,7 @@ def observe(repo, value):
                         if not (old_d / 'segment.json').exists():
                             seal(old_d, old_c)
             scope_binding.recheck_private_enrollment(context)
-            drain_enrollments(repo, deadline)
+            drain_enrollments(repo)
             current = segments(repo, session)
             rows, faults = pending_inventory(repo)
             chosen = active_segment(current, payload.get('branch_ids')) if value['action'] != 'admit' else active_segment(current)

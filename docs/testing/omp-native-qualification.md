@@ -111,10 +111,13 @@ explicit pending cursors/faults account for omitted references. There is no
 shared-core wake reservation that can suppress the healthy new root.
 
 The adapter stops awaiting after at most 950 ms (earlier on native cancellation)
-but never kills a helper during shared writes. A timeout, native continuation
-cap, queued/deferred scheduling, permission refusal, cancellation, provider/tool
-failure or model omission means **pending**, not completion. It returns advisory
-`continue:true`, never a blocking decision or synthetic human instruction.
+but never kills a helper during shared writes. This is a callback-await bound,
+not a whole-observation or registration wall-clock deadline: capture, scope
+checks, inventory and durable enrollment can finish in the background after it.
+A timeout, native continuation cap, queued/deferred scheduling, permission
+refusal, cancellation, provider/tool failure or model omission means **pending**,
+not completion. It returns advisory `continue:true`, never a blocking decision
+or synthetic human instruction.
 Ephemeral `--no-session` may retain safe private snapshots, but cannot recover
 content the native process never exposed safely. Missing/unsafe payloads remain
 explicit gaps, potentially indefinitely. Combined modes can leave a final
@@ -135,10 +138,26 @@ am omp-boundary --repo /absolute/project --source ACTUAL_ID_OR_ENROLLMENT_REFERE
 Follow `next_offset` until exhausted. A successful page never claims global
 source completeness. Registered rows have an actual `observation_id`;
 `enrollment-pending`/`registration-fault` rows preserve the original source
-reference and do not invent one. Capacity retry on later observer
-admit/ingest/seal persists the arriving event first, then drains at most eight
-fault-free records with their original references. A shared registration fault
-is retained and is never blindly registered again or erased by transport retry.
+reference and do not invent one. Later observer admit/ingest/seal calls first
+persist every arriving source/metadata record and recheck scope, then run a
+separate registration-progress phase. Each phase selects oldest retained
+fault-free enrollments first and attempts at most eight, using their original
+references and digests. The bound is a count, not an elapsed-time check after
+expensive capture, inventory, scope or shared-state inspection: those costs
+cannot consume the next phase's entire opportunity to register. Already
+registered and faulted records do not consume attempt slots. Capacity can still
+leave enrollment pending; a later phase resumes without discarding new arrivals.
+A successful registration whose response was lost is recovered from the exact
+shared reference/digest. A shared fault or an uncertain attempted write is
+retained and never blindly registered again or erased by transport retry.
+
+The unchanged `NativeSources` contracts in `tests/contracts/test_omp_boundary.py`
+and dedicated `tests/contracts/test_omp_enrollment_progress.py` regressions cover
+large retained segments, bounded oldest-first progress, new arrivals, lost
+success, uncertain attempts and retained shared faults. The latter also drives
+an explicitly installed public observer/source/no-learning journey with 151
+stored entries. These are real transport/CLI checks, not native callback,
+extension-loading or model/provider qualification.
 
 Read every source before assessment. Use exactly one original observation per
 `am omp-boundary --repo ... --stdin --quiet --refresh` invocation, with exact
