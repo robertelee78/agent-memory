@@ -1,0 +1,39 @@
+{
+  "schema": "am255/amd64-bom-interpretation-v1",
+  "authoritative_contents": "amd64-contents-20261106-qualified/",
+  "authoritative_comparison": "architecture-comparison-final.json",
+  "byte_comparison": "amd64-core-mage-byte-comparison.json",
+  "acquisition": {
+    "core_child": "sha256:bd01a159023283b56b807943ed28225c8f662920b64317f26da7d9f0f5b19de4",
+    "core_compressed_bytes": 226079840,
+    "mage_child": "sha256:1b903aa7c4502a55ccdf76d034156542a56d0c4a00e2a760a10bf5968de8b3c4",
+    "mage_compressed_bytes": 726398809,
+    "method": "Exact public child manifests/configs/layers acquired with skopeo into a new owned directory; all blob digests verified; streaming merged-rootfs contents inspection; NO native or emulated amd64 code execution",
+    "discovery_binding_metadata_only_field": "Describes the original registry discovery stage, not the later verified acquired-layer contents stage"
+  },
+  "observations": [
+    "Core/MAGE amd64 installed dpkg package inventories have 129/142 entries, respectively; names and versions match the existing same-profile arm64 inventories",
+    "Direct Python distribution inventories have 24/125 entries, respectively; names and versions match the existing same-profile arm64 importlib.metadata inventories",
+    "MAGE also contains 12 nested setuptools/_vendor dist-info records, retained separately; prior arm64 inventory did not enumerate that domain, so this is additional BOM coverage, not a demonstrated architecture difference",
+    "Core/MAGE amd64 query-module directories have 34/189 file entries; paths match their same-profile arm64 inventories",
+    "All 34 common core/MAGE amd64 module files, including vector_search.so, match by SHA-256",
+    "The 35 shipped Memgraph notice files match between amd64 core/MAGE and retained arm64 bytes",
+    "Despite equal package versions and equal 72666656-byte sizes, amd64 core/MAGE engine binary SHA-256 values differ. No build/linkage cause or amd64 runtime/query parity is established",
+    "Logical image symlink resolution leaves three core packages without a conventional per-package copyright path (Memgraph with separate notices, custom OpenSSL/libssl), and four in MAGE (also proprietary Microsoft ODBC)"
+  ],
+  "notice_scope": {
+    "description": "Python license_files are attributed only within each own dist-info directory. Missing there does not mean no notice elsewhere in the wheel/package/RECORD",
+    "duckdb_example": "MAGE duckdb 1.2.1 has no own dist-info license-like path in this inventory, but raw files retain duckdb/experimental/spark/LICENSE, SHA-256 ff5aa49c52e9830627582e9854fa76827d19c3b040b856162d172d72a9e95067. This does not settle whole DuckDB attribution",
+    "superseded_naming": "The earlier architecture-comparison-qualified.json field amd64_python_missing_license_files is a dist-info-scoped candidate list only; final comparison explicitly names that scope"
+  },
+  "explicit_unknowns": [
+    "No Linux-amd64 execution, ABI, graph/query behavior, vector correctness or performance qualification",
+    "No source rebuild/reproducible-binary attestation; unexplained amd64 core/MAGE engine-byte difference remains",
+    "No complete static/dynamic dependency versions/linkage/embedded source attribution or rootfs ownership audit",
+    "Wheel-vendored native-library and nested vendored Python license attribution remains incomplete",
+    "Custom OpenSSL origin, proprietary ODBC missing EULA text, BSL/MEL/distribution/hosted questions and operator/counsel dispositions remain open",
+    "Observed notice-byte parity and dependency-name/version parity do not grant legal, managed-profile or G1 acceptance"
+  ],
+  "retained_prior_attempts": ["amd64-contents-20261106", "amd64-contents-20261106-fixed", "architecture-comparison.json", "architecture-comparison-qualified.json"],
+  "acceptance": false
+}

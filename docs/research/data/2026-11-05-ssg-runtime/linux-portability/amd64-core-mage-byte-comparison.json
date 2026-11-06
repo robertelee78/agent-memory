@@ -1,0 +1,74 @@
+{
+  "schema": "am255/amd64-core-mage-byte-comparison-v1",
+  "source_reports": {
+    "core": {
+      "path": "/Users/robert.lee/.omp/wt/tbebd39362/m/docs/research/data/2026-11-05-ssg-runtime/linux-portability/amd64-contents-20261106-qualified/core/contents.json",
+      "sha256": "d9b283175fa5aaafed835f19101573d1211d6b6346de332531bc5dfd2e4316af"
+    },
+    "mage": {
+      "path": "/Users/robert.lee/.omp/wt/tbebd39362/m/docs/research/data/2026-11-05-ssg-runtime/linux-portability/amd64-contents-20261106-qualified/mage/contents.json",
+      "sha256": "73346c597ad00dca8d9ff6384859d1e1f565fb7cc5f9a65ff74ed70f6b0d3a2a"
+    }
+  },
+  "engine_binaries_equal": false,
+  "engine_binaries": {
+    "core": {
+      "bytes": 72666656,
+      "elf_machine": 62,
+      "gid": 0,
+      "layer": "sha256:d65ff1f94c3ac8f69040a7d173afd43652935bc84ecbff1fcaa482dff27ab758",
+      "link": null,
+      "mode": 493,
+      "path": "usr/lib/memgraph/memgraph",
+      "sha256": "70b9b4d25aa5e9b8f4d6cae4ad1d2cb6d778a7f2d782e672e2a021369d32d6f3",
+      "type": "file",
+      "uid": 0
+    },
+    "mage": {
+      "bytes": 72666656,
+      "elf_machine": 62,
+      "gid": 0,
+      "layer": "sha256:7412cdb2ae8c749b2f2a11d1dc15264a7c3df2adcbb9228993e63ee2da1b3296",
+      "link": null,
+      "mode": 493,
+      "path": "usr/lib/memgraph/memgraph",
+      "sha256": "c47bb1a3946099b3addc7bb87dddef55c9954772f50a2e42943290fa11bdda3a",
+      "type": "file",
+      "uid": 0
+    }
+  },
+  "common_module_file_count": 34,
+  "common_module_sha256_differences": [],
+  "vector_search": {
+    "core": {
+      "bytes": 59544,
+      "elf_machine": 62,
+      "gid": 0,
+      "layer": "sha256:d65ff1f94c3ac8f69040a7d173afd43652935bc84ecbff1fcaa482dff27ab758",
+      "link": null,
+      "mode": 420,
+      "path": "usr/lib/memgraph/query_modules/vector_search.so",
+      "sha256": "c66e01357cbebaa55ee7b6868d5007a41f14a8f37177743467c206f5b140bbc0",
+      "type": "file",
+      "uid": 0
+    },
+    "mage": {
+      "bytes": 59544,
+      "elf_machine": 62,
+      "gid": 0,
+      "layer": "sha256:7412cdb2ae8c749b2f2a11d1dc15264a7c3df2adcbb9228993e63ee2da1b3296",
+      "link": null,
+      "mode": 420,
+      "path": "usr/lib/memgraph/query_modules/vector_search.so",
+      "sha256": "c66e01357cbebaa55ee7b6868d5007a41f14a8f37177743467c206f5b140bbc0",
+      "type": "file",
+      "uid": 0
+    }
+  },
+  "unknowns": [
+    "Equal package versions and file sizes do NOT prove byte identity or runtime/query parity",
+    "Actual amd64 core/MAGE engine hashes differ; build/source/linkage explanation unestablished",
+    "No native or emulated amd64 executable was started; arm64 query parity is not inherited",
+    "Module/file hash equality is byte evidence only, not correctness or full provenance"
+  ]
+}
