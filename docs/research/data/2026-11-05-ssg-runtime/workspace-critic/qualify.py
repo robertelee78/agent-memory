@@ -75,8 +75,11 @@ def identity():
     engine = shutil.which('podman')
     if not cgg or not engine:
         raise RuntimeError('Actual cgg and podman executables are required')
-    files = ['qualify.py', 'expected-facts.json', 'source-analysis.json']
+    files = ['qualify.py', 'expected-facts.json', 'source-analysis.json', 'profile.json']
     files += [str(p.relative_to(ROOT)) for p in sorted((ROOT / 'fixture').rglob('*')) if p.is_file()]
+    authored = {str(p.relative_to(SSG_HOME)): sha(p)
+                for sub in ('expertise', 'queries')
+                for p in sorted((SSG_HOME / sub).rglob('*')) if p.is_file()}
     return {'schema': 'am255/workspace-critic-freeze-v1',
             'ssg_commit': SSG_COMMIT, 'ssg_binary': str(SSG), 'ssg_sha256': sha(SSG),
             'cgg': cgg, 'cgg_sha256': sha(cgg), 'cgg_version': capture([cgg, '--version']),
@@ -84,6 +87,11 @@ def identity():
             'resources': {'cpus': 2, 'memory_bytes': 2147483648, 'data': 'tmpfs', 'logs': 'tmpfs'},
             'recipe_sha256': {p: sha(ROOT / p) for p in files},
             'source_sha256': {p: sha(SSG_HOME / p) for p in SOURCES},
+            'source_profile': 'Private scratch SSG_HOME: exact authored expertise/queries, no data/advisories',
+            'authored_input_sha256': authored,
+            'authored_input_file_counts': {
+                sub: sum(p.startswith(sub + '/') for p in authored)
+                for sub in ('expertise', 'queries')},
             'model_calls_authorized': False,
             'shared_graph': 'Never connected. One owned graph first holds expertise, then is replaced by the synthetic repository workspace. During workspace commands SSG_BOLT is a non-listening sentinel, not a shared service.',
             'expected_facts_frozen_before_outputs': True}
@@ -131,7 +139,8 @@ def run(out):
     for key in list(env):
         if key.startswith('SSG_'):
             env.pop(key)
-    env.update(SSG_HOME=str(SSG_HOME), SSG_CACHE=str(scratch / 'cache'),
+    view = scratch / 'ssg-source-view'
+    env.update(SSG_HOME=str(view), SSG_CACHE=str(scratch / 'cache'),
                SSG_CRITIC_CONFIG=str(scratch / 'no-critic-config'),
                SSG_BOLT='127.0.0.1:1', SSG_WORKSPACE_BOLT='127.0.0.1:' + str(PORT),
                SSG_WORKSPACE_CONTAINER=CONTAINER)
@@ -192,6 +201,14 @@ def run(out):
             "{p:{'uid':os.stat(p).st_uid,'gid':os.stat(p).st_gid,'mode':oct(os.stat(p).st_mode & 0o777)}"
             " for p in ('/var/lib/memgraph','/var/log/memgraph')}}))"]))
         save(out / 'actual-tmpfs-process-posture.json', json.loads(posture['stdout']))
+        for sub in ('expertise', 'queries'):
+            shutil.copytree(SSG_HOME / sub, view / sub)
+        copied = {str(p.relative_to(view)): sha(p) for p in sorted(view.rglob('*')) if p.is_file()}
+        if copied != frozen['authored_input_sha256']:
+            raise RuntimeError('Scratch source view differs from frozen authored inputs')
+        save(out / 'actual-source-profile.json', {
+            'ssg_home': str(view), 'input_counts': frozen['authored_input_file_counts'],
+            'all_input_bytes_match_frozen_source': True, 'advisories_included': False})
         repo = scratch / 'repo'
         shutil.copytree(ROOT / 'fixture', repo)
         git_env = dict(env, GIT_CONFIG_NOSYSTEM='1', GIT_CONFIG_GLOBAL='/dev/null',

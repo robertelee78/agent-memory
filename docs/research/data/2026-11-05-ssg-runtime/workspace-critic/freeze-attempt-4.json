@@ -1,0 +1,62 @@
+{
+  "cgg": "/Users/robert.lee/.cargo/bin/cgg",
+  "cgg_sha256": "db51d8d05889af71e00c145ac3fb596bfed82571a1af9f8aabc1db566c0dde17",
+  "cgg_version": {
+    "argv": [
+      "/Users/robert.lee/.cargo/bin/cgg",
+      "--version"
+    ],
+    "cwd": "/Users/robert.lee/.omp/wt/tcb265d0cb/m/docs/research/data/2026-11-05-ssg-runtime/workspace-critic",
+    "elapsed_seconds_shared_host": 0.005304292018990964,
+    "exit": 0,
+    "stderr": "",
+    "stdout": "cgg 0.11.2\n"
+  },
+  "container": "am255-workspace-critic",
+  "engine": "/Users/robert.lee/.local/bin/podman",
+  "expected_facts_frozen_before_outputs": true,
+  "image": "docker.io/memgraph/memgraph-mage@sha256:e8e03640071c57de6a13f2f4c5f9ed1789797dc5e8e771bbe62203b20e1b8c27",
+  "model_calls_authorized": false,
+  "port": 17749,
+  "recipe_sha256": {
+    "expected-facts.json": "1250b59517c6958537403109abf053c66c4e752736e019f106a13350f24d5114",
+    "fixture/app.py": "79ed5803edaa76b23088bf17c4cf3f1e527c7be7582a47bdfd5b6b50ebace6a8",
+    "fixture/requirements.txt": "1daca92b63eaa7fdc8f61a8386a13d4a8a8d351b8dd16b98154fc7e4877d1788",
+    "fixture/tests/test_routes.py": "bbe6a781a45a28a8fa673580d012b6c1e00b3bacf9a20e1717da2e83f118c0ee",
+    "qualify.py": "e59fbb74baca3553c1d38b149567914d13fdd5ba7c08707eaadf9c1e67e7c885",
+    "source-analysis.json": "9f71077a6edf2382fd513107fdad1a6a1461bffc9b68802683f67bf19ad31eb7"
+  },
+  "resources": {
+    "cpus": 2,
+    "data": "tmpfs",
+    "logs": "tmpfs",
+    "memory_bytes": 2147483648
+  },
+  "schema": "am255/workspace-critic-freeze-v1",
+  "shared_graph": "Never connected. One owned graph first holds expertise, then is replaced by the synthetic repository workspace. During workspace commands SSG_BOLT is a non-listening sentinel, not a shared service.",
+  "source_sha256": {
+    "crates/ssg/src/assess.rs": "0f96eab77c292362427b8ccaef3708d04cfb3ecdb54c03a18b0a6f823c459ce7",
+    "crates/ssg/src/config.rs": "f68f3f5cf6b2b7586c09dbe4ff1c4a8d05ee7bd9f860d6f753928bdbbaeebb50",
+    "crates/ssg/src/critique.rs": "af0675a958fb388f09f6007bd582eb025169e45f562fc489ce2b599df41340ef",
+    "crates/ssg/src/critique_local.rs": "19cd777d5095a5346ce733141d4df41f3782a0c5fd433538f166b0af62c00b55",
+    "crates/ssg/src/critique_slotted.rs": "b100bf946dd51e1c6fecb4e5af8fecd89810ba5f59b690a4f510b18b257253b4",
+    "crates/ssg/src/fingerprint/cgg.rs": "70ce35edc05fd4009099ea4de6791de14a12da101ba7848b22da7d00608416ec",
+    "crates/ssg/src/fingerprint/mod.rs": "f4cd8f5ec91c7bbeb925e6802a45b7449ce3f38f69a656186a2807d438608fea",
+    "crates/ssg/src/main.rs": "819a1c4aae0bd9acdbf7fcd796a8830f91724e6d89824eac2fe47001ca78158b",
+    "crates/ssg/src/trace.rs": "e258cfb3b7fc7203951472a12bf176956af66e4de86a7948feac9c9eb2fb8604",
+    "crates/ssg/src/trace/evidence.rs": "70d535691e263bc66b4658fdb3121b2dc88a8b45ef4e37dcda637cdb75dd0af2",
+    "crates/ssg/src/workspace.rs": "a60e8dedb9f9b47e25c249900afb44fa6455e22d192e4fa62d1ce9dca9d6585c",
+    "crates/ssg/src/workspace/load.rs": "176176cbafc96459690dda5268c11e8ed9087686452c3e89575dc94f8a134b58",
+    "crates/ssg/src/workspace/paths.rs": "4ee7051d5d2699237268feb7554566da0efd414686ef0aa63e44b5aa8d37069d",
+    "crates/ssg/src/workspace/profile.rs": "38f069fb88fe48a67ccea2018b802361018336feefed75b4c2e99412dda40b26",
+    "critic/arbiter.md": "fae1bfb58165aa7bb7d3f64eb37a7878eda7b04b129d4768f35032e35b4e0edb",
+    "critic/defender.md": "7b7267a2e7de45dab92aff1859093518701dceaa75870aceb48b9a0829dd500d",
+    "critic/system.md": "0ab26d2b990adb20bf1c31febeff027ee293ebb51f7e39a9dbbe98bd8ef62391",
+    "expertise/frameworks/flask/entries/route.md": "1fe8ceb8cb6fcd683e982a007b36c773c0aac68579f11bad3a8c2c0e5fa94876",
+    "expertise/packages/lang/python/facets/safe-literal-eval.md": "c057e5e5a04d2a9a4982cb7a0f3ffad2c3c61f1cbb36c67a7db59c46b6447ded",
+    "expertise/packages/lang/python/facets/sink-eval-exec.md": "005c3e09b32e83500fb67ecfd71e148388955ea25a47601cf524be23e4b04ce2"
+  },
+  "ssg_binary": "/tmp/am-v15-delivery/ssg-target/release/ssg",
+  "ssg_commit": "9c4fd08c29f37bffe89ecdf75b069a6baeb8a5e0",
+  "ssg_sha256": "d87fe302f3c93f3a2bd71f89ee888b3df6b71a6a51be158956288409d49d864b"
+}
