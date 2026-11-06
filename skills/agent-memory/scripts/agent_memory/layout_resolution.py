@@ -187,10 +187,12 @@ def retire(repo, operation_id, owner, transaction=None):
     for item in dependencies:
         indexed['operations'][item['operation_id']]['state'] = 'terminal'
     state.set_index(root, indexed, digest(state.read_bytes(base / 'index.json')))
+    writes.fault('layout-recovery-retirement-after-index')
     for item in dependencies:
         dependent_manifest = state.read(state.paths(root, item['operation_id'])[3] / 'manifest.json')
         state.bind(root, item['operation_id'], row['project_id'],
             dependent_manifest['identity']['scope_context']['checkout_key'], 'terminal')
+        writes.fault('layout-recovery-retirement-after-binding')
     writes.fault('layout-recovery-sentinel-retirement')
     if marker is not None:
         markers(bank, owner, marker)

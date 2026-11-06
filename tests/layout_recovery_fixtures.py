@@ -146,7 +146,7 @@ def inherited_rows(world, manifest):
     return result
 
 
-def review_request(world, command, source, repo, inspected, intended):
+def review_request(world, command, source, repo, inspected, intended, *, pending_paths=('handoff-prompt.md',)):
     manifest = inspected['manifest']; operation = manifest['operation_id']
     author = {'developer_id': manifest['identity']['scope_context']['developer_id'], 'harness': 'fixture-author',
               'session': 'controlled-author-' + operation, 'evidence': 'Controlled test author observation; not acceptance evidence'}
@@ -165,7 +165,7 @@ def review_request(world, command, source, repo, inspected, intended):
             if 'id' in metadata:
                 existing = {'id': metadata['id'], 'version': metadata.get('version')}
         for size in lengths:
-            pending = original['path'] == 'handoff-prompt.md'
+            pending = original['path'] in pending_paths
             units.append({'unit_id': str(uuid.uuid4()), 'source_ranges': [{'source_id': original['source_id'], 'start': offset, 'end': offset + size}],
                           'semantic_kind': 'unadmitted-source' if pending else 'canonical-framing' if original['path'] == 'MEMORY.md' else 'canonical-guidance',
                           'existing_record': existing, 'provenance': {'origin': 'unknown' if pending else 'existing canonical fixture', 'uncertainty': pending},

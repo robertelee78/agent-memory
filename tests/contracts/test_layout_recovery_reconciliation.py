@@ -150,6 +150,52 @@ class RecoveryReconciliationContract(unittest.TestCase):
                 f.call(world, command, 'status', '--repo', repo, '--operation', continuation['operation_id'], expected=1)
                 self.assertEqual((bank / '.agent-memory-transaction.md').read_bytes(), marker)
 
+    def test_unfinished_rolled_back_resolution_excludes_outer_repair_handoff(self):
+        with World() as world:
+            command, source = f.installed(world)
+            repo, bank, native = f.memory(world)
+            (bank / 'handoff-notes.txt').write_text(SCRATCH)
+            original = bank_bytes(bank)
+            _, inspected = f.inspect(world, command, repo)
+            initial_request = f.review_request(world, command, source, repo, inspected, native,
+                pending_paths=('handoff-notes.txt',))
+            proposal = world.inside('initial-pending-layout.json')
+            f.call(world, command, 'prepare', '--repo', repo, '--operation', inspected['operation_id'],
+                '--input', f.save(world, initial_request), '--output', proposal)
+            f.call(world, command, 'apply', '--repo', repo, '--proposal', proposal, expected=1,
+                env={'AGENT_MEMORY_FAULT_STAGE': 'layout-recovery-before-receipt'})
+            rollback = world.inside('rolled-back-parent.json')
+            f.call(world, command, 'recover', '--repo', repo, '--operation', inspected['operation_id'],
+                '--mode', 'rollback', '--output', rollback)
+            f.call(world, command, 'recover', '--repo', repo, '--proposal', rollback)
+            _, continuation = f.inspect(world, command, repo)
+            continuation_request = f.review_request(world, command, source, repo, continuation, native,
+                pending_paths=('handoff-notes.txt',))
+            next_proposal = world.inside('continuation-proposal.json')
+            f.call(world, command, 'prepare', '--repo', repo, '--operation', continuation['operation_id'],
+                '--input', f.save(world, continuation_request), '--output', next_proposal)
+            status = f.call(world, command, 'status', '--repo', repo, '--operation', inspected['operation_id'])
+            resolution = f.discard_proposal(world, command, repo, bank, inspected, status['pending_unit_ids'][0])
+            f.call(world, command, 'resolve', '--repo', repo, '--proposal', resolution, expected=1,
+                env={'AGENT_MEMORY_FAULT_STAGE': 'layout-recovery-resolution-after-receipt'})
+            directory = f.private_directory(world, bank, inspected['operation_id'])
+            before = retained(directory.parent)
+            marker = (bank / '.agent-memory-transaction.md').read_bytes()
+            f.call(world, command, 'apply', '--repo', repo, '--proposal', next_proposal, expected=1)
+            f.call(world, command, 'inspect', '--repo', repo,
+                '--output', world.inside('reserved-inspection.json'), expected=1)
+            f.call(world, command, 'prepare', '--repo', repo, '--operation', continuation['operation_id'],
+                '--input', f.save(world, continuation_request),
+                '--output', world.inside('reserved-preparation.json'), expected=1)
+            self.assertEqual(retained(directory.parent), before)
+            self.assertEqual((bank / '.agent-memory-transaction.md').read_bytes(), marker)
+            self.assertEqual(bank_bytes(bank), original)
+            completed = f.call(world, command, 'resolve', '--repo', repo, '--proposal', resolution)
+            self.assertTrue(completed['semantic_recovery_complete'])
+            f.call(world, command, 'apply', '--repo', repo, '--proposal', next_proposal, expected=1)
+            f.inspect(world, command, repo)
+            self.assertEqual(bank_bytes(bank), original)
+
     def test_standalone_receipt_retry_finishes_exact_linkage_and_retirement(self):
         cases = [('layout-recovery-resolution-after-receipt', 'exit'),
                  ('layout-recovery-ledger-generation-before-head', 'error'),

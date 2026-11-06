@@ -148,6 +148,36 @@ class NestedReconciliationContract(unittest.TestCase):
                 progress = list((nested_directory / 'rollback-progress').glob('*.json'))
                 self.assertEqual(len(progress), 3 if fault_mode == 'error' else 2)
 
+    def test_nested_retirement_resumes_active_binding_after_terminal_index(self):
+        for mode in ('error', 'exit'):
+            with self.subTest(mode=mode), World() as world:
+                command, source, repo, bank, _, inspected, _ = f.small_pending(world)
+                operation = inspected['operation_id']
+                directory = f.private_directory(world, bank, operation)
+                proposal, transaction, _ = f.admission_proposal(
+                    world, command, source, repo, bank, inspected, full=True)
+                fault = world.run([command, 'admission', 'apply', '--proposal', proposal],
+                    check=False, timeout=30, env={
+                        'AGENT_MEMORY_FAULT_STAGE': 'layout-recovery-retirement-after-index',
+                        'AGENT_MEMORY_FAULT_MODE': mode})
+                self.assertEqual(fault.returncode, 86 if mode == 'exit' else 1,
+                    fault.stdout + fault.stderr)
+                if mode == 'exit':
+                    f.unlock(world, command, repo)
+                before = canonical(bank)
+                self.assertEqual(json.loads((directory.parent / 'index.json').read_text())
+                    ['operations'][operation]['state'], 'terminal')
+                f.public(world, command, 'bank', 'validate', '--repo', repo, expected=1)
+                recovery, _ = self.preview(world, command, repo, operation,
+                    transaction['operation_id'], 'finish')
+                f.call(world, command, 'recover-nested', '--repo', repo, '--proposal', recovery)
+                self.assertEqual(canonical(bank), before)
+                self.assertFalse((bank / '.agent-memory-transaction.md').exists())
+                self.assertFalse((bank / '.agent-memory-recovery.md').exists())
+                f.public(world, command, 'bank', 'validate', '--repo', repo)
+                status = f.call(world, command, 'status', '--repo', repo, '--operation', operation)
+                self.assertTrue(status['semantic_recovery_complete'])
+
     def test_exact_nested_finish_resumes_terminal_retirement_without_replaying_canonical_bytes(self):
         stages = ('layout-recovery-sentinel-retirement', 'layout-recovery-retirement-after-marker-removal',
             'layout-recovery-retirement-after-sentinel-removal')

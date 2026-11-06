@@ -270,8 +270,8 @@ def retired_nested(root, operation_id, nested_id, journal, receipt, indexed, own
         manifest = state.read(state.paths(root, item['operation_id'])[3] / 'manifest.json')
         if (dependency is None or dependency['state'] != 'terminal' or dependency['project_id'] != row['project_id']
                 or dependency['ledger_head_sha256'] != item['ledger_head_sha256']
-                or binding is None or binding['lifecycle_state'] != 'terminal'
-                or binding['project_id'] != row['project_id']
+                or binding is None or binding['lifecycle_state'] not in {'active', 'terminal'}
+                or binding['project_id'] != row['project_id'] or binding['bank_path'] != str(bank)
                 or binding['checkout_key'] != manifest['identity']['scope_context']['checkout_key']):
             raise ContractError('Nested retirement dependency no longer matches its terminal binding and ledger')
         dependencies.add(item['operation_id'])
@@ -285,8 +285,9 @@ def retired_nested(root, operation_id, nested_id, journal, receipt, indexed, own
         if (other_row['project_id'] != row['project_id'] or other_row['state'] in {'active', 'interrupted'}
                 or any(unit['state'] == 'pending-admission' for unit in current['units'])):
             raise ContractError('Retained same-bank recovery evidence still requires its safeguard')
-    if any(binding['bank_path'] == str(bank) and binding['lifecycle_state'] in {'active', 'interrupted'}
-            for binding in bindings.values()):
+    if any(other_id not in dependencies and binding['bank_path'] == str(bank)
+            and binding['lifecycle_state'] in {'active', 'interrupted'}
+            for other_id, binding in bindings.items()):
         raise ContractError('An active bound dependency prevents nested retirement recovery')
     scoped = journal.get('write_proposal', journal['proposal'])
     layout_history.check(root, scoped['scope_context'], row['project_id'])

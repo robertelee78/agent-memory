@@ -220,24 +220,26 @@ remain strict. Before a canonical receipt, rollback retains its exact initial
 state and ordered restoration plan before the first write, so a fresh preview
 can resume a rename that completed before its progress record.
 
-If nested terminalization already committed retirement but stopped before
-removing its marker or companion sentinel, exact `recover-nested --mode finish`
-can complete those recorded removals. Its locked preview pins the canonical
-receipt/current bytes, completion, immutable ledger successor, retirement,
-same-bank terminal dependencies, scope and remaining safeguards. Rollback,
-changed canonical bytes, foreign replacement markers/sentinels or mismatched
-completion evidence remain refusals. Ordinary bank observers are not allowed
-to interpret an orphan safeguard as a completed recovery.
+If nested terminalization committed its retirement index but stopped before
+finishing the exact listed bindings or removing its marker/companion sentinel,
+exact `recover-nested --mode finish` can complete those recorded transitions.
+Its locked preview pins the canonical receipt/current bytes, completion,
+immutable ledger successor, retirement, exact same-bank dependency bindings,
+scope and remaining safeguards. Unlisted active dependencies, rollback, changed
+canonical bytes, foreign replacement markers/sentinels or mismatched completion
+evidence remain refusals. Ordinary bank observers remain strict throughout.
 
 A standalone resolution journal reserves its exact ledger successor until its
 receipt, linkage and safeguard retirement have an exact durable completion.
-New resolutions, held transactions and unit revisions refuse under the ordinary
+New resolutions, held transactions, unit revisions, outer layout inspection/
+preparation/application/recovery and child restore refuse under the ordinary
 bank lock while any same-bank resolution journal remains unfinished; merely
-creating a completion file does not release that reservation. Retry the exact
-resolution proposal after separately recovering any dead owned lock. Recovery
-completes the same linkage/retirement without appending another resolution.
-Historical success is returned only after durable completion, never by
-discarding a remaining hold.
+creating a completion file does not release that reservation. This includes
+previously prepared continuation proposals: they cannot replace the hold before
+its reserved resolution finishes. Retry the exact resolution proposal after
+separately recovering any dead owned lock. Recovery completes the same linkage/
+retirement without appending another resolution. Historical success is returned
+only after durable completion, never by discarding a remaining hold.
 
 Recovery-aware `publish inspect|prepare|land` and separately reviewed
 `retention inspect|apply` use their own exact requests. Publication requires a

@@ -137,6 +137,8 @@ def inspect(repo, identity_review=None):
     predecessor, _ = predecessor_value(root)
     bank_observation.markers(target, None, predecessor.marker if predecessor else None)
     with storage.exclusive(target / '.agent-memory.lock', operation_id, 'bank-recover') as owner:
+        from . import layout_resolution
+        layout_resolution.require_completed_resolutions(root)
         try:
             predecessor, pinned = predecessor_value(root, owner=owner)
             transaction = predecessor.marker if predecessor else None
@@ -405,13 +407,21 @@ def pending_rows(directory, manifest, units):
 
 
 def prepare(repo, operation_id, request):
+    root, target, _, _ = state.paths(repo, operation_id)
+    with storage.exclusive(target / '.agent-memory.lock', operation_id, 'bank-recover') as owner:
+        from . import layout_resolution
+        layout_resolution.require_completed_resolutions(root)
+        return _prepare(root, operation_id, request, owner)
+
+
+def _prepare(repo, operation_id, request, owner):
     root, target, _, directory, manifest = operation(repo, operation_id)
     fields(request, {'schema', 'operation_id', 'author', 'unit_map', 'intended_files', 'metadata_plan', 'review',
                      'quiescence_attestation', 'retained_source_ids'}, 'agent-memory/layout-prepare-v1')
     if request['operation_id'] != operation_id:
         raise ContractError('Prepare request belongs to another operation')
     participant(request['author'])
-    predecessor, predecessor_pin = predecessor_value(root, manifest)
+    predecessor, predecessor_pin = predecessor_value(root, manifest, owner)
     inherited = frontier.inherited_pending_rows(root)
     if request['author']['developer_id'] != manifest['identity']['scope_context']['developer_id']:
         raise ContractError('Prepare author must retain the actual detecting developer')
@@ -436,7 +446,7 @@ def prepare(repo, operation_id, request):
     tx.check_layout(target, {source['path'] for source in manifest['sources']} | set(intended),
                     {source['path']: source['sha256'] for source in manifest['sources']})
     units = initial_units(manifest, unit_map)
-    capacity_token = frontier.prospective_token(root, manifest, units, predecessor=predecessor)
+    capacity_token = frontier.prospective_token(root, manifest, units, predecessor=predecessor, owner=owner)
     reserve = frontier.reservation(intended, pending_rows(directory, manifest, units) + inherited, capacity_token)
     runtime = artifact.inspect(artifact.PACK)
     attestation = request['quiescence_attestation']
@@ -446,7 +456,7 @@ def prepare(repo, operation_id, request):
             raise ContractError('Quiescence attestation needs the exact independent review')
     elif attestation is not None:
         attestation_value(attestation, manifest, runtime)
-    raw.recheck(root, manifest, transaction=predecessor.marker if predecessor else None)
+    raw.recheck(root, manifest, owner=owner, transaction=predecessor.marker if predecessor else None)
     originals = {source['path']: source['sha256'] for source in manifest['sources']}
     final = {**retained, **{path: digest(body.encode()) for path, body in intended.items()}}
     actions = [{'path': path, 'before': originals.get(path), 'after': final.get(path),
@@ -474,7 +484,9 @@ def prepare(repo, operation_id, request):
     if attestation is not None:
         state.write_once(directory / 'attestations' / (attestation['attestation_id'] + '.json'), attestation)
     state.write_once(directory / 'proposals' / (proposal['proposal_id'] + '.json'), proposal)
-    return result('prepare', operation_id, state='prepared', verified=True, canonical_eligibility=eligibility(root),
+    return result('prepare', operation_id, state='prepared', verified=True,
+                  canonical_eligibility=eligibility(root, owner, predecessor.marker if predecessor else None),
+                  temporary_lock_writes_performed=True,
                   pending_unit_ids=capacity_token['unit_ids'], pending_units=len(capacity_token['unit_ids']),
                   private_artifact_writes_performed=True, proposal=proposal,
                   preview={'actions': actions, 'unchanged_occupants': proposal['unchanged_occupants'],
@@ -1027,6 +1039,8 @@ def apply(repo, supplied):
         return historical(root, proposal, directory, known)
     _, _, _, _, manifest = operation(root, proposal['operation_id'])
     with storage.exclusive(target / '.agent-memory.lock', proposal['operation_id'], 'bank-recover') as owner:
+        from . import layout_resolution
+        layout_resolution.require_completed_resolutions(root)
         predecessor, predecessor_pin = predecessor_value(root, manifest, owner)
         if proposal['predecessor'] != predecessor_pin:
             raise ContractError('Reviewed recovery predecessor changed')
@@ -1212,6 +1226,8 @@ def recover(repo, operation_id=None, mode=None, proposal=None):
                       receipt=completed, receipt_is_historical=True, already_applied=True)
     root, target, base, directory, manifest, original, journal = recovery_source(repo, preview['operation_id'])
     with storage.exclusive(target / '.agent-memory.lock', original['operation_id'], 'bank-recover') as owner:
+        from . import layout_resolution
+        layout_resolution.require_completed_resolutions(root)
         current_marker = frontier.marker_bytes(target)
         known = receipt_value(directory, original)
         temporary_entries = temps.entries(target, original['operation_id'], original['actions'], manifest_view(manifest),

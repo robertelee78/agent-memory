@@ -88,6 +88,8 @@ def preview(repo, operation_id):
         raise ContractError('Later admission/governance/revision depends on the repaired bank')
     child = str(uuid.uuid4())
     with storage.exclusive(bank / '.agent-memory.lock', child, 'bank-recover') as owner:
+        from . import layout_resolution
+        layout_resolution.require_completed_resolutions(root)
         frontier.require_scope(root, original['project_id'], expected=original['scope_context'],
                                owned_lock=owner, owned_transaction=existing_marker)
         source_frontier = frontier.observe(root, owner, existing_marker)
@@ -191,6 +193,8 @@ def apply(repo, supplied, plan=None):
     mode = plan['mode'] if plan else 'finish'
     mutated = False
     with storage.exclusive(bank / '.agent-memory.lock', p['operation_id'], 'bank-recover') as owner:
+        from . import layout_resolution
+        layout_resolution.require_completed_resolutions(root)
         current_marker = frontier.marker_bytes(bank)
         starting_marker = encoded(p['parent_marker']) if p['parent_marker'] else None
         transaction = encoded({'schema': frontier.TRANSACTION, 'project_id': p['project_id'],
