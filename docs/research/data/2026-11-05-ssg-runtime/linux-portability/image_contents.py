@@ -148,8 +148,10 @@ def main():
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=False)
     args.acquisition.mkdir(parents=True, exist_ok=False)
+    source = command(args.output, "execution-source", ["git", "rev-parse", "HEAD"])
     save(args.output / "freeze.json", {"bindings_sha256": sha(args.bindings), "script_sha256": sha(__file__),
          "helper_sha256": sha(Path(__file__).with_name("discover.py")), "start_unix": time.time(),
+         "executed_source_commit": source["stdout"].strip(),
          "scope": "Exact amd64 core/MAGE image contents only; zero native/emulated graph execution"})
     results = []
     for name, spec in json.loads(args.bindings.read_text()).items():

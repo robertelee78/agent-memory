@@ -189,8 +189,10 @@ def main():
     root.mkdir(parents=True,exist_ok=False)
     config = json.loads(args.config.read_text())
     owner = secrets.token_hex(6)
+    source = command(root,'execution-source',['git','rev-parse','HEAD'])
     save(root/'frozen-inputs.json',{'config':config,'config_sha256':sha(args.config),'script_sha256':sha(__file__),
-         'helper_sha256':sha(Path(__file__).with_name('discover.py')),'am_source':config['am_baseline'], 'ssg':config['ssg'],
+         'helper_sha256':sha(Path(__file__).with_name('discover.py')),'am_baseline':config['am_baseline'],
+         'executed_source_commit':source['stdout'].strip(), 'ssg':config['ssg'],
          'owner':owner,'start_unix':time.time(),'limits':'shared Darwin host; Linux-arm64 CPU container in AppleHV VM; not bare metal or clean performance'})
     before = command(root,'containers-before',['podman','ps','-aq','--no-trunc'])
     command(root,'volumes-before',['podman','volume','ls','--format','json'])
@@ -209,9 +211,14 @@ def main():
     save(root/'release-files.json',[{'path':str(p.relative_to(release)), 'bytes':p.stat().st_size,'sha256':sha(p),'symlink':p.is_symlink()} for p in sorted(release.rglob('*')) if p.is_file()])
     (root/'release-LICENSE').write_bytes((release/'LICENSE').read_bytes())
     # Preflight executes only the exact release binary in an owned nonservice carrier.
-    preflight = command(root,'runtime-preflight',['podman','run','--rm','--pull=never','--platform=linux/arm64','--cpus','1','--memory','512m',
+    preflight_name = 'am255-linux-' + owner + '-preflight'
+    preflight = command(root,'runtime-preflight',['podman','run','--rm','--name',preflight_name,'--label','am255.linux.owner='+owner,
+        '--pull=never','--platform=linux/arm64','--cpus','1','--memory','512m',
         '--network','none','--image-volume=ignore','--read-only','--mount','type=bind,src='+str(release)+',dst=/release,ro=true',
         '--env','LD_LIBRARY_PATH=/release','--entrypoint','/release/llama-server',config['carrier_image'],'--version'])
+    preflight_absence = command(root,'preflight-absence',['podman','container','exists',preflight_name])
+    if preflight_absence['exit'] != 1:
+        raise RuntimeError('Exact owned preflight container was not auto-removed')
     results = []
     try:
         if preflight['exit'] == 0:
