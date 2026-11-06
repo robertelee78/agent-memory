@@ -29,10 +29,11 @@ def compare(contents):
                for name, report in reports.items()}
     common = sorted(modules["core"].keys() & modules["mage"].keys())
     engines = {name: report["memgraph_binary"] for name, report in reports.items()}
+    engines_equal = engines["core"]["sha256"] == engines["mage"]["sha256"]
     return {
         "schema": "am255/amd64-core-mage-byte-comparison-v1",
         "source_reports": {name: binding(path) for name, path in sources.items()},
-        "engine_binaries_equal": engines["core"]["sha256"] == engines["mage"]["sha256"],
+        "engine_binaries_equal": engines_equal,
         "engine_binaries": engines,
         "common_module_file_count": len(common),
         "common_module_sha256_differences": [path for path in common
@@ -41,7 +42,9 @@ def compare(contents):
                           for name, rows in modules.items()},
         "unknowns": [
             "Equal package versions and file sizes do NOT prove byte identity or runtime/query parity",
-            "Actual amd64 core/MAGE engine hashes differ; build/source/linkage explanation unestablished",
+            ("Actual amd64 core/MAGE engine hashes match; runtime equivalence unestablished"
+             if engines_equal else
+             "Actual amd64 core/MAGE engine hashes differ; build/source/linkage explanation unestablished"),
             "No native or emulated amd64 executable was started; arm64 query parity is not inherited",
             "Module/file hash equality is byte evidence only, not correctness or full provenance",
         ],

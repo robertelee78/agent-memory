@@ -9,6 +9,7 @@
   "evidence_lineage": "../evidence-commit-map.json; refs/heads/evidence/v015-255-linux-20261106 preserves original pre-output history. Integrated dates are not freeze dates.",
   "post_review_corrections": "post-review-corrections-20261106.json",
   "index_scope": "Updated interpretation/handoff index; original raw run-index.json and finalizer outputs are unchanged.",
+  "offline_followup": "offline-followup-20261106.json records the new public archive download/hash/disposal and conditional same-engine control.",
   "primary_reports": [
     "actual-20261106/report.json",
     "linux-interpretation.json",
@@ -1082,8 +1083,8 @@
     },
     {
       "path": "derive_evidence.py",
-      "bytes": 5628,
-      "sha256": "f04194d058ff987935d347f03cf2819ca9629a64d38f5aa8003f09ebc17ad2cf"
+      "bytes": 5792,
+      "sha256": "c33262e4fc77a8a873a4dced1fcc143cc3a7d3139741835c38e1154b82287340"
     },
     {
       "path": "byte-comparison-reproduced-20261106.json",
@@ -1094,6 +1095,11 @@
       "path": "static-closure-reproduced-20261106.json",
       "bytes": 9845,
       "sha256": "242aa164ba5cfce5fa64e22ef26c64153c8514ed9d96ad4218fdbe773a122111"
+    },
+    {
+      "path": "offline-followup-20261106.json",
+      "bytes": 1375,
+      "sha256": "1cd8fe00367fbf4914ea374c58c28dd93801fe2bfb23f6a65dc59a6ba372da98"
     },
     {
       "path": "post-review-corrections-20261106.json",
