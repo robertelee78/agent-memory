@@ -1,0 +1,163 @@
+{
+  "callables": [
+    {
+      "file": "app.py",
+      "name": "app.constant"
+    },
+    {
+      "file": "app.py",
+      "name": "app.direct"
+    },
+    {
+      "file": "app.py",
+      "name": "app.evaluate_text"
+    },
+    {
+      "file": "app.py",
+      "name": "app.literal"
+    },
+    {
+      "file": "app.py",
+      "name": "app.orphan"
+    },
+    {
+      "file": "tests/test_routes.py",
+      "name": "test_routes.test_only"
+    }
+  ],
+  "entries": [
+    {
+      "file": "app.py",
+      "name": "app.constant",
+      "trust": [
+        "network"
+      ]
+    },
+    {
+      "file": "app.py",
+      "name": "app.direct",
+      "trust": [
+        "network"
+      ]
+    },
+    {
+      "file": "app.py",
+      "name": "app.literal",
+      "trust": [
+        "network"
+      ]
+    },
+    {
+      "file": "tests/test_routes.py",
+      "name": "test_routes.test_only",
+      "trust": [
+        "test"
+      ]
+    }
+  ],
+  "repositories": [
+    {
+      "repository": {
+        "build": "1451d11ae7477d6571d36489b1e5703b5950c69146da9bc7250151200b87a36a",
+        "cgg_version": "0.11.2",
+        "commit": "e76f4612b9f2a63eae5d43625275d108beeb856d",
+        "content": "1076719aebc636ae9a37c11893bcaf0f4eedac7c5a12b9a01d6ffdffa8cdbd59",
+        "root": "/Users/robert.lee/.omp/wt/tcb265d0cb/m/docs/research/data/2026-11-05-ssg-runtime/workspace-critic/actual-20261106-authored/scratch/repo"
+      }
+    }
+  ],
+  "typed_edges": [
+    {
+      "count": 258,
+      "type": "ADDRESSES"
+    },
+    {
+      "count": 667,
+      "type": "APPLIES_TO"
+    },
+    {
+      "count": 9,
+      "type": "CALLS"
+    },
+    {
+      "count": 48,
+      "type": "CONTRASTS"
+    },
+    {
+      "count": 54,
+      "type": "DISTRIBUTED_AS"
+    },
+    {
+      "count": 66,
+      "type": "ENTRY_BY"
+    },
+    {
+      "count": 8,
+      "type": "FIRST"
+    },
+    {
+      "count": 72,
+      "type": "FOR"
+    },
+    {
+      "count": 425,
+      "type": "GRANTS"
+    },
+    {
+      "count": 35,
+      "type": "HAS_STEP"
+    },
+    {
+      "count": 6,
+      "type": "IN"
+    },
+    {
+      "count": 512,
+      "type": "INDICATES"
+    },
+    {
+      "count": 2,
+      "type": "MATCHES"
+    },
+    {
+      "count": 27,
+      "type": "NEXT"
+    },
+    {
+      "count": 2,
+      "type": "OF"
+    },
+    {
+      "count": 2000,
+      "type": "ON"
+    },
+    {
+      "count": 49,
+      "type": "REFINES"
+    },
+    {
+      "count": 4,
+      "type": "REGISTERED_BY"
+    },
+    {
+      "count": 341,
+      "type": "REQUIRES"
+    },
+    {
+      "count": 25,
+      "type": "RUNS"
+    },
+    {
+      "count": 160,
+      "type": "SEE_ALSO"
+    },
+    {
+      "count": 145,
+      "type": "SUGGESTS"
+    },
+    {
+      "count": 125,
+      "type": "USES"
+    }
+  ]
+}

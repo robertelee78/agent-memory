@@ -1,0 +1,10 @@
+{
+  "changed-code": 3,
+  "invalid-range": 2,
+  "missing-code": 2,
+  "missing-fact": 2,
+  "positive-evidence": 0,
+  "stale-path-boundary": 0,
+  "unconnected-path": 2,
+  "unsupported-claim-boundary": 0
+}
