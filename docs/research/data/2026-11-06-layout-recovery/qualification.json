@@ -50,6 +50,19 @@
       "limit": "Real raw-observer API and preservation only; not installed public command, native provider, combined registered-suite budget or full original acceptance."
     },
     {
+      "group": "expanded-registered-layout-recovery",
+      "source_commit": "2732df8bd2d11dfbc4999469cbdd0cd372427b60",
+      "methods": 12,
+      "passed": true,
+      "elapsed_seconds": 216.7147336669732,
+      "timeout_seconds": 300,
+      "timed_out": false,
+      "exit": 0,
+      "skipped": 0,
+      "receipt_sha256": "0c620533dca7560e2ea79524d927bc4054d9ad08d426c0bf12f76d2deabeb74c",
+      "scope": "Actual registered worker: original9 public methods plus3 real-count raw-observer methods, within unchanged300second deadline. Other registered recovery suites and full acceptance remain separate."
+    },
+    {
       "group": "outer-reservation-and-retirement-focused",
       "methods": 2,
       "subcases": 3,
