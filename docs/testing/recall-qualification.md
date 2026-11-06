@@ -66,6 +66,11 @@ The source inventory hashes their literal link-target bytes against the Git
 blob and records their symlink type; it never opens the target. Dirty links
 still refuse. Symlinks anywhere in executable `tests/`, `scripts/` or the
 portable pack remain unsupported; no fixture exception relaxes those guards.
+Active semantic-case and literal-label inputs still require frozen ordinary
+files: the quality controller refuses link traversal, reads with a no-follow
+nonblocking descriptor and verifies type, full mode and content against the
+frozen source binding before any fixture/model execution. Parsing and retained
+hashes use those same verified bytes, not a later reread.
 
 ## Complete serial commands
 

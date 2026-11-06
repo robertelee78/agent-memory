@@ -15,6 +15,7 @@ import json
 import os
 from pathlib import Path
 import platform
+import stat
 import shutil
 import statistics
 import subprocess
@@ -65,6 +66,31 @@ def source(root):
     if inventory(root/'skills/agent-memory') != portable:
         raise ValueError('Complete portable source differs from committed files')
     return {'commit': revision, 'tracked': tracked, 'portable': portable}
+
+
+def read_bound_source(root, relative, binding):
+    """Read one frozen ordinary input, never an archived symlink's target."""
+    parts = Path(relative).parts
+    entry = binding['tracked'].get(relative)
+    if (not parts or Path(relative).is_absolute() or '..' in parts or not entry
+            or entry.get('kind') == 'symlink' or entry.get('mode') not in (0o644, 0o755)):
+        raise ValueError('Qualification input must be a frozen ordinary source')
+    path = root
+    for part in parts:
+        path = path / part
+        if path.is_symlink():
+            raise ValueError('Qualification input cannot traverse a link')
+    try:
+        with os.fdopen(os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK), 'rb') as stream:
+            info = os.fstat(stream.fileno())
+            if not stat.S_ISREG(info.st_mode) or stat.S_IMODE(info.st_mode) != entry['mode']:
+                raise ValueError('Qualification input type or mode changed')
+            raw = stream.read()
+    except OSError as exc:
+        raise ValueError('Frozen qualification input is unavailable') from exc
+    if hashlib.sha256(raw).hexdigest() != entry['sha256']:
+        raise ValueError('Frozen qualification input bytes changed')
+    return raw
 
 
 def main():

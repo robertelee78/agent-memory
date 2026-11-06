@@ -334,6 +334,46 @@ print(json.dumps(binding))
                     executable.unlink()
                     world.git('add', '.', cwd=target); world.git('commit', '-m', 'Remove executable link control', cwd=target)
 
+    def test_active_frozen_inputs_refuse_archived_links_and_source_substitution(self):
+        with World() as world:
+            controller = self.stage(world)
+            target = world.repository('active-input-source')
+            data = target / 'docs/research/data'
+            data.mkdir(parents=True)
+            (data / 'labels.json').write_text('{"expected": ["qualified-record"]}\n')
+            (data / 'archived-link.json').symlink_to('labels.json')
+            world.git('add', '.', cwd=target); world.git('commit', '-m', 'Frozen input authority', cwd=target)
+            self.assert_controller(world, controller, '''
+import json,os
+from pathlib import Path
+from recall_comparison_builds import source
+from labeled_recall_probe import read_bound_source
+root=Path(sys.argv[2]);binding=source(root)
+relative='docs/research/data/labels.json';path=root/relative;original=path.read_bytes()
+assert json.loads(read_bound_source(root,relative,binding)) == {'expected':['qualified-record']}
+def refused(name):
+ try: read_bound_source(root,name,binding)
+ except ValueError: return
+ raise AssertionError('Substituted qualification input was accepted')
+refused('docs/research/data/archived-link.json')
+try:
+ path.write_text('{"expected": ["different-record"]}\\n')
+ refused(relative)
+ path.unlink();path.symlink_to('archived-link.json')
+ refused(relative)
+ path.unlink();os.mkfifo(path)
+ refused(relative)
+finally:
+ path.unlink(missing_ok=True);path.write_bytes(original);path.chmod(binding['tracked'][relative]['mode'])
+assert json.loads(read_bound_source(root,relative,binding)) == {'expected':['qualified-record']}
+parent=path.parent;retained=parent.with_name('retained-data')
+parent.rename(retained);parent.symlink_to(retained,target_is_directory=True)
+try: refused(relative)
+finally: parent.unlink();retained.rename(parent)
+assert source(root) == binding
+print('Frozen input authority, link refusal and exact restoration passed')
+''', target)
+
     def test_independent_pagination_batches_compare_every_equivalent_exact_native_request(self):
         with World() as world:
             root = self.stage(world)
@@ -347,7 +387,7 @@ from semantic_navigation_fixture import corpus
 source=Path(sys.argv[2]);sys.path.insert(0,str(source/'tests'))
 from world import World
 from identity_fixtures import bind
-name,question,context,labels=next(c for c in semantic_cases(source/SEMANTIC_SOURCE) if c[0]=='pagination')
+name,question,context,labels=next(c for c in semantic_cases((source/SEMANTIC_SOURCE).read_bytes()) if c[0]=='pagination')
 frozen=json.loads((source/'docs/research/data/2026-10-26-recall-native/literal-quality/1000-labels.json').read_text())
 files,records,_=corpus(frozen['fixed_record_sources'][0]['metadata'],64)
 paths=[r['path'] for r in records if r['label'] in labels]

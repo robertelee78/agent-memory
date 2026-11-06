@@ -25,7 +25,7 @@ for _directory in ('tests', 'scripts', 'skills/agent-memory'):
         if (_cache.name == '__pycache__' and _cache.is_symlink()) or _cache.suffix in ('.pyc', '.pyo'):
             raise ValueError('Qualification helper bytecode is not source-bound: ' + str(_cache))
 from recall_comparison_builds import encoded, save, sha, source, stamp
-from labeled_recall_probe import inventory
+from labeled_recall_probe import inventory, read_bound_source
 
 SEMANTIC_SOURCE = 'docs/research/data/2026-10-25-recall-final/semantic-controller-v5.py'
 EXCLUDED = {'timeout-v1', 'cache-v1', 'cache-replacement', 'quota-v1', 'quota-replacement',
@@ -166,8 +166,8 @@ def quality_outcomes(observations, counts, names, mode):
     return regressions, passed
 
 
-def semantic_cases(path):
-    tree = ast.parse(path.read_text())
+def semantic_cases(raw):
+    tree = ast.parse(raw)
     nodes = [n for n in tree.body if isinstance(n, ast.Assign)
              and any(isinstance(t, ast.Name) and t.id == 'CASES' for t in n.targets)]
     if len(nodes) != 1:
@@ -200,6 +200,11 @@ def main():
         if source(path) != manifest['builds'][label]['source']:
             parser.error('Source changed since comparison freeze: ' + label)
     root = roots['C']
+    binding = manifest['builds']['C']['source']
+    semantic_raw = read_bound_source(root, SEMANTIC_SOURCE, binding)
+    literal_raw = {count: read_bound_source(root,
+        f'docs/research/data/2026-10-26-recall-native/literal-quality/{count}-labels.json', binding)
+        for count in args.counts}
     sys.path[:0] = [str(root / 'tests'), str(root / 'scripts/evaluations')]
     from world import World
     from identity_fixtures import bind
@@ -210,7 +215,7 @@ def main():
         parser.error('Private evidence must remain outside source')
     out.mkdir(mode=0o700, exist_ok=False)
     save(out / 'builds.json', manifest)
-    cases = semantic_cases(root / SEMANTIC_SOURCE)
+    cases = semantic_cases(semantic_raw)
     # Freeze the private oracle before any invocation; it is never model input.
     outcome_oracle = {'schema': 'agent-memory/recall-semantic-outcomes-v1',
         'outcomes': {name: {'complete': complete, 'clarification_required': clarification}
@@ -236,7 +241,7 @@ def main():
     observations, failures = [], []
     summary = {'schema': 'agent-memory/recall-fixed-quality-v1', 'mode': args.mode, 'started_at': stamp(),
         'argv': sys.argv, 'python': sys.version, 'controller_sha256': sha(Path(__file__).read_bytes()),
-        'semantic_case_source': {'path': SEMANTIC_SOURCE, 'sha256': sha((root / SEMANTIC_SOURCE).read_bytes())},
+        'semantic_case_source': {'path': SEMANTIC_SOURCE, 'sha256': sha(semantic_raw)},
         'semantic_cases_sha256': sha(encoded(cases)), 'model_requested': args.model, 'model_command': model_argv,
         'semantic_outcome_oracle_sha256': outcome_oracle['sha256'] if args.mode == 'semantic' else None,
         'build_manifest_sha256': sha(args.builds.read_bytes()), 'observations': observations, 'failures': failures,
@@ -244,8 +249,8 @@ def main():
     def persist():
         save(out / 'observations.json', summary)
     for count in args.counts:
-        frozen_path = root / f'docs/research/data/2026-10-26-recall-native/literal-quality/{count}-labels.json'
-        frozen = json.loads(frozen_path.read_text())
+        frozen_raw = literal_raw[count]
+        frozen = json.loads(frozen_raw)
         # Use the retained fixture's actual template, not a later release's
         # example defaults; this keeps old canonical bytes and labels frozen.
         template = frozen['fixed_record_sources'][0]['metadata']
@@ -255,7 +260,7 @@ def main():
                 raise ValueError('Literal case labels changed; cannot silently rewrite the baseline')
             if sha(encoded({n: sha(b.encode()) for n, b in files.items()})) != frozen['fixture']['fixture_sha256']:
                 raise ValueError('Frozen literal source bytes changed; retain the mismatch rather than relabeling cases')
-            save(out / f'{count}-frozen-labels.json', {'sha256': sha(frozen_path.read_bytes()), **frozen})
+            save(out / f'{count}-frozen-labels.json', {'sha256': sha(frozen_raw), **frozen})
             active = [(c['case'], c['request']['query'], c['request']['context'], c) for c in literal]
         else:
             files, rows, _ = meaning_corpus(template, count)
