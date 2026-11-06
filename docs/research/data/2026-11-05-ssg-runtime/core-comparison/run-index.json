@@ -118,6 +118,32 @@
       },
       "root": "observed-20261106",
       "success": true
+    },
+    {
+      "artifact_inventory": {
+        "bytes": 19890,
+        "path": "diagnostic-20261106-opus/artifact-inventory.json",
+        "sha256": "4c79744ab4f4bb844c143ca5b8cae25543e34b4501c73a3f7705f31c61d759f5"
+      },
+      "controller_sha256": "b24c95429ef88308dcbcce52a2ddd352df9cc89f043b9817edef935cf27e97d6",
+      "description": "Separately frozen Opus diagnostic with SSG minimum capacity, raw engine order/distance and nonunit query; image parity only, not G1 or ANN correctness.",
+      "error": null,
+      "frozen_inputs": {
+        "bytes": 9341,
+        "path": "diagnostic-20261106-opus/frozen-inputs.json",
+        "sha256": "42c01d479eb0b5c37fe9f4ffbd9d1d444f380ff0e8cadd5af4ec11c083e9751e"
+      },
+      "owned_resources_all_absent": true,
+      "preexisting_containers_preserved": true,
+      "preexisting_volumes_preserved": true,
+      "remaining_new_volumes": [],
+      "report": {
+        "bytes": 527742,
+        "path": "diagnostic-20261106-opus/report.json",
+        "sha256": "d4b1ac5b9cad01d46a8e3baf5babfe9c432af47c1c7f302457a4e4f5ff45fd9c"
+      },
+      "root": "diagnostic-20261106-opus",
+      "success": true
     }
   ],
   "comparison": {
@@ -137,7 +163,7 @@
         }
       ]
     },
-    "ann_score_warning": "Raw ANN similarity is not assumed equivalent to exact signed cosine; negative-vector deviation remains a qualification finding, not silently corrected.",
+    "ann_score_warning": "The actual unmodified SSG search template inherits the antiparallel ANN error (most dissimilar vector first). Nine matching selected outputs prove image parity, not ANN score/ranking correctness.",
     "binary_equal": true,
     "identical_selected_query_outputs": true,
     "image_bytes": {
@@ -158,10 +184,363 @@
     ],
     "vector_search_equal": true
   },
+  "diagnostic": {
+    "actual_invocation": {
+      "argv": [
+        "/tmp/am-v15-delivery/qualification-venv/bin/python",
+        "docs/research/data/2026-11-05-ssg-runtime/core-comparison/compare.py",
+        "--authorized-shared-host",
+        "--output",
+        "docs/research/data/2026-11-05-ssg-runtime/core-comparison/diagnostic-20261106-opus",
+        "--ssg",
+        "/opt/ssg"
+      ],
+      "cwd": "/Users/robert.lee/.omp/wt/t09a3471e4/m",
+      "exit": 0,
+      "runs": 1,
+      "wall_seconds_observed_by_tool": 15.89
+    },
+    "adr_cutover": false,
+    "artifact_inventory": {
+      "bytes": 19890,
+      "path": "diagnostic-20261106-opus/artifact-inventory.json",
+      "sha256": "4c79744ab4f4bb844c143ca5b8cae25543e34b4501c73a3f7705f31c61d759f5"
+    },
+    "command_records": 117,
+    "comparison": {
+      "ann_exact_score_deviations": {
+        "core": [
+          {
+            "ann_distance": 2.0,
+            "ann_similarity": 1.0,
+            "controller_exact_similarity": -1.0,
+            "key": "investigation/synthetic"
+          }
+        ],
+        "mage": [
+          {
+            "ann_distance": 2.0,
+            "ann_similarity": 1.0,
+            "controller_exact_similarity": -1.0,
+            "key": "investigation/synthetic"
+          }
+        ]
+      },
+      "ann_parity_order": "Canonical key-sorted rowset only; raw engine arrival order and distance are retained in query records and vector_controls.",
+      "ann_score_warning": "The unmodified SSG search template inherits the antiparallel ANN error (most dissimilar vector first). Nine matching selected outputs prove image parity, not ANN score/ranking correctness.",
+      "binary_equal": true,
+      "identical_selected_query_outputs": true,
+      "image_bytes": {
+        "core": 627982663,
+        "mage": 2082396600
+      },
+      "memgraph_notice_sets_equal": true,
+      "selected_query_names": [
+        "component-attempts",
+        "recorded-related",
+        "replacement-evidence",
+        "ssg-exact-cosine",
+        "ssg-template-class",
+        "ssg-template-investigation",
+        "ssg-template-nearby",
+        "ssg-template-search",
+        "vector-search"
+      ],
+      "vector_search_equal": true
+    },
+    "controller": {
+      "bytes": 28921,
+      "path": "compare.py",
+      "sha256": "b24c95429ef88308dcbcce52a2ddd352df9cc89f043b9817edef935cf27e97d6"
+    },
+    "executed_controller_copy": {
+      "bytes": 28921,
+      "path": "diagnostic-20261106-opus/controller.py",
+      "sha256": "b24c95429ef88308dcbcce52a2ddd352df9cc89f043b9817edef935cf27e97d6"
+    },
+    "fetched_base": "c267b0071d6869bb2e5fc1ea368cf6d38374b3cc",
+    "fetched_from": "/opt/agent-memory-worktrees/v015-delivery",
+    "frozen_controls": {
+      "ann_k": 12,
+      "index_capacity": 2048,
+      "nonunit_query_vector": [
+        2.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scope": "Exhaustive seven-vector diagnostic, not eligible ANN recall or production AM exact cosine."
+    },
+    "frozen_inputs": {
+      "bytes": 9341,
+      "path": "diagnostic-20261106-opus/frozen-inputs.json",
+      "sha256": "42c01d479eb0b5c37fe9f4ffbd9d1d444f380ff0e8cadd5af4ec11c083e9751e"
+    },
+    "g1_accepted": false,
+    "host_load_before": {
+      "record": {
+        "bytes": 281,
+        "path": "diagnostic-20261106-opus/commands/006-host-load-before.json",
+        "sha256": "356b06a1f8853a6898bbce27b8d908fac831deb381beb96ebc21c55bb2dac02c"
+      },
+      "values": [
+        5.44,
+        5.37,
+        5.3
+      ]
+    },
+    "interpretation": {
+      "controller_reference": "Controller Python normalizes both query and stored vector; not AM vector-store implementation or normalized-float32 eligible exact baseline.",
+      "distance": "Antiparallel distance 2 is consistent with cosine -1 and arrives last in the raw engine order, while reported similarity 1 moves it first in SSG sorting; no engine-level root cause traced.",
+      "network": "Loopback Bolt publication and disabled telemetry do not prove egress freedom; default container networking retained without egress monitoring.",
+      "parity_not_correctness": "Nine selected outputs match between images; identical engine/module bytes make this weak correctness evidence. Raw ANN parity is a canonical key-sorted rowset, not an engine-order assertion.",
+      "recall": "k=12 over N=7 is exhaustive, not an ANN recall comparison. Physical project/generation domain isolation, eligibility filtering/completeness and exact rescoring remain unqualified.",
+      "ssg_search": "Unmodified search template inherits the ANN antiparallel similarity error: most dissimilar investigation/synthetic first for unit and nonunit queries in both images."
+    },
+    "legal_clearance": false,
+    "observations": {
+      "core": {
+        "controls": {
+          "nonunit": {
+            "antiparallel_ann": {
+              "distance": 2.0,
+              "key": "investigation/synthetic",
+              "similarity": 1.0
+            },
+            "antiparallel_controller_reference": {
+              "key": "investigation/synthetic",
+              "similarity": -1.0
+            },
+            "antiparallel_database_exact": {
+              "key": "investigation/synthetic",
+              "similarity": -1.0
+            },
+            "query_norm": 2.0,
+            "query_vector": [
+              2.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "raw_engine_order": [
+              "record:new:2",
+              "record:old:1",
+              "facet/synthetic",
+              "method/synthetic",
+              "class/synthetic",
+              "record:attempt:1",
+              "investigation/synthetic"
+            ],
+            "ssg_template_first_key": "investigation/synthetic",
+            "ssg_template_first_similarity": 1.0
+          },
+          "unit": {
+            "antiparallel_ann": {
+              "distance": 2.0,
+              "key": "investigation/synthetic",
+              "similarity": 1.0
+            },
+            "antiparallel_controller_reference": {
+              "key": "investigation/synthetic",
+              "similarity": -1.0
+            },
+            "antiparallel_database_exact": {
+              "key": "investigation/synthetic",
+              "similarity": -1.0
+            },
+            "query_norm": 1.0,
+            "query_vector": [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "raw_engine_order": [
+              "record:new:2",
+              "record:old:1",
+              "facet/synthetic",
+              "method/synthetic",
+              "class/synthetic",
+              "record:attempt:1",
+              "investigation/synthetic"
+            ],
+            "ssg_template_first_key": "investigation/synthetic",
+            "ssg_template_first_similarity": 1.0
+          }
+        },
+        "index_info": [
+          {
+            "capacity": 4096,
+            "dimension": 4,
+            "index_name": "ssg_embedding",
+            "index_type": "label+property_vector",
+            "label": "Embedded",
+            "metric": "cos",
+            "property": "embedding",
+            "scalar_kind": "f32",
+            "size": 7
+          }
+        ]
+      },
+      "mage": {
+        "controls": {
+          "nonunit": {
+            "antiparallel_ann": {
+              "distance": 2.0,
+              "key": "investigation/synthetic",
+              "similarity": 1.0
+            },
+            "antiparallel_controller_reference": {
+              "key": "investigation/synthetic",
+              "similarity": -1.0
+            },
+            "antiparallel_database_exact": {
+              "key": "investigation/synthetic",
+              "similarity": -1.0
+            },
+            "query_norm": 2.0,
+            "query_vector": [
+              2.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "raw_engine_order": [
+              "record:new:2",
+              "record:old:1",
+              "facet/synthetic",
+              "method/synthetic",
+              "class/synthetic",
+              "record:attempt:1",
+              "investigation/synthetic"
+            ],
+            "ssg_template_first_key": "investigation/synthetic",
+            "ssg_template_first_similarity": 1.0
+          },
+          "unit": {
+            "antiparallel_ann": {
+              "distance": 2.0,
+              "key": "investigation/synthetic",
+              "similarity": 1.0
+            },
+            "antiparallel_controller_reference": {
+              "key": "investigation/synthetic",
+              "similarity": -1.0
+            },
+            "antiparallel_database_exact": {
+              "key": "investigation/synthetic",
+              "similarity": -1.0
+            },
+            "query_norm": 1.0,
+            "query_vector": [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "raw_engine_order": [
+              "record:new:2",
+              "record:old:1",
+              "facet/synthetic",
+              "method/synthetic",
+              "class/synthetic",
+              "record:attempt:1",
+              "investigation/synthetic"
+            ],
+            "ssg_template_first_key": "investigation/synthetic",
+            "ssg_template_first_similarity": 1.0
+          }
+        },
+        "index_info": [
+          {
+            "capacity": 4096,
+            "dimension": 4,
+            "index_name": "ssg_embedding",
+            "index_type": "label+property_vector",
+            "label": "Embedded",
+            "metric": "cos",
+            "property": "embedding",
+            "scalar_kind": "f32",
+            "size": 7
+          }
+        ]
+      }
+    },
+    "ownership": {
+      "cleanup": [
+        {
+          "absent": true,
+          "id": "693aa286afdc98ea2f6c0753dcf17f3d9d680129082e307ddbc1a4ce83e9f71a",
+          "name": "am255-compare-4b1dcdfdab96-core",
+          "type": "container"
+        },
+        {
+          "absent": true,
+          "id": "8ba4ab0e079974f83f33c6277f2b807ffd017503a1426c572bb9002b87c9b24b",
+          "name": "am255-compare-4b1dcdfdab96-mage",
+          "type": "container"
+        },
+        {
+          "absent": true,
+          "created": "2026-11-06T11:48:01.863969668-08:00",
+          "name": "am255-compare-4b1dcdfdab96-core-data",
+          "type": "volume"
+        },
+        {
+          "absent": true,
+          "created": "2026-11-06T11:48:02.110392203-08:00",
+          "name": "am255-compare-4b1dcdfdab96-core-logs",
+          "type": "volume"
+        },
+        {
+          "absent": true,
+          "created": "2026-11-06T11:48:05.7916771-08:00",
+          "name": "am255-compare-4b1dcdfdab96-mage-data",
+          "type": "volume"
+        },
+        {
+          "absent": true,
+          "created": "2026-11-06T11:48:06.008367245-08:00",
+          "name": "am255-compare-4b1dcdfdab96-mage-logs",
+          "type": "volume"
+        }
+      ],
+      "new_remaining_volumes": [],
+      "preexisting_containers_preserved": true,
+      "preexisting_volumes_preserved": true
+    },
+    "profile_cutover": false,
+    "purpose": "Separately source-bound antiparallel/nonunit diagnostic; historical primary and all earlier raw/frozen data retained unchanged. No held-out queries or thresholds tuned.",
+    "query_records": {
+      "core": {
+        "bytes": 130311,
+        "path": "diagnostic-20261106-opus/core-queries.json",
+        "sha256": "8f10e076f3e41a44b422878e31f6c98726036ffb72a01db3e33da80d7b2c214c"
+      },
+      "mage": {
+        "bytes": 200953,
+        "path": "diagnostic-20261106-opus/mage-queries.json",
+        "sha256": "11ffc6eed76cf2427a8d6b07f0c4962c4cf3eb1e361e5136faa7b281ab63da62"
+      }
+    },
+    "report": {
+      "bytes": 527742,
+      "path": "diagnostic-20261106-opus/report.json",
+      "sha256": "d4b1ac5b9cad01d46a8e3baf5babfe9c432af47c1c7f302457a4e4f5ff45fd9c"
+    },
+    "root": "diagnostic-20261106-opus",
+    "source_commit": "f7746eb3c86b96a41e58144c17fb971fc9da97d8",
+    "ssg_index_source": {
+      "capacity_rule": "(needed.max(1000) * 2).next_power_of_two()",
+      "path": "crates/ssg/src/embed.rs",
+      "sha256": "fd55bc1519a876e572bc96046963c089be6d46b8d691a41df82644fe481ef6e3"
+    },
+    "success": true
+  },
   "exercised": {
     "dimension": 4,
     "explain_plans": 7,
-    "notes": "250ms read timeout requested; no adversarial timeout-enforcement or production ACL proof. Semantic query shapes, not production AM eligibility/reader implementations.",
+    "notes": "Historical primary: 250ms read timeout requested, no enforcement/ACL/eligibility proof. Nine outputs prove image parity, not ANN correctness; controller cosine is not AM implementation. Separately frozen diagnostic below captures distance/raw order, SSG capacity and nonunit query.",
     "synthetic_edges": 20,
     "synthetic_nodes": 17,
     "typed_relationships": [
@@ -203,6 +582,10 @@
     "core_not_python_free": "24 distributions; LGPL-declared gensim/ldap3 and MPL-declared certifi remain; numpy/scipy enumerate four vendored shared libraries with incomplete license/linkage closure.",
     "memgraph_texts": "BSL/MEL/APL and all 35 notice/file hashes agree between images. Literal BSL CHANGE DATE 2030-25-03 and MCE version2.0 naming retained; package3.10.1. AUG clauses a-c, MEL installing/using acceptance, distribution/hosted restrictions and unresolved counsel questions remain unchanged.",
     "remaining_closure": [
+      "eligible exact-cosine baseline in AM's persisted vector store",
+      "ANN recall versus eligible exact cosine with k<N and resource comparison",
+      "raw engine ordering/score semantics, antiparallel and nonunit controls, and exact rescoring",
+      "physical project/generation domain isolation and eligibility filtering/completeness; global top-K then filtering is not a completeness proof",
       "amd64 contents",
       "complete rootfs ownership audit",
       "third-party versions/linkage and reproducible origins",
@@ -284,11 +667,15 @@
   "production": false,
   "profile_cutover": false,
   "recommendation": {
-    "am_exact_cosine": "AM-side host calculation; MAGE is not required for AM exact cosine",
-    "candidate": "core is sufficient for these bounded observed query capabilities and has a smaller observed dependency/image surface",
+    "candidate": "arm64 core is sufficient only for the bounded observed graph/query-call capabilities, excluding ANN score/ranking correctness; smaller observed dependency/image surface",
+    "controller_exact_cosine": "Controller reference normalizes query and stored vector; not AM's exact-cosine implementation or an eligible vector-store baseline",
     "legal": "Core retains BSL/MEL/APL and AUG restrictions; smaller image does not confer legal clearance",
-    "not_adopted": "Parent retains profile/ADR decisions; ADR-0024 amendment and independent review required",
+    "not_adopted": "Parent retains profile/ADR decisions; G1 not accepted, no ADR/profile cutover; ADR-0024 amendment and independent review required",
     "remaining_closure": [
+      "eligible exact-cosine baseline in AM's persisted vector store",
+      "ANN recall versus eligible exact cosine with k<N and resource comparison",
+      "raw engine ordering/score semantics, antiparallel and nonunit controls, and exact rescoring",
+      "physical project/generation domain isolation and eligibility filtering/completeness; global top-K then filtering is not a completeness proof",
       "amd64 contents",
       "complete rootfs ownership audit",
       "third-party versions/linkage and reproducible origins",
@@ -805,7 +1192,7 @@
     "clone": "/Users/robert.lee/.omp/wt/t4d88ac83b/m",
     "controller": {
       "bytes": 26354,
-      "path": "compare.py",
+      "path": "observed-20261106/controller.py",
       "sha256": "98e612da09980fd4cd2ae4bc0d7da3a9f312dd474ad3b718dca290ec4bb3780f"
     },
     "executed_controller_copy": {

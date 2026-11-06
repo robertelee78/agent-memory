@@ -1,0 +1,41 @@
+{
+  "kind": "core-mage-comparison",
+  "platform": "macOS-27.2-arm64-arm-64bit-Mach-O",
+  "production": false,
+  "resources": [
+    {
+      "created": "2026-11-06T11:48:01.863969668-08:00",
+      "name": "am255-compare-4b1dcdfdab96-core-data",
+      "type": "volume"
+    },
+    {
+      "created": "2026-11-06T11:48:02.110392203-08:00",
+      "name": "am255-compare-4b1dcdfdab96-core-logs",
+      "type": "volume"
+    },
+    {
+      "id": "693aa286afdc98ea2f6c0753dcf17f3d9d680129082e307ddbc1a4ce83e9f71a",
+      "name": "am255-compare-4b1dcdfdab96-core",
+      "type": "container"
+    },
+    {
+      "created": "2026-11-06T11:48:05.7916771-08:00",
+      "name": "am255-compare-4b1dcdfdab96-mage-data",
+      "type": "volume"
+    },
+    {
+      "created": "2026-11-06T11:48:06.008367245-08:00",
+      "name": "am255-compare-4b1dcdfdab96-mage-logs",
+      "type": "volume"
+    },
+    {
+      "id": "8ba4ab0e079974f83f33c6277f2b807ffd017503a1426c572bb9002b87c9b24b",
+      "name": "am255-compare-4b1dcdfdab96-mage",
+      "type": "container"
+    }
+  ],
+  "root": "/Users/robert.lee/.omp/wt/t09a3471e4/m/docs/research/data/2026-11-05-ssg-runtime/core-comparison/diagnostic-20261106-opus",
+  "run_id": "4b1dcdfdab96416bbb1cd02d0bc0f770",
+  "schema": "am255/runtime-controls-owner-v1",
+  "uid": 502
+}
