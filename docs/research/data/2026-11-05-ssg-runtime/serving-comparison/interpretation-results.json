@@ -6,6 +6,7 @@
   "executed_source_commit": "fef68d07d0a8617220c3f332b0de7694cec7ad20",
   "executed_script_sha256": "6e0a0198822e939ec875c37cb9786379a95f220dec6a43c0204bafabd37c24b7",
   "canonical_inputs_sha256": "5e7d61a18511bc8182685e04ae4777f260d737fe6e80ead901bb0be3ac0d9645",
+  "corrected_separate_execution": "cache-interpretation-results.json; completed run actual-cache-observed-20261106/results.json. Intermediate actual-cache, actual-cache-logfix and actual-cache-finalized directories are retained parser-failure attempts, not completed four-launch results.",
   "actual_executable_smoke": {
     "argv": ["python3", "-B", "docs/research/data/2026-11-05-ssg-runtime/serving-comparison/compare_serving.py", "run", "--output", "docs/research/data/2026-11-05-ssg-runtime/serving-comparison/actual-20261106"],
     "exit": 0,
