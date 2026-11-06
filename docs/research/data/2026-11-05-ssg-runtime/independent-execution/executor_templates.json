@@ -1,0 +1,32 @@
+{
+  "schema": "am255/source-asserted-templates-v1",
+  "database_timeout_seconds": 0.25,
+  "templates": {
+    "replacement-evidence": {
+      "max_hops": 4,
+      "max_rows": 64,
+      "cypher": "MATCH p=(seed:RecordVersion {key:$seed})-[:CORRECTS|SUPERSEDES|SUPERSEDED_BY|SUPPORTED_BY*1..4]-(target) WHERE ALL(n IN nodes(p) WHERE NOT n:RecordVersion OR n.key IN $qualified) AND ALL(r IN relationships(p) WHERE r.asserted_by IN $qualified) RETURN p ORDER BY target.key LIMIT 64"
+    },
+    "component-attempts": {
+      "max_hops": 2,
+      "max_rows": 64,
+      "cypher": "MATCH p=(seed:RecordVersion {key:$seed})-[:DERIVED_FROM|IN_SCOPE|SUPPORTED_BY*1..2]-(target:RecordVersion) WHERE ALL(n IN nodes(p) WHERE NOT n:RecordVersion OR n.key IN $qualified) AND ALL(r IN relationships(p) WHERE r.asserted_by IN $qualified) AND target.kind IN ['episodic-attempt','project-decision','result'] AND (target.component=$component OR target.component STARTS WITH $component_prefix) RETURN p ORDER BY target.key LIMIT 64"
+    },
+    "recorded-related": {
+      "max_hops": 2,
+      "max_rows": 32,
+      "cypher": "MATCH p=(seed:RecordVersion {key:$seed})-[*1..2]-(target) WHERE ALL(n IN nodes(p) WHERE NOT n:RecordVersion OR n.key IN $qualified) AND ALL(r IN relationships(p) WHERE type(r) IN $relations AND r.asserted_by IN $qualified) RETURN p ORDER BY target.key SKIP $offset LIMIT 32"
+    },
+    "co-routed": {
+      "max_hops": 2,
+      "max_rows": 32,
+      "cypher": "MATCH (seed:RecordVersion {key:$seed})<-[:ROUTES_TO]-(route:Route) WHERE seed.key IN $qualified RETURN route.key AS key,route.index_path AS index_path,route.target_path AS target_path,route.ordinal AS ordinal ORDER BY route.key SKIP $offset LIMIT 32"
+    },
+    "origin": {
+      "max_hops": 2,
+      "max_rows": 32,
+      "cypher": "MATCH p=(seed:RecordVersion {key:$seed})-[:ATTRIBUTED_TO]->(origin:Origin) WHERE seed.key IN $qualified AND ALL(r IN relationships(p) WHERE r.asserted_by IN $qualified) RETURN p ORDER BY origin.key SKIP $offset LIMIT 32"
+    }
+  },
+  "interpretation": "Recorded canonical assertions only. Origin and co-routing are provenance/navigation, never semantic relevance or durable lesson relationships. Historical selection, outcome assembly and caveat mapping remain unavailable without independently reviewed native mappers."
+}
