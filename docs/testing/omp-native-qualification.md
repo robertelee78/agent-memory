@@ -45,6 +45,13 @@ The apply path uses that same explicit/saved root when validating lifecycle
 write boundaries, including the extension destination. Qualification MUST
 exercise actual application in both copy and link modes; a successful
 `--check` does not prove installation or native extension loading.
+The compiled native binary does not resolve the SDK as an external npm package:
+the adapter uses erased type-only imports and the injected `pi.pi.VERSION`
+runtime export. The fixed observer launcher also initializes its own local
+source import path under isolated Python; public-console tests alone do not
+exercise that callback route. The installed long-segment regression drives the
+actual `/bin/sh .../python3.sh .../omp_boundary.py` route before inspecting and
+assessing retained sources through the public command.
 The signed one-line installer accepts these same explicit native selection and
 quiescence options; its generated loader and checked-in loader MUST agree.
 

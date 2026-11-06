@@ -135,8 +135,14 @@ class EnrollmentProgress(unittest.TestCase):
             am = Path(receipt['bin_dir']) / 'am'
 
             def public(*arguments, value=None):
-                result = subprocess.run([str(am), '--json', 'omp-boundary', '--repo', str(repo),
-                                         *map(str, arguments)], input=json.dumps(value) if value is not None else None,
+                if '--observer' in arguments:
+                    pack = Path(receipt['source']['pack'])
+                    command = ['/bin/sh', str(pack / 'hooks/python3.sh'),
+                               str(pack / 'scripts/omp_boundary.py')]
+                else:
+                    command = [str(am), '--json', 'omp-boundary']
+                result = subprocess.run([*command, '--repo', str(repo), *map(str, arguments)],
+                                        input=json.dumps(value) if value is not None else None,
                                         text=True, capture_output=True, env=world.env, cwd=repo, timeout=60)
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
                 return json.loads(result.stdout)
