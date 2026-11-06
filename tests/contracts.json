@@ -8,6 +8,7 @@
     {"name": "held-private-source-enrollment", "layer": "client", "scope": "v0.0.15", "path": "tests/contracts/test_held_source_enrollment.py"},
     {"name": "omp-stored-projection", "layer": "client", "scope": "v0.0.15", "path": "tests/contracts/test_omp_projection.py"},
     {"name": "omp-native-source-transport", "layer": "client", "scope": "v0.0.15", "path": "tests/contracts/test_omp_boundary.py"},
+    {"name": "omp-enrollment-progress", "layer": "client", "scope": "v0.0.15", "path": "tests/contracts/test_omp_enrollment_progress.py"},
     {"name": "refresh-path-policy", "layer": "concurrency", "scope": "v0.0.9", "path": "tests/contracts/test_refresh_path_policy.py"},
     {"name": "compact-turn-check", "layer": "client", "scope": "v0.0.9", "path": "tests/contracts/test_compact_turn_check.py"},
     {"name": "opencode-native-source-turns", "layer": "client", "scope": "v0.0.8", "path": "tests/contracts/test_opencode_native_boundary.py"},
