@@ -233,7 +233,7 @@ def freeze(args, root):
     save(root / 'host-config.json', config)
     missing = []
     try:
-        profile = artifacts(config, spec) | {'source_commit': revision, 'renderers': renderer_identity(spec)}
+        profile = artifacts(config, spec, root) | {'source_commit': revision, 'renderers': renderer_identity(spec)}
     except (OSError, ValueError, RuntimeError, importlib_metadata_error()) as exc:
         profile = {'source_commit': revision, 'executed': False, 'prerequisite': str(exc),
                    'renderers': renderer_identity(spec)}
@@ -256,6 +256,8 @@ def freeze(args, root):
     receipt = {'schema': 'am255/independent-freeze-preflight-v1', 'source_commit': revision,
                'input_sha256': sha(args.inputs), 'spec_sha256': sha(args.spec), 'io_sha256': bindings['io']['sha256'],
                'source_bindings': bindings, 'sizes': source_identity['sizes'], 'missing_prerequisites': missing,
+               'runtime_observations': [pointer(root, root / 'runtime-version-observation.json')]
+                   if (root / 'runtime-version-observation.json').is_file() else [],
                'source_fixture_identity_sha256': digest(compact(source_identity).encode()),
                'native_fixture_checks_executed': True, 'model_or_graph_started': False,
                'semantic_query_executed': False, 'oracles_or_scorer_map_opened': False,
@@ -481,6 +483,7 @@ def main():
     try:
         receipt, fixtures, prepared, inputs, spec, config, profile = freeze(args, root)
         manifest['source_bindings'] = receipt['source_bindings']
+        manifest['runtime_observations'] = receipt['runtime_observations']
         if args.freeze_only:
             print(compact({'receipt': str(root / 'freeze.json'), 'sha256': sha(root / 'freeze.json'),
                            'model_or_graph_started': False, 'sizes': args.sizes,

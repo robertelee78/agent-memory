@@ -73,7 +73,7 @@ def identity_command(argv):
     return {k: v for k, v in command(argv).items() if k != 'seconds'}
 
 
-def artifacts(config, spec):
+def artifacts(config, spec, observation_root):
     if platform.system() != 'Darwin' or platform.machine() != 'arm64' or config.get('backend') != 'metal':
         raise ValueError('This frozen reference profile requires actual macOS arm64 Metal')
     binary = Path(config['reference_binary']).resolve(strict=True)
@@ -86,11 +86,20 @@ def artifacts(config, spec):
         raise ValueError('Reference tracked source modified')
     if sha(weight) != spec['profile']['reference_weight_sha256'] or weight.stat().st_size != 8047105824:
         raise ValueError('Reference exact 8B Q8_0 weight differs')
-    version = identity_command([binary, '--version'])
-    if 'version: 9341' not in version['stdout'] + version['stderr'] or revision[:9] not in version['stdout'] + version['stderr']:
-        raise ValueError('Reference build/source output differs')
-    if sha(binary) != 'b57ea6bb97b43a4f74b5a5ab71f1cc2ef292899d83c0e45ddfa9290b169598b5':
+    binary_sha256 = sha(binary)
+    if binary_sha256 != 'b57ea6bb97b43a4f74b5a5ab71f1cc2ef292899d83c0e45ddfa9290b169598b5':
         raise ValueError('Reference qualified executable bytes differ')
+    observed_version = command([binary, '--version'])
+    save(observation_root / 'runtime-version-observation.json', observed_version)
+    text = observed_version['stdout'] + observed_version['stderr']
+    versions_reported = re.findall(r'^version: (\d+) \(([0-9a-f]+)\)$', text, re.M)
+    builds_reported = [line for line in text.splitlines() if line.startswith('built with ')]
+    if versions_reported != [('9341', revision[:9])] or len(builds_reported) != 1:
+        raise ValueError('Reference stable build/source metadata differs or is ambiguous; full observation retained')
+    # Diagnostic timings and hardware messages remain in the raw observation,
+    # not in the byte identity used to compare independently repeated freezes.
+    version = {'build_number': 9341, 'source_abbrev': revision[:9],
+               'compiler_build': builds_reported[0]}
     expected = {'numpy': '2.2.6', 'neo4j': '5.28.2'}
     versions = {name: importlib.metadata.version(name) for name in expected}
     if versions != expected:
@@ -108,7 +117,7 @@ def artifacts(config, spec):
         raise ValueError('Actual local MAGE index/arm64 manifest bindings differ: ' +
                          compact({'Digest': image_digest, 'RepoDigests': image.get('RepoDigests', [])}))
     return {'schema': 'am255/independent-runtime-profile-v1', 'reference_source_commit': revision,
-            'binary': str(binary), 'binary_sha256': sha(binary), 'version': version,
+            'binary': str(binary), 'binary_sha256': binary_sha256, 'version': version,
             'weight': {'host_path': str(weight), 'sha256': spec['profile']['reference_weight_sha256'], 'bytes': weight.stat().st_size},
             'local_library_inventory': dependencies(binary), 'dependencies': versions,
             'graph_image': image, 'graph_profile': spec['graph_profile'], 'profile': spec['profile'],
