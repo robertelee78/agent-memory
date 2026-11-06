@@ -1,0 +1,10 @@
+{
+  "kind": "same-weight-serving-comparison",
+  "platform": "macOS-27.2-arm64-arm-64bit-Mach-O",
+  "production": false,
+  "resources": [],
+  "root": "/Users/robert.lee/.omp/wt/t8186eff00/m/docs/research/data/2026-11-05-ssg-runtime/serving-comparison/actual-20261106",
+  "run_id": "9f359c1b18d945f58e4549993d891103",
+  "schema": "am255/runtime-controls-owner-v1",
+  "uid": 502
+}

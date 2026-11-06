@@ -1,0 +1,684 @@
+ggml_metal_device_init: testing tensor API for f16 support
+ggml_metal_device_init: testing tensor API for bfloat support
+ggml_metal_library_init: using embedded metal library
+ggml_metal_library_init: turbo3 sparse V dequant enabled (opt-out: TURBO_SPARSE_V=0)
+ggml_metal_library_init: loaded in 0.012 sec
+ggml_metal_rsets_init: creating a residency set collection (keep_alive = 180 s)
+ggml_metal_device_init: GPU name:   MTL0 (Apple M5 Max)
+ggml_metal_device_init: GPU family: MTLGPUFamilyApple10  (1010)
+ggml_metal_device_init: GPU family: MTLGPUFamilyCommon3 (3003)
+ggml_metal_device_init: GPU family: MTLGPUFamilyMetal4  (5002)
+ggml_metal_device_init: simdgroup reduction   = true
+ggml_metal_device_init: simdgroup matrix mul. = true
+ggml_metal_device_init: has unified memory    = true
+ggml_metal_device_init: has bfloat            = true
+ggml_metal_device_init: has tensor            = true
+ggml_metal_device_init: use residency sets    = true
+ggml_metal_device_init: use shared buffers    = true
+ggml_metal_device_init: recommendedMaxWorkingSetSize  = 115448.73 MB
+migrate_old_cache_to_hf_cache: skipping migration in offline mode (will run when online)
+build_info: b9341-a578bb6b9
+system_info: n_threads = 4 (n_threads_batch = 4) / 18 | MTL : EMBED_LIBRARY = 1 | CPU : NEON = 1 | ARM_FMA = 1 | FP16_VA = 1 | MATMUL_INT8 = 1 | DOTPROD = 1 | SME = 1 | ACCELERATE = 1 | REPACK = 1 | 
+Running without SSL
+init: using 4 threads for HTTP server
+Web UI is disabled
+start: binding port with default address family
+main: loading model
+srv    load_model: loading model '/private/tmp/am-v15-delivery/Qwen3-Embedding-8B-Q8_0.gguf'
+llama_model_loader: loaded meta data with 36 key-value pairs and 398 tensors from /private/tmp/am-v15-delivery/Qwen3-Embedding-8B-Q8_0.gguf (version GGUF V3 (latest))
+llama_model_loader: Dumping metadata keys/values. Note: KV overrides do not apply in this output.
+llama_model_loader: - kv   0:                       general.architecture str              = qwen3
+llama_model_loader: - kv   1:                               general.type str              = model
+llama_model_loader: - kv   2:                               general.name str              = Qwen3 Embedding 8B
+llama_model_loader: - kv   3:                           general.basename str              = Qwen3-Embedding
+llama_model_loader: - kv   4:                         general.size_label str              = 8B
+llama_model_loader: - kv   5:                            general.license str              = apache-2.0
+llama_model_loader: - kv   6:                   general.base_model.count u32              = 1
+llama_model_loader: - kv   7:                  general.base_model.0.name str              = Qwen3 8B Base
+llama_model_loader: - kv   8:          general.base_model.0.organization str              = Qwen
+llama_model_loader: - kv   9:              general.base_model.0.repo_url str              = https://huggingface.co/Qwen/Qwen3-8B-...
+llama_model_loader: - kv  10:                               general.tags arr[str,5]       = ["transformers", "sentence-transforme...
+llama_model_loader: - kv  11:                          qwen3.block_count u32              = 36
+llama_model_loader: - kv  12:                       qwen3.context_length u32              = 40960
+llama_model_loader: - kv  13:                     qwen3.embedding_length u32              = 4096
+llama_model_loader: - kv  14:                  qwen3.feed_forward_length u32              = 12288
+llama_model_loader: - kv  15:                 qwen3.attention.head_count u32              = 32
+llama_model_loader: - kv  16:              qwen3.attention.head_count_kv u32              = 8
+llama_model_loader: - kv  17:                       qwen3.rope.freq_base f32              = 1000000.000000
+llama_model_loader: - kv  18:     qwen3.attention.layer_norm_rms_epsilon f32              = 0.000001
+llama_model_loader: - kv  19:                 qwen3.attention.key_length u32              = 128
+llama_model_loader: - kv  20:               qwen3.attention.value_length u32              = 128
+llama_model_loader: - kv  21:                         qwen3.pooling_type u32              = 3
+llama_model_loader: - kv  22:                       tokenizer.ggml.model str              = gpt2
+llama_model_loader: - kv  23:                         tokenizer.ggml.pre str              = qwen2
+llama_model_loader: - kv  24:                      tokenizer.ggml.tokens arr[str,151665]  = ["!", "\"", "#", "$", "%", "&", "'", ...
+llama_model_loader: - kv  25:                  tokenizer.ggml.token_type arr[i32,151665]  = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, ...
+llama_model_loader: - kv  26:                      tokenizer.ggml.merges arr[str,151387]  = ["Ġ Ġ", "ĠĠ ĠĠ", "i n", "Ġ t",...
+llama_model_loader: - kv  27:                tokenizer.ggml.eos_token_id u32              = 151643
+llama_model_loader: - kv  28:            tokenizer.ggml.padding_token_id u32              = 151643
+llama_model_loader: - kv  29:                tokenizer.ggml.eot_token_id u32              = 151645
+llama_model_loader: - kv  30:                tokenizer.ggml.bos_token_id u32              = 151643
+llama_model_loader: - kv  31:               tokenizer.ggml.add_eos_token bool             = true
+llama_model_loader: - kv  32:               tokenizer.ggml.add_bos_token bool             = false
+llama_model_loader: - kv  33:                    tokenizer.chat_template str              = {%- if tools %}\n    {{- '<|im_start|>...
+llama_model_loader: - kv  34:               general.quantization_version u32              = 2
+llama_model_loader: - kv  35:                          general.file_type u32              = 7
+llama_model_loader: - type  f32:  145 tensors
+llama_model_loader: - type q8_0:  253 tensors
+print_info: file format = GGUF V3 (latest)
+print_info: file type   = Q8_0
+print_info: file size   = 7.49 GiB (8.50 BPW) 
+llama_prepare_model_devices: using device MTL0 (Apple M5 Max) (unknown id) - 110100 MiB free
+load: 0 unused tokens
+load: control-looking token: 128247 '</s>' was not control-type; this is probably a bug in the model. its type will be overridden
+load: printing all EOG tokens:
+load:   - 128247 ('</s>')
+load:   - 151643 ('<|endoftext|>')
+load:   - 151645 ('<|im_end|>')
+load:   - 151662 ('<|fim_pad|>')
+load:   - 151663 ('<|repo_name|>')
+load:   - 151664 ('<|file_sep|>')
+load: special tokens cache size = 23
+load: token to piece cache size = 0.9310 MB
+print_info: arch                  = qwen3
+print_info: vocab_only            = 0
+print_info: no_alloc              = 0
+print_info: n_ctx_train           = 40960
+print_info: n_embd                = 4096
+print_info: n_embd_inp            = 4096
+print_info: n_layer               = 36
+print_info: n_head                = 32
+print_info: n_head_kv             = 8
+print_info: n_rot                 = 128
+print_info: n_swa                 = 0
+print_info: is_swa_any            = 0
+print_info: n_embd_head_k         = 128
+print_info: n_embd_head_v         = 128
+print_info: n_gqa                 = 4
+print_info: n_embd_k_gqa          = 1024
+print_info: n_embd_v_gqa          = 1024
+print_info: f_norm_eps            = 0.0e+00
+print_info: f_norm_rms_eps        = 1.0e-06
+print_info: f_clamp_kqv           = 0.0e+00
+print_info: f_max_alibi_bias      = 0.0e+00
+print_info: f_logit_scale         = 0.0e+00
+print_info: f_attn_scale          = 0.0e+00
+print_info: f_attn_value_scale    = 0.0000
+print_info: n_ff                  = 12288
+print_info: n_expert              = 0
+print_info: n_expert_used         = 0
+print_info: n_expert_groups       = 0
+print_info: n_group_used          = 0
+print_info: causal attn           = 1
+print_info: pooling type          = 3
+print_info: rope type             = 2
+print_info: rope scaling          = linear
+print_info: freq_base_train       = 1000000.0
+print_info: freq_scale_train      = 1
+print_info: n_ctx_orig_yarn       = 40960
+print_info: rope_yarn_log_mul     = 0.0000
+print_info: rope_finetuned        = unknown
+print_info: model type            = 8B
+print_info: model params          = 7.57 B
+print_info: general.name          = Qwen3 Embedding 8B
+print_info: vocab type            = BPE
+print_info: n_vocab               = 151665
+print_info: n_merges              = 151387
+print_info: BOS token             = 151643 '<|endoftext|>'
+print_info: EOS token             = 151643 '<|endoftext|>'
+print_info: EOT token             = 151645 '<|im_end|>'
+print_info: PAD token             = 151643 '<|endoftext|>'
+print_info: LF token              = 198 'Ċ'
+print_info: FIM PRE token         = 151659 '<|fim_prefix|>'
+print_info: FIM SUF token         = 151661 '<|fim_suffix|>'
+print_info: FIM MID token         = 151660 '<|fim_middle|>'
+print_info: FIM PAD token         = 151662 '<|fim_pad|>'
+print_info: FIM REP token         = 151663 '<|repo_name|>'
+print_info: FIM SEP token         = 151664 '<|file_sep|>'
+print_info: EOG token             = 128247 '</s>'
+print_info: EOG token             = 151643 '<|endoftext|>'
+print_info: EOG token             = 151645 '<|im_end|>'
+print_info: EOG token             = 151662 '<|fim_pad|>'
+print_info: EOG token             = 151663 '<|repo_name|>'
+print_info: EOG token             = 151664 '<|file_sep|>'
+print_info: max token length      = 256
+load_tensors: loading model tensors, this can take a while... (mmap = true, direct_io = false)
+load_tensors: offloading output layer to GPU
+load_tensors: offloading 35 repeating layers to GPU
+load_tensors: offloaded 37/37 layers to GPU
+load_tensors:   CPU_Mapped model buffer size =   629.47 MiB
+load_tensors:  MTL0_Mapped model buffer size =  7668.64 MiB
+.......................................................................................
+common_init_result: added </s> logit bias = -inf
+common_init_result: added <|endoftext|> logit bias = -inf
+common_init_result: added <|im_end|> logit bias = -inf
+common_init_result: added <|fim_pad|> logit bias = -inf
+common_init_result: added <|repo_name|> logit bias = -inf
+common_init_result: added <|file_sep|> logit bias = -inf
+llama_context: constructing llama_context
+llama_context: n_seq_max     = 1
+llama_context: n_ctx         = 8192
+llama_context: n_ctx_seq     = 8192
+llama_context: n_batch       = 8192
+llama_context: n_ubatch      = 8192
+llama_context: causal_attn   = 1
+llama_context: flash_attn    = disabled
+llama_context: kv_unified    = false
+llama_context: freq_base     = 1000000.0
+llama_context: freq_scale    = 1
+llama_context: n_ctx_seq (8192) < n_ctx_train (40960) -- the full capacity of the model will not be utilized
+ggml_metal_init: allocating
+ggml_metal_init: found device: Apple M5 Max
+ggml_metal_init: picking default device: Apple M5 Max
+ggml_metal_init: use fusion         = true
+ggml_metal_init: use concurrency    = true
+ggml_metal_init: use graph optimize = true
+llama_context:        CPU  output buffer size =     0.59 MiB
+llama_kv_cache:       MTL0 KV buffer size =  1152.00 MiB
+llama_kv_cache: size = 1152.00 MiB (  8192 cells,  36 layers,  1/1 seqs), K (f16):  576.00 MiB, V (f16):  576.00 MiB
+llama_kv_cache: attn_rot_k = 0, n_embd_head_k_all = 128
+llama_kv_cache: attn_rot_v = 0, n_embd_head_k_all = 128
+sched_reserve: reserving ...
+sched_reserve: resolving fused Gated Delta Net support:
+sched_reserve: fused Gated Delta Net (autoregressive) enabled
+sched_reserve: fused Gated Delta Net (chunked) enabled
+sched_reserve:       MTL0 compute buffer size =  8768.13 MiB
+sched_reserve:        CPU compute buffer size =   576.16 MiB
+sched_reserve: graph nodes  = 1447
+sched_reserve: graph splits = 2
+sched_reserve: reserve took 462.00 ms, sched copies = 1
+common_init_from_params: warming up the model with an empty run - please wait ... (--no-warmup to disable)
+srv    load_model: initializing slots, n_slots = 1
+no implementations specified for speculative decoding
+slot   load_model: id  0 | task -1 | new slot, n_ctx = 8192
+srv    load_model: prompt cache is enabled, size limit: 8192 MiB
+srv    load_model: use `--cache-ram 0` to disable the prompt cache
+srv    load_model: for more info see https://github.com/ggml-org/llama.cpp/pull/16391
+srv          init: init: --cache-idle-slots requires --kv-unified, disabling
+init: chat template, example_format: '<|im_start|>system
+You are a helpful assistant<|im_end|>
+<|im_start|>user
+Hello<|im_end|>
+<|im_start|>assistant
+Hi there<|im_end|>
+<|im_start|>user
+How are you?<|im_end|>
+<|im_start|>assistant
+'
+srv          init: init: chat template, thinking = 0
+main: model loaded
+main: server is listening on http://127.0.0.1:55668
+main: starting the main loop...
+srv  update_slots: all slots are idle
+slot get_availabl: id  0 | task -1 | selected slot by LRU, t_last = -1
+slot launch_slot_: id  0 | task 0 | processing task, is_child = 0
+slot update_slots: id  0 | task 0 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 9
+slot update_slots: id  0 | task 0 | n_tokens = 0, memory_seq_rm [0, end)
+slot update_slots: id  0 | task 0 | prompt processing done, n_tokens = 9, batch.n_tokens = 9
+slot      release: id  0 | task 0 | stop processing: n_tokens = 9, truncated = 0
+slot get_availabl: id  0 | task -1 | selected slot by LCP similarity, sim_best = 0.200 (> 0.100 thold), f_keep = 0.222
+slot launch_slot_: id  0 | task 1 | processing task, is_child = 0
+slot update_slots: id  0 | task 1 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 10
+slot update_slots: id  0 | task 1 | n_tokens = 2, memory_seq_rm [2, end)
+slot update_slots: id  0 | task 1 | prompt processing done, n_tokens = 10, batch.n_tokens = 8
+slot      release: id  0 | task 1 | stop processing: n_tokens = 10, truncated = 0
+slot get_availabl: id  0 | task -1 | selected slot by LCP similarity, sim_best = 0.200 (> 0.100 thold), f_keep = 0.200
+slot launch_slot_: id  0 | task 2 | processing task, is_child = 0
+slot update_slots: id  0 | task 2 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 10
+slot update_slots: id  0 | task 2 | n_tokens = 2, memory_seq_rm [2, end)
+slot update_slots: id  0 | task 2 | prompt processing done, n_tokens = 10, batch.n_tokens = 8
+slot      release: id  0 | task 2 | stop processing: n_tokens = 10, truncated = 0
+slot get_availabl: id  0 | task -1 | selected slot by LCP similarity, sim_best = 0.154 (> 0.100 thold), f_keep = 0.200
+slot launch_slot_: id  0 | task 3 | processing task, is_child = 0
+slot update_slots: id  0 | task 3 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 13
+slot update_slots: id  0 | task 3 | n_tokens = 2, memory_seq_rm [2, end)
+slot update_slots: id  0 | task 3 | prompt processing done, n_tokens = 13, batch.n_tokens = 11
+slot      release: id  0 | task 3 | stop processing: n_tokens = 13, truncated = 0
+srv  update_slots: all slots are idle
+srv  log_server_r: done request: POST /v1/embeddings 127.0.0.1 200
+slot get_availabl: id  0 | task -1 | selected slot by LCP similarity, sim_best = 0.222 (> 0.100 thold), f_keep = 0.154
+slot launch_slot_: id  0 | task 8 | processing task, is_child = 0
+slot update_slots: id  0 | task 8 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 9
+slot update_slots: id  0 | task 8 | n_tokens = 2, memory_seq_rm [2, end)
+slot update_slots: id  0 | task 8 | prompt processing done, n_tokens = 9, batch.n_tokens = 7
+slot      release: id  0 | task 8 | stop processing: n_tokens = 9, truncated = 0
+slot get_availabl: id  0 | task -1 | selected slot by LCP similarity, sim_best = 0.200 (> 0.100 thold), f_keep = 0.222
+slot launch_slot_: id  0 | task 9 | processing task, is_child = 0
+slot update_slots: id  0 | task 9 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 10
+slot update_slots: id  0 | task 9 | n_tokens = 2, memory_seq_rm [2, end)
+slot update_slots: id  0 | task 9 | prompt processing done, n_tokens = 10, batch.n_tokens = 8
+slot      release: id  0 | task 9 | stop processing: n_tokens = 10, truncated = 0
+slot get_availabl: id  0 | task -1 | selected slot by LCP similarity, sim_best = 0.200 (> 0.100 thold), f_keep = 0.200
+slot launch_slot_: id  0 | task 10 | processing task, is_child = 0
+slot update_slots: id  0 | task 10 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 10
+slot update_slots: id  0 | task 10 | n_tokens = 2, memory_seq_rm [2, end)
+slot update_slots: id  0 | task 10 | prompt processing done, n_tokens = 10, batch.n_tokens = 8
+slot      release: id  0 | task 10 | stop processing: n_tokens = 10, truncated = 0
+slot get_availabl: id  0 | task -1 | selected slot by LCP similarity, sim_best = 0.154 (> 0.100 thold), f_keep = 0.200
+slot launch_slot_: id  0 | task 11 | processing task, is_child = 0
+slot update_slots: id  0 | task 11 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 13
+slot update_slots: id  0 | task 11 | n_tokens = 2, memory_seq_rm [2, end)
+slot update_slots: id  0 | task 11 | prompt processing done, n_tokens = 13, batch.n_tokens = 11
+slot      release: id  0 | task 11 | stop processing: n_tokens = 13, truncated = 0
+srv  update_slots: all slots are idle
+srv  log_server_r: done request: POST /v1/embeddings 127.0.0.1 200
+slot get_availabl: id  0 | task -1 | selected slot by LCP similarity, sim_best = 0.222 (> 0.100 thold), f_keep = 0.154
+slot launch_slot_: id  0 | task 16 | processing task, is_child = 0
+slot update_slots: id  0 | task 16 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 9
+slot update_slots: id  0 | task 16 | n_tokens = 2, memory_seq_rm [2, end)
+slot update_slots: id  0 | task 16 | prompt processing done, n_tokens = 9, batch.n_tokens = 7
+slot      release: id  0 | task 16 | stop processing: n_tokens = 9, truncated = 0
+slot get_availabl: id  0 | task -1 | selected slot by LCP similarity, sim_best = 0.200 (> 0.100 thold), f_keep = 0.222
+slot launch_slot_: id  0 | task 17 | processing task, is_child = 0
+slot update_slots: id  0 | task 17 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 10
+slot update_slots: id  0 | task 17 | n_tokens = 2, memory_seq_rm [2, end)
+slot update_slots: id  0 | task 17 | prompt processing done, n_tokens = 10, batch.n_tokens = 8
+slot      release: id  0 | task 17 | stop processing: n_tokens = 10, truncated = 0
+slot get_availabl: id  0 | task -1 | selected slot by LCP similarity, sim_best = 0.200 (> 0.100 thold), f_keep = 0.200
+slot launch_slot_: id  0 | task 18 | processing task, is_child = 0
+slot update_slots: id  0 | task 18 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 10
+slot update_slots: id  0 | task 18 | n_tokens = 2, memory_seq_rm [2, end)
+slot update_slots: id  0 | task 18 | prompt processing done, n_tokens = 10, batch.n_tokens = 8
+slot      release: id  0 | task 18 | stop processing: n_tokens = 10, truncated = 0
+slot get_availabl: id  0 | task -1 | selected slot by LCP similarity, sim_best = 0.154 (> 0.100 thold), f_keep = 0.200
+slot launch_slot_: id  0 | task 19 | processing task, is_child = 0
+slot update_slots: id  0 | task 19 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 13
+slot update_slots: id  0 | task 19 | n_tokens = 2, memory_seq_rm [2, end)
+slot update_slots: id  0 | task 19 | prompt processing done, n_tokens = 13, batch.n_tokens = 11
+slot      release: id  0 | task 19 | stop processing: n_tokens = 13, truncated = 0
+srv  update_slots: all slots are idle
+srv  log_server_r: done request: POST /v1/embeddings 127.0.0.1 200
+slot get_availabl: id  0 | task -1 | selected slot by LRU, t_last = 405493109580
+slot launch_slot_: id  0 | task 24 | processing task, is_child = 0
+slot update_slots: id  0 | task 24 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 26
+slot update_slots: id  0 | task 24 | n_tokens = 0, memory_seq_rm [0, end)
+slot update_slots: id  0 | task 24 | prompt processing done, n_tokens = 26, batch.n_tokens = 26
+slot      release: id  0 | task 24 | stop processing: n_tokens = 26, truncated = 0
+slot get_availabl: id  0 | task -1 | selected slot by LCP similarity, sim_best = 0.538 (> 0.100 thold), f_keep = 0.538
+slot launch_slot_: id  0 | task 25 | processing task, is_child = 0
+slot update_slots: id  0 | task 25 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 26
+slot update_slots: id  0 | task 25 | n_tokens = 14, memory_seq_rm [14, end)
+slot update_slots: id  0 | task 25 | prompt processing done, n_tokens = 26, batch.n_tokens = 12
+slot      release: id  0 | task 25 | stop processing: n_tokens = 26, truncated = 0
+slot get_availabl: id  0 | task -1 | selected slot by LCP similarity, sim_best = 0.583 (> 0.100 thold), f_keep = 0.538
+slot launch_slot_: id  0 | task 26 | processing task, is_child = 0
+slot update_slots: id  0 | task 26 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 24
+slot update_slots: id  0 | task 26 | n_tokens = 14, memory_seq_rm [14, end)
+slot update_slots: id  0 | task 26 | prompt processing done, n_tokens = 24, batch.n_tokens = 10
+slot      release: id  0 | task 26 | stop processing: n_tokens = 24, truncated = 0
+slot get_availabl: id  0 | task -1 | selected slot by LCP similarity, sim_best = 0.583 (> 0.100 thold), f_keep = 0.583
+slot launch_slot_: id  0 | task 27 | processing task, is_child = 0
+slot update_slots: id  0 | task 27 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 24
+slot update_slots: id  0 | task 27 | n_tokens = 14, memory_seq_rm [14, end)
+slot update_slots: id  0 | task 27 | prompt processing done, n_tokens = 24, batch.n_tokens = 10
+slot      release: id  0 | task 27 | stop processing: n_tokens = 24, truncated = 0
+srv  update_slots: all slots are idle
+srv  log_server_r: done request: POST /v1/embeddings 127.0.0.1 200
+slot get_availabl: id  0 | task -1 | selected slot by LCP similarity, sim_best = 0.538 (> 0.100 thold), f_keep = 0.583
+slot launch_slot_: id  0 | task 32 | processing task, is_child = 0
+slot update_slots: id  0 | task 32 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 26
+slot update_slots: id  0 | task 32 | n_tokens = 14, memory_seq_rm [14, end)
+slot update_slots: id  0 | task 32 | prompt processing done, n_tokens = 26, batch.n_tokens = 12
+slot      release: id  0 | task 32 | stop processing: n_tokens = 26, truncated = 0
+slot get_availabl: id  0 | task -1 | selected slot by LCP similarity, sim_best = 0.538 (> 0.100 thold), f_keep = 0.538
+slot launch_slot_: id  0 | task 33 | processing task, is_child = 0
+slot update_slots: id  0 | task 33 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 26
+slot update_slots: id  0 | task 33 | n_tokens = 14, memory_seq_rm [14, end)
+slot update_slots: id  0 | task 33 | prompt processing done, n_tokens = 26, batch.n_tokens = 12
+slot      release: id  0 | task 33 | stop processing: n_tokens = 26, truncated = 0
+slot get_availabl: id  0 | task -1 | selected slot by LCP similarity, sim_best = 0.583 (> 0.100 thold), f_keep = 0.538
+slot launch_slot_: id  0 | task 34 | processing task, is_child = 0
+slot update_slots: id  0 | task 34 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 24
+slot update_slots: id  0 | task 34 | n_tokens = 14, memory_seq_rm [14, end)
+slot update_slots: id  0 | task 34 | prompt processing done, n_tokens = 24, batch.n_tokens = 10
+slot      release: id  0 | task 34 | stop processing: n_tokens = 24, truncated = 0
+slot get_availabl: id  0 | task -1 | selected slot by LCP similarity, sim_best = 0.583 (> 0.100 thold), f_keep = 0.583
+slot launch_slot_: id  0 | task 35 | processing task, is_child = 0
+slot update_slots: id  0 | task 35 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 24
+slot update_slots: id  0 | task 35 | n_tokens = 14, memory_seq_rm [14, end)
+slot update_slots: id  0 | task 35 | prompt processing done, n_tokens = 24, batch.n_tokens = 10
+slot      release: id  0 | task 35 | stop processing: n_tokens = 24, truncated = 0
+srv  update_slots: all slots are idle
+srv  log_server_r: done request: POST /v1/embeddings 127.0.0.1 200
+slot get_availabl: id  0 | task -1 | selected slot by LRU, t_last = 405493658837
+slot launch_slot_: id  0 | task 40 | processing task, is_child = 0
+slot update_slots: id  0 | task 40 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 12
+slot update_slots: id  0 | task 40 | n_tokens = 0, memory_seq_rm [0, end)
+slot update_slots: id  0 | task 40 | prompt processing done, n_tokens = 12, batch.n_tokens = 12
+slot      release: id  0 | task 40 | stop processing: n_tokens = 12, truncated = 0
+slot get_availabl: id  0 | task -1 | selected slot by LRU, t_last = 405493742705
+slot launch_slot_: id  0 | task 41 | processing task, is_child = 0
+slot update_slots: id  0 | task 41 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 19
+slot update_slots: id  0 | task 41 | n_tokens = 0, memory_seq_rm [0, end)
+slot update_slots: id  0 | task 41 | prompt processing done, n_tokens = 19, batch.n_tokens = 19
+slot      release: id  0 | task 41 | stop processing: n_tokens = 19, truncated = 0
+slot get_availabl: id  0 | task -1 | selected slot by LRU, t_last = 405493807219
+slot launch_slot_: id  0 | task 42 | processing task, is_child = 0
+slot update_slots: id  0 | task 42 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 16
+slot update_slots: id  0 | task 42 | n_tokens = 0, memory_seq_rm [0, end)
+slot update_slots: id  0 | task 42 | prompt processing done, n_tokens = 16, batch.n_tokens = 16
+slot      release: id  0 | task 42 | stop processing: n_tokens = 16, truncated = 0
+slot get_availabl: id  0 | task -1 | selected slot by LRU, t_last = 405493870264
+slot launch_slot_: id  0 | task 43 | processing task, is_child = 0
+slot update_slots: id  0 | task 43 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 16
+slot update_slots: id  0 | task 43 | n_tokens = 0, memory_seq_rm [0, end)
+slot update_slots: id  0 | task 43 | prompt processing done, n_tokens = 16, batch.n_tokens = 16
+slot      release: id  0 | task 43 | stop processing: n_tokens = 16, truncated = 0
+slot get_availabl: id  0 | task -1 | selected slot by LRU, t_last = 405493933236
+slot launch_slot_: id  0 | task 44 | processing task, is_child = 0
+slot update_slots: id  0 | task 44 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 13
+slot update_slots: id  0 | task 44 | n_tokens = 0, memory_seq_rm [0, end)
+slot update_slots: id  0 | task 44 | prompt processing done, n_tokens = 13, batch.n_tokens = 13
+slot      release: id  0 | task 44 | stop processing: n_tokens = 13, truncated = 0
+slot get_availabl: id  0 | task -1 | selected slot by LCP similarity, sim_best = 0.182 (> 0.100 thold), f_keep = 0.154
+slot launch_slot_: id  0 | task 45 | processing task, is_child = 0
+slot update_slots: id  0 | task 45 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 11
+slot update_slots: id  0 | task 45 | n_tokens = 2, memory_seq_rm [2, end)
+slot update_slots: id  0 | task 45 | prompt processing done, n_tokens = 11, batch.n_tokens = 9
+slot      release: id  0 | task 45 | stop processing: n_tokens = 11, truncated = 0
+srv  update_slots: all slots are idle
+srv  log_server_r: done request: POST /v1/embeddings 127.0.0.1 200
+slot get_availabl: id  0 | task -1 | selected slot by LRU, t_last = 405494057987
+slot launch_slot_: id  0 | task 52 | processing task, is_child = 0
+slot update_slots: id  0 | task 52 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 12
+slot update_slots: id  0 | task 52 | n_tokens = 0, memory_seq_rm [0, end)
+slot update_slots: id  0 | task 52 | prompt processing done, n_tokens = 12, batch.n_tokens = 12
+slot      release: id  0 | task 52 | stop processing: n_tokens = 12, truncated = 0
+slot get_availabl: id  0 | task -1 | selected slot by LRU, t_last = 405494156045
+slot launch_slot_: id  0 | task 53 | processing task, is_child = 0
+slot update_slots: id  0 | task 53 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 19
+slot update_slots: id  0 | task 53 | n_tokens = 0, memory_seq_rm [0, end)
+slot update_slots: id  0 | task 53 | prompt processing done, n_tokens = 19, batch.n_tokens = 19
+slot      release: id  0 | task 53 | stop processing: n_tokens = 19, truncated = 0
+slot get_availabl: id  0 | task -1 | selected slot by LRU, t_last = 405494219013
+slot launch_slot_: id  0 | task 54 | processing task, is_child = 0
+slot update_slots: id  0 | task 54 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 16
+slot update_slots: id  0 | task 54 | n_tokens = 0, memory_seq_rm [0, end)
+slot update_slots: id  0 | task 54 | prompt processing done, n_tokens = 16, batch.n_tokens = 16
+slot      release: id  0 | task 54 | stop processing: n_tokens = 16, truncated = 0
+slot get_availabl: id  0 | task -1 | selected slot by LRU, t_last = 405494282445
+slot launch_slot_: id  0 | task 55 | processing task, is_child = 0
+slot update_slots: id  0 | task 55 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 16
+slot update_slots: id  0 | task 55 | n_tokens = 0, memory_seq_rm [0, end)
+slot update_slots: id  0 | task 55 | prompt processing done, n_tokens = 16, batch.n_tokens = 16
+slot      release: id  0 | task 55 | stop processing: n_tokens = 16, truncated = 0
+slot get_availabl: id  0 | task -1 | selected slot by LRU, t_last = 405494345112
+slot launch_slot_: id  0 | task 56 | processing task, is_child = 0
+slot update_slots: id  0 | task 56 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 13
+slot update_slots: id  0 | task 56 | n_tokens = 0, memory_seq_rm [0, end)
+slot update_slots: id  0 | task 56 | prompt processing done, n_tokens = 13, batch.n_tokens = 13
+slot      release: id  0 | task 56 | stop processing: n_tokens = 13, truncated = 0
+slot get_availabl: id  0 | task -1 | selected slot by LCP similarity, sim_best = 0.182 (> 0.100 thold), f_keep = 0.154
+slot launch_slot_: id  0 | task 57 | processing task, is_child = 0
+slot update_slots: id  0 | task 57 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 11
+slot update_slots: id  0 | task 57 | n_tokens = 2, memory_seq_rm [2, end)
+slot update_slots: id  0 | task 57 | prompt processing done, n_tokens = 11, batch.n_tokens = 9
+slot      release: id  0 | task 57 | stop processing: n_tokens = 11, truncated = 0
+srv  update_slots: all slots are idle
+srv  log_server_r: done request: POST /v1/embeddings 127.0.0.1 200
+slot get_availabl: id  0 | task -1 | selected slot by LRU, t_last = 405494471127
+slot launch_slot_: id  0 | task 64 | processing task, is_child = 0
+slot update_slots: id  0 | task 64 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 33
+slot update_slots: id  0 | task 64 | n_tokens = 0, memory_seq_rm [0, end)
+slot update_slots: id  0 | task 64 | prompt processing done, n_tokens = 33, batch.n_tokens = 33
+slot      release: id  0 | task 64 | stop processing: n_tokens = 33, truncated = 0
+slot get_availabl: id  0 | task -1 | selected slot by LRU, t_last = 405494595673
+slot launch_slot_: id  0 | task 65 | processing task, is_child = 0
+slot update_slots: id  0 | task 65 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 33
+slot update_slots: id  0 | task 65 | n_tokens = 0, memory_seq_rm [0, end)
+slot update_slots: id  0 | task 65 | prompt processing done, n_tokens = 33, batch.n_tokens = 33
+slot      release: id  0 | task 65 | stop processing: n_tokens = 33, truncated = 0
+slot get_availabl: id  0 | task -1 | selected slot by LRU, t_last = 405494688943
+slot launch_slot_: id  0 | task 66 | processing task, is_child = 0
+slot update_slots: id  0 | task 66 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 34
+slot update_slots: id  0 | task 66 | n_tokens = 0, memory_seq_rm [0, end)
+slot update_slots: id  0 | task 66 | prompt processing done, n_tokens = 34, batch.n_tokens = 34
+slot      release: id  0 | task 66 | stop processing: n_tokens = 34, truncated = 0
+slot get_availabl: id  0 | task -1 | selected slot by LRU, t_last = 405494783460
+slot launch_slot_: id  0 | task 67 | processing task, is_child = 0
+slot update_slots: id  0 | task 67 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 34
+slot update_slots: id  0 | task 67 | n_tokens = 0, memory_seq_rm [0, end)
+slot update_slots: id  0 | task 67 | prompt processing done, n_tokens = 34, batch.n_tokens = 34
+slot      release: id  0 | task 67 | stop processing: n_tokens = 34, truncated = 0
+slot get_availabl: id  0 | task -1 | selected slot by LRU, t_last = 405494877448
+slot launch_slot_: id  0 | task 68 | processing task, is_child = 0
+slot update_slots: id  0 | task 68 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 27
+slot update_slots: id  0 | task 68 | n_tokens = 0, memory_seq_rm [0, end)
+slot update_slots: id  0 | task 68 | prompt processing done, n_tokens = 27, batch.n_tokens = 27
+slot      release: id  0 | task 68 | stop processing: n_tokens = 27, truncated = 0
+slot get_availabl: id  0 | task -1 | selected slot by LRU, t_last = 405494941291
+slot launch_slot_: id  0 | task 69 | processing task, is_child = 0
+slot update_slots: id  0 | task 69 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 32
+slot update_slots: id  0 | task 69 | n_tokens = 2, memory_seq_rm [2, end)
+slot update_slots: id  0 | task 69 | prompt processing done, n_tokens = 32, batch.n_tokens = 30
+slot      release: id  0 | task 69 | stop processing: n_tokens = 32, truncated = 0
+srv  update_slots: all slots are idle
+srv  log_server_r: done request: POST /v1/embeddings 127.0.0.1 200
+slot get_availabl: id  0 | task -1 | selected slot by LRU, t_last = 405495005335
+slot launch_slot_: id  0 | task 76 | processing task, is_child = 0
+slot update_slots: id  0 | task 76 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 33
+slot update_slots: id  0 | task 76 | n_tokens = 0, memory_seq_rm [0, end)
+slot update_slots: id  0 | task 76 | prompt processing done, n_tokens = 33, batch.n_tokens = 33
+slot      release: id  0 | task 76 | stop processing: n_tokens = 33, truncated = 0
+slot get_availabl: id  0 | task -1 | selected slot by LRU, t_last = 405495126187
+slot launch_slot_: id  0 | task 77 | processing task, is_child = 0
+slot update_slots: id  0 | task 77 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 33
+slot update_slots: id  0 | task 77 | n_tokens = 0, memory_seq_rm [0, end)
+slot update_slots: id  0 | task 77 | prompt processing done, n_tokens = 33, batch.n_tokens = 33
+slot      release: id  0 | task 77 | stop processing: n_tokens = 33, truncated = 0
+slot get_availabl: id  0 | task -1 | selected slot by LRU, t_last = 405495220048
+slot launch_slot_: id  0 | task 78 | processing task, is_child = 0
+slot update_slots: id  0 | task 78 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 34
+slot update_slots: id  0 | task 78 | n_tokens = 0, memory_seq_rm [0, end)
+slot update_slots: id  0 | task 78 | prompt processing done, n_tokens = 34, batch.n_tokens = 34
+slot      release: id  0 | task 78 | stop processing: n_tokens = 34, truncated = 0
+slot get_availabl: id  0 | task -1 | selected slot by LRU, t_last = 405495313801
+slot launch_slot_: id  0 | task 79 | processing task, is_child = 0
+slot update_slots: id  0 | task 79 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 34
+slot update_slots: id  0 | task 79 | n_tokens = 0, memory_seq_rm [0, end)
+slot update_slots: id  0 | task 79 | prompt processing done, n_tokens = 34, batch.n_tokens = 34
+slot      release: id  0 | task 79 | stop processing: n_tokens = 34, truncated = 0
+slot get_availabl: id  0 | task -1 | selected slot by LRU, t_last = 405495407035
+slot launch_slot_: id  0 | task 80 | processing task, is_child = 0
+slot update_slots: id  0 | task 80 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 27
+slot update_slots: id  0 | task 80 | n_tokens = 0, memory_seq_rm [0, end)
+slot update_slots: id  0 | task 80 | prompt processing done, n_tokens = 27, batch.n_tokens = 27
+slot      release: id  0 | task 80 | stop processing: n_tokens = 27, truncated = 0
+slot get_availabl: id  0 | task -1 | selected slot by LRU, t_last = 405495471083
+slot launch_slot_: id  0 | task 81 | processing task, is_child = 0
+slot update_slots: id  0 | task 81 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 32
+slot update_slots: id  0 | task 81 | n_tokens = 2, memory_seq_rm [2, end)
+slot update_slots: id  0 | task 81 | prompt processing done, n_tokens = 32, batch.n_tokens = 30
+slot      release: id  0 | task 81 | stop processing: n_tokens = 32, truncated = 0
+srv  update_slots: all slots are idle
+srv  log_server_r: done request: POST /v1/embeddings 127.0.0.1 200
+srv  log_server_r: done request: POST /tokenize 127.0.0.1 200
+srv  log_server_r: done request: POST /tokenize 127.0.0.1 200
+srv  log_server_r: done request: POST /tokenize 127.0.0.1 200
+slot get_availabl: id  0 | task -1 | selected slot by LRU, t_last = 405495535334
+slot launch_slot_: id  0 | task 88 | processing task, is_child = 0
+slot update_slots: id  0 | task 88 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 17
+slot update_slots: id  0 | task 88 | n_tokens = 0, memory_seq_rm [0, end)
+slot update_slots: id  0 | task 88 | prompt processing done, n_tokens = 17, batch.n_tokens = 17
+slot      release: id  0 | task 88 | stop processing: n_tokens = 17, truncated = 0
+srv  update_slots: all slots are idle
+srv  log_server_r: done request: POST /v1/embeddings 127.0.0.1 200
+slot get_availabl: id  0 | task -1 | selected slot by LRU, t_last = 405495669491
+slot launch_slot_: id  0 | task 90 | processing task, is_child = 0
+slot update_slots: id  0 | task 90 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 8265
+srv    send_error: task id = 90, error: request (8265 tokens) exceeds the available context size (8192 tokens), try increasing it
+slot      release: id  0 | task 90 | stop processing: n_tokens = 17, truncated = 0
+srv  update_slots: no tokens to decode
+srv  update_slots: all slots are idle
+srv          stop: cancel task, id_task = 90
+srv  update_slots: all slots are idle
+srv  log_server_r: done request: POST /v1/embeddings 127.0.0.1 400
+slot get_availabl: id  0 | task -1 | selected slot by LCP similarity, sim_best = 0.222 (> 0.100 thold), f_keep = 0.118
+slot launch_slot_: id  0 | task 93 | processing task, is_child = 0
+slot update_slots: id  0 | task 93 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 9
+slot update_slots: id  0 | task 93 | n_tokens = 2, memory_seq_rm [2, end)
+slot update_slots: id  0 | task 93 | prompt processing done, n_tokens = 9, batch.n_tokens = 7
+slot      release: id  0 | task 93 | stop processing: n_tokens = 9, truncated = 0
+srv  update_slots: all slots are idle
+srv  log_server_r: done request: POST /v1/embeddings 127.0.0.1 200
+slot get_availabl: id  0 | task -1 | selected slot by LCP similarity, sim_best = 1.000 (> 0.100 thold), f_keep = 1.000
+slot launch_slot_: id  0 | task 95 | processing task, is_child = 0
+slot update_slots: id  0 | task 95 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 9
+slot update_slots: id  0 | task 95 | need to evaluate at least 1 token for each active slot (n_past = 9, task.n_tokens() = 9)
+slot update_slots: id  0 | task 95 | n_past was set to 8
+slot update_slots: id  0 | task 95 | n_tokens = 8, memory_seq_rm [8, end)
+slot update_slots: id  0 | task 95 | prompt processing done, n_tokens = 9, batch.n_tokens = 1
+slot      release: id  0 | task 95 | stop processing: n_tokens = 9, truncated = 0
+srv  update_slots: all slots are idle
+srv  log_server_r: done request: POST /v1/embeddings 127.0.0.1 200
+srv    operator(): got exception: {"error":{"code":500,"message":"\"prompt\" must not be empty","type":"server_error"}}
+srv  log_server_r: done request: POST /v1/embeddings 127.0.0.1 500
+srv    operator(): got exception: {"error":{"code":500,"message":"\"prompt\" elements must be a string, a list of tokens, a JSON object containing a prompt string, or a list of mixed strings & tokens.","type":"server_error"}}
+srv  log_server_r: done request: POST /v1/embeddings 127.0.0.1 500
+slot get_availabl: id  0 | task -1 | selected slot by LCP similarity, sim_best = 0.286 (> 0.100 thold), f_keep = 0.222
+slot launch_slot_: id  0 | task 97 | processing task, is_child = 0
+slot update_slots: id  0 | task 97 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 7
+slot update_slots: id  0 | task 97 | n_tokens = 2, memory_seq_rm [2, end)
+slot update_slots: id  0 | task 97 | prompt processing done, n_tokens = 7, batch.n_tokens = 5
+slot      release: id  0 | task 97 | stop processing: n_tokens = 7, truncated = 0
+srv  update_slots: all slots are idle
+srv  log_server_r: done request: POST /v1/embeddings 127.0.0.1 200
+slot get_availabl: id  0 | task -1 | selected slot by LCP similarity, sim_best = 1.000 (> 0.100 thold), f_keep = 1.000
+slot launch_slot_: id  0 | task 99 | processing task, is_child = 0
+slot update_slots: id  0 | task 99 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 7
+slot update_slots: id  0 | task 99 | need to evaluate at least 1 token for each active slot (n_past = 7, task.n_tokens() = 7)
+slot update_slots: id  0 | task 99 | n_past was set to 6
+slot update_slots: id  0 | task 99 | n_tokens = 6, memory_seq_rm [6, end)
+slot update_slots: id  0 | task 99 | prompt processing done, n_tokens = 7, batch.n_tokens = 1
+slot      release: id  0 | task 99 | stop processing: n_tokens = 7, truncated = 0
+slot get_availabl: id  0 | task -1 | selected slot by LCP similarity, sim_best = 0.714 (> 0.100 thold), f_keep = 0.714
+slot launch_slot_: id  0 | task 100 | processing task, is_child = 0
+slot update_slots: id  0 | task 100 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 7
+slot update_slots: id  0 | task 100 | n_tokens = 5, memory_seq_rm [5, end)
+slot update_slots: id  0 | task 100 | prompt processing done, n_tokens = 7, batch.n_tokens = 2
+slot      release: id  0 | task 100 | stop processing: n_tokens = 7, truncated = 0
+slot get_availabl: id  0 | task -1 | selected slot by LCP similarity, sim_best = 0.714 (> 0.100 thold), f_keep = 0.714
+slot launch_slot_: id  0 | task 101 | processing task, is_child = 0
+slot update_slots: id  0 | task 101 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 7
+slot update_slots: id  0 | task 101 | n_tokens = 5, memory_seq_rm [5, end)
+slot update_slots: id  0 | task 101 | prompt processing done, n_tokens = 7, batch.n_tokens = 2
+slot      release: id  0 | task 101 | stop processing: n_tokens = 7, truncated = 0
+slot get_availabl: id  0 | task -1 | selected slot by LCP similarity, sim_best = 0.714 (> 0.100 thold), f_keep = 0.714
+slot launch_slot_: id  0 | task 102 | processing task, is_child = 0
+slot update_slots: id  0 | task 102 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 7
+slot update_slots: id  0 | task 102 | n_tokens = 5, memory_seq_rm [5, end)
+slot update_slots: id  0 | task 102 | prompt processing done, n_tokens = 7, batch.n_tokens = 2
+slot      release: id  0 | task 102 | stop processing: n_tokens = 7, truncated = 0
+srv  update_slots: all slots are idle
+srv  log_server_r: done request: POST /v1/embeddings 127.0.0.1 200
+slot get_availabl: id  0 | task -1 | selected slot by LCP similarity, sim_best = 0.714 (> 0.100 thold), f_keep = 0.714
+slot launch_slot_: id  0 | task 107 | processing task, is_child = 0
+slot update_slots: id  0 | task 107 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 7
+slot update_slots: id  0 | task 107 | n_tokens = 5, memory_seq_rm [5, end)
+slot update_slots: id  0 | task 107 | prompt processing done, n_tokens = 7, batch.n_tokens = 2
+slot      release: id  0 | task 107 | stop processing: n_tokens = 7, truncated = 0
+slot get_availabl: id  0 | task -1 | selected slot by LCP similarity, sim_best = 0.714 (> 0.100 thold), f_keep = 0.714
+slot launch_slot_: id  0 | task 108 | processing task, is_child = 0
+slot update_slots: id  0 | task 108 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 7
+slot update_slots: id  0 | task 108 | n_tokens = 5, memory_seq_rm [5, end)
+slot update_slots: id  0 | task 108 | prompt processing done, n_tokens = 7, batch.n_tokens = 2
+slot      release: id  0 | task 108 | stop processing: n_tokens = 7, truncated = 0
+slot get_availabl: id  0 | task -1 | selected slot by LCP similarity, sim_best = 0.714 (> 0.100 thold), f_keep = 0.714
+slot launch_slot_: id  0 | task 109 | processing task, is_child = 0
+slot update_slots: id  0 | task 109 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 7
+slot update_slots: id  0 | task 109 | n_tokens = 5, memory_seq_rm [5, end)
+slot update_slots: id  0 | task 109 | prompt processing done, n_tokens = 7, batch.n_tokens = 2
+slot      release: id  0 | task 109 | stop processing: n_tokens = 7, truncated = 0
+slot get_availabl: id  0 | task -1 | selected slot by LCP similarity, sim_best = 0.714 (> 0.100 thold), f_keep = 0.714
+slot launch_slot_: id  0 | task 110 | processing task, is_child = 0
+slot update_slots: id  0 | task 110 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 7
+slot update_slots: id  0 | task 110 | n_tokens = 5, memory_seq_rm [5, end)
+slot update_slots: id  0 | task 110 | prompt processing done, n_tokens = 7, batch.n_tokens = 2
+slot      release: id  0 | task 110 | stop processing: n_tokens = 7, truncated = 0
+slot get_availabl: id  0 | task -1 | selected slot by LCP similarity, sim_best = 0.714 (> 0.100 thold), f_keep = 0.714
+slot launch_slot_: id  0 | task 111 | processing task, is_child = 0
+slot update_slots: id  0 | task 111 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 7
+slot update_slots: id  0 | task 111 | n_tokens = 5, memory_seq_rm [5, end)
+slot update_slots: id  0 | task 111 | prompt processing done, n_tokens = 7, batch.n_tokens = 2
+slot      release: id  0 | task 111 | stop processing: n_tokens = 7, truncated = 0
+slot get_availabl: id  0 | task -1 | selected slot by LCP similarity, sim_best = 0.714 (> 0.100 thold), f_keep = 0.714
+slot launch_slot_: id  0 | task 112 | processing task, is_child = 0
+slot update_slots: id  0 | task 112 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 7
+slot update_slots: id  0 | task 112 | n_tokens = 5, memory_seq_rm [5, end)
+slot update_slots: id  0 | task 112 | prompt processing done, n_tokens = 7, batch.n_tokens = 2
+slot      release: id  0 | task 112 | stop processing: n_tokens = 7, truncated = 0
+slot get_availabl: id  0 | task -1 | selected slot by LCP similarity, sim_best = 0.714 (> 0.100 thold), f_keep = 0.714
+slot launch_slot_: id  0 | task 113 | processing task, is_child = 0
+slot update_slots: id  0 | task 113 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 7
+slot update_slots: id  0 | task 113 | n_tokens = 5, memory_seq_rm [5, end)
+slot update_slots: id  0 | task 113 | prompt processing done, n_tokens = 7, batch.n_tokens = 2
+slot      release: id  0 | task 113 | stop processing: n_tokens = 7, truncated = 0
+slot get_availabl: id  0 | task -1 | selected slot by LCP similarity, sim_best = 0.714 (> 0.100 thold), f_keep = 0.714
+slot launch_slot_: id  0 | task 114 | processing task, is_child = 0
+slot update_slots: id  0 | task 114 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 7
+slot update_slots: id  0 | task 114 | n_tokens = 5, memory_seq_rm [5, end)
+slot update_slots: id  0 | task 114 | prompt processing done, n_tokens = 7, batch.n_tokens = 2
+slot      release: id  0 | task 114 | stop processing: n_tokens = 7, truncated = 0
+srv  update_slots: all slots are idle
+srv  log_server_r: done request: POST /v1/embeddings 127.0.0.1 200
+slot get_availabl: id  0 | task -1 | selected slot by LCP similarity, sim_best = 0.714 (> 0.100 thold), f_keep = 0.714
+slot launch_slot_: id  0 | task 123 | processing task, is_child = 0
+slot update_slots: id  0 | task 123 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 7
+slot update_slots: id  0 | task 123 | n_tokens = 5, memory_seq_rm [5, end)
+slot update_slots: id  0 | task 123 | prompt processing done, n_tokens = 7, batch.n_tokens = 2
+slot      release: id  0 | task 123 | stop processing: n_tokens = 7, truncated = 0
+slot get_availabl: id  0 | task -1 | selected slot by LCP similarity, sim_best = 0.714 (> 0.100 thold), f_keep = 0.714
+slot launch_slot_: id  0 | task 124 | processing task, is_child = 0
+slot update_slots: id  0 | task 124 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 7
+slot update_slots: id  0 | task 124 | n_tokens = 5, memory_seq_rm [5, end)
+slot update_slots: id  0 | task 124 | prompt processing done, n_tokens = 7, batch.n_tokens = 2
+slot      release: id  0 | task 124 | stop processing: n_tokens = 7, truncated = 0
+slot get_availabl: id  0 | task -1 | selected slot by LCP similarity, sim_best = 0.714 (> 0.100 thold), f_keep = 0.714
+slot launch_slot_: id  0 | task 125 | processing task, is_child = 0
+slot update_slots: id  0 | task 125 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 7
+slot update_slots: id  0 | task 125 | n_tokens = 5, memory_seq_rm [5, end)
+slot update_slots: id  0 | task 125 | prompt processing done, n_tokens = 7, batch.n_tokens = 2
+slot      release: id  0 | task 125 | stop processing: n_tokens = 7, truncated = 0
+slot get_availabl: id  0 | task -1 | selected slot by LCP similarity, sim_best = 0.714 (> 0.100 thold), f_keep = 0.714
+slot launch_slot_: id  0 | task 126 | processing task, is_child = 0
+slot update_slots: id  0 | task 126 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 7
+slot update_slots: id  0 | task 126 | n_tokens = 5, memory_seq_rm [5, end)
+slot update_slots: id  0 | task 126 | prompt processing done, n_tokens = 7, batch.n_tokens = 2
+slot      release: id  0 | task 126 | stop processing: n_tokens = 7, truncated = 0
+slot get_availabl: id  0 | task -1 | selected slot by LCP similarity, sim_best = 0.714 (> 0.100 thold), f_keep = 0.714
+slot launch_slot_: id  0 | task 127 | processing task, is_child = 0
+slot update_slots: id  0 | task 127 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 7
+slot update_slots: id  0 | task 127 | n_tokens = 5, memory_seq_rm [5, end)
+slot update_slots: id  0 | task 127 | prompt processing done, n_tokens = 7, batch.n_tokens = 2
+slot      release: id  0 | task 127 | stop processing: n_tokens = 7, truncated = 0
+slot get_availabl: id  0 | task -1 | selected slot by LCP similarity, sim_best = 0.714 (> 0.100 thold), f_keep = 0.714
+slot launch_slot_: id  0 | task 128 | processing task, is_child = 0
+slot update_slots: id  0 | task 128 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 7
+slot update_slots: id  0 | task 128 | n_tokens = 5, memory_seq_rm [5, end)
+slot update_slots: id  0 | task 128 | prompt processing done, n_tokens = 7, batch.n_tokens = 2
+slot      release: id  0 | task 128 | stop processing: n_tokens = 7, truncated = 0
+slot get_availabl: id  0 | task -1 | selected slot by LCP similarity, sim_best = 0.714 (> 0.100 thold), f_keep = 0.714
+slot launch_slot_: id  0 | task 129 | processing task, is_child = 0
+slot update_slots: id  0 | task 129 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 7
+slot update_slots: id  0 | task 129 | n_tokens = 5, memory_seq_rm [5, end)
+slot update_slots: id  0 | task 129 | prompt processing done, n_tokens = 7, batch.n_tokens = 2
+slot      release: id  0 | task 129 | stop processing: n_tokens = 7, truncated = 0
+slot get_availabl: id  0 | task -1 | selected slot by LCP similarity, sim_best = 0.714 (> 0.100 thold), f_keep = 0.714
+slot launch_slot_: id  0 | task 130 | processing task, is_child = 0
+slot update_slots: id  0 | task 130 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 7
+slot update_slots: id  0 | task 130 | n_tokens = 5, memory_seq_rm [5, end)
+slot update_slots: id  0 | task 130 | prompt processing done, n_tokens = 7, batch.n_tokens = 2
+slot      release: id  0 | task 130 | stop processing: n_tokens = 7, truncated = 0
+slot get_availabl: id  0 | task -1 | selected slot by LCP similarity, sim_best = 0.714 (> 0.100 thold), f_keep = 0.714
+slot launch_slot_: id  0 | task 131 | processing task, is_child = 0
+slot update_slots: id  0 | task 131 | new prompt, n_ctx_slot = 8192, n_keep = 0, task.n_tokens = 7
+slot update_slots: id  0 | task 131 | n_tokens = 5, memory_seq_rm [5, end)
+slot update_slots: id  0 | task 131 | prompt processing done, n_tokens = 7, batch.n_tokens = 2
+slot      release: id  0 | task 131 | stop processing: n_tokens = 7, truncated = 0
+srv  update_slots: all slots are idle
+srv  log_server_r: done request: POST /v1/embeddings 127.0.0.1 200
+srv    operator(): operator(): cleaning up before exit...
+common_memory_breakdown_print: | memory breakdown [MiB]  |  total    free     self   model   context   compute    unaccounted |
+common_memory_breakdown_print: |   - MTL0 (Apple M5 Max) | 110100 = 92511 + (17588 =  7668 +    1152 +    8768) +           0 |
+common_memory_breakdown_print: |   - Host                |                    1205 =   629 +       0 +     576                |
+ggml_metal_free: deallocating
