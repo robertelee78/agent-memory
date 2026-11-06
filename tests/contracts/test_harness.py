@@ -2,6 +2,7 @@
 import ast
 import json
 import os
+import runpy
 from pathlib import Path
 import shutil
 import subprocess
@@ -188,24 +189,69 @@ for name,group in GROUPS.items():
                 {"name": "second", "path": "tests/contracts/controlled.py", "tests": ["Controlled.test_b"]}]
             manifest = checkout / "tests/contracts.json"
             manifest.write_text(json.dumps({"suites": entries}))
-            command = [sys.executable, "-I", checkout / "scripts/run_contract_suite.py", target, "--suite"]
+            # Distinguish a deliberate invalid-registration refusal from an
+            # unrelated crash without pinning incidental diagnostic wording.
+            wrapper = checkout / "controlled_worker.py"
+            wrapper.write_text(
+                "import runpy, sys\nsys.argv = sys.argv[1:]\n"
+                "try: runpy.run_path(sys.argv[0], run_name='__main__')\n"
+                "except ValueError: raise SystemExit(2)\n")
+            command = [sys.executable, "-I", wrapper, checkout / "scripts/run_contract_suite.py", target]
+            reports = []
             for name in ("first", "second"):
-                result = world.run([*command, name], check=False)
+                result = world.run([*command, "--suite", name], check=False)
                 self.assertEqual(result.returncode, 0, result.stderr)
-                self.assertTrue(json.loads(result.stdout)["passed"])
+                counts = json.loads(result.stdout)
+                self.assertTrue(counts["passed"])
+                reports.append({**counts, "name": name, "status": "passed"})
+            self.assertEqual(log.read_text(), "ab")
+            log.unlink()
+            result = world.run(command, check=False)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(json.loads(result.stdout)["tests"], 2)
             self.assertEqual(log.read_text(), "ab")
             corruptions = [
                 entries[:1],
                 [entries[0], {**entries[1], "tests": ["Controlled"]}],
                 [entries[0], {**entries[1], "tests": ["Controlled.test_missing"]}],
+                [entries[0], {**entries[1], "tests": ["MissingClass"]}],
+                [entries[0], {**entries[1], "tests": ["Controlled.test_b", "Controlled.test_b"]}],
+                [entries[0], {**entries[1], "tests": ["Controlled.test_b.extra"]}],
                 [entries[0], {**entries[1], "tests": []}]]
             for bad in corruptions:
                 with self.subTest(batch=bad):
                     log.unlink(missing_ok=True)
                     manifest.write_text(json.dumps({"suites": bad}))
-                    result = world.run([*command, "first"], check=False)
-                    self.assertNotEqual(result.returncode, 0)
+                    result = world.run([*command, "--suite", "first"], check=False)
+                    self.assertEqual(result.returncode, 2, result.stderr)
                     self.assertFalse(log.exists(), "Invalid coverage must refuse before running even a valid batch")
+            manifest.write_text(json.dumps({"suites": entries}))
+            for unregistered in ("missing", "other-file"):
+                with self.subTest(unregistered=unregistered):
+                    if unregistered == "other-file":
+                        manifest.write_text(json.dumps({"suites": [
+                            *entries, {"name": unregistered, "path": "tests/contracts/elsewhere.py"}]}))
+                    result = world.run([*command, "--suite", unregistered], check=False)
+                    self.assertEqual(result.returncode, 2, result.stderr)
+                    self.assertFalse(log.exists())
+            aggregate = runpy.run_path(str(ROOT / "scripts/test_gate.py"))["case_batch_coverage"]
+            summary = aggregate(entries, reports)
+            self.assertEqual(summary[0]["cases"], reports[0]["case_selection"]["complete"])
+            bad_reports = [
+                reports[:1],
+                [reports[0], {**reports[1], "status": "failed"}],
+                [reports[0], {**reports[1], "tests": 2}],
+                [reports[0], {**reports[1], "case_selection": {
+                    **reports[1]["case_selection"], "complete": ["different.test"]}}],
+                [reports[0], {**reports[1], "case_selection": {
+                    **reports[1]["case_selection"], "selected": reports[0]["case_selection"]["selected"]}}],
+                [{**report, "case_selection": {
+                    **report["case_selection"], "complete": [
+                        *report["case_selection"]["complete"], "omitted.test"]}} for report in reports]]
+            for invalid in bad_reports:
+                with self.subTest(aggregate=invalid):
+                    with self.assertRaises(ValueError):
+                        aggregate(entries, invalid)
 
 
 
