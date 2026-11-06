@@ -1,0 +1,830 @@
+{
+  "actual_invocation": {
+    "argv": [
+      "/tmp/am-v15-delivery/qualification-venv/bin/python",
+      "docs/research/data/2026-11-05-ssg-runtime/core-comparison/compare.py",
+      "--authorized-shared-host",
+      "--output",
+      "docs/research/data/2026-11-05-ssg-runtime/core-comparison/observed-20261106",
+      "--ssg",
+      "/opt/ssg"
+    ],
+    "cwd": "/Users/robert.lee/.omp/wt/t4d88ac83b/m",
+    "exit": 0,
+    "reproduction": "Use a NEW output root; the historical root intentionally refuses reuse. Existing local images and neo4j qualification environment required; no install or pull is attempted.",
+    "wall_seconds_observed_by_tool": 15.21
+  },
+  "attempts": [
+    {
+      "artifact_inventory": {
+        "bytes": 7985,
+        "path": "actual-20261106/artifact-inventory.json",
+        "sha256": "1038cd403234ae47b6da98bc592d62d2ddf900bb98afd0d4480e745597fa47ce"
+      },
+      "controller_sha256": "7263a393d310548a298007f10a31377708551396f192fdbe4d07dd49c85fbfa0",
+      "description": "Failed controller premise: ANN similarity was assumed equal to exact signed cosine; actual negative-vector mismatch retained, cleanup complete.",
+      "error": "ValueError: ANN score mismatch",
+      "frozen_inputs": {
+        "bytes": 8919,
+        "path": "actual-20261106/frozen-inputs.json",
+        "sha256": "4c5965515f21ee85275b878a04e75ae67d7ee569901d9a0c47f89b1d09de1712"
+      },
+      "owned_resources_all_absent": true,
+      "preexisting_containers_preserved": true,
+      "preexisting_volumes_preserved": true,
+      "remaining_new_volumes": [],
+      "report": {
+        "bytes": 25395,
+        "path": "actual-20261106/report.json",
+        "sha256": "485a541353ba124607f97a9e7af27616732d2dc39a3e57f8f0863714d99bbfd5"
+      },
+      "root": "actual-20261106",
+      "success": false
+    },
+    {
+      "artifact_inventory": {
+        "bytes": 7985,
+        "path": "actual-20261106-complete/artifact-inventory.json",
+        "sha256": "4286ec94ada4bc2c20ad0d3506aa62a746ac25efb751e1716162f491e05b42ab"
+      },
+      "controller_sha256": "8e3010d1454f6d1c0caf79404f1afcec8e6845207da9454ee263d47b409981d2",
+      "description": "Failed research Cypher: ORDER BY map-valued provenance is unsupported; fixed by sorting scalar relationship-type lists, with raw error and cleanup retained.",
+      "error": "ClientError: {code: Memgraph.ClientError.MemgraphError.MemgraphError} {message: Comparison is not defined for values of type map.}",
+      "frozen_inputs": {
+        "bytes": 8919,
+        "path": "actual-20261106-complete/frozen-inputs.json",
+        "sha256": "69c6b1bbd0362cdbcf2e5ce825dc0b6d884449df7d65139f99ce3a4f851d258d"
+      },
+      "owned_resources_all_absent": true,
+      "preexisting_containers_preserved": true,
+      "preexisting_volumes_preserved": true,
+      "remaining_new_volumes": [],
+      "report": {
+        "bytes": 25499,
+        "path": "actual-20261106-complete/report.json",
+        "sha256": "a9a8452dbffeb0781c204b7e63b5d4c2cc169ea36bc2f75a74f01787ed7c007d"
+      },
+      "root": "actual-20261106-complete",
+      "success": false
+    },
+    {
+      "artifact_inventory": {
+        "bytes": 19450,
+        "path": "actual-20261106-final/artifact-inventory.json",
+        "sha256": "d74ae31dcaa254c463e4c94445256126264a6667aa1f127b8f005be167e3e797"
+      },
+      "controller_sha256": "3cb4b7a63776642b748fa07c5abd3e8eede4799e083c39135cdc58f4bac511ee",
+      "description": "Earlier complete comparison; superseded as primary only because final controller now permits replay on descendants of the assigned baseline and snapshots its executable.",
+      "error": null,
+      "frozen_inputs": {
+        "bytes": 8919,
+        "path": "actual-20261106-final/frozen-inputs.json",
+        "sha256": "a3cbc512d236a21fbce04ff36d8185a6da502e9a45439070934196b4f4eb4840"
+      },
+      "owned_resources_all_absent": true,
+      "preexisting_containers_preserved": true,
+      "preexisting_volumes_preserved": true,
+      "remaining_new_volumes": [],
+      "report": {
+        "bytes": 490569,
+        "path": "actual-20261106-final/report.json",
+        "sha256": "c4d7328ecfd39df684ee6901105345f524661278ad53e09f3b6e66943317cb6c"
+      },
+      "root": "actual-20261106-final",
+      "success": true
+    },
+    {
+      "artifact_inventory": {
+        "bytes": 19890,
+        "path": "observed-20261106/artifact-inventory.json",
+        "sha256": "ca108086cbf88755ff02988f3831b5873d1e7705a29bc555dacd68e62e9b5a2b"
+      },
+      "controller_sha256": "98e612da09980fd4cd2ae4bc0d7da3a9f312dd474ad3b718dca290ec4bb3780f",
+      "description": "Primary final executable changed-path smoke; real core then MAGE comparison, not G1 acceptance.",
+      "error": null,
+      "frozen_inputs": {
+        "bytes": 8985,
+        "path": "observed-20261106/frozen-inputs.json",
+        "sha256": "b9c26a1c8c8e14d018e33d802f3cf31a91de92d1032e242a00611ef191ed0012"
+      },
+      "owned_resources_all_absent": true,
+      "preexisting_containers_preserved": true,
+      "preexisting_volumes_preserved": true,
+      "remaining_new_volumes": [],
+      "report": {
+        "bytes": 490645,
+        "path": "observed-20261106/report.json",
+        "sha256": "ea94f39e1b413170e6560f330191e07ff6ab3361b1fa410d165f7234ca25d5b8"
+      },
+      "root": "observed-20261106",
+      "success": true
+    }
+  ],
+  "comparison": {
+    "ann_exact_score_deviations": {
+      "core": [
+        {
+          "ann_similarity": 1.0,
+          "host_exact_similarity": -1.0,
+          "key": "investigation/synthetic"
+        }
+      ],
+      "mage": [
+        {
+          "ann_similarity": 1.0,
+          "host_exact_similarity": -1.0,
+          "key": "investigation/synthetic"
+        }
+      ]
+    },
+    "ann_score_warning": "Raw ANN similarity is not assumed equivalent to exact signed cosine; negative-vector deviation remains a qualification finding, not silently corrected.",
+    "binary_equal": true,
+    "identical_selected_query_outputs": true,
+    "image_bytes": {
+      "core": 627982663,
+      "mage": 2082396600
+    },
+    "memgraph_notice_sets_equal": true,
+    "selected_query_names": [
+      "component-attempts",
+      "recorded-related",
+      "replacement-evidence",
+      "ssg-exact-cosine",
+      "ssg-template-class",
+      "ssg-template-investigation",
+      "ssg-template-nearby",
+      "ssg-template-search",
+      "vector-search"
+    ],
+    "vector_search_equal": true
+  },
+  "exercised": {
+    "dimension": 4,
+    "explain_plans": 7,
+    "notes": "250ms read timeout requested; no adversarial timeout-enforcement or production ACL proof. Semantic query shapes, not production AM eligibility/reader implementations.",
+    "synthetic_edges": 20,
+    "synthetic_nodes": 17,
+    "typed_relationships": [
+      "CONTAINS",
+      "ROUTES_TO",
+      "IN_SCOPE",
+      "HAS_CONDITION",
+      "SUPPORTED_BY",
+      "ATTRIBUTED_TO",
+      "CORRECTS",
+      "SUPERSEDES",
+      "DERIVED_FROM",
+      "SIMILAR_SUGGESTION"
+    ],
+    "typed_research_shapes": [
+      "replacement-evidence",
+      "component-attempts",
+      "recorded-related"
+    ],
+    "unmodified_ssg_templates": [
+      "search",
+      "nearby",
+      "class",
+      "investigation"
+    ],
+    "vector_calls": [
+      "CREATE VECTOR INDEX",
+      "vector_search.search",
+      "vector_search.show_index_info",
+      "vector_search.cosine_similarity"
+    ],
+    "vectors": 7
+  },
+  "g1_accepted": false,
+  "issue": 255,
+  "legal_caveats": {
+    "classification": "Inventory/declarations and verified byte identities, not complete BOM/clearance.",
+    "core_not_only_memgraph_and_ubuntu": "Custom openssl/libssl3t64 3.5.4-0ubuntu0custom1 still lack per-package copyright files. memgraph uses its separate legal directory. No msodbcsql18 package or /opt files observed in core.",
+    "core_not_python_free": "24 distributions; LGPL-declared gensim/ldap3 and MPL-declared certifi remain; numpy/scipy enumerate four vendored shared libraries with incomplete license/linkage closure.",
+    "memgraph_texts": "BSL/MEL/APL and all 35 notice/file hashes agree between images. Literal BSL CHANGE DATE 2030-25-03 and MCE version2.0 naming retained; package3.10.1. AUG clauses a-c, MEL installing/using acceptance, distribution/hosted restrictions and unresolved counsel questions remain unchanged.",
+    "remaining_closure": [
+      "amd64 contents",
+      "complete rootfs ownership audit",
+      "third-party versions/linkage and reproducible origins",
+      "per-file MAGE license headers",
+      "Python wheel-vendored native licenses",
+      "custom OpenSSL origin/missing notices (both images)",
+      "distribution/hosted/operator/counsel disposition",
+      "production template/ACL/native-reader qualification",
+      "clean performance and independent G1 quality gates"
+    ]
+  },
+  "legal_clearance": false,
+  "limits": {
+    "cpus": 2,
+    "host": "shared ordinary load, Podman Linux VM; not a clean timing slot",
+    "memory_bytes": 2147483648,
+    "network": "only Bolt host publication is loopback; default container networking, not an egress-isolation proof; telemetry disabled",
+    "new_graphs_at_once": 1,
+    "timings": "observations including host/VM/client and instrumentation overhead, no performance pass"
+  },
+  "ownership": {
+    "cleanup": [
+      {
+        "absent": true,
+        "id": "935fb160c922e3563d467de6060e00ac6f56d613eb3bb3e357c3eecf6fe65519",
+        "name": "am255-compare-5b6962955026-core",
+        "type": "container"
+      },
+      {
+        "absent": true,
+        "id": "b93c772b9f66ed6e73344b1fae19a91b43a5c0bff80c56f3c153b538900ae3f8",
+        "name": "am255-compare-5b6962955026-mage",
+        "type": "container"
+      },
+      {
+        "absent": true,
+        "created": "2026-11-06T11:23:16.709983455-08:00",
+        "name": "am255-compare-5b6962955026-core-data",
+        "type": "volume"
+      },
+      {
+        "absent": true,
+        "created": "2026-11-06T11:23:16.922142359-08:00",
+        "name": "am255-compare-5b6962955026-core-logs",
+        "type": "volume"
+      },
+      {
+        "absent": true,
+        "created": "2026-11-06T11:23:20.533147131-08:00",
+        "name": "am255-compare-5b6962955026-mage-data",
+        "type": "volume"
+      },
+      {
+        "absent": true,
+        "created": "2026-11-06T11:23:20.739859028-08:00",
+        "name": "am255-compare-5b6962955026-mage-logs",
+        "type": "volume"
+      }
+    ],
+    "new_remaining_volumes": [],
+    "policy": "One newly owned instance at a time, image-default uid101/gid103, two labeled named volumes, image-volume=ignore (no anonymous /etc volume), exact IDs/volume creation identities checked before disposal; unrelated graph-b and serving processes not operated on.",
+    "preexisting_containers_preserved": true,
+    "preexisting_volumes_preserved": true
+  },
+  "primary": {
+    "artifact_inventory": {
+      "bytes": 19890,
+      "path": "observed-20261106/artifact-inventory.json",
+      "sha256": "ca108086cbf88755ff02988f3831b5873d1e7705a29bc555dacd68e62e9b5a2b"
+    },
+    "command_records": 117,
+    "report": {
+      "bytes": 490645,
+      "path": "observed-20261106/report.json",
+      "sha256": "ea94f39e1b413170e6560f330191e07ff6ab3361b1fa410d165f7234ca25d5b8"
+    },
+    "root": "observed-20261106"
+  },
+  "production": false,
+  "profile_cutover": false,
+  "recommendation": {
+    "am_exact_cosine": "AM-side host calculation; MAGE is not required for AM exact cosine",
+    "candidate": "core is sufficient for these bounded observed query capabilities and has a smaller observed dependency/image surface",
+    "legal": "Core retains BSL/MEL/APL and AUG restrictions; smaller image does not confer legal clearance",
+    "not_adopted": "Parent retains profile/ADR decisions; ADR-0024 amendment and independent review required",
+    "remaining_closure": [
+      "amd64 contents",
+      "complete rootfs ownership audit",
+      "third-party versions/linkage and reproducible origins",
+      "per-file MAGE license headers",
+      "Python wheel-vendored native licenses",
+      "custom OpenSSL origin/missing notices (both images)",
+      "distribution/hosted/operator/counsel disposition",
+      "production template/ACL/native-reader qualification",
+      "clean performance and independent G1 quality gates"
+    ]
+  },
+  "roles": {
+    "core": {
+      "bom": {
+        "bytes": 164099,
+        "path": "observed-20261106/core-bom.json",
+        "sha256": "02328c6c4af3714fe19f68c764bc95c3e4126974a7e18942b0f691d6333db3c9"
+      },
+      "container_id": "935fb160c922e3563d467de6060e00ac6f56d613eb3bb3e357c3eecf6fe65519",
+      "copyright_file_hashes": 126,
+      "deb_owned_module_files": 34,
+      "enumerated_wheel_vendored_shared_libraries": 4,
+      "extra_module_files": 0,
+      "function_count": 7,
+      "image": {
+        "child": "sha256:334cd2a524cdb05bb68310c8338c91de8d44d2998a7aa0349a6de9674824846d",
+        "config": "3792294abf9a035895d8db16cbc56146d48a9fa1d379be6581631fdeae525c4f",
+        "ref": "docker.io/memgraph/memgraph@sha256:042c8642954a7bde971a9c7683c8b1360e7fcf129a5fae36d63f12449e7154aa"
+      },
+      "installed_packages": 129,
+      "license_archive": {
+        "bytes": 378880,
+        "path": "observed-20261106/024-core-legal-texts.tar",
+        "sha256": "6cfef139b650eed516fec04fc2d9844caf818c0214eed36637852443a4437cf1"
+      },
+      "local_image_bytes": 627982663,
+      "memgraph_binary": {
+        "bytes": 69088792,
+        "path": "/usr/lib/memgraph/memgraph",
+        "sha256": "0b0e2855944de70376d4c3c866e8c920f5e9fe1267737b78db98716019f8a9f2"
+      },
+      "memgraph_license_texts": [
+        {
+          "bytes": 11294,
+          "path": "/usr/share/doc/memgraph/APL.txt",
+          "sha256": "2da5bcc8cff0ae5ba36d9923145e34eed3340a458a269f663c3582430f8c358f"
+        },
+        {
+          "bytes": 5162,
+          "path": "/usr/share/doc/memgraph/BSL.txt",
+          "sha256": "633e829d0a5358c94168283133701803e5ecc7a65652ad583629000580e019d1"
+        },
+        {
+          "bytes": 108313,
+          "path": "/usr/share/doc/memgraph/MEL.pdf",
+          "sha256": "09b9a62f64f09073cbef3f348c58b2f1e4368d7c1b919e9d2952520ad77cd47e"
+        },
+        {
+          "bytes": 11360,
+          "path": "/usr/share/doc/memgraph/third-party/abseil-cpp/LICENSE",
+          "sha256": "aac73b3148f6d1d7111dbca32099f68d26c644c6813ae1e4f05f6579aa2663fe"
+        },
+        {
+          "bytes": 2699,
+          "path": "/usr/share/doc/memgraph/third-party/antlr/LICENSE.txt",
+          "sha256": "b1b379fcaf3219593a4c433feb1b35c780bed23fafaae440b1ae2771a9521e3a"
+        },
+        {
+          "bytes": 1338,
+          "path": "/usr/share/doc/memgraph/third-party/boost/LICENSE_1_0.txt",
+          "sha256": "c9bff75738922193e67fa726fa225535870d2aa1059f91452c411736284ad566"
+        },
+        {
+          "bytes": 1901,
+          "path": "/usr/share/doc/memgraph/third-party/bzip2/LICENSE",
+          "sha256": "4919cfb14a73cd64fcef67b107613970cf1659a09aa675dba31314f373bc7204"
+        },
+        {
+          "bytes": 12262,
+          "path": "/usr/share/doc/memgraph/third-party/compile-time-regular-expressions/LICENSE",
+          "sha256": "9e45e856bedccee9f67254082ca11851d954de2fed7448c4bed19ad9aab99a91"
+        },
+        {
+          "bytes": 1318,
+          "path": "/usr/share/doc/memgraph/third-party/cppitertools/LICENSE.md",
+          "sha256": "466164da9b0db19fb948eab6de21e94548a49721c10ee35472d1c2ccb9375c05"
+        },
+        {
+          "bytes": 1071,
+          "path": "/usr/share/doc/memgraph/third-party/croncpp/LICENSE",
+          "sha256": "63cb5ce8f84323313fdf7bafb0bcaa1ddf17970bcfbffff71b66c79440b7e265"
+        },
+        {
+          "bytes": 1408,
+          "path": "/usr/share/doc/memgraph/third-party/fmt/LICENSE.rst",
+          "sha256": "825c9324e70f8c839c8ba910543dd4a7daee243b86ef960594c11381a19980b8"
+        },
+        {
+          "bytes": 1479,
+          "path": "/usr/share/doc/memgraph/third-party/gflags/COPYING.txt",
+          "sha256": "90d1f3701813c3cd65eee2dc736746fe46b465918f3f7d6d31463a2018b33fa5"
+        },
+        {
+          "bytes": 1535,
+          "path": "/usr/share/doc/memgraph/third-party/grappolo/LICENSE",
+          "sha256": "fb9a2e67c04f9bf5fd8f0f74dd42b8fea6a7b0c855fcbd1bb57ac582798f9931"
+        },
+        {
+          "bytes": 1338,
+          "path": "/usr/share/doc/memgraph/third-party/iostreams/LICENSE.txt",
+          "sha256": "c9bff75738922193e67fa726fa225535870d2aa1059f91452c411736284ad566"
+        },
+        {
+          "bytes": 1709,
+          "path": "/usr/share/doc/memgraph/third-party/jemalloc/COPYING",
+          "sha256": "94aa2caa98c25d942f58b956c71dba6a99ff98fc3a31cbc669fe2a4cd0268b53"
+        },
+        {
+          "bytes": 1076,
+          "path": "/usr/share/doc/memgraph/third-party/json/LICENSE.MIT",
+          "sha256": "c983d69523377819db3c377b390d5644f5ec53bec9b7c4a0f1ed893bb743d045"
+        },
+        {
+          "bytes": 11358,
+          "path": "/usr/share/doc/memgraph/third-party/ldbc/LICENSE",
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+        },
+        {
+          "bytes": 7048,
+          "path": "/usr/share/doc/memgraph/third-party/libbcrypt/COPYING",
+          "sha256": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499"
+        },
+        {
+          "bytes": 17034,
+          "path": "/usr/share/doc/memgraph/third-party/librdkafka/LICENSES.txt",
+          "sha256": "ee5e38ac7f79a1e90fd0cc7821503af66ca21f6cc1d99d5ae2f97b57a2ac7a38"
+        },
+        {
+          "bytes": 1520,
+          "path": "/usr/share/doc/memgraph/third-party/librdtsc/LICENSE",
+          "sha256": "64ab78ac3da7df057c2196575a0516308755261b203d8c5331342c27f195a7ae"
+        },
+        {
+          "bytes": 17997,
+          "path": "/usr/share/doc/memgraph/third-party/libstdc++/COPYING",
+          "sha256": "cd5c66af63b509ccd75ec85fee41b6e5cbb77cd6bf9392a54900acc0f02be4a6"
+        },
+        {
+          "bytes": 10174,
+          "path": "/usr/share/doc/memgraph/third-party/mgclient/LICENSE",
+          "sha256": "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594"
+        },
+        {
+          "bytes": 32473,
+          "path": "/usr/share/doc/memgraph/third-party/mgconsole/LICENSE",
+          "sha256": "1b3782ccad7b8614100cda30d3faf42fc39f2e97932908c543005053b654ca68"
+        },
+        {
+          "bytes": 11354,
+          "path": "/usr/share/doc/memgraph/third-party/nuraft/LICENSE",
+          "sha256": "e812f4679d82934d470559b4bf6b330715ba17e162fdc120a498b01ab9507198"
+        },
+        {
+          "bytes": 13300,
+          "path": "/usr/share/doc/memgraph/third-party/pulsar/LICENSE",
+          "sha256": "8ba56c6b25c502a185d6f7059946e2f517774452c8ea7f621e05cefeff2c3cc2"
+        },
+        {
+          "bytes": 7233,
+          "path": "/usr/share/doc/memgraph/third-party/range-v3/LICENSE.txt",
+          "sha256": "2b74ee37dd1a90b2b385534b7dbc171938409bda468673a123ff25302c9c5739"
+        },
+        {
+          "bytes": 2726,
+          "path": "/usr/share/doc/memgraph/third-party/replxx/LICENSE.md",
+          "sha256": "357d952174ede020b495eaf5d1986349f009bdada7fe2e1e49a6339277504378"
+        },
+        {
+          "bytes": 11358,
+          "path": "/usr/share/doc/memgraph/third-party/rocksdb/LICENSE.Apache",
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+        },
+        {
+          "bytes": 1572,
+          "path": "/usr/share/doc/memgraph/third-party/rocksdb/LICENSE.leveldb",
+          "sha256": "b568f1f37a5a1d37a3e981e7c8b7fc4856ca33b2ca0a45bc8e847aaaf7afe485"
+        },
+        {
+          "bytes": 1348,
+          "path": "/usr/share/doc/memgraph/third-party/spdlog/LICENSE",
+          "sha256": "a7241a379cb98d37788f82c2fc2e484c3ae85dae881fd3406f0637644850926f"
+        },
+        {
+          "bytes": 1338,
+          "path": "/usr/share/doc/memgraph/third-party/strong_type/LICENSE",
+          "sha256": "c9bff75738922193e67fa726fa225535870d2aa1059f91452c411736284ad566"
+        },
+        {
+          "bytes": 311,
+          "path": "/usr/share/doc/memgraph/third-party/tantivy/AUTHORS",
+          "sha256": "ceb59912dcef04b3d16ed830bdd34c46981cd9e2a61609c62088cd1a5bf23e1f"
+        },
+        {
+          "bytes": 1098,
+          "path": "/usr/share/doc/memgraph/third-party/tantivy/LICENSE",
+          "sha256": "8fc3d506f80a9d9c26b5d7dc586c543b9ea16c05e4bfdfbfdf6156ab8f0d14d0"
+        },
+        {
+          "bytes": 11357,
+          "path": "/usr/share/doc/memgraph/third-party/usearch/LICENSE",
+          "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+        },
+        {
+          "bytes": 5187,
+          "path": "/usr/share/doc/memgraph/third-party/zlib/README",
+          "sha256": "7960b6b1cc63e619abb77acaea5427159605afee8c8b362664f4effc7d7f7d15"
+        }
+      ],
+      "module_files": 34,
+      "procedure_count": 123,
+      "process_rss_kib": {
+        "after_queries": 123520,
+        "ready": 95964
+      },
+      "python_distributions": 24,
+      "python_license_file_hashes": 38,
+      "python_without_license_file": [],
+      "query_records": {
+        "bytes": 120243,
+        "path": "observed-20261106/core-queries.json",
+        "sha256": "d50b68db084cb573b7fa185af768c816620bdec5fb102e0e09baf6153ef501b7"
+      },
+      "startup_seconds": 0.6765880000311881,
+      "tree_totals": {
+        "/home/memgraph/.local/lib/python3.12/site-packages": {
+          "bytes": 315593626,
+          "files": 6307
+        },
+        "/opt": {
+          "bytes": 0,
+          "files": 0
+        },
+        "/usr/lib/memgraph": {
+          "bytes": 91693535,
+          "files": 47
+        },
+        "/usr/share/doc": {
+          "bytes": 2679082,
+          "files": 258
+        }
+      },
+      "user": "uid=101(memgraph) gid=103(memgraph) groups=103(memgraph)",
+      "vector_module": {
+        "bytes": 57624,
+        "path": "/usr/lib/memgraph/query_modules/vector_search.so",
+        "sha256": "8730aacb515b10fbfb1da29bc65e69f93d186785b07332f42226813c51d376b5"
+      },
+      "warnings": "Registered inventory only; enterprise-restricted and other failed module loads remain in startup logs. Default container networking does not prove egress isolation."
+    },
+    "mage": {
+      "bom": {
+        "bytes": 292602,
+        "path": "observed-20261106/mage-bom.json",
+        "sha256": "55a184c895e9a499dcaea79f9989223c45e3172c2afcaa894ec7f797d16d429d"
+      },
+      "container_id": "b93c772b9f66ed6e73344b1fae19a91b43a5c0bff80c56f3c153b538900ae3f8",
+      "copyright_file_hashes": 138,
+      "deb_owned_module_files": 34,
+      "enumerated_wheel_vendored_shared_libraries": 45,
+      "extra_module_files": 155,
+      "function_count": 48,
+      "image": {
+        "child": "sha256:fe2f37e45e263225129bcb6955612ac9956dea0e8db614f9c39eb74b105c6c39",
+        "config": "44b5244a3622425584cae52b0cdf1ea1690ebb98e27110b3adfd1af7ab8227a9",
+        "ref": "docker.io/memgraph/memgraph-mage@sha256:e8e03640071c57de6a13f2f4c5f9ed1789797dc5e8e771bbe62203b20e1b8c27"
+      },
+      "installed_packages": 142,
+      "license_archive": {
+        "bytes": 378880,
+        "path": "observed-20261106/062-mage-legal-texts.tar",
+        "sha256": "5c6dee16f294039b387e59176433c51f1714f051aa3da7c23d1dee558d43be05"
+      },
+      "local_image_bytes": 2082396600,
+      "memgraph_binary": {
+        "bytes": 69088792,
+        "path": "/usr/lib/memgraph/memgraph",
+        "sha256": "0b0e2855944de70376d4c3c866e8c920f5e9fe1267737b78db98716019f8a9f2"
+      },
+      "memgraph_license_texts": [
+        {
+          "bytes": 11294,
+          "path": "/usr/share/doc/memgraph/APL.txt",
+          "sha256": "2da5bcc8cff0ae5ba36d9923145e34eed3340a458a269f663c3582430f8c358f"
+        },
+        {
+          "bytes": 5162,
+          "path": "/usr/share/doc/memgraph/BSL.txt",
+          "sha256": "633e829d0a5358c94168283133701803e5ecc7a65652ad583629000580e019d1"
+        },
+        {
+          "bytes": 108313,
+          "path": "/usr/share/doc/memgraph/MEL.pdf",
+          "sha256": "09b9a62f64f09073cbef3f348c58b2f1e4368d7c1b919e9d2952520ad77cd47e"
+        },
+        {
+          "bytes": 11360,
+          "path": "/usr/share/doc/memgraph/third-party/abseil-cpp/LICENSE",
+          "sha256": "aac73b3148f6d1d7111dbca32099f68d26c644c6813ae1e4f05f6579aa2663fe"
+        },
+        {
+          "bytes": 2699,
+          "path": "/usr/share/doc/memgraph/third-party/antlr/LICENSE.txt",
+          "sha256": "b1b379fcaf3219593a4c433feb1b35c780bed23fafaae440b1ae2771a9521e3a"
+        },
+        {
+          "bytes": 1338,
+          "path": "/usr/share/doc/memgraph/third-party/boost/LICENSE_1_0.txt",
+          "sha256": "c9bff75738922193e67fa726fa225535870d2aa1059f91452c411736284ad566"
+        },
+        {
+          "bytes": 1901,
+          "path": "/usr/share/doc/memgraph/third-party/bzip2/LICENSE",
+          "sha256": "4919cfb14a73cd64fcef67b107613970cf1659a09aa675dba31314f373bc7204"
+        },
+        {
+          "bytes": 12262,
+          "path": "/usr/share/doc/memgraph/third-party/compile-time-regular-expressions/LICENSE",
+          "sha256": "9e45e856bedccee9f67254082ca11851d954de2fed7448c4bed19ad9aab99a91"
+        },
+        {
+          "bytes": 1318,
+          "path": "/usr/share/doc/memgraph/third-party/cppitertools/LICENSE.md",
+          "sha256": "466164da9b0db19fb948eab6de21e94548a49721c10ee35472d1c2ccb9375c05"
+        },
+        {
+          "bytes": 1071,
+          "path": "/usr/share/doc/memgraph/third-party/croncpp/LICENSE",
+          "sha256": "63cb5ce8f84323313fdf7bafb0bcaa1ddf17970bcfbffff71b66c79440b7e265"
+        },
+        {
+          "bytes": 1408,
+          "path": "/usr/share/doc/memgraph/third-party/fmt/LICENSE.rst",
+          "sha256": "825c9324e70f8c839c8ba910543dd4a7daee243b86ef960594c11381a19980b8"
+        },
+        {
+          "bytes": 1479,
+          "path": "/usr/share/doc/memgraph/third-party/gflags/COPYING.txt",
+          "sha256": "90d1f3701813c3cd65eee2dc736746fe46b465918f3f7d6d31463a2018b33fa5"
+        },
+        {
+          "bytes": 1535,
+          "path": "/usr/share/doc/memgraph/third-party/grappolo/LICENSE",
+          "sha256": "fb9a2e67c04f9bf5fd8f0f74dd42b8fea6a7b0c855fcbd1bb57ac582798f9931"
+        },
+        {
+          "bytes": 1338,
+          "path": "/usr/share/doc/memgraph/third-party/iostreams/LICENSE.txt",
+          "sha256": "c9bff75738922193e67fa726fa225535870d2aa1059f91452c411736284ad566"
+        },
+        {
+          "bytes": 1709,
+          "path": "/usr/share/doc/memgraph/third-party/jemalloc/COPYING",
+          "sha256": "94aa2caa98c25d942f58b956c71dba6a99ff98fc3a31cbc669fe2a4cd0268b53"
+        },
+        {
+          "bytes": 1076,
+          "path": "/usr/share/doc/memgraph/third-party/json/LICENSE.MIT",
+          "sha256": "c983d69523377819db3c377b390d5644f5ec53bec9b7c4a0f1ed893bb743d045"
+        },
+        {
+          "bytes": 11358,
+          "path": "/usr/share/doc/memgraph/third-party/ldbc/LICENSE",
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+        },
+        {
+          "bytes": 7048,
+          "path": "/usr/share/doc/memgraph/third-party/libbcrypt/COPYING",
+          "sha256": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499"
+        },
+        {
+          "bytes": 17034,
+          "path": "/usr/share/doc/memgraph/third-party/librdkafka/LICENSES.txt",
+          "sha256": "ee5e38ac7f79a1e90fd0cc7821503af66ca21f6cc1d99d5ae2f97b57a2ac7a38"
+        },
+        {
+          "bytes": 1520,
+          "path": "/usr/share/doc/memgraph/third-party/librdtsc/LICENSE",
+          "sha256": "64ab78ac3da7df057c2196575a0516308755261b203d8c5331342c27f195a7ae"
+        },
+        {
+          "bytes": 17997,
+          "path": "/usr/share/doc/memgraph/third-party/libstdc++/COPYING",
+          "sha256": "cd5c66af63b509ccd75ec85fee41b6e5cbb77cd6bf9392a54900acc0f02be4a6"
+        },
+        {
+          "bytes": 10174,
+          "path": "/usr/share/doc/memgraph/third-party/mgclient/LICENSE",
+          "sha256": "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594"
+        },
+        {
+          "bytes": 32473,
+          "path": "/usr/share/doc/memgraph/third-party/mgconsole/LICENSE",
+          "sha256": "1b3782ccad7b8614100cda30d3faf42fc39f2e97932908c543005053b654ca68"
+        },
+        {
+          "bytes": 11354,
+          "path": "/usr/share/doc/memgraph/third-party/nuraft/LICENSE",
+          "sha256": "e812f4679d82934d470559b4bf6b330715ba17e162fdc120a498b01ab9507198"
+        },
+        {
+          "bytes": 13300,
+          "path": "/usr/share/doc/memgraph/third-party/pulsar/LICENSE",
+          "sha256": "8ba56c6b25c502a185d6f7059946e2f517774452c8ea7f621e05cefeff2c3cc2"
+        },
+        {
+          "bytes": 7233,
+          "path": "/usr/share/doc/memgraph/third-party/range-v3/LICENSE.txt",
+          "sha256": "2b74ee37dd1a90b2b385534b7dbc171938409bda468673a123ff25302c9c5739"
+        },
+        {
+          "bytes": 2726,
+          "path": "/usr/share/doc/memgraph/third-party/replxx/LICENSE.md",
+          "sha256": "357d952174ede020b495eaf5d1986349f009bdada7fe2e1e49a6339277504378"
+        },
+        {
+          "bytes": 11358,
+          "path": "/usr/share/doc/memgraph/third-party/rocksdb/LICENSE.Apache",
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+        },
+        {
+          "bytes": 1572,
+          "path": "/usr/share/doc/memgraph/third-party/rocksdb/LICENSE.leveldb",
+          "sha256": "b568f1f37a5a1d37a3e981e7c8b7fc4856ca33b2ca0a45bc8e847aaaf7afe485"
+        },
+        {
+          "bytes": 1348,
+          "path": "/usr/share/doc/memgraph/third-party/spdlog/LICENSE",
+          "sha256": "a7241a379cb98d37788f82c2fc2e484c3ae85dae881fd3406f0637644850926f"
+        },
+        {
+          "bytes": 1338,
+          "path": "/usr/share/doc/memgraph/third-party/strong_type/LICENSE",
+          "sha256": "c9bff75738922193e67fa726fa225535870d2aa1059f91452c411736284ad566"
+        },
+        {
+          "bytes": 311,
+          "path": "/usr/share/doc/memgraph/third-party/tantivy/AUTHORS",
+          "sha256": "ceb59912dcef04b3d16ed830bdd34c46981cd9e2a61609c62088cd1a5bf23e1f"
+        },
+        {
+          "bytes": 1098,
+          "path": "/usr/share/doc/memgraph/third-party/tantivy/LICENSE",
+          "sha256": "8fc3d506f80a9d9c26b5d7dc586c543b9ea16c05e4bfdfbfdf6156ab8f0d14d0"
+        },
+        {
+          "bytes": 11357,
+          "path": "/usr/share/doc/memgraph/third-party/usearch/LICENSE",
+          "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+        },
+        {
+          "bytes": 5187,
+          "path": "/usr/share/doc/memgraph/third-party/zlib/README",
+          "sha256": "7960b6b1cc63e619abb77acaea5427159605afee8c8b362664f4effc7d7f7d15"
+        }
+      ],
+      "module_files": 189,
+      "procedure_count": 307,
+      "process_rss_kib": {
+        "after_queries": 793640,
+        "ready": 765376
+      },
+      "python_distributions": 125,
+      "python_license_file_hashes": 185,
+      "python_without_license_file": [
+        "dgl",
+        "tokenizers"
+      ],
+      "query_records": {
+        "bytes": 190895,
+        "path": "observed-20261106/mage-queries.json",
+        "sha256": "bdc2308a35ceef999b5e9bebe6ec5343dd391e49ebab7df5d700957f33bf2188"
+      },
+      "startup_seconds": 3.5547536250087433,
+      "tree_totals": {
+        "/home/memgraph/.local/lib/python3.12/site-packages": {
+          "bytes": 1754377670,
+          "files": 51733
+        },
+        "/opt": {
+          "bytes": 2186342,
+          "files": 4
+        },
+        "/usr/lib/memgraph": {
+          "bytes": 100493936,
+          "files": 202
+        },
+        "/usr/share/doc": {
+          "bytes": 2926039,
+          "files": 278
+        }
+      },
+      "user": "uid=101(memgraph) gid=103(memgraph) groups=103(memgraph)",
+      "vector_module": {
+        "bytes": 57624,
+        "path": "/usr/lib/memgraph/query_modules/vector_search.so",
+        "sha256": "8730aacb515b10fbfb1da29bc65e69f93d186785b07332f42226813c51d376b5"
+      },
+      "warnings": "Registered inventory only; enterprise-restricted and other failed module loads remain in startup logs. Default container networking does not prove egress isolation."
+    }
+  },
+  "schema": "am255/core-mage-comparison-index-v1",
+  "source": {
+    "baseline": "ba0087a129fed6dcda03ff4aa25060289531014a",
+    "clone": "/Users/robert.lee/.omp/wt/t4d88ac83b/m",
+    "controller": {
+      "bytes": 26354,
+      "path": "compare.py",
+      "sha256": "98e612da09980fd4cd2ae4bc0d7da3a9f312dd474ad3b718dca290ec4bb3780f"
+    },
+    "executed_controller_copy": {
+      "bytes": 26354,
+      "path": "observed-20261106/controller.py",
+      "sha256": "98e612da09980fd4cd2ae4bc0d7da3a9f312dd474ad3b718dca290ec4bb3780f"
+    },
+    "executed_source_commit": "ba0087a129fed6dcda03ff4aa25060289531014a",
+    "fetched_from": "/opt/agent-memory-worktrees/v015-delivery",
+    "fixture": {
+      "bytes": 3996,
+      "path": "fixture.json",
+      "sha256": "c331b204167adfbed4e4fd4cf887a8af90eaa4d9d97f211135833500b20c4dda"
+    },
+    "frozen_inputs": {
+      "bytes": 8985,
+      "path": "observed-20261106/frozen-inputs.json",
+      "sha256": "b9c26a1c8c8e14d018e33d802f3cf31a91de92d1032e242a00611ef191ed0012"
+    },
+    "ssg_commit": "9c4fd08c29f37bffe89ecdf75b069a6baeb8a5e0"
+  }
+}

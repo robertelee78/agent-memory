@@ -1,0 +1,385 @@
+{
+  "am_baseline": "ba0087a129fed6dcda03ff4aa25060289531014a",
+  "am_source_commit": "ba0087a129fed6dcda03ff4aa25060289531014a",
+  "am_template_contract_sha256": "86c1d28e13c66a3e2c7c4fb11f141bb703ee17c5a38f1297b604119b391b1c4e",
+  "clone": "/Users/robert.lee/.omp/wt/t4d88ac83b/m",
+  "common_sha256": "f08cb242284c91c8fb91445ff560bc2a1ea0e655844c66800eaa6c099cb9b6ab",
+  "controller_sha256": "98e612da09980fd4cd2ae4bc0d7da3a9f312dd474ad3b718dca290ec4bb3780f",
+  "fixture": {
+    "edges": [
+      [
+        "project:am255-synthetic",
+        "CONTAINS",
+        "record:new:2"
+      ],
+      [
+        "route:synthetic",
+        "ROUTES_TO",
+        "context:synthetic"
+      ],
+      [
+        "record:new:2",
+        "IN_SCOPE",
+        "scope:parser"
+      ],
+      [
+        "record:attempt:1",
+        "IN_SCOPE",
+        "scope:parser"
+      ],
+      [
+        "record:new:2",
+        "HAS_CONDITION",
+        "condition:synthetic"
+      ],
+      [
+        "record:new:2",
+        "SUPPORTED_BY",
+        "evidence:synthetic"
+      ],
+      [
+        "record:attempt:1",
+        "SUPPORTED_BY",
+        "evidence:synthetic"
+      ],
+      [
+        "record:attempt:1",
+        "ATTRIBUTED_TO",
+        "origin:synthetic"
+      ],
+      [
+        "record:new:2",
+        "CORRECTS",
+        "record:old:1"
+      ],
+      [
+        "record:new:2",
+        "SUPERSEDES",
+        "record:old:1"
+      ],
+      [
+        "record:new:2",
+        "DERIVED_FROM",
+        "record:attempt:1"
+      ],
+      [
+        "record:new:2",
+        "SIMILAR_SUGGESTION",
+        "record:attempt:1"
+      ],
+      [
+        "facet/synthetic",
+        "INDICATES",
+        "class/synthetic"
+      ],
+      [
+        "facet/synthetic",
+        "APPLIES_TO",
+        "cargo/synthetic"
+      ],
+      [
+        "method/synthetic",
+        "ADDRESSES",
+        "class/synthetic"
+      ],
+      [
+        "method/synthetic",
+        "FOR",
+        "cargo/synthetic"
+      ],
+      [
+        "investigation/synthetic",
+        "HAS_STEP",
+        "step/synthetic"
+      ],
+      [
+        "step/synthetic",
+        "USES",
+        "method/synthetic"
+      ],
+      [
+        "class/synthetic",
+        "SUGGESTS",
+        "query/synthetic"
+      ],
+      [
+        "step/synthetic",
+        "RUNS",
+        "query/synthetic"
+      ]
+    ],
+    "generation_id": "generation:comparison",
+    "nodes": [
+      {
+        "labels": [
+          "Project"
+        ],
+        "properties": {
+          "key": "project:am255-synthetic"
+        }
+      },
+      {
+        "labels": [
+          "RecordVersion",
+          "Embedded"
+        ],
+        "properties": {
+          "body": "Synthetic prior retry budget.",
+          "embedding": [
+            0.8,
+            0.6,
+            0.0,
+            0.0
+          ],
+          "key": "record:old:1",
+          "lifecycle": "superseded"
+        }
+      },
+      {
+        "labels": [
+          "RecordVersion",
+          "Embedded"
+        ],
+        "properties": {
+          "body": "Synthetic retry budget is three attempts.",
+          "embedding": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "key": "record:new:2",
+          "lifecycle": "accepted"
+        }
+      },
+      {
+        "labels": [
+          "RecordVersion",
+          "Embedded"
+        ],
+        "properties": {
+          "body": "Synthetic parser investigation attempt.",
+          "embedding": [
+            0.0,
+            1.0,
+            0.0,
+            0.0
+          ],
+          "key": "record:attempt:1",
+          "lifecycle": "accepted"
+        }
+      },
+      {
+        "labels": [
+          "ContextSource"
+        ],
+        "properties": {
+          "key": "context:synthetic",
+          "orientation_only": true
+        }
+      },
+      {
+        "labels": [
+          "Route"
+        ],
+        "properties": {
+          "key": "route:synthetic"
+        }
+      },
+      {
+        "labels": [
+          "Scope",
+          "Component"
+        ],
+        "properties": {
+          "key": "scope:parser"
+        }
+      },
+      {
+        "labels": [
+          "Condition"
+        ],
+        "properties": {
+          "key": "condition:synthetic",
+          "value": "parser"
+        }
+      },
+      {
+        "labels": [
+          "Evidence",
+          "Source"
+        ],
+        "properties": {
+          "body": "Synthetic source only.",
+          "key": "evidence:synthetic"
+        }
+      },
+      {
+        "labels": [
+          "Origin"
+        ],
+        "properties": {
+          "key": "origin:synthetic"
+        }
+      },
+      {
+        "labels": [
+          "Unit",
+          "Facet",
+          "Embedded"
+        ],
+        "properties": {
+          "body": "Synthetic fixture, not vulnerability evidence.",
+          "embedding": [
+            0.6,
+            0.0,
+            0.8,
+            0.0
+          ],
+          "key": "facet/synthetic",
+          "kind": "positive",
+          "status": "proposed",
+          "title": "Synthetic guarded input",
+          "type": "Facet"
+        }
+      },
+      {
+        "labels": [
+          "Unit",
+          "VulnClass",
+          "Embedded"
+        ],
+        "properties": {
+          "body": "Synthetic fixture.",
+          "cwe": "synthetic",
+          "docs": [],
+          "embedding": [
+            0.0,
+            0.0,
+            1.0,
+            0.0
+          ],
+          "key": "class/synthetic",
+          "status": "proposed",
+          "title": "Synthetic validation class",
+          "type": "VulnClass"
+        }
+      },
+      {
+        "labels": [
+          "Unit",
+          "Method",
+          "Embedded"
+        ],
+        "properties": {
+          "body": "Synthetic fixture.",
+          "embedding": [
+            0.0,
+            0.0,
+            0.6,
+            0.8
+          ],
+          "key": "method/synthetic",
+          "status": "proposed",
+          "title": "Synthetic check",
+          "type": "Method"
+        }
+      },
+      {
+        "labels": [
+          "Package"
+        ],
+        "properties": {
+          "key": "cargo/synthetic"
+        }
+      },
+      {
+        "labels": [
+          "Unit",
+          "Investigation",
+          "Embedded"
+        ],
+        "properties": {
+          "body": "Synthetic fixture.",
+          "docs": [],
+          "embedding": [
+            -1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "key": "investigation/synthetic",
+          "posture": "research",
+          "status": "proposed",
+          "title": "Synthetic investigation",
+          "type": "Investigation"
+        }
+      },
+      {
+        "labels": [
+          "Step"
+        ],
+        "properties": {
+          "commands": [],
+          "expect": "synthetic",
+          "instructions": "Read synthetic source.",
+          "key": "step/synthetic",
+          "order": 1,
+          "title": "Synthetic step"
+        }
+      },
+      {
+        "labels": [
+          "Query"
+        ],
+        "properties": {
+          "key": "query/synthetic",
+          "name": "class"
+        }
+      }
+    ],
+    "production": false,
+    "project_id": "project:am255-synthetic",
+    "query_vector": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "schema": "am255/core-mage-synthetic-fixture-v1"
+  },
+  "fixture_sha256": "c331b204167adfbed4e4fd4cf887a8af90eaa4d9d97f211135833500b20c4dda",
+  "flags": [
+    "--telemetry-enabled=false",
+    "--storage-properties-on-edges=true",
+    "--storage-wal-enabled=true",
+    "--storage-snapshot-interval-sec=300",
+    "--storage-snapshot-on-exit=true",
+    "--log-level=WARNING",
+    "--also-log-to-stderr=true"
+  ],
+  "images": {
+    "core": {
+      "child": "sha256:334cd2a524cdb05bb68310c8338c91de8d44d2998a7aa0349a6de9674824846d",
+      "config": "3792294abf9a035895d8db16cbc56146d48a9fa1d379be6581631fdeae525c4f",
+      "ref": "docker.io/memgraph/memgraph@sha256:042c8642954a7bde971a9c7683c8b1360e7fcf129a5fae36d63f12449e7154aa"
+    },
+    "mage": {
+      "child": "sha256:fe2f37e45e263225129bcb6955612ac9956dea0e8db614f9c39eb74b105c6c39",
+      "config": "44b5244a3622425584cae52b0cdf1ea1690ebb98e27110b3adfd1af7ab8227a9",
+      "ref": "docker.io/memgraph/memgraph-mage@sha256:e8e03640071c57de6a13f2f4c5f9ed1789797dc5e8e771bbe62203b20e1b8c27"
+    }
+  },
+  "neo4j_version": "5.28.2",
+  "platform": "macOS-27.2-arm64-arm-64bit-Mach-O",
+  "probe_sha256": "5667c50733839b9b44d6f1ac437b36b322be0e2a7aea3232709f0b8dad32a2de",
+  "python": "/tmp/am-v15-delivery/qualification-venv/bin/python",
+  "python_version": "3.13.13",
+  "ssg_commit": "9c4fd08c29f37bffe89ecdf75b069a6baeb8a5e0",
+  "ssg_templates": {
+    "class": "83bd9bc3374c27921cb889ca6edda00830aa6c2356754b6fdea3a5684a4b53fc",
+    "investigation": "881ba4fad8843d29bfcc74eb7a6bce87d4892c472e46a510ba12a87b950a7798",
+    "nearby": "4bdd9c4a400fe9fc9fa755db00f62c6d606252b9eea52f67bd10bb0fd62aee32",
+    "search": "62eb9e6663dc770bb5ecb58a44e8926bebaf3af812906332607e6afcc00f78a3"
+  }
+}

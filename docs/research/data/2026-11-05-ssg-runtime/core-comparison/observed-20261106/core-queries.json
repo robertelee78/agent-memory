@@ -1,0 +1,3566 @@
+[
+  {
+    "cypher": "CALL mg.procedures() YIELD * RETURN *",
+    "name": "procedures",
+    "params": {},
+    "rows": [
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "convert_c.to_tree",
+        "path": "/usr/lib/memgraph/query_modules/convert_c.so",
+        "signature": "convert_c.to_tree(paths :: ANY?, lowerCaseRels = true :: BOOLEAN, config = {} :: MAP) :: (value :: MAP)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "date.format",
+        "path": "/usr/lib/memgraph/query_modules/date.py",
+        "signature": "date.format(time :: INTEGER, unit = \"ms\" :: STRING, format = \"%Y-%m-%d %H:%M:%S %Z\" :: STRING, timezone = \"UTC\" :: STRING) :: (formatted :: STRING)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "date.get_date_formats",
+        "path": "/usr/lib/memgraph/query_modules/date.py",
+        "signature": "date.get_date_formats() :: (formats :: LIST OF STRING)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "date.parse",
+        "path": "/usr/lib/memgraph/query_modules/date.py",
+        "signature": "date.parse(time :: STRING, unit = \"ms\" :: STRING, format = \"%Y-%m-%d %H:%M:%S\" :: STRING, timezone = \"UTC\" :: STRING) :: (parsed :: INTEGER)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "example_c.procedure",
+        "path": "/usr/lib/memgraph/query_modules/example_c.so",
+        "signature": "example_c.procedure(required_arg :: ANY?, optional_arg = Null :: ANY?) :: (args :: LIST OF ANY?, result :: STRING)"
+      },
+      {
+        "is_editable": false,
+        "is_write": true,
+        "name": "example_c.write_procedure",
+        "path": "/usr/lib/memgraph/query_modules/example_c.so",
+        "signature": "example_c.write_procedure(required_arg :: STRING) :: (created_vertex :: NODE)"
+      },
+      {
+        "is_editable": false,
+        "is_write": true,
+        "name": "example_cpp.add_x_nodes",
+        "path": "/usr/lib/memgraph/query_modules/example_cpp.so",
+        "signature": "example_cpp.add_x_nodes(param_1 :: INTEGER) :: ()"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "example_cpp.return_true",
+        "path": "/usr/lib/memgraph/query_modules/example_cpp.so",
+        "signature": "example_cpp.return_true(param_1 :: INTEGER, param_2 = 2.3 :: FLOAT) :: (out :: BOOLEAN)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "graph_analyzer.analyze",
+        "path": "/usr/lib/memgraph/query_modules/graph_analyzer.py",
+        "signature": "graph_analyzer.analyze(analyses = Null :: LIST? OF STRING) :: (name :: STRING, value :: STRING)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "graph_analyzer.analyze_subgraph",
+        "path": "/usr/lib/memgraph/query_modules/graph_analyzer.py",
+        "signature": "graph_analyzer.analyze_subgraph(vertices :: LIST OF NODE, edges :: LIST OF RELATIONSHIP, analyses = Null :: LIST? OF STRING) :: (name :: STRING, value :: STRING)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "graph_analyzer.help",
+        "path": "/usr/lib/memgraph/query_modules/graph_analyzer.py",
+        "signature": "graph_analyzer.help() :: (name :: STRING, value :: STRING)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "mg.create_module_file",
+        "path": "builtin",
+        "signature": "mg.create_module_file(filename :: STRING, content :: STRING) :: (path :: STRING)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "mg.delete_module_file",
+        "path": "builtin",
+        "signature": "mg.delete_module_file(path :: STRING) :: ()"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "mg.functions",
+        "path": "builtin",
+        "signature": "mg.functions() :: (is_editable :: BOOLEAN, name :: STRING, path :: STRING, signature :: STRING)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "mg.get_module_file",
+        "path": "builtin",
+        "signature": "mg.get_module_file(path :: STRING) :: (content :: STRING)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "mg.get_module_files",
+        "path": "builtin",
+        "signature": "mg.get_module_files() :: (is_editable :: BOOLEAN, path :: STRING)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "mg.kafka_set_stream_offset",
+        "path": "builtin",
+        "signature": "mg.kafka_set_stream_offset(stream_name :: STRING, offset :: INTEGER) :: ()"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "mg.kafka_stream_info",
+        "path": "builtin",
+        "signature": "mg.kafka_stream_info(stream_name :: STRING) :: (bootstrap_servers :: STRING, configs :: MAP, consumer_group :: STRING, credentials :: MAP, topics :: LIST OF STRING)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "mg.load",
+        "path": "builtin",
+        "signature": "mg.load(module_name :: STRING) :: ()"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "mg.load_all",
+        "path": "builtin",
+        "signature": "mg.load_all() :: ()"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "mg.procedures",
+        "path": "builtin",
+        "signature": "mg.procedures() :: (is_editable :: BOOLEAN, is_write :: BOOLEAN, name :: STRING, path :: STRING, signature :: STRING)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "mg.pulsar_stream_info",
+        "path": "builtin",
+        "signature": "mg.pulsar_stream_info(stream_name :: STRING) :: (service_url :: STRING, topics :: LIST OF STRING)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "mg.transformations",
+        "path": "builtin",
+        "signature": "mg.transformations() :: (is_editable :: BOOLEAN, name :: STRING, path :: STRING)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "mg.update_module_file",
+        "path": "builtin",
+        "signature": "mg.update_module_file(path :: STRING, content :: STRING) :: ()"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "mgps.await_indexes",
+        "path": "/usr/lib/memgraph/query_modules/mgps.py",
+        "signature": "mgps.await_indexes(seconds :: INTEGER) :: ()"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "mgps.components",
+        "path": "/usr/lib/memgraph/query_modules/mgps.py",
+        "signature": "mgps.components() :: (edition :: STRING, name :: STRING, versions :: LIST OF ANY?)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "mgps.validate",
+        "path": "/usr/lib/memgraph/query_modules/mgps.py",
+        "signature": "mgps.validate(predicate :: BOOLEAN, message :: STRING, params :: LIST OF ANY) :: ()"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "mgps_cpp.validate",
+        "path": "/usr/lib/memgraph/query_modules/mgps_cpp.so",
+        "signature": "mgps_cpp.validate(predicate :: BOOLEAN, message :: STRING, params :: LIST OF ANY) :: ()"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.all_shortest_paths",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.all_shortest_paths(source :: NODE, target :: NODE, weight = Null :: STRING?, method = \"dijkstra\" :: STRING) :: (paths :: LIST OF LIST OF NODE)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.all_simple_paths",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.all_simple_paths(source :: NODE, target :: NODE, cutoff = Null :: INTEGER?) :: (paths :: LIST OF LIST OF NODE)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.ancestors",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.ancestors(source :: NODE) :: (ancestors :: LIST OF NODE)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.betweenness_centrality",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.betweenness_centrality(k = Null :: INTEGER?, normalized = true :: BOOLEAN, weight = Null :: STRING?, endpoints = false :: BOOLEAN, seed = Null :: INTEGER?) :: (betweenness :: NUMBER, node :: NODE)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.bfs_edges",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.bfs_edges(source :: NODE, reverse = false :: BOOLEAN, depth_limit = Null :: INTEGER?) :: (edges :: LIST OF RELATIONSHIP)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.bfs_predecessors",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.bfs_predecessors(source :: NODE, depth_limit = Null :: INTEGER?) :: (node :: NODE, predecessor :: NODE)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.bfs_successors",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.bfs_successors(source :: NODE, depth_limit = Null :: INTEGER?) :: (node :: NODE, successors :: LIST OF NODE)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.bfs_tree",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.bfs_tree(source :: NODE, reverse = false :: BOOLEAN, depth_limit = Null :: INTEGER?) :: (tree :: LIST OF NODE)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.biconnected_components",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.biconnected_components() :: (components :: LIST OF LIST OF NODE)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.bridges",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.bridges(root = Null :: NODE?) :: (bridges :: LIST OF RELATIONSHIP)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.center",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.center() :: (center :: LIST OF NODE)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.chain_decomposition",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.chain_decomposition(root = Null :: NODE?) :: (chains :: LIST OF LIST OF RELATIONSHIP)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.check_planarity",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.check_planarity() :: (is_planar :: BOOLEAN)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.clustering",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.clustering(nodes = Null :: LIST? OF NODE, weight = Null :: STRING?) :: (clustering :: NUMBER, node :: NODE)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.communicability",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.communicability() :: (communicability :: NUMBER, node1 :: NODE, node2 :: NODE)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.core_number",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.core_number() :: (core :: NUMBER, node :: NODE)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.degree_assortativity_coefficient",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.degree_assortativity_coefficient(x = \"out\" :: STRING, y = \"in\" :: STRING, weight = Null :: STRING?, nodes = Null :: LIST? OF NODE) :: (assortativity :: FLOAT)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.descendants",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.descendants(source :: NODE) :: (descendants :: LIST OF NODE)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.dfs_postorder_nodes",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.dfs_postorder_nodes(source :: NODE, depth_limit = Null :: INTEGER?) :: (nodes :: LIST OF NODE)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.dfs_predecessors",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.dfs_predecessors(source :: NODE, depth_limit = Null :: INTEGER?) :: (node :: NODE, predecessor :: NODE)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.dfs_preorder_nodes",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.dfs_preorder_nodes(source :: NODE, depth_limit = Null :: INTEGER?) :: (nodes :: LIST OF NODE)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.dfs_successors",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.dfs_successors(source :: NODE, depth_limit = Null :: INTEGER?) :: (node :: NODE, successors :: LIST OF NODE)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.dfs_tree",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.dfs_tree(source :: NODE, depth_limit = Null :: INTEGER?) :: (tree :: LIST OF NODE)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.diameter",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.diameter() :: (diameter :: INTEGER)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.dominance_frontiers",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.dominance_frontiers(start :: NODE) :: (frontier :: LIST OF NODE, node :: NODE)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.dominating_set",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.dominating_set(start :: NODE) :: (dominating_set :: LIST OF NODE)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.edge_bfs",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.edge_bfs(source = Null :: NODE?, orientation = Null :: STRING?) :: (edges :: LIST OF RELATIONSHIP)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.edge_dfs",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.edge_dfs(source = Null :: NODE?, orientation = Null :: STRING?) :: (edges :: LIST OF RELATIONSHIP)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.find_cliques",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.find_cliques() :: (cliques :: LIST OF LIST OF NODE)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.find_cycle",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.find_cycle(source = Null :: LIST? OF NODE, orientation = Null :: STRING?) :: (cycle :: LIST? OF RELATIONSHIP)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.flow_hierarchy",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.flow_hierarchy(weight = Null :: STRING?) :: (flow_hierarchy :: FLOAT)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.global_efficiency",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.global_efficiency() :: (global_efficiency :: FLOAT)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.greedy_color",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.greedy_color(strategy = \"largest_first\" :: STRING, interchange = false :: BOOLEAN) :: (color :: INTEGER, node :: NODE)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.has_eulerian_path",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.has_eulerian_path() :: (has_eulerian_path :: BOOLEAN)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.has_path",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.has_path(source :: NODE, target :: NODE) :: (has_path :: BOOLEAN)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.immediate_dominators",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.immediate_dominators(start :: NODE) :: (dominator :: NODE, node :: NODE)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.is_arborescence",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.is_arborescence() :: (is_arborescence :: BOOLEAN)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.is_at_free",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.is_at_free() :: (is_at_free :: BOOLEAN)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.is_bipartite",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.is_bipartite() :: (is_bipartite :: BOOLEAN)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.is_branching",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.is_branching() :: (is_branching :: BOOLEAN)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.is_chordal",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.is_chordal() :: (is_chordal :: BOOLEAN)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.is_distance_regular",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.is_distance_regular() :: (is_distance_regular :: BOOLEAN)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.is_edge_cover",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.is_edge_cover(cover :: LIST OF RELATIONSHIP) :: (is_edge_cover :: BOOLEAN)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.is_eulerian",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.is_eulerian() :: (is_eulerian :: BOOLEAN)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.is_forest",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.is_forest() :: (is_forest :: BOOLEAN)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.is_isolate",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.is_isolate(n :: NODE) :: (is_isolate :: BOOLEAN)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.is_isomorphic",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.is_isomorphic(nodes1 :: LIST OF NODE, edges1 :: LIST OF RELATIONSHIP, nodes2 :: LIST OF NODE, edges2 :: LIST OF RELATIONSHIP) :: (is_isomorphic :: BOOLEAN)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.is_semieulerian",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.is_semieulerian() :: (is_semieulerian :: BOOLEAN)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.is_simple_path",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.is_simple_path(nodes :: LIST OF NODE) :: (is_simple_path :: BOOLEAN)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.is_strongly_regular",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.is_strongly_regular() :: (is_strongly_regular :: BOOLEAN)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.is_tournament",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.is_tournament() :: (is_tournament :: BOOLEAN)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.is_tree",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.is_tree() :: (is_tree :: BOOLEAN)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.isolates",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.isolates() :: (isolates :: LIST OF NODE)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.jaccard_coefficient",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.jaccard_coefficient(ebunch = Null :: LIST? OF LIST OF NODE) :: (coef :: FLOAT, u :: NODE, v :: NODE)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.k_clique_communities",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.k_clique_communities(k :: INTEGER, cliques = Null :: LIST? OF LIST OF NODE) :: (communities :: LIST OF LIST OF NODE)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.k_components",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.k_components(density = 0.95 :: NUMBER) :: (components :: LIST OF LIST OF NODE, k :: INTEGER)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.k_edge_components",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.k_edge_components(k :: INTEGER) :: (components :: LIST OF LIST OF NODE)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.local_efficiency",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.local_efficiency() :: (local_efficiency :: FLOAT)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.lowest_common_ancestor",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.lowest_common_ancestor(node1 :: NODE, node2 :: NODE) :: (ancestor :: NODE?)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.maximal_matching",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.maximal_matching() :: (edges :: LIST OF RELATIONSHIP)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.minimum_spanning_tree",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.minimum_spanning_tree(weight = \"weight\" :: STRING, algorithm = \"kruskal\" :: STRING, ignore_nan = false :: BOOLEAN) :: (edges :: LIST OF RELATIONSHIP, nodes :: LIST OF NODE)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.multi_source_dijkstra_path",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.multi_source_dijkstra_path(sources :: LIST OF NODE, cutoff = Null :: INTEGER?, weight = \"weight\" :: STRING) :: (path :: LIST OF NODE, target :: NODE)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.multi_source_dijkstra_path_length",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.multi_source_dijkstra_path_length(sources :: LIST OF NODE, cutoff = Null :: INTEGER?, weight = \"weight\" :: STRING) :: (length :: NUMBER, target :: NODE)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.node_boundary",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.node_boundary(nbunch1 :: LIST OF NODE, nbunch2 = Null :: LIST? OF NODE) :: (boundary :: LIST OF NODE)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.node_connectivity",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.node_connectivity(source = Null :: NODE?, target = Null :: NODE?) :: (connectivity :: INTEGER)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.node_expansion",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.node_expansion(s :: LIST OF NODE) :: (node_expansion :: NUMBER)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.non_randomness",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.non_randomness(k = Null :: INTEGER?) :: (non_randomness :: FLOAT, relative_non_randomness :: FLOAT)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.pagerank",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.pagerank(alpha = 0.85 :: NUMBER, personalization = Null :: STRING?, max_iter = 100 :: INTEGER, tol = 1e-06 :: NUMBER, nstart = Null :: STRING?, weight = \"weight\" :: STRING?, dangling = Null :: STRING?) :: (node :: NODE, rank :: FLOAT)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.reciprocity",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.reciprocity(nodes = Null :: LIST? OF NODE) :: (node :: NODE?, reciprocity :: FLOAT?)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.shortest_path",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.shortest_path(source = Null :: NODE?, target = Null :: NODE?, weight = Null :: STRING?, method = \"dijkstra\" :: STRING) :: (path :: LIST OF NODE, source :: NODE, target :: NODE)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.shortest_path_length",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.shortest_path_length(source = Null :: NODE?, target = Null :: NODE?, weight = Null :: STRING?, method = \"dijkstra\" :: STRING) :: (length :: NUMBER, source :: NODE, target :: NODE)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.simple_cycles",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.simple_cycles() :: (cycles :: LIST OF LIST OF NODE)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.strongly_connected_components",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.strongly_connected_components() :: (components :: LIST OF LIST OF NODE)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.topological_sort",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.topological_sort() :: (nodes :: LIST? OF NODE)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.triadic_census",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.triadic_census() :: (count :: INTEGER, triad :: STRING)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.voronoi_cells",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.voronoi_cells(center_nodes :: LIST OF NODE, weight = \"weight\" :: STRING) :: (cell :: LIST OF NODE, center :: NODE)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.weakly_connected_components_subgraph",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.weakly_connected_components_subgraph(vertices :: LIST OF NODE, edges :: LIST OF RELATIONSHIP) :: (components :: LIST OF LIST OF NODE, n_components :: INTEGER)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "nxalg.wiener_index",
+        "path": "/usr/lib/memgraph/query_modules/nxalg.py",
+        "signature": "nxalg.wiener_index(weight = Null :: STRING?) :: (wiener_index :: NUMBER)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "py_example.procedure",
+        "path": "/usr/lib/memgraph/query_modules/py_example.py",
+        "signature": "py_example.procedure(required_arg :: ANY?, optional_arg = Null :: ANY?) :: (args :: LIST OF ANY?, avg_degree :: NUMBER, props :: MAP?, vertex_count :: INTEGER)"
+      },
+      {
+        "is_editable": false,
+        "is_write": true,
+        "name": "py_example.write_procedure",
+        "path": "/usr/lib/memgraph/query_modules/py_example.py",
+        "signature": "py_example.write_procedure(property_name :: STRING, property_value :: ANY?) :: (created_vertex :: NODE)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "schema.assert",
+        "path": "/usr/lib/memgraph/query_modules/schema.so",
+        "signature": "schema.assert(indices :: MAP, unique_constraints :: MAP, existence_constraints = {} :: MAP, drop_existing = true :: BOOLEAN) :: (action :: STRING, key :: STRING, keys :: LIST OF STRING, label :: STRING, unique :: BOOLEAN)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "schema.node_type_properties",
+        "path": "/usr/lib/memgraph/query_modules/schema.so",
+        "signature": "schema.node_type_properties(config = {} :: MAP) :: (mandatory :: BOOLEAN, nodeLabels :: LIST OF STRING, nodeType :: STRING, propertyName :: STRING, propertyTypes :: ANY)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "schema.rel_type_properties",
+        "path": "/usr/lib/memgraph/query_modules/schema.so",
+        "signature": "schema.rel_type_properties(config = {} :: MAP) :: (mandatory :: BOOLEAN, propertyName :: STRING, propertyTypes :: ANY, relType :: STRING)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "text_search.aggregate",
+        "path": "/usr/lib/memgraph/query_modules/text_search.so",
+        "signature": "text_search.aggregate(index_name :: STRING, search_query :: STRING, aggregation_query :: STRING) :: (aggregation :: STRING)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "text_search.aggregate_edges",
+        "path": "/usr/lib/memgraph/query_modules/text_search.so",
+        "signature": "text_search.aggregate_edges(index_name :: STRING, search_query :: STRING, aggregation_query :: STRING) :: (aggregation :: STRING)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "text_search.regex_search",
+        "path": "/usr/lib/memgraph/query_modules/text_search.so",
+        "signature": "text_search.regex_search(index_name :: STRING, search_query :: STRING, limit = 1000 :: INTEGER) :: (node :: NODE, score :: FLOAT)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "text_search.regex_search_edges",
+        "path": "/usr/lib/memgraph/query_modules/text_search.so",
+        "signature": "text_search.regex_search_edges(index_name :: STRING, search_query :: STRING, limit = 1000 :: INTEGER) :: (edge :: RELATIONSHIP, score :: FLOAT)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "text_search.search",
+        "path": "/usr/lib/memgraph/query_modules/text_search.so",
+        "signature": "text_search.search(index_name :: STRING, search_query :: STRING, limit = 1000 :: INTEGER) :: (node :: NODE, score :: FLOAT)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "text_search.search_all",
+        "path": "/usr/lib/memgraph/query_modules/text_search.so",
+        "signature": "text_search.search_all(index_name :: STRING, search_query :: STRING, limit = 1000 :: INTEGER) :: (node :: NODE, score :: FLOAT)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "text_search.search_all_edges",
+        "path": "/usr/lib/memgraph/query_modules/text_search.so",
+        "signature": "text_search.search_all_edges(index_name :: STRING, search_query :: STRING, limit = 1000 :: INTEGER) :: (edge :: RELATIONSHIP, score :: FLOAT)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "text_search.search_edges",
+        "path": "/usr/lib/memgraph/query_modules/text_search.so",
+        "signature": "text_search.search_edges(index_name :: STRING, search_query :: STRING, limit = 1000 :: INTEGER) :: (edge :: RELATIONSHIP, score :: FLOAT)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "vector_search.search",
+        "path": "/usr/lib/memgraph/query_modules/vector_search.so",
+        "signature": "vector_search.search(index_name :: STRING, result_set_size :: INTEGER, query_vector :: LIST OF ANY) :: (distance :: FLOAT, node :: NODE, similarity :: FLOAT)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "vector_search.search_edges",
+        "path": "/usr/lib/memgraph/query_modules/vector_search.so",
+        "signature": "vector_search.search_edges(index_name :: STRING, result_set_size :: INTEGER, query_vector :: LIST OF ANY) :: (distance :: FLOAT, edge :: RELATIONSHIP, similarity :: FLOAT)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "vector_search.show_index_info",
+        "path": "/usr/lib/memgraph/query_modules/vector_search.so",
+        "signature": "vector_search.show_index_info() :: (capacity :: INTEGER, dimension :: INTEGER, index_name :: STRING, index_type :: STRING, label :: STRING, metric :: STRING, property :: STRING, scalar_kind :: STRING, size :: INTEGER)"
+      },
+      {
+        "is_editable": false,
+        "is_write": false,
+        "name": "wcc.get_components",
+        "path": "/usr/lib/memgraph/query_modules/wcc.py",
+        "signature": "wcc.get_components(vertices :: LIST OF NODE, edges :: LIST OF RELATIONSHIP) :: (components :: LIST OF LIST OF NODE, n_components :: INTEGER)"
+      }
+    ],
+    "seconds": 0.0036912079667672515,
+    "success": true,
+    "timeout_seconds": 10
+  },
+  {
+    "cypher": "CALL mg.functions() YIELD * RETURN *",
+    "name": "functions",
+    "params": {},
+    "rows": [
+      {
+        "is_editable": false,
+        "name": "convert.str2object",
+        "path": "/usr/lib/memgraph/query_modules/convert.so",
+        "signature": "convert.str2object(string :: STRING)"
+      },
+      {
+        "is_editable": false,
+        "name": "date.add",
+        "path": "/usr/lib/memgraph/query_modules/date.py",
+        "signature": "date.add(time :: INTEGER, unit :: STRING, add_value :: INTEGER, add_unit :: STRING)"
+      },
+      {
+        "is_editable": false,
+        "name": "date.convert_format",
+        "path": "/usr/lib/memgraph/query_modules/date.py",
+        "signature": "date.convert_format(temporal :: STRING?, current_format :: STRING, convert_to :: STRING)"
+      },
+      {
+        "is_editable": false,
+        "name": "example_cpp.multiply",
+        "path": "/usr/lib/memgraph/query_modules/example_cpp.so",
+        "signature": "example_cpp.multiply(int :: INTEGER, int = 3 :: INTEGER)"
+      },
+      {
+        "is_editable": false,
+        "name": "mgps.validate_predicate",
+        "path": "/usr/lib/memgraph/query_modules/mgps.py",
+        "signature": "mgps.validate_predicate(predicate :: BOOLEAN, message :: STRING, params :: LIST OF ANY?)"
+      },
+      {
+        "is_editable": false,
+        "name": "mgps.version",
+        "path": "/usr/lib/memgraph/query_modules/mgps.py",
+        "signature": "mgps.version()"
+      },
+      {
+        "is_editable": false,
+        "name": "vector_search.cosine_similarity",
+        "path": "/usr/lib/memgraph/query_modules/vector_search.so",
+        "signature": "vector_search.cosine_similarity(vector1 :: LIST OF ANY, vector2 :: LIST OF ANY)"
+      }
+    ],
+    "seconds": 0.001003249955829233,
+    "success": true,
+    "timeout_seconds": 10
+  },
+  {
+    "cypher": "CREATE (n:Project) SET n = $props",
+    "name": "create-node",
+    "params": {
+      "props": {
+        "digest": "bc16f90ed80e397bd6f02b64ac696d97b40b0dd4cdf4fbe2c647d52cbbf9106d",
+        "generation_id": "generation:comparison",
+        "key": "project:am255-synthetic",
+        "project_id": "project:am255-synthetic",
+        "source": "synthetic/fixture.json"
+      }
+    },
+    "rows": [],
+    "seconds": 0.002440959040541202,
+    "success": true,
+    "timeout_seconds": 10
+  },
+  {
+    "cypher": "CREATE (n:RecordVersion:Embedded) SET n = $props",
+    "name": "create-node",
+    "params": {
+      "props": {
+        "body": "Synthetic prior retry budget.",
+        "digest": "4ec610189b1a6905b045da2190912a0335ba31d5555fcd87d153cbdfcab2b1fa",
+        "embedding": [
+          0.8,
+          0.6,
+          0.0,
+          0.0
+        ],
+        "generation_id": "generation:comparison",
+        "key": "record:old:1",
+        "lifecycle": "superseded",
+        "project_id": "project:am255-synthetic",
+        "source": "synthetic/fixture.json"
+      }
+    },
+    "rows": [],
+    "seconds": 0.0007327499915845692,
+    "success": true,
+    "timeout_seconds": 10
+  },
+  {
+    "cypher": "CREATE (n:RecordVersion:Embedded) SET n = $props",
+    "name": "create-node",
+    "params": {
+      "props": {
+        "body": "Synthetic retry budget is three attempts.",
+        "digest": "05a60e4b15ce144e5868ccb0f28058bf4ef6140fdcfb31eb0276c5e15126f63d",
+        "embedding": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "generation_id": "generation:comparison",
+        "key": "record:new:2",
+        "lifecycle": "accepted",
+        "project_id": "project:am255-synthetic",
+        "source": "synthetic/fixture.json"
+      }
+    },
+    "rows": [],
+    "seconds": 0.0008295830339193344,
+    "success": true,
+    "timeout_seconds": 10
+  },
+  {
+    "cypher": "CREATE (n:RecordVersion:Embedded) SET n = $props",
+    "name": "create-node",
+    "params": {
+      "props": {
+        "body": "Synthetic parser investigation attempt.",
+        "digest": "73605a8c1325852ae3cb6c5d123d19659a1b59174cb779e7207ef8b65e6f0f7e",
+        "embedding": [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ],
+        "generation_id": "generation:comparison",
+        "key": "record:attempt:1",
+        "lifecycle": "accepted",
+        "project_id": "project:am255-synthetic",
+        "source": "synthetic/fixture.json"
+      }
+    },
+    "rows": [],
+    "seconds": 0.000632665993180126,
+    "success": true,
+    "timeout_seconds": 10
+  },
+  {
+    "cypher": "CREATE (n:ContextSource) SET n = $props",
+    "name": "create-node",
+    "params": {
+      "props": {
+        "digest": "c5fb96ef26d16824965393857e6789723df8a85217f7ee02aed246800328a1ad",
+        "generation_id": "generation:comparison",
+        "key": "context:synthetic",
+        "orientation_only": true,
+        "project_id": "project:am255-synthetic",
+        "source": "synthetic/fixture.json"
+      }
+    },
+    "rows": [],
+    "seconds": 0.0007024169899523258,
+    "success": true,
+    "timeout_seconds": 10
+  },
+  {
+    "cypher": "CREATE (n:Route) SET n = $props",
+    "name": "create-node",
+    "params": {
+      "props": {
+        "digest": "51fde1d231bf3ccd31ce034cf213b05d919ec33c5290a4b5e53895c0ceba0db8",
+        "generation_id": "generation:comparison",
+        "key": "route:synthetic",
+        "project_id": "project:am255-synthetic",
+        "source": "synthetic/fixture.json"
+      }
+    },
+    "rows": [],
+    "seconds": 0.000599791994318366,
+    "success": true,
+    "timeout_seconds": 10
+  },
+  {
+    "cypher": "CREATE (n:Scope:Component) SET n = $props",
+    "name": "create-node",
+    "params": {
+      "props": {
+        "digest": "56f4145f37d329491a08d5740cd11932cd93ca87ac614754374c6916cab80c96",
+        "generation_id": "generation:comparison",
+        "key": "scope:parser",
+        "project_id": "project:am255-synthetic",
+        "source": "synthetic/fixture.json"
+      }
+    },
+    "rows": [],
+    "seconds": 0.0005817920318804681,
+    "success": true,
+    "timeout_seconds": 10
+  },
+  {
+    "cypher": "CREATE (n:Condition) SET n = $props",
+    "name": "create-node",
+    "params": {
+      "props": {
+        "digest": "65abbea96f499457187ea642342765e065e57cda58fe1f3fe5a2ea36e08288f1",
+        "generation_id": "generation:comparison",
+        "key": "condition:synthetic",
+        "project_id": "project:am255-synthetic",
+        "source": "synthetic/fixture.json",
+        "value": "parser"
+      }
+    },
+    "rows": [],
+    "seconds": 0.0005215000128373504,
+    "success": true,
+    "timeout_seconds": 10
+  },
+  {
+    "cypher": "CREATE (n:Evidence:Source) SET n = $props",
+    "name": "create-node",
+    "params": {
+      "props": {
+        "body": "Synthetic source only.",
+        "digest": "5322d08519e662c738fda4fcb09a818f9a9dd2a54ac28c77568d7c0d4c484678",
+        "generation_id": "generation:comparison",
+        "key": "evidence:synthetic",
+        "project_id": "project:am255-synthetic",
+        "source": "synthetic/fixture.json"
+      }
+    },
+    "rows": [],
+    "seconds": 0.000597250007558614,
+    "success": true,
+    "timeout_seconds": 10
+  },
+  {
+    "cypher": "CREATE (n:Origin) SET n = $props",
+    "name": "create-node",
+    "params": {
+      "props": {
+        "digest": "7c0107e6ec3722a1dddb1c763ac5250e044d094139398fafac7dc70b2df61980",
+        "generation_id": "generation:comparison",
+        "key": "origin:synthetic",
+        "project_id": "project:am255-synthetic",
+        "source": "synthetic/fixture.json"
+      }
+    },
+    "rows": [],
+    "seconds": 0.0004980000085197389,
+    "success": true,
+    "timeout_seconds": 10
+  },
+  {
+    "cypher": "CREATE (n:Unit:Facet:Embedded) SET n = $props",
+    "name": "create-node",
+    "params": {
+      "props": {
+        "body": "Synthetic fixture, not vulnerability evidence.",
+        "digest": "ab35f408a15f39dc41321f469bbb2b368e4305d5ba416a31bc5d28edbc0e9db5",
+        "embedding": [
+          0.6,
+          0.0,
+          0.8,
+          0.0
+        ],
+        "generation_id": "generation:comparison",
+        "key": "facet/synthetic",
+        "kind": "positive",
+        "project_id": "project:am255-synthetic",
+        "source": "synthetic/fixture.json",
+        "status": "proposed",
+        "title": "Synthetic guarded input",
+        "type": "Facet"
+      }
+    },
+    "rows": [],
+    "seconds": 0.0005426250281743705,
+    "success": true,
+    "timeout_seconds": 10
+  },
+  {
+    "cypher": "CREATE (n:Unit:VulnClass:Embedded) SET n = $props",
+    "name": "create-node",
+    "params": {
+      "props": {
+        "body": "Synthetic fixture.",
+        "cwe": "synthetic",
+        "digest": "39ceb084e3ba877f2fd4c1a51fc39f482754b6fa033beaf550628780e37ca5bd",
+        "docs": [],
+        "embedding": [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        "generation_id": "generation:comparison",
+        "key": "class/synthetic",
+        "project_id": "project:am255-synthetic",
+        "source": "synthetic/fixture.json",
+        "status": "proposed",
+        "title": "Synthetic validation class",
+        "type": "VulnClass"
+      }
+    },
+    "rows": [],
+    "seconds": 0.00047374999849125743,
+    "success": true,
+    "timeout_seconds": 10
+  },
+  {
+    "cypher": "CREATE (n:Unit:Method:Embedded) SET n = $props",
+    "name": "create-node",
+    "params": {
+      "props": {
+        "body": "Synthetic fixture.",
+        "digest": "4e10b8bcfa16a51ea2a153ed952e8553ee60e1e5c1f560b5345f3b0fa8be9c65",
+        "embedding": [
+          0.0,
+          0.0,
+          0.6,
+          0.8
+        ],
+        "generation_id": "generation:comparison",
+        "key": "method/synthetic",
+        "project_id": "project:am255-synthetic",
+        "source": "synthetic/fixture.json",
+        "status": "proposed",
+        "title": "Synthetic check",
+        "type": "Method"
+      }
+    },
+    "rows": [],
+    "seconds": 0.0005501669947989285,
+    "success": true,
+    "timeout_seconds": 10
+  },
+  {
+    "cypher": "CREATE (n:Package) SET n = $props",
+    "name": "create-node",
+    "params": {
+      "props": {
+        "digest": "487faa02d1afcf85cff8fb86f6e9ffd91b22a9acd5fd8f47853296f04b6815ee",
+        "generation_id": "generation:comparison",
+        "key": "cargo/synthetic",
+        "project_id": "project:am255-synthetic",
+        "source": "synthetic/fixture.json"
+      }
+    },
+    "rows": [],
+    "seconds": 0.0006466659833677113,
+    "success": true,
+    "timeout_seconds": 10
+  },
+  {
+    "cypher": "CREATE (n:Unit:Investigation:Embedded) SET n = $props",
+    "name": "create-node",
+    "params": {
+      "props": {
+        "body": "Synthetic fixture.",
+        "digest": "9f59d051641194e4a986b63a6c1802fc31ce3727485f5f0f8ac293eaca505e2e",
+        "docs": [],
+        "embedding": [
+          -1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "generation_id": "generation:comparison",
+        "key": "investigation/synthetic",
+        "posture": "research",
+        "project_id": "project:am255-synthetic",
+        "source": "synthetic/fixture.json",
+        "status": "proposed",
+        "title": "Synthetic investigation",
+        "type": "Investigation"
+      }
+    },
+    "rows": [],
+    "seconds": 0.000639582984149456,
+    "success": true,
+    "timeout_seconds": 10
+  },
+  {
+    "cypher": "CREATE (n:Step) SET n = $props",
+    "name": "create-node",
+    "params": {
+      "props": {
+        "commands": [],
+        "digest": "563ce0e3ed3e4f7a269d69335d68cd746ecfb77788d9fc3d68db932999b70917",
+        "expect": "synthetic",
+        "generation_id": "generation:comparison",
+        "instructions": "Read synthetic source.",
+        "key": "step/synthetic",
+        "order": 1,
+        "project_id": "project:am255-synthetic",
+        "source": "synthetic/fixture.json",
+        "title": "Synthetic step"
+      }
+    },
+    "rows": [],
+    "seconds": 0.0006267499993555248,
+    "success": true,
+    "timeout_seconds": 10
+  },
+  {
+    "cypher": "CREATE (n:Query) SET n = $props",
+    "name": "create-node",
+    "params": {
+      "props": {
+        "digest": "6d6a5f2b1196acd94b479576ac2e5cc295d5a059445d539c48735ed50650ed2e",
+        "generation_id": "generation:comparison",
+        "key": "query/synthetic",
+        "name": "class",
+        "project_id": "project:am255-synthetic",
+        "source": "synthetic/fixture.json"
+      }
+    },
+    "rows": [],
+    "seconds": 0.0006728339940309525,
+    "success": true,
+    "timeout_seconds": 10
+  },
+  {
+    "cypher": "MATCH (a {key:$a}),(b {key:$b}) CREATE (a)-[r:CONTAINS]->(b) SET r=$props",
+    "name": "create-edge",
+    "params": {
+      "a": "project:am255-synthetic",
+      "b": "record:new:2",
+      "props": {
+        "asserting_hash": "8c22357ef9fcd8a17421912e7591da7e379facf861f78163f8d6b166b9d6bf2e",
+        "asserting_source": "synthetic/fixture.json",
+        "channel": "recorded",
+        "condition": "condition:synthetic",
+        "endpoint_a": "project:am255-synthetic",
+        "endpoint_b": "record:new:2",
+        "generation_id": "generation:comparison",
+        "origin": "origin:synthetic",
+        "params": "{}",
+        "project_id": "project:am255-synthetic",
+        "when": "synthetic only"
+      }
+    },
+    "rows": [],
+    "seconds": 0.001610624953173101,
+    "success": true,
+    "timeout_seconds": 10
+  },
+  {
+    "cypher": "MATCH (a {key:$a}),(b {key:$b}) CREATE (a)-[r:ROUTES_TO]->(b) SET r=$props",
+    "name": "create-edge",
+    "params": {
+      "a": "route:synthetic",
+      "b": "context:synthetic",
+      "props": {
+        "asserting_hash": "ff3cb4500a16bf741b67175f8a17b99cb33765bf6df36ef98e079991702628f7",
+        "asserting_source": "synthetic/fixture.json",
+        "channel": "recorded",
+        "condition": "condition:synthetic",
+        "endpoint_a": "route:synthetic",
+        "endpoint_b": "context:synthetic",
+        "generation_id": "generation:comparison",
+        "origin": "origin:synthetic",
+        "params": "{}",
+        "project_id": "project:am255-synthetic",
+        "when": "synthetic only"
+      }
+    },
+    "rows": [],
+    "seconds": 0.0007650839979760349,
+    "success": true,
+    "timeout_seconds": 10
+  },
+  {
+    "cypher": "MATCH (a {key:$a}),(b {key:$b}) CREATE (a)-[r:IN_SCOPE]->(b) SET r=$props",
+    "name": "create-edge",
+    "params": {
+      "a": "record:new:2",
+      "b": "scope:parser",
+      "props": {
+        "asserting_hash": "a582e88d2083bf186d3070e5dd449385682f7c22db488161bdfce03670102c5c",
+        "asserting_source": "synthetic/fixture.json",
+        "channel": "recorded",
+        "condition": "condition:synthetic",
+        "endpoint_a": "record:new:2",
+        "endpoint_b": "scope:parser",
+        "generation_id": "generation:comparison",
+        "origin": "origin:synthetic",
+        "params": "{}",
+        "project_id": "project:am255-synthetic",
+        "when": "synthetic only"
+      }
+    },
+    "rows": [],
+    "seconds": 0.0008022499969229102,
+    "success": true,
+    "timeout_seconds": 10
+  },
+  {
+    "cypher": "MATCH (a {key:$a}),(b {key:$b}) CREATE (a)-[r:IN_SCOPE]->(b) SET r=$props",
+    "name": "create-edge",
+    "params": {
+      "a": "record:attempt:1",
+      "b": "scope:parser",
+      "props": {
+        "asserting_hash": "849350733f5b3bc1b988919b2ee5c2029d0f96e7cfee0fe01fe6d16c6fa6f101",
+        "asserting_source": "synthetic/fixture.json",
+        "channel": "recorded",
+        "condition": "condition:synthetic",
+        "endpoint_a": "record:attempt:1",
+        "endpoint_b": "scope:parser",
+        "generation_id": "generation:comparison",
+        "origin": "origin:synthetic",
+        "params": "{}",
+        "project_id": "project:am255-synthetic",
+        "when": "synthetic only"
+      }
+    },
+    "rows": [],
+    "seconds": 0.0005219170125201344,
+    "success": true,
+    "timeout_seconds": 10
+  },
+  {
+    "cypher": "MATCH (a {key:$a}),(b {key:$b}) CREATE (a)-[r:HAS_CONDITION]->(b) SET r=$props",
+    "name": "create-edge",
+    "params": {
+      "a": "record:new:2",
+      "b": "condition:synthetic",
+      "props": {
+        "asserting_hash": "560b5d7aba008962f864de56e73da70949859f1b6f24ebc8ed5fa11a6ac0d674",
+        "asserting_source": "synthetic/fixture.json",
+        "channel": "recorded",
+        "condition": "condition:synthetic",
+        "endpoint_a": "record:new:2",
+        "endpoint_b": "condition:synthetic",
+        "generation_id": "generation:comparison",
+        "origin": "origin:synthetic",
+        "params": "{}",
+        "project_id": "project:am255-synthetic",
+        "when": "synthetic only"
+      }
+    },
+    "rows": [],
+    "seconds": 0.0006966249784454703,
+    "success": true,
+    "timeout_seconds": 10
+  },
+  {
+    "cypher": "MATCH (a {key:$a}),(b {key:$b}) CREATE (a)-[r:SUPPORTED_BY]->(b) SET r=$props",
+    "name": "create-edge",
+    "params": {
+      "a": "record:new:2",
+      "b": "evidence:synthetic",
+      "props": {
+        "asserting_hash": "e6af577b6a477030a46e3a401097a0a19588dac3b8ae325671f0720a01079940",
+        "asserting_source": "synthetic/fixture.json",
+        "channel": "recorded",
+        "condition": "condition:synthetic",
+        "endpoint_a": "record:new:2",
+        "endpoint_b": "evidence:synthetic",
+        "generation_id": "generation:comparison",
+        "origin": "origin:synthetic",
+        "params": "{}",
+        "project_id": "project:am255-synthetic",
+        "when": "synthetic only"
+      }
+    },
+    "rows": [],
+    "seconds": 0.0006015420076437294,
+    "success": true,
+    "timeout_seconds": 10
+  },
+  {
+    "cypher": "MATCH (a {key:$a}),(b {key:$b}) CREATE (a)-[r:SUPPORTED_BY]->(b) SET r=$props",
+    "name": "create-edge",
+    "params": {
+      "a": "record:attempt:1",
+      "b": "evidence:synthetic",
+      "props": {
+        "asserting_hash": "7ca651079fae41434a411e2fd52663ed74613c09725086a57a70b0870d2de4b7",
+        "asserting_source": "synthetic/fixture.json",
+        "channel": "recorded",
+        "condition": "condition:synthetic",
+        "endpoint_a": "record:attempt:1",
+        "endpoint_b": "evidence:synthetic",
+        "generation_id": "generation:comparison",
+        "origin": "origin:synthetic",
+        "params": "{}",
+        "project_id": "project:am255-synthetic",
+        "when": "synthetic only"
+      }
+    },
+    "rows": [],
+    "seconds": 0.0005014170310460031,
+    "success": true,
+    "timeout_seconds": 10
+  },
+  {
+    "cypher": "MATCH (a {key:$a}),(b {key:$b}) CREATE (a)-[r:ATTRIBUTED_TO]->(b) SET r=$props",
+    "name": "create-edge",
+    "params": {
+      "a": "record:attempt:1",
+      "b": "origin:synthetic",
+      "props": {
+        "asserting_hash": "ca7bd16edc976416147dfb0b5ae08ac5411d7bb208ef67a490c8d976c163fc39",
+        "asserting_source": "synthetic/fixture.json",
+        "channel": "recorded",
+        "condition": "condition:synthetic",
+        "endpoint_a": "record:attempt:1",
+        "endpoint_b": "origin:synthetic",
+        "generation_id": "generation:comparison",
+        "origin": "origin:synthetic",
+        "params": "{}",
+        "project_id": "project:am255-synthetic",
+        "when": "synthetic only"
+      }
+    },
+    "rows": [],
+    "seconds": 0.0006194169982336462,
+    "success": true,
+    "timeout_seconds": 10
+  },
+  {
+    "cypher": "MATCH (a {key:$a}),(b {key:$b}) CREATE (a)-[r:CORRECTS]->(b) SET r=$props",
+    "name": "create-edge",
+    "params": {
+      "a": "record:new:2",
+      "b": "record:old:1",
+      "props": {
+        "asserting_hash": "947d4e36f11b3aae0979ddc5bfe98e9c7208a77acc0863985eab4b5e526b6aec",
+        "asserting_source": "synthetic/fixture.json",
+        "channel": "recorded",
+        "condition": "condition:synthetic",
+        "endpoint_a": "record:new:2",
+        "endpoint_b": "record:old:1",
+        "generation_id": "generation:comparison",
+        "origin": "origin:synthetic",
+        "params": "{}",
+        "project_id": "project:am255-synthetic",
+        "when": "synthetic only"
+      }
+    },
+    "rows": [],
+    "seconds": 0.0006735409842804074,
+    "success": true,
+    "timeout_seconds": 10
+  },
+  {
+    "cypher": "MATCH (a {key:$a}),(b {key:$b}) CREATE (a)-[r:SUPERSEDES]->(b) SET r=$props",
+    "name": "create-edge",
+    "params": {
+      "a": "record:new:2",
+      "b": "record:old:1",
+      "props": {
+        "asserting_hash": "853e9261f9946b116d956aa423e01ba442a761cf3d52c8f5bdbfabf7350b02e1",
+        "asserting_source": "synthetic/fixture.json",
+        "channel": "recorded",
+        "condition": "condition:synthetic",
+        "endpoint_a": "record:new:2",
+        "endpoint_b": "record:old:1",
+        "generation_id": "generation:comparison",
+        "origin": "origin:synthetic",
+        "params": "{}",
+        "project_id": "project:am255-synthetic",
+        "when": "synthetic only"
+      }
+    },
+    "rows": [],
+    "seconds": 0.0006148750544525683,
+    "success": true,
+    "timeout_seconds": 10
+  },
+  {
+    "cypher": "MATCH (a {key:$a}),(b {key:$b}) CREATE (a)-[r:DERIVED_FROM]->(b) SET r=$props",
+    "name": "create-edge",
+    "params": {
+      "a": "record:new:2",
+      "b": "record:attempt:1",
+      "props": {
+        "asserting_hash": "53ee148fd1be9b953d7137fede53f8829efca8c0d7bb3ddbe14b434f789bc56a",
+        "asserting_source": "synthetic/fixture.json",
+        "channel": "recorded",
+        "condition": "condition:synthetic",
+        "endpoint_a": "record:new:2",
+        "endpoint_b": "record:attempt:1",
+        "generation_id": "generation:comparison",
+        "origin": "origin:synthetic",
+        "params": "{}",
+        "project_id": "project:am255-synthetic",
+        "when": "synthetic only"
+      }
+    },
+    "rows": [],
+    "seconds": 0.0005964579759165645,
+    "success": true,
+    "timeout_seconds": 10
+  },
+  {
+    "cypher": "MATCH (a {key:$a}),(b {key:$b}) CREATE (a)-[r:SIMILAR_SUGGESTION]->(b) SET r=$props",
+    "name": "create-edge",
+    "params": {
+      "a": "record:new:2",
+      "b": "record:attempt:1",
+      "props": {
+        "asserting_hash": "dddc51b26858fec604c46b6cc1fcda6c9d37df857127a53926b9c0fc1920cb73",
+        "asserting_source": "synthetic/fixture.json",
+        "channel": "inferred",
+        "condition": "condition:synthetic",
+        "endpoint_a": "record:new:2",
+        "endpoint_b": "record:attempt:1",
+        "generation_id": "generation:comparison",
+        "origin": "origin:synthetic",
+        "params": "{}",
+        "project_id": "project:am255-synthetic",
+        "when": "synthetic only"
+      }
+    },
+    "rows": [],
+    "seconds": 0.0005869160522706807,
+    "success": true,
+    "timeout_seconds": 10
+  },
+  {
+    "cypher": "MATCH (a {key:$a}),(b {key:$b}) CREATE (a)-[r:INDICATES]->(b) SET r=$props",
+    "name": "create-edge",
+    "params": {
+      "a": "facet/synthetic",
+      "b": "class/synthetic",
+      "props": {
+        "asserting_hash": "b486dda6de42d929ecdf6881346c1dece4d9e5581892c07d7c656d30d8d8aca9",
+        "asserting_source": "synthetic/fixture.json",
+        "channel": "recorded",
+        "condition": "condition:synthetic",
+        "endpoint_a": "facet/synthetic",
+        "endpoint_b": "class/synthetic",
+        "generation_id": "generation:comparison",
+        "origin": "origin:synthetic",
+        "params": "{}",
+        "project_id": "project:am255-synthetic",
+        "when": "synthetic only"
+      }
+    },
+    "rows": [],
+    "seconds": 0.0005714169819839299,
+    "success": true,
+    "timeout_seconds": 10
+  },
+  {
+    "cypher": "MATCH (a {key:$a}),(b {key:$b}) CREATE (a)-[r:APPLIES_TO]->(b) SET r=$props",
+    "name": "create-edge",
+    "params": {
+      "a": "facet/synthetic",
+      "b": "cargo/synthetic",
+      "props": {
+        "asserting_hash": "52f6a5902aac674717e338516cb9fd11bbca62a39e0cec2155a7dc567f96f48e",
+        "asserting_source": "synthetic/fixture.json",
+        "channel": "recorded",
+        "condition": "condition:synthetic",
+        "endpoint_a": "facet/synthetic",
+        "endpoint_b": "cargo/synthetic",
+        "generation_id": "generation:comparison",
+        "origin": "origin:synthetic",
+        "params": "{}",
+        "project_id": "project:am255-synthetic",
+        "when": "synthetic only"
+      }
+    },
+    "rows": [],
+    "seconds": 0.000744541990570724,
+    "success": true,
+    "timeout_seconds": 10
+  },
+  {
+    "cypher": "MATCH (a {key:$a}),(b {key:$b}) CREATE (a)-[r:ADDRESSES]->(b) SET r=$props",
+    "name": "create-edge",
+    "params": {
+      "a": "method/synthetic",
+      "b": "class/synthetic",
+      "props": {
+        "asserting_hash": "dc922c1b017b3bb802e3add8fb601a607b2c2a7333505a637a51d4622767591b",
+        "asserting_source": "synthetic/fixture.json",
+        "channel": "recorded",
+        "condition": "condition:synthetic",
+        "endpoint_a": "method/synthetic",
+        "endpoint_b": "class/synthetic",
+        "generation_id": "generation:comparison",
+        "origin": "origin:synthetic",
+        "params": "{}",
+        "project_id": "project:am255-synthetic",
+        "when": "synthetic only"
+      }
+    },
+    "rows": [],
+    "seconds": 0.0005949590122327209,
+    "success": true,
+    "timeout_seconds": 10
+  },
+  {
+    "cypher": "MATCH (a {key:$a}),(b {key:$b}) CREATE (a)-[r:FOR]->(b) SET r=$props",
+    "name": "create-edge",
+    "params": {
+      "a": "method/synthetic",
+      "b": "cargo/synthetic",
+      "props": {
+        "asserting_hash": "bf174b335a77aa4d49e22d500c7fa24f3d26b6caf7e756dfb9f063d581c4045c",
+        "asserting_source": "synthetic/fixture.json",
+        "channel": "recorded",
+        "condition": "condition:synthetic",
+        "endpoint_a": "method/synthetic",
+        "endpoint_b": "cargo/synthetic",
+        "generation_id": "generation:comparison",
+        "origin": "origin:synthetic",
+        "params": "{}",
+        "project_id": "project:am255-synthetic",
+        "when": "synthetic only"
+      }
+    },
+    "rows": [],
+    "seconds": 0.000595749996136874,
+    "success": true,
+    "timeout_seconds": 10
+  },
+  {
+    "cypher": "MATCH (a {key:$a}),(b {key:$b}) CREATE (a)-[r:HAS_STEP]->(b) SET r=$props",
+    "name": "create-edge",
+    "params": {
+      "a": "investigation/synthetic",
+      "b": "step/synthetic",
+      "props": {
+        "asserting_hash": "d12dbd46dbb778bd5b3c1d165a45607cc83b03bb1cc699478b4ed4a698d04a21",
+        "asserting_source": "synthetic/fixture.json",
+        "channel": "recorded",
+        "condition": "condition:synthetic",
+        "endpoint_a": "investigation/synthetic",
+        "endpoint_b": "step/synthetic",
+        "generation_id": "generation:comparison",
+        "origin": "origin:synthetic",
+        "params": "{}",
+        "project_id": "project:am255-synthetic",
+        "when": "synthetic only"
+      }
+    },
+    "rows": [],
+    "seconds": 0.0005304579972289503,
+    "success": true,
+    "timeout_seconds": 10
+  },
+  {
+    "cypher": "MATCH (a {key:$a}),(b {key:$b}) CREATE (a)-[r:USES]->(b) SET r=$props",
+    "name": "create-edge",
+    "params": {
+      "a": "step/synthetic",
+      "b": "method/synthetic",
+      "props": {
+        "asserting_hash": "7441d029bfbeb3c2165abaa0510a387209793c84e530e2a652189c993b239862",
+        "asserting_source": "synthetic/fixture.json",
+        "channel": "recorded",
+        "condition": "condition:synthetic",
+        "endpoint_a": "step/synthetic",
+        "endpoint_b": "method/synthetic",
+        "generation_id": "generation:comparison",
+        "origin": "origin:synthetic",
+        "params": "{}",
+        "project_id": "project:am255-synthetic",
+        "when": "synthetic only"
+      }
+    },
+    "rows": [],
+    "seconds": 0.0005919169634580612,
+    "success": true,
+    "timeout_seconds": 10
+  },
+  {
+    "cypher": "MATCH (a {key:$a}),(b {key:$b}) CREATE (a)-[r:SUGGESTS]->(b) SET r=$props",
+    "name": "create-edge",
+    "params": {
+      "a": "class/synthetic",
+      "b": "query/synthetic",
+      "props": {
+        "asserting_hash": "167e5053c90822e60fcc1e7b22d17109aae7178c2c165da9902f044de50771ce",
+        "asserting_source": "synthetic/fixture.json",
+        "channel": "recorded",
+        "condition": "condition:synthetic",
+        "endpoint_a": "class/synthetic",
+        "endpoint_b": "query/synthetic",
+        "generation_id": "generation:comparison",
+        "origin": "origin:synthetic",
+        "params": "{}",
+        "project_id": "project:am255-synthetic",
+        "when": "synthetic only"
+      }
+    },
+    "rows": [],
+    "seconds": 0.000604541040956974,
+    "success": true,
+    "timeout_seconds": 10
+  },
+  {
+    "cypher": "MATCH (a {key:$a}),(b {key:$b}) CREATE (a)-[r:RUNS]->(b) SET r=$props",
+    "name": "create-edge",
+    "params": {
+      "a": "step/synthetic",
+      "b": "query/synthetic",
+      "props": {
+        "asserting_hash": "899fc7f3d86e5508bf7fe618bedc85cb2fbcd0c3e0db48f1bdf807126fcf66ba",
+        "asserting_source": "synthetic/fixture.json",
+        "channel": "recorded",
+        "condition": "condition:synthetic",
+        "endpoint_a": "step/synthetic",
+        "endpoint_b": "query/synthetic",
+        "generation_id": "generation:comparison",
+        "origin": "origin:synthetic",
+        "params": "{}",
+        "project_id": "project:am255-synthetic",
+        "when": "synthetic only"
+      }
+    },
+    "rows": [],
+    "seconds": 0.002269375021569431,
+    "success": true,
+    "timeout_seconds": 10
+  },
+  {
+    "cypher": "MATCH (n) RETURN count(n) AS nodes",
+    "name": "graph-coverage",
+    "params": {},
+    "rows": [
+      {
+        "nodes": 17
+      }
+    ],
+    "seconds": 0.001644749951083213,
+    "success": true,
+    "timeout_seconds": 10
+  },
+  {
+    "cypher": "MATCH ()-[r]->() RETURN count(r) AS edges",
+    "name": "edge-coverage",
+    "params": {},
+    "rows": [
+      {
+        "edges": 20
+      }
+    ],
+    "seconds": 0.0005804160027764738,
+    "success": true,
+    "timeout_seconds": 10
+  },
+  {
+    "cypher": "CREATE VECTOR INDEX ssg_embedding ON :Embedded(embedding) WITH CONFIG {\"dimension\": 4, \"capacity\": 32, \"metric\": \"cos\"}",
+    "name": "create-vector-index",
+    "params": {},
+    "rows": [],
+    "seconds": 0.000988874991890043,
+    "success": true,
+    "timeout_seconds": 10
+  },
+  {
+    "cypher": "CALL vector_search.show_index_info() YIELD * RETURN *",
+    "name": "indexinfo",
+    "params": {},
+    "rows": [
+      {
+        "capacity": 64,
+        "dimension": 4,
+        "index_name": "ssg_embedding",
+        "index_type": "label+property_vector",
+        "label": "Embedded",
+        "metric": "cos",
+        "property": "embedding",
+        "scalar_kind": "f32",
+        "size": 7
+      }
+    ],
+    "seconds": 0.0005154579994268715,
+    "success": true,
+    "timeout_seconds": 10
+  },
+  {
+    "cypher": "CALL vector_search.search('ssg_embedding', 12, $v) YIELD node,similarity RETURN node.key AS key,similarity ORDER BY similarity DESC,key",
+    "name": "vector-search",
+    "params": {
+      "v": [
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "rows": [
+      {
+        "key": "investigation/synthetic",
+        "similarity": 1.0
+      },
+      {
+        "key": "record:new:2",
+        "similarity": 1.0
+      },
+      {
+        "key": "record:old:1",
+        "similarity": 0.800000011920929
+      },
+      {
+        "key": "facet/synthetic",
+        "similarity": 0.6000000238418579
+      },
+      {
+        "key": "class/synthetic",
+        "similarity": 0.0
+      },
+      {
+        "key": "method/synthetic",
+        "similarity": 0.0
+      },
+      {
+        "key": "record:attempt:1",
+        "similarity": 0.0
+      }
+    ],
+    "seconds": 0.0012527909711934626,
+    "success": true,
+    "timeout_seconds": 10
+  },
+  {
+    "cypher": "MATCH (n:Embedded) RETURN n.key AS key,vector_search.cosine_similarity(n.embedding,$v) AS similarity ORDER BY similarity DESC,key",
+    "name": "ssg-exact-cosine",
+    "params": {
+      "v": [
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "rows": [
+      {
+        "key": "record:new:2",
+        "similarity": 1.0
+      },
+      {
+        "key": "record:old:1",
+        "similarity": 0.7999999928474427
+      },
+      {
+        "key": "facet/synthetic",
+        "similarity": 0.6000000095367428
+      },
+      {
+        "key": "class/synthetic",
+        "similarity": 0.0
+      },
+      {
+        "key": "method/synthetic",
+        "similarity": 0.0
+      },
+      {
+        "key": "record:attempt:1",
+        "similarity": 0.0
+      },
+      {
+        "key": "investigation/synthetic",
+        "similarity": -1.0
+      }
+    ],
+    "seconds": 0.0016485420055687428,
+    "success": true,
+    "timeout_seconds": 10
+  },
+  {
+    "cypher": "EXPLAIN MATCH p=(n:RecordVersion {key:$seed})-[:CORRECTS|SUPERSEDES|SUPPORTED_BY*1..4]-(x) RETURN x.key AS key,[r IN relationships(p)|{type:type(r),source:r.asserting_source,hash:r.asserting_hash,channel:r.channel}] AS provenance,[r IN relationships(p)|type(r)] AS types ORDER BY key,types LIMIT 64",
+    "name": "explain-replacement-evidence",
+    "params": {
+      "seed": "record:old:1"
+    },
+    "rows": [
+      {
+        "QUERY PLAN": " * Limit"
+      },
+      {
+        "QUERY PLAN": " * OrderBy {key, provenance, types}"
+      },
+      {
+        "QUERY PLAN": " * Produce {key, provenance, types}"
+      },
+      {
+        "QUERY PLAN": " * ConstructNamedPath"
+      },
+      {
+        "QUERY PLAN": " * ExpandVariable (n)-[anon1:CORRECTS|:SUPERSEDES|:SUPPORTED_BY]-(x)"
+      },
+      {
+        "QUERY PLAN": " * Filter (n :RecordVersion), {n.key}"
+      },
+      {
+        "QUERY PLAN": " * ScanAll (n)"
+      },
+      {
+        "QUERY PLAN": " * Once"
+      }
+    ],
+    "seconds": 0.007111999962944537,
+    "success": true,
+    "timeout_seconds": 0.25
+  },
+  {
+    "cypher": "MATCH p=(n:RecordVersion {key:$seed})-[:CORRECTS|SUPERSEDES|SUPPORTED_BY*1..4]-(x) RETURN x.key AS key,[r IN relationships(p)|{type:type(r),source:r.asserting_source,hash:r.asserting_hash,channel:r.channel}] AS provenance,[r IN relationships(p)|type(r)] AS types ORDER BY key,types LIMIT 64",
+    "name": "replacement-evidence",
+    "params": {
+      "seed": "record:old:1"
+    },
+    "rows": [
+      {
+        "key": "evidence:synthetic",
+        "provenance": [
+          {
+            "channel": "recorded",
+            "hash": "947d4e36f11b3aae0979ddc5bfe98e9c7208a77acc0863985eab4b5e526b6aec",
+            "source": "synthetic/fixture.json",
+            "type": "CORRECTS"
+          },
+          {
+            "channel": "recorded",
+            "hash": "947d4e36f11b3aae0979ddc5bfe98e9c7208a77acc0863985eab4b5e526b6aec",
+            "source": "synthetic/fixture.json",
+            "type": "SUPPORTED_BY"
+          }
+        ],
+        "types": [
+          "CORRECTS",
+          "SUPPORTED_BY"
+        ]
+      },
+      {
+        "key": "evidence:synthetic",
+        "provenance": [
+          {
+            "channel": "recorded",
+            "hash": "853e9261f9946b116d956aa423e01ba442a761cf3d52c8f5bdbfabf7350b02e1",
+            "source": "synthetic/fixture.json",
+            "type": "SUPERSEDES"
+          },
+          {
+            "channel": "recorded",
+            "hash": "853e9261f9946b116d956aa423e01ba442a761cf3d52c8f5bdbfabf7350b02e1",
+            "source": "synthetic/fixture.json",
+            "type": "SUPPORTED_BY"
+          }
+        ],
+        "types": [
+          "SUPERSEDES",
+          "SUPPORTED_BY"
+        ]
+      },
+      {
+        "key": "record:attempt:1",
+        "provenance": [
+          {
+            "channel": "recorded",
+            "hash": "947d4e36f11b3aae0979ddc5bfe98e9c7208a77acc0863985eab4b5e526b6aec",
+            "source": "synthetic/fixture.json",
+            "type": "CORRECTS"
+          },
+          {
+            "channel": "recorded",
+            "hash": "947d4e36f11b3aae0979ddc5bfe98e9c7208a77acc0863985eab4b5e526b6aec",
+            "source": "synthetic/fixture.json",
+            "type": "SUPPORTED_BY"
+          },
+          {
+            "channel": "recorded",
+            "hash": "947d4e36f11b3aae0979ddc5bfe98e9c7208a77acc0863985eab4b5e526b6aec",
+            "source": "synthetic/fixture.json",
+            "type": "SUPPORTED_BY"
+          }
+        ],
+        "types": [
+          "CORRECTS",
+          "SUPPORTED_BY",
+          "SUPPORTED_BY"
+        ]
+      },
+      {
+        "key": "record:attempt:1",
+        "provenance": [
+          {
+            "channel": "recorded",
+            "hash": "853e9261f9946b116d956aa423e01ba442a761cf3d52c8f5bdbfabf7350b02e1",
+            "source": "synthetic/fixture.json",
+            "type": "SUPERSEDES"
+          },
+          {
+            "channel": "recorded",
+            "hash": "853e9261f9946b116d956aa423e01ba442a761cf3d52c8f5bdbfabf7350b02e1",
+            "source": "synthetic/fixture.json",
+            "type": "SUPPORTED_BY"
+          },
+          {
+            "channel": "recorded",
+            "hash": "853e9261f9946b116d956aa423e01ba442a761cf3d52c8f5bdbfabf7350b02e1",
+            "source": "synthetic/fixture.json",
+            "type": "SUPPORTED_BY"
+          }
+        ],
+        "types": [
+          "SUPERSEDES",
+          "SUPPORTED_BY",
+          "SUPPORTED_BY"
+        ]
+      },
+      {
+        "key": "record:new:2",
+        "provenance": [
+          {
+            "channel": "recorded",
+            "hash": "947d4e36f11b3aae0979ddc5bfe98e9c7208a77acc0863985eab4b5e526b6aec",
+            "source": "synthetic/fixture.json",
+            "type": "CORRECTS"
+          }
+        ],
+        "types": [
+          "CORRECTS"
+        ]
+      },
+      {
+        "key": "record:new:2",
+        "provenance": [
+          {
+            "channel": "recorded",
+            "hash": "853e9261f9946b116d956aa423e01ba442a761cf3d52c8f5bdbfabf7350b02e1",
+            "source": "synthetic/fixture.json",
+            "type": "SUPERSEDES"
+          }
+        ],
+        "types": [
+          "SUPERSEDES"
+        ]
+      },
+      {
+        "key": "record:old:1",
+        "provenance": [
+          {
+            "channel": "recorded",
+            "hash": "947d4e36f11b3aae0979ddc5bfe98e9c7208a77acc0863985eab4b5e526b6aec",
+            "source": "synthetic/fixture.json",
+            "type": "CORRECTS"
+          },
+          {
+            "channel": "recorded",
+            "hash": "947d4e36f11b3aae0979ddc5bfe98e9c7208a77acc0863985eab4b5e526b6aec",
+            "source": "synthetic/fixture.json",
+            "type": "SUPERSEDES"
+          }
+        ],
+        "types": [
+          "CORRECTS",
+          "SUPERSEDES"
+        ]
+      },
+      {
+        "key": "record:old:1",
+        "provenance": [
+          {
+            "channel": "recorded",
+            "hash": "853e9261f9946b116d956aa423e01ba442a761cf3d52c8f5bdbfabf7350b02e1",
+            "source": "synthetic/fixture.json",
+            "type": "SUPERSEDES"
+          },
+          {
+            "channel": "recorded",
+            "hash": "853e9261f9946b116d956aa423e01ba442a761cf3d52c8f5bdbfabf7350b02e1",
+            "source": "synthetic/fixture.json",
+            "type": "CORRECTS"
+          }
+        ],
+        "types": [
+          "SUPERSEDES",
+          "CORRECTS"
+        ]
+      }
+    ],
+    "seconds": 0.0009204589878208935,
+    "success": true,
+    "timeout_seconds": 0.25
+  },
+  {
+    "cypher": "EXPLAIN MATCH (s:Scope {key:$scope})<-[:IN_SCOPE]-(n:RecordVersion) OPTIONAL MATCH (n)-[:SUPPORTED_BY|ATTRIBUTED_TO|DERIVED_FROM]->(x) RETURN n.key AS key,collect(x.key) AS context ORDER BY key LIMIT 64",
+    "name": "explain-component-attempts",
+    "params": {
+      "scope": "scope:parser"
+    },
+    "rows": [
+      {
+        "QUERY PLAN": " * Limit"
+      },
+      {
+        "QUERY PLAN": " * OrderBy {key, context}"
+      },
+      {
+        "QUERY PLAN": " * Produce {key, context}"
+      },
+      {
+        "QUERY PLAN": " * Aggregate {COLLECT-1} {n}"
+      },
+      {
+        "QUERY PLAN": " * Optional"
+      },
+      {
+        "QUERY PLAN": " |\\ "
+      },
+      {
+        "QUERY PLAN": " | * Expand (n)-[anon3:SUPPORTED_BY|:ATTRIBUTED_TO|:DERIVED_FROM]->(x)"
+      },
+      {
+        "QUERY PLAN": " | * Once"
+      },
+      {
+        "QUERY PLAN": " * Filter (n :RecordVersion)"
+      },
+      {
+        "QUERY PLAN": " * Expand (s)<-[anon1:IN_SCOPE]-(n)"
+      },
+      {
+        "QUERY PLAN": " * Filter (s :Scope), {s.key}"
+      },
+      {
+        "QUERY PLAN": " * ScanAll (s)"
+      },
+      {
+        "QUERY PLAN": " * Once"
+      }
+    ],
+    "seconds": 0.0015559580060653389,
+    "success": true,
+    "timeout_seconds": 0.25
+  },
+  {
+    "cypher": "MATCH (s:Scope {key:$scope})<-[:IN_SCOPE]-(n:RecordVersion) OPTIONAL MATCH (n)-[:SUPPORTED_BY|ATTRIBUTED_TO|DERIVED_FROM]->(x) RETURN n.key AS key,collect(x.key) AS context ORDER BY key LIMIT 64",
+    "name": "component-attempts",
+    "params": {
+      "scope": "scope:parser"
+    },
+    "rows": [
+      {
+        "context": [
+          "evidence:synthetic",
+          "origin:synthetic"
+        ],
+        "key": "record:attempt:1"
+      },
+      {
+        "context": [
+          "evidence:synthetic",
+          "record:attempt:1"
+        ],
+        "key": "record:new:2"
+      }
+    ],
+    "seconds": 0.000514000013936311,
+    "success": true,
+    "timeout_seconds": 0.25
+  },
+  {
+    "cypher": "EXPLAIN MATCH p=(n:RecordVersion {key:$seed})-[r*1..2]-(x) WHERE all(e IN r WHERE type(e) IN $types AND e.channel='recorded') RETURN DISTINCT x.key AS key,[e IN r|type(e)] AS types ORDER BY key,types LIMIT 32",
+    "name": "explain-recorded-related",
+    "params": {
+      "seed": "record:new:2",
+      "types": [
+        "CORRECTS",
+        "SUPERSEDES",
+        "SUPPORTED_BY",
+        "DERIVED_FROM",
+        "IN_SCOPE"
+      ]
+    },
+    "rows": [
+      {
+        "QUERY PLAN": " * Limit"
+      },
+      {
+        "QUERY PLAN": " * OrderBy {key, types}"
+      },
+      {
+        "QUERY PLAN": " * Distinct"
+      },
+      {
+        "QUERY PLAN": " * Produce {key, types}"
+      },
+      {
+        "QUERY PLAN": " * ConstructNamedPath"
+      },
+      {
+        "QUERY PLAN": " * Filter Generic {r}"
+      },
+      {
+        "QUERY PLAN": " * ExpandVariable (n)-[r]-(x)"
+      },
+      {
+        "QUERY PLAN": " * Filter (n :RecordVersion), {n.key}"
+      },
+      {
+        "QUERY PLAN": " * ScanAll (n)"
+      },
+      {
+        "QUERY PLAN": " * Once"
+      }
+    ],
+    "seconds": 0.002538542030379176,
+    "success": true,
+    "timeout_seconds": 0.25
+  },
+  {
+    "cypher": "MATCH p=(n:RecordVersion {key:$seed})-[r*1..2]-(x) WHERE all(e IN r WHERE type(e) IN $types AND e.channel='recorded') RETURN DISTINCT x.key AS key,[e IN r|type(e)] AS types ORDER BY key,types LIMIT 32",
+    "name": "recorded-related",
+    "params": {
+      "seed": "record:new:2",
+      "types": [
+        "CORRECTS",
+        "SUPERSEDES",
+        "SUPPORTED_BY",
+        "DERIVED_FROM",
+        "IN_SCOPE"
+      ]
+    },
+    "rows": [
+      {
+        "key": "evidence:synthetic",
+        "types": [
+          "DERIVED_FROM",
+          "SUPPORTED_BY"
+        ]
+      },
+      {
+        "key": "evidence:synthetic",
+        "types": [
+          "SUPPORTED_BY"
+        ]
+      },
+      {
+        "key": "record:attempt:1",
+        "types": [
+          "DERIVED_FROM"
+        ]
+      },
+      {
+        "key": "record:attempt:1",
+        "types": [
+          "IN_SCOPE",
+          "IN_SCOPE"
+        ]
+      },
+      {
+        "key": "record:attempt:1",
+        "types": [
+          "SUPPORTED_BY",
+          "SUPPORTED_BY"
+        ]
+      },
+      {
+        "key": "record:new:2",
+        "types": [
+          "CORRECTS",
+          "SUPERSEDES"
+        ]
+      },
+      {
+        "key": "record:new:2",
+        "types": [
+          "SUPERSEDES",
+          "CORRECTS"
+        ]
+      },
+      {
+        "key": "record:old:1",
+        "types": [
+          "CORRECTS"
+        ]
+      },
+      {
+        "key": "record:old:1",
+        "types": [
+          "SUPERSEDES"
+        ]
+      },
+      {
+        "key": "scope:parser",
+        "types": [
+          "DERIVED_FROM",
+          "IN_SCOPE"
+        ]
+      },
+      {
+        "key": "scope:parser",
+        "types": [
+          "IN_SCOPE"
+        ]
+      }
+    ],
+    "seconds": 0.0006534999702125788,
+    "success": true,
+    "timeout_seconds": 0.25
+  },
+  {
+    "cypher": "EXPLAIN CALL vector_search.search('ssg_embedding', 12, $text) YIELD node, similarity\nWITH node AS n, similarity\nRETURN {heading: coalesce(n.title, n.id + ': ' + n.summary), key: n.key,\n        type: coalesce(n.type, 'Advisory'), status: coalesce(n.status, 'imported'),\n        body: coalesce(substring(n.body, 0, 600), ''),\n        facts: {similarity: similarity,\n                classes: [(n)-[:INDICATES]->(c:VulnClass) | c.key],\n                packages: [(n)-[:APPLIES_TO]->(p:Package) | p.key] + [(n)-[:AFFECTS]->(p:Package) | p.key],\n                symbols: [(n)-[:ON]->(s:Symbol) | coalesce(s.simple, s.prefix)] + [(n)-[:VULNERABLE_AT]->(s:Symbol) | s.simple],\n                methods: [(n)-[:INDICATES]->(:VulnClass)<-[:ADDRESSES]-(m:Method) | m.key] + [(n)<-[:ADDRESSES]-(m:Method) | m.key],\n                contrasts: [(n)-[:CONTRASTS]-(x:Facet) | x.kind + ' ' + x.key + ': ' + x.title]},\n        next: CASE coalesce(n.type, '')\n                WHEN 'Facet' THEN [{query: 'facet', params: '{\"key\":\"' + n.key + '\"}', when: 'read the facet in full'}]\n                  + [(n)-[:CONTRASTS]-(x:Facet) | {query: 'facet', params: '{\"key\":\"' + x.key + '\"}', when: 'its ' + x.kind + ' counterpart: read both before deciding which one this code is'}]\n                WHEN 'VulnClass' THEN [{query: 'class', params: '{\"key\":\"' + n.key + '\"}', when: 'what a claim of this class MUST show'}]\n                WHEN 'Method' THEN [{query: 'method', params: '{\"key\":\"' + n.key + '\"}', when: 'follow the method'}]\n                WHEN 'Tool' THEN [{query: 'tool', params: '{\"key\":\"' + n.key + '\"}', when: 'exact invocation and output'}]\n                WHEN 'Investigation' THEN [{query: 'investigation', params: '{\"key\":\"' + n.key + '\"}', when: 'the steps'}]\n                ELSE [] END,\n        source: coalesce(n.source, n.url), digest: coalesce(n.digest, '')} AS item,\n       -similarity AS ord, n.key AS k\nORDER BY ord, k\n",
+    "name": "explain-ssg-search",
+    "params": {
+      "text": [
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "rows": [
+      {
+        "QUERY PLAN": " * OrderBy {item, ord, k}"
+      },
+      {
+        "QUERY PLAN": " * Produce {item, ord, k}"
+      },
+      {
+        "QUERY PLAN": " * RollUpApply"
+      },
+      {
+        "QUERY PLAN": " |\\ "
+      },
+      {
+        "QUERY PLAN": " | * Produce {anon1}"
+      },
+      {
+        "QUERY PLAN": " | * Filter (x :Facet)"
+      },
+      {
+        "QUERY PLAN": " | * Expand (n)-[anon17:CONTRASTS]-(x)"
+      },
+      {
+        "QUERY PLAN": " | * Once"
+      },
+      {
+        "QUERY PLAN": " * RollUpApply"
+      },
+      {
+        "QUERY PLAN": " |\\ "
+      },
+      {
+        "QUERY PLAN": " | * Produce {anon2}"
+      },
+      {
+        "QUERY PLAN": " | * Filter (m :Method)"
+      },
+      {
+        "QUERY PLAN": " | * EdgeUniquenessFilter {anon11 : anon13}"
+      },
+      {
+        "QUERY PLAN": " | * Expand (anon12)<-[anon13:ADDRESSES]-(m)"
+      },
+      {
+        "QUERY PLAN": " | * Filter (anon12 :VulnClass)"
+      },
+      {
+        "QUERY PLAN": " | * Expand (n)-[anon11:INDICATES]->(anon12)"
+      },
+      {
+        "QUERY PLAN": " | * Once"
+      },
+      {
+        "QUERY PLAN": " * RollUpApply"
+      },
+      {
+        "QUERY PLAN": " |\\ "
+      },
+      {
+        "QUERY PLAN": " | * Produce {anon5}"
+      },
+      {
+        "QUERY PLAN": " | * Filter (s :Symbol)"
+      },
+      {
+        "QUERY PLAN": " | * Expand (n)-[anon9:VULNERABLE_AT]->(s)"
+      },
+      {
+        "QUERY PLAN": " | * Once"
+      },
+      {
+        "QUERY PLAN": " * RollUpApply"
+      },
+      {
+        "QUERY PLAN": " |\\ "
+      },
+      {
+        "QUERY PLAN": " | * Produce {anon3}"
+      },
+      {
+        "QUERY PLAN": " | * Filter (m :Method)"
+      },
+      {
+        "QUERY PLAN": " | * Expand (n)<-[anon15:ADDRESSES]-(m)"
+      },
+      {
+        "QUERY PLAN": " | * Once"
+      },
+      {
+        "QUERY PLAN": " * RollUpApply"
+      },
+      {
+        "QUERY PLAN": " |\\ "
+      },
+      {
+        "QUERY PLAN": " | * Produce {anon4}"
+      },
+      {
+        "QUERY PLAN": " | * Filter (s :Symbol)"
+      },
+      {
+        "QUERY PLAN": " | * Expand (n)-[anon7:ON]->(s)"
+      },
+      {
+        "QUERY PLAN": " | * Once"
+      },
+      {
+        "QUERY PLAN": " * RollUpApply"
+      },
+      {
+        "QUERY PLAN": " |\\ "
+      },
+      {
+        "QUERY PLAN": " | * Produce {anon6}"
+      },
+      {
+        "QUERY PLAN": " | * Filter (p :Package)"
+      },
+      {
+        "QUERY PLAN": " | * Expand (n)-[anon3:APPLIES_TO]->(p)"
+      },
+      {
+        "QUERY PLAN": " | * Once"
+      },
+      {
+        "QUERY PLAN": " * RollUpApply"
+      },
+      {
+        "QUERY PLAN": " |\\ "
+      },
+      {
+        "QUERY PLAN": " | * Produce {anon19}"
+      },
+      {
+        "QUERY PLAN": " | * Filter (p :Package)"
+      },
+      {
+        "QUERY PLAN": " | * Expand (n)-[anon5:AFFECTS]->(p)"
+      },
+      {
+        "QUERY PLAN": " | * Once"
+      },
+      {
+        "QUERY PLAN": " * RollUpApply"
+      },
+      {
+        "QUERY PLAN": " |\\ "
+      },
+      {
+        "QUERY PLAN": " | * Produce {anon20}"
+      },
+      {
+        "QUERY PLAN": " | * Filter (c :VulnClass)"
+      },
+      {
+        "QUERY PLAN": " | * Expand (n)-[anon1:INDICATES]->(c)"
+      },
+      {
+        "QUERY PLAN": " | * Once"
+      },
+      {
+        "QUERY PLAN": " * RollUpApply"
+      },
+      {
+        "QUERY PLAN": " |\\ "
+      },
+      {
+        "QUERY PLAN": " | * Produce {anon21}"
+      },
+      {
+        "QUERY PLAN": " | * Filter (x :Facet)"
+      },
+      {
+        "QUERY PLAN": " | * Expand (n)-[anon19:CONTRASTS]-(x)"
+      },
+      {
+        "QUERY PLAN": " | * Once"
+      },
+      {
+        "QUERY PLAN": " * Produce {n, similarity}"
+      },
+      {
+        "QUERY PLAN": " * CallProcedure<vector_search.search> {node, similarity}"
+      },
+      {
+        "QUERY PLAN": " * Once"
+      }
+    ],
+    "seconds": 0.04211770900292322,
+    "success": true,
+    "timeout_seconds": 0.25
+  },
+  {
+    "cypher": "CALL vector_search.search('ssg_embedding', 12, $text) YIELD node, similarity\nWITH node AS n, similarity\nRETURN {heading: coalesce(n.title, n.id + ': ' + n.summary), key: n.key,\n        type: coalesce(n.type, 'Advisory'), status: coalesce(n.status, 'imported'),\n        body: coalesce(substring(n.body, 0, 600), ''),\n        facts: {similarity: similarity,\n                classes: [(n)-[:INDICATES]->(c:VulnClass) | c.key],\n                packages: [(n)-[:APPLIES_TO]->(p:Package) | p.key] + [(n)-[:AFFECTS]->(p:Package) | p.key],\n                symbols: [(n)-[:ON]->(s:Symbol) | coalesce(s.simple, s.prefix)] + [(n)-[:VULNERABLE_AT]->(s:Symbol) | s.simple],\n                methods: [(n)-[:INDICATES]->(:VulnClass)<-[:ADDRESSES]-(m:Method) | m.key] + [(n)<-[:ADDRESSES]-(m:Method) | m.key],\n                contrasts: [(n)-[:CONTRASTS]-(x:Facet) | x.kind + ' ' + x.key + ': ' + x.title]},\n        next: CASE coalesce(n.type, '')\n                WHEN 'Facet' THEN [{query: 'facet', params: '{\"key\":\"' + n.key + '\"}', when: 'read the facet in full'}]\n                  + [(n)-[:CONTRASTS]-(x:Facet) | {query: 'facet', params: '{\"key\":\"' + x.key + '\"}', when: 'its ' + x.kind + ' counterpart: read both before deciding which one this code is'}]\n                WHEN 'VulnClass' THEN [{query: 'class', params: '{\"key\":\"' + n.key + '\"}', when: 'what a claim of this class MUST show'}]\n                WHEN 'Method' THEN [{query: 'method', params: '{\"key\":\"' + n.key + '\"}', when: 'follow the method'}]\n                WHEN 'Tool' THEN [{query: 'tool', params: '{\"key\":\"' + n.key + '\"}', when: 'exact invocation and output'}]\n                WHEN 'Investigation' THEN [{query: 'investigation', params: '{\"key\":\"' + n.key + '\"}', when: 'the steps'}]\n                ELSE [] END,\n        source: coalesce(n.source, n.url), digest: coalesce(n.digest, '')} AS item,\n       -similarity AS ord, n.key AS k\nORDER BY ord, k\n",
+    "name": "ssg-template-search",
+    "params": {
+      "text": [
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "rows": [
+      {
+        "item": {
+          "body": "Synthetic fixture.",
+          "digest": "9f59d051641194e4a986b63a6c1802fc31ce3727485f5f0f8ac293eaca505e2e",
+          "facts": {
+            "classes": [],
+            "contrasts": [],
+            "methods": [],
+            "packages": [],
+            "similarity": 1.0,
+            "symbols": []
+          },
+          "heading": "Synthetic investigation",
+          "key": "investigation/synthetic",
+          "next": [
+            {
+              "params": "{\"key\":\"investigation/synthetic\"}",
+              "query": "investigation",
+              "when": "the steps"
+            }
+          ],
+          "source": "synthetic/fixture.json",
+          "status": "proposed",
+          "type": "Investigation"
+        },
+        "k": "investigation/synthetic",
+        "ord": -1.0
+      },
+      {
+        "item": {
+          "body": "Synthetic retry budget is three attempts.",
+          "digest": "05a60e4b15ce144e5868ccb0f28058bf4ef6140fdcfb31eb0276c5e15126f63d",
+          "facts": {
+            "classes": [],
+            "contrasts": [],
+            "methods": [],
+            "packages": [],
+            "similarity": 1.0,
+            "symbols": []
+          },
+          "heading": null,
+          "key": "record:new:2",
+          "next": [],
+          "source": "synthetic/fixture.json",
+          "status": "imported",
+          "type": "Advisory"
+        },
+        "k": "record:new:2",
+        "ord": -1.0
+      },
+      {
+        "item": {
+          "body": "Synthetic prior retry budget.",
+          "digest": "4ec610189b1a6905b045da2190912a0335ba31d5555fcd87d153cbdfcab2b1fa",
+          "facts": {
+            "classes": [],
+            "contrasts": [],
+            "methods": [],
+            "packages": [],
+            "similarity": 0.800000011920929,
+            "symbols": []
+          },
+          "heading": null,
+          "key": "record:old:1",
+          "next": [],
+          "source": "synthetic/fixture.json",
+          "status": "imported",
+          "type": "Advisory"
+        },
+        "k": "record:old:1",
+        "ord": -0.800000011920929
+      },
+      {
+        "item": {
+          "body": "Synthetic fixture, not vulnerability evidence.",
+          "digest": "ab35f408a15f39dc41321f469bbb2b368e4305d5ba416a31bc5d28edbc0e9db5",
+          "facts": {
+            "classes": [
+              "class/synthetic"
+            ],
+            "contrasts": [],
+            "methods": [
+              "method/synthetic"
+            ],
+            "packages": [
+              "cargo/synthetic"
+            ],
+            "similarity": 0.6000000238418579,
+            "symbols": []
+          },
+          "heading": "Synthetic guarded input",
+          "key": "facet/synthetic",
+          "next": [
+            {
+              "params": "{\"key\":\"facet/synthetic\"}",
+              "query": "facet",
+              "when": "read the facet in full"
+            }
+          ],
+          "source": "synthetic/fixture.json",
+          "status": "proposed",
+          "type": "Facet"
+        },
+        "k": "facet/synthetic",
+        "ord": -0.6000000238418579
+      },
+      {
+        "item": {
+          "body": "Synthetic fixture.",
+          "digest": "39ceb084e3ba877f2fd4c1a51fc39f482754b6fa033beaf550628780e37ca5bd",
+          "facts": {
+            "classes": [],
+            "contrasts": [],
+            "methods": [
+              "method/synthetic"
+            ],
+            "packages": [],
+            "similarity": 0.0,
+            "symbols": []
+          },
+          "heading": "Synthetic validation class",
+          "key": "class/synthetic",
+          "next": [
+            {
+              "params": "{\"key\":\"class/synthetic\"}",
+              "query": "class",
+              "when": "what a claim of this class MUST show"
+            }
+          ],
+          "source": "synthetic/fixture.json",
+          "status": "proposed",
+          "type": "VulnClass"
+        },
+        "k": "class/synthetic",
+        "ord": -0.0
+      },
+      {
+        "item": {
+          "body": "Synthetic fixture.",
+          "digest": "4e10b8bcfa16a51ea2a153ed952e8553ee60e1e5c1f560b5345f3b0fa8be9c65",
+          "facts": {
+            "classes": [],
+            "contrasts": [],
+            "methods": [],
+            "packages": [],
+            "similarity": 0.0,
+            "symbols": []
+          },
+          "heading": "Synthetic check",
+          "key": "method/synthetic",
+          "next": [
+            {
+              "params": "{\"key\":\"method/synthetic\"}",
+              "query": "method",
+              "when": "follow the method"
+            }
+          ],
+          "source": "synthetic/fixture.json",
+          "status": "proposed",
+          "type": "Method"
+        },
+        "k": "method/synthetic",
+        "ord": -0.0
+      },
+      {
+        "item": {
+          "body": "Synthetic parser investigation attempt.",
+          "digest": "73605a8c1325852ae3cb6c5d123d19659a1b59174cb779e7207ef8b65e6f0f7e",
+          "facts": {
+            "classes": [],
+            "contrasts": [],
+            "methods": [],
+            "packages": [],
+            "similarity": 0.0,
+            "symbols": []
+          },
+          "heading": null,
+          "key": "record:attempt:1",
+          "next": [],
+          "source": "synthetic/fixture.json",
+          "status": "imported",
+          "type": "Advisory"
+        },
+        "k": "record:attempt:1",
+        "ord": -0.0
+      }
+    ],
+    "seconds": 0.007761207991279662,
+    "success": true,
+    "timeout_seconds": 0.25
+  },
+  {
+    "cypher": "EXPLAIN CALL {\n  UNWIND $packages AS p\n  MATCH (n:Facet:Embedded)-[a:APPLIES_TO]->(:Package {key: p.key})\n  WHERE (a.lo IS NULL AND a.hi IS NULL) OR (p.vkey IS NOT NULL AND (a.lo IS NULL OR p.vkey >= a.lo) AND (a.hi IS NULL OR p.vkey < a.hi OR (a.hi_inclusive AND p.vkey = a.hi)))\n  RETURN DISTINCT n\n  UNION\n  UNWIND $packages AS p\n  MATCH (n:Advisory:Embedded)-[a:AFFECTS]->(:Package {key: p.key})\n  WHERE p.vkey IS NOT NULL AND (a.lo IS NULL OR p.vkey >= a.lo) AND (a.hi IS NULL OR p.vkey < a.hi OR (a.hi_inclusive AND p.vkey = a.hi))\n  RETURN DISTINCT n\n  UNION\n  MATCH (n:Embedded) WHERE n:VulnClass OR n:Tool OR n:Investigation\n  RETURN n\n  UNION\n  MATCH (n:Method:Embedded)\n  WITH n, [(n)-[:FOR]->(x) | x.key] AS targets\n  WHERE size(targets) = 0 OR any(t IN targets WHERE t IN $framework_keys OR t IN $package_keys)\n  RETURN n\n}\nWITH n, vector_search.cosine_similarity(n.embedding, $text) AS similarity\nORDER BY similarity DESC, n.key\nLIMIT 12\nRETURN {heading: coalesce(n.title, n.id + ': ' + n.summary), key: n.key,\n        type: coalesce(n.type, 'Advisory'), status: coalesce(n.status, 'imported'),\n        body: coalesce(substring(n.body, 0, 600), ''),\n        facts: {similarity: similarity,\n                classes: [(n)-[:INDICATES]->(c:VulnClass) | c.key],\n                packages: [(n)-[:APPLIES_TO]->(p:Package) | p.key] + [(n)-[:AFFECTS]->(p:Package) | p.key],\n                symbols: [(n)-[:ON]->(s:Symbol) | coalesce(s.simple, s.prefix)] + [(n)-[:VULNERABLE_AT]->(s:Symbol) | s.simple],\n                methods: [(n)-[:INDICATES]->(:VulnClass)<-[:ADDRESSES]-(m:Method) | m.key] + [(n)<-[:ADDRESSES]-(m:Method) | m.key],\n                contrasts: [(n)-[:CONTRASTS]-(x:Facet) | x.kind + ' ' + x.key + ': ' + x.title]},\n        next: CASE coalesce(n.type, '')\n                WHEN 'Facet' THEN [{query: 'facet', params: '{\"key\":\"' + n.key + '\"}', when: 'read the facet in full'}]\n                  + [(n)-[:CONTRASTS]-(x:Facet) | {query: 'facet', params: '{\"key\":\"' + x.key + '\"}', when: 'its ' + x.kind + ' counterpart: read both before deciding which one this code is'}]\n                WHEN 'VulnClass' THEN [{query: 'class', params: '{\"key\":\"' + n.key + '\"}', when: 'what a claim of this class MUST show'}]\n                WHEN 'Method' THEN [{query: 'method', params: '{\"key\":\"' + n.key + '\"}', when: 'follow the method'}]\n                WHEN 'Tool' THEN [{query: 'tool', params: '{\"key\":\"' + n.key + '\"}', when: 'exact invocation and output'}]\n                WHEN 'Investigation' THEN [{query: 'investigation', params: '{\"key\":\"' + n.key + '\"}', when: 'the steps'}]\n                ELSE [] END,\n        source: coalesce(n.source, n.url), digest: coalesce(n.digest, '')} AS item,\n       -similarity AS ord, n.key AS k\nORDER BY ord, k\n",
+    "name": "explain-ssg-nearby",
+    "params": {
+      "framework_keys": [],
+      "package_keys": [
+        "cargo/synthetic"
+      ],
+      "packages": [
+        {
+          "key": "cargo/synthetic",
+          "vkey": 1
+        }
+      ],
+      "text": [
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "rows": [
+      {
+        "QUERY PLAN": " * OrderBy {item, ord, k}"
+      },
+      {
+        "QUERY PLAN": " * Produce {item, ord, k}"
+      },
+      {
+        "QUERY PLAN": " * RollUpApply"
+      },
+      {
+        "QUERY PLAN": " |\\ "
+      },
+      {
+        "QUERY PLAN": " | * Produce {anon9}"
+      },
+      {
+        "QUERY PLAN": " | * Filter (x :Facet)"
+      },
+      {
+        "QUERY PLAN": " | * Expand (n)-[anon25:CONTRASTS]-(x)"
+      },
+      {
+        "QUERY PLAN": " | * Once"
+      },
+      {
+        "QUERY PLAN": " * RollUpApply"
+      },
+      {
+        "QUERY PLAN": " |\\ "
+      },
+      {
+        "QUERY PLAN": " | * Produce {anon14}"
+      },
+      {
+        "QUERY PLAN": " | * Filter (p :Package)"
+      },
+      {
+        "QUERY PLAN": " | * Expand (n)-[anon11:APPLIES_TO]->(p)"
+      },
+      {
+        "QUERY PLAN": " | * Once"
+      },
+      {
+        "QUERY PLAN": " * RollUpApply"
+      },
+      {
+        "QUERY PLAN": " |\\ "
+      },
+      {
+        "QUERY PLAN": " | * Produce {anon10}"
+      },
+      {
+        "QUERY PLAN": " | * Filter (m :Method)"
+      },
+      {
+        "QUERY PLAN": " | * EdgeUniquenessFilter {anon19 : anon21}"
+      },
+      {
+        "QUERY PLAN": " | * Expand (anon20)<-[anon21:ADDRESSES]-(m)"
+      },
+      {
+        "QUERY PLAN": " | * Filter (anon20 :VulnClass)"
+      },
+      {
+        "QUERY PLAN": " | * Expand (n)-[anon19:INDICATES]->(anon20)"
+      },
+      {
+        "QUERY PLAN": " | * Once"
+      },
+      {
+        "QUERY PLAN": " * RollUpApply"
+      },
+      {
+        "QUERY PLAN": " |\\ "
+      },
+      {
+        "QUERY PLAN": " | * Produce {anon11}"
+      },
+      {
+        "QUERY PLAN": " | * Filter (m :Method)"
+      },
+      {
+        "QUERY PLAN": " | * Expand (n)<-[anon23:ADDRESSES]-(m)"
+      },
+      {
+        "QUERY PLAN": " | * Once"
+      },
+      {
+        "QUERY PLAN": " * RollUpApply"
+      },
+      {
+        "QUERY PLAN": " |\\ "
+      },
+      {
+        "QUERY PLAN": " | * Produce {anon12}"
+      },
+      {
+        "QUERY PLAN": " | * Filter (s :Symbol)"
+      },
+      {
+        "QUERY PLAN": " | * Expand (n)-[anon15:ON]->(s)"
+      },
+      {
+        "QUERY PLAN": " | * Once"
+      },
+      {
+        "QUERY PLAN": " * RollUpApply"
+      },
+      {
+        "QUERY PLAN": " |\\ "
+      },
+      {
+        "QUERY PLAN": " | * Produce {anon13}"
+      },
+      {
+        "QUERY PLAN": " | * Filter (s :Symbol)"
+      },
+      {
+        "QUERY PLAN": " | * Expand (n)-[anon17:VULNERABLE_AT]->(s)"
+      },
+      {
+        "QUERY PLAN": " | * Once"
+      },
+      {
+        "QUERY PLAN": " * RollUpApply"
+      },
+      {
+        "QUERY PLAN": " |\\ "
+      },
+      {
+        "QUERY PLAN": " | * Produce {anon27}"
+      },
+      {
+        "QUERY PLAN": " | * Filter (p :Package)"
+      },
+      {
+        "QUERY PLAN": " | * Expand (n)-[anon13:AFFECTS]->(p)"
+      },
+      {
+        "QUERY PLAN": " | * Once"
+      },
+      {
+        "QUERY PLAN": " * RollUpApply"
+      },
+      {
+        "QUERY PLAN": " |\\ "
+      },
+      {
+        "QUERY PLAN": " | * Produce {anon28}"
+      },
+      {
+        "QUERY PLAN": " | * Filter (c :VulnClass)"
+      },
+      {
+        "QUERY PLAN": " | * Expand (n)-[anon9:INDICATES]->(c)"
+      },
+      {
+        "QUERY PLAN": " | * Once"
+      },
+      {
+        "QUERY PLAN": " * RollUpApply"
+      },
+      {
+        "QUERY PLAN": " |\\ "
+      },
+      {
+        "QUERY PLAN": " | * Produce {anon29}"
+      },
+      {
+        "QUERY PLAN": " | * Filter (x :Facet)"
+      },
+      {
+        "QUERY PLAN": " | * Expand (n)-[anon27:CONTRASTS]-(x)"
+      },
+      {
+        "QUERY PLAN": " | * Once"
+      },
+      {
+        "QUERY PLAN": " * Limit"
+      },
+      {
+        "QUERY PLAN": " * OrderBy {n, similarity}"
+      },
+      {
+        "QUERY PLAN": " * Produce {n, similarity}"
+      },
+      {
+        "QUERY PLAN": " * Apply"
+      },
+      {
+        "QUERY PLAN": " |\\ "
+      },
+      {
+        "QUERY PLAN": " | * Distinct"
+      },
+      {
+        "QUERY PLAN": " | * Union {n : n}"
+      },
+      {
+        "QUERY PLAN": " | |\\ "
+      },
+      {
+        "QUERY PLAN": " | | * Produce {n}"
+      },
+      {
+        "QUERY PLAN": " | | * Filter Generic {targets}"
+      },
+      {
+        "QUERY PLAN": " | | * Produce {n, targets}"
+      },
+      {
+        "QUERY PLAN": " | | * RollUpApply"
+      },
+      {
+        "QUERY PLAN": " | | |\\ "
+      },
+      {
+        "QUERY PLAN": " | | | * Produce {anon7}"
+      },
+      {
+        "QUERY PLAN": " | | | * Expand (n)-[anon7:FOR]->(x)"
+      },
+      {
+        "QUERY PLAN": " | | | * Once"
+      },
+      {
+        "QUERY PLAN": " | | * Filter (n :Embedded:Method)"
+      },
+      {
+        "QUERY PLAN": " | | * ScanAll (n)"
+      },
+      {
+        "QUERY PLAN": " | | * Once"
+      },
+      {
+        "QUERY PLAN": " | * Union {n : n}"
+      },
+      {
+        "QUERY PLAN": " | |\\ "
+      },
+      {
+        "QUERY PLAN": " | | * Produce {n}"
+      },
+      {
+        "QUERY PLAN": " | | * Filter (n :Embedded:(Investigation|Tool|VulnClass))"
+      },
+      {
+        "QUERY PLAN": " | | * ScanAll (n)"
+      },
+      {
+        "QUERY PLAN": " | | * Once"
+      },
+      {
+        "QUERY PLAN": " | * Union {n : n}"
+      },
+      {
+        "QUERY PLAN": " | |\\ "
+      },
+      {
+        "QUERY PLAN": " | | * Distinct"
+      },
+      {
+        "QUERY PLAN": " | | * Produce {n}"
+      },
+      {
+        "QUERY PLAN": " | | * Filter (anon3 :Package), Generic {a, p}, {anon3.key}, {p.key}"
+      },
+      {
+        "QUERY PLAN": " | | * Expand (n)-[a:AFFECTS]->(anon3)"
+      },
+      {
+        "QUERY PLAN": " | | * Filter (n :Advisory:Embedded)"
+      },
+      {
+        "QUERY PLAN": " | | * ScanAll (n)"
+      },
+      {
+        "QUERY PLAN": " | | * Filter {p.vkey}"
+      },
+      {
+        "QUERY PLAN": " | | * Unwind"
+      },
+      {
+        "QUERY PLAN": " | | * Once"
+      },
+      {
+        "QUERY PLAN": " | * Distinct"
+      },
+      {
+        "QUERY PLAN": " | * Produce {n}"
+      },
+      {
+        "QUERY PLAN": " | * Filter (anon1 :Package), Generic {a, p}, {anon1.key}, {p.key}"
+      },
+      {
+        "QUERY PLAN": " | * Expand (n)-[a:APPLIES_TO]->(anon1)"
+      },
+      {
+        "QUERY PLAN": " | * Filter (n :Embedded:Facet)"
+      },
+      {
+        "QUERY PLAN": " | * ScanAll (n)"
+      },
+      {
+        "QUERY PLAN": " | * Unwind"
+      },
+      {
+        "QUERY PLAN": " | * Once"
+      },
+      {
+        "QUERY PLAN": " * Once"
+      }
+    ],
+    "seconds": 0.018069874960929155,
+    "success": true,
+    "timeout_seconds": 0.25
+  },
+  {
+    "cypher": "CALL {\n  UNWIND $packages AS p\n  MATCH (n:Facet:Embedded)-[a:APPLIES_TO]->(:Package {key: p.key})\n  WHERE (a.lo IS NULL AND a.hi IS NULL) OR (p.vkey IS NOT NULL AND (a.lo IS NULL OR p.vkey >= a.lo) AND (a.hi IS NULL OR p.vkey < a.hi OR (a.hi_inclusive AND p.vkey = a.hi)))\n  RETURN DISTINCT n\n  UNION\n  UNWIND $packages AS p\n  MATCH (n:Advisory:Embedded)-[a:AFFECTS]->(:Package {key: p.key})\n  WHERE p.vkey IS NOT NULL AND (a.lo IS NULL OR p.vkey >= a.lo) AND (a.hi IS NULL OR p.vkey < a.hi OR (a.hi_inclusive AND p.vkey = a.hi))\n  RETURN DISTINCT n\n  UNION\n  MATCH (n:Embedded) WHERE n:VulnClass OR n:Tool OR n:Investigation\n  RETURN n\n  UNION\n  MATCH (n:Method:Embedded)\n  WITH n, [(n)-[:FOR]->(x) | x.key] AS targets\n  WHERE size(targets) = 0 OR any(t IN targets WHERE t IN $framework_keys OR t IN $package_keys)\n  RETURN n\n}\nWITH n, vector_search.cosine_similarity(n.embedding, $text) AS similarity\nORDER BY similarity DESC, n.key\nLIMIT 12\nRETURN {heading: coalesce(n.title, n.id + ': ' + n.summary), key: n.key,\n        type: coalesce(n.type, 'Advisory'), status: coalesce(n.status, 'imported'),\n        body: coalesce(substring(n.body, 0, 600), ''),\n        facts: {similarity: similarity,\n                classes: [(n)-[:INDICATES]->(c:VulnClass) | c.key],\n                packages: [(n)-[:APPLIES_TO]->(p:Package) | p.key] + [(n)-[:AFFECTS]->(p:Package) | p.key],\n                symbols: [(n)-[:ON]->(s:Symbol) | coalesce(s.simple, s.prefix)] + [(n)-[:VULNERABLE_AT]->(s:Symbol) | s.simple],\n                methods: [(n)-[:INDICATES]->(:VulnClass)<-[:ADDRESSES]-(m:Method) | m.key] + [(n)<-[:ADDRESSES]-(m:Method) | m.key],\n                contrasts: [(n)-[:CONTRASTS]-(x:Facet) | x.kind + ' ' + x.key + ': ' + x.title]},\n        next: CASE coalesce(n.type, '')\n                WHEN 'Facet' THEN [{query: 'facet', params: '{\"key\":\"' + n.key + '\"}', when: 'read the facet in full'}]\n                  + [(n)-[:CONTRASTS]-(x:Facet) | {query: 'facet', params: '{\"key\":\"' + x.key + '\"}', when: 'its ' + x.kind + ' counterpart: read both before deciding which one this code is'}]\n                WHEN 'VulnClass' THEN [{query: 'class', params: '{\"key\":\"' + n.key + '\"}', when: 'what a claim of this class MUST show'}]\n                WHEN 'Method' THEN [{query: 'method', params: '{\"key\":\"' + n.key + '\"}', when: 'follow the method'}]\n                WHEN 'Tool' THEN [{query: 'tool', params: '{\"key\":\"' + n.key + '\"}', when: 'exact invocation and output'}]\n                WHEN 'Investigation' THEN [{query: 'investigation', params: '{\"key\":\"' + n.key + '\"}', when: 'the steps'}]\n                ELSE [] END,\n        source: coalesce(n.source, n.url), digest: coalesce(n.digest, '')} AS item,\n       -similarity AS ord, n.key AS k\nORDER BY ord, k\n",
+    "name": "ssg-template-nearby",
+    "params": {
+      "framework_keys": [],
+      "package_keys": [
+        "cargo/synthetic"
+      ],
+      "packages": [
+        {
+          "key": "cargo/synthetic",
+          "vkey": 1
+        }
+      ],
+      "text": [
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "rows": [
+      {
+        "item": {
+          "body": "Synthetic fixture, not vulnerability evidence.",
+          "digest": "ab35f408a15f39dc41321f469bbb2b368e4305d5ba416a31bc5d28edbc0e9db5",
+          "facts": {
+            "classes": [
+              "class/synthetic"
+            ],
+            "contrasts": [],
+            "methods": [
+              "method/synthetic"
+            ],
+            "packages": [
+              "cargo/synthetic"
+            ],
+            "similarity": 0.6000000095367428,
+            "symbols": []
+          },
+          "heading": "Synthetic guarded input",
+          "key": "facet/synthetic",
+          "next": [
+            {
+              "params": "{\"key\":\"facet/synthetic\"}",
+              "query": "facet",
+              "when": "read the facet in full"
+            }
+          ],
+          "source": "synthetic/fixture.json",
+          "status": "proposed",
+          "type": "Facet"
+        },
+        "k": "facet/synthetic",
+        "ord": -0.6000000095367428
+      },
+      {
+        "item": {
+          "body": "Synthetic fixture.",
+          "digest": "39ceb084e3ba877f2fd4c1a51fc39f482754b6fa033beaf550628780e37ca5bd",
+          "facts": {
+            "classes": [],
+            "contrasts": [],
+            "methods": [
+              "method/synthetic"
+            ],
+            "packages": [],
+            "similarity": 0.0,
+            "symbols": []
+          },
+          "heading": "Synthetic validation class",
+          "key": "class/synthetic",
+          "next": [
+            {
+              "params": "{\"key\":\"class/synthetic\"}",
+              "query": "class",
+              "when": "what a claim of this class MUST show"
+            }
+          ],
+          "source": "synthetic/fixture.json",
+          "status": "proposed",
+          "type": "VulnClass"
+        },
+        "k": "class/synthetic",
+        "ord": -0.0
+      },
+      {
+        "item": {
+          "body": "Synthetic fixture.",
+          "digest": "4e10b8bcfa16a51ea2a153ed952e8553ee60e1e5c1f560b5345f3b0fa8be9c65",
+          "facts": {
+            "classes": [],
+            "contrasts": [],
+            "methods": [],
+            "packages": [],
+            "similarity": 0.0,
+            "symbols": []
+          },
+          "heading": "Synthetic check",
+          "key": "method/synthetic",
+          "next": [
+            {
+              "params": "{\"key\":\"method/synthetic\"}",
+              "query": "method",
+              "when": "follow the method"
+            }
+          ],
+          "source": "synthetic/fixture.json",
+          "status": "proposed",
+          "type": "Method"
+        },
+        "k": "method/synthetic",
+        "ord": -0.0
+      },
+      {
+        "item": {
+          "body": "Synthetic fixture.",
+          "digest": "9f59d051641194e4a986b63a6c1802fc31ce3727485f5f0f8ac293eaca505e2e",
+          "facts": {
+            "classes": [],
+            "contrasts": [],
+            "methods": [],
+            "packages": [],
+            "similarity": -1.0,
+            "symbols": []
+          },
+          "heading": "Synthetic investigation",
+          "key": "investigation/synthetic",
+          "next": [
+            {
+              "params": "{\"key\":\"investigation/synthetic\"}",
+              "query": "investigation",
+              "when": "the steps"
+            }
+          ],
+          "source": "synthetic/fixture.json",
+          "status": "proposed",
+          "type": "Investigation"
+        },
+        "k": "investigation/synthetic",
+        "ord": 1.0
+      }
+    ],
+    "seconds": 0.008834666979964823,
+    "success": true,
+    "timeout_seconds": 0.25
+  },
+  {
+    "cypher": "EXPLAIN MATCH (c:VulnClass {key: $key})\nRETURN {heading: c.title, key: c.key, type: c.type, status: c.status, body: c.body,\n        facts: {cwe: c.cwe, docs: c.docs,\n                indicated_by: [(f:Facet)-[:INDICATES]->(c) | f.key + ' (' + f.kind + ', ' + f.status + ')'],\n                methods: [(m:Method)-[:ADDRESSES]->(c) | m.key]},\n        next: [(c)-[s:SUGGESTS]->(q:Query) | {query: q.name, params: s.params, when: s.when}],\n        source: c.source, digest: c.digest} AS item, 0 AS ord, c.key AS k\nORDER BY ord, k\n",
+    "name": "explain-ssg-class",
+    "params": {
+      "key": "class/synthetic"
+    },
+    "rows": [
+      {
+        "QUERY PLAN": " * OrderBy {item, ord, k}"
+      },
+      {
+        "QUERY PLAN": " * Produce {item, ord, k}"
+      },
+      {
+        "QUERY PLAN": " * RollUpApply"
+      },
+      {
+        "QUERY PLAN": " |\\ "
+      },
+      {
+        "QUERY PLAN": " | * Produce {anon2}"
+      },
+      {
+        "QUERY PLAN": " | * Expand (f)-[anon2:INDICATES]->(c)"
+      },
+      {
+        "QUERY PLAN": " | * Filter (f :Facet)"
+      },
+      {
+        "QUERY PLAN": " | * ScanAll (f)"
+      },
+      {
+        "QUERY PLAN": " | * Once"
+      },
+      {
+        "QUERY PLAN": " * RollUpApply"
+      },
+      {
+        "QUERY PLAN": " |\\ "
+      },
+      {
+        "QUERY PLAN": " | * Produce {anon4}"
+      },
+      {
+        "QUERY PLAN": " | * Expand (m)-[anon4:ADDRESSES]->(c)"
+      },
+      {
+        "QUERY PLAN": " | * Filter (m :Method)"
+      },
+      {
+        "QUERY PLAN": " | * ScanAll (m)"
+      },
+      {
+        "QUERY PLAN": " | * Once"
+      },
+      {
+        "QUERY PLAN": " * RollUpApply"
+      },
+      {
+        "QUERY PLAN": " |\\ "
+      },
+      {
+        "QUERY PLAN": " | * Produce {anon6}"
+      },
+      {
+        "QUERY PLAN": " | * Filter (q :Query)"
+      },
+      {
+        "QUERY PLAN": " | * Expand (c)-[s:SUGGESTS]->(q)"
+      },
+      {
+        "QUERY PLAN": " | * Once"
+      },
+      {
+        "QUERY PLAN": " * Filter (c :VulnClass), {c.key}"
+      },
+      {
+        "QUERY PLAN": " * ScanAll (c)"
+      },
+      {
+        "QUERY PLAN": " * Once"
+      }
+    ],
+    "seconds": 0.005659457994624972,
+    "success": true,
+    "timeout_seconds": 0.25
+  },
+  {
+    "cypher": "MATCH (c:VulnClass {key: $key})\nRETURN {heading: c.title, key: c.key, type: c.type, status: c.status, body: c.body,\n        facts: {cwe: c.cwe, docs: c.docs,\n                indicated_by: [(f:Facet)-[:INDICATES]->(c) | f.key + ' (' + f.kind + ', ' + f.status + ')'],\n                methods: [(m:Method)-[:ADDRESSES]->(c) | m.key]},\n        next: [(c)-[s:SUGGESTS]->(q:Query) | {query: q.name, params: s.params, when: s.when}],\n        source: c.source, digest: c.digest} AS item, 0 AS ord, c.key AS k\nORDER BY ord, k\n",
+    "name": "ssg-template-class",
+    "params": {
+      "key": "class/synthetic"
+    },
+    "rows": [
+      {
+        "item": {
+          "body": "Synthetic fixture.",
+          "digest": "39ceb084e3ba877f2fd4c1a51fc39f482754b6fa033beaf550628780e37ca5bd",
+          "facts": {
+            "cwe": "synthetic",
+            "docs": [],
+            "indicated_by": [
+              "facet/synthetic (positive, proposed)"
+            ],
+            "methods": [
+              "method/synthetic"
+            ]
+          },
+          "heading": "Synthetic validation class",
+          "key": "class/synthetic",
+          "next": [
+            {
+              "params": "{}",
+              "query": "class",
+              "when": "synthetic only"
+            }
+          ],
+          "source": "synthetic/fixture.json",
+          "status": "proposed",
+          "type": "VulnClass"
+        },
+        "k": "class/synthetic",
+        "ord": 0
+      }
+    ],
+    "seconds": 0.0009654159657657146,
+    "success": true,
+    "timeout_seconds": 0.25
+  },
+  {
+    "cypher": "EXPLAIN MATCH (i:Investigation {key: $key})\nCALL {\n  WITH i\n  RETURN {heading: i.title, key: i.key, type: i.type, status: i.status, body: i.body,\n          facts: {posture: i.posture, docs: i.docs},\n          next: [(i)-[s:SUGGESTS]->(q:Query) | {query: q.name, params: s.params, when: s.when}],\n          source: i.source, digest: i.digest} AS item, 0 AS ord, '' AS k\n  UNION ALL\n  WITH i\n  MATCH (i)-[:HAS_STEP]->(st:Step)\n  RETURN {heading: 'Step ' + toString(st.order) + ': ' + st.title, key: st.key, type: 'Step', status: i.status,\n          body: st.instructions,\n          facts: {commands: st.commands, expect: st.expect,\n                  uses: [(st)-[:USES]->(u:Unit) | u.key]},\n          next: [(st)-[r:RUNS]->(q:Query) | {query: q.name, params: r.params, when: r.when}],\n          source: i.source, digest: i.digest} AS item, st.order AS ord, st.key AS k\n}\nRETURN item, ord, k\nORDER BY ord, k\n",
+    "name": "explain-ssg-investigation",
+    "params": {
+      "key": "investigation/synthetic"
+    },
+    "rows": [
+      {
+        "QUERY PLAN": " * OrderBy {item, ord, k}"
+      },
+      {
+        "QUERY PLAN": " * Produce {item, ord, k}"
+      },
+      {
+        "QUERY PLAN": " * Apply"
+      },
+      {
+        "QUERY PLAN": " |\\ "
+      },
+      {
+        "QUERY PLAN": " | * Union {item, ord, k : item, ord, k}"
+      },
+      {
+        "QUERY PLAN": " | |\\ "
+      },
+      {
+        "QUERY PLAN": " | | * Produce {item, ord, k}"
+      },
+      {
+        "QUERY PLAN": " | | * RollUpApply"
+      },
+      {
+        "QUERY PLAN": " | | |\\ "
+      },
+      {
+        "QUERY PLAN": " | | | * Produce {anon5}"
+      },
+      {
+        "QUERY PLAN": " | | | * Filter (u :Unit)"
+      },
+      {
+        "QUERY PLAN": " | | | * Expand (st)-[anon5:USES]->(u)"
+      },
+      {
+        "QUERY PLAN": " | | | * Once"
+      },
+      {
+        "QUERY PLAN": " | | * RollUpApply"
+      },
+      {
+        "QUERY PLAN": " | | |\\ "
+      },
+      {
+        "QUERY PLAN": " | | | * Produce {anon7}"
+      },
+      {
+        "QUERY PLAN": " | | | * Filter (q :Query)"
+      },
+      {
+        "QUERY PLAN": " | | | * Expand (st)-[r:RUNS]->(q)"
+      },
+      {
+        "QUERY PLAN": " | | | * Once"
+      },
+      {
+        "QUERY PLAN": " | | * Filter (st :Step)"
+      },
+      {
+        "QUERY PLAN": " | | * Expand (i)-[anon3:HAS_STEP]->(st)"
+      },
+      {
+        "QUERY PLAN": " | | * Produce {i}"
+      },
+      {
+        "QUERY PLAN": " | | * Once"
+      },
+      {
+        "QUERY PLAN": " | * Produce {item, ord, k}"
+      },
+      {
+        "QUERY PLAN": " | * RollUpApply"
+      },
+      {
+        "QUERY PLAN": " | |\\ "
+      },
+      {
+        "QUERY PLAN": " | | * Produce {anon2}"
+      },
+      {
+        "QUERY PLAN": " | | * Filter (q :Query)"
+      },
+      {
+        "QUERY PLAN": " | | * Expand (i)-[s:SUGGESTS]->(q)"
+      },
+      {
+        "QUERY PLAN": " | | * Once"
+      },
+      {
+        "QUERY PLAN": " | * Produce {i}"
+      },
+      {
+        "QUERY PLAN": " | * Once"
+      },
+      {
+        "QUERY PLAN": " * Filter (i :Investigation), {i.key}"
+      },
+      {
+        "QUERY PLAN": " * ScanAll (i)"
+      },
+      {
+        "QUERY PLAN": " * Once"
+      }
+    ],
+    "seconds": 0.0032393329893238842,
+    "success": true,
+    "timeout_seconds": 0.25
+  },
+  {
+    "cypher": "MATCH (i:Investigation {key: $key})\nCALL {\n  WITH i\n  RETURN {heading: i.title, key: i.key, type: i.type, status: i.status, body: i.body,\n          facts: {posture: i.posture, docs: i.docs},\n          next: [(i)-[s:SUGGESTS]->(q:Query) | {query: q.name, params: s.params, when: s.when}],\n          source: i.source, digest: i.digest} AS item, 0 AS ord, '' AS k\n  UNION ALL\n  WITH i\n  MATCH (i)-[:HAS_STEP]->(st:Step)\n  RETURN {heading: 'Step ' + toString(st.order) + ': ' + st.title, key: st.key, type: 'Step', status: i.status,\n          body: st.instructions,\n          facts: {commands: st.commands, expect: st.expect,\n                  uses: [(st)-[:USES]->(u:Unit) | u.key]},\n          next: [(st)-[r:RUNS]->(q:Query) | {query: q.name, params: r.params, when: r.when}],\n          source: i.source, digest: i.digest} AS item, st.order AS ord, st.key AS k\n}\nRETURN item, ord, k\nORDER BY ord, k\n",
+    "name": "ssg-template-investigation",
+    "params": {
+      "key": "investigation/synthetic"
+    },
+    "rows": [
+      {
+        "item": {
+          "body": "Synthetic fixture.",
+          "digest": "9f59d051641194e4a986b63a6c1802fc31ce3727485f5f0f8ac293eaca505e2e",
+          "facts": {
+            "docs": [],
+            "posture": "research"
+          },
+          "heading": "Synthetic investigation",
+          "key": "investigation/synthetic",
+          "next": [],
+          "source": "synthetic/fixture.json",
+          "status": "proposed",
+          "type": "Investigation"
+        },
+        "k": "",
+        "ord": 0
+      },
+      {
+        "item": {
+          "body": "Read synthetic source.",
+          "digest": "9f59d051641194e4a986b63a6c1802fc31ce3727485f5f0f8ac293eaca505e2e",
+          "facts": {
+            "commands": [],
+            "expect": "synthetic",
+            "uses": [
+              "method/synthetic"
+            ]
+          },
+          "heading": "Step 1: Synthetic step",
+          "key": "step/synthetic",
+          "next": [
+            {
+              "params": "{}",
+              "query": "class",
+              "when": "synthetic only"
+            }
+          ],
+          "source": "synthetic/fixture.json",
+          "status": "proposed",
+          "type": "Step"
+        },
+        "k": "step/synthetic",
+        "ord": 1
+      }
+    ],
+    "seconds": 0.0006933749536983669,
+    "success": true,
+    "timeout_seconds": 0.25
+  }
+]

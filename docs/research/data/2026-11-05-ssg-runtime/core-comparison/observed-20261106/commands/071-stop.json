@@ -1,0 +1,15 @@
+{
+  "argv": [
+    "podman",
+    "stop",
+    "-t",
+    "10",
+    "b93c772b9f66ed6e73344b1fae19a91b43a5c0bff80c56f3c153b538900ae3f8"
+  ],
+  "cwd": "/Users/robert.lee/.omp/wt/t4d88ac83b/m",
+  "exit": 0,
+  "seconds": 0.40553720900788903,
+  "started_at": "2026-11-06T19:23:27.540173+00:00",
+  "stderr": "",
+  "stdout": "b93c772b9f66ed6e73344b1fae19a91b43a5c0bff80c56f3c153b538900ae3f8\n"
+}

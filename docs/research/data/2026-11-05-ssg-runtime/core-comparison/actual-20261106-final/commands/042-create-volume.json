@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "podman",
+    "volume",
+    "create",
+    "--label",
+    "org.agent-memory.core-comparison=bda353c8f47949b8a2a57843fa92c296",
+    "am255-compare-bda353c8f479-mage-data"
+  ],
+  "cwd": "/Users/robert.lee/.omp/wt/t4d88ac83b/m",
+  "exit": 0,
+  "seconds": 0.07500524999340996,
+  "started_at": "2026-11-06T19:20:36.991387+00:00",
+  "stderr": "",
+  "stdout": "am255-compare-bda353c8f479-mage-data\n"
+}
