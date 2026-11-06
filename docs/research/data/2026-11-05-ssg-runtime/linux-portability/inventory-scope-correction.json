@@ -1,0 +1,9 @@
+{
+  "schema": "am255/inventory-scope-correction-v1",
+  "retained_earlier_outputs": ["amd64-contents-20261106-fixed", "architecture-comparison.json"],
+  "observed_issue": "The successful recursive metadata scan counted 137 MAGE .dist-info records, including 12 nested setuptools/_vendor records. The prior arm64 importlib.metadata inventory counted direct site-packages distributions only. A name-keyed comparison of these different scopes overwrote actual direct package versions with nested vendored versions. This is NOT an observed architecture-specific dependency difference.",
+  "second_issue": "Direct files.get(package/copyright) misses package doc-directory symlinks, falsely broadening the absent-notice list. Logical merged-image path resolution must follow image symlink directories/hardlinks, never host paths.",
+  "correction": "Keep all earlier raw outputs and do not cite their derived MAGE version/count differences or absent-copyright counts. Freeze corrected collector and summarizer before new output; report direct distributions separately from nested vendored metadata and resolve notice paths within the merged image inventory. Reuse exact acquired layers with every manifest/config/layer digest revalidated. No network refresh, no amd64 execution and no model-server re-execution.",
+  "authoritative_new_outputs": ["amd64-contents-20261106-qualified", "architecture-comparison-qualified.json"],
+  "remaining_limits": "Nested metadata is extra BOM coverage, not proof of different arm64 contents. Raw notice declarations still do not establish complete component versions/linkage/source reproducibility or legal clearance."
+}
