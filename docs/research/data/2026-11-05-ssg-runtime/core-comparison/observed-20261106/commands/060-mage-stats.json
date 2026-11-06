@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "podman",
+    "stats",
+    "--no-stream",
+    "--format",
+    "json",
+    "b93c772b9f66ed6e73344b1fae19a91b43a5c0bff80c56f3c153b538900ae3f8"
+  ],
+  "cwd": "/Users/robert.lee/.omp/wt/t4d88ac83b/m",
+  "exit": 0,
+  "seconds": 0.06761233397992328,
+  "started_at": "2026-11-06T19:23:24.952191+00:00",
+  "stderr": "",
+  "stdout": "[\n {\n  \"id\": \"b93c772b9f66\",\n  \"name\": \"am255-compare-5b6962955026-mage\",\n  \"cpu_time\": \"3.87696s\",\n  \"cpu_percent\": \"95.09%\",\n  \"avg_cpu\": \"95.09%\",\n  \"mem_usage\": \"592.3MB / 2.147GB\",\n  \"mem_percent\": \"27.58%\",\n  \"net_io\": \"192.7kB / 3.476kB\",\n  \"block_io\": \"0B / 721.4kB\",\n  \"pids\": \"58\"\n }\n]\n"
+}

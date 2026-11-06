@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "podman",
+    "volume",
+    "inspect",
+    "am255-compare-bda353c8f479-core-data"
+  ],
+  "cwd": "/Users/robert.lee/.omp/wt/t4d88ac83b/m",
+  "exit": 125,
+  "seconds": 0.06525187497027218,
+  "started_at": "2026-11-06T19:20:44.783697+00:00",
+  "stderr": "Error: no such volume \"am255-compare-bda353c8f479-core-data\"\n",
+  "stdout": "[]\n"
+}
