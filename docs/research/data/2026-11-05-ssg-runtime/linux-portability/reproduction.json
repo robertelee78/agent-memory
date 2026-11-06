@@ -1,0 +1,33 @@
+{
+  "schema": "am255/linux-portability-reproduction-v1",
+  "cwd": "docs/research/data/2026-11-05-ssg-runtime/linux-portability",
+  "source_bindings": {
+    "linux_executed_source": "3cca42a1760fd8c72fb3549f66243c48601b1e14",
+    "qualified_contents_source": "79196277e281f9bfa3faa96cc76fc19dee62c666",
+    "ssg": "9c4fd08c29f37bffe89ecdf75b069a6baeb8a5e0",
+    "upstream": "6b4e4bd582e457a47ee7cd498058495f47fee228"
+  },
+  "requirements": [
+    "Explicit serial shared-host resource assignment; do not run heavy recipes concurrently",
+    "Existing Linux-arm64 Podman VM and already present exact MAGE carrier image ID from recipe.json; no package installation, random latest, user-store or default-connection change",
+    "Exact existing 8B and 0.6B model paths/SHA-256 identities from recipe.json; never substitute a different requested model",
+    "Repeat from a new isolated clone at the pre-finalization source SHA recorded in finalization-source.json, using new run-output names. That frozen source has no prior root finalizer receipts/index; scripts intentionally refuse to overwrite old evidence. Do not rerun finalizer in the already finalized delivery tree",
+    "Owned acquired binary copies are disposed after qualification, so reacquire the same pinned public release/layers to repeat; published metadata/digests and selected raw artifacts remain retained",
+    "If the clone path differs, change only recipe.archive to its new owned acquired-copy path before freezing inputs; this necessarily changes the recorded config hash"
+  ],
+  "release_acquisition": {
+    "url": "https://github.com/ggml-org/llama.cpp/releases/download/b9360/llama-b9360-bin-ubuntu-arm64.tar.gz",
+    "bytes": 11497759,
+    "sha256": "ff85fef9c91027d8037c182cdb5a6f3d29ea0a12b31557338188810308b112dc",
+    "argv": ["curl", "--fail", "--location", "--retry", "0", "--max-time", "120", "--output", ".acquired/llama-b9360-bin-ubuntu-arm64.tar.gz", "https://github.com/ggml-org/llama.cpp/releases/download/b9360/llama-b9360-bin-ubuntu-arm64.tar.gz"],
+    "precondition": "Create the new owned .acquired directory only; hash verification is mandatory and also enforced by qualifier"
+  },
+  "fresh_run_argv_serial": [
+    ["python3", "-B", "qualify_linux.py", "--config", "recipe.json", "--output", "actual-new-run", "--reserved-host-slot"],
+    ["python3", "-B", "image_contents.py", "--bindings", "discovery-20261106/image-bindings.json", "--output", "amd64-new-run", "--acquisition", ".acquired/amd64", "--reserved-host-slot"],
+    ["python3", "-B", "summarize.py", "--contents", "amd64-new-run", "--arm64", "../core-comparison/observed-20261106", "--output", "architecture-new-run.json"],
+    ["python3", "-B", "finalize.py", "--actual", "actual-new-run", "--contents", "amd64-new-run", "--comparison", "architecture-new-run.json", "--dispose-owned-acquisition"]
+  ],
+  "actual_finalization_argv": ["python3", "-B", "finalize.py", "--actual", "actual-20261106", "--contents", "amd64-contents-20261106-qualified", "--comparison", "architecture-comparison-final.json", "--dispose-owned-acquisition"],
+  "scope": "Actual Linux VM CPU endpoint controls plus nonexecuting amd64 image contents; no production, G1, legal, managed-profile, quality or clean-performance acceptance"
+}

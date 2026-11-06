@@ -52,7 +52,8 @@ def main():
                 'different':{k:{'arm64':arm_legal.get(k),'amd64':amd_legal.get(k)} for k in sorted(arm_legal.keys()|amd_legal.keys()) if arm_legal.get(k)!=amd_legal.get(k)}},
             'amd64_memgraph_binary':amd['memgraph_binary'],'amd64_mgconsole':amd['mgconsole'],
             'amd64_packages_without_copyright':[{k:x[k] for k in ('name','version','maintainer')} for x in amd_packages if not x['copyright']],
-            'amd64_python_missing_license_files':[{'name':x['name'],'version':x['version']} for x in amd['python_distributions'] if not x['license_files']],
+            'amd64_python_without_license_in_own_dist_info':[{'name':x['name'],'version':x['version']} for x in amd['python_distributions'] if not x['license_files']],
+            'python_notice_scope':'Only license-like paths inside each own .dist-info are attributed here. Notices elsewhere in package/RECORD may exist; this is not proof that the distribution ships no license. Full attribution/linkage remains unqualified.',
             'unknowns':amd['unknowns']}
     save(args.output, {'schema':'am255/architecture-bom-comparison-v1','results':results,
         'any_amd64_execution':False,'legal_acceptance':False,'profile_acceptance':False,'G1_acceptance':False,

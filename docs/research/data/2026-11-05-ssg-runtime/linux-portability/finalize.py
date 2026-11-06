@@ -9,6 +9,7 @@ import argparse
 import json
 from pathlib import Path
 import shutil
+import socket
 import time
 from discover import command, save, sha
 
@@ -28,6 +29,7 @@ def main():
     report = json.loads((actual/'report.json').read_text())
     frozen = json.loads((actual/'frozen-inputs.json').read_text())
     image_freeze = json.loads((contents/'freeze.json').read_text())
+    final_source = command(root, 'finalization-source', ['git','rev-parse','HEAD'])
     checks = {
         'linux_controller_matches_frozen_sha256': sha(root/'qualify_linux.py') == frozen['script_sha256'],
         'linux_config_matches_frozen_sha256': sha(root/'recipe.json') == frozen['config_sha256'],
@@ -43,6 +45,12 @@ def main():
         exists = command(root, 'final-'+path.parent.name+'-container-absence', ['podman','container','exists',data['id']])
         cleanup.append({'path':str(path.relative_to(root)), 'sha256':sha(path), 'id':data['id'], 'receipt_absent':data['absent'], 'final_exit':exists['exit']})
         checks[path.parent.name+'_owned_container_absent'] = data['absent'] and exists['exit'] == 1
+        create_argv = json.loads((path.parent/'create.json').read_text())['argv']
+        publication = create_argv[create_argv.index('--publish')+1]
+        port = int(publication.split(':')[1])
+        with socket.socket() as sock:
+            sock.settimeout(.25)
+            checks[path.parent.name+'_owned_loopback_listener_absent'] = sock.connect_ex(('127.0.0.1',port)) != 0
     bindings = json.loads((root/'discovery-20261106/image-bindings.json').read_text())
     image_report = json.loads((contents/'report.json').read_text())
     for image in image_report['results']:
@@ -72,6 +80,8 @@ def main():
         # Borrowed weight was already hashed before use; final disposition verifies presence/size, not new provenance.
         path = Path(expected['weight'])
         checks[profile+'_borrowed_weight_preserved'] = path.is_file() and path.stat().st_size == expected['bytes']
+    carrier = command(root, 'final-borrowed-carrier-presence', ['podman','image','exists',frozen['config']['carrier_image']])
+    checks['borrowed_carrier_image_preserved'] = carrier['exit'] == 0
     save(root/'final-qualification.json', {'schema':'am255/linux-final-changed-path-qualification-v1',
         'finalizer_sha256':sha(__file__),'start_unix':time.time(),'checks':checks,'all_qualification_checks':all(checks.values()),
         'owned_container_disposition':cleanup,'owned_acquisition_files_disposed':len(acquired_inventory),
@@ -81,6 +91,7 @@ def main():
     save(root/'run-index.json', {'schema':'am255/linux-portability-evidence-index-v1',
         'am_baseline':frozen['am_baseline'],'linux_executed_source':frozen['executed_source_commit'],
         'image_contents_executed_source':image_freeze['executed_source_commit'],'ssg':frozen['ssg'],
+        'finalization_source_commit':final_source['stdout'].strip(),
         'upstream':frozen['config']['upstream_commit'],'actual_report':str((actual/'report.json').relative_to(root)),
         'actual_report_sha256':sha(actual/'report.json'),'image_report':str((contents/'report.json').relative_to(root)),
         'image_report_sha256':sha(contents/'report.json'),'comparison':str(args.comparison),'comparison_sha256':sha(args.comparison),
