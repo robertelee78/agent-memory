@@ -1,0 +1,252 @@
+{
+  "external_backups": "outside authority",
+  "production_erasure_guarantee": false,
+  "resources": [
+    {
+      "absent": true,
+      "name": "am255-rc-22f7fe3d7f6d-ssg-reference-9b16a9",
+      "type": "container"
+    },
+    {
+      "absent": true,
+      "name": "am255-inventory-f960de8bfb964c04a1707937f7f33817",
+      "type": "container"
+    },
+    {
+      "absent": true,
+      "name": "am255-inventory-0b14e36d41fd41b1ac21276c58190d03",
+      "type": "container"
+    },
+    {
+      "absent": true,
+      "name": "am255-rc-22f7fe3d7f6d-active-e114aa",
+      "type": "container"
+    },
+    {
+      "absent": true,
+      "name": "am255-rc-22f7fe3d7f6d-candidate-738ae6",
+      "type": "container"
+    },
+    {
+      "absent": true,
+      "name": "am255-rc-22f7fe3d7f6d-candidate-2822f3",
+      "type": "container"
+    },
+    {
+      "absent": true,
+      "name": "am255-rc-22f7fe3d7f6d-candidate-3e30c9",
+      "type": "container"
+    },
+    {
+      "absent": true,
+      "name": "am255-rc-22f7fe3d7f6d-candidate-55202d",
+      "type": "container"
+    },
+    {
+      "absent": true,
+      "name": "am255-rc-22f7fe3d7f6d-candidate-ef6916",
+      "type": "container"
+    },
+    {
+      "absent": true,
+      "name": "am255-rc-22f7fe3d7f6d-candidate-da4734",
+      "type": "container"
+    },
+    {
+      "absent": true,
+      "name": "am255-rc-22f7fe3d7f6d-rebuild-59ff5b",
+      "type": "container"
+    },
+    {
+      "absent": true,
+      "name": "am255-rc-22f7fe3d7f6d-foreign-project-67feb9",
+      "type": "container"
+    },
+    {
+      "absent": true,
+      "name": "am255-rc-22f7fe3d7f6d-stale-builder-41bd62",
+      "type": "container"
+    },
+    {
+      "absent": true,
+      "name": "am255-inventory-9beef7992e0a4880b383a474d41e4ea2",
+      "type": "container"
+    },
+    {
+      "absent": true,
+      "name": "am255-inventory-3647aef00f774bfda7bda6747e2aa3e5",
+      "type": "container"
+    },
+    {
+      "absent": true,
+      "name": "am255-inventory-0cebc462b4234e94af3864df69492fa7",
+      "type": "container"
+    },
+    {
+      "absent": true,
+      "name": "am255-inventory-4a432c73d83a49b785245fc936b31e1e",
+      "type": "container"
+    },
+    {
+      "absent": true,
+      "name": "am255-rc-22f7fe3d7f6d-post-delete-4cc5a3",
+      "type": "container"
+    },
+    {
+      "absent": true,
+      "name": "am255-rc-22f7fe3d7f6d-revoked-builder-09b3ae",
+      "type": "container"
+    },
+    {
+      "absent": true,
+      "name": "am255-inventory-c59373ade401437784125435370dc902",
+      "type": "container"
+    },
+    {
+      "absent": true,
+      "name": "am255-inventory-edd7ec0679594acda736ff323d4e5bf6",
+      "type": "container"
+    },
+    {
+      "absent": true,
+      "name": "am255-inventory-8f215e8cf13744c4b8ea2b67e05e52d4",
+      "type": "container"
+    },
+    {
+      "absent": true,
+      "name": "am255-inventory-832eb286ded84de5a23f5e10a1cfc871",
+      "type": "container"
+    },
+    {
+      "absent": true,
+      "name": "am255-rc-22f7fe3d7f6d-ssg-reference-9b16a9-data",
+      "type": "volume"
+    },
+    {
+      "absent": true,
+      "name": "am255-rc-22f7fe3d7f6d-ssg-reference-9b16a9-logs",
+      "type": "volume"
+    },
+    {
+      "absent": true,
+      "name": "am255-rc-22f7fe3d7f6d-active-e114aa-data",
+      "type": "volume"
+    },
+    {
+      "absent": true,
+      "name": "am255-rc-22f7fe3d7f6d-active-e114aa-logs",
+      "type": "volume"
+    },
+    {
+      "absent": true,
+      "name": "am255-rc-22f7fe3d7f6d-candidate-738ae6-data",
+      "type": "volume"
+    },
+    {
+      "absent": true,
+      "name": "am255-rc-22f7fe3d7f6d-candidate-738ae6-logs",
+      "type": "volume"
+    },
+    {
+      "absent": true,
+      "name": "am255-rc-22f7fe3d7f6d-candidate-2822f3-data",
+      "type": "volume"
+    },
+    {
+      "absent": true,
+      "name": "am255-rc-22f7fe3d7f6d-candidate-2822f3-logs",
+      "type": "volume"
+    },
+    {
+      "absent": true,
+      "name": "am255-rc-22f7fe3d7f6d-candidate-3e30c9-data",
+      "type": "volume"
+    },
+    {
+      "absent": true,
+      "name": "am255-rc-22f7fe3d7f6d-candidate-3e30c9-logs",
+      "type": "volume"
+    },
+    {
+      "absent": true,
+      "name": "am255-rc-22f7fe3d7f6d-candidate-55202d-data",
+      "type": "volume"
+    },
+    {
+      "absent": true,
+      "name": "am255-rc-22f7fe3d7f6d-candidate-55202d-logs",
+      "type": "volume"
+    },
+    {
+      "absent": true,
+      "name": "am255-rc-22f7fe3d7f6d-candidate-ef6916-data",
+      "type": "volume"
+    },
+    {
+      "absent": true,
+      "name": "am255-rc-22f7fe3d7f6d-candidate-ef6916-logs",
+      "type": "volume"
+    },
+    {
+      "absent": true,
+      "name": "am255-rc-22f7fe3d7f6d-candidate-da4734-data",
+      "type": "volume"
+    },
+    {
+      "absent": true,
+      "name": "am255-rc-22f7fe3d7f6d-candidate-da4734-logs",
+      "type": "volume"
+    },
+    {
+      "absent": true,
+      "name": "am255-rc-22f7fe3d7f6d-rebuild-59ff5b-data",
+      "type": "volume"
+    },
+    {
+      "absent": true,
+      "name": "am255-rc-22f7fe3d7f6d-rebuild-59ff5b-logs",
+      "type": "volume"
+    },
+    {
+      "absent": true,
+      "name": "am255-rc-22f7fe3d7f6d-foreign-project-67feb9-data",
+      "type": "volume"
+    },
+    {
+      "absent": true,
+      "name": "am255-rc-22f7fe3d7f6d-foreign-project-67feb9-logs",
+      "type": "volume"
+    },
+    {
+      "absent": true,
+      "name": "am255-rc-22f7fe3d7f6d-stale-builder-41bd62-data",
+      "type": "volume"
+    },
+    {
+      "absent": true,
+      "name": "am255-rc-22f7fe3d7f6d-stale-builder-41bd62-logs",
+      "type": "volume"
+    },
+    {
+      "absent": true,
+      "name": "am255-rc-22f7fe3d7f6d-post-delete-4cc5a3-data",
+      "type": "volume"
+    },
+    {
+      "absent": true,
+      "name": "am255-rc-22f7fe3d7f6d-post-delete-4cc5a3-logs",
+      "type": "volume"
+    },
+    {
+      "absent": true,
+      "name": "am255-rc-22f7fe3d7f6d-revoked-builder-09b3ae-data",
+      "type": "volume"
+    },
+    {
+      "absent": true,
+      "name": "am255-rc-22f7fe3d7f6d-revoked-builder-09b3ae-logs",
+      "type": "volume"
+    }
+  ],
+  "status": "qualified"
+}

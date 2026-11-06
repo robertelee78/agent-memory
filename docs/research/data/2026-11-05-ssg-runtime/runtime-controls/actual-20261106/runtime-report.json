@@ -1,0 +1,1890 @@
+{
+  "cells": [
+    {
+      "backend": "metal",
+      "cell": "reference",
+      "host": "macOS-27.2-arm64-arm-64bit-Mach-O",
+      "profile_identity_evidence": {
+        "server_binary_sha256": "b57ea6bb97b43a4f74b5a5ab71f1cc2ef292899d83c0e45ddfa9290b169598b5",
+        "source": "owned-launch-artifacts-not-response-model-echo",
+        "weight_sha256": "d20ddc71e8a5c4344f2343481e242233a997dc5eaff442427a945836c97b4deb"
+      },
+      "report": {
+        "batch_controls": {
+          "max_qualified_inputs": 8,
+          "observed": [
+            {
+              "error": null,
+              "indices": [
+                0
+              ],
+              "inputs": 1,
+              "model": "qwen3-embedding-8b-q8_0-d20ddc71e8a5",
+              "response_bytes": 88046,
+              "response_sha256": "217b3d9290ea243b1ae22e173701dacd4adfef315a22b82511cafdb1b9ac9d6b",
+              "seconds": 0.02962212503189221,
+              "status": 200,
+              "usage": {
+                "prompt_tokens": 7,
+                "total_tokens": 7
+              }
+            },
+            {
+              "error": null,
+              "indices": [
+                0,
+                1,
+                2,
+                3
+              ],
+              "inputs": 4,
+              "model": "qwen3-embedding-8b-q8_0-d20ddc71e8a5",
+              "response_bytes": 351907,
+              "response_sha256": "4a12eab7f2828e21357ce9cff70274fde62bba35f24e44e7653f7ad60c769599",
+              "seconds": 0.0817235839786008,
+              "status": 200,
+              "usage": {
+                "prompt_tokens": 28,
+                "total_tokens": 28
+              }
+            },
+            {
+              "error": null,
+              "indices": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7
+              ],
+              "inputs": 8,
+              "model": "qwen3-embedding-8b-q8_0-d20ddc71e8a5",
+              "response_bytes": 704053,
+              "response_sha256": "88a4ae50b771a5774c3740d2bc4db3dfaacd600744930c54963cf8ff7b8bbe80",
+              "seconds": 0.16477479197783396,
+              "status": 200,
+              "usage": {
+                "prompt_tokens": 56,
+                "total_tokens": 56
+              }
+            }
+          ],
+          "scope": "small synthetic batches only; not provider maximum or throughput acceptance"
+        },
+        "coverage": {
+          "error": null,
+          "indices": [
+            0,
+            1
+          ],
+          "model": "qwen3-embedding-8b-q8_0-d20ddc71e8a5",
+          "response_bytes": 176145,
+          "response_sha256": "8bb27bcf29083b373f7f7693e2df7dcbc135d12357dd1df1c49ee249c58cb014",
+          "seconds": 0.09656491602072492,
+          "status": 200,
+          "usage": {
+            "prompt_tokens": 19,
+            "total_tokens": 19
+          }
+        },
+        "dimension": 4096,
+        "discovered_model": "qwen3-embedding-8b-q8_0-d20ddc71e8a5",
+        "endpoint": "http://127.0.0.1:54107/v1",
+        "identity_assurance": "metadata-alias-only; provider model identity not verifiable",
+        "model": "qwen3-embedding-8b-q8_0-d20ddc71e8a5",
+        "optional_key": {
+          "reason": "No key-protected real endpoint in this cell",
+          "status": "prerequisite"
+        },
+        "own_vs_neighbor": {
+          "cells": {
+            "own": {
+              "rendered_sha256": "9b9d80f17b799a9c7b96d97965251447b4941fb8d846507f64a2f0b6ea114dae",
+              "results": [
+                {
+                  "expected": "retry",
+                  "query_sha256": "1ab5db450107bcd13c25e966832c83ad28eda2c2df755fd0afcb7e35f47143f6",
+                  "ranking": [
+                    [
+                      0.7072660838225838,
+                      "retry"
+                    ],
+                    [
+                      0.3669076280928785,
+                      "deletion"
+                    ],
+                    [
+                      0.2850398627154476,
+                      "pagination"
+                    ],
+                    [
+                      0.24882548677375033,
+                      "publication"
+                    ],
+                    [
+                      0.20147455421467553,
+                      "unrelated"
+                    ],
+                    [
+                      0.19225380311967927,
+                      "orientation"
+                    ]
+                  ],
+                  "reciprocal_rank": 1.0
+                },
+                {
+                  "expected": "pagination",
+                  "query_sha256": "ea5217cf113303746840813985e5ed703d953cc901aab88c24d0c4f270b98713",
+                  "ranking": [
+                    [
+                      0.6364080307898573,
+                      "pagination"
+                    ],
+                    [
+                      0.3155147674713242,
+                      "deletion"
+                    ],
+                    [
+                      0.27762866433773964,
+                      "publication"
+                    ],
+                    [
+                      0.23480125821201855,
+                      "orientation"
+                    ],
+                    [
+                      0.18174744640062984,
+                      "retry"
+                    ],
+                    [
+                      0.14666981623181902,
+                      "unrelated"
+                    ]
+                  ],
+                  "reciprocal_rank": 1.0
+                },
+                {
+                  "expected": "publication",
+                  "query_sha256": "3707b69efa2444d6e70c818d919848fcd2cee0643c2642a466444416a50d5868",
+                  "ranking": [
+                    [
+                      0.49770188608487453,
+                      "publication"
+                    ],
+                    [
+                      0.395246435657646,
+                      "deletion"
+                    ],
+                    [
+                      0.2675016641749082,
+                      "orientation"
+                    ],
+                    [
+                      0.2503250537523386,
+                      "pagination"
+                    ],
+                    [
+                      0.20957771365772426,
+                      "retry"
+                    ],
+                    [
+                      0.19740471165481102,
+                      "unrelated"
+                    ]
+                  ],
+                  "reciprocal_rank": 1.0
+                },
+                {
+                  "expected": "deletion",
+                  "query_sha256": "0e04aa426545a7cfea41c917741d3a19e8d1b08227d5c640ddd632b867950134",
+                  "ranking": [
+                    [
+                      0.43987023117554414,
+                      "deletion"
+                    ],
+                    [
+                      0.24139645027375398,
+                      "publication"
+                    ],
+                    [
+                      0.20698193280468347,
+                      "retry"
+                    ],
+                    [
+                      0.19667331565872465,
+                      "pagination"
+                    ],
+                    [
+                      0.19400814014739787,
+                      "unrelated"
+                    ],
+                    [
+                      0.18895777284592216,
+                      "orientation"
+                    ]
+                  ],
+                  "reciprocal_rank": 1.0
+                }
+              ],
+              "seconds": 0.3954186250339262,
+              "usage": {
+                "prompt_tokens": 87,
+                "total_tokens": 87
+              }
+            },
+            "with-neighbor": {
+              "rendered_sha256": "0e2ca01cb227de02f8b8bdf851aa47cc61e7f92ccfa26d78241a49ac6e30cf25",
+              "results": [
+                {
+                  "expected": "retry",
+                  "query_sha256": "1ab5db450107bcd13c25e966832c83ad28eda2c2df755fd0afcb7e35f47143f6",
+                  "ranking": [
+                    [
+                      0.6851725649226883,
+                      "retry"
+                    ],
+                    [
+                      0.5833967986334896,
+                      "orientation"
+                    ],
+                    [
+                      0.5525856310143085,
+                      "pagination"
+                    ],
+                    [
+                      0.3269561189880173,
+                      "unrelated"
+                    ],
+                    [
+                      0.321971603705596,
+                      "deletion"
+                    ],
+                    [
+                      0.31544949172145115,
+                      "publication"
+                    ]
+                  ],
+                  "reciprocal_rank": 1.0
+                },
+                {
+                  "expected": "pagination",
+                  "query_sha256": "ea5217cf113303746840813985e5ed703d953cc901aab88c24d0c4f270b98713",
+                  "ranking": [
+                    [
+                      0.589536202966653,
+                      "pagination"
+                    ],
+                    [
+                      0.5221869405783732,
+                      "unrelated"
+                    ],
+                    [
+                      0.49134375103763767,
+                      "retry"
+                    ],
+                    [
+                      0.311035328076269,
+                      "publication"
+                    ],
+                    [
+                      0.3094984683251284,
+                      "deletion"
+                    ],
+                    [
+                      0.2766225474232494,
+                      "orientation"
+                    ]
+                  ],
+                  "reciprocal_rank": 1.0
+                },
+                {
+                  "expected": "publication",
+                  "query_sha256": "3707b69efa2444d6e70c818d919848fcd2cee0643c2642a466444416a50d5868",
+                  "ranking": [
+                    [
+                      0.5156257513942347,
+                      "publication"
+                    ],
+                    [
+                      0.5018303411119605,
+                      "deletion"
+                    ],
+                    [
+                      0.3070747763413642,
+                      "orientation"
+                    ],
+                    [
+                      0.30115809764642776,
+                      "unrelated"
+                    ],
+                    [
+                      0.26870852335630746,
+                      "pagination"
+                    ],
+                    [
+                      0.26293149506811525,
+                      "retry"
+                    ]
+                  ],
+                  "reciprocal_rank": 1.0
+                },
+                {
+                  "expected": "deletion",
+                  "query_sha256": "0e04aa426545a7cfea41c917741d3a19e8d1b08227d5c640ddd632b867950134",
+                  "ranking": [
+                    [
+                      0.3944077607668679,
+                      "deletion"
+                    ],
+                    [
+                      0.3703028050334796,
+                      "publication"
+                    ],
+                    [
+                      0.28355203959705044,
+                      "unrelated"
+                    ],
+                    [
+                      0.27441709099592015,
+                      "orientation"
+                    ],
+                    [
+                      0.25764435662836205,
+                      "retry"
+                    ],
+                    [
+                      0.24695274867743797,
+                      "pagination"
+                    ]
+                  ],
+                  "reciprocal_rank": 1.0
+                }
+              ],
+              "seconds": 0.5170388340484351,
+              "usage": {
+                "prompt_tokens": 193,
+                "total_tokens": 193
+              }
+            }
+          },
+          "fixture_sha256": "f03c83abfb4de994901ff33f5a8210cc250c0131929916bbd0cb3728c8bd9d45",
+          "quality_pass": false,
+          "ssg_pattern": "embed.rs unit_text and unit_text_related; adapted synthetic texts, not SSG renderer equivalence",
+          "truth_sha256": "5a686557e30cbf8186c816fe7733e8dcd8c2680097ae89f15f6aabe7be675473"
+        },
+        "probe_at_fill": {
+          "deviations": [
+            {
+              "max_abs_coordinate": 0.0,
+              "max_cosine_distance": 2.220446049250313e-16,
+              "repeat": 1
+            },
+            {
+              "max_abs_coordinate": 0.0,
+              "max_cosine_distance": 2.220446049250313e-16,
+              "repeat": 2
+            }
+          ],
+          "diagnostic_tolerances": {
+            "max_abs_coordinate": 1e-05,
+            "max_cosine_distance": 1e-05
+          },
+          "extra_prompt_tokens_per_fill": {
+            "prompt_tokens": 42,
+            "total_tokens": 42
+          },
+          "identity_proof": false,
+          "inputs_per_fill": 4,
+          "mean_probe_seconds": 0.15597602802639207,
+          "performance_acceptance": false,
+          "probe_overhead_fraction_of_tiny_fill": 0.38942793140914245,
+          "probe_spec_sha256": "e2b18294b594a419a543c190ecbc0b7bceb89cf47da18a0d15d11453a377e904",
+          "repetitions": [
+            {
+              "error": null,
+              "indices": [
+                0,
+                1,
+                2,
+                3
+              ],
+              "model": "qwen3-embedding-8b-q8_0-d20ddc71e8a5",
+              "response_bytes": 352228,
+              "response_sha256": "a7483c13de34d5fa7084415c832e232cbf953303b8b4f8768439693e3eb0eeb9",
+              "seconds": 0.15586929203709587,
+              "status": 200,
+              "usage": {
+                "prompt_tokens": 42,
+                "total_tokens": 42
+              }
+            },
+            {
+              "error": null,
+              "indices": [
+                0,
+                1,
+                2,
+                3
+              ],
+              "model": "qwen3-embedding-8b-q8_0-d20ddc71e8a5",
+              "response_bytes": 352228,
+              "response_sha256": "a7483c13de34d5fa7084415c832e232cbf953303b8b4f8768439693e3eb0eeb9",
+              "seconds": 0.1569952090503648,
+              "status": 200,
+              "usage": {
+                "prompt_tokens": 42,
+                "total_tokens": 42
+              }
+            },
+            {
+              "error": null,
+              "indices": [
+                0,
+                1,
+                2,
+                3
+              ],
+              "model": "qwen3-embedding-8b-q8_0-d20ddc71e8a5",
+              "response_bytes": 352228,
+              "response_sha256": "a7483c13de34d5fa7084415c832e232cbf953303b8b4f8768439693e3eb0eeb9",
+              "seconds": 0.15506358299171552,
+              "status": 200,
+              "usage": {
+                "prompt_tokens": 42,
+                "total_tokens": 42
+              }
+            }
+          ],
+          "scope": "Three immediate repeats measure only this cell; cross-restart/backend/platform tolerance remains a prerequisite",
+          "six_document_fill_seconds": 0.40052604203810915,
+          "within_diagnostic_tolerance": true
+        },
+        "production_api_guarantee": false,
+        "protocol_simulation": {
+          "controls": {
+            "boolean-index": {
+              "exit": 1,
+              "expected": "response-index-coverage",
+              "matched": true,
+              "reason": "response-index-coverage",
+              "status": "refused"
+            },
+            "duplicate-index": {
+              "exit": 1,
+              "expected": "response-index-coverage",
+              "matched": true,
+              "reason": "response-index-coverage",
+              "status": "refused"
+            },
+            "extra-row": {
+              "exit": 1,
+              "expected": "response-count-mismatch",
+              "matched": true,
+              "reason": "response-count-mismatch",
+              "status": "refused"
+            },
+            "missing-row": {
+              "exit": 1,
+              "expected": "response-count-mismatch",
+              "matched": true,
+              "reason": "response-count-mismatch",
+              "status": "refused"
+            },
+            "nonfinite": {
+              "exit": 1,
+              "expected": "response-nonfinite-or-nonnumeric",
+              "matched": true,
+              "reason": "response-nonfinite-or-nonnumeric",
+              "status": "refused"
+            },
+            "wrong-dimension": {
+              "exit": 1,
+              "expected": "response-dimension-mismatch",
+              "matched": true,
+              "reason": "response-dimension-mismatch",
+              "status": "refused"
+            },
+            "wrong-model": {
+              "exit": 1,
+              "expected": "response-model-mismatch",
+              "matched": true,
+              "reason": "response-model-mismatch",
+              "status": "refused"
+            }
+          },
+          "evidence_class": "protocol-simulation-not-provider-behavior"
+        },
+        "public_outcome": {
+          "exit": 0,
+          "mode": "scratch-compatibility",
+          "status": "qualified"
+        },
+        "remote_retention": "not exercised; loopback synthetic only",
+        "schema": "am255/actual-endpoint-controls-v1",
+        "token_and_truncation": {
+          "aggregate_maintenance_token_ceiling": 8192,
+          "assurance": "bounded observed refusal; not proof against all silent truncation",
+          "configured_context_tokens": 8192,
+          "maintenance_preflight": {
+            "aggregate_limit": {
+              "exit": 1,
+              "expected": "maintenance-aggregate-token-limit",
+              "matched": true,
+              "reason": "maintenance-aggregate-token-limit",
+              "status": "refused"
+            },
+            "aggregate_token_ceiling": 8192,
+            "embedding_requests_sent": 0,
+            "evidence_class": "local-preflight-policy-using-real-tokenizer-not-provider-maxima",
+            "max_inputs": 8,
+            "nine_inputs": {
+              "exit": 1,
+              "expected": "maintenance-batch-input-limit",
+              "matched": true,
+              "reason": "maintenance-batch-input-limit",
+              "status": "refused"
+            },
+            "two_input_aggregate_tokens": 8322
+          },
+          "over_context": {
+            "error": {
+              "code": 400,
+              "message": "request (8265 tokens) exceeds the available context size (8192 tokens), try increasing it",
+              "n_ctx": 8192,
+              "n_prompt_tokens": 8265,
+              "type": "exceed_context_size_error"
+            },
+            "indices": [],
+            "model": null,
+            "response_bytes": 195,
+            "response_sha256": "77c119dd82048d38fec651284907fa86f3441063748074a8502e1506efd0bc15",
+            "seconds": 0.01192562497453764,
+            "status": 400,
+            "usage": null
+          },
+          "over_context_explicitly_refused": true,
+          "scope": "Tokenizer/native route is explicit and profile-specific, never guessed for BYO; no clipped input is sent",
+          "short_usage_token_difference": 0,
+          "token_counts": [
+            {
+              "cell": "short",
+              "rendered_sha256": "c178c57345f60b63e6918cca2b9f3a7d3381f7183ff6fbec3d3b6d13e90a3e5c",
+              "tokens": 17
+            },
+            {
+              "cell": "over-context",
+              "rendered_sha256": "70f857227cb655c41be524c6ad298aada59be8e4932e904b41e70e06c6b8398e",
+              "tokens": 8265
+            }
+          ],
+          "usage_diagnostic_tolerance_tokens": 2
+        },
+        "unknown_alias": {
+          "cosine_to_known_alias": 0.9999996416763897,
+          "echo_is_not_weight_identity": true,
+          "error": null,
+          "independent_metadata_refusal": {
+            "exit": 1,
+            "expected": "model-not-in-independent-metadata",
+            "matched": true,
+            "reason": "model-not-in-independent-metadata",
+            "status": "refused"
+          },
+          "indices": [
+            0
+          ],
+          "model": "am255-unknown-e2b18294b594a419",
+          "response_bytes": 88132,
+          "response_sha256": "b5cbd5d3eb46eccd27949271ffe12ec3ad67153e7e179a80c4ee2f2e5ac1ae70",
+          "seconds": 0.03197612502845004,
+          "status": 200,
+          "usage": {
+            "prompt_tokens": 9,
+            "total_tokens": 9
+          }
+        }
+      }
+    },
+    {
+      "backend": "metal",
+      "cell": "alternate",
+      "host": "macOS-27.2-arm64-arm-64bit-Mach-O",
+      "profile_identity_evidence": {
+        "server_binary_sha256": "619eff2bb5fa47bbcaec8804c5659ef426fa4a9aceb4e30ed33bc9d63a82d203",
+        "source": "owned-launch-artifacts-not-response-model-echo",
+        "weight_sha256": "06507c7b42688469c4e7298b0a1e16deff06caf291cf0a5b278c308249c3e439"
+      },
+      "report": {
+        "batch_controls": {
+          "max_qualified_inputs": 8,
+          "observed": [
+            {
+              "error": null,
+              "indices": [
+                0
+              ],
+              "inputs": 1,
+              "model": "qwen3-embedding-06b-q8_0-06507c7b4268",
+              "response_bytes": 21818,
+              "response_sha256": "d06ff47d141074b1b86e4c8920e85d3b3dbad499c9150b0110287a56c45e467d",
+              "seconds": 0.028378125047311187,
+              "status": 200,
+              "usage": {
+                "prompt_tokens": 7,
+                "total_tokens": 7
+              }
+            },
+            {
+              "error": null,
+              "indices": [
+                0,
+                1,
+                2,
+                3
+              ],
+              "inputs": 4,
+              "model": "qwen3-embedding-06b-q8_0-06507c7b4268",
+              "response_bytes": 87071,
+              "response_sha256": "0fdcbb23d0b840ac9e7ddd33c8e25693444fe0d001c09dcedf16fcdf4ce8ddc6",
+              "seconds": 0.033497583004646,
+              "status": 200,
+              "usage": {
+                "prompt_tokens": 28,
+                "total_tokens": 28
+              }
+            },
+            {
+              "error": null,
+              "indices": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7
+              ],
+              "inputs": 8,
+              "model": "qwen3-embedding-06b-q8_0-06507c7b4268",
+              "response_bytes": 174007,
+              "response_sha256": "2fcffaaba2235912f6dba82d0a68594f1de7e46f190d0869950c52bec3f3c1db",
+              "seconds": 0.036724750010762364,
+              "status": 200,
+              "usage": {
+                "prompt_tokens": 56,
+                "total_tokens": 56
+              }
+            }
+          ],
+          "scope": "small synthetic batches only; not provider maximum or throughput acceptance"
+        },
+        "coverage": {
+          "error": null,
+          "indices": [
+            0,
+            1
+          ],
+          "model": "qwen3-embedding-06b-q8_0-06507c7b4268",
+          "response_bytes": 43560,
+          "response_sha256": "3058ba7a1053d63d0d100f94be697ad260865923c108d3d353319b1e0cba8132",
+          "seconds": 0.08293475001119077,
+          "status": 200,
+          "usage": {
+            "prompt_tokens": 19,
+            "total_tokens": 19
+          }
+        },
+        "dimension": 1024,
+        "discovered_model": "qwen3-embedding-06b-q8_0-06507c7b4268",
+        "endpoint": "http://127.0.0.1:55089/v1",
+        "identity_assurance": "metadata-alias-only; provider model identity not verifiable",
+        "model": "qwen3-embedding-06b-q8_0-06507c7b4268",
+        "optional_key": {
+          "reason": "No key-protected real endpoint in this cell",
+          "status": "prerequisite"
+        },
+        "own_vs_neighbor": {
+          "cells": {
+            "own": {
+              "rendered_sha256": "9b9d80f17b799a9c7b96d97965251447b4941fb8d846507f64a2f0b6ea114dae",
+              "results": [
+                {
+                  "expected": "retry",
+                  "query_sha256": "1ab5db450107bcd13c25e966832c83ad28eda2c2df755fd0afcb7e35f47143f6",
+                  "ranking": [
+                    [
+                      0.7125732157059231,
+                      "retry"
+                    ],
+                    [
+                      0.390105740407563,
+                      "deletion"
+                    ],
+                    [
+                      0.3687370084681729,
+                      "pagination"
+                    ],
+                    [
+                      0.3465869056827193,
+                      "publication"
+                    ],
+                    [
+                      0.2320371010743704,
+                      "unrelated"
+                    ],
+                    [
+                      0.2045958700698093,
+                      "orientation"
+                    ]
+                  ],
+                  "reciprocal_rank": 1.0
+                },
+                {
+                  "expected": "pagination",
+                  "query_sha256": "ea5217cf113303746840813985e5ed703d953cc901aab88c24d0c4f270b98713",
+                  "ranking": [
+                    [
+                      0.6700260851240483,
+                      "pagination"
+                    ],
+                    [
+                      0.3769672027495404,
+                      "deletion"
+                    ],
+                    [
+                      0.33583439834629303,
+                      "publication"
+                    ],
+                    [
+                      0.29541977516107226,
+                      "retry"
+                    ],
+                    [
+                      0.26916417736279785,
+                      "orientation"
+                    ],
+                    [
+                      0.18386510829243102,
+                      "unrelated"
+                    ]
+                  ],
+                  "reciprocal_rank": 1.0
+                },
+                {
+                  "expected": "publication",
+                  "query_sha256": "3707b69efa2444d6e70c818d919848fcd2cee0643c2642a466444416a50d5868",
+                  "ranking": [
+                    [
+                      0.5212250579268509,
+                      "publication"
+                    ],
+                    [
+                      0.380084369986319,
+                      "deletion"
+                    ],
+                    [
+                      0.29246316235238784,
+                      "pagination"
+                    ],
+                    [
+                      0.29033258226846687,
+                      "retry"
+                    ],
+                    [
+                      0.27076687121160886,
+                      "unrelated"
+                    ],
+                    [
+                      0.2528269896118455,
+                      "orientation"
+                    ]
+                  ],
+                  "reciprocal_rank": 1.0
+                },
+                {
+                  "expected": "deletion",
+                  "query_sha256": "0e04aa426545a7cfea41c917741d3a19e8d1b08227d5c640ddd632b867950134",
+                  "ranking": [
+                    [
+                      0.39945662575695895,
+                      "deletion"
+                    ],
+                    [
+                      0.3213111423418066,
+                      "publication"
+                    ],
+                    [
+                      0.3020599994614326,
+                      "retry"
+                    ],
+                    [
+                      0.27004662970359616,
+                      "pagination"
+                    ],
+                    [
+                      0.24428619275792135,
+                      "unrelated"
+                    ],
+                    [
+                      0.2351968442991506,
+                      "orientation"
+                    ]
+                  ],
+                  "reciprocal_rank": 1.0
+                }
+              ],
+              "seconds": 0.07077358302194625,
+              "usage": {
+                "prompt_tokens": 87,
+                "total_tokens": 87
+              }
+            },
+            "with-neighbor": {
+              "rendered_sha256": "0e2ca01cb227de02f8b8bdf851aa47cc61e7f92ccfa26d78241a49ac6e30cf25",
+              "results": [
+                {
+                  "expected": "retry",
+                  "query_sha256": "1ab5db450107bcd13c25e966832c83ad28eda2c2df755fd0afcb7e35f47143f6",
+                  "ranking": [
+                    [
+                      0.6448914640295638,
+                      "retry"
+                    ],
+                    [
+                      0.5915339321461136,
+                      "orientation"
+                    ],
+                    [
+                      0.5365787900658205,
+                      "pagination"
+                    ],
+                    [
+                      0.40973135925258347,
+                      "deletion"
+                    ],
+                    [
+                      0.3951838830833595,
+                      "publication"
+                    ],
+                    [
+                      0.3632656987177581,
+                      "unrelated"
+                    ]
+                  ],
+                  "reciprocal_rank": 1.0
+                },
+                {
+                  "expected": "pagination",
+                  "query_sha256": "ea5217cf113303746840813985e5ed703d953cc901aab88c24d0c4f270b98713",
+                  "ranking": [
+                    [
+                      0.6449705195241221,
+                      "pagination"
+                    ],
+                    [
+                      0.5415763564577223,
+                      "unrelated"
+                    ],
+                    [
+                      0.5327454319552463,
+                      "retry"
+                    ],
+                    [
+                      0.3931349320873439,
+                      "deletion"
+                    ],
+                    [
+                      0.38875760916984453,
+                      "publication"
+                    ],
+                    [
+                      0.3190433737905074,
+                      "orientation"
+                    ]
+                  ],
+                  "reciprocal_rank": 1.0
+                },
+                {
+                  "expected": "publication",
+                  "query_sha256": "3707b69efa2444d6e70c818d919848fcd2cee0643c2642a466444416a50d5868",
+                  "ranking": [
+                    [
+                      0.5283722709272852,
+                      "publication"
+                    ],
+                    [
+                      0.4797563493150331,
+                      "deletion"
+                    ],
+                    [
+                      0.3288746143318225,
+                      "unrelated"
+                    ],
+                    [
+                      0.3096357217660314,
+                      "pagination"
+                    ],
+                    [
+                      0.3034682295840789,
+                      "retry"
+                    ],
+                    [
+                      0.29163188267851464,
+                      "orientation"
+                    ]
+                  ],
+                  "reciprocal_rank": 1.0
+                },
+                {
+                  "expected": "deletion",
+                  "query_sha256": "0e04aa426545a7cfea41c917741d3a19e8d1b08227d5c640ddd632b867950134",
+                  "ranking": [
+                    [
+                      0.4162797901198202,
+                      "deletion"
+                    ],
+                    [
+                      0.3999538749735832,
+                      "publication"
+                    ],
+                    [
+                      0.3230476005820699,
+                      "unrelated"
+                    ],
+                    [
+                      0.31757913930247245,
+                      "retry"
+                    ],
+                    [
+                      0.3065396770780686,
+                      "pagination"
+                    ],
+                    [
+                      0.2953583186112476,
+                      "orientation"
+                    ]
+                  ],
+                  "reciprocal_rank": 1.0
+                }
+              ],
+              "seconds": 0.07570500002475455,
+              "usage": {
+                "prompt_tokens": 193,
+                "total_tokens": 193
+              }
+            }
+          },
+          "fixture_sha256": "f03c83abfb4de994901ff33f5a8210cc250c0131929916bbd0cb3728c8bd9d45",
+          "quality_pass": false,
+          "ssg_pattern": "embed.rs unit_text and unit_text_related; adapted synthetic texts, not SSG renderer equivalence",
+          "truth_sha256": "5a686557e30cbf8186c816fe7733e8dcd8c2680097ae89f15f6aabe7be675473"
+        },
+        "probe_at_fill": {
+          "deviations": [
+            {
+              "max_abs_coordinate": 0.0,
+              "max_cosine_distance": 2.220446049250313e-16,
+              "repeat": 1
+            },
+            {
+              "max_abs_coordinate": 0.0,
+              "max_cosine_distance": 2.220446049250313e-16,
+              "repeat": 2
+            }
+          ],
+          "diagnostic_tolerances": {
+            "max_abs_coordinate": 1e-05,
+            "max_cosine_distance": 1e-05
+          },
+          "extra_prompt_tokens_per_fill": {
+            "prompt_tokens": 42,
+            "total_tokens": 42
+          },
+          "identity_proof": false,
+          "inputs_per_fill": 4,
+          "mean_probe_seconds": 0.030551777977962047,
+          "performance_acceptance": false,
+          "probe_overhead_fraction_of_tiny_fill": 0.4188636945904262,
+          "probe_spec_sha256": "e2b18294b594a419a543c190ecbc0b7bceb89cf47da18a0d15d11453a377e904",
+          "repetitions": [
+            {
+              "error": null,
+              "indices": [
+                0,
+                1,
+                2,
+                3
+              ],
+              "model": "qwen3-embedding-06b-q8_0-06507c7b4268",
+              "response_bytes": 87074,
+              "response_sha256": "8b0d35643a6e37a7f04a7d74d3576cce8bcb27abb88c08d20a5cc5c6e76e95fb",
+              "seconds": 0.033273833978455514,
+              "status": 200,
+              "usage": {
+                "prompt_tokens": 42,
+                "total_tokens": 42
+              }
+            },
+            {
+              "error": null,
+              "indices": [
+                0,
+                1,
+                2,
+                3
+              ],
+              "model": "qwen3-embedding-06b-q8_0-06507c7b4268",
+              "response_bytes": 87074,
+              "response_sha256": "8b0d35643a6e37a7f04a7d74d3576cce8bcb27abb88c08d20a5cc5c6e76e95fb",
+              "seconds": 0.0297224999521859,
+              "status": 200,
+              "usage": {
+                "prompt_tokens": 42,
+                "total_tokens": 42
+              }
+            },
+            {
+              "error": null,
+              "indices": [
+                0,
+                1,
+                2,
+                3
+              ],
+              "model": "qwen3-embedding-06b-q8_0-06507c7b4268",
+              "response_bytes": 87074,
+              "response_sha256": "8b0d35643a6e37a7f04a7d74d3576cce8bcb27abb88c08d20a5cc5c6e76e95fb",
+              "seconds": 0.028659000003244728,
+              "status": 200,
+              "usage": {
+                "prompt_tokens": 42,
+                "total_tokens": 42
+              }
+            }
+          ],
+          "scope": "Three immediate repeats measure only this cell; cross-restart/backend/platform tolerance remains a prerequisite",
+          "six_document_fill_seconds": 0.07293966598808765,
+          "within_diagnostic_tolerance": true
+        },
+        "production_api_guarantee": false,
+        "protocol_simulation": {
+          "controls": {
+            "boolean-index": {
+              "exit": 1,
+              "expected": "response-index-coverage",
+              "matched": true,
+              "reason": "response-index-coverage",
+              "status": "refused"
+            },
+            "duplicate-index": {
+              "exit": 1,
+              "expected": "response-index-coverage",
+              "matched": true,
+              "reason": "response-index-coverage",
+              "status": "refused"
+            },
+            "extra-row": {
+              "exit": 1,
+              "expected": "response-count-mismatch",
+              "matched": true,
+              "reason": "response-count-mismatch",
+              "status": "refused"
+            },
+            "missing-row": {
+              "exit": 1,
+              "expected": "response-count-mismatch",
+              "matched": true,
+              "reason": "response-count-mismatch",
+              "status": "refused"
+            },
+            "nonfinite": {
+              "exit": 1,
+              "expected": "response-nonfinite-or-nonnumeric",
+              "matched": true,
+              "reason": "response-nonfinite-or-nonnumeric",
+              "status": "refused"
+            },
+            "wrong-dimension": {
+              "exit": 1,
+              "expected": "response-dimension-mismatch",
+              "matched": true,
+              "reason": "response-dimension-mismatch",
+              "status": "refused"
+            },
+            "wrong-model": {
+              "exit": 1,
+              "expected": "response-model-mismatch",
+              "matched": true,
+              "reason": "response-model-mismatch",
+              "status": "refused"
+            }
+          },
+          "evidence_class": "protocol-simulation-not-provider-behavior"
+        },
+        "public_outcome": {
+          "exit": 0,
+          "mode": "scratch-compatibility",
+          "status": "qualified"
+        },
+        "remote_retention": "not exercised; loopback synthetic only",
+        "schema": "am255/actual-endpoint-controls-v1",
+        "token_and_truncation": {
+          "aggregate_maintenance_token_ceiling": 4096,
+          "assurance": "bounded observed refusal; not proof against all silent truncation",
+          "configured_context_tokens": 4096,
+          "maintenance_preflight": {
+            "aggregate_limit": {
+              "exit": 1,
+              "expected": "maintenance-aggregate-token-limit",
+              "matched": true,
+              "reason": "maintenance-aggregate-token-limit",
+              "status": "refused"
+            },
+            "aggregate_token_ceiling": 4096,
+            "embedding_requests_sent": 0,
+            "evidence_class": "local-preflight-policy-using-real-tokenizer-not-provider-maxima",
+            "max_inputs": 8,
+            "nine_inputs": {
+              "exit": 1,
+              "expected": "maintenance-batch-input-limit",
+              "matched": true,
+              "reason": "maintenance-batch-input-limit",
+              "status": "refused"
+            },
+            "two_input_aggregate_tokens": 4226
+          },
+          "over_context": {
+            "error": {
+              "code": 400,
+              "message": "request (4169 tokens) exceeds the available context size (4096 tokens), try increasing it",
+              "n_ctx": 4096,
+              "n_prompt_tokens": 4169,
+              "type": "exceed_context_size_error"
+            },
+            "indices": [],
+            "model": null,
+            "response_bytes": 195,
+            "response_sha256": "b6fe430f807b3e0b206036063ba313f7b1556fea5960795176816d2f4fe63238",
+            "seconds": 0.008839166956022382,
+            "status": 400,
+            "usage": null
+          },
+          "over_context_explicitly_refused": true,
+          "scope": "Tokenizer/native route is explicit and profile-specific, never guessed for BYO; no clipped input is sent",
+          "short_usage_token_difference": 0,
+          "token_counts": [
+            {
+              "cell": "short",
+              "rendered_sha256": "c178c57345f60b63e6918cca2b9f3a7d3381f7183ff6fbec3d3b6d13e90a3e5c",
+              "tokens": 17
+            },
+            {
+              "cell": "over-context",
+              "rendered_sha256": "f09714894ab556f3ed0f7ddb3d6d5694abc3dc856d44a5887d8ee724f3a9ef71",
+              "tokens": 4169
+            }
+          ],
+          "usage_diagnostic_tolerance_tokens": 2
+        },
+        "unknown_alias": {
+          "cosine_to_known_alias": 0.9999994639432381,
+          "echo_is_not_weight_identity": true,
+          "error": null,
+          "independent_metadata_refusal": {
+            "exit": 1,
+            "expected": "model-not-in-independent-metadata",
+            "matched": true,
+            "reason": "model-not-in-independent-metadata",
+            "status": "refused"
+          },
+          "indices": [
+            0
+          ],
+          "model": "am255-unknown-e2b18294b594a419",
+          "response_bytes": 21855,
+          "response_sha256": "16d614d46d98cad9a0ee03628af780cd9f7b365a65cfc558a2e16070fa997419",
+          "seconds": 0.008482750039547682,
+          "status": 200,
+          "usage": {
+            "prompt_tokens": 9,
+            "total_tokens": 9
+          }
+        }
+      }
+    },
+    {
+      "backend": "metal",
+      "cell": "ambiguous",
+      "host": "macOS-27.2-arm64-arm-64bit-Mach-O",
+      "profile_identity_evidence": {
+        "server_binary_sha256": "619eff2bb5fa47bbcaec8804c5659ef426fa4a9aceb4e30ed33bc9d63a82d203",
+        "source": "owned-launch-artifacts-not-response-model-echo",
+        "weight_sha256": "06507c7b42688469c4e7298b0a1e16deff06caf291cf0a5b278c308249c3e439"
+      },
+      "report": {
+        "embedding_request_sent": false,
+        "evidence_class": "actual-endpoint-metadata",
+        "production_api_guarantee": false,
+        "public_outcome": {
+          "exit": 1,
+          "expected": "ambiguous-model-discovery",
+          "matched": true,
+          "reason": "ambiguous-model-discovery",
+          "status": "refused"
+        }
+      }
+    },
+    {
+      "backend": "metal",
+      "cell": "nonembedding",
+      "host": "macOS-27.2-arm64-arm-64bit-Mach-O",
+      "profile_identity_evidence": {
+        "server_binary_sha256": "619eff2bb5fa47bbcaec8804c5659ef426fa4a9aceb4e30ed33bc9d63a82d203",
+        "source": "owned-launch-artifacts-not-response-model-echo",
+        "weight_sha256": "06507c7b42688469c4e7298b0a1e16deff06caf291cf0a5b278c308249c3e439"
+      },
+      "report": {
+        "evidence_class": "actual-endpoint-capability",
+        "identity_assurance": "metadata-alias-only; provider model identity not verifiable",
+        "production_api_guarantee": false,
+        "public_outcome": {
+          "exit": 1,
+          "reason": "embedding-capability-refused",
+          "status": "incompatible"
+        },
+        "response": {
+          "error": {
+            "code": 501,
+            "message": "This server does not support embeddings. Start it with `--embeddings`",
+            "type": "not_supported_error"
+          },
+          "indices": [],
+          "model": null,
+          "response_bytes": 133,
+          "response_sha256": "168b1bb696c89efa3807113eae390c8dca4eaa6a89c11fc288b5a9324a45e915",
+          "seconds": 0.003053500025998801,
+          "status": 501,
+          "usage": null
+        }
+      }
+    },
+    {
+      "backend": "metal",
+      "cell": "key-protected",
+      "host": "macOS-27.2-arm64-arm-64bit-Mach-O",
+      "profile_identity_evidence": {
+        "server_binary_sha256": "619eff2bb5fa47bbcaec8804c5659ef426fa4a9aceb4e30ed33bc9d63a82d203",
+        "source": "owned-launch-artifacts-not-response-model-echo",
+        "weight_sha256": "06507c7b42688469c4e7298b0a1e16deff06caf291cf0a5b278c308249c3e439"
+      },
+      "report": {
+        "batch_controls": {
+          "max_qualified_inputs": 8,
+          "observed": [
+            {
+              "error": null,
+              "indices": [
+                0
+              ],
+              "inputs": 1,
+              "model": "qwen3-embedding-06b-q8_0-06507c7b4268",
+              "response_bytes": 21818,
+              "response_sha256": "d06ff47d141074b1b86e4c8920e85d3b3dbad499c9150b0110287a56c45e467d",
+              "seconds": 0.008401500002946705,
+              "status": 200,
+              "usage": {
+                "prompt_tokens": 7,
+                "total_tokens": 7
+              }
+            },
+            {
+              "error": null,
+              "indices": [
+                0,
+                1,
+                2,
+                3
+              ],
+              "inputs": 4,
+              "model": "qwen3-embedding-06b-q8_0-06507c7b4268",
+              "response_bytes": 87071,
+              "response_sha256": "0fdcbb23d0b840ac9e7ddd33c8e25693444fe0d001c09dcedf16fcdf4ce8ddc6",
+              "seconds": 0.019972082984168082,
+              "status": 200,
+              "usage": {
+                "prompt_tokens": 28,
+                "total_tokens": 28
+              }
+            },
+            {
+              "error": null,
+              "indices": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7
+              ],
+              "inputs": 8,
+              "model": "qwen3-embedding-06b-q8_0-06507c7b4268",
+              "response_bytes": 174007,
+              "response_sha256": "2fcffaaba2235912f6dba82d0a68594f1de7e46f190d0869950c52bec3f3c1db",
+              "seconds": 0.03512137499637902,
+              "status": 200,
+              "usage": {
+                "prompt_tokens": 56,
+                "total_tokens": 56
+              }
+            }
+          ],
+          "scope": "small synthetic batches only; not provider maximum or throughput acceptance"
+        },
+        "coverage": {
+          "error": null,
+          "indices": [
+            0,
+            1
+          ],
+          "model": "qwen3-embedding-06b-q8_0-06507c7b4268",
+          "response_bytes": 43560,
+          "response_sha256": "3058ba7a1053d63d0d100f94be697ad260865923c108d3d353319b1e0cba8132",
+          "seconds": 0.02903533400967717,
+          "status": 200,
+          "usage": {
+            "prompt_tokens": 19,
+            "total_tokens": 19
+          }
+        },
+        "dimension": 1024,
+        "discovered_model": "qwen3-embedding-06b-q8_0-06507c7b4268",
+        "endpoint": "http://127.0.0.1:55125/v1",
+        "identity_assurance": "metadata-alias-only; provider model identity not verifiable",
+        "model": "qwen3-embedding-06b-q8_0-06507c7b4268",
+        "optional_key": {
+          "authorized_embedding_http": 200,
+          "key_material_retained": false,
+          "protected": true,
+          "unauthorized_embedding_http": 401
+        },
+        "own_vs_neighbor": {
+          "cells": {
+            "own": {
+              "rendered_sha256": "9b9d80f17b799a9c7b96d97965251447b4941fb8d846507f64a2f0b6ea114dae",
+              "results": [
+                {
+                  "expected": "retry",
+                  "query_sha256": "1ab5db450107bcd13c25e966832c83ad28eda2c2df755fd0afcb7e35f47143f6",
+                  "ranking": [
+                    [
+                      0.7125732157059231,
+                      "retry"
+                    ],
+                    [
+                      0.390105740407563,
+                      "deletion"
+                    ],
+                    [
+                      0.3687370084681729,
+                      "pagination"
+                    ],
+                    [
+                      0.3465869056827193,
+                      "publication"
+                    ],
+                    [
+                      0.2320371010743704,
+                      "unrelated"
+                    ],
+                    [
+                      0.2045958700698093,
+                      "orientation"
+                    ]
+                  ],
+                  "reciprocal_rank": 1.0
+                },
+                {
+                  "expected": "pagination",
+                  "query_sha256": "ea5217cf113303746840813985e5ed703d953cc901aab88c24d0c4f270b98713",
+                  "ranking": [
+                    [
+                      0.6700260851240483,
+                      "pagination"
+                    ],
+                    [
+                      0.3769672027495404,
+                      "deletion"
+                    ],
+                    [
+                      0.33583439834629303,
+                      "publication"
+                    ],
+                    [
+                      0.29541977516107226,
+                      "retry"
+                    ],
+                    [
+                      0.26916417736279785,
+                      "orientation"
+                    ],
+                    [
+                      0.18386510829243102,
+                      "unrelated"
+                    ]
+                  ],
+                  "reciprocal_rank": 1.0
+                },
+                {
+                  "expected": "publication",
+                  "query_sha256": "3707b69efa2444d6e70c818d919848fcd2cee0643c2642a466444416a50d5868",
+                  "ranking": [
+                    [
+                      0.5212250579268509,
+                      "publication"
+                    ],
+                    [
+                      0.380084369986319,
+                      "deletion"
+                    ],
+                    [
+                      0.29246316235238784,
+                      "pagination"
+                    ],
+                    [
+                      0.29033258226846687,
+                      "retry"
+                    ],
+                    [
+                      0.27076687121160886,
+                      "unrelated"
+                    ],
+                    [
+                      0.2528269896118455,
+                      "orientation"
+                    ]
+                  ],
+                  "reciprocal_rank": 1.0
+                },
+                {
+                  "expected": "deletion",
+                  "query_sha256": "0e04aa426545a7cfea41c917741d3a19e8d1b08227d5c640ddd632b867950134",
+                  "ranking": [
+                    [
+                      0.39945662575695895,
+                      "deletion"
+                    ],
+                    [
+                      0.3213111423418066,
+                      "publication"
+                    ],
+                    [
+                      0.3020599994614326,
+                      "retry"
+                    ],
+                    [
+                      0.27004662970359616,
+                      "pagination"
+                    ],
+                    [
+                      0.24428619275792135,
+                      "unrelated"
+                    ],
+                    [
+                      0.2351968442991506,
+                      "orientation"
+                    ]
+                  ],
+                  "reciprocal_rank": 1.0
+                }
+              ],
+              "seconds": 0.0710989169892855,
+              "usage": {
+                "prompt_tokens": 87,
+                "total_tokens": 87
+              }
+            },
+            "with-neighbor": {
+              "rendered_sha256": "0e2ca01cb227de02f8b8bdf851aa47cc61e7f92ccfa26d78241a49ac6e30cf25",
+              "results": [
+                {
+                  "expected": "retry",
+                  "query_sha256": "1ab5db450107bcd13c25e966832c83ad28eda2c2df755fd0afcb7e35f47143f6",
+                  "ranking": [
+                    [
+                      0.6448914640295638,
+                      "retry"
+                    ],
+                    [
+                      0.5915339321461136,
+                      "orientation"
+                    ],
+                    [
+                      0.5365787900658205,
+                      "pagination"
+                    ],
+                    [
+                      0.40973135925258347,
+                      "deletion"
+                    ],
+                    [
+                      0.3951838830833595,
+                      "publication"
+                    ],
+                    [
+                      0.3632656987177581,
+                      "unrelated"
+                    ]
+                  ],
+                  "reciprocal_rank": 1.0
+                },
+                {
+                  "expected": "pagination",
+                  "query_sha256": "ea5217cf113303746840813985e5ed703d953cc901aab88c24d0c4f270b98713",
+                  "ranking": [
+                    [
+                      0.6449705195241221,
+                      "pagination"
+                    ],
+                    [
+                      0.5415763564577223,
+                      "unrelated"
+                    ],
+                    [
+                      0.5327454319552463,
+                      "retry"
+                    ],
+                    [
+                      0.3931349320873439,
+                      "deletion"
+                    ],
+                    [
+                      0.38875760916984453,
+                      "publication"
+                    ],
+                    [
+                      0.3190433737905074,
+                      "orientation"
+                    ]
+                  ],
+                  "reciprocal_rank": 1.0
+                },
+                {
+                  "expected": "publication",
+                  "query_sha256": "3707b69efa2444d6e70c818d919848fcd2cee0643c2642a466444416a50d5868",
+                  "ranking": [
+                    [
+                      0.5283722709272852,
+                      "publication"
+                    ],
+                    [
+                      0.4797563493150331,
+                      "deletion"
+                    ],
+                    [
+                      0.3288746143318225,
+                      "unrelated"
+                    ],
+                    [
+                      0.3096357217660314,
+                      "pagination"
+                    ],
+                    [
+                      0.3034682295840789,
+                      "retry"
+                    ],
+                    [
+                      0.29163188267851464,
+                      "orientation"
+                    ]
+                  ],
+                  "reciprocal_rank": 1.0
+                },
+                {
+                  "expected": "deletion",
+                  "query_sha256": "0e04aa426545a7cfea41c917741d3a19e8d1b08227d5c640ddd632b867950134",
+                  "ranking": [
+                    [
+                      0.4162797901198202,
+                      "deletion"
+                    ],
+                    [
+                      0.3999538749735832,
+                      "publication"
+                    ],
+                    [
+                      0.3230476005820699,
+                      "unrelated"
+                    ],
+                    [
+                      0.31757913930247245,
+                      "retry"
+                    ],
+                    [
+                      0.3065396770780686,
+                      "pagination"
+                    ],
+                    [
+                      0.2953583186112476,
+                      "orientation"
+                    ]
+                  ],
+                  "reciprocal_rank": 1.0
+                }
+              ],
+              "seconds": 0.07520583301084116,
+              "usage": {
+                "prompt_tokens": 193,
+                "total_tokens": 193
+              }
+            }
+          },
+          "fixture_sha256": "f03c83abfb4de994901ff33f5a8210cc250c0131929916bbd0cb3728c8bd9d45",
+          "quality_pass": false,
+          "ssg_pattern": "embed.rs unit_text and unit_text_related; adapted synthetic texts, not SSG renderer equivalence",
+          "truth_sha256": "5a686557e30cbf8186c816fe7733e8dcd8c2680097ae89f15f6aabe7be675473"
+        },
+        "probe_at_fill": {
+          "deviations": [
+            {
+              "max_abs_coordinate": 0.0,
+              "max_cosine_distance": 2.220446049250313e-16,
+              "repeat": 1
+            },
+            {
+              "max_abs_coordinate": 0.0,
+              "max_cosine_distance": 2.220446049250313e-16,
+              "repeat": 2
+            }
+          ],
+          "diagnostic_tolerances": {
+            "max_abs_coordinate": 1e-05,
+            "max_cosine_distance": 1e-05
+          },
+          "extra_prompt_tokens_per_fill": {
+            "prompt_tokens": 42,
+            "total_tokens": 42
+          },
+          "identity_proof": false,
+          "inputs_per_fill": 4,
+          "mean_probe_seconds": 0.029197819666781772,
+          "performance_acceptance": false,
+          "probe_overhead_fraction_of_tiny_fill": 0.40232368210781666,
+          "probe_spec_sha256": "e2b18294b594a419a543c190ecbc0b7bceb89cf47da18a0d15d11453a377e904",
+          "repetitions": [
+            {
+              "error": null,
+              "indices": [
+                0,
+                1,
+                2,
+                3
+              ],
+              "model": "qwen3-embedding-06b-q8_0-06507c7b4268",
+              "response_bytes": 87074,
+              "response_sha256": "8b0d35643a6e37a7f04a7d74d3576cce8bcb27abb88c08d20a5cc5c6e76e95fb",
+              "seconds": 0.02999058400746435,
+              "status": 200,
+              "usage": {
+                "prompt_tokens": 42,
+                "total_tokens": 42
+              }
+            },
+            {
+              "error": null,
+              "indices": [
+                0,
+                1,
+                2,
+                3
+              ],
+              "model": "qwen3-embedding-06b-q8_0-06507c7b4268",
+              "response_bytes": 87074,
+              "response_sha256": "8b0d35643a6e37a7f04a7d74d3576cce8bcb27abb88c08d20a5cc5c6e76e95fb",
+              "seconds": 0.028736457985360175,
+              "status": 200,
+              "usage": {
+                "prompt_tokens": 42,
+                "total_tokens": 42
+              }
+            },
+            {
+              "error": null,
+              "indices": [
+                0,
+                1,
+                2,
+                3
+              ],
+              "model": "qwen3-embedding-06b-q8_0-06507c7b4268",
+              "response_bytes": 87074,
+              "response_sha256": "8b0d35643a6e37a7f04a7d74d3576cce8bcb27abb88c08d20a5cc5c6e76e95fb",
+              "seconds": 0.028866417007520795,
+              "status": 200,
+              "usage": {
+                "prompt_tokens": 42,
+                "total_tokens": 42
+              }
+            }
+          ],
+          "scope": "Three immediate repeats measure only this cell; cross-restart/backend/platform tolerance remains a prerequisite",
+          "six_document_fill_seconds": 0.07257295795716345,
+          "within_diagnostic_tolerance": true
+        },
+        "production_api_guarantee": false,
+        "protocol_simulation": {
+          "controls": {
+            "boolean-index": {
+              "exit": 1,
+              "expected": "response-index-coverage",
+              "matched": true,
+              "reason": "response-index-coverage",
+              "status": "refused"
+            },
+            "duplicate-index": {
+              "exit": 1,
+              "expected": "response-index-coverage",
+              "matched": true,
+              "reason": "response-index-coverage",
+              "status": "refused"
+            },
+            "extra-row": {
+              "exit": 1,
+              "expected": "response-count-mismatch",
+              "matched": true,
+              "reason": "response-count-mismatch",
+              "status": "refused"
+            },
+            "missing-row": {
+              "exit": 1,
+              "expected": "response-count-mismatch",
+              "matched": true,
+              "reason": "response-count-mismatch",
+              "status": "refused"
+            },
+            "nonfinite": {
+              "exit": 1,
+              "expected": "response-nonfinite-or-nonnumeric",
+              "matched": true,
+              "reason": "response-nonfinite-or-nonnumeric",
+              "status": "refused"
+            },
+            "wrong-dimension": {
+              "exit": 1,
+              "expected": "response-dimension-mismatch",
+              "matched": true,
+              "reason": "response-dimension-mismatch",
+              "status": "refused"
+            },
+            "wrong-model": {
+              "exit": 1,
+              "expected": "response-model-mismatch",
+              "matched": true,
+              "reason": "response-model-mismatch",
+              "status": "refused"
+            }
+          },
+          "evidence_class": "protocol-simulation-not-provider-behavior"
+        },
+        "public_outcome": {
+          "exit": 0,
+          "mode": "scratch-compatibility",
+          "status": "qualified"
+        },
+        "remote_retention": "not exercised; loopback synthetic only",
+        "schema": "am255/actual-endpoint-controls-v1",
+        "token_and_truncation": {
+          "aggregate_maintenance_token_ceiling": 4096,
+          "assurance": "bounded observed refusal; not proof against all silent truncation",
+          "configured_context_tokens": 4096,
+          "maintenance_preflight": {
+            "aggregate_limit": {
+              "exit": 1,
+              "expected": "maintenance-aggregate-token-limit",
+              "matched": true,
+              "reason": "maintenance-aggregate-token-limit",
+              "status": "refused"
+            },
+            "aggregate_token_ceiling": 4096,
+            "embedding_requests_sent": 0,
+            "evidence_class": "local-preflight-policy-using-real-tokenizer-not-provider-maxima",
+            "max_inputs": 8,
+            "nine_inputs": {
+              "exit": 1,
+              "expected": "maintenance-batch-input-limit",
+              "matched": true,
+              "reason": "maintenance-batch-input-limit",
+              "status": "refused"
+            },
+            "two_input_aggregate_tokens": 4226
+          },
+          "over_context": {
+            "error": {
+              "code": 400,
+              "message": "request (4169 tokens) exceeds the available context size (4096 tokens), try increasing it",
+              "n_ctx": 4096,
+              "n_prompt_tokens": 4169,
+              "type": "exceed_context_size_error"
+            },
+            "indices": [],
+            "model": null,
+            "response_bytes": 195,
+            "response_sha256": "b6fe430f807b3e0b206036063ba313f7b1556fea5960795176816d2f4fe63238",
+            "seconds": 0.008779417024925351,
+            "status": 400,
+            "usage": null
+          },
+          "over_context_explicitly_refused": true,
+          "scope": "Tokenizer/native route is explicit and profile-specific, never guessed for BYO; no clipped input is sent",
+          "short_usage_token_difference": 0,
+          "token_counts": [
+            {
+              "cell": "short",
+              "rendered_sha256": "c178c57345f60b63e6918cca2b9f3a7d3381f7183ff6fbec3d3b6d13e90a3e5c",
+              "tokens": 17
+            },
+            {
+              "cell": "over-context",
+              "rendered_sha256": "f09714894ab556f3ed0f7ddb3d6d5694abc3dc856d44a5887d8ee724f3a9ef71",
+              "tokens": 4169
+            }
+          ],
+          "usage_diagnostic_tolerance_tokens": 2
+        },
+        "unknown_alias": {
+          "cosine_to_known_alias": 0.9999994639432381,
+          "echo_is_not_weight_identity": true,
+          "error": null,
+          "independent_metadata_refusal": {
+            "exit": 1,
+            "expected": "model-not-in-independent-metadata",
+            "matched": true,
+            "reason": "model-not-in-independent-metadata",
+            "status": "refused"
+          },
+          "indices": [
+            0
+          ],
+          "model": "am255-unknown-e2b18294b594a419",
+          "response_bytes": 21855,
+          "response_sha256": "16d614d46d98cad9a0ee03628af780cd9f7b365a65cfc558a2e16070fa997419",
+          "seconds": 0.008386083005461842,
+          "status": 200,
+          "usage": {
+            "prompt_tokens": 9,
+            "total_tokens": 9
+          }
+        }
+      }
+    }
+  ],
+  "performance_acceptance": false,
+  "platform_scope": "only this observed host/backend; Linux/macOS results cannot be inferred from each other",
+  "production": false,
+  "schema": "am255/managed-serial-endpoints-v1"
+}

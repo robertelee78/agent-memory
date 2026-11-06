@@ -9,13 +9,19 @@ review, release evidence, and final contract freezing.
 
 ## Evidence status
 
-**The new runtime recipes have not been executed.** They were authored while the
-host was reserved for #209 and its subsequent correctness diagnostics. No model
-service, graph service, model request, database request, or performance workload
-was started by this subtask. A source/math-only smoke receipt, if present, is not
-runtime qualification. `execution-manifest.json` freezes the concrete commands,
-bounds, outcomes, evidence classes, and explicit platform prerequisites before
-execution; it does not mark them passing in advance.
+The authoring subtask originally performed source/math checks only while #209
+held the host. The parent subsequently executed the corrected serial recipe at
+`4a3c1c571eccecd587074c07dc3467f1f7a436dd` on 6 November, exit 0, 123.54 seconds.
+The [actual evidence index](actual-20261106/run-index.json) binds all five real
+endpoint profiles, SSG named reads/rebuilds, six killed builder boundaries,
+candidate database restart, physical isolation, deletion/revocation fences,
+snapshot/WAL disposal and all 49 inventoried resource absences.
+
+Earlier failed attempts remain identified in that index; the successful run
+does not erase them. These are synthetic scratch controls, not the full
+independent quality suite, clean scale/performance acceptance, native Linux
+embedding qualification, legal clearance or an AM production implementation.
+`execution-manifest.json` is the original pre-execution recipe, not its verdict.
 
 `prior-observations.json` retains exact SHA-256 bindings and compact extracts of
 already-existing, read-only parent artifacts:

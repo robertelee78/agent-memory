@@ -1,0 +1,4 @@
+{
+  "all_original_container_ids_preserved": true,
+  "note": "Other owners may legitimately stop containers; this controller never targets their IDs"
+}

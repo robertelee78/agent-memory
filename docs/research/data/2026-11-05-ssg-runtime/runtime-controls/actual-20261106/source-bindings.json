@@ -1,0 +1,33 @@
+{
+  "am_commit": "4a3c1c571eccecd587074c07dc3467f1f7a436dd",
+  "controllers": {
+    "common.py": "f08cb242284c91c8fb91445ff560bc2a1ea0e655844c66800eaa6c099cb9b6ab",
+    "endpoint_controls.py": "ab6eb5adea154078fc44acb6200a6dca1f78fec3a7a7689dc4d70c317ff0d6ec",
+    "graph_controls.py": "d4035389d8d749e1c2b5b093077a6ff0f69ccc68830b6b5574285b782735bd96",
+    "managed_endpoints.py": "e96645e04e002b8ff59bd9a9af0caf5883a616978a68c87b50bc908749370bf0"
+  },
+  "qualification_environment": {
+    "platform": "macOS-27.2-arm64-arm-64bit-Mach-O",
+    "python": "3.13.13"
+  },
+  "ssg_commit": "9c4fd08c29f37bffe89ecdf75b069a6baeb8a5e0",
+  "ssg_sources": {
+    "crates/ssg/src/build.rs": "7a2d2920093fc858a9e3927c17be82d4f2a978308f38ee2b2ef9fbfc877e970b",
+    "crates/ssg/src/config.rs": "f68f3f5cf6b2b7586c09dbe4ff1c4a8d05ee7bd9f860d6f753928bdbbaeebb50",
+    "crates/ssg/src/embed.rs": "fd55bc1519a876e572bc96046963c089be6d46b8d691a41df82644fe481ef6e3",
+    "crates/ssg/src/embed/cache.rs": "774edcbe914d74fff94add558c41966040128ea94964c696e16b4260e314d8ba",
+    "crates/ssg/src/error.rs": "3ffc0c4dbc32a1cbcb46c0e48683a48316de3647f2c7329a814347bae390ed4b",
+    "crates/ssg/src/graph.rs": "2817ec09294372350dc926a5bc66404af85e4aa11053927c0bb79fd1ce68c357",
+    "crates/ssg/src/query/mod.rs": "8a0a8529240669c7aab05cb9a8a2dbce732de5970bb4948da2595fb039b8bc79",
+    "crates/ssg/src/query/render.rs": "be0ac4322ec12282d1c600b566446bf6538e239cdd150faf8cff9f805fbe965d",
+    "crates/ssg/src/query/run.rs": "2107705c9530bbdf1f610ced84df1bef6d445393b6a4a3d96545ca3bfedc6909",
+    "crates/ssg/src/query/template.rs": "2d3af3d964d3264b9d67be78aec957aa5291873678979eb2b3481b5371d92846",
+    "crates/ssg/src/source.rs": "45a4832c8e66c91535a02c694dc4c1201068288b245bdb665091ac71a1378d4d",
+    "crates/ssg/src/workspace.rs": "a60e8dedb9f9b47e25c249900afb44fa6455e22d192e4fa62d1ce9dca9d6585c",
+    "crates/ssg/src/workspace/load.rs": "176176cbafc96459690dda5268c11e8ed9087686452c3e89575dc94f8a134b58",
+    "crates/ssg/src/workspace/paths.rs": "4ee7051d5d2699237268feb7554566da0efd414686ef0aa63e44b5aa8d37069d",
+    "critic/system.md": "0ab26d2b990adb20bf1c31febeff027ee293ebb51f7e39a9dbbe98bd8ef62391",
+    "queries/class.toml": "83bd9bc3374c27921cb889ca6edda00830aa6c2356754b6fdea3a5684a4b53fc",
+    "queries/investigation.toml": "881ba4fad8843d29bfcc74eb7a6bce87d4892c472e46a510ba12a87b950a7798"
+  }
+}
