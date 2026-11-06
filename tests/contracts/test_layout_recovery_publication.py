@@ -56,12 +56,19 @@ class LayoutPublicationContract(PublicationFixture):
                 if variant == 'overflow':
                     (bank/'activeContext.md').write_bytes(b'x' * 1048577)
                 elif variant == 'alias':
-                    (bank/'ProjectBrief.md').write_text('Portable alias must not be hidden.\n')
+                    # Git trees can contain both names even on a case-folding
+                    # host; construct that actual committed alias in the index.
+                    alias = w.inside('portable-alias-source')
+                    alias.write_text('Portable alias must not be hidden.\n')
+                    blob = w.git('hash-object', '-w', alias, cwd=repo).stdout.strip()
+                    w.git('update-index', '--add', '--cacheinfo',
+                          '100644,' + blob + ',memory-bank/ProjectBrief.md', cwd=repo)
                 elif variant == 'hold':
                     (bank/'.agent-memory-transaction.md').write_text('{}\n')
                 else:
                     (bank/'redirect.md').symlink_to('projectbrief.md')
-                w.git('add', 'memory-bank', cwd=repo)
+                if variant != 'alias':
+                    w.git('add', 'memory-bank', cwd=repo)
                 w.git('commit', '-m', 'Unsafe raw source control', cwd=repo)
                 revision = w.git('rev-parse', 'HEAD', cwd=repo).stdout.strip()
                 before = self.state(w, repo, bank)
@@ -136,7 +143,11 @@ class LayoutPublicationContract(PublicationFixture):
         w.git('commit', '-m', 'Synthetic invalid authority context', cwd=peer)
         w.git('push', 'origin', 'HEAD:main', cwd=peer)
         intended = {p.relative_to(bank).as_posix(): p.read_text() for p in bank.rglob('*.md')}
-        intended['activeContext.md'] = original + '\n' + sentence
+        # The legacy fixture uses an incomplete reserved checkpoint heading.
+        # Preserve its prose as ordinary orientation, not an invented qualified
+        # checkpoint; native recall correctly refuses the malformed original.
+        intended['activeContext.md'] = original.replace(
+            '# Current focus\n', '# Active context\n', 1) + '\n' + sentence
         _, observed = inspect(w, command, repo)
         proposal_path, proposal = prepare(w, command, source, repo, observed, intended)
         call(w, command, 'apply', '--repo', repo, '--proposal', proposal_path)
@@ -322,7 +333,13 @@ class LayoutPublicationContract(PublicationFixture):
                 process = w.run([sys.executable, '-I', '-B', source/'scripts/retrieve.py', '--repo', clone,
                                  '--request', save(w, recall)], check=False)
                 self.assertEqual(process.returncode, 0, (process.stdout, process.stderr))
-                self.assertIn('synthetic condition', process.stdout)
+                result = json.loads(process.stdout)
+                self.assertEqual([item['path'] for item in result['results']], ['activeContext.md'])
+                recalled = result['results'][0]
+                self.assertEqual(recalled['body'], intended['activeContext.md'])
+                self.assertEqual(recalled['selection_class'], 'orientation-only')
+                self.assertFalse(recalled['context_assessment']['managed_checkpoint'])
+                self.assertFalse(result['code_working_bytes_verified'])
                 self.assertFalse((profile/'state'/'writes').exists() and any((profile/'state'/'writes').rglob('layout-recovery')))
             finally:
                 w.env.clear(); w.env.update(original_env)

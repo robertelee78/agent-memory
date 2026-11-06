@@ -343,11 +343,14 @@ class NativeLifecyclePublic(unittest.TestCase):
             release.prepare()
             root = world.inside('signed native root')
             root.mkdir()
-            installed = release.install(mode='copy')
+            installed = world.run(['bash', '-o', 'pipefail', '-c',
+                'curl -fsSL "$1" | bash -s -- --json --mode copy --presets omp '
+                '--omp-agent-dir "$2" --omp-peers-upgraded',
+                'fixture', release.base + '/download/v0.0.3/install.sh', root],
+                timeout=120, check=False)
             self.assertEqual(installed.returncode, 0, installed.stdout + installed.stderr)
             receipt = json.loads(installed.stdout)['receipt']
-            receipt = self.public(world, receipt, 'install', '--presets', 'omp',
-                                  '--omp-agent-dir', root, '--omp-peers-upgraded')['receipt']
+            self.assertEqual(receipt['omp_binding']['agent_dir'], str(root))
             self.assertEqual(receipt['source']['kind'], 'release')
             self.update_journey(world, receipt, release.advance)
 

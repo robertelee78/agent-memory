@@ -45,6 +45,8 @@ The apply path uses that same explicit/saved root when validating lifecycle
 write boundaries, including the extension destination. Qualification MUST
 exercise actual application in both copy and link modes; a successful
 `--check` does not prove installation or native extension loading.
+The signed one-line installer accepts these same explicit native selection and
+quiescence options; its generated loader and checked-in loader MUST agree.
 
 Enabling a new native route during a layout recovery hold additionally needs
 `--omp-layout-quiescence /absolute/private-envelope.json`. This is the existing

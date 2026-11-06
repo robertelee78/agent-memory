@@ -232,8 +232,9 @@ The review MUST include `record_evidence`, an explicit list (empty when no new
 record authority is needed) of `{operation_id, receipt_sha256, proposal}`.
 Each proposal MUST be the exact actual ordinary admission, governance or
 consolidation transaction, and its digest MUST match a verified `finished`
-receipt read from the canonical private operation store. Its changed record
-outputs MUST still match the freshly observed local bank. The helper rechecks
+receipt read from the canonical private operation store. Only its changed record
+outputs that still match the freshly observed local bank confer authority;
+each evidence row MUST retain at least one such current output. The helper rechecks
 these receipt/source bindings through the final pre-push guard; a caller-supplied
 receipt, uncommitted proposal or rolled-back operation MUST NOT confer admission.
 Every resulting typed identity/version, metadata and body MUST derive from
