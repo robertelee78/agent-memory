@@ -53,9 +53,12 @@ source/inventory change invalidates the evidence and requires a new frozen
 comparison; do not carry forward old ratios. Before any local helper import,
 controllers reject bytecode anywhere under `tests/`, `scripts/` and the portable
 pack in the controller checkout; each target build receives the same check
-before fixture imports or source binding. `-B` alone only prevents writes and
-does not authenticate execution. Caches are never deleted or repaired: use a
-new bytecode-free source-equivalent clone instead.
+before fixture imports or source binding. Linked `__pycache__` directories are
+also rejected, including ignored, dangling or cyclic links, without traversing
+them: a matching stale helper cache can otherwise be read before source binding.
+`-B` alone only prevents writes and does not authenticate execution. Caches and
+links are never deleted or repaired: use a new bytecode-free source-equivalent
+clone instead.
 
 ## Complete serial commands
 
@@ -79,26 +82,48 @@ stdout must contain `action` (a full action object, or top-level action plus its
 fields), `model`, `usage`, and `reported_cost_usd`, or the actual Claude
 `structured_output`/`modelUsage`/`total_cost_usd` fields. `provider_version` is
 retained when reported. Missing identity/usage/cost prevents quality acceptance.
-Every reported model and model-usage identity must equal the requested exact
-identity. The sole provider spelling mapping is `anthropic/claude-opus-5-5` to
-`claude-opus-5-5`, validated against the retained first-party Claude receipt;
-it additionally requires `modelUsage` entries with that exact `canonicalModel`
-and `provider: firstParty`. Wrong/mixed identities, unvalidated aliases and
-effort/route suffix removal cannot qualify. The controller does not generate a
-synthetic model response or hide a model failure. The adapter must invoke the
-actual selected model, not use labels.
+Every reported top-level model, model-usage key and canonical identity is
+validated independently against the requested exact identity. The sole provider
+spelling mapping is `anthropic/claude-opus-5-5` to `claude-opus-5-5`, validated
+against the retained first-party Claude receipt. Thus a namespaced top-level
+model with canonical native usage keys is valid; spelling differences do not
+mean different executing models. Native `modelUsage` entries still require
+`provider: firstParty` and the exact unprefixed `canonicalModel: claude-opus-5-5`,
+even when their keys use the namespaced spelling. Wrong/mixed actual models,
+unvalidated aliases and effort/route suffix removal cannot qualify. A canonical
+top-level spelling alone still needs the native usage receipt. The controller
+does not generate a synthetic model response, choose a fallback or hide a model
+failure. The adapter must invoke the actual selected model, not use labels.
 
-Quality observations retain ordered native public results separately from
-sorted relevance accounting. A/B/C parity compares that order, source records,
-coverage, recovery IDs/count/`recovery_required_actions`, working-byte authority,
-and semantic finish outcomes. The private semantic outcome oracle is frozen and
-hashed before any model call, never included in adapter input. Resolved cases
-and true no-match require complete coverage; wall disagreement also requires
-clarification. Unknown prerequisite/session and hidden/unsafe guidance require
-incomplete coverage and clarification, not false no-match or permission to
-reveal withheld data. HEAD evidence never certifies staged/working bytes.
-Both absolute scoring and A/B/C parity enforce these flags; old unscored
-observations are not retroactively passing qualification.
+Quality observations retain every ordered native public response separately
+from sorted relevance accounting. Literal A/B/C observations use the same frozen
+request and compare their native order directly. Semantic models navigate
+independently: reading the same pagination evidence in one batch or two is not
+itself a native regression. After each semantic finish, the controller replays
+**every actual source-read request on A, B and C in that request's original
+World**, with the exact captured discovery trace, request (including path order)
+and rationale. The input hashes and all replay outputs/failures are retained.
+Each observed response must equal its own build's replay, and all three replays
+of that exact request must agree. Missing replays or ordering, source-record,
+coverage, recovery IDs/count/`recovery_required_actions`, or working-byte
+authority differences fail parity; observations are never sorted or discarded
+to manufacture equivalence. Selected source authority and semantic finish
+outcomes are also compared across the independent model runs.
+
+Replay commands are marked `native-replay`; their child seconds and whole replay
+wall are separate from the observed workflow's native, model and end-to-end
+clocks. They are post-finish correctness checks, not performance samples or model
+input. Protected bank/Git/index/staged-byte checks still cover the whole World,
+and every executed replay pack must match its frozen portable inventory.
+
+The private semantic outcome oracle is frozen and hashed before any model call,
+never included in adapter input. Resolved cases and true no-match require
+complete coverage; wall disagreement also requires clarification. Unknown
+prerequisite/session and hidden/unsafe guidance require incomplete coverage and
+clarification, not false no-match or permission to reveal withheld data. HEAD
+evidence never certifies staged/working bytes. Both absolute scoring and A/B/C
+parity enforce these flags; old observations without exact-request replay
+evidence are not retroactively passing qualification.
 
 The same stages can be invoked individually, in serial host slots, without
 repeating previously retained observations:

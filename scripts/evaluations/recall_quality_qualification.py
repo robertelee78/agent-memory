@@ -21,8 +21,9 @@ import traceback
 sys.dont_write_bytecode = True
 # Reject caches before the first local import, including the binding helper.
 for _directory in ('tests', 'scripts', 'skills/agent-memory'):
-    for _cache in (Path(__file__).resolve().parents[2] / _directory).rglob('*.py[co]'):
-        raise ValueError('Qualification helper bytecode is not source-bound: ' + str(_cache))
+    for _cache in (Path(__file__).resolve().parents[2] / _directory).rglob('*'):
+        if (_cache.name == '__pycache__' and _cache.is_symlink()) or _cache.suffix in ('.pyc', '.pyo'):
+            raise ValueError('Qualification helper bytecode is not source-bound: ' + str(_cache))
 from recall_comparison_builds import encoded, save, sha, source, stamp
 from labeled_recall_probe import inventory
 
@@ -64,27 +65,34 @@ def semantic_outcome_checks(name, finish):
 def complete_provider_evidence(call, requested):
     if call['usage'] is None or call['reported_cost_usd'] is None:
         return False
+    mapped = CLAUDE_IDENTITIES.get(requested)
+    canonical = mapped or requested
+    def normalized(identity):
+        if not isinstance(identity, str) or not identity:
+            return None
+        if identity == requested or (mapped and identity == mapped):
+            return canonical
+        return None
     identities = []
     if call.get('model') is not None:
-        if not isinstance(call['model'], str) or not call['model']:
-            return False
-        identities.append(call['model'])
+        identities.append(normalized(call['model']))
     usage = call.get('model_usage')
     if usage is not None:
         if not isinstance(usage, dict) or not usage:
             return False
         for identity, details in usage.items():
-            if not isinstance(identity, str) or not identity or not isinstance(details, dict):
+            if not isinstance(details, dict):
                 return False
-            identities.append(identity)
+            identities.append(normalized(identity))
+            if mapped:
+                # Native entries attest the canonical model independently of
+                # the top-level/key spelling, never a provider/model fallback.
+                if details.get('provider') != 'firstParty' or details.get('canonicalModel') != mapped:
+                    return False
             if 'canonicalModel' in details:
-                identities.append(details['canonicalModel'])
-    if identities and all(identity == requested for identity in identities):
-        return True
-    mapped = CLAUDE_IDENTITIES.get(requested)
-    return bool(mapped and identities and all(identity == mapped for identity in identities)
-        and usage and all(details.get('provider') == 'firstParty' and details.get('canonicalModel') == mapped
-                          for details in usage.values()))
+                identities.append(normalized(details['canonicalModel']))
+    return bool(identities and all(identity == canonical for identity in identities)
+                and (call.get('model') != mapped or usage))
 
 
 def public_projection(result):
@@ -95,9 +103,43 @@ def public_projection(result):
 
 
 def quality_projection(row):
-    """Keep native public ordering distinct from set-based relevance scoring."""
-    return {key: row[key] for key in ('selected', 'selected_qualified', 'public_results',
+    """Compare semantic outcomes without equating independent model actions."""
+    return {key: row[key] for key in ('selected', 'selected_qualified',
                                       'missed', 'unexpected', 'finish_outcome')}
+
+
+def replay_source_reads(reads, public, packs, repo, write):
+    """Replay every observed exact read on all builds in its original World."""
+    replays = []
+    for read in reads:
+        replay = {'read_sha256': sha(encoded(read)), 'public_results': {}, 'failures': {}}
+        for build in ('A', 'B', 'C'):
+            try:
+                state, _ = public('discover_memory.py', 'read', '--repo', repo,
+                    '--input', write(read['discovery'], 'replay-navigation'),
+                    '--request', write(read['request'], 'replay-request'), '--rationale', read['rationale'],
+                    from_pack=packs[build], purpose='native-replay')
+                replay['public_results'][build] = public_projection(state['qualification'])
+            except Exception as exc:
+                replay['failures'][build] = repr(exc)
+        replays.append(replay)
+    return replays
+
+
+def native_replay_matches(row):
+    """Require one ordered paired comparison for every observed source read."""
+    reads, replays = row.get('source_reads'), row.get('native_replays')
+    if not isinstance(reads, list) or not isinstance(replays, list):
+        return False
+    if len(reads) != len(row['public_results']) or len(replays) != len(reads):
+        return False
+    for read, observed, replay in zip(reads, row['public_results'], replays):
+        results = replay['public_results']
+        if (replay['read_sha256'] != sha(encoded(read)) or replay['failures']
+                or set(results) != {'A', 'B', 'C'} or observed != results[row['build']]
+                or any(results[build] != results['A'] for build in ('B', 'C'))):
+            return False
+    return True
 
 
 def quality_outcomes(observations, counts, names, mode):
@@ -109,9 +151,15 @@ def quality_outcomes(observations, counts, names, mode):
                 regressions.append({'count': count, 'case': name, 'reason': 'missing actual observation'})
                 continue
             for build in ('B', 'C'):
-                if quality_projection(cell[build]) != quality_projection(cell['A']):
+                if (quality_projection(cell[build]) != quality_projection(cell['A'])
+                        or (mode == 'literal' and cell[build]['public_results'] != cell['A']['public_results'])):
                     regressions.append({'count': count, 'case': name, 'build': build,
                                         'reason': 'public source/quality outcome differs from A'})
+            if mode == 'semantic':
+                for build, row in cell.items():
+                    if not native_replay_matches(row):
+                        regressions.append({'count': count, 'case': name, 'build': build,
+                                            'reason': 'equivalent exact native source-read replay differs or is missing'})
     passed = not regressions and len(observations) == len(counts) * 3 * len(names) and all(
         not r['failure'] and all(r['checks'].values()) and not r['unexpected'] and
         (not r['missed'] or (mode == 'literal' and r['case'] == 'no-shared-terms-paraphrase')) for r in observations)
@@ -223,6 +271,12 @@ def main():
             with World() as world:
                 pack = world.inside('portable quality pack')
                 shutil.copytree(roots[build] / 'skills/agent-memory', pack)
+                packs = {build: pack}
+                if args.mode == 'semantic':
+                    for label in ('A', 'B', 'C'):
+                        if label != build:
+                            packs[label] = world.inside('native replay pack ' + label)
+                            shutil.copytree(roots[label] / 'skills/agent-memory', packs[label])
                 repo = world.repository()
                 world.env.update(GIT_AUTHOR_DATE='2026-10-25T08:00:00Z', GIT_COMMITTER_DATE='2026-10-25T08:00:00Z')
                 (repo / 'code.py').write_text('DISPATCH_LIMIT = 3\n')
@@ -245,8 +299,8 @@ def main():
                 head = world.git('rev-parse', 'HEAD', cwd=repo).stdout.strip()
                 def write(value, name):
                     path = world.inside(name + '.json'); save(path, value); return path
-                def public(helper, *argv):
-                    actual = list(map(str, [sys.executable, '-I', '-B', pack / 'scripts' / helper, *argv]))
+                def public(helper, *argv, from_pack=pack, purpose='observed'):
+                    actual = list(map(str, [sys.executable, '-I', '-B', from_pack / 'scripts' / helper, *argv]))
                     number = len(commands) + 1; inputs = {}
                     for item in actual:
                         p = Path(item)
@@ -265,7 +319,7 @@ def main():
                     (directory / f'{number:05d}.stdout').write_text(stdout)
                     (directory / f'{number:05d}.stderr').write_text(stderr)
                     commands.append({'argv': actual, 'started_at': began, 'finished_at': stamp(), 'exit': code,
-                        'error': error, 'input_sha256': inputs, 'seconds': time.perf_counter() - start})
+                        'error': error, 'input_sha256': inputs, 'seconds': time.perf_counter() - start, 'purpose': purpose})
                     save(directory / 'commands.json', commands)
                     value = json.loads(stdout) if stdout else {}
                     if code != 0:
@@ -276,7 +330,7 @@ def main():
                     for name, question, context, expected in active:
                         started, first = time.perf_counter(), len(commands)
                         model_calls, selected, qualified, finish = [], [], {}, None
-                        public_results = []
+                        public_results, source_reads = [], []
                         error = None
                         try:
                             if args.mode == 'literal':
@@ -344,11 +398,14 @@ def main():
                                         request = {'project_id': state['discovery']['binding']['project_id'], 'query': question,
                                             'ids': [], 'paths': action['paths'], 'context': context, 'kinds': ['semantic-fact'],
                                             'minimum_trust': 'reviewed', 'limit': 16, 'include_context': False}
+                                        read = {'request': copy.deepcopy(request), 'discovery': copy.deepcopy(state['discovery']),
+                                                'rationale': action['rationale'], 'command_number': len(commands) + 1}
                                         state, raw = public('discover_memory.py', 'read', '--repo', repo,
                                             '--input', write(state['discovery'], 'navigation'), '--request', write(request, 'semantic-request'),
                                             '--rationale', action['rationale'])
                                         result = state['qualification']
                                         public_results.append(public_projection(result))
+                                        source_reads.append(read)
                                         qualified.update({r['path']: r for r in result['results']})
                                         conversation.append({'role': 'tool', 'content': state})
                                     elif action.get('action') == 'finish':
@@ -383,24 +440,33 @@ def main():
                             error = repr(exc); checks = {}; expected_paths = sorted(expected['relevant_paths']) if args.mode == 'literal' else sorted(
                                 r['path'] for r in rows if r['label'] in expected)
                             (directory / (name + '.failure.txt')).write_text(traceback.format_exc())
+                        # Native parity is a separate post-finish replay, not a
+                        # comparison of independently chosen model call batches.
+                        end_to_end_seconds = time.perf_counter() - started
+                        replay_started = time.perf_counter()
+                        native_replays = replay_source_reads(source_reads, public, packs, repo, write) if args.mode == 'semantic' else []
+                        native_replay_wall_seconds = time.perf_counter() - replay_started if args.mode == 'semantic' else 0
                         actual, desired = set(selected), set(expected_paths)
                         row = {'build': build, 'count': count, 'case': name, 'question': question, 'context': context,
                             'expected': expected_paths, 'selected': selected, 'missed': sorted(desired - actual), 'unexpected': sorted(actual - desired),
                             'qualified': qualified, 'finish': finish, 'failure': error, 'checks': checks,
                             'public_results': public_results,
+                            'source_reads': source_reads, 'native_replays': native_replays,
                             'finish_outcome': {key: finish[key] for key in ('complete', 'clarification_required')} if finish else None,
                             'selected_qualified': {p: qualified[p] for p in selected if p in qualified},
                             'found_relevant': sorted(actual & desired),
                             'precision': len(actual & desired) / len(actual) if actual else None,
                             'recall': len(actual & desired) / len(desired) if desired else None,
-                            'public_native_seconds': sum(c['seconds'] for c in commands[first:]),
+                            'public_native_seconds': sum(c['seconds'] for c in commands[first:] if c['purpose'] == 'observed'),
+                            'native_replay_seconds': sum(c['seconds'] for c in commands[first:] if c['purpose'] == 'native-replay'),
+                            'native_replay_wall_seconds': native_replay_wall_seconds,
                             'model_seconds': sum(m['seconds'] for m in model_calls), 'model_calls': model_calls,
-                            'end_to_end_seconds': time.perf_counter() - started}
+                            'end_to_end_seconds': end_to_end_seconds}
                         save(directory / (name + '.result.json'), row); observations.append(row); persist()
                     preservation = {'bank': inventory(bank) == initial, 'index': (repo / '.git/index').read_bytes() == index,
                         'HEAD': world.git('rev-parse', 'HEAD', cwd=repo).stdout.strip() == head,
                         'staged_feature': (repo / 'code.py').read_text() == 'DISPATCH_LIMIT = 9  # staged unfinished work\n',
-                        'executed_pack': inventory(pack) == manifest['builds'][build]['source']['portable']}
+                        'executed_pack': all(inventory(p) == manifest['builds'][label]['source']['portable'] for label, p in packs.items())}
                     save(directory / 'preservation.json', preservation)
                     if not all(preservation.values()):
                         raise RuntimeError('Quality operation modified protected bank/source/Git/index state')

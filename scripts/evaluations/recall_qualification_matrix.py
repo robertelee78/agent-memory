@@ -12,8 +12,9 @@ import time
 sys.dont_write_bytecode = True
 # Reject caches before the first local import, including the binding helper.
 for _directory in ('tests', 'scripts', 'skills/agent-memory'):
-    for _cache in (Path(__file__).resolve().parents[2] / _directory).rglob('*.py[co]'):
-        raise ValueError('Qualification helper bytecode is not source-bound: ' + str(_cache))
+    for _cache in (Path(__file__).resolve().parents[2] / _directory).rglob('*'):
+        if (_cache.name == '__pycache__' and _cache.is_symlink()) or _cache.suffix in ('.pyc', '.pyo'):
+            raise ValueError('Qualification helper bytecode is not source-bound: ' + str(_cache))
 from recall_comparison_builds import save, sha, source, stamp
 
 SAFETY_SUITES = (
