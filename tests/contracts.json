@@ -188,7 +188,12 @@
     {"name": "layout-recovery-resolution-retirement", "layer": "bank", "scope": "v0.0.15", "path": "tests/contracts/test_layout_recovery_reconciliation.py", "tests": ["RecoveryReconciliationContract.test_standalone_receipt_retry_finishes_exact_linkage_and_retirement"]},
     {"name": "layout-recovery-resolution-exclusion", "layer": "bank", "scope": "v0.0.15", "path": "tests/contracts/test_layout_recovery_reconciliation.py", "tests": ["RecoveryReconciliationContract.test_unfinished_resolution_excludes_new_resolutions_nested_admission_and_revision"]},
     {"name": "layout-recovery-rollback-exclusion", "layer": "bank", "scope": "v0.0.15", "path": "tests/contracts/test_layout_recovery_reconciliation.py", "tests": ["RecoveryReconciliationContract.test_unfinished_rolled_back_resolution_excludes_outer_repair_handoff"]},
-    {"name": "layout-nested-reconciliation", "layer": "concurrency", "scope": "v0.0.15", "path": "tests/contracts/test_layout_nested_reconciliation.py"},
+    {"name": "layout-nested-canonical-receipt", "layer": "concurrency", "scope": "v0.0.15", "path": "tests/contracts/test_layout_nested_reconciliation.py", "tests": ["NestedReconciliationContract.test_durable_canonical_receipt_reconciles_only_its_exact_journaled_head_gap"]},
+    {"name": "layout-nested-pre-receipt-rollback", "layer": "concurrency", "scope": "v0.0.15", "path": "tests/contracts/test_layout_nested_reconciliation.py", "tests": ["NestedReconciliationContract.test_interrupted_pre_receipt_rollback_resumes_ordered_plan_not_forward_prefix"]},
+    {"name": "layout-nested-terminal-index", "layer": "concurrency", "scope": "v0.0.15", "path": "tests/contracts/test_layout_nested_reconciliation.py", "tests": ["NestedReconciliationContract.test_nested_retirement_resumes_active_binding_after_terminal_index"]},
+    {"name": "layout-nested-sentinel-retirement", "layer": "concurrency", "scope": "v0.0.15", "path": "tests/contracts/test_layout_nested_reconciliation.py", "tests": ["NestedReconciliationContract.test_exact_nested_finish_resumes_sentinel_retirement_without_canonical_replay"]},
+    {"name": "layout-nested-marker-retirement", "layer": "concurrency", "scope": "v0.0.15", "path": "tests/contracts/test_layout_nested_reconciliation.py", "tests": ["NestedReconciliationContract.test_exact_nested_finish_resumes_after_marker_removal_without_canonical_replay"]},
+    {"name": "layout-nested-sentinel-removed", "layer": "concurrency", "scope": "v0.0.15", "path": "tests/contracts/test_layout_nested_reconciliation.py", "tests": ["NestedReconciliationContract.test_exact_nested_finish_resumes_after_sentinel_removal_without_canonical_replay"]},
     {"name": "semantic-discovery", "layer": "bank", "scope": "v0.0.3", "path": "tests/contracts/test_discovery.py"}
   ]
 }
