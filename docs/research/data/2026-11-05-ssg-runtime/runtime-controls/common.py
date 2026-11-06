@@ -70,6 +70,7 @@ def create_run(path, kind):
     if path.is_symlink() or path.exists():
         raise ValueError("Run root must be new; use cleanup for an existing owned run")
     path.mkdir(parents=True, mode=0o700)
+    path = path.resolve(strict=True)
     os.chmod(path, 0o700)
     receipt = {"schema": "am255/runtime-controls-owner-v1", "run_id": uuid.uuid4().hex,
                "kind": kind, "root": str(path.resolve()), "uid": os.getuid(),

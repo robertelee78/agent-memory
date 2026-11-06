@@ -75,6 +75,10 @@ that controller only sends synthetic requests to its supplied local API base.
 The run root must be new. Repeating an invocation with the same root refuses
 without modifying its historical evidence. Use a new root for an independent
 repeat. Cleanup is idempotent and exact-resource-bound.
+Creation returns the canonical path of the newly owned directory, so a host
+alias such as macOS `/tmp` does not disagree with its ownership receipt.
+Existing or linked run roots remain refused; cleanup requires that exact
+canonical owned path and never adopts an unrelated directory.
 
 ### Independent endpoint usage
 
