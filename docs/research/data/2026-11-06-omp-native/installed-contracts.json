@@ -1,0 +1,25 @@
+{
+  "schema": "agent-memory/omp-installed-contract-evidence-v1",
+  "recorded_date_utc": "2026-11-06",
+  "source_scope": "Native runtime/contract source unchanged during this run; concurrent work changed #255 research files and docs only. Disposable fixture versions/artifacts differ; no one installed artifact is attested across all cases.",
+  "observed": {
+    "passed": true,
+    "methods": 20,
+    "elapsed_seconds": 648.109,
+    "classes": {
+      "NativeSources": 10,
+      "StoredBatchControls": 1,
+      "ExplicitNativeOwnership": 4,
+      "NativeLifecyclePublic": 5
+    },
+    "job": "bg_176",
+    "provenance": "Observed auto-delivered unittest output. Transient job record expired before archival; this is a result summary, not a reconstructed raw log."
+  },
+  "exercised": "Real installed public commands for copy/link explicit ownership, saved-root selection, native source enrollment/gaps/capacity/wakes/idempotence and managed/signed fixture update/uninstall/drain/quiescence refusals.",
+  "limits": [
+    "Controlled transport/installed CLI contracts, not a real omp binary/provider/mode/platform/peer matrix.",
+    "No full #249 or release acceptance.",
+    "Longer grouped harness; unchanged300second registered worker deadline was not qualified by this grouped run.",
+    "Actual minimal macOS RPC binary/provider proof is separate in minimal-smoke.json."
+  ]
+}
