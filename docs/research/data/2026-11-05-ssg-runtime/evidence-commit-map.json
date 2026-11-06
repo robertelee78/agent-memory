@@ -5,6 +5,10 @@
   "purpose": "Preserve original pre-output freeze history separately from later cherry-pick integration dates; original measured/raw files remain unchanged. Git dates are recorded provenance, not independently signed timestamps.",
   "published_refs": [
     {
+      "ref": "refs/heads/evidence/v015-255-executor-preflight-20261106",
+      "tip": "cfc72d648fa62cb414ad108f9868d33b1a19d7a9"
+    },
+    {
       "ref": "refs/heads/evidence/v015-255-core-initial-20261106",
       "tip": "41ff29cdbb2c3fd615daa7e9fbff1394a98472ba"
     },
