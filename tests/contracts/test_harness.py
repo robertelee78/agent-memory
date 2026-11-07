@@ -1,5 +1,6 @@
 """Bootstrap contract: exercise real subprocesses/files, not product internals."""
 import ast
+import importlib.util
 import json
 import os
 import runpy
@@ -252,6 +253,44 @@ for name,group in GROUPS.items():
                 with self.subTest(aggregate=invalid):
                     with self.assertRaises(ValueError):
                         aggregate(entries, invalid)
+
+    def test_actual_recovery_batches_and_comparison_consumer_preserve_owned_cases(self):
+        worker = runpy.run_path(str(ROOT / "scripts/run_contract_suite.py"))
+        entries = json.loads((ROOT / "tests/contracts.json").read_text())["suites"]
+
+        def discover(path):
+            spec = importlib.util.spec_from_file_location("contract_suite", ROOT / path)
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            return module, list(worker["leaf_cases"](unittest.defaultTestLoader.loadTestsFromModule(module)))
+
+        for path in ("tests/contracts/test_layout_recovery.py",
+                     "tests/contracts/test_layout_recovery_publication.py"):
+            module, complete = discover(path)
+            batches = [entry for entry in entries if entry.get("path") == path]
+            self.assertEqual(len(batches), len(complete))
+            selected = []
+            for entry in batches:
+                suite, proof = worker["registered_suite"](module, ROOT / path, entry["name"])
+                cases = list(worker["leaf_cases"](suite))
+                self.assertEqual(len(cases), 1)
+                self.assertEqual(proof["selected"], [cases[0].id()])
+                selected.extend(case.id() for case in cases)
+            self.assertCountEqual(selected, [case.id() for case in complete])
+
+        frontier_path = "tests/contracts/test_layout_recovery_frontier.py"
+        comparison_path = "tests/contracts/test_comparison.py"
+        frontier, cases = discover(frontier_path)
+        _, owner_cases = discover(comparison_path)
+        consumer_cases = list(worker["leaf_cases"](
+            unittest.defaultTestLoader.loadTestsFromTestCase(frontier.RecoveryFrontierContract)))
+        owner_methods = {case._testMethodName for case in owner_cases
+                         if type(case).__name__ == "ComparisonContract"}
+        self.assertTrue(owner_methods)
+        self.assertCountEqual([case.id() for case in cases], [case.id() for case in consumer_cases])
+        self.assertTrue(any(entry.get("path") == comparison_path for entry in entries))
+        self.assertEqual(owner_methods, set(unittest.defaultTestLoader.getTestCaseNames(
+            frontier.test_comparison.ComparisonContract)))
 
 
 

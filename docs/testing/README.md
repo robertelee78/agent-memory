@@ -63,6 +63,15 @@ execution counts before reporting completeness. Existing lifecycle write-fault
 proofs remain separately required. Batching MUST NOT change assertions, omit
 subcases, introduce skips or increase the 300-second worker deadline.
 
+The recovery and publication contracts use one complete discovered method per
+worker, including the physical inventory boundaries; the selection proof still
+requires every method exactly once. The frontier consumer imports comparison
+fixtures without exposing their TestCase as another discovered suite: comparison
+cases remain owned by their registered comparison contract. This removes
+duplicate execution, not frontier-specific assertions. Individual method
+deadlines and the total hosted runtime still require platform evidence; neither
+batching nor deduplication establishes that the complete gate fits 180 minutes.
+
 The [first-release safety canaries](canaries.md) cover structural routes,
 lifecycle selection, project isolation, shared developer attribution,
 terminal deletion and poisoned imports through a copied portable skill.

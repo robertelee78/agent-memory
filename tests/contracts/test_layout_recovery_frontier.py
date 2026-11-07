@@ -6,13 +6,13 @@ import stat
 import unittest
 
 from world import World
-from contracts.test_comparison import ComparisonContract
+from contracts import test_comparison
 import layout_recovery_fixtures as recovery
 
 
 class RecoveryFrontierContract(unittest.TestCase):
     def test_checked_empty_frontier_is_explicit_and_v1_or_omitted_fields_cannot_write(self):
-        helper = ComparisonContract(methodName='runTest')
+        helper = test_comparison.ComparisonContract(methodName='runTest')
         with World() as world:
             repo, bank = helper.fixture(world)
             helper.add(bank, 'existing')
@@ -87,7 +87,7 @@ class RecoveryFrontierContract(unittest.TestCase):
             self.assertEqual(recalled['semantic_coverage'], 'incomplete-recovery')
             self.assertEqual(recalled['pending_recovery_units'], 8)
             self.assertTrue(recalled['results'])
-            helper = ComparisonContract(methodName='runTest')
+            helper = test_comparison.ComparisonContract(methodName='runTest')
             helper.pid = manifest['project_id']
             helper.actor = manifest['identity']['scope_context']['developer_id']
             request = helper.candidate()
