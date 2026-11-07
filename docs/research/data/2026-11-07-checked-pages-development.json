@@ -1,4 +1,68 @@
 {
+  "integrated_controller_pilots": [
+    {
+      "label": "pilot04",
+      "source_commit": "69df2f36317581e541914002c73210d6464cfcd4",
+      "tracked_sources": 3366,
+      "portable_sources": 216,
+      "source_preserved": true,
+      "public_commands": 421,
+      "timeouts": 0,
+      "outcome": {
+        "complete_compatible_rounds": true,
+        "full_daily_use_v1_acceptance": false,
+        "required_fault_matrix_complete": false,
+        "recovery_controls_executed": true,
+        "sessions": 6,
+        "seed_lessons": 128,
+        "developers": 2,
+        "independent_clones": 3,
+        "captured_lessons": 19,
+        "all_sessions_expected_feature_state_preserved": true,
+        "ordinary_code_integration_explicitly_expected": true,
+        "seconds": 3362.2243454160052
+      },
+      "artifact_sha256": {
+        "outcome.json": "9678896eb1b3dd7c1dff7944676f3c40a47ff935f36326e53eba9210a94aea0a",
+        "source-before.json": "1bc1de43c1d7747b118ada3bb248556849b01ae49a33aa4f0e388c6423205e99",
+        "source-after.json": "1bc1de43c1d7747b118ada3bb248556849b01ae49a33aa4f0e388c6423205e99",
+        "commands.json": "c4afbdd5de5a2d4a9a5515994031002ce06c73f5e306d56d0f9580922116a3ad",
+        "events.json": "48dd5cb8e117c1bd4bba60427c7e06ccae520dc718892074a82afb3615c94e65",
+        "fixture-identities.json": "03729598729d159c5d5462c5e1aa86c2791d181ae59d3dd4b2c2c783abdf7188"
+      }
+    },
+    {
+      "label": "pilot05",
+      "source_commit": "1be9ad0a5b67da637c5f1924831f6b52c9b2cbe0",
+      "tracked_sources": 3368,
+      "portable_sources": 216,
+      "source_preserved": true,
+      "public_commands": 421,
+      "timeouts": 0,
+      "outcome": {
+        "complete_compatible_rounds": true,
+        "full_daily_use_v1_acceptance": false,
+        "required_fault_matrix_complete": false,
+        "recovery_controls_executed": true,
+        "sessions": 6,
+        "seed_lessons": 128,
+        "developers": 2,
+        "independent_clones": 3,
+        "captured_lessons": 19,
+        "all_sessions_expected_feature_state_preserved": true,
+        "ordinary_code_integration_explicitly_expected": true,
+        "seconds": 3087.743309708021
+      },
+      "artifact_sha256": {
+        "outcome.json": "8af9f43297249dce6e03f02bfba3213b50f8d6e978665dacea0f21b0a1b21f36",
+        "source-before.json": "8ad2180a50b863cf6dad356d085c38630521d3492f44af6e03b417f6dd6b5594",
+        "source-after.json": "8ad2180a50b863cf6dad356d085c38630521d3492f44af6e03b417f6dd6b5594",
+        "commands.json": "9207f7cfe0eb70356aac91840c7356db485315224c7bd2c123803a6263399322",
+        "events.json": "4e222e35affe28b4255dff7c75cb6840559aeb55f51ba2e6d251ac5f96da6794",
+        "fixture-identities.json": "03729598729d159c5d5462c5e1aa86c2791d181ae59d3dd4b2c2c783abdf7188"
+      }
+    }
+  ],
   "runtime_commit": "8956aa40c8ad70f33b7fb2df14d2f64a6d43a278",
   "base_commit": "27aa667d4d9e225974f03f90e47bb878439b223b",
   "fable_model_records": [

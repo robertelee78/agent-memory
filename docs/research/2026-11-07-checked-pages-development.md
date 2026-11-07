@@ -40,7 +40,7 @@ failure” is narrower than the actual contract: an error after marker creation
 can leave a marker, but no successful operation receipt. Marker presence alone
 never authorizes consumption or publication; guides require exact receipt pins.
 
-## Retained apparatus failures and integrated blocker
+## Historical apparatus failures and integrated blocker
 
 The first full-controller pilot stopped before workload because the APFS-created
 worktree contained ignored bytecode files and failed the complete portable source
@@ -57,8 +57,8 @@ The integrated `recovery_frontier.marker_bytes` rejects every marker over4096byt
 including this exactly owned transaction carrying complete observed hashes.
 The new export branch is not reached. The #244 owner was asked to fix the owned
 marker contract without enlarging unknown-marker trust or shrinking the fixture.
-This blocks integrated controller qualification, not the demonstrated small-bank
-export/publication/refresh behavior. No larger/full run or Linux pass is claimed.
+At that point this blocked integrated controller qualification, not the
+demonstrated small-bank export/publication/refresh behavior.
 
 The first consumer-only diagnostic used a lexical `/tmp` output path while the
 producer correctly returned its canonical `/private/tmp` path; the consumer's
@@ -71,3 +71,53 @@ Raw receipts/streams/profiles and fixture marker are private under
 withheld bodies. Only sanitized data are committed. Follow-up qualification
 requires the reviewed #244 fix on the integrated source, unchanged controller
 faults and no invented speedup from overlapping invocation durations.
+
+## Integrated controller qualification after marker correction
+
+The #244 integration owner delegated the narrow exact-owned-marker correction.
+Both `_observe_index` and `require_scope` now preserve their existing owned byte
+witness; unknown markers and recovery sentinels keep the4096-byte bound. The
+first correction covered only the former; pilot03 reached admission and exposed
+the second missing caller. Both failures remain evidence. Amended implementation
+`227e3eab252905197e4e4fb3c789af0b8c8eb7a1` passes actual48-record admission
+direct apply and durable-receipt interrupted recover-finish, exact prior learning
+and feature/index/HEAD preserved, and14marker/frontier contract methods.
+
+Two subsequent actual public-controller pilots completed, not just unit tests:
+
+| Pilot | Composed source | Controller seconds | Public commands | Timeouts |
+| --- | --- | ---: | ---: | ---: |
+| 04 | `69df2f36317581e541914002c73210d6464cfcd4` | 3362.224 | 421 | 0 |
+| 05 | `1be9ad0a5b67da637c5f1924831f6b52c9b2cbe0` | 3087.743 | 421 | 0 |
+
+Each retained six sessions,128seeds,two rounds,four workers,three independent
+clones,two developers,19captured lessons, all declared semantic/recovery controls,
+exact learning/provenance/conditions and expected feature state. Complete source
+bytes/modes match before/after (pilot04:3366tracked/216portable;
+pilot05:3368tracked/216portable). Artifact hashes and explicit outcome flags are
+in the adjacent sanitized JSON; raw fixture receipts stay private.
+
+Pilot05 includes separately integrated read-path reuse and mixed-capability
+consumer changes. These are different product revisions on the normally busy
+host, not a matched page-fetch A/B comparison or causal/statistical speedup.
+Neither small cohort proves practical24-session/10,000-seed runtime. Both retain
+`full_daily_use_v1_acceptance:false` and `required_fault_matrix_complete:false`;
+no Linux or native-harness qualification follows from controller labels.
+
+The marker correction has scoped Opus source approval reported by the integration
+owner. Full admission-suite verification is not green:16of17methods passed and
+the existing10-second final-readback ready-file rendezvous failed. A separate
+actual diagnostic reaches the boundary, rejects changed repository evidence,
+preserves recovery state and restores exact bank/feature state through rollback;
+the historical rendezvous-failure cause remains unconfirmed. No guard/assertion
+was relaxed. The complete marker verification record is retained in evidence-only
+commit `545d732` on `fix/244-owned-large-marker`.
+
+#209 remains Executing/At risk, not accepted or delivered. Its obsolete marker
+blocker was cleared through a verified AWA reconciliation. Final source freeze
+awaits the integration owner's remaining native OMP FIFO/manual-ancestor/mixed-cost
+corrections and reviews; full numeric qualification protocol is still pending.
+The shared-host performance lane was explicitly handed to #206 after pilot05
+terminated. No #209 benchmark remains active; do not restart the entire workload
+for each intermediate integration edit.
+
