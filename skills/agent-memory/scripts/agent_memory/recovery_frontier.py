@@ -35,25 +35,32 @@ class VerifiedHold:
         self.runtime_artifact_digest = runtime_artifact_digest
 
 
-def marker_bytes(bank, name='.agent-memory-transaction.md'):
+def marker_bytes(bank, name='.agent-memory-transaction.md', *, expected=None):
+    # Ordinary transaction markers contain complete base hashes. Only an exact
+    # caller-owned byte witness can extend the unknown-marker disclosure bound.
+    if expected is not None and (name != '.agent-memory-transaction.md'
+            or not isinstance(expected, bytes) or len(expected) > sharing_limits.MAX_PRIVATE):
+        raise ContractError('Invalid exact owned transaction marker witness')
+    limit = 4096 if expected is None else len(expected)
     path = bank / name
     try:
         before = path.lstat()
     except FileNotFoundError:
         return None
-    if not stat.S_ISREG(before.st_mode) or before.st_nlink != 1 or before.st_size > 4096:
+    if not stat.S_ISREG(before.st_mode) or before.st_nlink != 1 or before.st_size > limit:
         raise ContractError('Unknown or unsafe recovery marker; retain it for reviewed recovery')
     directory = os.open(bank, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
     try:
         fd = os.open(name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=directory)
         with os.fdopen(fd, 'rb') as stream:
             opened = os.fstat(stream.fileno())
-            raw = stream.read(4097)
+            raw = stream.read(limit + 1)
             after = os.fstat(stream.fileno())
         named = os.stat(name, dir_fd=directory, follow_symlinks=False)
         parent = bank.lstat()
         pinned = os.fstat(directory)
-        if (len(raw) > 4096 or state.signature(before) != state.signature(opened)
+        if (len(raw) > limit or (expected is not None and raw != expected)
+                or state.signature(before) != state.signature(opened)
                 or state.signature(opened) != state.signature(after) or state.signature(after) != state.signature(named)
                 or (parent.st_dev, parent.st_ino) != (pinned.st_dev, pinned.st_ino)):
             raise ContractError('Recovery marker or bank binding changed during observation')
@@ -256,7 +263,7 @@ def _observe_index(repo, owner, transaction, index, bank=None):
     """Internal read-only view after exact known-transition validation only."""
     root, bank, base, _ = (state.paths(repo) if bank is None
                            else state._paths_for_bank(repo, bank))
-    raw = marker_bytes(bank)
+    raw = marker_bytes(bank, expected=transaction)
     sentinel_raw = marker_bytes(bank, '.agent-memory-recovery.md')
     raw_value = load(raw) if raw is not None else {}
     if not isinstance(raw_value, dict):
