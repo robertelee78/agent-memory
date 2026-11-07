@@ -109,7 +109,7 @@ class HeldSourceEnrollment(unittest.TestCase):
         script = ('import sys;sys.path.insert(0,sys.argv[1]);from agent_memory import turn_sources as s;'
                   'import json;print(json.dumps(s.register(sys.argv[2],"claude",sys.argv[3],sys.argv[4],'
                   '"a"*64,native_source_id=sys.argv[5],source_reference="/private/fixture.jsonl")))')
-        command = [sys.executable, '-I', '-c', script, str(SCRIPTS), str(repo), session, lifecycle, native]
+        command = [sys.executable, '-I', '-B', '-c', script, str(SCRIPTS), str(repo), session, lifecycle, native]
         environment = None if fault is None else {'AGENT_MEMORY_FAULT_STAGE': fault, 'AGENT_MEMORY_FAULT_MODE': mode}
         return world.run(command, env=environment, check=False, timeout=30)
 
@@ -193,7 +193,7 @@ class HeldSourceEnrollment(unittest.TestCase):
                                       'AGENT_MEMORY_FAULT_MODE': 'pause', 'AGENT_MEMORY_FAULT_DIR': str(rendezvous)})
                     script = ('import sys;sys.path.insert(0,sys.argv[1]);from agent_memory import turn_sources as s;'
                               's.register(sys.argv[2],"claude",sys.argv[3],sys.argv[4],"a"*64,native_source_id=sys.argv[5])')
-                    child = world.spawn([sys.executable, '-I', '-c', script, str(SCRIPTS), repo, session, lifecycle, event])
+                    child = world.spawn([sys.executable, '-I', '-B', '-c', script, str(SCRIPTS), repo, session, lifecycle, event])
                     for key in ('AGENT_MEMORY_FAULT_STAGE', 'AGENT_MEMORY_FAULT_MODE', 'AGENT_MEMORY_FAULT_DIR'):
                         world.env.pop(key)
                     ready = rendezvous / 'hold-source-before-final-recheck.ready'
@@ -386,7 +386,7 @@ class HeldSourceEnrollment(unittest.TestCase):
                 if harness == 'codex':event.update(turn_id=lifecycle, event_id=event_id)
                 else:event.update(prompt_id=lifecycle, transcript_path=str(world.inside('not-yet-created.jsonl')))
                 def hook(name, value):
-                    result = subprocess.run([sys.executable, '-I', str(helper.pack / 'hooks' / name)],
+                    result = subprocess.run([sys.executable, '-I', '-B', str(helper.pack / 'hooks' / name)],
                         input=json.dumps(value), text=True, capture_output=True, env=world.env, timeout=30)
                     self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
                     return json.loads(result.stdout)

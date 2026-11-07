@@ -25,7 +25,7 @@ def render(metadata,body):
 
 class ComparisonContract(unittest.TestCase):
     def call(self,w,helper,*args):
-        r=w.run([sys.executable,'-I',self.pack/'scripts'/helper,*args],check=False)
+        r=w.run([sys.executable,'-I','-B',self.pack/'scripts'/helper,*args],check=False)
         return r,json.loads(r.stdout) if r.stdout else None
 
     def good(self,w,helper,*args):
