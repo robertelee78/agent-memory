@@ -60,6 +60,15 @@ class LegacyLayoutConsumers(unittest.TestCase):
                     result = world.run([old, *args], check=False, timeout=60)
                     self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
                     self.assertEqual(state(), before)
+            for args in (['--json', 'uninstall', '--check'], ['--json', 'uninstall']):
+                runtime_before = (snapshot(world.paths['state'] / 'agent-memory/install'),
+                                  snapshot(command.parent))
+                result = world.run([command, *args], check=False, timeout=60)
+                self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertFalse(json.loads(result.stdout)['verified'])
+                self.assertEqual(state(), before)
+                self.assertEqual((snapshot(world.paths['state'] / 'agent-memory/install'),
+                                  snapshot(command.parent)), runtime_before)
             for executable in (old, command):
                 result = world.run([executable, 'doctor', '--fix', '--repo', repo, '--json'],
                                    check=False, timeout=60)
