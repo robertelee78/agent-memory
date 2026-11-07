@@ -61,16 +61,19 @@ class World(_ActualWorld):
                 'next(Path(os.environ["AGENT_MEMORY_TEST_ROOT"]).glob("owned-command-*" )).joinpath("status.json").mkdir()\n'
                 'time.sleep(5)\n')
             (checkout/'tests/contracts.json').write_text(json.dumps(manifest))
-            result = world.run(['sh', checkout/'scripts/test.sh', '--release', '--json'], check=False)
-            report = json.loads(result.stdout)
-            self.assertNotEqual(result.returncode, 0)
-            self.assertFalse(report['passed'])
-            self.assertFalse(report['release_complete'])
-            self.assertEqual(report['error_suite'], manifest['suites'][0]['name'])
-            self.assertEqual(report['error_stage'], 'suite-execution-and-collection')
-            for text in ('TimeoutExpired', 'IsADirectoryError', 'could not be persisted',
-                         'gate-producer-stdout-marker', 'gate-producer-stderr-marker', 'Traceback'):
-                self.assertIn(text, result.stderr)
+            for jobs in (1, 2):
+                with self.subTest(jobs=jobs):
+                    result = world.run(['sh', checkout/'scripts/test.sh', '--release',
+                                        '--jobs', str(jobs), '--json'], check=False)
+                    report = json.loads(result.stdout)
+                    self.assertNotEqual(result.returncode, 0)
+                    self.assertFalse(report['passed'])
+                    self.assertFalse(report['release_complete'])
+                    self.assertEqual(report['error_suite'], manifest['suites'][0]['name'])
+                    self.assertEqual(report['error_stage'], 'suite-execution-and-collection')
+                    for text in ('TimeoutExpired', 'IsADirectoryError', 'could not be persisted',
+                                 'gate-producer-stdout-marker', 'gate-producer-stderr-marker', 'Traceback'):
+                        self.assertIn(text, result.stderr)
 
 
 if __name__ == '__main__':

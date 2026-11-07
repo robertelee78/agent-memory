@@ -6,6 +6,7 @@ From a clean checkout with Python 3.11+ and Git, run:
 scripts/test.sh
 scripts/test.sh --json
 scripts/test.sh --release --json
+scripts/test.sh --release --jobs 2 --json
 ```
 
 The default mode runs every implemented suite and reports the remaining
@@ -25,8 +26,19 @@ Ubuntu/macOS and Python 3.11/3.15 when explicitly needed. Pushes and releases do
 not automatically start that expensive matrix. Each run retains actual results,
 failures and checked-out commit/tree evidence for each cell.
 
-Each suite retains its 300-second worker deadline. The complete sequential
-gate has a separate 180-minute CI job budget.
+Each suite retains its 300-second worker deadline. The complete gate has a
+separate 180-minute CI job budget. Local invocation defaults to one worker;
+`--jobs 2` permits at most two concurrent workers, each in a separate disposable
+World with its own home, registries, credentials directory and owned process
+supervisor. The hosted matrix selects two workers without changing either
+deadline, excluding suites or subdividing the total job budget.
+
+Results and buffered diagnostics remain in registry order. A fatal collector
+error cancels unstarted work, waits for started Worlds to finish their bounded
+cleanup, and retains their results plus the original suite/stage/exception chain.
+Worker concurrency does not establish that the full matrix fits its budget:
+that requires an actual complete hosted receipt.
+
 The registry explicitly recognizes the implemented `v0.0.15` feature suites;
 their version scope does not make them optional or exempt them from that
 deadline. Registry validation alone does not execute a suite.

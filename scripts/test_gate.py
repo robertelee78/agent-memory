@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import argparse
+from collections import deque
+from concurrent.futures import ThreadPoolExecutor
 import json
 from pathlib import Path
 import subprocess
@@ -94,12 +96,14 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--release", action="store_true", help="fail on missing v0.0.1 coverage")
     parser.add_argument("--json", action="store_true", help="emit a machine-readable coverage receipt")
+    parser.add_argument("--jobs", type=int, choices=(1, 2), default=1,
+                        help="run one or two isolated contract workers (default: one)")
     args = parser.parse_args(argv)
     report = {"schema": "agent-memory/test-gate-v1", "mode": "release" if args.release else "incremental",
               "suites": [], "release_complete": False, "passed": False}
     active = None; stage = 'registry'
     def diagnostic(exc):
-        traceback.print_exc(file=sys.stderr)
+        parts = ["".join(traceback.format_exception(exc))]
         seen = set(); displayed = set()
         while exc is not None and id(exc) not in seen:
             seen.add(id(exc))
@@ -107,13 +111,15 @@ def main(argv=None):
                                  ('partial stderr', getattr(exc, 'stderr', None))):
                 if value and label not in displayed:
                     if isinstance(value, bytes): value = value.decode('utf-8', errors='replace')
-                    sys.stderr.write('\n' + label + ':\n' + value + '\n'); displayed.add(label)
+                    parts.append('\n' + label + ':\n' + value + '\n'); displayed.add(label)
             exc = exc.__cause__ or exc.__context__
-    try:
-        entries = registry()
-        for entry in entries:
-            active = entry['name']; stage = 'world-setup'
-            item = {"name": entry["name"], "layer": entry["layer"]}
+        return ''.join(parts)
+
+    def execute(entry):
+        item = {"name": entry["name"], "layer": entry["layer"]}
+        output = []
+        stage = 'world-setup'
+        try:
             if not entry.get("path"):
                 item.update(status="not-applicable" if entry["scope"] == "future" else "pending",
                             reason=entry["reason"], tests=0)
@@ -121,21 +127,62 @@ def main(argv=None):
                 with World() as world:
                     try:
                         stage = 'suite-execution-and-collection'
-                        result = world.run([sys.executable, "-I", ROOT / "scripts/run_contract_suite.py",
+                        result = world.run([sys.executable, "-I", "-B", ROOT / "scripts/run_contract_suite.py",
                                             ROOT / entry["path"], "--suite", entry["name"]],
                                            check=False, timeout=300, group=True)
-                        sys.stderr.write(result.stderr)
+                        output.append(result.stderr)
                         stage = 'result-readback'
                         counts = json.loads(result.stdout)
                         item.update(counts)
                         item["status"] = "passed" if result.returncode == 0 and counts["passed"] else "failed"
-                        if item['status']=='passed' and entry['name'] in OWNERS:
+                        if item['status'] == 'passed' and entry['name'] in OWNERS:
                             item['fault_partition'] = partition_proof(result.stderr, entry['name'])
                     except (subprocess.TimeoutExpired, ValueError, KeyError) as exc:
-                        diagnostic(exc)
+                        output.append(diagnostic(exc))
                         item.update(status="failed", reason=str(exc), tests=0)
                     stage = 'world-cleanup'
-            report["suites"].append(item)
+        except (OSError, ValueError, KeyError) as exc:
+            return item, stage, ''.join(output), exc
+        return item, stage, ''.join(output), None
+
+    try:
+        entries = registry()
+        pending = deque()
+        remaining = iter(entries)
+        with ThreadPoolExecutor(max_workers=args.jobs) as workers:
+            def enqueue():
+                entry = next(remaining, None)
+                if entry is not None:
+                    pending.append((entry, workers.submit(execute, entry)))
+            for _ in range(args.jobs):
+                enqueue()
+            try:
+                while pending:
+                    entry, future = pending.popleft()
+                    active = entry['name']
+                    item, stage, output, error = future.result()
+                    sys.stderr.write(output)
+                    if error is not None:
+                        item.update(status='failed', reason=str(error), tests=0)
+                        report["suites"].append(item)
+                        for _, waiting in pending:
+                            waiting.cancel()
+                        raise error
+                    report["suites"].append(item)
+                    enqueue()
+            finally:
+                # Every started World owns its supervisor and finishes cleanup.
+                # Preserve its outcome even if an earlier collector failed.
+                for entry, future in pending:
+                    if future.cancelled():
+                        continue
+                    item, worker_stage, output, error = future.result()
+                    sys.stderr.write(output)
+                    if error is not None:
+                        sys.stderr.write(diagnostic(error))
+                        item.update(status='failed', reason=str(error), tests=0,
+                                    error_stage=worker_stage)
+                    report["suites"].append(item)
         active = 'lifecycle-fault-partitions'; stage = 'coverage-aggregation'
         report['fault_partition_coverage'] = partition_coverage(report['suites'])
         active = 'registered-case-batches'
@@ -145,7 +192,7 @@ def main(argv=None):
         report["release_complete"] = not pending and not failed
         report["passed"] = not failed and (not args.release or report["release_complete"])
     except (OSError, ValueError, KeyError) as exc:
-        diagnostic(exc)
+        sys.stderr.write(diagnostic(exc))
         report["error"] = str(exc)
         report['error_suite'] = active
         report['error_stage'] = stage
