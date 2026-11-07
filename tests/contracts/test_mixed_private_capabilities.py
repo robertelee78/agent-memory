@@ -5,6 +5,7 @@ import os
 import shutil
 from pathlib import Path
 import subprocess
+import sys
 import unittest
 import uuid
 
@@ -262,3 +263,127 @@ class MixedPrivateCapabilities(unittest.TestCase):
                 denied = lifecycle.public(world, receipt, *args, expected=1)
                 self.assertIn('Runtime downgrade refused', denied['error'])
                 self.assertEqual(preserved(), before)
+
+    def test_completed_omp_drains_before_layout_then_old_reader_after_both(self):
+        with World() as world, World() as legacy:
+            for directory in [world.root, *(p for p in world.root.rglob('*') if p.is_dir())]:
+                if directory.stat().st_gid != os.getegid():
+                    os.chown(directory, -1, os.getegid())
+            lifecycle = test_omp_boundary.NativeLifecyclePublic()
+            _, pack, receipt = lifecycle.managed(world)
+            command = Path(receipt['bin_dir']) / 'am'
+            repo, bank, native = recovery.memory(world)
+            (bank / 'handoff-prompt.md').write_text(recovery.policy_body(0))
+            (repo / 'synthetic-policy.md').write_text(recovery.policy_body(0))
+            world.git('add', 'synthetic-policy.md', cwd=repo)
+            world.git('commit', '-m', 'Synthetic baseline', cwd=repo)
+            entry = {'type': 'message', 'id': 'synthetic-human', 'parentId': None,
+                     'message': {'role': 'user', 'attribution': 'user',
+                                 'content': 'Disposable synthetic carrier observation, no native client or provider.'}}
+            request = {'schema': 'agent-memory/omp-observer-request-v1', 'action': 'seal',
+                       'session': str(uuid.uuid4()), 'lifecycle': str(uuid.uuid4()),
+                       'payload': {'entries': [entry], 'branch_ids': ['synthetic-human'], 'event_ordinal': 1,
+                                   'terminal': False, 'trigger': 'human', 'inherited_ids': [], 'metadata': [],
+                                   'request_wake': False}}
+            def send(args, value):
+                return subprocess.run([str(command), *map(str, args)], input=json.dumps(value),
+                                      cwd=repo, env=world.env, text=True, capture_output=True, timeout=60)
+            observed = send(['omp-boundary', '--repo', repo, '--observer', '--stdin',
+                             '--artifact', receipt['source']['artifact_digest'],
+                             '--omp-agent-dir', receipt['omp_binding']['agent_dir']], request)
+            self.assertEqual(observed.returncode, 0, observed.stdout + observed.stderr)
+            def pending():
+                return json.loads(world.run([command, 'omp-boundary', '--repo', repo, '--list-pending',
+                                             '--offset', '0'], timeout=60).stdout)['pending']
+            rows = pending()
+            self.assertEqual(len(rows), 2)
+            for row in rows:
+                source = json.loads(world.run([command, 'omp-boundary', '--repo', repo, '--source',
+                    row['observation_id'], '--session', row['session'], '--lifecycle', row['lifecycle']],
+                    timeout=60).stdout)
+                self.assertTrue(source['coverage_complete'])
+                self.assertEqual(source['faults'], [])
+                if 'content' in source['source']:
+                    self.assertEqual(source['source']['content'], entry['message']['content'])
+                    review = 'Reviewed the exact disposable carrier message; it contains no project learning.'
+                else:
+                    self.assertEqual(source['source']['gaps'], [])
+                    self.assertEqual(len(source['source']['captures']), 1)
+                    review = 'Reviewed the sealed synthetic manifest and its sole inspected capture; no project learning.'
+                value = {key: row[key] for key in ('session', 'lifecycle', 'observation_id', 'source_sha256')}
+                value.update(outcome='no-learning', assessment={'source_id': row['observation_id'],
+                             'source_review': review, 'candidates': []})
+                done = send(['omp-boundary', '--repo', repo, '--stdin'], value)
+                self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
+                self.assertTrue(json.loads(done.stdout)['verified'])
+            self.assertEqual(pending(), [])
+            _, inspected = recovery.inspect(world, command, repo)
+            layout = recovery.review_request(world, command, pack, repo, inspected, native)
+            attestation = layout['quiescence_attestation']
+            agent_dir = Path(receipt['omp_binding']['agent_dir'])
+            attestation['declared_invocation_routes'] += [str(command.parent / 'agent-memory'),
+                receipt['omp_binding']['extension_target'], str(agent_dir / 'skills/agent-memory'),
+                str(agent_dir / 'AGENTS.md')]
+            proposal = world.inside('completed-omp-layout.json')
+            recovery.call(world, command, 'prepare', '--repo', repo, '--operation', inspected['operation_id'],
+                          '--input', recovery.save(world, layout), '--output', proposal)
+            applied = recovery.call(world, command, 'apply', '--repo', repo, '--proposal', proposal)
+            self.assertFalse(applied['semantic_recovery_complete'])
+            directory = recovery.private_directory(world, bank, inspected['operation_id'])
+            base = directory.parent.parent
+            marker = base / 'turn-sources-compat-v1.json'
+            self.assertTrue(marker.is_file())
+            originals = {row['source_id']: (directory / row['blob']).read_bytes()
+                         for row in inspected['manifest']['sources']}
+            check = lifecycle.public(world, receipt, 'update', '--check')
+            self.assertEqual(check['private_compatibility']['required_capabilities'],
+                             ['layout-frontier-v1', 'omp-harness-v1'])
+            before = (snapshot(bank), snapshot(directory), snapshot(world.paths['config']),
+                      (repo / '.git/index').read_bytes(), world.git('rev-parse', 'HEAD', cwd=repo).stdout)
+            denied = lifecycle.public(world, receipt, 'uninstall', '--omp-writers-quiesced', expected=1)
+            self.assertIn('Private-state runtime compatibility', denied['error'])
+            self.assertFalse(marker.exists())
+            self.assertTrue(list((base / 'omp-drains').glob('*.json')))
+            self.assertEqual((snapshot(bank), snapshot(directory), snapshot(world.paths['config']),
+                              (repo / '.git/index').read_bytes(), world.git('rev-parse', 'HEAD', cwd=repo).stdout), before)
+            self.assertFalse(Path(receipt['omp_binding']['extension_target']).exists())
+            recovered = json.loads(world.run([command, '--json', 'recover'], timeout=60).stdout)
+            self.assertTrue(recovered['verified'])
+            lifecycle.extension(receipt)
+            checked = lifecycle.public(world, receipt, 'update', '--check')
+            self.assertEqual(checked['private_compatibility']['required_capabilities'], ['layout-frontier-v1'])
+            old = v014_runtime_fixture.extract(legacy.root)
+            before_candidate = (snapshot(bank), snapshot(directory), snapshot(world.paths['config']),
+                                owned(receipt), (repo / '.git/index').read_bytes(),
+                                world.git('rev-parse', 'HEAD', cwd=repo).stdout)
+            refused_old = lifecycle.public(world, receipt, 'install', '--development-source', str(old),
+                                           '--presets', 'none', expected=1)
+            self.assertIn('Removing saved omp selection', refused_old['error'])
+            self.assertEqual((snapshot(bank), snapshot(directory), snapshot(world.paths['config']),
+                              owned(receipt), (repo / '.git/index').read_bytes(),
+                              world.git('rev-parse', 'HEAD', cwd=repo).stdout), before_candidate)
+            self.assertFalse(marker.exists())
+            admission, transaction, _ = recovery.admission_proposal(world, command, pack, repo, bank,
+                                                                    inspected, full=True)
+            result = recovery.public(world, command, 'admission', 'apply', '--proposal', admission)
+            self.assertEqual(result['operation_id'], transaction['operation_id'])
+            self.assertTrue(result['admission_verified'])
+            self.assertTrue(recovery.call(world, command, 'status', '--repo', repo,
+                                          '--operation', inspected['operation_id'])['semantic_recovery_complete'])
+            self.assertEqual({row['source_id']: (directory / row['blob']).read_bytes()
+                              for row in inspected['manifest']['sources']}, originals)
+            self.assertTrue(lifecycle.public(world, receipt, 'uninstall', '--omp-writers-quiesced')['verified'])
+            # Install the byte-verified old archive separately; retained v2
+            # ownership is not silently handed to an unaware installer.
+            installed = legacy.run([sys.executable, '-I', '-B', old / 'scripts/installer.py', 'install',
+                                    '--development-source', old, '--presets', 'none'], timeout=60)
+            old_receipt = json.loads(installed.stdout)['receipt']
+            self.assertEqual(old_receipt['source']['artifact_digest'],
+                             '4208c18e2288bdb3f6faf6354fe44b638559ba8ec1fede2cec7ce491bea726f7')
+            old_command = Path(old_receipt['bin_dir']) / 'am'
+            before_read = (snapshot(bank), snapshot(world.paths['state']), snapshot(world.paths['config']),
+                           (repo / '.git/index').read_bytes(), world.git('rev-parse', 'HEAD', cwd=repo).stdout)
+            read = world.run([old_command, '--json', 'bank', 'validate', '--repo', repo], timeout=60)
+            self.assertFalse(json.loads(read.stdout)['writes_performed'])
+            self.assertEqual((snapshot(bank), snapshot(world.paths['state']), snapshot(world.paths['config']),
+                              (repo / '.git/index').read_bytes(), world.git('rev-parse', 'HEAD', cwd=repo).stdout), before_read)
