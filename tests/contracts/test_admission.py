@@ -119,6 +119,50 @@ class AdmissionContract(unittest.TestCase):
     def apply(self,w,proposal):
         return self.call(w,'admit_learning.py','apply','--proposal',self.save(w,proposal,'admission.json'))
 
+    def test_large_existing_inventory_admits_or_finishes_recovery_without_losing_prior_learning(self):
+        for interrupted in (False, True):
+            with self.subTest(interrupted=interrupted), World() as w:
+                repo, bank = self.fixture(w)
+                existing = {}
+                for number in range(48):
+                    _, path = self.add(bank, 'archive-storage-evidence-' + str(number),
+                        body='# Archive storage\n\nRetain two verified copies for partition ' + str(number) + '.\n')
+                    existing[path] = (bank / path).read_bytes()
+                before = self.state(w, repo, bank)
+                request = self.request()
+                proposal = self.prepared(w, repo, request)
+                if interrupted:
+                    w.env.update(AGENT_MEMORY_FAULT_STAGE='transaction-after-receipt', AGENT_MEMORY_FAULT_MODE='exit')
+                response, admitted = self.apply(w, proposal)
+                if interrupted:
+                    w.env.pop('AGENT_MEMORY_FAULT_STAGE')
+                    w.env.pop('AGENT_MEMORY_FAULT_MODE')
+                    self.assertEqual(response.returncode, 86, response.stdout + response.stderr)
+                    self.assertGreater((bank / '.agent-memory-transaction.md').stat().st_size, 4096)
+                    unlock = self.good(w, 'bank_writes.py', 'recover', '--repo', repo)
+                    self.good(w, 'bank_writes.py', 'recover', '--repo', repo,
+                        '--proposal', self.save(w, unlock, 'unlock.json'))
+                    recovery = self.good(w, 'bank_transactions.py', 'recover', '--repo', repo, '--mode', 'finish')
+                    admitted = self.good(w, 'bank_transactions.py', 'recover', '--repo', repo,
+                        '--proposal', self.save(w, recovery, 'finish.json'))
+                    self.assertEqual(admitted['outcome'], 'finished')
+                    self.assertTrue(admitted['verified'])
+                    response, admitted = self.apply(w, proposal)
+                    self.assertEqual(response.returncode, 0, admitted)
+                    self.assertTrue(admitted['already_applied'])
+                    self.assertFalse(admitted['writes_performed'])
+                else:
+                    self.assertEqual(response.returncode, 0, admitted)
+                self.assertTrue(admitted['admission_verified'])
+                path = bank / ('topics/' + request['candidate']['metadata']['id'] + '.md')
+                metadata, body = fixtures.unpack(path.read_text())
+                self.assertEqual(metadata['origin'], request['candidate']['metadata']['origin'])
+                self.assertEqual(body, request['candidate']['body'])
+                for name, raw in existing.items():
+                    self.assertEqual((bank / name).read_bytes(), raw)
+                self.assertEqual(self.state(w, repo, bank)[1:], before[1:])
+                self.assertFalse((bank / '.agent-memory-transaction.md').exists())
+
     def test_user_correction_admits_small_record_and_history_automatically_without_git_changes(self):
         with World() as w:
             repo,bank=self.fixture(w);before=self.state(w,repo,bank);request=self.request()
