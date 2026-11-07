@@ -1,13 +1,17 @@
 """Disposable public lifecycle boundaries; synthetic sources are not native-client proof."""
 import copy
 import json
+import os
+import shutil
 from pathlib import Path
+import subprocess
 import unittest
 import uuid
 
 from world import World
 import layout_recovery_fixtures as recovery
-from runtime_update_fixtures import snapshot
+import v014_runtime_fixture
+from runtime_update_fixtures import owned, snapshot
 from contracts import test_omp_boundary
 
 
@@ -81,3 +85,137 @@ class MixedPrivateCapabilities(unittest.TestCase):
             self.assertEqual(world.git('rev-parse', 'HEAD', cwd=repo).stdout, before[4])
             self.assertEqual({row['source_id']: (directory / row['blob']).read_bytes()
                               for row in inspected['manifest']['sources']}, originals)
+            entry = {'type': 'message', 'id': 'synthetic-human', 'parentId': None,
+                     'message': {'role': 'user', 'attribution': 'user',
+                                 'content': 'Disposable synthetic carrier observation, no native client or provider.'}}
+            payload = {'schema': 'agent-memory/omp-observer-request-v1', 'action': 'seal',
+                       'session': str(uuid.uuid4()), 'lifecycle': str(uuid.uuid4()),
+                       'payload': {'entries': [entry], 'branch_ids': ['synthetic-human'], 'event_ordinal': 1,
+                                   'terminal': False, 'trigger': 'human', 'inherited_ids': [], 'metadata': [],
+                                   'request_wake': False}}
+            def input_command(args, value):
+                return subprocess.run([str(command), *map(str, args)], cwd=repo, env=world.env,
+                                      input=json.dumps(value), text=True, capture_output=True, timeout=60)
+            observed = input_command(['omp-boundary', '--repo', repo, '--observer', '--stdin',
+                                      '--artifact', result['receipt']['source']['artifact_digest'],
+                                      '--omp-agent-dir', root], payload)
+            self.assertEqual(observed.returncode, 0, observed.stdout + observed.stderr)
+            self.assertTrue(json.loads(observed.stdout)['held'])
+            def pending():
+                response = world.run([command, 'omp-boundary', '--repo', repo, '--list-pending', '--offset', '0'],
+                                     timeout=60)
+                return json.loads(response.stdout)['pending']
+            rows = pending()
+            self.assertEqual(len(rows), 2)
+            checked = json.loads(world.run([*args, '--check'], timeout=60).stdout)
+            self.assertEqual(checked['private_compatibility']['required_capabilities'],
+                             ['layout-frontier-v1', 'omp-harness-v1'])
+            def assessment(row):
+                inspected_source = json.loads(world.run([command, 'omp-boundary', '--repo', repo, '--source',
+                    row['observation_id'], '--session', row['session'], '--lifecycle', row['lifecycle']],
+                    timeout=60).stdout)
+                self.assertTrue(inspected_source['verified'])
+                self.assertTrue(inspected_source['coverage_complete'])
+                self.assertEqual(inspected_source['faults'], [])
+                data = inspected_source['source']
+                if 'content' in data:
+                    self.assertEqual(data['content'], entry['message']['content'])
+                    review = 'Reviewed the exact disposable carrier message; it contains no project learning.'
+                else:
+                    self.assertEqual(data['gaps'], [])
+                    self.assertEqual(len(data['captures']), 1)
+                    review = 'Reviewed the sealed synthetic manifest and its sole inspected capture; no project learning.'
+                value = {key: row[key] for key in ('session', 'lifecycle', 'observation_id', 'source_sha256')}
+                value.update(outcome='no-learning', assessment={'source_id': row['observation_id'],
+                             'source_review': review, 'candidates': []})
+                return value
+            assessments = [assessment(row) for row in rows]
+            held_before = snapshot(bank), snapshot(directory), snapshot(world.paths['state'])
+            refused = input_command(['omp-boundary', '--repo', repo, '--stdin'], assessments[0])
+            self.assertNotEqual(refused.returncode, 0, refused.stdout + refused.stderr)
+            self.assertEqual((snapshot(bank), snapshot(directory), snapshot(world.paths['state'])), held_before)
+            proposal, transaction, _ = recovery.admission_proposal(world, command, source, repo, bank,
+                                                                     inspected, full=True)
+            admission = recovery.public(world, command, 'admission', 'apply', '--proposal', proposal)
+            self.assertEqual(admission['operation_id'], transaction['operation_id'])
+            self.assertTrue(admission['admission_verified'])
+            status = recovery.call(world, command, 'status', '--repo', repo, '--operation', inspected['operation_id'])
+            self.assertTrue(status['semantic_recovery_complete'])
+            self.assertEqual([row['observation_id'] for row in pending()],
+                             [row['observation_id'] for row in rows])
+            self.assertEqual({row['source_id']: (directory / row['blob']).read_bytes()
+                              for row in inspected['manifest']['sources']}, originals)
+            for value in assessments:
+                completed = input_command(['omp-boundary', '--repo', repo, '--stdin'], value)
+                self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
+                self.assertTrue(json.loads(completed.stdout)['verified'])
+            self.assertEqual(pending(), [])
+            uninstalled = json.loads(world.run([command, '--json', 'uninstall', '--omp-writers-quiesced'],
+                                               timeout=60).stdout)
+            self.assertTrue(uninstalled['verified'])
+
+    def test_omp_first_mixed_pending_rejects_actual_published_old_managed_candidate(self):
+        with World() as world:
+            # Controlled transport only, not a real native client or provider.
+            for directory in [world.root, *(p for p in world.root.rglob('*') if p.is_dir())]:
+                if directory.stat().st_gid != os.getegid():
+                    os.chown(directory, -1, os.getegid())
+            lifecycle = test_omp_boundary.NativeLifecyclePublic()
+            channel, pack, receipt = lifecycle.managed(world)
+            command = Path(receipt['bin_dir']) / 'am'
+            repo, bank, native = recovery.memory(world)
+            (bank / 'handoff-prompt.md').write_text(recovery.policy_body(0))
+            (repo / 'synthetic-policy.md').write_text(recovery.policy_body(0))
+            world.git('add', 'synthetic-policy.md', cwd=repo)
+            world.git('commit', '-m', 'Synthetic baseline', cwd=repo)
+            (repo / 'synthetic-policy.md').write_text(recovery.policy_body(0) + '\nStaged disposable change.\n')
+            world.git('add', 'synthetic-policy.md', cwd=repo)
+            entry = {'type': 'message', 'id': 'synthetic-human', 'parentId': None,
+                     'message': {'role': 'user', 'attribution': 'user',
+                                 'content': 'Disposable synthetic carrier observation, no native client or provider.'}}
+            request = {'schema': 'agent-memory/omp-observer-request-v1', 'action': 'seal',
+                       'session': str(uuid.uuid4()), 'lifecycle': str(uuid.uuid4()),
+                       'payload': {'entries': [entry], 'branch_ids': ['synthetic-human'], 'event_ordinal': 1,
+                                   'terminal': False, 'trigger': 'human', 'inherited_ids': [], 'metadata': [],
+                                   'request_wake': False}}
+            observed = subprocess.run([str(command), 'omp-boundary', '--repo', str(repo), '--observer', '--stdin',
+                '--artifact', receipt['source']['artifact_digest'], '--omp-agent-dir', receipt['omp_binding']['agent_dir']],
+                input=json.dumps(request), cwd=repo, env=world.env, text=True, capture_output=True, timeout=60)
+            self.assertEqual(observed.returncode, 0, observed.stdout + observed.stderr)
+            pending = json.loads(world.run([command, 'omp-boundary', '--repo', repo, '--list-pending',
+                                           '--offset', '0'], timeout=60).stdout)['pending']
+            self.assertEqual(len(pending), 2)
+            _, inspected = recovery.inspect(world, command, repo)
+            layout = recovery.review_request(world, command, pack, repo, inspected, native)
+            attestation = layout['quiescence_attestation']
+            agent_dir = Path(receipt['omp_binding']['agent_dir'])
+            attestation['declared_invocation_routes'] += [str(command.parent / 'agent-memory'),
+                receipt['omp_binding']['extension_target'], str(agent_dir / 'skills/agent-memory'),
+                str(agent_dir / 'AGENTS.md')]
+            proposal = world.inside('omp-first-layout.json')
+            recovery.call(world, command, 'prepare', '--repo', repo, '--operation', inspected['operation_id'],
+                          '--input', recovery.save(world, layout), '--output', proposal)
+            applied = recovery.call(world, command, 'apply', '--repo', repo, '--proposal', proposal)
+            self.assertFalse(applied['semantic_recovery_complete'])
+            check = lifecycle.public(world, receipt, 'update', '--check')
+            self.assertEqual(check['private_compatibility']['required_capabilities'],
+                             ['layout-frontier-v1', 'omp-harness-v1'])
+            directory = recovery.private_directory(world, bank, inspected['operation_id'])
+            old = v014_runtime_fixture.extract(world.inside('actual-published-v014'))
+            shutil.rmtree(pack)
+            shutil.copytree(old, pack)
+            world.git('add', '-A', cwd=channel)
+            world.git('commit', '-m', 'Published legacy candidate', cwd=channel)
+            def preserved():
+                state = snapshot(world.paths['state'])
+                state.pop('agent-memory/install/owner.json', None)
+                return (snapshot(bank), snapshot(directory), state, snapshot(world.paths['config']),
+                        owned(receipt), snapshot(agent_dir), (repo / '.git/index').read_bytes(),
+                        world.git('rev-parse', 'HEAD', cwd=repo).stdout,
+                        json.loads(world.run([command, 'omp-boundary', '--repo', repo, '--list-pending',
+                                              '--offset', '0'], timeout=60).stdout)['pending'])
+            before = preserved()
+            for args in (('update', '--check'), ('update',)):
+                denied = lifecycle.public(world, receipt, *args, expected=1)
+                self.assertIn('Candidate would remove the owned lifecycle command surface', denied['error'])
+                self.assertEqual(preserved(), before)
