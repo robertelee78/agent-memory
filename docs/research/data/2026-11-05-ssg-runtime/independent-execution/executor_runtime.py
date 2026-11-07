@@ -170,8 +170,8 @@ class Model:
         argv = [p['binary'], '--model', p['weight']['host_path'], '--host', '127.0.0.1', '--port', self.base.rsplit(':', 1)[1],
                 '--alias', self.alias, '--embedding', '--pooling', 'last', '--ctx-size', '8192', '--parallel', '1',
                 '--threads', '4', '--threads-batch', '4', '--threads-http', '4', '--batch-size', '8192', '--ubatch-size', '8192',
-                '--device', 'Metal', '--gpu-layers', '99', '--flash-attn', 'off', '--fit', 'off', '--offline', '--no-webui',
-                '--cache-ram', '0', '--log-verbosity', '4']
+                '--device', 'MTL0', '--gpu-layers', '99', '--flash-attn', 'off', '--fit', 'off', '--offline', '--no-webui',
+                '--cache-ram', '0', '--log-verbosity', '5']
         env = {k: v for k, v in os.environ.items() if not k.startswith(('LLAMA_', 'GGML_', 'TURBO_', 'DYLD_'))
                and k not in ('OPENAI_API_KEY', 'HF_TOKEN')}
         env.update(OMP_NUM_THREADS='4', DYLD_PRINT_LIBRARIES='1')

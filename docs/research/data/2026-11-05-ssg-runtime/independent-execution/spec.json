@@ -29,7 +29,7 @@
     "reference_weight_sha256": "d20ddc71e8a5c4344f2343481e242233a997dc5eaff442427a945836c97b4deb",
     "reference_dimension": 4096,
     "identity": "Freeze actual executable, loaded local backend dependency closure and exact weight hashes before outputs; retain source/build/profile/renderer fingerprints and explicit OS shared-cache limitations.",
-    "parameters": "Metal, context8192, poolinglast, parallel1, batch/ubatch8192, four generation/batch/HTTP threads, explicit cache-ram0; slot-local prefix reuse remains enabled and measured, not described as disabled.",
+    "parameters": "Metal backend with actual device ID MTL0, context8192, poolinglast, parallel1, batch/ubatch8192, four generation/batch/HTTP threads, explicit cache-ram0 and log-verbosity5 matching the qualified finalized-log parser; slot-local prefix reuse remains enabled and measured, not described as disabled.",
     "document_renderer": {"prefix": "", "format": "{canonical_body}\nScope: {canonical_scope}", "version": 1, "neighbor_bodies": false},
     "query_renderer": {"prefix": "Instruct: Retrieve applicable saved project guidance for the question.\nQuery: ", "format": "{prefix}{authored_query}", "version": 1},
     "scope_framing": "canonical_scope is the exact native string, UTF-8 encoded verbatim, not JSON-quoted, trimmed or case-normalized; canonical_body bytes and trailing newlines are preserved before the literal newline Scope: space framing.",
