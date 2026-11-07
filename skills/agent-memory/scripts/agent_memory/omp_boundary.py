@@ -390,7 +390,7 @@ def native_activation(plan, check=False):
     fresh_route = not old.get('omp_binding')
     if not fresh_route and old.get('source', {}).get('artifact_digest') == plan['source']['artifact_digest']:
         return []
-    from . import recovery_frontier, scope_binding
+    from . import layout_recovery_state, private_state, recovery_frontier, scope_binding
     route = plan['omp_binding']['extension_target']
     values = []
     proof_paths = plan.get('omp_layout_quiescence') or []
@@ -402,7 +402,15 @@ def native_activation(plan, check=False):
         values.append(load(turn_sources.read_bytes(path, 65536)))
     results = []
     renewals = []
-    for repo in _enrolled_repositories(old):
+    roots, unknown, _ = private_state.repository_inventory(old)
+    if unknown:
+        raise ContractError('Private-state bank inventory is unavailable; preserve the active runtime')
+    enrolled = set(_enrolled_repositories(old))
+    held = {Path(row['repo_root']) for row in layout_recovery_state.bindings()['bindings'].values()
+            if row['lifecycle_state'] in {'active', 'interrupted'}}
+    if not (enrolled | held).issubset(roots):
+        raise ContractError('Private-state bank inventory changed during native activation')
+    for repo in sorted(enrolled | held, key=str):
         with (nullcontext() if check else source_barrier(repo, exclusive=True)):
             context = scope_binding.private_enrollment_context(repo)
             if context.held:
