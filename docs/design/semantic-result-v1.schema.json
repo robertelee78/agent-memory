@@ -48,7 +48,7 @@
     {"if": {"properties": {"reason_code": {"const": "missing-score"}}}, "then": {"properties": {"status": {"const": "stale"}, "semantic_status": {"const": "stale"}}}},
     {"if": {"properties": {"exclusions": {"contains": {"const": "missing-score"}}}}, "then": {"properties": {"semantic_status": {"const": "stale"}}}},
     {"if": {"properties": {"native_coverage": {"type": "object", "properties": {"semantic_coverage": {"const": "incomplete-recovery"}}, "required": ["semantic_coverage"]}}}, "then": {"properties": {"exclusions": {"contains": {"const": "pending-recovery"}}, "semantic_coverage": {"not": {"const": "complete"}}}}},
-    {"if": {"properties": {"semantic_coverage": {"const": "complete"}}}, "then": {"properties": {"exclusions": {"maxItems": 0}, "native_coverage": {"$ref": "#/$defs/complete_native_coverage"}}}},
+    {"if": {"properties": {"semantic_coverage": {"const": "complete"}}}, "then": {"properties": {"exclusions": {"items": {"const": "capped"}}, "native_coverage": {"$ref": "#/$defs/complete_native_coverage"}}}},
     {"if": {"properties": {"operation": {"const": "search"}, "status": {"enum": ["qualified", "partial"]}}}, "then": {"properties": {"native_coverage": {"$ref": "#/$defs/native_coverage"}}}},
     {"if": {"properties": {"operation": {"const": "search"}}}, "then": {"properties": {"results": {"items": {"$ref": "#/$defs/result"}}}}},
     {"if": {"properties": {"operation": {"const": "related"}}}, "then": {"properties": {"results": {"items": {"$ref": "#/$defs/related"}}}}}
@@ -116,7 +116,10 @@
         "paths": {"type": "array", "minItems": 1, "items": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/path_row"}}},
         "relation_channel": {"enum": ["recorded", "inferred"]},
         "selection_ref": {"type": "string", "minLength": 1}
-      }
+      },
+      "allOf": [
+        {"if": {"properties": {"paths": {"contains": {"contains": {"properties": {"channel": {"const": "inferred"}}, "required": ["channel"]}}}}}, "then": {"properties": {"relation_channel": {"const": "inferred"}}}, "else": {"properties": {"relation_channel": {"const": "recorded"}}}}
+      ]
     },
     "mandatory_group": {
       "type": "object", "additionalProperties": false,
