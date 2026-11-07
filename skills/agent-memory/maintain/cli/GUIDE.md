@@ -98,6 +98,12 @@ manifest, judgment, proof or proposal. See the
 [recovery workflow](../../bank/GUIDE.md#source-preserving-layout-recovery)
 for all-source review, source pages, independent attestation and recovery states.
 
+`am semantic inspect-v2 --pages-dir ABSOLUTE_NEW_DIRECTORY` optionally exports
+the exact checked disclosure pages alongside its required new manifest output.
+The [semantic guide](../../sharing/semantic/GUIDE.md) defines receipt/page checks,
+private output restrictions and the independent fresh authorization boundary.
+Reading that bundle does not rebuild the frontier or authorize a stale judgment.
+
 ### Natural turn boundaries
 
 A session MUST use the [sharing domain](../../sharing/GUIDE.md) at natural turn

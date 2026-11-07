@@ -1,6 +1,7 @@
 {
   "schema": "agent-memory/test-contracts-v1",
   "suites": [
+    {"name": "checked-page-export", "layer": "concurrency", "scope": "v0.0.15", "path": "tests/contracts/test_checked_page_export.py"},
     {"name":"layout-recovery-preserve","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_recovery.py","tests":["LayoutRecoveryContract.test_all_preserve_apply_keeps_metadata_feature_head_and_exact_original_index"]},
     {"name":"layout-recovery-changed-sources","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_recovery.py","tests":["LayoutRecoveryContract.test_changed_source_or_metadata_invalidates_apply_before_any_canonical_replacement"]},
     {"name":"layout-recovery-restore","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_recovery.py","tests":["LayoutRecoveryContract.test_completed_restore_has_distinct_child_and_keeps_parent_historical_receipt"]},
