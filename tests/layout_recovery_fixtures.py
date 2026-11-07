@@ -273,7 +273,7 @@ def discard_proposal(world, command, repo, bank, inspected, unit_id):
     return output
 
 
-def admission_proposal(world, command, source, repo, bank, inspected, *, full):
+def admission_proposal(world, command, source, repo, bank, inspected, *, full, policy_number=0):
     """Construct controlled attestations; actual installed consumers verify them."""
     from contracts.test_admission import AdmissionContract
     helper = AdmissionContract('runTest')
@@ -282,7 +282,8 @@ def admission_proposal(world, command, source, repo, bank, inspected, *, full):
     request = helper.request('verified-repository', 'durable-discovery')
     request['repository_evidence'] = {'path': 'synthetic-policy.md', 'sha256': sha((repo / 'synthetic-policy.md').read_bytes())}
     request['assessment']['review'] = 'Controlled review of actual independently readable repository evidence.'
-    request['candidate']['body'] = policy_body(0)
+    request['candidate']['body'] = ('# Synthetic policies\n\n' + '\n\n'.join(POLICIES) + '\n'
+                                    if policy_number is None else policy_body(policy_number))
     request['candidate']['metadata']['evidence'] = ['synthetic-policy.md']
     captured = public(world, command, 'capture', '--repo', repo, '--request', save(world, request))['capture']
     compared = {'project_id': helper.pid, 'candidate': captured['request']['candidate'],
@@ -305,7 +306,7 @@ def admission_proposal(world, command, source, repo, bank, inspected, *, full):
     target = 'topics/' + captured['request']['candidate']['metadata']['id'] + '.md'
     pending = []
     for number, row in enumerate(view['pending_matches']):
-        credited = full and number == 0
+        credited = full and (policy_number is None or row['source_ranges'][0]['start'] == policy_number * 3560)
         claim = {'unit_id': row['unit_id'], 'coverage': 'full' if credited else 'none',
             'covered_source_ranges': row['source_ranges'] if credited else [],
             'target_record_refs': [{'id': captured['request']['candidate']['metadata']['id'], 'version': 1,
