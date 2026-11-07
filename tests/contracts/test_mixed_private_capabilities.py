@@ -17,6 +17,9 @@ class MixedPrivateCapabilities(unittest.TestCase):
             command, source, repo, bank, native, inspected, applied = recovery.small_pending(world)
             self.assertFalse(applied['semantic_recovery_complete'])
             world.git('add', 'synthetic-policy.md', cwd=repo)
+            world.git('commit', '-m', 'Synthetic baseline', cwd=repo)
+            (repo / 'synthetic-policy.md').write_text(recovery.policy_body(0) + '\nStaged disposable change.\n')
+            world.git('add', 'synthetic-policy.md', cwd=repo)
             directory = recovery.private_directory(world, bank, inspected['operation_id'])
             originals = {row['source_id']: (directory / row['blob']).read_bytes()
                          for row in inspected['manifest']['sources']}
