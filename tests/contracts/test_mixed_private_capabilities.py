@@ -11,7 +11,7 @@ import uuid
 from world import World
 import layout_recovery_fixtures as recovery
 import v014_runtime_fixture
-from runtime_update_fixtures import owned, snapshot
+from runtime_update_fixtures import PACK, advance, owned, snapshot
 from contracts import test_omp_boundary
 
 
@@ -218,4 +218,47 @@ class MixedPrivateCapabilities(unittest.TestCase):
             for args in (('update', '--check'), ('update',)):
                 denied = lifecycle.public(world, receipt, *args, expected=1)
                 self.assertIn('Candidate would remove the owned lifecycle command surface', denied['error'])
+                self.assertEqual(preserved(), before)
+            # A genuinely new capable managed artifact needs a newly reviewed
+            # attestation for its own digest and all receipt-owned routes.
+            private_before = snapshot(directory)
+            bank_before, config_before = snapshot(bank), snapshot(world.paths['config'])
+            index_before = (repo / '.git/index').read_bytes()
+            head_before = world.git('rev-parse', 'HEAD', cwd=repo).stdout
+            shutil.rmtree(pack)
+            shutil.copytree(PACK, pack)
+            advance(world, channel, pack, '1.0.0')
+            renewed = recovery.review_request(world, command, pack, repo, inspected, native)['quiescence_attestation']
+            renewed['declared_invocation_routes'] = sorted(set(renewed['declared_invocation_routes']
+                + [target['path'] for target in receipt['targets']]))
+            envelope = {'attestation': renewed, 'review': {
+                'schema': 'agent-memory/layout-quiescence-review-v1', 'review_id': renewed['review_id'],
+                'operation_id': renewed['operation_id'], 'attestation_sha256': recovery.sha(recovery.encoded(renewed)),
+                'reviewer_developer_id': renewed['operator_developer_id'], 'reviewer_harness': 'fixture-independent-reviewer',
+                'reviewer_session': 'managed-' + str(uuid.uuid4()), 'review_time': renewed['issued_at'],
+                'decision': 'approve', 'rationale': 'Disposable independent review of exact bank, artifact and invocation routes.'}}
+            renewal = recovery.save(world, envelope)
+            checked = lifecycle.public(world, receipt, 'update', '--layout-quiescence', str(renewal), '--check')
+            self.assertEqual(checked['private_compatibility']['required_capabilities'],
+                             ['layout-frontier-v1', 'omp-harness-v1'])
+            changed = lifecycle.public(world, receipt, 'update', '--layout-quiescence', str(renewal))
+            self.assertTrue(changed['verified'])
+            self.assertTrue(changed['changed'])
+            receipt = changed['receipt']
+            self.assertEqual(snapshot(bank), bank_before)
+            self.assertEqual(snapshot(world.paths['config']), config_before)
+            self.assertEqual((repo / '.git/index').read_bytes(), index_before)
+            self.assertEqual(world.git('rev-parse', 'HEAD', cwd=repo).stdout, head_before)
+            private_after = snapshot(directory)
+            self.assertTrue(all(private_after.get(path) == value for path, value in private_before.items()))
+            self.assertEqual(json.loads(world.run([command, 'omp-boundary', '--repo', repo, '--list-pending',
+                '--offset', '0'], timeout=60).stdout)['pending'], pending)
+            shutil.rmtree(pack)
+            shutil.copytree(old, pack)
+            world.git('add', '-A', cwd=channel)
+            world.git('commit', '-m', 'Published legacy downgrade', cwd=channel)
+            before = preserved()
+            for args in (('update', '--check'), ('update',)):
+                denied = lifecycle.public(world, receipt, *args, expected=1)
+                self.assertIn('Runtime downgrade refused', denied['error'])
                 self.assertEqual(preserved(), before)
