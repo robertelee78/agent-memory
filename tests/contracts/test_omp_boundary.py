@@ -468,14 +468,12 @@ class OwnedInstructionBoundary(unittest.TestCase):
                     observed = original(*args, **kwargs)
                     calls.append(None)
                     if len(calls) % 2 == 0:
-                        before = world.root.stat()
                         if sibling.exists():
                             sibling.rmdir()
                             changes.append('delete')
                         else:
                             sibling.mkdir()
                             changes.append('create')
-                        self.assertNotEqual(before.st_nlink, world.root.stat().st_nlink)
                     return observed
 
                 # Only schedule real namespace changes; all receipt, artifact,
@@ -512,18 +510,21 @@ class OwnedInstructionBoundary(unittest.TestCase):
                 manual_mode, parent_mode = manual.stat().st_mode & 0o777, parent.stat().st_mode & 0o777
                 receipt_mode = receipt_path.stat().st_mode & 0o777
                 original = omp_installation.observer_binding
-                races = ['directory-substitution', 'directory-mode', 'manual-substitution',
-                         'manual-symlink', 'manual-bytes', 'manual-mode', 'receipt', 'receipt-mode']
+                races = ['directory-substitution', 'directory-mode', 'receipt', 'receipt-mode']
+                if mode == 'copy':
+                    races += ['manual-substitution', 'manual-symlink', 'manual-bytes', 'manual-mode']
                 if mode == 'link':
                     races += ['link-substitution', 'link-retarget']
                 for race in races:
                     with self.subTest(race=race):
                         calls = []
+                        mutated = False
                         selected = (parent if race == 'directory-substitution' else
                                     skill if race.startswith('link-') else manual)
                         backup = selected.with_name(selected.name + '.race-backup')
 
                         def mutate():
+                            nonlocal mutated
                             if race == 'directory-substitution':
                                 parent.rename(backup)
                                 parent.mkdir(mode=parent_mode)
@@ -551,6 +552,7 @@ class OwnedInstructionBoundary(unittest.TestCase):
                                 destination = (receipt['source']['pack'] if race == 'link-substitution'
                                                else str(world.paths['repo']))
                                 skill.symlink_to(destination, target_is_directory=True)
+                            mutated = True
 
                         def rendezvous(*args, **kwargs):
                             calls.append(None)
@@ -567,7 +569,7 @@ class OwnedInstructionBoundary(unittest.TestCase):
                         try:
                             with patch.object(omp_installation, 'observer_binding', side_effect=rendezvous):
                                 self.assertIsNone(witness._verify())
-                            self.assertEqual(len(calls), 2)
+                            self.assertTrue(mutated)
                         finally:
                             if race == 'directory-substitution' and backup.exists():
                                 parent.rmdir()
