@@ -293,20 +293,45 @@ def write_observation(root, prepared, value):
     return {'case_ordinal': value['case_ordinal'], 'variant': value['variant'], **pointer(root, path)}
 
 
-def delivery_accounting(root, prepared, document_sends, profile_sha):
-    """Retain global requests separately from first-send and reused deliveries."""
+def delivery_accounting(root, prepared, document_sends, profile_sha, *, complete=True,
+                        attempted_requests=None):
+    """Bind completed requests and any uncertain transport attempt, never erase it."""
+    attempted = document_sends if attempted_requests is None else attempted_requests
+    if (len(attempted) > len(prepared['batches']) or len(document_sends) > len(attempted)
+            or attempted[:len(document_sends)] != document_sends
+            or (complete and len(document_sends) != len(prepared['batches']))):
+        raise ValueError('Actual document request prefix differs from frozen schedule')
     requests, offset = [], 0
-    for batch, request in zip(prepared['batches'], document_sends, strict=True):
+    for index, request in enumerate(attempted):
+        batch = prepared['batches'][index]
         requests.append({'request': request, 'first_generation': batch[0]['first_generation'],
-                         'rows': list(range(offset, offset + len(batch)))})
+                         'rows': list(range(offset, offset + len(batch))),
+                         'completion': 'embedding-complete' if index < len(document_sends)
+                             else 'transport-outcome-unconfirmed'})
         offset += len(batch)
+    coverage_path = prepared['root'] / ('vector-coverage.json' if complete else 'planned-coverage.json')
     value = {'schema': 'am255/generation-delivery-ledger-v2', 'profile_sha256': profile_sha,
-             'coverage': pointer(root, prepared['root'] / 'vector-coverage.json'),
+             'coverage': pointer(root, coverage_path), 'documents_complete': complete,
+             'pending_batches': len(prepared['batches']) - len(attempted),
+             'pending_embedding_requests': len(attempted) - len(document_sends),
              'requests': requests, 'erasure': {'executed': False,
                  'prerequisite': 'No controlled temporal canonical delete, derived-store purge, provider/cache disposal and forensic readback phase implemented'}}
+    if not complete and (prepared['root'] / 'vectors.f32').is_file():
+        value['partial_vector_store'] = pointer(root, prepared['root'] / 'vectors.f32')
     path = prepared['root'] / 'delivery-ledger.json'
     save(path, value)
     return pointer(root, path)
+
+
+def source_coverage(prepared, profile_sha, store_hash=None):
+    """A complete source plan is not a completed vector store."""
+    return {'schema': 'am255/persisted-float32-coverage-v2', 'dtype': '<f4',
+            'dimension': 4096, 'rows': prepared['ordered'], 'vector_store_sha256': store_hash,
+            'generations': {g['bank'].generation_id: {'canonical_sha256': g['bank'].canonical_sha256,
+                'sources': [{'key': key, 'row': index, 'rendered_sha256': g['coverage'][key]}
+                            for key, index in g['vector_rows'].items()]}
+                for g in prepared['generations'].values()},
+            'source_profile_sha256': profile_sha, 'full_coverage': store_hash is not None}
 
 
 def generation_requests(prepared, document_sends, generation_id):
@@ -332,6 +357,11 @@ def run_size(root, prepared, fixtures, inputs, spec, config, profile, run_id):
     observations, query_vectors, query_sends, document_sends = [], {}, {}, []
     started = time.monotonic()
     store = None
+    documents_complete = False
+    save(work / 'planned-coverage.json', source_coverage(prepared, profile_sha))
+    for artifact in result['generation_artifacts']:
+        artifact['coverage'] = pointer(root, work / 'planned-coverage.json')
+    result['delivery_ledger'] = delivery_accounting(root, prepared, [], profile_sha, complete=False)
     try:
         no_active_services(config['engine'])
         graph.start()
@@ -353,18 +383,14 @@ def run_size(root, prepared, fixtures, inputs, spec, config, profile, run_id):
             for index, vector in enumerate(values, offset):
                 store.put(index, vector)
             offset += len(batch)
+            result['delivery_ledger'] = delivery_accounting(root, prepared, document_sends, profile_sha, complete=False)
         store_hash = store.finish()
-        save(work / 'vector-coverage.json', {'schema': 'am255/persisted-float32-coverage-v2', 'dtype': '<f4',
-             'dimension': 4096, 'rows': prepared['ordered'], 'vector_store_sha256': store_hash,
-             'generations': {g['bank'].generation_id: {'canonical_sha256': g['bank'].canonical_sha256,
-                'sources': [{'key': key, 'row': index,
-                             'rendered_sha256': g['coverage'][key]} for key, index in g['vector_rows'].items()]}
-                for g in prepared['generations'].values()},
-             'source_profile_sha256': profile_sha, 'full_coverage': True})
+        save(work / 'vector-coverage.json', source_coverage(prepared, profile_sha, store_hash))
         for artifact in result['generation_artifacts']:
             artifact['vector_store'] = pointer(root, work / 'vectors.f32')
             artifact['coverage'] = pointer(root, work / 'vector-coverage.json')
         result['delivery_ledger'] = delivery_accounting(root, prepared, document_sends, profile_sha)
+        documents_complete = True
         templates = load(HERE / 'executor_templates.json')
         request_ordinal = 0
         for variant in ('base', 'overlay'):
@@ -376,8 +402,8 @@ def run_size(root, prepared, fixtures, inputs, spec, config, profile, run_id):
                 bank = generation['bank']
                 native, context = fixtures.qualify(bank, case)
                 native['source_binding']['profile_sha256'] = profile_sha
-                state_prerequisite = mechanism_prerequisite(case) or native.get('prerequisite')
-                prerequisite = state_prerequisite
+                state_prerequisite = mechanism_prerequisite(case)
+                prerequisite = state_prerequisite or native.get('prerequisite')
                 if not native['request_valid']:
                     prerequisite = native.get('refusal', native.get('prerequisite', 'Native request/context precondition failed'))
                 unavailable = {'executed': False, 'prerequisite': prerequisite or 'This case requests a different mechanism'}
@@ -445,6 +471,17 @@ def run_size(root, prepared, fixtures, inputs, spec, config, profile, run_id):
         if len(query_vectors) != len(prepared['query_schedule']):
             raise ValueError('Actual query coverage differs from complete frozen schedule')
     finally:
+        if not documents_complete:
+            for artifact in result['generation_artifacts']:
+                artifact.pop('vector_store', None)
+                artifact['coverage'] = pointer(root, work / 'planned-coverage.json')
+            attempted = [pointer(root, path) for path in model.requests
+                         if load(path).get('kind') == 'documents']
+            result['delivery_ledger'] = delivery_accounting(
+                root, prepared, document_sends, profile_sha, complete=False, attempted_requests=attempted)
+            result['missing_prerequisites'].append({
+                'phase': 'document-embedding',
+                'prerequisite': 'Document schedule incomplete; retained attempts include unconfirmed transport, not a no-send or completed-vector claim'})
         stopped, stop_error = None, None
         try:
             stopped = model.stop()
@@ -471,7 +508,7 @@ def run_size(root, prepared, fixtures, inputs, spec, config, profile, run_id):
                 reason = 'Actual model dependency/token/cache finalization failed; retained raw vectors are unqualified'
                 observation['semantic'].update(executed=False, prerequisite=reason)
                 observation['semantic']['ann'] = {'executed': False, 'prerequisite': reason}
-                observation['provider'].update(executed=False, prerequisite=reason)
+                observation['provider'].update(inference_qualified=False, inference_prerequisite=reason)
             if task_path.is_file() and stop_error is None:
                 observation['provider']['task_evidence'] = {'executed': True, **pointer(root, task_path)}
             else:
