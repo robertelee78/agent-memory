@@ -29,7 +29,7 @@ from executor_runtime import (Model, VectorStore, artifacts, command, memory_pre
                               no_active_services, pointer, save, sha)
 from executor_graph import Graph, projection
 
-INPUT_SHA = '1986071901b4004618310b15f2ebcbf6f03e6ee7afc9e113eca6d4deff893ef2'
+INPUT_SHA = 'fc22d917544e865b9acf2ecc63ff410ccd8d3ced18e810c7755ffb62fa8892f1'
 AM_COMMIT = '175d21fa26bbef41f8ec859b463876934e16db79'
 MAPPER = 'No independently reviewed contract-derived AM175 research outcome/caveat assembler exists'
 SCOPE = ('Raw private synthetic scratch mechanisms only; no production P1/G3 API, semantic outcome, '
@@ -129,9 +129,9 @@ def mechanism_prerequisite(case):
 def prepare_size(fixtures, inputs, size, root):
     directory = root / 'sizes' / str(size)
     directory.mkdir(parents=True, mode=0o700)
-    generations, text_by_hash, ordered = {}, {}, []
-    # Base and overlay complete sources precede mutation deltas; exact rendered
-    # duplicates within this size use the first byte-identical occurrence only.
+    generations, text_by_hash, row_by_hash, ordered, batches = {}, {}, {}, [], []
+    # Each real batch belongs to exactly one first-send generation. Reuse is
+    # exact rendered bytes under this size's single frozen profile, not erasure.
     stages = [(v, None) for v in ('base', 'overlay')]
     stages += [(v, m) for m in inputs['mutation_order'] for v in ('base', 'overlay')]
     artifacts_rows = []
@@ -144,14 +144,23 @@ def prepare_size(fixtures, inputs, size, root):
         stage.mkdir(mode=0o700)
         save(stage / 'catalog.json', catalog)
         save(stage / 'projection.json', project)
-        coverage = {}
+        coverage, fresh = {}, []
         for source, rendered in fixtures.rendered(bank):
             h = digest(rendered)
+            membership = {'generation_id': bank.generation_id, 'key': source['key'],
+                          'file_sha256': source['file_sha256']}
             if h not in text_by_hash:
                 text_by_hash[h] = rendered
-                ordered.append({'rendered_sha256': h, 'source_keys': [], 'first_generation': bank.generation_id,
-                                'first_path': source['path']})
+                ordered.append({'rendered_sha256': h, 'source_keys': [], 'memberships': [],
+                                'first_generation': bank.generation_id, 'first_path': source['path']})
+                row_by_hash[h] = ordered[-1]
+                fresh.append(ordered[-1])
+            row = row_by_hash[h]
+            row['memberships'].append(membership)
+            if row['first_generation'] == bank.generation_id:
+                row['source_keys'].append(source['key'])
             coverage[source['key']] = h
+        batches.extend(fresh[start:start + 8] for start in range(0, len(fresh), 8))
         generations[(variant, mutation)] = {'bank': bank, 'projection': project, 'coverage': coverage,
                                              'root': stage, 'info': info}
         artifacts_rows.append({'generation_id': bank.generation_id, 'variant': variant,
@@ -159,14 +168,10 @@ def prepare_size(fixtures, inputs, size, root):
                                'canonical_sha256': bank.canonical_sha256, 'catalog': pointer(root, stage / 'catalog.json'),
                                'projection': pointer(root, stage / 'projection.json')})
     index_of = {row['rendered_sha256']: i for i, row in enumerate(ordered)}
-    keys_by_hash = {h: set() for h in text_by_hash}
     for generation in generations.values():
-        for key, h in generation['coverage'].items():
-            keys_by_hash[h].add(key)
         generation['vector_rows'] = {key: index_of[h] for key, h in generation['coverage'].items()}
     for row in ordered:
-        row['source_keys'] = sorted(keys_by_hash[row['rendered_sha256']])
-    batches = [ordered[start:start + 8] for start in range(0, len(ordered), 8)]
+        row['source_keys'].sort()
     queries, seen = [], set()
     native_checks = []
     for variant in ('base', 'overlay'):
@@ -175,7 +180,7 @@ def prepare_size(fixtures, inputs, size, root):
                 continue
             g = generations[(variant, selected_mutation(case))]
             native, context = fixtures.qualify(g['bank'], case)
-            prerequisite = mechanism_prerequisite(case)
+            prerequisite = mechanism_prerequisite(case) or native.get('prerequisite')
             eligible_query = native['request_valid'] and prerequisite is None and 'ranking' in case['request']
             rendered = render_query(case['request']['query'])
             h = digest(rendered)
@@ -187,13 +192,13 @@ def prepare_size(fixtures, inputs, size, root):
                                   'generation_id': g['bank'].generation_id, 'request_valid': native['request_valid'],
                                   'eligible_count': len(native['eligible']), 'crosscheck': native['crosscheck'],
                                   'query_first_allowed_occurrence': first, 'mechanism_prerequisite': prerequisite})
-    schedule = {'schema': 'am255/ordered-source-query-schedule-v1', 'size': size,
+    schedule = {'schema': 'am255/ordered-source-query-schedule-v2', 'size': size,
                 'document_batches': batches, 'query_first_occurrences': queries,
                 'native_checks': native_checks, 'cross_size_reuse': False,
-                'order': 'Base source-path UTF8 byte order; overlay additions; mutation declaration order; base then overlay opaque case order'}
+                'order': 'Contiguous first-generation batches; base, overlay, mutation declaration order; exact byte/profile reuse only'}
     save(directory / 'schedule.json', schedule)
     return {'size': size, 'root': directory, 'generations': generations, 'ordered': ordered,
-            'texts': text_by_hash, 'generation_artifacts': artifacts_rows, 'query_schedule': queries,
+            'batches': batches, 'texts': text_by_hash, 'generation_artifacts': artifacts_rows, 'query_schedule': queries,
             'schedule': pointer(root, directory / 'schedule.json')}
 
 
@@ -288,6 +293,32 @@ def write_observation(root, prepared, value):
     return {'case_ordinal': value['case_ordinal'], 'variant': value['variant'], **pointer(root, path)}
 
 
+def delivery_accounting(root, prepared, document_sends, profile_sha):
+    """Retain global requests separately from first-send and reused deliveries."""
+    requests, offset = [], 0
+    for batch, request in zip(prepared['batches'], document_sends, strict=True):
+        requests.append({'request': request, 'first_generation': batch[0]['first_generation'],
+                         'rows': list(range(offset, offset + len(batch)))})
+        offset += len(batch)
+    value = {'schema': 'am255/generation-delivery-ledger-v2', 'profile_sha256': profile_sha,
+             'coverage': pointer(root, prepared['root'] / 'vector-coverage.json'),
+             'requests': requests, 'erasure': {'executed': False,
+                 'prerequisite': 'No controlled temporal canonical delete, derived-store purge, provider/cache disposal and forensic readback phase implemented'}}
+    path = prepared['root'] / 'delivery-ledger.json'
+    save(path, value)
+    return pointer(root, path)
+
+
+def generation_requests(prepared, document_sends, generation_id):
+    actual, reused = [], []
+    for batch, request in zip(prepared['batches'], document_sends, strict=True):
+        if batch[0]['first_generation'] == generation_id:
+            actual.append(request)
+        elif any(m['generation_id'] == generation_id for row in batch for m in row['memberships']):
+            reused.append(request)
+    return actual, reused
+
+
 def run_size(root, prepared, fixtures, inputs, spec, config, profile, run_id):
     work = prepared['root']
     model_root, graph_root = work / 'model', work / 'graph'
@@ -297,7 +328,7 @@ def run_size(root, prepared, fixtures, inputs, spec, config, profile, run_id):
     profile_sha = sha(root / 'runtime-profile.json')
     result = {'size': prepared['size'], 'canonical_sha256': {g['bank'].generation_id: g['bank'].canonical_sha256 for g in prepared['generations'].values()},
               'profile_sha256': profile_sha, 'observations': [], 'generation_artifacts': prepared['generation_artifacts'],
-              'costs': {}, 'missing_prerequisites': []}
+              'costs': {}, 'missing_prerequisites': [], 'schedule': prepared['schedule']}
     observations, query_vectors, query_sends, document_sends = [], {}, {}, []
     started = time.monotonic()
     store = None
@@ -307,8 +338,8 @@ def run_size(root, prepared, fixtures, inputs, spec, config, profile, run_id):
         graph.freeze_plans(load(HERE / 'executor_templates.json'))
         model.start()
         store = VectorStore(work / 'vectors.f32', len(prepared['ordered']))
-        for start in range(0, len(prepared['ordered']), 8):
-            batch = prepared['ordered'][start:start + 8]
+        offset = 0
+        for batch in prepared['batches']:
             # Recheck canonical source eligibility/security before each batch; no
             # scoring canary names participate in selection or provider filtering.
             for row in batch:
@@ -319,10 +350,11 @@ def run_size(root, prepared, fixtures, inputs, spec, config, profile, run_id):
             texts = [prepared['texts'][r['rendered_sha256']].decode('utf-8') for r in batch]
             values, request_path, costs = model.embed(texts, 'documents', sorted({k for r in batch for k in r['source_keys']}))
             document_sends.append(pointer(root, request_path))
-            for index, vector in enumerate(values, start):
+            for index, vector in enumerate(values, offset):
                 store.put(index, vector)
+            offset += len(batch)
         store_hash = store.finish()
-        save(work / 'vector-coverage.json', {'schema': 'am255/persisted-float32-coverage-v1', 'dtype': '<f4',
+        save(work / 'vector-coverage.json', {'schema': 'am255/persisted-float32-coverage-v2', 'dtype': '<f4',
              'dimension': 4096, 'rows': prepared['ordered'], 'vector_store_sha256': store_hash,
              'generations': {g['bank'].generation_id: {'canonical_sha256': g['bank'].canonical_sha256,
                 'sources': [{'key': key, 'row': index,
@@ -332,6 +364,7 @@ def run_size(root, prepared, fixtures, inputs, spec, config, profile, run_id):
         for artifact in result['generation_artifacts']:
             artifact['vector_store'] = pointer(root, work / 'vectors.f32')
             artifact['coverage'] = pointer(root, work / 'vector-coverage.json')
+        result['delivery_ledger'] = delivery_accounting(root, prepared, document_sends, profile_sha)
         templates = load(HERE / 'executor_templates.json')
         request_ordinal = 0
         for variant in ('base', 'overlay'):
@@ -343,17 +376,20 @@ def run_size(root, prepared, fixtures, inputs, spec, config, profile, run_id):
                 bank = generation['bank']
                 native, context = fixtures.qualify(bank, case)
                 native['source_binding']['profile_sha256'] = profile_sha
-                state_prerequisite = mechanism_prerequisite(case)
+                state_prerequisite = mechanism_prerequisite(case) or native.get('prerequisite')
                 prerequisite = state_prerequisite
                 if not native['request_valid']:
                     prerequisite = native.get('refusal', native.get('prerequisite', 'Native request/context precondition failed'))
                 unavailable = {'executed': False, 'prerequisite': prerequisite or 'This case requests a different mechanism'}
                 semantic = unavailable | {'exact_ranking': [], 'ann': {'executed': False, 'prerequisite': prerequisite or 'No semantic mechanism requested'}}
                 typed = unavailable | {'edges': [], 'primary_candidates': [], 'route_pointers': [], 'costs': {}}
-                provider = {'executed': state_prerequisite is None,
-                            'prerequisite': state_prerequisite,
-                            'document_sends': document_sends, 'query_send': None,
-                            'documents_sent': len(prepared['ordered']), 'queries_sent': 0,
+                actual, reused = generation_requests(prepared, document_sends, bank.generation_id)
+                provider = {'schema': 'am255/generation-provider-accounting-v2',
+                            'executed': state_prerequisite is None, 'prerequisite': state_prerequisite,
+                            'generation_id': bank.generation_id, 'delivery_ledger': result['delivery_ledger'],
+                            'document_sends': actual, 'reused_document_requests': reused, 'query_send': None,
+                            'documents_sent': sum(len(load(root / p['path'])['rendered_sha256']) for p in actual),
+                            'queries_sent': 0,
                             'task_evidence': {'executed': False, 'prerequisite': 'Finalized actual owned-server task logs are attached after process stop'}}
                 costs = {}
                 if prerequisite is None:
@@ -393,7 +429,7 @@ def run_size(root, prepared, fixtures, inputs, spec, config, profile, run_id):
                                         queries_sent=1 if fresh else 0, query_vector_reused=not fresh)
                     else:
                         native['literal'] = fixtures.literal(bank, case, context)
-                observation = {'schema': 'am255/independent-case-observation-v1', 'case_ordinal': case['case_ordinal'],
+                observation = {'schema': 'am255/independent-case-observation-v2', 'case_ordinal': case['case_ordinal'],
                     'size': prepared['size'], 'variant': variant, 'operation': case['operation'],
                     # Native request validation and provider accounting ran even
                     # when semantic/typed mechanisms were refused or unavailable.
@@ -473,7 +509,7 @@ def main():
     run_id = uuid.uuid4().hex
     save(root / 'owner.json', {'schema': 'am255/independent-owner-v1', 'root': str(root), 'uid': os.getuid(),
                               'run_id': run_id, 'production': False, 'resources': []})
-    manifest = {'schema': 'am255/independent-raw-manifest-v1', 'input_sha256': sha(args.inputs),
+    manifest = {'schema': 'am255/independent-raw-manifest-v2', 'input_sha256': sha(args.inputs),
                 'spec_sha256': sha(args.spec), 'io_sha256': sha(HERE / 'execution-io.json'),
                 'source_bindings': {}, 'sizes': [], 'cleanup': {'status': 'no-services-started'}, 'qualification_scope': SCOPE}
     def interrupted(signum, frame):
