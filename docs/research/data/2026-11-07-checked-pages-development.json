@@ -1,0 +1,177 @@
+{
+  "runtime_commit": "8956aa40c8ad70f33b7fb2df14d2f64a6d43a278",
+  "base_commit": "27aa667d4d9e225974f03f90e47bb878439b223b",
+  "fable_model_records": [
+    {
+      "type": "model_change",
+      "id": "5a5f8dc8",
+      "parentId": null,
+      "timestamp": "2026-11-07T05:57:41.100Z",
+      "runtime": {
+        "version": "18.16.0"
+      },
+      "model": "anthropic/claude-fable-5",
+      "resolvedModelIsFallback": false
+    }
+  ],
+  "fable_verdict": "PASS",
+  "smoke": {
+    "complete": true,
+    "real_publication_peer_refresh": true,
+    "exact_export_independent_page_equivalence": true,
+    "publisher_feature_bank_index_HEAD_preserved": true,
+    "profile_overhead": true,
+    "full_qualification": false,
+    "commands": [
+      {
+        "label": "publisher-initial",
+        "exit": 0,
+        "seconds": 5.725179000000935
+      },
+      {
+        "label": "publisher-export",
+        "exit": 0,
+        "seconds": 7.380647208949085,
+        "frontier_build_calls": 1
+      },
+      {
+        "label": "publisher-independent-page-0",
+        "exit": 0,
+        "seconds": 5.564294791023713,
+        "frontier_build_calls": 1
+      },
+      {
+        "label": "publisher-review",
+        "exit": 0,
+        "seconds": 7.534848332987167
+      },
+      {
+        "label": "prepare-publication",
+        "exit": 0,
+        "seconds": 8.746484874980524
+      },
+      {
+        "label": "land-publication",
+        "exit": 0,
+        "seconds": 26.96361199999228
+      },
+      {
+        "label": "peer-initial",
+        "exit": 0,
+        "seconds": 4.972138542041648
+      },
+      {
+        "label": "peer-export",
+        "exit": 0,
+        "seconds": 6.076693125010934,
+        "frontier_build_calls": 1
+      },
+      {
+        "label": "peer-independent-page-0",
+        "exit": 0,
+        "seconds": 5.172671291977167,
+        "frontier_build_calls": 1
+      },
+      {
+        "label": "peer-review",
+        "exit": 0,
+        "seconds": 7.5928341670078225
+      },
+      {
+        "label": "prepare-refresh",
+        "exit": 0,
+        "seconds": 16.217788166948594
+      },
+      {
+        "label": "apply-refresh",
+        "exit": 0,
+        "seconds": 26.01576091698371
+      }
+    ]
+  },
+  "consumer_smoke": {
+    "complete": true,
+    "actual_public_export_and_page_v2_consumer_equivalent": true,
+    "canonical_feature_index_HEAD_preserved": true,
+    "refused": [
+      "page-bytes",
+      "missing-page",
+      "extra-file",
+      "marker-bytes",
+      "missing-marker",
+      "directory-mode",
+      "page-symlink",
+      "page-hardlink"
+    ],
+    "consumer_sha256": "b9b63ea170b3ca905e27a6c9392f7c7db0a784b7a0606b62ad2b5b4f77a3fe04",
+    "full_stress_qualification": false
+  },
+  "contracts": [
+    {
+      "suite": "tests/contracts/test_checked_page_export.py",
+      "exit": 0,
+      "seconds": 66.91568808397278,
+      "result": {
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 5,
+        "unexpected_successes": 0
+      }
+    },
+    {
+      "suite": "tests/contracts/test_semantic_sharing.py",
+      "exit": 0,
+      "seconds": 136.6850500839646,
+      "result": {
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 9,
+        "unexpected_successes": 0
+      }
+    },
+    {
+      "suite": "tests/contracts/test_recall_catalog.py",
+      "exit": 0,
+      "seconds": 153.24733791698236,
+      "result": {
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 17,
+        "unexpected_successes": 0
+      }
+    },
+    {
+      "suite": "tests/contracts/test_refresh_v2.py",
+      "exit": 0,
+      "seconds": 21.501623500022106,
+      "result": {
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 2,
+        "unexpected_successes": 0
+      }
+    }
+  ],
+  "pilot_complete": false,
+  "full_qualification": false,
+  "pilot_blocker": {
+    "owner_issue": 244,
+    "component": "recovery_frontier.marker_bytes",
+    "message": "Known owned transaction-marker-v1 rejected by4096bytecap",
+    "actual_marker_bytes": 13828,
+    "marker_sha256": "934a7a80447e411a6a97418b91a0d6c096fb50e49efb4a8b34ac5a02456d26c8",
+    "scope": "scope_binding.apply authority rebind after128seedfixturebeforefirstcapture"
+  }
+}
