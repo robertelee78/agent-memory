@@ -1,0 +1,167 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Proposed G1 lifecycle and semantic result v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "operation", "status", "reason_code", "exit_code", "project_id", "namespace_id", "requested_mode", "effective_mode", "semantic_status", "resource_state", "generation_state", "generation_id", "profile_id", "identity_assurance", "destination_class", "source_currency", "semantic_coverage", "remote_freshness", "graph_capability", "vector_capability", "results", "mandatory_groups", "selection_ref", "mutated", "resource_changed", "purge", "exclusions"],
+  "properties": {
+    "schema": {"const": "agent-memory/semantic-result-v1"},
+    "operation": {"enum": ["graph.setup", "graph.status", "graph.start", "graph.stop", "graph.build", "graph.rebuild", "graph.diagnose", "graph.purge-preview", "graph.purge-apply", "embeddings.setup", "embeddings.status", "embeddings.start", "embeddings.stop", "embeddings.reembed", "embeddings.diagnose", "embeddings.purge-preview", "embeddings.purge-apply", "search", "related"]},
+    "status": {"$ref": "#/$defs/status"},
+    "reason_code": {"enum": ["completed", "already-running", "already-stopped", "literal-fallback", "partial-coverage", "empty-input", "over-context", "invalid-response", "model-drift", "identity-unverified", "truncation-unverified", "endpoint-unavailable", "graph-unavailable", "profile-disabled", "approval-required", "remote-budget-exhausted", "source-stale", "missing-score", "resource-limit", "runtime-stopped", "erasure-pending", "byo-graph-erasure-unverifiable", "resource-set-changed", "foreign-scope", "withheld", "clarification-required", "invalid-request", "operation-failed"]},
+    "exit_code": {"type": "integer", "enum": [0, 1, 2]},
+    "project_id": {"type": ["string", "null"]},
+    "namespace_id": {"type": ["string", "null"]},
+    "requested_mode": {"$ref": "#/$defs/mode"},
+    "effective_mode": {"$ref": "#/$defs/mode"},
+    "semantic_status": {"anyOf": [{"$ref": "#/$defs/status"}, {"const": "not-requested"}]},
+    "resource_state": {"enum": ["not-applicable", "unconfigured", "stopped", "running", "unknown"]},
+    "generation_state": {"enum": [null, "planned", "building-graph", "filling-vectors", "validating", "ready", "active", "retiring", "interrupted", "discarded", "erasure-pending", "erased"]},
+    "generation_id": {"type": ["string", "null"]},
+    "profile_id": {"type": ["string", "null"]},
+    "identity_assurance": {"enum": ["not-applicable", "managed-receipt-verified", "byo-attested", "provider-alias-unverified"]},
+    "destination_class": {"enum": ["not-applicable", "managed-local", "loopback-byo", "remote"]},
+    "source_currency": {"$ref": "#/$defs/assessment"},
+    "semantic_coverage": {"$ref": "#/$defs/assessment"},
+    "remote_freshness": {"$ref": "#/$defs/assessment"},
+    "graph_capability": {"$ref": "#/$defs/capability"},
+    "vector_capability": {"$ref": "#/$defs/capability"},
+    "results": {"type": "array", "items": {"$ref": "#/$defs/result"}},
+    "mandatory_groups": {"type": "array", "items": {"$ref": "#/$defs/mandatory_group"}},
+    "selection_ref": {"type": ["string", "null"]},
+    "mutated": {"type": "boolean"},
+    "resource_changed": {"type": "boolean"},
+    "purge": {"anyOf": [{"type": "null"}, {"$ref": "#/$defs/purge"}]},
+    "exclusions": {"type": "array", "uniqueItems": true, "items": {"enum": ["empty-input", "over-context", "withheld", "capped", "truncation-unverified", "missing-score"]}}
+  },
+  "allOf": [
+    {"if": {"properties": {"status": {"const": "qualified"}}, "required": ["status"]}, "then": {"properties": {"exit_code": {"const": 0}}}},
+    {"if": {"properties": {"status": {"const": "invalid-request"}}, "required": ["status"]}, "then": {"properties": {"exit_code": {"const": 2}}}},
+    {"if": {"properties": {"status": {"not": {"enum": ["qualified", "invalid-request"]}}}, "required": ["status"]}, "then": {"properties": {"exit_code": {"const": 1}}}}
+  ],
+  "$defs": {
+    "status": {"enum": ["qualified", "partial", "unavailable", "stale", "incompatible", "refused", "approval-required", "pending", "erasure-pending", "invalid-request", "withheld", "clarification-required", "failed"]},
+    "mode": {"enum": ["semantic", "literal", "related", "lifecycle", "none"]},
+    "assessment": {"enum": ["complete", "partial", "stale", "unavailable", "unverified", "not-applicable"]},
+    "capability": {"enum": ["available", "partial", "unavailable", "pending", "incompatible", "not-applicable"]},
+    "mandatory_group": {
+      "type": "object", "additionalProperties": false,
+      "required": ["kind", "use_as_settled_guidance", "rationales", "sources"],
+      "properties": {
+        "kind": {"const": "unresolved-conflict"},
+        "use_as_settled_guidance": {"const": false},
+        "rationales": {"type": "array", "items": {"type": "string"}},
+        "sources": {"type": "array", "minItems": 2, "items": {"$ref": "#/$defs/native"}}
+      }
+    },
+    "result": {
+      "type": "object", "additionalProperties": false,
+      "required": ["native", "selection_ref", "relation", "mandatory_caveats"],
+      "properties": {
+        "native": {"$ref": "#/$defs/native"},
+        "selection_ref": {"type": ["string", "null"]},
+        "relation": {"enum": [null, "recorded", "inferred"]},
+        "mandatory_caveats": {"type": "array", "items": {"$ref": "#/$defs/native"}}
+      }
+    },
+    "native": {
+      "type": "object",
+      "required": ["path", "format", "body", "source_sha256", "scope_chain", "source_class", "untrusted_data", "source_assertions_verified", "admission_verified", "procedural_guidance", "selection_class", "match"],
+      "properties": {
+        "path": {"type": "string"}, "format": {"enum": ["standalone-record", "context-prose"]},
+        "body": {"type": "string"}, "source_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "scope_chain": {"type": "array", "items": {"type": "string"}},
+        "source_class": {"const": "external"}, "untrusted_data": {"const": true},
+        "source_assertions_verified": {"const": false}, "admission_verified": {"const": false},
+        "procedural_guidance": {"const": false}, "selection_class": {"enum": ["current-record", "orientation-only"]},
+        "match": {"$ref": "#/$defs/match"}
+      },
+      "oneOf": [
+        {
+          "required": ["record", "selection"],
+          "properties": {
+            "format": {"const": "standalone-record"}, "selection_class": {"const": "current-record"},
+            "record": {"$ref": "../../skills/agent-memory/schemas/record.json"},
+            "selection": {"$ref": "#/$defs/selection"}
+          }
+        },
+        {
+          "required": ["trust", "assignment", "context_assessment", "explanation"],
+          "properties": {
+            "format": {"const": "context-prose"}, "selection_class": {"const": "orientation-only"},
+            "trust": {"const": null}, "assignment": {"const": false},
+            "context_assessment": {"anyOf": [{"type": "null"}, {"$ref": "#/$defs/context_assessment"}]},
+            "explanation": {"type": "string"}
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "selection": {
+      "type": "object", "additionalProperties": false,
+      "required": ["current", "gates", "reasons"],
+      "properties": {
+        "current": {"const": true},
+        "gates": {
+          "type": "object", "additionalProperties": false,
+          "required": ["authorized-scope", "applicable", "active", "valid-time", "sufficient-trust", "visible", "no-active-superseder"],
+          "properties": {
+            "authorized-scope": {"const": true}, "applicable": {"const": true}, "active": {"const": true},
+            "valid-time": {"const": true}, "sufficient-trust": {"const": true}, "visible": {"const": true},
+            "no-active-superseder": {"const": true}
+          }
+        },
+        "reasons": {"type": "array", "maxItems": 0}
+      }
+    },
+    "match": {
+      "type": "object", "additionalProperties": false,
+      "required": ["strategy", "score", "matching_terms"],
+      "properties": {
+        "strategy": {"enum": ["exact-id", "exact-path", "ordinary-text", "current-inventory", "semantic-cosine"]},
+        "score": {"type": "number"}, "matching_terms": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "context_assessment": {
+      "type": "object", "additionalProperties": false,
+      "required": ["managed_checkpoint", "applicable", "assignment"],
+      "properties": {
+        "managed_checkpoint": {"type": "boolean"}, "applicable": {"type": ["boolean", "null"]}, "assignment": {"const": false},
+        "statement_applicability": {"const": "unassessed orientation"},
+        "conditions": {"anyOf": [{"type": "null"}, {"$ref": "../../skills/agent-memory/schemas/record.json#/properties/conditions"}]},
+        "reasons": {"type": "array", "items": {"type": "string"}},
+        "evidence_status": {"enum": ["not-inspected-inapplicable", "qualified-observations", "historical-or-unqualified-evidence"]},
+        "evidence": {"type": "array", "items": {"$ref": "#/$defs/evidence_comparison"}},
+        "evidence_bytes_match": {"type": "boolean"}
+      }
+    },
+    "evidence_comparison": {
+      "type": "object", "additionalProperties": false,
+      "required": ["ref", "recorded", "current", "qualification"],
+      "properties": {
+        "ref": {"type": "string"}, "recorded": {"$ref": "#/$defs/evidence_observation"},
+        "current": {"$ref": "#/$defs/evidence_observation"},
+        "qualification": {"enum": ["matching-local-bytes", "changed-local-bytes", "unavailable-here", "original-byte-binding-unverified"]}
+      }
+    },
+    "evidence_observation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["ref", "kind", "sha256", "bytes", "commit", "blob"],
+      "properties": {
+        "ref": {"type": "string"}, "kind": {"enum": ["external-unverified", "outside-uninspected", "unavailable", "canonical-memory-reference", "local-unpublished", "repository-committed"]},
+        "sha256": {"type": ["string", "null"]}, "bytes": {"type": ["integer", "null"], "minimum": 0},
+        "commit": {"type": ["string", "null"]}, "blob": {"type": ["string", "null"]}
+      }
+    },
+    "purge": {
+      "type": "object", "additionalProperties": false,
+      "required": ["resource_ids", "paths", "confirmation_token", "verified_absent", "forensic_media_provider_backup_erasure"],
+      "properties": {
+        "resource_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+        "paths": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+        "confirmation_token": {"type": ["string", "null"]}, "verified_absent": {"type": "boolean"},
+        "forensic_media_provider_backup_erasure": {"const": false}
+      }
+    }
+  }
+}
