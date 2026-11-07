@@ -1,0 +1,283 @@
+{
+  "schema": "am255/runtime-operational-attempts-v1",
+  "recorded_date_utc": "2026-11-07",
+  "scope": "Real reference-runtime mechanism execution and retained failed attempts only; not all-size quality, production API, G1, legal, managed-profile, operator or release acceptance. Raw synthetic observations include unexecuted prerequisites and are not passed quality cells.",
+  "stable_identity_attempt": {
+    "retained_artifact": "255-stable-independent-actual-controller-20261106/completion.json",
+    "sha256": "0af6d507f10c8984c65f38f30a8df588076d154afcabfa936ec775025728a4d7",
+    "source_commit": "35f27906120221ebbc06093c1e11fb6ec722e586",
+    "started_at": "2026-11-06T23:40:14.991245+00:00",
+    "exit": 1,
+    "elapsed_seconds": 974.9893632910098,
+    "outcome": "Failed after stable-freeze comparison and first owned graph start; model rejected device Metal before embeddings.",
+    "model_stderr": {
+      "retained_artifact": "model/server-stderr.log",
+      "sha256": "b731f23ac1aa798e2559e67191a59d5f648af2ffb10b832f15d93cd9c335882a"
+    },
+    "graph_cleanup": {
+      "borrowed_artifacts_untouched": true,
+      "forensic_erasure_claim": false,
+      "resources": [
+        {
+          "absent": true,
+          "resource": {
+            "id": "e8ef10ba8bb4ad3de96f8b7e741cf6e65c4596f9ae6fa58ec0762ebdeec98335",
+            "name": "am255-independent-d2763d592fa9-a9fca7b8",
+            "type": "container"
+          }
+        },
+        {
+          "absent": true,
+          "resource": {
+            "created": "2026-11-06T15:56:16.582333591-08:00",
+            "name": "am255-independent-d2763d592fa9-a9fca7b8-data",
+            "type": "volume"
+          }
+        },
+        {
+          "absent": true,
+          "resource": {
+            "created": "2026-11-06T15:56:16.961682333-08:00",
+            "name": "am255-independent-d2763d592fa9-a9fca7b8-logs",
+            "type": "volume"
+          }
+        }
+      ],
+      "status": "disposed"
+    },
+    "model_process_stop": {
+      "exit": 1,
+      "pid": 46509,
+      "reaped": true,
+      "run_id": "d2763d592fa94900a78dc3fdc5244732"
+    },
+    "model_finalization_failure": {
+      "reason": "Chosen --cache-ram 0 was not confirmed by actual server logs",
+      "type": "ValueError"
+    }
+  },
+  "corrected_one_thousand_run": {
+    "retained_artifact": "255-restored-1k-controller-20261107/completion.json",
+    "sha256": "52e5d7a8dabdf3154fe1fe09fbbb51b8a2fabfeb5fb3f26c66dc60127039c1c7",
+    "source_commit": "a4ac3263ba769812311787f70a07dacc8aea7c20",
+    "started_at": "2026-11-07T01:07:15.944316+00:00",
+    "exit": 0,
+    "elapsed_seconds": 233.99274529202376,
+    "freeze": {
+      "retained_artifact": "255-restored-1k-freeze-20261107/freeze.json",
+      "sha256": "1058ea8a7ad72555ba02d6cf37c0d046e4460f765fd8bead2df826e2e64edf72"
+    },
+    "source_fixture_identity_sha256": "d946857b32eb357ab795d06802e9758aaf303e360e1d8149666d7eead6c23da1",
+    "manifest": {
+      "retained_artifact": "255-restored-1k-actual-20261107/manifest.json",
+      "sha256": "62a393d2390ecca220d8a8e1e6ddd5ee5eaec5d02160a74068f9b0fa003b3b2d"
+    },
+    "input_sha256": "1986071901b4004618310b15f2ebcbf6f03e6ee7afc9e113eca6d4deff893ef2",
+    "spec_sha256": "8c34c17b844bc9b80fe43bab20e88437f123fb1c17ab8ea1522f81d3986b4f44",
+    "io_sha256": "68ff893e3e7875ded55844b381e54a364c5696173e785ca40894cd767f1ea3e5",
+    "actual_generations": 8,
+    "raw_variant_observations": 189,
+    "missing_prerequisites": [
+      {
+        "case_ordinal": 35,
+        "prerequisite": "Current recall cannot substitute another branch/revision for the observed checkout",
+        "variant": "base"
+      },
+      {
+        "case_ordinal": 63,
+        "prerequisite": "Unsafe query must not become returned context or audit content",
+        "variant": "base"
+      },
+      {
+        "case_ordinal": 64,
+        "prerequisite": "Unsafe query must not become returned context or audit content",
+        "variant": "base"
+      },
+      {
+        "case_ordinal": 65,
+        "prerequisite": "Unexecuted actual state transition requires its own reviewed controlled phase: remote-endpoint-configured-not-approved",
+        "variant": "base"
+      },
+      {
+        "case_ordinal": 66,
+        "prerequisite": "Unexecuted actual state transition requires its own reviewed controlled phase: embedding-service-stopped",
+        "variant": "base"
+      },
+      {
+        "case_ordinal": 67,
+        "prerequisite": "Unexecuted actual state transition requires its own reviewed controlled phase: embedding-service-stopped",
+        "variant": "base"
+      },
+      {
+        "case_ordinal": 68,
+        "prerequisite": "Unexecuted actual state transition requires its own reviewed controlled phase: candidate-vector-fill-interrupted-no-prior-generation",
+        "variant": "base"
+      },
+      {
+        "case_ordinal": 69,
+        "prerequisite": "Unexecuted actual state transition requires its own reviewed controlled phase: prior-complete-generation-active-candidate-interrupted-no-source-change",
+        "variant": "base"
+      },
+      {
+        "case_ordinal": 70,
+        "prerequisite": "Unexecuted actual state transition requires its own reviewed controlled phase: only-generation-built-for-main-bank-state",
+        "variant": "base"
+      },
+      {
+        "case_ordinal": 71,
+        "prerequisite": "Unexecuted actual state transition requires its own reviewed controlled phase: configured-embedding-profile-changed-since-generation",
+        "variant": "base"
+      },
+      {
+        "case_ordinal": 72,
+        "prerequisite": "Unexecuted actual state transition requires its own reviewed controlled phase: approved-opaque-remote-alias-complete-generation",
+        "variant": "base"
+      },
+      {
+        "case_ordinal": 73,
+        "prerequisite": "Actual changed canonical source with a stale prior generation and reviewed fencing observation required; ordinary rebuild does not exercise stale state",
+        "variant": "base"
+      },
+      {
+        "case_ordinal": 35,
+        "prerequisite": "Current recall cannot substitute another branch/revision for the observed checkout",
+        "variant": "overlay"
+      },
+      {
+        "case_ordinal": 63,
+        "prerequisite": "Unsafe query must not become returned context or audit content",
+        "variant": "overlay"
+      },
+      {
+        "case_ordinal": 64,
+        "prerequisite": "Unsafe query must not become returned context or audit content",
+        "variant": "overlay"
+      },
+      {
+        "case_ordinal": 65,
+        "prerequisite": "Unexecuted actual state transition requires its own reviewed controlled phase: remote-endpoint-configured-not-approved",
+        "variant": "overlay"
+      },
+      {
+        "case_ordinal": 66,
+        "prerequisite": "Unexecuted actual state transition requires its own reviewed controlled phase: embedding-service-stopped",
+        "variant": "overlay"
+      },
+      {
+        "case_ordinal": 67,
+        "prerequisite": "Unexecuted actual state transition requires its own reviewed controlled phase: embedding-service-stopped",
+        "variant": "overlay"
+      },
+      {
+        "case_ordinal": 68,
+        "prerequisite": "Unexecuted actual state transition requires its own reviewed controlled phase: candidate-vector-fill-interrupted-no-prior-generation",
+        "variant": "overlay"
+      },
+      {
+        "case_ordinal": 69,
+        "prerequisite": "Unexecuted actual state transition requires its own reviewed controlled phase: prior-complete-generation-active-candidate-interrupted-no-source-change",
+        "variant": "overlay"
+      },
+      {
+        "case_ordinal": 70,
+        "prerequisite": "Unexecuted actual state transition requires its own reviewed controlled phase: only-generation-built-for-main-bank-state",
+        "variant": "overlay"
+      },
+      {
+        "case_ordinal": 71,
+        "prerequisite": "Unexecuted actual state transition requires its own reviewed controlled phase: configured-embedding-profile-changed-since-generation",
+        "variant": "overlay"
+      },
+      {
+        "case_ordinal": 72,
+        "prerequisite": "Unexecuted actual state transition requires its own reviewed controlled phase: approved-opaque-remote-alias-complete-generation",
+        "variant": "overlay"
+      },
+      {
+        "case_ordinal": 73,
+        "prerequisite": "Actual changed canonical source with a stale prior generation and reviewed fencing observation required; ordinary rebuild does not exercise stale state",
+        "variant": "overlay"
+      }
+    ],
+    "cleanup": {
+      "sizes": [
+        {
+          "graph": {
+            "borrowed_artifacts_untouched": true,
+            "forensic_erasure_claim": false,
+            "resources": [
+              {
+                "absent": true,
+                "resource": {
+                  "id": "a622d9519252f4e74c0db385ed443bea5eb6b0537c052562f50a8cb46218f826",
+                  "name": "am255-independent-fde8e4387517-b22bf4a2",
+                  "type": "container"
+                }
+              },
+              {
+                "absent": true,
+                "resource": {
+                  "created": "2026-11-06T17:07:37.049748345-08:00",
+                  "name": "am255-independent-fde8e4387517-b22bf4a2-data",
+                  "type": "volume"
+                }
+              },
+              {
+                "absent": true,
+                "resource": {
+                  "created": "2026-11-06T17:07:37.266926595-08:00",
+                  "name": "am255-independent-fde8e4387517-b22bf4a2-logs",
+                  "type": "volume"
+                }
+              }
+            ],
+            "status": "disposed"
+          },
+          "model": {
+            "exit": 0,
+            "pid": 24573,
+            "reaped": true,
+            "run_id": "fde8e43875174786ad2dafccf727d62f"
+          },
+          "model_finalization_error": null
+        }
+      ],
+      "status": "disposed"
+    },
+    "scorer_or_oracles_opened": false,
+    "reference_profile": "SSG MAGE e8e0364\u2026 with llama.cpp9341/a578bb6b9 Metal MTL0 and exact Qwen3-Embedding-8B Q8_0 d20ddc71\u2026; not upstream9360 managed candidate",
+    "limits": [
+      "Reference single-size operational success only; no quality verdict.",
+      "Runtime transitions and semantic outcome/caveat mapping remain unimplemented prerequisites.",
+      "Shared-host resources do not establish clean-host latency."
+    ]
+  },
+  "corrected_all_size_freeze": {
+    "retained_artifact": "255-a4ac326-allsize-freeze-controller-20261107/completion.json",
+    "sha256": "b183792502ab0ec38bc4184492ac577d15856ab73f58f09358f92542da6520e9",
+    "source_commit": "a4ac3263ba769812311787f70a07dacc8aea7c20",
+    "started_at": "2026-11-07T01:14:00.211261+00:00",
+    "exit": 0,
+    "elapsed_seconds": 938.2815779169905,
+    "freeze": {
+      "retained_artifact": "255-a4ac326-allsize-freeze-20261107/freeze.json",
+      "sha256": "8f7e726c770a43a79ac47992a07412f83f2108f88bfb91fa220ca75f79467f8a"
+    },
+    "sizes": [
+      1000,
+      10000,
+      50000
+    ],
+    "services_started": false
+  },
+  "all_size_execution_launch": {
+    "source_commit": "a4ac3263ba769812311787f70a07dacc8aea7c20",
+    "freeze_sha256": "8f7e726c770a43a79ac47992a07412f83f2108f88bfb91fa220ca75f79467f8a",
+    "launch": {
+      "retained_artifact": "255-a4ac326-allsize-actual-controller-20261107/launch.json",
+      "sha256": "ffbf77c02d2b9607cd2160d3e34bde4e8d7e5263a80f2f4235b12f015923edff"
+    },
+    "state_at_recording": "Launched; completion and scoring require separate actual receipts. No result inferred from launch."
+  },
+  "provenance_limit": "Public bounded projection of private synthetic experiment artifacts. Hash binding establishes bytes, not publisher authentication. Original failures remain unchanged; private model/server/host inventories and raw project content are not published."
+}

@@ -59,6 +59,44 @@
     "assessment": {"enum": ["complete", "partial", "stale", "unavailable", "unverified", "not-applicable"]},
     "capability": {"enum": ["available", "partial", "unavailable", "pending", "incompatible", "not-applicable"]},
     "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "related_query": {
+      "type": "object", "additionalProperties": false,
+      "required": ["template", "arguments", "page_token"],
+      "properties": {
+        "template": {"enum": ["replacement-evidence", "component-attempts", "recorded-related"]},
+        "arguments": {"type": "object"},
+        "page_token": {"type": ["string", "null"]}
+      },
+      "oneOf": [
+        {"properties": {"template": {"const": "replacement-evidence"}, "arguments": {
+          "type": "object", "additionalProperties": false, "required": ["historical"],
+          "properties": {"historical": {"type": "boolean"}}
+        }}},
+        {"properties": {"template": {"const": "component-attempts"}, "arguments": {
+          "type": "object", "additionalProperties": false, "required": ["component", "task"],
+          "properties": {
+            "component": {"type": "string", "minLength": 1, "pattern": "^(?!/)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*//)(?!.*\\\\)(?!.*\\/$)[^\\u0000-\\u001f]+$"},
+            "task": {"type": ["string", "null"]}
+          }
+        }}},
+        {"properties": {"template": {"const": "recorded-related"}, "arguments": {
+          "type": "object", "additionalProperties": false, "required": ["relations"],
+          "properties": {"relations": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {
+            "enum": ["CORRECTS", "SUPERSEDES", "SUPERSEDED_BY", "DERIVED_FROM", "SUPPORTED_BY", "SIMILAR_SUGGESTION", "IN_SCOPE"]
+          }}}
+        }}}
+      ]
+    },
+    "related_request": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema", "selection_ref", "context", "query"],
+      "properties": {
+        "schema": {"const": "agent-memory/related-request-v1"},
+        "selection_ref": {"type": "string", "minLength": 1},
+        "context": {"type": "object", "additionalProperties": {"type": "string"}},
+        "query": {"$ref": "#/$defs/related_query"}
+      }
+    },
     "native_coverage": {
       "type": "object", "additionalProperties": false,
       "required": ["bank_observation_sha256", "context", "scope_context", "excluded_counts", "semantic_coverage", "pending_recovery_unit_ids", "pending_recovery_units", "recovery_required_actions"],
@@ -133,12 +171,13 @@
     },
     "result": {
       "type": "object", "additionalProperties": false,
-      "required": ["native", "selection_ref", "relation", "mandatory_caveats", "related"],
+      "required": ["native", "selection_ref", "relation", "mandatory_caveats", "related", "related_next_page"],
       "properties": {
         "native": {"$ref": "#/$defs/native"},
         "selection_ref": {"type": ["string", "null"]},
         "relation": {"enum": [null, "recorded", "inferred"]},
         "related": {"type": "array", "items": {"$ref": "#/$defs/related"}},
+        "related_next_page": {"type": ["string", "null"]},
         "mandatory_caveats": {"type": "array", "items": {"$ref": "#/$defs/native"}}
       }
     },
