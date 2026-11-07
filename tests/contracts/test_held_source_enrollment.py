@@ -84,7 +84,8 @@ class HeldSourceEnrollment(unittest.TestCase):
         for path, value in [('manifest.json', manifest), ('unit-map.json', unit_map),
                 ('proposals/' + proposal_id + '.json', proposal), ('ledger/00000000.json', ledger),
                 ('ledger-head.json', head), ('journal.json', {'schema': 'agent-memory/layout-recovery-journal-v1',
-                 'operation_id': operation, 'proposal_sha256': digest(encoded(proposal))})]:
+                 'operation_id': operation, 'proposal_sha256': digest(encoded(proposal)),
+                 'manifest_sha256': digest(encoded(manifest))})]:
             state.write_once(directory / path, value)
         index = state.index(repo)
         index['operations'][operation] = {'state': 'active', 'project_id': scope['project_id'],
