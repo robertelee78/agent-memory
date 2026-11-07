@@ -4,7 +4,7 @@ import json
 import unittest
 
 from world import World
-from contracts.test_admission import AdmissionContract
+from contracts import test_admission
 import layout_recovery_fixtures as f
 
 
@@ -12,7 +12,7 @@ class RecoveryComparisonContract(unittest.TestCase):
     def test_lexical_miss_omission_and_substituted_frontier_never_prove_novelty(self):
         with World() as w:
             command, source, repo, bank, _, inspected, applied = f.small_pending(w)
-            helper = AdmissionContract('runTest')
+            helper = test_admission.AdmissionContract('runTest')
             helper.pid = inspected['manifest']['project_id']
             helper.actor = inspected['manifest']['identity']['scope_context']['developer_id']
             capture = helper.request('verified-repository', 'durable-discovery')

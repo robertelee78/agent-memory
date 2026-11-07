@@ -207,6 +207,13 @@ reserve the complete inherited frontier before an atomic hold handoff.
 capacity before append-only refinement; it does not admit children.
 `resolve` requires real committed ordinary receipts and independently reviewed
 exact coverage or explicit non-guidance discard authority, never body similarity.
+Its public envelope identifies `operation:resolve` and the exact recovery
+operation. `state:prepared` verifies the preview, not application;
+`state:resolved` verifies the completed resolution and reports the observed
+semantic coverage separately. An exact completed retry reports
+`state:historical`, `receipt_is_historical:true` and no new writes. Historical
+verification MUST NOT be treated as a fresh complete-coverage claim; use current
+status or qualified recall for that observation.
 For held ordinary transactions, `recover-nested` is the sole aware interface:
 rollback only before the durable canonical receipt; finish only after it, linking
 ledger resolution durably before restoring the hold. Missing evidence remains

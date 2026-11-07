@@ -306,7 +306,7 @@ def admission_proposal(world, command, source, repo, bank, inspected, *, full, p
     target = 'topics/' + captured['request']['candidate']['metadata']['id'] + '.md'
     pending = []
     for number, row in enumerate(view['pending_matches']):
-        credited = full and (policy_number is None or row['source_ranges'][0]['start'] == policy_number * 3560)
+        credited = full and (policy_number is None or number == policy_number)
         claim = {'unit_id': row['unit_id'], 'coverage': 'full' if credited else 'none',
             'covered_source_ranges': row['source_ranges'] if credited else [],
             'target_record_refs': [{'id': captured['request']['candidate']['metadata']['id'], 'version': 1,

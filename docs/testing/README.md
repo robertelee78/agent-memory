@@ -185,6 +185,7 @@ private recovery operation, staged index, HEAD and feature bytes. This is a
 cooperative mediated-reader check, not a fence against direct edits, already
 running readers, other installations or copied checkouts. The fixture records
 release provenance; it does not claim independent signature verification.
+
 An additional disposable public-CLI observation exercised a genuine normal
 repository-evidenced admission whose one reviewed canonical record covered all
 eight pending units: the terminal ledger linked eight distinct resolution
@@ -192,8 +193,10 @@ receipts to the same durable admission operation. Its synthetic source,
 staged index, unstaged feature bytes and HEAD were unchanged; original bank
 bytes remained in the private archive. The raw local transcript is retained at
 `/tmp/am244-one-admission-smoke-raw.txt`. A separate sequential eight-admission
-run is retained at `/tmp/am244-consumer-smoke-raw-2.txt`. These controlled
-attestations demonstrate consumer mechanics, not independent semantic review.
+run is retained at `/tmp/am244-consumer-smoke-raw-2.txt`; it took 500.97 seconds
+and did not satisfy the unchanged 300-second worker deadline. Only the separate
+single-admission route above supplied the bounded eight-unit mechanics proof.
+These controlled attestations are not independent semantic review.
 An additional disposable comparison control
 (`/tmp/am244-negative-smoke-raw-2.txt`) observed an unconfirmed capture remain
 pending, found the pending unit despite two lexical misses, accepted the
@@ -207,8 +210,9 @@ The corresponding registered regression has not yet been run as a suite.
 The catalog frontier-only disposable observation used enabled and disabled
 recall across a reviewed non-guidance terminal resolution with identical
 canonical source hashes (`/tmp/am244-catalog-smoke-raw-2.txt`). This standalone
-candidate did not produce an authenticated warm catalog hit; the registered
-warm-hit assertion requires the separately integrated #206 catalog repair.
+candidate did not produce an authenticated warm catalog hit. Its warm-hit
+assertion remains required; no combined-candidate catalog qualification is
+inferred from the presence of the separately integrated #206 changes.
 Exact 16,384/16,385 source bytes are already covered by
 `test_bounded_bank_observation.py`. The 64/65 mandatory-row and exact
 65,536/65,537 disclosure/proof edges are not claimed by these observations:

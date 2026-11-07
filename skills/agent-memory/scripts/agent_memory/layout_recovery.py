@@ -1468,6 +1468,13 @@ def main(argv=None):
             if proposed is None and (request is None or output is None or not args.unit or not args.operation):
                 raise ContractError('Resolution preview requires actual terminal evidence and exact unit/operation')
             value = frontier.resolve(args.repo, operation_id=args.operation, unit_id=args.unit, terminal=request, proposal=proposed)
+            resolved_operation = (proposed.get('proposal', proposed)['operation_id']
+                                  if proposed is not None else args.operation)
+            historical = value.get('receipt_is_historical', False)
+            value = result('resolve', resolved_operation, **{**value,
+                'state': 'prepared' if proposed is None else 'historical' if historical else 'resolved',
+                'verified': True, 'private_artifact_writes_performed': value.get('writes_performed', False),
+                'temporary_lock_writes_performed': not historical})
         elif args.command == 'revise-units':
             from . import layout_units
             if proposed is None and (request is None or output is None or not args.operation):

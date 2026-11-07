@@ -7,7 +7,7 @@ import uuid
 
 from world import World
 from runtime_update_fixtures import snapshot
-from contracts.test_admission import AdmissionContract
+from contracts import test_admission
 import layout_recovery_fixtures as recovery
 import v014_runtime_fixture
 
@@ -27,7 +27,7 @@ class LegacyLayoutConsumers(unittest.TestCase):
             command, _, repo, bank, _, inspected, applied = recovery.small_pending(world)
             self.assertFalse(applied['semantic_recovery_complete'])
             self.assertTrue((bank / '.agent-memory-transaction.md').is_file())
-            helper = AdmissionContract()
+            helper = test_admission.AdmissionContract()
             helper.pid = inspected['manifest']['project_id']
             helper.actor = inspected['manifest']['identity']['scope_context']['developer_id']
             capture = recovery.save(world, helper.request())
