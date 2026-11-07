@@ -18,6 +18,31 @@ python3 -B scripts/evaluations/daily_use.py --root . --out /tmp/am-daily-require
 python3 -B scripts/evaluations/daily_use.py --root . --out /tmp/am-daily-required-24-10000 --sessions 24 --lessons 10000 --recovery-controls --semantic-scenarios
 ```
 
+Selected review inspections now default to `--page-source export`: one checked
+inspection writes the complete private page bundle, and the controller verifies
+and derives its judgment from actual page items without rebuilding per page.
+`--page-source pages` retains genuine public `page-v2` acquisition for a comparison
+arm. Both modes share the same consumer and all original fault/event assertions;
+inspections without a page consumer do not request an export. The lost-manifest
+control still invokes actual `page-v2` on the missing manifest before fresh
+reconstruction.
+
+Every run writes `fixture-identities.json`. Reuse it with
+`--fixture-identities /private/baseline/fixture-identities.json` in the other arm
+to preserve the same project and two developer identities before public binding.
+The controller does not mock production UUIDs or clocks. Keep source/runtime,
+corpus, worker schedule and declared timestamp differences explicit. Command
+receipts include monotonic start/end times; summed overlapping command durations
+are not wall time. The operator's normally busy host is an eligible measurement
+environment, not an isolated benchmark. No percentage speedup follows merely
+from choosing export mode.
+
+Source binding hashes archival research symlink targets as literal link bytes,
+without following them. Executable/portable sources must remain ordinary files;
+the complete portable inventory and tracked source modes/bytes are rechecked.
+The reviewed third-capture archive queries avoid UUID-path substring artifacts
+without skipping returned matches or weakening the comparison budget.
+
 Independent size/session variations exercise the compatible two-round and
 recovery core separately:
 

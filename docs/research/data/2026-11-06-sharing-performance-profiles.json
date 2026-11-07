@@ -1,0 +1,1905 @@
+{
+  "source_commit": "33c95bbebef61e3ac6e58c5c59e0d411b6dc63e8",
+  "runtime": "Python 3.15.0 macOS arm64",
+  "profile_overhead": true,
+  "full_qualification": false,
+  "speedup_measured": false,
+  "operations": {
+    "209-rca-profile-run-01/inspect": {
+      "label": "inspect",
+      "exit": 0,
+      "elapsed_s": 74.31319245800842,
+      "pstats_sha256": "513331e0bb71b7255d77293d4de8e721d2180f2c28be08d7012c89fe6f0876f1",
+      "functions": [
+        {
+          "file": "sharing_frontier.py",
+          "line": 197,
+          "name": "build",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.007901163000000001,
+          "cumulative_s": 74.05760904200001
+        },
+        {
+          "file": "semantic_sharing.py",
+          "line": 38,
+          "name": "snapshots",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.004862164,
+          "cumulative_s": 50.418526666000005
+        },
+        {
+          "file": "sharing_recovery.py",
+          "line": 282,
+          "name": "observe",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.015268460000000001,
+          "cumulative_s": 46.833287000000006
+        },
+        {
+          "file": "bank_observation.py",
+          "line": 156,
+          "name": "observe",
+          "calls": 5,
+          "primitive_calls": 5,
+          "own_s": 0.004860878,
+          "cumulative_s": 33.132815583
+        },
+        {
+          "file": "bank_contract.py",
+          "line": 313,
+          "name": "validate_files",
+          "calls": 15,
+          "primitive_calls": 15,
+          "own_s": 0.001364166,
+          "cumulative_s": 33.122249458
+        },
+        {
+          "file": "sharing_frontier.py",
+          "line": 30,
+          "name": "components",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.072644681,
+          "cumulative_s": 10.430610959000001
+        },
+        {
+          "file": "semantic_sharing.py",
+          "line": 119,
+          "name": "final_sources",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.0017239590000000002,
+          "cumulative_s": 6.822210792000001
+        },
+        {
+          "file": "subprocess.py",
+          "line": 627,
+          "name": "run",
+          "calls": 353,
+          "primitive_calls": 353,
+          "own_s": 0.008682805,
+          "cumulative_s": 4.34578517
+        },
+        {
+          "file": "sharing_frontier.py",
+          "line": 130,
+          "name": "selected",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.012310761,
+          "cumulative_s": 0.15151775
+        },
+        {
+          "file": "sharing_frontier.py",
+          "line": 181,
+          "name": "page_payloads",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 2.6046e-05,
+          "cumulative_s": 0.013168875
+        },
+        {
+          "file": "project_identity.py",
+          "line": 157,
+          "name": "observe",
+          "calls": 9,
+          "primitive_calls": 9,
+          "own_s": 0.00010703600000000001,
+          "cumulative_s": 0.0066232090000000006
+        },
+        {
+          "file": "developer_identity.py",
+          "line": 130,
+          "name": "observe",
+          "calls": 7,
+          "primitive_calls": 7,
+          "own_s": 3.5961000000000003e-05,
+          "cumulative_s": 0.0016162090000000002
+        }
+      ]
+    },
+    "209-rca-profile-run-01/page": {
+      "label": "page",
+      "exit": 0,
+      "elapsed_s": 74.03375233302359,
+      "pstats_sha256": "48897bc5b7988d2435010c39617f719649774a025de0f5beda0efe04defaf96f",
+      "functions": [
+        {
+          "file": "sharing_frontier.py",
+          "line": 197,
+          "name": "build",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.008405292,
+          "cumulative_s": 73.700029958
+        },
+        {
+          "file": "semantic_sharing.py",
+          "line": 38,
+          "name": "snapshots",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.004878791,
+          "cumulative_s": 49.712685209
+        },
+        {
+          "file": "sharing_recovery.py",
+          "line": 282,
+          "name": "observe",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.014283208,
+          "cumulative_s": 46.114276708000006
+        },
+        {
+          "file": "bank_contract.py",
+          "line": 313,
+          "name": "validate_files",
+          "calls": 15,
+          "primitive_calls": 15,
+          "own_s": 0.001351371,
+          "cumulative_s": 33.223122665000005
+        },
+        {
+          "file": "bank_observation.py",
+          "line": 156,
+          "name": "observe",
+          "calls": 5,
+          "primitive_calls": 5,
+          "own_s": 0.006059429000000001,
+          "cumulative_s": 32.804582917000005
+        },
+        {
+          "file": "sharing_frontier.py",
+          "line": 30,
+          "name": "components",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.068575306,
+          "cumulative_s": 10.238488708
+        },
+        {
+          "file": "semantic_sharing.py",
+          "line": 119,
+          "name": "final_sources",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.002031208,
+          "cumulative_s": 7.194333125000001
+        },
+        {
+          "file": "subprocess.py",
+          "line": 627,
+          "name": "run",
+          "calls": 353,
+          "primitive_calls": 353,
+          "own_s": 0.010732269000000001,
+          "cumulative_s": 4.21315534
+        },
+        {
+          "file": "sharing_frontier.py",
+          "line": 130,
+          "name": "selected",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.011696028,
+          "cumulative_s": 0.130742792
+        },
+        {
+          "file": "sharing_frontier.py",
+          "line": 181,
+          "name": "page_payloads",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 2.8083000000000002e-05,
+          "cumulative_s": 0.013230333
+        },
+        {
+          "file": "project_identity.py",
+          "line": 157,
+          "name": "observe",
+          "calls": 9,
+          "primitive_calls": 9,
+          "own_s": 0.000130294,
+          "cumulative_s": 0.006818794
+        },
+        {
+          "file": "developer_identity.py",
+          "line": 130,
+          "name": "observe",
+          "calls": 7,
+          "primitive_calls": 7,
+          "own_s": 4.0081000000000005e-05,
+          "cumulative_s": 0.001676666
+        }
+      ]
+    },
+    "209-rca-pipeline-profile-run-01/inspect": {
+      "label": "inspect",
+      "exit": 0,
+      "elapsed_s": 73.36139508301858,
+      "pstats_sha256": "275e7eae3291f34bff39a651c78bf9f798e4f18dd75ac24e5f2f6e7708c879b5",
+      "functions": [
+        {
+          "file": "sharing_frontier.py",
+          "line": 197,
+          "name": "build",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.007476044,
+          "cumulative_s": 73.107596458
+        },
+        {
+          "file": "semantic_sharing.py",
+          "line": 38,
+          "name": "snapshots",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.004446663,
+          "cumulative_s": 49.916093625
+        },
+        {
+          "file": "sharing_recovery.py",
+          "line": 282,
+          "name": "observe",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.015155289,
+          "cumulative_s": 46.357855375
+        },
+        {
+          "file": "bank_contract.py",
+          "line": 313,
+          "name": "validate_files",
+          "calls": 15,
+          "primitive_calls": 15,
+          "own_s": 0.00131733,
+          "cumulative_s": 32.821117291
+        },
+        {
+          "file": "bank_observation.py",
+          "line": 156,
+          "name": "observe",
+          "calls": 5,
+          "primitive_calls": 5,
+          "own_s": 0.00485558,
+          "cumulative_s": 32.413204916000005
+        },
+        {
+          "file": "sharing_frontier.py",
+          "line": 30,
+          "name": "components",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.067288547,
+          "cumulative_s": 10.176903417
+        },
+        {
+          "file": "semantic_sharing.py",
+          "line": 119,
+          "name": "final_sources",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.0014684180000000002,
+          "cumulative_s": 6.6937334580000005
+        },
+        {
+          "file": "subprocess.py",
+          "line": 627,
+          "name": "run",
+          "calls": 353,
+          "primitive_calls": 353,
+          "own_s": 0.008170107000000001,
+          "cumulative_s": 4.213866165000001
+        },
+        {
+          "file": "sharing_frontier.py",
+          "line": 130,
+          "name": "selected",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.012013429,
+          "cumulative_s": 0.136334791
+        },
+        {
+          "file": "sharing_frontier.py",
+          "line": 181,
+          "name": "page_payloads",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 2.5625000000000003e-05,
+          "cumulative_s": 0.013141083000000001
+        },
+        {
+          "file": "project_identity.py",
+          "line": 157,
+          "name": "observe",
+          "calls": 9,
+          "primitive_calls": 9,
+          "own_s": 9.8794e-05,
+          "cumulative_s": 0.006521460000000001
+        },
+        {
+          "file": "developer_identity.py",
+          "line": 130,
+          "name": "observe",
+          "calls": 7,
+          "primitive_calls": 7,
+          "own_s": 4.2709e-05,
+          "cumulative_s": 0.0016605830000000002
+        }
+      ]
+    },
+    "209-rca-pipeline-profile-run-01/page": {
+      "label": "page",
+      "exit": 0,
+      "elapsed_s": 72.27307504200144,
+      "pstats_sha256": "0935238122b16a54f11dd013f5171dded557f76c7632ced6001ca4114ce39bdf",
+      "functions": [
+        {
+          "file": "sharing_frontier.py",
+          "line": 197,
+          "name": "build",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.007478209,
+          "cumulative_s": 72.04761275
+        },
+        {
+          "file": "semantic_sharing.py",
+          "line": 38,
+          "name": "snapshots",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.004581419000000001,
+          "cumulative_s": 49.271278292000005
+        },
+        {
+          "file": "sharing_recovery.py",
+          "line": 282,
+          "name": "observe",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.013905463000000002,
+          "cumulative_s": 45.745353958
+        },
+        {
+          "file": "bank_contract.py",
+          "line": 313,
+          "name": "validate_files",
+          "calls": 15,
+          "primitive_calls": 15,
+          "own_s": 0.0012872010000000002,
+          "cumulative_s": 32.537697248
+        },
+        {
+          "file": "bank_observation.py",
+          "line": 156,
+          "name": "observe",
+          "calls": 5,
+          "primitive_calls": 5,
+          "own_s": 0.004901170000000001,
+          "cumulative_s": 31.950752459
+        },
+        {
+          "file": "sharing_frontier.py",
+          "line": 30,
+          "name": "components",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.064945764,
+          "cumulative_s": 10.037948375000001
+        },
+        {
+          "file": "semantic_sharing.py",
+          "line": 119,
+          "name": "final_sources",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.002048667,
+          "cumulative_s": 6.579403916
+        },
+        {
+          "file": "subprocess.py",
+          "line": 627,
+          "name": "run",
+          "calls": 353,
+          "primitive_calls": 353,
+          "own_s": 0.010132863,
+          "cumulative_s": 4.093824008
+        },
+        {
+          "file": "sharing_frontier.py",
+          "line": 130,
+          "name": "selected",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.0110653,
+          "cumulative_s": 0.12634641600000002
+        },
+        {
+          "file": "sharing_frontier.py",
+          "line": 181,
+          "name": "page_payloads",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 2.9462e-05,
+          "cumulative_s": 0.012984375000000001
+        },
+        {
+          "file": "project_identity.py",
+          "line": 157,
+          "name": "observe",
+          "calls": 9,
+          "primitive_calls": 9,
+          "own_s": 0.000104164,
+          "cumulative_s": 0.006633207
+        },
+        {
+          "file": "developer_identity.py",
+          "line": 130,
+          "name": "observe",
+          "calls": 7,
+          "primitive_calls": 7,
+          "own_s": 3.8496000000000005e-05,
+          "cumulative_s": 0.0016746250000000001
+        }
+      ]
+    },
+    "209-rca-pipeline-profile-run-01/publication-initial": {
+      "label": "publication-initial",
+      "exit": 0,
+      "elapsed_s": 72.36062975000823,
+      "pstats_sha256": "e03b15c91cc7a691f47a5b09531afccfe19bc98fa18ef18aa98510bbc6ca3782",
+      "functions": [
+        {
+          "file": "sharing_frontier.py",
+          "line": 197,
+          "name": "build",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.007463253,
+          "cumulative_s": 72.120484084
+        },
+        {
+          "file": "semantic_sharing.py",
+          "line": 38,
+          "name": "snapshots",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.0052200860000000005,
+          "cumulative_s": 49.331211666
+        },
+        {
+          "file": "sharing_recovery.py",
+          "line": 282,
+          "name": "observe",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.014983999000000001,
+          "cumulative_s": 45.80317575
+        },
+        {
+          "file": "bank_contract.py",
+          "line": 313,
+          "name": "validate_files",
+          "calls": 15,
+          "primitive_calls": 15,
+          "own_s": 0.001240248,
+          "cumulative_s": 32.674952456
+        },
+        {
+          "file": "bank_observation.py",
+          "line": 156,
+          "name": "observe",
+          "calls": 5,
+          "primitive_calls": 5,
+          "own_s": 0.005350612,
+          "cumulative_s": 31.959301624000002
+        },
+        {
+          "file": "sharing_frontier.py",
+          "line": 30,
+          "name": "components",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.06370990600000001,
+          "cumulative_s": 10.03631975
+        },
+        {
+          "file": "semantic_sharing.py",
+          "line": 119,
+          "name": "final_sources",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.0015925420000000002,
+          "cumulative_s": 6.6319485
+        },
+        {
+          "file": "subprocess.py",
+          "line": 627,
+          "name": "run",
+          "calls": 353,
+          "primitive_calls": 353,
+          "own_s": 0.008295971000000001,
+          "cumulative_s": 4.009891298
+        },
+        {
+          "file": "sharing_frontier.py",
+          "line": 130,
+          "name": "selected",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.011204785,
+          "cumulative_s": 0.1270415
+        },
+        {
+          "file": "sharing_frontier.py",
+          "line": 181,
+          "name": "page_payloads",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 2.3791000000000003e-05,
+          "cumulative_s": 0.012988125000000001
+        },
+        {
+          "file": "project_identity.py",
+          "line": 157,
+          "name": "observe",
+          "calls": 9,
+          "primitive_calls": 9,
+          "own_s": 9.0876e-05,
+          "cumulative_s": 0.006259748000000001
+        },
+        {
+          "file": "developer_identity.py",
+          "line": 130,
+          "name": "observe",
+          "calls": 7,
+          "primitive_calls": 7,
+          "own_s": 3.6669000000000004e-05,
+          "cumulative_s": 0.0016516270000000001
+        }
+      ]
+    },
+    "209-rca-pipeline-profile-run-01/publication-selected": {
+      "label": "publication-selected",
+      "exit": 0,
+      "elapsed_s": 74.32776616699994,
+      "pstats_sha256": "20f4e652e0d55b04f3a67a7c094ca516528ea7df9d172ea0d93cfadd18b9e2bf",
+      "functions": [
+        {
+          "file": "sharing_frontier.py",
+          "line": 197,
+          "name": "build",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.008687044000000001,
+          "cumulative_s": 74.072595125
+        },
+        {
+          "file": "semantic_sharing.py",
+          "line": 38,
+          "name": "snapshots",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.005181749,
+          "cumulative_s": 50.329749875000005
+        },
+        {
+          "file": "sharing_recovery.py",
+          "line": 282,
+          "name": "observe",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.015989287,
+          "cumulative_s": 46.724199416000005
+        },
+        {
+          "file": "bank_contract.py",
+          "line": 313,
+          "name": "validate_files",
+          "calls": 15,
+          "primitive_calls": 15,
+          "own_s": 0.0013058380000000001,
+          "cumulative_s": 33.039876293
+        },
+        {
+          "file": "bank_observation.py",
+          "line": 156,
+          "name": "observe",
+          "calls": 5,
+          "primitive_calls": 5,
+          "own_s": 0.004794912,
+          "cumulative_s": 32.912725124000005
+        },
+        {
+          "file": "sharing_frontier.py",
+          "line": 30,
+          "name": "components",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.06747457700000001,
+          "cumulative_s": 10.218175042
+        },
+        {
+          "file": "semantic_sharing.py",
+          "line": 119,
+          "name": "final_sources",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.0017444160000000002,
+          "cumulative_s": 6.69489125
+        },
+        {
+          "file": "subprocess.py",
+          "line": 627,
+          "name": "run",
+          "calls": 353,
+          "primitive_calls": 353,
+          "own_s": 0.007698894,
+          "cumulative_s": 4.003043618
+        },
+        {
+          "file": "sharing_frontier.py",
+          "line": 130,
+          "name": "selected",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.038351581,
+          "cumulative_s": 0.7438640830000001
+        },
+        {
+          "file": "sharing_frontier.py",
+          "line": 181,
+          "name": "page_payloads",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 3.1708e-05,
+          "cumulative_s": 0.014578291
+        },
+        {
+          "file": "project_identity.py",
+          "line": 157,
+          "name": "observe",
+          "calls": 9,
+          "primitive_calls": 9,
+          "own_s": 0.00010342000000000001,
+          "cumulative_s": 0.006650958
+        },
+        {
+          "file": "developer_identity.py",
+          "line": 130,
+          "name": "observe",
+          "calls": 7,
+          "primitive_calls": 7,
+          "own_s": 4.271e-05,
+          "cumulative_s": 0.0018620840000000002
+        }
+      ]
+    },
+    "209-rca-pipeline-profile-run-01/publication-page-0": {
+      "label": "publication-page-0",
+      "exit": 0,
+      "elapsed_s": 75.0723098749877,
+      "pstats_sha256": "38520fd94c9c262fa9e128060952b39e3bbd7d0656ab8e112722a86c63051065",
+      "functions": [
+        {
+          "file": "sharing_frontier.py",
+          "line": 197,
+          "name": "build",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.00900604,
+          "cumulative_s": 74.80552691700001
+        },
+        {
+          "file": "semantic_sharing.py",
+          "line": 38,
+          "name": "snapshots",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.0031786260000000004,
+          "cumulative_s": 50.803075375000006
+        },
+        {
+          "file": "sharing_recovery.py",
+          "line": 282,
+          "name": "observe",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.014651125000000001,
+          "cumulative_s": 47.185344083000004
+        },
+        {
+          "file": "bank_observation.py",
+          "line": 156,
+          "name": "observe",
+          "calls": 5,
+          "primitive_calls": 5,
+          "own_s": 0.0056195740000000004,
+          "cumulative_s": 33.170324083000004
+        },
+        {
+          "file": "bank_contract.py",
+          "line": 313,
+          "name": "validate_files",
+          "calls": 15,
+          "primitive_calls": 15,
+          "own_s": 0.001325582,
+          "cumulative_s": 33.169443914
+        },
+        {
+          "file": "sharing_frontier.py",
+          "line": 30,
+          "name": "components",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.071379552,
+          "cumulative_s": 10.33212825
+        },
+        {
+          "file": "semantic_sharing.py",
+          "line": 119,
+          "name": "final_sources",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.001464625,
+          "cumulative_s": 6.695395875
+        },
+        {
+          "file": "subprocess.py",
+          "line": 627,
+          "name": "run",
+          "calls": 353,
+          "primitive_calls": 353,
+          "own_s": 0.009325355,
+          "cumulative_s": 4.112397881000001
+        },
+        {
+          "file": "sharing_frontier.py",
+          "line": 130,
+          "name": "selected",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.038486781000000005,
+          "cumulative_s": 0.756901625
+        },
+        {
+          "file": "sharing_frontier.py",
+          "line": 181,
+          "name": "page_payloads",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 2.7416000000000003e-05,
+          "cumulative_s": 0.014776333000000001
+        },
+        {
+          "file": "project_identity.py",
+          "line": 157,
+          "name": "observe",
+          "calls": 9,
+          "primitive_calls": 9,
+          "own_s": 0.00011138000000000001,
+          "cumulative_s": 0.006896167000000001
+        },
+        {
+          "file": "developer_identity.py",
+          "line": 130,
+          "name": "observe",
+          "calls": 7,
+          "primitive_calls": 7,
+          "own_s": 3.8039e-05,
+          "cumulative_s": 0.0019772080000000003
+        }
+      ]
+    },
+    "209-rca-pipeline-profile-run-01/publication-review": {
+      "label": "publication-review",
+      "exit": 0,
+      "elapsed_s": 136.1525698340265,
+      "pstats_sha256": "e22dad2cfc533c55a077417540f2fe159695fe91b57dbaecead86322ed1a3469",
+      "functions": [
+        {
+          "file": "sharing_frontier.py",
+          "line": 197,
+          "name": "build",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.008585625000000001,
+          "cumulative_s": 80.275515083
+        },
+        {
+          "file": "bank_observation.py",
+          "line": 156,
+          "name": "observe",
+          "calls": 8,
+          "primitive_calls": 8,
+          "own_s": 0.009366246,
+          "cumulative_s": 56.58041079
+        },
+        {
+          "file": "semantic_sharing.py",
+          "line": 38,
+          "name": "snapshots",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.003926166,
+          "cumulative_s": 51.642375958
+        },
+        {
+          "file": "bank_contract.py",
+          "line": 313,
+          "name": "validate_files",
+          "calls": 39,
+          "primitive_calls": 39,
+          "own_s": 0.003955878,
+          "cumulative_s": 51.460575003
+        },
+        {
+          "file": "sharing_recovery.py",
+          "line": 282,
+          "name": "observe",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.016941579000000002,
+          "cumulative_s": 47.779778750000006
+        },
+        {
+          "file": "semantic_sharing.py",
+          "line": 119,
+          "name": "final_sources",
+          "calls": 4,
+          "primitive_calls": 4,
+          "own_s": 0.006675875,
+          "cumulative_s": 30.452640417
+        },
+        {
+          "file": "sharing_frontier.py",
+          "line": 30,
+          "name": "components",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.090519443,
+          "cumulative_s": 12.503920416000001
+        },
+        {
+          "file": "subprocess.py",
+          "line": 627,
+          "name": "run",
+          "calls": 504,
+          "primitive_calls": 504,
+          "own_s": 0.014050711,
+          "cumulative_s": 6.337473561
+        },
+        {
+          "file": "sharing_frontier.py",
+          "line": 130,
+          "name": "selected",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.042091760000000006,
+          "cumulative_s": 0.7991488330000001
+        },
+        {
+          "file": "sharing_frontier.py",
+          "line": 181,
+          "name": "page_payloads",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 2.7874e-05,
+          "cumulative_s": 0.014863833000000002
+        },
+        {
+          "file": "project_identity.py",
+          "line": 157,
+          "name": "observe",
+          "calls": 12,
+          "primitive_calls": 12,
+          "own_s": 0.00014934,
+          "cumulative_s": 0.009517752
+        },
+        {
+          "file": "developer_identity.py",
+          "line": 130,
+          "name": "observe",
+          "calls": 10,
+          "primitive_calls": 10,
+          "own_s": 4.8127e-05,
+          "cumulative_s": 0.005701831
+        }
+      ]
+    },
+    "209-rca-pipeline-profile-run-01/publication-prepare": {
+      "label": "publication-prepare",
+      "exit": 0,
+      "elapsed_s": 136.1403070410015,
+      "pstats_sha256": "8ac5de8d9d9a0961f050acac314cf275ca110f26693685f31bfdcd63cfeeb423",
+      "functions": [
+        {
+          "file": "sharing_frontier.py",
+          "line": 197,
+          "name": "build",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.009097247000000001,
+          "cumulative_s": 74.36340491700001
+        },
+        {
+          "file": "bank_observation.py",
+          "line": 156,
+          "name": "observe",
+          "calls": 9,
+          "primitive_calls": 9,
+          "own_s": 0.009657905000000001,
+          "cumulative_s": 59.016308124000005
+        },
+        {
+          "file": "bank_contract.py",
+          "line": 313,
+          "name": "validate_files",
+          "calls": 41,
+          "primitive_calls": 41,
+          "own_s": 0.0038399590000000004,
+          "cumulative_s": 54.108410206
+        },
+        {
+          "file": "semantic_sharing.py",
+          "line": 38,
+          "name": "snapshots",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.0051199190000000006,
+          "cumulative_s": 50.040257959
+        },
+        {
+          "file": "sharing_recovery.py",
+          "line": 282,
+          "name": "observe",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.015956658000000002,
+          "cumulative_s": 46.440946708000006
+        },
+        {
+          "file": "semantic_sharing.py",
+          "line": 119,
+          "name": "final_sources",
+          "calls": 5,
+          "primitive_calls": 5,
+          "own_s": 0.008392667000000001,
+          "cumulative_s": 34.214953542
+        },
+        {
+          "file": "sharing_frontier.py",
+          "line": 30,
+          "name": "components",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.070450265,
+          "cumulative_s": 10.321269500000001
+        },
+        {
+          "file": "subprocess.py",
+          "line": 627,
+          "name": "run",
+          "calls": 571,
+          "primitive_calls": 571,
+          "own_s": 0.014074275,
+          "cumulative_s": 7.2498662110000005
+        },
+        {
+          "file": "sharing_frontier.py",
+          "line": 130,
+          "name": "selected",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.039724984000000005,
+          "cumulative_s": 0.7360220420000001
+        },
+        {
+          "file": "sharing_frontier.py",
+          "line": 181,
+          "name": "page_payloads",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 2.6206000000000003e-05,
+          "cumulative_s": 0.014478584000000001
+        },
+        {
+          "file": "project_identity.py",
+          "line": 157,
+          "name": "observe",
+          "calls": 14,
+          "primitive_calls": 14,
+          "own_s": 0.00012066600000000001,
+          "cumulative_s": 0.010410586000000001
+        },
+        {
+          "file": "developer_identity.py",
+          "line": 130,
+          "name": "observe",
+          "calls": 11,
+          "primitive_calls": 11,
+          "own_s": 9.258000000000001e-05,
+          "cumulative_s": 0.0027375430000000003
+        }
+      ]
+    },
+    "209-rca-pipeline-profile-run-01/publication-land": {
+      "label": "publication-land",
+      "exit": 0,
+      "elapsed_s": 320.0523308329866,
+      "pstats_sha256": "f6992634b934feb329482cd06cb443fad3fa510d8e10074e78a1aefc6f0d0958",
+      "functions": [
+        {
+          "file": "bank_observation.py",
+          "line": 156,
+          "name": "observe",
+          "calls": 25,
+          "primitive_calls": 25,
+          "own_s": 0.025062925000000003,
+          "cumulative_s": 165.29016674800002
+        },
+        {
+          "file": "sharing_recovery.py",
+          "line": 282,
+          "name": "observe",
+          "calls": 4,
+          "primitive_calls": 4,
+          "own_s": 0.035309213,
+          "cumulative_s": 136.771420917
+        },
+        {
+          "file": "bank_contract.py",
+          "line": 313,
+          "name": "validate_files",
+          "calls": 106,
+          "primitive_calls": 106,
+          "own_s": 0.008842634,
+          "cumulative_s": 130.710634004
+        },
+        {
+          "file": "sharing_frontier.py",
+          "line": 197,
+          "name": "build",
+          "calls": 2,
+          "primitive_calls": 2,
+          "own_s": 0.016350172,
+          "cumulative_s": 120.805792459
+        },
+        {
+          "file": "semantic_sharing.py",
+          "line": 38,
+          "name": "snapshots",
+          "calls": 2,
+          "primitive_calls": 2,
+          "own_s": 0.006868833,
+          "cumulative_s": 72.34532641700001
+        },
+        {
+          "file": "semantic_sharing.py",
+          "line": 119,
+          "name": "final_sources",
+          "calls": 9,
+          "primitive_calls": 9,
+          "own_s": 0.016476125,
+          "cumulative_s": 63.562741584
+        },
+        {
+          "file": "subprocess.py",
+          "line": 627,
+          "name": "run",
+          "calls": 1745,
+          "primitive_calls": 1745,
+          "own_s": 0.043870781000000005,
+          "cumulative_s": 23.046721737000002
+        },
+        {
+          "file": "sharing_frontier.py",
+          "line": 30,
+          "name": "components",
+          "calls": 2,
+          "primitive_calls": 2,
+          "own_s": 0.13331462600000002,
+          "cumulative_s": 20.340251001000002
+        },
+        {
+          "file": "sharing_frontier.py",
+          "line": 130,
+          "name": "selected",
+          "calls": 2,
+          "primitive_calls": 2,
+          "own_s": 0.075244394,
+          "cumulative_s": 1.340239167
+        },
+        {
+          "file": "project_identity.py",
+          "line": 157,
+          "name": "observe",
+          "calls": 44,
+          "primitive_calls": 44,
+          "own_s": 0.000314542,
+          "cumulative_s": 0.030744126000000004
+        },
+        {
+          "file": "sharing_frontier.py",
+          "line": 181,
+          "name": "page_payloads",
+          "calls": 2,
+          "primitive_calls": 2,
+          "own_s": 4.4954000000000004e-05,
+          "cumulative_s": 0.025180125
+        },
+        {
+          "file": "developer_identity.py",
+          "line": 130,
+          "name": "observe",
+          "calls": 34,
+          "primitive_calls": 34,
+          "own_s": 0.00029927700000000003,
+          "cumulative_s": 0.015835999
+        }
+      ]
+    },
+    "209-rca-pipeline-profile-run-01/refresh-initial": {
+      "label": "refresh-initial",
+      "exit": 0,
+      "elapsed_s": 74.2022955410066,
+      "pstats_sha256": "9b0e7d13ef2eed3a63a679b327567843564d7f8cbb695d49d72ce41987ce4c7c",
+      "functions": [
+        {
+          "file": "sharing_frontier.py",
+          "line": 197,
+          "name": "build",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.007625628000000001,
+          "cumulative_s": 73.941474084
+        },
+        {
+          "file": "semantic_sharing.py",
+          "line": 38,
+          "name": "snapshots",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.00491117,
+          "cumulative_s": 51.167189875000005
+        },
+        {
+          "file": "sharing_recovery.py",
+          "line": 282,
+          "name": "observe",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.014446419,
+          "cumulative_s": 47.629715917000006
+        },
+        {
+          "file": "bank_observation.py",
+          "line": 156,
+          "name": "observe",
+          "calls": 5,
+          "primitive_calls": 5,
+          "own_s": 0.0047690070000000005,
+          "cumulative_s": 33.803664500000004
+        },
+        {
+          "file": "bank_contract.py",
+          "line": 313,
+          "name": "validate_files",
+          "calls": 15,
+          "primitive_calls": 15,
+          "own_s": 0.0012873700000000001,
+          "cumulative_s": 32.39559175
+        },
+        {
+          "file": "sharing_frontier.py",
+          "line": 30,
+          "name": "components",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.06218971,
+          "cumulative_s": 10.017291958000001
+        },
+        {
+          "file": "semantic_sharing.py",
+          "line": 119,
+          "name": "final_sources",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.001452498,
+          "cumulative_s": 6.560063208000001
+        },
+        {
+          "file": "subprocess.py",
+          "line": 627,
+          "name": "run",
+          "calls": 353,
+          "primitive_calls": 353,
+          "own_s": 0.008771179,
+          "cumulative_s": 4.23270263
+        },
+        {
+          "file": "sharing_frontier.py",
+          "line": 130,
+          "name": "selected",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.011454169,
+          "cumulative_s": 0.121760583
+        },
+        {
+          "file": "sharing_frontier.py",
+          "line": 181,
+          "name": "page_payloads",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 2.1749e-05,
+          "cumulative_s": 0.012929334
+        },
+        {
+          "file": "project_identity.py",
+          "line": 157,
+          "name": "observe",
+          "calls": 9,
+          "primitive_calls": 9,
+          "own_s": 0.00011025100000000001,
+          "cumulative_s": 0.006664373
+        },
+        {
+          "file": "developer_identity.py",
+          "line": 130,
+          "name": "observe",
+          "calls": 7,
+          "primitive_calls": 7,
+          "own_s": 4.4248e-05,
+          "cumulative_s": 0.005190206
+        }
+      ]
+    },
+    "209-rca-pipeline-profile-run-01/refresh-selected": {
+      "label": "refresh-selected",
+      "exit": 0,
+      "elapsed_s": 72.83356437494513,
+      "pstats_sha256": "9fba88f443b4d00cd4d6afc5f4f35df09b306bdb67d2d7a72b05f5aaad454da3",
+      "functions": [
+        {
+          "file": "sharing_frontier.py",
+          "line": 197,
+          "name": "build",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.007464455,
+          "cumulative_s": 72.557364041
+        },
+        {
+          "file": "semantic_sharing.py",
+          "line": 38,
+          "name": "snapshots",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.005023251,
+          "cumulative_s": 49.089405917
+        },
+        {
+          "file": "sharing_recovery.py",
+          "line": 282,
+          "name": "observe",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.015818042,
+          "cumulative_s": 45.545230166
+        },
+        {
+          "file": "bank_contract.py",
+          "line": 313,
+          "name": "validate_files",
+          "calls": 15,
+          "primitive_calls": 15,
+          "own_s": 0.0012755840000000002,
+          "cumulative_s": 32.373791751
+        },
+        {
+          "file": "bank_observation.py",
+          "line": 156,
+          "name": "observe",
+          "calls": 5,
+          "primitive_calls": 5,
+          "own_s": 0.004808593,
+          "cumulative_s": 31.761410458
+        },
+        {
+          "file": "sharing_frontier.py",
+          "line": 30,
+          "name": "components",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.060708580000000005,
+          "cumulative_s": 9.977812458
+        },
+        {
+          "file": "semantic_sharing.py",
+          "line": 119,
+          "name": "final_sources",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.001816794,
+          "cumulative_s": 6.600781459
+        },
+        {
+          "file": "subprocess.py",
+          "line": 627,
+          "name": "run",
+          "calls": 353,
+          "primitive_calls": 353,
+          "own_s": 0.007650243,
+          "cumulative_s": 4.134665938
+        },
+        {
+          "file": "sharing_frontier.py",
+          "line": 130,
+          "name": "selected",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.038757259,
+          "cumulative_s": 0.748858209
+        },
+        {
+          "file": "sharing_frontier.py",
+          "line": 181,
+          "name": "page_payloads",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 2.7291e-05,
+          "cumulative_s": 0.014252583000000001
+        },
+        {
+          "file": "project_identity.py",
+          "line": 157,
+          "name": "observe",
+          "calls": 9,
+          "primitive_calls": 9,
+          "own_s": 0.000100494,
+          "cumulative_s": 0.006435457
+        },
+        {
+          "file": "developer_identity.py",
+          "line": 130,
+          "name": "observe",
+          "calls": 7,
+          "primitive_calls": 7,
+          "own_s": 4.6043000000000006e-05,
+          "cumulative_s": 0.0018649580000000001
+        }
+      ]
+    },
+    "209-rca-pipeline-profile-run-01/refresh-page-0": {
+      "label": "refresh-page-0",
+      "exit": 0,
+      "elapsed_s": 75.8553316249745,
+      "pstats_sha256": "45e4156cecee76d1ce0b4eccd9dc2c444d30b4b3d88edc00368100738a0125d2",
+      "functions": [
+        {
+          "file": "sharing_frontier.py",
+          "line": 197,
+          "name": "build",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.008081501000000001,
+          "cumulative_s": 75.584803875
+        },
+        {
+          "file": "semantic_sharing.py",
+          "line": 38,
+          "name": "snapshots",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.008558581000000001,
+          "cumulative_s": 51.388823917
+        },
+        {
+          "file": "sharing_recovery.py",
+          "line": 282,
+          "name": "observe",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.016130377,
+          "cumulative_s": 47.7128275
+        },
+        {
+          "file": "bank_observation.py",
+          "line": 156,
+          "name": "observe",
+          "calls": 5,
+          "primitive_calls": 5,
+          "own_s": 0.005149917,
+          "cumulative_s": 33.803269126
+        },
+        {
+          "file": "bank_contract.py",
+          "line": 313,
+          "name": "validate_files",
+          "calls": 15,
+          "primitive_calls": 15,
+          "own_s": 0.001387124,
+          "cumulative_s": 32.95847925
+        },
+        {
+          "file": "sharing_frontier.py",
+          "line": 30,
+          "name": "components",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.068309544,
+          "cumulative_s": 10.242612458
+        },
+        {
+          "file": "semantic_sharing.py",
+          "line": 119,
+          "name": "final_sources",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.0017426240000000001,
+          "cumulative_s": 6.7316308330000005
+        },
+        {
+          "file": "subprocess.py",
+          "line": 627,
+          "name": "run",
+          "calls": 353,
+          "primitive_calls": 353,
+          "own_s": 0.010320486,
+          "cumulative_s": 4.475407797
+        },
+        {
+          "file": "sharing_frontier.py",
+          "line": 130,
+          "name": "selected",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.039011131000000004,
+          "cumulative_s": 0.742925375
+        },
+        {
+          "file": "sharing_frontier.py",
+          "line": 181,
+          "name": "page_payloads",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 2.9579000000000003e-05,
+          "cumulative_s": 0.01458325
+        },
+        {
+          "file": "project_identity.py",
+          "line": 157,
+          "name": "observe",
+          "calls": 9,
+          "primitive_calls": 9,
+          "own_s": 0.00010678900000000001,
+          "cumulative_s": 0.007031918000000001
+        },
+        {
+          "file": "developer_identity.py",
+          "line": 130,
+          "name": "observe",
+          "calls": 7,
+          "primitive_calls": 7,
+          "own_s": 3.7001e-05,
+          "cumulative_s": 0.0051757090000000006
+        }
+      ]
+    },
+    "209-rca-pipeline-profile-run-01/refresh-review": {
+      "label": "refresh-review",
+      "exit": 0,
+      "elapsed_s": 127.71477637503995,
+      "pstats_sha256": "d01387d9eb0f1ec00e46cd2247adc7fb5b003dcbf30b68745012eb208b83744c",
+      "functions": [
+        {
+          "file": "sharing_frontier.py",
+          "line": 197,
+          "name": "build",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.008516338,
+          "cumulative_s": 73.823146959
+        },
+        {
+          "file": "bank_observation.py",
+          "line": 156,
+          "name": "observe",
+          "calls": 8,
+          "primitive_calls": 8,
+          "own_s": 0.008034616,
+          "cumulative_s": 52.176408417000005
+        },
+        {
+          "file": "semantic_sharing.py",
+          "line": 38,
+          "name": "snapshots",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.004468748000000001,
+          "cumulative_s": 49.645922291000005
+        },
+        {
+          "file": "bank_contract.py",
+          "line": 313,
+          "name": "validate_files",
+          "calls": 39,
+          "primitive_calls": 39,
+          "own_s": 0.00380846,
+          "cumulative_s": 49.056370879000006
+        },
+        {
+          "file": "sharing_recovery.py",
+          "line": 282,
+          "name": "observe",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.014234416000000001,
+          "cumulative_s": 46.046820792000005
+        },
+        {
+          "file": "semantic_sharing.py",
+          "line": 119,
+          "name": "final_sources",
+          "calls": 4,
+          "primitive_calls": 4,
+          "own_s": 0.007029834,
+          "cumulative_s": 27.635140376000003
+        },
+        {
+          "file": "sharing_frontier.py",
+          "line": 30,
+          "name": "components",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.069796802,
+          "cumulative_s": 10.29265125
+        },
+        {
+          "file": "subprocess.py",
+          "line": 627,
+          "name": "run",
+          "calls": 504,
+          "primitive_calls": 504,
+          "own_s": 0.017674324,
+          "cumulative_s": 6.409301662000001
+        },
+        {
+          "file": "sharing_frontier.py",
+          "line": 130,
+          "name": "selected",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.039600386,
+          "cumulative_s": 0.769177375
+        },
+        {
+          "file": "sharing_frontier.py",
+          "line": 181,
+          "name": "page_payloads",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 3.1668e-05,
+          "cumulative_s": 0.014853542
+        },
+        {
+          "file": "project_identity.py",
+          "line": 157,
+          "name": "observe",
+          "calls": 12,
+          "primitive_calls": 12,
+          "own_s": 0.00013966300000000002,
+          "cumulative_s": 0.008945335
+        },
+        {
+          "file": "developer_identity.py",
+          "line": 130,
+          "name": "observe",
+          "calls": 10,
+          "primitive_calls": 10,
+          "own_s": 5.687e-05,
+          "cumulative_s": 0.002325001
+        }
+      ]
+    },
+    "209-rca-pipeline-profile-run-01/refresh-prepare": {
+      "label": "refresh-prepare",
+      "exit": 0,
+      "elapsed_s": 256.1790417909506,
+      "pstats_sha256": "ff885705d466f67cff5bd5c743b4d58c4e8469c72f22b8d3826e6231fdd21eca",
+      "functions": [
+        {
+          "file": "sharing_frontier.py",
+          "line": 197,
+          "name": "build",
+          "calls": 2,
+          "primitive_calls": 2,
+          "own_s": 0.017305498000000002,
+          "cumulative_s": 136.65883654200002
+        },
+        {
+          "file": "memory_refresh.py",
+          "line": 407,
+          "name": "validate_transaction",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.003735499,
+          "cumulative_s": 116.424087291
+        },
+        {
+          "file": "bank_observation.py",
+          "line": 156,
+          "name": "observe",
+          "calls": 17,
+          "primitive_calls": 17,
+          "own_s": 0.017340172,
+          "cumulative_s": 114.944719499
+        },
+        {
+          "file": "bank_contract.py",
+          "line": 313,
+          "name": "validate_files",
+          "calls": 81,
+          "primitive_calls": 81,
+          "own_s": 0.008515968,
+          "cumulative_s": 96.678704421
+        },
+        {
+          "file": "semantic_sharing.py",
+          "line": 38,
+          "name": "snapshots",
+          "calls": 2,
+          "primitive_calls": 2,
+          "own_s": 0.008904048000000001,
+          "cumulative_s": 88.196068917
+        },
+        {
+          "file": "sharing_recovery.py",
+          "line": 282,
+          "name": "observe",
+          "calls": 2,
+          "primitive_calls": 2,
+          "own_s": 0.036384125,
+          "cumulative_s": 80.780428416
+        },
+        {
+          "file": "semantic_sharing.py",
+          "line": 119,
+          "name": "final_sources",
+          "calls": 8,
+          "primitive_calls": 8,
+          "own_s": 0.013865793000000001,
+          "cumulative_s": 56.712255291000005
+        },
+        {
+          "file": "sharing_frontier.py",
+          "line": 30,
+          "name": "components",
+          "calls": 2,
+          "primitive_calls": 2,
+          "own_s": 0.14626742,
+          "cumulative_s": 20.741064667
+        },
+        {
+          "file": "subprocess.py",
+          "line": 627,
+          "name": "run",
+          "calls": 1069,
+          "primitive_calls": 1069,
+          "own_s": 0.031639162000000005,
+          "cumulative_s": 13.576501149
+        },
+        {
+          "file": "sharing_frontier.py",
+          "line": 130,
+          "name": "selected",
+          "calls": 2,
+          "primitive_calls": 2,
+          "own_s": 0.07709961,
+          "cumulative_s": 1.369709751
+        },
+        {
+          "file": "sharing_frontier.py",
+          "line": 181,
+          "name": "page_payloads",
+          "calls": 2,
+          "primitive_calls": 2,
+          "own_s": 6.0128000000000004e-05,
+          "cumulative_s": 0.025582125
+        },
+        {
+          "file": "project_identity.py",
+          "line": 157,
+          "name": "observe",
+          "calls": 25,
+          "primitive_calls": 25,
+          "own_s": 0.000251075,
+          "cumulative_s": 0.018247665
+        },
+        {
+          "file": "developer_identity.py",
+          "line": 130,
+          "name": "observe",
+          "calls": 21,
+          "primitive_calls": 21,
+          "own_s": 0.000122377,
+          "cumulative_s": 0.005095625
+        }
+      ]
+    },
+    "209-rca-pipeline-profile-run-01/refresh-apply": {
+      "label": "refresh-apply",
+      "exit": 0,
+      "elapsed_s": 344.24934020795627,
+      "pstats_sha256": "c2b2df2bc8bc7828a9a2f57cdf47125b415a1839ec072b6e5acbcffe3c735ec4",
+      "functions": [
+        {
+          "file": "memory_refresh.py",
+          "line": 407,
+          "name": "validate_transaction",
+          "calls": 2,
+          "primitive_calls": 2,
+          "own_s": 0.0061314180000000005,
+          "cumulative_s": 244.49116433300003
+        },
+        {
+          "file": "bank_observation.py",
+          "line": 156,
+          "name": "observe",
+          "calls": 26,
+          "primitive_calls": 26,
+          "own_s": 0.026519174000000003,
+          "cumulative_s": 176.87637591700002
+        },
+        {
+          "file": "bank_contract.py",
+          "line": 313,
+          "name": "validate_files",
+          "calls": 100,
+          "primitive_calls": 100,
+          "own_s": 0.00884496,
+          "cumulative_s": 139.39611983100002
+        },
+        {
+          "file": "sharing_frontier.py",
+          "line": 197,
+          "name": "build",
+          "calls": 2,
+          "primitive_calls": 2,
+          "own_s": 0.016781420000000002,
+          "cumulative_s": 134.640983083
+        },
+        {
+          "file": "sharing_recovery.py",
+          "line": 282,
+          "name": "observe",
+          "calls": 3,
+          "primitive_calls": 3,
+          "own_s": 0.036014210000000005,
+          "cumulative_s": 111.60104575000001
+        },
+        {
+          "file": "semantic_sharing.py",
+          "line": 38,
+          "name": "snapshots",
+          "calls": 2,
+          "primitive_calls": 2,
+          "own_s": 0.007057919,
+          "cumulative_s": 85.454640583
+        },
+        {
+          "file": "semantic_sharing.py",
+          "line": 119,
+          "name": "final_sources",
+          "calls": 8,
+          "primitive_calls": 8,
+          "own_s": 0.0136045,
+          "cumulative_s": 56.789083124
+        },
+        {
+          "file": "subprocess.py",
+          "line": 627,
+          "name": "run",
+          "calls": 1652,
+          "primitive_calls": 1652,
+          "own_s": 0.062558177,
+          "cumulative_s": 22.480603738000003
+        },
+        {
+          "file": "sharing_frontier.py",
+          "line": 30,
+          "name": "components",
+          "calls": 2,
+          "primitive_calls": 2,
+          "own_s": 0.13766746900000001,
+          "cumulative_s": 20.805583292
+        },
+        {
+          "file": "bank_transactions.py",
+          "line": 344,
+          "name": "validate_outcome",
+          "calls": 3,
+          "primitive_calls": 3,
+          "own_s": 0.0035686650000000004,
+          "cumulative_s": 20.518875207
+        },
+        {
+          "file": "retrieval.py",
+          "line": 209,
+          "name": "retrieve",
+          "calls": 1,
+          "primitive_calls": 1,
+          "own_s": 0.0011731670000000001,
+          "cumulative_s": 9.789012125000001
+        },
+        {
+          "file": "sharing_frontier.py",
+          "line": 130,
+          "name": "selected",
+          "calls": 2,
+          "primitive_calls": 2,
+          "own_s": 0.080956681,
+          "cumulative_s": 1.434267667
+        },
+        {
+          "file": "project_identity.py",
+          "line": 157,
+          "name": "observe",
+          "calls": 38,
+          "primitive_calls": 38,
+          "own_s": 0.000833587,
+          "cumulative_s": 0.027763333
+        },
+        {
+          "file": "sharing_frontier.py",
+          "line": 181,
+          "name": "page_payloads",
+          "calls": 2,
+          "primitive_calls": 2,
+          "own_s": 6.383300000000001e-05,
+          "cumulative_s": 0.025075251000000003
+        },
+        {
+          "file": "developer_identity.py",
+          "line": 130,
+          "name": "observe",
+          "calls": 31,
+          "primitive_calls": 31,
+          "own_s": 0.00022221800000000002,
+          "cumulative_s": 0.007997872000000001
+        }
+      ]
+    }
+  },
+  "script_sha256": {
+    "209-rca-profile.py": "4ec76a1f7549d66c9b4425a2b57464c8560a73592981030e5c3dc535eca93e6d",
+    "209-rca-pipeline-profile.py": "95656803b4d22c3592ca5eedbebff48fb030b5ad6b9b7dcbc09bbe6cedfeb24e"
+  }
+}

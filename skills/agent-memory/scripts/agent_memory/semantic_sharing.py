@@ -631,7 +631,7 @@ def main(argv=None):
         else:p.add_argument('--input',required=True)
         if name=='check':p.add_argument('--v2',action='store_true')
         p.add_argument('--output')
-    p=sub.add_parser('inspect-v2');p.add_argument('--repo',required=True);p.add_argument('--input');p.add_argument('--output',required=True)
+    p=sub.add_parser('inspect-v2');p.add_argument('--repo',required=True);p.add_argument('--input');p.add_argument('--output',required=True);p.add_argument('--pages-dir')
     p=sub.add_parser('page-v2');p.add_argument('--repo',required=True);p.add_argument('--input',required=True);p.add_argument('--page',type=int,required=True)
     p=sub.add_parser('worklist-v2');p.add_argument('--repo',required=True);p.add_argument('--input',required=True);p.add_argument('--page',type=int,required=True)
     p=sub.add_parser('review-v2');p.add_argument('--repo',required=True);p.add_argument('--input',required=True);p.add_argument('--output',required=True)
@@ -639,7 +639,10 @@ def main(argv=None):
     p=sub.add_parser('recover-holds');p.add_argument('--repo',required=True);p.add_argument('--project-id',required=True)
     args=parser.parse_args(argv)
     try:
-        if getattr(args, 'output', None):
+        if getattr(args, 'pages_dir', None) is not None:
+            from . import sharing_page_export
+            sharing_page_export.preflight(args.repo,args.output,args.pages_dir)
+        elif getattr(args, 'output', None):
             limits.preflight_private_output(args.output, args.repo)
         if args.command=='recover-holds':
             from . import sharing_holds
@@ -649,7 +652,10 @@ def main(argv=None):
             value=compact_review(args.repo,read_input(args.inspection,version2=True),load(limits.read_bytes(args.input,limits.MAX_PRIVATE)))
         elif args.command in {'inspect-v2','page-v2','worklist-v2','review-v2'}:
             from . import sharing_frontier as frontier
-            if args.command=='inspect-v2':value=frontier.inspect(args.repo,read_input(args.input,version2=True) if args.input else None)
+            if args.command=='inspect-v2':
+                request=read_input(args.input,version2=True) if args.input else None
+                value=(sharing_page_export.export(args.repo,args.output,args.pages_dir,request)
+                       if args.pages_dir is not None else frontier.inspect(args.repo,request))
             elif args.command in {'page-v2','worklist-v2'}:
                 manifest=read_input(args.input,version2=True)
                 value=frontier.page(args.repo,manifest,args.page)
@@ -662,7 +668,7 @@ def main(argv=None):
         elif args.command=='inspect':value=inspect(args.repo,args.base)
         elif args.command=='review':value=review(args.repo,read_input(args.input))
         else:value=check(args.repo,read_input(args.input,version2=args.v2))
-        if getattr(args,'output',None):value=limits.write_private(args.output,value,args.repo)
+        if getattr(args,'output',None) and getattr(args,'pages_dir',None) is None:value=limits.write_private(args.output,value,args.repo)
         elif isinstance(value,dict) and value.get('proof',{}).get('schema')=='agent-memory/semantic-sharing-proof-v2':
             # Complete candidate banks can retain quarantined local originals.
             # They belong only in explicitly selected private artifacts.
