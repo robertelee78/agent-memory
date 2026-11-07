@@ -461,7 +461,7 @@ def require_scope(repo, project_id=None, *, expected=None, owned_lock=None, owne
     if kwargs.get('initialize') and not (bank / 'MEMORY.md').exists():
         return scope_binding.require(root, project_id, expected=expected, owned_lock=owned_lock,
             owned_transaction=owned_transaction, **kwargs)
-    raw = marker_bytes(bank)
+    raw = marker_bytes(bank, expected=owned_transaction)
     if raw is None or load(raw).get('schema') not in {HOLD, NESTED}:
         # Also detects a removed hold with a surviving private binding/index.
         observe(root, owned_lock, owned_transaction)
