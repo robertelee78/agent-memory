@@ -171,19 +171,60 @@ class Fixtures:
             deferred.append(ref['path'])
         if truth['evaluation_time_after'] and self.now <= truth['evaluation_time_after']:
             return initial | {'prerequisite': 'Actual current UTC time must exceed declared evaluation time'}, None
-        # Recompute the real gate order before every query. Crosscheck is cached only for a
-        # distinct finite native context, exactly as the pinned native fixture supports.
+        # Fresh gates preserve supersession/security/deferred ordering. The frozen
+        # helper's memo key omits selectors and time; never reuse its crosscheck.
         eligible, reasons = bank._eligibility(request, context, self.now, deferred)
-        matched, excluded, mine = bank.native_crosscheck(request, context, self.now, deferred, eligible, reasons)
-        if not matched:
+        memo_key = ('crosscheck',) + bank.key(request, context, deferred)
+        bank.memo.pop(memo_key, None)
+        try:
+            matched, excluded, mine = bank.native_crosscheck(request, context, self.now, deferred, eligible, reasons)
+        finally:
+            bank.memo.pop(memo_key, None)
+        gate_excluded = {key: value for key, value in excluded.items() if key != 'result-budget'}
+        if not matched and (not excluded.get('result-budget') or gate_excluded != mine):
             raise ValueError('Native evaluate_sources crosscheck differs from eligibility qualification')
+        # Exact ids OR paths narrow the post-gate semantic ranking domain. Empty
+        # query is deliberate: semantic query text is not a native lexical filter.
+        selection = {**request, 'query': '', 'limit': 64}
+        selected = [p for p in eligible if self.native.retrieval.match(
+            selection, {'path': p, 'body': '', 'record': bank.sources[p].get('metadata', {})})]
+        rows, native_excluded, used, pool, ranked, canonical_bytes = self.native.retrieval.evaluate_sources(
+            None, None, self.pid, bank.entries, lambda path: bank.raw[path],
+            lambda path, text: bank.parsed[path], bank.hashes, selection, selection, context, self.now,
+            frozenset(deferred), None)
+        expected = dict(mine)
+        if len(selected) != len(eligible):
+            expected['selector-or-text-mismatch'] = len(eligible) - len(selected)
+        observed_excluded = {key: value for key, value in native_excluded.items() if key != 'result-budget'}
+        if ranked != len(selected) or observed_excluded != expected:
+            raise ValueError('Native exact-selector crosscheck differs from qualified ranking domain')
+        for row in rows:
+            source = bank.sources[row['path']]
+            if row['source_sha256'] != source['source_sha256'] or (
+                    source['format'] == 'standalone-record' and
+                    (row['record']['id'], row['record']['version']) != (source['id'], source['version'])):
+                raise ValueError('Native selector crosscheck source identity mismatch')
+        complete = len(rows) == ranked and not native_excluded.get('result-budget')
+        if complete and sorted(row['path'] for row in rows) != sorted(selected):
+            raise ValueError('Native selector crosscheck returned a different source domain')
+        crosscheck = {'matched': matched and complete, 'excluded_counts': dict(native_excluded),
+                      'qualified_counts': expected,
+                      'gate_crosscheck': {'matched': matched, 'excluded_counts': excluded, 'qualified_counts': mine},
+                      'native_selection': {'ranked_domain_size': ranked, 'result_count': len(rows),
+                                           'result_limit': selection['limit'], 'used_bytes': used,
+                                           'result_byte_limit': self.native.retrieval.MAX_RESULT,
+                                           'pool': pool, 'canonical_bytes': canonical_bytes}}
+        qualified = initial | {'request_valid': True, 'context_sha256': digest(compact(context).encode()),
+                               'observed': observed, 'context': context, 'crosscheck': crosscheck}
+        if not matched or not complete:
+            prerequisite = 'Bounded native output cannot crosscheck the complete qualified domain'
+            crosscheck['prerequisite'] = prerequisite
+            return qualified | {'prerequisite': prerequisite}, context
         identities = [{k: bank.sources[p][k] for k in ('key', 'path', 'id', 'version') if k in bank.sources[p]}
-                      for p in eligible]
-        if any(not self.provider_safe(bank, p) for p in eligible):
+                      for p in selected]
+        if any(not self.provider_safe(bank, p) for p in selected):
             raise ValueError('Native eligible domain contains source outside provider projection')
-        return initial | {'request_valid': True, 'context_sha256': digest(compact(context).encode()),
-                          'eligible': identities, 'observed': observed, 'context': context,
-                          'crosscheck': {'matched': matched, 'excluded_counts': excluded, 'qualified_counts': mine}}, context
+        return qualified | {'eligible': identities}, context
 
     def literal(self, bank, case, context):
         request = {k: v for k, v in case['request'].items() if k != 'ranking'}
