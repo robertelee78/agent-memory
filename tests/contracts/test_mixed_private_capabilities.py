@@ -407,7 +407,7 @@ import json, sys
 from pathlib import Path
 from unittest.mock import patch
 sys.path.insert(0, sys.argv.pop(1))
-from agent_memory import artifact, private_state, recovery_quiescence as quiescence
+from agent_memory import artifact, private_state, recovery_frontier as frontier, recovery_quiescence as quiescence
 from agent_memory.frontmatter import ContractError
 repo, bank, directory, source = map(Path, sys.argv[1:])
 installation = {'observed_repositories': [str(repo)]}
@@ -416,6 +416,14 @@ for kind in ('config', 'bank', 'hold', 'attestation'):
     target = artifact.inspect(source)
     expected = private_state.require_compatible(installation, target, 'update')
     original = quiescence._selected_attestation
+    original_hold = frontier.verified_hold
+    prior_hold_verified = False
+    mutation_after_verified_hold = False
+    def verified_hold(*args, **kwargs):
+        global prior_hold_verified
+        held = original_hold(*args, **kwargs)
+        prior_hold_verified = held is not None
+        return held
     saved = None
     displaced = bank.with_name('displaced-bank')
     if kind == 'config':
@@ -428,9 +436,13 @@ for kind in ('config', 'bank', 'hold', 'attestation'):
         saved = path.read_bytes()
     injected = False
     def change_after_read(*args):
-        global injected
+        global injected, mutation_after_verified_hold
+        caller = sys._getframe(1)
         selected = original(*args)
-        if not injected:
+        # Synchronize after the lifecycle consumer's own final attestation read,
+        # not the earlier independently checked hold's attestation read.
+        if not injected and caller.f_globals.get('__name__') == private_state.__name__:
+            mutation_after_verified_hold = prior_hold_verified
             injected = True
             if kind == 'bank':
                 bank.rename(displaced)
@@ -445,7 +457,8 @@ for kind in ('config', 'bank', 'hold', 'attestation'):
         return selected
     refused = False
     try:
-        with patch.object(quiescence, '_selected_attestation', side_effect=change_after_read):
+        with patch.object(frontier, 'verified_hold', new=verified_hold), \
+                patch.object(quiescence, '_selected_attestation', new=change_after_read):
             private_state.require_compatible(installation, target, 'update')
     except ContractError:
         refused = True
@@ -455,14 +468,45 @@ for kind in ('config', 'bank', 'hold', 'attestation'):
         elif kind != 'bank':
             path.write_bytes(saved)
     private_state.require_compatible(installation, target, 'update', expected=expected)
-    results[kind] = {'injected': injected, 'refused': refused}
+    results[kind] = {'injected': injected, 'refused': refused,
+                     'mutation_after_verified_hold': mutation_after_verified_hold}
 print(json.dumps(results))
 '''
             result = world.run([sys.executable, '-I', '-B', '-c', program,
                                 source / 'scripts', repo, bank, directory, source], timeout=60)
             self.assertEqual(json.loads(result.stdout), {
-                kind: {'injected': True, 'refused': True}
+                kind: {'injected': True, 'refused': True, 'mutation_after_verified_hold': True}
                 for kind in ('config', 'bank', 'hold', 'attestation')})
             self.assertEqual((snapshot(bank), snapshot(directory), snapshot(world.paths['config']),
                               owned(receipt), feature.read_bytes(), (repo / '.git/index').read_bytes(),
+                              world.git('rev-parse', 'HEAD', cwd=repo).stdout), before)
+
+    def test_managed_update_accepts_repository_under_symlinked_ancestor(self):
+        with World() as world:
+            for directory in [world.root, *(p for p in world.root.rglob('*') if p.is_dir())]:
+                if directory.stat().st_gid != os.getegid():
+                    os.chown(directory, -1, os.getegid())
+            lifecycle = test_omp_boundary.NativeLifecyclePublic()
+            _, _, receipt = lifecycle.managed(world)
+            repo, bank, _ = recovery.memory(world)
+            feature = repo / 'feature.txt'
+            feature.write_text('Disposable independent feature baseline.\n')
+            world.git('add', 'feature.txt', cwd=repo)
+            world.git('commit', '-m', 'Independent feature baseline', cwd=repo)
+            feature.write_text('Disposable staged feature change.\n')
+            world.git('add', 'feature.txt', cwd=repo)
+            ancestor = world.root / 'symlinked-ancestor'
+            ancestor.symlink_to(repo.parent, target_is_directory=True)
+            selected = ancestor / repo.name
+            before = (snapshot(bank), snapshot(world.paths['config']), owned(receipt),
+                      feature.read_bytes(), (repo / '.git/index').read_bytes(),
+                      world.git('rev-parse', 'HEAD', cwd=repo).stdout)
+            checked = lifecycle.public(world, receipt, 'update', '--repo', str(selected), '--check')
+            self.assertTrue(checked['check_complete'])
+            self.assertEqual(checked['compatibility']['private_state']['decision'], 'compatible')
+            applied = lifecycle.public(world, receipt, 'update', '--repo', str(selected))
+            self.assertTrue(applied['verified'])
+            self.assertFalse(applied['changed'])
+            self.assertEqual((snapshot(bank), snapshot(world.paths['config']), owned(receipt),
+                              feature.read_bytes(), (repo / '.git/index').read_bytes(),
                               world.git('rev-parse', 'HEAD', cwd=repo).stdout), before)

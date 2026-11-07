@@ -112,15 +112,17 @@ def required_private_state_capabilities(installation, target_artifact, operation
                         raise ContractError('Bound recovery bank is unavailable')
                     continue
                 capabilities = set()
-                operations, _ = bank_writes.state_paths(root, bank, '00000000-0000-4000-8000-000000000000')
-                source_marker = operations.parent / 'turn-sources-compat-v1.json'
-                source_tree = operations.parent / 'omp-source-v1'
                 held = _barriers.get()
                 if held is not None and str(root) not in held:
                     raise ContractError('A bank joined the private-state inventory after lifecycle quiescence')
                 from .turn_sources import source_barrier
                 if held is None:
                     stack.enter_context(source_barrier(root, exclusive=True))
+                located = state.paths(root)[:2]
+                root, bank = located
+                operations, _ = bank_writes.state_paths(root, bank, '00000000-0000-4000-8000-000000000000')
+                source_marker = operations.parent / 'turn-sources-compat-v1.json'
+                source_tree = operations.parent / 'omp-source-v1'
                 producer = getattr(omp_boundary, 'required_source_capabilities', None)
                 if producer is None:
                     if os.path.lexists(source_marker) or os.path.lexists(source_tree):
@@ -166,7 +168,7 @@ def required_private_state_capabilities(installation, target_artifact, operation
                     raise ContractError('A private-state producer returned an unknown capability')
                 if recovery_frontier._observe_bank(root, bank, None, None) != token:
                     raise ContractError('Private recovery frontier changed during compatibility observation')
-                if state.paths(root)[:2] != (root, bank):
+                if state.paths(root)[:2] != located:
                     raise ContractError('Recovery bank location changed during compatibility observation')
                 requirements[str(bank)] = sorted(capabilities)
                 pins.append({'repo_root': str(root), 'bank_path': str(bank), 'recovery_frontier': token,
