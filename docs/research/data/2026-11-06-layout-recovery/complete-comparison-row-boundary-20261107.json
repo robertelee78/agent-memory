@@ -1,0 +1,17 @@
+{
+  "passed": true,
+  "scope": "Actual public inspect/review/check64mixedrows,65refusal; controlled structural judgments, no admission or semantic-quality claim",
+  "source_commit": "398d5eab4e7995414d73f0a9b45e15c3103f736c",
+  "canonical_rows": 56,
+  "pending_rows": 8,
+  "disclosure_bytes": 64012,
+  "proof_bytes": 23956,
+  "protected_preserved": true,
+  "elapsed_seconds": 37.39035225001862,
+  "schema": "agent-memory/complete-comparison-row-boundary-v1",
+  "setup": "One actual reviewed original split into8pending1byteunits;50matched historical records and6contexts;65throw added by queryonly, no canonical mutation",
+  "public_command_deadline_seconds": 60,
+  "worker_deadline_seconds": 300,
+  "independent_byte_bound": "64-row disclosure plus maximum canonical row is below65536;65refusal does not depend on byte-cap crossing",
+  "review_labels": "Controlled structural uncertainty with coverage:none; no source admission, semantic confirmation or issue acceptance"
+}
