@@ -6,7 +6,7 @@ import copy
 import json
 import unittest
 
-from contracts.test_comparison import ComparisonContract
+from contracts import test_comparison
 from identity_fixtures import bind
 from record_fixtures import project_id
 from world import World
@@ -17,7 +17,7 @@ class LayoutComparisonByteBoundaries(unittest.TestCase):
     def fixture(self, world):
         command, _ = f.installed(world)
         repo, bank, _ = f.memory(world)
-        helper = ComparisonContract('runTest')
+        helper = test_comparison.ComparisonContract('runTest')
         helper.pid = project_id((bank / 'MEMORY.md').read_text())
         helper.actor = bind(world, repo)['developer_id']
         for number in range(40):
