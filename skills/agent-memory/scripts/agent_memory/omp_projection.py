@@ -164,3 +164,123 @@ def project(entry):
         return {'gap': 'unsafe-representation'}
     except (ContractError, TypeError, ValueError, UnicodeError, RecursionError):
         return {'gap': 'missing-payload'}
+
+
+def _valid_instruction_context(snapshot):
+    """Validate a historical metadata-only manual assertion, if present."""
+    if not isinstance(snapshot, dict):
+        return False
+    if 'instruction_context' not in snapshot:
+        return True
+    try:
+        required = {'carrier', 'native_entry_id', 'native_parent_id', 'role',
+                    'toolCallId', 'toolName', 'isError', 'content', 'instruction_context'}
+        if not required <= snapshot.keys() or set(snapshot) - required - {'attribution'}:
+            return False
+        context = snapshot['instruction_context']
+        fields = {'schema', 'kind', 'installation_id', 'observed_receipt_sha256',
+                  'artifact_digest', 'manual_file_sha256', 'manual_relative_path',
+                  'renderer', 'invocation_native_entry_id', 'tool_call_id'}
+        if not isinstance(context, dict) or set(context) != fields:
+            return False
+        if (snapshot['carrier'] != 'message' or snapshot['role'] != 'toolResult'
+                or snapshot['toolName'] != 'read' or snapshot['isError'] is not False
+                or snapshot['content'] != [] or type(snapshot['content']) is not list
+                or context['schema'] != 'agent-memory/owned-instruction-context-v1'
+                or context['kind'] != 'installed-am-manual'
+                or context['manual_relative_path'] != 'SKILL.md'
+                or context['renderer'] != 'omp-18.16-full-skill-v1'
+                or context['tool_call_id'] != snapshot['toolCallId']):
+            return False
+        for value in (snapshot['native_entry_id'], snapshot['toolCallId'],
+                      context['installation_id'], context['invocation_native_entry_id']):
+            if not isinstance(value, str) or not value:
+                return False
+        if snapshot['native_parent_id'] is not None and not isinstance(snapshot['native_parent_id'], str):
+            return False
+        if 'attribution' in snapshot and not isinstance(snapshot['attribution'], str):
+            return False
+        for key in ('observed_receipt_sha256', 'artifact_digest', 'manual_file_sha256'):
+            if not isinstance(context[key], str) or not re.fullmatch(r'[0-9a-f]{64}', context[key]):
+                return False
+        _safe_tree(snapshot)
+        raw = json.dumps(snapshot, ensure_ascii=False, sort_keys=True, separators=(',', ':'), allow_nan=False)
+        return (len(raw.encode('utf-8')) <= MAX_SOURCE
+                and not any(re.search(pattern, raw) for _, pattern in (*security.SECRETS, *security.SUSPICIOUS)))
+    except (ContractError, TypeError, ValueError, UnicodeError, RecursionError):
+        return False
+
+
+def _project_owned_manual(entry, invocation, witness):
+    """Project only an exact native full read backed by an installation witness."""
+    from . import omp_installation
+
+    try:
+        if type(witness) is not omp_installation._OwnedManual:
+            return None
+        verified = witness._verify()
+        if verified is None:
+            return None
+        text, path, installation_id, receipt_hash, artifact_hash, manual_hash = verified
+        if (not isinstance(entry, dict) or set(entry) != {'type', 'id', 'parentId', 'message'}
+                or entry['type'] != 'message' or not isinstance(entry['message'], dict)):
+            return None
+        message = entry['message']
+        required = {'role', 'toolCallId', 'toolName', 'isError', 'content', 'details'}
+        if (not required <= message.keys() or set(message) - required - {'attribution'}
+                or message['role'] != 'toolResult' or message['toolName'] != 'read'
+                or message['isError'] is not False):
+            return None
+        call_id = _text(message['toolCallId'])
+        if (not isinstance(invocation, dict) or invocation.get('type') != 'message'
+                or not isinstance(invocation.get('message'), dict)
+                or invocation['message'].get('role') != 'assistant'
+                or not isinstance(invocation['message'].get('content'), list)):
+            return None
+        calls = [block for block in invocation['message']['content']
+                 if isinstance(block, dict) and block.get('type') == 'toolCall' and block.get('id') == call_id]
+        if len(calls) != 1 or set(calls[0]) != {'type', 'id', 'name', 'arguments'} or calls[0]['name'] != 'read':
+            return None
+        arguments = calls[0]['arguments']
+        if (not isinstance(arguments, dict) or set(arguments) not in ({'path'}, {'i', 'path'})
+                or arguments['path'] != 'skill://agent-memory'):
+            return None
+        if 'i' in arguments:
+            _text(arguments['i'])
+            _safe_tree(arguments['i'])
+            raw_i = json.dumps(arguments['i'], ensure_ascii=False, allow_nan=False)
+            if len(raw_i.encode('utf-8')) > MAX_SOURCE or any(
+                    re.search(pattern, raw_i) for _, pattern in (*security.SECRETS, *security.SUSPICIOUS)):
+                return None
+        body = text.rstrip('\n')
+        lines = len(body.split('\n'))
+        if (message['content'] != [{'type': 'text', 'text': '[Skill file: ' + path + ']\n' + body}]
+                or message['details'] != {
+                    'contentType': 'text/markdown', 'resolvedPath': path, 'rowPrefixes': False,
+                    'totalLines': lines, 'displayContent': {'lineNumbers': list(range(1, lines + 1)),
+                                                            'startLine': 1, 'text': body},
+                    'meta': {'source': {'type': 'internal', 'value': 'skill://agent-memory'}}}):
+            return None
+        # Python equality otherwise treats booleans and integers as interchangeable.
+        details = message['details']
+        if (type(details['rowPrefixes']) is not bool or type(details['totalLines']) is not int
+                or type(details['displayContent']['startLine']) is not int
+                or any(type(n) is not int for n in details['displayContent']['lineNumbers'])):
+            return None
+        snapshot = {'carrier': 'message', 'native_entry_id': _text(entry['id']),
+                    'native_parent_id': entry['parentId'], 'role': 'toolResult',
+                    'toolCallId': call_id, 'toolName': 'read', 'isError': False, 'content': [],
+                    'instruction_context': {
+                        'schema': 'agent-memory/owned-instruction-context-v1',
+                        'kind': 'installed-am-manual', 'installation_id': installation_id,
+                        'observed_receipt_sha256': receipt_hash, 'artifact_digest': artifact_hash,
+                        'manual_file_sha256': manual_hash, 'manual_relative_path': 'SKILL.md',
+                        'renderer': 'omp-18.16-full-skill-v1',
+                        'invocation_native_entry_id': _text(invocation.get('id')), 'tool_call_id': call_id}}
+        if 'attribution' in message:
+            snapshot['attribution'] = _text(message['attribution'])
+        if not _valid_instruction_context(snapshot):
+            return None
+        return {'snapshot': snapshot, 'exclusions': list(EXCLUSIONS)}
+    except (ContractError, TypeError, ValueError, UnicodeError, RecursionError, KeyError):
+        return None

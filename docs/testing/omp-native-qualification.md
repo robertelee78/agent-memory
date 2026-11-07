@@ -88,6 +88,33 @@ unknown secret: native stored user/tool plaintext can remain plaintext in
 private snapshots. An unavailable image/file/artifact payload stays a coverage
 gap; no arbitrary path or URL is dereferenced to fill it.
 
+For the supported omp 18.16 stored-source renderer, a fresh full
+`read` of `skill://agent-memory` can be recognized as installed operating
+context only when its unique invocation/result pair and complete rendered
+content match the internally verified receipt-owned `SKILL.md`. The
+installation binding, target and manual are checked again before publication.
+The native result and model input are unchanged. The learning snapshot retains
+the result identity and an empty content list with an `instruction_context`
+annotation, not the manual body or duplicated display content. Partial reads,
+foreign or modified skills, unsupported wrappers and other tool results follow
+ordinary screening and gap policy; this is not a general tool-result exemption.
+
+The annotation records the installation ID, observed receipt and artifact
+digests, manual file digest, fixed relative path and renderer, and invocation
+and tool-call identities. It is an observer assertion of a comparison at
+capture time, not publisher authentication, an instruction-authority grant,
+or proof of current installation integrity. Historical `--source` readback
+validates the immutable metadata-only snapshot, not the continued presence of
+the old installed file. Existing snapshots, sealed manifests and gaps are not
+rewritten or waived. An interrupted publication reuses its already-published
+snapshot; a later fresh read must qualify against the then-current installation.
+
+This classification adds no observation or wake by itself. It does not change
+the empty own-maintenance companion allowlist or pure-batch rules: a manual read
+after a wake can still leave an ambiguous interval requiring enrollment and
+assessment. A reassociated event gap is not recovery of an older native-keyed
+or sealed tool-call gap.
+
 Private snapshots, manifests, unresolved gaps and enrollment records live
 beside the shared turn-source state under owner-only `omp-source-v1`. They
 remain on uninstall. There is **no automatic purge or global retention quota**

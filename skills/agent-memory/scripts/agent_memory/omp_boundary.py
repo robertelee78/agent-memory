@@ -623,7 +623,7 @@ def main(argv=None):
                 return turn_check.emit({'verified': True, 'status': 'inactive-no-bank',
                                         'canonical_writes_performed': False}, False)
             from .omp_installation import observer_binding
-            observer_binding(args.artifact, args.omp_agent_dir)
+            receipt = observer_binding(args.artifact, args.omp_agent_dir)
         modes = sum((args.observer, args.list_pending, bool(args.source), args.stdin and not args.observer))
         if modes != 1 or (args.observer and (args.quiet or args.refresh)):
             raise ContractError('Select exactly one native observer, source, pending or assessment operation')
@@ -640,7 +640,7 @@ def main(argv=None):
                 raise ContractError('Native boundary input exceeds bound')
             value = load(raw)
             if args.observer:
-                result = omp_transport.observe(args.repo, value)
+                result = omp_transport.observe(args.repo, value, receipt=receipt)
             elif args.refresh:
                 fields = {'session', 'lifecycle', 'observation_id', 'source_sha256', 'outcome', 'assessment'}
                 if not isinstance(value, dict) or set(value) not in (fields, fields | {'publication_request'}):

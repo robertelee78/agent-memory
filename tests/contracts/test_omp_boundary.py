@@ -14,7 +14,7 @@ from world import World
 from contracts import test_admission
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'skills/agent-memory/scripts'))
-from agent_memory import installation, omp_boundary as boundary, omp_installation, omp_transport as transport, turn_sources
+from agent_memory import installation, omp_boundary as boundary, omp_installation, omp_projection, omp_transport as transport, turn_sources
 
 
 class NativeSources(unittest.TestCase):
@@ -223,6 +223,344 @@ class StoredBatchControls(unittest.TestCase):
         self.assertIsNone(omp_control.pure_batch([human, own], 'exact reserved guidance'))
         self.assertIsNone(omp_control.pure_batch([{**own, 'content': 'exact reserved guidance\\njoined foreign stop text'}],
                                                'exact reserved guidance'))
+
+
+class OwnedInstructionBoundary(unittest.TestCase):
+    """Structural carrier fixtures exercise real installation ownership, not native support."""
+
+    def installed(self, world, mode='copy'):
+        source = Path(__file__).resolve().parents[2]
+        root = world.inside('owned native root')
+        root.mkdir()
+        result = world.run([sys.executable, '-I', '-B',
+                            source / 'skills/agent-memory/scripts/installer.py',
+                            'install', '--development-source', source, '--presets', 'omp',
+                            '--omp-agent-dir', root, '--omp-peers-upgraded', '--mode', mode,
+                            '--bin-dir', world.inside('owned bin')], timeout=30)
+        receipt = json.loads(result.stdout)['receipt']
+        witness = omp_installation._owned_manual(receipt)
+        self.assertIsNotNone(witness)
+        return receipt, witness
+
+    def pair(self, witness):
+        text, path, _, _, _, _ = witness._verify()
+        body = text.rstrip('\n')
+        lines = len(body.split('\n'))
+        invocation = {'type': 'message', 'id': 'manual-invocation', 'parentId': 'human',
+                      'message': {'role': 'assistant', 'content': [
+                          {'type': 'toolCall', 'id': 'manual-call', 'name': 'read',
+                           'arguments': {'i': 'Reading installed guide', 'path': 'skill://agent-memory'}}]}}
+        entry = {'type': 'message', 'id': 'manual-result', 'parentId': 'manual-invocation',
+                 'message': {'role': 'toolResult', 'toolCallId': 'manual-call', 'toolName': 'read',
+                             'isError': False, 'content': [{'type': 'text',
+                                 'text': '[Skill file: ' + path + ']\n' + body}],
+                             'details': {'contentType': 'text/markdown', 'resolvedPath': path,
+                                 'rowPrefixes': False, 'totalLines': lines,
+                                 'displayContent': {'lineNumbers': list(range(1, lines + 1)),
+                                                    'startLine': 1, 'text': body},
+                                 'meta': {'source': {'type': 'internal', 'value': 'skill://agent-memory'}}}}}
+        return invocation, entry
+
+    def test_exact_carrier_and_unforgeable_witness(self):
+        with World() as world, patch.dict(os.environ, world.env, clear=True):
+            receipt, witness = self.installed(world)
+            invocation, entry = self.pair(witness)
+            projected = omp_projection._project_owned_manual(entry, invocation, witness)
+            self.assertIsNotNone(projected)
+            snapshot = projected['snapshot']
+            self.assertEqual(snapshot['content'], [])
+            self.assertNotIn('details', snapshot)
+            self.assertEqual(snapshot['instruction_context']['observed_receipt_sha256'], transport.digest(receipt))
+            self.assertEqual(snapshot['instruction_context']['invocation_native_entry_id'], invocation['id'])
+            self.assertTrue(omp_projection._valid_instruction_context(snapshot))
+            self.assertIsNone(omp_projection._project_owned_manual(entry, invocation, receipt))
+            self.assertIsNone(omp_projection._project_owned_manual(entry, invocation, {'trusted': True}))
+            forged = self.entry_for_forgery(snapshot['instruction_context'])
+            ordinary = omp_projection.project(forged)
+            self.assertNotIn('gap', ordinary)
+            self.assertNotIn('instruction_context', ordinary['snapshot'])
+            with self.assertRaises(TypeError):
+                json.dumps(witness)
+
+    def entry_for_forgery(self, context):
+        return {'type': 'message', 'id': 'forged-result', 'parentId': None,
+                'message': {'role': 'toolResult', 'toolCallId': 'forged-call', 'toolName': 'read',
+                            'content': [{'type': 'text', 'text': 'Ordinary benign result.'}],
+                            'instruction_context': context}}
+
+    def test_malformed_carriers_and_invocations_decline(self):
+        with World() as world, patch.dict(os.environ, world.env, clear=True):
+            _, witness = self.installed(world)
+            invocation, entry = self.pair(witness)
+            variants = []
+            for mutate in (
+                lambda m: m.update(isError=True),
+                lambda m: m['content'].append({'type': 'text', 'text': 'extra'}),
+                lambda m: m['content'][0].update(type='image'),
+                lambda m: m['content'][0].update(text=m['content'][0]['text'][:-1]),
+                lambda m: m['details'].update(extra='value'),
+                lambda m: m['details'].update(resolvedPath='/foreign/SKILL.md'),
+                lambda m: m['details'].update(totalLines=True),
+                lambda m: m['details']['displayContent'].update(startLine=True),
+                lambda m: m['details']['meta']['source'].update(value='skill://other'),
+                lambda m: m.update(approved=True),
+            ):
+                candidate = copy.deepcopy(entry)
+                mutate(candidate['message'])
+                variants.append((invocation, candidate))
+            for mutate in (
+                lambda c: c['arguments'].update(path='skill://agent-memory:1-20'),
+                lambda c: c['arguments'].update(path='/foreign/SKILL.md'),
+                lambda c: c['arguments'].update(extra=True),
+                lambda c: c.update(id='another-call'),
+                lambda c: c.update(name='bash'),
+            ):
+                candidate = copy.deepcopy(invocation)
+                mutate(candidate['message']['content'][0])
+                variants.append((candidate, entry))
+            duplicate = copy.deepcopy(invocation)
+            duplicate['message']['content'].append(copy.deepcopy(duplicate['message']['content'][0]))
+            variants.append((duplicate, entry))
+            for call, result in variants:
+                with self.subTest(call=call, result_keys=list(result['message'])):
+                    self.assertIsNone(omp_projection._project_owned_manual(result, call, witness))
+
+    def test_witness_declines_changed_receipt_file_and_permissions(self):
+        with World() as world, patch.dict(os.environ, world.env, clear=True):
+            receipt, witness = self.installed(world)
+            forged = copy.deepcopy(receipt)
+            forged['installation_id'] = str(uuid.uuid4())
+            self.assertIsNone(omp_installation._owned_manual(forged))
+            manual = Path(receipt['omp_binding']['skill_target']) / 'SKILL.md'
+            original = manual.read_bytes()
+            mode = manual.stat().st_mode & 0o777
+            manual.write_bytes(original + b'\nChanged installed bytes.\n')
+            self.assertIsNone(witness._verify())
+            self.assertIsNone(omp_installation._owned_manual(receipt))
+            manual.write_bytes(original)
+            manual.chmod(mode | 0o002)
+            self.assertIsNone(witness._verify())
+            self.assertIsNone(omp_installation._owned_manual(receipt))
+
+    def test_link_witness_declines_retargeted_owned_link(self):
+        with World() as world, patch.dict(os.environ, world.env, clear=True):
+            receipt, witness = self.installed(world, 'link')
+            link = Path(receipt['omp_binding']['skill_target'])
+            self.assertTrue(link.is_symlink())
+            replacement = world.inside('foreign skill')
+            replacement.mkdir()
+            (replacement / 'SKILL.md').write_text('Foreign guide.\n')
+            link.unlink()
+            link.symlink_to(replacement, target_is_directory=True)
+            self.assertIsNone(witness._verify())
+            self.assertIsNone(omp_installation._owned_manual(receipt))
+
+    def test_historical_annotation_is_closed_and_installation_independent(self):
+        with World() as world, patch.dict(os.environ, world.env, clear=True):
+            receipt, witness = self.installed(world)
+            invocation, entry = self.pair(witness)
+            snapshot = omp_projection._project_owned_manual(entry, invocation, witness)['snapshot']
+            manual = Path(receipt['omp_binding']['skill_target']) / 'SKILL.md'
+            manual.unlink()
+            self.assertIsNone(witness._verify())
+            self.assertTrue(omp_projection._valid_instruction_context(snapshot))
+            self.assertTrue(omp_projection._valid_instruction_context({'role': 'user', 'content': []}))
+            mutations = (
+                lambda s: s.update(content=[{'type': 'text', 'text': 'not metadata'}]),
+                lambda s: s.update(details={}),
+                lambda s: s['instruction_context'].update(extra='value'),
+                lambda s: s['instruction_context'].update(tool_call_id='different'),
+                lambda s: s['instruction_context'].update(manual_file_sha256='z' * 64),
+                lambda s: s['instruction_context'].update(renderer='another-renderer'),
+                lambda s: s['instruction_context'].pop('installation_id'),
+            )
+            for mutate in mutations:
+                changed = copy.deepcopy(snapshot)
+                mutate(changed)
+                self.assertFalse(omp_projection._valid_instruction_context(changed))
+
+    def observe(self, repo, session, lifecycle, entries, receipt=None, *, seal=False):
+        payload = {'entries': entries, 'branch_ids': [e['id'] for e in entries],
+                   'event_ordinal': len(entries), 'terminal': False, 'trigger': 'human',
+                   'inherited_ids': [], 'metadata': []}
+        if seal:
+            payload['request_wake'] = False
+        return transport.observe(repo, {'schema': 'agent-memory/omp-observer-request-v1',
+                                      'action': 'seal' if seal else 'ingest', 'session': session,
+                                      'lifecycle': lifecycle, 'payload': payload}, receipt=receipt)
+
+    def test_fresh_capture_preserves_surrounding_source_and_retries(self):
+        for mode in ('copy', 'link'):
+            with self.subTest(mode=mode), World() as world, patch.dict(os.environ, world.env, clear=True):
+                receipt, witness = self.installed(world, mode)
+                helper = NativeSources()
+                repo, session, lifecycle = helper.fixture(world)
+                invocation, entry = self.pair(witness)
+                human = helper.entry('human', 'user', 'Review this task', attribution='user')
+                answer = helper.entry('answer', 'assistant', 'The task is complete.')
+                entries = [human, invocation, entry, answer]
+                result = self.observe(repo, session, lifecycle, entries, receipt, seal=True)
+                directory, _ = transport.segments(repo, session)[0]
+                name = hashlib.sha256(entry['id'].encode()).hexdigest() + '.json'
+                path = directory / 'snapshots' / name
+                original = path.read_bytes()
+                snapshot = transport.read(path)
+                self.assertEqual(snapshot['content'], [])
+                self.assertEqual(snapshot['instruction_context']['tool_call_id'], 'manual-call')
+                self.assertTrue(omp_projection._valid_instruction_context(snapshot))
+                for native in ('human', 'manual-invocation', 'answer'):
+                    self.assertTrue((directory / 'captures' /
+                                     (hashlib.sha256(native.encode()).hexdigest() + '.json')).exists())
+                manifest = transport.read(directory / 'segment.json')
+                self.assertFalse(any(g['native_entry_id'] == 'tool:manual-call' for g in manifest['gaps']))
+                self.observe(repo, session, result['lifecycle'], entries, receipt)
+                self.assertEqual(path.read_bytes(), original)
+
+    def test_screened_invocation_does_not_hide_following_answer(self):
+        with World() as world, patch.dict(os.environ, world.env, clear=True):
+            receipt, witness = self.installed(world)
+            helper = NativeSources()
+            repo, session, lifecycle = helper.fixture(world)
+            invocation, entry = self.pair(witness)
+            invocation['message']['content'][0]['arguments']['i'] = 'password=secretvalue'
+            human = helper.entry('human', 'user', 'Review this task', attribution='user')
+            answer = helper.entry('answer', 'assistant', 'The task is complete.')
+            self.observe(repo, session, lifecycle, [human, invocation, entry, answer], receipt, seal=True)
+            directory, _ = transport.segments(repo, session)[0]
+            gaps = [transport.read(path) for path in (directory / 'gaps').glob('*.json')]
+            self.assertTrue(any(g['native_entry_id'] == invocation['id'] for g in gaps))
+            name = hashlib.sha256(entry['id'].encode()).hexdigest() + '.json'
+            result_snapshot = directory / 'snapshots' / name
+            if result_snapshot.exists():
+                self.assertNotIn('instruction_context', transport.read(result_snapshot))
+            answer_name = hashlib.sha256(answer['id'].encode()).hexdigest() + '.json'
+            answer_snapshot = transport.read(directory / 'snapshots' / answer_name)
+            self.assertEqual(answer_snapshot['content'], [{'type': 'text', 'text': 'The task is complete.'}])
+            self.assertTrue(transport.pending_inventory(repo)[0])
+
+    def test_snapshot_publication_recovery_survives_uninstall_and_retry(self):
+        with World() as world, patch.dict(os.environ, world.env, clear=True):
+            receipt, witness = self.installed(world)
+            helper = NativeSources()
+            repo, session, lifecycle = helper.fixture(world)
+            invocation, entry = self.pair(witness)
+            human = helper.entry('human', 'user', 'Review this task', attribution='user')
+            self.observe(repo, session, lifecycle, [human, invocation], receipt)
+            directory, _ = transport.segments(repo, session)[0]
+            snapshot = omp_projection._project_owned_manual(entry, invocation, witness)['snapshot']
+            name = hashlib.sha256(entry['id'].encode()).hexdigest() + '.json'
+            path = directory / 'snapshots' / name
+            transport.retain(path, snapshot)
+            original = path.read_bytes()
+            (Path(receipt['omp_binding']['skill_target']) / 'SKILL.md').unlink()
+            self.observe(repo, session, lifecycle, [human, invocation, entry])
+            capture = transport.read(directory / 'captures' / name)
+            self.assertEqual(capture['snapshot_sha256'], transport.digest(snapshot))
+            self.assertEqual(path.read_bytes(), original)
+            self.observe(repo, session, lifecycle, [human, invocation, entry])
+            self.assertEqual(path.read_bytes(), original)
+            self.assertFalse(list((directory / 'gaps').glob('*.json')))
+
+    def test_mismatched_orphan_snapshot_is_integrity_failure(self):
+        with World() as world, patch.dict(os.environ, world.env, clear=True):
+            receipt, witness = self.installed(world)
+            helper = NativeSources()
+            repo, session, lifecycle = helper.fixture(world)
+            invocation, entry = self.pair(witness)
+            human = helper.entry('human', 'user', 'Review this task', attribution='user')
+            self.observe(repo, session, lifecycle, [human, invocation], receipt)
+            directory, _ = transport.segments(repo, session)[0]
+            snapshot = omp_projection._project_owned_manual(entry, invocation, witness)['snapshot']
+            snapshot['native_entry_id'] = 'another-entry'
+            self.assertTrue(omp_projection._valid_instruction_context(snapshot))
+            name = hashlib.sha256(entry['id'].encode()).hexdigest() + '.json'
+            path = directory / 'snapshots' / name
+            transport.retain(path, snapshot)
+            original = path.read_bytes()
+            with self.assertRaises(ValueError):
+                self.observe(repo, session, lifecycle, [human, invocation, entry], receipt)
+            self.assertEqual(path.read_bytes(), original)
+            self.assertFalse((directory / 'captures' / name).exists())
+            self.assertFalse(list((directory / 'gaps').glob('*.json')))
+
+    def test_preexisting_native_gap_is_not_reclassified(self):
+        with World() as world, patch.dict(os.environ, world.env, clear=True):
+            receipt, witness = self.installed(world)
+            helper = NativeSources()
+            repo, session, lifecycle = helper.fixture(world)
+            invocation, entry = self.pair(witness)
+            human = helper.entry('human', 'user', 'Review this task', attribution='user')
+            unavailable = copy.deepcopy(entry)
+            unavailable['message']['content'] = [{'type': 'image', 'data': 'opaque'}]
+            self.observe(repo, session, lifecycle, [human, invocation, unavailable], receipt)
+            directory, _ = transport.segments(repo, session)[0]
+            gaps = {p.name: p.read_bytes() for p in (directory / 'gaps').glob('*.json')}
+            self.assertTrue(gaps)
+            self.observe(repo, session, lifecycle, [human, invocation, entry], receipt)
+            self.assertEqual(gaps, {p.name: p.read_bytes() for p in (directory / 'gaps').glob('*.json')})
+            name = hashlib.sha256(entry['id'].encode()).hexdigest() + '.json'
+            path = directory / 'snapshots' / name
+            if path.exists():
+                self.assertNotIn('instruction_context', transport.read(path))
+            self.assertTrue(transport.pending_inventory(repo)[0])
+
+    def test_sealed_tool_gap_does_not_authorize_late_classification(self):
+        with World() as world, patch.dict(os.environ, world.env, clear=True):
+            receipt, witness = self.installed(world)
+            helper = NativeSources()
+            repo, session, lifecycle = helper.fixture(world)
+            invocation, entry = self.pair(witness)
+            human = helper.entry('human', 'user', 'Review this task', attribution='user')
+            result = self.observe(repo, session, lifecycle, [human, invocation], receipt, seal=True)
+            directory, _ = transport.segments(repo, session)[0]
+            manifest_path = directory / 'segment.json'
+            before = manifest_path.read_bytes()
+            self.assertTrue(any(g['native_entry_id'] == 'tool:manual-call'
+                                for g in transport.read(manifest_path)['gaps']))
+            self.observe(repo, session, result['lifecycle'], [human, invocation, entry], receipt)
+            self.assertEqual(manifest_path.read_bytes(), before)
+            self.assertFalse((directory / 'resolutions').exists() and
+                             list((directory / 'resolutions').glob('*.json')))
+            name = hashlib.sha256(entry['id'].encode()).hexdigest() + '.json'
+            for segment, _ in transport.segments(repo, session):
+                path = segment / 'snapshots' / name
+                if path.exists():
+                    self.assertNotIn('instruction_context', transport.read(path))
+
+    def test_same_sweep_human_boundary_preserves_sealed_tool_gap(self):
+        with World() as world, patch.dict(os.environ, world.env, clear=True):
+            receipt, witness = self.installed(world)
+            helper = NativeSources()
+            repo, session, lifecycle = helper.fixture(world)
+            invocation, entry = self.pair(witness)
+            first = helper.entry('human', 'user', 'Review the first task', attribution='user')
+            second = helper.entry('second-human', 'user', 'Review the next task', attribution='user')
+            entries = [first, invocation, second, entry]
+            result = self.observe(repo, session, lifecycle, entries, receipt)
+            segments = transport.segments(repo, session)
+            original = next(directory for directory, _ in segments
+                            if (directory / 'segment.json').exists()
+                            and any(g['native_entry_id'] == 'tool:manual-call'
+                                    for g in transport.read(directory / 'segment.json')['gaps']))
+            manifest = (original / 'segment.json').read_bytes()
+            gap_value = next(g for g in transport.read(original / 'segment.json')['gaps']
+                             if g['native_entry_id'] == 'tool:manual-call')
+            gap_path = original / 'gaps' / (gap_value['gap_id'] + '.json')
+            gap_bytes = gap_path.read_bytes()
+            resolution = original / 'resolutions' / (gap_value['gap_id'] + '.json')
+            self.assertFalse(resolution.exists())
+            name = hashlib.sha256(entry['id'].encode()).hexdigest() + '.json'
+            for directory, _ in segments:
+                path = directory / 'snapshots' / name
+                if path.exists():
+                    self.assertNotIn('instruction_context', transport.read(path))
+            self.observe(repo, session, result['lifecycle'], entries, receipt)
+            self.assertEqual((original / 'segment.json').read_bytes(), manifest)
+            self.assertEqual(gap_path.read_bytes(), gap_bytes)
+            self.assertFalse(resolution.exists())
+            self.assertTrue(transport.pending_inventory(repo)[0])
+
+
 
 
 class ExplicitNativeOwnership(unittest.TestCase):

@@ -135,8 +135,202 @@ def observer_binding(artifact_digest, agent_dir):
     for relative in ('hooks/omp.ts', 'hooks/python3.sh', 'scripts/omp_boundary.py',
                      'scripts/agent_memory/omp_boundary.py', 'scripts/agent_memory/omp_transport.py',
                      'scripts/agent_memory/omp_projection.py', 'scripts/agent_memory/omp_control.py',
-                     'scripts/agent_memory/omp_installation.py'):
+                     'scripts/agent_memory/omp_installation.py',
+                     'scripts/agent_memory/installation.py', 'scripts/agent_memory/artifact.py',
+                     'scripts/agent_memory/trust_paths.py', 'scripts/agent_memory/frontmatter.py',
+                     'scripts/agent_memory/pack_validation.py', 'scripts/agent_memory/migration_contract.py',
+                     'scripts/agent_memory/turn_sources.py', 'scripts/agent_memory/security.py'):
         expected = receipt['artifact_files'].get(relative)
         if not expected or hashlib.sha256((pack / relative).read_bytes()).hexdigest() != expected['sha256']:
             raise ContractError('Native observer executable differs from installed artifact')
     return receipt
+
+
+_MANUAL_MINT = object()
+# Renderer paths are enabled only for installation kinds actually measured.
+_MEASURED_MANUAL_KINDS = frozenset({'copy', 'link'})
+
+
+class _OwnedManual:
+    """In-process evidence, valid only while the same installation re-verifies."""
+    __slots__ = ('_receipt_sha', '_artifact', '_agent_dir', '_comparison')
+
+    def __init__(self, token, receipt_sha, artifact, agent_dir, comparison):
+        if token is not _MANUAL_MINT:
+            raise TypeError('Owned manual evidence is internally minted')
+        object.__setattr__(self, '_receipt_sha', receipt_sha)
+        object.__setattr__(self, '_artifact', artifact)
+        object.__setattr__(self, '_agent_dir', agent_dir)
+        object.__setattr__(self, '_comparison', comparison)
+
+    def __setattr__(self, name, value):
+        raise AttributeError('Owned manual evidence is immutable')
+
+    def __reduce__(self):
+        raise TypeError('Owned manual evidence cannot be serialized')
+
+    def _verify(self):
+        current = _manual_comparison(self._receipt_sha, self._artifact, self._agent_dir)
+        return current if current == self._comparison else None
+
+    def revalidate(self):
+        return self._verify() is not None
+
+    @property
+    def text(self):
+        return self._comparison[0]
+
+    @property
+    def header_path(self):
+        return self._comparison[1]
+
+    @property
+    def installation_id(self):
+        return self._comparison[2]
+
+    @property
+    def observed_receipt_sha256(self):
+        return self._comparison[3]
+
+    @property
+    def artifact_digest(self):
+        return self._comparison[4]
+
+    @property
+    def manual_file_sha256(self):
+        return self._comparison[5]
+
+
+def _manual_comparison(receipt_sha, artifact_digest, agent_dir):
+    """Reobserve the binding and read through pinned no-follow descriptors."""
+    import hashlib
+    import os
+    import stat
+    from . import installation, omp_projection, omp_transport, trust_paths
+
+    descriptors, link_descriptors = [], []
+    try:
+        receipt = observer_binding(artifact_digest, agent_dir)
+        if omp_transport.digest(receipt) != receipt_sha:
+            return None
+        skill_path = receipt['omp_binding']['skill_target']
+        targets = [item for item in receipt['targets'] if item['path'] == skill_path]
+        if len(targets) != 1 or targets[0]['kind'] not in _MEASURED_MANUAL_KINDS:
+            return None
+        target = targets[0]
+        installation.verify_targets([target], source=receipt['source'])
+        expected = receipt['artifact_files']['SKILL.md']['sha256']
+        if not isinstance(expected, str) or not re.fullmatch(r'[0-9a-f]{64}', expected):
+            return None
+        logical_path = Path(skill_path) / 'SKILL.md'
+        link_pin = None
+        if target['kind'] == 'link':
+            link = Path(skill_path)
+            destination = Path(receipt['source']['pack'])
+            if (not link.is_absolute() or '..' in link.parts
+                    or not destination.is_absolute() or '..' in destination.parts
+                    or target['identity'] != {'kind': 'link', 'target': str(destination)}):
+                return None
+            link_parts = link.parts[1:]
+            node = Path(link.anchor)
+            fd = os.open(node, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+            link_descriptors.append(fd)
+            link_dirs = [(fd, None, None, os.fstat(fd))]
+            protected, _ = trust_paths.inspect_entry(node, link_dirs[0][3], False)
+            for part in link_parts[:-1]:
+                parent = fd
+                fd = os.open(part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=parent)
+                link_descriptors.append(fd)
+                node = node / part
+                value = os.fstat(fd)
+                protected, _ = trust_paths.inspect_entry(node, value, protected)
+                link_dirs.append((fd, parent, part, value))
+            link_value = os.stat(link_parts[-1], dir_fd=fd, follow_symlinks=False)
+            trust_paths.inspect_entry(link, link_value, protected, final=True, allow_final_link=True)
+            if not stat.S_ISLNK(link_value.st_mode) or os.readlink(link_parts[-1], dir_fd=fd) != str(destination):
+                return None
+            link_pin = (link, link_parts[-1], fd, link_value, link_dirs, str(destination))
+            path = destination / 'SKILL.md'
+        else:
+            path = logical_path
+        if not path.is_absolute() or '..' in path.parts:
+            return None
+
+        def pin(value):
+            return (value.st_dev, value.st_ino, value.st_mode, value.st_uid,
+                    value.st_gid, value.st_nlink, value.st_size,
+                    value.st_mtime_ns, value.st_ctime_ns)
+
+        root = Path(path.anchor)
+        descriptors.append(os.open(root, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW))
+        protected, _ = trust_paths.inspect_entry(root, os.fstat(descriptors[0]), False)
+        pins = [pin(os.fstat(descriptors[0]))]
+        parts = path.parts[1:]
+        node = root
+        for index, part in enumerate(parts):
+            final = index == len(parts) - 1
+            flags = os.O_RDONLY | os.O_NOFOLLOW | (os.O_NONBLOCK if final else os.O_DIRECTORY)
+            fd = os.open(part, flags, dir_fd=descriptors[-1])
+            descriptors.append(fd)
+            node = node / part
+            value = os.fstat(fd)
+            protected, _ = trust_paths.inspect_entry(node, value, protected, final=final)
+            if final and (not stat.S_ISREG(value.st_mode) or value.st_nlink != 1
+                          or value.st_size > omp_projection.MAX_SOURCE):
+                return None
+            pins.append(pin(value))
+
+        chunks, size = [], 0
+        while size <= omp_projection.MAX_SOURCE:
+            chunk = os.read(descriptors[-1], min(8192, omp_projection.MAX_SOURCE + 1 - size))
+            if not chunk:
+                break
+            chunks.append(chunk)
+            size += len(chunk)
+        if size > omp_projection.MAX_SOURCE:
+            return None
+        raw = b''.join(chunks)
+        if hashlib.sha256(raw).hexdigest() != expected:
+            return None
+        text = raw.decode('utf-8')
+        installation.verify_targets([target], source=receipt['source'])
+        if omp_transport.digest(observer_binding(artifact_digest, agent_dir)) != receipt_sha:
+            return None
+        if pin(os.fstat(descriptors[0])) != pins[0] or pin(os.stat(root, follow_symlinks=False)) != pins[0]:
+            return None
+        for index, part in enumerate(parts):
+            if (pin(os.fstat(descriptors[index + 1])) != pins[index + 1]
+                    or pin(os.stat(part, dir_fd=descriptors[index], follow_symlinks=False)) != pins[index + 1]):
+                return None
+        if link_pin is not None:
+            link, name, parent, value, link_dirs, destination = link_pin
+            if (pin(os.stat(link.anchor, follow_symlinks=False)) != pin(link_dirs[0][3])
+                    or pin(os.stat(name, dir_fd=parent, follow_symlinks=False)) != pin(value)
+                    or os.readlink(name, dir_fd=parent) != destination):
+                return None
+            for fd, parent_fd, part, before in link_dirs:
+                if (pin(os.fstat(fd)) != pin(before)
+                        or (parent_fd is not None
+                            and pin(os.stat(part, dir_fd=parent_fd, follow_symlinks=False)) != pin(before))):
+                    return None
+        return (text, str(logical_path), receipt['installation_id'], receipt_sha, artifact_digest, expected)
+    except (OSError, ValueError, TypeError, KeyError, IndexError, ContractError):
+        return None
+    finally:
+        for fd in reversed(descriptors + link_descriptors):
+            os.close(fd)
+
+
+def _owned_manual(receipt):
+    """Mint comparison evidence only for the current explicitly owned binding."""
+    from . import omp_transport
+    try:
+        receipt_sha = omp_transport.digest(receipt)
+        artifact_digest = receipt['source']['artifact_digest']
+        agent_dir = receipt['omp_binding']['agent_dir']
+        comparison = _manual_comparison(receipt_sha, artifact_digest, agent_dir)
+        if comparison is None:
+            return None
+        return _OwnedManual(_MANUAL_MINT, receipt_sha, artifact_digest, agent_dir, comparison)
+    except (ValueError, TypeError, KeyError, ContractError):
+        return None

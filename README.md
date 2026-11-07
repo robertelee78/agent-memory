@@ -111,6 +111,12 @@ or successful capture/publication. Actual supported-platform/mode/peer claims
 must be backed by the signed release's independent real-native qualification;
 the runnable minimal smoke is not the complete release matrix.
 
+For a qualifying full read of the receipt-owned AM manual, the omp learning
+snapshot records historical instruction-context provenance without the manual
+body. This narrow stored-source treatment does not change the native result,
+waive existing gaps or exempt other tool results from screening; see the guide
+for its verification and privacy limits.
+
 ### First use in a repository
 
 Ask your coding agent to use the installed `agent-memory` skill in the target

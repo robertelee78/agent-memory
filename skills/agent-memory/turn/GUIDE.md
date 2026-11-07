@@ -46,6 +46,14 @@ coverage gap. Use `am omp-boundary --repo REPO --list-pending --offset N` and
 for source-qualified recovery. Unregistered sources retain original references,
 not invented observation IDs. A pending page does not prove full coverage.
 
+In supported omp 18.16 stored-source captures, `--source` MAY show a closed
+`instruction_context` annotation with empty content for a full read of the
+receipt-owned installed AM manual. Its receipt, artifact and manual digests
+describe the observer's historical comparison; they do not authenticate the
+current installation or establish complete source coverage. The manual body is
+intentionally not learning material. Other reads remain subject to ordinary
+screening; existing gaps and assessments remain authoritative.
+
 The combined `agent-memory/turn-check-v1` response keeps mechanical freshness and
 source assessment separate. Successful quiet checks emit nothing. A real source
 assessment can finish while freshness remains pending: overall verification is

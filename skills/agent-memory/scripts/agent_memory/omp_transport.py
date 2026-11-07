@@ -279,16 +279,57 @@ def gap(directory, cursor, native_id, reason):
     return value
 
 
-def capture(directory, cursor, entry, *, mapping='verified'):
+def _retained_gap(current, identities):
+    """Check both live gaps and immutable manifests, including this sweep."""
+    for directory, cursor in current:
+        for path in _files(directory, 'gaps', r'[0-9a-f-]{36}\.json'):
+            if read(path, 4096)['native_entry_id'] in identities:
+                return True
+        if (directory / 'segment.json').exists() and any(
+                item['native_entry_id'] in identities for item in manifest_value(directory, cursor)['gaps']):
+            return True
+    return False
+
+
+def capture(directory, cursor, entry, *, mapping='verified', invocation=None, witness=None):
     native = turn_sources.bounded(entry.get('id'))
     name = hashlib.sha256(native.encode()).hexdigest()
-    projected = omp_projection.project(entry)
-    if 'gap' in projected:
-        gap(directory, cursor, native, projected['gap'])
-        return None
-    snapshot = projected['snapshot']
     snapshot_ref = 'snapshots/' + name + '.json'
-    source_hash = retain(directory / snapshot_ref, snapshot)
+    path = directory / snapshot_ref
+    if os.path.lexists(path):
+        snapshot = read(path)
+        if not omp_projection._valid_instruction_context(snapshot):
+            raise ContractError('Invalid retained native instruction context')
+        if 'instruction_context' in snapshot:
+            message = entry.get('message')
+            if (entry.get('type') != 'message' or not isinstance(message, dict)
+                    or message.get('role') != 'toolResult'
+                    or snapshot.get('native_entry_id') != native
+                    or snapshot.get('native_parent_id') != entry.get('parentId')
+                    or snapshot.get('toolCallId') != message.get('toolCallId')
+                    or snapshot.get('toolName') != message.get('toolName')
+                    or snapshot.get('isError') is not message.get('isError')
+                    or ('attribution' in snapshot) != ('attribution' in message)
+                    or snapshot.get('attribution') != message.get('attribution')):
+                raise ContractError('Retained instruction context differs from native identity')
+        else:
+            original = omp_projection.project(entry)
+            if original.get('snapshot') != snapshot:
+                raise ContractError('Retained native snapshot differs from its projection')
+        projected = {'snapshot': snapshot, 'exclusions': list(omp_projection.EXCLUSIONS)}
+    else:
+        verified = witness._verify() if witness is not None else None
+        projected = (omp_projection._project_owned_manual(entry, invocation, witness)
+                     if verified is not None and invocation is not None else None)
+        if projected is not None and witness._verify() != verified:
+            projected = None
+        if projected is None:
+            projected = omp_projection.project(entry)
+        if 'gap' in projected:
+            gap(directory, cursor, native, projected['gap'])
+            return None
+        snapshot = projected['snapshot']
+    source_hash = retain(path, snapshot)
     record = {'schema': 'agent-memory/omp-capture-v1', 'session': cursor['session'],
               'lifecycle': cursor['lifecycle'], 'capture_id': str(uuid.uuid5(uuid.UUID(cursor['lifecycle']), native)),
               'native_entry_id': native, 'native_parent_id': entry.get('parentId'),
@@ -591,6 +632,8 @@ def _coverage(directory, manifest):
             raise ContractError('Native gap resolution differs from sealed evidence')
         path = _snapshot_path(directory, resolution['recovered_ref'])
         recovered = read(path)
+        if not omp_projection._valid_instruction_context(recovered):
+            raise ContractError('Invalid recovered native instruction context')
         original = gap_value['native_entry_id']
         reassociated = False
         if isinstance(original, str) and original.startswith('event:') and resolution['reason'] == 'verified-native-reassociation':
@@ -622,8 +665,11 @@ def manifest_value(directory, cursor):
     canonical_uuid(manifest['seal_id'])
     for item in manifest['captures']:
         exact(item, {'ref', 'sha256'})
-        if digest(read(_snapshot_path(directory, item['ref']))) != item['sha256']:
+        snapshot = read(_snapshot_path(directory, item['ref']))
+        if digest(snapshot) != item['sha256']:
             raise ContractError('Native sealed capture digest changed')
+        if not omp_projection._valid_instruction_context(snapshot):
+            raise ContractError('Invalid sealed native instruction context')
     for item in manifest['gaps']:
         exact(item, {'schema', 'session', 'lifecycle', 'gap_id', 'native_entry_id', 'reason'})
         if (item['schema'] != 'agent-memory/omp-gap-v1' or item['session'] != cursor['session']
@@ -657,8 +703,13 @@ def segment_inventory(repo, directory, cursor):
         if path.name != hashlib.sha256(native.encode()).hexdigest() + '.json':
             raise ContractError('Native capture namespace differs')
         snapshot_path = _snapshot_path(directory, captured['snapshot_ref'])
-        if digest(read(snapshot_path)) != captured['snapshot_sha256']:
+        snapshot = read(snapshot_path)
+        if digest(snapshot) != captured['snapshot_sha256']:
             raise ContractError('Native capture snapshot digest changed')
+        if (snapshot.get('native_entry_id') != native
+                or snapshot.get('native_parent_id') != captured['native_parent_id']
+                or not omp_projection._valid_instruction_context(snapshot)):
+            raise ContractError('Invalid native capture snapshot identity')
         referenced.add(captured['snapshot_ref'])
         captures_by_id[captured['capture_id']] = captured
     admission_path = directory / 'admission.json'
@@ -862,11 +913,17 @@ def _source(repo, session, lifecycle, identifier):
         raise ContractError('Retained native source digest changed')
     capture_metadata = [read(path, 4096) for path in _files(directory, 'captures', r'[0-9a-f]{64}\.json')]
     absent = (cursor['control_interval'] or {}).get('absent_native_entries', [])
-    qualifications = [{'native_entry_id': item['native_entry_id'],
-                       'mapping': 'absent' if item['native_entry_id'] in absent else item['mapping'],
-                       'snapshot_reference': str(_snapshot_path(directory, item['snapshot_ref'])),
-                       'snapshot_sha256': item['snapshot_sha256'], 'exclusions': item['exclusions']}
-                      for item in capture_metadata]
+    qualifications = []
+    for item in capture_metadata:
+        snapshot = read(_snapshot_path(directory, item['snapshot_ref']))
+        qualification = {'native_entry_id': item['native_entry_id'],
+                         'mapping': 'absent' if item['native_entry_id'] in absent else item['mapping'],
+                         'snapshot_reference': str(_snapshot_path(directory, item['snapshot_ref'])),
+                         'snapshot_sha256': item['snapshot_sha256'], 'exclusions': item['exclusions']}
+        if 'instruction_context' in snapshot:
+            qualification['instruction_context'] = snapshot['instruction_context']
+            qualification['instruction_context_qualification'] = 'Historical observer assertion; body intentionally nonlearning, not current installation authentication or complete source coverage.'
+        qualifications.append(qualification)
     return {'verified': True, 'source': payload, 'enrollment': enrollment, 'observation': shared,
             'origin': cursor['origin'], 'coverage_complete': manifest is not None and _coverage(directory, manifest),
             'exclusions': list(omp_projection.EXCLUSIONS), 'faults': faults,
@@ -959,6 +1016,15 @@ def resolve_tool_result(current, owner, captured, invocations):
     call_id = recovered.get('toolCallId')
     if recovered.get('role') != 'toolResult' or not call_id:
         return False
+    if 'instruction_context' in recovered:
+        for old_dir, old_cursor in current:
+            if any(read(path, 4096)['native_entry_id'] == 'tool:' + call_id
+                   for path in _files(old_dir, 'gaps', r'[0-9a-f-]{36}\.json')):
+                return False
+            if (old_dir / 'segment.json').exists() and any(
+                    old['native_entry_id'] == 'tool:' + call_id
+                    for old in manifest_value(old_dir, old_cursor)['gaps']):
+                return False
     roots = {c['origin']['human_root'] for _, c in current if call_id in c['tool_lifecycles']}
     root = cursor['origin']['human_root']
     if len(invocations.get(call_id, set())) != 1 or not roots or roots != {root}:
@@ -981,7 +1047,7 @@ def resolve_tool_result(current, owner, captured, invocations):
     return True
 
 
-def observe(repo, value):
+def observe(repo, value, *, receipt=None):
     from .omp_boundary import source_barrier, private_lock, _base, ensure_marker
     exact(value, {'schema', 'action', 'session', 'lifecycle', 'payload'})
     if value['schema'] != 'agent-memory/omp-observer-request-v1' or value['action'] not in {'admit', 'ingest', 'seal', 'wake'}:
@@ -1046,7 +1112,25 @@ def observe(repo, value):
                         turn_sources.bounded(native)
                 current = segments(repo, session)
                 known = {}; tools = {}; invocations = {}; retained_results = []
+                snapshots = {}; retained_tool_gaps = set()
+                raw_calls = {}; raw_results = {}
+                for candidate in payload['entries']:
+                    if not isinstance(candidate, dict) or not isinstance(candidate.get('message'), dict):
+                        continue
+                    msg = candidate['message']
+                    if msg.get('role') == 'assistant' and isinstance(msg.get('content'), list):
+                        for block in msg['content']:
+                            if isinstance(block, dict) and block.get('type') == 'toolCall' and isinstance(block.get('id'), str):
+                                raw_calls.setdefault(block['id'], []).append(candidate)
+                    elif msg.get('role') == 'toolResult' and isinstance(msg.get('toolCallId'), str):
+                        raw_results.setdefault(msg['toolCallId'], []).append(candidate)
                 for d, c in current:
+                    for path in _files(d, 'snapshots', r'[0-9a-f]{64}\.json'):
+                        snapshots.setdefault(path.name, []).append((d, c))
+                    if (d / 'segment.json').exists():
+                        for old in manifest_value(d, c)['gaps']:
+                            if isinstance(old['native_entry_id'], str) and old['native_entry_id'].startswith('tool:'):
+                                retained_tool_gaps.add(old['native_entry_id'][5:])
                     tools.update(c['tool_lifecycles'])
                     for path in _files(d, 'captures', r'[0-9a-f]{64}\.json'):
                         cap = read(path, 4096); known[cap['native_entry_id']] = (d, c)
@@ -1060,6 +1144,8 @@ def observe(repo, value):
                             retained_results.append(((d, c), cap))
                     for path in _files(d, 'gaps', r'[0-9a-f-]{36}\.json'):
                         old = read(path, 4096)
+                        if isinstance(old['native_entry_id'], str) and old['native_entry_id'].startswith('tool:'):
+                            retained_tool_gaps.add(old['native_entry_id'][5:])
                         if old['native_entry_id']:
                             known.setdefault(old['native_entry_id'], (d, c))
                     control = c['control_interval'] or {}
@@ -1149,6 +1235,9 @@ def observe(repo, value):
                         # Recover original missing evidence, never mutate an existing safe snapshot.
                         name = hashlib.sha256(native.encode()).hexdigest()
                         if not (d / 'captures' / (name + '.json')).exists():
+                            prior = d / 'snapshots' / (name + '.json')
+                            if os.path.lexists(prior) and 'instruction_context' in read(prior):
+                                raise ContractError('Instruction context conflicts with retained native gap')
                             capture(d, c, entry, mapping='verified' if native in payload['branch_ids'] else 'absent')
                         continue
                     mention_owner = None
@@ -1209,8 +1298,14 @@ def observe(repo, value):
                         if owner is None:
                             owner = new_segment(repo, session, str(uuid.uuid4()), root, 'foreign-hidden',
                                                 max([c['event_ordinal'] for _, c in current] + [payload['event_ordinal']]) + 1)
+                    snapshot_name = hashlib.sha256(native.encode()).hexdigest() + '.json'
+                    existing_owners = snapshots.get(snapshot_name, [])
+                    if len(existing_owners) > 1:
+                        raise ContractError('Ambiguous retained native snapshot')
+                    if existing_owners:
+                        owner = existing_owners[0]
                     d, c = owner
-                    if ambiguous_mention or ambiguous_call:
+                    if (ambiguous_mention or ambiguous_call) and not existing_owners:
                         gap(d, c, native, 'ambiguous-lifecycle')
                     if human and native in deferred_mentions:
                         order = (c['control_interval'] or {}).get('capture_order', [])
@@ -1221,7 +1316,32 @@ def observe(repo, value):
                                 order.append(mention_id)
                             known[mention_id] = (d, c)
                         c['control_interval'] = {**(c['control_interval'] or {}), 'capture_order': order}
-                    cap = capture(d, c, entry, mapping='verified' if native in payload['branch_ids'] else 'absent')
+                    invocation = None
+                    witness = None
+                    candidates = raw_calls.get(call_id, [])
+                    if (receipt is not None and not existing_owners and not ambiguous_call
+                            and call_id not in retained_tool_gaps and len(candidates) == 1
+                            and len(raw_results.get(call_id, [])) == 1
+                            and len(invocations.get(call_id, set())) == 1
+                            and candidates[0].get('id') in invocations[call_id]
+                            and candidates[0].get('id') in known
+                            and not _retained_gap(current, {native, 'tool:' + call_id})):
+                        invocation_owner = known[candidates[0]['id']][0]
+                        invocation_path = invocation_owner / 'snapshots' / (hashlib.sha256(candidates[0]['id'].encode()).hexdigest() + '.json')
+                        invocation_record = invocation_owner / 'captures' / (hashlib.sha256(candidates[0]['id'].encode()).hexdigest() + '.json')
+                        projected_invocation = omp_projection.project(candidates[0]).get('snapshot')
+                        if (projected_invocation is not None and os.path.lexists(invocation_record)
+                                and os.path.lexists(invocation_path)):
+                            retained_invocation = read(invocation_record, 4096)
+                            if (retained_invocation.get('native_entry_id') == candidates[0]['id']
+                                    and retained_invocation.get('snapshot_ref') == str(invocation_path.relative_to(invocation_owner))
+                                    and retained_invocation.get('snapshot_sha256') == digest(projected_invocation)
+                                    and projected_invocation == read(invocation_path)):
+                                from . import omp_installation
+                                witness = omp_installation._owned_manual(receipt)
+                                invocation = candidates[0]
+                    cap = capture(d, c, entry, mapping='verified' if native in payload['branch_ids'] else 'absent',
+                                  invocation=invocation, witness=witness)
                     order = (c['control_interval'] or {}).get('capture_order', [])
                     if native not in order:
                         order.append(native)
