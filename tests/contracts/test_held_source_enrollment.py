@@ -267,6 +267,39 @@ class HeldSourceEnrollment(unittest.TestCase):
                 with self.assertRaises(ValueError):scope_binding.private_enrollment_context(repo)
             self.assertEqual((directory / original['blob']).read_bytes(), body)
 
+    def test_verified_hold_rejects_location_and_hold_changes_during_observation(self):
+        with World() as world, patch.dict(os.environ, world.env, clear=True):
+            _, repo, bank, operation, directory, original, body = self.fixture(world)
+            config = repo / '.git' / 'config'
+            binding = local_registry.paths('layout-recovery-bindings')[1]
+            marker = bank / '.agent-memory-transaction.md'
+            foreign = json.loads(binding.read_bytes())
+            foreign['bindings'][operation]['bank_path'] = str(world.inside('foreign-bank'))
+            for target, replacement in (
+                    (config, config.read_bytes() + b'\n[agent-memory]\n\tbankroot = foreign-bank\n'),
+                    (binding, encoded(foreign)),
+                    (marker, b'{}\n')):
+                with self.subTest(target=target.name):
+                    old = target.read_bytes()
+                    observe = recovery_frontier._observe_bank
+                    changed = False
+                    def change_after_first(*args, **kwargs):
+                        nonlocal changed
+                        result = observe(*args, **kwargs)
+                        if not changed:
+                            changed = True
+                            target.write_bytes(replacement)
+                        return result
+                    try:
+                        with patch.object(recovery_frontier, '_observe_bank', side_effect=change_after_first):
+                            with self.assertRaises((ValueError, OSError, KeyError)):
+                                recovery_frontier.verified_hold(repo)
+                        self.assertTrue(changed)
+                    finally:
+                        target.write_bytes(old)
+            self.assertTrue(recovery_frontier.verified_hold(repo))
+            self.assertEqual((directory / original['blob']).read_bytes(), body)
+
     def test_shared_source_barrier_reentrancy_and_lifecycle_contention_preserve_sources(self):
         with World() as world, patch.dict(os.environ, world.env, clear=True):
             _, repo, bank, operation, directory, original, body = self.fixture(world)

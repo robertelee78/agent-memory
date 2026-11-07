@@ -43,12 +43,12 @@ def main(event=None):
                    ' observation_id=' + obs['observation_id'] + ' source_sha256=' + obs['source_sha256'] +
                    '. Before final submit top-level session,prompt,observation_id,source_sha256,outcome,assessment '
                    'via one am claude-boundary --repo REPO --input - --refresh --quiet for no-learning; assessment requires source_id=observation_id, source_review=actual review, candidates=authored list (empty only if none). '
-                   'Use actual source attribution. On routine success, output only the task response: no announcement of reading guides, assessments, no-learning or saved/unsaved memory, in progress or final.')
+                   'Attribute the actual source. On routine success, output only the task response; do not announce guides, assessments, no-learning or memory status.')
         if enrollment.held:
-            context += ' Recovery-pending: input retained privately; continue the human task. Refresh, acknowledgement and canonical writes stay inactive; never fabricate no-learning or publication.'
+            context += ' Recovery-pending: input retained privately; continue the task. No refresh, acknowledgement or canonical writes; never fabricate no-learning or publication.'
         prior = turn_sources.pending_notice(repo, 'claude', session, prompt)
         if prior:
-            context += ' Earlier or recovery-pending work remains; inspect am claude-boundary --list-pending before assessing an original source.'
+            context += ' Pending work: use am claude-boundary --list-pending before assessing the original source.'
         if len(context.encode()) > 2048:
             raise ValueError('guidance bound')
         scope_binding.recheck_private_enrollment(enrollment)

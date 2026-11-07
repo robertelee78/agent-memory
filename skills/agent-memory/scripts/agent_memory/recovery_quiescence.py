@@ -41,6 +41,10 @@ def attestation_value(value, manifest, runtime):
 
 def selected_attestation(repo, operation_id, proposal, runtime_digest):
     directory = state.paths(repo, operation_id)[3]
+    return _selected_attestation(directory, proposal, runtime_digest)
+
+
+def _selected_attestation(directory, proposal, runtime_digest):
     heads = state.read(directory / 'quiescence-attestations.json', missing=True) or {}
     row = heads.get(runtime_digest)
     if row is None:

@@ -157,7 +157,9 @@ def private_enrollment_context(repo):
                         for path in (root, bank.parent, bank) for info in [path.lstat()]],
             'marker': digest(hold.marker) if hold is not None else None}
     if hold is not None:
-        directory = layout_recovery_state.paths(root, hold.operation_id)[3]
+        if (hold.root, hold.bank) != (root, bank):
+            raise ContractError('Private enrollment recovery location changed during observation')
+        directory = layout_recovery_state._paths_for_bank(root, bank, hold.operation_id)[3]
         pins.update(runtime_artifact_digest=hold.runtime_artifact_digest,
                     private_bindings_sha256=digest(layout_recovery_state.read_bytes(
                         storage.paths('layout-recovery-bindings')[1])),

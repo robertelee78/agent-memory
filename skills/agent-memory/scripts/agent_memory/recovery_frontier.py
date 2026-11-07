@@ -82,7 +82,12 @@ def marker_value(raw):
 
 
 def ledger(repo, operation_id, row):
-    _, _, _, directory = state.paths(repo, operation_id)
+    return _ledger(repo, operation_id, row)
+
+
+def _ledger(repo, operation_id, row, bank=None):
+    _, _, _, directory = (state.paths(repo, operation_id) if bank is None
+                          else state._paths_for_bank(repo, bank, operation_id))
     head = state.read(directory / 'ledger-head.json', 4096)
     if (not isinstance(head, dict) or set(head) != {'schema', 'operation_id', 'generation', 'sha256'}
             or head['schema'] != 'agent-memory/layout-ledger-head-v1' or head['operation_id'] != operation_id
@@ -236,12 +241,21 @@ def retained_handoff(root, operation, row, manifest, current_operation, index):
 
 
 def observe(repo, owner=None, transaction=None):
-    return _observe_index(repo, owner, transaction, state.index(repo))
+    root, bank, _, _ = state.paths(repo)
+    result = _observe_bank(root, bank, owner, transaction)
+    if state.paths(root)[:2] != (root, bank):
+        raise ContractError('Recovery bank location changed during observation')
+    return result
+
+def _observe_bank(root, bank, owner, transaction):
+    index = state._index_for_bank(root, bank)
+    return _observe_index(root, owner, transaction, index, bank)
 
 
-def _observe_index(repo, owner, transaction, index):
+def _observe_index(repo, owner, transaction, index, bank=None):
     """Internal read-only view after exact known-transition validation only."""
-    root, bank, base, _ = state.paths(repo)
+    root, bank, base, _ = (state.paths(repo) if bank is None
+                           else state._paths_for_bank(repo, bank))
     raw = marker_bytes(bank)
     sentinel_raw = marker_bytes(bank, '.agent-memory-recovery.md')
     raw_value = load(raw) if raw is not None else {}
@@ -285,7 +299,7 @@ def _observe_index(repo, owner, transaction, index):
     for operation, row in sorted(index['operations'].items()):
         if row['state'] == 'cleaned':
             continue
-        directory, head, current = ledger(root, operation, row)
+        directory, head, current = _ledger(root, operation, row, bank)
         manifest, proposal = evidence(directory, current, row)
         mapping = state.read(directory / 'reference-map.json', missing=True)
         if mapping:
@@ -352,10 +366,12 @@ def check(expected, repo, owner=None, transaction=None):
 
 def verified_hold(repo, owner=None, transaction=None):
     from . import artifact, scope_binding
-    token = observe(repo, owner, transaction)
     root, bank, _, _ = state.paths(repo)
+    token = _observe_bank(root, bank, owner, transaction)
     raw = marker_bytes(bank)
     if raw is None:
+        if state.paths(root)[:2] != (root, bank):
+            raise ContractError('Recovery bank location changed during observation')
         return None
     marker = marker_value(raw)
     if marker['schema'] != HOLD and transaction != raw:
@@ -364,8 +380,8 @@ def verified_hold(repo, owner=None, transaction=None):
     capabilities = measured_runtime['compatibility'].get('private_state_capabilities', [])
     if 'layout-frontier-v1' not in capabilities:
         raise ContractError('Active runtime cannot enforce the private recovery frontier')
-    row = state.index(root)['operations'][marker['operation_id']]
-    directory, _, current = ledger(root, marker['operation_id'], row)
+    row = state._index_for_bank(root, bank)['operations'][marker['operation_id']]
+    directory, _, current = _ledger(root, marker['operation_id'], row, bank)
     manifest, proposal = evidence(directory, current, row)
     expected = manifest['identity']['scope_context']
     if row['state'] == 'rolled-back':
@@ -383,15 +399,19 @@ def verified_hold(repo, owner=None, transaction=None):
             owned_lock=owner, owned_transaction=raw)
     if context['checkout_key'] != state.bindings()['bindings'][marker['operation_id']]['checkout_key']:
         raise ContractError('Recovery checkout continuity changed')
-    from .recovery_quiescence import selected_attestation
-    attestation = selected_attestation(root, marker['operation_id'], proposal, measured_runtime['artifact_digest'])
+    from .recovery_quiescence import _selected_attestation
+    attestation_directory = state._paths_for_bank(root, bank, marker['operation_id'])[3]
+    attestation = _selected_attestation(attestation_directory, proposal, measured_runtime['artifact_digest'])
     if attestation is None:
         raise ContractError('Recovery hold has no independently reviewed attestation for the measured executing runtime')
     if (attestation.get('operation_id') != marker['operation_id'] or attestation.get('project_id') != token['project_id']
             or attestation.get('repo_root') != str(root) or attestation.get('bank_path') != str(bank)
             or attestation.get('checkout_key') != context['checkout_key']):
         raise ContractError('Recovery quiescence attestation has stale identity or route pins')
-    check(token, root, owner, transaction)
+    if _observe_bank(root, bank, owner, transaction) != {**token, 'review_digest': None}:
+        raise ContractError('Private recovery frontier changed; reread every pending source before proceeding')
+    if state.paths(root)[:2] != (root, bank):
+        raise ContractError('Recovery bank location changed during observation')
     return VerifiedHold(root, bank, raw, token, context, marker['operation_id'], measured_runtime['artifact_digest'])
 
 

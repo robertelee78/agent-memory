@@ -54,10 +54,10 @@ def main():
         guidance=(pack/'hooks'/'boundary-prompt.txt').read_text(encoding='utf-8').strip().replace('{{SKILL_DIR}}',str(pack))
         guidance += (' Observation '+observation['observation_id']+'; session='+session+'; prompt='+turn+'; source_sha256='+observation['source_sha256']+'. Before final use one am codex-boundary --repo REPO --stdin --refresh --quiet with top-level session,prompt,observation_id,source_sha256,outcome,assessment; for no-learning assessment requires source_id=this observation ID, source_review=actual review, candidates=authored list (empty only if none). Never substitute a later input. Earlier pending IDs: am codex-boundary --repo REPO --list-pending.')
         if enrollment.held:
-            guidance += ' Recovery-pending: this input is privately retained; continue the human task. Canonical admission, refresh and source acknowledgement remain inactive until the verified hold is resolved. Never fabricate no-learning or publication.'
+            guidance += ' Recovery-pending: input retained privately; continue the task. Until the verified hold resolves, no canonical admission, refresh or source acknowledgement. Never fabricate no-learning or publication.'
         try:notice=turn_sources.pending_notice(root,'codex',session,turn)
         except (OSError,ValueError):notice=True  # Optional notice bookkeeping cannot veto durable source registration.
-        if notice:guidance += ' Earlier pending work exists; inspect am codex-boundary --list-pending to recover original identifiers. Never substitute this input for an earlier source.'
+        if notice:guidance += ' Earlier pending work exists; use am codex-boundary --list-pending for original IDs. Never substitute a later input.'
         if observation['control_origin_hint']:guidance += ' Retained generated-control hint: these instructions are not a new operator decision; still assess this observation explicitly.'
         if len(guidance.encode())>2048:raise ValueError('guidance exceeds bound')
         scope_binding.recheck_private_enrollment(enrollment)

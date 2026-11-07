@@ -145,9 +145,16 @@ def bindings():
 
 
 def paths(repo, operation_id=None):
-    from . import bank_contract, repository_config
+    from . import repository_config
     root = Path(repo).resolve()
     bank = root / repository_config.recovery_settings(root)['bank_root']
+    return _paths_for_bank(root, bank, operation_id)
+
+
+def _paths_for_bank(root, bank, operation_id=None):
+    """Repeat filesystem and private-binding guards for an already located bank."""
+    from . import bank_contract
+    root, bank = Path(root), Path(bank)
     bank_contract.bank_root(bank)
     if bank.is_symlink() or not bank.is_dir():
         raise ContractError('Recovery requires the existing configured ordinary bank directory')
@@ -171,7 +178,12 @@ def paths(repo, operation_id=None):
 
 
 def index(repo):
-    root, bank, base, _ = paths(repo)
+    root, bank, _, _ = paths(repo)
+    return _index_for_bank(root, bank)
+
+
+def _index_for_bank(root, bank):
+    root, bank, base, _ = _paths_for_bank(root, bank)
     value = read(base / 'index.json', missing=True)
     if value is None:
         return {'schema': INDEX, 'repo_root': str(root), 'bank_path': str(bank), 'operations': {}}
