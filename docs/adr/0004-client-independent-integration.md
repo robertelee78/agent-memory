@@ -1,7 +1,7 @@
 ---
 id: ADR-0004
 status: accepted
-approval-scope: v0.0.1 and v0.0.4 turn-boundary hooks
+approval-scope: v0.0.1; v0.0.4 turn-boundary hooks; v0.0.15 receipt-owned instruction-context clarification for task 249
 date: 2026-10-21
 depends-on: [ADR-0001, ADR-0002]
 ---
@@ -10,8 +10,13 @@ depends-on: [ADR-0001, ADR-0002]
 
 The v0.0.1 scope was accepted in the [operator approval](../design/v0.0.1-approval.md).
 The operator subsequently approved v0.0.4 execution of turn-boundary hooks for
-Claude Code, Codex, and OpenCode. Other later-milestone proposals remain under
-review. Implementation, acceptance and delivery require separate evidence.
+Claude Code, Codex, and OpenCode. On 2026-11-07 the operator approved treating
+AM's exactly verified installed manual as operating instructions rather than
+learning material for task #249; independent Opus review approved the bounded
+engineering design. This clarifies the existing hook/skill authority separation,
+not a new memory authority or a change to ordinary source screening. Other
+later-milestone proposals remain under review. Implementation, native acceptance
+and delivery require separate evidence.
 
 ## Context
 
@@ -80,6 +85,42 @@ The implementation SHOULD support Codex `AGENTS.md`, OpenCode `AGENTS.md` and
 files to share identical syntax. Generated, sentinel-delimited activation
 blocks are preferred to whole-file symlinks. No binding MAY substitute a
 client-local repository identifier or credential for the common identity model.
+
+### v0.0.15: verified installed instructions are operating context
+
+Task #249 SHALL distinguish an exactly verified full native read of AM's own
+receipt-owned installed manual from substantive task evidence. The supported
+observer SHALL retain a content-free provenance annotation, not the manual body
+as learning material. This MUST NOT change native tool results, model input,
+permissions, provider/model selection, canonical admission or publication.
+Ordinary and unverified tool results MUST retain the existing source-screening
+and coverage rules; a caller-supplied flag MUST NOT confer instruction authority.
+
+The observer MUST verify the current installation receipt, exact owned target,
+artifact/manual bytes and unique invocation/result linkage against the measured
+supported carrier immediately before fresh capture. Copy and link renderers MUST
+be measured independently. Extra/mixed, partial, ambiguous, changed, foreign or
+unsupported representations MUST NOT receive this classification.
+
+Classification MUST NOT close any pre-existing native-keyed gap or retained
+tool-call gap. Immutable snapshots and sealed evidence MUST remain unchanged.
+Crash retry MUST complete an already-published representation without selecting a
+different representation after installation update or uninstall. Historical
+readback SHALL explain the observed provenance and intentionally nonlearning
+body without claiming current installation authentication or complete coverage.
+
+The shared source envelopes, exclusions, own-maintenance allowlist, wake budgets,
+human/foreign attribution and pending-source gates MUST remain unchanged.
+Classification itself SHALL create no new shared observation or wake; existing
+control policy MAY still enroll substantive or ambiguous intervals containing a
+manual read. The exact carrier, closed annotation, retry and qualification design
+is specified in the
+[task-specific execution addendum](../design/v0.0.15-omp-instruction-context.md).
+Actual copied and linked native reads, adversarial nonqualification, old-gap
+preservation, crash retry and historical readback MUST be qualified before
+claiming this behavior supported. This clarification MUST NOT narrow #249's
+previously approved native, lifecycle, peer-harness or platform acceptance.
+
 
 ## Consequences
 
