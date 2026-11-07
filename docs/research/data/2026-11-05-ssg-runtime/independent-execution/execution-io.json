@@ -1,6 +1,6 @@
 {
-  "schema": "am255/research-execution-io-design-v1",
-  "status": "Proposed executable research interface; not a production AM API or a G1 pass",
+  "schema": "am255/research-execution-io-design-v2",
+  "status": "Held-out-informed future-only correction, not independently held-out qualification; new source review and full closure freeze required",
   "executor_input": {
     "compiled": "am255/oracle-separated-inputs-v1 from compile_inputs.py; only opaque case_ordinal, never descriptive case_id, split, expected guidance, relationships, caveats, disclosure or availability",
     "spec": "Exact spec.json bytes/hash, actual fixed authoring AM175 checkout, runtime host configuration and a fresh owned output root",
@@ -21,16 +21,16 @@
     "visibility": "Physical project/generation namespaces remain mandatory; tagged keys do not grant visibility or scope. No excluded node/path/title/evidence in public diagnostic summaries."
   },
   "manifest": {
-    "schema": "am255/independent-raw-manifest-v1",
+    "schema": "am255/independent-raw-manifest-v2",
     "required": ["schema", "input_sha256", "spec_sha256", "io_sha256", "source_bindings", "sizes", "cleanup", "qualification_scope"],
-    "sizes": "List of {size, canonical_sha256, profile_sha256, observations:[{case_ordinal,variant,path,sha256}], generation_artifacts, costs, missing_prerequisites}; paths are relative to exact owned output root; observation uniqueness is(size,variant,case_ordinal), with88 base/101 overlay controls per size",
+    "sizes": "List of {size, canonical_sha256, profile_sha256, observations:[{case_ordinal,variant,path,sha256}], generation_artifacts, schedule:{path,sha256}, delivery_ledger:{path,sha256}, costs, missing_prerequisites}; paths are relative to exact owned output root. Observation uniqueness is(size,variant,case_ordinal), with88 base/101 overlay controls per size.",
     "source_bindings": "{authoring_am:{commit,native_tree_sha256},inputs:{path,sha256},spec:{path,sha256,repository_path},io:{path,sha256,repository_path},recipe:{path,sha256,commit,repository_path},helpers:[{path,sha256,repository_path,source_commit?}],runtime_profile:{path,sha256,source_commit}}; artifact paths are relative to the owned raw root; repository_path is relative to the trusted source checkout, never inferred from a basename. Runtime profile is a generated artifact, not necessarily tracked source. Exact copies are frozen before outputs and every hash is verified by scorer.",
     "generation_artifacts": "Per-size list of {generation_id,variant,mutation,stage,canonical_sha256,catalog:{path,sha256},vector_store:{path,sha256}}. Catalog entries derive from actual native canonical files: {key,path,id?,version?,file_sha256,body_sha256?,status?,visibility?,metadata,fixture_label?}; metadata is the actual parsed canonical frontmatter, not oracle fields. Actual fixture_label bindings and route records resolve authored reference identities offline; they never select rankings. Catalog top-level routes retain {key,index_path,target_path,ordinal}. The per-size canonical_sha256 maps generation_id to digest for distinct base/overlay/mutation states.",
     "qualification_scope": "Raw scratch mechanism/quality observations only; production outcome/caveat coverage and all unexecuted cells remain explicit. No operator/legal/profile/G1 acceptance.",
     "cleanup": "Exact resource disposal receipts; partial failures keep erasure-pending and cannot be converted to overall pass. Borrowed artifacts/services must remain unchanged."
   },
   "case_observation": {
-    "schema": "am255/independent-case-observation-v1",
+    "schema": "am255/independent-case-observation-v2",
     "required": ["schema", "case_ordinal", "size", "variant", "operation", "executed", "prerequisites", "native", "semantic", "typed", "outcome", "caveats", "provider", "costs"],
     "executed": "Boolean for whether any real requested mechanism ran, not whether all oracle classes passed",
     "native": "{request_valid, context_sha256, eligible:[{key,path,id?,version?}], source_binding:{generation_id,canonical_sha256,profile_sha256}, crosscheck}; exact native gates precede model/ranking/template disclosure. Actual canonical catalogs and excluded-source identities are private synthetic provenance, not an exercised production diagnostic/disclosure surface or expected-answer catalog.",
@@ -38,8 +38,16 @@
     "typed": "{executed,prerequisite?,edges:[{from,rel,to,asserted_by,source_sha256,channel,via?}],primary_candidates:[key],route_pointers:[key],costs}; rel uses recorded contract relation names, channel recorded or inferred, and provenance is canonical. Any virtual co-routed/origin view is explicitly labeled navigation/provenance, not a new durable lesson assertion.",
     "outcome": "{executed:false,prerequisite} unless a separately reviewed contract-derived real research outcome mapper is frozen. Never copy expected status/exit/no-match into output. Actual service/state transition observations may be retained separately without manufacturing semantic outcomes.",
     "caveats": "{executed:false,prerequisite} unless native/reviewed research caveat assembly actually ran; no expected-caveat echoes",
-    "provider": "Actual source/rendered request hashes, document/query sends, task IDs, token usage and cached/evaluated splits; raw request data only synthetic and owner-private. Scoring canaries never filter a request.",
+    "provider": "am255/generation-provider-accounting-v2: generation_id, delivery_ledger pointer, document_sends (exact complete first-generation request pointers), reused_document_requests (explicit complete prior requests having any exact-byte/profile reused row), documents_sent (actual first-generation row count), and unchanged query/task/token accounting. No omission/filtering of original request source_keys. Unversioned v1 observations use only old global-union scoring, never infer v2 semantics.",
     "costs": "Actual measured elapsed/token/RAM/disk/index-build quantities and sampling conditions; shared-host measurements never become clean performance passes."
+  },
+  "generation_delivery": {
+    "ledger": "am255/generation-delivery-ledger-v2: profile_sha256, coverage pointer, requests:[{request:{path,sha256},first_generation,rows:[integer]}], erasure:{executed:false,prerequisite}. Every actual request is globally retained exactly once, with all original source_keys, rendered_sha256 and exact body.input bytes. Each contiguous batch has one first-generation attribution; mixed first-generation batches are rejected, not filtered.",
+    "coverage": "am255/persisted-float32-coverage-v2: ordered rows retain rendered_sha256, original first-generation source_keys, first_generation, first_path and memberships:[{generation_id,key,file_sha256}]. generations maps every catalog generation to canonical_sha256 and sources:[{key,row,rendered_sha256}]. Exact catalog provider_source_keys coverage, original source hashes, body/scope rendering and vector-store/profile pointers must agree. Shared bytes are explicit reuse, not fresh inference.",
+    "validation": "Bind ledger, schedule, catalogs, every request body/pointer/hash, coverage and vector-store hashes before opening oracle fields. Reject absent/duplicate/forged/cross-generation membership, missing coverage, wrong source hashes, missing or foreign request pointers, filtered original batch keys, unknown protocol versions or profile mismatches. Case lists must exactly equal ledger-derived first-send and reuse lists, even for unexecuted runtime cells.",
+    "time_scope": "Only first-generation actual sends are compared to that generation's mutation-local disclosure predicate. Global immutable hard exclusions (hidden/unsafe source release) apply to the entire retained scientific request log. Previous authorized sends remain visible and are not retroactive disclosure after a new deletion projection.",
+    "unexecuted_erasure": "No temporal delete/erasure phase exists: before/delete/rebuild sequencing, actual derived vector/graph/index purge and readback, provider/cache disposal and forensic absence with retained-evidence policy require a separate controlled source/profile/generation-bound implementation and review. Zero new sends or absent catalog membership never establishes erasure, remote consent or runtime/status pass.",
+    "freeze": "Old failed reference a4ac326 and all its raw/scorer/manifest bytes remain unchanged under their old scorer authority. New spec regenerates allowlisted compiled inputs through unchanged compiler normal CLI; no oracle fields are added. Every new source/spec/IO/input/profile byte requires independent review and a new full closure freeze before actual embedding/graph execution. Affected repeat labels are held-out-informed, not independent held-out qualification; no newly tuned cutoff or overall passing flags."
   },
   "scorer_cli": "score.py --suite SUITE --scorer-map MAP --raw-root ROOT --manifest MANIFEST --expected-source-commit REVIEWED_FREEZE_SHA --output NEW_OUTPUT; scorer never starts services, creates embeddings, changes labels, rewrites raw outputs or calls an LLM.",
   "scorer_rules": {

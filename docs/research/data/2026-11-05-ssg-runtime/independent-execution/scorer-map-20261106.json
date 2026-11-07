@@ -506,7 +506,7 @@
       "split": "held-out"
     }
   ],
-  "input_sha256": "1986071901b4004618310b15f2ebcbf6f03e6ee7afc9e113eca6d4deff893ef2",
+  "input_sha256": "fc22d917544e865b9acf2ecc63ff410ccd8d3ced18e810c7755ffb62fa8892f1",
   "schema": "am255/scorer-only-case-map-v1",
   "suite_sha256": "36b663df90a5002ef93996ccc76e0a5de932f984d4a35178fe32b6f74e83b21f"
 }

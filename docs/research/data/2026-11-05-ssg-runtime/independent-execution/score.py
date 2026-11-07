@@ -29,8 +29,8 @@ _cache_guard = runpy.run_path(str(STARTUP), run_name='am_source_startup')['isola
 
 SUITE_SHA256 = '36b663df90a5002ef93996ccc76e0a5de932f984d4a35178fe32b6f74e83b21f'
 LABELS_SHA256 = '39b78cd401b4170cc0dcaa35df18dd914477bd9b4a40532d079fd4024ac5c43b'
-INPUT_SHA256 = '1986071901b4004618310b15f2ebcbf6f03e6ee7afc9e113eca6d4deff893ef2'
-MAP_SHA256 = 'ae01bb275058e098ac37ea47fab1ca7a75e4692c5680899406506f3d262488f2'
+INPUT_SHA256 = 'fc22d917544e865b9acf2ecc63ff410ccd8d3ced18e810c7755ffb62fa8892f1'
+MAP_SHA256 = 'b4d7bfde73ca473c90d1a75239b0daf39e10942887465a02f74484aa09cc3f37'
 AM_COMMIT = '175d21fa26bbef41f8ec859b463876934e16db79'
 NATIVE_SHA256 = '9bd89d0e341ee8984db9e5082936807a49f1368a05a40ce026193f7b34e88ef3'
 SIZES = (1000, 10000, 50000)
@@ -292,7 +292,8 @@ def bind_raw(store, manifest_path, expected_source_commit):
         manifest_raw = stream.read()
     store.hashes[manifest_name] = sha(manifest_raw)
     manifest = decode(manifest_raw, manifest_name)
-    require(isinstance(manifest, dict) and manifest.get('schema') == 'am255/independent-raw-manifest-v1',
+    require(isinstance(manifest, dict) and manifest.get('schema') in (
+        'am255/independent-raw-manifest-v1', 'am255/independent-raw-manifest-v2'),
             'Unknown raw manifest schema')
     for key in ('input_sha256', 'spec_sha256', 'io_sha256', 'source_bindings', 'sizes', 'cleanup', 'qualification_scope'):
         require(key in manifest, 'Missing manifest field: ' + key)
@@ -324,6 +325,8 @@ def bind_raw(store, manifest_path, expected_source_commit):
                 store.verify(generation['vector_store'])
             generations[size, gid] = generation
         require(set(canonical) == {gid for n, gid in generations if n == size}, 'Unbound canonical generation')
+        if manifest['schema'] == 'am255/independent-raw-manifest-v2':
+            bind_delivery(store, row)
         require(isinstance(row.get('observations'), list), 'Missing observation pointer list')
         for pointer in row['observations']:
             ordinal, variant = pointer.get('case_ordinal'), pointer.get('variant')
@@ -341,7 +344,12 @@ def bind_raw(store, manifest_path, expected_source_commit):
     for identity, pointer in observations.items():
         observation = store.json(pointer)
         require(isinstance(observation, dict), 'Observation must be an object')
-        require(observation.get('schema') == 'am255/independent-case-observation-v1', 'Unknown observation schema')
+        version = 'v2' if manifest['schema'].endswith('-v2') else 'v1'
+        require(observation.get('schema') == 'am255/independent-case-observation-' + version,
+                'Observation/manifest accounting schema mismatch')
+        provider = observation.get('provider', {})
+        require(provider.get('schema') == ('am255/generation-provider-accounting-v2' if version == 'v2' else None),
+                'Provider accounting version mismatch')
         require((observation.get('size'), observation.get('variant'), observation.get('case_ordinal')) == identity,
                 'Observation source/size/variant/ordinal identity mismatch')
         require(integer(observation.get('size')) and integer(observation.get('case_ordinal')),
@@ -355,6 +363,8 @@ def bind_raw(store, manifest_path, expected_source_commit):
         for key in ('semantic', 'typed', 'outcome', 'caveats'):
             require(isinstance(observation[key].get('executed'), bool), 'Section executed must be boolean: ' + key)
         store.pointers(observation)
+        if version == 'v2':
+            validate_provider_delivery(observation, store)
     store.pointers(manifest)
     return manifest, inputs, profile, observations, size_rows, generations
 
@@ -753,8 +763,166 @@ def typed_metrics(case, observation, catalog, oracle):
                   missing_route_pointers=route_missing, primary=primaries)
 
 
-def provider_metrics(case, observation, store, oracle):
+def bind_delivery(store, size_row):
+    """Validate all first sends and exact generation memberships before oracles."""
+    ledger_pointer = size_row.get('delivery_ledger')
+    ledger = store.json(ledger_pointer)
+    require(ledger.get('schema') == 'am255/generation-delivery-ledger-v2', 'Unknown delivery ledger')
+    profile = size_row['profile_sha256']
+    require(ledger.get('profile_sha256') == profile, 'Delivery profile mismatch')
+    require(ledger.get('erasure', {}).get('executed') is False, 'Delivery membership cannot assert erasure')
+    coverage = store.json(ledger.get('coverage'))
+    require(coverage.get('schema') == 'am255/persisted-float32-coverage-v2' and
+            coverage.get('source_profile_sha256') == profile and coverage.get('full_coverage') is True,
+            'Missing complete source/profile coverage')
+    artifacts = {g['generation_id']: g for g in size_row['generation_artifacts']}
+    require(set(coverage.get('generations', {})) == set(artifacts), 'Coverage generation set mismatch')
+    catalogs, memberships = {}, {}
+    for gid, generation in artifacts.items():
+        catalog = store.json(generation['catalog'])
+        require(catalog.get('generation_id') == gid and
+                catalog.get('canonical_sha256') == generation['canonical_sha256'],
+                'Delivery catalog generation mismatch')
+        entries = catalog.get('sources', catalog.get('entries'))
+        require(isinstance(entries, list), 'Delivery catalog lacks sources')
+        catalogs[gid] = {entry['key']: entry for entry in entries}
+        require(len(catalogs[gid]) == len(entries), 'Duplicate delivery catalog key')
+        require(generation.get('coverage') == ledger['coverage'], 'Generation coverage pointer mismatch')
+        require(generation.get('vector_store', {}).get('sha256') == coverage.get('vector_store_sha256'),
+                'Coverage vector-store hash mismatch')
+        declared = coverage['generations'][gid]
+        require(declared.get('canonical_sha256') == generation['canonical_sha256'],
+                'Coverage canonical hash mismatch')
+        keys = set()
+        for source in declared.get('sources', []):
+            key, index = source.get('key'), source.get('row')
+            require(key in catalogs[gid] and key not in keys and integer(index), 'Foreign/duplicate coverage source')
+            keys.add(key)
+            memberships[gid, key] = (index, source.get('rendered_sha256'))
+        require(keys == set(catalog.get('provider_source_keys', [])),
+                'Incomplete native provider projection coverage')
+    rows = coverage.get('rows')
+    require(isinstance(rows, list), 'Missing delivery rows')
+    observed, hashes = set(), set()
+    for index, row in enumerate(rows):
+        h = digest(row.get('rendered_sha256'), 'delivery rendered row')
+        require(h not in hashes, 'Duplicate rendered row under exact profile')
+        hashes.add(h)
+        first = row.get('first_generation')
+        require(first in artifacts and isinstance(row.get('memberships'), list) and row['memberships'],
+                'Missing first-generation membership')
+        first_keys = []
+        for member in row['memberships']:
+            gid, key = member.get('generation_id'), member.get('key')
+            identity = (gid, key)
+            require(identity in memberships and identity not in observed, 'Absent/duplicate generation membership')
+            require(memberships[identity] == (index, h), 'Wrong generation row/rendered membership')
+            require(member.get('file_sha256') == catalogs[gid][key].get('file_sha256'),
+                    'Generation source hash mismatch')
+            observed.add(identity)
+            if gid == first:
+                first_keys.append(key)
+        require(first_keys and sorted(first_keys) == row.get('source_keys'), 'First-send original source keys mismatch')
+        order = list(artifacts)
+        require(first == min((m['generation_id'] for m in row['memberships']), key=order.index),
+                'Forged first-send generation attribution')
+    require(observed == set(memberships), 'Incomplete generation membership coverage')
+    schedule = store.json(size_row.get('schedule'))
+    require(schedule.get('schema') == 'am255/ordered-source-query-schedule-v2' and
+            schedule.get('size') == size_row['size'], 'Wrong delivery schedule')
+    batches = schedule.get('document_batches')
+    require(isinstance(batches, list) and [r for b in batches for r in b] == rows,
+            'Delivery rows differ from frozen ordered batches')
+    requests = ledger.get('requests')
+    require(isinstance(requests, list) and len(requests) == len(batches), 'Missing actual document request')
+    actual, reused, all_keys, seen_paths = {g: [] for g in artifacts}, {g: [] for g in artifacts}, set(), set()
+    offset = 0
+    for batch, binding in zip(batches, requests):
+        require(1 <= len(batch) <= 8, 'Invalid contiguous document batch size')
+        first = batch[0]['first_generation']
+        require(all(r['first_generation'] == first for r in batch), 'Cross-generation document batch')
+        require(binding.get('first_generation') == first and
+                binding.get('rows') == list(range(offset, offset + len(batch))), 'Wrong request generation/row pointer')
+        offset += len(batch)
+        pointer = binding.get('request')
+        request = store.json(pointer)
+        require(pointer['path'] not in seen_paths, 'Duplicate actual request pointer')
+        seen_paths.add(pointer['path'])
+        keys = sorted({key for r in batch for key in r['source_keys']})
+        rendered = [r['rendered_sha256'] for r in batch]
+        body = request.get('body', {}).get('input')
+        require(request.get('kind') == 'documents' and request.get('source_keys') == keys,
+                'Request original source keys differ from complete first-generation batch')
+        require(request.get('rendered_sha256') == rendered and isinstance(body, list) and
+                all(isinstance(text, str) for text in body) and
+                [sha(text.encode('utf-8')) for text in body] == rendered, 'Request rendered bytes/hash mismatch')
+        for row, text in zip(batch, body):
+            for member in row['memberships']:
+                source = catalogs[member['generation_id']][member['key']]
+                suffix = '\nScope: ' + source['scope']
+                require(text.endswith(suffix) and
+                        sha(text[:-len(suffix)].encode('utf-8')) == source['body_sha256'],
+                        'Request bytes differ from canonical source body/scope')
+        actual[first].append(pointer)
+        all_keys.update(keys)
+        for gid in {m['generation_id'] for r in batch for m in r['memberships']} - {first}:
+            reused[gid].append(pointer)
+    if not hasattr(store, 'deliveries'):
+        store.deliveries = {}
+    store.deliveries[size_row['size']] = {'ledger': ledger_pointer, 'actual': actual, 'reused': reused,
+                                         'global_keys': all_keys, 'request_count': len(requests)}
+
+
+def validate_provider_delivery(observation, store):
     provider = observation['provider']
+    delivery = getattr(store, 'deliveries', {}).get(observation['size'])
+    require(delivery is not None and provider.get('delivery_ledger') == delivery['ledger'],
+            'Absent/foreign generation delivery ledger')
+    gid = observation['native'].get('source_binding', {}).get('generation_id')
+    require(gid in delivery['actual'] and provider.get('generation_id') == gid,
+            'Wrong provider generation membership')
+    require(provider.get('document_sends') == delivery['actual'][gid] and
+            provider.get('reused_document_requests') == delivery['reused'][gid],
+            'Missing/forged/cross-generation request pointer')
+    count = sum(len(store.json(p)['rendered_sha256']) for p in provider['document_sends'])
+    require(provider.get('documents_sent') == count, 'First-generation document count mismatch')
+    return delivery
+
+
+def generation_provider_metrics(case, observation, store, oracle):
+    provider = observation['provider']
+    delivery = validate_provider_delivery(observation, store)
+    # Global hard exclusions apply to every real request, not mutation-local
+    # deletion labels. A prior authorized send never disappears from this log.
+    global_exposed = sorted(delivery['global_keys'] & oracle.forbidden_global())
+    sent = {key for p in provider['document_sends'] for key in store.json(p)['source_keys']}
+    exposed = sorted(sent & {oracle.resolve(ref) for ref in case['disclosure']['provider_send_forbidden']})
+    result_scope = {'global_forbidden_source_keys_sent': global_exposed,
+                    'global_retained_document_sources': len(delivery['global_keys']),
+                    'global_retained_document_requests': delivery['request_count'],
+                    'reused_prior_document_requests': len(provider['reused_document_requests']),
+                    'erasure_executed': False,
+                    'interpretation': 'Generation first-send accounting plus explicit exact-byte/profile reuse; global scientific log retained; no temporal delete or forensic/provider/cache erasure proof'}
+    # Query accounting and unexecuted-state handling remain the old rules.
+    result = provider_metrics(case, observation, store, oracle, legacy=True)
+    if result['executed']:
+        failures = []
+        if exposed:
+            failures.append('Forbidden source sent in this generation')
+        if global_exposed:
+            failures.append('Globally forbidden source sent to provider')
+        if case['disclosure']['query_send_forbidden'] and result['actual_query_sends']:
+            failures.append('Forbidden query sent to provider')
+        result.update(failed_predicates=failures, forbidden_source_keys_sent=exposed)
+    result.update(result_scope)
+    return result
+
+
+def provider_metrics(case, observation, store, oracle, legacy=False):
+    provider = observation['provider']
+    if provider.get('schema') == 'am255/generation-provider-accounting-v2' and not legacy:
+        return generation_provider_metrics(case, observation, store, oracle)
+    require(legacy or provider.get('schema') is None, 'Unknown provider accounting schema')
     if not isinstance(provider, dict):
         return metric(prerequisite='No complete actual provider-send accounting surface')
     if not provider.get('executed', False):
@@ -971,6 +1139,13 @@ def score(suite_path, map_path, raw_root, manifest_path, expected_source_commit)
         for path, expected in tuple(store.hashes.items()):
             store.verify({'path': path, 'sha256': expected})
         return {'schema': 'am255/independent-offline-score-v1', 'status': 'raw-research-report-not-acceptance',
+                'accounting_protocol': manifest['schema'],
+                'interpretation': {'correction_held_out_informed': True,
+                    'affected_repeats_independent_held_out': False,
+                    'old_frozen_failure_rescored': False,
+                    'new_independent_review_and_full_closure_freeze_required': True,
+                    'temporal_delete_erasure': {'executed': False,
+                        'prerequisite': 'Separate controlled source/profile/generation-bound canonical delete, rebuild, derived-store purge, provider/cache lifecycle and forensic readback implementation'}},
                 'source': {'suite_sha256': SUITE_SHA256, 'labels_sha256': LABELS_SHA256,
                            'scorer_map_sha256': MAP_SHA256, 'input_sha256': INPUT_SHA256,
                            'spec_sha256': manifest['spec_sha256'], 'io_sha256': manifest['io_sha256'],

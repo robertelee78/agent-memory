@@ -3833,6 +3833,6 @@
   },
   "schema": "am255/oracle-separated-inputs-v1",
   "source_startup_sha256": "124aa791b1da7b236d859a1153dbd47f98d924ac713b53289e81d3c3da10bf01",
-  "spec_sha256": "8c34c17b844bc9b80fe43bab20e88437f123fb1c17ab8ea1522f81d3986b4f44",
+  "spec_sha256": "f5efd0b189747f6e2f5e9a5f6fd83e24a19f9cf6e76a7b4a0a083ef864288ad7",
   "suite_sha256": "36b663df90a5002ef93996ccc76e0a5de932f984d4a35178fe32b6f74e83b21f"
 }
