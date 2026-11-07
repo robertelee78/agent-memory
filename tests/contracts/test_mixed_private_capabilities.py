@@ -47,13 +47,26 @@ class MixedPrivateCapabilities(unittest.TestCase):
                          for row in inspected['manifest']['sources']})
             before = preserved()
             baseline = snapshot(world.paths['state']), snapshot(root)
+            variants = []
             wrong = copy.deepcopy(attestation)
             wrong['declared_invocation_routes'].remove(str(root / 'extensions/agent-memory.ts'))
-            denied = world.run([*args, '--check', '--omp-layout-quiescence', recovery.save(world, envelope(wrong))],
-                               check=False, timeout=60)
-            self.assertNotEqual(denied.returncode, 0, denied.stdout + denied.stderr)
-            self.assertEqual(preserved(), before)
-            self.assertEqual((snapshot(world.paths['state']), snapshot(root)), baseline)
+            variants.append(envelope(wrong))
+            wrong = copy.deepcopy(attestation)
+            wrong['bank_path'] = str(repo / 'foreign-bank')
+            variants.append(envelope(wrong))
+            wrong = copy.deepcopy(attestation)
+            wrong['runtime_artifact_digest'] = 'a' * 64
+            variants.append(envelope(wrong))
+            unreviewed = envelope(attestation)
+            unreviewed['review']['reviewer_harness'] = request['author']['harness']
+            unreviewed['review']['reviewer_session'] = request['author']['session']
+            variants.append(unreviewed)
+            for variant in variants:
+                denied = world.run([*args, '--check', '--omp-layout-quiescence', recovery.save(world, variant)],
+                                   check=False, timeout=60)
+                self.assertNotEqual(denied.returncode, 0, denied.stdout + denied.stderr)
+                self.assertEqual(preserved(), before)
+                self.assertEqual((snapshot(world.paths['state']), snapshot(root)), baseline)
             proof = recovery.save(world, envelope(attestation))
             preview = json.loads(world.run([*args, '--check', '--omp-layout-quiescence', proof], timeout=60).stdout)
             self.assertEqual(preview['private_compatibility']['required_capabilities'], ['layout-frontier-v1'])
