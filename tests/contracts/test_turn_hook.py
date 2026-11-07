@@ -123,8 +123,8 @@ process.stdout.write(JSON.stringify({one: one.system, two: two.system, disposed}
         self.assertEqual(len(value['one']), 1)
         self.assertEqual(len(value['two']), 1)
         self.assertEqual(value['one'][0], value['two'][0]['text'])
-        self.assertIn(str(target.parent / 'SKILL.md'), value['one'][0])
-        self.assertNotIn('{{SKILL_DIR}}', value['one'][0])
+        self.assertIn('agent-memory', value['one'][0])
+        self.assertIn('turn/GUIDE.md', value['one'][0])
         self.assertTrue(value['disposed'])
         self.assertIn('pending', result.stderr)
 

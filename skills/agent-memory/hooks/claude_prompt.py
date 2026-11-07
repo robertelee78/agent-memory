@@ -38,7 +38,7 @@ def main(event=None):
         enrollment = scope_binding.private_enrollment_context(repo)
         obs = turn_sources.register(repo, 'claude', session, prompt, hashlib.sha256(text.encode()).hexdigest(),
                                     native_source_id=prompt, source_reference=str(Path(reference).resolve()))
-        guide = (pack / 'hooks/boundary-prompt.txt').read_text().strip().replace('{{SKILL_DIR}}', str(pack))
+        guide = (pack / 'hooks/boundary-prompt.txt').read_text().strip()
         context = (guide + '\nClaude source: session=' + session + ' prompt=' + prompt +
                    ' observation_id=' + obs['observation_id'] + ' source_sha256=' + obs['source_sha256'] +
                    '. Before final submit top-level session,prompt,observation_id,source_sha256,outcome,assessment '

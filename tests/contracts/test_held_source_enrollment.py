@@ -371,7 +371,13 @@ class HeldSourceEnrollment(unittest.TestCase):
 
     def test_real_codex_claude_hooks_keep_task_active_but_boundaries_pending(self):
         with World() as world, patch.dict(os.environ, world.env, clear=True):
-            helper, repo, bank, operation, directory, original, body = self.fixture(world)
+            long_parent = world.inside('長い設置場所' * 10)
+            long_parent.mkdir()
+            inside = world.inside
+            with patch.object(world, 'inside', side_effect=lambda value:
+                    long_parent / 'portable comparison pack' if value == 'portable comparison pack' else inside(value)):
+                helper, repo, bank, operation, directory, original, body = self.fixture(world)
+            self.assertGreater(len(str(helper.pack).encode()), 200)
             before = self.snapshot(world, repo, bank)
             for harness in ('codex', 'claude'):
                 session, lifecycle, event_id = uid(), uid(), uid()

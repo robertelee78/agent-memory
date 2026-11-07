@@ -24,7 +24,6 @@ def main():
             from claude_prompt import main as claude_prompt
             return claude_prompt(event)
         prompt = (directory / 'boundary-prompt.txt').read_text(encoding='utf-8').strip()
-        prompt = prompt.replace('{{SKILL_DIR}}', str(directory.parent))
         if not prompt or len(prompt.encode('utf-8')) > 4096:
             raise ValueError('invalid instruction')
         print(json.dumps({'hookSpecificOutput': {'hookEventName': 'UserPromptSubmit', 'additionalContext': prompt}}))

@@ -154,7 +154,6 @@ def main():
         finally:
             os.close(dfd)
         prompt = (directory / 'boundary-prompt.txt').read_text(encoding='utf-8').strip()
-        prompt = prompt.replace('{{SKILL_DIR}}', str(directory.parent))
         if not prompt or len(prompt.encode('utf-8')) > 4096:
             raise ValueError('invalid instruction')
         # A legacy v1 turn still receives one short, source-bound continuation.
