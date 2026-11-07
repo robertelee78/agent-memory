@@ -289,5 +289,17 @@
     "cleanup_status": "erasure-pending; owned resources absent and model processes reaped, aggregate status not upgraded",
     "original_launch_record_preserved": true
   },
+  "separate_empty_config_diagnostic": {
+    "record": "empty-reference-config-20261107.json",
+    "observed_storage_access_timeout_sec": 1,
+    "failed_instance_effective_setting": "Unknown; this is a new empty instance, not a retroactive measurement or identified failure cause.",
+    "profile_changed_or_retry_performed": false
+  },
+  "operator_byo_limit_diagnostics": {
+    "record": "operator-byo-06b-limits-20261107.json",
+    "single_model_discovery": "One matching provider alias; max_model_len=4096 is declared metadata.",
+    "exact_token_boundary_and_truncation": "Unqualified; optional tokenizer unavailable, small integer-ID input returned inconclusive usage. Boundary requests were not sent.",
+    "configuration_requirement_unchanged": "OpenAI-compatible URL plus optional key; explicit model only when discovery is ambiguous."
+  },
   "provenance_limit": "Public bounded projection of private synthetic experiment artifacts. Hash binding establishes bytes, not publisher authentication. Original failures remain unchanged; private model/server/host inventories and raw project content are not published."
 }

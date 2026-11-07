@@ -1,0 +1,4996 @@
+{
+  "schema": "am255/frozen-failed-run-offline-observations-v1",
+  "scope": "Offline unmodified scorer of an incomplete failed frozen reference experiment; raw research, not acceptance. No rerun, parameter tuning, cutoff changes, inferred missing observations or label changes. Held-out outcomes now opened; cannot tune this profile against them and call them held-out.",
+  "source": {
+    "bound_artifact_count": 8509,
+    "expected_source_commit": "a4ac3263ba769812311787f70a07dacc8aea7c20",
+    "input_sha256": "1986071901b4004618310b15f2ebcbf6f03e6ee7afc9e113eca6d4deff893ef2",
+    "io_sha256": "68ff893e3e7875ded55844b381e54a364c5696173e785ca40894cd767f1ea3e5",
+    "labels_sha256": "39b78cd401b4170cc0dcaa35df18dd914477bd9b4a40532d079fd4024ac5c43b",
+    "manifest_sha256": "489bfa60e23a21518360cc090a6a04d97cbea2870a3b43134bcb85450e424c48",
+    "scorer_map_sha256": "ae01bb275058e098ac37ea47fab1ca7a75e4692c5680899406506f3d262488f2",
+    "scorer_sha256": "d1c123985fc24dcb6386a2cac8cc6182fa3d8b83e5f5c433ee99de4476198ce6",
+    "source_bindings": {
+      "authoring_am": {
+        "commit": "175d21fa26bbef41f8ec859b463876934e16db79",
+        "native_tree_sha256": "9bd89d0e341ee8984db9e5082936807a49f1368a05a40ce026193f7b34e88ef3"
+      },
+      "helpers": [
+        {
+          "path": "source/docs/research/data/2026-11-05-ssg-runtime/independent-execution/executor_native.py",
+          "repository_path": "docs/research/data/2026-11-05-ssg-runtime/independent-execution/executor_native.py",
+          "sha256": "657faa3697f4be541acca0d71a1292a38512dddd8a797c3f9312217e24578b17",
+          "source_commit": "a4ac3263ba769812311787f70a07dacc8aea7c20"
+        },
+        {
+          "path": "source/docs/research/data/2026-11-05-ssg-runtime/independent-execution/executor_runtime.py",
+          "repository_path": "docs/research/data/2026-11-05-ssg-runtime/independent-execution/executor_runtime.py",
+          "sha256": "65452f97172149cded95e922b8505b471f32c351c0b30178dc856afc2ae5c656",
+          "source_commit": "a4ac3263ba769812311787f70a07dacc8aea7c20"
+        },
+        {
+          "path": "source/docs/research/data/2026-11-05-ssg-runtime/independent-execution/executor_graph.py",
+          "repository_path": "docs/research/data/2026-11-05-ssg-runtime/independent-execution/executor_graph.py",
+          "sha256": "efb2ff0366e0cb15f2483b5f8a014e47a288911449343d58a16825d8a2573097",
+          "source_commit": "a4ac3263ba769812311787f70a07dacc8aea7c20"
+        },
+        {
+          "path": "source/docs/research/data/2026-11-05-ssg-runtime/independent-execution/executor_render.py",
+          "repository_path": "docs/research/data/2026-11-05-ssg-runtime/independent-execution/executor_render.py",
+          "sha256": "17b4d90a23ad9ab441f908d5aa1de4ad47463f976aae2de1a7f73e45240a42d8",
+          "source_commit": "a4ac3263ba769812311787f70a07dacc8aea7c20"
+        },
+        {
+          "path": "source/docs/research/data/2026-11-05-ssg-runtime/independent-execution/executor_templates.json",
+          "repository_path": "docs/research/data/2026-11-05-ssg-runtime/independent-execution/executor_templates.json",
+          "sha256": "dc7e2a4185eac1e802550d4de7d3097e4b8fac6771b1b45dcdd365108f649075",
+          "source_commit": "a4ac3263ba769812311787f70a07dacc8aea7c20"
+        },
+        {
+          "path": "source/docs/research/data/2026-11-05-ssg-runtime/independent-execution/compile_inputs.py",
+          "repository_path": "docs/research/data/2026-11-05-ssg-runtime/independent-execution/compile_inputs.py",
+          "sha256": "584c5f2d3d3b1972d17ea77088e79bff8f2d50e68a174aded08c33782b1ea1c9",
+          "source_commit": "a4ac3263ba769812311787f70a07dacc8aea7c20"
+        },
+        {
+          "path": "source/skills/agent-memory/scripts/source_startup.py",
+          "repository_path": "skills/agent-memory/scripts/source_startup.py",
+          "sha256": "124aa791b1da7b236d859a1153dbd47f98d924ac713b53289e81d3c3da10bf01",
+          "source_commit": "a4ac3263ba769812311787f70a07dacc8aea7c20"
+        },
+        {
+          "path": "source/docs/research/data/2026-11-05-ssg-runtime/independent-suite/validate_suite.py",
+          "repository_path": "docs/research/data/2026-11-05-ssg-runtime/independent-suite/validate_suite.py",
+          "sha256": "5b47a20c573d1cbbf093016f6ef33b42c72196d7140990c5d569a773d0c552a4",
+          "source_commit": "a4ac3263ba769812311787f70a07dacc8aea7c20"
+        },
+        {
+          "path": "source/docs/research/data/2026-11-05-ssg-runtime/independent-suite/g1_relationship_overlay.py",
+          "repository_path": "docs/research/data/2026-11-05-ssg-runtime/independent-suite/g1_relationship_overlay.py",
+          "sha256": "69127e95964ba5e9ee46ff5ce1a616aebe5172f624923445e7cc5714279f993a",
+          "source_commit": "a4ac3263ba769812311787f70a07dacc8aea7c20"
+        },
+        {
+          "path": "source/docs/research/data/2026-11-05-ssg-runtime/runtime-controls/common.py",
+          "repository_path": "docs/research/data/2026-11-05-ssg-runtime/runtime-controls/common.py",
+          "sha256": "f08cb242284c91c8fb91445ff560bc2a1ea0e655844c66800eaa6c099cb9b6ab",
+          "source_commit": "a4ac3263ba769812311787f70a07dacc8aea7c20"
+        },
+        {
+          "path": "source/docs/research/data/2026-11-05-ssg-runtime/serving-comparison/compare_serving.py",
+          "repository_path": "docs/research/data/2026-11-05-ssg-runtime/serving-comparison/compare_serving.py",
+          "sha256": "621c58ac9672a84b099d094e59658a263b733220d0ae5005ca1de4d12491f672",
+          "source_commit": "a4ac3263ba769812311787f70a07dacc8aea7c20"
+        },
+        {
+          "path": "source/docs/research/data/2026-11-05-ssg-runtime/independent-execution/score.py",
+          "repository_path": "docs/research/data/2026-11-05-ssg-runtime/independent-execution/score.py",
+          "sha256": "d1c123985fc24dcb6386a2cac8cc6182fa3d8b83e5f5c433ee99de4476198ce6",
+          "source_commit": "a4ac3263ba769812311787f70a07dacc8aea7c20"
+        },
+        {
+          "path": "authoring-source/scripts/evaluations/labeled_recall_fixture.py",
+          "repository_path": "scripts/evaluations/labeled_recall_fixture.py",
+          "sha256": "dded27f037c0770edbf3127eb8f8b944ce29d05b331d4cf0782c2389e627e2a9",
+          "source_commit": "175d21fa26bbef41f8ec859b463876934e16db79"
+        },
+        {
+          "path": "authoring-source/scripts/evaluations/semantic_navigation_fixture.py",
+          "repository_path": "scripts/evaluations/semantic_navigation_fixture.py",
+          "sha256": "a1b8cfae9a269ba79c6ae0e29e287dfd6c6c57c64bb7f88ab03927dd5ce9963f",
+          "source_commit": "175d21fa26bbef41f8ec859b463876934e16db79"
+        },
+        {
+          "path": "authoring-source/skills/agent-memory/templates/record-proposal.example.json",
+          "repository_path": "skills/agent-memory/templates/record-proposal.example.json",
+          "sha256": "87e9a441607c8ec83545ee57f157cd51b2be8b6adbc527f730f9c533e2ef4ce8",
+          "source_commit": "175d21fa26bbef41f8ec859b463876934e16db79"
+        }
+      ],
+      "inputs": {
+        "path": "inputs.json",
+        "repository_path": "docs/research/data/2026-11-05-ssg-runtime/independent-execution/authored-inputs-20261106.json",
+        "sha256": "1986071901b4004618310b15f2ebcbf6f03e6ee7afc9e113eca6d4deff893ef2"
+      },
+      "io": {
+        "path": "execution-io.json",
+        "repository_path": "docs/research/data/2026-11-05-ssg-runtime/independent-execution/execution-io.json",
+        "sha256": "68ff893e3e7875ded55844b381e54a364c5696173e785ca40894cd767f1ea3e5"
+      },
+      "recipe": {
+        "commit": "a4ac3263ba769812311787f70a07dacc8aea7c20",
+        "path": "source/docs/research/data/2026-11-05-ssg-runtime/independent-execution/execute.py",
+        "repository_path": "docs/research/data/2026-11-05-ssg-runtime/independent-execution/execute.py",
+        "sha256": "ead4ee2344ebdd42a3386fbf3d3edfb297181fa0e5d7bd7405662cd01b2bcdb7"
+      },
+      "runtime_profile": {
+        "path": "runtime-profile.json",
+        "sha256": "08dc5d231645694c5af745e8e79b890ae1cd5d04d78ab070f40f71f00dbf306e",
+        "source_commit": "a4ac3263ba769812311787f70a07dacc8aea7c20"
+      },
+      "spec": {
+        "path": "spec.json",
+        "repository_path": "docs/research/data/2026-11-05-ssg-runtime/independent-execution/spec.json",
+        "sha256": "8c34c17b844bc9b80fe43bab20e88437f123fb1c17ab8ea1522f81d3986b4f44"
+      }
+    },
+    "spec_sha256": "8c34c17b844bc9b80fe43bab20e88437f123fb1c17ab8ea1522f81d3986b4f44",
+    "suite_sha256": "36b663df90a5002ef93996ccc76e0a5de932f984d4a35178fe32b6f74e83b21f"
+  },
+  "status": "raw-research-report-not-acceptance",
+  "expected_cells": 567,
+  "observation_cells": 426,
+  "independent_labels": {
+    "base_cases": 88,
+    "calibration": 16,
+    "counterparts_not_independent_labels": true,
+    "held-out": 85,
+    "overlay_cases": 101,
+    "total": 101
+  },
+  "groups": [
+    {
+      "ann": {
+        "budget<N": {
+          "candidate_recall_denominator": 0,
+          "executed": 0,
+          "failed": 0,
+          "k_domain_classes": {},
+          "mean_candidate_recall": null,
+          "mean_exact_rescored_top_k_overlap": null
+        },
+        "exhaustive-candidates": {
+          "candidate_recall_denominator": 16,
+          "executed": 16,
+          "failed": 0,
+          "k_domain_classes": {
+            "k<N": 16
+          },
+          "mean_candidate_recall": 1.0,
+          "mean_exact_rescored_top_k_overlap": 1.0
+        },
+        "unexecuted": 0
+      },
+      "classes": {
+        "abstention": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 16,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No calibration-only cutoff frozen; raw ranking is not abstention": 16
+          },
+          "unexecuted": 16,
+          "without_measured_failure": 0
+        },
+        "caveats": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 16,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No independently reviewed contract-derived AM175 research outcome/caveat assembler exists": 16
+          },
+          "unexecuted": 16,
+          "without_measured_failure": 0
+        },
+        "literal_status": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 16,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No reviewed native literal/status/exit/no-match comparison mapper": 16
+          },
+          "unexecuted": 16,
+          "without_measured_failure": 0
+        },
+        "native": {
+          "executed": 16,
+          "failed": 0,
+          "intended_denominator": 16,
+          "measured_denominator": 16,
+          "measured_failure_fraction": 0.0,
+          "prerequisites": {},
+          "unexecuted": 0,
+          "without_measured_failure": 16
+        },
+        "outcome": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 16,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No independently reviewed contract-derived AM175 research outcome/caveat assembler exists": 16
+          },
+          "unexecuted": 16,
+          "without_measured_failure": 0
+        },
+        "provider_canaries": {
+          "executed": 16,
+          "failed": 0,
+          "intended_denominator": 16,
+          "measured_denominator": 16,
+          "measured_failure_fraction": 0.0,
+          "prerequisites": {},
+          "unexecuted": 0,
+          "without_measured_failure": 16
+        },
+        "public_disclosure": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 16,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No actual public body/identifier/count/diagnostic surface mapper": 16
+          },
+          "unexecuted": 16,
+          "without_measured_failure": 0
+        },
+        "semantic": {
+          "executed": 16,
+          "failed": 0,
+          "intended_denominator": 16,
+          "measured_denominator": 16,
+          "measured_failure_fraction": 0.0,
+          "prerequisites": {},
+          "unexecuted": 0,
+          "without_measured_failure": 16
+        },
+        "typed": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 16,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "This case requests a different mechanism": 16
+          },
+          "unexecuted": 16,
+          "without_measured_failure": 0
+        }
+      },
+      "conflict_evidence_completeness": {
+        "executed": false,
+        "failed_predicates": [],
+        "prerequisites": [
+          "Raw primary ranks/edges do not implement an outcome or mandatory-caveat/evidence assembler"
+        ]
+      },
+      "expected_cells": 16,
+      "no_content_overlap": {
+        "ann": {
+          "budget<N": {
+            "candidate_recall_denominator": 0,
+            "executed": 0,
+            "failed": 0,
+            "k_domain_classes": {},
+            "mean_candidate_recall": null,
+            "mean_exact_rescored_top_k_overlap": null
+          },
+          "exhaustive-candidates": {
+            "candidate_recall_denominator": 1,
+            "executed": 1,
+            "failed": 0,
+            "k_domain_classes": {
+              "k<N": 1
+            },
+            "mean_candidate_recall": 1.0,
+            "mean_exact_rescored_top_k_overlap": 1.0
+          },
+          "unexecuted": 0
+        },
+        "classes": {
+          "abstention": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 1,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No calibration-only cutoff frozen; raw ranking is not abstention": 1
+            },
+            "unexecuted": 1,
+            "without_measured_failure": 0
+          },
+          "caveats": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 1,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No independently reviewed contract-derived AM175 research outcome/caveat assembler exists": 1
+            },
+            "unexecuted": 1,
+            "without_measured_failure": 0
+          },
+          "literal_status": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 1,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No reviewed native literal/status/exit/no-match comparison mapper": 1
+            },
+            "unexecuted": 1,
+            "without_measured_failure": 0
+          },
+          "native": {
+            "executed": 1,
+            "failed": 0,
+            "intended_denominator": 1,
+            "measured_denominator": 1,
+            "measured_failure_fraction": 0.0,
+            "prerequisites": {},
+            "unexecuted": 0,
+            "without_measured_failure": 1
+          },
+          "outcome": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 1,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No independently reviewed contract-derived AM175 research outcome/caveat assembler exists": 1
+            },
+            "unexecuted": 1,
+            "without_measured_failure": 0
+          },
+          "provider_canaries": {
+            "executed": 1,
+            "failed": 0,
+            "intended_denominator": 1,
+            "measured_denominator": 1,
+            "measured_failure_fraction": 0.0,
+            "prerequisites": {},
+            "unexecuted": 0,
+            "without_measured_failure": 1
+          },
+          "public_disclosure": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 1,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No actual public body/identifier/count/diagnostic surface mapper": 1
+            },
+            "unexecuted": 1,
+            "without_measured_failure": 0
+          },
+          "semantic": {
+            "executed": 1,
+            "failed": 0,
+            "intended_denominator": 1,
+            "measured_denominator": 1,
+            "measured_failure_fraction": 0.0,
+            "prerequisites": {},
+            "unexecuted": 0,
+            "without_measured_failure": 1
+          },
+          "typed": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 1,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "This case requests a different mechanism": 1
+            },
+            "unexecuted": 1,
+            "without_measured_failure": 0
+          }
+        },
+        "conflict_evidence_completeness": {
+          "executed": false,
+          "failed_predicates": [],
+          "prerequisites": [
+            "Raw primary ranks/edges do not implement an outcome or mandatory-caveat/evidence assembler"
+          ]
+        },
+        "expected_cells": 1,
+        "observed_cells": 1,
+        "semantic_raw_recall": {
+          "complete_required_set_denominator": 1,
+          "complete_required_sets": 1,
+          "domain_classes": {
+            "k<N": 1
+          },
+          "executed_empty_required_cells": 0,
+          "executed_nonempty_required_cells": 1,
+          "executed_required_label_denominator": 1,
+          "intended_required_label_denominator": 1,
+          "macro_recall_on_executed_nonempty_cells": 1.0,
+          "micro_recall_on_executed_required_labels": 1.0,
+          "required_hits": 1,
+          "unexecuted_required_label_count": 0
+        },
+        "typed_raw_paths": {
+          "executed_required_path_denominator": 0,
+          "fully_provenanced_edge_denominator": 0,
+          "intended_required_path_denominator": 0,
+          "matched_required_paths": 0,
+          "micro_relation_label_accuracy": null,
+          "micro_required_path_recall": null,
+          "unexecuted_required_path_count": 0,
+          "unverified_provenance_edge_count": 0
+        }
+      },
+      "observed_cells": 16,
+      "semantic_raw_recall": {
+        "complete_required_set_denominator": 9,
+        "complete_required_sets": 9,
+        "domain_classes": {
+          "k<N": 16
+        },
+        "executed_empty_required_cells": 7,
+        "executed_nonempty_required_cells": 9,
+        "executed_required_label_denominator": 12,
+        "intended_required_label_denominator": 12,
+        "macro_recall_on_executed_nonempty_cells": 1.0,
+        "micro_recall_on_executed_required_labels": 1.0,
+        "required_hits": 12,
+        "unexecuted_required_label_count": 0
+      },
+      "size": 1000,
+      "split": "calibration",
+      "typed_raw_paths": {
+        "executed_required_path_denominator": 0,
+        "fully_provenanced_edge_denominator": 0,
+        "intended_required_path_denominator": 0,
+        "matched_required_paths": 0,
+        "micro_relation_label_accuracy": null,
+        "micro_required_path_recall": null,
+        "unexecuted_required_path_count": 0,
+        "unverified_provenance_edge_count": 0
+      },
+      "variant": "base"
+    },
+    {
+      "ann": {
+        "budget<N": {
+          "candidate_recall_denominator": 0,
+          "executed": 0,
+          "failed": 0,
+          "k_domain_classes": {},
+          "mean_candidate_recall": null,
+          "mean_exact_rescored_top_k_overlap": null
+        },
+        "exhaustive-candidates": {
+          "candidate_recall_denominator": 59,
+          "executed": 59,
+          "failed": 1,
+          "k_domain_classes": {
+            "k<N": 59
+          },
+          "mean_candidate_recall": 1.0,
+          "mean_exact_rescored_top_k_overlap": 1.0
+        },
+        "unexecuted": 13
+      },
+      "classes": {
+        "abstention": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 72,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No calibration-only cutoff frozen; raw ranking is not abstention": 72
+          },
+          "unexecuted": 72,
+          "without_measured_failure": 0
+        },
+        "caveats": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 72,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No independently reviewed contract-derived AM175 research outcome/caveat assembler exists": 72
+          },
+          "unexecuted": 72,
+          "without_measured_failure": 0
+        },
+        "literal_status": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 72,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No reviewed native literal/status/exit/no-match comparison mapper": 72
+          },
+          "unexecuted": 72,
+          "without_measured_failure": 0
+        },
+        "native": {
+          "executed": 71,
+          "failed": 0,
+          "intended_denominator": 72,
+          "measured_denominator": 71,
+          "measured_failure_fraction": 0.0,
+          "prerequisites": {
+            "Actual stale-generation transition lacks a reviewed receipt verifier": 1
+          },
+          "unexecuted": 1,
+          "without_measured_failure": 71
+        },
+        "outcome": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 72,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No independently reviewed contract-derived AM175 research outcome/caveat assembler exists": 72
+          },
+          "unexecuted": 72,
+          "without_measured_failure": 0
+        },
+        "provider_canaries": {
+          "executed": 63,
+          "failed": 1,
+          "intended_denominator": 72,
+          "measured_denominator": 63,
+          "measured_failure_fraction": 0.015873015873015872,
+          "prerequisites": {
+            "Actual changed canonical source with a stale prior generation and reviewed fencing observation required; ordinary rebuild does not exercise stale state": 1,
+            "Unexecuted actual state transition requires its own reviewed controlled phase: approved-opaque-remote-alias-complete-generation": 1,
+            "Unexecuted actual state transition requires its own reviewed controlled phase: candidate-vector-fill-interrupted-no-prior-generation": 1,
+            "Unexecuted actual state transition requires its own reviewed controlled phase: configured-embedding-profile-changed-since-generation": 1,
+            "Unexecuted actual state transition requires its own reviewed controlled phase: embedding-service-stopped": 2,
+            "Unexecuted actual state transition requires its own reviewed controlled phase: only-generation-built-for-main-bank-state": 1,
+            "Unexecuted actual state transition requires its own reviewed controlled phase: prior-complete-generation-active-candidate-interrupted-no-source-change": 1,
+            "Unexecuted actual state transition requires its own reviewed controlled phase: remote-endpoint-configured-not-approved": 1
+          },
+          "unexecuted": 9,
+          "without_measured_failure": 62
+        },
+        "public_disclosure": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 72,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No actual public body/identifier/count/diagnostic surface mapper": 72
+          },
+          "unexecuted": 72,
+          "without_measured_failure": 0
+        },
+        "semantic": {
+          "executed": 59,
+          "failed": 1,
+          "intended_denominator": 72,
+          "measured_denominator": 59,
+          "measured_failure_fraction": 0.01694915254237288,
+          "prerequisites": {
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: approved-opaque-remote-alias-complete-generation": 1,
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: candidate-vector-fill-interrupted-no-prior-generation": 1,
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: configured-embedding-profile-changed-since-generation": 1,
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: embedding-service-stopped": 2,
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: only-generation-built-for-main-bank-state": 1,
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: prior-complete-generation-active-candidate-interrupted-no-source-change": 1,
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: ready-complete-generation": 1,
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: remote-endpoint-configured-not-approved": 1,
+            "Current recall cannot substitute another branch/revision for the observed checkout": 1,
+            "This case requests a different mechanism": 1,
+            "Unsafe query must not become returned context or audit content": 2
+          },
+          "unexecuted": 13,
+          "without_measured_failure": 58
+        },
+        "typed": {
+          "executed": 7,
+          "failed": 2,
+          "intended_denominator": 72,
+          "measured_denominator": 7,
+          "measured_failure_fraction": 0.2857142857142857,
+          "prerequisites": {
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: approved-opaque-remote-alias-complete-generation": 1,
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: candidate-vector-fill-interrupted-no-prior-generation": 1,
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: configured-embedding-profile-changed-since-generation": 1,
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: embedding-service-stopped": 2,
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: only-generation-built-for-main-bank-state": 1,
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: prior-complete-generation-active-candidate-interrupted-no-source-change": 1,
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: ready-complete-generation": 1,
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: remote-endpoint-configured-not-approved": 1,
+            "Current recall cannot substitute another branch/revision for the observed checkout": 1,
+            "Native AM175 has no reviewed historical endpoint qualification mapper; historical typed cell unexecuted": 2,
+            "Seed is not freshly native-qualified current guidance; no hidden/unsafe/historical endpoint disclosure": 3,
+            "This case requests a different mechanism": 48,
+            "Unsafe query must not become returned context or audit content": 2
+          },
+          "unexecuted": 65,
+          "without_measured_failure": 5
+        }
+      },
+      "conflict_evidence_completeness": {
+        "executed": false,
+        "failed_predicates": [],
+        "prerequisites": [
+          "Raw primary ranks/edges do not implement an outcome or mandatory-caveat/evidence assembler"
+        ]
+      },
+      "expected_cells": 72,
+      "no_content_overlap": {
+        "ann": {
+          "budget<N": {
+            "candidate_recall_denominator": 0,
+            "executed": 0,
+            "failed": 0,
+            "k_domain_classes": {},
+            "mean_candidate_recall": null,
+            "mean_exact_rescored_top_k_overlap": null
+          },
+          "exhaustive-candidates": {
+            "candidate_recall_denominator": 17,
+            "executed": 17,
+            "failed": 0,
+            "k_domain_classes": {
+              "k<N": 17
+            },
+            "mean_candidate_recall": 1.0,
+            "mean_exact_rescored_top_k_overlap": 1.0
+          },
+          "unexecuted": 2
+        },
+        "classes": {
+          "abstention": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 19,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No calibration-only cutoff frozen; raw ranking is not abstention": 19
+            },
+            "unexecuted": 19,
+            "without_measured_failure": 0
+          },
+          "caveats": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 19,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No independently reviewed contract-derived AM175 research outcome/caveat assembler exists": 19
+            },
+            "unexecuted": 19,
+            "without_measured_failure": 0
+          },
+          "literal_status": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 19,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No reviewed native literal/status/exit/no-match comparison mapper": 19
+            },
+            "unexecuted": 19,
+            "without_measured_failure": 0
+          },
+          "native": {
+            "executed": 19,
+            "failed": 0,
+            "intended_denominator": 19,
+            "measured_denominator": 19,
+            "measured_failure_fraction": 0.0,
+            "prerequisites": {},
+            "unexecuted": 0,
+            "without_measured_failure": 19
+          },
+          "outcome": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 19,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No independently reviewed contract-derived AM175 research outcome/caveat assembler exists": 19
+            },
+            "unexecuted": 19,
+            "without_measured_failure": 0
+          },
+          "provider_canaries": {
+            "executed": 17,
+            "failed": 1,
+            "intended_denominator": 19,
+            "measured_denominator": 17,
+            "measured_failure_fraction": 0.058823529411764705,
+            "prerequisites": {
+              "Unexecuted actual state transition requires its own reviewed controlled phase: approved-opaque-remote-alias-complete-generation": 1,
+              "Unexecuted actual state transition requires its own reviewed controlled phase: prior-complete-generation-active-candidate-interrupted-no-source-change": 1
+            },
+            "unexecuted": 2,
+            "without_measured_failure": 16
+          },
+          "public_disclosure": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 19,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No actual public body/identifier/count/diagnostic surface mapper": 19
+            },
+            "unexecuted": 19,
+            "without_measured_failure": 0
+          },
+          "semantic": {
+            "executed": 17,
+            "failed": 0,
+            "intended_denominator": 19,
+            "measured_denominator": 17,
+            "measured_failure_fraction": 0.0,
+            "prerequisites": {
+              "Actual runtime/generation transition lacks a reviewed receipt verifier: approved-opaque-remote-alias-complete-generation": 1,
+              "Actual runtime/generation transition lacks a reviewed receipt verifier: prior-complete-generation-active-candidate-interrupted-no-source-change": 1
+            },
+            "unexecuted": 2,
+            "without_measured_failure": 17
+          },
+          "typed": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 19,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "Actual runtime/generation transition lacks a reviewed receipt verifier: approved-opaque-remote-alias-complete-generation": 1,
+              "Actual runtime/generation transition lacks a reviewed receipt verifier: prior-complete-generation-active-candidate-interrupted-no-source-change": 1,
+              "This case requests a different mechanism": 17
+            },
+            "unexecuted": 19,
+            "without_measured_failure": 0
+          }
+        },
+        "conflict_evidence_completeness": {
+          "executed": false,
+          "failed_predicates": [],
+          "prerequisites": [
+            "Raw primary ranks/edges do not implement an outcome or mandatory-caveat/evidence assembler"
+          ]
+        },
+        "expected_cells": 19,
+        "observed_cells": 19,
+        "semantic_raw_recall": {
+          "complete_required_set_denominator": 17,
+          "complete_required_sets": 17,
+          "domain_classes": {
+            "k<N": 17
+          },
+          "executed_empty_required_cells": 0,
+          "executed_nonempty_required_cells": 17,
+          "executed_required_label_denominator": 19,
+          "intended_required_label_denominator": 21,
+          "macro_recall_on_executed_nonempty_cells": 1.0,
+          "micro_recall_on_executed_required_labels": 1.0,
+          "required_hits": 19,
+          "unexecuted_required_label_count": 2
+        },
+        "typed_raw_paths": {
+          "executed_required_path_denominator": 0,
+          "fully_provenanced_edge_denominator": 0,
+          "intended_required_path_denominator": 1,
+          "matched_required_paths": 0,
+          "micro_relation_label_accuracy": null,
+          "micro_required_path_recall": null,
+          "unexecuted_required_path_count": 1,
+          "unverified_provenance_edge_count": 0
+        }
+      },
+      "observed_cells": 72,
+      "semantic_raw_recall": {
+        "complete_required_set_denominator": 30,
+        "complete_required_sets": 29,
+        "domain_classes": {
+          "k<N": 59
+        },
+        "executed_empty_required_cells": 29,
+        "executed_nonempty_required_cells": 30,
+        "executed_required_label_denominator": 33,
+        "intended_required_label_denominator": 38,
+        "macro_recall_on_executed_nonempty_cells": 0.9666666666666667,
+        "micro_recall_on_executed_required_labels": 0.9696969696969697,
+        "required_hits": 32,
+        "unexecuted_required_label_count": 5
+      },
+      "size": 1000,
+      "split": "held-out",
+      "typed_raw_paths": {
+        "executed_required_path_denominator": 4,
+        "fully_provenanced_edge_denominator": 39,
+        "intended_required_path_denominator": 10,
+        "matched_required_paths": 1,
+        "micro_relation_label_accuracy": 1.0,
+        "micro_required_path_recall": 0.25,
+        "unexecuted_required_path_count": 6,
+        "unverified_provenance_edge_count": 0
+      },
+      "variant": "base"
+    },
+    {
+      "ann": {
+        "budget<N": {
+          "candidate_recall_denominator": 0,
+          "executed": 0,
+          "failed": 0,
+          "k_domain_classes": {},
+          "mean_candidate_recall": null,
+          "mean_exact_rescored_top_k_overlap": null
+        },
+        "exhaustive-candidates": {
+          "candidate_recall_denominator": 16,
+          "executed": 16,
+          "failed": 0,
+          "k_domain_classes": {
+            "k<N": 16
+          },
+          "mean_candidate_recall": 1.0,
+          "mean_exact_rescored_top_k_overlap": 1.0
+        },
+        "unexecuted": 0
+      },
+      "classes": {
+        "abstention": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 16,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No calibration-only cutoff frozen; raw ranking is not abstention": 16
+          },
+          "unexecuted": 16,
+          "without_measured_failure": 0
+        },
+        "caveats": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 16,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No independently reviewed contract-derived AM175 research outcome/caveat assembler exists": 16
+          },
+          "unexecuted": 16,
+          "without_measured_failure": 0
+        },
+        "literal_status": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 16,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No reviewed native literal/status/exit/no-match comparison mapper": 16
+          },
+          "unexecuted": 16,
+          "without_measured_failure": 0
+        },
+        "native": {
+          "executed": 16,
+          "failed": 0,
+          "intended_denominator": 16,
+          "measured_denominator": 16,
+          "measured_failure_fraction": 0.0,
+          "prerequisites": {},
+          "unexecuted": 0,
+          "without_measured_failure": 16
+        },
+        "outcome": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 16,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No independently reviewed contract-derived AM175 research outcome/caveat assembler exists": 16
+          },
+          "unexecuted": 16,
+          "without_measured_failure": 0
+        },
+        "provider_canaries": {
+          "executed": 16,
+          "failed": 0,
+          "intended_denominator": 16,
+          "measured_denominator": 16,
+          "measured_failure_fraction": 0.0,
+          "prerequisites": {},
+          "unexecuted": 0,
+          "without_measured_failure": 16
+        },
+        "public_disclosure": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 16,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No actual public body/identifier/count/diagnostic surface mapper": 16
+          },
+          "unexecuted": 16,
+          "without_measured_failure": 0
+        },
+        "semantic": {
+          "executed": 16,
+          "failed": 0,
+          "intended_denominator": 16,
+          "measured_denominator": 16,
+          "measured_failure_fraction": 0.0,
+          "prerequisites": {},
+          "unexecuted": 0,
+          "without_measured_failure": 16
+        },
+        "typed": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 16,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "This case requests a different mechanism": 16
+          },
+          "unexecuted": 16,
+          "without_measured_failure": 0
+        }
+      },
+      "conflict_evidence_completeness": {
+        "executed": false,
+        "failed_predicates": [],
+        "prerequisites": [
+          "Raw primary ranks/edges do not implement an outcome or mandatory-caveat/evidence assembler"
+        ]
+      },
+      "expected_cells": 16,
+      "no_content_overlap": {
+        "ann": {
+          "budget<N": {
+            "candidate_recall_denominator": 0,
+            "executed": 0,
+            "failed": 0,
+            "k_domain_classes": {},
+            "mean_candidate_recall": null,
+            "mean_exact_rescored_top_k_overlap": null
+          },
+          "exhaustive-candidates": {
+            "candidate_recall_denominator": 1,
+            "executed": 1,
+            "failed": 0,
+            "k_domain_classes": {
+              "k<N": 1
+            },
+            "mean_candidate_recall": 1.0,
+            "mean_exact_rescored_top_k_overlap": 1.0
+          },
+          "unexecuted": 0
+        },
+        "classes": {
+          "abstention": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 1,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No calibration-only cutoff frozen; raw ranking is not abstention": 1
+            },
+            "unexecuted": 1,
+            "without_measured_failure": 0
+          },
+          "caveats": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 1,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No independently reviewed contract-derived AM175 research outcome/caveat assembler exists": 1
+            },
+            "unexecuted": 1,
+            "without_measured_failure": 0
+          },
+          "literal_status": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 1,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No reviewed native literal/status/exit/no-match comparison mapper": 1
+            },
+            "unexecuted": 1,
+            "without_measured_failure": 0
+          },
+          "native": {
+            "executed": 1,
+            "failed": 0,
+            "intended_denominator": 1,
+            "measured_denominator": 1,
+            "measured_failure_fraction": 0.0,
+            "prerequisites": {},
+            "unexecuted": 0,
+            "without_measured_failure": 1
+          },
+          "outcome": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 1,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No independently reviewed contract-derived AM175 research outcome/caveat assembler exists": 1
+            },
+            "unexecuted": 1,
+            "without_measured_failure": 0
+          },
+          "provider_canaries": {
+            "executed": 1,
+            "failed": 0,
+            "intended_denominator": 1,
+            "measured_denominator": 1,
+            "measured_failure_fraction": 0.0,
+            "prerequisites": {},
+            "unexecuted": 0,
+            "without_measured_failure": 1
+          },
+          "public_disclosure": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 1,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No actual public body/identifier/count/diagnostic surface mapper": 1
+            },
+            "unexecuted": 1,
+            "without_measured_failure": 0
+          },
+          "semantic": {
+            "executed": 1,
+            "failed": 0,
+            "intended_denominator": 1,
+            "measured_denominator": 1,
+            "measured_failure_fraction": 0.0,
+            "prerequisites": {},
+            "unexecuted": 0,
+            "without_measured_failure": 1
+          },
+          "typed": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 1,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "This case requests a different mechanism": 1
+            },
+            "unexecuted": 1,
+            "without_measured_failure": 0
+          }
+        },
+        "conflict_evidence_completeness": {
+          "executed": false,
+          "failed_predicates": [],
+          "prerequisites": [
+            "Raw primary ranks/edges do not implement an outcome or mandatory-caveat/evidence assembler"
+          ]
+        },
+        "expected_cells": 1,
+        "observed_cells": 1,
+        "semantic_raw_recall": {
+          "complete_required_set_denominator": 1,
+          "complete_required_sets": 1,
+          "domain_classes": {
+            "k<N": 1
+          },
+          "executed_empty_required_cells": 0,
+          "executed_nonempty_required_cells": 1,
+          "executed_required_label_denominator": 1,
+          "intended_required_label_denominator": 1,
+          "macro_recall_on_executed_nonempty_cells": 1.0,
+          "micro_recall_on_executed_required_labels": 1.0,
+          "required_hits": 1,
+          "unexecuted_required_label_count": 0
+        },
+        "typed_raw_paths": {
+          "executed_required_path_denominator": 0,
+          "fully_provenanced_edge_denominator": 0,
+          "intended_required_path_denominator": 0,
+          "matched_required_paths": 0,
+          "micro_relation_label_accuracy": null,
+          "micro_required_path_recall": null,
+          "unexecuted_required_path_count": 0,
+          "unverified_provenance_edge_count": 0
+        }
+      },
+      "observed_cells": 16,
+      "semantic_raw_recall": {
+        "complete_required_set_denominator": 9,
+        "complete_required_sets": 9,
+        "domain_classes": {
+          "k<N": 16
+        },
+        "executed_empty_required_cells": 7,
+        "executed_nonempty_required_cells": 9,
+        "executed_required_label_denominator": 12,
+        "intended_required_label_denominator": 12,
+        "macro_recall_on_executed_nonempty_cells": 1.0,
+        "micro_recall_on_executed_required_labels": 1.0,
+        "required_hits": 12,
+        "unexecuted_required_label_count": 0
+      },
+      "size": 1000,
+      "split": "calibration",
+      "typed_raw_paths": {
+        "executed_required_path_denominator": 0,
+        "fully_provenanced_edge_denominator": 0,
+        "intended_required_path_denominator": 0,
+        "matched_required_paths": 0,
+        "micro_relation_label_accuracy": null,
+        "micro_required_path_recall": null,
+        "unexecuted_required_path_count": 0,
+        "unverified_provenance_edge_count": 0
+      },
+      "variant": "overlay"
+    },
+    {
+      "ann": {
+        "budget<N": {
+          "candidate_recall_denominator": 0,
+          "executed": 0,
+          "failed": 0,
+          "k_domain_classes": {},
+          "mean_candidate_recall": null,
+          "mean_exact_rescored_top_k_overlap": null
+        },
+        "exhaustive-candidates": {
+          "candidate_recall_denominator": 72,
+          "executed": 72,
+          "failed": 2,
+          "k_domain_classes": {
+            "k<N": 72
+          },
+          "mean_candidate_recall": 1.0,
+          "mean_exact_rescored_top_k_overlap": 1.0
+        },
+        "unexecuted": 13
+      },
+      "classes": {
+        "abstention": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 85,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No calibration-only cutoff frozen; raw ranking is not abstention": 85
+          },
+          "unexecuted": 85,
+          "without_measured_failure": 0
+        },
+        "caveats": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 85,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No independently reviewed contract-derived AM175 research outcome/caveat assembler exists": 85
+          },
+          "unexecuted": 85,
+          "without_measured_failure": 0
+        },
+        "literal_status": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 85,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No reviewed native literal/status/exit/no-match comparison mapper": 85
+          },
+          "unexecuted": 85,
+          "without_measured_failure": 0
+        },
+        "native": {
+          "executed": 84,
+          "failed": 0,
+          "intended_denominator": 85,
+          "measured_denominator": 84,
+          "measured_failure_fraction": 0.0,
+          "prerequisites": {
+            "Actual stale-generation transition lacks a reviewed receipt verifier": 1
+          },
+          "unexecuted": 1,
+          "without_measured_failure": 84
+        },
+        "outcome": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 85,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No independently reviewed contract-derived AM175 research outcome/caveat assembler exists": 85
+          },
+          "unexecuted": 85,
+          "without_measured_failure": 0
+        },
+        "provider_canaries": {
+          "executed": 76,
+          "failed": 1,
+          "intended_denominator": 85,
+          "measured_denominator": 76,
+          "measured_failure_fraction": 0.013157894736842105,
+          "prerequisites": {
+            "Actual changed canonical source with a stale prior generation and reviewed fencing observation required; ordinary rebuild does not exercise stale state": 1,
+            "Unexecuted actual state transition requires its own reviewed controlled phase: approved-opaque-remote-alias-complete-generation": 1,
+            "Unexecuted actual state transition requires its own reviewed controlled phase: candidate-vector-fill-interrupted-no-prior-generation": 1,
+            "Unexecuted actual state transition requires its own reviewed controlled phase: configured-embedding-profile-changed-since-generation": 1,
+            "Unexecuted actual state transition requires its own reviewed controlled phase: embedding-service-stopped": 2,
+            "Unexecuted actual state transition requires its own reviewed controlled phase: only-generation-built-for-main-bank-state": 1,
+            "Unexecuted actual state transition requires its own reviewed controlled phase: prior-complete-generation-active-candidate-interrupted-no-source-change": 1,
+            "Unexecuted actual state transition requires its own reviewed controlled phase: remote-endpoint-configured-not-approved": 1
+          },
+          "unexecuted": 9,
+          "without_measured_failure": 75
+        },
+        "public_disclosure": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 85,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No actual public body/identifier/count/diagnostic surface mapper": 85
+          },
+          "unexecuted": 85,
+          "without_measured_failure": 0
+        },
+        "semantic": {
+          "executed": 72,
+          "failed": 2,
+          "intended_denominator": 85,
+          "measured_denominator": 72,
+          "measured_failure_fraction": 0.027777777777777776,
+          "prerequisites": {
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: approved-opaque-remote-alias-complete-generation": 1,
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: candidate-vector-fill-interrupted-no-prior-generation": 1,
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: configured-embedding-profile-changed-since-generation": 1,
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: embedding-service-stopped": 2,
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: only-generation-built-for-main-bank-state": 1,
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: prior-complete-generation-active-candidate-interrupted-no-source-change": 1,
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: ready-complete-generation": 1,
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: remote-endpoint-configured-not-approved": 1,
+            "Current recall cannot substitute another branch/revision for the observed checkout": 1,
+            "This case requests a different mechanism": 1,
+            "Unsafe query must not become returned context or audit content": 2
+          },
+          "unexecuted": 13,
+          "without_measured_failure": 70
+        },
+        "typed": {
+          "executed": 10,
+          "failed": 5,
+          "intended_denominator": 85,
+          "measured_denominator": 10,
+          "measured_failure_fraction": 0.5,
+          "prerequisites": {
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: approved-opaque-remote-alias-complete-generation": 1,
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: candidate-vector-fill-interrupted-no-prior-generation": 1,
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: configured-embedding-profile-changed-since-generation": 1,
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: embedding-service-stopped": 2,
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: only-generation-built-for-main-bank-state": 1,
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: prior-complete-generation-active-candidate-interrupted-no-source-change": 1,
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: ready-complete-generation": 1,
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: remote-endpoint-configured-not-approved": 1,
+            "Current recall cannot substitute another branch/revision for the observed checkout": 1,
+            "Native AM175 has no reviewed historical endpoint qualification mapper; historical typed cell unexecuted": 2,
+            "Seed is not freshly native-qualified current guidance; no hidden/unsafe/historical endpoint disclosure": 3,
+            "This case requests a different mechanism": 58,
+            "Unsafe query must not become returned context or audit content": 2
+          },
+          "unexecuted": 75,
+          "without_measured_failure": 5
+        }
+      },
+      "conflict_evidence_completeness": {
+        "executed": false,
+        "failed_predicates": [],
+        "prerequisites": [
+          "Raw primary ranks/edges do not implement an outcome or mandatory-caveat/evidence assembler"
+        ]
+      },
+      "expected_cells": 85,
+      "no_content_overlap": {
+        "ann": {
+          "budget<N": {
+            "candidate_recall_denominator": 0,
+            "executed": 0,
+            "failed": 0,
+            "k_domain_classes": {},
+            "mean_candidate_recall": null,
+            "mean_exact_rescored_top_k_overlap": null
+          },
+          "exhaustive-candidates": {
+            "candidate_recall_denominator": 21,
+            "executed": 21,
+            "failed": 0,
+            "k_domain_classes": {
+              "k<N": 21
+            },
+            "mean_candidate_recall": 1.0,
+            "mean_exact_rescored_top_k_overlap": 1.0
+          },
+          "unexecuted": 2
+        },
+        "classes": {
+          "abstention": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 23,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No calibration-only cutoff frozen; raw ranking is not abstention": 23
+            },
+            "unexecuted": 23,
+            "without_measured_failure": 0
+          },
+          "caveats": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 23,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No independently reviewed contract-derived AM175 research outcome/caveat assembler exists": 23
+            },
+            "unexecuted": 23,
+            "without_measured_failure": 0
+          },
+          "literal_status": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 23,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No reviewed native literal/status/exit/no-match comparison mapper": 23
+            },
+            "unexecuted": 23,
+            "without_measured_failure": 0
+          },
+          "native": {
+            "executed": 23,
+            "failed": 0,
+            "intended_denominator": 23,
+            "measured_denominator": 23,
+            "measured_failure_fraction": 0.0,
+            "prerequisites": {},
+            "unexecuted": 0,
+            "without_measured_failure": 23
+          },
+          "outcome": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 23,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No independently reviewed contract-derived AM175 research outcome/caveat assembler exists": 23
+            },
+            "unexecuted": 23,
+            "without_measured_failure": 0
+          },
+          "provider_canaries": {
+            "executed": 21,
+            "failed": 1,
+            "intended_denominator": 23,
+            "measured_denominator": 21,
+            "measured_failure_fraction": 0.047619047619047616,
+            "prerequisites": {
+              "Unexecuted actual state transition requires its own reviewed controlled phase: approved-opaque-remote-alias-complete-generation": 1,
+              "Unexecuted actual state transition requires its own reviewed controlled phase: prior-complete-generation-active-candidate-interrupted-no-source-change": 1
+            },
+            "unexecuted": 2,
+            "without_measured_failure": 20
+          },
+          "public_disclosure": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 23,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No actual public body/identifier/count/diagnostic surface mapper": 23
+            },
+            "unexecuted": 23,
+            "without_measured_failure": 0
+          },
+          "semantic": {
+            "executed": 21,
+            "failed": 0,
+            "intended_denominator": 23,
+            "measured_denominator": 21,
+            "measured_failure_fraction": 0.0,
+            "prerequisites": {
+              "Actual runtime/generation transition lacks a reviewed receipt verifier: approved-opaque-remote-alias-complete-generation": 1,
+              "Actual runtime/generation transition lacks a reviewed receipt verifier: prior-complete-generation-active-candidate-interrupted-no-source-change": 1
+            },
+            "unexecuted": 2,
+            "without_measured_failure": 21
+          },
+          "typed": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 23,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "Actual runtime/generation transition lacks a reviewed receipt verifier: approved-opaque-remote-alias-complete-generation": 1,
+              "Actual runtime/generation transition lacks a reviewed receipt verifier: prior-complete-generation-active-candidate-interrupted-no-source-change": 1,
+              "This case requests a different mechanism": 21
+            },
+            "unexecuted": 23,
+            "without_measured_failure": 0
+          }
+        },
+        "conflict_evidence_completeness": {
+          "executed": false,
+          "failed_predicates": [],
+          "prerequisites": [
+            "Raw primary ranks/edges do not implement an outcome or mandatory-caveat/evidence assembler"
+          ]
+        },
+        "expected_cells": 23,
+        "observed_cells": 23,
+        "semantic_raw_recall": {
+          "complete_required_set_denominator": 21,
+          "complete_required_sets": 21,
+          "domain_classes": {
+            "k<N": 21
+          },
+          "executed_empty_required_cells": 0,
+          "executed_nonempty_required_cells": 21,
+          "executed_required_label_denominator": 23,
+          "intended_required_label_denominator": 25,
+          "macro_recall_on_executed_nonempty_cells": 1.0,
+          "micro_recall_on_executed_required_labels": 1.0,
+          "required_hits": 23,
+          "unexecuted_required_label_count": 2
+        },
+        "typed_raw_paths": {
+          "executed_required_path_denominator": 0,
+          "fully_provenanced_edge_denominator": 0,
+          "intended_required_path_denominator": 1,
+          "matched_required_paths": 0,
+          "micro_relation_label_accuracy": null,
+          "micro_required_path_recall": null,
+          "unexecuted_required_path_count": 1,
+          "unverified_provenance_edge_count": 0
+        }
+      },
+      "observed_cells": 85,
+      "semantic_raw_recall": {
+        "complete_required_set_denominator": 38,
+        "complete_required_sets": 36,
+        "domain_classes": {
+          "k<N": 72
+        },
+        "executed_empty_required_cells": 34,
+        "executed_nonempty_required_cells": 38,
+        "executed_required_label_denominator": 44,
+        "intended_required_label_denominator": 49,
+        "macro_recall_on_executed_nonempty_cells": 0.9671052631578947,
+        "micro_recall_on_executed_required_labels": 0.9545454545454546,
+        "required_hits": 42,
+        "unexecuted_required_label_count": 5
+      },
+      "size": 1000,
+      "split": "held-out",
+      "typed_raw_paths": {
+        "executed_required_path_denominator": 13,
+        "fully_provenanced_edge_denominator": 54,
+        "intended_required_path_denominator": 19,
+        "matched_required_paths": 9,
+        "micro_relation_label_accuracy": 1.0,
+        "micro_required_path_recall": 0.6923076923076923,
+        "unexecuted_required_path_count": 6,
+        "unverified_provenance_edge_count": 0
+      },
+      "variant": "overlay"
+    },
+    {
+      "ann": {
+        "budget<N": {
+          "candidate_recall_denominator": 0,
+          "executed": 0,
+          "failed": 0,
+          "k_domain_classes": {},
+          "mean_candidate_recall": null,
+          "mean_exact_rescored_top_k_overlap": null
+        },
+        "exhaustive-candidates": {
+          "candidate_recall_denominator": 16,
+          "executed": 16,
+          "failed": 0,
+          "k_domain_classes": {
+            "k<N": 16
+          },
+          "mean_candidate_recall": 1.0,
+          "mean_exact_rescored_top_k_overlap": 1.0
+        },
+        "unexecuted": 0
+      },
+      "classes": {
+        "abstention": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 16,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No calibration-only cutoff frozen; raw ranking is not abstention": 16
+          },
+          "unexecuted": 16,
+          "without_measured_failure": 0
+        },
+        "caveats": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 16,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No independently reviewed contract-derived AM175 research outcome/caveat assembler exists": 16
+          },
+          "unexecuted": 16,
+          "without_measured_failure": 0
+        },
+        "literal_status": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 16,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No reviewed native literal/status/exit/no-match comparison mapper": 16
+          },
+          "unexecuted": 16,
+          "without_measured_failure": 0
+        },
+        "native": {
+          "executed": 16,
+          "failed": 0,
+          "intended_denominator": 16,
+          "measured_denominator": 16,
+          "measured_failure_fraction": 0.0,
+          "prerequisites": {},
+          "unexecuted": 0,
+          "without_measured_failure": 16
+        },
+        "outcome": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 16,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No independently reviewed contract-derived AM175 research outcome/caveat assembler exists": 16
+          },
+          "unexecuted": 16,
+          "without_measured_failure": 0
+        },
+        "provider_canaries": {
+          "executed": 16,
+          "failed": 0,
+          "intended_denominator": 16,
+          "measured_denominator": 16,
+          "measured_failure_fraction": 0.0,
+          "prerequisites": {},
+          "unexecuted": 0,
+          "without_measured_failure": 16
+        },
+        "public_disclosure": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 16,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No actual public body/identifier/count/diagnostic surface mapper": 16
+          },
+          "unexecuted": 16,
+          "without_measured_failure": 0
+        },
+        "semantic": {
+          "executed": 16,
+          "failed": 0,
+          "intended_denominator": 16,
+          "measured_denominator": 16,
+          "measured_failure_fraction": 0.0,
+          "prerequisites": {},
+          "unexecuted": 0,
+          "without_measured_failure": 16
+        },
+        "typed": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 16,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "This case requests a different mechanism": 16
+          },
+          "unexecuted": 16,
+          "without_measured_failure": 0
+        }
+      },
+      "conflict_evidence_completeness": {
+        "executed": false,
+        "failed_predicates": [],
+        "prerequisites": [
+          "Raw primary ranks/edges do not implement an outcome or mandatory-caveat/evidence assembler"
+        ]
+      },
+      "expected_cells": 16,
+      "no_content_overlap": {
+        "ann": {
+          "budget<N": {
+            "candidate_recall_denominator": 0,
+            "executed": 0,
+            "failed": 0,
+            "k_domain_classes": {},
+            "mean_candidate_recall": null,
+            "mean_exact_rescored_top_k_overlap": null
+          },
+          "exhaustive-candidates": {
+            "candidate_recall_denominator": 1,
+            "executed": 1,
+            "failed": 0,
+            "k_domain_classes": {
+              "k<N": 1
+            },
+            "mean_candidate_recall": 1.0,
+            "mean_exact_rescored_top_k_overlap": 1.0
+          },
+          "unexecuted": 0
+        },
+        "classes": {
+          "abstention": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 1,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No calibration-only cutoff frozen; raw ranking is not abstention": 1
+            },
+            "unexecuted": 1,
+            "without_measured_failure": 0
+          },
+          "caveats": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 1,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No independently reviewed contract-derived AM175 research outcome/caveat assembler exists": 1
+            },
+            "unexecuted": 1,
+            "without_measured_failure": 0
+          },
+          "literal_status": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 1,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No reviewed native literal/status/exit/no-match comparison mapper": 1
+            },
+            "unexecuted": 1,
+            "without_measured_failure": 0
+          },
+          "native": {
+            "executed": 1,
+            "failed": 0,
+            "intended_denominator": 1,
+            "measured_denominator": 1,
+            "measured_failure_fraction": 0.0,
+            "prerequisites": {},
+            "unexecuted": 0,
+            "without_measured_failure": 1
+          },
+          "outcome": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 1,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No independently reviewed contract-derived AM175 research outcome/caveat assembler exists": 1
+            },
+            "unexecuted": 1,
+            "without_measured_failure": 0
+          },
+          "provider_canaries": {
+            "executed": 1,
+            "failed": 0,
+            "intended_denominator": 1,
+            "measured_denominator": 1,
+            "measured_failure_fraction": 0.0,
+            "prerequisites": {},
+            "unexecuted": 0,
+            "without_measured_failure": 1
+          },
+          "public_disclosure": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 1,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No actual public body/identifier/count/diagnostic surface mapper": 1
+            },
+            "unexecuted": 1,
+            "without_measured_failure": 0
+          },
+          "semantic": {
+            "executed": 1,
+            "failed": 0,
+            "intended_denominator": 1,
+            "measured_denominator": 1,
+            "measured_failure_fraction": 0.0,
+            "prerequisites": {},
+            "unexecuted": 0,
+            "without_measured_failure": 1
+          },
+          "typed": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 1,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "This case requests a different mechanism": 1
+            },
+            "unexecuted": 1,
+            "without_measured_failure": 0
+          }
+        },
+        "conflict_evidence_completeness": {
+          "executed": false,
+          "failed_predicates": [],
+          "prerequisites": [
+            "Raw primary ranks/edges do not implement an outcome or mandatory-caveat/evidence assembler"
+          ]
+        },
+        "expected_cells": 1,
+        "observed_cells": 1,
+        "semantic_raw_recall": {
+          "complete_required_set_denominator": 1,
+          "complete_required_sets": 1,
+          "domain_classes": {
+            "k<N": 1
+          },
+          "executed_empty_required_cells": 0,
+          "executed_nonempty_required_cells": 1,
+          "executed_required_label_denominator": 1,
+          "intended_required_label_denominator": 1,
+          "macro_recall_on_executed_nonempty_cells": 1.0,
+          "micro_recall_on_executed_required_labels": 1.0,
+          "required_hits": 1,
+          "unexecuted_required_label_count": 0
+        },
+        "typed_raw_paths": {
+          "executed_required_path_denominator": 0,
+          "fully_provenanced_edge_denominator": 0,
+          "intended_required_path_denominator": 0,
+          "matched_required_paths": 0,
+          "micro_relation_label_accuracy": null,
+          "micro_required_path_recall": null,
+          "unexecuted_required_path_count": 0,
+          "unverified_provenance_edge_count": 0
+        }
+      },
+      "observed_cells": 16,
+      "semantic_raw_recall": {
+        "complete_required_set_denominator": 9,
+        "complete_required_sets": 9,
+        "domain_classes": {
+          "k<N": 16
+        },
+        "executed_empty_required_cells": 7,
+        "executed_nonempty_required_cells": 9,
+        "executed_required_label_denominator": 12,
+        "intended_required_label_denominator": 12,
+        "macro_recall_on_executed_nonempty_cells": 1.0,
+        "micro_recall_on_executed_required_labels": 1.0,
+        "required_hits": 12,
+        "unexecuted_required_label_count": 0
+      },
+      "size": 10000,
+      "split": "calibration",
+      "typed_raw_paths": {
+        "executed_required_path_denominator": 0,
+        "fully_provenanced_edge_denominator": 0,
+        "intended_required_path_denominator": 0,
+        "matched_required_paths": 0,
+        "micro_relation_label_accuracy": null,
+        "micro_required_path_recall": null,
+        "unexecuted_required_path_count": 0,
+        "unverified_provenance_edge_count": 0
+      },
+      "variant": "base"
+    },
+    {
+      "ann": {
+        "budget<N": {
+          "candidate_recall_denominator": 0,
+          "executed": 0,
+          "failed": 0,
+          "k_domain_classes": {},
+          "mean_candidate_recall": null,
+          "mean_exact_rescored_top_k_overlap": null
+        },
+        "exhaustive-candidates": {
+          "candidate_recall_denominator": 59,
+          "executed": 59,
+          "failed": 1,
+          "k_domain_classes": {
+            "k<N": 59
+          },
+          "mean_candidate_recall": 1.0,
+          "mean_exact_rescored_top_k_overlap": 1.0
+        },
+        "unexecuted": 13
+      },
+      "classes": {
+        "abstention": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 72,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No calibration-only cutoff frozen; raw ranking is not abstention": 72
+          },
+          "unexecuted": 72,
+          "without_measured_failure": 0
+        },
+        "caveats": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 72,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No independently reviewed contract-derived AM175 research outcome/caveat assembler exists": 72
+          },
+          "unexecuted": 72,
+          "without_measured_failure": 0
+        },
+        "literal_status": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 72,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No reviewed native literal/status/exit/no-match comparison mapper": 72
+          },
+          "unexecuted": 72,
+          "without_measured_failure": 0
+        },
+        "native": {
+          "executed": 71,
+          "failed": 0,
+          "intended_denominator": 72,
+          "measured_denominator": 71,
+          "measured_failure_fraction": 0.0,
+          "prerequisites": {
+            "Actual stale-generation transition lacks a reviewed receipt verifier": 1
+          },
+          "unexecuted": 1,
+          "without_measured_failure": 71
+        },
+        "outcome": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 72,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No independently reviewed contract-derived AM175 research outcome/caveat assembler exists": 72
+          },
+          "unexecuted": 72,
+          "without_measured_failure": 0
+        },
+        "provider_canaries": {
+          "executed": 63,
+          "failed": 1,
+          "intended_denominator": 72,
+          "measured_denominator": 63,
+          "measured_failure_fraction": 0.015873015873015872,
+          "prerequisites": {
+            "Actual changed canonical source with a stale prior generation and reviewed fencing observation required; ordinary rebuild does not exercise stale state": 1,
+            "Unexecuted actual state transition requires its own reviewed controlled phase: approved-opaque-remote-alias-complete-generation": 1,
+            "Unexecuted actual state transition requires its own reviewed controlled phase: candidate-vector-fill-interrupted-no-prior-generation": 1,
+            "Unexecuted actual state transition requires its own reviewed controlled phase: configured-embedding-profile-changed-since-generation": 1,
+            "Unexecuted actual state transition requires its own reviewed controlled phase: embedding-service-stopped": 2,
+            "Unexecuted actual state transition requires its own reviewed controlled phase: only-generation-built-for-main-bank-state": 1,
+            "Unexecuted actual state transition requires its own reviewed controlled phase: prior-complete-generation-active-candidate-interrupted-no-source-change": 1,
+            "Unexecuted actual state transition requires its own reviewed controlled phase: remote-endpoint-configured-not-approved": 1
+          },
+          "unexecuted": 9,
+          "without_measured_failure": 62
+        },
+        "public_disclosure": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 72,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No actual public body/identifier/count/diagnostic surface mapper": 72
+          },
+          "unexecuted": 72,
+          "without_measured_failure": 0
+        },
+        "semantic": {
+          "executed": 59,
+          "failed": 1,
+          "intended_denominator": 72,
+          "measured_denominator": 59,
+          "measured_failure_fraction": 0.01694915254237288,
+          "prerequisites": {
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: approved-opaque-remote-alias-complete-generation": 1,
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: candidate-vector-fill-interrupted-no-prior-generation": 1,
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: configured-embedding-profile-changed-since-generation": 1,
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: embedding-service-stopped": 2,
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: only-generation-built-for-main-bank-state": 1,
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: prior-complete-generation-active-candidate-interrupted-no-source-change": 1,
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: ready-complete-generation": 1,
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: remote-endpoint-configured-not-approved": 1,
+            "Current recall cannot substitute another branch/revision for the observed checkout": 1,
+            "This case requests a different mechanism": 1,
+            "Unsafe query must not become returned context or audit content": 2
+          },
+          "unexecuted": 13,
+          "without_measured_failure": 58
+        },
+        "typed": {
+          "executed": 7,
+          "failed": 2,
+          "intended_denominator": 72,
+          "measured_denominator": 7,
+          "measured_failure_fraction": 0.2857142857142857,
+          "prerequisites": {
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: approved-opaque-remote-alias-complete-generation": 1,
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: candidate-vector-fill-interrupted-no-prior-generation": 1,
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: configured-embedding-profile-changed-since-generation": 1,
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: embedding-service-stopped": 2,
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: only-generation-built-for-main-bank-state": 1,
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: prior-complete-generation-active-candidate-interrupted-no-source-change": 1,
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: ready-complete-generation": 1,
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: remote-endpoint-configured-not-approved": 1,
+            "Current recall cannot substitute another branch/revision for the observed checkout": 1,
+            "Native AM175 has no reviewed historical endpoint qualification mapper; historical typed cell unexecuted": 2,
+            "Seed is not freshly native-qualified current guidance; no hidden/unsafe/historical endpoint disclosure": 3,
+            "This case requests a different mechanism": 48,
+            "Unsafe query must not become returned context or audit content": 2
+          },
+          "unexecuted": 65,
+          "without_measured_failure": 5
+        }
+      },
+      "conflict_evidence_completeness": {
+        "executed": false,
+        "failed_predicates": [],
+        "prerequisites": [
+          "Raw primary ranks/edges do not implement an outcome or mandatory-caveat/evidence assembler"
+        ]
+      },
+      "expected_cells": 72,
+      "no_content_overlap": {
+        "ann": {
+          "budget<N": {
+            "candidate_recall_denominator": 0,
+            "executed": 0,
+            "failed": 0,
+            "k_domain_classes": {},
+            "mean_candidate_recall": null,
+            "mean_exact_rescored_top_k_overlap": null
+          },
+          "exhaustive-candidates": {
+            "candidate_recall_denominator": 17,
+            "executed": 17,
+            "failed": 0,
+            "k_domain_classes": {
+              "k<N": 17
+            },
+            "mean_candidate_recall": 1.0,
+            "mean_exact_rescored_top_k_overlap": 1.0
+          },
+          "unexecuted": 2
+        },
+        "classes": {
+          "abstention": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 19,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No calibration-only cutoff frozen; raw ranking is not abstention": 19
+            },
+            "unexecuted": 19,
+            "without_measured_failure": 0
+          },
+          "caveats": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 19,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No independently reviewed contract-derived AM175 research outcome/caveat assembler exists": 19
+            },
+            "unexecuted": 19,
+            "without_measured_failure": 0
+          },
+          "literal_status": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 19,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No reviewed native literal/status/exit/no-match comparison mapper": 19
+            },
+            "unexecuted": 19,
+            "without_measured_failure": 0
+          },
+          "native": {
+            "executed": 19,
+            "failed": 0,
+            "intended_denominator": 19,
+            "measured_denominator": 19,
+            "measured_failure_fraction": 0.0,
+            "prerequisites": {},
+            "unexecuted": 0,
+            "without_measured_failure": 19
+          },
+          "outcome": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 19,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No independently reviewed contract-derived AM175 research outcome/caveat assembler exists": 19
+            },
+            "unexecuted": 19,
+            "without_measured_failure": 0
+          },
+          "provider_canaries": {
+            "executed": 17,
+            "failed": 1,
+            "intended_denominator": 19,
+            "measured_denominator": 17,
+            "measured_failure_fraction": 0.058823529411764705,
+            "prerequisites": {
+              "Unexecuted actual state transition requires its own reviewed controlled phase: approved-opaque-remote-alias-complete-generation": 1,
+              "Unexecuted actual state transition requires its own reviewed controlled phase: prior-complete-generation-active-candidate-interrupted-no-source-change": 1
+            },
+            "unexecuted": 2,
+            "without_measured_failure": 16
+          },
+          "public_disclosure": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 19,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No actual public body/identifier/count/diagnostic surface mapper": 19
+            },
+            "unexecuted": 19,
+            "without_measured_failure": 0
+          },
+          "semantic": {
+            "executed": 17,
+            "failed": 0,
+            "intended_denominator": 19,
+            "measured_denominator": 17,
+            "measured_failure_fraction": 0.0,
+            "prerequisites": {
+              "Actual runtime/generation transition lacks a reviewed receipt verifier: approved-opaque-remote-alias-complete-generation": 1,
+              "Actual runtime/generation transition lacks a reviewed receipt verifier: prior-complete-generation-active-candidate-interrupted-no-source-change": 1
+            },
+            "unexecuted": 2,
+            "without_measured_failure": 17
+          },
+          "typed": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 19,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "Actual runtime/generation transition lacks a reviewed receipt verifier: approved-opaque-remote-alias-complete-generation": 1,
+              "Actual runtime/generation transition lacks a reviewed receipt verifier: prior-complete-generation-active-candidate-interrupted-no-source-change": 1,
+              "This case requests a different mechanism": 17
+            },
+            "unexecuted": 19,
+            "without_measured_failure": 0
+          }
+        },
+        "conflict_evidence_completeness": {
+          "executed": false,
+          "failed_predicates": [],
+          "prerequisites": [
+            "Raw primary ranks/edges do not implement an outcome or mandatory-caveat/evidence assembler"
+          ]
+        },
+        "expected_cells": 19,
+        "observed_cells": 19,
+        "semantic_raw_recall": {
+          "complete_required_set_denominator": 17,
+          "complete_required_sets": 17,
+          "domain_classes": {
+            "k<N": 17
+          },
+          "executed_empty_required_cells": 0,
+          "executed_nonempty_required_cells": 17,
+          "executed_required_label_denominator": 19,
+          "intended_required_label_denominator": 21,
+          "macro_recall_on_executed_nonempty_cells": 1.0,
+          "micro_recall_on_executed_required_labels": 1.0,
+          "required_hits": 19,
+          "unexecuted_required_label_count": 2
+        },
+        "typed_raw_paths": {
+          "executed_required_path_denominator": 0,
+          "fully_provenanced_edge_denominator": 0,
+          "intended_required_path_denominator": 1,
+          "matched_required_paths": 0,
+          "micro_relation_label_accuracy": null,
+          "micro_required_path_recall": null,
+          "unexecuted_required_path_count": 1,
+          "unverified_provenance_edge_count": 0
+        }
+      },
+      "observed_cells": 72,
+      "semantic_raw_recall": {
+        "complete_required_set_denominator": 30,
+        "complete_required_sets": 29,
+        "domain_classes": {
+          "k<N": 59
+        },
+        "executed_empty_required_cells": 29,
+        "executed_nonempty_required_cells": 30,
+        "executed_required_label_denominator": 33,
+        "intended_required_label_denominator": 38,
+        "macro_recall_on_executed_nonempty_cells": 0.9666666666666667,
+        "micro_recall_on_executed_required_labels": 0.9696969696969697,
+        "required_hits": 32,
+        "unexecuted_required_label_count": 5
+      },
+      "size": 10000,
+      "split": "held-out",
+      "typed_raw_paths": {
+        "executed_required_path_denominator": 4,
+        "fully_provenanced_edge_denominator": 39,
+        "intended_required_path_denominator": 10,
+        "matched_required_paths": 1,
+        "micro_relation_label_accuracy": 1.0,
+        "micro_required_path_recall": 0.25,
+        "unexecuted_required_path_count": 6,
+        "unverified_provenance_edge_count": 0
+      },
+      "variant": "base"
+    },
+    {
+      "ann": {
+        "budget<N": {
+          "candidate_recall_denominator": 0,
+          "executed": 0,
+          "failed": 0,
+          "k_domain_classes": {},
+          "mean_candidate_recall": null,
+          "mean_exact_rescored_top_k_overlap": null
+        },
+        "exhaustive-candidates": {
+          "candidate_recall_denominator": 16,
+          "executed": 16,
+          "failed": 0,
+          "k_domain_classes": {
+            "k<N": 16
+          },
+          "mean_candidate_recall": 1.0,
+          "mean_exact_rescored_top_k_overlap": 1.0
+        },
+        "unexecuted": 0
+      },
+      "classes": {
+        "abstention": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 16,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No calibration-only cutoff frozen; raw ranking is not abstention": 16
+          },
+          "unexecuted": 16,
+          "without_measured_failure": 0
+        },
+        "caveats": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 16,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No independently reviewed contract-derived AM175 research outcome/caveat assembler exists": 16
+          },
+          "unexecuted": 16,
+          "without_measured_failure": 0
+        },
+        "literal_status": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 16,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No reviewed native literal/status/exit/no-match comparison mapper": 16
+          },
+          "unexecuted": 16,
+          "without_measured_failure": 0
+        },
+        "native": {
+          "executed": 16,
+          "failed": 0,
+          "intended_denominator": 16,
+          "measured_denominator": 16,
+          "measured_failure_fraction": 0.0,
+          "prerequisites": {},
+          "unexecuted": 0,
+          "without_measured_failure": 16
+        },
+        "outcome": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 16,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No independently reviewed contract-derived AM175 research outcome/caveat assembler exists": 16
+          },
+          "unexecuted": 16,
+          "without_measured_failure": 0
+        },
+        "provider_canaries": {
+          "executed": 16,
+          "failed": 0,
+          "intended_denominator": 16,
+          "measured_denominator": 16,
+          "measured_failure_fraction": 0.0,
+          "prerequisites": {},
+          "unexecuted": 0,
+          "without_measured_failure": 16
+        },
+        "public_disclosure": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 16,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No actual public body/identifier/count/diagnostic surface mapper": 16
+          },
+          "unexecuted": 16,
+          "without_measured_failure": 0
+        },
+        "semantic": {
+          "executed": 16,
+          "failed": 0,
+          "intended_denominator": 16,
+          "measured_denominator": 16,
+          "measured_failure_fraction": 0.0,
+          "prerequisites": {},
+          "unexecuted": 0,
+          "without_measured_failure": 16
+        },
+        "typed": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 16,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "This case requests a different mechanism": 16
+          },
+          "unexecuted": 16,
+          "without_measured_failure": 0
+        }
+      },
+      "conflict_evidence_completeness": {
+        "executed": false,
+        "failed_predicates": [],
+        "prerequisites": [
+          "Raw primary ranks/edges do not implement an outcome or mandatory-caveat/evidence assembler"
+        ]
+      },
+      "expected_cells": 16,
+      "no_content_overlap": {
+        "ann": {
+          "budget<N": {
+            "candidate_recall_denominator": 0,
+            "executed": 0,
+            "failed": 0,
+            "k_domain_classes": {},
+            "mean_candidate_recall": null,
+            "mean_exact_rescored_top_k_overlap": null
+          },
+          "exhaustive-candidates": {
+            "candidate_recall_denominator": 1,
+            "executed": 1,
+            "failed": 0,
+            "k_domain_classes": {
+              "k<N": 1
+            },
+            "mean_candidate_recall": 1.0,
+            "mean_exact_rescored_top_k_overlap": 1.0
+          },
+          "unexecuted": 0
+        },
+        "classes": {
+          "abstention": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 1,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No calibration-only cutoff frozen; raw ranking is not abstention": 1
+            },
+            "unexecuted": 1,
+            "without_measured_failure": 0
+          },
+          "caveats": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 1,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No independently reviewed contract-derived AM175 research outcome/caveat assembler exists": 1
+            },
+            "unexecuted": 1,
+            "without_measured_failure": 0
+          },
+          "literal_status": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 1,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No reviewed native literal/status/exit/no-match comparison mapper": 1
+            },
+            "unexecuted": 1,
+            "without_measured_failure": 0
+          },
+          "native": {
+            "executed": 1,
+            "failed": 0,
+            "intended_denominator": 1,
+            "measured_denominator": 1,
+            "measured_failure_fraction": 0.0,
+            "prerequisites": {},
+            "unexecuted": 0,
+            "without_measured_failure": 1
+          },
+          "outcome": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 1,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No independently reviewed contract-derived AM175 research outcome/caveat assembler exists": 1
+            },
+            "unexecuted": 1,
+            "without_measured_failure": 0
+          },
+          "provider_canaries": {
+            "executed": 1,
+            "failed": 0,
+            "intended_denominator": 1,
+            "measured_denominator": 1,
+            "measured_failure_fraction": 0.0,
+            "prerequisites": {},
+            "unexecuted": 0,
+            "without_measured_failure": 1
+          },
+          "public_disclosure": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 1,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No actual public body/identifier/count/diagnostic surface mapper": 1
+            },
+            "unexecuted": 1,
+            "without_measured_failure": 0
+          },
+          "semantic": {
+            "executed": 1,
+            "failed": 0,
+            "intended_denominator": 1,
+            "measured_denominator": 1,
+            "measured_failure_fraction": 0.0,
+            "prerequisites": {},
+            "unexecuted": 0,
+            "without_measured_failure": 1
+          },
+          "typed": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 1,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "This case requests a different mechanism": 1
+            },
+            "unexecuted": 1,
+            "without_measured_failure": 0
+          }
+        },
+        "conflict_evidence_completeness": {
+          "executed": false,
+          "failed_predicates": [],
+          "prerequisites": [
+            "Raw primary ranks/edges do not implement an outcome or mandatory-caveat/evidence assembler"
+          ]
+        },
+        "expected_cells": 1,
+        "observed_cells": 1,
+        "semantic_raw_recall": {
+          "complete_required_set_denominator": 1,
+          "complete_required_sets": 1,
+          "domain_classes": {
+            "k<N": 1
+          },
+          "executed_empty_required_cells": 0,
+          "executed_nonempty_required_cells": 1,
+          "executed_required_label_denominator": 1,
+          "intended_required_label_denominator": 1,
+          "macro_recall_on_executed_nonempty_cells": 1.0,
+          "micro_recall_on_executed_required_labels": 1.0,
+          "required_hits": 1,
+          "unexecuted_required_label_count": 0
+        },
+        "typed_raw_paths": {
+          "executed_required_path_denominator": 0,
+          "fully_provenanced_edge_denominator": 0,
+          "intended_required_path_denominator": 0,
+          "matched_required_paths": 0,
+          "micro_relation_label_accuracy": null,
+          "micro_required_path_recall": null,
+          "unexecuted_required_path_count": 0,
+          "unverified_provenance_edge_count": 0
+        }
+      },
+      "observed_cells": 16,
+      "semantic_raw_recall": {
+        "complete_required_set_denominator": 9,
+        "complete_required_sets": 9,
+        "domain_classes": {
+          "k<N": 16
+        },
+        "executed_empty_required_cells": 7,
+        "executed_nonempty_required_cells": 9,
+        "executed_required_label_denominator": 12,
+        "intended_required_label_denominator": 12,
+        "macro_recall_on_executed_nonempty_cells": 1.0,
+        "micro_recall_on_executed_required_labels": 1.0,
+        "required_hits": 12,
+        "unexecuted_required_label_count": 0
+      },
+      "size": 10000,
+      "split": "calibration",
+      "typed_raw_paths": {
+        "executed_required_path_denominator": 0,
+        "fully_provenanced_edge_denominator": 0,
+        "intended_required_path_denominator": 0,
+        "matched_required_paths": 0,
+        "micro_relation_label_accuracy": null,
+        "micro_required_path_recall": null,
+        "unexecuted_required_path_count": 0,
+        "unverified_provenance_edge_count": 0
+      },
+      "variant": "overlay"
+    },
+    {
+      "ann": {
+        "budget<N": {
+          "candidate_recall_denominator": 0,
+          "executed": 0,
+          "failed": 0,
+          "k_domain_classes": {},
+          "mean_candidate_recall": null,
+          "mean_exact_rescored_top_k_overlap": null
+        },
+        "exhaustive-candidates": {
+          "candidate_recall_denominator": 72,
+          "executed": 72,
+          "failed": 2,
+          "k_domain_classes": {
+            "k<N": 72
+          },
+          "mean_candidate_recall": 1.0,
+          "mean_exact_rescored_top_k_overlap": 1.0
+        },
+        "unexecuted": 13
+      },
+      "classes": {
+        "abstention": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 85,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No calibration-only cutoff frozen; raw ranking is not abstention": 85
+          },
+          "unexecuted": 85,
+          "without_measured_failure": 0
+        },
+        "caveats": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 85,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No independently reviewed contract-derived AM175 research outcome/caveat assembler exists": 85
+          },
+          "unexecuted": 85,
+          "without_measured_failure": 0
+        },
+        "literal_status": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 85,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No reviewed native literal/status/exit/no-match comparison mapper": 85
+          },
+          "unexecuted": 85,
+          "without_measured_failure": 0
+        },
+        "native": {
+          "executed": 84,
+          "failed": 0,
+          "intended_denominator": 85,
+          "measured_denominator": 84,
+          "measured_failure_fraction": 0.0,
+          "prerequisites": {
+            "Actual stale-generation transition lacks a reviewed receipt verifier": 1
+          },
+          "unexecuted": 1,
+          "without_measured_failure": 84
+        },
+        "outcome": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 85,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No independently reviewed contract-derived AM175 research outcome/caveat assembler exists": 85
+          },
+          "unexecuted": 85,
+          "without_measured_failure": 0
+        },
+        "provider_canaries": {
+          "executed": 76,
+          "failed": 1,
+          "intended_denominator": 85,
+          "measured_denominator": 76,
+          "measured_failure_fraction": 0.013157894736842105,
+          "prerequisites": {
+            "Actual changed canonical source with a stale prior generation and reviewed fencing observation required; ordinary rebuild does not exercise stale state": 1,
+            "Unexecuted actual state transition requires its own reviewed controlled phase: approved-opaque-remote-alias-complete-generation": 1,
+            "Unexecuted actual state transition requires its own reviewed controlled phase: candidate-vector-fill-interrupted-no-prior-generation": 1,
+            "Unexecuted actual state transition requires its own reviewed controlled phase: configured-embedding-profile-changed-since-generation": 1,
+            "Unexecuted actual state transition requires its own reviewed controlled phase: embedding-service-stopped": 2,
+            "Unexecuted actual state transition requires its own reviewed controlled phase: only-generation-built-for-main-bank-state": 1,
+            "Unexecuted actual state transition requires its own reviewed controlled phase: prior-complete-generation-active-candidate-interrupted-no-source-change": 1,
+            "Unexecuted actual state transition requires its own reviewed controlled phase: remote-endpoint-configured-not-approved": 1
+          },
+          "unexecuted": 9,
+          "without_measured_failure": 75
+        },
+        "public_disclosure": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 85,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No actual public body/identifier/count/diagnostic surface mapper": 85
+          },
+          "unexecuted": 85,
+          "without_measured_failure": 0
+        },
+        "semantic": {
+          "executed": 72,
+          "failed": 2,
+          "intended_denominator": 85,
+          "measured_denominator": 72,
+          "measured_failure_fraction": 0.027777777777777776,
+          "prerequisites": {
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: approved-opaque-remote-alias-complete-generation": 1,
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: candidate-vector-fill-interrupted-no-prior-generation": 1,
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: configured-embedding-profile-changed-since-generation": 1,
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: embedding-service-stopped": 2,
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: only-generation-built-for-main-bank-state": 1,
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: prior-complete-generation-active-candidate-interrupted-no-source-change": 1,
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: ready-complete-generation": 1,
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: remote-endpoint-configured-not-approved": 1,
+            "Current recall cannot substitute another branch/revision for the observed checkout": 1,
+            "This case requests a different mechanism": 1,
+            "Unsafe query must not become returned context or audit content": 2
+          },
+          "unexecuted": 13,
+          "without_measured_failure": 70
+        },
+        "typed": {
+          "executed": 10,
+          "failed": 5,
+          "intended_denominator": 85,
+          "measured_denominator": 10,
+          "measured_failure_fraction": 0.5,
+          "prerequisites": {
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: approved-opaque-remote-alias-complete-generation": 1,
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: candidate-vector-fill-interrupted-no-prior-generation": 1,
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: configured-embedding-profile-changed-since-generation": 1,
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: embedding-service-stopped": 2,
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: only-generation-built-for-main-bank-state": 1,
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: prior-complete-generation-active-candidate-interrupted-no-source-change": 1,
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: ready-complete-generation": 1,
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: remote-endpoint-configured-not-approved": 1,
+            "Current recall cannot substitute another branch/revision for the observed checkout": 1,
+            "Native AM175 has no reviewed historical endpoint qualification mapper; historical typed cell unexecuted": 2,
+            "Seed is not freshly native-qualified current guidance; no hidden/unsafe/historical endpoint disclosure": 3,
+            "This case requests a different mechanism": 58,
+            "Unsafe query must not become returned context or audit content": 2
+          },
+          "unexecuted": 75,
+          "without_measured_failure": 5
+        }
+      },
+      "conflict_evidence_completeness": {
+        "executed": false,
+        "failed_predicates": [],
+        "prerequisites": [
+          "Raw primary ranks/edges do not implement an outcome or mandatory-caveat/evidence assembler"
+        ]
+      },
+      "expected_cells": 85,
+      "no_content_overlap": {
+        "ann": {
+          "budget<N": {
+            "candidate_recall_denominator": 0,
+            "executed": 0,
+            "failed": 0,
+            "k_domain_classes": {},
+            "mean_candidate_recall": null,
+            "mean_exact_rescored_top_k_overlap": null
+          },
+          "exhaustive-candidates": {
+            "candidate_recall_denominator": 21,
+            "executed": 21,
+            "failed": 0,
+            "k_domain_classes": {
+              "k<N": 21
+            },
+            "mean_candidate_recall": 1.0,
+            "mean_exact_rescored_top_k_overlap": 1.0
+          },
+          "unexecuted": 2
+        },
+        "classes": {
+          "abstention": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 23,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No calibration-only cutoff frozen; raw ranking is not abstention": 23
+            },
+            "unexecuted": 23,
+            "without_measured_failure": 0
+          },
+          "caveats": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 23,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No independently reviewed contract-derived AM175 research outcome/caveat assembler exists": 23
+            },
+            "unexecuted": 23,
+            "without_measured_failure": 0
+          },
+          "literal_status": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 23,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No reviewed native literal/status/exit/no-match comparison mapper": 23
+            },
+            "unexecuted": 23,
+            "without_measured_failure": 0
+          },
+          "native": {
+            "executed": 23,
+            "failed": 0,
+            "intended_denominator": 23,
+            "measured_denominator": 23,
+            "measured_failure_fraction": 0.0,
+            "prerequisites": {},
+            "unexecuted": 0,
+            "without_measured_failure": 23
+          },
+          "outcome": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 23,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No independently reviewed contract-derived AM175 research outcome/caveat assembler exists": 23
+            },
+            "unexecuted": 23,
+            "without_measured_failure": 0
+          },
+          "provider_canaries": {
+            "executed": 21,
+            "failed": 1,
+            "intended_denominator": 23,
+            "measured_denominator": 21,
+            "measured_failure_fraction": 0.047619047619047616,
+            "prerequisites": {
+              "Unexecuted actual state transition requires its own reviewed controlled phase: approved-opaque-remote-alias-complete-generation": 1,
+              "Unexecuted actual state transition requires its own reviewed controlled phase: prior-complete-generation-active-candidate-interrupted-no-source-change": 1
+            },
+            "unexecuted": 2,
+            "without_measured_failure": 20
+          },
+          "public_disclosure": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 23,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No actual public body/identifier/count/diagnostic surface mapper": 23
+            },
+            "unexecuted": 23,
+            "without_measured_failure": 0
+          },
+          "semantic": {
+            "executed": 21,
+            "failed": 0,
+            "intended_denominator": 23,
+            "measured_denominator": 21,
+            "measured_failure_fraction": 0.0,
+            "prerequisites": {
+              "Actual runtime/generation transition lacks a reviewed receipt verifier: approved-opaque-remote-alias-complete-generation": 1,
+              "Actual runtime/generation transition lacks a reviewed receipt verifier: prior-complete-generation-active-candidate-interrupted-no-source-change": 1
+            },
+            "unexecuted": 2,
+            "without_measured_failure": 21
+          },
+          "typed": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 23,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "Actual runtime/generation transition lacks a reviewed receipt verifier: approved-opaque-remote-alias-complete-generation": 1,
+              "Actual runtime/generation transition lacks a reviewed receipt verifier: prior-complete-generation-active-candidate-interrupted-no-source-change": 1,
+              "This case requests a different mechanism": 21
+            },
+            "unexecuted": 23,
+            "without_measured_failure": 0
+          }
+        },
+        "conflict_evidence_completeness": {
+          "executed": false,
+          "failed_predicates": [],
+          "prerequisites": [
+            "Raw primary ranks/edges do not implement an outcome or mandatory-caveat/evidence assembler"
+          ]
+        },
+        "expected_cells": 23,
+        "observed_cells": 23,
+        "semantic_raw_recall": {
+          "complete_required_set_denominator": 21,
+          "complete_required_sets": 21,
+          "domain_classes": {
+            "k<N": 21
+          },
+          "executed_empty_required_cells": 0,
+          "executed_nonempty_required_cells": 21,
+          "executed_required_label_denominator": 23,
+          "intended_required_label_denominator": 25,
+          "macro_recall_on_executed_nonempty_cells": 1.0,
+          "micro_recall_on_executed_required_labels": 1.0,
+          "required_hits": 23,
+          "unexecuted_required_label_count": 2
+        },
+        "typed_raw_paths": {
+          "executed_required_path_denominator": 0,
+          "fully_provenanced_edge_denominator": 0,
+          "intended_required_path_denominator": 1,
+          "matched_required_paths": 0,
+          "micro_relation_label_accuracy": null,
+          "micro_required_path_recall": null,
+          "unexecuted_required_path_count": 1,
+          "unverified_provenance_edge_count": 0
+        }
+      },
+      "observed_cells": 85,
+      "semantic_raw_recall": {
+        "complete_required_set_denominator": 38,
+        "complete_required_sets": 36,
+        "domain_classes": {
+          "k<N": 72
+        },
+        "executed_empty_required_cells": 34,
+        "executed_nonempty_required_cells": 38,
+        "executed_required_label_denominator": 44,
+        "intended_required_label_denominator": 49,
+        "macro_recall_on_executed_nonempty_cells": 0.9671052631578947,
+        "micro_recall_on_executed_required_labels": 0.9545454545454546,
+        "required_hits": 42,
+        "unexecuted_required_label_count": 5
+      },
+      "size": 10000,
+      "split": "held-out",
+      "typed_raw_paths": {
+        "executed_required_path_denominator": 13,
+        "fully_provenanced_edge_denominator": 54,
+        "intended_required_path_denominator": 19,
+        "matched_required_paths": 9,
+        "micro_relation_label_accuracy": 1.0,
+        "micro_required_path_recall": 0.6923076923076923,
+        "unexecuted_required_path_count": 6,
+        "unverified_provenance_edge_count": 0
+      },
+      "variant": "overlay"
+    },
+    {
+      "ann": {
+        "budget<N": {
+          "candidate_recall_denominator": 0,
+          "executed": 0,
+          "failed": 0,
+          "k_domain_classes": {},
+          "mean_candidate_recall": null,
+          "mean_exact_rescored_top_k_overlap": null
+        },
+        "exhaustive-candidates": {
+          "candidate_recall_denominator": 16,
+          "executed": 16,
+          "failed": 0,
+          "k_domain_classes": {
+            "k<N": 16
+          },
+          "mean_candidate_recall": 1.0,
+          "mean_exact_rescored_top_k_overlap": 1.0
+        },
+        "unexecuted": 0
+      },
+      "classes": {
+        "abstention": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 16,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No calibration-only cutoff frozen; raw ranking is not abstention": 16
+          },
+          "unexecuted": 16,
+          "without_measured_failure": 0
+        },
+        "caveats": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 16,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No independently reviewed contract-derived AM175 research outcome/caveat assembler exists": 16
+          },
+          "unexecuted": 16,
+          "without_measured_failure": 0
+        },
+        "literal_status": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 16,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No reviewed native literal/status/exit/no-match comparison mapper": 16
+          },
+          "unexecuted": 16,
+          "without_measured_failure": 0
+        },
+        "native": {
+          "executed": 16,
+          "failed": 0,
+          "intended_denominator": 16,
+          "measured_denominator": 16,
+          "measured_failure_fraction": 0.0,
+          "prerequisites": {},
+          "unexecuted": 0,
+          "without_measured_failure": 16
+        },
+        "outcome": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 16,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No independently reviewed contract-derived AM175 research outcome/caveat assembler exists": 16
+          },
+          "unexecuted": 16,
+          "without_measured_failure": 0
+        },
+        "provider_canaries": {
+          "executed": 16,
+          "failed": 0,
+          "intended_denominator": 16,
+          "measured_denominator": 16,
+          "measured_failure_fraction": 0.0,
+          "prerequisites": {},
+          "unexecuted": 0,
+          "without_measured_failure": 16
+        },
+        "public_disclosure": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 16,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No actual public body/identifier/count/diagnostic surface mapper": 16
+          },
+          "unexecuted": 16,
+          "without_measured_failure": 0
+        },
+        "semantic": {
+          "executed": 16,
+          "failed": 0,
+          "intended_denominator": 16,
+          "measured_denominator": 16,
+          "measured_failure_fraction": 0.0,
+          "prerequisites": {},
+          "unexecuted": 0,
+          "without_measured_failure": 16
+        },
+        "typed": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 16,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "This case requests a different mechanism": 16
+          },
+          "unexecuted": 16,
+          "without_measured_failure": 0
+        }
+      },
+      "conflict_evidence_completeness": {
+        "executed": false,
+        "failed_predicates": [],
+        "prerequisites": [
+          "Raw primary ranks/edges do not implement an outcome or mandatory-caveat/evidence assembler"
+        ]
+      },
+      "expected_cells": 16,
+      "no_content_overlap": {
+        "ann": {
+          "budget<N": {
+            "candidate_recall_denominator": 0,
+            "executed": 0,
+            "failed": 0,
+            "k_domain_classes": {},
+            "mean_candidate_recall": null,
+            "mean_exact_rescored_top_k_overlap": null
+          },
+          "exhaustive-candidates": {
+            "candidate_recall_denominator": 1,
+            "executed": 1,
+            "failed": 0,
+            "k_domain_classes": {
+              "k<N": 1
+            },
+            "mean_candidate_recall": 1.0,
+            "mean_exact_rescored_top_k_overlap": 1.0
+          },
+          "unexecuted": 0
+        },
+        "classes": {
+          "abstention": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 1,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No calibration-only cutoff frozen; raw ranking is not abstention": 1
+            },
+            "unexecuted": 1,
+            "without_measured_failure": 0
+          },
+          "caveats": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 1,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No independently reviewed contract-derived AM175 research outcome/caveat assembler exists": 1
+            },
+            "unexecuted": 1,
+            "without_measured_failure": 0
+          },
+          "literal_status": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 1,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No reviewed native literal/status/exit/no-match comparison mapper": 1
+            },
+            "unexecuted": 1,
+            "without_measured_failure": 0
+          },
+          "native": {
+            "executed": 1,
+            "failed": 0,
+            "intended_denominator": 1,
+            "measured_denominator": 1,
+            "measured_failure_fraction": 0.0,
+            "prerequisites": {},
+            "unexecuted": 0,
+            "without_measured_failure": 1
+          },
+          "outcome": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 1,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No independently reviewed contract-derived AM175 research outcome/caveat assembler exists": 1
+            },
+            "unexecuted": 1,
+            "without_measured_failure": 0
+          },
+          "provider_canaries": {
+            "executed": 1,
+            "failed": 0,
+            "intended_denominator": 1,
+            "measured_denominator": 1,
+            "measured_failure_fraction": 0.0,
+            "prerequisites": {},
+            "unexecuted": 0,
+            "without_measured_failure": 1
+          },
+          "public_disclosure": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 1,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No actual public body/identifier/count/diagnostic surface mapper": 1
+            },
+            "unexecuted": 1,
+            "without_measured_failure": 0
+          },
+          "semantic": {
+            "executed": 1,
+            "failed": 0,
+            "intended_denominator": 1,
+            "measured_denominator": 1,
+            "measured_failure_fraction": 0.0,
+            "prerequisites": {},
+            "unexecuted": 0,
+            "without_measured_failure": 1
+          },
+          "typed": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 1,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "This case requests a different mechanism": 1
+            },
+            "unexecuted": 1,
+            "without_measured_failure": 0
+          }
+        },
+        "conflict_evidence_completeness": {
+          "executed": false,
+          "failed_predicates": [],
+          "prerequisites": [
+            "Raw primary ranks/edges do not implement an outcome or mandatory-caveat/evidence assembler"
+          ]
+        },
+        "expected_cells": 1,
+        "observed_cells": 1,
+        "semantic_raw_recall": {
+          "complete_required_set_denominator": 1,
+          "complete_required_sets": 1,
+          "domain_classes": {
+            "k<N": 1
+          },
+          "executed_empty_required_cells": 0,
+          "executed_nonempty_required_cells": 1,
+          "executed_required_label_denominator": 1,
+          "intended_required_label_denominator": 1,
+          "macro_recall_on_executed_nonempty_cells": 1.0,
+          "micro_recall_on_executed_required_labels": 1.0,
+          "required_hits": 1,
+          "unexecuted_required_label_count": 0
+        },
+        "typed_raw_paths": {
+          "executed_required_path_denominator": 0,
+          "fully_provenanced_edge_denominator": 0,
+          "intended_required_path_denominator": 0,
+          "matched_required_paths": 0,
+          "micro_relation_label_accuracy": null,
+          "micro_required_path_recall": null,
+          "unexecuted_required_path_count": 0,
+          "unverified_provenance_edge_count": 0
+        }
+      },
+      "observed_cells": 16,
+      "semantic_raw_recall": {
+        "complete_required_set_denominator": 9,
+        "complete_required_sets": 9,
+        "domain_classes": {
+          "k<N": 16
+        },
+        "executed_empty_required_cells": 7,
+        "executed_nonempty_required_cells": 9,
+        "executed_required_label_denominator": 12,
+        "intended_required_label_denominator": 12,
+        "macro_recall_on_executed_nonempty_cells": 1.0,
+        "micro_recall_on_executed_required_labels": 1.0,
+        "required_hits": 12,
+        "unexecuted_required_label_count": 0
+      },
+      "size": 50000,
+      "split": "calibration",
+      "typed_raw_paths": {
+        "executed_required_path_denominator": 0,
+        "fully_provenanced_edge_denominator": 0,
+        "intended_required_path_denominator": 0,
+        "matched_required_paths": 0,
+        "micro_relation_label_accuracy": null,
+        "micro_required_path_recall": null,
+        "unexecuted_required_path_count": 0,
+        "unverified_provenance_edge_count": 0
+      },
+      "variant": "base"
+    },
+    {
+      "ann": {
+        "budget<N": {
+          "candidate_recall_denominator": 0,
+          "executed": 0,
+          "failed": 0,
+          "k_domain_classes": {},
+          "mean_candidate_recall": null,
+          "mean_exact_rescored_top_k_overlap": null
+        },
+        "exhaustive-candidates": {
+          "candidate_recall_denominator": 31,
+          "executed": 31,
+          "failed": 0,
+          "k_domain_classes": {
+            "k<N": 31
+          },
+          "mean_candidate_recall": 1.0,
+          "mean_exact_rescored_top_k_overlap": 1.0
+        },
+        "unexecuted": 41
+      },
+      "classes": {
+        "abstention": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 72,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No calibration-only cutoff frozen; raw ranking is not abstention": 32,
+            "No hash-bound observation for this exact size/variant/ordinal": 40
+          },
+          "unexecuted": 72,
+          "without_measured_failure": 0
+        },
+        "caveats": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 72,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No hash-bound observation for this exact size/variant/ordinal": 40,
+            "No independently reviewed contract-derived AM175 research outcome/caveat assembler exists": 32
+          },
+          "unexecuted": 72,
+          "without_measured_failure": 0
+        },
+        "literal_status": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 72,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No hash-bound observation for this exact size/variant/ordinal": 40,
+            "No reviewed native literal/status/exit/no-match comparison mapper": 32
+          },
+          "unexecuted": 72,
+          "without_measured_failure": 0
+        },
+        "native": {
+          "executed": 32,
+          "failed": 0,
+          "intended_denominator": 72,
+          "measured_denominator": 32,
+          "measured_failure_fraction": 0.0,
+          "prerequisites": {
+            "No hash-bound observation for this exact size/variant/ordinal": 40
+          },
+          "unexecuted": 40,
+          "without_measured_failure": 32
+        },
+        "outcome": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 72,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No hash-bound observation for this exact size/variant/ordinal": 40,
+            "No independently reviewed contract-derived AM175 research outcome/caveat assembler exists": 32
+          },
+          "unexecuted": 72,
+          "without_measured_failure": 0
+        },
+        "provider_canaries": {
+          "executed": 32,
+          "failed": 0,
+          "intended_denominator": 72,
+          "measured_denominator": 32,
+          "measured_failure_fraction": 0.0,
+          "prerequisites": {
+            "No hash-bound observation for this exact size/variant/ordinal": 40
+          },
+          "unexecuted": 40,
+          "without_measured_failure": 32
+        },
+        "public_disclosure": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 72,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No actual public body/identifier/count/diagnostic surface mapper": 32,
+            "No hash-bound observation for this exact size/variant/ordinal": 40
+          },
+          "unexecuted": 72,
+          "without_measured_failure": 0
+        },
+        "semantic": {
+          "executed": 31,
+          "failed": 0,
+          "intended_denominator": 72,
+          "measured_denominator": 31,
+          "measured_failure_fraction": 0.0,
+          "prerequisites": {
+            "Current recall cannot substitute another branch/revision for the observed checkout": 1,
+            "No hash-bound observation for this exact size/variant/ordinal": 40
+          },
+          "unexecuted": 41,
+          "without_measured_failure": 31
+        },
+        "typed": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 72,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "Current recall cannot substitute another branch/revision for the observed checkout": 1,
+            "No hash-bound observation for this exact size/variant/ordinal": 40,
+            "This case requests a different mechanism": 31
+          },
+          "unexecuted": 72,
+          "without_measured_failure": 0
+        }
+      },
+      "conflict_evidence_completeness": {
+        "executed": false,
+        "failed_predicates": [],
+        "prerequisites": [
+          "Raw primary ranks/edges do not implement an outcome or mandatory-caveat/evidence assembler"
+        ]
+      },
+      "expected_cells": 72,
+      "no_content_overlap": {
+        "ann": {
+          "budget<N": {
+            "candidate_recall_denominator": 0,
+            "executed": 0,
+            "failed": 0,
+            "k_domain_classes": {},
+            "mean_candidate_recall": null,
+            "mean_exact_rescored_top_k_overlap": null
+          },
+          "exhaustive-candidates": {
+            "candidate_recall_denominator": 12,
+            "executed": 12,
+            "failed": 0,
+            "k_domain_classes": {
+              "k<N": 12
+            },
+            "mean_candidate_recall": 1.0,
+            "mean_exact_rescored_top_k_overlap": 1.0
+          },
+          "unexecuted": 7
+        },
+        "classes": {
+          "abstention": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 19,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No calibration-only cutoff frozen; raw ranking is not abstention": 12,
+              "No hash-bound observation for this exact size/variant/ordinal": 7
+            },
+            "unexecuted": 19,
+            "without_measured_failure": 0
+          },
+          "caveats": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 19,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No hash-bound observation for this exact size/variant/ordinal": 7,
+              "No independently reviewed contract-derived AM175 research outcome/caveat assembler exists": 12
+            },
+            "unexecuted": 19,
+            "without_measured_failure": 0
+          },
+          "literal_status": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 19,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No hash-bound observation for this exact size/variant/ordinal": 7,
+              "No reviewed native literal/status/exit/no-match comparison mapper": 12
+            },
+            "unexecuted": 19,
+            "without_measured_failure": 0
+          },
+          "native": {
+            "executed": 12,
+            "failed": 0,
+            "intended_denominator": 19,
+            "measured_denominator": 12,
+            "measured_failure_fraction": 0.0,
+            "prerequisites": {
+              "No hash-bound observation for this exact size/variant/ordinal": 7
+            },
+            "unexecuted": 7,
+            "without_measured_failure": 12
+          },
+          "outcome": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 19,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No hash-bound observation for this exact size/variant/ordinal": 7,
+              "No independently reviewed contract-derived AM175 research outcome/caveat assembler exists": 12
+            },
+            "unexecuted": 19,
+            "without_measured_failure": 0
+          },
+          "provider_canaries": {
+            "executed": 12,
+            "failed": 0,
+            "intended_denominator": 19,
+            "measured_denominator": 12,
+            "measured_failure_fraction": 0.0,
+            "prerequisites": {
+              "No hash-bound observation for this exact size/variant/ordinal": 7
+            },
+            "unexecuted": 7,
+            "without_measured_failure": 12
+          },
+          "public_disclosure": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 19,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No actual public body/identifier/count/diagnostic surface mapper": 12,
+              "No hash-bound observation for this exact size/variant/ordinal": 7
+            },
+            "unexecuted": 19,
+            "without_measured_failure": 0
+          },
+          "semantic": {
+            "executed": 12,
+            "failed": 0,
+            "intended_denominator": 19,
+            "measured_denominator": 12,
+            "measured_failure_fraction": 0.0,
+            "prerequisites": {
+              "No hash-bound observation for this exact size/variant/ordinal": 7
+            },
+            "unexecuted": 7,
+            "without_measured_failure": 12
+          },
+          "typed": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 19,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No hash-bound observation for this exact size/variant/ordinal": 7,
+              "This case requests a different mechanism": 12
+            },
+            "unexecuted": 19,
+            "without_measured_failure": 0
+          }
+        },
+        "conflict_evidence_completeness": {
+          "executed": false,
+          "failed_predicates": [],
+          "prerequisites": [
+            "Raw primary ranks/edges do not implement an outcome or mandatory-caveat/evidence assembler"
+          ]
+        },
+        "expected_cells": 19,
+        "observed_cells": 12,
+        "semantic_raw_recall": {
+          "complete_required_set_denominator": 12,
+          "complete_required_sets": 12,
+          "domain_classes": {
+            "k<N": 12
+          },
+          "executed_empty_required_cells": 0,
+          "executed_nonempty_required_cells": 12,
+          "executed_required_label_denominator": 14,
+          "intended_required_label_denominator": 21,
+          "macro_recall_on_executed_nonempty_cells": 1.0,
+          "micro_recall_on_executed_required_labels": 1.0,
+          "required_hits": 14,
+          "unexecuted_required_label_count": 7
+        },
+        "typed_raw_paths": {
+          "executed_required_path_denominator": 0,
+          "fully_provenanced_edge_denominator": 0,
+          "intended_required_path_denominator": 1,
+          "matched_required_paths": 0,
+          "micro_relation_label_accuracy": null,
+          "micro_required_path_recall": null,
+          "unexecuted_required_path_count": 1,
+          "unverified_provenance_edge_count": 0
+        }
+      },
+      "observed_cells": 32,
+      "semantic_raw_recall": {
+        "complete_required_set_denominator": 15,
+        "complete_required_sets": 15,
+        "domain_classes": {
+          "k<N": 31
+        },
+        "executed_empty_required_cells": 16,
+        "executed_nonempty_required_cells": 15,
+        "executed_required_label_denominator": 17,
+        "intended_required_label_denominator": 38,
+        "macro_recall_on_executed_nonempty_cells": 1.0,
+        "micro_recall_on_executed_required_labels": 1.0,
+        "required_hits": 17,
+        "unexecuted_required_label_count": 21
+      },
+      "size": 50000,
+      "split": "held-out",
+      "typed_raw_paths": {
+        "executed_required_path_denominator": 0,
+        "fully_provenanced_edge_denominator": 0,
+        "intended_required_path_denominator": 10,
+        "matched_required_paths": 0,
+        "micro_relation_label_accuracy": null,
+        "micro_required_path_recall": null,
+        "unexecuted_required_path_count": 10,
+        "unverified_provenance_edge_count": 0
+      },
+      "variant": "base"
+    },
+    {
+      "ann": {
+        "budget<N": {
+          "candidate_recall_denominator": 0,
+          "executed": 0,
+          "failed": 0,
+          "k_domain_classes": {},
+          "mean_candidate_recall": null,
+          "mean_exact_rescored_top_k_overlap": null
+        },
+        "exhaustive-candidates": {
+          "candidate_recall_denominator": 0,
+          "executed": 0,
+          "failed": 0,
+          "k_domain_classes": {},
+          "mean_candidate_recall": null,
+          "mean_exact_rescored_top_k_overlap": null
+        },
+        "unexecuted": 16
+      },
+      "classes": {
+        "abstention": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 16,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No hash-bound observation for this exact size/variant/ordinal": 16
+          },
+          "unexecuted": 16,
+          "without_measured_failure": 0
+        },
+        "caveats": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 16,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No hash-bound observation for this exact size/variant/ordinal": 16
+          },
+          "unexecuted": 16,
+          "without_measured_failure": 0
+        },
+        "literal_status": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 16,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No hash-bound observation for this exact size/variant/ordinal": 16
+          },
+          "unexecuted": 16,
+          "without_measured_failure": 0
+        },
+        "native": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 16,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No hash-bound observation for this exact size/variant/ordinal": 16
+          },
+          "unexecuted": 16,
+          "without_measured_failure": 0
+        },
+        "outcome": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 16,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No hash-bound observation for this exact size/variant/ordinal": 16
+          },
+          "unexecuted": 16,
+          "without_measured_failure": 0
+        },
+        "provider_canaries": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 16,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No hash-bound observation for this exact size/variant/ordinal": 16
+          },
+          "unexecuted": 16,
+          "without_measured_failure": 0
+        },
+        "public_disclosure": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 16,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No hash-bound observation for this exact size/variant/ordinal": 16
+          },
+          "unexecuted": 16,
+          "without_measured_failure": 0
+        },
+        "semantic": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 16,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No hash-bound observation for this exact size/variant/ordinal": 16
+          },
+          "unexecuted": 16,
+          "without_measured_failure": 0
+        },
+        "typed": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 16,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No hash-bound observation for this exact size/variant/ordinal": 16
+          },
+          "unexecuted": 16,
+          "without_measured_failure": 0
+        }
+      },
+      "conflict_evidence_completeness": {
+        "executed": false,
+        "failed_predicates": [],
+        "prerequisites": [
+          "Raw primary ranks/edges do not implement an outcome or mandatory-caveat/evidence assembler"
+        ]
+      },
+      "expected_cells": 16,
+      "no_content_overlap": {
+        "ann": {
+          "budget<N": {
+            "candidate_recall_denominator": 0,
+            "executed": 0,
+            "failed": 0,
+            "k_domain_classes": {},
+            "mean_candidate_recall": null,
+            "mean_exact_rescored_top_k_overlap": null
+          },
+          "exhaustive-candidates": {
+            "candidate_recall_denominator": 0,
+            "executed": 0,
+            "failed": 0,
+            "k_domain_classes": {},
+            "mean_candidate_recall": null,
+            "mean_exact_rescored_top_k_overlap": null
+          },
+          "unexecuted": 1
+        },
+        "classes": {
+          "abstention": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 1,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No hash-bound observation for this exact size/variant/ordinal": 1
+            },
+            "unexecuted": 1,
+            "without_measured_failure": 0
+          },
+          "caveats": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 1,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No hash-bound observation for this exact size/variant/ordinal": 1
+            },
+            "unexecuted": 1,
+            "without_measured_failure": 0
+          },
+          "literal_status": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 1,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No hash-bound observation for this exact size/variant/ordinal": 1
+            },
+            "unexecuted": 1,
+            "without_measured_failure": 0
+          },
+          "native": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 1,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No hash-bound observation for this exact size/variant/ordinal": 1
+            },
+            "unexecuted": 1,
+            "without_measured_failure": 0
+          },
+          "outcome": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 1,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No hash-bound observation for this exact size/variant/ordinal": 1
+            },
+            "unexecuted": 1,
+            "without_measured_failure": 0
+          },
+          "provider_canaries": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 1,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No hash-bound observation for this exact size/variant/ordinal": 1
+            },
+            "unexecuted": 1,
+            "without_measured_failure": 0
+          },
+          "public_disclosure": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 1,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No hash-bound observation for this exact size/variant/ordinal": 1
+            },
+            "unexecuted": 1,
+            "without_measured_failure": 0
+          },
+          "semantic": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 1,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No hash-bound observation for this exact size/variant/ordinal": 1
+            },
+            "unexecuted": 1,
+            "without_measured_failure": 0
+          },
+          "typed": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 1,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No hash-bound observation for this exact size/variant/ordinal": 1
+            },
+            "unexecuted": 1,
+            "without_measured_failure": 0
+          }
+        },
+        "conflict_evidence_completeness": {
+          "executed": false,
+          "failed_predicates": [],
+          "prerequisites": [
+            "Raw primary ranks/edges do not implement an outcome or mandatory-caveat/evidence assembler"
+          ]
+        },
+        "expected_cells": 1,
+        "observed_cells": 0,
+        "semantic_raw_recall": {
+          "complete_required_set_denominator": 0,
+          "complete_required_sets": 0,
+          "domain_classes": {},
+          "executed_empty_required_cells": 0,
+          "executed_nonempty_required_cells": 0,
+          "executed_required_label_denominator": 0,
+          "intended_required_label_denominator": 1,
+          "macro_recall_on_executed_nonempty_cells": null,
+          "micro_recall_on_executed_required_labels": null,
+          "required_hits": 0,
+          "unexecuted_required_label_count": 1
+        },
+        "typed_raw_paths": {
+          "executed_required_path_denominator": 0,
+          "fully_provenanced_edge_denominator": 0,
+          "intended_required_path_denominator": 0,
+          "matched_required_paths": 0,
+          "micro_relation_label_accuracy": null,
+          "micro_required_path_recall": null,
+          "unexecuted_required_path_count": 0,
+          "unverified_provenance_edge_count": 0
+        }
+      },
+      "observed_cells": 0,
+      "semantic_raw_recall": {
+        "complete_required_set_denominator": 0,
+        "complete_required_sets": 0,
+        "domain_classes": {},
+        "executed_empty_required_cells": 0,
+        "executed_nonempty_required_cells": 0,
+        "executed_required_label_denominator": 0,
+        "intended_required_label_denominator": 12,
+        "macro_recall_on_executed_nonempty_cells": null,
+        "micro_recall_on_executed_required_labels": null,
+        "required_hits": 0,
+        "unexecuted_required_label_count": 12
+      },
+      "size": 50000,
+      "split": "calibration",
+      "typed_raw_paths": {
+        "executed_required_path_denominator": 0,
+        "fully_provenanced_edge_denominator": 0,
+        "intended_required_path_denominator": 0,
+        "matched_required_paths": 0,
+        "micro_relation_label_accuracy": null,
+        "micro_required_path_recall": null,
+        "unexecuted_required_path_count": 0,
+        "unverified_provenance_edge_count": 0
+      },
+      "variant": "overlay"
+    },
+    {
+      "ann": {
+        "budget<N": {
+          "candidate_recall_denominator": 0,
+          "executed": 0,
+          "failed": 0,
+          "k_domain_classes": {},
+          "mean_candidate_recall": null,
+          "mean_exact_rescored_top_k_overlap": null
+        },
+        "exhaustive-candidates": {
+          "candidate_recall_denominator": 0,
+          "executed": 0,
+          "failed": 0,
+          "k_domain_classes": {},
+          "mean_candidate_recall": null,
+          "mean_exact_rescored_top_k_overlap": null
+        },
+        "unexecuted": 85
+      },
+      "classes": {
+        "abstention": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 85,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No hash-bound observation for this exact size/variant/ordinal": 85
+          },
+          "unexecuted": 85,
+          "without_measured_failure": 0
+        },
+        "caveats": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 85,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No hash-bound observation for this exact size/variant/ordinal": 85
+          },
+          "unexecuted": 85,
+          "without_measured_failure": 0
+        },
+        "literal_status": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 85,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No hash-bound observation for this exact size/variant/ordinal": 85
+          },
+          "unexecuted": 85,
+          "without_measured_failure": 0
+        },
+        "native": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 85,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No hash-bound observation for this exact size/variant/ordinal": 85
+          },
+          "unexecuted": 85,
+          "without_measured_failure": 0
+        },
+        "outcome": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 85,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No hash-bound observation for this exact size/variant/ordinal": 85
+          },
+          "unexecuted": 85,
+          "without_measured_failure": 0
+        },
+        "provider_canaries": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 85,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No hash-bound observation for this exact size/variant/ordinal": 85
+          },
+          "unexecuted": 85,
+          "without_measured_failure": 0
+        },
+        "public_disclosure": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 85,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No hash-bound observation for this exact size/variant/ordinal": 85
+          },
+          "unexecuted": 85,
+          "without_measured_failure": 0
+        },
+        "semantic": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 85,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No hash-bound observation for this exact size/variant/ordinal": 85
+          },
+          "unexecuted": 85,
+          "without_measured_failure": 0
+        },
+        "typed": {
+          "executed": 0,
+          "failed": 0,
+          "intended_denominator": 85,
+          "measured_denominator": 0,
+          "measured_failure_fraction": null,
+          "prerequisites": {
+            "No hash-bound observation for this exact size/variant/ordinal": 85
+          },
+          "unexecuted": 85,
+          "without_measured_failure": 0
+        }
+      },
+      "conflict_evidence_completeness": {
+        "executed": false,
+        "failed_predicates": [],
+        "prerequisites": [
+          "Raw primary ranks/edges do not implement an outcome or mandatory-caveat/evidence assembler"
+        ]
+      },
+      "expected_cells": 85,
+      "no_content_overlap": {
+        "ann": {
+          "budget<N": {
+            "candidate_recall_denominator": 0,
+            "executed": 0,
+            "failed": 0,
+            "k_domain_classes": {},
+            "mean_candidate_recall": null,
+            "mean_exact_rescored_top_k_overlap": null
+          },
+          "exhaustive-candidates": {
+            "candidate_recall_denominator": 0,
+            "executed": 0,
+            "failed": 0,
+            "k_domain_classes": {},
+            "mean_candidate_recall": null,
+            "mean_exact_rescored_top_k_overlap": null
+          },
+          "unexecuted": 23
+        },
+        "classes": {
+          "abstention": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 23,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No hash-bound observation for this exact size/variant/ordinal": 23
+            },
+            "unexecuted": 23,
+            "without_measured_failure": 0
+          },
+          "caveats": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 23,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No hash-bound observation for this exact size/variant/ordinal": 23
+            },
+            "unexecuted": 23,
+            "without_measured_failure": 0
+          },
+          "literal_status": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 23,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No hash-bound observation for this exact size/variant/ordinal": 23
+            },
+            "unexecuted": 23,
+            "without_measured_failure": 0
+          },
+          "native": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 23,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No hash-bound observation for this exact size/variant/ordinal": 23
+            },
+            "unexecuted": 23,
+            "without_measured_failure": 0
+          },
+          "outcome": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 23,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No hash-bound observation for this exact size/variant/ordinal": 23
+            },
+            "unexecuted": 23,
+            "without_measured_failure": 0
+          },
+          "provider_canaries": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 23,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No hash-bound observation for this exact size/variant/ordinal": 23
+            },
+            "unexecuted": 23,
+            "without_measured_failure": 0
+          },
+          "public_disclosure": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 23,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No hash-bound observation for this exact size/variant/ordinal": 23
+            },
+            "unexecuted": 23,
+            "without_measured_failure": 0
+          },
+          "semantic": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 23,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No hash-bound observation for this exact size/variant/ordinal": 23
+            },
+            "unexecuted": 23,
+            "without_measured_failure": 0
+          },
+          "typed": {
+            "executed": 0,
+            "failed": 0,
+            "intended_denominator": 23,
+            "measured_denominator": 0,
+            "measured_failure_fraction": null,
+            "prerequisites": {
+              "No hash-bound observation for this exact size/variant/ordinal": 23
+            },
+            "unexecuted": 23,
+            "without_measured_failure": 0
+          }
+        },
+        "conflict_evidence_completeness": {
+          "executed": false,
+          "failed_predicates": [],
+          "prerequisites": [
+            "Raw primary ranks/edges do not implement an outcome or mandatory-caveat/evidence assembler"
+          ]
+        },
+        "expected_cells": 23,
+        "observed_cells": 0,
+        "semantic_raw_recall": {
+          "complete_required_set_denominator": 0,
+          "complete_required_sets": 0,
+          "domain_classes": {},
+          "executed_empty_required_cells": 0,
+          "executed_nonempty_required_cells": 0,
+          "executed_required_label_denominator": 0,
+          "intended_required_label_denominator": 25,
+          "macro_recall_on_executed_nonempty_cells": null,
+          "micro_recall_on_executed_required_labels": null,
+          "required_hits": 0,
+          "unexecuted_required_label_count": 25
+        },
+        "typed_raw_paths": {
+          "executed_required_path_denominator": 0,
+          "fully_provenanced_edge_denominator": 0,
+          "intended_required_path_denominator": 1,
+          "matched_required_paths": 0,
+          "micro_relation_label_accuracy": null,
+          "micro_required_path_recall": null,
+          "unexecuted_required_path_count": 1,
+          "unverified_provenance_edge_count": 0
+        }
+      },
+      "observed_cells": 0,
+      "semantic_raw_recall": {
+        "complete_required_set_denominator": 0,
+        "complete_required_sets": 0,
+        "domain_classes": {},
+        "executed_empty_required_cells": 0,
+        "executed_nonempty_required_cells": 0,
+        "executed_required_label_denominator": 0,
+        "intended_required_label_denominator": 49,
+        "macro_recall_on_executed_nonempty_cells": null,
+        "micro_recall_on_executed_required_labels": null,
+        "required_hits": 0,
+        "unexecuted_required_label_count": 49
+      },
+      "size": 50000,
+      "split": "held-out",
+      "typed_raw_paths": {
+        "executed_required_path_denominator": 0,
+        "fully_provenanced_edge_denominator": 0,
+        "intended_required_path_denominator": 19,
+        "matched_required_paths": 0,
+        "micro_relation_label_accuracy": null,
+        "micro_required_path_recall": null,
+        "unexecuted_required_path_count": 19,
+        "unverified_provenance_edge_count": 0
+      },
+      "variant": "overlay"
+    }
+  ],
+  "costs": [
+    {
+      "actual": {
+        "actual_graph_stats": {
+          "argv": [
+            "podman",
+            "stats",
+            "--no-stream",
+            "--format",
+            "json",
+            "808018f246e376e7e6655eea55432ef410db27f2a34b32f5e795a00c01057b2c"
+          ],
+          "exit": 0,
+          "seconds": 0.1510619999608025,
+          "stderr": "",
+          "stdout": "[\n {\n  \"id\": \"808018f246e3\",\n  \"name\": \"am255-independent-1a771ad514d0-3b562c72\",\n  \"cpu_time\": \"21.792392s\",\n  \"cpu_percent\": \"11.37%\",\n  \"avg_cpu\": \"11.37%\",\n  \"mem_usage\": \"658.1MB / 12.88GB\",\n  \"mem_percent\": \"5.11%\",\n  \"net_io\": \"193.7kB / 3.976kB\",\n  \"block_io\": \"0B / 519.9MB\",\n  \"pids\": \"58\"\n }\n]\n"
+        },
+        "clean_performance_acceptance": false,
+        "disk_bytes": 373136675,
+        "elapsed_seconds": 195.29055962502025,
+        "shared_host": true
+      },
+      "missing_prerequisites": [
+        {
+          "case_ordinal": 35,
+          "prerequisite": "Current recall cannot substitute another branch/revision for the observed checkout",
+          "variant": "base"
+        },
+        {
+          "case_ordinal": 63,
+          "prerequisite": "Unsafe query must not become returned context or audit content",
+          "variant": "base"
+        },
+        {
+          "case_ordinal": 64,
+          "prerequisite": "Unsafe query must not become returned context or audit content",
+          "variant": "base"
+        },
+        {
+          "case_ordinal": 65,
+          "prerequisite": "Unexecuted actual state transition requires its own reviewed controlled phase: remote-endpoint-configured-not-approved",
+          "variant": "base"
+        },
+        {
+          "case_ordinal": 66,
+          "prerequisite": "Unexecuted actual state transition requires its own reviewed controlled phase: embedding-service-stopped",
+          "variant": "base"
+        },
+        {
+          "case_ordinal": 67,
+          "prerequisite": "Unexecuted actual state transition requires its own reviewed controlled phase: embedding-service-stopped",
+          "variant": "base"
+        },
+        {
+          "case_ordinal": 68,
+          "prerequisite": "Unexecuted actual state transition requires its own reviewed controlled phase: candidate-vector-fill-interrupted-no-prior-generation",
+          "variant": "base"
+        },
+        {
+          "case_ordinal": 69,
+          "prerequisite": "Unexecuted actual state transition requires its own reviewed controlled phase: prior-complete-generation-active-candidate-interrupted-no-source-change",
+          "variant": "base"
+        },
+        {
+          "case_ordinal": 70,
+          "prerequisite": "Unexecuted actual state transition requires its own reviewed controlled phase: only-generation-built-for-main-bank-state",
+          "variant": "base"
+        },
+        {
+          "case_ordinal": 71,
+          "prerequisite": "Unexecuted actual state transition requires its own reviewed controlled phase: configured-embedding-profile-changed-since-generation",
+          "variant": "base"
+        },
+        {
+          "case_ordinal": 72,
+          "prerequisite": "Unexecuted actual state transition requires its own reviewed controlled phase: approved-opaque-remote-alias-complete-generation",
+          "variant": "base"
+        },
+        {
+          "case_ordinal": 73,
+          "prerequisite": "Actual changed canonical source with a stale prior generation and reviewed fencing observation required; ordinary rebuild does not exercise stale state",
+          "variant": "base"
+        },
+        {
+          "case_ordinal": 35,
+          "prerequisite": "Current recall cannot substitute another branch/revision for the observed checkout",
+          "variant": "overlay"
+        },
+        {
+          "case_ordinal": 63,
+          "prerequisite": "Unsafe query must not become returned context or audit content",
+          "variant": "overlay"
+        },
+        {
+          "case_ordinal": 64,
+          "prerequisite": "Unsafe query must not become returned context or audit content",
+          "variant": "overlay"
+        },
+        {
+          "case_ordinal": 65,
+          "prerequisite": "Unexecuted actual state transition requires its own reviewed controlled phase: remote-endpoint-configured-not-approved",
+          "variant": "overlay"
+        },
+        {
+          "case_ordinal": 66,
+          "prerequisite": "Unexecuted actual state transition requires its own reviewed controlled phase: embedding-service-stopped",
+          "variant": "overlay"
+        },
+        {
+          "case_ordinal": 67,
+          "prerequisite": "Unexecuted actual state transition requires its own reviewed controlled phase: embedding-service-stopped",
+          "variant": "overlay"
+        },
+        {
+          "case_ordinal": 68,
+          "prerequisite": "Unexecuted actual state transition requires its own reviewed controlled phase: candidate-vector-fill-interrupted-no-prior-generation",
+          "variant": "overlay"
+        },
+        {
+          "case_ordinal": 69,
+          "prerequisite": "Unexecuted actual state transition requires its own reviewed controlled phase: prior-complete-generation-active-candidate-interrupted-no-source-change",
+          "variant": "overlay"
+        },
+        {
+          "case_ordinal": 70,
+          "prerequisite": "Unexecuted actual state transition requires its own reviewed controlled phase: only-generation-built-for-main-bank-state",
+          "variant": "overlay"
+        },
+        {
+          "case_ordinal": 71,
+          "prerequisite": "Unexecuted actual state transition requires its own reviewed controlled phase: configured-embedding-profile-changed-since-generation",
+          "variant": "overlay"
+        },
+        {
+          "case_ordinal": 72,
+          "prerequisite": "Unexecuted actual state transition requires its own reviewed controlled phase: approved-opaque-remote-alias-complete-generation",
+          "variant": "overlay"
+        },
+        {
+          "case_ordinal": 73,
+          "prerequisite": "Actual changed canonical source with a stale prior generation and reviewed fencing observation required; ordinary rebuild does not exercise stale state",
+          "variant": "overlay"
+        }
+      ],
+      "size": 1000
+    },
+    {
+      "actual": {
+        "actual_graph_stats": {
+          "argv": [
+            "podman",
+            "stats",
+            "--no-stream",
+            "--format",
+            "json",
+            "666de0d2ee4019faa7f054e7fb10c8ed0947e39d649c117809f10aeb82d77a88"
+          ],
+          "exit": 0,
+          "seconds": 0.2232622919837013,
+          "stderr": "",
+          "stdout": "[\n {\n  \"id\": \"666de0d2ee40\",\n  \"name\": \"am255-independent-1a771ad514d0-129ff3d0\",\n  \"cpu_time\": \"2m42.021725s\",\n  \"cpu_percent\": \"9.90%\",\n  \"avg_cpu\": \"9.90%\",\n  \"mem_usage\": \"1.043GB / 12.88GB\",\n  \"mem_percent\": \"8.10%\",\n  \"net_io\": \"195.7kB / 4.348kB\",\n  \"block_io\": \"402.3MB / 6.224GB\",\n  \"pids\": \"58\"\n }\n]\n"
+        },
+        "clean_performance_acceptance": false,
+        "disk_bytes": 3525569484,
+        "elapsed_seconds": 1647.2936590829631,
+        "shared_host": true
+      },
+      "missing_prerequisites": [
+        {
+          "case_ordinal": 35,
+          "prerequisite": "Current recall cannot substitute another branch/revision for the observed checkout",
+          "variant": "base"
+        },
+        {
+          "case_ordinal": 63,
+          "prerequisite": "Unsafe query must not become returned context or audit content",
+          "variant": "base"
+        },
+        {
+          "case_ordinal": 64,
+          "prerequisite": "Unsafe query must not become returned context or audit content",
+          "variant": "base"
+        },
+        {
+          "case_ordinal": 65,
+          "prerequisite": "Unexecuted actual state transition requires its own reviewed controlled phase: remote-endpoint-configured-not-approved",
+          "variant": "base"
+        },
+        {
+          "case_ordinal": 66,
+          "prerequisite": "Unexecuted actual state transition requires its own reviewed controlled phase: embedding-service-stopped",
+          "variant": "base"
+        },
+        {
+          "case_ordinal": 67,
+          "prerequisite": "Unexecuted actual state transition requires its own reviewed controlled phase: embedding-service-stopped",
+          "variant": "base"
+        },
+        {
+          "case_ordinal": 68,
+          "prerequisite": "Unexecuted actual state transition requires its own reviewed controlled phase: candidate-vector-fill-interrupted-no-prior-generation",
+          "variant": "base"
+        },
+        {
+          "case_ordinal": 69,
+          "prerequisite": "Unexecuted actual state transition requires its own reviewed controlled phase: prior-complete-generation-active-candidate-interrupted-no-source-change",
+          "variant": "base"
+        },
+        {
+          "case_ordinal": 70,
+          "prerequisite": "Unexecuted actual state transition requires its own reviewed controlled phase: only-generation-built-for-main-bank-state",
+          "variant": "base"
+        },
+        {
+          "case_ordinal": 71,
+          "prerequisite": "Unexecuted actual state transition requires its own reviewed controlled phase: configured-embedding-profile-changed-since-generation",
+          "variant": "base"
+        },
+        {
+          "case_ordinal": 72,
+          "prerequisite": "Unexecuted actual state transition requires its own reviewed controlled phase: approved-opaque-remote-alias-complete-generation",
+          "variant": "base"
+        },
+        {
+          "case_ordinal": 73,
+          "prerequisite": "Actual changed canonical source with a stale prior generation and reviewed fencing observation required; ordinary rebuild does not exercise stale state",
+          "variant": "base"
+        },
+        {
+          "case_ordinal": 35,
+          "prerequisite": "Current recall cannot substitute another branch/revision for the observed checkout",
+          "variant": "overlay"
+        },
+        {
+          "case_ordinal": 63,
+          "prerequisite": "Unsafe query must not become returned context or audit content",
+          "variant": "overlay"
+        },
+        {
+          "case_ordinal": 64,
+          "prerequisite": "Unsafe query must not become returned context or audit content",
+          "variant": "overlay"
+        },
+        {
+          "case_ordinal": 65,
+          "prerequisite": "Unexecuted actual state transition requires its own reviewed controlled phase: remote-endpoint-configured-not-approved",
+          "variant": "overlay"
+        },
+        {
+          "case_ordinal": 66,
+          "prerequisite": "Unexecuted actual state transition requires its own reviewed controlled phase: embedding-service-stopped",
+          "variant": "overlay"
+        },
+        {
+          "case_ordinal": 67,
+          "prerequisite": "Unexecuted actual state transition requires its own reviewed controlled phase: embedding-service-stopped",
+          "variant": "overlay"
+        },
+        {
+          "case_ordinal": 68,
+          "prerequisite": "Unexecuted actual state transition requires its own reviewed controlled phase: candidate-vector-fill-interrupted-no-prior-generation",
+          "variant": "overlay"
+        },
+        {
+          "case_ordinal": 69,
+          "prerequisite": "Unexecuted actual state transition requires its own reviewed controlled phase: prior-complete-generation-active-candidate-interrupted-no-source-change",
+          "variant": "overlay"
+        },
+        {
+          "case_ordinal": 70,
+          "prerequisite": "Unexecuted actual state transition requires its own reviewed controlled phase: only-generation-built-for-main-bank-state",
+          "variant": "overlay"
+        },
+        {
+          "case_ordinal": 71,
+          "prerequisite": "Unexecuted actual state transition requires its own reviewed controlled phase: configured-embedding-profile-changed-since-generation",
+          "variant": "overlay"
+        },
+        {
+          "case_ordinal": 72,
+          "prerequisite": "Unexecuted actual state transition requires its own reviewed controlled phase: approved-opaque-remote-alias-complete-generation",
+          "variant": "overlay"
+        },
+        {
+          "case_ordinal": 73,
+          "prerequisite": "Actual changed canonical source with a stale prior generation and reviewed fencing observation required; ordinary rebuild does not exercise stale state",
+          "variant": "overlay"
+        }
+      ],
+      "size": 10000
+    },
+    {
+      "actual": {
+        "actual_graph_stats": {
+          "argv": [
+            "podman",
+            "stats",
+            "--no-stream",
+            "--format",
+            "json",
+            "ea6a844cd7a02912414e6d094c0e55ade1d43c0a0a78b94dda3f6c2d1a4cb43e"
+          ],
+          "exit": 0,
+          "seconds": 0.3308622919721529,
+          "stderr": "",
+          "stdout": "[\n {\n  \"id\": \"ea6a844cd7a0\",\n  \"name\": \"am255-independent-1a771ad514d0-1fff5bff\",\n  \"cpu_time\": \"1m31.935132s\",\n  \"cpu_percent\": \"1.39%\",\n  \"avg_cpu\": \"1.39%\",\n  \"mem_usage\": \"2.977GB / 12.88GB\",\n  \"mem_percent\": \"23.10%\",\n  \"net_io\": \"218.9kB / 4.434kB\",\n  \"block_io\": \"99.32MB / 5.099GB\",\n  \"pids\": \"58\"\n }\n]\n"
+        },
+        "clean_performance_acceptance": false,
+        "disk_bytes": 17405194888,
+        "elapsed_seconds": 6627.749639042013,
+        "shared_host": true
+      },
+      "missing_prerequisites": [
+        {
+          "case_ordinal": 35,
+          "prerequisite": "Current recall cannot substitute another branch/revision for the observed checkout",
+          "variant": "base"
+        }
+      ],
+      "size": 50000
+    }
+  ],
+  "cutoff": {
+    "abstention": "unexecuted",
+    "executed": false,
+    "held_out_tuning": false,
+    "prerequisite": "No calibration-only cutoff method/value frozen"
+  },
+  "limitations": [
+    "Raw scratch research only; no overall G1, production feature, profile, legal or operator acceptance.",
+    "Base/overlay counterparts are controls, not additional independent labels.",
+    "No semantic cutoff is derived or applied; abstention is unexecuted.",
+    "No semantic-result outcome/caveat/public disclosure or literal/status mapper is implemented.",
+    "Provider/canonical metadata are private scientific evidence, not a production diagnostic surface.",
+    "ANN uses independent budget 16; raw engine similarity is never accepted as signed cosine.",
+    "Quality/resource thresholds are proposed, not operator-frozen acceptance.",
+    "Earlier mechanism controls fill none of these suite cells; no synthesized answers or coding benefit."
+  ],
+  "cleanup": {
+    "sizes": [
+      {
+        "graph": {
+          "borrowed_artifacts_untouched": true,
+          "forensic_erasure_claim": false,
+          "resources": [
+            {
+              "absent": true,
+              "resource": {
+                "id": "808018f246e376e7e6655eea55432ef410db27f2a34b32f5e795a00c01057b2c",
+                "name": "am255-independent-1a771ad514d0-3b562c72",
+                "type": "container"
+              }
+            },
+            {
+              "absent": true,
+              "resource": {
+                "created": "2026-11-06T17:50:12.251668859-08:00",
+                "name": "am255-independent-1a771ad514d0-3b562c72-data",
+                "type": "volume"
+              }
+            },
+            {
+              "absent": true,
+              "resource": {
+                "created": "2026-11-06T17:50:12.567418867-08:00",
+                "name": "am255-independent-1a771ad514d0-3b562c72-logs",
+                "type": "volume"
+              }
+            }
+          ],
+          "status": "disposed"
+        },
+        "model": {
+          "exit": 0,
+          "pid": 14548,
+          "reaped": true,
+          "run_id": "1a771ad514d04364ac7aec4d92c0d0d0"
+        },
+        "model_finalization_error": null
+      },
+      {
+        "graph": {
+          "borrowed_artifacts_untouched": true,
+          "forensic_erasure_claim": false,
+          "resources": [
+            {
+              "absent": true,
+              "resource": {
+                "id": "666de0d2ee4019faa7f054e7fb10c8ed0947e39d649c117809f10aeb82d77a88",
+                "name": "am255-independent-1a771ad514d0-129ff3d0",
+                "type": "container"
+              }
+            },
+            {
+              "absent": true,
+              "resource": {
+                "created": "2026-11-06T17:53:26.98790535-08:00",
+                "name": "am255-independent-1a771ad514d0-129ff3d0-data",
+                "type": "volume"
+              }
+            },
+            {
+              "absent": true,
+              "resource": {
+                "created": "2026-11-06T17:53:27.245801789-08:00",
+                "name": "am255-independent-1a771ad514d0-129ff3d0-logs",
+                "type": "volume"
+              }
+            }
+          ],
+          "status": "disposed"
+        },
+        "model": {
+          "exit": 0,
+          "pid": 17033,
+          "reaped": true,
+          "run_id": "1a771ad514d04364ac7aec4d92c0d0d0"
+        },
+        "model_finalization_error": null
+      },
+      {
+        "graph": {
+          "borrowed_artifacts_untouched": true,
+          "forensic_erasure_claim": false,
+          "resources": [
+            {
+              "absent": true,
+              "resource": {
+                "id": "ea6a844cd7a02912414e6d094c0e55ade1d43c0a0a78b94dda3f6c2d1a4cb43e",
+                "name": "am255-independent-1a771ad514d0-1fff5bff",
+                "type": "container"
+              }
+            },
+            {
+              "absent": true,
+              "resource": {
+                "created": "2026-11-06T18:20:55.150213449-08:00",
+                "name": "am255-independent-1a771ad514d0-1fff5bff-data",
+                "type": "volume"
+              }
+            },
+            {
+              "absent": true,
+              "resource": {
+                "created": "2026-11-06T18:20:55.435240715-08:00",
+                "name": "am255-independent-1a771ad514d0-1fff5bff-logs",
+                "type": "volume"
+              }
+            }
+          ],
+          "status": "disposed"
+        },
+        "model": {
+          "exit": 0,
+          "pid": 51731,
+          "reaped": true,
+          "run_id": "1a771ad514d04364ac7aec4d92c0d0d0"
+        },
+        "model_finalization_error": null
+      }
+    ],
+    "status": "erasure-pending"
+  },
+  "interpretation": {
+    "complete_experiment": false,
+    "unexecuted_cells": "Remain unexecuted with original denominators and explicit prerequisites; not passes.",
+    "ann": "All executed domains in this attempt are exhaustive-candidates; budget<N remains unexecuted. Perfect overlap here does not qualify bounded ANN recall.",
+    "safety_and_quality": "Measured semantic, typed and provider-canary failure predicates remain failures pending independent causal interpretation; no reinterpretation or scoring change in this record.",
+    "failed_runtime": "50k CREATE VECTOR INDEX unique-storage-access failure remains failed; offline scoring does not repair or complete execution.",
+    "production": "No semantic production implementation, legal/operator/profile/target approval or downstream readiness inferred."
+  },
+  "raw_private_bindings": {
+    "255-failed-run-offline-score-20261107.json": "23966c5231cb7b51ebf36c2f226d7e190f4b685a52fc2ce8eccf88860ce841cf",
+    "255-failed-run-offline-score-20261107-canonical.json": "6d9dc80392ef032c4435285c6569e9a206e4133bad6d41fb97f9d6c464927029",
+    "failed-allsize-offline-score-canonical-controller-20261107.json": "e37c267ce01d8747e7d69cc3f667d654d024024a05a6b7e79d6d3db07fcda64e"
+  },
+  "initial_symlink_refusal": "First /tmp path was correctly integrity-rejected before oracle reading; rerun used canonical /private/tmp source paths without changing evidence or scorer.",
+  "failed_cells": [
+    {
+      "size": 1000,
+      "variant": "base",
+      "case_id": "e-id-intersection",
+      "case_ordinal": 58,
+      "failures": {
+        "semantic": [
+          "Required primary missing from scorer-only top-K"
+        ]
+      }
+    },
+    {
+      "size": 1000,
+      "variant": "base",
+      "case_id": "m-delete-receipt-rebuilt",
+      "case_ordinal": 76,
+      "failures": {
+        "provider_canaries": [
+          "Forbidden source sent to provider"
+        ]
+      }
+    },
+    {
+      "size": 1000,
+      "variant": "base",
+      "case_id": "r-journaling-component",
+      "case_ordinal": 85,
+      "failures": {
+        "typed": [
+          "Required recorded typed path missing",
+          "Typed required current primary missing"
+        ]
+      }
+    },
+    {
+      "size": 1000,
+      "variant": "base",
+      "case_id": "r-ledger-component",
+      "case_ordinal": 86,
+      "failures": {
+        "typed": [
+          "Required recorded typed path missing",
+          "Typed required current primary missing"
+        ]
+      }
+    },
+    {
+      "size": 1000,
+      "variant": "overlay",
+      "case_id": "e-id-intersection",
+      "case_ordinal": 58,
+      "failures": {
+        "semantic": [
+          "Required primary missing from scorer-only top-K"
+        ]
+      }
+    },
+    {
+      "size": 1000,
+      "variant": "overlay",
+      "case_id": "m-delete-receipt-rebuilt",
+      "case_ordinal": 76,
+      "failures": {
+        "provider_canaries": [
+          "Forbidden source sent to provider"
+        ]
+      }
+    },
+    {
+      "size": 1000,
+      "variant": "overlay",
+      "case_id": "r-journaling-component",
+      "case_ordinal": 85,
+      "failures": {
+        "typed": [
+          "Required recorded typed path missing",
+          "Typed required current primary missing"
+        ]
+      }
+    },
+    {
+      "size": 1000,
+      "variant": "overlay",
+      "case_id": "r-ledger-component",
+      "case_ordinal": 86,
+      "failures": {
+        "typed": [
+          "Required recorded typed path missing",
+          "Typed required current primary missing"
+        ]
+      }
+    },
+    {
+      "size": 1000,
+      "variant": "overlay",
+      "case_id": "ov-batch-attempts",
+      "case_ordinal": 89,
+      "failures": {
+        "semantic": [
+          "Required primary missing from scorer-only top-K"
+        ],
+        "typed": [
+          "Required recorded typed path missing",
+          "Typed required current primary missing"
+        ]
+      }
+    },
+    {
+      "size": 1000,
+      "variant": "overlay",
+      "case_id": "ov-evidence-chain",
+      "case_ordinal": 98,
+      "failures": {
+        "typed": [
+          "Typed required current primary missing"
+        ]
+      }
+    },
+    {
+      "size": 1000,
+      "variant": "overlay",
+      "case_id": "ov-hidden-derivation",
+      "case_ordinal": 99,
+      "failures": {
+        "typed": [
+          "Typed required current primary missing"
+        ]
+      }
+    },
+    {
+      "size": 10000,
+      "variant": "base",
+      "case_id": "e-id-intersection",
+      "case_ordinal": 58,
+      "failures": {
+        "semantic": [
+          "Required primary missing from scorer-only top-K"
+        ]
+      }
+    },
+    {
+      "size": 10000,
+      "variant": "base",
+      "case_id": "m-delete-receipt-rebuilt",
+      "case_ordinal": 76,
+      "failures": {
+        "provider_canaries": [
+          "Forbidden source sent to provider"
+        ]
+      }
+    },
+    {
+      "size": 10000,
+      "variant": "base",
+      "case_id": "r-journaling-component",
+      "case_ordinal": 85,
+      "failures": {
+        "typed": [
+          "Required recorded typed path missing",
+          "Typed required current primary missing"
+        ]
+      }
+    },
+    {
+      "size": 10000,
+      "variant": "base",
+      "case_id": "r-ledger-component",
+      "case_ordinal": 86,
+      "failures": {
+        "typed": [
+          "Required recorded typed path missing",
+          "Typed required current primary missing"
+        ]
+      }
+    },
+    {
+      "size": 10000,
+      "variant": "overlay",
+      "case_id": "e-id-intersection",
+      "case_ordinal": 58,
+      "failures": {
+        "semantic": [
+          "Required primary missing from scorer-only top-K"
+        ]
+      }
+    },
+    {
+      "size": 10000,
+      "variant": "overlay",
+      "case_id": "m-delete-receipt-rebuilt",
+      "case_ordinal": 76,
+      "failures": {
+        "provider_canaries": [
+          "Forbidden source sent to provider"
+        ]
+      }
+    },
+    {
+      "size": 10000,
+      "variant": "overlay",
+      "case_id": "r-journaling-component",
+      "case_ordinal": 85,
+      "failures": {
+        "typed": [
+          "Required recorded typed path missing",
+          "Typed required current primary missing"
+        ]
+      }
+    },
+    {
+      "size": 10000,
+      "variant": "overlay",
+      "case_id": "r-ledger-component",
+      "case_ordinal": 86,
+      "failures": {
+        "typed": [
+          "Required recorded typed path missing",
+          "Typed required current primary missing"
+        ]
+      }
+    },
+    {
+      "size": 10000,
+      "variant": "overlay",
+      "case_id": "ov-batch-attempts",
+      "case_ordinal": 89,
+      "failures": {
+        "semantic": [
+          "Required primary missing from scorer-only top-K"
+        ],
+        "typed": [
+          "Required recorded typed path missing",
+          "Typed required current primary missing"
+        ]
+      }
+    },
+    {
+      "size": 10000,
+      "variant": "overlay",
+      "case_id": "ov-evidence-chain",
+      "case_ordinal": 98,
+      "failures": {
+        "typed": [
+          "Typed required current primary missing"
+        ]
+      }
+    },
+    {
+      "size": 10000,
+      "variant": "overlay",
+      "case_id": "ov-hidden-derivation",
+      "case_ordinal": 99,
+      "failures": {
+        "typed": [
+          "Typed required current primary missing"
+        ]
+      }
+    }
+  ]
+}
