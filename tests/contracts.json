@@ -5,6 +5,7 @@
     {"name": "layout-recovery-publication", "layer": "concurrency", "scope": "v0.0.15", "path": "tests/contracts/test_layout_recovery_publication.py"},
     {"name": "layout-recovery-retention", "layer": "bank", "scope": "v0.0.15", "path": "tests/contracts/test_layout_recovery_retention.py"},
     {"name": "layout-recovery-frontier", "layer": "bank", "scope": "v0.0.15", "path": "tests/contracts/test_layout_recovery_frontier.py"},
+    {"name": "layout-recovery-legacy-consumers", "layer": "lifecycle", "scope": "v0.0.15", "path": "tests/contracts/test_layout_recovery_legacy.py"},
     {"name": "held-private-source-enrollment", "layer": "client", "scope": "v0.0.15", "path": "tests/contracts/test_held_source_enrollment.py"},
     {"name": "omp-stored-projection", "layer": "client", "scope": "v0.0.15", "path": "tests/contracts/test_omp_projection.py"},
     {"name": "omp-native-source-admission", "layer": "client", "scope": "v0.0.15", "path": "tests/contracts/test_omp_boundary.py", "tests": ["NativeSources.test_long_segment_uses_two_shared_observations_and_ingest_is_idempotent", "NativeSources.test_admission_requires_sealed_registered_segment", "NativeSources.test_gap_refuses_both_assessment_outcomes_and_preserves_marker", "NativeSources.test_capacity_retains_arrival_then_reuses_reference_after_capacity_frees", "NativeSources.test_root_wake_is_once_and_later_human_carries_unassessed_old_source", "StoredBatchControls"]},

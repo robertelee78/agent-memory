@@ -168,6 +168,15 @@ authored cases alone do not prove repair of the unavailable original incident,
 platform/legacy-reader crash behavior, native provider sessions or release
 publication/fresh-second-clone acceptance.
 
+The registered `layout-recovery-legacy-consumers` contract uses the complete
+published v0.0.14 portable archive offline, checking its release-asset digest and
+every archived file's bytes and mode before execution. It exercises the actual
+old CLI against a pending layout hold and checks preservation of the bank,
+private recovery operation, staged index, HEAD and feature bytes. This is a
+cooperative mediated-reader check, not a fence against direct edits, already
+running readers, other installations or copied checkouts. The fixture records
+release provenance; it does not claim independent signature verification.
+
 `LayoutRecoveryInventoryBounds` in the same module exercises the actual raw
 observer with 67,108,864 source bytes, 65,536 ordinary source files and 131,072
 physical directory entries, then one over each limit. It checks the complete
