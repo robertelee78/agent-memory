@@ -149,37 +149,46 @@ class HeldSourceEnrollment(unittest.TestCase):
                                  source_reference='/private/fixture.jsonl')
             self.assertEqual(sources.inspect(repo, 'claude', session, lifecycle)['sources'][0]['observation_id'], first['observation_id'])
 
-    def test_error_and_hard_exit_boundaries_reconcile_one_original_observation(self):
-        stages = ('before-intent', 'after-intent', 'before-index', 'before-source',
-                  'after-source', 'after-index', 'before-final-recheck')
+    def assert_fault_boundaries(self, mode, stages):
         with World() as world, patch.dict(os.environ, world.env, clear=True):
             _, repo, bank, operation, directory, original, body = self.fixture(world)
             before = self.snapshot(world, repo, bank)
-            for mode in ('error', 'exit'):
-                for stage in stages:
-                    with self.subTest(mode=mode, stage=stage):
-                        session, lifecycle, event = uid(), uid(), uid()
-                        failed = self.child_register(world, repo, session, lifecycle, event,
-                                                     fault='hold-source-' + stage, mode=mode)
-                        self.assertEqual(failed.returncode, 86 if mode == 'exit' else 1, failed.stderr)
-                        _, _, _, turn, identity = sources.private_namespace(repo, 'claude', session, lifecycle)
-                        intents = sources.enrollment_inventory(turn, identity)
-                        observation = intents[0]['observation_id'] if intents else None
-                        if observation is not None:
-                            backlog = sources.backlog(repo, 'claude')
-                            self.assertTrue(any(item['observation_id'] == observation
-                                for row in backlog['turns'] for item in row['pending']))
-                        completed = self.child_register(world, repo, session, lifecycle, event)
-                        self.assertEqual(completed.returncode, 0, completed.stderr)
-                        registered = json.loads(completed.stdout)
-                        if observation is not None:
-                            self.assertEqual(registered['observation_id'], observation)
-                        current = sources.inspect(repo, 'claude', session, lifecycle)
-                        self.assertEqual(len(current['sources']), 1)
-                        self.assertFalse(current['complete'])
-                        self.assertEqual(sources.enrollment_inventory(turn, identity)[0]['state'], 'registered')
+            for stage in stages:
+                with self.subTest(mode=mode, stage=stage):
+                    session, lifecycle, event = uid(), uid(), uid()
+                    failed = self.child_register(world, repo, session, lifecycle, event,
+                                                 fault='hold-source-' + stage, mode=mode)
+                    self.assertEqual(failed.returncode, 86 if mode == 'exit' else 1, failed.stderr)
+                    _, _, _, turn, identity = sources.private_namespace(repo, 'claude', session, lifecycle)
+                    intents = sources.enrollment_inventory(turn, identity)
+                    observation = intents[0]['observation_id'] if intents else None
+                    if observation is not None:
+                        backlog = sources.backlog(repo, 'claude')
+                        self.assertTrue(any(item['observation_id'] == observation
+                            for row in backlog['turns'] for item in row['pending']))
+                    completed = self.child_register(world, repo, session, lifecycle, event)
+                    self.assertEqual(completed.returncode, 0, completed.stderr)
+                    registered = json.loads(completed.stdout)
+                    if observation is not None:
+                        self.assertEqual(registered['observation_id'], observation)
+                    current = sources.inspect(repo, 'claude', session, lifecycle)
+                    self.assertEqual(len(current['sources']), 1)
+                    self.assertFalse(current['complete'])
+                    self.assertEqual(sources.enrollment_inventory(turn, identity)[0]['state'], 'registered')
             self.assertEqual((directory / original['blob']).read_bytes(), body)
             self.assertEqual(self.snapshot(world, repo, bank), before)
+
+    def test_error_before_source_boundaries_reconcile_one_original_observation(self):
+        self.assert_fault_boundaries('error', ('before-intent', 'after-intent', 'before-index'))
+
+    def test_error_source_publication_boundaries_reconcile_one_original_observation(self):
+        self.assert_fault_boundaries('error', ('before-source', 'after-source', 'after-index', 'before-final-recheck'))
+
+    def test_hard_exit_before_source_boundaries_reconcile_one_original_observation(self):
+        self.assert_fault_boundaries('exit', ('before-intent', 'after-intent', 'before-index'))
+
+    def test_hard_exit_source_publication_boundaries_reconcile_one_original_observation(self):
+        self.assert_fault_boundaries('exit', ('before-source', 'after-source', 'after-index', 'before-final-recheck'))
 
     def test_late_hold_registry_and_ledger_changes_retain_written_source_then_retry(self):
         with World() as world, patch.dict(os.environ, world.env, clear=True):
