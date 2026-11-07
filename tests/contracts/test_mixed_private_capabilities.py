@@ -16,6 +16,7 @@ class MixedPrivateCapabilities(unittest.TestCase):
         with World() as world:
             command, source, repo, bank, native, inspected, applied = recovery.small_pending(world)
             self.assertFalse(applied['semantic_recovery_complete'])
+            world.git('add', 'synthetic-policy.md', cwd=repo)
             directory = recovery.private_directory(world, bank, inspected['operation_id'])
             originals = {row['source_id']: (directory / row['blob']).read_bytes()
                          for row in inspected['manifest']['sources']}
