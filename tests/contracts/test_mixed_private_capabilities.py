@@ -12,7 +12,7 @@ import uuid
 from world import World
 import layout_recovery_fixtures as recovery
 import v014_runtime_fixture
-from runtime_update_fixtures import PACK, advance, owned, snapshot
+from runtime_update_fixtures import PACK, advance, owned, receipt_path, snapshot
 from contracts import test_omp_boundary
 
 
@@ -387,3 +387,76 @@ class MixedPrivateCapabilities(unittest.TestCase):
             self.assertFalse(json.loads(read.stdout)['writes_performed'])
             self.assertEqual((snapshot(bank), snapshot(world.paths['state']), snapshot(world.paths['config']),
                               (repo / '.git/index').read_bytes(), world.git('rev-parse', 'HEAD', cwd=repo).stdout), before_read)
+
+    def test_private_lifecycle_observation_refuses_config_bank_hold_and_attestation_races(self):
+        with World() as world:
+            command, source, repo, bank, _, inspected, _ = recovery.small_pending(world)
+            directory = recovery.private_directory(world, bank, inspected['operation_id'])
+            receipt = json.loads(receipt_path(world).read_text())
+            before = (snapshot(bank), snapshot(directory), snapshot(world.paths['config']),
+                      owned(receipt), (repo / '.git/index').read_bytes(),
+                      world.git('rev-parse', 'HEAD', cwd=repo).stdout)
+            program = r'''
+import json, sys
+from pathlib import Path
+from unittest.mock import patch
+sys.path.insert(0, sys.argv.pop(1))
+from agent_memory import artifact, private_state, recovery_quiescence as quiescence
+from agent_memory.frontmatter import ContractError
+repo, bank, directory, source = map(Path, sys.argv[1:])
+installation = {'observed_repositories': [str(repo)]}
+results = {}
+for kind in ('config', 'bank', 'hold', 'attestation'):
+    target = artifact.inspect(source)
+    expected = private_state.require_compatible(installation, target, 'update')
+    original = quiescence._selected_attestation
+    saved = None
+    displaced = bank.with_name('displaced-bank')
+    if kind == 'config':
+        path = repo / '.git/config'
+    elif kind == 'hold':
+        path = bank / '.agent-memory-transaction.md'
+    elif kind == 'attestation':
+        path = next((directory / 'proposals').glob('*.json'))
+    if kind != 'bank':
+        saved = path.read_bytes()
+    injected = False
+    def change_after_read(*args):
+        global injected
+        selected = original(*args)
+        if not injected:
+            injected = True
+            if kind == 'bank':
+                bank.rename(displaced)
+            elif kind == 'config':
+                path.write_bytes(saved + b'\n[agent-memory]\n\tbankRoot = foreign-bank\n')
+            elif kind == 'hold':
+                path.write_bytes(b'Changed hold during the actual read-only observation.\n')
+            else:
+                value = json.loads(saved)
+                value['quiescence_attestation']['declared_invocation_routes'].append('/changed-route')
+                path.write_text(json.dumps(value))
+        return selected
+    refused = False
+    try:
+        with patch.object(quiescence, '_selected_attestation', side_effect=change_after_read):
+            private_state.require_compatible(installation, target, 'update')
+    except ContractError:
+        refused = True
+    finally:
+        if kind == 'bank' and displaced.exists():
+            displaced.rename(bank)
+        elif kind != 'bank':
+            path.write_bytes(saved)
+    private_state.require_compatible(installation, target, 'update', expected=expected)
+    results[kind] = {'injected': injected, 'refused': refused}
+print(json.dumps(results))
+'''
+            result = world.run([sys.executable, '-I', '-B', '-c', program,
+                                source / 'scripts', repo, bank, directory, source], timeout=60)
+            self.assertEqual(json.loads(result.stdout), {
+                kind: {'injected': True, 'refused': True}
+                for kind in ('config', 'bank', 'hold', 'attestation')})
+            self.assertEqual((snapshot(bank), snapshot(directory), snapshot(world.paths['config']),
+                              owned(receipt), (repo / '.git/index').read_bytes(),
+                              world.git('rev-parse', 'HEAD', cwd=repo).stdout), before)
