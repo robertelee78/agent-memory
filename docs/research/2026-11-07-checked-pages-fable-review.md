@@ -1,0 +1,27 @@
+# Independent Review — #209 Checked-Page Export (commit 8956aa4, base 27aa667)
+
+## Verdict: **PASS** — no blockers found in the diff scope. This is a static, evidence-based technical review plus verification of the receipts that exist today; it is **not** operator approval, implementation acceptance, or acceptance of the full 24-session/10k/Mac+Linux stress qualification, whose runs (catalog/refresh regressions, 6-session 128-seed two-round pilot) have no receipts yet and whose results I do not assume.
+
+## Evidence reviewed (all by source read)
+
+**Export core** (`sharing_page_export.py`, new):
+- **Path safety both directions**: `preflight_private_output` rejects targets *inside* repo/source/pack via `is_relative_to` (sharing_limits.py:31-33); export's `preflight` additionally rejects the pages dir being *equal to or an ancestor of* repo/source/runtime, overlap between manifest and pages dir, relative paths, and pre-existing outputs (`absent` via `lstat`).
+- **TOCTOU discipline**: parent dirs opened `O_DIRECTORY|O_NOFOLLOW`, owner-only 0o700 enforced (`private_workspace.checked_directory`), absence **re-checked against the held dir fds** before `mkdir`/creation; files created `O_EXCL|O_NOFOLLOW` 0o600; `readback` opens `O_RDONLY|O_NOFOLLOW|O_NONBLOCK` via `dir_fd`, enforces regular/uid/0o600/nlink==1/size, reads `size+1` to detect growth, compares digest, and pins `(dev,ino,mode,uid,nlink,size,mtime_ns,ctime_ns)` across fstat-before/fstat-after/named-lstat (rename-swap detection). Directory identity re-verified at every stage via `check_directory`.
+- **Ordering per design contract**: `recovery_frontier.observe` token captured **before** the single `sharing_frontier.build` call; per-page bounds (64 KiB page / 512 MiB total), schema `semantic-sharing-page-v2`, index, `binding_sha256`, and exact descriptor bytes/sha verified before write; `final_sources` + fresh `sharing_holds.load` digest vs `known_inventory_sha256` + `recovery_frontier.check(token)` + full directory-membership scandir + full re-readback of every artifact **before** `complete.json` is written; marker written last; receipt only returned on success. Default no-flag inspect-v2 and `page-v2`/`worklist-v2` are untouched (CLI dispatch confirmed, semantic_sharing.py:634-666).
+- **Error path**: single CLI failure JSON with `publication_verified:false`, `canonical_writes_performed:false`, `private-output-invalid` code for output failures — no partial-success claims; no `complete.json` on any failure.
+
+**Tests** (`test_checked_page_export.py`, registered in contracts.json:4, layer "concurrency"): 5 tests covering empty inspection (marker-only), byte-exact equivalence of exported pages vs independent `page-v2`, multi-page preservation of all real sources (≥2 populated pages), 8 collision/unsafe-path refusals without clobbering (existing file, occupied dir, same path, nested overlap, inside-repo, 0o755 parent, symlinked parent, relative), and 8 injected failures (source mutation, hold change, frontier token change, page corruption, FIFO replacement, write/fsync/readback failure) — each exits 1 with no completion marker. Negative control in daily_use.py:441-444 remains real: an actual authority commit after reading all pages causes `review-v2` to refuse (exit 1).
+
+**Consumer** (`daily_use.py`): `consume_pages` is shared by both arms; export mode re-verifies directory/file fingerprints with `O_NOFOLLOW` dir-fd reads, exact descriptor bytes/sha, marker fields vs receipt, and **derives sources/edges/holds from page items**, asserting equality with manifest inventory; judgment pairs come from the consumed view. Source binding hashes symlink link-bytes literally only under `docs/research/data/` (mode 0o120000) and requires executables to be ordinary 0o644/0o755 files — no link following (lines 32-41). `--fixture-identities`/`profile` adopt precedes binding init (line 747-749).
+
+**Receipts**: smoke run-01 `outcome.json` — 12 public commands all exit 0, `frontier_build_calls:1` for each export and each independent page-0 (structural criterion 1-build/export, 0-build reads via bundle, met; `full_qualification:false` honestly stated, no 20% claim). Contracts run-01: 5/5 export + 9/9 existing semantic passing, 0 errors/failures/skips.
+
+**Docs**: ADR renumbered to 0026 (0025 project/shared-memory intact in docs/adr/); design doc, releases note, sharing/semantic GUIDE, maintain/cli GUIDE, and daily-use-v1.md all describe the flag, bounds, freshness separation, and non-claims consistently.
+
+## Nonblocking suggestions
+1. **Failed-export residue**: after a mid-export failure the partial pages dir remains and the same paths are permanently refused (correct, evidence-preserving), but the guide could state explicitly that operators should pick fresh paths rather than delete-and-retry in place.
+2. **Redundant fsyncs**: `write_fd` already fsyncs the dir fd per file; export's extra `os.fsync(directory_fd)` passes are harmless but could be consolidated with a comment.
+3. **Duplicate preflight**: CLI calls `sharing_page_export.preflight` then `export` repeats it; cheap and defensive, but worth a one-line comment so a future edit doesn't remove the fd-based recheck thinking it's covered.
+4. Broad CLI exception set (`AttributeError`, `RecursionError`, …) is pre-existing product pattern, not introduced here — noting it only to separate it from this change's scope.
+
+No fixture secrets or withheld bodies are quoted in this review.
