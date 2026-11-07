@@ -292,6 +292,26 @@ capabilities; all ten owned containers were absent afterward. No AM
 installation/extension, model, provider or session ran. These checks establish
 available executable prerequisites, **not Linux native integration support**.
 
+The separate [Linux minimal RPC evidence](../research/data/2026-11-06-omp-native/linux-minimal-rpc.json)
+records actual copy-installed, receipt-bound two-human RPC smokes on those two
+Linux arm64 VM-container carriers, using the same selected model and normal
+native approval mode. Both drivers reported distinct verified human/source
+mappings, one answer per submitted turn and settled native state; retained
+pending warnings and coverage/tool rows are not completion. Public source
+verifier responses and private World file inventories agreed before and after
+each scoped evidence copy. Transient unknown-role processes exited before two
+empty samples and the copy; those samples are not a global writer fence or
+drain proof. The original conservative Python 3.11 override and the later
+parent scope clarification remain separate, hash-bound records.
+
+The source was a Git-tree-verified, mode-normalized archive export, not a Git
+checkout: the install receipt correctly reports an unversioned development
+source. The evidence binds that export and the separately inspected artifact
+to the named commit without claiming reproducible source/binary equivalence.
+These minimal RPC observations do not establish source completeness,
+assessment, refresh, publication, peer exchange, TUI/print support, full
+platform support or release acceptance.
+
 The [registered-worker receipts](../research/data/2026-11-06-omp-native/registered-worker-batches.json)
 retain all 26 unchanged native transport/lifecycle/smoke-driver-control methods
 in seven disjoint, exhaustive batches at `bf7722a`. Every actual worker passed
