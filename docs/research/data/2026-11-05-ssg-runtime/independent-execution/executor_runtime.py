@@ -161,6 +161,7 @@ class Model:
         self.root, self.profile, self.run_id = root, profile, run_id
         self.process = None
         self.traces, self.requests = [], []
+        self.tokenization_attempts = []
         self.parser = serving_parser()
         self.alias = 'qwen3-embedding-8b-q8_0-d20ddc71e8a5'
         self.base = 'http://127.0.0.1:' + str(free_port())
@@ -213,9 +214,22 @@ class Model:
             raise ValueError('Frozen batch exceeds8 inputs')
         ordinal = len(self.requests) + 1
         counts = []
+        rendered_hashes = [digest(text.encode('utf-8')) for text in texts]
         for i, text in enumerate(texts):
-            answer = request(self.base + '/tokenize', '', {'content': text, 'add_special': True})
-            save(self.root / ('tokenize-' + str(ordinal) + '-' + str(i) + '.json'), answer)
+            token_ordinal = len(self.tokenization_attempts) + 1
+            intent = self.root / ('tokenization-attempt-' + str(token_ordinal) + '.json')
+            body = {'content': text, 'add_special': True}
+            save(intent, {'schema': 'am255/provider-tokenization-attempt-v1',
+                'purpose': 'document-tokenization' if kind == 'documents' else 'query-tokenization',
+                'kind': kind, 'embedding_request_ordinal': ordinal, 'text_index': i,
+                'batch_rendered_sha256': rendered_hashes, 'batch_source_keys': source_keys,
+                'case_ordinal': case_ordinal, 'body': body})
+            attempt = {'request': intent, 'response': None}
+            self.tokenization_attempts.append(attempt)
+            answer = request(self.base + '/tokenize', '', body)
+            response = self.root / ('tokenization-response-' + str(token_ordinal) + '.json')
+            save(response, answer)
+            attempt['response'] = response
             tokens = answer['body'].get('tokens')
             if answer['status'] != 200 or not isinstance(tokens, list):
                 raise ValueError('Actual native tokenizer unavailable; no nontruncation assurance')

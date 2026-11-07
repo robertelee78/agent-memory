@@ -324,7 +324,7 @@ def bind_raw(store, manifest_path, expected_source_commit):
                 store.verify(generation['vector_store'])
             generations[size, gid] = generation
         require(set(canonical) == {gid for n, gid in generations if n == size}, 'Unbound canonical generation')
-        bind_delivery(store, row)
+        bind_delivery(store, row, inputs)
         require(isinstance(row.get('observations'), list), 'Missing observation pointer list')
         for pointer in row['observations']:
             ordinal, variant = pointer.get('case_ordinal'), pointer.get('variant')
@@ -759,7 +759,111 @@ def typed_metrics(case, observation, catalog, oracle):
                   missing_route_pointers=route_missing, primary=primaries)
 
 
-def bind_delivery(store, size_row):
+def bind_tokenization(store, size_row, schedule, batches, document_requests, catalogs, inputs):
+    """Bind every tokenizer disclosure, including requests with no embedding."""
+    value = store.json(size_row.get('tokenization_accounting'))
+    require(value.get('schema') == 'am255/provider-tokenization-ledger-v1' and
+            value.get('profile_sha256') == size_row['profile_sha256'], 'Missing tokenizer source/profile ledger')
+    attempts, embeddings = value.get('attempts'), value.get('embedding_requests')
+    require(isinstance(attempts, list) and isinstance(embeddings, list), 'Missing tokenizer/embedding attempt inventories')
+    cases = {case['case_ordinal']: case for case in inputs['cases']}
+    query_schedule = schedule.get('query_first_occurrences')
+    require(isinstance(query_schedule, list), 'Missing frozen query first-send schedule')
+    expected = [{'kind': 'documents', 'hashes': [r['rendered_sha256'] for r in batch],
+                 'keys': sorted({key for row in batch for key in row['source_keys']}), 'rows': batch}
+                for batch in batches]
+    prefix = json.loads(trusted_bytes(HERE / 'spec.json'))['profile']['query_renderer']['prefix']
+    for query in query_schedule:
+        ordinal = query.get('case_ordinal')
+        require(integer(ordinal) and ordinal in cases and query.get('variant') in VARIANTS,
+                'Foreign tokenizer query schedule case')
+        text = prefix + cases[ordinal]['request']['query']
+        require(sha(text.encode()) == query.get('rendered_sha256'), 'Tokenizer query schedule hash mismatch')
+        expected.append({'kind': 'query', 'hashes': [sha(text.encode())], 'keys': [], 'text': text,
+                         'case_ordinal': ordinal, 'variant': query['variant']})
+    require(len(embeddings) <= len(expected) and
+            embeddings[:len(document_requests)] == [r['request'] for r in document_requests],
+            'Tokenizer embedding inventory differs from retained document requests')
+    require(len(document_requests) == min(len(embeddings), len(batches)),
+            'Unbound document embedding attempt in tokenizer inventory')
+    seen_paths, token_counts, token_keys, by_generation, query_tokens = set(), {}, set(), {}, []
+    next_ordinal, next_index, uncertain = 1, 0, 0
+    for position, binding in enumerate(attempts):
+        request = store.json(binding.get('request'))
+        path = binding['request']['path']
+        require(path not in seen_paths, 'Duplicate tokenizer attempt pointer')
+        seen_paths.add(path)
+        ordinal, index = request.get('embedding_request_ordinal'), request.get('text_index')
+        require(integer(ordinal) and integer(index) and (ordinal, index) == (next_ordinal, next_index) and
+                ordinal <= len(expected) and ordinal <= len(embeddings) + 1,
+                'Tokenizer attempts are not an exact scheduled prefix')
+        batch = expected[ordinal - 1]
+        require(request.get('schema') == 'am255/provider-tokenization-attempt-v1' and
+                request.get('kind') == batch['kind'] and
+                request.get('purpose') == ('document-tokenization' if batch['kind'] == 'documents' else 'query-tokenization'),
+                'Wrong tokenizer request purpose')
+        require(request.get('batch_rendered_sha256') == batch['hashes'] and
+                request.get('batch_source_keys') == batch['keys'], 'Tokenizer original batch attribution mismatch')
+        body = request.get('body')
+        require(isinstance(body, dict) and body.get('add_special') is True and
+                isinstance(body.get('content'), str) and sha(body['content'].encode()) == batch['hashes'][index],
+                'Tokenizer rendered request bytes mismatch')
+        if batch['kind'] == 'documents':
+            require(request.get('case_ordinal') is None, 'Document tokenizer carries a query case')
+            row = batch['rows'][index]
+            for member in row['memberships']:
+                source = catalogs[member['generation_id']][member['key']]
+                suffix = '\nScope: ' + source['scope']
+                require(body['content'].endswith(suffix) and
+                        sha(body['content'][:-len(suffix)].encode()) == source['body_sha256'],
+                        'Tokenizer bytes differ from canonical body/scope')
+            token_keys.update(row['source_keys'])
+            by_generation.setdefault(row['first_generation'], set()).update(row['source_keys'])
+        else:
+            require(request.get('case_ordinal') == batch['case_ordinal'] and body['content'] == batch['text'],
+                    'Tokenizer query case/body mismatch')
+            query_tokens.append({'case_ordinal': batch['case_ordinal'], 'variant': batch['variant'],
+                                 'request': binding['request'], 'outcome': binding.get('outcome')})
+        response_pointer = binding.get('response')
+        count = None
+        if response_pointer is None:
+            require(binding.get('outcome') == 'transport-outcome-unconfirmed' and position == len(attempts) - 1,
+                    'Unconfirmed tokenizer transport must be the final attempt')
+            uncertain += 1
+        else:
+            require(binding.get('outcome') == 'response-recorded', 'Wrong tokenizer response state')
+            response = store.json(response_pointer)
+            require(isinstance(response, dict) and integer(response.get('status')), 'Malformed tokenizer response receipt')
+            tokens = response.get('body', {}).get('tokens') if isinstance(response.get('body'), dict) else None
+            if response['status'] == 200 and isinstance(tokens, list):
+                count = len(tokens)
+            else:
+                require(position == len(attempts) - 1, 'Failed tokenizer response followed by another request')
+        token_counts[ordinal, index] = count
+        next_ordinal, next_index = ((ordinal + 1, 0) if index + 1 == len(batch['hashes']) else (ordinal, index + 1))
+    query_requests = []
+    for ordinal, pointer in enumerate(embeddings, 1):
+        require(pointer['path'] not in seen_paths, 'Duplicate/aliased embedding request pointer')
+        seen_paths.add(pointer['path'])
+        batch = expected[ordinal - 1]
+        counts = [token_counts.get((ordinal, i)) for i in range(len(batch['hashes']))]
+        require(all(integer(count) and 0 <= count <= 8192 for count in counts) and sum(counts) <= 8192,
+                'Embedding request lacks complete successful bounded tokenizer receipts')
+        request = store.json(pointer)
+        require(request.get('request_ordinal') == ordinal and request.get('kind') == batch['kind'] and
+                request.get('source_keys') == batch['keys'] and request.get('rendered_sha256') == batch['hashes'] and
+                request.get('token_counts') == counts, 'Embedding/tokenizer request attribution mismatch')
+        if batch['kind'] == 'query':
+            require(request.get('case_ordinal') == batch['case_ordinal'] and
+                    request.get('query_sha256') == batch['hashes'][0] and
+                    request.get('body', {}).get('input') == [batch['text']], 'Unbound query embedding request')
+            query_requests.append(pointer)
+    return {'tokenization_requests': len(attempts), 'tokenization_unconfirmed': uncertain,
+            'tokenization_keys': token_keys, 'tokenization_keys_by_generation': by_generation,
+            'query_tokenization_attempts': query_tokens, 'query_requests': query_requests}
+
+
+def bind_delivery(store, size_row, inputs):
     """Validate all first sends and exact generation memberships before oracles."""
     ledger_pointer = size_row.get('delivery_ledger')
     ledger = store.json(ledger_pointer)
@@ -891,6 +995,9 @@ def bind_delivery(store, size_row):
         'global_keys': all_keys, 'request_count': len(requests), 'documents_complete': complete,
         'pending_batches': ledger['pending_batches'],
         'pending_embedding_requests': ledger['pending_embedding_requests']}
+    transport = bind_tokenization(store, size_row, schedule, batches, requests, catalogs, inputs)
+    store.deliveries[size_row['size']].update(transport)
+    store.deliveries[size_row['size']]['global_keys'].update(transport['tokenization_keys'])
 
 
 def validate_provider_delivery(observation, store):
@@ -909,6 +1016,8 @@ def validate_provider_delivery(observation, store):
             'Missing/forged/cross-generation request pointer')
     count = sum(len(store.json(p)['rendered_sha256']) for p in provider['document_sends'])
     require(provider.get('documents_sent') == count, 'First-generation document count mismatch')
+    query = provider.get('query_send')
+    require(query is None or query in delivery['query_requests'], 'Query request absent from tokenizer/embedding inventory')
     return delivery
 
 
@@ -919,10 +1028,13 @@ def provider_metrics(case, observation, store, oracle):
     # deletion labels. A prior authorized send never disappears from this log.
     global_exposed = sorted(delivery['global_keys'] & oracle.forbidden_global())
     sent = {key for p in provider['document_sends'] for key in store.json(p)['source_keys']}
+    sent.update(delivery['tokenization_keys_by_generation'].get(provider['generation_id'], set()))
     exposed = sorted(sent & {oracle.resolve(ref) for ref in case['disclosure']['provider_send_forbidden']})
     result_scope = {'global_forbidden_source_keys_sent': global_exposed,
                     'global_retained_document_sources': len(delivery['global_keys']),
                     'global_retained_document_requests': delivery['request_count'],
+                    'global_retained_tokenization_requests': delivery['tokenization_requests'],
+                    'global_unconfirmed_tokenization_transports': delivery['tokenization_unconfirmed'],
                     'reused_prior_document_requests': len(provider['reused_document_requests']),
                     'erasure_executed': False,
                     'interpretation': 'Generation first-send accounting plus explicit exact-byte/profile reuse; global scientific log retained; no temporal delete or forensic/provider/cache erasure proof'}
@@ -985,15 +1097,15 @@ def score_case(case, observation, store, generation, catalog, profile_hash, orac
             failures.append('Frozen native-forbidden current source in eligible domain')
         if native['request_valid'] != (case['availability']['outcome'] != 'invalid-request'):
             failures.append('Actual native request gate differs from frozen validation expectation')
-        if native['request_valid'] and (native.get('crosscheck') or {}).get('matched') is not True:
+        if native['request_valid'] and not native.get('prerequisite') and (native.get('crosscheck') or {}).get('matched') is not True:
             failures.append('Native evaluate_sources crosscheck absent/unmatched')
         truth = case['context_truth']
-        if generation.get('mutation') != truth['mutation'] or generation.get('stage') != truth['stage']:
-            failures.append('Canonical mutation/stage differs from requested case transition')
+        require(generation.get('mutation') == truth['mutation'] and generation.get('stage') == truth['stage'],
+                'Canonical mutation/stage differs from requested case transition')
         if native.get('prerequisite'):
             require(not observation['semantic']['executed'] and not observation['typed']['executed'],
                     'Native-incomplete observation claims semantic/typed execution')
-            classes['native'] = metric(prerequisite=native['prerequisite'])
+            classes['native'] = metric(prerequisite=native['prerequisite'], failures=failures)
         elif truth['stage'] == 'before-rebuild':
             classes['native'] = metric(prerequisite='Actual stale-generation transition lacks a reviewed receipt verifier')
         else:
@@ -1168,6 +1280,12 @@ def score(suite_path, map_path, raw_root, manifest_path, expected_source_commit)
                      'retained_requests': delivery['request_count'],
                      'pending_batches': delivery['pending_batches'],
                      'transport_outcome_unconfirmed_requests': delivery['pending_embedding_requests'],
+                     'retained_tokenization_requests': delivery['tokenization_requests'],
+                     'unconfirmed_tokenization_transports': delivery['tokenization_unconfirmed'],
+                     'query_tokenization_attempts': [
+                         item | {'forbidden_by_frozen_query_rule':
+                             suite['cases'][item['case_ordinal'] - 1]['disclosure']['query_send_forbidden']}
+                         for item in delivery['query_tokenization_attempts']],
                      'global_forbidden_source_keys_in_retained_attempts':
                          sorted(delivery['global_keys'] & oracle.forbidden_global()),
                      'interpretation': 'Bound request payloads include uncertain transport; incomplete size cells remain unexecuted, not no-send or erasure claims'}
