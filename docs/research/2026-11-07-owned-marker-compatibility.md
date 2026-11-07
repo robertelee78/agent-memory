@@ -56,10 +56,18 @@ it is retained as a failed test setup, not a product regression or a pass.
   removes the marker and public admission replay reports an already-applied,
   verified historical admission without performing new writes.
 - New permanent large-bank admission regression passes both direct and
-  interrupted-finish subcases. A separate full admission-suite attempt exceeded
-  the disposable runner's300-second limit; it is not reported as a passing
-  full-suite result. The14methods above qualify the first correction; the
-  focused regression and actual public smoke qualify the second caller.
+  interrupted-finish subcases. The14marker/frontier methods above also pass
+  the amended source including both witness callers.
+- Two full admission-suite attempts exceeded the disposable runner's300-second
+  limit. A subsequent900-second-cap run completed17methods in629.897seconds:
+  16pass,1failure at the existing10-second ready-file rendezvous in the
+  final-readback evidence-change test. No full-suite pass is claimed.
+- A separate actual public diagnostic reaches that same final-readback boundary
+  in6.317seconds, changes repository evidence, receives admission_verified:false
+  with the transaction marker preserved, and completes rollback with exact bank
+  and feature/index/HEAD restoration. This confirms the safety path in that
+  diagnostic, not the historical rendezvous-failure cause. No product guard or
+  permanent rendezvous assertion was relaxed.
 
 These are source-bound local development checks, not full #209 controller,
 24-session/10k, Linux or signed-release acceptance. The original failed controller
