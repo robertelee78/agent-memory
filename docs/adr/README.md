@@ -45,6 +45,7 @@ MUST NOT be treated as evidence that a guide is semantically complete.
 | [0023](0023-guided-progressive-recall.md) | Guided progressive recall and explicit cross-project expansion | Accepted architecture; task execution designs gated |
 | [0024](0024-ssg-graph-embedding-runtime.md) | SSG-derived graph database, embedding model, and retrieval runtime | Accepted architecture/G1 research; v0.0.16 execution gated on G1 |
 | [0025](0025-project-and-shared-memory.md) | Project memory plus deliberately published shared memory | Accepted architecture; operator/team/ecosystem datasets, per-install configuration; execution gated |
+| [0026](0026-source-bound-sharing-performance.md) | Source-bound sharing performance for existing #209 | Accepted bounded fix after Fable review; implementation/qualification pending |
 
 [ADR-0013](0013-public-cli-and-corrective-releases.md) defines the corrective
 `v0.0.2` public command contract and the current future-release mapping. Older
