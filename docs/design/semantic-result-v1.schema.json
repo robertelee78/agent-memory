@@ -8,7 +8,7 @@
     "schema": {"const": "agent-memory/semantic-result-v1"},
     "operation": {"enum": ["graph.setup", "graph.status", "graph.start", "graph.stop", "graph.build", "graph.rebuild", "graph.diagnose", "graph.purge-preview", "graph.purge-apply", "embeddings.setup", "embeddings.status", "embeddings.start", "embeddings.stop", "embeddings.reembed", "embeddings.diagnose", "embeddings.purge-preview", "embeddings.purge-apply", "search", "related"]},
     "status": {"$ref": "#/$defs/status"},
-    "reason_code": {"enum": ["completed", "already-running", "already-stopped", "literal-fallback", "partial-coverage", "empty-input", "over-context", "invalid-response", "model-drift", "identity-unverified", "truncation-unverified", "endpoint-unavailable", "graph-unavailable", "profile-disabled", "approval-required", "remote-budget-exhausted", "source-stale", "missing-score", "resource-limit", "runtime-stopped", "erasure-pending", "byo-graph-erasure-unverifiable", "resource-set-changed", "foreign-scope", "foreign-reference", "stale-reference", "invalid-reference", "withheld", "clarification-required", "invalid-request", "operation-failed"]},
+    "reason_code": {"enum": ["completed", "already-running", "already-stopped", "literal-fallback", "partial-coverage", "empty-input", "over-context", "invalid-response", "model-drift", "identity-unverified", "truncation-unverified", "endpoint-unavailable", "graph-unavailable", "profile-disabled", "approval-required", "remote-budget-exhausted", "source-stale", "missing-score", "resource-limit", "runtime-stopped", "erasure-pending", "byo-graph-erasure-unverifiable", "resource-set-changed", "foreign-scope", "foreign-reference", "stale-reference", "invalid-reference", "invalid-related-seed", "withheld", "clarification-required", "invalid-request", "operation-failed"]},
     "exit_code": {"type": "integer", "enum": [0, 1, 2]},
     "project_id": {"type": ["string", "null"]},
     "namespace_id": {"type": ["string", "null"]},
@@ -59,6 +59,14 @@
     "assessment": {"enum": ["complete", "partial", "stale", "unavailable", "unverified", "not-applicable"]},
     "capability": {"enum": ["available", "partial", "unavailable", "pending", "incompatible", "not-applicable"]},
     "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "ranking_request": {
+      "type": "object", "additionalProperties": false,
+      "required": ["mode", "profile", "fallback"],
+      "properties": {
+        "mode": {"const": "semantic"}, "profile": {"type": "string", "minLength": 1},
+        "fallback": {"enum": ["none", "literal"]}
+      }
+    },
     "related_query": {
       "type": "object", "additionalProperties": false,
       "required": ["template", "arguments", "page_token"],
@@ -73,11 +81,7 @@
           "properties": {"historical": {"type": "boolean"}}
         }}},
         {"properties": {"template": {"const": "component-attempts"}, "arguments": {
-          "type": "object", "additionalProperties": false, "required": ["component", "task"],
-          "properties": {
-            "component": {"type": "string", "minLength": 1, "pattern": "^(?!/)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*//)(?!.*\\\\)(?!.*\\/$)[^\\u0000-\\u001f]+$"},
-            "task": {"type": ["string", "null"]}
-          }
+          "type": "object", "additionalProperties": false, "maxProperties": 0
         }}},
         {"properties": {"template": {"const": "recorded-related"}, "arguments": {
           "type": "object", "additionalProperties": false, "required": ["relations"],

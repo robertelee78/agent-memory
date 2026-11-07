@@ -1,0 +1,30 @@
+{
+  "schema": "am255/final-interface-smoke-v1",
+  "base_commit": "bdc4193",
+  "schema_sha256": "1391ea97e3ca6cbecef5a7367d8e745d848a7c3c40d2ba1d130e70606db1b282",
+  "source_binding": "Exact modified proposed schema over basecommit, not attributed to basecommit",
+  "actual_receipt_sha256": "bfeb6ad8a0e16117f1afa0825070355dd2fbe9c812d1c1ec3a0173554c506c30",
+  "driver_sha256": "6321c0d90949741b85314c13195f728bafb1b9086c9333802a06fadf9a6e09f6",
+  "passed": true,
+  "checks": 56,
+  "elapsed_seconds": 7.428201083035674,
+  "unexpected_checks": [],
+  "actual_native_payload_scope": [
+    "Existing public literal records and top-level coverage",
+    "Existing public context-prose plus typed records",
+    "Seven actual canonical condition_value acceptance/refusal controls"
+  ],
+  "structural_only_scope": [
+    "Closed ranking_request and related_request definitions",
+    "Body-free related references, per-seed paging and historical pointer shapes",
+    "Fallback, capped output, exclusion, pending-frontier and lifecycle shapes"
+  ],
+  "interface_changes": [
+    "Component/task derive only from effective native context; duplicate template arguments refused",
+    "Source selection and related page purposes do not bind issuing operation; a search page resumes via standalone related",
+    "Fixed related qualification for both entry surfaces; proposed overall250ms/16KiBoptional-reference budget also obeys remaining nativeMAX_RESULT",
+    "Context-only seeds refused standalone and not explored inline; reserved similarity makes whole requested operation unavailable",
+    "Inhibit remains reported/fenced until verified reconciliation"
+  ],
+  "limits": "Actual existing public literal and context-prose payload compatibility plus explicitly synthetic related/semantic/frontier/lifecycle schema controls. No graph paths, semantic ranking, caveat/conflict classification, token authentication, native frontier behavior, production API or G1 acceptance."
+}
