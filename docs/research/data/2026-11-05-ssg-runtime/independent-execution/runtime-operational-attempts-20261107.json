@@ -279,5 +279,15 @@
     },
     "state_at_recording": "Launched; completion and scoring require separate actual receipts. No result inferred from launch."
   },
+  "all_size_execution_completion": {
+    "state": "Failed; no quality, performance or G1 acceptance",
+    "exit": 1,
+    "elapsed_seconds": 9457.217916499998,
+    "record": "allsize-runtime-failure-20261107.json",
+    "failure": "50k base request 49: Memgraph CREATE VECTOR INDEX could not obtain unique storage access.",
+    "snapshot_causation": "Unproven; effective storage-access timeout was not captured.",
+    "cleanup_status": "erasure-pending; owned resources absent and model processes reaped, aggregate status not upgraded",
+    "original_launch_record_preserved": true
+  },
   "provenance_limit": "Public bounded projection of private synthetic experiment artifacts. Hash binding establishes bytes, not publisher authentication. Original failures remain unchanged; private model/server/host inventories and raw project content are not published."
 }
