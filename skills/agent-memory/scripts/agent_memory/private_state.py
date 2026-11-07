@@ -112,27 +112,32 @@ def required_private_state_capabilities(installation, target_artifact, operation
                         raise ContractError('Bound recovery bank is unavailable')
                     continue
                 capabilities = set()
-                operations, _ = bank_writes.state_paths(root, bank, '00000000-0000-4000-8000-000000000000')
-                source_marker = operations.parent / 'turn-sources-compat-v1.json'
-                source_tree = operations.parent / 'omp-source-v1'
                 held = _barriers.get()
                 if held is not None and str(root) not in held:
                     raise ContractError('A bank joined the private-state inventory after lifecycle quiescence')
                 from .turn_sources import source_barrier
                 if held is None:
                     stack.enter_context(source_barrier(root, exclusive=True))
+                located = state.paths(root)[:2]
+                root, bank = located
+                operations, _ = bank_writes.state_paths(root, bank, '00000000-0000-4000-8000-000000000000')
+                source_marker = operations.parent / 'turn-sources-compat-v1.json'
+                source_tree = operations.parent / 'omp-source-v1'
                 producer = getattr(omp_boundary, 'required_source_capabilities', None)
                 if producer is None:
                     if os.path.lexists(source_marker) or os.path.lexists(source_tree):
                         raise ContractError('Private native source requirement cannot be completely observed')
                 else:
                     capabilities.update(producer(root))
-                token = recovery_frontier.observe(root)
-                indexed = state.index(root)
+                # Reuse only this read-only observation's located bank. The
+                # helpers still repeat filesystem/binding guards; below we
+                # recheck the full frontier and freshly locate the bank again.
+                token = recovery_frontier._observe_bank(root, bank, None, None)
+                indexed = state._index_for_bank(root, bank)
                 layout_operations = []
                 for operation_id, indexed_row in indexed['operations'].items():
                     if indexed_row['state'] in {'active', 'interrupted', 'rolled-back'}:
-                        _, _, value = recovery_frontier.ledger(root, operation_id, indexed_row)
+                        _, _, value = recovery_frontier._ledger(root, operation_id, indexed_row, bank)
                         if indexed_row['state'] != 'rolled-back' or any(unit['state'] == 'pending-admission' for unit in value['units']):
                             layout_operations.append(operation_id)
                 active_layout = [operation_id for operation_id in layout_operations
@@ -150,16 +155,21 @@ def required_private_state_capabilities(installation, target_artifact, operation
                         elif indexed['operations'][frontier_operation]['state'] in {'active', 'interrupted'}:
                             recovery_frontier.verified_hold(root)
                         if target_digest is not None:
-                            from .recovery_quiescence import selected_attestation
-                            directory, _, ledger_value = recovery_frontier.ledger(root, frontier_operation, indexed['operations'][frontier_operation])
+                            from .recovery_quiescence import _selected_attestation
+                            directory, _, ledger_value = recovery_frontier._ledger(
+                                root, frontier_operation, indexed['operations'][frontier_operation], bank)
                             _, proposal = recovery_frontier.evidence(directory, ledger_value, indexed['operations'][frontier_operation])
-                            selected = selected_attestation(root, frontier_operation, proposal, target_digest)
+                            selected = _selected_attestation(directory, proposal, target_digest)
                             if selected is None and override is None:
                                 raise ContractError('Target capable runtime has no renewed bank-bound quiescence attestation')
                             if override is None and selected is not None and not set(target_artifact.get('layout_required_routes', ())).issubset(selected['declared_invocation_routes']):
                                 raise ContractError('Target capable reader has an invocation route omitted from quiescence')
                 if not capabilities.issubset(TOKENS):
                     raise ContractError('A private-state producer returned an unknown capability')
+                if recovery_frontier._observe_bank(root, bank, None, None) != token:
+                    raise ContractError('Private recovery frontier changed during compatibility observation')
+                if state.paths(root)[:2] != located:
+                    raise ContractError('Recovery bank location changed during compatibility observation')
                 requirements[str(bank)] = sorted(capabilities)
                 pins.append({'repo_root': str(root), 'bank_path': str(bank), 'recovery_frontier': token,
                     'requirements': sorted(capabilities)})

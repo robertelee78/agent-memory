@@ -70,10 +70,10 @@ def validate(repo, value, *, runtime_artifact_digest, required_routes=(), publis
         raise ContractError('New invocation routes require the exact private attestation and independent review envelope')
     attestation, review = value['attestation'], value['review']
     operation_id = attestation.get('operation_id')
-    row = state.index(root)['operations'].get(operation_id)
+    row = state._index_for_bank(root, bank)['operations'].get(operation_id)
     if row is None or row['state'] != 'active':
         raise ContractError('Quiescence renewal must bind the actual active recovery operation')
-    directory, _, current = frontier.ledger(root, operation_id, row)
+    directory, _, current = frontier._ledger(root, operation_id, row, bank)
     manifest, proposal = frontier.evidence(directory, current, row)
     runtime = artifact.inspect(artifact.PACK)
     runtime['artifact_digest'] = runtime_artifact_digest
@@ -96,7 +96,9 @@ def validate(repo, value, *, runtime_artifact_digest, required_routes=(), publis
     comparison.safe_text(review['reviewer_harness'], 256)
     comparison.safe_text(review['reviewer_session'], 256)
     from . import bank_observation, scope_binding
-    live = frontier.observe(root, owner)
+    # Bank location is fresh at entry and frontier.check below freshly resolves
+    # it again. Do not carry this read-only path observation across publication.
+    live = frontier._observe_bank(root, bank, owner, None)
     marker = frontier.marker_bytes(bank)
     marker_value = frontier.marker_value(marker) if marker is not None else None
     if marker_value is None or marker_value['schema'] != frontier.HOLD or marker_value['operation_id'] != operation_id:
@@ -105,7 +107,7 @@ def validate(repo, value, *, runtime_artifact_digest, required_routes=(), publis
     scope_binding.require(root, manifest['project_id'], expected=manifest['identity']['scope_context'],
         owned_lock=owner, owned_transaction=marker)
     executing = artifact.inspect(artifact.PACK)
-    if (selected_attestation(root, operation_id, proposal, executing['artifact_digest']) is None
+    if (_selected_attestation(directory, proposal, executing['artifact_digest']) is None
             and executing['artifact_digest'] != runtime_artifact_digest):
         raise ContractError('The executing verifier is neither the reviewed existing runtime nor the reviewed replacement')
     frontier.check(live, root, owner)
