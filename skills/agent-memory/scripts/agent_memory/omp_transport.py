@@ -1153,6 +1153,10 @@ def observe(repo, value, *, receipt=None):
                             retained_results.append(((d, c), cap))
                     for path in _files(d, 'snapshots', r'[0-9a-f]{64}\.json'):
                         if str(path.relative_to(d)) not in referenced:
+                            # A sealed ordinary orphan may be unrecorded pure
+                            # control; never reopen its parent for later work.
+                            if (d / 'segment.json').exists() and 'instruction_context' not in read(path):
+                                continue
                             snapshots.setdefault(path.name, []).append((d, c))
                     for path in _files(d, 'gaps', r'[0-9a-f-]{36}\.json'):
                         old = read(path, 4096)

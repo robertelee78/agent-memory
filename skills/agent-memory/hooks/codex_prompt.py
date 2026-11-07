@@ -58,7 +58,7 @@ def main():
         try:notice=turn_sources.pending_notice(root,'codex',session,turn)
         except (OSError,ValueError):notice=True  # Optional notice bookkeeping cannot veto durable source registration.
         if notice:guidance += ' Earlier pending work exists; use am codex-boundary --list-pending for original IDs.'
-        if observation['control_origin_hint']:guidance += ' Retained generated-control hint: these instructions are not a new operator decision; still assess this observation explicitly.'
+        if observation['control_origin_hint']:guidance += ' Generated-control hint, not a new operator decision; assess this source.'
         if len(guidance.encode())>2048:raise ValueError('guidance exceeds bound')
         scope_binding.recheck_private_enrollment(enrollment)
         diagnostic(root)

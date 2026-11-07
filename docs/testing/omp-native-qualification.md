@@ -346,6 +346,12 @@ within the unchanged 300-second deadline, with no skips or removed subcases.
 The original unsplit timeout remains a failed attempt. This qualifies the
 worker grouping, not the real provider/platform/peer matrix below.
 
+A crash after an ordinary pure-control snapshot but before its cursor record
+does not establish the old batch's nonlearning classification. Later substantive
+work MUST NOT add a capture to that sealed parent or erase the historical orphan.
+The successor retains the available control/work evidence; the historical
+unqualified snapshot remains an explicit inventory fault, not silently complete.
+
 ## Full independent native release matrix
 
 Retain immutable source/artifact/binary/provider/platform pins and actual

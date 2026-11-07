@@ -175,6 +175,38 @@ class NativeSources(unittest.TestCase):
                 self.assertFalse((segments[0][0] / 'captures' / name).exists())
                 self.assertTrue((segments[-1][0] / 'captures' / name).exists())
 
+    def test_crashed_pure_snapshot_never_reopens_sealed_parent(self):
+        with World() as world, patch.dict(os.environ, world.env, clear=True):
+            repo, session, lifecycle = self.fixture(world)
+            human = self.entry('human', 'user', 'Actual short request', attribution='user')
+            result = self.observe(repo, session, lifecycle, [human])
+            parent, _ = transport.segments(repo, session)[0]
+            manifest = (parent / 'segment.json').read_bytes()
+            wake = transport.observe(repo, {'schema': 'agent-memory/omp-observer-request-v1', 'action': 'wake',
+                'session': session, 'lifecycle': result['lifecycle'], 'payload': result['wake_payload']})
+            control = {'type': 'custom_message', 'id': 'native-control', 'parentId': 'human',
+                       'customType': 'session-stop-continuation', 'attribution': 'agent',
+                       'content': wake['additionalContext']}
+            replace = transport.replace_cursor
+            def interrupted(path, value):
+                if 'native-control' in (value.get('control_interval') or {}).get('pure_entries', {}):
+                    raise OSError('Controlled crash after snapshot, before cursor publication')
+                return replace(path, value)
+            with patch.object(transport, 'replace_cursor', side_effect=interrupted):
+                with self.assertRaises(OSError):
+                    self.observe(repo, session, result['lifecycle'], [human, control], seal=False)
+            substantive = self.entry('late-work', 'assistant', 'New substantive foreign work')
+            self.observe(repo, session, result['lifecycle'], [human, control, substantive], seal=False,
+                         terminal=True, trigger='own-hidden-ambiguous')
+            segments = transport.segments(repo, session)
+            name = hashlib.sha256(control['id'].encode()).hexdigest() + '.json'
+            self.assertEqual((parent / 'segment.json').read_bytes(), manifest)
+            self.assertFalse((parent / 'captures' / name).exists())
+            self.assertTrue((segments[-1][0] / 'captures' / name).exists())
+            self.assertTrue((parent / 'snapshots' / name).exists())
+            self.assertTrue(transport.pending_inventory(repo)[1],
+                            'the unqualified historical orphan must remain an explicit inventory fault')
+
     def test_late_native_tool_result_recovers_original_sealed_gap_without_reopening(self):
         with World() as world:
             repo, session, lifecycle = self.fixture(world)

@@ -404,6 +404,19 @@ class HeldSourceEnrollment(unittest.TestCase):
                     self.assertEqual(len(steered['sources']), 2)
                     self.assertEqual({source['native_source_id'] for source in steered['sources']},
                                      {event_id, steering['event_id']})
+                    generated = {**event, 'event_id': uid(),
+                                 'prompt': 'Controlled late generated guidance; inspect the original source.'}
+                    self.assertTrue(sources.reserve_wake(repo, harness, session, lifecycle,
+                        steered['fingerprint'], hashlib.sha256(generated['prompt'].encode()).hexdigest()))
+                    generated_output = hook('codex_prompt.py', generated)
+                    self.assertLessEqual(len(generated_output['hookSpecificOutput']['additionalContext'].encode()), 2048)
+                    hinted = sources.inspect(repo, harness, session, lifecycle)
+                    self.assertEqual(len(hinted['sources']), 3)
+                    actual = next(source for source in hinted['sources']
+                                  if source['native_source_id'] == generated['event_id'])
+                    self.assertTrue(actual['control_origin_hint'])
+                    self.assertEqual(actual['source_sha256'], hashlib.sha256(generated['prompt'].encode()).hexdigest())
+                    self.assertFalse(hinted['complete'])
                 stopped = hook(harness + '_stop.py', {**event, 'hook_event_name': 'Stop', 'stop_hook_active': False})
                 self.assertIn('recovery-pending', stopped['systemMessage'])
                 self.assertNotIn('decision', stopped)
