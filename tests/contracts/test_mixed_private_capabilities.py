@@ -393,8 +393,14 @@ class MixedPrivateCapabilities(unittest.TestCase):
             command, source, repo, bank, _, inspected, _ = recovery.small_pending(world)
             directory = recovery.private_directory(world, bank, inspected['operation_id'])
             receipt = json.loads(receipt_path(world).read_text())
+            feature = repo / 'feature.txt'
+            feature.write_text('Disposable independent feature baseline.\n')
+            world.git('add', 'feature.txt', cwd=repo)
+            world.git('commit', '-m', 'Independent feature baseline', cwd=repo)
+            feature.write_text('Disposable staged feature change.\n')
+            world.git('add', 'feature.txt', cwd=repo)
             before = (snapshot(bank), snapshot(directory), snapshot(world.paths['config']),
-                      owned(receipt), (repo / '.git/index').read_bytes(),
+                      owned(receipt), feature.read_bytes(), (repo / '.git/index').read_bytes(),
                       world.git('rev-parse', 'HEAD', cwd=repo).stdout)
             program = r'''
 import json, sys
@@ -458,5 +464,5 @@ print(json.dumps(results))
                 kind: {'injected': True, 'refused': True}
                 for kind in ('config', 'bank', 'hold', 'attestation')})
             self.assertEqual((snapshot(bank), snapshot(directory), snapshot(world.paths['config']),
-                              owned(receipt), (repo / '.git/index').read_bytes(),
+                              owned(receipt), feature.read_bytes(), (repo / '.git/index').read_bytes(),
                               world.git('rev-parse', 'HEAD', cwd=repo).stdout), before)
