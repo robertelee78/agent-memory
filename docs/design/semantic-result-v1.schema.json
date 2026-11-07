@@ -3,12 +3,12 @@
   "title": "Proposed G1 lifecycle and semantic result v1",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "operation", "status", "reason_code", "exit_code", "project_id", "namespace_id", "requested_mode", "effective_mode", "semantic_status", "resource_state", "generation_state", "generation_id", "profile_id", "identity_assurance", "destination_class", "source_currency", "semantic_coverage", "remote_freshness", "graph_capability", "vector_capability", "results", "mandatory_groups", "selection_ref", "mutated", "resource_changed", "purge", "exclusions"],
+  "required": ["schema", "operation", "status", "reason_code", "exit_code", "project_id", "namespace_id", "requested_mode", "effective_mode", "semantic_status", "resource_state", "generation_state", "generation_id", "profile_id", "identity_assurance", "destination_class", "source_currency", "semantic_coverage", "native_coverage", "remote_freshness", "graph_capability", "vector_capability", "results", "mandatory_groups", "selection_ref", "next_page", "queued_hints", "mutated", "resource_changed", "purge", "exclusions"],
   "properties": {
     "schema": {"const": "agent-memory/semantic-result-v1"},
     "operation": {"enum": ["graph.setup", "graph.status", "graph.start", "graph.stop", "graph.build", "graph.rebuild", "graph.diagnose", "graph.purge-preview", "graph.purge-apply", "embeddings.setup", "embeddings.status", "embeddings.start", "embeddings.stop", "embeddings.reembed", "embeddings.diagnose", "embeddings.purge-preview", "embeddings.purge-apply", "search", "related"]},
     "status": {"$ref": "#/$defs/status"},
-    "reason_code": {"enum": ["completed", "already-running", "already-stopped", "literal-fallback", "partial-coverage", "empty-input", "over-context", "invalid-response", "model-drift", "identity-unverified", "truncation-unverified", "endpoint-unavailable", "graph-unavailable", "profile-disabled", "approval-required", "remote-budget-exhausted", "source-stale", "missing-score", "resource-limit", "runtime-stopped", "erasure-pending", "byo-graph-erasure-unverifiable", "resource-set-changed", "foreign-scope", "withheld", "clarification-required", "invalid-request", "operation-failed"]},
+    "reason_code": {"enum": ["completed", "already-running", "already-stopped", "literal-fallback", "partial-coverage", "empty-input", "over-context", "invalid-response", "model-drift", "identity-unverified", "truncation-unverified", "endpoint-unavailable", "graph-unavailable", "profile-disabled", "approval-required", "remote-budget-exhausted", "source-stale", "missing-score", "resource-limit", "runtime-stopped", "erasure-pending", "byo-graph-erasure-unverifiable", "resource-set-changed", "foreign-scope", "foreign-reference", "stale-reference", "invalid-reference", "withheld", "clarification-required", "invalid-request", "operation-failed"]},
     "exit_code": {"type": "integer", "enum": [0, 1, 2]},
     "project_id": {"type": ["string", "null"]},
     "namespace_id": {"type": ["string", "null"]},
@@ -23,27 +23,101 @@
     "destination_class": {"enum": ["not-applicable", "managed-local", "loopback-byo", "remote"]},
     "source_currency": {"$ref": "#/$defs/assessment"},
     "semantic_coverage": {"$ref": "#/$defs/assessment"},
+    "native_coverage": {"anyOf": [{"type": "null"}, {"$ref": "#/$defs/native_coverage"}]},
     "remote_freshness": {"$ref": "#/$defs/assessment"},
     "graph_capability": {"$ref": "#/$defs/capability"},
     "vector_capability": {"$ref": "#/$defs/capability"},
-    "results": {"type": "array", "items": {"$ref": "#/$defs/result"}},
+    "results": {"type": "array", "items": {"oneOf": [{"$ref": "#/$defs/result"}, {"$ref": "#/$defs/related"}]}},
     "mandatory_groups": {"type": "array", "items": {"$ref": "#/$defs/mandatory_group"}},
     "selection_ref": {"type": ["string", "null"]},
+    "next_page": {"type": ["string", "null"]},
+    "queued_hints": {"type": ["integer", "null"], "minimum": 0},
     "mutated": {"type": "boolean"},
     "resource_changed": {"type": "boolean"},
     "purge": {"anyOf": [{"type": "null"}, {"$ref": "#/$defs/purge"}]},
-    "exclusions": {"type": "array", "uniqueItems": true, "items": {"enum": ["empty-input", "over-context", "withheld", "capped", "truncation-unverified", "missing-score"]}}
+    "exclusions": {"type": "array", "uniqueItems": true, "items": {"enum": ["empty-input", "over-context", "held", "pending-recovery", "withheld", "capped", "truncation-unverified", "missing-score"]}}
   },
   "allOf": [
     {"if": {"properties": {"status": {"const": "qualified"}}, "required": ["status"]}, "then": {"properties": {"exit_code": {"const": 0}}}},
     {"if": {"properties": {"status": {"const": "invalid-request"}}, "required": ["status"]}, "then": {"properties": {"exit_code": {"const": 2}}}},
-    {"if": {"properties": {"status": {"not": {"enum": ["qualified", "invalid-request"]}}}, "required": ["status"]}, "then": {"properties": {"exit_code": {"const": 1}}}}
+    {"if": {"properties": {"status": {"not": {"enum": ["qualified", "invalid-request"]}}}, "required": ["status"]}, "then": {"properties": {"exit_code": {"const": 1}}}},
+    {"if": {"properties": {"requested_mode": {"const": "literal"}}}, "then": {"properties": {"semantic_status": {"const": "not-requested"}}}},
+    {"if": {"properties": {"reason_code": {"const": "literal-fallback"}}}, "then": {"properties": {"requested_mode": {"const": "semantic"}, "effective_mode": {"const": "literal"}, "semantic_status": {"not": {"enum": ["qualified", "not-requested"]}}}}},
+    {"if": {"properties": {"requested_mode": {"const": "semantic"}, "effective_mode": {"const": "literal"}}}, "then": {"properties": {"reason_code": {"const": "literal-fallback"}, "semantic_status": {"not": {"enum": ["qualified", "not-requested"]}}}}},
+    {"if": {"properties": {"operation": {"enum": ["graph.purge-preview", "graph.purge-apply", "embeddings.purge-preview", "embeddings.purge-apply"]}}}, "then": {"properties": {"purge": {"$ref": "#/$defs/purge"}}}},
+    {"if": {"properties": {"reason_code": {"const": "missing-score"}}}, "then": {"properties": {"status": {"const": "stale"}, "semantic_status": {"const": "stale"}}}},
+    {"if": {"properties": {"exclusions": {"contains": {"const": "missing-score"}}}}, "then": {"properties": {"semantic_status": {"const": "stale"}}}},
+    {"if": {"properties": {"native_coverage": {"type": "object", "properties": {"semantic_coverage": {"const": "incomplete-recovery"}}, "required": ["semantic_coverage"]}}}, "then": {"properties": {"exclusions": {"contains": {"const": "pending-recovery"}}, "semantic_coverage": {"not": {"const": "complete"}}}}},
+    {"if": {"properties": {"semantic_coverage": {"const": "complete"}}}, "then": {"properties": {"exclusions": {"maxItems": 0}, "native_coverage": {"$ref": "#/$defs/complete_native_coverage"}}}},
+    {"if": {"properties": {"operation": {"const": "search"}, "status": {"enum": ["qualified", "partial"]}}}, "then": {"properties": {"native_coverage": {"$ref": "#/$defs/native_coverage"}}}},
+    {"if": {"properties": {"operation": {"const": "search"}}}, "then": {"properties": {"results": {"items": {"$ref": "#/$defs/result"}}}}},
+    {"if": {"properties": {"operation": {"const": "related"}}}, "then": {"properties": {"results": {"items": {"$ref": "#/$defs/related"}}}}}
   ],
   "$defs": {
     "status": {"enum": ["qualified", "partial", "unavailable", "stale", "incompatible", "refused", "approval-required", "pending", "erasure-pending", "invalid-request", "withheld", "clarification-required", "failed"]},
     "mode": {"enum": ["semantic", "literal", "related", "lifecycle", "none"]},
     "assessment": {"enum": ["complete", "partial", "stale", "unavailable", "unverified", "not-applicable"]},
     "capability": {"enum": ["available", "partial", "unavailable", "pending", "incompatible", "not-applicable"]},
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "native_coverage": {
+      "type": "object", "additionalProperties": false,
+      "required": ["bank_observation_sha256", "context", "scope_context", "excluded_counts", "semantic_coverage", "pending_recovery_unit_ids", "pending_recovery_units", "recovery_required_actions"],
+      "properties": {
+        "bank_observation_sha256": {"$ref": "#/$defs/sha256"},
+        "context": {"type": "object", "additionalProperties": {"type": "string"}},
+        "scope_context": {
+          "type": "object", "additionalProperties": false,
+          "required": ["developer_id", "project_id", "developer_sha256", "project_sha256", "checkout_key", "repository_settings_sha256", "initialization_only"],
+          "properties": {
+            "developer_id": {"type": "string"}, "project_id": {"type": "string"},
+            "developer_sha256": {"$ref": "#/$defs/sha256"}, "project_sha256": {"$ref": "#/$defs/sha256"},
+            "checkout_key": {"type": "string"}, "repository_settings_sha256": {"$ref": "#/$defs/sha256"},
+            "initialization_only": {"type": "boolean"}
+          }
+        },
+        "excluded_counts": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}},
+        "semantic_coverage": {"enum": ["complete-canonical-observation", "incomplete-recovery"]},
+        "pending_recovery_unit_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+        "pending_recovery_units": {"type": "integer", "minimum": 0},
+        "recovery_required_actions": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "complete_native_coverage": {
+      "allOf": [
+        {"$ref": "#/$defs/native_coverage"},
+        {"properties": {"semantic_coverage": {"const": "complete-canonical-observation"}, "pending_recovery_unit_ids": {"maxItems": 0}, "pending_recovery_units": {"const": 0}, "recovery_required_actions": {"maxItems": 0}}}
+      ]
+    },
+    "path_row": {
+      "type": "object", "additionalProperties": false,
+      "required": ["from", "rel", "to", "asserted_by", "source_sha256", "channel"],
+      "properties": {
+        "from": {"type": "string", "minLength": 1}, "to": {"type": "string", "minLength": 1},
+        "asserted_by": {"type": "string", "minLength": 1}, "source_sha256": {"$ref": "#/$defs/sha256"},
+        "rel": {"enum": ["CONTAINS", "ROUTES_TO", "IN_SCOPE", "HAS_CONDITION", "SUPPORTED_BY", "ATTRIBUTED_TO", "CORRECTS", "SUPERSEDES", "SUPERSEDED_BY", "DERIVED_FROM", "SIMILAR_SUGGESTION"]},
+        "channel": {"enum": ["recorded", "inferred"]}
+      },
+      "allOf": [
+        {"if": {"properties": {"rel": {"const": "SIMILAR_SUGGESTION"}}}, "then": {"properties": {"channel": {"const": "inferred"}}}, "else": {"properties": {"channel": {"const": "recorded"}}}}
+      ]
+    },
+    "related": {
+      "type": "object", "additionalProperties": false,
+      "required": ["target", "paths", "relation_channel", "selection_ref"],
+      "properties": {
+        "target": {
+          "type": "object", "additionalProperties": false,
+          "required": ["tagged_key", "path", "source_sha256", "lifecycle"],
+          "properties": {
+            "tagged_key": {"type": "string", "minLength": 1}, "path": {"type": "string", "minLength": 1},
+            "source_sha256": {"$ref": "#/$defs/sha256"}, "lifecycle": {"enum": ["current", "historical"]}
+          }
+        },
+        "paths": {"type": "array", "minItems": 1, "items": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/path_row"}}},
+        "relation_channel": {"enum": ["recorded", "inferred"]},
+        "selection_ref": {"type": "string", "minLength": 1}
+      }
+    },
     "mandatory_group": {
       "type": "object", "additionalProperties": false,
       "required": ["kind", "use_as_settled_guidance", "rationales", "sources"],
@@ -56,11 +130,12 @@
     },
     "result": {
       "type": "object", "additionalProperties": false,
-      "required": ["native", "selection_ref", "relation", "mandatory_caveats"],
+      "required": ["native", "selection_ref", "relation", "mandatory_caveats", "related"],
       "properties": {
         "native": {"$ref": "#/$defs/native"},
         "selection_ref": {"type": ["string", "null"]},
         "relation": {"enum": [null, "recorded", "inferred"]},
+        "related": {"type": "array", "items": {"$ref": "#/$defs/related"}},
         "mandatory_caveats": {"type": "array", "items": {"$ref": "#/$defs/native"}}
       }
     },
