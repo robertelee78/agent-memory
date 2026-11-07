@@ -256,6 +256,11 @@ def _manual_comparison(receipt_sha, artifact_digest, agent_dir):
         if not path.is_absolute() or '..' in path.parts:
             return None
 
+        def directory_pin(value):
+            # Sibling entries may change directory size, links and timestamps.
+            # Authority is the selected named inode and its unchanged trust policy.
+            return (value.st_dev, value.st_ino, value.st_mode, value.st_uid, value.st_gid)
+
         def pin(value):
             return (value.st_dev, value.st_ino, value.st_mode, value.st_uid,
                     value.st_gid, value.st_nlink, value.st_size,
@@ -264,7 +269,7 @@ def _manual_comparison(receipt_sha, artifact_digest, agent_dir):
         root = Path(path.anchor)
         descriptors.append(os.open(root, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW))
         protected, _ = trust_paths.inspect_entry(root, os.fstat(descriptors[0]), False)
-        pins = [pin(os.fstat(descriptors[0]))]
+        pins = [directory_pin(os.fstat(descriptors[0]))]
         parts = path.parts[1:]
         node = root
         for index, part in enumerate(parts):
@@ -278,7 +283,7 @@ def _manual_comparison(receipt_sha, artifact_digest, agent_dir):
             if final and (not stat.S_ISREG(value.st_mode) or value.st_nlink != 1
                           or value.st_size > omp_projection.MAX_SOURCE):
                 return None
-            pins.append(pin(value))
+            pins.append(pin(value) if final else directory_pin(value))
 
         chunks, size = [], 0
         while size <= omp_projection.MAX_SOURCE:
@@ -296,22 +301,24 @@ def _manual_comparison(receipt_sha, artifact_digest, agent_dir):
         installation.verify_targets([target], source=receipt['source'])
         if omp_transport.digest(observer_binding(artifact_digest, agent_dir)) != receipt_sha:
             return None
-        if pin(os.fstat(descriptors[0])) != pins[0] or pin(os.stat(root, follow_symlinks=False)) != pins[0]:
+        if (directory_pin(os.fstat(descriptors[0])) != pins[0]
+                or directory_pin(os.stat(root, follow_symlinks=False)) != pins[0]):
             return None
         for index, part in enumerate(parts):
-            if (pin(os.fstat(descriptors[index + 1])) != pins[index + 1]
-                    or pin(os.stat(part, dir_fd=descriptors[index], follow_symlinks=False)) != pins[index + 1]):
+            selected_pin = pin if index == len(parts) - 1 else directory_pin
+            if (selected_pin(os.fstat(descriptors[index + 1])) != pins[index + 1]
+                    or selected_pin(os.stat(part, dir_fd=descriptors[index], follow_symlinks=False)) != pins[index + 1]):
                 return None
         if link_pin is not None:
             link, name, parent, value, link_dirs, destination = link_pin
-            if (pin(os.stat(link.anchor, follow_symlinks=False)) != pin(link_dirs[0][3])
+            if (directory_pin(os.stat(link.anchor, follow_symlinks=False)) != directory_pin(link_dirs[0][3])
                     or pin(os.stat(name, dir_fd=parent, follow_symlinks=False)) != pin(value)
                     or os.readlink(name, dir_fd=parent) != destination):
                 return None
             for fd, parent_fd, part, before in link_dirs:
-                if (pin(os.fstat(fd)) != pin(before)
+                if (directory_pin(os.fstat(fd)) != directory_pin(before)
                         or (parent_fd is not None
-                            and pin(os.stat(part, dir_fd=parent_fd, follow_symlinks=False)) != pin(before))):
+                            and directory_pin(os.stat(part, dir_fd=parent_fd, follow_symlinks=False)) != directory_pin(before))):
                     return None
         return (text, str(logical_path), receipt['installation_id'], receipt_sha, artifact_digest, expected)
     except (OSError, ValueError, TypeError, KeyError, IndexError, ContractError):

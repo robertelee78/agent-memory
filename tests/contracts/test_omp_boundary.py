@@ -277,8 +277,8 @@ class OwnedInstructionBoundary(unittest.TestCase):
         self.assertIsNotNone(witness)
         return receipt, witness
 
-    def pair(self, witness):
-        text, path, _, _, _, _ = witness._verify()
+    def pair(self, witness, *, verified=None):
+        text, path, _, _, _, _ = witness._verify() if verified is None else verified
         body = text.rstrip('\n')
         lines = len(body.split('\n'))
         invocation = {'type': 'message', 'id': 'manual-invocation', 'parentId': 'human',
@@ -451,6 +451,143 @@ class OwnedInstructionBoundary(unittest.TestCase):
                 self.assertFalse(any(g['native_entry_id'] == 'tool:manual-call' for g in manifest['gaps']))
                 self.observe(repo, session, result['lifecycle'], entries, receipt)
                 self.assertEqual(path.read_bytes(), original)
+
+    def test_unrelated_ancestor_churn_preserves_witness_and_public_annotation(self):
+        for mode in ('copy', 'link'):
+            with self.subTest(mode=mode), World() as world, patch.dict(os.environ, world.env, clear=True):
+                receipt, witness = self.installed(world, mode)
+                helper = NativeSources()
+                repo, session, lifecycle = helper.fixture(world)
+                invocation, entry = self.pair(witness, verified=witness._comparison)
+                human = helper.entry('human', 'user', 'Review this task', attribution='user')
+                sibling = world.inside('unrelated sibling')
+                original = omp_installation.observer_binding
+                calls, changes = [], []
+
+                def rendezvous(*args, **kwargs):
+                    observed = original(*args, **kwargs)
+                    calls.append(None)
+                    if len(calls) % 2 == 0:
+                        before = world.root.stat()
+                        if sibling.exists():
+                            sibling.rmdir()
+                            changes.append('delete')
+                        else:
+                            sibling.mkdir()
+                            changes.append('create')
+                        self.assertNotEqual(before.st_nlink, world.root.stat().st_nlink)
+                    return observed
+
+                # Only schedule real namespace changes; all receipt, artifact,
+                # descriptor and trust-policy verification still runs.
+                with patch.object(omp_installation, 'observer_binding', side_effect=rendezvous):
+                    with self.subTest(boundary='witness'):
+                        self.assertIsNotNone(witness._verify())
+                    result = self.observe(repo, session, lifecycle, [human, invocation, entry],
+                                          receipt, seal=True)
+                self.assertIn('create', changes)
+                self.assertIn('delete', changes)
+                directory, _ = transport.segments(repo, session)[0]
+                name = hashlib.sha256(entry['id'].encode()).hexdigest() + '.json'
+                snapshot_path = directory / 'snapshots' / name
+                self.assertTrue(snapshot_path.exists(), result)
+                snapshot = transport.read(snapshot_path)
+                self.assertEqual(snapshot['content'], [])
+                self.assertEqual(snapshot['instruction_context']['tool_call_id'], 'manual-call')
+                self.assertTrue(omp_projection._valid_instruction_context(snapshot))
+                manifest = transport.read(directory / 'segment.json')
+                self.assertFalse(any(g['native_entry_id'] == 'tool:manual-call'
+                                     for g in manifest['gaps']))
+
+    def test_verification_races_refuse_selected_binding_payload_and_policy_changes(self):
+        for mode in ('copy', 'link'):
+            with self.subTest(mode=mode), World() as world, patch.dict(os.environ, world.env, clear=True):
+                receipt, witness = self.installed(world, mode)
+                skill = Path(receipt['omp_binding']['skill_target'])
+                manual = skill / 'SKILL.md'
+                parent = skill.parent
+                state, _ = installation.locations()
+                receipt_path = state / 'receipt.json'
+                original_manual, original_receipt = manual.read_bytes(), receipt_path.read_bytes()
+                manual_mode, parent_mode = manual.stat().st_mode & 0o777, parent.stat().st_mode & 0o777
+                receipt_mode = receipt_path.stat().st_mode & 0o777
+                original = omp_installation.observer_binding
+                races = ['directory-substitution', 'directory-mode', 'manual-substitution',
+                         'manual-symlink', 'manual-bytes', 'manual-mode', 'receipt', 'receipt-mode']
+                if mode == 'link':
+                    races += ['link-substitution', 'link-retarget']
+                for race in races:
+                    with self.subTest(race=race):
+                        calls = []
+                        selected = (parent if race == 'directory-substitution' else
+                                    skill if race.startswith('link-') else manual)
+                        backup = selected.with_name(selected.name + '.race-backup')
+
+                        def mutate():
+                            if race == 'directory-substitution':
+                                parent.rename(backup)
+                                parent.mkdir(mode=parent_mode)
+                            elif race == 'directory-mode':
+                                parent.chmod(parent_mode | 0o002)
+                            elif race in {'manual-substitution', 'manual-symlink'}:
+                                manual.rename(backup)
+                                if race == 'manual-symlink':
+                                    manual.symlink_to(backup)
+                                else:
+                                    manual.write_bytes(original_manual)
+                                    manual.chmod(manual_mode)
+                            elif race == 'manual-bytes':
+                                manual.write_bytes(bytes([original_manual[0] ^ 1]) + original_manual[1:])
+                            elif race == 'manual-mode':
+                                manual.chmod(manual_mode | 0o002)
+                            elif race == 'receipt':
+                                changed = copy.deepcopy(receipt)
+                                changed['installation_id'] = uuid.uuid4().hex
+                                receipt_path.write_text(json.dumps(changed))
+                            elif race == 'receipt-mode':
+                                receipt_path.chmod(receipt_mode | 0o002)
+                            else:
+                                skill.rename(backup)
+                                destination = (receipt['source']['pack'] if race == 'link-substitution'
+                                               else str(world.paths['repo']))
+                                skill.symlink_to(destination, target_is_directory=True)
+
+                        def rendezvous(*args, **kwargs):
+                            calls.append(None)
+                            # Receipt mutations precede its final genuine read.
+                            # Other races occur after genuine artifact readback,
+                            # so the descriptor/named-entry pins must refuse.
+                            if len(calls) == 2 and race.startswith('receipt'):
+                                mutate()
+                            observed = original(*args, **kwargs)
+                            if len(calls) == 2 and not race.startswith('receipt'):
+                                mutate()
+                            return observed
+
+                        try:
+                            with patch.object(omp_installation, 'observer_binding', side_effect=rendezvous):
+                                self.assertIsNone(witness._verify())
+                            self.assertEqual(len(calls), 2)
+                        finally:
+                            if race == 'directory-substitution' and backup.exists():
+                                parent.rmdir()
+                                backup.rename(parent)
+                            elif race == 'directory-mode':
+                                parent.chmod(parent_mode)
+                            elif race in {'manual-substitution', 'manual-symlink'} and backup.exists():
+                                manual.unlink()
+                                backup.rename(manual)
+                            elif race == 'manual-bytes':
+                                manual.write_bytes(original_manual)
+                            elif race == 'manual-mode':
+                                manual.chmod(manual_mode)
+                            elif race == 'receipt':
+                                receipt_path.write_bytes(original_receipt)
+                            elif race == 'receipt-mode':
+                                receipt_path.chmod(receipt_mode)
+                            elif race.startswith('link-') and backup.is_symlink():
+                                skill.unlink()
+                                backup.rename(skill)
 
     def test_nonread_result_never_mints_manual_witness(self):
         with World() as world, patch.dict(os.environ, world.env, clear=True):
