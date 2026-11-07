@@ -1,0 +1,353 @@
+{
+  "before_source_commit": "d351eab6929c7103ffe948db7fe968a178384551",
+  "controls": [
+    {
+      "budget_control": "count-budget",
+      "downstream_attempt_counts": {
+        "ann": 0,
+        "exact_rank": 0,
+        "query_embed": 1,
+        "typed": 0
+      },
+      "first_forbidden_attempt": "query_embed",
+      "missing_prerequisite_rows": 0,
+      "native_selection": {
+        "canonical_bytes": 126508,
+        "pool": 83,
+        "ranked_domain_size": 80,
+        "result_byte_limit": 65536,
+        "result_count": 30,
+        "result_limit": 64,
+        "used_bytes": 63575
+      },
+      "operation": "semantic-recall",
+      "persisted_unexecuted_observations": 0,
+      "prerequisite": "Bounded native output cannot crosscheck the complete qualified domain",
+      "provider_accounting_executed": null,
+      "query_schedule_count": 1,
+      "scored_native_class": null,
+      "source": "before"
+    },
+    {
+      "budget_control": "count-budget",
+      "downstream_attempt_counts": {
+        "ann": 0,
+        "exact_rank": 0,
+        "query_embed": 0,
+        "typed": 1
+      },
+      "first_forbidden_attempt": "typed",
+      "missing_prerequisite_rows": 0,
+      "native_selection": {
+        "canonical_bytes": 126508,
+        "pool": 83,
+        "ranked_domain_size": 80,
+        "result_byte_limit": 65536,
+        "result_count": 30,
+        "result_limit": 64,
+        "used_bytes": 63575
+      },
+      "operation": "template:controlled-boundary",
+      "persisted_unexecuted_observations": 0,
+      "prerequisite": "Bounded native output cannot crosscheck the complete qualified domain",
+      "provider_accounting_executed": null,
+      "query_schedule_count": 1,
+      "scored_native_class": null,
+      "source": "before"
+    },
+    {
+      "budget_control": "count-budget",
+      "downstream_attempt_counts": {
+        "ann": 0,
+        "exact_rank": 0,
+        "query_embed": 0,
+        "typed": 0
+      },
+      "first_forbidden_attempt": null,
+      "missing_prerequisite_rows": 2,
+      "native_selection": {
+        "canonical_bytes": 126508,
+        "pool": 83,
+        "ranked_domain_size": 80,
+        "result_byte_limit": 65536,
+        "result_count": 30,
+        "result_limit": 64,
+        "used_bytes": 63575
+      },
+      "operation": "semantic-recall",
+      "persisted_unexecuted_observations": 2,
+      "prerequisite": "Bounded native output cannot crosscheck the complete qualified domain",
+      "provider_accounting_executed": true,
+      "query_schedule_count": 0,
+      "scored_native_class": {
+        "executed": false,
+        "failed_predicates": [],
+        "prerequisites": [
+          "Bounded native output cannot crosscheck the complete qualified domain"
+        ]
+      },
+      "source": "after"
+    },
+    {
+      "budget_control": "count-budget",
+      "downstream_attempt_counts": {
+        "ann": 0,
+        "exact_rank": 0,
+        "query_embed": 0,
+        "typed": 0
+      },
+      "first_forbidden_attempt": null,
+      "missing_prerequisite_rows": 2,
+      "native_selection": {
+        "canonical_bytes": 126508,
+        "pool": 83,
+        "ranked_domain_size": 80,
+        "result_byte_limit": 65536,
+        "result_count": 30,
+        "result_limit": 64,
+        "used_bytes": 63575
+      },
+      "operation": "template:controlled-boundary",
+      "persisted_unexecuted_observations": 2,
+      "prerequisite": "Bounded native output cannot crosscheck the complete qualified domain",
+      "provider_accounting_executed": true,
+      "query_schedule_count": 0,
+      "scored_native_class": {
+        "executed": false,
+        "failed_predicates": [],
+        "prerequisites": [
+          "Bounded native output cannot crosscheck the complete qualified domain"
+        ]
+      },
+      "source": "after"
+    },
+    {
+      "budget_control": "byte-budget",
+      "downstream_attempt_counts": {
+        "ann": 0,
+        "exact_rank": 0,
+        "query_embed": 1,
+        "typed": 0
+      },
+      "first_forbidden_attempt": "query_embed",
+      "missing_prerequisite_rows": 0,
+      "native_selection": {
+        "canonical_bytes": 137531,
+        "pool": 13,
+        "ranked_domain_size": 10,
+        "result_byte_limit": 65536,
+        "result_count": 7,
+        "result_limit": 64,
+        "used_bytes": 61227
+      },
+      "operation": "semantic-recall",
+      "persisted_unexecuted_observations": 0,
+      "prerequisite": "Bounded native output cannot crosscheck the complete qualified domain",
+      "provider_accounting_executed": null,
+      "query_schedule_count": 1,
+      "scored_native_class": null,
+      "source": "before"
+    },
+    {
+      "budget_control": "byte-budget",
+      "downstream_attempt_counts": {
+        "ann": 0,
+        "exact_rank": 0,
+        "query_embed": 0,
+        "typed": 1
+      },
+      "first_forbidden_attempt": "typed",
+      "missing_prerequisite_rows": 0,
+      "native_selection": {
+        "canonical_bytes": 137531,
+        "pool": 13,
+        "ranked_domain_size": 10,
+        "result_byte_limit": 65536,
+        "result_count": 7,
+        "result_limit": 64,
+        "used_bytes": 61227
+      },
+      "operation": "template:controlled-boundary",
+      "persisted_unexecuted_observations": 0,
+      "prerequisite": "Bounded native output cannot crosscheck the complete qualified domain",
+      "provider_accounting_executed": null,
+      "query_schedule_count": 1,
+      "scored_native_class": null,
+      "source": "before"
+    },
+    {
+      "budget_control": "byte-budget",
+      "downstream_attempt_counts": {
+        "ann": 0,
+        "exact_rank": 0,
+        "query_embed": 0,
+        "typed": 0
+      },
+      "first_forbidden_attempt": null,
+      "missing_prerequisite_rows": 2,
+      "native_selection": {
+        "canonical_bytes": 137531,
+        "pool": 13,
+        "ranked_domain_size": 10,
+        "result_byte_limit": 65536,
+        "result_count": 7,
+        "result_limit": 64,
+        "used_bytes": 61227
+      },
+      "operation": "semantic-recall",
+      "persisted_unexecuted_observations": 2,
+      "prerequisite": "Bounded native output cannot crosscheck the complete qualified domain",
+      "provider_accounting_executed": true,
+      "query_schedule_count": 0,
+      "scored_native_class": {
+        "executed": false,
+        "failed_predicates": [],
+        "prerequisites": [
+          "Bounded native output cannot crosscheck the complete qualified domain"
+        ]
+      },
+      "source": "after"
+    },
+    {
+      "budget_control": "byte-budget",
+      "downstream_attempt_counts": {
+        "ann": 0,
+        "exact_rank": 0,
+        "query_embed": 0,
+        "typed": 0
+      },
+      "first_forbidden_attempt": null,
+      "missing_prerequisite_rows": 2,
+      "native_selection": {
+        "canonical_bytes": 137531,
+        "pool": 13,
+        "ranked_domain_size": 10,
+        "result_byte_limit": 65536,
+        "result_count": 7,
+        "result_limit": 64,
+        "used_bytes": 61227
+      },
+      "operation": "template:controlled-boundary",
+      "persisted_unexecuted_observations": 2,
+      "prerequisite": "Bounded native output cannot crosscheck the complete qualified domain",
+      "provider_accounting_executed": true,
+      "query_schedule_count": 0,
+      "scored_native_class": {
+        "executed": false,
+        "failed_predicates": [],
+        "prerequisites": [
+          "Bounded native output cannot crosscheck the complete qualified domain"
+        ]
+      },
+      "source": "after"
+    }
+  ],
+  "execution_io_sha256": "558f5552e8baf0846493b74efe22dde59a2678fa21d16c2b1fc31cbba77cce7c",
+  "executor_native_sha256": "7765ef70e6ac715925d081a9c8c7a629563f5332a9f54510aa7c29a6bf558735",
+  "held_out_informed": true,
+  "independent_held_out_qualification": false,
+  "model_graph_endpoint_service_calls": 0,
+  "new_independent_review_and_full_closure_freeze_required": true,
+  "partial_finally_controls": [
+    {
+      "accounting": {
+        "documents_complete": false,
+        "global_forbidden_source_keys_in_retained_attempts": [],
+        "interpretation": "Bound request payloads include uncertain transport; incomplete size cells remain unexecuted, not no-send or erasure claims",
+        "pending_batches": 1250,
+        "retained_requests": 0,
+        "size": 10000,
+        "transport_outcome_unconfirmed_requests": 0
+      },
+      "actual_retained_payload_attempts": 0,
+      "earlier_observation_cells": 2,
+      "phase_prerequisite": {
+        "phase": "document-embedding",
+        "prerequisite": "Document schedule incomplete; retained attempts include unconfirmed transport, not a no-send or completed-vector claim"
+      },
+      "scorer_cli": {
+        "argv": [
+          "/Users/robert.lee/.pyenv/versions/3.13.12/bin/python3",
+          "-I",
+          "-B",
+          "/opt/agent-memory-worktrees/issue255-accounting-20261107/docs/research/data/2026-11-05-ssg-runtime/independent-execution/score.py",
+          "--suite",
+          "/opt/agent-memory-worktrees/issue255-accounting-20261107/docs/research/data/2026-11-05-ssg-runtime/independent-suite/suite.json",
+          "--scorer-map",
+          "/opt/agent-memory-worktrees/issue255-accounting-20261107/docs/research/data/2026-11-05-ssg-runtime/independent-execution/scorer-map-20261106.json",
+          "--raw-root",
+          "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-bounded-caller-otve3f2f/actual-partial-finally-0",
+          "--manifest",
+          "manifest.json",
+          "--expected-source-commit",
+          "eb70f2ef2f795cdd4cb6f3cbc306f27877ae695a",
+          "--output",
+          "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-bounded-caller-otve3f2f/partial-finally-0-score.json"
+        ],
+        "exit_code": 0,
+        "output": "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-bounded-caller-otve3f2f/partial-finally-0-score.json",
+        "output_sha256": "a8fe3cc764e9593b8bbc50da98bde7d37c0f358338c797c49c847d279f69effa",
+        "stderr": "",
+        "stdout": "{\"status\": \"raw-research-report-not-acceptance\", \"output\": \"/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-bounded-caller-otve3f2f/partial-finally-0-score.json\", \"output_sha256\": \"a8fe3cc764e9593b8bbc50da98bde7d37c0f358338c797c49c847d279f69effa\", \"model_graph_llm_calls\": 0}\n"
+      }
+    },
+    {
+      "accounting": {
+        "documents_complete": false,
+        "global_forbidden_source_keys_in_retained_attempts": [],
+        "interpretation": "Bound request payloads include uncertain transport; incomplete size cells remain unexecuted, not no-send or erasure claims",
+        "pending_batches": 1248,
+        "retained_requests": 2,
+        "size": 10000,
+        "transport_outcome_unconfirmed_requests": 1
+      },
+      "actual_retained_payload_attempts": 2,
+      "earlier_observation_cells": 2,
+      "phase_prerequisite": {
+        "phase": "document-embedding",
+        "prerequisite": "Document schedule incomplete; retained attempts include unconfirmed transport, not a no-send or completed-vector claim"
+      },
+      "scorer_cli": {
+        "argv": [
+          "/Users/robert.lee/.pyenv/versions/3.13.12/bin/python3",
+          "-I",
+          "-B",
+          "/opt/agent-memory-worktrees/issue255-accounting-20261107/docs/research/data/2026-11-05-ssg-runtime/independent-execution/score.py",
+          "--suite",
+          "/opt/agent-memory-worktrees/issue255-accounting-20261107/docs/research/data/2026-11-05-ssg-runtime/independent-suite/suite.json",
+          "--scorer-map",
+          "/opt/agent-memory-worktrees/issue255-accounting-20261107/docs/research/data/2026-11-05-ssg-runtime/independent-execution/scorer-map-20261106.json",
+          "--raw-root",
+          "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-bounded-caller-otve3f2f/actual-partial-finally-2",
+          "--manifest",
+          "manifest.json",
+          "--expected-source-commit",
+          "eb70f2ef2f795cdd4cb6f3cbc306f27877ae695a",
+          "--output",
+          "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-bounded-caller-otve3f2f/partial-finally-2-score.json"
+        ],
+        "exit_code": 0,
+        "output": "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-bounded-caller-otve3f2f/partial-finally-2-score.json",
+        "output_sha256": "02e137e14ab0e95aa2bf24158da82f269a97c6eb7b74ac531e0d88d50a14b452",
+        "stderr": "",
+        "stdout": "{\"status\": \"raw-research-report-not-acceptance\", \"output\": \"/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-bounded-caller-otve3f2f/partial-finally-2-score.json\", \"output_sha256\": \"02e137e14ab0e95aa2bf24158da82f269a97c6eb7b74ac531e0d88d50a14b452\", \"model_graph_llm_calls\": 0}\n"
+      }
+    }
+  ],
+  "schema": "am255/controlled-bounded-native-caller-proof-v1",
+  "scope": "Exact source-AST schedule and case-controller loops with real native canonical sources and qualification. Forbidden downstream callbacks abort without producing data; no services/model/graph/endpoint execution. Not a full run_size startup/cleanup test.",
+  "source_commit": "eb70f2ef2f795cdd4cb6f3cbc306f27877ae695a",
+  "source_hashes": {
+    "authored-inputs-20261106.json": "fc22d917544e865b9acf2ecc63ff410ccd8d3ced18e810c7755ffb62fa8892f1",
+    "compile_inputs.py": "584c5f2d3d3b1972d17ea77088e79bff8f2d50e68a174aded08c33782b1ea1c9",
+    "execute.py": "f2f93a814bba37c31eb5a846b477f33bfdb6cf379394e244a61fd764f31856d7",
+    "execution-io.json": "558f5552e8baf0846493b74efe22dde59a2678fa21d16c2b1fc31cbba77cce7c",
+    "executor_native.py": "7765ef70e6ac715925d081a9c8c7a629563f5332a9f54510aa7c29a6bf558735",
+    "score.py": "bb972f81e1d66a3118dd111d15ca4cc0dd74fa525ea724c70ca0bac41e35d8a3",
+    "scorer-map-20261106.json": "b4d7bfde73ca473c90d1a75239b0daf39e10942887465a02f74484aa09cc3f37",
+    "spec.json": "f5efd0b189747f6e2f5e9a5f6fd83e24a19f9cf6e76a7b4a0a083ef864288ad7"
+  },
+  "source_ref": "refs/heads/research/issue255-accounting-review-source-20261107",
+  "source_sha256": "f2f93a814bba37c31eb5a846b477f33bfdb6cf379394e244a61fd764f31856d7",
+  "temporal_delete_erasure_executed": false
+}
