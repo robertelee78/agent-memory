@@ -318,8 +318,8 @@ def capture(directory, cursor, entry, *, mapping='verified', invocation=None, wi
                 raise ContractError('Retained native snapshot differs from its projection')
         projected = {'snapshot': snapshot, 'exclusions': list(omp_projection.EXCLUSIONS)}
     else:
-        verified = witness._verify() if witness is not None else None
-        projected = (omp_projection._project_owned_manual(entry, invocation, witness)
+        verified = witness._comparison if witness is not None else None
+        projected = (omp_projection._project_owned_manual(entry, invocation, witness, verified)
                      if verified is not None and invocation is not None else None)
         if projected is not None and witness._verify() != verified:
             projected = None
@@ -1125,15 +1125,24 @@ def observe(repo, value, *, receipt=None):
                     elif msg.get('role') == 'toolResult' and isinstance(msg.get('toolCallId'), str):
                         raw_results.setdefault(msg['toolCallId'], []).append(candidate)
                 for d, c in current:
-                    for path in _files(d, 'snapshots', r'[0-9a-f]{64}\.json'):
-                        snapshots.setdefault(path.name, []).append((d, c))
+                    referenced = {record['snapshot_ref'] for record in
+                                  (c['control_interval'] or {}).get('pure_entries', {}).values()}
+                    for path in _files(d, 'resolutions', r'[0-9a-f-]{36}\.json'):
+                        referenced.add(read(path, 4096)['recovered_ref'])
+                    for path in _files(d, 'enrollments', r'[0-9a-f]{64}\.json'):
+                        referenced.add(read(path, 4096)['snapshot_ref'])
                     if (d / 'segment.json').exists():
-                        for old in manifest_value(d, c)['gaps']:
+                        manifest = manifest_value(d, c)
+                        referenced.update(item['ref'] for item in manifest['captures'])
+                        if manifest['admission_ref'] is not None:
+                            referenced.add(manifest['admission_ref'])
+                        for old in manifest['gaps']:
                             if isinstance(old['native_entry_id'], str) and old['native_entry_id'].startswith('tool:'):
                                 retained_tool_gaps.add(old['native_entry_id'][5:])
                     tools.update(c['tool_lifecycles'])
                     for path in _files(d, 'captures', r'[0-9a-f]{64}\.json'):
                         cap = read(path, 4096); known[cap['native_entry_id']] = (d, c)
+                        referenced.add(cap['snapshot_ref'])
                         snapshot = read(_snapshot_path(d, cap['snapshot_ref']))
                         if snapshot.get('role') == 'assistant' and isinstance(snapshot.get('content'), list):
                             for block in snapshot['content']:
@@ -1142,6 +1151,9 @@ def observe(repo, value, *, receipt=None):
                                     invocations.setdefault(block['id'], set()).add(cap['native_entry_id'])
                         if snapshot.get('role') == 'toolResult' and snapshot.get('toolCallId'):
                             retained_results.append(((d, c), cap))
+                    for path in _files(d, 'snapshots', r'[0-9a-f]{64}\.json'):
+                        if str(path.relative_to(d)) not in referenced:
+                            snapshots.setdefault(path.name, []).append((d, c))
                     for path in _files(d, 'gaps', r'[0-9a-f-]{36}\.json'):
                         old = read(path, 4096)
                         if isinstance(old['native_entry_id'], str) and old['native_entry_id'].startswith('tool:'):
@@ -1320,8 +1332,15 @@ def observe(repo, value, *, receipt=None):
                     witness = None
                     candidates = raw_calls.get(call_id, [])
                     if (receipt is not None and not existing_owners and not ambiguous_call
-                            and call_id not in retained_tool_gaps and len(candidates) == 1
+                            and message.get('role') == 'toolResult' and message.get('toolName') == 'read'
+                            and message.get('isError') is False and len(candidates) == 1
                             and len(raw_results.get(call_id, [])) == 1
+                            and any(block.get('type') == 'toolCall' and block.get('id') == call_id
+                                    and block.get('name') == 'read'
+                                    and isinstance(block.get('arguments'), dict)
+                                    and block['arguments'].get('path') == 'skill://agent-memory'
+                                    for block in candidates[0]['message']['content'] if isinstance(block, dict))
+                            and call_id not in retained_tool_gaps
                             and len(invocations.get(call_id, set())) == 1
                             and candidates[0].get('id') in invocations[call_id]
                             and candidates[0].get('id') in known

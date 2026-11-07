@@ -171,6 +171,9 @@ class NativeSources(unittest.TestCase):
                 self.assertEqual(len(segments), 2)
                 self.assertEqual(segments[-1][1]['origin']['human_root'], segments[0][1]['origin']['human_root'])
                 self.assertEqual(segments[-1][1]['origin']['native_trigger'], 'own-hidden-ambiguous')
+                name = hashlib.sha256(control['id'].encode()).hexdigest() + '.json'
+                self.assertFalse((segments[0][0] / 'captures' / name).exists())
+                self.assertTrue((segments[-1][0] / 'captures' / name).exists())
 
     def test_late_native_tool_result_recovers_original_sealed_gap_without_reopening(self):
         with World() as world:
@@ -265,7 +268,7 @@ class OwnedInstructionBoundary(unittest.TestCase):
         with World() as world, patch.dict(os.environ, world.env, clear=True):
             receipt, witness = self.installed(world)
             invocation, entry = self.pair(witness)
-            projected = omp_projection._project_owned_manual(entry, invocation, witness)
+            projected = omp_projection._project_owned_manual(entry, invocation, witness, witness._verify())
             self.assertIsNotNone(projected)
             snapshot = projected['snapshot']
             self.assertEqual(snapshot['content'], [])
@@ -273,8 +276,8 @@ class OwnedInstructionBoundary(unittest.TestCase):
             self.assertEqual(snapshot['instruction_context']['observed_receipt_sha256'], transport.digest(receipt))
             self.assertEqual(snapshot['instruction_context']['invocation_native_entry_id'], invocation['id'])
             self.assertTrue(omp_projection._valid_instruction_context(snapshot))
-            self.assertIsNone(omp_projection._project_owned_manual(entry, invocation, receipt))
-            self.assertIsNone(omp_projection._project_owned_manual(entry, invocation, {'trusted': True}))
+            self.assertIsNone(omp_projection._project_owned_manual(entry, invocation, receipt, witness._verify()))
+            self.assertIsNone(omp_projection._project_owned_manual(entry, invocation, {'trusted': True}, witness._verify()))
             forged = self.entry_for_forgery(snapshot['instruction_context'])
             ordinary = omp_projection.project(forged)
             self.assertNotIn('gap', ordinary)
@@ -323,7 +326,7 @@ class OwnedInstructionBoundary(unittest.TestCase):
             variants.append((duplicate, entry))
             for call, result in variants:
                 with self.subTest(call=call, result_keys=list(result['message'])):
-                    self.assertIsNone(omp_projection._project_owned_manual(result, call, witness))
+                    self.assertIsNone(omp_projection._project_owned_manual(result, call, witness, witness._verify()))
 
     def test_witness_declines_changed_receipt_file_and_permissions(self):
         with World() as world, patch.dict(os.environ, world.env, clear=True):
@@ -359,7 +362,7 @@ class OwnedInstructionBoundary(unittest.TestCase):
         with World() as world, patch.dict(os.environ, world.env, clear=True):
             receipt, witness = self.installed(world)
             invocation, entry = self.pair(witness)
-            snapshot = omp_projection._project_owned_manual(entry, invocation, witness)['snapshot']
+            snapshot = omp_projection._project_owned_manual(entry, invocation, witness, witness._verify())['snapshot']
             manual = Path(receipt['omp_binding']['skill_target']) / 'SKILL.md'
             manual.unlink()
             self.assertIsNone(witness._verify())
@@ -416,6 +419,27 @@ class OwnedInstructionBoundary(unittest.TestCase):
                 self.observe(repo, session, result['lifecycle'], entries, receipt)
                 self.assertEqual(path.read_bytes(), original)
 
+    def test_nonread_result_never_mints_manual_witness(self):
+        with World() as world, patch.dict(os.environ, world.env, clear=True):
+            receipt, _ = self.installed(world)
+            helper = NativeSources()
+            repo, session, lifecycle = helper.fixture(world)
+            human = helper.entry('human', 'user', 'Review this task', attribution='user')
+            invocation = helper.entry('call', 'assistant', [
+                {'type': 'toolCall', 'id': 'bash-call', 'name': 'bash',
+                 'arguments': {'command': 'printf 12'}}])
+            result = helper.entry('result', 'toolResult', '12',
+                                  toolCallId='bash-call', toolName='bash', isError=False)
+            with patch.object(omp_installation, '_owned_manual',
+                              side_effect=AssertionError('non-read minted manual witness')):
+                self.observe(repo, session, lifecycle, [human, invocation, result], receipt, seal=True)
+            directory, _ = transport.segments(repo, session)[0]
+            name = hashlib.sha256(result['id'].encode()).hexdigest() + '.json'
+            snapshot = transport.read(directory / 'snapshots' / name)
+            self.assertEqual(snapshot['content'], [{'type': 'text', 'text': '12'}])
+            self.assertEqual(snapshot['toolName'], 'bash')
+            self.assertNotIn('instruction_context', snapshot)
+
     def test_screened_invocation_does_not_hide_following_answer(self):
         with World() as world, patch.dict(os.environ, world.env, clear=True):
             receipt, witness = self.installed(world)
@@ -447,7 +471,7 @@ class OwnedInstructionBoundary(unittest.TestCase):
             human = helper.entry('human', 'user', 'Review this task', attribution='user')
             self.observe(repo, session, lifecycle, [human, invocation], receipt)
             directory, _ = transport.segments(repo, session)[0]
-            snapshot = omp_projection._project_owned_manual(entry, invocation, witness)['snapshot']
+            snapshot = omp_projection._project_owned_manual(entry, invocation, witness, witness._verify())['snapshot']
             name = hashlib.sha256(entry['id'].encode()).hexdigest() + '.json'
             path = directory / 'snapshots' / name
             transport.retain(path, snapshot)
@@ -470,7 +494,7 @@ class OwnedInstructionBoundary(unittest.TestCase):
             human = helper.entry('human', 'user', 'Review this task', attribution='user')
             self.observe(repo, session, lifecycle, [human, invocation], receipt)
             directory, _ = transport.segments(repo, session)[0]
-            snapshot = omp_projection._project_owned_manual(entry, invocation, witness)['snapshot']
+            snapshot = omp_projection._project_owned_manual(entry, invocation, witness, witness._verify())['snapshot']
             snapshot['native_entry_id'] = 'another-entry'
             self.assertTrue(omp_projection._valid_instruction_context(snapshot))
             name = hashlib.sha256(entry['id'].encode()).hexdigest() + '.json'

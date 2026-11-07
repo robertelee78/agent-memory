@@ -211,15 +211,13 @@ def _valid_instruction_context(snapshot):
         return False
 
 
-def _project_owned_manual(entry, invocation, witness):
+def _project_owned_manual(entry, invocation, witness, verified):
     """Project only an exact native full read backed by an installation witness."""
     from . import omp_installation
 
     try:
-        if type(witness) is not omp_installation._OwnedManual:
-            return None
-        verified = witness._verify()
-        if verified is None:
+        if (type(witness) is not omp_installation._OwnedManual
+                or verified != witness._comparison):
             return None
         text, path, installation_id, receipt_hash, artifact_hash, manual_hash = verified
         if (not isinstance(entry, dict) or set(entry) != {'type', 'id', 'parentId', 'message'}
