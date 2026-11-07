@@ -186,6 +186,10 @@ The separate [original-worker checks](../research/data/2026-11-06-layout-recover
 passed publication and retention within 300 seconds but timed out both
 reconciliation modules. The expanded public recovery suite, including three
 real-count boundary methods, separately passed all 12 methods in 216.71 seconds.
-The failed modules require complete-case rebatching and new actual receipts;
-their earlier long-group success does not waive the release deadline.
+The [registered-batch receipts](../research/data/2026-11-06-layout-recovery/registered-worker-batches.json)
+retain the subsequent complete-case rebatching: all five reconciliation batches
+and all six nested-reconciliation batches passed their unchanged 300-second
+worker deadline. The nested retirement extraction preserves the original six
+fault subcases and assertions. Those results do not erase the original timeouts
+or prove the remaining platform, hosted-authority or signed-delivery criteria.
 
