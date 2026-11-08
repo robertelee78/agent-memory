@@ -1,7 +1,7 @@
 ---
 id: ADR-0004
 status: accepted
-approval-scope: v0.0.1; v0.0.4 turn-boundary hooks; v0.0.15 receipt-owned instruction-context clarification for task 249
+approval-scope: v0.0.1; v0.0.4 turn-boundary hooks; v0.0.15 receipt-owned instruction-context and stock-harness source-authority clarifications for task 249
 date: 2026-10-21
 depends-on: [ADR-0001, ADR-0002]
 ---
@@ -17,6 +17,12 @@ engineering design. This clarifies the existing hook/skill authority separation,
 not a new memory authority or a change to ordinary source screening. Other
 later-milestone proposals remain under review. Implementation, native acceptance
 and delivery require separate evidence.
+
+On 2026-11-08 the operator clarified that omp is an independently maintained,
+frequently updated client: changing it is not an AM integration strategy. The
+stock-harness and source-authority constraints below clarify the existing
+public-surface and truthful-provenance decision. They do not approve an unfinished
+transport design or establish implementation, native qualification or delivery.
 
 ## Context
 
@@ -85,6 +91,30 @@ The implementation SHOULD support Codex `AGENTS.md`, OpenCode `AGENTS.md` and
 files to share identical syntax. Generated, sentinel-delimited activation
 blocks are preferred to whole-file symlinks. No binding MAY substitute a
 client-local repository identifier or credential for the common identity model.
+
+### v0.0.15: stock harnesses and stored-source authority
+
+Task #249 MUST work through unmodified, released omp public interfaces. It MUST
+NOT require an omp fork, custom build, private native patch or upstream change.
+AM MUST NOT reorder or disable unrelated operator extensions, weaken permissions
+or silently change the operator's client installation to qualify its integration.
+Supported capabilities and version limits MUST be stated and exercised against
+stock clients; compatibility MUST NOT be inferred from a version string alone.
+
+Native notifications SHALL be scheduling hints, not source-ownership authority.
+Genuine human origin MUST come from a checked native stored-user entry and its
+actual native identity. Notification role, attribution, current callback context,
+position or timing MUST NOT invent a human root, assign a foreign source to the
+current session or resolve a real source gap.
+
+Missing notification-to-entry mapping MAY remain absent or unverified while an
+independently checked, digest-verified safe stored source remains assessable.
+Actual unavailable, unsafe, oversized or incompletely transferred source evidence
+MUST remain explicitly pending. This distinction MUST NOT waive historical gaps,
+rewrite immutable evidence, fabricate completion or relax #249's existing native,
+peer-harness, lifecycle, permission and macOS/Linux acceptance. Detailed capture,
+transport and recovery changes still require independent engineering review and
+actual stock-client qualification.
 
 ### v0.0.15: verified installed instructions are operating context
 

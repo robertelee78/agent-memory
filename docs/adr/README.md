@@ -23,7 +23,7 @@ MUST NOT be treated as evidence that a guide is semantically complete.
 | [0001](0001-local-first-authority-boundaries.md) | Local-first memory and authority boundaries | Accepted (v0.0.1) |
 | [0002](0002-markdown-first-temporal-memory.md) | Markdown-first, typed, temporal memory model | Accepted (v0.0.1) |
 | [0003](0003-progressive-disclosure.md) | Progressive disclosure for memory and skills | Accepted (v0.0.1) |
-| [0004](0004-client-independent-integration.md) | Harness-independent skill and CLI | Accepted (v0.0.1, v0.0.4 hooks; narrow v0.0.15 owned-instruction clarification) |
+| [0004](0004-client-independent-integration.md) | Harness-independent skill and CLI | Accepted (v0.0.1, v0.0.4 hooks; v0.0.15 owned-instruction and stock-harness source-authority clarifications) |
 | [0005](0005-admission-consolidation-retrieval.md) | Separate admission, consolidation, retrieval, and forgetting | Accepted (v0.0.1) |
 | [0006](0006-security-and-evaluation.md) | Security boundaries and executable evaluation | Accepted (v0.0.1) |
 | [0007](0007-portable-pack-and-lifecycle.md) | Portable skill pack and installation lifecycle | Accepted (v0.0.1) |
