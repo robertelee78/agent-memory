@@ -73,6 +73,25 @@
       "group": "separate-installed-cli-reservation-smoke",
       "passed": true,
       "elapsed_seconds": 28.684
+    },
+    {
+      "group": "exact-published-old-managed-rollback-control-and-mixed-refusal",
+      "recorded_date_utc": "2026-11-08",
+      "source_commit": "295e80110737c0785761941d7cdf6366f65600ef",
+      "driver_sha256": "12848025d55f6e058affa88318b649285839eb7dcb73af9c3b9cd47b701e2ef0",
+      "receipt_sha256": "c634b0b03a21bc9515b62b5e06f806027af1b65c09668d9470ae9bdf10fcc9bc",
+      "old_artifact_digest": "4208c18e2288bdb3f6faf6354fe44b638559ba8ec1fede2cec7ce491bea726f7",
+      "exit": 2,
+      "timed_out": false,
+      "elapsed_seconds": 53.801438875030726,
+      "empty_union_exact_rollback_verified": true,
+      "mixed_old_rollback_refused": true,
+      "protected_evidence_unchanged": true,
+      "full_union_public_proof": false,
+      "acceptance": "NOT-ESTABLISHED-full-union-public-proof-target-digest-dependent-unknown-attributed-separately",
+      "scope": "Actual published v0.0.14 managed install and pre-receipt interruption/recover; empty-union exact restoration plus mixed public refusal/preservation. Not full #244 or platform acceptance.",
+      "limitation": "Internal unknown originates in target-digest attestation before full capability attribution; no production change made to turn the diagnostic exit green.",
+      "independent_review": "Claude Opus5.5 source PASS for exact driver before execution"
     }
   ],
   "superseded_attempt_not_erased": "Earlier28-method run had27passes/one retention-fixture error and failed overall. Final combined run above passed after fixture corrections; this does not rewrite that earlier result.",
