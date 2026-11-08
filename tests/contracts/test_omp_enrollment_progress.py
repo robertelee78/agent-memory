@@ -512,6 +512,104 @@ class EnrollmentProgress(unittest.TestCase):
                     if alternate.exists():
                         alternate.rename(world.inside('retained-late-bank-' + str(index)))
 
+    def _assert_raw_locator_refusal_preserved(self, *, held, kind):
+        from agent_memory import bank_writes, layout_recovery_state, recovery_frontier, scope_binding
+        with World() as world, patch.dict(os.environ, world.env, clear=True):
+            if held:
+                from contracts.test_held_source_enrollment import HeldSourceEnrollment
+                _, repo, bank, _, _, _, _ = HeldSourceEnrollment().fixture(world)
+            else:
+                repo, _, _ = fixtures.NativeSources().fixture(world)
+                bank = repo / 'memory-bank'
+            self.assertEqual(recovery_frontier.verified_hold(repo) is not None, held,
+                             'The original fixture must have its actual expected hold before adding a locator')
+            stray = repo / 'raw-only' / 'MEMORY.md'; stray.parent.mkdir()
+            plain = '# Raw locator fixture\n\nDeliberately not a memory router.\n'
+            if kind == 'symlink':
+                target = repo / 'raw-locator-target.txt'; target.write_text(plain)
+                stray.symlink_to(target)
+                with self.assertRaises(ValueError):
+                    bank_writes.bank_path(repo)
+            else:
+                stray.write_text(plain)
+                if kind == 'committed-missing':
+                    relative = stray.relative_to(repo).as_posix()
+                    world.git('add', '--', relative, cwd=repo)
+                    world.git('commit', '-m', 'Retain synthetic raw-only locator', '--', relative, cwd=repo)
+                    stray.unlink()
+                self.assertEqual(bank_writes.bank_path(repo), (repo.resolve(), bank))
+            with self.assertRaises(ValueError):
+                layout_recovery_state.paths(repo)
+            before = ({str(path.relative_to(world.paths['state'])): path.read_bytes()
+                       for path in world.paths['state'].rglob('*') if path.is_file()},
+                      {str(path.relative_to(bank)): path.read_bytes()
+                       for path in bank.rglob('*') if path.is_file()},
+                      (repo / '.git/index').read_bytes(),
+                      world.git('rev-parse', 'HEAD', cwd=repo).stdout)
+            failures = []
+            for mint in (self._original_enrollment_projection, scope_binding.private_enrollment_context):
+                with self.assertRaises(ValueError) as refused:
+                    mint(repo)
+                failures.append(str(refused.exception))
+            self.assertEqual(failures[0], failures[1])
+            if kind != 'symlink':
+                self.assertIn('Competing memory bank locations', failures[0])
+            self.assertEqual(
+                ({str(path.relative_to(world.paths['state'])): path.read_bytes()
+                  for path in world.paths['state'].rglob('*') if path.is_file()},
+                 {str(path.relative_to(bank)): path.read_bytes()
+                  for path in bank.rglob('*') if path.is_file()},
+                 (repo / '.git/index').read_bytes(),
+                 world.git('rev-parse', 'HEAD', cwd=repo).stdout), before)
+
+    def test_fresh_mint_preserves_raw_nonrouter_refusal_with_and_without_verified_hold(self):
+        for held in (False, True):
+            with self.subTest(held=held):
+                self._assert_raw_locator_refusal_preserved(held=held, kind='untracked')
+
+    def test_fresh_mint_preserves_committed_raw_locator_refusal_with_and_without_verified_hold(self):
+        for held in (False, True):
+            with self.subTest(held=held):
+                self._assert_raw_locator_refusal_preserved(held=held, kind='committed-missing')
+
+    def test_fresh_mint_preserves_symlink_locator_refusal_with_and_without_verified_hold(self):
+        for held in (False, True):
+            with self.subTest(held=held):
+                self._assert_raw_locator_refusal_preserved(held=held, kind='symlink')
+
+    def test_fresh_mint_preserves_late_raw_locator_refusal_with_and_without_verified_hold(self):
+        from agent_memory import bank_writes, recovery_frontier, scope_binding
+        for held in (False, True):
+            with self.subTest(held=held), World() as world, patch.dict(os.environ, world.env, clear=True):
+                if held:
+                    from contracts.test_held_source_enrollment import HeldSourceEnrollment
+                    _, repo, bank, _, _, _, _ = HeldSourceEnrollment().fixture(world)
+                else:
+                    repo, _, _ = fixtures.NativeSources().fixture(world)
+                    bank = repo / 'memory-bank'
+                self.assertEqual(recovery_frontier.verified_hold(repo) is not None, held)
+                require = scope_binding.require
+                stray = repo / 'late-raw-locator' / 'MEMORY.md'
+                for index, mint in enumerate((self._original_enrollment_projection, scope_binding.private_enrollment_context)):
+                    changed = []
+                    def scope_then_add_raw_locator(*args, **kwargs):
+                        result = require(*args, **kwargs)
+                        if not changed:
+                            stray.parent.mkdir()
+                            stray.write_text('# Late raw locator\n\nNot a router.\n')
+                            changed.append(True)
+                        return result
+                    try:
+                        with patch.object(scope_binding, 'require', side_effect=scope_then_add_raw_locator):
+                            with self.assertRaisesRegex(ValueError, 'Competing memory bank locations'):
+                                mint(repo)
+                        self.assertTrue(changed)
+                        self.assertEqual(bank_writes.bank_path(repo), (repo.resolve(), bank),
+                                         'The ordinary locator must still accept the original bank')
+                    finally:
+                        if stray.parent.exists():
+                            stray.parent.rename(world.inside('retained-late-raw-locator-' + str(index)))
+
 
 if __name__ == '__main__':
     unittest.main()

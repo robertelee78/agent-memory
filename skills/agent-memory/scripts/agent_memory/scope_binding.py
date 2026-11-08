@@ -156,12 +156,15 @@ def _private_enrollment_context(repo):
     """Allow only private source retention through an exact verified hold."""
     from . import layout_recovery_state, recovery_frontier, turn_sources
     root, bank = writes.bank_path(repo)
-    turn_sources.check_source_compatibility(layout_recovery_state._paths_for_bank(root, bank)[2].parent)
-    hold = recovery_frontier._verified_hold_at_bank(root, bank)
+    raw_root, raw_bank, recovery_base, _ = layout_recovery_state.paths(root)
+    if (raw_root, raw_bank) != (root, bank):
+        raise ContractError('Private enrollment raw recovery bank differs from the ordinary bank')
+    turn_sources.check_source_compatibility(recovery_base.parent)
+    hold = recovery_frontier._verified_hold_at_bank(raw_root, raw_bank)
     scope = dict(hold.scope) if hold is not None else require(root)
     # The ordinary path also checks the private index, so a removed hold is not
     # an empty frontier. No caller supplies marker bytes or an owned lock.
-    token = hold.token if hold is not None else recovery_frontier._observe_bank(root, bank, None, None)
+    token = hold.token if hold is not None else recovery_frontier._observe_bank(raw_root, raw_bank, None, None)
     pins = {'scope': scope, 'frontier': token,
             'binding': [[str(path), info.st_dev, info.st_ino, info.st_uid, info.st_gid, info.st_mode]
                         for path in (root, bank.parent, bank) for info in [path.lstat()]],
@@ -176,6 +179,8 @@ def _private_enrollment_context(repo):
                     journal_sha256=digest(layout_recovery_state.read_bytes(directory / 'journal.json')))
     if writes.bank_path(root) != (root, bank):
         raise ContractError('Private enrollment bank location changed during observation')
+    if layout_recovery_state.paths(root)[:2] != (root, bank):
+        raise ContractError('Private enrollment raw recovery bank location changed during observation')
     context = object.__new__(PrivateEnrollmentContext)
     context.root, context.bank, context._scope, context.hold = root, bank, scope, hold
     context._pins, context.context_digest, context._seal = pins, digest(encoded(pins)), _enrollment_seal
