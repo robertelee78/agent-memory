@@ -79,22 +79,23 @@ class LayoutComparisonByteBoundaries(unittest.TestCase):
             helper = test_comparison.ComparisonContract('runTest')
             repo, _ = helper.fixture(world)
             request = helper.candidate()
-            evidence = request['candidate']['metadata']['evidence']
-            evidence.append('Synthetic comparison boundary context: é \" ')
-            remaining = 65536 - len(f.encoded(request))
-            self.assertGreater(remaining, 0)
-            evidence[-1] += 'x' * remaining
-            self.assertEqual(len(f.encoded(request)), 65536)
+            # Exercise the raw public reader bound without violating the
+            # independent 16 KiB candidate/security-content bound.
+            request_path = f.save(world, request)
+            raw = request_path.read_bytes()
+            self.assertLess(len(raw), 65536)
+            request_path.write_bytes(raw + b' ' * (65536 - len(raw)))
+            self.assertEqual(request_path.stat().st_size, 65536)
             before = self.state(world, repo)
-            accepted = self.invoke(world, command, 'inspect', '--repo', repo, '--request', f.save(world, request))
+            accepted = self.invoke(world, command, 'inspect', '--repo', repo, '--request', request_path)
             self.assertEqual(accepted.returncode, 0, accepted.stdout + accepted.stderr)
             view = json.loads(accepted.stdout)
             self.assertTrue(view['comparison_read_complete'])
             self.assertEqual(view['observation']['request_sha256'], f.sha(f.encoded(request)))
             self.assertEqual(self.state(world, repo), before)
-            evidence[-1] += 'x'
-            self.assertEqual(len(f.encoded(request)), 65537)
-            refused = self.invoke(world, command, 'inspect', '--repo', repo, '--request', f.save(world, request))
+            request_path.write_bytes(request_path.read_bytes() + b' ')
+            self.assertEqual(request_path.stat().st_size, 65537)
+            refused = self.invoke(world, command, 'inspect', '--repo', repo, '--request', request_path)
             self.assertEqual(refused.returncode, 1, refused.stdout + refused.stderr)
             self.assertFalse(json.loads(refused.stdout)['comparison_read_complete'])
             self.assertEqual(self.state(world, repo), before)

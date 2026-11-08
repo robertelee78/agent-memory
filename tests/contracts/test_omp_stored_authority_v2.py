@@ -67,7 +67,7 @@ class NativeStoredAuthorityV2(unittest.TestCase):
                 self.assertTrue(helper.acknowledge(repo, row)['verified'])
             self.assertEqual(transport.list_pending(repo)['pending'], [])
 
-    def test_delayed_old_hint_cannot_invent_human_in_checked_new_empty_session(self):
+    def test_delayed_old_checked_view_refuses_new_session_and_real_new_human_has_one_root(self):
         with World() as world, patch.dict(os.environ, world.env, clear=True):
             helper = fixtures.NativeSources(); repo, old, lifecycle = helper.fixture(world)
             human = helper.entry('old-native-human', 'user', 'Old real source.', attribution='user')
@@ -78,11 +78,25 @@ class NativeStoredAuthorityV2(unittest.TestCase):
             metadata_path = directory / 'admissions' / (old_metadata['capture_id'] + '.json')
             transport.retain(metadata_path, {**old_metadata, 'lifecycle': directory.name}, 4096)
             metadata_bytes = metadata_path.read_bytes(); manifest = (directory / 'segment.json').read_bytes()
-            new = str(uuid.uuid4())
-            _, receipt = self.neutral_hint(world, repo, new, str(uuid.uuid4()))
-            self.neutral_hint(world, repo, new, str(uuid.uuid4()), receipt=receipt)
+            new = str(uuid.uuid4()); new_lifecycle = str(uuid.uuid4())
+            delayed = self.request(repo, old, lifecycle, [human])
+            delayed['session'] = new
+            delayed['lifecycle'] = new_lifecycle
+            started = []
+            with self.assertRaises(ValueError):
+                helper.observe_request(repo, delayed, on_started=lambda: started.append(True))
+            self.assertEqual(started, [])
+            self.assertEqual(transport.segments(repo, new), [])
+            helper.observe_request(repo, self.request(repo, new, new_lifecycle, []))
             self.assertEqual(transport.segments(repo, new), [])
             self.assertEqual(metadata_path.read_bytes(), metadata_bytes)
+            self.assertEqual((directory / 'segment.json').read_bytes(), manifest)
+            actual = helper.entry('new-native-human', 'user', 'Actual new session source.', attribution='user')
+            helper.observe(repo, new, new_lifecycle, [actual])
+            roots = [cursor for _, cursor in transport.segments(repo, new)
+                     if cursor['origin']['kind'] == 'genuine-user']
+            self.assertEqual(len(roots), 1)
+            self.assertEqual(roots[0]['control_interval']['human_entry'], 'new-native-human')
             self.assertEqual((directory / 'segment.json').read_bytes(), manifest)
 
     def test_changed_header_branch_and_parent_graph_refuse_before_transaction(self):
@@ -409,6 +423,27 @@ class NativeStoredAuthorityV2(unittest.TestCase):
             self.assertEqual(transport.list_pending(repo)['pending'], [])
             self.assertTrue(boundary.drain_source_capabilities(repo, quiesced=True)['drainable'])
 
+    def test_foreign_tool_call_id_cannot_resolve_actual_sealed_tool_gap(self):
+        with World() as world, patch.dict(os.environ, world.env, clear=True):
+            helper = fixtures.NativeSources(); repo, session, lifecycle = helper.fixture(world)
+            human = helper.entry('human', 'user', 'Actual request.', attribution='user')
+            call = helper.entry('call', 'assistant', [{'type': 'toolCall', 'id': 'owned-call',
+                'name': 'read', 'arguments': {'path': 'synthetic.txt'}}])
+            helper.observe(repo, session, lifecycle, [human, call])
+            original, _ = transport.segments(repo, session)[0]
+            manifest = (original / 'segment.json').read_bytes()
+            missing = next(item for item in transport.read(original / 'segment.json')['gaps']
+                           if item['native_entry_id'] == 'tool:owned-call')
+            foreign = helper.entry('foreign-result', 'toolResult', 'Different invocation result.',
+                                   toolCallId='foreign-call', toolName='read', isError=False)
+            helper.observe(repo, session, lifecycle, [human, call, foreign], seal=False, terminal=True)
+            self.assertEqual((original / 'segment.json').read_bytes(), manifest)
+            self.assertFalse((original / 'resolutions' / (missing['gap_id'] + '.json')).exists())
+            rows, faults = transport.pending_inventory(repo)
+            self.assertEqual(faults, [])
+            self.assertTrue(any(row['status'] == 'pending-coverage-gap' for row in rows))
+            self.assertFalse(boundary.drain_source_capabilities(repo, quiesced=True)['drainable'])
+
     def test_unsafe_exact_recovery_does_not_append_gap_to_sealed_source(self):
         with World() as world, patch.dict(os.environ, world.env, clear=True):
             helper = fixtures.NativeSources(); repo, session, lifecycle = helper.fixture(world)
@@ -505,6 +540,81 @@ class NativeStoredAuthorityV2(unittest.TestCase):
             self.assertFalse(refused['continue'])
             self.assertEqual(refused['status'], 'pending-wake-state-unverifiable')
             self.assertEqual(transport.read(wakes / 'unknown.json'), {'unexpected': 'preserve'})
+
+    def test_no_active_resume_paths_never_append_to_previously_sealed_instance_segment(self):
+        for kind in ('carrier', 'message', 'tail'):
+            with self.subTest(kind=kind), World() as world, patch.dict(os.environ, world.env, clear=True):
+                helper = fixtures.NativeSources(); repo, session, _ = helper.fixture(world)
+                lifecycle = str(uuid.uuid5(uuid.NAMESPACE_URL, str(repo.resolve()) + ':omp:' + session + ':old-human'))
+                helper.observe(repo, session, lifecycle,
+                    [helper.entry('old-human', 'user', 'Earlier branch human.', attribution='user')], terminal=True)
+                original = transport.session_dir(repo, session) / lifecycle
+                before = {str(path.relative_to(original)): path.read_bytes() for path in original.rglob('*.json')}
+                entries = ([{'type': 'unknown-native-carrier', 'id': 'later', 'parentId': None}]
+                           if kind == 'carrier' else
+                           [helper.entry('later', 'assistant', 'A different stored branch.')] if kind == 'message' else [])
+                value = self.request(repo, session, lifecycle, entries, terminal=True)
+                if kind == 'tail':
+                    value['payload']['view']['tail_status'] = 'active-unavailable'
+                result = helper.observe_request(repo, value)
+                self.assertTrue(result['verified'])
+                self.assertEqual(before, {str(path.relative_to(original)): path.read_bytes() for path in original.rglob('*.json')})
+                successors = [item for item in transport.segments(repo, session) if item[0] != original]
+                self.assertEqual(len(successors), 1)
+                self.assertTrue(transport.read(successors[0][0] / 'segment.json')['gaps'])
+                self.assertEqual(transport.pending_inventory(repo)[1], [])
+
+    def test_wake_failure_after_reservation_preserves_verified_seal_and_single_budget(self):
+        with World() as world, patch.dict(os.environ, world.env, clear=True):
+            helper = fixtures.NativeSources(); repo, session, lifecycle = helper.fixture(world)
+            entries = [helper.entry('human', 'user', 'Actual source.', attribution='user')]
+            value = self.request(repo, session, lifecycle, entries, action='seal')
+            value['payload']['request_wake'] = True
+            replace = transport.replace_cursor
+            def fail_after_reservation(path, cursor):
+                if (cursor.get('control_interval') or {}).get('generated_guidance'):
+                    raise OSError('Controlled failure after durable reservation')
+                return replace(path, cursor)
+            with patch.object(transport, 'replace_cursor', side_effect=fail_after_reservation):
+                result = helper.observe_request(repo, value, delivery_window=fixtures.LiveDeliveryWindow())
+            self.assertTrue(result['verified'])
+            self.assertEqual(result['status'], 'pending-wake-unknown-after-reservation')
+            self.assertFalse(result['continue'])
+            wakes = transport.session_dir(repo, session) / 'root-wakes'
+            self.assertEqual(len(list(wakes.glob('*.json'))), 1)
+            repeated = helper.observe_request(repo, value, delivery_window=fixtures.LiveDeliveryWindow())
+            self.assertTrue(repeated['verified']); self.assertFalse(repeated['continue'])
+            self.assertEqual(len(list(wakes.glob('*.json'))), 1)
+            self.assertEqual(len([row for row in transport.pending_inventory(repo)[0] if 'observation_id' in row]), 2)
+
+    def test_pre_reservation_wake_exception_does_not_unverify_committed_source(self):
+        with World() as world, patch.dict(os.environ, world.env, clear=True):
+            from agent_memory.omp_stream import VerifiedNativeDeliveryWindow
+            helper = fixtures.NativeSources(); repo, session, lifecycle = helper.fixture(world)
+            value = self.request(repo, session, lifecycle,
+                [helper.entry('human', 'user', 'Actual source.', attribution='user')], action='seal')
+            value['payload']['request_wake'] = True
+            with patch.object(VerifiedNativeDeliveryWindow, 'allow_reservation', side_effect=OSError('Controlled read-only clock failure')):
+                result = helper.observe_request(repo, value, delivery_window=fixtures.LiveDeliveryWindow())
+            self.assertTrue(result['verified']); self.assertFalse(result['continue'])
+            self.assertEqual(result['status'], 'pending-wake-unavailable')
+            self.assertFalse((transport.session_dir(repo, session) / 'root-wakes').exists())
+            self.assertEqual(len([row for row in transport.pending_inventory(repo)[0] if 'observation_id' in row]), 2)
+
+    def test_removed_public_observer_flag_refuses_before_any_source_write(self):
+        with World() as world, patch.dict(os.environ, world.env, clear=True):
+            receipt, _ = fixtures.OwnedInstructionBoundary().installed(world)
+            helper = fixtures.NativeSources(); repo, session, lifecycle = helper.fixture(world)
+            base = boundary._base(repo)
+            before = {str(path.relative_to(base)): path.read_bytes() for path in base.rglob('*') if path.is_file()}
+            value = self.request(repo, session, lifecycle,
+                [helper.entry('human', 'user', 'Must not be written by removed public flag.', attribution='user')])
+            result = fixtures.subprocess.run([fixtures.Path(receipt['bin_dir']) / 'am', 'omp-boundary', '--repo', repo,
+                '--observer', '--stdin'], input=fixtures.json.dumps(value), cwd=repo, env=world.env,
+                capture_output=True, text=True, timeout=30)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertEqual(before, {str(path.relative_to(base)): path.read_bytes() for path in base.rglob('*') if path.is_file()})
+            self.assertEqual(transport.segments(repo, session), [])
 
 
 if __name__ == '__main__':

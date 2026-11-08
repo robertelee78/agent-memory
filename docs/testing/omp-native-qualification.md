@@ -197,8 +197,8 @@ am omp-boundary --repo /absolute/project --source ACTUAL_ID_OR_ENROLLMENT_REFERE
 Follow `next_offset` until exhausted. A successful page never claims global
 source completeness. Registered rows have an actual `observation_id`;
 `enrollment-pending`/`registration-fault` rows preserve the original source
-reference and do not invent one. Later observer admit/ingest/seal calls first
-persist every arriving source/metadata record and recheck scope, then run a
+reference and do not invent one. Later finite-worker ingest/seal calls first
+persist each arriving checked stored source and recheck scope, then run a
 separate registration-progress phase. Each phase selects oldest retained
 fault-free enrollments first and attempts at most eight, using their original
 references and digests. The bound is a count, not an elapsed-time check after
@@ -210,12 +210,13 @@ A successful registration whose response was lost is recovered from the exact
 shared reference/digest. A shared fault or an uncertain attempted write is
 retained and never blindly registered again or erased by transport retry.
 
-The unchanged `NativeSources` contracts in `tests/contracts/test_omp_boundary.py`
+The migrated `NativeSources` contracts in `tests/contracts/test_omp_boundary.py`
 and dedicated `tests/contracts/test_omp_enrollment_progress.py` regressions cover
 large retained segments, bounded oldest-first progress, new arrivals, lost
 success, uncertain attempts and retained shared faults. The latter also drives
-an explicitly installed public observer/source/no-learning journey with 151
-stored entries. These are real transport/CLI checks, not native callback,
+an explicitly installed finite-stream/source/no-learning journey with 151
+stored entries. The removed public `--observer --stdin` write route must refuse
+before source writes. These are real transport/CLI checks, not native callback,
 extension-loading or model/provider qualification.
 
 Read every source before assessment. Use exactly one original observation per
@@ -317,14 +318,19 @@ notification/display text remains excluded.
 Readback waits for background observer publication within one shared absolute
 deadline (default 240 seconds), distinct from the 950 ms callback-await bound.
 Known verified pending/null-observation states remain pending; malformed or
-misbound source evidence still refuses. Before public readback, the driver uses
-numeric PID/PPID child-quiescence samples to avoid contending with one-shot
-observer writes. This is a scheduling heuristic, not proof that native queues
-are empty. It rechecks the latest native settled state and both answer counts
-after late frames; an earlier settled response cannot qualify a later duplicate
-or unsettled session.
+misbound source evidence still refuses. A detached finite worker may remain a
+live child throughout the session: child-process quiescence is not required.
+Instead the driver enumerates the complete joined public pending inventory and
+checks actual per-instance contiguous received attempts and terminal outcomes.
+A verified full seal must cover the current stored native leaf; unresolved
+execution/coverage qualifiers remain pending (an otherwise healthy open stream
+is expected). These receipts prove received work, not an unseen producer queue.
+It rechecks the latest native settled state and both answer counts after late
+frames; an earlier settled response cannot qualify a later duplicate or unsettled session.
 The report retains source/binary/receipt identity and current human observation
-references without copying arbitrary display payloads:
+references without copying arbitrary display payloads.
+
+The actual native run must exercise the loaded receipt-owned hook's `/bin/sh hooks/python3.sh scripts/omp_boundary.py --stream` route. The report records that receipt-owned route and actual stream receipts, without claiming a separate process-argv trace. A public `am omp-boundary --stream` fixture is an internal-transport check only; raw framed source input grants no assessment/publication authority and is not native-loading proof.
 
 ```sh
 python3 scripts/evaluations/omp_native_smoke.py --binary /absolute/omp --am /absolute/owned/bin/am --receipt /absolute/install/receipt.json --repo /absolute/disposable/project --output /absolute/new/private-smoke-output --model actual-provider/actual-model
@@ -334,6 +340,8 @@ The driver never auto-approves. Headless UI requests are refused and preserved
 as such. A smoke pass is not a durable-capture/Git-exchange, full-mode,
 platform-wide, peer-client or release acceptance pass. Its report explicitly
 keeps `full_native_qualification:false`.
+
+The pre-cutover macOS source `90d822b…`, Linux RPC runs and `bf7722a` worker receipts below are retained historical evidence, explicitly **superseded for the current stored-source-v2/finite-stream candidate**. They are not current-source passes; fresh frozen-source qualification is required.
 
 The [2026-11-06 minimal macOS RPC evidence](../research/data/2026-11-06-omp-native/minimal-smoke.json)
 records an actual pass on source `90d822b42e41b96b27682ebca2bcf405c6a26bfc`,

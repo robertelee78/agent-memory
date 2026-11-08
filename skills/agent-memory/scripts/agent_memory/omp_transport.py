@@ -1087,10 +1087,6 @@ def wake(repo, session, lifecycle, payload, *, delivery_window=None):
         return {'continue': False, 'status': 'pending-already-requested-native-user', 'canonical_writes_performed': False}
     value = {'schema': 'agent-memory/omp-root-wake-v1', 'session': session, 'human_root': root,
              'native_user_entry': native_user_entry, 'request_id': str(uuid.uuid4()), 'status': 'requested'}
-    from .omp_stream import VerifiedNativeDeliveryWindow
-    if type(delivery_window) is not VerifiedNativeDeliveryWindow or not delivery_window.allow_reservation():
-        return {'continue': False, 'status': 'pending-undeliverable-window', 'canonical_writes_performed': False}
-    retain(target, value, 4096)
     earlier = [r for r in rows if r['status'] != 'completed' and r not in current]
     inline = []; omitted = False
     for row in current + earlier:
@@ -1110,11 +1106,20 @@ def wake(repo, session, lifecycle, payload, *, delivery_window=None):
                 'inventory_complete:' + str(not omitted and not faults).lower() + '. Sources: ' + json.dumps(inline, separators=(',', ':')) +
                 ' Faults:' + json.dumps(faults) + ' [/agent-memory omp request]')
     if len(guidance.encode()) > 8192:
-        raise ContractError('Native guidance bound exceeded; source remains pending')
-    control = root_cursor['control_interval'] or {}
-    control['generated_guidance'] = guidance
-    root_cursor['control_interval'] = control
-    replace_cursor(session_dir(repo, session) / root / 'cursor.json', root_cursor)
+        return {'continue': False, 'status': 'pending-wake-guidance-bound', 'canonical_writes_performed': False}
+    from .omp_stream import VerifiedNativeDeliveryWindow
+    if type(delivery_window) is not VerifiedNativeDeliveryWindow or not delivery_window.allow_reservation():
+        return {'continue': False, 'status': 'pending-undeliverable-window', 'canonical_writes_performed': False}
+    try:
+        retain(target, value, 4096)
+        control = root_cursor['control_interval'] or {}
+        control['generated_guidance'] = guidance
+        root_cursor['control_interval'] = control
+        replace_cursor(session_dir(repo, session) / root / 'cursor.json', root_cursor)
+    except Exception:
+        # Reservation may have reached durable storage. Never retry this attempt.
+        return {'continue': False, 'status': 'pending-wake-unknown-after-reservation',
+                'canonical_writes_performed': False}
     return {'continue': True, 'additionalContext': guidance, 'request_id': value['request_id'],
             'inventory_complete': not omitted and not faults, 'canonical_writes_performed': False}
 
@@ -1378,8 +1383,7 @@ def observe(repo, value, *, receipt=None, on_started=None, delivery_window=None,
                         if active is None:
                             active = new_segment(repo, session, value['lifecycle'], value['lifecycle'], 'resume', payload['event_ordinal'])
                             current.append(active)
-                        else:
-                            active = writable_successor(repo, session, active, current, payload['event_ordinal'])
+                        active = writable_successor(repo, session, active, current, payload['event_ordinal'])
                         gap(*active, native, 'missing-stored-source')
                         continue
                     message = entry.get('message') if isinstance(entry.get('message'), dict) else {}
@@ -1448,6 +1452,7 @@ def observe(repo, value, *, receipt=None, on_started=None, delivery_window=None,
                         if inherited:
                             continue
                         active = new_segment(repo, session, value['lifecycle'], value['lifecycle'], 'resume', payload['event_ordinal'])
+                        active = writable_successor(repo, session, active, current, payload['event_ordinal'])
                         gap(*active, native, 'ambiguous-lifecycle')
                     owner = tool_owner or active
                     if tool_owner and (tool_owner[0] / 'segment.json').exists():
@@ -1545,8 +1550,7 @@ def observe(repo, value, *, receipt=None, on_started=None, delivery_window=None,
                     if active is None:
                         active = new_segment(repo, session, value['lifecycle'], value['lifecycle'],
                                              'resume', payload['event_ordinal'])
-                    else:
-                        active = writable_successor(repo, session, active, current, payload['event_ordinal'])
+                    active = writable_successor(repo, session, active, current, payload['event_ordinal'])
                     gap(*active, None, 'ambiguous-lifecycle')
                 if active:
                     d, c = active
@@ -1585,5 +1589,9 @@ def observe(repo, value, *, receipt=None, on_started=None, delivery_window=None,
             result['source_references'] = source_refs
             result['source_coverage_complete'] = view['source_kind'] == 'retired-file' and source_complete
             if value['action'] == 'seal' and payload['request_wake'] and latest:
-                result.update(wake(repo, session, latest['lifecycle'], result['wake_payload'], delivery_window=delivery_window))
+                try:
+                    result.update(wake(repo, session, latest['lifecycle'], result['wake_payload'], delivery_window=delivery_window))
+                except Exception:
+                    # The source transaction is verified independently of wake preparation.
+                    result.update({'continue': False, 'status': 'pending-wake-unavailable'})
             return result

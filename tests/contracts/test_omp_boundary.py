@@ -1301,6 +1301,38 @@ for line in sys.stdin:
             self.assertEqual([row['native_entry_id'] for row in evidence], ['registration-human'])
             self.assertEqual([row['human_root'] for row in evidence], [lifecycle])
 
+    def test_stream_readback_requires_terminal_receipts_and_current_leaf_not_child_quiescence(self):
+        from runtime_update_fixtures import ROOT
+        spec = importlib.util.spec_from_file_location('omp_native_smoke', ROOT / 'scripts/evaluations/omp_native_smoke.py')
+        smoke = importlib.util.module_from_spec(spec); spec.loader.exec_module(smoke)
+        with World() as world, patch.dict(os.environ, world.env, clear=True):
+            repo, receipt, _ = self.fixture(world)
+            session, lifecycle = str(uuid.uuid4()), str(uuid.uuid4())
+            human = NativeSources().entry('stream-human', 'user', 'Ephemeral checked source.', attribution='user')
+            payload = observer_payload(repo, session, [human]); payload['request_wake'] = False
+            request = {'schema': 'agent-memory/omp-observer-request-v2', 'action': 'seal',
+                       'session': session, 'lifecycle': lifecycle, 'payload': payload}
+            am = Path(receipt['bin_dir']) / 'am'
+            observed = observe_installed(world, am, repo, receipt, request)
+            self.assertEqual(observed.returncode, 0, observed.stdout + observed.stderr)
+            native_file = world.inside('current-stream-native.jsonl')
+            native_file.write_text('\n'.join(json.dumps(value) for value in [
+                {'type': 'session', 'id': session, 'cwd': str(repo)}, human]) + '\n')
+            status = json.loads(world.run([am, '--json', 'status', '--repo', repo]).stdout)
+            evidence = smoke.current_stream_outcomes(repo, session, native_file, status, world.env, [])
+            self.assertEqual(len(evidence), 1)
+            self.assertEqual(evidence[0]['received_sequence'], 1)
+            self.assertEqual(evidence[0]['terminal_sequence'], 1)
+            qualifier = {'qualification': {'session': session, 'code': 'missing-outcome'}}
+            with self.assertRaises(smoke.PendingObservations):
+                smoke.current_stream_outcomes(repo, session, native_file, status, world.env, [qualifier])
+            self.assertEqual(smoke.current_stream_outcomes(repo, session, native_file, status, world.env,
+                [{'qualification': {'session': session, 'code': 'open-stream'}}]), evidence)
+            native_file.write_text(native_file.read_text() + json.dumps(
+                NativeSources().entry('uncaptured-leaf', 'assistant', 'Later source.')) + '\n')
+            with self.assertRaises(smoke.PendingObservations):
+                smoke.current_stream_outcomes(repo, session, native_file, status, world.env, [])
+
     def test_late_native_frames_cannot_reuse_initial_answer_or_settled_proof(self):
         for mode in ('complete', 'late-duplicate', 'late-unsettled'):
             with self.subTest(mode=mode), World() as world:

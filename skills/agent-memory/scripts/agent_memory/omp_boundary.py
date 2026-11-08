@@ -239,12 +239,26 @@ def _source_state_bindings(installation, registered):
 
 def source_capability_repositories(installation=None):
     """Union discovery retains unavailable paths so lifecycle cannot call them empty."""
+    from .identity_git import git
     registered = _registry()
     roots = {Path(p) for p in registered['repositories']}
     roots.update(_source_state_bindings(installation, registered))
     registry, _ = project_identity.observe()
     for checkout in registry['checkouts'].values():
-        roots.update(Path(p) for p in checkout['locations'])
+        for location in checkout['locations']:
+            path = Path(location)
+            if not path.is_dir():
+                # Retain unavailable inventory so activation cannot call it empty.
+                roots.add(path)
+                continue
+            listed = git(path, 'worktree', 'list', '--porcelain', optional=True)
+            if listed is None:
+                if (path / '.git').exists() or path.name == '.git':
+                    raise ContractError('Registered Git location cannot list native bank worktrees')
+                roots.add(path)
+                continue
+            roots.update(Path(line[9:]) for line in listed.splitlines()
+                         if line.startswith('worktree '))
     if installation:
         for key in ('rollback_repositories', 'observed_repositories'):
             roots.update(Path(p) for p in installation.get(key, []))
