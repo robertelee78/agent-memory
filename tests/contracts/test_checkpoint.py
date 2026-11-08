@@ -71,6 +71,46 @@ class CheckpointContract(unittest.TestCase):
             self.assertEqual((repo/'feature.py').read_text(),'unfinished = True\n')
             again=self.preview(w,repo,self.payload(self.inspect(w,repo)));self.assertEqual(again['changed_memory_paths'],[])
 
+    def test_rendered_utf8_boundary_replaces_without_growth_and_refuses_one_extra_byte(self):
+        with World() as w:
+            repo,bank=self.fixture(w)
+            (repo/'feature.py').write_text('unfinished = True\n');w.git('add','feature.py',cwd=repo)
+            index,head=(repo/'.git/index').read_bytes(),(repo/'.git/HEAD').read_bytes()
+            payload=self.payload(self.inspect(w,repo))
+            sample=self.preview(w,repo,payload)['proposal']['write']['content']
+            prefix='\n## Boundary notes\n\n'
+            suffix='\n'
+            padding=16384-len(sample.encode('utf-8'))-len((prefix+suffix).encode('utf-8'))
+            self.assertGreater(padding,0)
+            # Use a multibyte character so this measures the actual UTF-8 envelope.
+            notes=prefix+'é'*(padding//2)+'x'*(padding%2)+suffix
+            active=bank/'activeContext.md';active.write_text(active.read_text()+notes)
+            original=self.files(bank)
+            payload['observed_active_sha256']=self.inspect(w,repo)['observed_active_sha256']
+            proposal=self.preview(w,repo,payload)
+            self.assertEqual(len(proposal['proposal']['write']['content'].encode('utf-8')),16384)
+            self.assertTrue(self.apply(w,proposal)[1]['verified'])
+            boundary=self.files(bank)
+            self.assertEqual(len(boundary['activeContext.md']),16384)
+            self.assertIn(LEGACY.encode(),boundary['activeContext.md'])
+            self.assertIn(notes.encode(),boundary['activeContext.md'])
+            self.assertEqual({k:v for k,v in boundary.items() if k!='activeContext.md'},
+                             {k:v for k,v in original.items() if k!='activeContext.md'})
+            for _ in range(2):
+                payload['observed_active_sha256']=self.inspect(w,repo)['observed_active_sha256']
+                proposal=self.preview(w,repo,payload)
+                self.assertEqual(proposal['changed_memory_paths'],[])
+                self.assertTrue(self.apply(w,proposal)[1]['verified'])
+                self.assertEqual(self.files(bank),boundary)
+            payload['observed_active_sha256']=self.inspect(w,repo)['observed_active_sha256']
+            payload['next_step']+='x'
+            r,value=self.command(w,'checkpoint','preview','--repo',repo,'--input',self.save(w,payload))
+            self.assertEqual(r.returncode,1,value)
+            self.assertEqual(self.files(bank),boundary)
+            self.assertEqual((repo/'.git/index').read_bytes(),index)
+            self.assertEqual((repo/'.git/HEAD').read_bytes(),head)
+            self.assertEqual((repo/'feature.py').read_text(),'unfinished = True\n')
+
     def test_stale_active_or_other_bank_edits_are_preserved_and_fresh_checkpoint_carries_manual_evidence(self):
         with World() as w:
             repo,bank=self.fixture(w);current=self.inspect(w,repo);payload=self.payload(current);p=self.preview(w,repo,payload)
