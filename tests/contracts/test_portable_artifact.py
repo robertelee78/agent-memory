@@ -206,6 +206,13 @@ class PortableArtifactContract(unittest.TestCase):
                         self.assertEqual(status, 1)
                         self.assertFalse(refused['valid'])
                         self.assertFalse(refused['writes_performed'])
+                        if mutation == 'bytes':
+                            # The direct validator has no artifact readback
+                            # backstop; stale byte validation must refuse here.
+                            with redirect_stdout(StringIO()) as output:
+                                status = pack_validation.main(['--pack', str(pack)])
+                            self.assertEqual(status, 1)
+                            self.assertFalse(json.loads(output.getvalue())['valid'])
                     finally:
                         if manual.is_symlink():
                             manual.unlink()
@@ -215,6 +222,15 @@ class PortableArtifactContract(unittest.TestCase):
                         if mutation == 'new-file':
                             (pack / 'unreachable.md').unlink()
                     self.assertEqual(artifact.inspect(pack)['artifact_digest'], baseline['artifact_digest'])
+            guide = pack / 'maintain/artifact/GUIDE.md'
+            guide_bytes = guide.read_bytes()
+            guide.write_bytes(guide_bytes + b'\nAdditional maintainer context.\n')
+            changed = artifact.inspect(pack)
+            self.assertNotEqual(changed['artifact_digest'], baseline['artifact_digest'])
+            self.assertNotEqual(changed['files']['maintain/artifact/GUIDE.md']['sha256'],
+                                baseline['files']['maintain/artifact/GUIDE.md']['sha256'])
+            guide.write_bytes(guide_bytes)
+            self.assertEqual(artifact.inspect(pack)['artifact_digest'], baseline['artifact_digest'])
             executable = pack / 'scripts/artifact.py'
             old_mode = executable.stat().st_mode & 0o777
             executable.chmod(old_mode ^ 0o100)
