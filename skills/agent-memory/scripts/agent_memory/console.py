@@ -237,6 +237,10 @@ def main(argv=None, *, prog='am', bootstrap=False):
         argv = bootstrap_command(argv)
     command = argv[0]; output = StringIO(); errors = StringIO(); previous = sys.argv[0]
     from . import installation
+    if command == 'omp-boundary' and '--stream' in argv[1:]:
+        # The private framed worker is a byte stream, not one printable JSON
+        # response. Capturing it in StringIO also removes stdout.buffer.
+        return installation.main(argv)
     try:
         sys.argv[0] = prog
         try:
