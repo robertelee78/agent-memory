@@ -107,3 +107,32 @@ metadata matched; healthy EOF, verified neutral hint and actual CLOSED were all
 observed. Independent Opus accepted only this apparatus proof. Original and R2
 pending states remained unchanged; no baseline was repeated. Synchronous observer
 logging perturbs timing, so this does not qualify native latency, wake or clocks.
+
+## Actual R5b campaign: failed after complete transport observation
+
+The [source-bound R5b disposition](data/2026-11-06-omp-native/stock-r5b-disposition-20261108.json)
+retains a separate failure against unchanged AM `77cf838`. The learn worker
+received contiguous REQUEST 1–141, FINAL 142 and complete EOF, with a healthy
+observer and no partial frames. Only attempts 1–42 have verified durable outcomes.
+The worker exited 1 and left OPEN; requests 43–141 remain unaccounted.
+
+Source review localizes the failure to an exception escaping the executor.
+`run` retains only an error flag and exits before `Coverage.close`; the original
+exception type and stage were not recorded. Later sequence refusals explain
+propagation, not the first failure. Contention, changed authority and filesystem
+errors remain unproven alternatives. A new bounded, metadata-only external
+diagnostic is being designed; no original pending state is repaired or waived.
+
+The instrumented run also had substantial executor backlog: request 42 waited
+approximately 106 seconds before its verified response. No root-wake reservation
+occurred; the queued seal was cancelled. The old switched stream still has a
+refused/unresolvable source identity and unresolved transition. A governed
+admission was observed, but the positive model-forgets condition is undetermined.
+RPC acceptance checks aborted at the closure gate.
+
+Print source capture/CLOSED and fork large-entry storage/EOF/CLOSED are scoped
+positives only. Independent Opus confirmed this failed disposition and identified
+a harness mislabel: healthy observation with worker exit 1 was called missing
+instrumentation. Separating those classifications MUST retain exit 1 and OPEN
+as fatal failures. No native retry or stock omp modification follows from this
+evidence, and no full #249, wake, timing or platform pass is claimed.
