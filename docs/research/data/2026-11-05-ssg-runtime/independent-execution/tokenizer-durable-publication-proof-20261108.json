@@ -1,0 +1,119 @@
+{
+  "schema": "am255/tokenizer-durable-publication-control-v1",
+  "source_commit": "1e83e2b566032e5bf57c6fc6f26721f956f1526e",
+  "source_ref": "refs/heads/research/255-response-durability-source-20261108",
+  "source_hashes": {
+    "execute.py": "42c2872b8044bf485fce0b64ddaa6e36a925094ba0f68192d7bdcd87a70cccbe",
+    "score.py": "b63174c202148abfc327bf2c415c91bcd64ee40e63b8cdcb21aed9d46d0c20a3",
+    "execution-io.json": "2ffa6aae2073991514194202f467ab3b75ab090b8598210e3eaa8c1cab03dbbe",
+    "executor_runtime.py": "83c1eed9a7b150cb7018a5eaccb74683856901409bcaf21cb089805780f8c200",
+    "executor_native.py": "7765ef70e6ac715925d081a9c8c7a629563f5332a9f54510aa7c29a6bf558735",
+    "spec.json": "f5efd0b189747f6e2f5e9a5f6fd83e24a19f9cf6e76a7b4a0a083ef864288ad7",
+    "compile_inputs.py": "584c5f2d3d3b1972d17ea77088e79bff8f2d50e68a174aded08c33782b1ea1c9",
+    "authored-inputs-20261106.json": "fc22d917544e865b9acf2ecc63ff410ccd8d3ced18e810c7755ffb62fa8892f1",
+    "scorer-map-20261106.json": "b4d7bfde73ca473c90d1a75239b0daf39e10942887465a02f74484aa09cc3f37"
+  },
+  "scope": "Actual Model.embed/retain and tokenization_accounting with real file/directory fsyncs and explicit controlled transport/liveness/failure fixtures. No provider, model, graph, native-tokenizer, resource or release qualification.",
+  "model_graph_endpoint_service_calls": 0,
+  "passed": true,
+  "controls": [
+    {
+      "name": "intent-file-sync",
+      "raised": "OSError",
+      "controlled_transport_calls": [],
+      "fsync_call_count": 1,
+      "response_pointer_published": false,
+      "response_file_may_exist": false,
+      "retained_tokenizer_attempts": 0,
+      "tokenizer_outcomes": [],
+      "ledger": {
+        "path": "intent-file-sync/tokenization-ledger.json",
+        "sha256": "15bdf4db95f2e98080776e0e4ab4d8bef869c250793355ed009d481b385a4836"
+      }
+    },
+    {
+      "name": "response-file-sync",
+      "raised": "OSError",
+      "controlled_transport_calls": [
+        "tokenize"
+      ],
+      "fsync_call_count": 3,
+      "response_pointer_published": false,
+      "response_file_may_exist": true,
+      "retained_tokenizer_attempts": 1,
+      "tokenizer_outcomes": [
+        "transport-outcome-unconfirmed"
+      ],
+      "ledger": {
+        "path": "response-file-sync/tokenization-ledger.json",
+        "sha256": "820646625a21564485e041b3a34dd36596dc1eb47cf54b3b60494de883f619c5"
+      }
+    },
+    {
+      "name": "response-directory-sync",
+      "raised": "OSError",
+      "controlled_transport_calls": [
+        "tokenize"
+      ],
+      "fsync_call_count": 4,
+      "response_pointer_published": false,
+      "response_file_may_exist": true,
+      "retained_tokenizer_attempts": 1,
+      "tokenizer_outcomes": [
+        "transport-outcome-unconfirmed"
+      ],
+      "ledger": {
+        "path": "response-directory-sync/tokenization-ledger.json",
+        "sha256": "76e9e915328d1491c803603b26ace9d009d4dcb352498430461715f977a17722"
+      }
+    },
+    {
+      "name": "response-interrupt",
+      "raised": "KeyboardInterrupt",
+      "controlled_transport_calls": [
+        "tokenize"
+      ],
+      "fsync_call_count": 3,
+      "response_pointer_published": false,
+      "response_file_may_exist": true,
+      "retained_tokenizer_attempts": 1,
+      "tokenizer_outcomes": [
+        "transport-outcome-unconfirmed"
+      ],
+      "ledger": {
+        "path": "response-interrupt/tokenization-ledger.json",
+        "sha256": "6476006e7c0e2233db0d83a1ba0fc3c44a0f7e59b95d6bd26bd69dc3f9b24d9f"
+      }
+    },
+    {
+      "name": "embedding-transport-after-durable-tokenizer",
+      "raised": "OSError",
+      "controlled_transport_calls": [
+        "tokenize",
+        "embeddings"
+      ],
+      "fsync_call_count": 6,
+      "response_pointer_published": true,
+      "response_file_may_exist": true,
+      "retained_tokenizer_attempts": 1,
+      "tokenizer_outcomes": [
+        "response-recorded"
+      ],
+      "ledger": {
+        "path": "embedding-transport-after-durable-tokenizer/tokenization-ledger.json",
+        "sha256": "f9560ce83de3fb8ed2979f81602b68d021db797fe6a42178c42b6376f457cd8b"
+      }
+    }
+  ],
+  "prior_failed_reference_unchanged": true,
+  "new_independent_review_and_full_closure_freeze_required": true,
+  "raw_receipt_sha256": "784b2d2da2de1105be70e30cc42435d9817bfa428f998c5175fd1b82be7ee875",
+  "source_ref_scope": "Retained immutable local source reference; exact source commit is reachable on the public integration branch.",
+  "before_control": {
+    "source_commit": "3e14160b369c6146e0956924c4330626cbd32869",
+    "exit": 1,
+    "failure": "Actual response-file fsync failure left response pointer published; corrected response-is-unconfirmed invariant failed",
+    "scope": "Controlled transport and filesystem failure, no network/model/graph/service",
+    "raw_receipt_sha256": "dae162b19b5aab52e46f3891430e0f64c52b910b0e4c76299a431f26f8f5bdaa"
+  }
+}

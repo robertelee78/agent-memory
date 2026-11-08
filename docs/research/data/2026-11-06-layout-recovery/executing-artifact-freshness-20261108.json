@@ -1,0 +1,53 @@
+{
+  "schema": "agent-memory/executing-artifact-freshness-v1",
+  "production_source_commit": "0bde46815ec24d624c3ae4e53677181f8d0965ca",
+  "production_file": "skills/agent-memory/scripts/agent_memory/pack_validation.py",
+  "production_sha256": "1ae17f55d586548e43c384dffeeae89764491c4a367be96237402d9aa2e4590c",
+  "review": "Opus scoped source PASS; P3byte-transition test coverage strengthened before final worker",
+  "guard": "One exact root/name/byte/mode static-validation memo; complete physical inventory freshly read at entry and exit; artifact inspector independently rechecks a third inventory; no cached authority or caller-result mutation",
+  "workers": [
+    {
+      "source_commit": "339d6889a765a81e4182e166fe3eebf74b236ba0",
+      "suite": "portable-artifact",
+      "passed": true,
+      "elapsed_seconds": 21.656963292043656,
+      "worker_deadline_seconds": 300
+    },
+    {
+      "source_commit": "0bde46815ec24d624c3ae4e53677181f8d0965ca",
+      "suite": "held-source-mutable-final-recheck",
+      "passed": true,
+      "elapsed_seconds": 51.98064974998124,
+      "worker_deadline_seconds": 300,
+      "ready_deadline_seconds": 10,
+      "finish_deadline_seconds": 15,
+      "mutations": [
+        "hold",
+        "registry",
+        "ledger",
+        "copied executing SKILL bytes"
+      ]
+    },
+    {
+      "source_commit": "0bde46815ec24d624c3ae4e53677181f8d0965ca",
+      "suite": "held-source-real-client-hooks",
+      "passed": true,
+      "elapsed_seconds": 74.28458650002722,
+      "worker_deadline_seconds": 300,
+      "child_deadline_seconds": 30,
+      "clients": [
+        "Codex",
+        "Claude"
+      ],
+      "path": "Long Unicode installation path; actual current hook processes, not native provider interactions"
+    }
+  ],
+  "initial_failure_retained": "Portable consumer expected a private exception type but the OS correctly returned PermissionError. The test now checks public status/valid/writes results; production code was not changed to suppress the error.",
+  "not_claimed": [
+    "Clean performance percentage",
+    "Whole #244 or #249 acceptance",
+    "Native omp qualification",
+    "Platform matrix",
+    "Release delivery"
+  ]
+}
