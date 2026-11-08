@@ -16,7 +16,8 @@ TRIGGERS = {'human', 'human-with-own-guidance', 'own-hidden-pure', 'own-hidden-c
 GAPS = {'unsafe-representation', 'missing-stored-source', 'ambiguous-lifecycle', 'missing-payload',
         'oversized-source', 'cursor-discontinuity', 'late-substantive-source'}
 NONLEARNING = {'model_change', 'thinking_level_change', 'label', 'session_info', 'credential_pin',
-               'custom', 'compaction', 'branch_summary'}
+               'custom', 'compaction', 'branch_summary', 'model_usage', 'service_tier_change',
+               'reset_boundary', 'ttsr_injection', 'title_change', 'mode_change', 'session_init'}
 
 
 def digest(value):
@@ -168,10 +169,13 @@ def cursor_value(value, session, lifecycle):
 
 def validate_root_wakes(path, session=None):
     trust_paths.state(path)
+    entries = []; native_users = set()
     with os.scandir(path) as scan:
-        entries = sorted(list(scan), key=lambda e: e.name)
-    if len(entries) > 65536:
-        raise ContractError('Native root wake inventory exceeds bound')
+        for index, entry in enumerate(scan):
+            if index >= 65536:
+                raise ContractError('Native root wake inventory exceeds bound')
+            entries.append(entry)
+    entries.sort(key=lambda entry: entry.name)
     for entry in entries:
         if not entry.name.endswith('.json'):
             raise ContractError('Unknown native root wake record')
@@ -185,6 +189,8 @@ def validate_root_wakes(path, session=None):
         turn_sources.bounded(value['native_user_entry'])
         canonical_uuid(value['request_id'])
         cursor_value(read(path.parent / root / 'cursor.json'), value['session'], root)
+        native_users.add(value['native_user_entry'])
+    return native_users
 
 
 def segments(repo, session):
@@ -198,7 +204,7 @@ def segments(repo, session):
             if i >= 65536:
                 raise ContractError('Native session inventory exceeds bound')
             if entry.name == 'root-wakes':
-                validate_root_wakes(Path(entry.path), session); continue
+                continue  # Producer source capture is independent of wake-state faults.
             canonical_uuid(entry.name)
             child = Path(entry.path); trust_paths.state(child)
             cursor = cursor_value(read(child / 'cursor.json', 1024 * 1024), session, entry.name)
@@ -208,6 +214,11 @@ def segments(repo, session):
 
 def new_segment(repo, session, lifecycle, root, trigger, ordinal):
     directory = session_dir(repo, session) / lifecycle
+    if root != lifecycle:
+        root_directory = session_dir(repo, session) / root
+        root_cursor = cursor_value(read(root_directory / 'cursor.json'), session, root)
+        if not source_bound_origin(root_directory, root_cursor):
+            raise ContractError('Cannot extend an unbound native root family')
     turn_sources.private_mkdir(directory)
     cursor = {'schema': 'agent-memory/omp-cursor-v1', 'session': session, 'lifecycle': lifecycle,
               'origin': {'kind': 'genuine-user' if trigger in {'human', 'human-with-own-guidance'} else 'foreign-continuation',
@@ -218,24 +229,87 @@ def new_segment(repo, session, lifecycle, root, trigger, ordinal):
         retain(directory / 'cursor.json', cursor, 1024 * 1024)
     else:
         cursor = cursor_value(read(directory / 'cursor.json'), session, lifecycle)
+        if not source_bound_origin(directory, cursor):
+            raise ContractError('Cannot reuse an unbound native root family')
     return directory, cursor
 
 
+def source_bound_origin(directory, cursor):
+    """Historical notification-only cursors never acquire source authority."""
+    root = cursor['origin']['human_root']
+    if root != cursor['lifecycle']:
+        root_directory = directory.parent / root
+        try:
+            root_cursor = cursor_value(read(root_directory / 'cursor.json'), cursor['session'], root)
+        except FileNotFoundError:
+            return False
+        if root_cursor['origin']['human_root'] != root:
+            return False
+        return source_bound_origin(root_directory, root_cursor)
+    if cursor['origin']['kind'] != 'genuine-user':
+        return True
+    native = (cursor['control_interval'] or {}).get('human_entry')
+    if not native:
+        return False
+    binding = read(directory.parents[2] / 'omp-bank-binding-v1.json', 4096)
+    repository = binding.get('repository')
+    if not isinstance(repository, str) or not Path(repository).is_absolute():
+        return False
+    expected = str(uuid.uuid5(uuid.NAMESPACE_URL, str(Path(repository).resolve()) + ':omp:' + cursor['session'] + ':' + native))
+    if cursor['lifecycle'] != expected:
+        return False
+    target = directory / 'captures' / (hashlib.sha256(native.encode()).hexdigest() + '.json')
+    if os.path.lexists(target):
+        captured = read(target, 4096)
+        snapshot = read(_snapshot_path(directory, captured['snapshot_ref']))
+        return (captured.get('schema') == 'agent-memory/omp-capture-v1'
+                and captured.get('session') == cursor['session'] and captured.get('lifecycle') == cursor['lifecycle']
+                and captured['native_entry_id'] == native and snapshot.get('native_entry_id') == native
+                and digest(snapshot) == captured['snapshot_sha256']
+                and snapshot.get('role') == 'user' and snapshot.get('attribution') == 'user')
+    # A checked stored user can itself be unsafe/unavailable. Its exact-ID gap
+    # preserves that real origin without admitting its payload or a metadata root.
+    for path in _files(directory, 'gaps', r'[0-9a-f-]{36}\.json'):
+        value = read(path, 4096)
+        if (value.get('schema') == 'agent-memory/omp-gap-v1' and value.get('session') == cursor['session']
+                and value.get('lifecycle') == cursor['lifecycle'] and value.get('native_entry_id') == native
+                and value.get('reason') in {'unsafe-representation', 'oversized-source', 'missing-payload'}):
+            return True
+    return False
+
+
 def active_segment(current, branch_ids=None):
+    invalid = {cursor['origin']['human_root'] for directory, cursor in current
+               if not source_bound_origin(directory, cursor)}
+    current = [item for item in current if item[1]['origin']['human_root'] not in invalid]
     if not current:
         return None
     humans = [item for item in current if item[1]['origin']['kind'] == 'genuine-user']
     if branch_ids is not None:
         humans = [item for item in humans if (item[1]['control_interval'] or {}).get('human_entry') in branch_ids]
         if not humans:
-            provisional = [item for item in current if not (item[1]['control_interval'] or {}).get('human_entry')
-                           and item[1]['origin']['kind'] == 'genuine-user']
-            return provisional[-1] if provisional else None
+            return next((item for item in reversed(current)
+                         if item[1]['origin']['kind'] != 'genuine-user'), None)
     if not humans:
         return current[-1]
     root = max(humans, key=lambda item: item[1]['event_ordinal'])[1]['origin']['human_root']
     return max((item for item in current if item[1]['origin']['human_root'] == root),
                key=lambda item: item[1]['event_ordinal'])
+
+
+def writable_successor(repo, session, owner, current, ordinal):
+    directory, cursor = owner
+    if not (directory / 'segment.json').exists():
+        return owner
+    root = cursor['origin']['human_root']
+    existing = [item for item in current if item[1]['origin']['human_root'] == root
+                and source_bound_origin(*item) and not (item[0] / 'segment.json').exists()]
+    if existing:
+        return existing[-1]
+    successor = new_segment(repo, session, str(uuid.uuid4()), root, 'foreign-hidden',
+                            max([item[1]['event_ordinal'] for item in current] + [ordinal]) + 1)
+    current.append(successor)
+    return successor
 
 
 def _files(directory, child, pattern):
@@ -250,6 +324,33 @@ def _files(directory, child, pattern):
                 raise ContractError('Native capture inventory exceeds bound or has unknown entries')
             result.append(Path(entry.path))
     return sorted(result)
+
+
+def native_disposition_ids(repo, session):
+    """Exact safely retained/qualified IDs; neutral hints are never source evidence."""
+    result = set()
+    for directory, cursor in segments(repo, session):
+        if not source_bound_origin(directory, cursor):
+            continue
+        for path in _files(directory, 'captures', r'[0-9a-f]{64}\.json'):
+            captured = read(path, 4096)
+            snapshot = read(_snapshot_path(directory, captured['snapshot_ref']))
+            native = captured['native_entry_id']
+            if (snapshot.get('native_entry_id') != native or digest(snapshot) != captured['snapshot_sha256']):
+                raise ContractError('Native disposition snapshot identity changed')
+            result.add(native)
+        for native, captured in (cursor['control_interval'] or {}).get('pure_entries', {}).items():
+            if digest(read(_snapshot_path(directory, captured['snapshot_ref']))) != captured['snapshot_sha256']:
+                raise ContractError('Native control disposition changed')
+            result.add(native)
+        for path in _files(directory, 'gaps', r'[0-9a-f-]{36}\.json'):
+            value = read(path, 4096)
+            native = value.get('native_entry_id')
+            if (isinstance(native, str) and not native.startswith(('event:', 'tool:'))
+                    and value.get('session') == session and value.get('lifecycle') == cursor['lifecycle']
+                    and value.get('reason') in GAPS):
+                result.add(native)
+    return result
 
 
 def _enroll(directory, cursor, reference, snapshot, kind, native):
@@ -291,7 +392,7 @@ def _retained_gap(current, identities):
     return False
 
 
-def capture(directory, cursor, entry, *, mapping='verified', invocation=None, witness=None):
+def capture(directory, cursor, entry, *, mapping='verified', invocation=None, witness=None, persisted=False):
     native = turn_sources.bounded(entry.get('id'))
     name = hashlib.sha256(native.encode()).hexdigest()
     snapshot_ref = 'snapshots/' + name + '.json'
@@ -312,8 +413,20 @@ def capture(directory, cursor, entry, *, mapping='verified', invocation=None, wi
                     or ('attribution' in snapshot) != ('attribution' in message)
                     or snapshot.get('attribution') != message.get('attribution')):
                 raise ContractError('Retained instruction context differs from native identity')
+        elif persisted:
+            # Native persistence may truncate otherwise safe bodies. Reuse the
+            # already screened immutable snapshot by exact structural identity,
+            # never compare/replace it with a persisted rendering.
+            message = entry.get('message', {}) if entry.get('type') == 'message' else entry
+            if (snapshot.get('carrier') != entry.get('type') or snapshot.get('native_entry_id') != native
+                    or snapshot.get('native_parent_id') != entry.get('parentId')
+                    or (entry.get('type') == 'message' and snapshot.get('role') != message.get('role'))
+                    or any(snapshot.get(key) != message.get(key) for key in
+                           ('toolCallId', 'toolName', 'isError', 'attribution', 'customType')
+                           if key in snapshot or key in message)):
+                raise ContractError('Retained native snapshot identity differs')
         else:
-            original = omp_projection.project(entry)
+            original = omp_projection.project(entry, persisted=persisted)
             if original.get('snapshot') != snapshot:
                 raise ContractError('Retained native snapshot differs from its projection')
         projected = {'snapshot': snapshot, 'exclusions': list(omp_projection.EXCLUSIONS)}
@@ -324,9 +437,10 @@ def capture(directory, cursor, entry, *, mapping='verified', invocation=None, wi
         if projected is not None and witness._verify() != verified:
             projected = None
         if projected is None:
-            projected = omp_projection.project(entry)
+            projected = omp_projection.project(entry, persisted=persisted)
         if 'gap' in projected:
-            gap(directory, cursor, native, projected['gap'])
+            if not (directory / 'segment.json').exists():
+                gap(directory, cursor, native, projected['gap'])
             return None
         snapshot = projected['snapshot']
     source_hash = retain(path, snapshot)
@@ -355,76 +469,11 @@ def matched_metadata(cursor):
     return {**control.get('metadata_matches', {}), **control.get('tool_metadata_matches', {})}
 
 
-def reconcile_metadata(repo, session, branch_ids):
-    """Qualify metadata against safe stored carriers after the captured predecessor."""
-    current = segments(repo, session)
-    positions = {native: i for i, native in enumerate(branch_ids)}
-    snapshots = {}
-    calls_by_entry = {}
-    used = set()
-    for directory, cursor in current:
-        used.update((cursor['control_interval'] or {}).get('metadata_matches', {}).values())
-        for path in _files(directory, 'captures', r'[0-9a-f]{64}\.json'):
-            capture_record = read(path, 4096)
-            snapshot = read(_snapshot_path(directory, capture_record['snapshot_ref']))
-            native = capture_record['native_entry_id']
-            snapshots[native] = (snapshot.get('role', 'custom'), directory, capture_record)
-            if snapshot.get('role') == 'assistant' and isinstance(snapshot.get('content'), list):
-                calls_by_entry[native] = {block['id'] for block in snapshot['content'] if block.get('type') == 'toolCall'}
-        for native, capture_record in (cursor['control_interval'] or {}).get('pure_entries', {}).items():
-            snapshot = read(_snapshot_path(directory, capture_record['snapshot_ref']))
-            if digest(snapshot) != capture_record['snapshot_sha256']:
-                raise ContractError('Retained own-control projection changed')
-            snapshots.setdefault(native, (snapshot.get('role', 'custom'), directory, capture_record))
-            if snapshot.get('role') == 'assistant' and isinstance(snapshot.get('content'), list):
-                calls_by_entry[native] = {block['id'] for block in snapshot['content'] if block.get('type') == 'toolCall'}
-    for directory, cursor in current:
-        control = cursor['control_interval'] or {}
-        matches = control.get('metadata_matches', {})
-        tool_matches = control.get('tool_metadata_matches', {})
-        predecessors = control.get('metadata_predecessors', {})
-        records = [read(p, 4096) for p in _files(directory, 'admissions', r'[0-9a-f-]{36}\.json')]
-        records.sort(key=lambda value: (value['event_ordinal'], value['capture_id']))
-        for meta in records:
-            identifier = meta['capture_id']
-            target_matches = tool_matches if meta['tool_call_ids'] else matches
-            if identifier in target_matches:
-                continue
-            predecessor = predecessors.get(identifier)
-            if predecessor is not None and predecessor not in positions:
-                continue
-            after = positions.get(predecessor, -1)
-            if meta['tool_call_ids']:
-                candidates = [native for native in branch_ids if positions[native] >= after
-                              and set(meta['tool_call_ids']).issubset(calls_by_entry.get(native, set()))]
-            else:
-                candidates = [native for native in branch_ids if native not in used and positions[native] > after
-                              and native in snapshots and snapshots[native][0] == meta['role']]
-            if not candidates:
-                continue
-            native = candidates[0]; target_matches[identifier] = native
-            if not meta['tool_call_ids']:
-                used.add(native)
-            manifest_path = directory / 'segment.json'
-            if manifest_path.exists():
-                manifest = read(manifest_path)
-                for old in manifest['gaps']:
-                    if old['native_entry_id'] == 'event:' + identifier:
-                        _, recovered_dir, captured = snapshots[native]
-                        recovered = read(_snapshot_path(recovered_dir, captured['snapshot_ref']))
-                        ref = 'snapshots/' + hashlib.sha256(native.encode()).hexdigest() + '.json'
-                        retain(directory / ref, recovered)
-                        retain(directory / 'resolutions' / (old['gap_id'] + '.json'),
-                               {'schema': 'agent-memory/omp-gap-resolution-v1', 'manifest_sha256': digest(manifest),
-                                'gap_id': old['gap_id'], 'recovered_ref': ref, 'recovered_sha256': digest(recovered),
-                                'reason': 'verified-native-reassociation'}, 4096)
-        control['metadata_matches'] = matches
-        control['tool_metadata_matches'] = tool_matches
-        cursor['control_interval'] = control
-        replace_cursor(directory / 'cursor.json', cursor)
 
 
 def enroll_sealed(directory, cursor, manifest):
+    if not source_bound_origin(directory, cursor):
+        raise ContractError('Cannot enroll an unbound native root family')
     reference = manifest['admission_ref']
     if reference is not None:
         matching = [read(path, 4096) for path in _files(directory, 'captures', r'[0-9a-f]{64}\.json')]
@@ -438,6 +487,8 @@ def enroll_sealed(directory, cursor, manifest):
 
 
 def seal(directory, cursor):
+    if not source_bound_origin(directory, cursor):
+        raise ContractError('Legacy notification-only native origin cannot be sealed')
     if (directory / 'segment.json').exists():
         manifest = manifest_value(directory, cursor)
         enroll_sealed(directory, cursor, manifest)
@@ -450,11 +501,6 @@ def seal(directory, cursor):
     captures.sort(key=lambda value: sequence.index(value['native_entry_id']) if value['native_entry_id'] in sequence else len(sequence))
     for call_id in cursor['tool_lifecycles']:
         gap(directory, cursor, 'tool:' + call_id, 'missing-stored-source')
-    matched = matched_metadata(cursor)
-    for path in _files(directory, 'admissions', r'[0-9a-f-]{36}\.json'):
-        meta = read(path, 4096)
-        if meta['capture_id'] not in matched:
-            gap(directory, cursor, 'event:' + meta['capture_id'], 'missing-stored-source')
     gaps = [read(p, 4096) for p in _files(directory, 'gaps', r'[0-9a-f-]{36}\.json')]
     if not captures and not gaps:
         gap(directory, cursor, None, 'missing-stored-source')
@@ -538,6 +584,8 @@ def all_segments(repo, errors=None):
 
 
 def registration(repo, directory, cursor, enrollment, *, perform=False):
+    if perform and not source_bound_origin(directory, cursor):
+        raise ContractError('Cannot register an unbound native root family')
     state = turn_sources.inspect(repo, 'omp', cursor['session'], cursor['lifecycle'])
     matches = [s for s in state['sources'] if s['source_reference'] == enrollment['source_reference']]
     if matches:
@@ -570,8 +618,8 @@ def registration(repo, directory, cursor, enrollment, *, perform=False):
                 exists |= value == turn_sources.ref(shared, identity)
     if not exists and occupied >= turn_sources.MAX_TURNS:
         return None, []
-    from .omp_boundary import ensure_marker
-    ensure_marker(repo)
+    from .omp_boundary import verify_marker
+    verify_marker(repo)
     # Recover successful lost responses above; never repeat an unknown attempt
     # whose shared failure could not itself be durably written (e.g. disk full).
     retain(attempt_path, attempt, 4096)
@@ -599,6 +647,8 @@ def drain_enrollments(repo):
     attempts = 0
     records = []
     for directory, cursor in all_segments(repo, []):
+        if not source_bound_origin(directory, cursor):
+            continue
         try:
             if (directory / 'segment.json').exists():
                 enroll_sealed(directory, cursor, manifest_value(directory, cursor))
@@ -619,7 +669,7 @@ def drain_enrollments(repo):
             continue
 
 
-def _coverage(directory, manifest):
+def _coverage(directory, manifest, *, historical=False):
     for gap_value in manifest['gaps']:
         try:
             resolution = read(directory / 'resolutions' / (gap_value['gap_id'] + '.json'), 4096)
@@ -637,6 +687,8 @@ def _coverage(directory, manifest):
         original = gap_value['native_entry_id']
         reassociated = False
         if isinstance(original, str) and original.startswith('event:') and resolution['reason'] == 'verified-native-reassociation':
+            if not historical:
+                return False  # Role/order metadata is not an exact native-ID witness.
             cursor = read(directory / 'cursor.json')
             reassociated = matched_metadata(cursor).get(original[6:]) == recovered.get('native_entry_id')
         if isinstance(original, str) and original.startswith('tool:') and resolution['reason'] == 'verified-native-reassociation':
@@ -678,9 +730,36 @@ def manifest_value(directory, cursor):
         canonical_uuid(item['gap_id'])
     return manifest
 
+def historical_completed_family(repo, directory, cursor):
+    """Preserve completed old assertions without granting new root authority."""
+    root = cursor['origin']['human_root']
+    family = [item for item in segments(repo, cursor['session']) if item[1]['origin']['human_root'] == root]
+    represented = False
+    for old_directory, old_cursor in family:
+        if not (old_directory / 'segment.json').exists():
+            return False
+        state = turn_sources.inspect(repo, 'omp', old_cursor['session'], old_cursor['lifecycle'])
+        if state['faults'] or not state['sources']:
+            return False
+        if any(not source['completed'] for source in state['sources']):
+            return False
+        enrollments = [read(path, 4096) for path in _files(old_directory, 'enrollments', r'[0-9a-f]{64}\.json')]
+        if not enrollments or not any(item['kind'] == 'segment' for item in enrollments):
+            return False
+        sources = {(item['source_reference'], item['source_sha256']) for item in state['sources']}
+        if sources != {(item['source_reference'], item['source_sha256']) for item in enrollments}:
+            return False
+        represented = True
+    return represented
+
+
 
 def segment_inventory(repo, directory, cursor):
     rows = []
+    if not source_bound_origin(directory, cursor) and not historical_completed_family(repo, directory, cursor):
+        return [{'session': cursor['session'], 'lifecycle': cursor['lifecycle'],
+                 'human_root': cursor['origin']['human_root'], 'status': 'legacy-unverified-metadata',
+                 'source_reference': 'omp:legacy-metadata:' + cursor['lifecycle']}]
     manifest = manifest_value(directory, cursor) if (directory / 'segment.json').exists() else None
     allowed = {'cursor.json', 'admission.json', 'segment.json', 'captures', 'gaps', 'snapshots',
                'enrollments', 'resolutions', 'admissions', 'registration-attempts'}
@@ -745,16 +824,18 @@ def segment_inventory(repo, directory, cursor):
         rows.append({'session': cursor['session'], 'lifecycle': cursor['lifecycle'], 'human_root': cursor['origin']['human_root'],
                      'status': 'open-segment', 'source_reference': 'omp:open:' + cursor['lifecycle']})
     matched = matched_metadata(cursor)
-    for call_id in cursor['tool_lifecycles']:
-        rows.append({'session': cursor['session'], 'lifecycle': cursor['lifecycle'], 'human_root': cursor['origin']['human_root'],
-                     'status': 'pending-native-tool', 'source_reference': 'omp:tool:' + call_id})
+    if manifest is None:
+        for call_id in cursor['tool_lifecycles']:
+            rows.append({'session': cursor['session'], 'lifecycle': cursor['lifecycle'], 'human_root': cursor['origin']['human_root'],
+                         'status': 'pending-native-tool', 'source_reference': 'omp:tool:' + call_id})
     for path in _files(directory, 'admissions', r'[0-9a-f-]{36}\.json'):
         meta = admission_metadata(read(path, 4096), cursor['session'])
         if path.name != meta['capture_id'] + '.json':
             raise ContractError('Native admission metadata namespace differs')
         if meta['capture_id'] not in matched:
             rows.append({'session': cursor['session'], 'lifecycle': cursor['lifecycle'], 'human_root': cursor['origin']['human_root'],
-                         'status': 'pending-stored-source', 'source_reference': 'omp:event:' + meta['capture_id']})
+                         'status': 'legacy-unverified-notification', 'source_reference': 'omp:event:' + meta['capture_id'],
+                         'actionable': False})
     for path in _files(directory, 'registration-attempts', r'[0-9a-f]{64}\.json'):
         attempt = read(path, 4096)
         exact(attempt, {'schema', 'session', 'lifecycle', 'source_reference', 'source_sha256'})
@@ -781,7 +862,7 @@ def segment_inventory(repo, directory, cursor):
         except (OSError, ValueError):
             observation, errors = None, ['source-unavailable']
         status = 'registration-fault' if errors else ('completed' if observation and observation['completed'] else 'pending-assessment' if observation else 'enrollment-pending')
-        if manifest and not _coverage(directory, manifest):
+        if manifest and not _coverage(directory, manifest, historical=bool(observation and observation['completed'])):
             status = 'pending-coverage-gap'
         row = {'session': cursor['session'], 'lifecycle': cursor['lifecycle'], 'human_root': cursor['origin']['human_root'],
                'source_reference': enrollment['source_reference'], 'source_sha256': enrollment['source_sha256'], 'status': status}
@@ -867,6 +948,12 @@ def list_pending(repo, offset=0):
     with source_barrier(repo), private_lock(_base(repo) / 'omp-transport.lock'):
         rows, faults = pending_inventory(repo)
         rows = [r for r in rows if r['status'] != 'completed']
+        from . import omp_stream
+        for index, item in enumerate(omp_stream.inventory(repo)['pending']):
+            rows.append({'session': item['session'], 'lifecycle': item['instance_id'],
+                         'source_reference': 'omp:stream:' + item['instance_id'] + ':' + str(index),
+                         'status': 'pending-native-coverage', 'qualification': item,
+                         'actionable': False})
         page = []; position = offset
         for row in rows[offset:]:
             if len(turn_sources.encoded(page + [row])) > 48000:
@@ -888,6 +975,8 @@ def _source(repo, session, lifecycle, identifier):
     canonical_uuid(lifecycle)
     directory = session_dir(repo, session) / lifecycle
     cursor = cursor_value(read(directory / 'cursor.json'), session, lifecycle)
+    if not source_bound_origin(directory, cursor) and not historical_completed_family(repo, directory, cursor):
+        raise ContractError('Native source has no independently stored root origin')
     segment_inventory(repo, directory, cursor)
     observation = None
     for path in _files(directory, 'enrollments', r'[0-9a-f]{64}\.json'):
@@ -925,7 +1014,8 @@ def _source(repo, session, lifecycle, identifier):
             qualification['instruction_context_qualification'] = 'Historical observer assertion; body intentionally nonlearning, not current installation authentication or complete source coverage.'
         qualifications.append(qualification)
     return {'verified': True, 'source': payload, 'enrollment': enrollment, 'observation': shared,
-            'origin': cursor['origin'], 'coverage_complete': manifest is not None and _coverage(directory, manifest),
+            'origin': cursor['origin'], 'coverage_complete': manifest is not None and _coverage(directory, manifest, historical=bool(shared and shared['completed'])),
+            'origin_qualification': 'stored-native-id-bound' if source_bound_origin(directory, cursor) else 'historical-unverified-native-origin',
             'exclusions': list(omp_projection.EXCLUSIONS), 'faults': faults,
             'retained_directory': str(directory), 'captures': qualifications,
             'gaps': manifest['gaps'] if manifest else [],
@@ -946,6 +1036,14 @@ def complete(repo, value):
             raise ContractError('Native segment not sealed/enrolled or has unresolved coverage gaps')
         directory = session_dir(repo, value['session']) / value['lifecycle']
         cursor = read(directory / 'cursor.json')
+        if not source_bound_origin(directory, cursor):
+            observation = checked['observation']
+            receipt = observation.get('completion') if observation.get('completed') else None
+            if (not isinstance(receipt, dict) or receipt.get('input_sha256') != digest(value)
+                    or receipt.get('source_sha256') != value['source_sha256']):
+                raise ContractError('Native assessment requires an independently stored root origin')
+            return {'verified': True, 'already_completed': True, **receipt,
+                    'origin_qualification': 'historical-unverified-native-origin'}
         manifest = read(directory / 'segment.json')
         segment_refs = [read(p, 4096) for p in _files(directory, 'enrollments', r'[0-9a-f]{64}\.json')]
         sealed = [e for e in segment_refs if e['kind'] == 'segment']
@@ -957,7 +1055,7 @@ def complete(repo, value):
         return turn_sources.complete(repo, 'omp', value['session'], value['lifecycle'], value['observation_id'], value['source_sha256'], receipt)
 
 
-def wake(repo, session, lifecycle, payload):
+def wake(repo, session, lifecycle, payload, *, delivery_window=None):
     exact(payload, {'observation_ids', 'enrollment_refs'})
     for key in payload:
         if not isinstance(payload[key], list) or payload[key] != sorted(set(payload[key])):
@@ -976,10 +1074,22 @@ def wake(repo, session, lifecycle, payload):
         return {'continue': False, 'status': 'pending', 'canonical_writes_performed': False}
     root_cursor = read(session_dir(repo, session) / root / 'cursor.json')
     native_user_entry = (root_cursor['control_interval'] or {}).get('human_entry')
+    if not source_bound_origin(session_dir(repo, session) / root, root_cursor):
+        return {'continue': False, 'status': 'pending-missing-human-source', 'canonical_writes_performed': False}
     if not native_user_entry:
         return {'continue': False, 'status': 'pending-missing-human-source', 'canonical_writes_performed': False}
+    wakes = session_dir(repo, session) / 'root-wakes'
+    try:
+        prior_users = validate_root_wakes(wakes, session) if os.path.lexists(wakes) else set()
+    except (OSError, ValueError, TypeError, KeyError):
+        return {'continue': False, 'status': 'pending-wake-state-unverifiable', 'canonical_writes_performed': False}
+    if native_user_entry in prior_users:
+        return {'continue': False, 'status': 'pending-already-requested-native-user', 'canonical_writes_performed': False}
     value = {'schema': 'agent-memory/omp-root-wake-v1', 'session': session, 'human_root': root,
              'native_user_entry': native_user_entry, 'request_id': str(uuid.uuid4()), 'status': 'requested'}
+    from .omp_stream import VerifiedNativeDeliveryWindow
+    if type(delivery_window) is not VerifiedNativeDeliveryWindow or not delivery_window.allow_reservation():
+        return {'continue': False, 'status': 'pending-undeliverable-window', 'canonical_writes_performed': False}
     retain(target, value, 4096)
     earlier = [r for r in rows if r['status'] != 'completed' and r not in current]
     inline = []; omitted = False
@@ -1012,6 +1122,9 @@ def wake(repo, session, lifecycle, payload):
 def resolve_tool_result(current, owner, captured, invocations):
     """Recover only an unambiguous native invocation, including crash readback."""
     directory, cursor = owner
+    current = [item for item in current if source_bound_origin(*item)]
+    if not source_bound_origin(directory, cursor):
+        return False
     recovered = read(_snapshot_path(directory, captured['snapshot_ref']))
     call_id = recovered.get('toolCallId')
     if recovered.get('role') != 'toolResult' or not call_id:
@@ -1042,75 +1155,94 @@ def resolve_tool_result(current, owner, captured, invocations):
                            {'schema': 'agent-memory/omp-gap-resolution-v1', 'manifest_sha256': digest(manifest),
                             'gap_id': old_gap['gap_id'], 'recovered_ref': reference,
                             'recovered_sha256': digest(recovered), 'reason': 'verified-native-reassociation'}, 4096)
-        old_cursor['tool_lifecycles'].pop(call_id)
-        replace_cursor(old_dir / 'cursor.json', old_cursor)
+        if not (old_dir / 'segment.json').exists():
+            old_cursor['tool_lifecycles'].pop(call_id, None)
+            replace_cursor(old_dir / 'cursor.json', old_cursor)
     return True
 
 
-def observe(repo, value, *, receipt=None):
-    from .omp_boundary import source_barrier, private_lock, _base, ensure_marker
+def _checked_payload_coverage(current, payload, rows, faults):
+    """Retained safe native IDs or explicit payload-not-required metadata only."""
+    native_ids = {item['id'] for item in payload['view']['native_parents']}
+    qualified = {entry['id'] for entry in payload['entries']
+                 if entry.get('type') in NONLEARNING or entry.get('agent', {}).get('kind') == 'sub'}
+    for directory, cursor in current:
+        if not source_bound_origin(directory, cursor):
+            continue
+        for path in _files(directory, 'captures', r'[0-9a-f]{64}\.json'):
+            captured = read(path, 4096)
+            snapshot = read(_snapshot_path(directory, captured['snapshot_ref']))
+            if digest(snapshot) != captured['snapshot_sha256']:
+                raise ContractError('Checked native payload digest changed')
+            qualified.add(captured['native_entry_id'])
+        for native, captured in (cursor['control_interval'] or {}).get('pure_entries', {}).items():
+            if digest(read(_snapshot_path(directory, captured['snapshot_ref']))) != captured['snapshot_sha256']:
+                raise ContractError('Checked native control payload changed')
+            qualified.add(native)
+    relevant = [row for row in rows if row['session'] == payload['view']['session']]
+    references = [{'session': row['session'], 'lifecycle': row['lifecycle'],
+                   'observation_id': row['observation_id'], 'source_sha256': row['source_sha256']}
+                  for row in relevant if 'observation_id' in row and 'source_sha256' in row
+                  and row['status'] not in {'orphan-registration', 'legacy-unverified-metadata', 'open-segment'}
+                  and any(cursor['lifecycle'] == row['lifecycle'] and source_bound_origin(directory, cursor)
+                          for directory, cursor in current)]
+    references_complete = len(references) <= 64
+    references = references[:64]
+    incomplete = {'pending-coverage-gap', 'registration-fault', 'pending-native-tool',
+                  'legacy-unverified-metadata', 'enrollment-pending', 'orphan-registration', 'open-segment'}
+    complete = (bool(native_ids) and native_ids.issubset(qualified) and not faults
+                and references_complete and not any(row['status'] in incomplete for row in relevant)
+                and payload['view']['tail_status'] == 'available')
+    return sorted(qualified & native_ids), references, complete
+
+
+def _verify_observer_receipt(receipt, *, repo=None, verified_binding=None):
+    from . import omp_installation
+    if not isinstance(receipt, dict):
+        raise ContractError('Native observation requires a current installed binding')
+    if repo is None:
+        return omp_installation.verified_observer_binding(receipt['source']['artifact_digest'],
+            receipt['omp_binding']['agent_dir'], receipt=receipt)
+    return omp_installation.verify_observer_binding(repo, receipt, verified_binding)
+
+
+def observe(repo, value, *, receipt=None, on_started=None, delivery_window=None, verified_binding=None):
+    from .omp_boundary import source_barrier, private_lock, _base
     exact(value, {'schema', 'action', 'session', 'lifecycle', 'payload'})
-    if value['schema'] != 'agent-memory/omp-observer-request-v1' or value['action'] not in {'admit', 'ingest', 'seal', 'wake'}:
+    if value['schema'] != 'agent-memory/omp-observer-request-v2' or value['action'] not in {'ingest', 'seal', 'wake'}:
         raise ContractError('Unsupported native observer operation')
     session = turn_sources.bounded(value['session']); canonical_uuid(value['lifecycle'])
+    payload = value['payload']
+    if value['action'] != 'wake':
+        fields = {'entries', 'branch_ids', 'event_ordinal', 'terminal', 'trigger', 'inherited_ids', 'view'}
+        exact(payload, fields | {'request_wake'} if value['action'] == 'seal' else fields)
+        if value['action'] == 'seal' and type(payload['request_wake']) is not bool:
+            raise ContractError('Invalid native wake selection')
+        if (type(payload['event_ordinal']) is not int or payload['event_ordinal'] < 0
+                or type(payload['terminal']) is not bool or payload['trigger'] not in TRIGGERS):
+            raise ContractError('Native stored sweep exceeds bound')
+        view = omp_projection.checked_view(repo, session, payload)
+        for key in ('branch_ids', 'inherited_ids'):
+            if not isinstance(payload[key], list) or len(payload[key]) > MAX_CAPTURES or len(set(payload[key])) != len(payload[key]):
+                raise ContractError('Invalid native branch inventory')
+            for native in payload[key]:
+                turn_sources.bounded(native)
+        if not set(payload['inherited_ids']).issubset(item['id'] for item in view['native_parents']):
+            raise ContractError('Inherited native source identity unavailable')
+    if verified_binding is None:
+        verified_binding = _verify_observer_receipt(receipt)
     with source_barrier(repo), private_lock(_base(repo) / 'omp-transport.lock'):
-        with scope_binding.private_enrollment_context(repo) as context:
-            ensure_marker(repo)
+        with _verify_observer_receipt(receipt, repo=repo, verified_binding=verified_binding) as context:
+            fences = []
+            if value['action'] == 'ingest':
+                from . import omp_stream
+                fences = omp_stream.retire_for_recovery(repo, session, exclude_instance=getattr(on_started, 'instance_id', None))
+            if on_started is not None:
+                on_started()
             if value['action'] == 'wake':
-                return wake(repo, session, value['lifecycle'], value['payload'])
-            payload = value['payload']
-            if value['action'] == 'admit' and isinstance(payload, dict) and payload.get('schema') == 'agent-memory/omp-gap-v1':
-                exact(payload, {'schema', 'session', 'lifecycle', 'gap_id', 'native_entry_id', 'reason'})
-                canonical_uuid(payload['gap_id'])
-                if (payload['session'] != session or payload['lifecycle'] != value['lifecycle']
-                        or payload['native_entry_id'] is not None or payload['reason'] != 'ambiguous-lifecycle'):
-                    raise ContractError('Unexpected bounded native observer gap')
-                current = segments(repo, session)
-                existing = [(d, c) for d, c in current if (d / 'gaps' / (payload['gap_id'] + '.json')).exists()]
-                chosen = existing[0] if existing else active_segment(current)
-                if chosen is None:
-                    chosen = new_segment(repo, session, value['lifecycle'], value['lifecycle'], 'resume', 0)
-                directory, cursor = chosen
-                if not existing and (directory / 'segment.json').exists():
-                    directory, cursor = new_segment(repo, session, str(uuid.uuid4()), cursor['origin']['human_root'],
-                                                   'own-hidden-ambiguous', max(c['event_ordinal'] for _, c in current) + 1)
-                retain(directory / 'gaps' / (payload['gap_id'] + '.json'), {**payload, 'lifecycle': cursor['lifecycle']}, 4096)
-            elif value['action'] == 'admit':
-                admission_metadata(payload, session)
-                if payload['lifecycle'] != value['lifecycle']:
-                    raise ContractError('Native admission identity differs')
-                current = segments(repo, session)
-                if not current:
-                    trigger = 'human' if payload['role'] == 'user' and payload['attribution'] == 'user' else 'resume'
-                    directory, cursor = new_segment(repo, session, value['lifecycle'], value['lifecycle'], trigger, payload['event_ordinal'])
-                else:
-                    directory, cursor = active_segment(current)
-                # Metadata contains no display-derived payload or digest.
-                retain(directory / 'admissions' / (payload['capture_id'] + '.json'), payload, 4096)
-                control = cursor['control_interval'] or {}
-                for call_id in payload['tool_call_ids']:
-                    cursor['tool_lifecycles'].setdefault(call_id, cursor['lifecycle'])
-                cursor_value(cursor, session, cursor['lifecycle'])
-                predecessors = control.setdefault('metadata_predecessors', {})
-                predecessors.setdefault(payload['capture_id'], cursor['last_native_entry'])
-                cursor['control_interval'] = control
-                replace_cursor(directory / 'cursor.json', cursor)
-            else:
-                fields = {'entries', 'branch_ids', 'event_ordinal', 'terminal', 'trigger', 'inherited_ids', 'metadata'}
-                exact(payload, fields | {'request_wake'} if value['action'] == 'seal' else fields)
-                if value['action'] == 'seal' and type(payload['request_wake']) is not bool:
-                    raise ContractError('Invalid native wake selection')
-                if (not isinstance(payload['entries'], list) or len(payload['entries']) > MAX_CAPTURES
-                        or type(payload['event_ordinal']) is not int or payload['event_ordinal'] < 0
-                        or type(payload['terminal']) is not bool or payload['trigger'] not in TRIGGERS
-                        or not isinstance(payload['metadata'], list) or len(payload['metadata']) > 4096):
-                    raise ContractError('Native stored sweep exceeds bound')
-                for key in ('branch_ids', 'inherited_ids'):
-                    if not isinstance(payload[key], list) or len(payload[key]) > MAX_CAPTURES:
-                        raise ContractError('Invalid native branch inventory')
-                    for native in payload[key]:
-                        turn_sources.bounded(native)
-                current = segments(repo, session)
+                return {'verified': True, **wake(repo, session, value['lifecycle'], payload, delivery_window=delivery_window)}
+            if value['action'] in {'ingest', 'seal'}:
+                current = [item for item in segments(repo, session) if source_bound_origin(*item)]
                 known = {}; tools = {}; invocations = {}; retained_results = []
                 snapshots = {}; retained_tool_gaps = set()
                 raw_calls = {}; raw_results = {}
@@ -1125,6 +1257,8 @@ def observe(repo, value, *, receipt=None):
                     elif msg.get('role') == 'toolResult' and isinstance(msg.get('toolCallId'), str):
                         raw_results.setdefault(msg['toolCallId'], []).append(candidate)
                 for d, c in current:
+                    if not source_bound_origin(d, c):
+                        continue
                     referenced = {record['snapshot_ref'] for record in
                                   (c['control_interval'] or {}).get('pure_entries', {}).values()}
                     for path in _files(d, 'resolutions', r'[0-9a-f-]{36}\.json'):
@@ -1164,12 +1298,13 @@ def observe(repo, value, *, receipt=None):
                             retained_tool_gaps.add(old['native_entry_id'][5:])
                         if old['native_entry_id']:
                             known.setdefault(old['native_entry_id'], (d, c))
-                    control = c['control_interval'] or {}
-                    control['absent_native_entries'] = [cap['native_entry_id'] for cap in
-                                                       (read(p, 4096) for p in _files(d, 'captures', r'[0-9a-f]{64}\.json'))
-                                                       if cap['native_entry_id'] not in payload['branch_ids']]
-                    c['control_interval'] = control
-                    replace_cursor(d / 'cursor.json', c)
+                    if not (d / 'segment.json').exists():
+                        control = c['control_interval'] or {}
+                        control['absent_native_entries'] = [cap['native_entry_id'] for cap in
+                                                           (read(p, 4096) for p in _files(d, 'captures', r'[0-9a-f]{64}\.json'))
+                                                           if cap['native_entry_id'] not in payload['branch_ids']]
+                        c['control_interval'] = control
+                        replace_cursor(d / 'cursor.json', c)
                 for result_owner, result_capture in retained_results:
                     if resolve_tool_result(current, result_owner, result_capture, invocations):
                         result = read(_snapshot_path(result_owner[0], result_capture['snapshot_ref']))
@@ -1240,17 +1375,27 @@ def observe(repo, value, *, receipt=None):
                     if entry.get('type') in NONLEARNING:
                         continue
                     if entry.get('type') not in {'message', 'custom_message'}:
-                        if active:
-                            gap(*active, native, 'missing-stored-source')
+                        if active is None:
+                            active = new_segment(repo, session, value['lifecycle'], value['lifecycle'], 'resume', payload['event_ordinal'])
+                            current.append(active)
+                        else:
+                            active = writable_successor(repo, session, active, current, payload['event_ordinal'])
+                        gap(*active, native, 'missing-stored-source')
                         continue
-                    message = entry.get('message', {})
-                    human = entry.get('type') == 'message' and message.get('role') == 'user' and message.get('attribution') == 'user'
+                    message = entry.get('message') if isinstance(entry.get('message'), dict) else {}
+                    stored_user = entry.get('type') == 'message' and message.get('role') == 'user' and message.get('attribution') == 'user'
+                    human = stored_user and view['fork_status'] != 'unavailable'
                     inherited = native in payload['inherited_ids']
                     if native in known:
                         d, c = known[native]
                         # Recover original missing evidence, never mutate an existing safe snapshot.
                         name = hashlib.sha256(native.encode()).hexdigest()
                         if not (d / 'captures' / (name + '.json')).exists():
+                            if (d / 'segment.json').exists() and not any(
+                                    read(path, 4096)['native_entry_id'] == native
+                                    and read(path, 4096)['reason'] in {'missing-stored-source', 'missing-payload', 'cursor-discontinuity'}
+                                    for path in _files(d, 'gaps', r'[0-9a-f-]{36}\.json')):
+                                continue
                             prior = d / 'snapshots' / (name + '.json')
                             if os.path.lexists(prior) and 'instruction_context' in read(prior):
                                 raise ContractError('Instruction context conflicts with retained native gap')
@@ -1287,14 +1432,12 @@ def observe(repo, value, *, receipt=None):
                     if tool_owner is None and len(invocation_owners) == 1:
                         tool_owner = next((item for item in current if item[1]['lifecycle'] in invocation_owners), None)
                     if human and not inherited:
-                        provisional = active and not (active[0] / 'segment.json').exists() and not _files(active[0], 'captures', r'[0-9a-f]{64}\.json') and active[1]['origin']['kind'] == 'genuine-user'
-                        if not provisional:
-                            if active and not (active[0] / 'segment.json').exists():
-                                seal(*active)
-                            lifecycle = str(uuid.uuid5(uuid.NAMESPACE_URL, str(Path(repo).resolve()) + ':omp:' + session + ':' + native))
-                            active = new_segment(repo, session, lifecycle, lifecycle,
-                                                 'human-with-own-guidance' if payload['trigger'] in {'own-hidden-combined', 'human-with-own-guidance'} else 'human',
-                                                 max([c['event_ordinal'] for _, c in current] + [payload['event_ordinal']]) + 1)
+                        if active and not (active[0] / 'segment.json').exists():
+                            seal(*active)
+                        lifecycle = str(uuid.uuid5(uuid.NAMESPACE_URL, str(context.root) + ':omp:' + session + ':' + native))
+                        active = new_segment(repo, session, lifecycle, lifecycle,
+                                             'human-with-own-guidance' if payload['trigger'] in {'own-hidden-combined', 'human-with-own-guidance'} else 'human',
+                                             max([c['event_ordinal'] for _, c in current] + [payload['event_ordinal']]) + 1)
                     elif active and not tool_owner and (active[0] / 'segment.json').exists():
                         root = active[1]['origin']['human_root']
                         active = new_segment(repo, session, str(uuid.uuid4()), root,
@@ -1321,9 +1464,14 @@ def observe(repo, value, *, receipt=None):
                     if existing_owners:
                         owner = existing_owners[0]
                     d, c = owner
+                    if stored_user and view['fork_status'] == 'unavailable':
+                        if (d / 'segment.json').exists():
+                            owner = writable_successor(repo, session, owner, current, payload['event_ordinal'])
+                            d, c = owner
+                        gap(d, c, native, 'ambiguous-lifecycle')
                     if (ambiguous_mention or ambiguous_call) and not existing_owners:
                         gap(d, c, native, 'ambiguous-lifecycle')
-                    if human and native in deferred_mentions:
+                    if stored_user and native in deferred_mentions:
                         order = (c['control_interval'] or {}).get('capture_order', [])
                         for mention in deferred_mentions.pop(native):
                             capture(d, c, mention)
@@ -1364,7 +1512,7 @@ def observe(repo, value, *, receipt=None):
                                 witness = omp_installation._owned_manual(receipt)
                                 invocation = candidates[0]
                     cap = capture(d, c, entry, mapping='verified' if native in payload['branch_ids'] else 'absent',
-                                  invocation=invocation, witness=witness)
+                                  invocation=invocation, witness=witness, persisted=view['source_kind'] == 'retired-file')
                     order = (c['control_interval'] or {}).get('capture_order', [])
                     if native not in order:
                         order.append(native)
@@ -1393,46 +1541,49 @@ def observe(repo, value, *, receipt=None):
                     known[native] = owner
                     if owner not in current:
                         current.append(owner)
+                if view['tail_status'] == 'active-unavailable':
+                    if active is None:
+                        active = new_segment(repo, session, value['lifecycle'], value['lifecycle'],
+                                             'resume', payload['event_ordinal'])
+                    else:
+                        active = writable_successor(repo, session, active, current, payload['event_ordinal'])
+                    gap(*active, None, 'ambiguous-lifecycle')
                 if active:
                     d, c = active
-                    # Every queued event becomes durable metadata before enrollment drain.
-                    for meta in payload['metadata']:
-                        admission_metadata(meta, session)
-                        existing = [(old_d, old_c) for old_d, old_c in segments(repo, session)
-                                    if (old_d / 'admissions' / (meta['capture_id'] + '.json')).exists()]
-                        if not existing:
-                            retain(d / 'admissions' / (meta['capture_id'] + '.json'), meta, 4096)
-                            control = c['control_interval'] or {}
-                            control.setdefault('metadata_predecessors', {})[meta['capture_id']] = None
-                            c['control_interval'] = control
-                            replace_cursor(d / 'cursor.json', c)
-                    reconcile_metadata(repo, session, payload['branch_ids'])
-                    c = cursor_value(read(d / 'cursor.json'), session, c['lifecycle'])
                     if (value['action'] == 'seal' and c['origin']['kind'] == 'genuine-user') or payload['terminal']:
                         seal(d, c)
-                elif payload['metadata']:
-                    root = active_segment(current)[1]['origin']['human_root'] if current else value['lifecycle']
-                    lifecycle = str(uuid.uuid4()) if current else value['lifecycle']
-                    d, c = new_segment(repo, session, lifecycle, root, 'resume', payload['event_ordinal'])
-                    for meta in payload['metadata']:
-                        retain(d / 'admissions' / (meta['capture_id'] + '.json'), meta, 4096)
-                    gap(d, c, None, 'missing-stored-source'); seal(d, c)
                 if payload['terminal']:
                     for old_d, old_c in segments(repo, session):
-                        if not (old_d / 'segment.json').exists():
+                        if source_bound_origin(old_d, old_c) and not (old_d / 'segment.json').exists():
                             seal(old_d, old_c)
             scope_binding.recheck_private_enrollment(context)
             drain_enrollments(repo)
             current = segments(repo, session)
             rows, faults = pending_inventory(repo)
-            chosen = active_segment(current, payload.get('branch_ids')) if value['action'] != 'admit' else active_segment(current)
+            chosen = active_segment(current, payload.get('branch_ids'))
             latest = chosen[1] if chosen else None
             root_rows = [r for r in rows if latest and r['session'] == session and r.get('human_root') == latest['origin']['human_root'] and r['status'] != 'completed']
+            payload_ids, source_refs, source_complete = _checked_payload_coverage(current, payload, rows, faults)
+            envelope_identity = getattr(on_started, 'identity', None)
+            if fences and isinstance(envelope_identity, dict):
+                from . import omp_stream
+                native_ids = sorted(item['id'] for item in view['native_parents'])
+                token = None
+                if (view['source_kind'] == 'retired-file' and source_complete
+                        and all(entry.get('type') in NONLEARNING for entry in payload['entries'])):
+                    token = omp_stream._nonlearning_tail_evidence(session, envelope_identity['view_id'], native_ids)
+                omp_stream.resolve_recovery(repo, fences, view_id=envelope_identity['view_id'],
+                    native_ids=native_ids, tool_ids=envelope_identity['tool_ids'],
+                    payload_native_ids=payload_ids, source_references=source_refs,
+                    complete=view['source_kind'] == 'retired-file' and source_complete,
+                    leaf_id=view['leaf_id'], nonlearning_evidence=token)
             result = {'verified': True, 'status': 'pending' if root_rows or faults else 'observed',
                       'session': session, 'lifecycle': latest['lifecycle'] if latest else value['lifecycle'],
                       'wake_payload': {'observation_ids': sorted(r['observation_id'] for r in root_rows if 'observation_id' in r),
                                        'enrollment_refs': sorted(r['source_reference'] for r in root_rows if 'observation_id' not in r and r['source_reference'].startswith(('omp:capture:', 'omp:seal:')))},
                       'faults': faults, 'held': context.held, 'canonical_writes_performed': False}
+            result['source_references'] = source_refs
+            result['source_coverage_complete'] = view['source_kind'] == 'retired-file' and source_complete
             if value['action'] == 'seal' and payload['request_wake'] and latest:
-                result.update(wake(repo, session, latest['lifecycle'], result['wake_payload']))
+                result.update(wake(repo, session, latest['lifecycle'], result['wake_payload'], delivery_window=delivery_window))
             return result

@@ -30,6 +30,10 @@ class VerifiedReceipt(dict):
     pass
 
 
+class SourceTransportBusy(ContractError):
+    """A nonblocking source lock was unavailable before its protected work."""
+
+
 def encoded(value):
     return json.dumps(value,sort_keys=True,separators=(',',':'),ensure_ascii=False).encode()
 
@@ -61,7 +65,7 @@ def private_lock(path, *, shared=False):
         if not stat.S_ISREG(info.st_mode) or info.st_uid!=os.geteuid() or info.st_nlink!=1 or info.st_mode&0o077:
             raise ContractError('Unsafe private source lock')
         try:fcntl.flock(fd,(fcntl.LOCK_SH if shared else fcntl.LOCK_EX)|fcntl.LOCK_NB)
-        except BlockingIOError:raise ContractError('Source transport busy; preserve pending work and retry') from None
+        except BlockingIOError:raise SourceTransportBusy('Source transport busy; preserve pending work and retry') from None
         yield
         named=path.lstat()
         if (info.st_dev,info.st_ino)!=(named.st_dev,named.st_ino):
@@ -74,8 +78,9 @@ def check_source_compatibility(base):
     path=base/'turn-sources-compat-v1.json'
     try:value=read(path,MAX_SOURCE)
     except FileNotFoundError:return
-    if value!={'schema':'agent-memory/turn-sources-compat-v1',
-               'minimum_reader':'omp-harness-v1','harnesses':['omp']}:
+    if value not in ({'schema':'agent-memory/turn-sources-compat-v1',
+                      'minimum_reader':capability,'harnesses':['omp']}
+                     for capability in ('omp-harness-v1','omp-stored-source-v2')):
         raise ContractError('Unknown or malformed shared source compatibility marker; preserve pending evidence')
 
 
@@ -390,7 +395,7 @@ def locked(directory):
         s=os.fstat(fd)
         if not stat.S_ISREG(s.st_mode) or s.st_uid!=os.geteuid() or s.st_nlink!=1 or s.st_mode&0o077:raise ContractError('Unsafe completion lock')
         try:fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
-        except BlockingIOError:raise ContractError('Source completion is busy; preserve pending work') from None
+        except BlockingIOError:raise SourceTransportBusy('Source completion is busy; preserve pending work') from None
         yield
     finally:os.close(fd)
 

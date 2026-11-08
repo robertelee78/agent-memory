@@ -11,7 +11,7 @@ from .developer_identity import digest, encoded
 from .frontmatter import ContractError
 from .identity_git import git
 
-TOKENS = {'layout-frontier-v1', 'omp-harness-v1'}
+TOKENS = {'layout-frontier-v1', 'omp-harness-v1', 'omp-stored-source-v2'}
 
 
 _barriers = ContextVar('private-state-lifecycle-barriers', default=None)
@@ -123,9 +123,11 @@ def required_private_state_capabilities(installation, target_artifact, operation
                 operations, _ = bank_writes.state_paths(root, bank, '00000000-0000-4000-8000-000000000000')
                 source_marker = operations.parent / 'turn-sources-compat-v1.json'
                 source_tree = operations.parent / 'omp-source-v1'
+                stream_tree = operations.parent / 'omp-stream-v1'
+                stream_locks = operations.parent / 'omp-stream-session-locks'
                 producer = getattr(omp_boundary, 'required_source_capabilities', None)
                 if producer is None:
-                    if os.path.lexists(source_marker) or os.path.lexists(source_tree):
+                    if any(os.path.lexists(path) for path in (source_marker, source_tree, stream_tree, stream_locks)):
                         raise ContractError('Private native source requirement cannot be completely observed')
                 else:
                     capabilities.update(producer(root))

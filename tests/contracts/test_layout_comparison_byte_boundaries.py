@@ -11,6 +11,7 @@ from unittest.mock import patch
 import unittest
 
 from contracts import test_comparison
+from contracts import test_admission
 from identity_fixtures import bind
 from record_fixtures import project_id
 from world import World
@@ -43,6 +44,60 @@ class LayoutComparisonByteBoundaries(unittest.TestCase):
 
     def invoke(self, world, command, *args):
         return world.run([command, 'compare', *args], check=False, timeout=60)
+
+    def test_capture_request_exact_limit_and_one_byte_over_preserve_sources(self):
+        with World() as world:
+            command, _ = f.installed(world)
+            helper = test_admission.AdmissionContract('runTest')
+            repo, _ = helper.fixture(world)
+            request = helper.request()
+            evidence = request['candidate']['metadata']['evidence']
+            evidence.append('Synthetic boundary context: é \" ')
+            remaining = 16384 - len(f.encoded(request))
+            self.assertGreater(remaining, 0)
+            evidence[-1] += 'x' * remaining
+            self.assertEqual(len(f.encoded(request)), 16384)
+            before = self.state(world, repo)
+            accepted = world.run([command, 'capture', '--repo', repo, '--request', f.save(world, request)],
+                                 check=False, timeout=60)
+            self.assertEqual(accepted.returncode, 0, accepted.stdout + accepted.stderr)
+            capture = json.loads(accepted.stdout)
+            self.assertEqual(capture['decision'], 'eligible')
+            self.assertFalse(capture['canonical_writes_performed'])
+            self.assertEqual(self.state(world, repo), before)
+            evidence[-1] += 'x'
+            self.assertEqual(len(f.encoded(request)), 16385)
+            refused = world.run([command, 'capture', '--repo', repo, '--request', f.save(world, request)],
+                                check=False, timeout=60)
+            self.assertEqual(refused.returncode, 1, refused.stdout + refused.stderr)
+            self.assertFalse(json.loads(refused.stdout)['canonical_writes_performed'])
+            self.assertEqual(self.state(world, repo), before)
+
+    def test_comparison_request_exact_limit_and_one_byte_over_preserve_sources(self):
+        with World() as world:
+            command, _ = f.installed(world)
+            helper = test_comparison.ComparisonContract('runTest')
+            repo, _ = helper.fixture(world)
+            request = helper.candidate()
+            evidence = request['candidate']['metadata']['evidence']
+            evidence.append('Synthetic comparison boundary context: é \" ')
+            remaining = 65536 - len(f.encoded(request))
+            self.assertGreater(remaining, 0)
+            evidence[-1] += 'x' * remaining
+            self.assertEqual(len(f.encoded(request)), 65536)
+            before = self.state(world, repo)
+            accepted = self.invoke(world, command, 'inspect', '--repo', repo, '--request', f.save(world, request))
+            self.assertEqual(accepted.returncode, 0, accepted.stdout + accepted.stderr)
+            view = json.loads(accepted.stdout)
+            self.assertTrue(view['comparison_read_complete'])
+            self.assertEqual(view['observation']['request_sha256'], f.sha(f.encoded(request)))
+            self.assertEqual(self.state(world, repo), before)
+            evidence[-1] += 'x'
+            self.assertEqual(len(f.encoded(request)), 65537)
+            refused = self.invoke(world, command, 'inspect', '--repo', repo, '--request', f.save(world, request))
+            self.assertEqual(refused.returncode, 1, refused.stdout + refused.stderr)
+            self.assertFalse(json.loads(refused.stdout)['comparison_read_complete'])
+            self.assertEqual(self.state(world, repo), before)
 
     def test_disclosure_exact_encoded_limit_and_one_byte_over_preserve_sources(self):
         with World() as world:

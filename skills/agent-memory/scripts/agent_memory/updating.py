@@ -23,10 +23,10 @@ def version_key(value):
             tuple((0, int(v)) if v.isdecimal() else (1, v) for v in pre.split('.') if pre))
 
 
-def configuration(old):
+def configuration(old, *, omp_peers_upgraded=False):
     return argparse.Namespace(command='install', development_source=None, remote=None, ref=None,
                               mode=None, presets=None, target_dir=None, bin_dir=None, no_guidance=False,
-                              omp_agent_dir=None, omp_peers_upgraded=False)
+                              omp_agent_dir=None, omp_peers_upgraded=omp_peers_upgraded)
 
 
 def current(state, code, *, cache_recovery=None):
@@ -336,7 +336,7 @@ def run(args):
             if cache_qualification is not None:
                 summary['cache_recovery'] = cache_qualification['summary']
             same_revision = not summary['update_available']
-            with install.prepare(configuration(old),state,code,old,
+            with install.prepare(configuration(old, omp_peers_upgraded=getattr(args, 'omp_peers_upgraded', False)),state,code,old,
                                  candidate_root=None if same_revision and cache_qualification is None else root, candidate_kind=candidate['kind'],
                                  cache_recovery=cache_qualification) as plan:
                 plan['operation']='update'
@@ -353,10 +353,12 @@ def run(args):
                                 for t in old['targets'])):
                     install.verify_targets(old['targets'], source=old['source'])
                     wrapper_readback(old)
-                    return {**summary, 'compatibility': {'bank_scan': 'not-needed-no-changes',
-                            'bank_writes_performed': False, 'implicit_migration_performed': False},
-                            'verified': True, 'changed': False, 'receipt': old,
-                            'restart_clients': [], 'receipt_path': str(state/'receipt.json')}
+                    result = {**summary, 'compatibility': {
+                              'bank_scan': 'native-private-activation' if old.get('omp_binding') else 'not-needed-no-changes',
+                              'bank_writes_performed': False, 'implicit_migration_performed': False},
+                              'verified': True, 'changed': False, 'receipt': old,
+                              'restart_clients': [], 'receipt_path': str(state/'receipt.json')}
+                    return install.finish_stored_source_activation(state, result)
                 compatibility = banks(args.repo,candidate['compatibility'])
                 summary['compatibility'] = compatibility
                 plan['rollback_repositories'] = compatibility['observed_repositories']
@@ -409,6 +411,7 @@ def main(argv=None):
     parser.add_argument('--check',action='store_true')
     parser.add_argument('--repo',action='append',default=[])
     parser.add_argument('--omp-writers-quiesced',action='store_true')
+    parser.add_argument('--omp-peers-upgraded',action='store_true')
     parser.add_argument('--omp-layout-quiescence',action='append')
     parser.add_argument('--layout-quiescence',action='append',default=[])
     args = parser.parse_args(argv)

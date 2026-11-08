@@ -13,7 +13,8 @@ from .developer_identity import load
 from .frontmatter import ContractError
 from .turn_sources import private_lock, source_barrier
 
-CAPABILITY = 'omp-harness-v1'
+HISTORICAL_CAPABILITY = 'omp-harness-v1'
+CAPABILITY = 'omp-stored-source-v2'
 MARKER = {'schema': 'agent-memory/turn-sources-compat-v1',
           'minimum_reader': CAPABILITY, 'harnesses': ['omp']}
 
@@ -31,32 +32,99 @@ def _marker(base):
         value = load(turn_sources.read_bytes(base / 'turn-sources-compat-v1.json', 4096))
     except FileNotFoundError:
         return False
-    if value != MARKER:
+    if value not in ({**MARKER, 'minimum_reader': token}
+                     for token in (HISTORICAL_CAPABILITY, CAPABILITY)):
         raise ContractError('Unknown or malformed source compatibility marker')
-    return True
+    return value['minimum_reader']
 
 
-def ensure_marker(repo):
+def verify_marker(repo):
+    """Observer verification never enrolls or upgrades a bank."""
     from . import scope_binding
-    root, bank = bank_writes.bank_path(repo)
+    context = scope_binding.private_enrollment_context(repo)
+    root, bank = context.root, context.bank
     base = _base(root)
-    record_bank(root)
-    context = scope_binding.private_enrollment_context(root)
-    binding = {'schema': 'agent-memory/omp-bank-binding-v1', 'repository': str(root), 'bank_path': str(bank),
-               'private_base': str(base), 'project_id': context.project_id}
-    try:
-        turn_sources.exclusive(base / 'omp-bank-binding-v1.json', binding, 4096)
-    except FileExistsError:
-        if _bank_binding(base) != binding:
-            raise ContractError('Native source bank/private-state binding changed')
-    if not _marker(base):
-        try:
-            turn_sources.exclusive(base / 'turn-sources-compat-v1.json', MARKER, 4096)
-        except FileExistsError:
-            if not _marker(base):
-                raise ContractError('Source compatibility marker changed')
+    expected = {'schema': 'agent-memory/omp-bank-binding-v1', 'repository': str(root),
+                'bank_path': str(bank), 'private_base': str(base), 'project_id': context.project_id}
+    if _marker(base) != CAPABILITY or _bank_binding(base) != expected:
+        raise ContractError('Native stored-source activation is required; preserve existing private state')
+    registered = _registry()
+    if registered['private_bases'].get(str(root)) != str(base):
+        raise ContractError('Native source bank registration differs from its protected binding')
     scope_binding.recheck_private_enrollment(context)
+    return context
 
+
+def _activate_marker(repo, *, fresh_only=False):
+    """Lifecycle-only mutation under the exclusive source barrier."""
+    from . import layout_recovery_state, scope_binding
+    with source_barrier(repo, exclusive=True):
+        context = scope_binding.private_enrollment_context(repo)
+        root, bank = context.root, context.bank
+        base = _base(root)
+        marker = _marker(base)
+        if fresh_only and (marker or any(os.path.lexists(base / name)
+                for name in ('omp-source-v1', 'omp-stream-v1', 'omp-stream-session-locks'))):
+            raise ContractError('Existing native state requires explicit stored-source lifecycle upgrade')
+        binding = {'schema': 'agent-memory/omp-bank-binding-v1', 'repository': str(root),
+                   'bank_path': str(bank), 'private_base': str(base), 'project_id': context.project_id}
+        record_bank(root)
+        try:
+            turn_sources.exclusive(base / 'omp-bank-binding-v1.json', binding, 4096)
+        except FileExistsError:
+            if _bank_binding(base) != binding:
+                raise ContractError('Native source bank/private-state binding changed')
+        path = base / 'turn-sources-compat-v1.json'
+        if not marker:
+            turn_sources.exclusive(path, MARKER, 4096)
+        elif marker != CAPABILITY:
+            observed = hashlib.sha256(turn_sources.read_bytes(path, 4096)).hexdigest()
+            layout_recovery_state.replace(path, MARKER, observed)
+        scope_binding.recheck_private_enrollment(context)
+        return verify_marker(root)
+
+
+def stream_startup(repo, session, instance_id, lifecycle, *, receipt):
+    """Fresh enrollment is a lifecycle transaction, never an observer write."""
+    from . import omp_installation, private_state, repository_config
+    from .identity_git import git
+    cwd = Path(repo).resolve(strict=True)
+    top = git(cwd, 'rev-parse', '--show-toplevel', optional=True)
+    if top is None:
+        if any(os.path.lexists(parent / '.git') for parent in (cwd, *cwd.parents)):
+            raise ContractError('Native repository is unavailable; preserve pending sources')
+        return None
+    root = Path(top).resolve(strict=True)
+    if not repository_config.bank_path(root).is_dir():
+        return None
+    current = omp_installation.observer_binding(receipt['source']['artifact_digest'],
+                                              receipt['omp_binding']['agent_dir'])
+    if current != receipt or receipt['omp_binding']['peer_reader_capability'] != CAPABILITY:
+        raise ContractError('Native stream requires the renewed stored-source installation')
+    turn_sources.bounded(session)
+    turn_sources.bounded(lifecycle)
+    if str(uuid.UUID(instance_id)) != instance_id:
+        raise ContractError('Invalid native stream instance')
+    with source_barrier(root):
+        marker = _marker(_base(root))
+        if marker:
+            context = verify_marker(root)
+    if not marker:
+        with source_barrier(root, exclusive=True):
+            from . import scope_binding
+            context = scope_binding.private_enrollment_context(root)
+            required = {HISTORICAL_CAPABILITY, CAPABILITY}
+            if context.held:
+                required.add('layout-frontier-v1')
+            if not required.issubset(private_state.compatibility(receipt['source'])):
+                raise ContractError('Native fresh-bank enrollment lacks the bank-local private-state readers')
+            if not _marker(_base(root)):
+                _activate_marker(root, fresh_only=True)
+            context = verify_marker(root)
+    return {'project_id': context.project_id, 'repo_root': str(context.root),
+            'bank_path': str(context.bank), 'checkout_key': context.scope['checkout_key'],
+            'artifact_digest': receipt['source']['artifact_digest'],
+            'installation_id': receipt['installation_id'], 'initial_lifecycle': lifecycle}
 
 def _registry():
     _, path, _ = local_registry.paths('omp-banks')
@@ -148,7 +216,7 @@ def _source_state_bindings(installation, registered):
                 if base != expected:
                     raise ContractError('Native bank remains bound to another protected private-state root')
                 continue
-            if any(os.path.lexists(base / name) for name in ('turn-sources-compat-v1.json', 'omp-source-v1')):
+            if any(os.path.lexists(base / name) for name in ('turn-sources-compat-v1.json', 'omp-source-v1', 'omp-stream-v1', 'omp-stream-session-locks')):
                 raise ContractError('Native marker/source inventory lacks its bound repository')
             pending = base / 'turn-sources-v2' / 'pending'
             if os.path.lexists(pending):
@@ -285,11 +353,17 @@ def required_source_capabilities(repo):
             raise ContractError('Native private source binding differs from the current bank')
     elif saved_base is not None:
         raise ContractError('Saved native bank lacks its protected private-state binding')
-    if _marker(base):
+    marker = _marker(base)
+    has_streams = any(os.path.lexists(base / name) for name in ('omp-stream-v1', 'omp-stream-session-locks'))
+    if marker:
         if not has_binding:
             raise ContractError('Native compatibility marker lacks its protected bank binding')
-        return {CAPABILITY}
-    has_evidence = has_binding or os.path.lexists(base / 'omp-source-v1')
+        if marker == HISTORICAL_CAPABILITY:
+            if has_streams:
+                raise ContractError('Native stream evidence requires the stored-source reader marker')
+            return {HISTORICAL_CAPABILITY}
+        return {HISTORICAL_CAPABILITY, CAPABILITY}
+    has_evidence = has_binding or os.path.lexists(base / 'omp-source-v1') or has_streams
     if _omp_index(repo):
         raise ContractError('Markerless state still contains indexed omp references')
     shared = base / 'turn-sources-v2' / 'turns'
@@ -321,7 +395,29 @@ def required_source_capabilities(repo):
                     'private_state': str(base), 'inventory_sha256': digest, 'writers_quiesced': True}
         if proof != expected or binding['pending'] or binding['faults']:
             raise ContractError('Retained omp drain proof differs from current private evidence')
+        if has_streams:
+            _verify_stream_drain(repo, base)
     return set()
+
+
+def _stream_proof(repo, base, inventory):
+    return {'schema': 'agent-memory/omp-stream-drain-v1',
+            'repository': str(Path(repo).resolve()), 'private_state': str(base),
+            'inventory_sha256': inventory['inventory_sha256'], 'writers_quiesced': True}
+
+
+def _verify_stream_drain(repo, base):
+    from . import omp_stream
+    inventory = omp_stream.drain_state(repo, base=base)
+    expected = _stream_proof(repo, base, inventory)
+    target = base / 'omp-stream-drains' / (inventory['inventory_sha256'] + '.json')
+    try:
+        proof = load(turn_sources.read_bytes(target, 4096))
+    except FileNotFoundError:
+        raise ContractError('Retained native streams lack their bound lifecycle drain proof') from None
+    if inventory['pending'] or proof != expected:
+        raise ContractError('Retained native stream drain proof differs from complete coverage')
+    return inventory
 
 
 def drain_source_capabilities(repo, *, quiesced=False, check=False):
@@ -343,8 +439,12 @@ def drain_source_capabilities(repo, *, quiesced=False, check=False):
                     if turn_sources.inventory(directory, identity)['complete']:
                         turn_sources.cleanup(shared_base, directory, identity, root)
         binding, digest = _drain_inventory(repo)
+        from . import omp_stream
+        streams = omp_stream.drain_state(repo, base=base)
         result = {'capability': CAPABILITY, 'pending': binding['pending'], 'faults': binding['faults'],
-                  'inventory_sha256': digest, 'drainable': not binding['pending'] and not binding['faults'],
+                  'transport_pending': streams['pending'], 'stream_inventory_sha256': streams['inventory_sha256'],
+                  'inventory_sha256': digest,
+                  'drainable': not binding['pending'] and not binding['faults'] and not streams['pending'],
                   'marker_cleared': False, 'canonical_writes_performed': False}
         if check or not result['drainable']:
             return result
@@ -358,6 +458,17 @@ def drain_source_capabilities(repo, *, quiesced=False, check=False):
         except FileExistsError:
             if load(turn_sources.read_bytes(target, 4096)) != proof:
                 raise ContractError('Conflicting retained source drain proof')
+        if any(os.path.lexists(base / name) for name in ('omp-stream-v1', 'omp-stream-session-locks')):
+            directory = base / 'omp-stream-drains'
+            turn_sources.private_mkdir(directory)
+            proof = _stream_proof(repo, base, streams)
+            target = directory / (streams['inventory_sha256'] + '.json')
+            try:
+                turn_sources.exclusive(target, proof, 4096)
+            except FileExistsError:
+                if load(turn_sources.read_bytes(target, 4096)) != proof:
+                    raise ContractError('Conflicting retained native stream drain proof')
+            _verify_stream_drain(repo, base)
         if _marker(base):
             (base / 'turn-sources-compat-v1.json').unlink()
             turn_sources.sync(base)
@@ -388,6 +499,11 @@ def native_activation(plan, check=False):
         return []
     old = plan.get('old') or {}
     fresh_route = not old.get('omp_binding')
+    upgrading = (old.get('omp_binding') or {}).get('peer_reader_capability') != CAPABILITY
+    if plan['omp_binding']['peer_reader_capability'] != CAPABILITY:
+        raise ContractError('New native activation requires the stored-source reader capability')
+    if upgrading and not plan.get('omp_peers_upgraded'):
+        raise ContractError('Native source activation requires renewed --omp-peers-upgraded')
     if not fresh_route and old.get('source', {}).get('artifact_digest') == plan['source']['artifact_digest']:
         return []
     from . import layout_recovery_state, private_state, recovery_frontier, scope_binding
@@ -422,9 +538,56 @@ def native_activation(plan, check=False):
                     repo, matching[0], runtime_artifact_digest=plan['source']['artifact_digest'],
                     required_routes=(route,), publish=not check))
                 renewals.append(matching[0])
+            marker = _marker(_base(repo))
+            if marker and _bank_binding(_base(repo))['project_id'] != context.project_id:
+                raise ContractError('Native source activation differs from the checked project binding')
     if check:
         plan['native_layout_quiescence_overrides'] = renewals
     return results
+
+
+def complete_stored_source_activation(state):
+    """The committed ownership receipt authorizes an idempotent marker upgrade."""
+    from . import installation as install, layout_recovery_state, omp_installation, private_state
+    receipt = install.read_receipt(state)
+    if (receipt is None or receipt.get('uninstalled')
+            or not receipt.get('omp_binding')
+            or receipt['omp_binding']['peer_reader_capability'] != CAPABILITY):
+        return {'status': 'not-required', 'verified': True}
+    journal = install.read_journal(state)
+    receipt_identity = install.fingerprint(Path(state) / 'receipt.json')
+    if journal is not None:
+        if journal['status'] == 'complete':
+            if journal.get('receipt_identity') is None or receipt_identity != journal['receipt_identity']:
+                raise ContractError('Native source activation requires the exact committed installation receipt')
+        elif journal['status'] == 'rolled-back':
+            if receipt_identity == journal.get('receipt_identity'):
+                raise ContractError('Rolled-back transaction cannot authorize native source activation')
+            if journal.get('opaque_cache_recovery'):
+                raise ContractError('Rolled-back ownership remains unverified; native source activation is pending')
+            install._verify_rolled_back_targets(state, journal)
+        else:
+            raise ContractError('Recover the unfinished installation before native source activation')
+    omp_installation.validate_receipt(receipt)
+    install.verify_targets(receipt['targets'], source=receipt['source'])
+    roots = set(_enrolled_repositories(receipt))
+    roots.update(Path(row['repo_root']) for row in layout_recovery_state.bindings()['bindings'].values()
+                 if row['lifecycle_state'] in {'active', 'interrupted'})
+    def upgrade():
+        for repo in sorted(roots, key=str):
+            _activate_marker(repo)
+    with private_state.activation_guard(receipt, receipt['source'], 'omp-stored-source-activation',
+                                        transition=upgrade):
+        if install.read_receipt(state) != receipt:
+            raise ContractError('Native source activation receipt changed')
+        for repo in sorted(roots, key=str):
+            verify_marker(repo)
+        current_roots = set(_enrolled_repositories(receipt))
+        current_roots.update(Path(row['repo_root']) for row in layout_recovery_state.bindings()['bindings'].values()
+                             if row['lifecycle_state'] in {'active', 'interrupted'})
+        if roots != current_roots:
+            raise ContractError('Native source activation bank inventory changed')
+    return {'status': 'activated', 'verified': True, 'banks': len(roots)}
 
 
 def native_transition(plan, check=False):
@@ -600,11 +763,13 @@ def native_recovery_expected(state, target):
 
 def main(argv=None):
     from . import omp_transport, turn_check
+    argv = list(sys.argv[1:] if argv is None else argv)
+    if '--stream' in argv:
+        from . import omp_stream
+        argv.remove('--stream')
+        return omp_stream.main(argv)
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--repo', required=True)
-    parser.add_argument('--observer', action='store_true')
-    parser.add_argument('--artifact')
-    parser.add_argument('--omp-agent-dir')
     parser.add_argument('--stdin', action='store_true')
     parser.add_argument('--list-pending', action='store_true')
     parser.add_argument('--offset', type=int, default=0)
@@ -615,26 +780,9 @@ def main(argv=None):
     parser.add_argument('--refresh', action='store_true')
     args = parser.parse_args(argv)
     try:
-        if args.observer:
-            from .identity_git import git
-            cwd = Path(args.repo).resolve(strict=True)
-            root = git(cwd, 'rev-parse', '--show-toplevel', optional=True)
-            if root is None:
-                if any(os.path.lexists(parent / '.git') for parent in (cwd, *cwd.parents)):
-                    raise ContractError('Native repository is unavailable; preserve pending sources')
-                return turn_check.emit({'verified': True, 'status': 'inactive-nonrepository',
-                                        'canonical_writes_performed': False}, False)
-            args.repo = str(Path(root).resolve(strict=True))
-            from . import repository_config
-            candidate = repository_config.bank_path(Path(args.repo).resolve())
-            if not candidate.is_dir():
-                return turn_check.emit({'verified': True, 'status': 'inactive-no-bank',
-                                        'canonical_writes_performed': False}, False)
-            from .omp_installation import observer_binding
-            receipt = observer_binding(args.artifact, args.omp_agent_dir)
-        modes = sum((args.observer, args.list_pending, bool(args.source), args.stdin and not args.observer))
-        if modes != 1 or (args.observer and (args.quiet or args.refresh)):
-            raise ContractError('Select exactly one native observer, source, pending or assessment operation')
+        modes = sum((args.list_pending, bool(args.source), args.stdin))
+        if modes != 1:
+            raise ContractError('Select exactly one native source, pending or assessment operation')
         if args.list_pending:
             if args.refresh or args.stdin:
                 raise ContractError('Pending inventory cannot acknowledge or refresh')
@@ -642,14 +790,12 @@ def main(argv=None):
         elif args.source:
             result = omp_transport.source(args.repo, args.session, args.lifecycle, args.source)
         else:
-            maximum = omp_transport.MAX_PAYLOAD if args.observer else 65536
+            maximum = 65536
             raw = sys.stdin.buffer.read(maximum + 1)
             if len(raw) > maximum:
                 raise ContractError('Native boundary input exceeds bound')
             value = load(raw)
-            if args.observer:
-                result = omp_transport.observe(args.repo, value, receipt=receipt)
-            elif args.refresh:
+            if args.refresh:
                 fields = {'session', 'lifecycle', 'observation_id', 'source_sha256', 'outcome', 'assessment'}
                 if not isinstance(value, dict) or set(value) not in (fields, fields | {'publication_request'}):
                     raise ContractError('Native compact assessment accepts exactly one original observation, never an array')

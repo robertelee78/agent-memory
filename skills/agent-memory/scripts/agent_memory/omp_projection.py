@@ -5,6 +5,8 @@ message event. A returned gap is not assessable source coverage.
 """
 import json
 import re
+from pathlib import Path
+from datetime import datetime
 
 from . import security
 from .frontmatter import ContractError
@@ -17,6 +19,125 @@ ROLES = {'user', 'developer', 'assistant', 'toolResult', 'bashExecution', 'pytho
 FORBIDDEN_KEYS = {'providerPayload', 'provider_payload', 'thinking', 'reasoning',
                   'thinkingSignature', 'textSignature', 'signature', 'auth',
                   'credentials', 'credential', 'config', 'contextSnapshot'}
+PERSISTENCE_TRUNCATION_NOTICE = '\n\n[Session persistence truncated large content]'
+
+
+def stored_timestamp(value):
+    if value is None:
+        return None
+    if not isinstance(value, str) or not re.fullmatch(r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?Z', value):
+        raise ContractError('Invalid native stored timestamp')
+    try:
+        return datetime.fromisoformat(value.replace('Z', '+00:00'))
+    except ValueError as exc:
+        raise ContractError('Invalid native stored timestamp') from exc
+
+
+def checked_view(repo, session, payload):
+    """Validate a detached public stored view, not notification ownership."""
+    from . import turn_sources
+    view = payload.get('view')
+    fields = {'session', 'cwd', 'file', 'header', 'leaf_id', 'native_parents', 'source_kind', 'tail_status', 'fork_status'}
+    if not isinstance(view, dict) or set(view) != fields or view['session'] != session:
+        raise ContractError('Invalid checked native source view')
+    header = view['header']
+    if (not isinstance(header, dict) or set(header) != {'id', 'cwd', 'version', 'parent_session', 'timestamp'}
+            or header['id'] != session or type(header['version']) is not int
+            or header['version'] != 3 or view['source_kind'] not in {'session-manager', 'retired-file'}):
+        raise ContractError('Invalid checked native source header')
+    if view['tail_status'] not in {'available', 'active-unavailable'}:
+        raise ContractError('Invalid checked native tail qualification')
+    for cwd in (view['cwd'], header['cwd']):
+        if not isinstance(cwd, str) or not Path(cwd).is_absolute():
+            raise ContractError('Invalid checked native working directory')
+    from . import bank_writes
+    expected_root, expected_bank = bank_writes.bank_path(repo)
+    from .identity_git import git
+    actual_top = git(Path(view['cwd']), 'rev-parse', '--show-toplevel', optional=True)
+    if actual_top is None:
+        raise ContractError('Checked native source Git root is unavailable')
+    if Path(actual_top).resolve() != expected_root:
+        raise ContractError('Checked native source belongs to another bank scope')
+    actual_root, actual_bank = bank_writes.bank_path(actual_top)
+    if (actual_root, actual_bank) != (expected_root, expected_bank):
+        raise ContractError('Checked native source belongs to another bank scope')
+    if view['file'] is not None and (not isinstance(view['file'], str) or not Path(view['file']).is_absolute()):
+        raise ContractError('Invalid checked native source file')
+    if view['source_kind'] == 'retired-file' and (view['file'] is None or view['tail_status'] != 'available'):
+        raise ContractError('Retired native source requires its exact available file')
+    if header['parent_session'] is not None:
+        turn_sources.bounded(header['parent_session'], 8192)
+    parents = view['native_parents']
+    if not isinstance(parents, list) or len(parents) > 16384:
+        raise ContractError('Checked native source inventory exceeds bound')
+    identities = {}
+    for entry in parents:
+        if not isinstance(entry, dict) or set(entry) != {'id', 'parent_id', 'timestamp'}:
+            raise ContractError('Invalid checked native parent identity')
+        native = turn_sources.bounded(entry['id'])
+        if native.startswith(('event:', 'tool:')):
+            raise ContractError('Native identity uses a reserved gap prefix')
+        parent = entry['parent_id']
+        if parent is not None:
+            turn_sources.bounded(parent)
+        if native in identities:
+            raise ContractError('Duplicate checked native identity')
+        identities[native] = parent
+    finished = set()
+    for native in identities:
+        chain = set()
+        current = native
+        while current is not None and current not in finished:
+            if current not in identities or current in chain:
+                raise ContractError('Incomplete or cyclic checked native source tree')
+            chain.add(current)
+            current = identities[current]
+        finished.update(chain)
+    leaf = view['leaf_id']
+    if leaf is not None and leaf not in identities:
+        raise ContractError('Checked native leaf is unavailable')
+    branch = []
+    current = leaf
+    while current is not None:
+        branch.append(current)
+        current = identities[current]
+    branch.reverse()
+    if payload.get('branch_ids') != branch:
+        raise ContractError('Checked native branch differs from its parent identities')
+    entries = payload.get('entries')
+    if not isinstance(entries, list) or len(entries) > 16384:
+        raise ContractError('Checked native source carriers exceed bound')
+    seen = set()
+    for entry in entries:
+        if (not isinstance(entry, dict) or entry.get('id') not in identities
+                or entry.get('parentId') != identities[entry['id']] or entry['id'] in seen):
+            raise ContractError('Checked native carrier identity differs')
+        if entry.get('type') == 'message' and not isinstance(entry.get('message'), dict):
+            raise ContractError('Checked native message carrier is unavailable')
+        seen.add(entry['id'])
+    if set(identities) != seen:
+        raise ContractError('Checked native inventory omits stored carriers')
+    fork_time = stored_timestamp(header['timestamp'])
+    times = {entry['id']: stored_timestamp(entry['timestamp']) for entry in parents}
+    expected_fork = ('none' if header['parent_session'] is None else
+                     'verified' if fork_time is not None and all(time is not None for time in times.values()) else 'unavailable')
+    if view['fork_status'] != expected_fork:
+        raise ContractError('Native fork evidence qualification differs')
+    inherited = sorted(native for native, time in times.items()
+                       if expected_fork == 'verified' and time <= fork_time)
+    if sorted(payload.get('inherited_ids', [])) != inherited:
+        raise ContractError('Inherited native IDs differ from stored fork evidence')
+    return view
+
+
+def _persistence_truncated(value):
+    if isinstance(value, str):
+        return value.endswith(PERSISTENCE_TRUNCATION_NOTICE)
+    if isinstance(value, list):
+        return any(_persistence_truncated(child) for child in value)
+    if isinstance(value, dict):
+        return any(_persistence_truncated(child) for child in value.values())
+    return False
 
 
 class UnsafeSource(ContractError):
@@ -82,7 +203,7 @@ def _blocks(value):
     return blocks, gap
 
 
-def project(entry):
+def project(entry, *, persisted=False):
     """Return a projected entry or a fixed, content-free coverage gap.
 
     This operation does not perform enrollment, canonical writes, or complete
@@ -149,6 +270,8 @@ def project(entry):
             if 'attribution' in entry:
                 result['attribution'] = _text(entry['attribution'])
             result['content'], gap = _blocks(entry.get('content'))
+        if _persistence_truncated(result):
+            return {'gap': 'oversized-source'}
         _safe_tree(result)
         raw = json.dumps(result, ensure_ascii=False, sort_keys=True, separators=(',', ':'), allow_nan=False)
         if len(raw.encode('utf-8')) > MAX_SOURCE:

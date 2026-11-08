@@ -135,12 +135,7 @@ class EnrollmentProgress(unittest.TestCase):
             am = Path(receipt['bin_dir']) / 'am'
 
             def public(*arguments, value=None):
-                if '--observer' in arguments:
-                    pack = Path(receipt['source']['pack'])
-                    command = ['/bin/sh', str(pack / 'hooks/python3.sh'),
-                               str(pack / 'scripts/omp_boundary.py')]
-                else:
-                    command = [str(am), '--json', 'omp-boundary']
+                command = [str(am), '--json', 'omp-boundary']
                 result = subprocess.run([*command, '--repo', str(repo), *map(str, arguments)],
                                         input=json.dumps(value) if value is not None else None,
                                         text=True, capture_output=True, env=world.env, cwd=repo, timeout=60)
@@ -152,13 +147,16 @@ class EnrollmentProgress(unittest.TestCase):
             index = (repo / '.git/index').read_bytes()
             entries = [helper.entry('human', 'user', 'Compute only ephemeral arithmetic; no project learning.', attribution='user')]
             entries += [helper.entry('assistant-' + str(i), 'assistant', 'Ephemeral computation ' + str(i)) for i in range(150)]
+            payload = fixtures.observer_payload(repo, session, entries, terminal=True)
+            payload['request_wake'] = False
             start = time.monotonic()
-            observed = public('--observer', '--stdin', '--artifact', receipt['source']['artifact_digest'],
-                              '--omp-agent-dir', agent_dir, value={
-                'schema': 'agent-memory/omp-observer-request-v1', 'action': 'seal', 'session': session,
-                'lifecycle': lifecycle, 'payload': {'entries': entries, 'branch_ids': [entry['id'] for entry in entries],
-                    'event_ordinal': len(entries), 'terminal': True, 'trigger': 'human',
-                    'inherited_ids': [], 'metadata': [], 'request_wake': False}})
+            pack = Path(receipt['source']['pack'])
+            completed = fixtures.observe_installed(world, am, repo, receipt, {
+                'schema': 'agent-memory/omp-observer-request-v2', 'action': 'seal', 'session': session,
+                'lifecycle': lifecycle, 'payload': payload}, launcher=[
+                    '/bin/sh', pack / 'hooks/python3.sh', pack / 'scripts/omp_boundary.py'])
+            self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
+            observed = json.loads(completed.stdout)
             elapsed = time.monotonic() - start
             self.assertTrue(observed['verified'])
             pending = public('--list-pending')

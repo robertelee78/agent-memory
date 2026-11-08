@@ -256,9 +256,9 @@ def main():
                 label = method if method in known_methods else 'unknown'
                 result['native_ui_methods'][label] = result['native_ui_methods'].get(label, 0) + 1
                 # Retain only fixed owned-adapter codes, never arbitrary UI text.
-                for code in ('inactive: unsupported version or missing explicit installed binding',
-                             'duplicate-binding', 'observer pending', 'metadata-capacity coverage gap',
-                             'observer wait ended; retained work pending'):
+                for code in ('inactive: unsupported public API or activation binding',
+                             'duplicate-binding', 'observer pending', 'observer result unavailable',
+                             'observer shutdown flush pending'):
                     values = (frame.get('message'), frame.get('text'), frame.get('statusText'))
                     if ('am: ' + code in values or
                             'Agent Memory: ' + code + '; sources remain pending. Use am status/doctor and am omp-boundary --list-pending.' in values):

@@ -1,0 +1,332 @@
+{
+  "purpose": "One additional authorized MODEL-FREE stock SDK leaf and four-timestamp clock seam probe",
+  "binary_sha256": "d4a10d97488d6054d2b18198bd24f461079952c7e0fb75ba66336ca0df0cb99e",
+  "approval_mode": "native-default-unchanged",
+  "provider_credentials_requested": false,
+  "prompts_submitted": 0,
+  "parser_controls_repeated": false,
+  "AM_installed": false,
+  "native_modified": false,
+  "native_exit": 0,
+  "native_seconds": 1.408266625017859,
+  "qualification": {
+    "public_resolveSessionLeafId_callable": true,
+    "eight_branch_controls": true,
+    "all_native_leaf_results_expected": true,
+    "all_selector_inputs_unchanged": true,
+    "fixture_graph_rejects_missing_parent_and_cycle": true,
+    "three_four_timestamp_handshakes": true,
+    "translated_live_expired_windows_expected": true,
+    "one_second_elapsed_rate_within_fixture_tolerance": false,
+    "finite_python_child_exit0_no_signal": true,
+    "model_free": true,
+    "no_native_signal_sent": true,
+    "scope": "SDK helper and clock seam only: macOS arm64 actual stock18.16. Not finite-worker wake reservation, warm margin/p99, Linux, native fork journey, or full source coverage."
+  },
+  "metadata_events": [
+    {
+      "kind": "public_exports",
+      "unix_ms": 1794105329883,
+      "resolveSessionLeafId": "function",
+      "sessionEntryLeafId": "function",
+      "lastSelfSelectedLeafId": "function",
+      "session_id": "01a1b902-c834-70e9-ad0d-17a7f8857d71",
+      "runtime": {
+        "bun": "1.4.4",
+        "node": "v26.3.0",
+        "platform": "darwin",
+        "arch": "arm64"
+      }
+    },
+    {
+      "kind": "branch_case",
+      "unix_ms": 1794105329883,
+      "label": "empty",
+      "native_selector_leaf": null,
+      "expected_leaf": null,
+      "selector_matches_expected": true,
+      "native_selector_mutates_input": false,
+      "fixture_graph": {
+        "valid": true,
+        "reason": null
+      },
+      "expected_graph_valid": true,
+      "fixture_graph_matches_expected": true,
+      "checked_parent_chain": [],
+      "raw_body_or_hash_retained": false
+    },
+    {
+      "kind": "branch_case",
+      "unix_ms": 1794105329883,
+      "label": "ordinary",
+      "native_selector_leaf": "b",
+      "expected_leaf": "b",
+      "selector_matches_expected": true,
+      "native_selector_mutates_input": false,
+      "fixture_graph": {
+        "valid": true,
+        "reason": null
+      },
+      "expected_graph_valid": true,
+      "fixture_graph_matches_expected": true,
+      "checked_parent_chain": [
+        "a",
+        "b"
+      ],
+      "raw_body_or_hash_retained": false
+    },
+    {
+      "kind": "branch_case",
+      "unix_ms": 1794105329883,
+      "label": "late_off_branch",
+      "native_selector_leaf": "b",
+      "expected_leaf": "b",
+      "selector_matches_expected": true,
+      "native_selector_mutates_input": false,
+      "fixture_graph": {
+        "valid": true,
+        "reason": null
+      },
+      "expected_graph_valid": true,
+      "fixture_graph_matches_expected": true,
+      "checked_parent_chain": [
+        "a",
+        "b"
+      ],
+      "raw_body_or_hash_retained": false
+    },
+    {
+      "kind": "branch_case",
+      "unix_ms": 1794105329883,
+      "label": "explicit_null",
+      "native_selector_leaf": null,
+      "expected_leaf": null,
+      "selector_matches_expected": true,
+      "native_selector_mutates_input": false,
+      "fixture_graph": {
+        "valid": true,
+        "reason": null
+      },
+      "expected_graph_valid": true,
+      "fixture_graph_matches_expected": true,
+      "checked_parent_chain": [],
+      "raw_body_or_hash_retained": false
+    },
+    {
+      "kind": "branch_case",
+      "unix_ms": 1794105329883,
+      "label": "fork",
+      "native_selector_leaf": "c",
+      "expected_leaf": "c",
+      "selector_matches_expected": true,
+      "native_selector_mutates_input": false,
+      "fixture_graph": {
+        "valid": true,
+        "reason": null
+      },
+      "expected_graph_valid": true,
+      "fixture_graph_matches_expected": true,
+      "checked_parent_chain": [
+        "a",
+        "c"
+      ],
+      "raw_body_or_hash_retained": false
+    },
+    {
+      "kind": "branch_case",
+      "unix_ms": 1794105329883,
+      "label": "missing_active_leaf",
+      "native_selector_leaf": "a",
+      "expected_leaf": "a",
+      "selector_matches_expected": true,
+      "native_selector_mutates_input": false,
+      "fixture_graph": {
+        "valid": true,
+        "reason": null
+      },
+      "expected_graph_valid": true,
+      "fixture_graph_matches_expected": true,
+      "checked_parent_chain": [
+        "a"
+      ],
+      "raw_body_or_hash_retained": false
+    },
+    {
+      "kind": "branch_case",
+      "unix_ms": 1794105329883,
+      "label": "missing_parent",
+      "native_selector_leaf": "b",
+      "expected_leaf": "b",
+      "selector_matches_expected": true,
+      "native_selector_mutates_input": false,
+      "fixture_graph": {
+        "valid": false,
+        "reason": "missing-parent"
+      },
+      "expected_graph_valid": false,
+      "fixture_graph_matches_expected": true,
+      "checked_parent_chain": [],
+      "raw_body_or_hash_retained": false
+    },
+    {
+      "kind": "branch_case",
+      "unix_ms": 1794105329883,
+      "label": "cycle",
+      "native_selector_leaf": "b",
+      "expected_leaf": "b",
+      "selector_matches_expected": true,
+      "native_selector_mutates_input": false,
+      "fixture_graph": {
+        "valid": false,
+        "reason": "cycle"
+      },
+      "expected_graph_valid": false,
+      "fixture_graph_matches_expected": true,
+      "checked_parent_chain": [],
+      "raw_body_or_hash_retained": false
+    },
+    {
+      "kind": "clock_child_start",
+      "unix_ms": 1794105329884,
+      "pid": 43387,
+      "source_writes": false,
+      "ends_on": "EOF"
+    },
+    {
+      "kind": "clock_handshake",
+      "unix_ms": 1794105329902,
+      "label": "rate_before",
+      "nonce": "6d7d9602-4502-4862-866a-2f6b383a86cd",
+      "j0": "275039959",
+      "p1": "518252007750000",
+      "p2": "518252007759291",
+      "j3": "292494667",
+      "L": "518251715264624",
+      "U": "518251732710041",
+      "offset_interval_valid": true,
+      "interval_width_ns": "17445417",
+      "worker_recomputed_same_interval": true,
+      "js_deadline": "592494667",
+      "worker_window_check": {
+        "type": "WINDOW-CHECK",
+        "nonce": "6d7d9602-4502-4862-866a-2f6b383a86cd",
+        "L": "518251715264624",
+        "U": "518251732710041",
+        "python_now": "518252008031708",
+        "translated_deadline": "518252307759291",
+        "expired": false,
+        "remaining_ns": "299727583",
+        "reservation_performed": false
+      },
+      "expected_expired": false,
+      "window_matches_expected": true
+    },
+    {
+      "kind": "clock_handshake",
+      "unix_ms": 1794105330953,
+      "label": "rate_after",
+      "nonce": "31214b39-483d-4244-a496-34ae7a2157e9",
+      "j0": "1343368875",
+      "p1": "518253058898208",
+      "p2": "518253058945125",
+      "j3": "1343609625",
+      "L": "518251715335500",
+      "U": "518251715529333",
+      "offset_interval_valid": true,
+      "interval_width_ns": "193833",
+      "worker_recomputed_same_interval": true,
+      "js_deadline": "1643609625",
+      "worker_window_check": {
+        "type": "WINDOW-CHECK",
+        "nonce": "31214b39-483d-4244-a496-34ae7a2157e9",
+        "L": "518251715335500",
+        "U": "518251715529333",
+        "python_now": "518253059112333",
+        "translated_deadline": "518253358945125",
+        "expired": false,
+        "remaining_ns": "299832792",
+        "reservation_performed": false
+      },
+      "expected_expired": false,
+      "window_matches_expected": true
+    },
+    {
+      "kind": "clock_handshake",
+      "unix_ms": 1794105330953,
+      "label": "expired",
+      "nonce": "46085845-f3c1-4a31-9636-00503fff1aa5",
+      "j0": "1343872292",
+      "p1": "518253059320541",
+      "p2": "518253059324958",
+      "j3": "1343917042",
+      "L": "518251715407916",
+      "U": "518251715448249",
+      "offset_interval_valid": true,
+      "interval_width_ns": "40333",
+      "worker_recomputed_same_interval": true,
+      "js_deadline": "1343872291",
+      "worker_window_check": {
+        "type": "WINDOW-CHECK",
+        "nonce": "46085845-f3c1-4a31-9636-00503fff1aa5",
+        "L": "518251715407916",
+        "U": "518251715448249",
+        "python_now": "518253059370333",
+        "translated_deadline": "518253059280207",
+        "expired": true,
+        "remaining_ns": "-90126",
+        "reservation_performed": false
+      },
+      "expected_expired": true,
+      "window_matches_expected": true
+    },
+    {
+      "kind": "clock_elapsed_rate",
+      "unix_ms": 1794105330953,
+      "elapsed_js_min_ns": "1050874208",
+      "elapsed_js_max_ns": "1068569666",
+      "elapsed_python_min_ns": "1051138917",
+      "elapsed_python_max_ns": "1051195125",
+      "ratio_lower": 0.9836877748315195,
+      "ratio_upper": 1.0003053809842861,
+      "tolerance_fraction": 0.005,
+      "interval_contains_equal_rate": true,
+      "entire_interval_within_tolerance": false,
+      "interval_offset_overlap": true,
+      "qualification_scope": "One ~1second macOS sample; not long-term drift, Linux, wake reservation or p99 margin"
+    },
+    {
+      "kind": "clock_child_finish",
+      "unix_ms": 1794105330956,
+      "pid": 43387,
+      "exit": 0,
+      "signal": null,
+      "stderr_bytes": 0
+    },
+    {
+      "kind": "clock_child_ownership_terminal",
+      "unix_ms": 1794105330956,
+      "pid": 43387,
+      "finish": {
+        "code": 0,
+        "signal": null
+      },
+      "no_signal_sent": true
+    },
+    {
+      "kind": "seam_probe_complete",
+      "unix_ms": 1794105330956,
+      "session_id": "01a1b902-c834-70e9-ad0d-17a7f8857d71",
+      "provider_invoked": false,
+      "prompt_submitted": false
+    }
+  ],
+  "schema": "agent-memory/native249-public-leaf-clock-seam-v1",
+  "python_runtime": {
+    "version": "3.13.12 (main, May 27 2026, 12:03:16) [Clang 21.0.0 (clang-2100.1.1.101)]",
+    "platform": "macOS-27.2-arm64-arm-64bit-Mach-O",
+    "monotonic": "namespace(implementation='mach_absolute_time()', monotonic=True, adjustable=False, resolution=4.166666666666666e-08)"
+  },
+  "rate_qualification": "Equal rate consistent with sample; 0.5% tolerance NOT qualified because timing uncertainty lower bound is0.9836877748. Preserve this result; no native rerun.",
+  "raw_receipt_sha256": "2e13395e74eb63e709c0f9c7176194478a2e396a14b8bcfa0fbcef34c1d4c589",
+  "raw_retention": "Exact owner-only private evidence copy; no additional observation"
+}
