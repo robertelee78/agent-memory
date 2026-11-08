@@ -1,0 +1,34 @@
+{
+  "candidate_budget": 32,
+  "data_sha256": "df700924d227099e545cfcfe94d966d732c856be2a75eb5c02910d58d7d7620c",
+  "design_sha256": "8e4dad6369e08afa2e5efd66a4cd834863559643bec8077b2f1b6ceb3fa9932f",
+  "dim": 64,
+  "generator": "numpy 2.2.6 PCG64 integers[-127,128), int32 converted to little-endian f32",
+  "k": 10,
+  "platform": "macOS-27.2-arm64-arm-64bit-Mach-O",
+  "python": "3.13.12 (main, May 27 2026, 12:03:16) [Clang 21.0.0 (clang-2100.1.1.101)]",
+  "python_executable_sha256": "98b0cb3f8e341110132a94a0c64ba0e2c885f1edc0a8e4567640add88806fe02",
+  "queries": 8,
+  "queries_sha256": "3cd522711d8040dd62efe4ab8c149aa36865873c07b91eeeccdfbbd0581e1816",
+  "seed": 20261108,
+  "settings": {
+    "connectivity": 16,
+    "dtype": "f32",
+    "expansion_add": 128,
+    "expansion_search": 64,
+    "metric": "cos",
+    "multi": false,
+    "ndim": 64
+  },
+  "size": 1000,
+  "smoke_events_sha256": null,
+  "source_sha256": "ca7b95fbdab40e0a87b92c83e0e9756314a703006f35656f5583e3c227a82bd0",
+  "threads": 1,
+  "tolerance_absolute": 2e-05,
+  "versions": {
+    "numkong": "7.8.6",
+    "numpy": "2.2.6",
+    "tqdm": "4.67.1",
+    "usearch": "2.26.6"
+  }
+}
