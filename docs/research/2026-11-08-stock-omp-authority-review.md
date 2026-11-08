@@ -100,3 +100,10 @@ The original R4 failures are consistent with this defect **[INFERENCE]**, not
 retroactively qualified or conclusively attributed. Original and new pending
 streams remain retained. The successful baseline covers neutral metadata only,
 not source capture, learning, native lifecycle or flush timing.
+
+The [corrected-companion smoke](data/2026-11-06-omp-native/corrected-companion-smoke-20261108.json)
+subsequently passed once on a new identity: direct stdout and observer frame
+metadata matched; healthy EOF, verified neutral hint and actual CLOSED were all
+observed. Independent Opus accepted only this apparatus proof. Original and R2
+pending states remained unchanged; no baseline was repeated. Synchronous observer
+logging perturbs timing, so this does not qualify native latency, wake or clocks.

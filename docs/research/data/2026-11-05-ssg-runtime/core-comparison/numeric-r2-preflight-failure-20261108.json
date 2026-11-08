@@ -1,0 +1,43 @@
+{
+  "schema": "agent-memory/core255-numeric-r2-preflight-failure-v1",
+  "driver_sha256": "b8fc894fbb573b0028623b11b45d9daaf0189da7a125b6a7d12306d26f6277f7",
+  "adapter_sha256": "dd7826b64014aa79333582aa921d7067f91c4329fd86cf67924263cfb01a099b",
+  "dependencies_sha256": "4341f5090726fff4a838073d48837d554dae56b94464d670b734996f823760bc",
+  "complete_freeze_sha256": "0be69e082594996798409b8305b9523deeb7205fa90038d0b319521cdeaf4263",
+  "actual_run_result_sha256": "0511c8bec7c97bcee8e767f8fa9c395cdf54adc5d744de680b41463f3bd0a89f",
+  "actual_exit": 1,
+  "completed_cells": 0,
+  "failed_stage": "FirstN64build0safe_preflight before graphallocation",
+  "cause": "PodmanGo image/containerinspect templates used .Id JSONtag instead of actual .ID structfield; imageprojectionexit125 before scientificwork",
+  "actual_ownership": {
+    "journal_resources": [],
+    "allocation_outcome_uncertain": false,
+    "CREATE_DROP_sent": false,
+    "finish_status": "erasure-pending",
+    "reason": "Before/after finish inventory uses same faultycontainerprojection; no disposal claimed; emptyjournal/preresourcefailure unchanged"
+  },
+  "before_failure": {
+    "N64_actual_prebudget_eligible": 64,
+    "native_output_count": 32,
+    "oracle_all_eight_predicates": true,
+    "maximum_float64_fsum_disagreement": 0.0,
+    "numeric_graph_ANN_executed": false,
+    "matmul_runtime_warnings": "divide-by-zero/overflow/invalid warnings emitted unsuppressed by NumPyAccelerate; persistedoracle remainsfinite and independentfsumagrees on thisfixture; backendcauseUNPROVEN"
+  },
+  "independent_review": {
+    "model": "anthropic/claude-opus-5-5",
+    "reviewer": "Numeric255OpusReview",
+    "scope": "Actualfailurebeforeallocation andsafeunknowninventorydisposition; correctedprojectiontwo-lineR3sourcePASS, NOT rerunorqualification"
+  },
+  "new_correction": {
+    "adapter_sha256": "429dd540d921f4b72e68bfd6c6899b8fbfb9e02be13bd0a59fcaa96eccedd74a",
+    "source_delta": "Exactly twoGo .Id\u2192.ID templatefieldchanges, emittedJSONIdunchanged",
+    "distinct_metadata_prerequisites": "Actualcorrectedimage/container/machine projections passed read-only; no graphstate created",
+    "full_campaign": "UNEXECUTED_R3_REQUIRES_OWN_APPROVAL_AND_LANE",
+    "volume_projection": "Not yet actualqualified"
+  },
+  "original_r2_artifacts_modified": false,
+  "all_named_scales": "UNEXECUTED",
+  "semantic_quality": "UNEXECUTED",
+  "G1": "NOT_ACCEPTED"
+}
