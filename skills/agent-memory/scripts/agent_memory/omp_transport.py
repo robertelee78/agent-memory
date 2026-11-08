@@ -1,4 +1,5 @@
 """Private native evidence transport. Shared turn_sources owns all completion."""
+from contextlib import ExitStack
 import hashlib
 import os
 from pathlib import Path
@@ -83,10 +84,10 @@ def replace_cursor(path, value):
             temporary.unlink()
 
 
-def session_dir(repo, session):
+def session_dir(repo, session, *, enrollment_context=None):
     from .omp_boundary import _base
     turn_sources.bounded(session)
-    return _base(repo) / 'omp-source-v1' / hashlib.sha256(session.encode()).hexdigest()
+    return _base(repo, enrollment_context=enrollment_context) / 'omp-source-v1' / hashlib.sha256(session.encode()).hexdigest()
 
 
 def directories(path, pattern, maximum=65536):
@@ -193,8 +194,8 @@ def validate_root_wakes(path, session=None):
     return native_users
 
 
-def segments(repo, session):
-    directory = session_dir(repo, session)
+def segments(repo, session, *, enrollment_context=None):
+    directory = session_dir(repo, session, enrollment_context=enrollment_context)
     result = []
     if not directory.exists():
         return result
@@ -212,10 +213,10 @@ def segments(repo, session):
     return sorted(result, key=lambda item: (item[1]['event_ordinal'], item[0].name))
 
 
-def new_segment(repo, session, lifecycle, root, trigger, ordinal):
-    directory = session_dir(repo, session) / lifecycle
+def new_segment(repo, session, lifecycle, root, trigger, ordinal, *, enrollment_context=None):
+    directory = session_dir(repo, session, enrollment_context=enrollment_context) / lifecycle
     if root != lifecycle:
-        root_directory = session_dir(repo, session) / root
+        root_directory = session_dir(repo, session, enrollment_context=enrollment_context) / root
         root_cursor = cursor_value(read(root_directory / 'cursor.json'), session, root)
         if not source_bound_origin(root_directory, root_cursor):
             raise ContractError('Cannot extend an unbound native root family')
@@ -297,7 +298,7 @@ def active_segment(current, branch_ids=None):
                key=lambda item: item[1]['event_ordinal'])
 
 
-def writable_successor(repo, session, owner, current, ordinal):
+def writable_successor(repo, session, owner, current, ordinal, *, enrollment_context=None):
     directory, cursor = owner
     if not (directory / 'segment.json').exists():
         return owner
@@ -307,7 +308,8 @@ def writable_successor(repo, session, owner, current, ordinal):
     if existing:
         return existing[-1]
     successor = new_segment(repo, session, str(uuid.uuid4()), root, 'foreign-hidden',
-                            max([item[1]['event_ordinal'] for item in current] + [ordinal]) + 1)
+                            max([item[1]['event_ordinal'] for item in current] + [ordinal]) + 1,
+                            enrollment_context=enrollment_context)
     current.append(successor)
     return successor
 
@@ -547,9 +549,9 @@ def _shared_inventory(repo, cursor, enrollment_context=None):
     return turn_sources.inspect(repo, 'omp', cursor['session'], cursor['lifecycle'])
 
 
-def all_segments(repo, errors=None):
+def all_segments(repo, errors=None, *, enrollment_context=None):
     from .omp_boundary import _base
-    root = _base(repo) / 'omp-source-v1'
+    root = _base(repo, enrollment_context=enrollment_context) / 'omp-source-v1'
     result = []
     if not root.exists():
         return result
@@ -577,7 +579,7 @@ def all_segments(repo, errors=None):
                     directory = Path(entry.path); trust_paths.state(directory)
                     cursor = read(directory / 'cursor.json', 1024 * 1024)
                     cursor_value(cursor, cursor.get('session'), entry.name)
-                    if session_dir(repo, cursor['session']) != session_path:
+                    if session_dir(repo, cursor['session'], enrollment_context=enrollment_context) != session_path:
                         raise ContractError('Foreign native session namespace')
                     result.append((directory, cursor))
                 except (OSError, ValueError, TypeError, KeyError):
@@ -656,7 +658,7 @@ def drain_enrollments(repo, *, enrollment_context=None):
         scope_binding._enrollment_read_context(repo, enrollment_context)
     attempts = 0
     records = []
-    for directory, cursor in all_segments(repo, []):
+    for directory, cursor in all_segments(repo, [], enrollment_context=enrollment_context):
         if not source_bound_origin(directory, cursor):
             continue
         try:
@@ -743,7 +745,8 @@ def manifest_value(directory, cursor):
 def historical_completed_family(repo, directory, cursor, *, enrollment_context=None):
     """Preserve completed old assertions without granting new root authority."""
     root = cursor['origin']['human_root']
-    family = [item for item in segments(repo, cursor['session']) if item[1]['origin']['human_root'] == root]
+    family = [item for item in segments(repo, cursor['session'], enrollment_context=enrollment_context)
+              if item[1]['origin']['human_root'] == root]
     represented = False
     for old_directory, old_cursor in family:
         if not (old_directory / 'segment.json').exists():
@@ -900,7 +903,7 @@ def pending_inventory(repo, *, enrollment_context=None):
     if enrollment_context is not None:
         scope_binding._enrollment_read_context(repo, enrollment_context)
     rows = []; faults = []; represented = set()
-    for directory, cursor in all_segments(repo, faults):
+    for directory, cursor in all_segments(repo, faults, enrollment_context=enrollment_context):
         try:
             segment_rows = segment_inventory(repo, directory, cursor, enrollment_context=enrollment_context)
             rows.extend(segment_rows)
@@ -911,7 +914,7 @@ def pending_inventory(repo, *, enrollment_context=None):
                          'source_reference': 'omp:fault:' + cursor['lifecycle'], 'status': 'registration-fault'})
     # Include orphan shared registrations, even if they never reached the transport receipt.
     from .omp_boundary import _base
-    turns = _base(repo) / 'turn-sources-v2' / 'turns'
+    turns = _base(repo, enrollment_context=enrollment_context) / 'turn-sources-v2' / 'turns'
     try:
         shared_directories = directories(turns, r'[0-9a-f]{64}')
     except (OSError, ValueError, TypeError, KeyError):
@@ -957,7 +960,7 @@ def list_pending(repo, offset=0):
     from .omp_boundary import source_barrier, private_lock, _base
     if type(offset) is not int or not 0 <= offset <= 262144:
         raise ContractError('Invalid native pending cursor')
-    with source_barrier(repo), private_lock(_base(repo) / 'omp-transport.lock'):
+    with scope_binding._fresh_enrollment_locations(), source_barrier(repo), private_lock(_base(repo) / 'omp-transport.lock'):
         rows, faults = pending_inventory(repo)
         rows = [r for r in rows if r['status'] != 'completed']
         from . import omp_stream
@@ -979,7 +982,7 @@ def list_pending(repo, offset=0):
 
 def source(repo, session, lifecycle, identifier):
     from .omp_boundary import source_barrier, private_lock, _base
-    with source_barrier(repo), private_lock(_base(repo) / 'omp-transport.lock'):
+    with scope_binding._fresh_enrollment_locations(), source_barrier(repo), private_lock(_base(repo) / 'omp-transport.lock'):
         return _source(repo, session, lifecycle, identifier)
 
 
@@ -1040,7 +1043,7 @@ def complete(repo, value):
     fields = {'session', 'lifecycle', 'observation_id', 'source_sha256', 'outcome', 'assessment'}
     if not isinstance(value, dict) or set(value) not in (fields, fields | {'publication_request'}):
         raise ContractError('Use exact native observation-bound assessment fields')
-    with source_barrier(repo), private_lock(_base(repo) / 'omp-transport.lock'):
+    with scope_binding._fresh_enrollment_locations(), source_barrier(repo), private_lock(_base(repo) / 'omp-transport.lock'):
         # No held-enrollment authority reaches acknowledgement or refresh.
         scope_binding.require(repo)
         checked = _source(repo, value['session'], value['lifecycle'], value['observation_id'])
@@ -1072,7 +1075,7 @@ def wake(repo, session, lifecycle, payload, *, delivery_window=None, enrollment_
     for key in payload:
         if not isinstance(payload[key], list) or payload[key] != sorted(set(payload[key])):
             raise ContractError('Use sorted unique native wake references')
-    directory = session_dir(repo, session) / canonical_uuid(lifecycle)
+    directory = session_dir(repo, session, enrollment_context=enrollment_context) / canonical_uuid(lifecycle)
     cursor = cursor_value(read(directory / 'cursor.json'), session, lifecycle)
     rows, faults = pending_inventory(repo, enrollment_context=enrollment_context)
     current = [r for r in rows if r['session'] == session and r.get('human_root') == cursor['origin']['human_root'] and r['status'] != 'completed']
@@ -1081,16 +1084,16 @@ def wake(repo, session, lifecycle, payload, *, delivery_window=None, enrollment_
     if payload['observation_ids'] != expected_ids or payload['enrollment_refs'] != expected_refs:
         raise ContractError('Current native root inventory changed before wake')
     root = cursor['origin']['human_root']
-    target = session_dir(repo, session) / 'root-wakes' / (root + '.json')
+    target = session_dir(repo, session, enrollment_context=enrollment_context) / 'root-wakes' / (root + '.json')
     if target.exists() or cursor['origin']['native_trigger'] not in {'human', 'human-with-own-guidance'}:
         return {'continue': False, 'status': 'pending', 'canonical_writes_performed': False}
-    root_cursor = read(session_dir(repo, session) / root / 'cursor.json')
+    root_cursor = read(session_dir(repo, session, enrollment_context=enrollment_context) / root / 'cursor.json')
     native_user_entry = (root_cursor['control_interval'] or {}).get('human_entry')
-    if not source_bound_origin(session_dir(repo, session) / root, root_cursor):
+    if not source_bound_origin(session_dir(repo, session, enrollment_context=enrollment_context) / root, root_cursor):
         return {'continue': False, 'status': 'pending-missing-human-source', 'canonical_writes_performed': False}
     if not native_user_entry:
         return {'continue': False, 'status': 'pending-missing-human-source', 'canonical_writes_performed': False}
-    wakes = session_dir(repo, session) / 'root-wakes'
+    wakes = session_dir(repo, session, enrollment_context=enrollment_context) / 'root-wakes'
     try:
         prior_users = validate_root_wakes(wakes, session) if os.path.lexists(wakes) else set()
     except (OSError, ValueError, TypeError, KeyError):
@@ -1130,7 +1133,7 @@ def wake(repo, session, lifecycle, payload, *, delivery_window=None, enrollment_
         control = root_cursor['control_interval'] or {}
         control['generated_guidance'] = guidance
         root_cursor['control_interval'] = control
-        replace_cursor(session_dir(repo, session) / root / 'cursor.json', root_cursor)
+        replace_cursor(session_dir(repo, session, enrollment_context=enrollment_context) / root / 'cursor.json', root_cursor)
     except Exception:
         # Reservation may have reached durable storage. Never retry this attempt.
         return {'continue': False, 'status': 'pending-wake-unknown-after-reservation',
@@ -1252,18 +1255,19 @@ def observe(repo, value, *, receipt=None, on_started=None, delivery_window=None,
     if verified_binding is None:
         verified_binding = _verify_observer_receipt(receipt)
     with source_barrier(repo), private_lock(_base(repo) / 'omp-transport.lock'):
-        with _verify_observer_receipt(receipt, repo=repo, verified_binding=verified_binding) as context, scope_binding._private_enrollment_reads(context):
+        with _verify_observer_receipt(receipt, repo=repo, verified_binding=verified_binding) as context, scope_binding._private_enrollment_reads(context), ExitStack() as locations:
             fences = []
             if value['action'] == 'ingest':
                 from . import omp_stream
                 fences = omp_stream.retire_for_recovery(repo, session, exclude_instance=getattr(on_started, 'instance_id', None))
             if on_started is not None:
                 on_started()
+            locations.enter_context(scope_binding._observe_enrollment_locations(context))
             if value['action'] == 'wake':
                 return {'verified': True, **wake(repo, session, value['lifecycle'], payload, delivery_window=delivery_window,
                                                enrollment_context=context)}
             if value['action'] in {'ingest', 'seal'}:
-                current = [item for item in segments(repo, session) if source_bound_origin(*item)]
+                current = [item for item in segments(repo, session, enrollment_context=context) if source_bound_origin(*item)]
                 known = {}; tools = {}; invocations = {}; retained_results = []
                 snapshots = {}; retained_tool_gaps = set()
                 raw_calls = {}; raw_results = {}
@@ -1397,9 +1401,10 @@ def observe(repo, value, *, receipt=None, on_started=None, delivery_window=None,
                         continue
                     if entry.get('type') not in {'message', 'custom_message'}:
                         if active is None:
-                            active = new_segment(repo, session, value['lifecycle'], value['lifecycle'], 'resume', payload['event_ordinal'])
+                            active = new_segment(repo, session, value['lifecycle'], value['lifecycle'], 'resume', payload['event_ordinal'],
+                                                 enrollment_context=context)
                             current.append(active)
-                        active = writable_successor(repo, session, active, current, payload['event_ordinal'])
+                        active = writable_successor(repo, session, active, current, payload['event_ordinal'], enrollment_context=context)
                         gap(*active, native, 'missing-stored-source')
                         continue
                     message = entry.get('message') if isinstance(entry.get('message'), dict) else {}
@@ -1457,18 +1462,21 @@ def observe(repo, value, *, receipt=None, on_started=None, delivery_window=None,
                         lifecycle = str(uuid.uuid5(uuid.NAMESPACE_URL, str(context.root) + ':omp:' + session + ':' + native))
                         active = new_segment(repo, session, lifecycle, lifecycle,
                                              'human-with-own-guidance' if payload['trigger'] in {'own-hidden-combined', 'human-with-own-guidance'} else 'human',
-                                             max([c['event_ordinal'] for _, c in current] + [payload['event_ordinal']]) + 1)
+                                             max([c['event_ordinal'] for _, c in current] + [payload['event_ordinal']]) + 1,
+                                             enrollment_context=context)
                     elif active and not tool_owner and (active[0] / 'segment.json').exists():
                         root = active[1]['origin']['human_root']
                         active = new_segment(repo, session, str(uuid.uuid4()), root,
                                              'own-hidden-ambiguous' if payload['trigger'].startswith('own-') else 'foreign-hidden',
-                                             max([c['event_ordinal'] for _, c in current] + [payload['event_ordinal']]) + 1)
+                                             max([c['event_ordinal'] for _, c in current] + [payload['event_ordinal']]) + 1,
+                                             enrollment_context=context)
                     elif active is None and not tool_owner:
                         # Context inherited on a fork is not a new human admission.
                         if inherited:
                             continue
-                        active = new_segment(repo, session, value['lifecycle'], value['lifecycle'], 'resume', payload['event_ordinal'])
-                        active = writable_successor(repo, session, active, current, payload['event_ordinal'])
+                        active = new_segment(repo, session, value['lifecycle'], value['lifecycle'], 'resume', payload['event_ordinal'],
+                                             enrollment_context=context)
+                        active = writable_successor(repo, session, active, current, payload['event_ordinal'], enrollment_context=context)
                         gap(*active, native, 'ambiguous-lifecycle')
                     owner = tool_owner or active
                     if tool_owner and (tool_owner[0] / 'segment.json').exists():
@@ -1477,7 +1485,8 @@ def observe(repo, value, *, receipt=None, on_started=None, delivery_window=None,
                                       and not (item[0] / 'segment.json').exists()), None)
                         if owner is None:
                             owner = new_segment(repo, session, str(uuid.uuid4()), root, 'foreign-hidden',
-                                                max([c['event_ordinal'] for _, c in current] + [payload['event_ordinal']]) + 1)
+                                                max([c['event_ordinal'] for _, c in current] + [payload['event_ordinal']]) + 1,
+                                                enrollment_context=context)
                     snapshot_name = hashlib.sha256(native.encode()).hexdigest() + '.json'
                     existing_owners = snapshots.get(snapshot_name, [])
                     if len(existing_owners) > 1:
@@ -1487,7 +1496,7 @@ def observe(repo, value, *, receipt=None, on_started=None, delivery_window=None,
                     d, c = owner
                     if stored_user and view['fork_status'] == 'unavailable':
                         if (d / 'segment.json').exists():
-                            owner = writable_successor(repo, session, owner, current, payload['event_ordinal'])
+                            owner = writable_successor(repo, session, owner, current, payload['event_ordinal'], enrollment_context=context)
                             d, c = owner
                         gap(d, c, native, 'ambiguous-lifecycle')
                     if (ambiguous_mention or ambiguous_call) and not existing_owners:
@@ -1565,20 +1574,20 @@ def observe(repo, value, *, receipt=None, on_started=None, delivery_window=None,
                 if view['tail_status'] == 'active-unavailable':
                     if active is None:
                         active = new_segment(repo, session, value['lifecycle'], value['lifecycle'],
-                                             'resume', payload['event_ordinal'])
-                    active = writable_successor(repo, session, active, current, payload['event_ordinal'])
+                                             'resume', payload['event_ordinal'], enrollment_context=context)
+                    active = writable_successor(repo, session, active, current, payload['event_ordinal'], enrollment_context=context)
                     gap(*active, None, 'ambiguous-lifecycle')
                 if active:
                     d, c = active
                     if (value['action'] == 'seal' and c['origin']['kind'] == 'genuine-user') or payload['terminal']:
                         seal(d, c)
                 if payload['terminal']:
-                    for old_d, old_c in segments(repo, session):
+                    for old_d, old_c in segments(repo, session, enrollment_context=context):
                         if source_bound_origin(old_d, old_c) and not (old_d / 'segment.json').exists():
                             seal(old_d, old_c)
             scope_binding.recheck_private_enrollment(context)
             drain_enrollments(repo, enrollment_context=context)
-            current = segments(repo, session)
+            current = segments(repo, session, enrollment_context=context)
             rows, faults = pending_inventory(repo, enrollment_context=context)
             chosen = active_segment(current, payload.get('branch_ids'))
             latest = chosen[1] if chosen else None
@@ -1592,11 +1601,12 @@ def observe(repo, value, *, receipt=None, on_started=None, delivery_window=None,
                 if (view['source_kind'] == 'retired-file' and source_complete
                         and all(entry.get('type') in NONLEARNING for entry in payload['entries'])):
                     token = omp_stream._nonlearning_tail_evidence(session, envelope_identity['view_id'], native_ids)
-                omp_stream.resolve_recovery(repo, fences, view_id=envelope_identity['view_id'],
-                    native_ids=native_ids, tool_ids=envelope_identity['tool_ids'],
-                    payload_native_ids=payload_ids, source_references=source_refs,
-                    complete=view['source_kind'] == 'retired-file' and source_complete,
-                    leaf_id=view['leaf_id'], nonlearning_evidence=token)
+                with scope_binding._fresh_enrollment_locations():
+                    omp_stream.resolve_recovery(repo, fences, view_id=envelope_identity['view_id'],
+                        native_ids=native_ids, tool_ids=envelope_identity['tool_ids'],
+                        payload_native_ids=payload_ids, source_references=source_refs,
+                        complete=view['source_kind'] == 'retired-file' and source_complete,
+                        leaf_id=view['leaf_id'], nonlearning_evidence=token)
             result = {'verified': True, 'status': 'pending' if root_rows or faults else 'observed',
                       'session': session, 'lifecycle': latest['lifecycle'] if latest else value['lifecycle'],
                       'wake_payload': {'observation_ids': sorted(r['observation_id'] for r in root_rows if 'observation_id' in r),

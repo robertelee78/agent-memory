@@ -108,6 +108,7 @@ def raw_recovery_context(repo, raw_identity, owner=None, transaction=None):
 
 _enrollment_seal = object()
 _enrollment_reads = ContextVar('agent_memory_private_enrollment_reads', default=None)
+_enrollment_locations = ContextVar('agent_memory_observe_enrollment_locations', default=None)
 
 
 class PrivateEnrollmentContext:
@@ -146,6 +147,12 @@ class PrivateEnrollmentContext:
 
 
 def private_enrollment_context(repo):
+    """Always discover a fresh bank, including when called inside an observer."""
+    with _fresh_enrollment_locations():
+        return _private_enrollment_context(repo)
+
+
+def _private_enrollment_context(repo):
     """Allow only private source retention through an exact verified hold."""
     from . import layout_recovery_state, recovery_frontier, turn_sources
     root, bank = writes.bank_path(repo)
@@ -195,6 +202,46 @@ def _enrollment_read_context(repo, context):
             or _enrollment_reads.get() is not context or Path(repo).resolve() != context.root):
         raise ContractError('Private enrollment read context is foreign or outside its live operation')
     return context
+
+
+@contextmanager
+def _fresh_enrollment_locations():
+    """Full scope checks and non-observer boundaries never inherit a locator."""
+    token = _enrollment_locations.set(None)
+    try:
+        yield
+    finally:
+        _enrollment_locations.reset(token)
+
+
+@contextmanager
+def _observe_enrollment_locations(context):
+    _enrollment_read_context(context.root, context)
+    token = _enrollment_locations.set(context)
+    try:
+        _observe_enrollment_location(context.root, context)
+        yield
+    finally:
+        _enrollment_locations.reset(token)
+
+
+def _observe_enrollment_location(repo, context=None):
+    """An existing observe barrier permits locator reuse, never scope reuse."""
+    active = _enrollment_locations.get()
+    if active is None:
+        if context is not None:
+            raise ContractError('Observer locator reuse is outside its live operation')
+        return None
+    if context is not None and context is not active:
+        raise ContractError('Observer locator differs from its exact active context')
+    if Path(repo).resolve() != active.root and context is None:
+        return None
+    _enrollment_read_context(repo, active)
+    from . import layout_recovery_state, turn_sources
+    location = layout_recovery_state._paths_for_bank(active.root, active.bank)
+    if str(location[2].parent) not in turn_sources._barriers.get():
+        raise ContractError('Observer locator reuse requires its already held source barrier')
+    return location
 
 
 def recheck_private_enrollment(context):

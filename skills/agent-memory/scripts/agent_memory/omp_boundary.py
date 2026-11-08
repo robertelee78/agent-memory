@@ -19,7 +19,10 @@ MARKER = {'schema': 'agent-memory/turn-sources-compat-v1',
           'minimum_reader': CAPABILITY, 'harnesses': ['omp']}
 
 
-def _base(repo):
+def _base(repo, *, enrollment_context=None):
+    if enrollment_context is not None:
+        from . import scope_binding
+        return scope_binding._observe_enrollment_location(repo, enrollment_context)[2].parent
     root, bank = bank_writes.bank_path(repo)
     operations, _ = bank_writes.state_paths(root, bank, str(uuid.uuid4()))
     return operations.parent

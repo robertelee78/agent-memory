@@ -88,7 +88,8 @@ def check_source_compatibility(base):
 def source_barrier(repo, *, exclusive=False):
     """First source lock family; reentrant reads cannot upgrade to writers."""
     from . import layout_recovery_state
-    root,bank,recovery_base,_=layout_recovery_state.paths(repo)
+    location=scope_binding._observe_enrollment_location(repo)
+    root,bank,recovery_base,_=(layout_recovery_state.paths(repo) if location is None else location)
     base=recovery_base.parent
     check_source_compatibility(base)
     known=_barriers.get()

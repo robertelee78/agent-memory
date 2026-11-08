@@ -186,7 +186,7 @@ class EnrollmentProgress(unittest.TestCase):
                               'native_loading': 'not-exercised', 'model_provider': 'not-exercised'}, sort_keys=True))
 
     def test_transaction_local_read_reuse_requires_exact_live_context_and_preserves_inventory(self):
-        from agent_memory import scope_binding
+        from agent_memory import bank_writes, layout_recovery_state, scope_binding
         with World() as world, patch.dict(os.environ, world.env, clear=True):
             helper = fixtures.NativeSources(); repo, session, lifecycle = helper.fixture(world)
             result = helper.observe(repo, session, lifecycle,
@@ -203,6 +203,24 @@ class EnrollmentProgress(unittest.TestCase):
                     for _ in range(3):
                         self.assertEqual(turn_sources._inspect_enrollment(repo, 'omp', session, lifecycle, context), expected)
                     self.assertEqual(discovery.call_count, 0)
+                with self.assertRaises(ValueError):
+                    fixtures.boundary._base(repo, enrollment_context=context)
+                fresh_base = fixtures.boundary._base(repo)
+                with scope_binding._observe_enrollment_locations(context):
+                    with patch.object(bank_writes, 'bank_path', wraps=bank_writes.bank_path) as locator:
+                        self.assertEqual(fixtures.boundary._base(repo, enrollment_context=context), fresh_base)
+                        self.assertEqual(transport.session_dir(repo, session, enrollment_context=context),
+                            fresh_base / 'omp-source-v1' / hashlib.sha256(session.encode()).hexdigest())
+                        self.assertEqual(locator.call_count, 0)
+                        self.assertEqual(fixtures.boundary._base(repo), fresh_base)
+                        self.assertEqual(locator.call_count, 1)
+                        scope_binding.recheck_private_enrollment(context)
+                        self.assertGreater(locator.call_count, 1, 'Full scope checks must freshly locate the bank')
+                    with patch.object(layout_recovery_state, 'paths', wraps=layout_recovery_state.paths) as locator:
+                        with turn_sources.source_barrier(repo):
+                            self.assertEqual(scope_binding._observe_enrollment_location(repo)[:2], (context.root, context.bank))
+                        self.assertEqual(locator.call_count, 0)
+                self.assertIsNone(scope_binding._observe_enrollment_location(repo))
                 with self.assertRaises(ValueError):
                     turn_sources._inspect_enrollment(world.inside('foreign'), 'omp', session, lifecycle, context)
                 for invalid in ({'project_id': context.project_id}, object()):
@@ -331,6 +349,61 @@ class EnrollmentProgress(unittest.TestCase):
             state = turn_sources.inspect(repo, 'claude', session, lifecycle)
             self.assertEqual([item['observation_id'] for item in state['sources']], [observed['observation_id']])
             self.assertEqual(len(turn_sources.enrollment_inventory(shared, identity)), 1)
+
+    def test_observe_bank_drift_keeps_original_captures_refuses_final_and_next_frame_freshly_locates(self):
+        import shutil
+        from agent_memory import bank_writes, scope_binding
+        with World() as world, patch.dict(os.environ, world.env, clear=True):
+            helper = fixtures.NativeSources(); repo, session, lifecycle = helper.fixture(world)
+            original_bank = repo / 'memory-bank'; alternate_bank = repo / 'alternate-bank'
+            original_base = fixtures.boundary._base(repo)
+            alternate_base = bank_writes.state_paths(repo, alternate_bank, str(fixtures.uuid.uuid4()))[0].parent
+            entries = [helper.entry('first-human', 'user', 'First actual stored source.', attribution='user'),
+                       helper.entry('second-human', 'user', 'Second actual stored source.', attribution='user')]
+            capture = transport.capture; bank_path = bank_writes.bank_path
+            drifted = []; full_locations = []; started_locations = []
+            def capture_then_change_config(directory, cursor, entry, **kwargs):
+                result = capture(directory, cursor, entry, **kwargs)
+                if result is not None and not drifted:
+                    shutil.copytree(original_bank, alternate_bank)
+                    world.git('config', '--local', 'agent-memory.bankRoot', 'alternate-bank', cwd=repo)
+                    drifted.append(True)
+                return result
+            def fresh_location(path):
+                if drifted:
+                    full_locations.append(scope_binding._observe_enrollment_location(path))
+                return bank_path(path)
+            value = {'schema': 'agent-memory/omp-observer-request-v2', 'action': 'seal',
+                     'session': session, 'lifecycle': lifecycle,
+                     'payload': fixtures.observer_payload(repo, session, entries, terminal=True)}
+            value['payload']['request_wake'] = False
+            with patch.object(transport, 'capture', side_effect=capture_then_change_config), \
+                    patch.object(bank_writes, 'bank_path', side_effect=fresh_location):
+                with self.assertRaisesRegex(ValueError, 'Competing memory bank locations'):
+                    helper.observe_request(repo, value,
+                        on_started=lambda: started_locations.append(scope_binding._observe_enrollment_location(repo)))
+            self.assertEqual(started_locations, [None], 'Worker start must precede observer locator reuse')
+            self.assertTrue(full_locations)
+            self.assertTrue(all(location is None for location in full_locations),
+                            'Full scope checks must suspend the transaction locator')
+            source_root = original_base / 'omp-source-v1' / hashlib.sha256(session.encode()).hexdigest()
+            retained = {transport.read(path, 4096)['native_entry_id'] for path in source_root.glob('*/captures/*.json')}
+            self.assertEqual(retained, {'first-human', 'second-human'})
+            self.assertFalse((alternate_base / 'omp-source-v1').exists())
+            self.assertFalse((alternate_base / 'turn-sources-v2').exists())
+            self.assertIsNone(scope_binding._observe_enrollment_location(repo))
+            # Remove only the competing locator from this owned fixture, retaining
+            # its complete original canonical bank outside the Git checkout.
+            original_bank.rename(world.inside('retained-original-bank'))
+            self.assertEqual(fixtures.boundary._base(repo), alternate_base)
+            self.assertEqual(transport.session_dir(repo, session),
+                alternate_base / 'omp-source-v1' / hashlib.sha256(session.encode()).hexdigest())
+            started = []
+            with self.assertRaises(ValueError):
+                helper.observe_request(repo, value, on_started=lambda: started.append(True))
+            self.assertEqual(started, [], 'The unactivated new bank must refuse before source execution')
+            self.assertFalse((alternate_base / 'omp-source-v1').exists())
+            self.assertFalse((alternate_base / 'turn-sources-v2').exists())
 
 
 if __name__ == '__main__':
