@@ -58,3 +58,25 @@ correct, ready to post; no concrete transport implementation approval.
 
 This clarification neither narrows the original #249 matrix nor unlocks graph,
 embedding or guided-recall implementation. Those retain their own roadmap gates.
+
+## Actual R4 campaign: failed, retained
+
+The [source-bound disposition](data/2026-11-06-omp-native/stock-r4-disposition-20261108.json)
+records the actual stock 18.16 print run against AM `77cf838`. Native exited 0
+with one stored human and one substantive Sol completion; both AM workers exited
+1 after creating OPEN metadata, before any observed READY, attempt or outcome.
+Their exception cause remains unknown because worker stderr was discarded.
+Original streams and the disposable World remain retained, not repaired or
+counted as source capture.
+
+Independent Opus and Sol triage separated two probe defects from that runtime
+failure: lexical route comparison rejected two real companion-start records,
+and print-mode terminal `agent_end` was not idle, so the large-source fixture
+correctly refused to send. The large-source case was **not exercised**. Neither
+defect explains worker exit 1.
+
+No RPC process, switch, fork or automatic continuation ran. Source capture,
+causal EOF, shutdown flush and positive model-forgets qualification remain open.
+A separately reviewed model-free diagnostic uses new synthetic stream identities
+to distinguish the original companion from worker startup; it does not authorize
+closing original streams, changing omp or repeating model prompts.
