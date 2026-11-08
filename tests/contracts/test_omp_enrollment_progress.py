@@ -573,11 +573,9 @@ class EnrollmentProgress(unittest.TestCase):
             self.assertEqual(world.git('ls-files', '--', 'memory-bank', cwd=repo).stdout, '')
             self.assertEqual(bank_writes.bank_path(repo), (repo.resolve(), bank))
             self.assertEqual(layout_recovery_state.paths(repo)[:2], (repo.resolve(), stray.parent))
-            # Deliberate tightening: the original composition succeeded while
-            # combining the ordinary bank's scope with the other bank's frontier.
-            original = self._original_enrollment_projection(repo)
-            self.assertEqual(original[:2], (repo.resolve(), bank))
-            self.assertIsNone(original[3])
+            # Both locators succeed, but the raw bank is not a valid router.
+            # The original frontier parser and the new early equality guard
+            # must both refuse rather than combine the two namespaces.
             def preserved():
                 return ({str(path.relative_to(world.paths['state'])): path.read_bytes()
                          for path in world.paths['state'].rglob('*') if path.is_file()},
@@ -585,9 +583,10 @@ class EnrollmentProgress(unittest.TestCase):
                          for path in repo.rglob('*') if path.is_file()},
                         world.git('rev-parse', 'HEAD', cwd=repo).stdout)
             before = preserved()
-            with self.assertRaises(ValueError):
-                scope_binding.private_enrollment_context(repo)
-            self.assertEqual(preserved(), before)
+            for mint in (self._original_enrollment_projection, scope_binding.private_enrollment_context):
+                with self.assertRaises(ValueError):
+                    mint(repo)
+                self.assertEqual(preserved(), before)
 
     def test_fresh_mint_preserves_raw_nonrouter_refusal_with_and_without_verified_hold(self):
         for held in (False, True):
