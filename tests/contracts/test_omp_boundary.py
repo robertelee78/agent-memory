@@ -1207,6 +1207,10 @@ for line in sys.stdin:
             humans = [NativeSources().entry('current-first', 'user', prompts[0], attribution='user'),
                       NativeSources().entry('current-second', 'user', prompts[1],
                                             parent='current-first', attribution='user')]
+            # A fork/copied-ID shape must not borrow another session's proof,
+            # even when both native IDs and complete prompt bodies are identical.
+            with patch.dict(os.environ, world.env, clear=True):
+                NativeSources().observe(repo, str(uuid.uuid4()), str(uuid.uuid4()), humans)
             path = root / 'sessions/current.jsonl'
             path.write_text('\n'.join(json.dumps(value) for value in [
                 {'type': 'session', 'id': session, 'cwd': str(repo)}, *humans]) + '\n')
