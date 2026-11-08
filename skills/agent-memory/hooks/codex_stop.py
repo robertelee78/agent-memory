@@ -8,6 +8,10 @@ import re
 import subprocess
 import uuid
 import sys
+sys.dont_write_bytecode = True
+import runpy
+_cache_guard = runpy.run_path(str(Path(__file__).resolve().parent.parent/'scripts/source_startup.py'),
+                              run_name='am_source_startup')['isolate']()
 
 
 
@@ -57,6 +61,7 @@ def main():
         if not os.path.lexists(repository_config.bank_path(repo)):
             diagnostic(repo);print('{}');return 0
         stage,reason='identity','identity.unresolved'
+        scope_binding.private_enrollment_context(repo)
         stage,reason='boundary','state.unavailable'
         current=turn_sources.inspect(repo,'codex',session,turn)
         if current.get('recovery_pending') is True:
@@ -64,7 +69,9 @@ def main():
         if current['complete']:return quiet(repo,session,turn,current['fingerprint'])
         _,_,_,state_directory,_=turn_sources.namespace(repo,'codex',session,turn)
         if not state_directory.exists():
+            stage,reason='identity','identity.unresolved'
             context=scope_binding.require(repo)
+            stage,reason='boundary','state.unavailable'
             operations,_=bank_writes.state_paths(repo,repository_config.bank_path(repo),str(uuid.uuid4()))
             key=hashlib.sha256((session+':'+turn).encode()).hexdigest()
             legacy=operations.parent/'codex-boundaries'

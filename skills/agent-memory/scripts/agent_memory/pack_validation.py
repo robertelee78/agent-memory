@@ -5,6 +5,7 @@ program behavior, source trust, or the truth of memory. Candidate code is data.
 """
 from __future__ import annotations
 
+from contextlib import contextmanager
 import argparse
 import ast
 import copy
@@ -356,7 +357,9 @@ def dispatch(script, files, *, details=False, seen=()):
     return (module, commands, flags, routes) if details else (module, commands, flags)
 
 
-def validate(pack):
+@contextmanager
+def _validated(pack):
+    """Bracket one caller's complete nonexecuting inspection with fresh bytes."""
     global _last_validation
     root = Path(pack).resolve(strict=True)
     require(root.is_dir(), 'inventory', '.', 'Pack must be a directory')
@@ -365,8 +368,9 @@ def validate(pack):
                            for path, (raw, mode) in sorted(files.items())))
     cached = _last_validation
     if cached is not None and cached[0] == key:
+        yield copy.deepcopy(cached[1])
         require(files == inventory(root), 'changed-pack', '.', 'Pack changed during validation')
-        return copy.deepcopy(cached[1])
+        return
     require([p for p in files if Path(p).name == 'SKILL.md'] == ['SKILL.md'],
             'registration', '.', 'Exactly one root SKILL.md is required')
     documents = {}; metadata = {}; shells = {}; bodies = {}
@@ -516,7 +520,6 @@ def validate(pack):
         visiting.remove(path); complete.add(path)
     for path in mandatory:
         visit(path)
-    require(files == inventory(root), 'changed-pack', '.', 'Pack changed during validation')
     result = {'schema': 'agent-memory/pack-validation-v1', 'valid': True, 'writes_performed': False,
             'candidate_code_executed': False, 'semantic_completeness_verified': False,
             'version': metadata['SKILL.md']['metadata']['version'],
@@ -527,8 +530,15 @@ def validate(pack):
                        'Conditioned navigation is distinct from recognized direct mandatory loading sentences.',
                        'Parameter semantics, arbitrary English obligations and behavioral correctness require independent review.',
                        'Documentation refactors also require preserved source, rule/strength/location mapping and actual independent use.']}
-    _last_validation = (key, copy.deepcopy(result))
-    return result
+    cached_result = copy.deepcopy(result)
+    yield result
+    require(files == inventory(root), 'changed-pack', '.', 'Pack changed during validation')
+    _last_validation = (key, cached_result)
+
+
+def validate(pack):
+    with _validated(pack) as result:
+        return result
 
 
 def main(argv=None):

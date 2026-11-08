@@ -55,16 +55,16 @@ evidence identifiers, not transport URLs.
 ## Apply
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/developer_identity.py" preview --create \
+python3 -I "$SKILL_DIR/scripts/developer_identity.py" preview --create \
   --label 'Developer label' > /private/path/developer.json
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/developer_identity.py" apply \
+python3 -I "$SKILL_DIR/scripts/developer_identity.py" apply \
   --proposal /private/path/developer.json
 ```
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/scope_binding.py" preview --repo /path/to/repo \
+python3 -I "$SKILL_DIR/scripts/scope_binding.py" preview --repo /path/to/repo \
   --action bind --reason 'Adopt this existing project bank' > /private/path/bind.json
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/scope_binding.py" apply --proposal /private/path/bind.json
+python3 -I "$SKILL_DIR/scripts/scope_binding.py" apply --proposal /private/path/bind.json
 ```
 
 ## Read back
@@ -106,10 +106,10 @@ report that state and retry the same bundle, rather than guess a new identity.
 A visible bank lock requires its explicit preview/readback recovery first:
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/bank_writes.py" recover --repo /path/to/repo > /private/path/unlock.json
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/bank_writes.py" recover --repo /path/to/repo \
+python3 -I "$SKILL_DIR/scripts/bank_writes.py" recover --repo /path/to/repo > /private/path/unlock.json
+python3 -I "$SKILL_DIR/scripts/bank_writes.py" recover --repo /path/to/repo \
   --proposal /private/path/unlock.json
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/scope_binding.py" apply --proposal /private/path/bind.json
+python3 -I "$SKILL_DIR/scripts/scope_binding.py" apply --proposal /private/path/bind.json
 ```
 
 Live, foreign or unknown locks MUST remain for inspection; age is not ownership.

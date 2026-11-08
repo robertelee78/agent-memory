@@ -48,7 +48,7 @@ class CheckoutRepairContract(unittest.TestCase):
             helper = test_admission.AdmissionContract()
             repo, _ = helper.fixture(w)
             script = "import sys;sys.path.insert(0,sys.argv[1]);from agent_memory import hook_failure as h;h.record(sys.argv[2],'codex','prompt','identity','identity.unresolved');h.record(sys.argv[2],'codex','stop','boundary','boundary.missing')"
-            w.run([sys.executable, '-I', '-c', script, helper.pack / 'scripts', repo])
+            w.run([sys.executable, '-I', '-B', '-c', script, helper.pack / 'scripts', repo])
             result = w.run([sys.executable, '-I', helper.pack / 'scripts/installer.py', 'doctor', '--repo', repo, '--json'], check=False)
             value = json.loads(result.stdout)
             self.assertEqual(len(value['hook_failures']), 2)

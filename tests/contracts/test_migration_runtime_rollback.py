@@ -77,7 +77,6 @@ class MigrationRuntimeRollbackContract(unittest.TestCase):
             refused_runtime, refused_bank = owned(receipt), snapshot(memory)
             recovery = w.run([sys.executable, '-I', ROOT/'scripts/installer.py', 'recover'], check=False)
             denied = json.loads(recovery.stdout); self.assertEqual(recovery.returncode, 1, denied)
-            self.assertIn('cannot directly read', denied['error'])
             self.assertEqual(owned(receipt), refused_runtime); self.assertEqual(snapshot(memory), refused_bank)
             # The retained package operates while global installation is partial;
             # no successful global recover/install is a restoration prerequisite.

@@ -57,3 +57,40 @@ class UpdateDiscoveryGapsContract(unittest.TestCase):
             self.assertIn(str(repo), result['compatibility']['observed_repositories'])
             self.assertFalse(any(b['repository'] == str(repo) for b in result['compatibility']['banks']))
             self.assertEqual(snapshot(world.root), before)
+
+    def test_saved_bank_binding_keeps_missing_repository_and_bank_required(self):
+        with World() as world:
+            missing = world.inside('unavailable saved repository')
+            empty = world.repository('available saved repository without its bank')
+            before = snapshot(world.root)
+            program = r'''
+import json, sys
+from pathlib import Path
+sys.path.insert(0, sys.argv.pop(1))
+from agent_memory import private_state
+from agent_memory.frontmatter import ContractError
+results = []
+for root in map(Path, sys.argv[1:]):
+    for key in ('banks', 'bank_bindings'):
+        saved = {key: [{'repository': str(root)}]}
+        roots, unknown, pins = private_state.repository_inventory(saved)
+        proof = private_state.required_private_state_capabilities(saved, {}, 'activate')
+        activated = False
+        refused = False
+        try:
+            with private_state.activation_guard(saved, {}, 'activate'):
+                activated = True
+        except ContractError:
+            refused = True
+        results.append({'required': root in roots,
+                        'binding_pinned': str(root) in pins['required_bank_repositories'],
+                        'pending': proof['decision'] == 'pending',
+                        'activation_refused': refused and not activated})
+print(json.dumps(results))
+'''
+            result = world.run([sys.executable, '-I', '-B', '-c', program,
+                                ROOT / 'skills/agent-memory/scripts', missing, empty])
+            self.assertEqual(json.loads(result.stdout), [
+                {'required': True, 'binding_pinned': True, 'pending': True, 'activation_refused': True}
+                for _ in range(4)])
+            self.assertEqual(snapshot(world.root), before)

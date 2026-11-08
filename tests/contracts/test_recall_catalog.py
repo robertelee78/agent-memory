@@ -185,7 +185,7 @@ assert c.invalidate_after_change(sys.argv[2],{})=='deferred-to-canonical-fallbac
 assert not oversized,'Oversized header was decoded before its bound was checked'
 print('bounded cleanup fallback')
 '''
-            result=w.run([sys.executable,'-I','-c',program,self.pack/'scripts',repo],check=False)
+            result=w.run([sys.executable,'-I','-B','-c',program,self.pack/'scripts',repo],check=False)
             self.assertEqual(result.returncode,0,result.stderr);self.assertIn('bounded cleanup fallback',result.stdout)
             g=governance_fixtures.GovernanceContract();g.pack=self.pack;g.pid=self.h.pid;g.actor=self.h.actor
             deletion=g.request(bank,meta,request['paths'][0],'delete')
@@ -280,7 +280,7 @@ import agent_memory.projections
 refused('unexpected-native-dependency')
 print(json.dumps(checked))
 '''
-            result=w.run([sys.executable,'-I','-c',program,self.pack/'scripts'],check=False)
+            result=w.run([sys.executable,'-I','-B','-c',program,self.pack/'scripts'],check=False)
             self.assertEqual(result.returncode,0,result.stderr)
             self.assertEqual(json.loads(result.stdout),['loaded-policy','loaded-code','substituted-namespace','unexpected-native-dependency'])
 
@@ -299,7 +299,7 @@ try:c.physical_inventory(Path(sys.argv[2]))
 except c.CacheMiss:print('bounded runtime traversal')
 else:raise AssertionError('Excluded runtime entries evaded the finite hint traversal budget')
 '''
-            result=w.run([sys.executable,'-I','-c',program,self.pack/'scripts',isolated],check=False)
+            result=w.run([sys.executable,'-I','-B','-c',program,self.pack/'scripts',isolated],check=False)
             self.assertEqual(result.returncode,0,result.stderr);self.assertEqual(result.stdout.strip(),'bounded runtime traversal')
 
     def test_busy_optional_publisher_leaves_useful_recall_available_and_rebuilds_after_unlock(self):

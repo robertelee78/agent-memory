@@ -105,7 +105,7 @@ With `SKILL_DIR` resolved to a trusted complete package, the session MUST previe
 the intended source and target configuration before activation. For example:
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/installer.py" install --check --development-source /path/to/checkout --mode copy --presets none --target-dir /path/to/custom/skills
+python3 -I "$SKILL_DIR/scripts/installer.py" install --check --development-source /path/to/checkout --mode copy --presets none --target-dir /path/to/custom/skills
 ```
 
 The session MUST compare each target's current and planned identity. Check mode
@@ -123,7 +123,7 @@ After an authorized acceptable preview, the session MUST run the same install
 configuration without `--check`:
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/installer.py" install --development-source /path/to/checkout --mode copy --presets none --target-dir /path/to/custom/skills
+python3 -I "$SKILL_DIR/scripts/installer.py" install --development-source /path/to/checkout --mode copy --presets none --target-dir /path/to/custom/skills
 ```
 
 The installer stages all targets, checks atomic replacement on each target
@@ -175,10 +175,20 @@ When installation is interrupted, the session MUST use the trusted source helper
 even if the installed command does not exist:
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/installer.py" recover
+python3 -I "$SKILL_DIR/scripts/installer.py" recover
 ```
 
 Recovery verifies a committed receipt or rolls back an incomplete activation.
-The session MUST inspect its verified result before retrying installation. It
-MUST preserve a recovery conflict caused by external edits rather than overwrite
-those edits. A lost response after receipt activation is recovered as committed.
+The session MUST inspect the result and preserve conflicts caused by external
+edits. A lost response after receipt activation MUST NOT undo that commit.
+Strict recovery MUST NOT report success or mark its journal complete until
+current targets verify; repeating it does not make an external edit trusted.
+
+When the trusted helper reports an unchanged committed receipt that needs an
+ownership re-plan, the session MUST preserve the pending journal and review the
+normal install or update preview. Only the exact committed `activating` state
+permits this pending-journal route; uncommitted or conflicting states still refuse.
+An authorized fresh plan MAY reconcile allowed surrounding user edits while
+retaining the prior journal. The session MUST require its verified readback.
+Changed receipts, unsafe paths and edits to owned content MUST NOT be bypassed
+by manually completing or deleting the journal.

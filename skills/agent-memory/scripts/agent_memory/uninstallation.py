@@ -177,6 +177,9 @@ def run(args):
         if current is None:
             historical = install.load(state/'receipt.json')
             install.require(historical.get('uninstalled') is True, 'No active ownership receipt; do not guess removal targets')
+            journal = install.read_journal(state)
+            install.require(journal is None or journal['status'] in ('complete', 'rolled-back'),
+                            'Removal receipt is committed but targets remain unverified; use trusted install to re-plan')
             return {'operation':'uninstall', 'verified':not args.check, 'check_complete':bool(args.check),
                     'changed':False, 'uninstalled':True, 'receipt':historical,
                     'preserved':historical['preserved'], 'reinstall':historical['reinstall']}
@@ -203,15 +206,7 @@ def run(args):
         return {**result, 'uninstalled':True, 'preserved':plan['preserved'], 'reinstall':plan['reinstall'],
                 'project_memory_writes_performed':False, 'purge_performed':False}
     if args.check:
-        journal = state/'journal.json'
-        if os.path.lexists(journal):
-            recorded = install.load(journal)
-            install.require(recorded['status'] in ('complete','rolled-back'),
-                            'Recover the interrupted lifecycle transaction before planning uninstall')
-            if recorded['status']=='complete':
-                install.require(recorded.get('receipt_identity') is not None
-                                and install.fingerprint(state/'receipt.json')==recorded['receipt_identity'],
-                                'Completed installation receipt differs from its journal; preserve and reconcile ownership')
+        install._require_replannable_journal(state)
         return work()
     paths = [state, code, *(Path(t['path']) for t in (old['targets'] if old else []))]
     with runtime_faults.operation('uninstall', paths), install.locked(state):

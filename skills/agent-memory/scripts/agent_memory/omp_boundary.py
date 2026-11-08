@@ -186,6 +186,13 @@ def _bank_binding(base):
     return value
 
 
+def _has_native_source_state(base):
+    """Cheap native evidence names shared by discovery and capability reads."""
+    return any(os.path.lexists(base / name) for name in (
+        'omp-bank-binding-v1.json', 'turn-sources-compat-v1.json', 'omp-source-v1',
+        'omp-stream-v1', 'omp-stream-session-locks'))
+
+
 def _source_state_bindings(installation, registered):
     state_roots = {bank_writes.state_root()}
     state_roots.update(Path(path).parents[1] for path in registered['private_bases'].values())
@@ -219,7 +226,7 @@ def _source_state_bindings(installation, registered):
                 if base != expected:
                     raise ContractError('Native bank remains bound to another protected private-state root')
                 continue
-            if any(os.path.lexists(base / name) for name in ('turn-sources-compat-v1.json', 'omp-source-v1', 'omp-stream-v1', 'omp-stream-session-locks')):
+            if _has_native_source_state(base):
                 raise ContractError('Native marker/source inventory lacks its bound repository')
             pending = base / 'turn-sources-v2' / 'pending'
             if os.path.lexists(pending):
@@ -354,6 +361,31 @@ def _drain_inventory(repo):
     return binding, hashlib.sha256(turn_sources.encoded(binding)).hexdigest()
 
 
+def _shared_native_source_evidence(repo, base):
+    """Read shared v2 state without creating locks or a drain requirement."""
+    if _omp_index(repo):
+        raise ContractError('Markerless state still contains indexed omp references')
+    has_evidence = False
+    shared = base / 'turn-sources-v2' / 'turns'
+    if os.path.lexists(shared):
+        trust_paths.state(shared)
+        with os.scandir(shared) as entries:
+            for number, entry in enumerate(entries):
+                if number >= 65536:
+                    raise ContractError('Source namespace inventory exceeds bound')
+                directory = Path(entry.path)
+                trust_paths.state(directory)
+                for i in range(turn_sources.MAX_SOURCES):
+                    try:
+                        source = load(turn_sources.read_bytes(directory / ('source-' + str(i) + '.json'), 4096))
+                    except FileNotFoundError:
+                        continue
+                    if not isinstance(source, dict):
+                        raise ContractError('Unverifiable source inventory')
+                    has_evidence |= source.get('harness') == 'omp'
+    return has_evidence
+
+
 def required_source_capabilities(repo):
     """A missing marker needs a real bound drain proof, never an empty fallback."""
     root, bank = bank_writes.bank_path(repo)
@@ -380,26 +412,8 @@ def required_source_capabilities(repo):
                 raise ContractError('Native stream evidence requires the stored-source reader marker')
             return {HISTORICAL_CAPABILITY}
         return {HISTORICAL_CAPABILITY, CAPABILITY}
-    has_evidence = has_binding or os.path.lexists(base / 'omp-source-v1') or has_streams
-    if _omp_index(repo):
-        raise ContractError('Markerless state still contains indexed omp references')
-    shared = base / 'turn-sources-v2' / 'turns'
-    if os.path.lexists(shared):
-        trust_paths.state(shared)
-        with os.scandir(shared) as entries:
-            for number, entry in enumerate(entries):
-                if number >= 65536:
-                    raise ContractError('Source namespace inventory exceeds bound')
-                directory = Path(entry.path)
-                trust_paths.state(directory)
-                for i in range(turn_sources.MAX_SOURCES):
-                    try:
-                        source = load(turn_sources.read_bytes(directory / ('source-' + str(i) + '.json'), 4096))
-                    except FileNotFoundError:
-                        continue
-                    if not isinstance(source, dict):
-                        raise ContractError('Unverifiable source inventory')
-                    has_evidence |= source.get('harness') == 'omp'
+    has_evidence = _has_native_source_state(base)
+    has_evidence |= _shared_native_source_evidence(root, base)
     if not has_evidence:
         return set()
     with private_lock(base / 'omp-transport.lock'):
@@ -498,12 +512,21 @@ def drain_source_capabilities(repo, *, quiesced=False, check=False):
 def _enrolled_repositories(installation):
     from . import repository_config
     result = []
-    enrolled = set(_registry()['repositories'])
+    registered = _registry()
+    protected = {Path(value) for value in registered['repositories']}
+    protected.update(_source_state_bindings(installation, registered))
+    if installation:
+        for key in ('rollback_repositories', 'observed_repositories'):
+            protected.update(Path(value) for value in installation.get(key, []))
+        for key in ('banks', 'bank_bindings'):
+            protected.update(Path(row['repository']) for row in installation.get(key, []))
     for repo in sorted(source_capability_repositories(installation)):
         if not repo.is_dir():
-            raise ContractError('Enrolled native bank is unavailable; compatibility remains unknown')
+            if repo in protected or os.path.lexists(repo):
+                raise ContractError('Enrolled native bank is unavailable; compatibility remains unknown')
+            continue
         if not repository_config.bank_path(repo).is_dir():
-            if str(repo) in enrolled:
+            if repo in protected:
                 raise ContractError('Enrolled native bank has disappeared; compatibility remains unknown')
             continue
         result.append(repo)

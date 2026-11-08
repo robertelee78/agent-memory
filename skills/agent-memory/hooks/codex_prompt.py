@@ -2,6 +2,10 @@
 """Bind a Codex user prompt to its turn without retaining its content."""
 import hashlib,json,os,re,subprocess,sys,uuid
 from pathlib import Path
+sys.dont_write_bytecode = True
+import runpy
+_cache_guard = runpy.run_path(str(Path(__file__).resolve().parent.parent/'scripts/source_startup.py'),
+                              run_name='am_source_startup')['isolate']()
 
 
 def diagnostic(repo, stage=None, reason=None):
@@ -37,6 +41,7 @@ def main():
         if not os.path.lexists(repository_config.bank_path(root)):
             diagnostic(root);print('{}');return 0
         from agent_memory import turn_sources
+        stage,reason='identity','identity.unresolved'
         enrollment=scope_binding.private_enrollment_context(root)
         stage,reason='boundary','state.unavailable'
         native_ids=[event[key] for key in ('event_id','prompt_id') if event.get(key) is not None]
@@ -47,7 +52,7 @@ def main():
             reference=None
         if enrollment.held and native is None:
             retained_input=turn_sources.retain_unidentified_input(root,'codex',session,turn,text.encode(),reference)
-            stage,reason='native-event','identity.unavailable'
+            stage,reason='identity','identity.unresolved'
             raise ValueError('Retained source lacks an unambiguous native event identity')
         observation=turn_sources.register(root,'codex',session,turn,hashlib.sha256(text.encode()).hexdigest(),native_source_id=native,source_reference=reference)
         stage,reason='guidance','guidance.unavailable'
@@ -60,6 +65,7 @@ def main():
         if notice:guidance += ' Earlier pending work exists; use am codex-boundary --list-pending for original IDs.'
         if observation['control_origin_hint']:guidance += ' Generated-control hint, not a new operator decision; assess this source.'
         if len(guidance.encode())>2048:raise ValueError('guidance exceeds bound')
+        stage,reason='identity','identity.unresolved'
         scope_binding.recheck_private_enrollment(enrollment)
         diagnostic(root)
         print(json.dumps({'hookSpecificOutput':{'hookEventName':'UserPromptSubmit','additionalContext':guidance}}));return 0

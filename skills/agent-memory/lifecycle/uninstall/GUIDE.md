@@ -72,7 +72,7 @@ session MUST NOT delete such records or the marker to force removal.
 The session MUST preview removal before applying it:
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/uninstall_runtime.py" uninstall --check > /private/path/uninstall-plan.json
+python3 -I "$SKILL_DIR/scripts/uninstall_runtime.py" uninstall --check > /private/path/uninstall-plan.json
 ```
 
 The session MUST review each target's before/after identity and the `preserved`
@@ -86,7 +86,7 @@ After an authorized acceptable preview, the session MUST run the same helper
 without `--check`, or the installed `agent-memory uninstall` command:
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/uninstall_runtime.py" uninstall > /private/path/uninstall-receipt.json
+python3 -I "$SKILL_DIR/scripts/uninstall_runtime.py" uninstall > /private/path/uninstall-receipt.json
 ```
 
 The lifecycle lock, external journal and native per-target moves retain rollback
@@ -134,9 +134,14 @@ The session MUST recover interrupted runtime removal using the trusted complete
 package, even when the installed command and managed source are gone:
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/installer.py" recover
+python3 -I "$SKILL_DIR/scripts/installer.py" recover
 ```
 
-The session MUST read the verified recovery result before retrying uninstall.
+The session MUST inspect the recovery result before retrying uninstall.
 Recovery restores an incomplete removal or verifies its committed receipt;
 external edits discovered during recovery remain preserved for reconciliation.
+An already-uninstalled receipt with a pending, unverified journal MUST NOT be
+reported as verified merely by repeating uninstall. The session MUST preserve
+that journal and the edits. If re-establishing the runtime is authorized, it MAY
+use the recorded reinstall recipe through the installation operation's explicit
+ownership re-plan; it MUST NOT delete evidence or initialize replacement memory.

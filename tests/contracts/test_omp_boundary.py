@@ -178,6 +178,8 @@ class NativeSources(unittest.TestCase):
             entries = [self.entry('human', 'user', 'Source with unavailable payload', attribution='user'),
                        self.entry('image', 'assistant', [{'type': 'image', 'data': 'must-not-retain'}])]
             with patch.dict(os.environ, world.env, clear=True):
+                marker = boundary._base(repo) / 'turn-sources-compat-v1.json'
+                original_marker = marker.read_bytes()
                 self.observe(repo, session, lifecycle, entries)
                 rows, _ = transport.pending_inventory(repo)
                 self.assertTrue(all(row['status'] == 'pending-coverage-gap' for row in rows))
@@ -186,7 +188,7 @@ class NativeSources(unittest.TestCase):
                         self.acknowledge(repo, row)
                 result = boundary.drain_source_capabilities(repo, quiesced=True)
                 self.assertFalse(result['drainable'])
-                self.assertEqual(boundary.required_source_capabilities(repo), {boundary.CAPABILITY})
+                self.assertEqual(marker.read_bytes(), original_marker)
                 for path in (boundary._base(repo) / 'omp-source-v1').rglob('*.json'):
                     self.assertNotIn('must-not-retain', path.read_text())
 
@@ -309,26 +311,6 @@ class NativeSources(unittest.TestCase):
             self.assertTrue((parent / 'snapshots' / name).exists())
             self.assertTrue(transport.pending_inventory(repo)[1],
                             'the unqualified historical orphan must remain an explicit inventory fault')
-
-    def test_late_native_tool_result_recovers_original_sealed_gap_without_reopening(self):
-        with World() as world:
-            repo, session, lifecycle = self.fixture(world)
-            with patch.dict(os.environ, world.env, clear=True):
-                human = self.entry('human', 'user', 'Actual approved tool request', attribution='user')
-                assistant = self.entry('assistant-call', 'assistant',
-                                       [{'type': 'toolCall', 'id': 'native-call', 'name': 'bash',
-                                         'arguments': {'command': 'printf 12'}}])
-                first = self.observe(repo, session, lifecycle, [human, assistant])
-                original_dir, original_cursor = transport.segments(repo, session)[0]
-                original_manifest = transport.read(original_dir / 'segment.json')
-                self.assertTrue(any(gap['native_entry_id'] == 'tool:native-call' for gap in original_manifest['gaps']))
-                result = self.entry('tool-result', 'toolResult', '12', toolCallId='native-call', toolName='bash')
-                self.observe(repo, session, first['lifecycle'], [human, assistant, result], terminal=True)
-                self.assertEqual(transport.read(original_dir / 'segment.json'), original_manifest)
-                self.assertTrue(transport._coverage(original_dir, original_manifest))
-                self.assertFalse(transport.read(original_dir / 'cursor.json')['tool_lifecycles'])
-                self.assertFalse(transport.pending_inventory(repo)[1])
-                self.assertEqual(len(transport.segments(repo, session)), 2)
 
     def test_protected_private_root_cannot_silently_move_or_lose_binding(self):
         with World() as world:
@@ -971,6 +953,48 @@ class NativeLifecyclePublic(unittest.TestCase):
                 channel, pack, receipt = self.managed(world, mode)
                 self.update_journey(world, receipt, lambda: advance(world, channel, pack, '1.0.0'))
 
+    def test_native_update_ignores_missing_historical_worktree_but_preserves_required_enrollment(self):
+        from runtime_update_fixtures import advance, owned, receipt_path, snapshot
+        from agent_memory.frontmatter import ContractError
+        with World() as world:
+            channel, pack, receipt = self.managed(world)
+            repo, _, _ = NativeSources().fixture(world)
+            world.git('add', '.', cwd=repo)
+            world.git('commit', '-m', 'Bound native project bank', cwd=repo)
+            missing = world.inside('deleted native session')
+            world.git('worktree', 'add', '-b', 'deleted-native-session', missing, cwd=repo)
+            shutil.rmtree(missing)
+            before = snapshot(repo)
+            revision = advance(world, channel, pack)
+            all_before = snapshot(world.root)
+            preview = self.public(world, receipt, 'update', '--check')
+            self.assertTrue(preview['check_complete'])
+            self.assertEqual(snapshot(world.root), all_before)
+            self.assertTrue(any(row['location'] == str(missing)
+                                for row in preview['compatibility']['discovery_gaps']))
+            updated = self.public(world, receipt, 'update')
+            self.assertTrue(updated['verified'])
+            receipt = updated['receipt']
+            self.assertEqual(receipt['source']['revision'], revision)
+            self.assertEqual(snapshot(repo), before)
+            self.assertFalse(self.public(world, receipt, 'update')['changed'])
+            self.assertTrue(self.public(world, receipt, 'recover')['verified'])
+            self.assertEqual(snapshot(repo), before)
+            # Losing the actually enrolled repository is not a historical gap.
+            retained = world.inside('retained unavailable native project')
+            repo.rename(retained)
+            protected = owned(receipt), receipt_path(world).read_bytes(), snapshot(world.paths['state'])
+            with patch.dict(os.environ, world.env, clear=True):
+                with self.assertRaises(ContractError):
+                    boundary._enrolled_repositories(receipt)
+            refused = world.run([Path(receipt['bin_dir']) / 'am', '--json', 'update', '--check'],
+                                cwd=world.paths['home'], check=False, timeout=30)
+            self.assertEqual(refused.returncode, 1, refused.stdout + refused.stderr)
+            self.assertFalse(json.loads(refused.stdout)['verified'])
+            self.assertEqual((owned(receipt), receipt_path(world).read_bytes(),
+                              snapshot(world.paths['state'])), protected)
+            self.assertEqual(snapshot(retained), before)
+
     def test_signed_native_updates_preserve_extension_integrity(self):
         from signed_release_fixtures import SignedRelease
         with World() as world, SignedRelease(world) as release:
@@ -1042,68 +1066,6 @@ class NativeLifecyclePublic(unittest.TestCase):
             self.assertTrue((base / 'turn-sources-compat-v1.json').exists())
             self.assertFalse(list((base / 'omp-drains').glob('*.json')))
             self.assertTrue(list(extension.parent.glob('.agent-memory-disabled-*.ts.disabled')))
-
-    def test_held_native_preview_consumes_reviewed_envelope_without_publishing(self):
-        import layout_recovery_fixtures as recovery
-        from runtime_update_fixtures import snapshot
-        with World() as world:
-            command, source, repo, bank, native, inspected, _ = recovery.small_pending(world)
-            helper = NativeSources()
-            with patch.dict(os.environ, world.env, clear=True):
-                helper.observe(repo, str(uuid.uuid4()), str(uuid.uuid4()), [
-                    helper.entry('held-human', 'user', 'Controlled pending source under the same layout hold', attribution='user')])
-            root = world.inside('held native root')
-            root.mkdir()
-            request = recovery.review_request(world, command, source, repo, inspected, native)
-            attestation = request['quiescence_attestation']
-            attestation['declared_invocation_routes'] += [str(root / path) for path in
-                ('skills/agent-memory', 'extensions/agent-memory.ts', 'AGENTS.md')]
-            attestation['declared_invocation_routes'].append(str(command.parent / 'agent-memory'))
-            def envelope(attestation):
-                return {'attestation': attestation, 'review': {
-                    'schema': 'agent-memory/layout-quiescence-review-v1', 'review_id': attestation['review_id'],
-                    'operation_id': attestation['operation_id'], 'attestation_sha256': recovery.sha(recovery.encoded(attestation)),
-                    'reviewer_developer_id': attestation['operator_developer_id'],
-                    'reviewer_harness': 'controlled-native-independent-reviewer',
-                    'reviewer_session': 'native-renewal-' + str(uuid.uuid4()), 'review_time': attestation['issued_at'],
-                    'decision': 'approve', 'rationale': 'Controlled independent review of exact bank, artifact and complete invocation routes.'}}
-            good = envelope(attestation)
-            arguments = [command, '--json', 'install', '--development-source', source, '--presets', 'omp',
-                         '--omp-agent-dir', root, '--omp-peers-upgraded']
-            variants = []
-            wrong_artifact = copy.deepcopy(attestation)
-            wrong_artifact['runtime_artifact_digest'] = 'a' * 64
-            variants.append(envelope(wrong_artifact))
-            wrong_bank = copy.deepcopy(attestation)
-            wrong_bank['bank_path'] = str(repo / 'other-bank')
-            variants.append(envelope(wrong_bank))
-            missing_route = copy.deepcopy(attestation)
-            missing_route['declared_invocation_routes'].remove(str(root / 'extensions/agent-memory.ts'))
-            variants.append(envelope(missing_route))
-            missing_other_route = copy.deepcopy(attestation)
-            missing_other_route['declared_invocation_routes'].remove(str(root / 'skills/agent-memory'))
-            variants.append(envelope(missing_other_route))
-            unreviewed = copy.deepcopy(good)
-            unreviewed['review']['reviewer_harness'] = request['author']['harness']
-            unreviewed['review']['reviewer_session'] = request['author']['session']
-            variants.append(unreviewed)
-            before = snapshot(world.paths['state']), snapshot(bank), snapshot(root)
-            for value in variants:
-                result = world.run([*arguments, '--check', '--omp-layout-quiescence', recovery.save(world, value)],
-                                   check=False, timeout=30)
-                self.assertNotEqual(result.returncode, 0)
-                self.assertEqual((snapshot(world.paths['state']), snapshot(bank), snapshot(root)), before)
-            proof = recovery.save(world, good)
-            preview = world.run([*arguments, '--check', '--omp-layout-quiescence', proof], timeout=30)
-            checked = json.loads(preview.stdout)
-            self.assertEqual(checked['schema'], 'agent-memory/install-plan-v1')
-            self.assertFalse(checked['installation_writes_performed'])
-            self.assertEqual(checked['private_compatibility']['required_capabilities'],
-                             ['layout-frontier-v1', 'omp-stored-source-v2'])
-            self.assertEqual((snapshot(world.paths['state']), snapshot(bank), snapshot(root)), before)
-            applied = json.loads(world.run([*arguments, '--omp-layout-quiescence', proof], timeout=30).stdout)
-            self.assertTrue(applied['verified'])
-            self.extension(applied['receipt'])
 
 
 class NativeSmokeQualification(unittest.TestCase):

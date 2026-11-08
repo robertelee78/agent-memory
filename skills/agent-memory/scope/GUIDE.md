@@ -47,8 +47,8 @@ The operation is a read-only decision. A session MUST plan a separate governed o
 With `SKILL_DIR` resolved to the packaged skill directory:
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/scope_policy.py" model
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/scope_policy.py" decide --input /tmp/scope-request.json
+python3 -I "$SKILL_DIR/scripts/scope_policy.py" model
+python3 -I "$SKILL_DIR/scripts/scope_policy.py" decide --input /tmp/scope-request.json
 ```
 
 ## Read back

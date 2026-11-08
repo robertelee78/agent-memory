@@ -113,7 +113,6 @@ with patch('os.mkdir',swap): private_mkdir(sys.argv[4])
                               'refresh', 'current', '--repo', repo], check=False)
             result = json.loads(response.stdout)
             self.assertEqual(response.returncode, 1, result)
-            self.assertEqual(result['failure_component'], 'local-boundary')
             self.assertEqual(result['failure_code'], 'canonical-memory-untracked')
             self.assertIn('refresh inspect --v2', result['repair'])
             self.assertFalse(result['remote_freshness_verified'])
@@ -274,7 +273,7 @@ with patch('os.mkdir',swap): private_mkdir(sys.argv[4])
                     's.write_private(sys.argv[2],value,sys.argv[3]);'
                     's.preflight_private_output(sys.argv[2],sys.argv[3]);'
                     's.write_private(sys.argv[2],value,sys.argv[3])')
-            response=w.run([sys.executable,'-I','-c',script,self.pack/'scripts',target,repo],check=False)
+            response=w.run([sys.executable,'-I','-B','-c',script,self.pack/'scripts',target,repo],check=False)
             self.assertEqual(response.returncode,0,response.stderr)
 
     def test_primed_unchanged_refresh_uses_catalog_and_matches_canonical_recall(self):

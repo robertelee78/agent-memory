@@ -132,6 +132,55 @@ class LayoutRecoveryContract(unittest.TestCase):
             self.assertFalse((bank / '.agent-memory-transaction.md').exists())
             self.assertFalse((bank / '.agent-memory-recovery.md').exists())
 
+    def test_prepare_refuses_demoting_canonical_context_or_typed_prior_guidance(self):
+        for kind in ('context', 'typed-record'):
+            with self.subTest(kind=kind), World() as world:
+                command, source, repo, bank, native, originals = self.setup_repair(world)
+                feature = repo / 'feature.txt'
+                feature.write_text('Staged unrelated work\n')
+                world.git('add', 'feature.txt', cwd=repo)
+                index = (repo / '.git/index').read_bytes()
+                head = (repo / '.git/HEAD').read_bytes()
+                safe, inspected = fixture.inspect(world, command, repo)
+                path = ('projectbrief.md' if kind == 'context' else
+                        next(path for path in native if path.startswith('topics/')))
+                request = fixture.review_request(world, command, source, repo, inspected, native,
+                                                 pending_paths=(path,))
+                source_id = next(row['source_id'] for row in inspected['manifest']['sources']
+                                 if row['path'] == path)
+                unit = next(row for row in request['unit_map']['units']
+                            if row['source_ranges'][0]['source_id'] == source_id)
+                self.assertEqual(unit['semantic_kind'], 'unadmitted-source')
+                if kind == 'context':
+                    self.assertIsNone(unit['existing_record'])
+                else:
+                    metadata, _ = fixture.unpack(originals[path].decode('utf-8'))
+                    self.assertEqual(unit['existing_record'], {'id': metadata['id'], 'version': metadata['version']})
+                    self.assertEqual(metadata['status'], 'active')
+                unit['reason'] = 'Move existing guidance to private pending material to fit the recovered layout'
+                review = request['review']
+                review['unit_map_sha256'] = fixture.sha(fixture.encoded(request['unit_map']))
+                review['intended_files_sha256'] = fixture.sha(fixture.encoded(request['intended_files']))
+                decision = next(row for row in review['unit_decisions'] if row['unit_id'] == unit['unit_id'])
+                decision['disposition'] = unit['disposition']
+                decision['rationale'] = unit['reason']
+                result = fixture.call(world, command, 'prepare', '--repo', repo,
+                    '--operation', safe['operation_id'], '--input', fixture.save(world, request),
+                    '--output', world.inside('demotion-proposal.json'), expected=1)
+                self.assertEqual(result['failure_code'], 'pending-evidence-or-state')
+                self.assertEqual(result['state'], 'pending')
+                self.assertFalse(result['canonical_writes_performed'])
+                self.assertFalse(result['canonical_mutation_may_have_occurred'])
+                self.assertEqual({p.relative_to(bank).as_posix(): p.read_bytes()
+                                  for p in bank.rglob('*') if p.is_file()}, originals)
+                self.assertEqual((repo / '.git/index').read_bytes(), index)
+                self.assertEqual((repo / '.git/HEAD').read_bytes(), head)
+                self.assertEqual(feature.read_text(), 'Staged unrelated work\n')
+                self.assertFalse((bank / '.agent-memory-transaction.md').exists())
+                self.assertFalse((bank / '.agent-memory-recovery.md').exists())
+                _, prepared = fixture.prepare(world, command, source, repo, inspected, native)
+                self.assertFalse(prepared['canonical_writes_performed'])
+
     def test_changed_source_or_metadata_invalidates_apply_before_any_canonical_replacement(self):
         for change in ('bytes', 'mode', 'index'):
             with self.subTest(change=change), World() as world:

@@ -7,6 +7,7 @@ from pathlib import Path
 import subprocess
 import sys
 import unittest
+from unittest.mock import patch
 import uuid
 
 from world import World
@@ -49,12 +50,18 @@ class MixedPrivateCapabilities(unittest.TestCase):
                 return (snapshot(bank), snapshot(directory), snapshot(world.paths['config']),
                         (repo / '.git/index').read_bytes(), world.git('rev-parse', 'HEAD', cwd=repo).stdout,
                         {row['source_id']: (directory / row['blob']).read_bytes()
-                         for row in inspected['manifest']['sources']})
+                         for row in inspected['manifest']['sources']},
+                        snapshot(world.paths['state']))
             before = preserved()
+            registry_key = 'agent-memory/omp-banks.json'
+            self.assertNotIn(registry_key, before[2])
             target_before = snapshot(root)
             variants = []
             wrong = copy.deepcopy(attestation)
             wrong['declared_invocation_routes'].remove(str(root / 'extensions/agent-memory.ts'))
+            variants.append(envelope(wrong))
+            wrong = copy.deepcopy(attestation)
+            wrong['declared_invocation_routes'].remove(str(root / 'skills/agent-memory'))
             variants.append(envelope(wrong))
             wrong = copy.deepcopy(attestation)
             wrong['bank_path'] = str(repo / 'foreign-bank')
@@ -81,7 +88,20 @@ class MixedPrivateCapabilities(unittest.TestCase):
             self.assertTrue(result['verified'])
             test_omp_boundary.NativeLifecyclePublic().extension(result['receipt'])
             self.assertEqual(snapshot(bank), before[0])
-            self.assertEqual(snapshot(world.paths['config']), before[2])
+            config_after = snapshot(world.paths['config'])
+            self.assertEqual(set(config_after) - set(before[2]), {registry_key})
+            self.assertEqual({key: value for key, value in config_after.items()
+                              if key != registry_key}, before[2])
+            self.assertEqual(config_after[registry_key]['mode'], 0o600)
+            base = directory.parent.parent
+            self.assertEqual(json.loads((world.paths['config'] / registry_key).read_bytes()), {
+                'schema': 'agent-memory/omp-bank-registry-v1',
+                'repositories': [str(repo.resolve())],
+                'private_bases': {str(repo.resolve()): str(base)}})
+            self.assertEqual(json.loads((base / 'omp-bank-binding-v1.json').read_bytes()), {
+                'schema': 'agent-memory/omp-bank-binding-v1',
+                'repository': str(repo.resolve()), 'bank_path': str(bank.resolve()),
+                'private_base': str(base), 'project_id': inspected['manifest']['project_id']})
             self.assertEqual((repo / '.git/index').read_bytes(), before[3])
             self.assertEqual(world.git('rev-parse', 'HEAD', cwd=repo).stdout, before[4])
             self.assertEqual({row['source_id']: (directory / row['blob']).read_bytes()
@@ -331,6 +351,7 @@ class MixedPrivateCapabilities(unittest.TestCase):
             base = directory.parent.parent
             marker = base / 'turn-sources-compat-v1.json'
             self.assertTrue(marker.is_file())
+            retained_native_sources = snapshot(base / 'omp-source-v1')
             originals = {row['source_id']: (directory / row['blob']).read_bytes()
                          for row in inspected['manifest']['sources']}
             check = lifecycle.public(world, receipt, 'update', '--check')
@@ -349,7 +370,9 @@ class MixedPrivateCapabilities(unittest.TestCase):
             self.assertTrue(recovered['verified'])
             lifecycle.extension(receipt)
             checked = lifecycle.public(world, receipt, 'update', '--check')
-            self.assertEqual(checked['private_compatibility']['required_capabilities'], ['layout-frontier-v1'])
+            self.assertTrue(checked['check_complete'])
+            self.assertTrue(recovered['stored_source_activation']['verified'])
+            restored_marker = marker.read_bytes()
             old = v014_runtime_fixture.extract(legacy.root)
             before_candidate = (snapshot(bank), snapshot(directory), snapshot(world.paths['config']),
                                 owned(receipt), (repo / '.git/index').read_bytes(),
@@ -360,7 +383,7 @@ class MixedPrivateCapabilities(unittest.TestCase):
             self.assertEqual((snapshot(bank), snapshot(directory), snapshot(world.paths['config']),
                               owned(receipt), (repo / '.git/index').read_bytes(),
                               world.git('rev-parse', 'HEAD', cwd=repo).stdout), before_candidate)
-            self.assertFalse(marker.exists())
+            self.assertEqual(marker.read_bytes(), restored_marker)
             admission, transaction, _ = recovery.admission_proposal(world, command, pack, repo, bank,
                                                                     inspected, full=True)
             result = recovery.public(world, command, 'admission', 'apply', '--proposal', admission)
@@ -371,6 +394,12 @@ class MixedPrivateCapabilities(unittest.TestCase):
             self.assertEqual({row['source_id']: (directory / row['blob']).read_bytes()
                               for row in inspected['manifest']['sources']}, originals)
             self.assertTrue(lifecycle.public(world, receipt, 'uninstall', '--omp-writers-quiesced')['verified'])
+            self.assertFalse(marker.exists())
+            self.assertTrue(list((base / 'omp-drains').glob('*.json')))
+            self.assertEqual(snapshot(base / 'omp-source-v1'), retained_native_sources)
+            with patch.dict(os.environ, world.env, clear=True):
+                self.assertEqual(test_omp_boundary.transport.list_pending(repo)['pending'], [])
+                self.assertEqual(test_omp_boundary.boundary.required_source_capabilities(repo), set())
             # Install the byte-verified old archive separately; retained v2
             # ownership is not silently handed to an unaware installer.
             installed = legacy.run([sys.executable, '-I', '-B', old / 'scripts/installer.py', 'install',
@@ -487,6 +516,7 @@ print(json.dumps(results))
             lifecycle = test_omp_boundary.NativeLifecyclePublic()
             _, _, receipt = lifecycle.managed(world)
             repo, bank, _ = recovery.memory(world)
+            self.assertTrue(lifecycle.public(world, receipt, 'recover')['verified'])
             feature = repo / 'feature.txt'
             feature.write_text('Disposable independent feature baseline.\n')
             world.git('add', 'feature.txt', cwd=repo)

@@ -162,7 +162,12 @@ def inspect(repo):
 def preview(repo, value, *, prepare=False):
     value = input_value(value)
     from . import recovery_frontier
+    # Pin attribution before bank discovery can block on repository resolution.
+    developer = identity.principal(repo)
     context = recovery_frontier.require_scope(repo)
+    if (context['developer_id'] != developer['developer_id']
+            or context['developer_sha256'] != developer['observed_sha256']):
+        raise ContractError('Developer identity changed during checkpoint resolution; retain original provenance and prepare again')
     current = inspect(repo)
     if current['observed_active_sha256'] != value['observed_active_sha256']:
         raise ContractError('Active context changed or was not read; inspect it and preserve compatible evidence before a fresh proposal')

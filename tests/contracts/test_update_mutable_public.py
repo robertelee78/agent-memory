@@ -61,7 +61,7 @@ class MutableUpdateCompatibility(unittest.TestCase):
                 self.assertEqual(child.returncode,0,stdout+stderr); self.assertTrue(result['verified'])
                 self.assertEqual(result['receipt']['source']['revision'],new_revision)
                 self.assertEqual(self.inspect_repo(world,repo),observed)
-                print(json.dumps({'case':kind,'exit':child.returncode,'verified':True,'project_state_preserved':True}),flush=True)
+                print(json.dumps({'case':kind,'exit':child.returncode,'verified':True,'project_state_preserved':True}),flush=True,file=sys.stderr)
                 return
             self.assertEqual(child.returncode,1,stdout+stderr)
             self.assertFalse(result['verified'])
@@ -92,7 +92,7 @@ class MutableUpdateCompatibility(unittest.TestCase):
             self.assertEqual(owned(receipt),before_targets,'trusted recovery failed to restore owned targets')
             if kind=='lock': self.assertIn('idle bank',result['error'])
             print(json.dumps({'case':kind,'exit':child.returncode,'error':result['error'],
-                'repair':result['repair'],'changed_project_state_preserved':True,'trusted_recovery_restored_receipt_and_targets':True}),flush=True)
+                'repair':result['repair'],'changed_project_state_preserved':True,'trusted_recovery_restored_receipt_and_targets':True}),flush=True,file=sys.stderr)
 
     def test_changed_head_is_reobserved(self):self.exercise('head')
     def test_changed_index_is_reobserved(self):self.exercise('index')

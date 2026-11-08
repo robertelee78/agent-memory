@@ -1,7 +1,7 @@
 ---
 name: agent-memory
 description: Maintain a repository's shared Markdown memory across sessions, worktrees and machines; use to initialize, resume, recall, capture durable project learning, correct, forget or checkpoint memory.
-metadata: {"version": "0.0.14"}
+metadata: {"version": "0.0.15"}
 ---
 
 # Agent memory
@@ -14,8 +14,9 @@ The words MUST, MUST NOT, SHOULD and MAY carry their RFC 2119 meanings in this
 file and its linked guides. A session MUST resolve `SKILL_DIR` to the directory
 containing this file before using a packaged script. Use the installed `am` command
 when available. For packaged scripts, a session MUST use the documented
-interpreter launcher or Python 3.11 or later with both `-I` and `-B`. Installed
-`am` and client hooks select a supported interpreter. If an older system Python
+helper commands with Python 3.11 or later in isolated mode. Each documented helper
+disables bytecode writes and isolates its cache before importing package code.
+Installed `am` and client hooks select a supported interpreter. If an older system Python
 appears first on PATH, put a supported Python first before running the examples.
 
 A session MUST NOT use ad hoc bare-Python imports of a managed AM installation

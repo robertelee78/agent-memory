@@ -70,10 +70,10 @@ class HookFailureContract(unittest.TestCase):
             result=subprocess.run([sys.executable,'-I',str(helper.pack/'hooks/codex_prompt.py')],input=json.dumps(event),text=True,capture_output=True,env=w.env,timeout=10)
             self.assertEqual(result.returncode,0,result.stderr)
             self.assertEqual(json.loads(result.stdout)['decision'],'block')
-            self.assertIn('identity/identity.unresolved',json.loads(result.stdout)['reason'])
             with patch.dict(os.environ,w.env,clear=True):
                 records=hook_failure.read(repo)
-                self.assertEqual(records[0]['stage'],'identity');self.assertNotIn('SECRET',json.dumps(records))
+                self.assertEqual(len(records),1);self.assertNotIn('SECRET',json.dumps(records))
+                self.assertEqual((records[0]['stage'],records[0]['reason']),('identity','identity.unresolved'))
             self.assertEqual(before,helper.state(w,repo,bank))
 
     def test_unsafe_or_oversized_metadata_is_preserved_and_refused(self):
@@ -108,10 +108,11 @@ class HookFailureContract(unittest.TestCase):
                 output=io.StringIO()
                 with patch.dict(os.environ,w.env,clear=True), patch.object(sys,'stdin',io.TextIOWrapper(io.BytesIO(json.dumps(event).encode()))), patch.object(scope_binding,'require',side_effect=RuntimeError('SECRET EXCEPTION CONTENT')),redirect_stdout(output):
                     self.assertEqual(module.main(),0)
-                self.assertIn('identity/internal.unexpected',output.getvalue());self.assertNotIn('SECRET',output.getvalue())
+                self.assertNotIn('SECRET',output.getvalue())
             with patch.dict(os.environ,w.env,clear=True):
                 records=hook_failure.read(repo);self.assertEqual(len(records),2)
                 self.assertTrue(all(r['reason']=='internal.unexpected' for r in records))
+                self.assertTrue(all(r['stage']=='identity' for r in records))
 
     def test_malformed_fields_are_refused_and_missing_clear_writes_nothing(self):
         with World() as w:

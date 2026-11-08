@@ -49,8 +49,29 @@ class RuntimeUninstallContract(unittest.TestCase):
                             self.assertEqual(recovered.returncode, 1 if edited else 0, recovered.stdout)
                             self.assertEqual(snapshot(path), hook_after)
                             if edited:
-                                self.assertNotEqual(json.loads((receipt_path(world).parent/'journal.json').read_text())['status'],
-                                                    'complete')
+                                retried = world.run([sys.executable, '-I', ROOT/'scripts/installer.py', 'recover'],
+                                                    check=False)
+                                self.assertEqual(retried.returncode, 1, retried.stdout + retried.stderr)
+                                self.assertFalse(json.loads(retried.stdout)['verified'])
+                                self.assertEqual(snapshot(path), hook_after)
+                                state = receipt_path(world).parent
+                                pending = (state/'journal.json').read_bytes()
+                                refused = uninstall(world, receipt, source=True, expected=1)
+                                self.assertFalse(refused['verified'])
+                                self.assertEqual(snapshot(path), hook_after)
+                                self.assertEqual((state/'journal.json').read_bytes(), pending)
+                                installed = world.run([sys.executable, '-I', ROOT/'scripts/installer.py', 'install',
+                                    '--remote', receipt['source']['remote'], '--ref', receipt['source']['ref'],
+                                    '--mode', 'copy', '--presets', preset])
+                                self.assertTrue(json.loads(installed.stdout)['verified'])
+                                remaining = json.loads(path.read_bytes())
+                                self.assertEqual(remaining['otherToolSetting'], {'preserve': True})
+                                for event in ('UserPromptSubmit', 'Stop'):
+                                    self.assertIn(foreign, remaining['hooks'][event])
+                                    self.assertEqual(len(remaining['hooks'][event]), 2)
+                                self.assertTrue(any(p.read_bytes() == pending for p in state.glob('journal-*.json')))
+                                final = world.run([sys.executable, '-I', ROOT/'scripts/installer.py', 'recover'])
+                                self.assertTrue(json.loads(final.stdout)['verified'])
                                 continue
                         else:
                             result = uninstall(world, receipt)
