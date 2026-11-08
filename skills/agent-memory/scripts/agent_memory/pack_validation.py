@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import argparse
 import ast
+import copy
 import hashlib
 import html
 import json
@@ -26,6 +27,10 @@ LINK = re.compile(r'!?\[([^\]\n]*)\]\((<[^>\n]+>|[^\s)]+)(?:\s+["\'][^\n]*["\'])
 VERSION = re.compile(r'(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)'
                      r'(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?'
                      r'(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?')
+
+# Only static validation is memoized, for one exact root/byte/mode inventory.
+# Every call still freshly traverses and reads the entire physical artifact.
+_last_validation = None
 
 
 class Invalid(ContractError):
@@ -352,9 +357,16 @@ def dispatch(script, files, *, details=False, seen=()):
 
 
 def validate(pack):
+    global _last_validation
     root = Path(pack).resolve(strict=True)
     require(root.is_dir(), 'inventory', '.', 'Pack must be a directory')
     files = inventory(root)
+    key = (str(root), tuple((path, mode, hashlib.sha256(raw).digest())
+                           for path, (raw, mode) in sorted(files.items())))
+    cached = _last_validation
+    if cached is not None and cached[0] == key:
+        require(files == inventory(root), 'changed-pack', '.', 'Pack changed during validation')
+        return copy.deepcopy(cached[1])
     require([p for p in files if Path(p).name == 'SKILL.md'] == ['SKILL.md'],
             'registration', '.', 'Exactly one root SKILL.md is required')
     documents = {}; metadata = {}; shells = {}; bodies = {}
@@ -505,7 +517,7 @@ def validate(pack):
     for path in mandatory:
         visit(path)
     require(files == inventory(root), 'changed-pack', '.', 'Pack changed during validation')
-    return {'schema': 'agent-memory/pack-validation-v1', 'valid': True, 'writes_performed': False,
+    result = {'schema': 'agent-memory/pack-validation-v1', 'valid': True, 'writes_performed': False,
             'candidate_code_executed': False, 'semantic_completeness_verified': False,
             'version': metadata['SKILL.md']['metadata']['version'],
             'files': {p: {'sha256': hashlib.sha256(raw).hexdigest(), 'mode': oct(mode)} for p, (raw, mode) in sorted(files.items())},
@@ -515,6 +527,8 @@ def validate(pack):
                        'Conditioned navigation is distinct from recognized direct mandatory loading sentences.',
                        'Parameter semantics, arbitrary English obligations and behavioral correctness require independent review.',
                        'Documentation refactors also require preserved source, rule/strength/location mapping and actual independent use.']}
+    _last_validation = (key, copy.deepcopy(result))
+    return result
 
 
 def main(argv=None):

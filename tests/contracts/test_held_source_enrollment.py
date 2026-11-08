@@ -192,9 +192,9 @@ class HeldSourceEnrollment(unittest.TestCase):
 
     def test_late_hold_registry_and_ledger_changes_retain_written_source_then_retry(self):
         with World() as world, patch.dict(os.environ, world.env, clear=True):
-            _, repo, bank, operation, directory, original, body = self.fixture(world)
+            helper, repo, bank, operation, directory, original, body = self.fixture(world)
             for target in (bank / '.agent-memory-transaction.md', local_registry.paths('projects')[1],
-                           directory / 'ledger-head.json'):
+                           directory / 'ledger-head.json', helper.pack / 'SKILL.md'):
                 with self.subTest(target=target.name):
                     session, lifecycle, event = uid(), uid(), uid()
                     rendezvous = world.inside('pause-' + event)
@@ -202,7 +202,7 @@ class HeldSourceEnrollment(unittest.TestCase):
                                       'AGENT_MEMORY_FAULT_MODE': 'pause', 'AGENT_MEMORY_FAULT_DIR': str(rendezvous)})
                     script = ('import sys;sys.path.insert(0,sys.argv[1]);from agent_memory import turn_sources as s;'
                               's.register(sys.argv[2],"claude",sys.argv[3],sys.argv[4],"a"*64,native_source_id=sys.argv[5])')
-                    child = world.spawn([sys.executable, '-I', '-B', '-c', script, str(SCRIPTS), repo, session, lifecycle, event])
+                    child = world.spawn([sys.executable, '-I', '-B', '-c', script, str(helper.pack / 'scripts'), repo, session, lifecycle, event])
                     for key in ('AGENT_MEMORY_FAULT_STAGE', 'AGENT_MEMORY_FAULT_MODE', 'AGENT_MEMORY_FAULT_DIR'):
                         world.env.pop(key)
                     ready = rendezvous / 'hold-source-before-final-recheck.ready'
@@ -225,6 +225,8 @@ class HeldSourceEnrollment(unittest.TestCase):
                         updated_index = copy.deepcopy(retained_index)
                         updated_index['operations'][operation]['ledger_head_sha256'] = digest(encoded(updated_head))
                         state.set_index(repo, updated_index, digest(encoded(retained_index)))
+                    elif target.name == 'SKILL.md':
+                        target.write_bytes(retained + b'\nAdditional runtime context.\n')
                     else:
                         changed = json.loads(retained); changed['hold_id'] = uid(); target.write_bytes(encoded(changed))
                     (rendezvous / 'hold-source-before-final-recheck.release').touch()

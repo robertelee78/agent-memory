@@ -6,6 +6,7 @@ from pathlib import Path
 import shutil
 import sys
 import unittest
+from unittest.mock import patch
 
 from world import World
 
@@ -167,6 +168,54 @@ class PortableArtifactContract(unittest.TestCase):
             self.assertNotEqual(mode['artifact_digest'], changed['artifact_digest'])
             self.assertEqual(mode['files']['scripts/artifact.py']['sha256'], changed['files']['scripts/artifact.py']['sha256'])
             self.assertFalse(mode['source_origin_authenticated'])
+
+    def test_repeated_inspection_rechecks_changed_source_modes_and_topology(self):
+        with World() as world:
+            pack = self.copy(world)
+            with patch.object(sys, 'path', [str(PACK / 'scripts'), *sys.path]):
+                from agent_memory import artifact, pack_validation
+            baseline = artifact.inspect(pack)
+            # Returned validation data is caller-owned, never writable authority
+            # for the next inspection of the same physical candidate.
+            returned = pack_validation.validate(pack)
+            returned['files'].clear()
+            returned['guides'].clear()
+            self.assertEqual(artifact.inspect(pack)['artifact_digest'], baseline['artifact_digest'])
+            manual = pack / 'SKILL.md'
+            original = manual.read_bytes()
+            mode = manual.stat().st_mode & 0o777
+            outside = world.inside('same-manual-outside-artifact.md')
+            outside.write_bytes(original)
+            for mutation in ('bytes', 'mode', 'symlink', 'new-file'):
+                with self.subTest(mutation=mutation):
+                    if mutation == 'bytes':
+                        manual.write_bytes(original.replace(b'## Route\n', b'## Missing route\n'))
+                    elif mutation == 'mode':
+                        manual.chmod(0)
+                    elif mutation == 'symlink':
+                        manual.unlink()
+                        manual.symlink_to(outside)
+                    else:
+                        (pack / 'unreachable.md').write_text('# Unreachable instruction\n')
+                    try:
+                        with self.assertRaises(pack_validation.Invalid):
+                            artifact.inspect(pack)
+                    finally:
+                        if manual.is_symlink():
+                            manual.unlink()
+                        if not manual.exists() or mutation == 'bytes':
+                            manual.write_bytes(original)
+                        manual.chmod(mode)
+                        if mutation == 'new-file':
+                            (pack / 'unreachable.md').unlink()
+                    self.assertEqual(artifact.inspect(pack)['artifact_digest'], baseline['artifact_digest'])
+            executable = pack / 'scripts/artifact.py'
+            old_mode = executable.stat().st_mode & 0o777
+            executable.chmod(old_mode ^ 0o100)
+            changed = artifact.inspect(pack)
+            self.assertNotEqual(changed['artifact_digest'], baseline['artifact_digest'])
+            self.assertEqual(changed['files']['scripts/artifact.py']['sha256'],
+                             baseline['files']['scripts/artifact.py']['sha256'])
 
 
 if __name__ == '__main__':
