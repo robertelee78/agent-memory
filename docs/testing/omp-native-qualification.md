@@ -322,9 +322,14 @@ misbound source evidence still refuses. A detached finite worker may remain a
 live child throughout the session: child-process quiescence is not required.
 Instead the driver enumerates the complete joined public pending inventory and
 checks actual per-instance contiguous received attempts and terminal outcomes.
-A verified full seal must cover the current stored native leaf; unresolved
-execution/coverage qualifiers remain pending (an otherwise healthy open stream
-is expected). These receipts prove received work, not an unseen producer queue.
+A verified full seal must cover the current stored native leaf. The pinned 18.16
+public selector semantics honor explicit `activeLeafId` (including null), otherwise
+an entry selects itself; an unavailable selected ID falls back to the newest
+self-selecting entry. Physically later usage/background entries are not assumed
+to be the active leaf. OPEN repository identity compares canonical paths, including
+the macOS `/tmp` alias. Unresolved execution/coverage qualifiers remain pending
+(an otherwise healthy open stream is expected). These receipts prove received
+work, not an unseen producer queue.
 It rechecks the latest native settled state and both answer counts after late
 frames; an earlier settled response cannot qualify a later duplicate or unsettled session.
 The report retains source/binary/receipt identity and current human observation

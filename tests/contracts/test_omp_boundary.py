@@ -1328,6 +1328,24 @@ for line in sys.stdin:
                 smoke.current_stream_outcomes(repo, session, native_file, status, world.env, [qualifier])
             self.assertEqual(smoke.current_stream_outcomes(repo, session, native_file, status, world.env,
                 [{'qualification': {'session': session, 'code': 'open-stream'}}]), evidence)
+            # Physically late native usage/background records keep an explicitly
+            # selected earlier leaf. They cannot make a healthy seal falsely pending.
+            late = [dict(NativeSources().entry('late-background', 'assistant', 'Off-branch context.'),
+                         activeLeafId='stream-human'),
+                    {'type': 'model_usage', 'id': 'late-usage', 'parentId': 'stream-human',
+                     'activeLeafId': 'stream-human'}]
+            native_file.write_text(native_file.read_text() + ''.join(json.dumps(entry) + '\n' for entry in late))
+            self.assertEqual(smoke.current_stream_outcomes(repo, session, native_file, status, world.env, []), evidence)
+            # Exercise the actual /tmp alias on macOS; elsewhere a lexical dot
+            # component still requires canonical comparison against OPEN.repo_root.
+            alias = Path('/tmp') / repo.relative_to('/private/tmp') if str(repo).startswith('/private/tmp/') else repo / '.'
+            self.assertEqual(smoke.current_stream_outcomes(alias, session, native_file, status, world.env, []), evidence)
+            records = [human, *late]
+            self.assertEqual(smoke.current_native_leaf(records), 'stream-human')
+            self.assertIsNone(smoke.current_native_leaf([*records,
+                {'type': 'custom', 'id': 'explicit-null', 'parentId': None, 'activeLeafId': None}]))
+            self.assertEqual(smoke.current_native_leaf([*records,
+                {'type': 'custom', 'id': 'dangling', 'parentId': None, 'activeLeafId': 'missing'}]), 'stream-human')
             native_file.write_text(native_file.read_text() + json.dumps(
                 NativeSources().entry('uncaptured-leaf', 'assistant', 'Later source.')) + '\n')
             with self.assertRaises(smoke.PendingObservations):

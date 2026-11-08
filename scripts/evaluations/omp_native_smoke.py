@@ -176,6 +176,24 @@ def current_observations(am, repo, root, session, session_file, prompts, status,
     return evidence
 
 
+def current_native_leaf(stored):
+    """Pinned 18.16 session-entries public leaf-selector semantics, not file adjacency."""
+    entries = [entry for entry in stored if entry.get('type') not in {'session', 'title'}]
+    ids = set(); leaf = None; newest_self_selected = None
+    for entry in entries:
+        identifier = entry.get('id')
+        if not isinstance(identifier, str) or not identifier or identifier in ids:
+            raise RuntimeError('Stored native entry identity is unavailable or duplicated')
+        ids.add(identifier)
+        selected = entry['activeLeafId'] if 'activeLeafId' in entry else identifier
+        if selected is not None and (not isinstance(selected, str) or not selected):
+            raise RuntimeError('Stored native active leaf identity is malformed')
+        leaf = selected
+        if selected == identifier:
+            newest_self_selected = identifier
+    return newest_self_selected if leaf is not None and leaf not in ids else leaf
+
+
 def current_stream_outcomes(repo, session, session_file, status, env, pending):
     """Read counted receipts, not process-child liveness, after public inventory validation."""
     for row in pending:
@@ -189,13 +207,13 @@ def current_stream_outcomes(repo, session, session_file, status, env, pending):
     base = state / 'writes' / hashlib.sha256(str(bank).encode()).hexdigest()
     directory = base / 'omp-stream-v1' / hashlib.sha256(session.encode()).hexdigest()
     stored = [json.loads(line) for line in Path(session_file).read_text().splitlines() if line.strip()]
-    native_ids = [entry['id'] for entry in stored if entry.get('type') not in {'session', 'title'} and entry.get('id')]
-    if not native_ids:
+    leaf = current_native_leaf(stored)
+    if leaf is None:
         raise PendingObservations('Current stored native leaf is unavailable')
     evidence = []; covered = False
     for opened_path in sorted(directory.glob('*/open.json')):
         opened = json.loads(opened_path.read_text())
-        if opened.get('session') != session or opened.get('repo_root') != str(repo):
+        if opened.get('session') != session or opened.get('repo_root') != str(Path(repo).resolve()):
             raise RuntimeError('Finite stream is bound to a foreign native session/repository')
         instance = opened['instance_id']
         if opened_path.parent.name != instance:
@@ -219,7 +237,7 @@ def current_stream_outcomes(repo, session, session_file, status, env, pending):
             identity = attempt.get('identity') or {}
             if (attempt.get('action') == 'seal' and attempt.get('source_kind') == 'session-manager'
                     and identity.get('kind') in {'baseline', 'delta'}
-                    and identity.get('leaf_id') == native_ids[-1]):
+                    and identity.get('leaf_id') == leaf):
                 covered = True
         evidence.append({'instance_id': instance, 'received_sequence': len(attempts),
                          'terminal_sequence': len(attempts)})

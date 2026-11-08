@@ -55,6 +55,15 @@ Apply rechecks the reader receipt, all targets, the bank frontier and the
 reviewed routes under the source barriers. No separate reader selection is
 needed only when the complete private-state union is genuinely empty.
 
+For an owned native binding, the session MUST stop its AM writers and explicitly
+pass `--omp-writers-quiesced` to preview and apply. Drain verifies both the
+historical source proof and the separate `omp-stream-drain-v1` proof before
+removing the compatibility marker. It MUST preserve the old proof format for
+older readers and retain stream evidence after removal. An open stream,
+unresolved source, unknown attempt or sticky `startup-incomplete` record MUST
+keep drain pending; stopping a process alone is not proof of coverage. The
+session MUST NOT delete such records or the marker to force removal.
+
 
 
 
