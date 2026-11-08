@@ -211,7 +211,6 @@ class Model:
     def retain(self, path, value):
         """Write each transport artifact once and cache its exact byte digest."""
         raw = (json.dumps(value, indent=2, sort_keys=True, allow_nan=False) + '\n').encode('utf-8')
-        self.artifacts[path] = {'path': path, 'sha256': digest(raw)}
         with path.open('xb') as stream:
             os.fchmod(stream.fileno(), 0o600)
             stream.write(raw)
@@ -222,6 +221,7 @@ class Model:
             os.fsync(fd)
         finally:
             os.close(fd)
+        self.artifacts[path] = {'path': path, 'sha256': digest(raw)}
 
     def retained_pointer(self, root, path):
         artifact = self.artifacts[path]
@@ -248,8 +248,8 @@ class Model:
             self.tokenization_attempts.append(attempt)
             answer = request(self.base + '/tokenize', '', body)
             response = self.root / ('tokenization-response-' + str(token_ordinal) + '.json')
-            attempt['response'] = response
             self.retain(response, answer)
+            attempt['response'] = response
             tokens = answer['body'].get('tokens')
             if answer['status'] != 200 or not isinstance(tokens, list):
                 raise ValueError('Actual native tokenizer unavailable; no nontruncation assurance')
