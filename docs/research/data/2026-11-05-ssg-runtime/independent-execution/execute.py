@@ -309,9 +309,8 @@ def delivery_accounting(root, prepared, document_sends, profile_sha, *, complete
                          'completion': 'embedding-complete' if index < len(document_sends)
                              else 'transport-outcome-unconfirmed'})
         offset += len(batch)
-    coverage_path = prepared['root'] / ('vector-coverage.json' if complete else 'planned-coverage.json')
     value = {'schema': 'am255/generation-delivery-ledger-v2', 'profile_sha256': profile_sha,
-             'coverage': pointer(root, coverage_path), 'documents_complete': complete,
+             'coverage': prepared['vector_coverage' if complete else 'planned_coverage'], 'documents_complete': complete,
              'pending_batches': len(prepared['batches']) - len(attempted),
              'pending_embedding_requests': len(attempted) - len(document_sends),
              'requests': requests, 'erasure': {'executed': False,
@@ -336,14 +335,14 @@ def source_coverage(prepared, profile_sha, store_hash=None):
 
 def tokenization_accounting(root, prepared, model, profile_sha):
     """Bind tokenizer disclosure independently of later embedding completion."""
-    attempts = [{'request': pointer(root, attempt['request']),
-                 'response': pointer(root, attempt['response']) if attempt['response'] is not None else None,
+    attempts = [{'request': model.retained_pointer(root, attempt['request']),
+                 'response': model.retained_pointer(root, attempt['response']) if attempt['response'] is not None else None,
                  'outcome': 'response-recorded' if attempt['response'] is not None
                      else 'transport-outcome-unconfirmed'}
                 for attempt in model.tokenization_attempts]
     path = prepared['root'] / 'tokenization-ledger.json'
     save(path, {'schema': 'am255/provider-tokenization-ledger-v1', 'profile_sha256': profile_sha,
-                'attempts': attempts, 'embedding_requests': [pointer(root, path) for path in model.requests]})
+                'attempts': attempts, 'embedding_requests': [model.retained_pointer(root, path) for path in model.requests]})
     return pointer(root, path)
 
 
@@ -368,9 +367,9 @@ def finalize_size(root, prepared, model, graph, documents_complete, document_sen
             if not documents_complete:
                 for artifact in result['generation_artifacts']:
                     artifact.pop('vector_store', None)
-                    artifact['coverage'] = pointer(root, work / 'planned-coverage.json')
-                attempted = [pointer(root, path) for path in model.requests
-                             if load(path).get('kind') == 'documents']
+                    artifact['coverage'] = prepared['planned_coverage']
+                attempted = [model.retained_pointer(root, path) for path in model.requests
+                             if model.request_kinds[path] == 'documents']
                 result['delivery_ledger'] = delivery_accounting(
                     root, prepared, document_sends, profile_sha, complete=False, attempted_requests=attempted)
                 result['missing_prerequisites'].append({
@@ -445,8 +444,9 @@ def run_size(root, prepared, fixtures, inputs, spec, config, profile, run_id):
     store = None
     documents_complete = False
     save(work / 'planned-coverage.json', source_coverage(prepared, profile_sha))
+    prepared['planned_coverage'] = pointer(root, work / 'planned-coverage.json')
     for artifact in result['generation_artifacts']:
-        artifact['coverage'] = pointer(root, work / 'planned-coverage.json')
+        artifact['coverage'] = prepared['planned_coverage']
     result['delivery_ledger'] = delivery_accounting(root, prepared, [], profile_sha, complete=False)
     result['tokenization_accounting'] = tokenization_accounting(root, prepared, model, profile_sha)
     failures = []
@@ -457,6 +457,7 @@ def run_size(root, prepared, fixtures, inputs, spec, config, profile, run_id):
         model.start()
         store = VectorStore(work / 'vectors.f32', len(prepared['ordered']))
         offset = 0
+        document_counts = {}
         for batch in prepared['batches']:
             # Recheck canonical source eligibility/security before each batch; no
             # scoring canary names participate in selection or provider filtering.
@@ -467,17 +468,20 @@ def run_size(root, prepared, fixtures, inputs, spec, config, profile, run_id):
                     raise ValueError('Canonical provider gate changed before document send')
             texts = [prepared['texts'][r['rendered_sha256']].decode('utf-8') for r in batch]
             values, request_path, costs = model.embed(texts, 'documents', sorted({k for r in batch for k in r['source_keys']}))
-            document_sends.append(pointer(root, request_path))
+            document_sends.append(model.retained_pointer(root, request_path))
             for index, vector in enumerate(values, offset):
                 store.put(index, vector)
             offset += len(batch)
-            result['delivery_ledger'] = delivery_accounting(root, prepared, document_sends, profile_sha, complete=False)
-            result['tokenization_accounting'] = tokenization_accounting(root, prepared, model, profile_sha)
+            gid = batch[0]['first_generation']
+            document_counts[gid] = document_counts.get(gid, 0) + len(batch)
         store_hash = store.finish()
         save(work / 'vector-coverage.json', source_coverage(prepared, profile_sha, store_hash))
+        prepared['vector_coverage'] = pointer(root, work / 'vector-coverage.json')
+        vector_store_pointer = {'path': (work / 'vectors.f32').relative_to(root).as_posix(),
+                                'sha256': store_hash}
         for artifact in result['generation_artifacts']:
-            artifact['vector_store'] = pointer(root, work / 'vectors.f32')
-            artifact['coverage'] = pointer(root, work / 'vector-coverage.json')
+            artifact['vector_store'] = vector_store_pointer
+            artifact['coverage'] = prepared['vector_coverage']
         result['delivery_ledger'] = delivery_accounting(root, prepared, document_sends, profile_sha)
         documents_complete = True
         templates = load(HERE / 'executor_templates.json')
@@ -503,7 +507,7 @@ def run_size(root, prepared, fixtures, inputs, spec, config, profile, run_id):
                             'executed': state_prerequisite is None, 'prerequisite': state_prerequisite,
                             'generation_id': bank.generation_id, 'delivery_ledger': result['delivery_ledger'],
                             'document_sends': actual, 'reused_document_requests': reused, 'query_send': None,
-                            'documents_sent': sum(len(load(root / p['path'])['rendered_sha256']) for p in actual),
+                            'documents_sent': document_counts.get(bank.generation_id, 0),
                             'queries_sent': 0,
                             'task_evidence': {'executed': False, 'prerequisite': 'Finalized actual owned-server task logs are attached after process stop'}}
                 costs = {}
@@ -530,7 +534,7 @@ def run_size(root, prepared, fixtures, inputs, spec, config, profile, run_id):
                                 stream.flush()
                                 os.fsync(stream.fileno())
                             query_vectors[h] = persisted.tolist()
-                            query_sends[h] = pointer(root, path)
+                            query_sends[h] = model.retained_pointer(root, path)
                         domain = [(bank.sources[row['path']], generation['vector_rows'][row['key']]) for row in native['eligible']]
                         began = time.monotonic()
                         exact = store.rank(domain, query_vectors[h])

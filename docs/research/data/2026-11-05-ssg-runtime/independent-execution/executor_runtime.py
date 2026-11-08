@@ -162,6 +162,7 @@ class Model:
         self.process = None
         self.traces, self.requests = [], []
         self.tokenization_attempts = []
+        self.artifacts, self.request_kinds = {}, {}
         self.parser = serving_parser()
         self.alias = 'qwen3-embedding-8b-q8_0-d20ddc71e8a5'
         self.base = 'http://127.0.0.1:' + str(free_port())
@@ -207,6 +208,25 @@ class Model:
         self.parser.loaded_closure(self.root, 'fork', {
             'servers': {'fork': {'local_library_inventory': inventory}}})
 
+    def retain(self, path, value):
+        """Write each transport artifact once and cache its exact byte digest."""
+        raw = (json.dumps(value, indent=2, sort_keys=True, allow_nan=False) + '\n').encode('utf-8')
+        self.artifacts[path] = {'path': path, 'sha256': digest(raw)}
+        with path.open('xb') as stream:
+            os.fchmod(stream.fileno(), 0o600)
+            stream.write(raw)
+            stream.flush()
+            os.fsync(stream.fileno())
+        fd = os.open(path.parent, os.O_RDONLY | os.O_DIRECTORY)
+        try:
+            os.fsync(fd)
+        finally:
+            os.close(fd)
+
+    def retained_pointer(self, root, path):
+        artifact = self.artifacts[path]
+        return {'path': artifact['path'].relative_to(root).as_posix(), 'sha256': artifact['sha256']}
+
     def embed(self, texts, kind, source_keys, case_ordinal=None):
         if self.process is None or self.process.poll() is not None:
             raise RuntimeError('Only this exact live owned model may receive synthetic inputs')
@@ -219,7 +239,7 @@ class Model:
             token_ordinal = len(self.tokenization_attempts) + 1
             intent = self.root / ('tokenization-attempt-' + str(token_ordinal) + '.json')
             body = {'content': text, 'add_special': True}
-            save(intent, {'schema': 'am255/provider-tokenization-attempt-v1',
+            self.retain(intent, {'schema': 'am255/provider-tokenization-attempt-v1',
                 'purpose': 'document-tokenization' if kind == 'documents' else 'query-tokenization',
                 'kind': kind, 'embedding_request_ordinal': ordinal, 'text_index': i,
                 'batch_rendered_sha256': rendered_hashes, 'batch_source_keys': source_keys,
@@ -228,8 +248,8 @@ class Model:
             self.tokenization_attempts.append(attempt)
             answer = request(self.base + '/tokenize', '', body)
             response = self.root / ('tokenization-response-' + str(token_ordinal) + '.json')
-            save(response, answer)
             attempt['response'] = response
+            self.retain(response, answer)
             tokens = answer['body'].get('tokens')
             if answer['status'] != 200 or not isinstance(tokens, list):
                 raise ValueError('Actual native tokenizer unavailable; no nontruncation assurance')
@@ -237,15 +257,16 @@ class Model:
         if any(n > 8192 for n in counts) or sum(counts) > 8192:
             raise ValueError('Frozen batch token budget exceeds context/aggregate8192; never truncate or silently reschedule')
         sent = {'request_ordinal': ordinal, 'kind': kind, 'source_keys': source_keys,
-                'rendered_sha256': [digest(t.encode('utf-8')) for t in texts], 'token_counts': counts,
+                'rendered_sha256': rendered_hashes, 'token_counts': counts,
                 'case_ordinal': case_ordinal, 'body': {'input': texts, 'model': self.alias, 'encoding_format': 'float'}}
         if kind == 'query':
             sent['query_sha256'] = sent['rendered_sha256'][0]
         path = self.root / ('request-' + str(ordinal) + '.json')
-        save(path, sent)
+        self.retain(path, sent)
         self.requests.append(path)
+        self.request_kinds[path] = kind
         answer = request(self.base + '/v1', '/embeddings', sent['body'], timeout=600)
-        save(self.root / ('response-' + str(ordinal) + '.json'), answer)
+        self.retain(self.root / ('response-' + str(ordinal) + '.json'), answer)
         validate(answer, self.alias, len(texts), 4096)
         self.traces.append({'name': path.name, 'expected_rows': len(texts),
                             'input_sha256': digest(compact(texts).encode())})

@@ -1100,7 +1100,9 @@ def score_case(case, observation, store, generation, catalog, profile_hash, orac
         if native['request_valid'] and not native.get('prerequisite') and (native.get('crosscheck') or {}).get('matched') is not True:
             failures.append('Native evaluate_sources crosscheck absent/unmatched')
         truth = case['context_truth']
-        require(generation.get('mutation') == truth['mutation'] and generation.get('stage') == truth['stage'],
+        expected_generation = ((truth['mutation'], 'after-rebuild')
+                               if truth['stage'] == 'after-rebuild' else (None, None))
+        require((generation.get('mutation'), generation.get('stage')) == expected_generation,
                 'Canonical mutation/stage differs from requested case transition')
         if native.get('prerequisite'):
             require(not observation['semantic']['executed'] and not observation['typed']['executed'],
