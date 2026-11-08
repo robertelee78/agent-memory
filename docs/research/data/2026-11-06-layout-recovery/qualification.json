@@ -138,6 +138,50 @@
       "limits": "Original30/60second children and300second worker; no increase",
       "independent_review": "Claude Opus5.5 exact driver source PASS before execution and scoped actual-outcome acceptance for these two runs; not whole #244/native/Linux/CI acceptance",
       "scope": "Actual installed public managed lifecycle and ordinary admission with controlled finite observer source. Two actual interpreter cells on one OS only; no stock omp/provider callback, Linux, whole #244 or signed-release inference."
+    },
+    {
+      "group": "guidance-demotion-refusal-and-resolved-publication-handoff",
+      "recorded_date_utc": "2026-11-08",
+      "source_state": "Uncommitted corrective source, bound by complete source-before inventory; not retroattested to an unchanged commit",
+      "source_inventory_sha256": "17f844517c3cec595268c86bc07ab4cad9b5e7a5ffdfa4f4605a338d1f14937e",
+      "test_source_sha256": {
+        "tests/contracts/test_layout_recovery.py": "6925513e1db0a614d0c20705bb880141fdd3b260580fdd6889ee8573e6c2ed7b",
+        "tests/contracts/test_layout_recovery_resolved_publication.py": "4c5fea3b9e62dd58d56f1bb847548b7a385e22dd074607d77ec1ad5106d37539",
+        "tests/contracts/test_checkpoint.py": "569430266cfcec249a689950f8f29c175eb490e6e8607469ea7a200d5b05e3d0"
+      },
+      "cells": [
+        {
+          "suite": "layout-recovery-no-guidance-demotion",
+          "exit": 0,
+          "methods": 1,
+          "skipped": 0,
+          "elapsed_seconds": 10.73300358292181,
+          "receipt_sha256": "3153fb1e2944b706d57aa17d1f09725b9a897c8bfe478687ffadb1724f7adcfa"
+        },
+        {
+          "suite": "layout-publication-resolved-handoff",
+          "exit": 0,
+          "methods": 1,
+          "skipped": 0,
+          "elapsed_seconds": 84.57548670796677,
+          "receipt_sha256": "aa13b4ebe64e7c2066bf701d46e661d5577127e517f504b22c641f43938ae3bf"
+        }
+      ],
+      "checkpoint_utf8_boundary": {
+        "method": "test_rendered_utf8_boundary_replaces_without_growth_and_refuses_one_extra_byte",
+        "method_passed": true,
+        "parent_checkpoint_suite_passed": false,
+        "parent_receipt_sha256": "26f964e21d2c6d4ab865bfb8205792cefccd0632c09e8796b1d9e3bb2f7fc183",
+        "limit": "Only this method passed; a separate identity-switch race failed the 17-method checkpoint suite"
+      },
+      "parent_campaign_passed": false,
+      "parent_campaign": "23 suites:19 passed,4 failed; generated21 source cache files later in hook-failure suite. Source equality excluded caches and is not whole-source preservation.",
+      "private_terminal_archive_sha256": "73d65d8217d6201e132addf6ff2be90207dfdef90593ac04e3192b4dda52a6c1",
+      "private_cache_objects_archive_sha256": "a36c3b7614568ae1566b136f3434aec714d7bb7c18ea25df550f1e06779c728e",
+      "scope": "Darwin27.2/CPython3.13.12, unchanged300second grouped workers; resolved all eight large-source units, independently sourced ordinary admission, memory-only publication and empty-profile clone recall with feature/index/HEAD and provenance preservation",
+      "hosted_limit": "Connected publication uses a controlled local GitHub stand-in, not actual hosted branch policy or provider behavior",
+      "independent_review": "Actual Claude Opus5.5 source review of corrected controls; no whole-task acceptance",
+      "full_244_or_release_acceptance": false
     }
   ],
   "superseded_attempt_not_erased": "Earlier28-method run had27passes/one retention-fixture error and failed overall. Final combined run above passed after fixture corrections; this does not rewrite that earlier result.",

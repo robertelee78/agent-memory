@@ -136,3 +136,19 @@ a harness mislabel: healthy observation with worker exit 1 was called missing
 instrumentation. Separating those classifications MUST retain exit 1 and OPEN
 as fatal failures. No native retry or stock omp modification follows from this
 evidence, and no full #249, wake, timing or platform pass is claimed.
+
+### Distinct model-free executor diagnostic
+
+The [actual direct-route diagnostic](data/2026-11-06-omp-native/executor-fault-diagnostic-20261108.json)
+used two new disposable Worlds and unchanged AM `77cf838`, without a native
+client, model, provider or token. The neutral baseline verified two hints and
+closed with exit0. A real separately held stream lock caused the first hint's
+`SourceTransportBusy` to escape at the expected fixed source locations; the next
+sequence obtained no durable slot, and the worker exited1 OPEN. Both workers
+were terminal, with healthy output draining.
+
+Independent Opus confirmed only the external first-fault observer and induced
+missing-slot propagation. The direct tracer/runpy route is not the shell hook
+route, tracing perturbs timing, and no elapsed busy duration was recorded.
+This does not identify R5b's original exception, repair its source gaps, qualify
+automatic wake or close any #249 acceptance criterion.
