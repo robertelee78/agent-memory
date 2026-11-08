@@ -24,6 +24,38 @@ class EnrollmentProgress(unittest.TestCase):
         self.assertTrue(all(row['source_reference'].startswith(('omp:capture:', 'omp:seal:')) for row in rows))
         return {row['source_reference']: row for row in rows}
 
+    def _original_enrollment_projection(self, repo):
+        """Original full-mint composition, using the unchanged fresh public APIs."""
+        from agent_memory import bank_writes, layout_recovery_state, local_registry, recovery_frontier, scope_binding
+        from agent_memory.developer_identity import digest, encoded
+        root, bank = bank_writes.bank_path(repo)
+        turn_sources.check_source_compatibility(layout_recovery_state.paths(root)[2].parent)
+        hold = recovery_frontier.verified_hold(root)
+        scope = dict(hold.scope) if hold is not None else scope_binding.require(root)
+        token = hold.token if hold is not None else recovery_frontier.observe(root)
+        pins = {'scope': scope, 'frontier': token,
+                'binding': [[str(path), info.st_dev, info.st_ino, info.st_uid, info.st_gid, info.st_mode]
+                            for path in (root, bank.parent, bank) for info in [path.lstat()]],
+                'marker': digest(hold.marker) if hold is not None else None}
+        if hold is not None:
+            self.assertEqual((hold.root, hold.bank), (root, bank))
+            directory = layout_recovery_state._paths_for_bank(root, bank, hold.operation_id)[3]
+            pins.update(runtime_artifact_digest=hold.runtime_artifact_digest,
+                        private_bindings_sha256=digest(layout_recovery_state.read_bytes(
+                            local_registry.paths('layout-recovery-bindings')[1])),
+                        journal_sha256=digest(layout_recovery_state.read_bytes(directory / 'journal.json')))
+        return root, bank, scope, hold, pins, digest(encoded(pins))
+
+    def _assert_original_enrollment_composition(self, repo):
+        from agent_memory import recovery_frontier, scope_binding
+        root, bank, scope, hold, pins, digest = self._original_enrollment_projection(repo)
+        actual = scope_binding.private_enrollment_context(repo)
+        self.assertEqual((actual.root, actual.bank, actual.scope, actual.held, actual._pins, actual.context_digest),
+                         (root, bank, scope, hold is not None, pins, digest))
+        if hold is not None:
+            self.assertTrue(recovery_frontier.same_hold(actual.hold, hold))
+        return actual
+
     def test_bounded_later_sweeps_enroll_oldest_and_keep_every_new_arrival(self):
         with World() as world:
             helper = fixtures.NativeSources()
@@ -62,9 +94,14 @@ class EnrollmentProgress(unittest.TestCase):
                 helper = fixtures.NativeSources()
                 repo, session, lifecycle = helper.fixture(world)
                 with patch.dict(os.environ, world.env, clear=True):
+                    human = helper.entry('human', 'user', 'Ephemeral interrupted source', attribution='user')
+                    lifecycle = str(fixtures.uuid.uuid5(fixtures.uuid.NAMESPACE_URL,
+                        str(repo.resolve()) + ':omp:' + session + ':' + human['id']))
                     directory, cursor = transport.new_segment(repo, session, lifecycle, lifecycle, 'human', 1)
-                    captured = transport.capture(directory, cursor, helper.entry(
-                        'human', 'user', 'Ephemeral interrupted source', attribution='user'))
+                    captured = transport.capture(directory, cursor, human)
+                    cursor['last_native_entry'] = human['id']
+                    cursor['control_interval'] = {'human_entry': human['id'], 'capture_order': [human['id']]}
+                    transport.replace_cursor(directory / 'cursor.json', cursor)
                     transport.enroll_admission(directory, cursor, captured)
                     transport.seal(directory, cursor)
                     enrollment = next(transport.read(path, 4096) for path in
@@ -404,6 +441,76 @@ class EnrollmentProgress(unittest.TestCase):
             self.assertEqual(started, [], 'The unactivated new bank must refuse before source execution')
             self.assertFalse((alternate_base / 'omp-source-v1').exists())
             self.assertFalse((alternate_base / 'turn-sources-v2').exists())
+
+    def test_fresh_mint_matches_original_composition_in_regular_and_newline_worktree(self):
+        import shutil
+        with World() as world, patch.dict(os.environ, world.env, clear=True):
+            helper = fixtures.NativeSources(); repo, _, _ = helper.fixture(world)
+            ordinary = self._assert_original_enrollment_composition(repo)
+            worktree = world.inside('linked worktree with space\n')
+            world.git('worktree', 'add', '--detach', worktree, 'HEAD', cwd=repo)
+            shutil.copytree(repo / 'memory-bank', worktree / 'memory-bank')
+            linked = self._assert_original_enrollment_composition(worktree)
+            self.assertEqual(linked.root, worktree.resolve())
+            self.assertEqual(linked.project_id, ordinary.project_id)
+            self.assertEqual(linked.scope['checkout_key'], ordinary.scope['checkout_key'])
+
+    def test_fresh_mint_matches_original_composition_for_actual_verified_hold(self):
+        from contracts.test_held_source_enrollment import HeldSourceEnrollment
+        with World() as world, patch.dict(os.environ, world.env, clear=True):
+            _, repo, _, _, _, _, _ = HeldSourceEnrollment().fixture(world)
+            context = self._assert_original_enrollment_composition(repo)
+            self.assertTrue(context.held)
+            self.assertIsNotNone(context._pins['marker'])
+            self.assertEqual(context._pins['runtime_artifact_digest'], context.hold.runtime_artifact_digest)
+
+    def test_fresh_mint_and_original_composition_both_refuse_foreign_bank_identity(self):
+        import shutil
+        from agent_memory import scope_binding
+        with World() as world, World() as foreign, patch.dict(os.environ, world.env, clear=True):
+            helper = fixtures.NativeSources(); repo, _, _ = helper.fixture(world)
+            with patch.dict(os.environ, foreign.env, clear=True):
+                foreign_repo, _, _ = fixtures.NativeSources().fixture(foreign)
+            (repo / 'memory-bank').rename(world.inside('retained-original-identity-bank'))
+            shutil.copytree(foreign_repo / 'memory-bank', repo / 'foreign-bank')
+            world.git('config', '--local', 'agent-memory.bankRoot', 'foreign-bank', cwd=repo)
+            before = {str(path.relative_to(world.paths['state'])): path.read_bytes()
+                      for path in world.paths['state'].rglob('*') if path.is_file()}
+            failures = []
+            for mint in (self._original_enrollment_projection, scope_binding.private_enrollment_context):
+                with self.assertRaises(ValueError) as refused:
+                    mint(repo)
+                failures.append(str(refused.exception))
+            self.assertEqual(failures[0], failures[1])
+            self.assertEqual({str(path.relative_to(world.paths['state'])): path.read_bytes()
+                              for path in world.paths['state'].rglob('*') if path.is_file()}, before)
+
+    def test_fresh_mint_and_original_composition_refuse_bank_drift_after_actual_scope_read(self):
+        import shutil
+        from agent_memory import scope_binding
+        with World() as world, patch.dict(os.environ, world.env, clear=True):
+            helper = fixtures.NativeSources(); repo, _, _ = helper.fixture(world)
+            config = repo / '.git/config'; original = config.read_bytes()
+            require = scope_binding.require
+            alternate = repo / 'late-bank'
+            for index, mint in enumerate((self._original_enrollment_projection, scope_binding.private_enrollment_context)):
+                changed = []
+                def scope_then_drift(*args, **kwargs):
+                    result = require(*args, **kwargs)
+                    if not changed:
+                        shutil.copytree(repo / 'memory-bank', alternate)
+                        world.git('config', '--local', 'agent-memory.bankRoot', 'late-bank', cwd=repo)
+                        changed.append(True)
+                    return result
+                try:
+                    with patch.object(scope_binding, 'require', side_effect=scope_then_drift):
+                        with self.assertRaisesRegex(ValueError, 'Competing memory bank locations'):
+                            mint(repo)
+                    self.assertTrue(changed, 'The actual scope read must precede the real configuration mutation')
+                finally:
+                    config.write_bytes(original)
+                    if alternate.exists():
+                        alternate.rename(world.inside('retained-late-bank-' + str(index)))
 
 
 if __name__ == '__main__':
