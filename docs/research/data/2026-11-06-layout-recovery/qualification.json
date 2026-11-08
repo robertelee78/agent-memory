@@ -6,7 +6,7 @@
     "reservation_and_retirement": "97469a6",
     "retention_fixture_and_crash_assertions": "8a581a9"
   },
-  "source_scope": "Recovery/runtime/contract bytes were unchanged during these runs; concurrent edits affected only #255 research files and documentation.",
+  "source_scope": "Original2026-11-06 runs kept recovery/runtime/contract bytes unchanged while other edits affected #255 research/docs. Later entries bind their own immutable source/archive and do not inherit that earlier source scope.",
   "runs": [
     {
       "group": "public-recovery",
@@ -75,7 +75,7 @@
       "elapsed_seconds": 28.684
     },
     {
-      "group": "exact-published-old-managed-rollback-control-and-mixed-refusal",
+      "group": "exact-published-old-portable-copy-rollback-control-and-mixed-refusal",
       "recorded_date_utc": "2026-11-08",
       "source_commit": "295e80110737c0785761941d7cdf6366f65600ef",
       "driver_sha256": "12848025d55f6e058affa88318b649285839eb7dcb73af9c3b9cd47b701e2ef0",
@@ -89,9 +89,55 @@
       "protected_evidence_unchanged": true,
       "full_union_public_proof": false,
       "acceptance": "NOT-ESTABLISHED-full-union-public-proof-target-digest-dependent-unknown-attributed-separately",
-      "scope": "Actual published v0.0.14 managed install and pre-receipt interruption/recover; empty-union exact restoration plus mixed public refusal/preservation. Not full #244 or platform acceptance.",
-      "limitation": "Internal unknown originates in target-digest attestation before full capability attribution; no production change made to turn the diagnostic exit green.",
+      "scope": "Actual published v0.0.14 artifact installed as a development-source portable copy by its own installer; pre-receipt interruption/recover proves empty-union exact restoration plus mixed public refusal/preservation. Not a managed-channel install, full #244 or platform acceptance.",
+      "limitation": "Internal unknown attributed to the digest-gated block at skills/agent-memory/scripts/agent_memory/private_state.py lines159-168 (source295e801), not a specific unobserved failure within it; no production change made to turn the diagnostic exit green.",
       "independent_review": "Claude Opus5.5 source PASS for exact driver before execution"
+    },
+    {
+      "group": "capable-managed-rollback-layout-first-independent-clearing",
+      "recorded_date_utc": "2026-11-08",
+      "source_commit": "77cf838fb1a73dc348f60c2fe4230e67c7aef814",
+      "source_archive_sha256": "9d7b6c0cca32cdfb4ce9f497717ed7fd491621e3bd1d4287084ad6bf012939ba",
+      "driver_sha256": "2617f1d836d34136dbf2df7150352b4200650bac1ebdb09796e087bbd9c33a43",
+      "source_files_compared_to_archive": 504,
+      "cells": [
+        {
+          "os": "Darwin 27.2.0 arm64",
+          "python": "3.13.12",
+          "exit": 0,
+          "timed_out": false,
+          "elapsed_seconds": 159.39465712499805,
+          "receipt_sha256": "53f441ba91cd64c97fccfd55f75e409b71298eaf79a7d897aa23396d80acc902",
+          "launch_sha256": "533cb4ed9eec34f08d49f63aedc268a938ddf04be053248375f5c350ff8f9ded",
+          "raw_directory": "/tmp/am-v15-delivery/recovery244-capable-managed-clear-r2-20261108",
+          "matrix_role": "Supplemental interpreter; not one of the required3.11/3.15 cells"
+        },
+        {
+          "os": "Darwin 27.2.0 arm64",
+          "python": "3.15.0",
+          "exit": 0,
+          "timed_out": false,
+          "elapsed_seconds": 170.3590415000217,
+          "receipt_sha256": "49ddf739fc11efc2dd013803d3766aec76ed6fd8b2412a943524ad96deaf0bbc",
+          "launch_sha256": "0a614f1c8e94a00be1bcfa6db1ca7bb13c558bfba2f917e5e89709a062ce057e",
+          "raw_directory": "/tmp/am-v15-delivery/recovery244-capable-managed-clear-r2-py315-20261108",
+          "matrix_role": "Required Darwin/Python3.15 cell for this scoped scenario only"
+        }
+      ],
+      "combined_cells_sha256": "053b7548559d3c6274b99344f2ee721ce782514db847ffb9ceeec4f6ea7faf46",
+      "required_cells_not_proved_here": ["Darwin/Python3.11", "Linux/Python3.11", "Linux/Python3.15"],
+      "actual_capability_transitions": {
+        "before_rollback": ["layout-frontier-v1", "omp-harness-v1", "omp-stored-source-v2"],
+        "after_layout_admission": ["omp-harness-v1", "omp-stored-source-v2"],
+        "after_native_assessments_before_drain": ["omp-harness-v1", "omp-stored-source-v2"]
+      },
+      "exact_capable_rollback_and_update_retry_verified": true,
+      "ordinary_admission_and_native_assessments_verified": true,
+      "actual_quiesced_drain_uninstall_verified": true,
+      "preservation": "Canonical data, all original source ranges/blobs, historical layout receipt, ledger/manifest, shared turns/native streams, config and unrelated staged/unstaged feature/index/HEAD/branch checked at the relevant boundaries",
+      "limits": "Original30/60second children and300second worker; no increase",
+      "independent_review": "Claude Opus5.5 exact driver source PASS before execution and scoped actual-outcome acceptance for these two runs; not whole #244/native/Linux/CI acceptance",
+      "scope": "Actual installed public managed lifecycle and ordinary admission with controlled finite observer source. Two actual interpreter cells on one OS only; no stock omp/provider callback, Linux, whole #244 or signed-release inference."
     }
   ],
   "superseded_attempt_not_erased": "Earlier28-method run had27passes/one retention-fixture error and failed overall. Final combined run above passed after fixture corrections; this does not rewrite that earlier result.",
