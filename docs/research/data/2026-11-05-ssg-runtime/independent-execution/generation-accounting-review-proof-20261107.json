@@ -1,0 +1,581 @@
+{
+  "actual_provider_inference_executed": false,
+  "after_generation": {
+    "cells": [
+      {
+        "provider": {
+          "actual_document_requests": 0,
+          "actual_query_sends": 0,
+          "erasure_executed": false,
+          "executed": true,
+          "failed_predicates": [],
+          "forbidden_source_keys_sent": [],
+          "global_forbidden_source_keys_sent": [],
+          "global_retained_document_requests": 126,
+          "global_retained_document_sources": 1003,
+          "interpretation": "Generation first-send accounting plus explicit exact-byte/profile reuse; global scientific log retained; no temporal delete or forensic/provider/cache erasure proof",
+          "prerequisites": [],
+          "reused_prior_document_requests": 125,
+          "unique_document_sources": 0
+        },
+        "variant": "base"
+      },
+      {
+        "provider": {
+          "actual_document_requests": 0,
+          "actual_query_sends": 0,
+          "erasure_executed": false,
+          "executed": true,
+          "failed_predicates": [],
+          "forbidden_source_keys_sent": [],
+          "global_forbidden_source_keys_sent": [],
+          "global_retained_document_requests": 126,
+          "global_retained_document_sources": 1003,
+          "interpretation": "Generation first-send accounting plus explicit exact-byte/profile reuse; global scientific log retained; no temporal delete or forensic/provider/cache erasure proof",
+          "prerequisites": [],
+          "reused_prior_document_requests": 126,
+          "unique_document_sources": 0
+        },
+        "variant": "overlay"
+      }
+    ],
+    "receipt": {
+      "argv": [
+        "/Users/robert.lee/.pyenv/versions/3.13.12/bin/python3",
+        "-I",
+        "-B",
+        "/opt/agent-memory-worktrees/issue255-accounting-20261107/docs/research/data/2026-11-05-ssg-runtime/independent-execution/score.py",
+        "--suite",
+        "/opt/agent-memory-worktrees/issue255-accounting-20261107/docs/research/data/2026-11-05-ssg-runtime/independent-suite/suite.json",
+        "--scorer-map",
+        "/opt/agent-memory-worktrees/issue255-accounting-20261107/docs/research/data/2026-11-05-ssg-runtime/independent-execution/scorer-map-20261106.json",
+        "--raw-root",
+        "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-generation-control-f3tem8hu/raw",
+        "--manifest",
+        "manifest.json",
+        "--expected-source-commit",
+        "eb70f2ef2f795cdd4cb6f3cbc306f27877ae695a",
+        "--output",
+        "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-generation-control-f3tem8hu/after-v2-score.json"
+      ],
+      "exit_code": 0,
+      "report": "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-generation-control-f3tem8hu/after-v2-score.json",
+      "sha256": "dd2197800acd50a73ac1bbda3d735baa9abccc562f80eeb67ac56eed896ea450",
+      "stderr": "",
+      "stdout": "{\"status\": \"raw-research-report-not-acceptance\", \"output\": \"/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-generation-control-f3tem8hu/after-v2-score.json\", \"output_sha256\": \"dd2197800acd50a73ac1bbda3d735baa9abccc562f80eeb67ac56eed896ea450\", \"model_graph_llm_calls\": 0}\n"
+    }
+  },
+  "before_original_immutable_receipt": {
+    "cells": [
+      {
+        "provider": {
+          "actual_document_requests": 126,
+          "actual_query_sends": 0,
+          "executed": true,
+          "failed_predicates": [
+            "Forbidden source sent to provider"
+          ],
+          "forbidden_source_keys_sent": [
+            "record:7eea1199-8123-4989-8cde-012d3361c8ee:429ebfbe-7713-40be-bca4-c3b904f82517:1"
+          ],
+          "interpretation": "Private sent-source accounting only; not a public body/disclosure/status pass",
+          "prerequisites": [],
+          "unique_document_sources": 1004
+        },
+        "size": 1000,
+        "variant": "base"
+      },
+      {
+        "provider": {
+          "actual_document_requests": 126,
+          "actual_query_sends": 0,
+          "executed": true,
+          "failed_predicates": [
+            "Forbidden source sent to provider"
+          ],
+          "forbidden_source_keys_sent": [
+            "record:7eea1199-8123-4989-8cde-012d3361c8ee:429ebfbe-7713-40be-bca4-c3b904f82517:1"
+          ],
+          "interpretation": "Private sent-source accounting only; not a public body/disclosure/status pass",
+          "prerequisites": [],
+          "unique_document_sources": 1004
+        },
+        "size": 1000,
+        "variant": "overlay"
+      },
+      {
+        "provider": {
+          "actual_document_requests": 1251,
+          "actual_query_sends": 0,
+          "executed": true,
+          "failed_predicates": [
+            "Forbidden source sent to provider"
+          ],
+          "forbidden_source_keys_sent": [
+            "record:7eea1199-8123-4989-8cde-012d3361c8ee:429ebfbe-7713-40be-bca4-c3b904f82517:1"
+          ],
+          "interpretation": "Private sent-source accounting only; not a public body/disclosure/status pass",
+          "prerequisites": [],
+          "unique_document_sources": 10004
+        },
+        "size": 10000,
+        "variant": "base"
+      },
+      {
+        "provider": {
+          "actual_document_requests": 1251,
+          "actual_query_sends": 0,
+          "executed": true,
+          "failed_predicates": [
+            "Forbidden source sent to provider"
+          ],
+          "forbidden_source_keys_sent": [
+            "record:7eea1199-8123-4989-8cde-012d3361c8ee:429ebfbe-7713-40be-bca4-c3b904f82517:1"
+          ],
+          "interpretation": "Private sent-source accounting only; not a public body/disclosure/status pass",
+          "prerequisites": [],
+          "unique_document_sources": 10004
+        },
+        "size": 10000,
+        "variant": "overlay"
+      }
+    ],
+    "not_rescored": true,
+    "path": "/private/tmp/am-v15-delivery/255-failed-run-offline-score-20261107-canonical.json",
+    "scorer_sha256": "d1c123985fc24dcb6386a2cac8cc6182fa3d8b83e5f5c433ee99de4476198ce6",
+    "sha256": "6d9dc80392ef032c4435285c6569e9a206e4133bad6d41fb97f9d6c464927029",
+    "source_commit": "a4ac3263ba769812311787f70a07dacc8aea7c20"
+  },
+  "completed_then_partial": {
+    "accounting": [
+      {
+        "documents_complete": true,
+        "global_forbidden_source_keys_in_retained_attempts": [],
+        "interpretation": "Bound request payloads include uncertain transport; incomplete size cells remain unexecuted, not no-send or erasure claims",
+        "pending_batches": 0,
+        "retained_requests": 126,
+        "size": 1000,
+        "transport_outcome_unconfirmed_requests": 0
+      },
+      {
+        "documents_complete": false,
+        "global_forbidden_source_keys_in_retained_attempts": [],
+        "interpretation": "Bound request payloads include uncertain transport; incomplete size cells remain unexecuted, not no-send or erasure claims",
+        "pending_batches": 1248,
+        "retained_requests": 2,
+        "size": 10000,
+        "transport_outcome_unconfirmed_requests": 1
+      }
+    ],
+    "earlier_observed_cells_preserved": 2,
+    "partial_manifest": "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-generation-control-f3tem8hu/completed-then-partial/manifest.json",
+    "partial_scope": "Actual 10k canonical SOURCE PLAN only, one-generation controlled ledger, two offline payload attempts; no vector/model/graph run or qualification",
+    "partial_size_observations": 0,
+    "receipt": {
+      "argv": [
+        "/Users/robert.lee/.pyenv/versions/3.13.12/bin/python3",
+        "-I",
+        "-B",
+        "/opt/agent-memory-worktrees/issue255-accounting-20261107/docs/research/data/2026-11-05-ssg-runtime/independent-execution/score.py",
+        "--suite",
+        "/opt/agent-memory-worktrees/issue255-accounting-20261107/docs/research/data/2026-11-05-ssg-runtime/independent-suite/suite.json",
+        "--scorer-map",
+        "/opt/agent-memory-worktrees/issue255-accounting-20261107/docs/research/data/2026-11-05-ssg-runtime/independent-execution/scorer-map-20261106.json",
+        "--raw-root",
+        "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-generation-control-f3tem8hu/completed-then-partial",
+        "--manifest",
+        "manifest.json",
+        "--expected-source-commit",
+        "eb70f2ef2f795cdd4cb6f3cbc306f27877ae695a",
+        "--output",
+        "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-generation-control-f3tem8hu/completed-then-partial-score.json"
+      ],
+      "exit_code": 0,
+      "report": "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-generation-control-f3tem8hu/completed-then-partial-score.json",
+      "sha256": "fce2a62953b5dd1f778fa26780e7f33e4c83d9b6f4f36a02360977b0a5850e3c",
+      "stderr": "",
+      "stdout": "{\"status\": \"raw-research-report-not-acceptance\", \"output\": \"/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-generation-control-f3tem8hu/completed-then-partial-score.json\", \"output_sha256\": \"fce2a62953b5dd1f778fa26780e7f33e4c83d9b6f4f36a02360977b0a5850e3c\", \"model_graph_llm_calls\": 0}\n"
+    }
+  },
+  "frozen_reference_touched_or_rescored": false,
+  "held_out_informed": true,
+  "manifest": {
+    "path": "manifest.json",
+    "sha256": "d28417f64afc82f8d7c87e46e80cbf91b5b1ae336bce8d9e931e958e1720719a"
+  },
+  "model_graph_endpoint_service_calls": 0,
+  "new_independent_review_and_full_closure_freeze_required": true,
+  "rejections": [
+    {
+      "control": "v1-manifest",
+      "error": "Only v2 manifests are accepted; historical observations require their frozen old scorer",
+      "receipt": {
+        "argv": [
+          "/Users/robert.lee/.pyenv/versions/3.13.12/bin/python3",
+          "-I",
+          "-B",
+          "/opt/agent-memory-worktrees/issue255-accounting-20261107/docs/research/data/2026-11-05-ssg-runtime/independent-execution/score.py",
+          "--suite",
+          "/opt/agent-memory-worktrees/issue255-accounting-20261107/docs/research/data/2026-11-05-ssg-runtime/independent-suite/suite.json",
+          "--scorer-map",
+          "/opt/agent-memory-worktrees/issue255-accounting-20261107/docs/research/data/2026-11-05-ssg-runtime/independent-execution/scorer-map-20261106.json",
+          "--raw-root",
+          "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-generation-control-f3tem8hu/v1-manifest",
+          "--manifest",
+          "manifest.json",
+          "--expected-source-commit",
+          "eb70f2ef2f795cdd4cb6f3cbc306f27877ae695a",
+          "--output",
+          "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-generation-control-f3tem8hu/v1-manifest-score.json"
+        ],
+        "exit_code": 2,
+        "report": "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-generation-control-f3tem8hu/v1-manifest-score.json",
+        "sha256": "6fb9297e50122f0025d94bb7610500534d5335eff0317c60bd4d24af958d43c0",
+        "stderr": "",
+        "stdout": "{\"status\": \"integrity-rejected\", \"output\": \"/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-generation-control-f3tem8hu/v1-manifest-score.json\", \"output_sha256\": \"6fb9297e50122f0025d94bb7610500534d5335eff0317c60bd4d24af958d43c0\", \"model_graph_llm_calls\": 0}\n"
+      }
+    },
+    {
+      "control": "v1-observation",
+      "error": "Only v2 case observations are accepted",
+      "receipt": {
+        "argv": [
+          "/Users/robert.lee/.pyenv/versions/3.13.12/bin/python3",
+          "-I",
+          "-B",
+          "/opt/agent-memory-worktrees/issue255-accounting-20261107/docs/research/data/2026-11-05-ssg-runtime/independent-execution/score.py",
+          "--suite",
+          "/opt/agent-memory-worktrees/issue255-accounting-20261107/docs/research/data/2026-11-05-ssg-runtime/independent-suite/suite.json",
+          "--scorer-map",
+          "/opt/agent-memory-worktrees/issue255-accounting-20261107/docs/research/data/2026-11-05-ssg-runtime/independent-execution/scorer-map-20261106.json",
+          "--raw-root",
+          "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-generation-control-f3tem8hu/v1-observation",
+          "--manifest",
+          "manifest.json",
+          "--expected-source-commit",
+          "eb70f2ef2f795cdd4cb6f3cbc306f27877ae695a",
+          "--output",
+          "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-generation-control-f3tem8hu/v1-observation-score.json"
+        ],
+        "exit_code": 2,
+        "report": "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-generation-control-f3tem8hu/v1-observation-score.json",
+        "sha256": "d6414788b185a1475f0cac4a554741d2f3db50454c1286633b967e8b164362dd",
+        "stderr": "",
+        "stdout": "{\"status\": \"integrity-rejected\", \"output\": \"/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-generation-control-f3tem8hu/v1-observation-score.json\", \"output_sha256\": \"d6414788b185a1475f0cac4a554741d2f3db50454c1286633b967e8b164362dd\", \"model_graph_llm_calls\": 0}\n"
+      }
+    },
+    {
+      "control": "missing-provider-schema",
+      "error": "Provider accounting v2 schema is required",
+      "receipt": {
+        "argv": [
+          "/Users/robert.lee/.pyenv/versions/3.13.12/bin/python3",
+          "-I",
+          "-B",
+          "/opt/agent-memory-worktrees/issue255-accounting-20261107/docs/research/data/2026-11-05-ssg-runtime/independent-execution/score.py",
+          "--suite",
+          "/opt/agent-memory-worktrees/issue255-accounting-20261107/docs/research/data/2026-11-05-ssg-runtime/independent-suite/suite.json",
+          "--scorer-map",
+          "/opt/agent-memory-worktrees/issue255-accounting-20261107/docs/research/data/2026-11-05-ssg-runtime/independent-execution/scorer-map-20261106.json",
+          "--raw-root",
+          "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-generation-control-f3tem8hu/missing-provider-schema",
+          "--manifest",
+          "manifest.json",
+          "--expected-source-commit",
+          "eb70f2ef2f795cdd4cb6f3cbc306f27877ae695a",
+          "--output",
+          "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-generation-control-f3tem8hu/missing-provider-schema-score.json"
+        ],
+        "exit_code": 2,
+        "report": "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-generation-control-f3tem8hu/missing-provider-schema-score.json",
+        "sha256": "0ca4cde60f951406487535f87a985ecc180d327c3c3fdaae1aaaefea33ce92e2",
+        "stderr": "",
+        "stdout": "{\"status\": \"integrity-rejected\", \"output\": \"/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-generation-control-f3tem8hu/missing-provider-schema-score.json\", \"output_sha256\": \"0ca4cde60f951406487535f87a985ecc180d327c3c3fdaae1aaaefea33ce92e2\", \"model_graph_llm_calls\": 0}\n"
+      }
+    },
+    {
+      "control": "missing-membership",
+      "error": "Incomplete generation membership coverage",
+      "receipt": {
+        "argv": [
+          "/Users/robert.lee/.pyenv/versions/3.13.12/bin/python3",
+          "-I",
+          "-B",
+          "/opt/agent-memory-worktrees/issue255-accounting-20261107/docs/research/data/2026-11-05-ssg-runtime/independent-execution/score.py",
+          "--suite",
+          "/opt/agent-memory-worktrees/issue255-accounting-20261107/docs/research/data/2026-11-05-ssg-runtime/independent-suite/suite.json",
+          "--scorer-map",
+          "/opt/agent-memory-worktrees/issue255-accounting-20261107/docs/research/data/2026-11-05-ssg-runtime/independent-execution/scorer-map-20261106.json",
+          "--raw-root",
+          "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-generation-control-f3tem8hu/missing-membership",
+          "--manifest",
+          "manifest.json",
+          "--expected-source-commit",
+          "eb70f2ef2f795cdd4cb6f3cbc306f27877ae695a",
+          "--output",
+          "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-generation-control-f3tem8hu/missing-membership-score.json"
+        ],
+        "exit_code": 2,
+        "report": "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-generation-control-f3tem8hu/missing-membership-score.json",
+        "sha256": "8de5dc09ff2db1a7cfe973561ae6b8d649ba0f966530c10b328e9a63b210f7e1",
+        "stderr": "",
+        "stdout": "{\"status\": \"integrity-rejected\", \"output\": \"/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-generation-control-f3tem8hu/missing-membership-score.json\", \"output_sha256\": \"8de5dc09ff2db1a7cfe973561ae6b8d649ba0f966530c10b328e9a63b210f7e1\", \"model_graph_llm_calls\": 0}\n"
+      }
+    },
+    {
+      "control": "wrong-membership",
+      "error": "Absent/duplicate generation membership",
+      "receipt": {
+        "argv": [
+          "/Users/robert.lee/.pyenv/versions/3.13.12/bin/python3",
+          "-I",
+          "-B",
+          "/opt/agent-memory-worktrees/issue255-accounting-20261107/docs/research/data/2026-11-05-ssg-runtime/independent-execution/score.py",
+          "--suite",
+          "/opt/agent-memory-worktrees/issue255-accounting-20261107/docs/research/data/2026-11-05-ssg-runtime/independent-suite/suite.json",
+          "--scorer-map",
+          "/opt/agent-memory-worktrees/issue255-accounting-20261107/docs/research/data/2026-11-05-ssg-runtime/independent-execution/scorer-map-20261106.json",
+          "--raw-root",
+          "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-generation-control-f3tem8hu/wrong-membership",
+          "--manifest",
+          "manifest.json",
+          "--expected-source-commit",
+          "eb70f2ef2f795cdd4cb6f3cbc306f27877ae695a",
+          "--output",
+          "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-generation-control-f3tem8hu/wrong-membership-score.json"
+        ],
+        "exit_code": 2,
+        "report": "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-generation-control-f3tem8hu/wrong-membership-score.json",
+        "sha256": "40aea63c9904c3146ba81a86e041da05cf4207590f136a9eca65a3507c27d3b5",
+        "stderr": "",
+        "stdout": "{\"status\": \"integrity-rejected\", \"output\": \"/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-generation-control-f3tem8hu/wrong-membership-score.json\", \"output_sha256\": \"40aea63c9904c3146ba81a86e041da05cf4207590f136a9eca65a3507c27d3b5\", \"model_graph_llm_calls\": 0}\n"
+      }
+    },
+    {
+      "control": "wrong-source-hash",
+      "error": "Generation source hash mismatch",
+      "receipt": {
+        "argv": [
+          "/Users/robert.lee/.pyenv/versions/3.13.12/bin/python3",
+          "-I",
+          "-B",
+          "/opt/agent-memory-worktrees/issue255-accounting-20261107/docs/research/data/2026-11-05-ssg-runtime/independent-execution/score.py",
+          "--suite",
+          "/opt/agent-memory-worktrees/issue255-accounting-20261107/docs/research/data/2026-11-05-ssg-runtime/independent-suite/suite.json",
+          "--scorer-map",
+          "/opt/agent-memory-worktrees/issue255-accounting-20261107/docs/research/data/2026-11-05-ssg-runtime/independent-execution/scorer-map-20261106.json",
+          "--raw-root",
+          "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-generation-control-f3tem8hu/wrong-source-hash",
+          "--manifest",
+          "manifest.json",
+          "--expected-source-commit",
+          "eb70f2ef2f795cdd4cb6f3cbc306f27877ae695a",
+          "--output",
+          "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-generation-control-f3tem8hu/wrong-source-hash-score.json"
+        ],
+        "exit_code": 2,
+        "report": "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-generation-control-f3tem8hu/wrong-source-hash-score.json",
+        "sha256": "c0c9e0c206d04160b12cb0cdf0d3be56476f706800afa0d02610c4a340d67ade",
+        "stderr": "",
+        "stdout": "{\"status\": \"integrity-rejected\", \"output\": \"/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-generation-control-f3tem8hu/wrong-source-hash-score.json\", \"output_sha256\": \"c0c9e0c206d04160b12cb0cdf0d3be56476f706800afa0d02610c4a340d67ade\", \"model_graph_llm_calls\": 0}\n"
+      }
+    },
+    {
+      "control": "cross-generation-pointer",
+      "error": "Missing/forged/cross-generation request pointer",
+      "receipt": {
+        "argv": [
+          "/Users/robert.lee/.pyenv/versions/3.13.12/bin/python3",
+          "-I",
+          "-B",
+          "/opt/agent-memory-worktrees/issue255-accounting-20261107/docs/research/data/2026-11-05-ssg-runtime/independent-execution/score.py",
+          "--suite",
+          "/opt/agent-memory-worktrees/issue255-accounting-20261107/docs/research/data/2026-11-05-ssg-runtime/independent-suite/suite.json",
+          "--scorer-map",
+          "/opt/agent-memory-worktrees/issue255-accounting-20261107/docs/research/data/2026-11-05-ssg-runtime/independent-execution/scorer-map-20261106.json",
+          "--raw-root",
+          "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-generation-control-f3tem8hu/cross-generation-pointer",
+          "--manifest",
+          "manifest.json",
+          "--expected-source-commit",
+          "eb70f2ef2f795cdd4cb6f3cbc306f27877ae695a",
+          "--output",
+          "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-generation-control-f3tem8hu/cross-generation-pointer-score.json"
+        ],
+        "exit_code": 2,
+        "report": "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-generation-control-f3tem8hu/cross-generation-pointer-score.json",
+        "sha256": "8c28f80497fb1c4ddf77a75df3f1bd94f6eef75de82ba906962f6891f4e7d823",
+        "stderr": "",
+        "stdout": "{\"status\": \"integrity-rejected\", \"output\": \"/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-generation-control-f3tem8hu/cross-generation-pointer-score.json\", \"output_sha256\": \"8c28f80497fb1c4ddf77a75df3f1bd94f6eef75de82ba906962f6891f4e7d823\", \"model_graph_llm_calls\": 0}\n"
+      }
+    },
+    {
+      "control": "absent-request",
+      "error": "Missing actual document request",
+      "receipt": {
+        "argv": [
+          "/Users/robert.lee/.pyenv/versions/3.13.12/bin/python3",
+          "-I",
+          "-B",
+          "/opt/agent-memory-worktrees/issue255-accounting-20261107/docs/research/data/2026-11-05-ssg-runtime/independent-execution/score.py",
+          "--suite",
+          "/opt/agent-memory-worktrees/issue255-accounting-20261107/docs/research/data/2026-11-05-ssg-runtime/independent-suite/suite.json",
+          "--scorer-map",
+          "/opt/agent-memory-worktrees/issue255-accounting-20261107/docs/research/data/2026-11-05-ssg-runtime/independent-execution/scorer-map-20261106.json",
+          "--raw-root",
+          "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-generation-control-f3tem8hu/absent-request",
+          "--manifest",
+          "manifest.json",
+          "--expected-source-commit",
+          "eb70f2ef2f795cdd4cb6f3cbc306f27877ae695a",
+          "--output",
+          "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-generation-control-f3tem8hu/absent-request-score.json"
+        ],
+        "exit_code": 2,
+        "report": "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-generation-control-f3tem8hu/absent-request-score.json",
+        "sha256": "49f011d26917027498c6a468eca0fba68e414ef371779f508c92b4cfb4af6d5d",
+        "stderr": "",
+        "stdout": "{\"status\": \"integrity-rejected\", \"output\": \"/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-generation-control-f3tem8hu/absent-request-score.json\", \"output_sha256\": \"49f011d26917027498c6a468eca0fba68e414ef371779f508c92b4cfb4af6d5d\", \"model_graph_llm_calls\": 0}\n"
+      }
+    },
+    {
+      "control": "filtered-shared-request",
+      "error": "Request original source keys differ from complete first-generation batch",
+      "receipt": {
+        "argv": [
+          "/Users/robert.lee/.pyenv/versions/3.13.12/bin/python3",
+          "-I",
+          "-B",
+          "/opt/agent-memory-worktrees/issue255-accounting-20261107/docs/research/data/2026-11-05-ssg-runtime/independent-execution/score.py",
+          "--suite",
+          "/opt/agent-memory-worktrees/issue255-accounting-20261107/docs/research/data/2026-11-05-ssg-runtime/independent-suite/suite.json",
+          "--scorer-map",
+          "/opt/agent-memory-worktrees/issue255-accounting-20261107/docs/research/data/2026-11-05-ssg-runtime/independent-execution/scorer-map-20261106.json",
+          "--raw-root",
+          "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-generation-control-f3tem8hu/filtered-shared-request",
+          "--manifest",
+          "manifest.json",
+          "--expected-source-commit",
+          "eb70f2ef2f795cdd4cb6f3cbc306f27877ae695a",
+          "--output",
+          "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-generation-control-f3tem8hu/filtered-shared-request-score.json"
+        ],
+        "exit_code": 2,
+        "report": "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-generation-control-f3tem8hu/filtered-shared-request-score.json",
+        "sha256": "d58090f04b662ca49ab84545c3c763680bd3c39b872b9fce35602703c6c4530e",
+        "stderr": "",
+        "stdout": "{\"status\": \"integrity-rejected\", \"output\": \"/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-generation-control-f3tem8hu/filtered-shared-request-score.json\", \"output_sha256\": \"d58090f04b662ca49ab84545c3c763680bd3c39b872b9fce35602703c6c4530e\", \"model_graph_llm_calls\": 0}\n"
+      }
+    },
+    {
+      "control": "partial-missing-ledger",
+      "error": "Expected hash-bound artifact pointer",
+      "receipt": {
+        "argv": [
+          "/Users/robert.lee/.pyenv/versions/3.13.12/bin/python3",
+          "-I",
+          "-B",
+          "/opt/agent-memory-worktrees/issue255-accounting-20261107/docs/research/data/2026-11-05-ssg-runtime/independent-execution/score.py",
+          "--suite",
+          "/opt/agent-memory-worktrees/issue255-accounting-20261107/docs/research/data/2026-11-05-ssg-runtime/independent-suite/suite.json",
+          "--scorer-map",
+          "/opt/agent-memory-worktrees/issue255-accounting-20261107/docs/research/data/2026-11-05-ssg-runtime/independent-execution/scorer-map-20261106.json",
+          "--raw-root",
+          "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-generation-control-f3tem8hu/partial-missing-ledger",
+          "--manifest",
+          "manifest.json",
+          "--expected-source-commit",
+          "eb70f2ef2f795cdd4cb6f3cbc306f27877ae695a",
+          "--output",
+          "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-generation-control-f3tem8hu/partial-missing-ledger-score.json"
+        ],
+        "exit_code": 2,
+        "report": "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-generation-control-f3tem8hu/partial-missing-ledger-score.json",
+        "sha256": "539d6503008eb14d131d5422f7f28aa443267c8dd35676acc04d05e3c78ad0dd",
+        "stderr": "",
+        "stdout": "{\"status\": \"integrity-rejected\", \"output\": \"/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-generation-control-f3tem8hu/partial-missing-ledger-score.json\", \"output_sha256\": \"539d6503008eb14d131d5422f7f28aa443267c8dd35676acc04d05e3c78ad0dd\", \"model_graph_llm_calls\": 0}\n"
+      }
+    },
+    {
+      "control": "partial-wrong-pending",
+      "error": "Wrong pending document batch count",
+      "receipt": {
+        "argv": [
+          "/Users/robert.lee/.pyenv/versions/3.13.12/bin/python3",
+          "-I",
+          "-B",
+          "/opt/agent-memory-worktrees/issue255-accounting-20261107/docs/research/data/2026-11-05-ssg-runtime/independent-execution/score.py",
+          "--suite",
+          "/opt/agent-memory-worktrees/issue255-accounting-20261107/docs/research/data/2026-11-05-ssg-runtime/independent-suite/suite.json",
+          "--scorer-map",
+          "/opt/agent-memory-worktrees/issue255-accounting-20261107/docs/research/data/2026-11-05-ssg-runtime/independent-execution/scorer-map-20261106.json",
+          "--raw-root",
+          "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-generation-control-f3tem8hu/partial-wrong-pending",
+          "--manifest",
+          "manifest.json",
+          "--expected-source-commit",
+          "eb70f2ef2f795cdd4cb6f3cbc306f27877ae695a",
+          "--output",
+          "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-generation-control-f3tem8hu/partial-wrong-pending-score.json"
+        ],
+        "exit_code": 2,
+        "report": "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-generation-control-f3tem8hu/partial-wrong-pending-score.json",
+        "sha256": "f027a954483ae3c56a1941851c44ba7c13d3512562179adc6452f9a948f04224",
+        "stderr": "",
+        "stdout": "{\"status\": \"integrity-rejected\", \"output\": \"/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-generation-control-f3tem8hu/partial-wrong-pending-score.json\", \"output_sha256\": \"f027a954483ae3c56a1941851c44ba7c13d3512562179adc6452f9a948f04224\", \"model_graph_llm_calls\": 0}\n"
+      }
+    },
+    {
+      "control": "partial-wrong-source-hash",
+      "error": "Generation source hash mismatch",
+      "receipt": {
+        "argv": [
+          "/Users/robert.lee/.pyenv/versions/3.13.12/bin/python3",
+          "-I",
+          "-B",
+          "/opt/agent-memory-worktrees/issue255-accounting-20261107/docs/research/data/2026-11-05-ssg-runtime/independent-execution/score.py",
+          "--suite",
+          "/opt/agent-memory-worktrees/issue255-accounting-20261107/docs/research/data/2026-11-05-ssg-runtime/independent-suite/suite.json",
+          "--scorer-map",
+          "/opt/agent-memory-worktrees/issue255-accounting-20261107/docs/research/data/2026-11-05-ssg-runtime/independent-execution/scorer-map-20261106.json",
+          "--raw-root",
+          "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-generation-control-f3tem8hu/partial-wrong-source-hash",
+          "--manifest",
+          "manifest.json",
+          "--expected-source-commit",
+          "eb70f2ef2f795cdd4cb6f3cbc306f27877ae695a",
+          "--output",
+          "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-generation-control-f3tem8hu/partial-wrong-source-hash-score.json"
+        ],
+        "exit_code": 2,
+        "report": "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-generation-control-f3tem8hu/partial-wrong-source-hash-score.json",
+        "sha256": "c0c9e0c206d04160b12cb0cdf0d3be56476f706800afa0d02610c4a340d67ade",
+        "stderr": "",
+        "stdout": "{\"status\": \"integrity-rejected\", \"output\": \"/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-generation-control-f3tem8hu/partial-wrong-source-hash-score.json\", \"output_sha256\": \"c0c9e0c206d04160b12cb0cdf0d3be56476f706800afa0d02610c4a340d67ade\", \"model_graph_llm_calls\": 0}\n"
+      }
+    }
+  ],
+  "root": "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-generation-control-f3tem8hu",
+  "same_prior_request_globally_retained": [
+    {
+      "path": "sizes/1000/controlled-request-35.json",
+      "sha256": "1a5068bdb3ef4050cf19234f72e9064dd5d68a4cd3d3a5efe02c54781f198fc2"
+    }
+  ],
+  "schema": "am255/strict-v2-accounting-review-proof-v1",
+  "scope": "Controlled structural offline mechanism proof only; no actual provider sends/inference, vectors, graph, temporal delete, forensic erasure, runtime/status or acceptance",
+  "source_commit": "eb70f2ef2f795cdd4cb6f3cbc306f27877ae695a",
+  "source_hashes": {
+    "authored-inputs-20261106.json": "fc22d917544e865b9acf2ecc63ff410ccd8d3ced18e810c7755ffb62fa8892f1",
+    "compile_inputs.py": "584c5f2d3d3b1972d17ea77088e79bff8f2d50e68a174aded08c33782b1ea1c9",
+    "execute.py": "f2f93a814bba37c31eb5a846b477f33bfdb6cf379394e244a61fd764f31856d7",
+    "execution-io.json": "558f5552e8baf0846493b74efe22dde59a2678fa21d16c2b1fc31cbba77cce7c",
+    "executor_native.py": "7765ef70e6ac715925d081a9c8c7a629563f5332a9f54510aa7c29a6bf558735",
+    "score.py": "bb972f81e1d66a3118dd111d15ca4cc0dd74fa525ea724c70ca0bac41e35d8a3",
+    "scorer-map-20261106.json": "b4d7bfde73ca473c90d1a75239b0daf39e10942887465a02f74484aa09cc3f37",
+    "spec.json": "f5efd0b189747f6e2f5e9a5f6fd83e24a19f9cf6e76a7b4a0a083ef864288ad7"
+  },
+  "source_ref": "refs/heads/research/issue255-accounting-review-source-20261107",
+  "supersedes_structural_v1_baseline": "generation-accounting-controlled-proof-20261107.json is retained historical evidence, NOT the baseline or authority for this correction",
+  "temporal_delete_erasure_executed": false
+}

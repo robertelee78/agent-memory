@@ -1,0 +1,239 @@
+{
+  "controls": [
+    {
+      "actual_cleanup_call_order": [
+        "execution-failure",
+        "model.stop",
+        "graph.metrics",
+        "graph.cleanup"
+      ],
+      "attempted_service_starts": [],
+      "control": "document-ledger-write-fails",
+      "denied_retention_writes": [
+        "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-unconditional-cleanup-ytns7s0b/document-ledger-write-fails/sizes/1000/delivery-ledger.json"
+      ],
+      "exception_group_phases": [
+        "execution",
+        "document-accounting"
+      ],
+      "exceptions": [
+        {
+          "phase": "execution",
+          "reason": "Injected original execution error before all service starts",
+          "type": "ValueError"
+        },
+        {
+          "phase": "document-accounting",
+          "reason": "Injected unwritable retention: delivery-ledger.json",
+          "type": "OSError"
+        }
+      ],
+      "original_exception_object_preserved": true,
+      "retained_manifest": {
+        "cleanup": {
+          "graph": {
+            "borrowed_artifacts_untouched": true,
+            "forensic_erasure_claim": false,
+            "resources": [],
+            "status": "disposed"
+          },
+          "graph_disposal_error": null,
+          "model": {
+            "reaped": true,
+            "started": false
+          },
+          "model_finalization_error": null
+        },
+        "failures": [
+          {
+            "phase": "execution",
+            "reason": "Injected original execution error before all service starts",
+            "type": "ValueError"
+          },
+          {
+            "phase": "document-accounting",
+            "reason": "Injected unwritable retention: delivery-ledger.json",
+            "type": "OSError"
+          }
+        ],
+        "path": "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-unconditional-cleanup-ytns7s0b/document-ledger-write-fails/sizes/1000/size-manifest.json",
+        "sha256": "13a9bbf4df8792c3df553ca9963c739e5a2c009e20e638fac79a2f5c6692cf10"
+      }
+    },
+    {
+      "actual_cleanup_call_order": [
+        "execution-failure",
+        "model.stop",
+        "graph.metrics",
+        "graph.cleanup"
+      ],
+      "attempted_service_starts": [],
+      "control": "tokenizer-ledger-write-fails",
+      "denied_retention_writes": [
+        "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-unconditional-cleanup-ytns7s0b/tokenizer-ledger-write-fails/sizes/1000/tokenization-ledger.json"
+      ],
+      "exception_group_phases": [
+        "execution",
+        "tokenization-accounting"
+      ],
+      "exceptions": [
+        {
+          "phase": "execution",
+          "reason": "Injected original execution error before all service starts",
+          "type": "ValueError"
+        },
+        {
+          "phase": "tokenization-accounting",
+          "reason": "Injected unwritable retention: tokenization-ledger.json",
+          "type": "OSError"
+        }
+      ],
+      "original_exception_object_preserved": true,
+      "retained_manifest": {
+        "cleanup": {
+          "graph": {
+            "borrowed_artifacts_untouched": true,
+            "forensic_erasure_claim": false,
+            "resources": [],
+            "status": "disposed"
+          },
+          "graph_disposal_error": null,
+          "model": {
+            "reaped": true,
+            "started": false
+          },
+          "model_finalization_error": null
+        },
+        "failures": [
+          {
+            "phase": "execution",
+            "reason": "Injected original execution error before all service starts",
+            "type": "ValueError"
+          },
+          {
+            "phase": "tokenization-accounting",
+            "reason": "Injected unwritable retention: tokenization-ledger.json",
+            "type": "OSError"
+          }
+        ],
+        "path": "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-unconditional-cleanup-ytns7s0b/tokenizer-ledger-write-fails/sizes/1000/size-manifest.json",
+        "sha256": "786baeafae801d0478a589575def4b22108316a2aca011f9e9fc7c96002c79f6"
+      }
+    },
+    {
+      "actual_cleanup_call_order": [
+        "execution-failure",
+        "model.stop",
+        "graph.metrics",
+        "graph.cleanup"
+      ],
+      "attempted_service_starts": [],
+      "control": "all-retention-and-disposal-faults",
+      "denied_retention_writes": [
+        "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-unconditional-cleanup-ytns7s0b/all-retention-and-disposal-faults/sizes/1000/delivery-ledger.json",
+        "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-unconditional-cleanup-ytns7s0b/all-retention-and-disposal-faults/sizes/1000/tokenization-ledger.json",
+        "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-unconditional-cleanup-ytns7s0b/all-retention-and-disposal-faults/sizes/1000/graph/cleanup.json",
+        "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-unconditional-cleanup-ytns7s0b/all-retention-and-disposal-faults/sizes/1000/size-manifest.json"
+      ],
+      "exception_group_phases": [
+        "execution",
+        "document-accounting",
+        "tokenization-accounting",
+        "model-disposal",
+        "graph-disposal",
+        "manifest-retention"
+      ],
+      "exceptions": [
+        {
+          "phase": "execution",
+          "reason": "Injected original execution error before all service starts",
+          "type": "ValueError"
+        },
+        {
+          "phase": "document-accounting",
+          "reason": "Injected unwritable retention: delivery-ledger.json",
+          "type": "OSError"
+        },
+        {
+          "phase": "tokenization-accounting",
+          "reason": "Injected unwritable retention: tokenization-ledger.json",
+          "type": "OSError"
+        },
+        {
+          "phase": "model-disposal",
+          "reason": "Injected model finalization failure after actual no-process stop",
+          "type": "OSError"
+        },
+        {
+          "phase": "graph-disposal",
+          "reason": "Injected unwritable retention: cleanup.json",
+          "type": "OSError"
+        },
+        {
+          "phase": "manifest-retention",
+          "reason": "Injected unwritable retention: size-manifest.json",
+          "type": "OSError"
+        }
+      ],
+      "original_exception_object_preserved": true,
+      "retained_manifest": null
+    }
+  ],
+  "held_out_informed": true,
+  "model_graph_endpoint_service_calls": 0,
+  "new_independent_review_and_full_closure_freeze_required": true,
+  "request_gate_prerequisite_control": {
+    "adversarial_raw_not_native_output": true,
+    "native_class": {
+      "executed": false,
+      "failed_predicates": [
+        "Actual native request gate differs from frozen validation expectation"
+      ],
+      "prerequisites": [
+        "Adversarial raw prerequisite; must not erase gate predicate"
+      ]
+    },
+    "provider_accounting_executed": true,
+    "scorer_cli": {
+      "argv": [
+        "/Users/robert.lee/.pyenv/versions/3.13.12/bin/python3",
+        "-I",
+        "-B",
+        "/opt/agent-memory-worktrees/issue255-accounting-20261107/docs/research/data/2026-11-05-ssg-runtime/independent-execution/score.py",
+        "--suite",
+        "/opt/agent-memory-worktrees/issue255-accounting-20261107/docs/research/data/2026-11-05-ssg-runtime/independent-suite/suite.json",
+        "--scorer-map",
+        "/opt/agent-memory-worktrees/issue255-accounting-20261107/docs/research/data/2026-11-05-ssg-runtime/independent-execution/scorer-map-20261106.json",
+        "--raw-root",
+        "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-unconditional-cleanup-ytns7s0b/request-gate-prerequisite-retention",
+        "--manifest",
+        "manifest.json",
+        "--expected-source-commit",
+        "d742f848133a5785e4d2541476287d358e725070",
+        "--output",
+        "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-unconditional-cleanup-ytns7s0b/gate-retention-score.json"
+      ],
+      "exit_code": 0,
+      "output": "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-unconditional-cleanup-ytns7s0b/gate-retention-score.json",
+      "output_sha256": "ec366b0b9fae7d21221b78324ef573589f25a8bcce29483987635b27efcfdd11",
+      "stderr": "",
+      "stdout": "{\"status\": \"raw-research-report-not-acceptance\", \"output\": \"/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-unconditional-cleanup-ytns7s0b/gate-retention-score.json\", \"output_sha256\": \"ec366b0b9fae7d21221b78324ef573589f25a8bcce29483987635b27efcfdd11\", \"model_graph_llm_calls\": 0}\n"
+    }
+  },
+  "schema": "am255/unconditional-cleanup-review-proof-v1",
+  "scope": "Actual run_size/finalize_size and actual zero-resource Model.stop/Graph.cleanup. Only environment, retention and post-disposal faults injected; native fixtures/helper/validator unmodified. No started model/graph, endpoints or services, and no runtime erasure proof.",
+  "source_commit": "d742f848133a5785e4d2541476287d358e725070",
+  "source_hashes": {
+    "authored-inputs-20261106.json": "fc22d917544e865b9acf2ecc63ff410ccd8d3ced18e810c7755ffb62fa8892f1",
+    "compile_inputs.py": "584c5f2d3d3b1972d17ea77088e79bff8f2d50e68a174aded08c33782b1ea1c9",
+    "execute.py": "c3851c0cdc2e3e71f10183da2195e218f1a957d568010685311f5052b5670c6f",
+    "execution-io.json": "c864ed20a3734f9ae74d9d80bf112f0c1546c3d339cef26024de0216c9c066e8",
+    "executor_native.py": "7765ef70e6ac715925d081a9c8c7a629563f5332a9f54510aa7c29a6bf558735",
+    "executor_runtime.py": "6a28c36d6d7672c66a53a72209d987d61795727382f4d896b14dad833c4e6e56",
+    "score.py": "84b49d31089aaf293b0a9546c3a45f9a82697280570630059e3c1170e42c824a",
+    "scorer-map-20261106.json": "b4d7bfde73ca473c90d1a75239b0daf39e10942887465a02f74484aa09cc3f37",
+    "spec.json": "f5efd0b189747f6e2f5e9a5f6fd83e24a19f9cf6e76a7b4a0a083ef864288ad7"
+  },
+  "source_ref": "refs/heads/research/issue255-tokenization-cleanup-source-20261107",
+  "temporal_delete_erasure_executed": false
+}

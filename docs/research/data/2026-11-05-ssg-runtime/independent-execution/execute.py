@@ -293,19 +293,56 @@ def write_observation(root, prepared, value):
     return {'case_ordinal': value['case_ordinal'], 'variant': value['variant'], **pointer(root, path)}
 
 
-def delivery_accounting(root, prepared, document_sends, profile_sha):
-    """Retain global requests separately from first-send and reused deliveries."""
+def delivery_accounting(root, prepared, document_sends, profile_sha, *, complete=True,
+                        attempted_requests=None):
+    """Bind completed requests and any uncertain transport attempt, never erase it."""
+    attempted = document_sends if attempted_requests is None else attempted_requests
+    if (len(attempted) > len(prepared['batches']) or len(document_sends) > len(attempted)
+            or attempted[:len(document_sends)] != document_sends
+            or (complete and len(document_sends) != len(prepared['batches']))):
+        raise ValueError('Actual document request prefix differs from frozen schedule')
     requests, offset = [], 0
-    for batch, request in zip(prepared['batches'], document_sends, strict=True):
+    for index, request in enumerate(attempted):
+        batch = prepared['batches'][index]
         requests.append({'request': request, 'first_generation': batch[0]['first_generation'],
-                         'rows': list(range(offset, offset + len(batch)))})
+                         'rows': list(range(offset, offset + len(batch))),
+                         'completion': 'embedding-complete' if index < len(document_sends)
+                             else 'transport-outcome-unconfirmed'})
         offset += len(batch)
     value = {'schema': 'am255/generation-delivery-ledger-v2', 'profile_sha256': profile_sha,
-             'coverage': pointer(root, prepared['root'] / 'vector-coverage.json'),
+             'coverage': prepared['vector_coverage' if complete else 'planned_coverage'], 'documents_complete': complete,
+             'pending_batches': len(prepared['batches']) - len(attempted),
+             'pending_embedding_requests': len(attempted) - len(document_sends),
              'requests': requests, 'erasure': {'executed': False,
                  'prerequisite': 'No controlled temporal canonical delete, derived-store purge, provider/cache disposal and forensic readback phase implemented'}}
+    if not complete and (prepared['root'] / 'vectors.f32').is_file():
+        value['partial_vector_store'] = pointer(root, prepared['root'] / 'vectors.f32')
     path = prepared['root'] / 'delivery-ledger.json'
     save(path, value)
+    return pointer(root, path)
+
+
+def source_coverage(prepared, profile_sha, store_hash=None):
+    """A complete source plan is not a completed vector store."""
+    return {'schema': 'am255/persisted-float32-coverage-v2', 'dtype': '<f4',
+            'dimension': 4096, 'rows': prepared['ordered'], 'vector_store_sha256': store_hash,
+            'generations': {g['bank'].generation_id: {'canonical_sha256': g['bank'].canonical_sha256,
+                'sources': [{'key': key, 'row': index, 'rendered_sha256': g['coverage'][key]}
+                            for key, index in g['vector_rows'].items()]}
+                for g in prepared['generations'].values()},
+            'source_profile_sha256': profile_sha, 'full_coverage': store_hash is not None}
+
+
+def tokenization_accounting(root, prepared, model, profile_sha):
+    """Bind tokenizer disclosure independently of later embedding completion."""
+    attempts = [{'request': model.retained_pointer(root, attempt['request']),
+                 'response': model.retained_pointer(root, attempt['response']) if attempt['response'] is not None else None,
+                 'outcome': 'response-recorded' if attempt['response'] is not None
+                     else 'transport-outcome-unconfirmed'}
+                for attempt in model.tokenization_attempts]
+    path = prepared['root'] / 'tokenization-ledger.json'
+    save(path, {'schema': 'am255/provider-tokenization-ledger-v1', 'profile_sha256': profile_sha,
+                'attempts': attempts, 'embedding_requests': [model.retained_pointer(root, path) for path in model.requests]})
     return pointer(root, path)
 
 
@@ -317,6 +354,79 @@ def generation_requests(prepared, document_sends, generation_id):
         elif any(m['generation_id'] == generation_id for row in batch for m in row['memberships']):
             reused.append(request)
     return actual, reused
+
+
+def finalize_size(root, prepared, model, graph, documents_complete, document_sends,
+                  profile_sha, result, observations, started, failures):
+    """Dispose owned resources even when scientific accounting cannot be saved."""
+    work = prepared['root']
+    stopped, stop_error, graph_error, cleanup = None, None, None, None
+    actual_graph_metrics = {'executed': False, 'prerequisite': 'Graph statistics unavailable'}
+    try:
+        try:
+            if not documents_complete:
+                for artifact in result['generation_artifacts']:
+                    artifact.pop('vector_store', None)
+                    artifact['coverage'] = prepared['planned_coverage']
+                attempted = [model.retained_pointer(root, path) for path in model.requests
+                             if model.request_kinds[path] == 'documents']
+                result['delivery_ledger'] = delivery_accounting(
+                    root, prepared, document_sends, profile_sha, complete=False, attempted_requests=attempted)
+                result['missing_prerequisites'].append({
+                    'phase': 'document-embedding',
+                    'prerequisite': 'Document schedule incomplete; retained attempts include unconfirmed transport, not a no-send or completed-vector claim'})
+        except BaseException as exc:
+            failures.append(('document-accounting', exc))
+        try:
+            result['tokenization_accounting'] = tokenization_accounting(root, prepared, model, profile_sha)
+        except BaseException as exc:
+            failures.append(('tokenization-accounting', exc))
+    finally:
+        try:
+            stopped = model.stop()
+        except BaseException as exc:
+            stop_error = {'type': type(exc).__name__, 'reason': str(exc)}
+            failures.append(('model-disposal', exc))
+        finally:
+            try:
+                actual_graph_metrics = graph.metrics()
+            except BaseException as exc:
+                actual_graph_metrics = {'executed': False, 'prerequisite': str(exc)}
+                if not isinstance(exc, Exception):
+                    failures.append(('graph-metrics', exc))
+            finally:
+                try:
+                    cleanup = graph.cleanup()
+                except BaseException as exc:
+                    graph_error = {'type': type(exc).__name__, 'reason': str(exc)}
+                    failures.append(('graph-disposal', exc))
+    result['cleanup'] = {'model': stopped, 'model_finalization_error': stop_error,
+                         'graph': cleanup if cleanup is not None else
+                             {'status': 'erasure-pending', 'failure': graph_error},
+                         'graph_disposal_error': graph_error}
+    try:
+        result['costs'] = {'elapsed_seconds': time.monotonic() - started,
+                          'shared_host': True, 'clean_performance_acceptance': False,
+                          'actual_graph_stats': actual_graph_metrics,
+                          'disk_bytes': sum(p.stat().st_size for p in work.rglob('*') if p.is_file() and not p.is_symlink())}
+        task_path = work / 'model' / 'cache-evidence.json'
+        for observation in observations:
+            if stop_error is not None:
+                reason = 'Actual model dependency/token/cache finalization failed; retained raw vectors are unqualified'
+                observation['semantic'].update(executed=False, prerequisite=reason)
+                observation['semantic']['ann'] = {'executed': False, 'prerequisite': reason}
+                observation['provider'].update(inference_qualified=False, inference_prerequisite=reason)
+            if task_path.is_file() and stop_error is None:
+                observation['provider']['task_evidence'] = {'executed': True, **pointer(root, task_path)}
+            else:
+                observation['provider']['task_evidence'] = {'executed': False,
+                    'prerequisite': 'Complete actual finalized task/cache parser evidence unavailable; retain launch/failure logs'}
+            result['observations'].append(write_observation(root, prepared, observation))
+        result['failures'] = [{'phase': phase, 'type': type(exc).__name__, 'reason': str(exc)}
+                              for phase, exc in failures]
+        save(work / 'size-manifest.json', result)
+    except BaseException as exc:
+        failures.append(('manifest-retention', exc))
 
 
 def run_size(root, prepared, fixtures, inputs, spec, config, profile, run_id):
@@ -332,6 +442,14 @@ def run_size(root, prepared, fixtures, inputs, spec, config, profile, run_id):
     observations, query_vectors, query_sends, document_sends = [], {}, {}, []
     started = time.monotonic()
     store = None
+    documents_complete = False
+    save(work / 'planned-coverage.json', source_coverage(prepared, profile_sha))
+    prepared['planned_coverage'] = pointer(root, work / 'planned-coverage.json')
+    for artifact in result['generation_artifacts']:
+        artifact['coverage'] = prepared['planned_coverage']
+    result['delivery_ledger'] = delivery_accounting(root, prepared, [], profile_sha, complete=False)
+    result['tokenization_accounting'] = tokenization_accounting(root, prepared, model, profile_sha)
+    failures = []
     try:
         no_active_services(config['engine'])
         graph.start()
@@ -339,6 +457,7 @@ def run_size(root, prepared, fixtures, inputs, spec, config, profile, run_id):
         model.start()
         store = VectorStore(work / 'vectors.f32', len(prepared['ordered']))
         offset = 0
+        document_counts = {}
         for batch in prepared['batches']:
             # Recheck canonical source eligibility/security before each batch; no
             # scoring canary names participate in selection or provider filtering.
@@ -349,22 +468,22 @@ def run_size(root, prepared, fixtures, inputs, spec, config, profile, run_id):
                     raise ValueError('Canonical provider gate changed before document send')
             texts = [prepared['texts'][r['rendered_sha256']].decode('utf-8') for r in batch]
             values, request_path, costs = model.embed(texts, 'documents', sorted({k for r in batch for k in r['source_keys']}))
-            document_sends.append(pointer(root, request_path))
+            document_sends.append(model.retained_pointer(root, request_path))
             for index, vector in enumerate(values, offset):
                 store.put(index, vector)
             offset += len(batch)
+            gid = batch[0]['first_generation']
+            document_counts[gid] = document_counts.get(gid, 0) + len(batch)
         store_hash = store.finish()
-        save(work / 'vector-coverage.json', {'schema': 'am255/persisted-float32-coverage-v2', 'dtype': '<f4',
-             'dimension': 4096, 'rows': prepared['ordered'], 'vector_store_sha256': store_hash,
-             'generations': {g['bank'].generation_id: {'canonical_sha256': g['bank'].canonical_sha256,
-                'sources': [{'key': key, 'row': index,
-                             'rendered_sha256': g['coverage'][key]} for key, index in g['vector_rows'].items()]}
-                for g in prepared['generations'].values()},
-             'source_profile_sha256': profile_sha, 'full_coverage': True})
+        save(work / 'vector-coverage.json', source_coverage(prepared, profile_sha, store_hash))
+        prepared['vector_coverage'] = pointer(root, work / 'vector-coverage.json')
+        vector_store_pointer = {'path': (work / 'vectors.f32').relative_to(root).as_posix(),
+                                'sha256': store_hash}
         for artifact in result['generation_artifacts']:
-            artifact['vector_store'] = pointer(root, work / 'vectors.f32')
-            artifact['coverage'] = pointer(root, work / 'vector-coverage.json')
+            artifact['vector_store'] = vector_store_pointer
+            artifact['coverage'] = prepared['vector_coverage']
         result['delivery_ledger'] = delivery_accounting(root, prepared, document_sends, profile_sha)
+        documents_complete = True
         templates = load(HERE / 'executor_templates.json')
         request_ordinal = 0
         for variant in ('base', 'overlay'):
@@ -376,8 +495,8 @@ def run_size(root, prepared, fixtures, inputs, spec, config, profile, run_id):
                 bank = generation['bank']
                 native, context = fixtures.qualify(bank, case)
                 native['source_binding']['profile_sha256'] = profile_sha
-                state_prerequisite = mechanism_prerequisite(case) or native.get('prerequisite')
-                prerequisite = state_prerequisite
+                state_prerequisite = mechanism_prerequisite(case)
+                prerequisite = state_prerequisite or native.get('prerequisite')
                 if not native['request_valid']:
                     prerequisite = native.get('refusal', native.get('prerequisite', 'Native request/context precondition failed'))
                 unavailable = {'executed': False, 'prerequisite': prerequisite or 'This case requests a different mechanism'}
@@ -388,7 +507,7 @@ def run_size(root, prepared, fixtures, inputs, spec, config, profile, run_id):
                             'executed': state_prerequisite is None, 'prerequisite': state_prerequisite,
                             'generation_id': bank.generation_id, 'delivery_ledger': result['delivery_ledger'],
                             'document_sends': actual, 'reused_document_requests': reused, 'query_send': None,
-                            'documents_sent': sum(len(load(root / p['path'])['rendered_sha256']) for p in actual),
+                            'documents_sent': document_counts.get(bank.generation_id, 0),
                             'queries_sent': 0,
                             'task_evidence': {'executed': False, 'prerequisite': 'Finalized actual owned-server task logs are attached after process stop'}}
                 costs = {}
@@ -415,7 +534,7 @@ def run_size(root, prepared, fixtures, inputs, spec, config, profile, run_id):
                                 stream.flush()
                                 os.fsync(stream.fileno())
                             query_vectors[h] = persisted.tolist()
-                            query_sends[h] = pointer(root, path)
+                            query_sends[h] = model.retained_pointer(root, path)
                         domain = [(bank.sources[row['path']], generation['vector_rows'][row['key']]) for row in native['eligible']]
                         began = time.monotonic()
                         exact = store.rank(domain, query_vectors[h])
@@ -444,42 +563,16 @@ def run_size(root, prepared, fixtures, inputs, spec, config, profile, run_id):
                     result['missing_prerequisites'].append({'case_ordinal': case['case_ordinal'], 'variant': variant, 'prerequisite': prerequisite})
         if len(query_vectors) != len(prepared['query_schedule']):
             raise ValueError('Actual query coverage differs from complete frozen schedule')
+    except BaseException as exc:
+        failures.append(('execution', exc))
     finally:
-        stopped, stop_error = None, None
-        try:
-            stopped = model.stop()
-        except BaseException as exc:
-            stop_error = {'type': type(exc).__name__, 'reason': str(exc)}
-            save(model_root / 'finalization-failure.json', stop_error)
-            result['missing_prerequisites'].append({
-                'phase': 'model-finalization',
-                'prerequisite': 'Actual loaded-closure/token/cache finalization failed; model-derived metrics unqualified',
-                'failure': stop_error})
-        try:
-            actual_graph_metrics = graph.metrics()
-        except Exception as exc:
-            actual_graph_metrics = {'executed': False, 'prerequisite': 'Actual graph statistics unavailable: ' + str(exc)}
-        cleanup = graph.cleanup()
-        result['cleanup'] = {'model': stopped, 'model_finalization_error': stop_error, 'graph': cleanup}
-        result['costs'] = {'elapsed_seconds': time.monotonic() - started,
-                           'shared_host': True, 'clean_performance_acceptance': False,
-                           'actual_graph_stats': actual_graph_metrics,
-                           'disk_bytes': sum(p.stat().st_size for p in work.rglob('*') if p.is_file() and not p.is_symlink())}
-        task_path = model_root / 'cache-evidence.json'
-        for observation in observations:
-            if stop_error is not None:
-                reason = 'Actual model dependency/token/cache finalization failed; retained raw vectors are unqualified'
-                observation['semantic'].update(executed=False, prerequisite=reason)
-                observation['semantic']['ann'] = {'executed': False, 'prerequisite': reason}
-                observation['provider'].update(executed=False, prerequisite=reason)
-            if task_path.is_file() and stop_error is None:
-                observation['provider']['task_evidence'] = {'executed': True, **pointer(root, task_path)}
-            else:
-                observation['provider']['task_evidence'] = {'executed': False, 'prerequisite': 'Complete actual finalized task/cache parser evidence unavailable; retain launch/failure logs'}
-            result['observations'].append(write_observation(root, prepared, observation))
-        save(work / 'size-manifest.json', result)
-    if stop_error is not None:
-        raise RuntimeError('Owned model finalization failed; partial observations retained as unqualified')
+        finalize_size(root, prepared, model, graph, documents_complete, document_sends,
+                      profile_sha, result, observations, started, failures)
+    if len(failures) == 1:
+        raise failures[0][1]
+    if failures:
+        raise BaseExceptionGroup('Independent research execution and finalization failures',
+                                 [BaseExceptionGroup(phase, [exc]) for phase, exc in failures])
     return result
 
 
@@ -516,6 +609,7 @@ def main():
         raise KeyboardInterrupt('Controller terminated; owned finally cleanup required')
     signal.signal(signal.SIGTERM, interrupted)
     size_in_progress = None
+    controller_failures = []
     try:
         receipt, fixtures, prepared, inputs, spec, config, profile = freeze(args, root)
         manifest['source_bindings'] = receipt['source_bindings']
@@ -542,24 +636,40 @@ def main():
                     'sizes': [s['cleanup'] for s in manifest['sizes']]}
                 save(root / 'manifest.json', manifest)
                 size_in_progress = None
-            except BaseException:
-                retained = item['root'] / 'size-manifest.json'
-                if retained.is_file():
-                    manifest['sizes'].append(load(retained))
+            except BaseException as execution_error:
+                try:
+                    retained = item['root'] / 'size-manifest.json'
+                    if retained.is_file() and not any(row['size'] == item['size'] for row in manifest['sizes']):
+                        manifest['sizes'].append(load(retained))
+                except BaseException as retention_error:
+                    raise BaseExceptionGroup('Size execution and retained-manifest failures',
+                        [BaseExceptionGroup('execution', [execution_error]),
+                         BaseExceptionGroup('size-manifest-retention', [retention_error])])
                 raise
         print(compact({'manifest': str(root / 'manifest.json'), 'sha256': sha(root / 'manifest.json'), 'qualification_scope': SCOPE}))
         return 0
     except BaseException as exc:
-        save(root / 'failure.json', {'type': type(exc).__name__, 'reason': str(exc),
-             'qualification_scope': SCOPE, 'retain_failed_attempt': True})
+        controller_failures.append(('controller', exc))
+        try:
+            save(root / 'failure.json', {'type': type(exc).__name__, 'reason': str(exc),
+                 'qualification_scope': SCOPE, 'retain_failed_attempt': True})
+        except BaseException as retention_error:
+            controller_failures.append(('failure-receipt-retention', retention_error))
         manifest['cleanup'] = {'status': 'erasure-pending' if size_in_progress is not None or any(
             s.get('cleanup', {}).get('graph', {}).get('status') != 'disposed'
             or not s.get('cleanup', {}).get('model')
             or s.get('cleanup', {}).get('model_finalization_error') for s in manifest['sizes']) else 'no-unowned-disposal',
             'sizes': [s.get('cleanup') for s in manifest['sizes']]}
-        raise
     finally:
-        save(root / 'manifest.json', manifest)
+        try:
+            save(root / 'manifest.json', manifest)
+        except BaseException as retention_error:
+            controller_failures.append(('root-manifest-retention', retention_error))
+        if len(controller_failures) == 1:
+            raise controller_failures[0][1]
+        if controller_failures:
+            raise BaseExceptionGroup('Independent research controller and retention failures',
+                [BaseExceptionGroup(phase, [exc]) for phase, exc in controller_failures])
 
 
 if __name__ == '__main__':
