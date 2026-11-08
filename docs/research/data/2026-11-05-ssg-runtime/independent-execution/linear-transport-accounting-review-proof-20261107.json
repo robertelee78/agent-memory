@@ -1,0 +1,165 @@
+{
+  "controls": [
+    {
+      "accounting": {
+        "documents_complete": false,
+        "global_forbidden_source_keys_in_retained_attempts": [],
+        "interpretation": "Bound request payloads include uncertain transport; incomplete size cells remain unexecuted, not no-send or erasure claims",
+        "pending_batches": 895,
+        "query_tokenization_attempts": [],
+        "retained_requests": 100,
+        "retained_tokenization_requests": 101,
+        "size": 1000,
+        "transport_outcome_unconfirmed_requests": 0,
+        "unconfirmed_tokenization_transports": 1
+      },
+      "all_successful_tokenizer_responses_retained": 100,
+      "captured_unqualified_rows": 100,
+      "completed_batches": 100,
+      "next_batch_tokenizer_interrupted": true,
+      "operation_counts": {
+        "cached_pointer_lookups": 501,
+        "embedding_transport_callbacks": 100,
+        "file_hash_bytes": 88895,
+        "file_hash_calls": 4,
+        "immutable_bytes": 6312581,
+        "immutable_writes": 401,
+        "raw_digest_bytes": 6345737,
+        "raw_digest_calls": 602,
+        "rss_probes_unexecuted": 100,
+        "snapshot_bytes": 91318,
+        "snapshot_writes": 6,
+        "tokenizer_transport_callbacks": 101
+      },
+      "scorer_cli": {
+        "argv": [
+          "/Users/robert.lee/.pyenv/versions/3.13.12/bin/python3",
+          "-I",
+          "-B",
+          "/opt/agent-memory-worktrees/issue255-accounting-20261107/docs/research/data/2026-11-05-ssg-runtime/independent-execution/score.py",
+          "--suite",
+          "/opt/agent-memory-worktrees/issue255-accounting-20261107/docs/research/data/2026-11-05-ssg-runtime/independent-suite/suite.json",
+          "--scorer-map",
+          "/opt/agent-memory-worktrees/issue255-accounting-20261107/docs/research/data/2026-11-05-ssg-runtime/independent-execution/scorer-map-20261106.json",
+          "--raw-root",
+          "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-linear-controller-r53_v6jc/batches-100",
+          "--manifest",
+          "manifest.json",
+          "--expected-source-commit",
+          "3e14160b369c6146e0956924c4330626cbd32869",
+          "--output",
+          "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-linear-controller-r53_v6jc/batches-100-score.json"
+        ],
+        "exit_code": 0,
+        "output": "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-linear-controller-r53_v6jc/batches-100-score.json",
+        "sha256": "69ed0a413756f04f11ee74203e82f00dc5b5579cc32481651ebd086258c5a2b6",
+        "stderr": "",
+        "stdout": "{\"status\": \"raw-research-report-not-acceptance\", \"output\": \"/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-linear-controller-r53_v6jc/batches-100-score.json\", \"output_sha256\": \"69ed0a413756f04f11ee74203e82f00dc5b5579cc32481651ebd086258c5a2b6\", \"model_graph_llm_calls\": 0}\n"
+      },
+      "snapshot_names": [
+        "delivery-ledger.json",
+        "tokenization-ledger.json",
+        "delivery-ledger.json",
+        "tokenization-ledger.json",
+        "cleanup.json",
+        "size-manifest.json"
+      ],
+      "source_manifest": "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-linear-controller-r53_v6jc/batches-100/manifest.json"
+    },
+    {
+      "accounting": {
+        "documents_complete": false,
+        "global_forbidden_source_keys_in_retained_attempts": [],
+        "interpretation": "Bound request payloads include uncertain transport; incomplete size cells remain unexecuted, not no-send or erasure claims",
+        "pending_batches": 795,
+        "query_tokenization_attempts": [],
+        "retained_requests": 200,
+        "retained_tokenization_requests": 201,
+        "size": 1000,
+        "transport_outcome_unconfirmed_requests": 0,
+        "unconfirmed_tokenization_transports": 1
+      },
+      "all_successful_tokenizer_responses_retained": 200,
+      "captured_unqualified_rows": 200,
+      "completed_batches": 200,
+      "next_batch_tokenizer_interrupted": true,
+      "operation_counts": {
+        "cached_pointer_lookups": 1001,
+        "embedding_transport_callbacks": 200,
+        "file_hash_bytes": 176495,
+        "file_hash_calls": 4,
+        "immutable_bytes": 12624329,
+        "immutable_writes": 801,
+        "raw_digest_bytes": 12690033,
+        "raw_digest_calls": 1202,
+        "rss_probes_unexecuted": 200,
+        "snapshot_bytes": 178918,
+        "snapshot_writes": 6,
+        "tokenizer_transport_callbacks": 201
+      },
+      "scorer_cli": {
+        "argv": [
+          "/Users/robert.lee/.pyenv/versions/3.13.12/bin/python3",
+          "-I",
+          "-B",
+          "/opt/agent-memory-worktrees/issue255-accounting-20261107/docs/research/data/2026-11-05-ssg-runtime/independent-execution/score.py",
+          "--suite",
+          "/opt/agent-memory-worktrees/issue255-accounting-20261107/docs/research/data/2026-11-05-ssg-runtime/independent-suite/suite.json",
+          "--scorer-map",
+          "/opt/agent-memory-worktrees/issue255-accounting-20261107/docs/research/data/2026-11-05-ssg-runtime/independent-execution/scorer-map-20261106.json",
+          "--raw-root",
+          "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-linear-controller-r53_v6jc/batches-200",
+          "--manifest",
+          "manifest.json",
+          "--expected-source-commit",
+          "3e14160b369c6146e0956924c4330626cbd32869",
+          "--output",
+          "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-linear-controller-r53_v6jc/batches-200-score.json"
+        ],
+        "exit_code": 0,
+        "output": "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-linear-controller-r53_v6jc/batches-200-score.json",
+        "sha256": "038ab5cf39ff9473bef82c1de7a0610553cdee2659315ce324a98d778ddce58a",
+        "stderr": "",
+        "stdout": "{\"status\": \"raw-research-report-not-acceptance\", \"output\": \"/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-linear-controller-r53_v6jc/batches-200-score.json\", \"output_sha256\": \"038ab5cf39ff9473bef82c1de7a0610553cdee2659315ce324a98d778ddce58a\", \"model_graph_llm_calls\": 0}\n"
+      },
+      "snapshot_names": [
+        "delivery-ledger.json",
+        "tokenization-ledger.json",
+        "delivery-ledger.json",
+        "tokenization-ledger.json",
+        "cleanup.json",
+        "size-manifest.json"
+      ],
+      "source_manifest": "/private/var/folders/bd/84n3hd3120sdr990qkfbgvj00000gp/T/issue255-linear-controller-r53_v6jc/batches-200/manifest.json"
+    }
+  ],
+  "held_out_informed": true,
+  "linear_relations": {
+    "all_snapshot_writes_including_graph_cleanup_and_size_manifest": 6,
+    "cached_pointer_lookups": "5*B+1",
+    "explanation": "No per-batch ledger snapshot or immutable artifact reread; source plan/catalog and source-freeze setup excluded from measured loop/finalizer, identical native plan for both controls. Scorer then independently verifies every final bound byte.",
+    "full_ledger_snapshots": "4 independent of B (two empty initial, two final)",
+    "immutable_transport_writes": "4*B+1",
+    "in_memory_raw_digest_calls": "6*B+2",
+    "ledger_file_hash_calls": 4
+  },
+  "model_graph_endpoint_service_calls": 0,
+  "new_independent_review_and_full_closure_freeze_required": true,
+  "planned_native_source_count": 995,
+  "schema": "am255/linear-transport-accounting-operation-proof-v1",
+  "scope": "Unmodified source-AST document controller loop and actual Model.embed/retain/finalize_size; real pinned native sources/provider gate and actual response validator; explicit transport/liveness/RSS/vector-capture test fixtures. No real inference, graph, endpoints/services, native-tokenizer qualification, wall-clock scaling or 50k runtime claim.",
+  "source_commit": "3e14160b369c6146e0956924c4330626cbd32869",
+  "source_hashes": {
+    "authored-inputs-20261106.json": "fc22d917544e865b9acf2ecc63ff410ccd8d3ced18e810c7755ffb62fa8892f1",
+    "compile_inputs.py": "584c5f2d3d3b1972d17ea77088e79bff8f2d50e68a174aded08c33782b1ea1c9",
+    "execute.py": "42c2872b8044bf485fce0b64ddaa6e36a925094ba0f68192d7bdcd87a70cccbe",
+    "execution-io.json": "2ffa6aae2073991514194202f467ab3b75ab090b8598210e3eaa8c1cab03dbbe",
+    "executor_native.py": "7765ef70e6ac715925d081a9c8c7a629563f5332a9f54510aa7c29a6bf558735",
+    "executor_runtime.py": "3de93bdc84d1ac0a9792071a5ec9f0c4ea1ef388afe1dea251c1953408420ed3",
+    "score.py": "b63174c202148abfc327bf2c415c91bcd64ee40e63b8cdcb21aed9d46d0c20a3",
+    "scorer-map-20261106.json": "b4d7bfde73ca473c90d1a75239b0daf39e10942887465a02f74484aa09cc3f37",
+    "spec.json": "f5efd0b189747f6e2f5e9a5f6fd83e24a19f9cf6e76a7b4a0a083ef864288ad7"
+  },
+  "source_ref": "refs/heads/research/issue255-generation-linear-source-20261107",
+  "temporal_delete_erasure_executed": false
+}
