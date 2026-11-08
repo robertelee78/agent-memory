@@ -185,6 +185,153 @@ class EnrollmentProgress(unittest.TestCase):
                               'retained_entries': len(entries), 'sources': source_proofs,
                               'native_loading': 'not-exercised', 'model_provider': 'not-exercised'}, sort_keys=True))
 
+    def test_transaction_local_read_reuse_requires_exact_live_context_and_preserves_inventory(self):
+        from agent_memory import scope_binding
+        with World() as world, patch.dict(os.environ, world.env, clear=True):
+            helper = fixtures.NativeSources(); repo, session, lifecycle = helper.fixture(world)
+            result = helper.observe(repo, session, lifecycle,
+                [helper.entry('human', 'user', 'Actual ephemeral source.', attribution='user')])
+            lifecycle = result['lifecycle']
+            expected = turn_sources.inspect(repo, 'omp', session, lifecycle)
+            context = scope_binding.private_enrollment_context(repo)
+            with scope_binding._private_enrollment_reads(context):
+                with self.assertRaisesRegex(ValueError, 'active source barrier'):
+                    turn_sources._inspect_enrollment(repo, 'omp', session, lifecycle, context)
+            with turn_sources.source_barrier(repo), scope_binding._private_enrollment_reads(context):
+                with patch.object(scope_binding, 'private_enrollment_context',
+                                  wraps=scope_binding.private_enrollment_context) as discovery:
+                    for _ in range(3):
+                        self.assertEqual(turn_sources._inspect_enrollment(repo, 'omp', session, lifecycle, context), expected)
+                    self.assertEqual(discovery.call_count, 0)
+                with self.assertRaises(ValueError):
+                    turn_sources._inspect_enrollment(world.inside('foreign'), 'omp', session, lifecycle, context)
+                for invalid in ({'project_id': context.project_id}, object()):
+                    with self.assertRaises(ValueError):
+                        turn_sources._inspect_enrollment(repo, 'omp', session, lifecycle, invalid)
+                    with self.assertRaises(ValueError):
+                        turn_sources.register(repo, 'omp', session, lifecycle, 'b' * 64,
+                                              native_source_id='not-written', _enrollment_context=invalid)
+                # Even an actual minted object cannot redirect its reused locator
+                # or claim a hold while retaining the original pin dictionary.
+                original_bank = context.bank
+                try:
+                    context.bank = world.inside('foreign-bank')
+                    with self.assertRaises(ValueError):
+                        scope_binding.recheck_private_enrollment(context)
+                finally:
+                    context.bank = original_bank
+                try:
+                    context.hold = object()
+                    with self.assertRaises(ValueError):
+                        scope_binding.recheck_private_enrollment(context)
+                finally:
+                    context.hold = None
+            with self.assertRaises(ValueError):
+                turn_sources._inspect_enrollment(repo, 'omp', session, lifecycle, context)
+            self.assertEqual(turn_sources.inspect(repo, 'omp', session, lifecycle), expected)
+
+    def test_changed_configured_bank_before_reused_registration_writes_neither_namespace(self):
+        from agent_memory import bank_writes, scope_binding
+        with World() as world, patch.dict(os.environ, world.env, clear=True):
+            helper = fixtures.NativeSources(); repo, session, lifecycle = helper.fixture(world)
+            context = scope_binding.private_enrollment_context(repo)
+            original_namespace = turn_sources.private_namespace(repo, 'omp', session, lifecycle)[3]
+            alternate_bank = repo / 'alternate-bank'; alternate_bank.mkdir()
+            alternate_base = bank_writes.state_paths(repo, alternate_bank, str(fixtures.uuid.uuid4()))[0].parent
+            relative = original_namespace.relative_to(original_namespace.parents[2])
+            alternate_namespace = alternate_base / relative
+            def snapshot(directory):
+                return (directory.exists(), {str(path.relative_to(directory)): path.read_bytes()
+                        for path in directory.rglob('*') if path.is_file()})
+            before = snapshot(original_namespace), snapshot(alternate_namespace)
+            config = repo / '.git/config'; original = config.read_bytes()
+            with turn_sources.source_barrier(repo), scope_binding._private_enrollment_reads(context):
+                try:
+                    world.git('config', '--local', 'agent-memory.bankRoot', 'alternate-bank', cwd=repo)
+                    with self.assertRaises(ValueError):
+                        turn_sources.register(repo, 'omp', session, lifecycle, 'a' * 64,
+                            native_source_id='actual-native-source', _enrollment_context=context)
+                finally:
+                    config.write_bytes(original)
+            self.assertEqual((snapshot(original_namespace), snapshot(alternate_namespace)), before)
+
+    def test_transaction_end_fresh_recheck_refuses_late_config_after_read_only_reuse(self):
+        from agent_memory import scope_binding
+        with World() as world, patch.dict(os.environ, world.env, clear=True):
+            helper = fixtures.NativeSources(); repo, session, lifecycle = helper.fixture(world)
+            context = scope_binding.private_enrollment_context(repo)
+            config = repo / '.git/config'; original = config.read_bytes()
+            try:
+                with self.assertRaises(ValueError):
+                    with turn_sources.source_barrier(repo), scope_binding._private_enrollment_reads(context):
+                        world.git('config', '--local', 'agent-memory.authorityRemote', 'missing-native-authority', cwd=repo)
+                        # Read-only locator reuse can retain the old private view,
+                        # but cannot return a qualified transaction after a changed scope.
+                        turn_sources._inspect_enrollment(repo, 'omp', session, lifecycle, context)
+            finally:
+                config.write_bytes(original)
+            self.assertFalse(turn_sources.private_namespace(repo, 'omp', session, lifecycle)[3].exists())
+            with self.assertRaises(ValueError):
+                turn_sources._inspect_enrollment(repo, 'omp', session, lifecycle, context)
+
+    def test_reused_locator_keeps_post_source_mutation_scope_check_and_original_fault(self):
+        from agent_memory import scope_binding
+        with World() as world, patch.dict(os.environ, world.env, clear=True):
+            helper = fixtures.NativeSources(); repo, session, lifecycle = helper.fixture(world)
+            context = scope_binding.private_enrollment_context(repo)
+            shared = turn_sources.private_namespace(repo, 'omp', session, lifecycle)[3]
+            config = repo / '.git/config'; original = config.read_bytes()
+            exclusive = turn_sources.exclusive; written = []
+            def changed_after_source(path, value, maximum):
+                result = exclusive(path, value, maximum)
+                if path.parent == shared and path.name.startswith('source-'):
+                    written.append(value)
+                    world.git('config', '--local', 'agent-memory.authorityRemote', 'missing-native-authority', cwd=repo)
+                return result
+            try:
+                with self.assertRaises(ValueError), turn_sources.source_barrier(repo), scope_binding._private_enrollment_reads(context):
+                    with patch.object(turn_sources, 'exclusive', side_effect=changed_after_source):
+                        turn_sources.register(repo, 'omp', session, lifecycle, 'a' * 64,
+                            native_source_id='actual-source', source_reference='omp:controlled-source',
+                            _enrollment_context=context)
+            finally:
+                config.write_bytes(original)
+            self.assertEqual(len(written), 1)
+            self.assertEqual(turn_sources.read(shared / 'source-0.json', turn_sources.MAX_SOURCE), written[0])
+            self.assertEqual(turn_sources.read(shared / 'fault.json', turn_sources.MAX_SOURCE)['reason'], 'registration-unverified')
+            self.assertFalse((shared / 'source-1.json').exists())
+
+    def test_held_read_reuse_keeps_exact_intent_pins_and_refuses_changed_hold_without_new_source(self):
+        from contracts.test_held_source_enrollment import HeldSourceEnrollment
+        from agent_memory import scope_binding
+        with World() as world, patch.dict(os.environ, world.env, clear=True):
+            _, repo, bank, _, _, _, _ = HeldSourceEnrollment().fixture(world)
+            context = scope_binding.private_enrollment_context(repo)
+            session = fixtures.uuid.uuid4().hex; lifecycle = fixtures.uuid.uuid4().hex
+            marker = bank / '.agent-memory-transaction.md'; original = marker.read_bytes()
+            try:
+                with self.assertRaises(ValueError), turn_sources.source_barrier(repo), scope_binding._private_enrollment_reads(context):
+                    observed = turn_sources.register(repo, 'claude', session, lifecycle, 'a' * 64,
+                        native_source_id='actual-held-native', source_reference='controlled-held-source',
+                        _enrollment_context=context)
+                    _, _, _, shared, identity = turn_sources._enrollment_namespace(repo, 'claude', session, lifecycle, context)
+                    intent = turn_sources.enrollment_inventory(shared, identity)[0]
+                    self.assertEqual(intent['context_digest'], context.context_digest)
+                    self.assertEqual(intent['observation_id'], observed['observation_id'])
+                    self.assertEqual(intent['state'], 'registered')
+                    with self.assertRaises(ValueError):
+                        turn_sources.namespace(repo, 'claude', session, lifecycle)
+                    changed = json.loads(original); changed['hold_id'] = str(fixtures.uuid.uuid4())
+                    marker.write_bytes(turn_sources.encoded(changed))
+                    turn_sources.register(repo, 'claude', session, lifecycle, 'b' * 64,
+                        native_source_id='different-held-native', source_reference='different-controlled-source',
+                        _enrollment_context=context)
+            finally:
+                marker.write_bytes(original)
+            state = turn_sources.inspect(repo, 'claude', session, lifecycle)
+            self.assertEqual([item['observation_id'] for item in state['sources']], [observed['observation_id']])
+            self.assertEqual(len(turn_sources.enrollment_inventory(shared, identity)), 1)
+
 
 if __name__ == '__main__':
     unittest.main()

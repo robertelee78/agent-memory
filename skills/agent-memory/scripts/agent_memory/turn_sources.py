@@ -140,6 +140,15 @@ def private_namespace(repo,harness,session,lifecycle,create=False):
     return _namespace(repo,harness,session,lifecycle,scope_binding.private_enrollment_context(repo),create)
 
 
+def _enrollment_namespace(repo,harness,session,lifecycle,context):
+    """Private locator reuse only while the exact sealed read operation is live."""
+    context=scope_binding._enrollment_read_context(repo,context)
+    value=_namespace(repo,harness,session,lifecycle,context)
+    if str(value[2].parent) not in _barriers.get():
+        raise ContractError('Private enrollment locator reuse requires the active source barrier')
+    return value
+
+
 def read_bytes(path,maximum):
     from .layout_recovery_state import signature
     path=Path(path);trust_paths.inspect(path)
@@ -348,8 +357,9 @@ def held_register(root,context,base,directory,identity,value):
 
 
 @source_operation
-def register(repo,harness,session,lifecycle,source_sha256,*,native_source_id=None,source_reference=None):
-    root,context,base,directory,identity=private_namespace(repo,harness,session,lifecycle)
+def register(repo,harness,session,lifecycle,source_sha256,*,native_source_id=None,source_reference=None,_enrollment_context=None):
+    root,context,base,directory,identity=(private_namespace(repo,harness,session,lifecycle)
+        if _enrollment_context is None else _enrollment_namespace(repo,harness,session,lifecycle,_enrollment_context))
     value={'schema':'agent-memory/turn-source-v2',**identity,'observation_id':str(uuid.uuid4()),'source_sha256':source_sha256,'native_source_id':native_source_id,'source_reference':source_reference,'control_origin_hint':False}
     validate_source(value,identity)
     if len(encoded(value))>MAX_SOURCE:raise ContractError('Source observation exceeds encoded bound')
@@ -547,6 +557,19 @@ def pending_rows(state,directory,identity):
         if intent['state']!='registered' or intent['observation_id'] not in observed:
             rows[intent['observation_id']]={'observation_id':intent['observation_id'],'source_sha256':intent['source_sha256']}
     return list(rows.values())
+
+
+def _inspect_enrollment(repo,harness,session,lifecycle,context):
+    """Read-only transaction-local inventory; never skips a mutation guard."""
+    root,context,base,directory,identity=_enrollment_namespace(repo,harness,session,lifecycle,context)
+    if not directory.exists():
+        return private_inventory(directory,identity,context)
+    with locked(directory):
+        value=private_inventory(directory,identity,context)
+        again=private_inventory(directory,identity,context)
+        if again!=value:raise ContractError('Source inventory changed; inspect again')
+        scope_binding._enrollment_read_context(repo,context)
+        return value
 
 
 @source_operation

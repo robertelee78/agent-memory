@@ -535,8 +535,16 @@ def enroll_admission(directory, cursor, captured):
         _enroll(directory, cursor, 'omp:capture:' + captured['capture_id'], read(directory / captured['snapshot_ref']), 'admission', captured['native_entry_id'])
 
 
-def _shared(repo, cursor):
+def _shared(repo, cursor, *, enrollment_context=None):
+    if enrollment_context is not None:
+        return turn_sources._enrollment_namespace(repo, 'omp', cursor['session'], cursor['lifecycle'], enrollment_context)
     return turn_sources.private_namespace(repo, 'omp', cursor['session'], cursor['lifecycle'])
+
+
+def _shared_inventory(repo, cursor, enrollment_context=None):
+    if enrollment_context is not None:
+        return turn_sources._inspect_enrollment(repo, 'omp', cursor['session'], cursor['lifecycle'], enrollment_context)
+    return turn_sources.inspect(repo, 'omp', cursor['session'], cursor['lifecycle'])
 
 
 def all_segments(repo, errors=None):
@@ -583,10 +591,10 @@ def all_segments(repo, errors=None):
     return result
 
 
-def registration(repo, directory, cursor, enrollment, *, perform=False):
+def registration(repo, directory, cursor, enrollment, *, perform=False, enrollment_context=None):
     if perform and not source_bound_origin(directory, cursor):
         raise ContractError('Cannot register an unbound native root family')
-    state = turn_sources.inspect(repo, 'omp', cursor['session'], cursor['lifecycle'])
+    state = _shared_inventory(repo, cursor, enrollment_context)
     matches = [s for s in state['sources'] if s['source_reference'] == enrollment['source_reference']]
     if matches:
         if len(matches) != 1 or matches[0]['source_sha256'] != enrollment['source_sha256']:
@@ -604,7 +612,7 @@ def registration(repo, directory, cursor, enrollment, *, perform=False):
         return None, ['registration-fault-retained']
     if not perform:
         return None, []
-    _, _, base, shared, identity = _shared(repo, cursor)
+    _, _, base, shared, identity = _shared(repo, cursor, enrollment_context=enrollment_context)
     pending = base / 'pending'
     occupied = 0; exists = False
     if pending.exists():
@@ -626,24 +634,26 @@ def registration(repo, directory, cursor, enrollment, *, perform=False):
     try:
         observation = turn_sources.register(repo, 'omp', cursor['session'], cursor['lifecycle'],
                                            enrollment['source_sha256'], native_source_id=enrollment['native_source_id'],
-                                           source_reference=enrollment['source_reference'])
+                                           source_reference=enrollment['source_reference'], _enrollment_context=enrollment_context)
     except (OSError, ValueError):
         # register's durable fault is intentionally never erased or retried.
         return None, ['registration-fault-retained']
-    checked = turn_sources.inspect(repo, 'omp', cursor['session'], cursor['lifecycle'])
+    checked = _shared_inventory(repo, cursor, enrollment_context)
     found = [s for s in checked['sources'] if s['observation_id'] == observation['observation_id']]
     if len(found) != 1:
         raise ContractError('Native registration readback unavailable')
     return found[0], checked['faults']
 
 
-def drain_enrollments(repo):
+def drain_enrollments(repo, *, enrollment_context=None):
     """Finish at most eight eligible enrollments, independently of capture time.
 
     Inventory and each selected registration must finish their durable work:
     elapsed-time cutoffs after scope/inspection can otherwise starve every
     callback. The native adapter bounds its await, not this helper's writes.
     """
+    if enrollment_context is not None:
+        scope_binding._enrollment_read_context(repo, enrollment_context)
     attempts = 0
     records = []
     for directory, cursor in all_segments(repo, []):
@@ -661,10 +671,10 @@ def drain_enrollments(repo):
         if attempts >= 8:
             return
         try:
-            observation, faults = registration(repo, directory, cursor, enrollment)
+            observation, faults = registration(repo, directory, cursor, enrollment, enrollment_context=enrollment_context)
             if observation is None and not faults:
                 attempts += 1
-                registration(repo, directory, cursor, enrollment, perform=True)
+                registration(repo, directory, cursor, enrollment, perform=True, enrollment_context=enrollment_context)
         except (OSError, ValueError, TypeError, KeyError):
             continue
 
@@ -730,7 +740,7 @@ def manifest_value(directory, cursor):
         canonical_uuid(item['gap_id'])
     return manifest
 
-def historical_completed_family(repo, directory, cursor):
+def historical_completed_family(repo, directory, cursor, *, enrollment_context=None):
     """Preserve completed old assertions without granting new root authority."""
     root = cursor['origin']['human_root']
     family = [item for item in segments(repo, cursor['session']) if item[1]['origin']['human_root'] == root]
@@ -738,7 +748,7 @@ def historical_completed_family(repo, directory, cursor):
     for old_directory, old_cursor in family:
         if not (old_directory / 'segment.json').exists():
             return False
-        state = turn_sources.inspect(repo, 'omp', old_cursor['session'], old_cursor['lifecycle'])
+        state = _shared_inventory(repo, old_cursor, enrollment_context)
         if state['faults'] or not state['sources']:
             return False
         if any(not source['completed'] for source in state['sources']):
@@ -754,9 +764,9 @@ def historical_completed_family(repo, directory, cursor):
 
 
 
-def segment_inventory(repo, directory, cursor):
+def segment_inventory(repo, directory, cursor, *, enrollment_context=None):
     rows = []
-    if not source_bound_origin(directory, cursor) and not historical_completed_family(repo, directory, cursor):
+    if not source_bound_origin(directory, cursor) and not historical_completed_family(repo, directory, cursor, enrollment_context=enrollment_context):
         return [{'session': cursor['session'], 'lifecycle': cursor['lifecycle'],
                  'human_root': cursor['origin']['human_root'], 'status': 'legacy-unverified-metadata',
                  'source_reference': 'omp:legacy-metadata:' + cursor['lifecycle']}]
@@ -858,7 +868,7 @@ def segment_inventory(repo, directory, cursor):
         if digest(read(target)) != enrollment['source_sha256']:
             raise ContractError('Native enrollment source digest differs')
         try:
-            observation, errors = registration(repo, directory, cursor, enrollment)
+            observation, errors = registration(repo, directory, cursor, enrollment, enrollment_context=enrollment_context)
         except (OSError, ValueError):
             observation, errors = None, ['source-unavailable']
         status = 'registration-fault' if errors else ('completed' if observation and observation['completed'] else 'pending-assessment' if observation else 'enrollment-pending')
@@ -886,11 +896,13 @@ def segment_inventory(repo, directory, cursor):
     return rows
 
 
-def pending_inventory(repo):
+def pending_inventory(repo, *, enrollment_context=None):
+    if enrollment_context is not None:
+        scope_binding._enrollment_read_context(repo, enrollment_context)
     rows = []; faults = []; represented = set()
     for directory, cursor in all_segments(repo, faults):
         try:
-            segment_rows = segment_inventory(repo, directory, cursor)
+            segment_rows = segment_inventory(repo, directory, cursor, enrollment_context=enrollment_context)
             rows.extend(segment_rows)
             represented.update(row['observation_id'] for row in segment_rows if 'observation_id' in row)
         except (OSError, ValueError, TypeError, KeyError):
@@ -924,7 +936,7 @@ def pending_inventory(repo):
             continue
         first = sources[0]
         try:
-            root, _, _, expected, identity = turn_sources.private_namespace(repo, 'omp', first['session'], first['lifecycle'])
+            root, _, _, expected, identity = _shared(repo, first, enrollment_context=enrollment_context)
             if expected != directory:
                 raise ContractError('Foreign shared source namespace')
             with turn_sources.locked(directory):
@@ -1055,14 +1067,14 @@ def complete(repo, value):
         return turn_sources.complete(repo, 'omp', value['session'], value['lifecycle'], value['observation_id'], value['source_sha256'], receipt)
 
 
-def wake(repo, session, lifecycle, payload, *, delivery_window=None):
+def wake(repo, session, lifecycle, payload, *, delivery_window=None, enrollment_context=None):
     exact(payload, {'observation_ids', 'enrollment_refs'})
     for key in payload:
         if not isinstance(payload[key], list) or payload[key] != sorted(set(payload[key])):
             raise ContractError('Use sorted unique native wake references')
     directory = session_dir(repo, session) / canonical_uuid(lifecycle)
     cursor = cursor_value(read(directory / 'cursor.json'), session, lifecycle)
-    rows, faults = pending_inventory(repo)
+    rows, faults = pending_inventory(repo, enrollment_context=enrollment_context)
     current = [r for r in rows if r['session'] == session and r.get('human_root') == cursor['origin']['human_root'] and r['status'] != 'completed']
     expected_ids = sorted(r['observation_id'] for r in current if 'observation_id' in r)
     expected_refs = sorted(r['source_reference'] for r in current if 'observation_id' not in r and r['source_reference'].startswith(('omp:capture:', 'omp:seal:')))
@@ -1107,6 +1119,9 @@ def wake(repo, session, lifecycle, payload, *, delivery_window=None):
                 ' Faults:' + json.dumps(faults) + ' [/agent-memory omp request]')
     if len(guidance.encode()) > 8192:
         return {'continue': False, 'status': 'pending-wake-guidance-bound', 'canonical_writes_performed': False}
+    if enrollment_context is not None:
+        scope_binding._enrollment_read_context(repo, enrollment_context)
+        scope_binding.recheck_private_enrollment(enrollment_context)
     from .omp_stream import VerifiedNativeDeliveryWindow
     if type(delivery_window) is not VerifiedNativeDeliveryWindow or not delivery_window.allow_reservation():
         return {'continue': False, 'status': 'pending-undeliverable-window', 'canonical_writes_performed': False}
@@ -1237,7 +1252,7 @@ def observe(repo, value, *, receipt=None, on_started=None, delivery_window=None,
     if verified_binding is None:
         verified_binding = _verify_observer_receipt(receipt)
     with source_barrier(repo), private_lock(_base(repo) / 'omp-transport.lock'):
-        with _verify_observer_receipt(receipt, repo=repo, verified_binding=verified_binding) as context:
+        with _verify_observer_receipt(receipt, repo=repo, verified_binding=verified_binding) as context, scope_binding._private_enrollment_reads(context):
             fences = []
             if value['action'] == 'ingest':
                 from . import omp_stream
@@ -1245,7 +1260,8 @@ def observe(repo, value, *, receipt=None, on_started=None, delivery_window=None,
             if on_started is not None:
                 on_started()
             if value['action'] == 'wake':
-                return {'verified': True, **wake(repo, session, value['lifecycle'], payload, delivery_window=delivery_window)}
+                return {'verified': True, **wake(repo, session, value['lifecycle'], payload, delivery_window=delivery_window,
+                                               enrollment_context=context)}
             if value['action'] in {'ingest', 'seal'}:
                 current = [item for item in segments(repo, session) if source_bound_origin(*item)]
                 known = {}; tools = {}; invocations = {}; retained_results = []
@@ -1561,9 +1577,9 @@ def observe(repo, value, *, receipt=None, on_started=None, delivery_window=None,
                         if source_bound_origin(old_d, old_c) and not (old_d / 'segment.json').exists():
                             seal(old_d, old_c)
             scope_binding.recheck_private_enrollment(context)
-            drain_enrollments(repo)
+            drain_enrollments(repo, enrollment_context=context)
             current = segments(repo, session)
-            rows, faults = pending_inventory(repo)
+            rows, faults = pending_inventory(repo, enrollment_context=context)
             chosen = active_segment(current, payload.get('branch_ids'))
             latest = chosen[1] if chosen else None
             root_rows = [r for r in rows if latest and r['session'] == session and r.get('human_root') == latest['origin']['human_root'] and r['status'] != 'completed']
@@ -1590,7 +1606,8 @@ def observe(repo, value, *, receipt=None, on_started=None, delivery_window=None,
             result['source_coverage_complete'] = view['source_kind'] == 'retired-file' and source_complete
             if value['action'] == 'seal' and payload['request_wake'] and latest:
                 try:
-                    result.update(wake(repo, session, latest['lifecycle'], result['wake_payload'], delivery_window=delivery_window))
+                    result.update(wake(repo, session, latest['lifecycle'], result['wake_payload'], delivery_window=delivery_window,
+                                       enrollment_context=context))
                 except Exception:
                     # The source transaction is verified independently of wake preparation.
                     result.update({'continue': False, 'status': 'pending-wake-unavailable'})
