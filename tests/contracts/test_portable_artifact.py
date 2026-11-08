@@ -1,6 +1,8 @@
 """A complete copied package identifies itself and operates without clients."""
 import ast
+from contextlib import redirect_stdout
 import hashlib
+from io import StringIO
 import json
 from pathlib import Path
 import shutil
@@ -198,8 +200,12 @@ class PortableArtifactContract(unittest.TestCase):
                     else:
                         (pack / 'unreachable.md').write_text('# Unreachable instruction\n')
                     try:
-                        with self.assertRaises(pack_validation.Invalid):
-                            artifact.inspect(pack)
+                        with redirect_stdout(StringIO()) as output:
+                            status = artifact.main(['inspect', '--pack', str(pack)])
+                        refused = json.loads(output.getvalue())
+                        self.assertEqual(status, 1)
+                        self.assertFalse(refused['valid'])
+                        self.assertFalse(refused['writes_performed'])
                     finally:
                         if manual.is_symlink():
                             manual.unlink()
