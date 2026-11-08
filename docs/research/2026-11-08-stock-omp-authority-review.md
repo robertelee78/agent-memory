@@ -80,3 +80,23 @@ causal EOF, shutdown flush and positive model-forgets qualification remain open.
 A separately reviewed model-free diagnostic uses new synthetic stream identities
 to distinguish the original companion from worker startup; it does not authorize
 closing original streams, changing omp or repeating model prompts.
+
+### Model-free follow-up: observer defect isolated
+
+The [subsequent actual diagnostic](data/2026-11-06-omp-native/companion-parser-disposition-20261108.json)
+used two new synthetic stream identities, without a model or native process.
+The unchanged hook route without the companion returned READY, verified the
+neutral hint and closed successfully. With the frozen companion it returned
+READY but exited 1 with OPEN only.
+
+The companion cleared a bytearray backing its regex match before reading the
+capture groups. An isolated standard-library reproduction produced empty groups
+and `ValueError`; independent Opus source/evidence review traced that exception
+through the writer and reader catch paths. This explains the new companion arm's
+failure and missing observation records. Its absence of a READY log did not mean
+READY was absent from transport.
+
+The original R4 failures are consistent with this defect **[INFERENCE]**, not
+retroactively qualified or conclusively attributed. Original and new pending
+streams remain retained. The successful baseline covers neutral metadata only,
+not source capture, learning, native lifecycle or flush timing.

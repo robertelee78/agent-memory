@@ -1,0 +1,97 @@
+{
+  "schema": "agent-memory/core255-native-numeric-prerequisite-smoke-v1",
+  "driver_sha256": "b8fc894fbb573b0028623b11b45d9daaf0189da7a125b6a7d12306d26f6277f7",
+  "native_commit": "175d21fa26bbef41f8ec859b463876934e16db79",
+  "native_tree_sha256": "9bd89d0e341ee8984db9e5082936807a49f1368a05a40ce026193f7b34e88ef3",
+  "smoke_source_sha256": "310f5ae108d6ac932f3eb496ae5aab826afc9728b86c25ac3d81d9dba6c32867",
+  "actual_result_sha256": "377da570c42993fcd3707c7bc265ebe9cc2ecbd1df4bd5c53f202e244545726f",
+  "actual_exit": 0,
+  "runtime": {
+    "python": "3.13.12",
+    "numpy": "2.2.6",
+    "neo4j": "5.28.2",
+    "pytz": "2026.6",
+    "distribution_closure_sha256": "c3db9f4eab083c473e40efdca72d441f7a6a372a6a7a49499edad4ae36cdc3e1"
+  },
+  "result": {
+    "G1": false,
+    "adapter_imported": false,
+    "cells": [
+      {
+        "actual_eligible_count": 64,
+        "all_native_paths_equal_vector_members": true,
+        "eligible_N": 64,
+        "exclusions": {
+          "active": 2,
+          "applicable": 1,
+          "different-context:component": 1,
+          "missing-context:task": 1,
+          "no-active-superseder": 1,
+          "non-guidance-format": 5,
+          "orientation-not-requested": 1,
+          "pending-semantic-conflict": 1,
+          "result-budget": 32,
+          "security:credential": 1,
+          "sufficient-trust": 1,
+          "visible": 2
+        },
+        "f32_envelope": 2.9147473656898626e-08,
+        "max_float64_error": 0.0,
+        "native_bank_generation": "numeric-v1-64-0a36dbc36cd2266de5df684f0c54c6972e0c3fad294afc46cdd152c0fc24718a",
+        "native_bounded_count": 32,
+        "oracle_predicates": {
+          "antiparallel_signed": true,
+          "f32_envelope_clear": true,
+          "float64_fsum_agreement": true,
+          "independent_top5_agrees": true,
+          "nonunit_normalized": true,
+          "orthogonal": true,
+          "parallel_signed": true,
+          "top5_gap_clear": true
+        },
+        "rank5_rank6_gap": 0.03999999955498634,
+        "vectors_sha256": "f3ee0544a213f37ad80d3d98702c3eed8cb929eaa3540539d397f5c6a901d32d"
+      },
+      {
+        "actual_eligible_count": 1024,
+        "all_native_paths_equal_vector_members": true,
+        "eligible_N": 1024,
+        "exclusions": {
+          "active": 2,
+          "applicable": 1,
+          "different-context:component": 1,
+          "missing-context:task": 1,
+          "no-active-superseder": 1,
+          "non-guidance-format": 45,
+          "orientation-not-requested": 1,
+          "pending-semantic-conflict": 1,
+          "result-budget": 992,
+          "security:credential": 1,
+          "sufficient-trust": 1,
+          "visible": 2
+        },
+        "f32_envelope": 3.303414264355098e-08,
+        "max_float64_error": 0.0,
+        "native_bank_generation": "numeric-v1-1024-eab10e8619936cceb12359776ff4a6a2b0194a2b29aada148ff41ff7a93cf7b9",
+        "native_bounded_count": 32,
+        "oracle_predicates": {
+          "antiparallel_signed": true,
+          "f32_envelope_clear": true,
+          "float64_fsum_agreement": true,
+          "independent_top5_agrees": true,
+          "nonunit_normalized": true,
+          "orthogonal": true,
+          "parallel_signed": true,
+          "top5_gap_clear": true
+        },
+        "rank5_rank6_gap": 0.03999999955498634,
+        "vectors_sha256": "59cca79b037a110158e77f764cdc58e1a43b2ac37a88422c852257fe393af735"
+      }
+    ],
+    "full_numeric_campaign": false,
+    "graph_calls": 0,
+    "model_calls": 0,
+    "schema": "am255/synthetic-native-maths-smoke-v1"
+  },
+  "interpretation": "Actual synthetic native-bank validity/global prebudget membership and independent persisted-f32 exact oracle only. No adapter import, graph, ANN, model, endpoint, semantic quality, performance, named scales or G1 acceptance."
+}
