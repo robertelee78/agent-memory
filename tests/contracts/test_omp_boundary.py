@@ -1194,12 +1194,30 @@ for line in sys.stdin:
         self.assertFalse(report['full_native_qualification'])
         return report
 
-    def test_historical_observers_cannot_qualify_disabled_current_extension(self):
+    def test_historical_observers_cannot_qualify_new_current_session(self):
+        from runtime_update_fixtures import ROOT
+        spec = importlib.util.spec_from_file_location('omp_native_smoke', ROOT / 'scripts/evaluations/omp_native_smoke.py')
+        smoke = importlib.util.module_from_spec(spec); spec.loader.exec_module(smoke)
         with World() as world:
-            repo, receipt, path = self.fixture(world)
-            report = self.smoke(world, repo, receipt, path, self.binary(world, receipt))
-            self.assertEqual(report['status_readback']['omp']['observer_evidence'], 'retained')
-            self.assertEqual(report['native_requests'], ['human-1', 'human-2'])
+            repo, receipt, _ = self.fixture(world)
+            root = world.inside('historical-verifier-run')
+            (root / 'sessions').mkdir(parents=True)
+            session = str(uuid.uuid4())
+            prompts = ['First actual current task.', 'Second actual current task.']
+            humans = [NativeSources().entry('current-first', 'user', prompts[0], attribution='user'),
+                      NativeSources().entry('current-second', 'user', prompts[1],
+                                            parent='current-first', attribution='user')]
+            path = root / 'sessions/current.jsonl'
+            path.write_text('\n'.join(json.dumps(value) for value in [
+                {'type': 'session', 'id': session, 'cwd': str(repo)}, *humans]) + '\n')
+            am = str(Path(receipt['bin_dir']) / 'am')
+            status = json.loads(world.run([am, '--json', 'status', '--repo', repo], timeout=30).stdout)
+            self.assertEqual([entry['id'] for entry in smoke.current_humans(
+                repo, root, session, str(path), prompts)], ['current-first', 'current-second'])
+            with self.assertRaises(smoke.PendingObservations):
+                smoke.current_observations(am, repo, root, session, str(path), prompts, status, world.env)
+            with patch.dict(os.environ, world.env, clear=True):
+                self.assertEqual(transport.segments(repo, session), [])
 
     def test_both_exact_current_human_turns_and_persistent_session_are_required(self):
         for mode in ('first-only', 'wrong-text', 'wrong-id', 'missing-session'):
@@ -1281,9 +1299,10 @@ for line in sys.stdin:
             repo, receipt, _ = self.fixture(world)
             root = world.inside('registration-verifier-run')
             (root / 'sessions').mkdir(parents=True)
-            session, lifecycle = str(uuid.uuid4()), str(uuid.uuid4())
+            session = str(uuid.uuid4())
             prompt = 'Controlled ephemeral source awaiting registration.'
             human = NativeSources().entry('registration-human', 'user', prompt, attribution='user')
+            lifecycle = str(uuid.uuid5(uuid.NAMESPACE_URL, str(repo.resolve()) + ':omp:' + session + ':' + human['id']))
             path = root / 'sessions/current.jsonl'
             path.write_text('\n'.join(json.dumps(value) for value in [
                 {'type': 'session', 'id': session, 'cwd': str(repo)}, human]) + '\n')
@@ -1292,6 +1311,11 @@ for line in sys.stdin:
             with patch.dict(os.environ, world.env, clear=True):
                 directory, cursor = transport.new_segment(repo, session, lifecycle, lifecycle, 'human', 1)
                 captured = transport.capture(directory, cursor, human)
+                # Real stored-user identity and capture, with only shared
+                # registration unfinished; never a legacy notification root.
+                cursor['control_interval'] = {'human_entry': human['id']}
+                cursor['last_native_entry'] = human['id']
+                transport.replace_cursor(directory / 'cursor.json', cursor)
                 transport.enroll_admission(directory, cursor, captured)
             with self.assertRaises(smoke.PendingObservations):
                 smoke.current_observations(am, repo, root, session, str(path), [prompt], status, world.env)
