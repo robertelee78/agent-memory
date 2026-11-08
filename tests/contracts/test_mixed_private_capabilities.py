@@ -89,17 +89,15 @@ class MixedPrivateCapabilities(unittest.TestCase):
             entry = {'type': 'message', 'id': 'synthetic-human', 'parentId': None,
                      'message': {'role': 'user', 'attribution': 'user',
                                  'content': 'Disposable synthetic carrier observation, no native client or provider.'}}
-            payload = {'schema': 'agent-memory/omp-observer-request-v1', 'action': 'seal',
-                       'session': str(uuid.uuid4()), 'lifecycle': str(uuid.uuid4()),
-                       'payload': {'entries': [entry], 'branch_ids': ['synthetic-human'], 'event_ordinal': 1,
-                                   'terminal': False, 'trigger': 'human', 'inherited_ids': [], 'metadata': [],
-                                   'request_wake': False}}
+            session = str(uuid.uuid4())
+            source_view = test_omp_boundary.observer_payload(repo, session, [entry], trigger='human')
+            source_view['request_wake'] = False
+            payload = {'schema': 'agent-memory/omp-observer-request-v2', 'action': 'seal',
+                       'session': session, 'lifecycle': str(uuid.uuid4()), 'payload': source_view}
             def input_command(args, value):
                 return subprocess.run([str(command), *map(str, args)], cwd=repo, env=world.env,
                                       input=json.dumps(value), text=True, capture_output=True, timeout=60)
-            observed = input_command(['omp-boundary', '--repo', repo, '--observer', '--stdin',
-                                      '--artifact', result['receipt']['source']['artifact_digest'],
-                                      '--omp-agent-dir', root], payload)
+            observed = test_omp_boundary.observe_installed(world, command, repo, result['receipt'], payload)
             self.assertEqual(observed.returncode, 0, observed.stdout + observed.stderr)
             self.assertTrue(json.loads(observed.stdout)['held'])
             def pending():
@@ -110,7 +108,7 @@ class MixedPrivateCapabilities(unittest.TestCase):
             self.assertEqual(len(rows), 2)
             checked = json.loads(world.run([*args, '--check'], timeout=60).stdout)
             self.assertEqual(checked['private_compatibility']['required_capabilities'],
-                             ['layout-frontier-v1', 'omp-harness-v1'])
+                             ['layout-frontier-v1', 'omp-harness-v1', 'omp-stored-source-v2'])
             def assessment(row):
                 inspected_source = json.loads(world.run([command, 'omp-boundary', '--repo', repo, '--source',
                     row['observation_id'], '--session', row['session'], '--lifecycle', row['lifecycle']],
@@ -165,6 +163,9 @@ class MixedPrivateCapabilities(unittest.TestCase):
             channel, pack, receipt = lifecycle.managed(world)
             command = Path(receipt['bin_dir']) / 'am'
             repo, bank, native = recovery.memory(world)
+            # Enroll the newly discovered bank through the committed native
+            # lifecycle before introducing the invalid recovery source.
+            self.assertTrue(lifecycle.public(world, receipt, 'recover')['verified'])
             (bank / 'handoff-prompt.md').write_text(recovery.policy_body(0))
             (repo / 'synthetic-policy.md').write_text(recovery.policy_body(0))
             world.git('add', 'synthetic-policy.md', cwd=repo)
@@ -174,14 +175,12 @@ class MixedPrivateCapabilities(unittest.TestCase):
             entry = {'type': 'message', 'id': 'synthetic-human', 'parentId': None,
                      'message': {'role': 'user', 'attribution': 'user',
                                  'content': 'Disposable synthetic carrier observation, no native client or provider.'}}
-            request = {'schema': 'agent-memory/omp-observer-request-v1', 'action': 'seal',
-                       'session': str(uuid.uuid4()), 'lifecycle': str(uuid.uuid4()),
-                       'payload': {'entries': [entry], 'branch_ids': ['synthetic-human'], 'event_ordinal': 1,
-                                   'terminal': False, 'trigger': 'human', 'inherited_ids': [], 'metadata': [],
-                                   'request_wake': False}}
-            observed = subprocess.run([str(command), 'omp-boundary', '--repo', str(repo), '--observer', '--stdin',
-                '--artifact', receipt['source']['artifact_digest'], '--omp-agent-dir', receipt['omp_binding']['agent_dir']],
-                input=json.dumps(request), cwd=repo, env=world.env, text=True, capture_output=True, timeout=60)
+            session = str(uuid.uuid4())
+            source_view = test_omp_boundary.observer_payload(repo, session, [entry], trigger='human')
+            source_view['request_wake'] = False
+            request = {'schema': 'agent-memory/omp-observer-request-v2', 'action': 'seal',
+                       'session': session, 'lifecycle': str(uuid.uuid4()), 'payload': source_view}
+            observed = test_omp_boundary.observe_installed(world, command, repo, receipt, request)
             self.assertEqual(observed.returncode, 0, observed.stdout + observed.stderr)
             pending = json.loads(world.run([command, 'omp-boundary', '--repo', repo, '--list-pending',
                                            '--offset', '0'], timeout=60).stdout)['pending']
@@ -200,7 +199,7 @@ class MixedPrivateCapabilities(unittest.TestCase):
             self.assertFalse(applied['semantic_recovery_complete'])
             check = lifecycle.public(world, receipt, 'update', '--check')
             self.assertEqual(check['private_compatibility']['required_capabilities'],
-                             ['layout-frontier-v1', 'omp-harness-v1'])
+                             ['layout-frontier-v1', 'omp-harness-v1', 'omp-stored-source-v2'])
             directory = recovery.private_directory(world, bank, inspected['operation_id'])
             old = v014_runtime_fixture.extract(world.inside('actual-published-v014'))
             shutil.rmtree(pack)
@@ -241,7 +240,7 @@ class MixedPrivateCapabilities(unittest.TestCase):
             renewal = recovery.save(world, envelope)
             checked = lifecycle.public(world, receipt, 'update', '--layout-quiescence', str(renewal), '--check')
             self.assertEqual(checked['private_compatibility']['required_capabilities'],
-                             ['layout-frontier-v1', 'omp-harness-v1'])
+                             ['layout-frontier-v1', 'omp-harness-v1', 'omp-stored-source-v2'])
             changed = lifecycle.public(world, receipt, 'update', '--layout-quiescence', str(renewal))
             self.assertTrue(changed['verified'])
             self.assertTrue(changed['changed'])
@@ -273,6 +272,7 @@ class MixedPrivateCapabilities(unittest.TestCase):
             _, pack, receipt = lifecycle.managed(world)
             command = Path(receipt['bin_dir']) / 'am'
             repo, bank, native = recovery.memory(world)
+            self.assertTrue(lifecycle.public(world, receipt, 'recover')['verified'])
             (bank / 'handoff-prompt.md').write_text(recovery.policy_body(0))
             (repo / 'synthetic-policy.md').write_text(recovery.policy_body(0))
             world.git('add', 'synthetic-policy.md', cwd=repo)
@@ -280,17 +280,15 @@ class MixedPrivateCapabilities(unittest.TestCase):
             entry = {'type': 'message', 'id': 'synthetic-human', 'parentId': None,
                      'message': {'role': 'user', 'attribution': 'user',
                                  'content': 'Disposable synthetic carrier observation, no native client or provider.'}}
-            request = {'schema': 'agent-memory/omp-observer-request-v1', 'action': 'seal',
-                       'session': str(uuid.uuid4()), 'lifecycle': str(uuid.uuid4()),
-                       'payload': {'entries': [entry], 'branch_ids': ['synthetic-human'], 'event_ordinal': 1,
-                                   'terminal': False, 'trigger': 'human', 'inherited_ids': [], 'metadata': [],
-                                   'request_wake': False}}
+            session = str(uuid.uuid4())
+            source_view = test_omp_boundary.observer_payload(repo, session, [entry], trigger='human')
+            source_view['request_wake'] = False
+            request = {'schema': 'agent-memory/omp-observer-request-v2', 'action': 'seal',
+                       'session': session, 'lifecycle': str(uuid.uuid4()), 'payload': source_view}
             def send(args, value):
                 return subprocess.run([str(command), *map(str, args)], input=json.dumps(value),
                                       cwd=repo, env=world.env, text=True, capture_output=True, timeout=60)
-            observed = send(['omp-boundary', '--repo', repo, '--observer', '--stdin',
-                             '--artifact', receipt['source']['artifact_digest'],
-                             '--omp-agent-dir', receipt['omp_binding']['agent_dir']], request)
+            observed = test_omp_boundary.observe_installed(world, command, repo, receipt, request)
             self.assertEqual(observed.returncode, 0, observed.stdout + observed.stderr)
             def pending():
                 return json.loads(world.run([command, 'omp-boundary', '--repo', repo, '--list-pending',
@@ -337,7 +335,7 @@ class MixedPrivateCapabilities(unittest.TestCase):
                          for row in inspected['manifest']['sources']}
             check = lifecycle.public(world, receipt, 'update', '--check')
             self.assertEqual(check['private_compatibility']['required_capabilities'],
-                             ['layout-frontier-v1', 'omp-harness-v1'])
+                             ['layout-frontier-v1', 'omp-harness-v1', 'omp-stored-source-v2'])
             before = (snapshot(bank), snapshot(directory), snapshot(world.paths['config']),
                       (repo / '.git/index').read_bytes(), world.git('rev-parse', 'HEAD', cwd=repo).stdout)
             denied = lifecycle.public(world, receipt, 'uninstall', '--omp-writers-quiesced', expected=1)

@@ -176,6 +176,76 @@ def current_observations(am, repo, root, session, session_file, prompts, status,
     return evidence
 
 
+def current_native_leaf(stored):
+    """Pinned 18.16 session-entries public leaf-selector semantics, not file adjacency."""
+    entries = [entry for entry in stored if entry.get('type') not in {'session', 'title'}]
+    ids = set(); leaf = None; newest_self_selected = None
+    for entry in entries:
+        identifier = entry.get('id')
+        if not isinstance(identifier, str) or not identifier or identifier in ids:
+            raise RuntimeError('Stored native entry identity is unavailable or duplicated')
+        ids.add(identifier)
+        selected = entry['activeLeafId'] if 'activeLeafId' in entry else identifier
+        if selected is not None and (not isinstance(selected, str) or not selected):
+            raise RuntimeError('Stored native active leaf identity is malformed')
+        leaf = selected
+        if selected == identifier:
+            newest_self_selected = identifier
+    return newest_self_selected if leaf is not None and leaf not in ids else leaf
+
+
+def current_stream_outcomes(repo, session, session_file, status, env, pending):
+    """Read counted receipts, not process-child liveness, after public inventory validation."""
+    for row in pending:
+        qualification = row.get('qualification')
+        if (isinstance(qualification, dict) and qualification.get('session') == session
+                and qualification.get('code') != 'open-stream'):
+            raise PendingObservations('Current finite stream retains unresolved execution/coverage evidence')
+    bank = Path(status['bank']['path'])
+    state = Path(env.get('AGENT_MEMORY_STATE_HOME') or
+                 str(Path(env.get('XDG_STATE_HOME', str(Path.home() / '.local/state'))) / 'agent-memory')).expanduser()
+    base = state / 'writes' / hashlib.sha256(str(bank).encode()).hexdigest()
+    directory = base / 'omp-stream-v1' / hashlib.sha256(session.encode()).hexdigest()
+    stored = [json.loads(line) for line in Path(session_file).read_text().splitlines() if line.strip()]
+    leaf = current_native_leaf(stored)
+    if leaf is None:
+        raise PendingObservations('Current stored native leaf is unavailable')
+    evidence = []; covered = False
+    for opened_path in sorted(directory.glob('*/open.json')):
+        opened = json.loads(opened_path.read_text())
+        if opened.get('session') != session or opened.get('repo_root') != str(Path(repo).resolve()):
+            raise RuntimeError('Finite stream is bound to a foreign native session/repository')
+        instance = opened['instance_id']
+        if opened_path.parent.name != instance:
+            raise RuntimeError('Finite stream instance namespace differs')
+        attempts = sorted(opened_path.parent.glob('attempts/*.json'), key=lambda path: int(path.stem))
+        for sequence, path in enumerate(attempts, 1):
+            attempt = json.loads(path.read_text())
+            try:
+                outcome = json.loads((opened_path.parent / 'outcomes' / (str(sequence) + '.json')).read_text())
+            except FileNotFoundError:
+                raise PendingObservations('A received finite source attempt has no terminal outcome') from None
+            if (path.stem != str(sequence) or attempt.get('sequence') != sequence
+                    or attempt.get('instance_id') != instance
+                    or attempt.get('open_sha256') != source_digest(opened)
+                    or outcome.get('sequence') != sequence
+                    or outcome.get('open_sha256') != source_digest(opened)
+                    or outcome.get('attempt_sha256') != source_digest(attempt)):
+                raise RuntimeError('Finite source attempt/outcome receipts differ')
+            if outcome.get('outcome') != 'verified':
+                raise PendingObservations('Finite source attempt lacks a verified terminal outcome')
+            identity = attempt.get('identity') or {}
+            if (attempt.get('action') == 'seal' and attempt.get('source_kind') == 'session-manager'
+                    and identity.get('kind') in {'baseline', 'delta'}
+                    and identity.get('leaf_id') == leaf):
+                covered = True
+        evidence.append({'instance_id': instance, 'received_sequence': len(attempts),
+                         'terminal_sequence': len(attempts)})
+    if not covered:
+        raise PendingObservations('No verified finite seal covers the current stored native leaf')
+    return evidence
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--binary', required=True)
@@ -219,6 +289,11 @@ def main():
               'model': args.model, 'approval_mode': args.approval_mode or 'native-existing-default',
               'native_requests': [], 'refused_ui_requests': 0, 'task_sentinels': {}, 'failures': [],
               'native_adapter_diagnostics': [], 'native_ui_methods': {},
+              'observer_execution_route': {
+                  'authority': 'receipt-owned native hook spawn; not a public one-shot writer',
+                  'argv_prefix': ['/bin/sh', str(Path(receipt['source']['pack']) / 'hooks/python3.sh'),
+                                  str(Path(receipt['source']['pack']) / 'scripts/omp_boundary.py'), '--stream'],
+                  'evidence': 'loaded owned extension plus actual finite attempt/outcome receipts; not a separate process-argv trace'},
               'readback_attempts': 0}
     frames = queue.Queue()
     process = None
@@ -256,9 +331,9 @@ def main():
                 label = method if method in known_methods else 'unknown'
                 result['native_ui_methods'][label] = result['native_ui_methods'].get(label, 0) + 1
                 # Retain only fixed owned-adapter codes, never arbitrary UI text.
-                for code in ('inactive: unsupported version or missing explicit installed binding',
-                             'duplicate-binding', 'observer pending', 'metadata-capacity coverage gap',
-                             'observer wait ended; retained work pending'):
+                for code in ('inactive: unsupported public API or activation binding',
+                             'duplicate-binding', 'observer pending', 'observer result unavailable',
+                             'observer shutdown flush pending'):
                     values = (frame.get('message'), frame.get('text'), frame.get('statusText'))
                     if ('am: ' + code in values or
                             'Agent Memory: ' + code + '; sources remain pending. Use am status/doctor and am omp-boundary --list-pending.' in values):
@@ -323,38 +398,40 @@ def main():
         # Wait read-only, with a deadline; never manufacture or acknowledge sources.
         waiting = time.monotonic()
         deadline = waiting + args.timeout
-        quiet_samples = 0
         while True:
             result['readback_attempts'] += 1
             try:
                 bounded_timeout(deadline, args.timeout)
-                # Readback locks are nonblocking. Do not contend with the native
-                # helper and make its one-shot durable observation fail ourselves.
+                # A live detached finite worker is expected. Inspect counted terminal
+                # receipts and the joined public inventory, never a no-children heuristic.
                 identifier = 'observer-progress-' + str(result['readback_attempts'])
                 send({'id': identifier, 'type': 'get_state'})
                 progress = until('response', identifier, deadline=deadline)
                 if progress.get('data', {}).get('sessionId') != result['session_id']:
                     raise RuntimeError('Native session changed while awaiting its observer')
-                processes = subprocess.run(['ps', '-axo', 'pid=,ppid='], env=env,
-                                           capture_output=True, text=True, check=True,
-                                           timeout=bounded_timeout(deadline, 5))
-                children = [line for line in processes.stdout.splitlines()
-                            if len(line.split()) == 2 and int(line.split()[1]) == process.pid]
-                quiet_samples = 0 if children else quiet_samples + 1
-                if quiet_samples < 2:
-                    if time.monotonic() >= deadline:
-                        raise PendingObservations('Native observer helpers did not become idle before the deadline')
-                    time.sleep(bounded_timeout(deadline, 0.5))
-                    continue
                 result['pending_readback'] = json.loads(run(
                     [args.am, 'omp-boundary', '--repo', str(repo), '--list-pending'],
                     cwd=repo, env=env, deadline=deadline))
+                pending = list(result['pending_readback']['pending'])
+                cursor = result['pending_readback'].get('next_offset')
+                while cursor is not None:
+                    page = json.loads(run([args.am, 'omp-boundary', '--repo', str(repo),
+                                           '--list-pending', '--offset', str(cursor)],
+                                          cwd=repo, env=env, deadline=deadline))
+                    pending.extend(page['pending'])
+                    next_cursor = page.get('next_offset')
+                    if next_cursor is not None and next_cursor <= cursor:
+                        raise RuntimeError('Native pending inventory cursor did not advance')
+                    cursor = next_cursor
                 result['status_readback'] = json.loads(run(
                     [args.am, '--json', 'status', '--repo', str(repo)],
                     cwd=repo, env=env, deadline=deadline))
                 native = result['status_readback'].get('omp', {})
                 if native.get('binding') != binding or native.get('owned_disk_integrity') != 'verified':
                     raise RuntimeError('Current installed native ownership is not verified')
+                result['stream_outcomes'] = current_stream_outcomes(
+                    repo, result['session_id'], result['native_session_file'],
+                    result['status_readback'], env, pending)
                 observations = current_observations(
                     args.am, repo, root, result['session_id'], result['native_session_file'],
                     prompts, result['status_readback'], env, deadline=deadline)
@@ -372,7 +449,6 @@ def main():
                     raise PendingObservations('Native observations completed after the readback deadline')
                 break
             except PendingObservations:
-                quiet_samples = 0
                 if time.monotonic() >= deadline or process.poll() is not None:
                     raise PendingObservations('Current human observer evidence did not complete before the readback deadline')
                 time.sleep(min(0.5, max(0, deadline - time.monotonic())))

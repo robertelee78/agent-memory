@@ -62,6 +62,14 @@ bindings, recovery indexes/holds and native source registries; inaccessible,
 offline or corrupt private state leaves activation pending. Clearing one
 feature's requirement MUST NOT clear another's.
 
+An enabled stored-source route requires both `omp-harness-v1` and
+`omp-stored-source-v2`. Upgrading an older native binding MUST include a renewed
+`--omp-peers-upgraded`; a saved legacy approval is not sufficient. A committed
+update with `stored_source_activation: pending` MUST retain its runtime and
+private evidence. The session MUST restore unavailable banks, quiesce writers
+and run `am recover`; it MUST NOT roll back the committed receipt to hide the
+pending activation or count the update as verified.
+
 A pending layout frontier requires the exact bound state and independently
 reviewed operator quiescence for the measured target runtime and all same-bank
 invocation routes. Update, recovery and exact rollback recheck these pins before

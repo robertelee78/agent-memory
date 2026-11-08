@@ -839,6 +839,7 @@ def prepare(args, state, code, old, *, candidate_root=None, candidate_kind=None,
                'custom_targets': [str(absolute(t)) for t in custom], 'no_guidance': no_guidance,
                'bin_dir': str(bin_dir), 'adapters': adapters, 'actions': actions, 'restart': restart,
                'omp_binding': cfg['omp_binding'],
+               'omp_peers_upgraded': getattr(args, 'omp_peers_upgraded', False),
                'omp_layout_quiescence': getattr(args, 'omp_layout_quiescence', None),
                'layout_quiescence': getattr(args, 'layout_quiescence', None) or [],
                'old': old, 'pack_source': pack_source, 'shim':shim, 'cache_recovery': cache_recovery}
@@ -1111,7 +1112,23 @@ def read_journal(state):
     return journal
 
 
-def recover(state, *, for_install=False):
+def _verify_rolled_back_targets(state, journal):
+    """Read-only ownership checks shared by recovery and native activation."""
+    require(journal['status'] == 'rolled-back', 'Runtime rollback is not complete')
+    for action in journal['actions']:
+        preserved = journal.get('preserved_opaque_source', {})
+        expected = (preserved['identity'] if action['kind'] == 'source'
+                    and preserved.get('path') == action['path'] else action['before'])
+        if action['kind'] == 'wrapper' and action['before'] is None and os.path.lexists(state/'omp-transition.json'):
+            from . import omp_boundary
+            restored = omp_boundary.native_recovery_expected(state, action['path'])
+            if restored is not None:
+                expected = restored
+        require(fingerprint(Path(action['path'])) == expected,
+                'Rolled-back target changed; preserve and reconcile: ' + action['path'])
+
+
+def recover(state, *, for_install=False, complete_native=True):
     path = state/'journal.json'
     journal = read_journal(state)
     def restore_native():
@@ -1121,7 +1138,8 @@ def recover(state, *, for_install=False):
     if journal is None or journal['status'] in {'complete', 'rolled-back'}:
         restore_native()
     if journal is None:
-        return {'operation': 'recover', 'verified': True, 'status': 'no-pending-transaction'}
+        result = {'operation': 'recover', 'verified': True, 'status': 'no-pending-transaction'}
+        return finish_stored_source_activation(state, result) if complete_native and not for_install else result
     if journal['status'] == 'complete':
         require(journal.get('receipt_identity') is not None
                 and fingerprint(state/'receipt.json') == journal['receipt_identity'],
@@ -1132,25 +1150,17 @@ def recover(state, *, for_install=False):
             return {'operation': 'recover', 'verified': False, 'status': 'install-validation-pending'}
         if not journal['receipt'].get('uninstalled'):
             verify_targets(journal['receipt']['targets'], source=journal['receipt']['source'])
-        return {'operation': 'recover', 'verified': True, 'status': 'complete'}
+        result = {'operation': 'recover', 'verified': True, 'status': 'complete'}
+        return finish_stored_source_activation(state, result) if complete_native else result
     if journal['status'] == 'rolled-back':
         if for_install:
             return {'operation': 'recover', 'verified': False, 'status': 'install-validation-pending'}
-        for action in journal['actions']:
-            preserved = journal.get('preserved_opaque_source', {})
-            expected = (preserved['identity'] if action['kind'] == 'source'
-                        and preserved.get('path') == action['path'] else action['before'])
-            if action['kind'] == 'wrapper' and action['before'] is None and os.path.lexists(state/'omp-transition.json'):
-                from . import omp_boundary
-                restored = omp_boundary.native_recovery_expected(state, action['path'])
-                if restored is not None:
-                    expected = restored
-            require(fingerprint(Path(action['path'])) == expected,
-                    'Rolled-back target changed; preserve and reconcile: ' + action['path'])
-        return {'operation': 'recover', 'verified': not bool(journal.get('opaque_cache_recovery')),
+        _verify_rolled_back_targets(state, journal)
+        result = {'operation': 'recover', 'verified': not bool(journal.get('opaque_cache_recovery')),
                 'status': 'opaque-cache-recovery-pending' if journal.get('opaque_cache_recovery') else 'rolled-back',
                 **({'repair': 'The previous source is preserved but its opaque caches remain untrusted. Retry using the trusted signed installer; do not execute old runtime caches.'}
                    if journal.get('opaque_cache_recovery') else {})}
+        return finish_stored_source_activation(state, result) if complete_native and result['verified'] else result
     # Receipt activation is the commit point; a lost final response must not undo it.
     receipt = state/'receipt.json'
     if journal.get('receipt_identity') is not None and fingerprint(receipt) == journal['receipt_identity']:
@@ -1160,7 +1170,8 @@ def recover(state, *, for_install=False):
         journal['status'] = 'complete'; replace_record(path, journal)
         restore_native()
         verify_targets(journal['receipt']['targets'], uninstall_output=uninstall_output)
-        return {'operation': 'recover', 'verified': True, 'status': 'complete'}
+        result = {'operation': 'recover', 'verified': True, 'status': 'complete'}
+        return finish_stored_source_activation(state, result) if complete_native else result
     result = rollback(state, journal)
     restore_native()
     return result
@@ -1184,7 +1195,27 @@ def install(plan, *, before_activate=None, after_activate=None):
             omp_boundary.native_activation(plan, check=False)
     with private_state.activation_guard(installation, target, plan.get('operation', 'install'), transition=transition) as proof:
         plan['private_state_evidence'] = proof
-        return _install(plan, before_activate=before_activate, after_activate=after_activate)
+        result = _install(plan, before_activate=before_activate, after_activate=after_activate)
+    return finish_stored_source_activation(plan['state'], result)
+
+
+def finish_stored_source_activation(state, result):
+    """A post-commit qualification failure must never roll ownership back."""
+    from . import omp_boundary
+    try:
+        receipt = read_receipt(state)
+        selected = receipt.get('omp_binding') if receipt else None
+        if (not selected or receipt.get('uninstalled')
+                or selected['peer_reader_capability'] != omp_boundary.CAPABILITY):
+            return result
+        fault(result['operation'] + '-before-stored-source-activation')
+        activation = omp_boundary.complete_stored_source_activation(state)
+    except (OSError, ValueError, TypeError, KeyError, UnicodeError, subprocess.SubprocessError):
+        return {**result, 'verified': False, 'stored_source_activation': 'pending',
+                'receipt_committed': True, 'private_state_writes': 'stored-source-activation-may-be-partial',
+                'repair': 'Preserve the committed runtime and private evidence; quiesce bank writers, restore unavailable banks and run am recover. Stored-source observation remains activation-required.'}
+    return {**result, 'stored_source_activation': activation,
+            'private_state_writes': 'stored-source-activation-checked'}
 
 
 def _install(plan, *, before_activate=None, after_activate=None):
@@ -1361,7 +1392,7 @@ def _install(plan, *, before_activate=None, after_activate=None):
                 'restart_clients': plan['restart'], 'receipt_path': str(receipt_path)}
     except Exception:
         # If the commit point landed, recovery verifies it; otherwise it restores old targets.
-        recover(state)
+        recover(state, complete_native=False)
         raise
 
 
@@ -1424,6 +1455,7 @@ def main(argv=None):
     update.add_argument('--check', action='store_true')
     update.add_argument('--repo', action='append', default=[])
     update.add_argument('--omp-writers-quiesced', action='store_true')
+    update.add_argument('--omp-peers-upgraded', action='store_true')
     update.add_argument('--omp-layout-quiescence', action='append')
     update.add_argument('--layout-quiescence', action='append', default=[])
     uninstall = commands.add_parser('uninstall', help='Remove only unchanged owned runtime targets; preserve project memory')
@@ -1488,6 +1520,10 @@ def main(argv=None):
         if args.command == 'recover' and not os.path.lexists(state/'journal.json'):
             result = {'operation':'recover', 'verified':True, 'status':'no-pending-transaction',
                       'writes_performed':False}
+            if old and old.get('omp_binding'):
+                with locked(state):
+                    result = finish_stored_source_activation(state, {key: value for key, value in result.items()
+                                                                     if key != 'writes_performed'})
         elif args.command == 'install' and args.check:
             require(not os.path.lexists(state/'journal.json') or load(state/'journal.json')['status'] in ('complete','rolled-back'),
                     'An interrupted transaction requires recover before a new install plan')

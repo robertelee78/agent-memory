@@ -7,9 +7,12 @@ import os
 from pathlib import Path
 import sys
 import shutil
+import subprocess
+import time
 import unittest
 import uuid
 from unittest.mock import patch
+from contextlib import nullcontext
 from world import World
 from contracts import test_admission
 
@@ -17,23 +20,123 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'skills/agent-memor
 from agent_memory import installation, omp_boundary as boundary, omp_installation, omp_projection, omp_transport as transport, turn_sources
 
 
+def observer_payload(repo, session, entries, *, terminal=False, trigger='resume', inherited_ids=()):
+    """Controlled native-format source fixture, not native API qualification."""
+    entries = copy.deepcopy(entries)
+    for index, entry in enumerate(entries):
+        if index and entry.get('parentId') is None:
+            entry['parentId'] = entries[index - 1]['id']
+    parents = {entry['id']: entry.get('parentId') for entry in entries}
+    branch = []
+    current = entries[-1]['id'] if entries else None
+    while current is not None:
+        if current in branch or current not in parents:
+            raise ValueError('Malformed controlled native source tree')
+        branch.append(current); current = parents[current]
+    branch.reverse()
+    return {'entries': entries, 'branch_ids': branch, 'event_ordinal': len(entries),
+            'terminal': terminal, 'trigger': trigger, 'inherited_ids': list(inherited_ids),
+            'view': {'session': session, 'cwd': str(repo), 'file': None,
+                     'header': {'id': session, 'cwd': str(repo), 'version': 3, 'parent_session': None, 'timestamp': None},
+                     'leaf_id': entries[-1]['id'] if entries else None,
+                     'native_parents': [{'id': entry['id'], 'parent_id': entry.get('parentId'), 'timestamp': None} for entry in entries],
+                     'source_kind': 'session-manager', 'tail_status': 'available', 'fork_status': 'none'}}
+
+
+def LiveDeliveryWindow(*, expired=False):
+    """Real opaque capability minted only inside this controlled timing fixture."""
+    from agent_memory import omp_stream
+    now = time.monotonic_ns()
+    return omp_stream.VerifiedNativeDeliveryWindow(omp_stream._WINDOW_MINT, L=0, j3=now,
+        j_deadline=now - 1 if expired else now + 60_000_000_000, nonce=str(uuid.uuid4()),
+        instance=str(uuid.uuid4()), eligible=lambda: True, platform='darwin')
+
+
+def observe_installed(world, command, repo, receipt, request, *, launcher=None, timeout=60):
+    """Exercise the real finite installed pipe; return only its actual verified result."""
+    from agent_memory import omp_stream
+    instance = str(uuid.uuid4())
+    payload = request['payload']; view = payload.get('view')
+    if request['action'] == 'hint':
+        identity = {'kind': 'hint', **payload}
+    else:
+        native_ids = sorted(item['id'] for item in view['native_parents'])
+        tools = set()
+        for entry in payload['entries']:
+            message = entry.get('message')
+            if not isinstance(message, dict):
+                continue
+            if message.get('role') == 'toolResult' and isinstance(message.get('toolCallId'), str):
+                tools.add(message['toolCallId'])
+            if message.get('role') == 'assistant' and isinstance(message.get('content'), list):
+                tools.update(block['id'] for block in message['content']
+                             if isinstance(block, dict) and block.get('type') == 'toolCall' and isinstance(block.get('id'), str))
+        identity = {'view_id': str(uuid.uuid4()), 'leaf_id': view['leaf_id'],
+                    'native_ids': native_ids, 'tool_ids': sorted(tools)}
+    ordinal = payload.get('event_ordinal', 1)
+    wire = omp_stream.encode_frame('REQUEST', 1, {'request': request, 'event_ordinal': ordinal, 'identity': identity})
+    wire += omp_stream.encode_frame('FINAL', 2, {'last_attempt_seq': 1, 'refused_count': 0,
+                                               'last_event_ordinal': ordinal, 'transition': None})
+    argv = list(map(str, launcher)) if launcher is not None else [str(command), 'omp-boundary']
+    argv += ['--stream', '--repo', str(repo), '--session', request['session'], '--instance', instance,
+             '--lifecycle', request['lifecycle'], '--artifact', receipt['source']['artifact_digest'],
+             '--omp-agent-dir', receipt['omp_binding']['agent_dir']]
+    completed = subprocess.run(argv, input=wire, capture_output=True, env=world.env, cwd=repo, timeout=timeout)
+    stdout = completed.stdout.decode('utf-8', 'strict'); stderr = completed.stderr.decode('utf-8', 'strict')
+    if completed.returncode:
+        return subprocess.CompletedProcess(argv, completed.returncode, stdout, stderr)
+    raw = completed.stdout; result = None; ready = False
+    while raw:
+        end = raw.find(b'\n')
+        if end < 0 or end >= 256:
+            raise AssertionError('Incomplete finite observer response header')
+        header = raw[:end + 1].decode('ascii', 'strict').split()
+        if len(header) != 5 or header[0] != 'AM249' or header[4] != '-':
+            raise AssertionError('Malformed finite observer response header')
+        kind, sequence, length = header[1], int(header[2]), int(header[3])
+        if length > 65536 or len(raw) < end + 1 + length:
+            raise AssertionError('Incomplete or oversized finite observer response')
+        body = json.loads(raw[end + 1:end + 1 + length].decode('utf-8', 'strict')); raw = raw[end + 1 + length:]
+        if body.get('instance_id') != instance:
+            raise AssertionError('Foreign finite observer response')
+        if kind == 'READY':
+            ready = True
+        if kind == 'OBSERVED' and sequence == 1 and isinstance(body.get('result'), dict):
+            if result is not None:
+                raise AssertionError('Duplicate finite observer result')
+            result = body['result']
+    if not ready or not result or result.get('verified') is not True:
+        raise AssertionError('No actual verified finite observer result: ' + stdout + stderr)
+    with patch.dict(os.environ, world.env, clear=True):
+        streams = omp_stream.inventory(repo)['streams']
+        actual = next(row for row in streams if row['instance_id'] == instance)
+        if not actual['closed']:
+            raise AssertionError('Finite observer exited without actual CLOSED coverage')
+    return subprocess.CompletedProcess(argv, completed.returncode, json.dumps(result), stderr)
+
+
 class NativeSources(unittest.TestCase):
     def fixture(self, world):
         repo, _ = test_admission.AdmissionContract().fixture(world)
+        with patch.dict(os.environ, world.env, clear=True):
+            boundary._activate_marker(repo)
         return repo, str(uuid.uuid4()), str(uuid.uuid4())
 
     def entry(self, identifier, role, text, *, attribution='agent', parent=None, **extra):
         return {'type': 'message', 'id': identifier, 'parentId': parent,
                 'message': {'role': role, 'attribution': attribution, 'content': text, **extra}}
+    def observe_request(self, repo, request, **kwargs):
+        with patch.object(transport, '_verify_observer_receipt', side_effect=lambda *args, **kwargs: boundary.verify_marker(repo)):
+            return transport.observe(repo, request, **kwargs)
+
 
     def observe(self, repo, session, lifecycle, entries, *, seal=True, terminal=False, trigger='human'):
-        payload = {'entries': entries, 'branch_ids': [e['id'] for e in entries], 'event_ordinal': len(entries),
-                   'terminal': terminal, 'trigger': trigger, 'inherited_ids': [], 'metadata': []}
+        payload = observer_payload(repo, session, entries, terminal=terminal, trigger=trigger)
         if seal:
             payload['request_wake'] = False
-        return transport.observe(repo, {'schema': 'agent-memory/omp-observer-request-v1',
-                                       'action': 'seal' if seal else 'ingest', 'session': session,
-                                       'lifecycle': lifecycle, 'payload': payload})
+        return self.observe_request(repo, {'schema': 'agent-memory/omp-observer-request-v2',
+                                          'action': 'seal' if seal else 'ingest', 'session': session,
+                                          'lifecycle': lifecycle, 'payload': payload})
 
     def acknowledge(self, repo, row):
         value = {key: row[key] for key in ('session', 'lifecycle', 'observation_id', 'source_sha256')}
@@ -111,16 +214,16 @@ class NativeSources(unittest.TestCase):
             with patch.dict(os.environ, world.env, clear=True):
                 first = self.entry('h1', 'user', 'First actual short question', attribution='user')
                 result = self.observe(repo, session, lifecycle, [first])
-                request = {'schema': 'agent-memory/omp-observer-request-v1', 'action': 'wake', 'session': session,
+                request = {'schema': 'agent-memory/omp-observer-request-v2', 'action': 'wake', 'session': session,
                            'lifecycle': result['lifecycle'], 'payload': result['wake_payload']}
-                wake = transport.observe(repo, request)
+                wake = self.observe_request(repo, request, delivery_window=LiveDeliveryWindow())
                 self.assertTrue(wake['continue'])
-                self.assertFalse(transport.observe(repo, request)['continue'])
+                self.assertFalse(self.observe_request(repo, request, delivery_window=LiveDeliveryWindow())['continue'])
                 old_ids = set(result['wake_payload']['observation_ids'])
                 second = self.entry('h2', 'user', 'Second actual short question', attribution='user')
                 result = self.observe(repo, session, result['lifecycle'], [first, second])
                 request.update(lifecycle=result['lifecycle'], payload=result['wake_payload'])
-                wake = transport.observe(repo, request)
+                wake = self.observe_request(repo, request, delivery_window=LiveDeliveryWindow())
                 self.assertTrue(wake['continue'])
                 self.assertTrue(all(identifier in wake['additionalContext'] for identifier in old_ids))
                 self.assertLessEqual(len(wake['additionalContext'].encode()), 8192)
@@ -157,8 +260,8 @@ class NativeSources(unittest.TestCase):
             with patch.dict(os.environ, world.env, clear=True):
                 human = self.entry('human', 'user', 'Actual short request', attribution='user')
                 result = self.observe(repo, session, lifecycle, [human])
-                wake = transport.observe(repo, {'schema': 'agent-memory/omp-observer-request-v1', 'action': 'wake',
-                                               'session': session, 'lifecycle': result['lifecycle'], 'payload': result['wake_payload']})
+                wake = self.observe_request(repo, {'schema': 'agent-memory/omp-observer-request-v2', 'action': 'wake',
+                    'session': session, 'lifecycle': result['lifecycle'], 'payload': result['wake_payload']}, delivery_window=LiveDeliveryWindow())
                 control = {'type': 'custom_message', 'id': 'native-control', 'parentId': 'human',
                            'customType': 'session-stop-continuation', 'attribution': 'agent',
                            'content': wake['additionalContext']}
@@ -182,8 +285,8 @@ class NativeSources(unittest.TestCase):
             result = self.observe(repo, session, lifecycle, [human])
             parent, _ = transport.segments(repo, session)[0]
             manifest = (parent / 'segment.json').read_bytes()
-            wake = transport.observe(repo, {'schema': 'agent-memory/omp-observer-request-v1', 'action': 'wake',
-                'session': session, 'lifecycle': result['lifecycle'], 'payload': result['wake_payload']})
+            wake = self.observe_request(repo, {'schema': 'agent-memory/omp-observer-request-v2', 'action': 'wake',
+                'session': session, 'lifecycle': result['lifecycle'], 'payload': result['wake_payload']}, delivery_window=LiveDeliveryWindow())
             control = {'type': 'custom_message', 'id': 'native-control', 'parentId': 'human',
                        'customType': 'session-stop-continuation', 'attribution': 'agent',
                        'content': wake['additionalContext']}
@@ -416,14 +519,13 @@ class OwnedInstructionBoundary(unittest.TestCase):
                 self.assertFalse(omp_projection._valid_instruction_context(changed))
 
     def observe(self, repo, session, lifecycle, entries, receipt=None, *, seal=False):
-        payload = {'entries': entries, 'branch_ids': [e['id'] for e in entries],
-                   'event_ordinal': len(entries), 'terminal': False, 'trigger': 'human',
-                   'inherited_ids': [], 'metadata': []}
+        payload = observer_payload(repo, session, entries)
         if seal:
             payload['request_wake'] = False
-        return transport.observe(repo, {'schema': 'agent-memory/omp-observer-request-v1',
-                                      'action': 'seal' if seal else 'ingest', 'session': session,
-                                      'lifecycle': lifecycle, 'payload': payload}, receipt=receipt)
+        with patch.object(transport, '_verify_observer_receipt', side_effect=lambda *args, **kwargs: boundary.verify_marker(repo)) if receipt is None else nullcontext():
+            return transport.observe(repo, {'schema': 'agent-memory/omp-observer-request-v2',
+                                          'action': 'seal' if seal else 'ingest', 'session': session,
+                                          'lifecycle': lifecycle, 'payload': payload}, receipt=receipt)
 
     def test_fresh_capture_preserves_surrounding_source_and_retries(self):
         for mode in ('copy', 'link'):
@@ -997,7 +1099,7 @@ class NativeLifecyclePublic(unittest.TestCase):
             self.assertEqual(checked['schema'], 'agent-memory/install-plan-v1')
             self.assertFalse(checked['installation_writes_performed'])
             self.assertEqual(checked['private_compatibility']['required_capabilities'],
-                             ['layout-frontier-v1', 'omp-harness-v1'])
+                             ['layout-frontier-v1', 'omp-stored-source-v2'])
             self.assertEqual((snapshot(world.paths['state']), snapshot(bank), snapshot(root)), before)
             applied = json.loads(world.run([*arguments, '--omp-layout-quiescence', proof], timeout=30).stdout)
             self.assertTrue(applied['verified'])
@@ -1026,9 +1128,12 @@ class NativeSmokeQualification(unittest.TestCase):
         am = str(Path(receipt['bin_dir']) / 'am')
         path.write_text('#!' + sys.executable + '\n' + 'VERSION = ' + repr(version) + '\nMODE = ' + repr(mode)
             + '\nAM = ' + repr(am) + '\nARTIFACT = ' + repr(receipt['source']['artifact_digest'])
-            + '\nAGENT_DIR = ' + repr(receipt['omp_binding']['agent_dir']) + '\n' + r'''
-import hashlib, json, re, subprocess, sys, uuid
+            + '\nRECEIPT = ' + repr(receipt) + '\nTESTS = ' + repr(str(Path(__file__).resolve().parents[1])) + '\n' + r'''
+import hashlib, json, os, re, subprocess, sys, uuid
 from pathlib import Path
+from types import SimpleNamespace
+sys.path.insert(0, TESTS)
+from contracts.test_omp_boundary import observe_installed, observer_payload
 if '--version' in sys.argv:
     print('omp/' + VERSION); raise SystemExit()
 Path(__file__).with_suffix('.launched').write_text('Controlled protocol launch, never model proof.')
@@ -1053,14 +1158,12 @@ for line in sys.stdin:
                 retained[-1]['message']['content'] = 'Wrong retained human source text.'
             if len(entries) == 2 and MODE == 'wrong-id':
                 retained[-1]['id'] = 'foreign-native-human'
-            request = {'schema': 'agent-memory/omp-observer-request-v1', 'action': 'seal',
-                       'session': session, 'lifecycle': lifecycle, 'payload': {
-                'entries': retained, 'branch_ids': [entry['id'] for entry in retained],
-                'event_ordinal': len(entries), 'terminal': False, 'trigger': 'human',
-                'inherited_ids': [], 'metadata': [], 'request_wake': False}}
-            observed = subprocess.run([AM, 'omp-boundary', '--repo', repo, '--observer', '--stdin',
-                '--artifact', ARTIFACT, '--omp-agent-dir', AGENT_DIR], input=json.dumps(request),
-                capture_output=True, text=True, check=True)
+            payload = observer_payload(repo, session, retained)
+            payload['request_wake'] = False
+            request = {'schema': 'agent-memory/omp-observer-request-v2', 'action': 'seal',
+                       'session': session, 'lifecycle': lifecycle, 'payload': payload}
+            observed = observe_installed(SimpleNamespace(env=dict(os.environ)), AM, repo, RECEIPT, request)
+            observed.check_returncode()
             lifecycle = json.loads(observed.stdout)['lifecycle']
         sentinel = re.search(r'OMP_SMOKE_(?:FIRST|SECOND)_[a-f0-9]+', value['message'])[0]
         print(json.dumps({'type': 'message_end', 'message': {'role': 'assistant', 'content': sentinel}}), flush=True)
@@ -1091,12 +1194,34 @@ for line in sys.stdin:
         self.assertFalse(report['full_native_qualification'])
         return report
 
-    def test_historical_observers_cannot_qualify_disabled_current_extension(self):
+    def test_historical_observers_cannot_qualify_new_current_session(self):
+        from runtime_update_fixtures import ROOT
+        spec = importlib.util.spec_from_file_location('omp_native_smoke', ROOT / 'scripts/evaluations/omp_native_smoke.py')
+        smoke = importlib.util.module_from_spec(spec); spec.loader.exec_module(smoke)
         with World() as world:
-            repo, receipt, path = self.fixture(world)
-            report = self.smoke(world, repo, receipt, path, self.binary(world, receipt))
-            self.assertEqual(report['status_readback']['omp']['observer_evidence'], 'retained')
-            self.assertEqual(report['native_requests'], ['human-1', 'human-2'])
+            repo, receipt, _ = self.fixture(world)
+            root = world.inside('historical-verifier-run')
+            (root / 'sessions').mkdir(parents=True)
+            session = str(uuid.uuid4())
+            prompts = ['First actual current task.', 'Second actual current task.']
+            humans = [NativeSources().entry('current-first', 'user', prompts[0], attribution='user'),
+                      NativeSources().entry('current-second', 'user', prompts[1],
+                                            parent='current-first', attribution='user')]
+            # A fork/copied-ID shape must not borrow another session's proof,
+            # even when both native IDs and complete prompt bodies are identical.
+            with patch.dict(os.environ, world.env, clear=True):
+                NativeSources().observe(repo, str(uuid.uuid4()), str(uuid.uuid4()), humans)
+            path = root / 'sessions/current.jsonl'
+            path.write_text('\n'.join(json.dumps(value) for value in [
+                {'type': 'session', 'id': session, 'cwd': str(repo)}, *humans]) + '\n')
+            am = str(Path(receipt['bin_dir']) / 'am')
+            status = json.loads(world.run([am, '--json', 'status', '--repo', repo], timeout=30).stdout)
+            self.assertEqual([entry['id'] for entry in smoke.current_humans(
+                repo, root, session, str(path), prompts)], ['current-first', 'current-second'])
+            with self.assertRaises(smoke.PendingObservations):
+                smoke.current_observations(am, repo, root, session, str(path), prompts, status, world.env)
+            with patch.dict(os.environ, world.env, clear=True):
+                self.assertEqual(transport.segments(repo, session), [])
 
     def test_both_exact_current_human_turns_and_persistent_session_are_required(self):
         for mode in ('first-only', 'wrong-text', 'wrong-id', 'missing-session'):
@@ -1178,9 +1303,10 @@ for line in sys.stdin:
             repo, receipt, _ = self.fixture(world)
             root = world.inside('registration-verifier-run')
             (root / 'sessions').mkdir(parents=True)
-            session, lifecycle = str(uuid.uuid4()), str(uuid.uuid4())
+            session = str(uuid.uuid4())
             prompt = 'Controlled ephemeral source awaiting registration.'
             human = NativeSources().entry('registration-human', 'user', prompt, attribution='user')
+            lifecycle = str(uuid.uuid5(uuid.NAMESPACE_URL, str(repo.resolve()) + ':omp:' + session + ':' + human['id']))
             path = root / 'sessions/current.jsonl'
             path.write_text('\n'.join(json.dumps(value) for value in [
                 {'type': 'session', 'id': session, 'cwd': str(repo)}, human]) + '\n')
@@ -1189,6 +1315,11 @@ for line in sys.stdin:
             with patch.dict(os.environ, world.env, clear=True):
                 directory, cursor = transport.new_segment(repo, session, lifecycle, lifecycle, 'human', 1)
                 captured = transport.capture(directory, cursor, human)
+                # Real stored-user identity and capture, with only shared
+                # registration unfinished; never a legacy notification root.
+                cursor['control_interval'] = {'human_entry': human['id']}
+                cursor['last_native_entry'] = human['id']
+                transport.replace_cursor(directory / 'cursor.json', cursor)
                 transport.enroll_admission(directory, cursor, captured)
             with self.assertRaises(smoke.PendingObservations):
                 smoke.current_observations(am, repo, root, session, str(path), [prompt], status, world.env)
@@ -1197,6 +1328,56 @@ for line in sys.stdin:
             evidence = smoke.current_observations(am, repo, root, session, str(path), [prompt], status, world.env)
             self.assertEqual([row['native_entry_id'] for row in evidence], ['registration-human'])
             self.assertEqual([row['human_root'] for row in evidence], [lifecycle])
+
+    def test_stream_readback_requires_terminal_receipts_and_current_leaf_not_child_quiescence(self):
+        from runtime_update_fixtures import ROOT
+        spec = importlib.util.spec_from_file_location('omp_native_smoke', ROOT / 'scripts/evaluations/omp_native_smoke.py')
+        smoke = importlib.util.module_from_spec(spec); spec.loader.exec_module(smoke)
+        with World() as world, patch.dict(os.environ, world.env, clear=True):
+            repo, receipt, _ = self.fixture(world)
+            session, lifecycle = str(uuid.uuid4()), str(uuid.uuid4())
+            human = NativeSources().entry('stream-human', 'user', 'Ephemeral checked source.', attribution='user')
+            payload = observer_payload(repo, session, [human]); payload['request_wake'] = False
+            request = {'schema': 'agent-memory/omp-observer-request-v2', 'action': 'seal',
+                       'session': session, 'lifecycle': lifecycle, 'payload': payload}
+            am = Path(receipt['bin_dir']) / 'am'
+            observed = observe_installed(world, am, repo, receipt, request)
+            self.assertEqual(observed.returncode, 0, observed.stdout + observed.stderr)
+            native_file = world.inside('current-stream-native.jsonl')
+            native_file.write_text('\n'.join(json.dumps(value) for value in [
+                {'type': 'session', 'id': session, 'cwd': str(repo)}, human]) + '\n')
+            status = json.loads(world.run([am, '--json', 'status', '--repo', repo]).stdout)
+            evidence = smoke.current_stream_outcomes(repo, session, native_file, status, world.env, [])
+            self.assertEqual(len(evidence), 1)
+            self.assertEqual(evidence[0]['received_sequence'], 1)
+            self.assertEqual(evidence[0]['terminal_sequence'], 1)
+            qualifier = {'qualification': {'session': session, 'code': 'missing-outcome'}}
+            with self.assertRaises(smoke.PendingObservations):
+                smoke.current_stream_outcomes(repo, session, native_file, status, world.env, [qualifier])
+            self.assertEqual(smoke.current_stream_outcomes(repo, session, native_file, status, world.env,
+                [{'qualification': {'session': session, 'code': 'open-stream'}}]), evidence)
+            # Physically late native usage/background records keep an explicitly
+            # selected earlier leaf. They cannot make a healthy seal falsely pending.
+            late = [dict(NativeSources().entry('late-background', 'assistant', 'Off-branch context.'),
+                         activeLeafId='stream-human'),
+                    {'type': 'model_usage', 'id': 'late-usage', 'parentId': 'stream-human',
+                     'activeLeafId': 'stream-human'}]
+            native_file.write_text(native_file.read_text() + ''.join(json.dumps(entry) + '\n' for entry in late))
+            self.assertEqual(smoke.current_stream_outcomes(repo, session, native_file, status, world.env, []), evidence)
+            # Exercise the actual /tmp alias on macOS; elsewhere a lexical dot
+            # component still requires canonical comparison against OPEN.repo_root.
+            alias = Path('/tmp') / repo.relative_to('/private/tmp') if str(repo).startswith('/private/tmp/') else repo / '.'
+            self.assertEqual(smoke.current_stream_outcomes(alias, session, native_file, status, world.env, []), evidence)
+            records = [human, *late]
+            self.assertEqual(smoke.current_native_leaf(records), 'stream-human')
+            self.assertIsNone(smoke.current_native_leaf([*records,
+                {'type': 'custom', 'id': 'explicit-null', 'parentId': None, 'activeLeafId': None}]))
+            self.assertEqual(smoke.current_native_leaf([*records,
+                {'type': 'custom', 'id': 'dangling', 'parentId': None, 'activeLeafId': 'missing'}]), 'stream-human')
+            native_file.write_text(native_file.read_text() + json.dumps(
+                NativeSources().entry('uncaptured-leaf', 'assistant', 'Later source.')) + '\n')
+            with self.assertRaises(smoke.PendingObservations):
+                smoke.current_stream_outcomes(repo, session, native_file, status, world.env, [])
 
     def test_late_native_frames_cannot_reuse_initial_answer_or_settled_proof(self):
         for mode in ('complete', 'late-duplicate', 'late-unsettled'):

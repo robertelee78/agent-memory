@@ -66,7 +66,7 @@ def inspect(pack):
             'Compatibility must declare bounded schema/tool lists and a client-neutral standard-library core')
     command_names(spec)
     require(strings(spec.get('private_state_capabilities', []), allow_empty=True)
-            and set(spec.get('private_state_capabilities', [])) <= {'layout-frontier-v1', 'omp-harness-v1'},
+            and set(spec.get('private_state_capabilities', [])) <= {'layout-frontier-v1', 'omp-harness-v1', 'omp-stored-source-v2'},
             'Private-state capabilities must be explicit unique supported tokens')
     require(strings(spec.get('installation_receipt_schemas', ['agent-memory/install-receipt-v1']))
             and set(spec.get('installation_receipt_schemas', ['agent-memory/install-receipt-v1'])) <=

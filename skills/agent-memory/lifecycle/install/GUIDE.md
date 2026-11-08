@@ -71,6 +71,11 @@ The [source-bound native setup and qualification matrix](https://github.com/robe
 defines that separate evidence gate. `--no-guidance` omits the optional Markdown
 activation block, not the explicitly selected native extension.
 
+The stored-source route requires a renewed `--omp-peers-upgraded` attestation;
+an older receipt's `omp-harness-v1` approval MUST NOT authorize
+`omp-stored-source-v2`. AM MUST use stock omp's public interfaces, without
+patching its runtime, installation, permissions or other extensions.
+
 Managed code lives under the XDG data root, while receipts, journals and receipt
 backups live under the XDG state root. Project memory stays in its repository.
 The session MUST preserve those separate ownership domains.
@@ -155,8 +160,13 @@ clients do not prevent installing their discovery paths.
 Exit 1 with `verified: false` means the session MUST preserve the refusal and
 reported paths. Unrelated files, directories, links, wrappers and activation
 blocks MUST NOT be replaced. User edits outside an owned activation block remain
-preserved; edits inside it require reconciliation. Ordinary activation errors
-roll back; a killed process leaves an external recovery journal. Backups remain
+preserved; edits inside it require reconciliation. Errors before receipt commit
+roll back; a killed process leaves an external recovery journal. After commit,
+bank activation is separate: `receipt_committed: true` with
+`stored_source_activation: pending` MUST NOT be treated as rollback or success.
+The session MUST preserve the committed runtime and evidence, restore unavailable
+banks, quiesce their writers and run `am recover`. Recovery MUST verify the exact
+receipt and complete the bank markers before observation resumes. Backups remain
 available rather than being silently removed.
 
 ## Diagnostic fallback

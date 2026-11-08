@@ -18,6 +18,8 @@ never derives its owned target from HOME, XDG or the active profile.
 First quiesce all old/aware agent-memory writers touching the same bank/private
 state and upgrade peer readers before confirming `--omp-peers-upgraded`. This
 is an operator rollout attestation, not an inferred process-list guarantee.
+The stored-source-v2 cutover requires a renewed explicit attestation for the
+new capability and artifact; an older saved rollout approval is insufficient.
 Different clones with different private state do not share this source index.
 Preview a trusted complete candidate, then apply the same arguments without
 `--check`:
@@ -78,15 +80,17 @@ only its fixed installed observer helper through the receipt-owned
 interpreter-pinned security claim. Canonical operations use ordinary model
 tools with the person's unchanged native permissions.
 
-`message_end` retains metadata only. Display content, arguments/results,
-thinking, signatures and image bytes are never copied or hashed by that
-callback. Subsequent lifecycle sweeps project detached **stored** native
-entries, preserve native placeholders and attribution/tool identities, and
-exclude credential/config/provider/reasoning payloads. Shared unsafe-source
-screening withholds a flagged entry as a whole. It does not detect every
-unknown secret: native stored user/tool plaintext can remain plaintext in
-private snapshots. An unavailable image/file/artifact payload stays a coverage
-gap; no arbitrary path or URL is dereferenced to fill it.
+`message_end` and `tool_call` are cheap neutral metadata hints, never body,
+role/attribution or reported tool-ID source ownership. Their closed identity is
+`{kind:'hint',session,header_id,cwd,leaf_id}`; the worker records it without
+calling source observe or acquiring the transport lock. Null leaf is neutral.
+A nonnull leaf needs an exact native-ID disposition or a verified full
+same-session source attempt; role/order/count cannot fill missing evidence.
+One trailing macrotask coalesces FULL stored sweeps at minimum one-second
+spacing. Every lifecycle/agent start/end/stop/shutdown and pre-compaction
+boundary still captures a FULL checked stored view immediately. The last FULL
+view, never a hint, anchors OLD transition coverage. Shared unsafe screening
+remains unchanged, and unknown secrets or unavailable payloads remain limits.
 
 For the supported omp 18.16 stored-source renderer, a fresh full
 `read` of `skill://agent-memory` can be recognized as installed operating
@@ -112,16 +116,20 @@ snapshot; a later fresh read must qualify against the then-current installation.
 This classification adds no observation or wake by itself. It does not change
 the empty own-maintenance companion allowlist or pure-batch rules: a manual read
 after a wake can still leave an ambiguous interval requiring enrollment and
-assessment. A reassociated event gap is not recovery of an older native-keyed
-or sealed tool-call gap.
+assessment. A manual classification cannot clear an older native/tool gap or
+authorize historical role/position event-gap reassociation.
 
-Private snapshots, manifests, unresolved gaps and enrollment records live
-beside the shared turn-source state under owner-only `omp-source-v1`. They
-remain on uninstall. There is **no automatic purge or global retention quota**
-in this milestone. Per-source/manifest input is bounded at 16 MiB, per-segment
-captures at 16,384, active tool bindings at 1,024, cursor at 1 MiB and in-memory
-metadata queue at 4,096. Bounds/disk-full stay explicit pending failures, never
-truncation-as-assessment. The existing shared source/index bounds are unchanged.
+Private snapshots, manifests, unresolved gaps and enrollment records remain
+under owner-only `omp-source-v1`. Neutral hints, counted attempts/outcomes,
+finite-worker OPEN/CLOSED records and transition qualifications live in the
+**sibling** `omp-stream-v1`, never new child kinds under the historical source
+tree. Both remain on uninstall, without automatic purge/global retention quota.
+Per-source/frame input is bounded at 16 MiB, per-segment captures at 16,384,
+active tools at 1,024 and cursors at 1 MiB. Each side retains at most 64 MiB and
+4,096 encoded source frames; that is not a decoded-tree/RSS or global storage
+bound. One detached finite worker executes serially and drains on EOF; it is
+not a daemon or source-completion ledger. Bounds/refusals/unknown outcomes stay
+explicit pending, never truncation-as-assessment.
 
 Each substantive segment has at most one admission source and one sealed
 manifest in the shared ledger, not one per assistant/tool message. Late
@@ -131,6 +139,10 @@ assistant work, while a late tool result retains its invoking lifecycle/root.
 A fork has its own namespace; inherited context is not a fresh human admission.
 Resume keeps existing source identities and snapshots. Native mapping is a
 qualification, not a requirement that the host transcript survive forever.
+Fork inheritance uses normalized timestamps from the actual stored header and
+entries, never notification time. On cold resume, post-fork genuine work is
+not blanket-inherited. Missing fork-point evidence retains available content
+as nonhuman context with an explicit ambiguity gap instead of dropping it.
 
 An exact reserved own hidden message has **no companion allowlist**. Human
 input, joined foreign hook text, goal/plan/vibe/todo/advisor messages or unknown
@@ -144,14 +156,27 @@ all sessions of this bound project. Guidance is at most 8,192 UTF-8 bytes;
 explicit pending cursors/faults account for omitted references. There is no
 shared-core wake reservation that can suppress the healthy new root.
 
-The adapter stops awaiting after at most 950 ms (earlier on native cancellation)
-but never kills a helper during shared writes. This is a callback-await bound,
-not a whole-observation or registration wall-clock deadline: capture, scope
-checks, inventory and durable enrollment can finish in the background after it.
-A timeout, native continuation cap, queued/deferred scheduling, permission
-refusal, cancellation, provider/tool failure or model omission means **pending**,
-not completion. It returns advisory `continue:true`, never a blocking decision
-or synthetic human instruction.
+The total stop-callback bound remains **950 ms**, earlier on cancellation;
+helpers are never killed during shared writes. A source-first seal is handed
+off immediately without reserving a wake. After a fresh nonce-bound clock
+handshake, a second counted seal of the same detached view may request the
+one existing root wake. Bun hrtime and Python monotonic have different epochs.
+Four timestamps bound their offset; use the conservative lower bound and
+subtract the platform rate uncertainty before the pre-reservation check.
+The provisional 100 ms margin must cover measured post-reservation p99.
+Expired/cancelled/EOF/broken-output windows reserve nothing new. A timely
+reservation returned late remains one unknown attempt; late results cannot
+change the active request/lifecycle or deliver guidance. Rate, host-loop and
+warm-latency support remain unqualified until the required platform measurements.
+Source capture may finish after the callback; that is not delivered-wake proof.
+
+On shutdown, worker creation is disabled, the trailing hint timer is cancelled,
+and the adapter awaits actual stdin finish for at most 1.8 seconds within the
+native two-second cap. It does not wait for observer transactions or kill them.
+A timed-out or partial transfer remains OPEN; normal print needs actual
+greater-than-pipe-buffer flush/CLOSE qualification, not a synchronous end() call.
+Refusal, unavailable authority, continuation caps, cancellation and model
+omission remain pending, never a synthetic human or blocking decision.
 Ephemeral `--no-session` may retain safe private snapshots, but cannot recover
 content the native process never exposed safely. Missing/unsafe payloads remain
 explicit gaps, potentially indefinitely. Combined modes can leave a final
@@ -172,8 +197,8 @@ am omp-boundary --repo /absolute/project --source ACTUAL_ID_OR_ENROLLMENT_REFERE
 Follow `next_offset` until exhausted. A successful page never claims global
 source completeness. Registered rows have an actual `observation_id`;
 `enrollment-pending`/`registration-fault` rows preserve the original source
-reference and do not invent one. Later observer admit/ingest/seal calls first
-persist every arriving source/metadata record and recheck scope, then run a
+reference and do not invent one. Later finite-worker ingest/seal calls first
+persist each arriving checked stored source and recheck scope, then run a
 separate registration-progress phase. Each phase selects oldest retained
 fault-free enrollments first and attempts at most eight, using their original
 references and digests. The bound is a count, not an elapsed-time check after
@@ -185,12 +210,13 @@ A successful registration whose response was lost is recovered from the exact
 shared reference/digest. A shared fault or an uncertain attempted write is
 retained and never blindly registered again or erased by transport retry.
 
-The unchanged `NativeSources` contracts in `tests/contracts/test_omp_boundary.py`
+The migrated `NativeSources` contracts in `tests/contracts/test_omp_boundary.py`
 and dedicated `tests/contracts/test_omp_enrollment_progress.py` regressions cover
 large retained segments, bounded oldest-first progress, new arrivals, lost
 success, uncertain attempts and retained shared faults. The latter also drives
-an explicitly installed public observer/source/no-learning journey with 151
-stored entries. These are real transport/CLI checks, not native callback,
+an explicitly installed finite-stream/source/no-learning journey with 151
+stored entries. The removed public `--observer --stdin` write route must refuse
+before source writes. These are real transport/CLI checks, not native callback,
 extension-loading or model/provider qualification.
 
 Read every source before assessment. Use exactly one original observation per
@@ -219,10 +245,18 @@ contexts never initialize a replacement bank automatically.
 
 ## Lifecycle drain and rollback
 
-Before the first native shared reference, the observer durably writes
-`turn-sources-compat-v1.json` declaring `omp-harness-v1`, an immutable
-`omp-bank-binding-v1.json` binding the canonical repository, bank, project and
-private namespace, and a local registry pin to that protected state location.
+After the ownership receipt commits, lifecycle activation durably writes
+`turn-sources-compat-v1.json` declaring `omp-stored-source-v2`, the protected
+`omp-bank-binding-v1.json` and registry pin. Renewed explicit peer rollout is
+required for this exact artifact; observers only verify those existing records.
+If postcommit activation cannot finish, installation returns verified:false
+with committed receipt/pending activation retained. Use ordinary `am recover`;
+do not roll back or delete that committed receipt to hide the interlock.
+An old marker is REFUSED until explicit lifecycle recovery upgrades it.
+After both source and sibling coverage inventories drain, exact rollback
+remains possible with bound proofs; the upgrade is not permanently one-way.
+Only stock omp is supported: no native patch, private API or changed approval
+policy is an accepted substitute for these checks.
 Common lifecycle preflight unions that requirement with `layout-frontier-v1`,
 saved bindings, actual known private-state namespaces, source indexes and
 recovery state. Changing the configured state root cannot hide the saved
@@ -255,8 +289,10 @@ private proof bound to the exact repository/private-state inventory and
 verified completion state, durably removes the marker and reads it back.
 Markerless retained snapshots are accepted **only with that bound proof**,
 not by pretending the inventory is empty. Manually deleting the marker, an
-index entry, a gap or a proof is not recovery. New source evidence recreates
-the marker before shared visibility. Compatible readers remain required for
+index entry, a gap or a proof is not recovery. New stored-source activation
+must reestablish the marker through the committed lifecycle route before writes.
+Historical and sibling stream drain proofs remain separately bound.
+Compatible readers remain required for
 unresolved permanent gaps/faults. Local discovery cannot fence manually invoked
 old binaries, undiscovered banks, remote private state or already-running
 omp-unaware peers; mixed-reader use on one protected index is unsupported.
@@ -282,14 +318,24 @@ notification/display text remains excluded.
 Readback waits for background observer publication within one shared absolute
 deadline (default 240 seconds), distinct from the 950 ms callback-await bound.
 Known verified pending/null-observation states remain pending; malformed or
-misbound source evidence still refuses. Before public readback, the driver uses
-numeric PID/PPID child-quiescence samples to avoid contending with one-shot
-observer writes. This is a scheduling heuristic, not proof that native queues
-are empty. It rechecks the latest native settled state and both answer counts
-after late frames; an earlier settled response cannot qualify a later duplicate
-or unsettled session.
+misbound source evidence still refuses. A detached finite worker may remain a
+live child throughout the session: child-process quiescence is not required.
+Instead the driver enumerates the complete joined public pending inventory and
+checks actual per-instance contiguous received attempts and terminal outcomes.
+A verified full seal must cover the current stored native leaf. The pinned 18.16
+public selector semantics honor explicit `activeLeafId` (including null), otherwise
+an entry selects itself; an unavailable selected ID falls back to the newest
+self-selecting entry. Physically later usage/background entries are not assumed
+to be the active leaf. OPEN repository identity compares canonical paths, including
+the macOS `/tmp` alias. Unresolved execution/coverage qualifiers remain pending
+(an otherwise healthy open stream is expected). These receipts prove received
+work, not an unseen producer queue.
+It rechecks the latest native settled state and both answer counts after late
+frames; an earlier settled response cannot qualify a later duplicate or unsettled session.
 The report retains source/binary/receipt identity and current human observation
-references without copying arbitrary display payloads:
+references without copying arbitrary display payloads.
+
+The actual native run must exercise the loaded receipt-owned hook's `/bin/sh hooks/python3.sh scripts/omp_boundary.py --stream` route. The report records that receipt-owned route and actual stream receipts, without claiming a separate process-argv trace. A public `am omp-boundary --stream` fixture is an internal-transport check only; raw framed source input grants no assessment/publication authority and is not native-loading proof.
 
 ```sh
 python3 scripts/evaluations/omp_native_smoke.py --binary /absolute/omp --am /absolute/owned/bin/am --receipt /absolute/install/receipt.json --repo /absolute/disposable/project --output /absolute/new/private-smoke-output --model actual-provider/actual-model
@@ -299,6 +345,8 @@ The driver never auto-approves. Headless UI requests are refused and preserved
 as such. A smoke pass is not a durable-capture/Git-exchange, full-mode,
 platform-wide, peer-client or release acceptance pass. Its report explicitly
 keeps `full_native_qualification:false`.
+
+The pre-cutover macOS source `90d822b…`, Linux RPC runs and `bf7722a` worker receipts below are retained historical evidence, explicitly **superseded for the current stored-source-v2/finite-stream candidate**. They are not current-source passes; fresh frozen-source qualification is required.
 
 The [2026-11-06 minimal macOS RPC evidence](../research/data/2026-11-06-omp-native/minimal-smoke.json)
 records an actual pass on source `90d822b42e41b96b27682ebca2bcf405c6a26bfc`,
@@ -368,6 +416,26 @@ only; CLI-only or mocked harness runs cannot fill native rows.
 | Capacity/idempotence | Full shared pending capacity retains arriving evidence before bounded drain; capacity frees registers original reference once; crash after shared registration reuses actual observation; registration-fault never re-enters register; no source-per-message exhaustion |
 | Lifecycle | Fresh/update `all` never enables omp; explicit missing root/attestation refusal; v1/v2 ownership; same-root repeat and changed-environment preservation; modified/colliding targets; duplicate module copies and disposal; actual install/update/status/doctor/uninstall/exact rollback/recovery; markerless completed snapshots with bound drain proof; pending/unknown refuses incapable restore; preserve unrelated files/Git/index/worktrees |
 | Mixed features/peers | Both source/layout capabilities active; either resolves first; old runtime refuses until both drain; native activation under layout hold has refreshed independent route attestation; live frontier-only changes affect next observation; retained Codex/Claude/OpenCode boundary regressions |
+| Stored-source API/transport | Actual public parser/leaf-selector exports and closed result shapes; strict malformed/truncated/multiheader/session/cwd/version controls; stable exact old-file read after writer drain; fork/activeLeafId/null and invalid graph controls; delayed old hint cannot create a new-session human; no positional gap waiver; source-first short print drains; normal cloned hints remain assessable; T/unsafe active-tail negatives; response pressure and expired/cancelled/lost-window behavior; warm and post-reservation p99 on both platforms |
+
+The retired-file reader uses only the exact file from a prior checked native
+view, public pure `parseSessionContent`/`resolveSessionLeafId`, strict UTF-8,
+native header/version/anchors and owned no-follow descriptor checks. NEW capture
+starts independently; OLD recovery precedes its FINAL. It never materializes a
+lazy file, constructs SessionManager/BlobStore, discovers transcript paths or
+spools/hashes raw bodies. Its provisional 16 MiB raw cap needs measured host-loop
+qualification. Known snapshots are reused by native ID, not persisted-payload
+digest. The version-qualified persistence truncation suffix becomes an
+oversized-source gap in **all** views, including a resumed SessionManager;
+blob/image references remain unavailable. User-owned ancestor symlinks outside
+the qualified root-owned system aliases retain T; no path-policy relaxation or
+native installation change is inferred.
+
+Unavailable final OLD views retain non-actionable T without invalidating safe
+prefix assessment. Empty/unknown/pre-ID tails cannot be cleared by absence.
+All-nonlearning T recovery needs a nonempty anchored, complete committed view,
+not invented observations. Normal notification cloning alone never creates T.
+
 
 Inspect source/assessment/refresh/publication and actual native answer/input
 preservation independently, retain failures/unsupported cases, and obtain

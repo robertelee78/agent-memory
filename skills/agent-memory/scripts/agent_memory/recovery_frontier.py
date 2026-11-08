@@ -372,13 +372,23 @@ def check(expected, repo, owner=None, transaction=None):
 
 
 def verified_hold(repo, owner=None, transaction=None):
-    from . import artifact, scope_binding
     root, bank, _, _ = state.paths(repo)
+    held = _verified_hold_at_bank(root, bank, owner, transaction)
+    if state.paths(root)[:2] != (root, bank):
+        raise ContractError('Recovery bank location changed during observation')
+    return held
+
+
+def _verified_hold_at_bank(root, bank, owner=None, transaction=None):
+    """Full read-only hold verification at one internally located bank.
+
+    Public callers retain their fresh locator checks. A single enrollment mint
+    may reuse its freshly located bank only with its own final fresh comparison.
+    """
+    from . import artifact, scope_binding
     token = _observe_bank(root, bank, owner, transaction)
     raw = marker_bytes(bank)
     if raw is None:
-        if state.paths(root)[:2] != (root, bank):
-            raise ContractError('Recovery bank location changed during observation')
         return None
     marker = marker_value(raw)
     if marker['schema'] != HOLD and transaction != raw:
@@ -417,8 +427,6 @@ def verified_hold(repo, owner=None, transaction=None):
         raise ContractError('Recovery quiescence attestation has stale identity or route pins')
     if _observe_bank(root, bank, owner, transaction) != {**token, 'review_digest': None}:
         raise ContractError('Private recovery frontier changed; reread every pending source before proceeding')
-    if state.paths(root)[:2] != (root, bank):
-        raise ContractError('Recovery bank location changed during observation')
     return VerifiedHold(root, bank, raw, token, context, marker['operation_id'], measured_runtime['artifact_digest'])
 
 

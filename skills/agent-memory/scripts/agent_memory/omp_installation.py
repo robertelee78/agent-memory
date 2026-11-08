@@ -7,18 +7,22 @@ from .frontmatter import ContractError
 SCHEMAS = {'agent-memory/install-receipt-v1', 'agent-memory/install-receipt-v2'}
 FIELDS = {'agent_dir', 'skill_target', 'extension_target', 'activation_target',
           'peer_reader_capability', 'rollout_attested'}
+READER_CAPABILITY = 'omp-stored-source-v2'
+HISTORICAL_READER_CAPABILITY = 'omp-harness-v1'
 
 
-def binding(agent_dir, *, no_guidance=False):
+def binding(agent_dir, *, no_guidance=False, reader_capability=READER_CAPABILITY):
     if not isinstance(agent_dir, str) or not Path(agent_dir).is_absolute() or '..' in Path(agent_dir).parts:
         raise ContractError('Explicit --omp-agent-dir must be an absolute canonical root')
     root = Path(agent_dir)
     if root.resolve() != root or any(p.is_symlink() for p in (root, *root.parents)):
         raise ContractError('omp agent root must not contain symlinks')
+    if reader_capability not in {HISTORICAL_READER_CAPABILITY, READER_CAPABILITY}:
+        raise ContractError('Unknown native reader capability')
     return {'agent_dir': str(root), 'skill_target': str(root / 'skills' / 'agent-memory'),
             'extension_target': str(root / 'extensions' / 'agent-memory.ts'),
             'activation_target': None if no_guidance else str(root / 'AGENTS.md'),
-            'peer_reader_capability': 'omp-harness-v1', 'rollout_attested': True}
+            'peer_reader_capability': reader_capability, 'rollout_attested': True}
 
 
 def configuration(args, old, selected, no_guidance):
@@ -34,9 +38,12 @@ def configuration(args, old, selected, no_guidance):
     if previous:
         if explicit and explicit != previous['agent_dir']:
             raise ContractError('omp root differs from saved ownership; uninstall/reinstall explicitly')
-        if previous != binding(previous['agent_dir'], no_guidance=no_guidance):
+        capability = previous.get('peer_reader_capability')
+        if previous != binding(previous['agent_dir'], no_guidance=no_guidance, reader_capability=capability):
             raise ContractError('omp saved binding changed; preserve owned targets')
-        return previous
+        if capability != READER_CAPABILITY and not getattr(args, 'omp_peers_upgraded', False):
+            raise ContractError('Stored-source authority upgrade requires renewed --omp-peers-upgraded for omp-stored-source-v2')
+        return binding(previous['agent_dir'], no_guidance=no_guidance)
     if not explicit or not getattr(args, 'omp_peers_upgraded', False):
         raise ContractError('Native omp requires --presets omp, --omp-agent-dir and --omp-peers-upgraded after quiescing/upgrading bank peers')
     return binding(explicit, no_guidance=no_guidance)
@@ -60,7 +67,8 @@ def validate_receipt(receipt):
     if (type(value['rollout_attested']) is not bool or value['rollout_attested'] is not True
             or not re.fullmatch(r'[0-9a-f]{32}', receipt['installation_id'])):
         raise ContractError('Invalid native rollout/installation identity')
-    if value != binding(value['agent_dir'], no_guidance=receipt.get('no_guidance', False)):
+    if value != binding(value['agent_dir'], no_guidance=receipt.get('no_guidance', False),
+                        reader_capability=value['peer_reader_capability']):
         raise ContractError('Native ownership targets differ from canonical saved binding')
     targets = {target['path']: target for target in receipt['targets']}
     for field in ('skill_target', 'extension_target', 'activation_target'):
@@ -79,7 +87,9 @@ def validate_receipt(receipt):
 
 def extension_wrapper(active_pack, artifact_digest, value):
     source = json.dumps(str(active_pack / 'hooks' / 'omp.ts'))
-    options = json.dumps({'artifact': artifact_digest, 'agentDir': value['agent_dir'], 'rolloutAttested': True}, separators=(',', ':'))
+    options = json.dumps({'artifact': artifact_digest, 'agentDir': value['agent_dir'],
+                          'readerCapability': value['peer_reader_capability'],
+                          'rolloutAttested': True}, separators=(',', ':'))
     return ('// Receipt-owned native executable. Never edit provider or approval settings.\n'
             'import nativeMemory from ' + source + ';\n'
             'export default pi => nativeMemory(pi, ' + options + ');\n').encode()
@@ -114,13 +124,26 @@ def diagnostics(repo, receipt):
         result['pending'] = pending
     else:
         result['observer_evidence'] = 'not-observed'
+    if any((base / name).exists() for name in ('omp-stream-v1', 'omp-stream-session-locks')):
+        from . import omp_stream
+        streams = omp_stream.inventory(repo, base=base)
+        result['transport_qualification'] = {
+            'instances': len(streams['streams']), 'pending': streams['pending'],
+            'assessment_authority': False, 'automatic_wake_support': 'unqualified'}
+    from . import turn_sources
+    try:
+        with turn_sources.source_barrier(repo):
+            omp_boundary.verify_marker(repo)
+        result['stored_source_activation'] = 'verified'
+    except (ContractError, OSError, ValueError, TypeError, KeyError):
+        result['stored_source_activation'] = 'required-or-unverified'
     return result
 
 
 def observer_binding(artifact_digest, agent_dir):
     """Read back the explicit installed authority before any observer write."""
     import hashlib
-    from . import installation
+    from . import artifact, installation
     state, _ = installation.locations()
     receipt = installation.read_receipt(state)
     if (receipt is None or not receipt.get('omp_binding')
@@ -132,10 +155,12 @@ def observer_binding(artifact_digest, agent_dir):
     owned = next(item for item in receipt['targets'] if item['path'] == target)
     installation.verify_targets([owned], source=receipt['source'])
     pack = Path(receipt['source']['pack'])
+    if artifact.inspect(pack)['artifact_digest'] != artifact_digest:
+        raise ContractError('Native observer executable closure differs from the installed artifact')
     for relative in ('hooks/omp.ts', 'hooks/python3.sh', 'scripts/omp_boundary.py',
                      'scripts/agent_memory/omp_boundary.py', 'scripts/agent_memory/omp_transport.py',
                      'scripts/agent_memory/omp_projection.py', 'scripts/agent_memory/omp_control.py',
-                     'scripts/agent_memory/omp_installation.py',
+                     'scripts/agent_memory/omp_installation.py', 'scripts/agent_memory/omp_stream.py',
                      'scripts/agent_memory/installation.py', 'scripts/agent_memory/artifact.py',
                      'scripts/agent_memory/trust_paths.py', 'scripts/agent_memory/frontmatter.py',
                      'scripts/agent_memory/pack_validation.py', 'scripts/agent_memory/migration_contract.py',
@@ -144,6 +169,79 @@ def observer_binding(artifact_digest, agent_dir):
         if not expected or hashlib.sha256((pack / relative).read_bytes()).hexdigest() != expected['sha256']:
             raise ContractError('Native observer executable differs from installed artifact')
     return receipt
+
+
+_OBSERVER_MINT = object()
+
+
+class ObserverBinding:
+    """In-process executable attestation; fast checks never adopt a new receipt."""
+    __slots__ = ('_seal', '_receipt_sha', '_receipt_identity', '_receipt_path',
+                 '_agent_dir', '_artifact_digest', '_pack')
+
+    def __init__(self, token, receipt, receipt_path, identity):
+        if token is not _OBSERVER_MINT:
+            raise TypeError('Observer binding is internally minted')
+        from . import installation
+        if identity is None or identity.get('kind') != 'file':
+            raise ContractError('Observer ownership receipt is unavailable')
+        values = {
+            '_seal': token, '_receipt_sha': installation.sha(installation.encoded(receipt)),
+            '_receipt_identity': (identity['kind'], identity['hash'], identity['mode']),
+            '_receipt_path': receipt_path,
+            '_agent_dir': receipt['omp_binding']['agent_dir'],
+            '_artifact_digest': receipt['source']['artifact_digest'],
+            '_pack': receipt['source']['pack'],
+        }
+        for name, value in values.items():
+            object.__setattr__(self, name, value)
+
+    def __setattr__(self, name, value):
+        raise AttributeError('Observer binding is immutable')
+
+    def __reduce__(self):
+        raise TypeError('Observer binding cannot be serialized')
+
+    def __reduce_ex__(self, protocol):
+        raise TypeError('Observer binding cannot be serialized')
+
+
+def verified_observer_binding(artifact_digest, agent_dir, *, receipt=None):
+    """Full artifact/ownership verification, outside the transport lock."""
+    from . import installation
+    current = observer_binding(artifact_digest, agent_dir)
+    if receipt is not None and installation.encoded(current) != installation.encoded(receipt):
+        raise ContractError('Native observer installation changed; start a new instance')
+    state, _ = installation.locations()
+    path = state / 'receipt.json'
+    identity = installation.fingerprint(path)
+    if installation.read_receipt(state) != current or installation.fingerprint(path) != identity:
+        raise ContractError('Native observer receipt changed during verification')
+    return ObserverBinding(_OBSERVER_MINT, current, path, identity)
+
+
+def verify_observer_binding(repo, receipt, proof):
+    """Fast same-frame checks under the source barrier; no artifact rehash."""
+    from . import installation, omp_boundary, trust_paths, turn_sources
+    if type(proof) is not ObserverBinding or proof._seal is not _OBSERVER_MINT:
+        raise ContractError('Native observer requires its exact internally verified binding')
+    if (not isinstance(receipt, dict) or not isinstance(receipt.get('omp_binding'), dict)
+            or installation.sha(installation.encoded(receipt)) != proof._receipt_sha
+            or receipt['omp_binding']['agent_dir'] != proof._agent_dir
+            or receipt['source']['artifact_digest'] != proof._artifact_digest
+            or receipt['source']['pack'] != proof._pack):
+        raise ContractError('Native observer proof differs from its original receipt')
+    with turn_sources.source_barrier(repo):
+        state, _ = installation.locations()
+        if state / 'receipt.json' != proof._receipt_path:
+            raise ContractError('Native observer ownership location changed')
+        trust_paths.state(state)
+        trust_paths.record(proof._receipt_path)
+        identity = installation.fingerprint(proof._receipt_path)
+        if (identity is None or identity.get('kind') != 'file'
+                or (identity['kind'], identity['hash'], identity['mode']) != proof._receipt_identity):
+            raise ContractError('Native observer installation changed; preserve pending work and start a new instance')
+        return omp_boundary.verify_marker(repo)
 
 
 _MANUAL_MINT = object()

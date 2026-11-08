@@ -1,5 +1,7 @@
 """Shared attribution/project resolution and explicit, recoverable scope binding."""
 from __future__ import annotations
+from contextlib import contextmanager
+from contextvars import ContextVar
 
 import argparse
 import json
@@ -105,6 +107,8 @@ def raw_recovery_context(repo, raw_identity, owner=None, transaction=None):
 
 
 _enrollment_seal = object()
+_enrollment_reads = ContextVar('agent_memory_private_enrollment_reads', default=None)
+_enrollment_locations = ContextVar('agent_memory_observe_enrollment_locations', default=None)
 
 
 class PrivateEnrollmentContext:
@@ -143,15 +147,24 @@ class PrivateEnrollmentContext:
 
 
 def private_enrollment_context(repo):
+    """Always discover a fresh bank, including when called inside an observer."""
+    with _fresh_enrollment_locations():
+        return _private_enrollment_context(repo)
+
+
+def _private_enrollment_context(repo):
     """Allow only private source retention through an exact verified hold."""
     from . import layout_recovery_state, recovery_frontier, turn_sources
     root, bank = writes.bank_path(repo)
-    turn_sources.check_source_compatibility(layout_recovery_state.paths(root)[2].parent)
-    hold = recovery_frontier.verified_hold(root)
+    raw_root, raw_bank, recovery_base, _ = layout_recovery_state.paths(root)
+    if (raw_root, raw_bank) != (root, bank):
+        raise ContractError('Private enrollment raw recovery bank differs from the ordinary bank')
+    turn_sources.check_source_compatibility(recovery_base.parent)
+    hold = recovery_frontier._verified_hold_at_bank(raw_root, raw_bank)
     scope = dict(hold.scope) if hold is not None else require(root)
     # The ordinary path also checks the private index, so a removed hold is not
     # an empty frontier. No caller supplies marker bytes or an owned lock.
-    token = hold.token if hold is not None else recovery_frontier.observe(root)
+    token = hold.token if hold is not None else recovery_frontier._observe_bank(raw_root, raw_bank, None, None)
     pins = {'scope': scope, 'frontier': token,
             'binding': [[str(path), info.st_dev, info.st_ino, info.st_uid, info.st_gid, info.st_mode]
                         for path in (root, bank.parent, bank) for info in [path.lstat()]],
@@ -164,17 +177,90 @@ def private_enrollment_context(repo):
                     private_bindings_sha256=digest(layout_recovery_state.read_bytes(
                         storage.paths('layout-recovery-bindings')[1])),
                     journal_sha256=digest(layout_recovery_state.read_bytes(directory / 'journal.json')))
+    if writes.bank_path(root) != (root, bank):
+        raise ContractError('Private enrollment bank location changed during observation')
+    if layout_recovery_state.paths(root)[:2] != (root, bank):
+        raise ContractError('Private enrollment raw recovery bank location changed during observation')
     context = object.__new__(PrivateEnrollmentContext)
     context.root, context.bank, context._scope, context.hold = root, bank, scope, hold
     context._pins, context.context_digest, context._seal = pins, digest(encoded(pins)), _enrollment_seal
     return context
 
 
+@contextmanager
+def _private_enrollment_reads(context):
+    """Reuse only private namespace/read discovery in one synchronous operation.
+
+    Mutation guards still perform their full fresh rechecks. No ordinary scope
+    authority accepts this context, and leaving the operation rechecks it again.
+    """
+    if type(context) is not PrivateEnrollmentContext or context._seal is not _enrollment_seal:
+        raise ContractError('Private enrollment reads require an internally observed context')
+    token = _enrollment_reads.set(context)
+    try:
+        yield context
+        recheck_private_enrollment(context)
+    finally:
+        _enrollment_reads.reset(token)
+
+
+def _enrollment_read_context(repo, context):
+    if (type(context) is not PrivateEnrollmentContext or context._seal is not _enrollment_seal
+            or _enrollment_reads.get() is not context or Path(repo).resolve() != context.root):
+        raise ContractError('Private enrollment read context is foreign or outside its live operation')
+    return context
+
+
+@contextmanager
+def _fresh_enrollment_locations():
+    """Full scope checks and non-observer boundaries never inherit a locator."""
+    token = _enrollment_locations.set(None)
+    try:
+        yield
+    finally:
+        _enrollment_locations.reset(token)
+
+
+@contextmanager
+def _observe_enrollment_locations(context):
+    _enrollment_read_context(context.root, context)
+    token = _enrollment_locations.set(context)
+    try:
+        _observe_enrollment_location(context.root, context)
+        yield
+    finally:
+        _enrollment_locations.reset(token)
+
+
+def _observe_enrollment_location(repo, context=None):
+    """An existing observe barrier permits locator reuse, never scope reuse."""
+    active = _enrollment_locations.get()
+    if active is None:
+        if context is not None:
+            raise ContractError('Observer locator reuse is outside its live operation')
+        return None
+    if context is not None and context is not active:
+        raise ContractError('Observer locator differs from its exact active context')
+    if Path(repo).resolve() != active.root and context is None:
+        return None
+    _enrollment_read_context(repo, active)
+    from . import layout_recovery_state, turn_sources
+    location = layout_recovery_state._paths_for_bank(active.root, active.bank)
+    if str(location[2].parent) not in turn_sources._barriers.get():
+        raise ContractError('Observer locator reuse requires its already held source barrier')
+    return location
+
+
 def recheck_private_enrollment(context):
     if type(context) is not PrivateEnrollmentContext or context._seal is not _enrollment_seal:
         raise ContractError('Private enrollment requires an internally constructed live context')
     current = private_enrollment_context(context.root)
-    if current._pins != context._pins or current.context_digest != context.context_digest:
+    from . import recovery_frontier
+    same_hold = ((current.hold is None and context.hold is None)
+                 or recovery_frontier.same_hold(current.hold, context.hold))
+    if ((current.root, current.bank, current.scope) != (context.root, context.bank, context.scope)
+            or not same_hold or current._pins != context._pins
+            or current.context_digest != context.context_digest):
         raise ContractError('Private enrollment identity or recovery hold changed; retain the original pending source')
     return context
 

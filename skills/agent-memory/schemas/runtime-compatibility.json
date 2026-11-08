@@ -2,7 +2,7 @@
   "schema": "agent-memory/runtime-compatibility-v1",
   "readable_bank_schemas": ["agent-memory/v1"],
   "migrator_source_schemas": [],
-  "private_state_capabilities": ["layout-frontier-v1", "omp-harness-v1"],
+  "private_state_capabilities": ["layout-frontier-v1", "omp-harness-v1", "omp-stored-source-v2"],
   "migration_catalog": "schemas/migrations.json",
   "python_minimum": "3.11",
   "installed_commands": ["am", "agent-memory"],
