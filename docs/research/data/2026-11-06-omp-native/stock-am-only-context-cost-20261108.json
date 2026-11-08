@@ -623,9 +623,53 @@
     "index_sha256": "911d7e0f7ca89bd80759df6f6176da04e2a0a7e01e36100426e80d101fd2d873",
     "classification": "Owner-only retained qualification records; not provider-side or forensic-erasure evidence"
   },
-  "remaining": [
+  "remaining_at_initial_capture": [
     "Source-reviewed explicit observer-locator optimization at 4f618dd still requires its actual timing/guard proof",
     "Further fresh-context cost reduction if measurements require it; no authority-cache or deadline waiver",
     "Composed original native matrix, actual stock event path, >=256KiB shutdown flush, old-reader blocking cap, clocks, TUI/fork/transition journeys and Linux"
-  ]
+  ],
+  "later_observation_20261108": {
+    "source_commit": "77cf838fb1a73dc348f60c2fe4230e67c7aef814",
+    "archive_sha256": "9d7b6c0cca32cdfb4ce9f497717ed7fd491621e3bd1d4287084ad6bf012939ba",
+    "source_review": "Independent Claude Opus5.5 source PASS; original ordinary and raw locator refusals restored after unexecuted f8ee1bf was rejected",
+    "registered_correctness_suites": {
+      "passed": 9,
+      "scope": "Four original-composition conformance cases, four raw-locator cases each with and without a verified hold, and the lost-response/no-retry regression",
+      "scope_limits": "Controlled workers only; not native callback, automatic wake or platform acceptance"
+    },
+    "direct_receipt_owned_helper": {
+      "driver_sha256": "54da8e7215245ffd36d6dee368a0431336f306e8e515a233d147a50e4a44e67d",
+      "raw_receipt_sha256": "df5893b317371aca931d0e7dce297bf370f62ab32115ce8b9c337f0e99f96da1",
+      "cold_ingest_seconds": 5.373874124954455,
+      "warm_repeat_seconds": [3.279977041995153, 3.251153749995865, 3.291954749962315],
+      "seal_seconds": 5.215801125043072,
+      "verified_original_source": true,
+      "verified_closed_inventory": true,
+      "canonical_index_head_preserved": true,
+      "scope": "Actual installed helper argv; no TypeScript callback, omp launch, provider, automatic wake, clock-rate, p99 or platform qualification"
+    },
+    "instrumented_companion": {
+      "raw_receipt_sha256": "235b09e1a1a8a14ddca0aa2bd2400fffab98d7df11a59d0249bf50f6d5799840",
+      "warm_observe_identity_git_calls": [361, 361, 361],
+      "scope": "Delegating instrumentation, not the hook argv; counts only identity_git.git, not every subprocess",
+      "full_executable_attestation": "Retained on every frame"
+    },
+    "disagreeing_locators": {
+      "failed_test_only_candidate": "2247954f084641b4d2f6f9a1ad84ff07fdce8844",
+      "failure": "The asserted old-mint success was disproved by its actual raw-router parse; no production defect or runtime pass inferred",
+      "corrected_test_only_candidate": "fc026b89d620d027eace3db9cb51ad57d3716e80",
+      "result": "Independent Opus source PASS and actual one-case PASS; both locators succeed and disagree, both old and new mints refuse, all private/repository bytes and HEAD preserved",
+      "known_untested_case": "A raw-only bank with actual private recovery ledgers supplying project_ids can skip the old router parse. No production-path fixture was established for that old-success/new-refusal path; no hand-crafted ledger or equivalence claim."
+    },
+    "private_evidence_archive": {
+      "files_verified": 80,
+      "index_sha256": "70547ae240a1d5d22adda252b2fa3634627d6f2dc12cedef3814e80efda598d2",
+      "classification": "Owner-only retained qualification records; not provider-side or forensic-erasure evidence"
+    },
+    "remaining": [
+      "Actual stock short-print >=256KiB shutdown flush and RPC delayed-switch/fork journeys",
+      "Native callback timing, positive session_stop automatic wake/model-forgets delivery, measured post-reservation margin and eventual durable source completion as separate gates",
+      "Composed original permissions, lifecycle, peer-harness, TUI and macOS/Linux matrix; signed release delivery"
+    ]
+  }
 }
