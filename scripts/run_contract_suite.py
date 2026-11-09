@@ -3,6 +3,7 @@
 import argparse
 import importlib.util
 import json
+import os
 from pathlib import Path
 import sys
 import unittest
@@ -30,12 +31,14 @@ def registered_suite(module, path, name):
     if name is not None and sum(entry["name"] == name for entry in groups) != 1:
         raise ValueError("Named suite does not identify this registered contract file")
     bind_fault_partition(name, path.relative_to(ROOT).as_posix(), entries)
-    if not any("tests" in entry for entry in groups):
-        return complete, None
     cases = list(leaf_cases(complete))
     identities = [case.id() for case in cases]
     if len(identities) != len(set(identities)):
         raise ValueError("Contract discovery contains duplicate case identities")
+    selection = {"batch": name, "complete": sorted(identities),
+                 "selected": sorted(identities)}
+    if not any("tests" in entry for entry in groups):
+        return complete, selection
     selected, covered = {}, set()
     for entry in groups:
         selectors = entry.get("tests")
@@ -59,10 +62,20 @@ def registered_suite(module, path, name):
     if covered != set(identities):
         raise ValueError("Registered contract batches omit discovered tests")
     if name is None:
-        return complete, None
+        return complete, selection
     chosen = selected[name]
     return unittest.TestSuite(chosen), {"batch": name, "complete": sorted(identities),
                                       "selected": sorted(case.id() for case in chosen)}
+
+
+class RecordingResult(unittest.TextTestResult):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.executed_cases = []
+
+    def startTest(self, test):
+        super().startTest(test)
+        self.executed_cases.append(test.id())
 
 
 def main():
@@ -74,20 +87,34 @@ def main():
     path = args.path.resolve()
     if not path.is_relative_to(ROOT / "tests") or not path.is_file():
         raise ValueError("Suite must be a test file in this checkout")
-    spec = importlib.util.spec_from_file_location("contract_suite", path)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    suite, selection = registered_suite(module, path, args.suite)
-    result = unittest.TextTestRunner(verbosity=2, stream=sys.stderr).run(suite)
+    # Test and inherited child output is diagnostic, not part of the single
+    # machine-readable worker receipt. Redirect the descriptor as well as
+    # Python writes so subprocesses cannot corrupt that receipt.
+    sys.stdout.flush()
+    receipt_fd = os.dup(sys.stdout.fileno())
+    try:
+        os.dup2(sys.stderr.fileno(), sys.stdout.fileno())
+        spec = importlib.util.spec_from_file_location("contract_suite", path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        suite, selection = registered_suite(module, path, args.suite)
+        result = unittest.TextTestRunner(verbosity=2, stream=sys.stderr, resultclass=RecordingResult).run(suite)
+    finally:
+        try:
+            sys.stdout.flush()
+        finally:
+            os.dup2(receipt_fd, sys.stdout.fileno())
+            os.close(receipt_fd)
     counts = {"tests": result.testsRun, "failures": len(result.failures),
               "errors": len(result.errors), "skipped": len(result.skipped),
               "expected_failures": len(result.expectedFailures),
               "unexpected_successes": len(result.unexpectedSuccesses)}
     counts["passed"] = result.wasSuccessful() and counts["tests"] > 0 and not any(
         counts[key] for key in counts if key != "tests")
-    if selection is not None:
-        counts["passed"] = counts["passed"] and result.testsRun == len(selection["selected"])
-        counts["case_selection"] = selection
+    selection["executed"] = sorted(result.executed_cases)
+    counts["passed"] = (counts["passed"] and result.testsRun == len(selection["selected"])
+                        and selection["executed"] == selection["selected"])
+    counts["case_selection"] = selection
     print(json.dumps(counts, sort_keys=True))
     return 0 if counts["passed"] else 1
 

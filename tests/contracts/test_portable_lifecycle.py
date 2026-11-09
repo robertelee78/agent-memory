@@ -1,5 +1,4 @@
-"""Installed lifecycle journeys and executable bindings for the full matrix."""
-import ast
+"""Installed lifecycle journeys."""
 import json
 from pathlib import Path
 import shutil
@@ -9,8 +8,6 @@ from world import World
 from contracts import test_installed_layout as layout
 from contracts import test_retrieval as retrieval
 from runtime_update_fixtures import advance, snapshot, receipt_path
-
-ROOT = Path(__file__).resolve().parents[2]
 
 
 class PortableLifecycleContract(unittest.TestCase):
@@ -101,27 +98,6 @@ class PortableLifecycleContract(unittest.TestCase):
             self.assertEqual({str(p/'neighbor'):snapshot(p/'neighbor') for p in custom}, neighbors)
             self.assertFalse((w.paths['repo']/'memory-bank').exists())
             self.assertFalse(Path(w.env['AGENT_MEMORY_CONFIG_HOME']).exists())
-
-    def test_complete_approved_matrix_is_bound_to_registered_executable_cases(self):
-        matrix = json.loads((ROOT/'tests/lifecycle-matrix.json').read_text())
-        expected = {'fresh-repeat','modes','spaces-optional-clients','ownership-backups','sentinel-edits',
-                    'update-guards','activation-interrupts','lost-responses','rollback-locks','removal-purge',
-                    'bank-preservation','generated-state-loss','client-identity','pack-validation','isolation'}
-        self.assertEqual(matrix['schema'], 'agent-memory/lifecycle-test-matrix-v1')
-        self.assertEqual({row['requirement'] for row in matrix['requirements']}, expected)
-        self.assertEqual(len(matrix['requirements']), len(expected))
-        registry = {row['name']:row for row in json.loads((ROOT/'tests/contracts.json').read_text())['suites']}
-        methods = {}
-        for row in matrix['requirements']:
-            self.assertTrue(row['cases'], row['requirement'])
-            for case in row['cases']:
-                entry = registry[case['suite']]
-                self.assertEqual(entry['scope'], 'v0.0.1'); self.assertTrue(entry['path'])
-                if entry['path'] not in methods:
-                    tree = ast.parse((ROOT/entry['path']).read_text())
-                    methods[entry['path']] = {cls.name+'.'+fn.name for cls in tree.body if isinstance(cls, ast.ClassDef)
-                                             for fn in cls.body if isinstance(fn, ast.FunctionDef) and fn.name.startswith('test_')}
-                self.assertIn(case['test'], methods[entry['path']], case)
 
 
 if __name__ == '__main__':

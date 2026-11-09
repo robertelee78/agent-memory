@@ -95,10 +95,24 @@ An expensive contract file MAY be registered as several named batches using
 The worker's `--suite NAME` selects the registered batch. Before any test runs,
 the worker MUST verify that all batches for that file are disjoint and cover
 every discovered case; omissions, overlaps, empty or unknown selectors refuse.
-The gate independently aggregates the actual per-batch case inventories and
-execution counts before reporting completeness. Existing lifecycle write-fault
-proofs remain separately required. Batching MUST NOT change assertions, omit
-subcases, introduce skips or increase the 300-second worker deadline.
+Every worker, split or unsplit, reports its complete discovered inventory,
+registered selection and identities recorded when `unittest` actually starts
+each case. A passing receipt MUST have matching selected/started identities,
+strict integer counts and no failed, errored, skipped or expected-failure cases.
+The gate independently verifies these receipts before reporting completeness.
+Split batches MUST be disjoint and complete; unsplit fault workers sharing a
+wrapper MUST each run its matching full inventory, with interruption disjointness
+proved separately. Mixing split and unsplit registrations on one path refuses.
+Batching MUST NOT change assertions, omit subcases or increase the 300-second
+worker deadline.
+
+Release aggregation also consumes all 15 approved lifecycle requirements from
+`tests/lifecycle-matrix.json`. Every binding MUST name a registered `v0.0.1`
+suite and a method present in its successful actual-start receipt; source
+references or agreeing counts cannot substitute for execution. Controlled gate
+fixtures exercise missing bindings, malformed worker output and incompatible
+shards. Their fabricated metadata is synthetic consumer evidence, not product
+interruption or platform qualification.
 
 The recovery and publication contracts use one complete discovered method per
 worker, including the physical inventory boundaries; the selection proof still

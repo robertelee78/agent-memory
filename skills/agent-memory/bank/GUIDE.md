@@ -65,9 +65,9 @@ not audited admissions or concurrency-safe mediated replacements.
 
 When normal observation refuses an oversized source, unsupported root handoff
 or invalid routing, use `am bank recover-layout`, not capture/checkpoint,
-initialization, truncation or raised normal limits. The packaged equivalent is
-`scripts/recover_layout.py` run with isolated Python (`python3` and `-I`)
-followed by the same operation arguments. `am recover` remains runtime recovery.
+initialization, truncation or raised normal limits. For example, the packaged
+inspection command is `python3 -I "$SKILL_DIR/scripts/recover_layout.py" inspect --repo REPO --output PRIVATE_INSPECTION_JSON`.
+The helper accepts the same operations and arguments. `am recover` remains runtime recovery.
 
 Recovery observes at most 1,048,576 bytes per ordinary source, 67,108,864 total
 source bytes, 65,536 sources, 131,072 physical entries and depth 64; these bounds

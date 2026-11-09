@@ -94,10 +94,11 @@ class MixedPrivateCapabilities(unittest.TestCase):
                               if key != registry_key}, before[2])
             self.assertEqual(config_after[registry_key]['mode'], 0o600)
             base = directory.parent.parent
-            self.assertEqual(json.loads((world.paths['config'] / registry_key).read_bytes()), {
-                'schema': 'agent-memory/omp-bank-registry-v1',
-                'repositories': [str(repo.resolve())],
-                'private_bases': {str(repo.resolve()): str(base)}})
+            registry = json.loads((world.paths['config'] / registry_key).read_bytes())
+            self.assertEqual(set(registry), {'schema', 'repositories', 'private_bases'})
+            self.assertEqual(registry['schema'], 'agent-memory/omp-bank-registry-v1')
+            self.assertIn(str(repo.resolve()), registry['repositories'])
+            self.assertEqual(registry['private_bases'][str(repo.resolve())], str(base))
             self.assertEqual(json.loads((base / 'omp-bank-binding-v1.json').read_bytes()), {
                 'schema': 'agent-memory/omp-bank-binding-v1',
                 'repository': str(repo.resolve()), 'bank_path': str(bank.resolve()),
@@ -126,6 +127,14 @@ class MixedPrivateCapabilities(unittest.TestCase):
                 return json.loads(response.stdout)['pending']
             rows = pending()
             self.assertEqual(len(rows), 2)
+            # Native writer quiescence does not authorize removing the sole
+            # capable reader while the independent layout hold is active.
+            held_before = preserved(), snapshot(world.paths['state']), snapshot(root)
+            refused = world.run([command, '--json', 'uninstall', '--omp-writers-quiesced'],
+                                check=False, timeout=60)
+            self.assertNotEqual(refused.returncode, 0, refused.stdout + refused.stderr)
+            self.assertFalse(json.loads(refused.stdout)['verified'])
+            self.assertEqual((preserved(), snapshot(world.paths['state']), snapshot(root)), held_before)
             checked = json.loads(world.run([*args, '--check'], timeout=60).stdout)
             self.assertEqual(checked['private_compatibility']['required_capabilities'],
                              ['layout-frontier-v1', 'omp-harness-v1', 'omp-stored-source-v2'])
@@ -236,7 +245,7 @@ class MixedPrivateCapabilities(unittest.TestCase):
                                               '--offset', '0'], timeout=60).stdout)['pending'])
             before = preserved()
             for args in (('update', '--check'), ('update',)):
-                denied = lifecycle.public(world, receipt, *args, expected=1)
+                lifecycle.public(world, receipt, *args, expected=1)
                 self.assertEqual(preserved(), before)
             # A genuinely new capable managed artifact needs a newly reviewed
             # attestation for its own digest and all receipt-owned routes.
@@ -357,18 +366,26 @@ class MixedPrivateCapabilities(unittest.TestCase):
             self.assertEqual(check['private_compatibility']['required_capabilities'],
                              ['layout-frontier-v1', 'omp-harness-v1', 'omp-stored-source-v2'])
             before = (snapshot(bank), snapshot(directory), snapshot(world.paths['config']),
-                      (repo / '.git/index').read_bytes(), world.git('rev-parse', 'HEAD', cwd=repo).stdout)
+                      (repo / '.git/index').read_bytes(), world.git('rev-parse', 'HEAD', cwd=repo).stdout,
+                      snapshot(world.paths['state']), snapshot(agent_dir), snapshot(world.paths['backups']))
             denied = lifecycle.public(world, receipt, 'uninstall', '--omp-writers-quiesced', expected=1)
             self.assertIn('Private-state runtime compatibility', denied['error'])
-            self.assertFalse(marker.exists())
-            self.assertTrue(list((base / 'omp-drains').glob('*.json')))
+            self.assertTrue(marker.is_file())
             self.assertEqual((snapshot(bank), snapshot(directory), snapshot(world.paths['config']),
-                              (repo / '.git/index').read_bytes(), world.git('rev-parse', 'HEAD', cwd=repo).stdout), before)
-            self.assertFalse(Path(receipt['omp_binding']['extension_target']).exists())
+                              (repo / '.git/index').read_bytes(), world.git('rev-parse', 'HEAD', cwd=repo).stdout,
+                              snapshot(world.paths['state']), snapshot(agent_dir), snapshot(world.paths['backups'])), before)
+            lifecycle.extension(receipt)
             recovered = json.loads(world.run([command, '--json', 'recover'], timeout=60).stdout)
             self.assertTrue(recovered['verified'])
             lifecycle.extension(receipt)
             checked = lifecycle.public(world, receipt, 'update', '--check')
+            # Refusal did not disable the native route or drain its marker;
+            # recovery leaves the capable reader and unrelated hold intact.
+            self.assertTrue(marker.is_file())
+            self.assertEqual(pending(), [])
+            self.assertEqual(checked['private_compatibility']['required_capabilities'],
+                             ['layout-frontier-v1', 'omp-harness-v1', 'omp-stored-source-v2'])
+            self.assertEqual(snapshot(directory), before[1])
             self.assertTrue(checked['check_complete'])
             self.assertTrue(recovered['stored_source_activation']['verified'])
             restored_marker = marker.read_bytes()
@@ -525,15 +542,40 @@ print(json.dumps(results))
             ancestor = world.root / 'symlinked-ancestor'
             ancestor.symlink_to(repo.parent, target_is_directory=True)
             selected = ancestor / repo.name
+            registry_key = 'agent-memory/omp-banks.json'
+            registry_path = world.paths['config'] / registry_key
+            registry_before = json.loads(registry_path.read_text()) if registry_path.exists() else None
             before = (snapshot(bank), snapshot(world.paths['config']), owned(receipt),
                       feature.read_bytes(), (repo / '.git/index').read_bytes(),
                       world.git('rev-parse', 'HEAD', cwd=repo).stdout)
             checked = lifecycle.public(world, receipt, 'update', '--repo', str(selected), '--check')
             self.assertTrue(checked['check_complete'])
+            self.assertEqual(snapshot(world.paths['config']), before[1])
             self.assertEqual(checked['compatibility']['private_state']['decision'], 'compatible')
             applied = lifecycle.public(world, receipt, 'update', '--repo', str(selected))
             self.assertTrue(applied['verified'])
-            self.assertFalse(applied['changed'])
-            self.assertEqual((snapshot(bank), snapshot(world.paths['config']), owned(receipt),
+            config_before = before[1].copy()
+            config_after = snapshot(world.paths['config'])
+            registry = json.loads(registry_path.read_text())
+            canonical = str(repo.resolve())
+            previous_repositories = registry_before['repositories'] if registry_before else []
+            previous_bases = registry_before['private_bases'] if registry_before else {}
+            self.assertEqual(registry['schema'], 'agent-memory/omp-bank-registry-v1')
+            self.assertEqual(set(registry['repositories']), set(previous_repositories) | {canonical})
+            self.assertEqual({key: value for key, value in registry['private_bases'].items()
+                              if key != canonical},
+                             {key: value for key, value in previous_bases.items() if key != canonical})
+            self.assertIn(canonical, registry['private_bases'])
+            if canonical in previous_bases:
+                self.assertEqual(registry['private_bases'][canonical], previous_bases[canonical])
+            binding = json.loads((Path(registry['private_bases'][canonical]) /
+                                  'omp-bank-binding-v1.json').read_text())
+            self.assertEqual(binding['repository'], canonical)
+            self.assertEqual(binding['bank_path'], str(bank.resolve()))
+            self.assertEqual(binding['private_base'], registry['private_bases'][canonical])
+            config_before.pop(registry_key, None)
+            config_after.pop(registry_key)
+            self.assertEqual((snapshot(bank), config_after, owned(receipt),
                               feature.read_bytes(), (repo / '.git/index').read_bytes(),
-                              world.git('rev-parse', 'HEAD', cwd=repo).stdout), before)
+                              world.git('rev-parse', 'HEAD', cwd=repo).stdout),
+                             (before[0], config_before, *before[2:]))

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Bind a Codex user prompt to its turn without retaining its content."""
 import hashlib,json,os,re,subprocess,sys,uuid
-from pathlib import Path
 sys.dont_write_bytecode = True
+from pathlib import Path
 import runpy
 _cache_guard = runpy.run_path(str(Path(__file__).resolve().parent.parent/'scripts/source_startup.py'),
                               run_name='am_source_startup')['isolate']()
@@ -21,6 +21,7 @@ def diagnostic(repo, stage=None, reason=None):
 
 def main():
     diagnostic_repo = None
+    scope_binding = None
     retained_input=None
     stage, reason = "event", "event.invalid"
     try:
@@ -41,9 +42,8 @@ def main():
         if not os.path.lexists(repository_config.bank_path(root)):
             diagnostic(root);print('{}');return 0
         from agent_memory import turn_sources
-        stage,reason='identity','identity.unresolved'
-        enrollment=scope_binding.private_enrollment_context(root)
         stage,reason='boundary','state.unavailable'
+        enrollment=scope_binding.private_enrollment_context(root)
         native_ids=[event[key] for key in ('event_id','prompt_id') if event.get(key) is not None]
         native=(native_ids[0] if native_ids and all(isinstance(value,str) and value and len(value.encode())<=512
                 and not any(ord(char)<32 for char in value) for value in native_ids) and len(set(native_ids))==1 else None)
@@ -65,11 +65,13 @@ def main():
         if notice:guidance += ' Earlier pending work exists; use am codex-boundary --list-pending for original IDs.'
         if observation['control_origin_hint']:guidance += ' Generated-control hint, not a new operator decision; assess this source.'
         if len(guidance.encode())>2048:raise ValueError('guidance exceeds bound')
-        stage,reason='identity','identity.unresolved'
+        stage,reason='boundary','state.unavailable'
         scope_binding.recheck_private_enrollment(enrollment)
         diagnostic(root)
         print(json.dumps({'hookSpecificOutput':{'hookEventName':'UserPromptSubmit','additionalContext':guidance}}));return 0
-    except (OSError,ValueError,TypeError,KeyError,UnicodeError,ImportError,subprocess.SubprocessError):
+    except (OSError,ValueError,TypeError,KeyError,UnicodeError,ImportError,subprocess.SubprocessError) as exc:
+        if scope_binding is not None and isinstance(exc,scope_binding.IdentityUnresolved):
+            stage,reason='identity','identity.unresolved'
         diagnostic(diagnostic_repo,stage,reason)
         retained=(' Unidentified input retained privately as '+retained_input['retention_id']+'; it is not an observation. Restore the original native event ID/reference before enrollment.' if retained_input else '')
         print(json.dumps({'decision':'block','reason':f'Agent Memory input not accepted [{stage}/{reason}]. Preserve work; run am doctor and am codex-boundary --list-pending for this repository, then retry this input after resolving the fault.'+retained}));return 0

@@ -29,8 +29,8 @@ VERSION = re.compile(r'(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)'
                      r'(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?'
                      r'(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?')
 
-# Only static validation is memoized, for one exact root/byte/mode inventory.
-# Every call still freshly traverses and reads the entire physical artifact.
+# Only static validation is memoized, for one exact relative-path/byte/mode inventory.
+# Every root is still freshly traversed and read before and after each inspection.
 _last_validation = None
 
 
@@ -364,8 +364,8 @@ def _validated(pack):
     root = Path(pack).resolve(strict=True)
     require(root.is_dir(), 'inventory', '.', 'Pack must be a directory')
     files = inventory(root)
-    key = (str(root), tuple((path, mode, hashlib.sha256(raw).digest())
-                           for path, (raw, mode) in sorted(files.items())))
+    key = tuple((path, mode, hashlib.sha256(raw).digest())
+                for path, (raw, mode) in sorted(files.items()))
     cached = _last_validation
     if cached is not None and cached[0] == key:
         yield copy.deepcopy(cached[1])

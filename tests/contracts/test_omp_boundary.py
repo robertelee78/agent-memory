@@ -184,10 +184,19 @@ class NativeSources(unittest.TestCase):
                 rows, _ = transport.pending_inventory(repo)
                 self.assertTrue(all(row['status'] == 'pending-coverage-gap' for row in rows))
                 for row in rows:
-                    with self.assertRaises(ValueError):
-                        self.acknowledge(repo, row)
+                    value = {key: row[key] for key in ('session', 'lifecycle', 'observation_id', 'source_sha256')}
+                    for outcome in ('no-learning', 'published'):
+                        value.update(outcome=outcome, assessment={'source_id': row['observation_id'],
+                                     'source_review': 'Reviewed the controlled source.', 'candidates': []})
+                        with self.assertRaises(ValueError):
+                            transport.complete(repo, value)
+                self.assertEqual(transport.pending_inventory(repo)[0], rows)
                 result = boundary.drain_source_capabilities(repo, quiesced=True)
                 self.assertFalse(result['drainable'])
+                self.assertEqual(boundary.required_source_capabilities(repo),
+                                 {boundary.HISTORICAL_CAPABILITY, boundary.CAPABILITY})
+                self.assertTrue((boundary._base(repo) / 'turn-sources-compat-v1.json').is_file())
+                self.assertFalse(list((boundary._base(repo) / 'omp-drains').glob('*.json')))
                 self.assertEqual(marker.read_bytes(), original_marker)
                 for path in (boundary._base(repo) / 'omp-source-v1').rglob('*.json'):
                     self.assertNotIn('must-not-retain', path.read_text())
@@ -241,6 +250,40 @@ class NativeSources(unittest.TestCase):
                 self.assertTrue(result['marker_cleared'])
                 self.assertEqual(boundary.required_source_capabilities(repo), set())
                 self.assertTrue((boundary._base(repo) / 'omp-source-v1').exists())
+                lock = boundary._base(repo) / 'omp-transport.lock'
+                retained_proofs = {path.name: path.read_bytes()
+                                   for path in (boundary._base(repo) / 'omp-drains').glob('*.json')}
+                original_flock = turn_sources.fcntl.flock
+                def replace_after_flock(fd, operation):
+                    result = original_flock(fd, operation)
+                    current = lock.lstat()
+                    opened = os.fstat(fd)
+                    if (current.st_dev, current.st_ino) == (opened.st_dev, opened.st_ino):
+                        lock.unlink()
+                        lock.touch(mode=0o600)
+                    return result
+                with patch.object(turn_sources.fcntl, 'flock', side_effect=replace_after_flock):
+                    with self.assertRaises(ValueError):
+                        boundary.required_source_capabilities(repo)
+                self.assertEqual({path.name: path.read_bytes()
+                                  for path in (boundary._base(repo) / 'omp-drains').glob('*.json')},
+                                 retained_proofs)
+                original_open = os.open
+                def remove_before_open(path, flags, *args, **kwargs):
+                    if path == lock.name and kwargs.get('dir_fd') is not None:
+                        lock.unlink()
+                    return original_open(path, flags, *args, **kwargs)
+                with patch.object(turn_sources.os, 'open', side_effect=remove_before_open):
+                    with self.assertRaises(ValueError):
+                        boundary.required_source_capabilities(repo)
+                self.assertFalse(lock.exists())
+                self.assertEqual({path.name: path.read_bytes()
+                                  for path in (boundary._base(repo) / 'omp-drains').glob('*.json')},
+                                 retained_proofs)
+                # Restore the fixture's synchronization file before testing
+                # the separate missing-proof refusal.
+                with turn_sources.private_lock(lock):
+                    pass
                 for proof in (boundary._base(repo) / 'omp-drains').glob('*.json'):
                     proof.unlink()
                 with self.assertRaises(ValueError):
@@ -312,6 +355,40 @@ class NativeSources(unittest.TestCase):
             self.assertTrue(transport.pending_inventory(repo)[1],
                             'the unqualified historical orphan must remain an explicit inventory fault')
 
+    def test_late_native_tool_result_recovers_original_sealed_gap_without_reopening(self):
+        with World() as world:
+            repo, session, lifecycle = self.fixture(world)
+            with patch.dict(os.environ, world.env, clear=True):
+                human = self.entry('human', 'user', 'Actual approved tool request', attribution='user')
+                assistant = self.entry('assistant-call', 'assistant',
+                                       [{'type': 'toolCall', 'id': 'native-call', 'name': 'bash',
+                                         'arguments': {'command': 'printf 12'}}])
+                first = self.observe(repo, session, lifecycle, [human, assistant])
+                original_dir, original_cursor = transport.segments(repo, session)[0]
+                original_manifest = transport.read(original_dir / 'segment.json')
+                self.assertTrue(any(gap['native_entry_id'] == 'tool:native-call' for gap in original_manifest['gaps']))
+                result = self.entry('tool-result', 'toolResult', '12', toolCallId='native-call', toolName='bash')
+                self.observe(repo, session, first['lifecycle'], [human, assistant, result], terminal=True)
+                self.assertEqual(transport.read(original_dir / 'segment.json'), original_manifest)
+                self.assertTrue(transport._coverage(original_dir, original_manifest))
+                # A sealed cursor is historical evidence, not a live queue to
+                # mutate; the bound resolution establishes recovered coverage.
+                self.assertEqual(transport.read(original_dir / 'cursor.json')['tool_lifecycles'],
+                                 original_cursor['tool_lifecycles'])
+                rows, faults = transport.pending_inventory(repo)
+                self.assertFalse(faults)
+                segment = next(row for row in rows if row['lifecycle'] == original_cursor['lifecycle']
+                               and row['source_reference'].startswith('omp:seal:'))
+                readback = transport.source(repo, session, segment['lifecycle'], segment['observation_id'])
+                self.assertTrue(readback['coverage_complete'])
+                self.assertEqual(readback['source'], original_manifest)
+                resolution = next(item for item in readback['gap_resolutions']
+                                  if item['gap_id'] == next(gap['gap_id'] for gap in original_manifest['gaps']
+                                                            if gap['native_entry_id'] == 'tool:native-call'))
+                recovered = transport.read(original_dir / resolution['recovered_ref'])
+                self.assertEqual(recovered['toolCallId'], 'native-call')
+                self.assertEqual(recovered['content'], '12')
+                self.assertEqual(len(transport.segments(repo, session)), 2)
     def test_protected_private_root_cannot_silently_move_or_lose_binding(self):
         with World() as world:
             repo, session, lifecycle = self.fixture(world)
@@ -1024,6 +1101,14 @@ class NativeLifecyclePublic(unittest.TestCase):
             helper = NativeSources()
             repo, session, lifecycle = helper.fixture(world)
             with patch.dict(os.environ, world.env, clear=True):
+                base = boundary._base(repo)
+                transport_lock = base / 'omp-transport.lock'
+                self.assertFalse(transport_lock.exists())
+                before_check = snapshot(world.paths['state']), snapshot(world.paths['config'])
+                self.assertTrue(boundary.drain_source_capabilities(repo, quiesced=True, check=True)['drainable'])
+                self.assertEqual((snapshot(world.paths['state']), snapshot(world.paths['config'])), before_check)
+                self.assertFalse(transport_lock.exists())
+            with patch.dict(os.environ, world.env, clear=True):
                 helper.observe(repo, session, lifecycle, [
                     helper.entry('human', 'user', 'Controlled native lifecycle work', attribution='user')])
                 self.enroll_fixture(repo, session)
@@ -1058,15 +1143,115 @@ class NativeLifecyclePublic(unittest.TestCase):
             with patch.dict(os.environ, world.env, clear=True):
                 helper.observe(repo, session, lifecycle, [
                     helper.entry('human', 'user', 'Still unassessed controlled source', attribution='user')])
+                rows, faults = transport.pending_inventory(repo)
+                self.assertFalse(faults)
+                sources = [transport.source(repo, row['session'], row['lifecycle'], row['observation_id'])
+                           for row in rows]
                 base = boundary._base(repo)
             extension = self.extension(receipt)
+            from runtime_update_fixtures import snapshot
+            unrelated = {target['path']: snapshot(Path(target['path'])) for target in receipt['targets']
+                         if target['path'] != str(extension)}
             result = self.public(world, receipt, 'uninstall', '--omp-writers-quiesced', expected=1)
             self.assertFalse(result['verified'])
             self.assertFalse(extension.exists())
             self.assertTrue((base / 'turn-sources-compat-v1.json').exists())
             self.assertFalse(list((base / 'omp-drains').glob('*.json')))
             self.assertTrue(list(extension.parent.glob('.agent-memory-disabled-*.ts.disabled')))
+            self.assertEqual({target['path']: snapshot(Path(target['path'])) for target in receipt['targets']
+                              if target['path'] != str(extension)}, unrelated)
+            with patch.dict(os.environ, world.env, clear=True):
+                self.assertEqual(transport.pending_inventory(repo), (rows, []))
+                self.assertEqual([transport.source(repo, row['session'], row['lifecycle'], row['observation_id'])
+                                  for row in rows], sources)
+                self.assertEqual(boundary.required_source_capabilities(repo),
+                                 {boundary.HISTORICAL_CAPABILITY, boundary.CAPABILITY})
 
+    def test_held_native_preview_consumes_reviewed_envelope_without_publishing(self):
+        import layout_recovery_fixtures as recovery
+        from runtime_update_fixtures import snapshot
+        with World() as world:
+            command, source, repo, bank, native, inspected, _ = recovery.small_pending(world)
+            helper = NativeSources()
+            with patch.dict(os.environ, world.env, clear=True):
+                # This low-level synthetic observer fixture has no installed
+                # native stream to perform checked bank enrollment.
+                boundary._activate_marker(repo)
+                boundary.verify_marker(repo)
+                self.assertEqual(boundary.required_source_capabilities(repo),
+                                 {boundary.HISTORICAL_CAPABILITY, boundary.CAPABILITY})
+                helper.observe(repo, str(uuid.uuid4()), str(uuid.uuid4()), [
+                    helper.entry('held-human', 'user', 'Controlled pending source under the same layout hold', attribution='user')])
+                rows, faults = transport.pending_inventory(repo)
+                self.assertFalse(faults)
+                self.assertTrue(rows)
+                sources = [transport.source(repo, row['session'], row['lifecycle'], row['observation_id'])
+                           for row in rows]
+                self.assertTrue(all(item['coverage_complete'] and not item['faults'] for item in sources))
+                self.assertTrue(any(item['source'].get('content') ==
+                                    'Controlled pending source under the same layout hold'
+                                    for item in sources))
+                base = boundary._base(repo)
+                self.assertFalse(boundary.drain_source_capabilities(repo, quiesced=True, check=True)['drainable'])
+                self.assertFalse(list((base / 'omp-drains').glob('*.json')))
+            root = world.inside('held native root')
+            root.mkdir()
+            request = recovery.review_request(world, command, source, repo, inspected, native)
+            attestation = request['quiescence_attestation']
+            attestation['declared_invocation_routes'] += [str(root / path) for path in
+                ('skills/agent-memory', 'extensions/agent-memory.ts', 'AGENTS.md')]
+            attestation['declared_invocation_routes'].append(str(command.parent / 'agent-memory'))
+            def envelope(attestation):
+                return {'attestation': attestation, 'review': {
+                    'schema': 'agent-memory/layout-quiescence-review-v1', 'review_id': attestation['review_id'],
+                    'operation_id': attestation['operation_id'], 'attestation_sha256': recovery.sha(recovery.encoded(attestation)),
+                    'reviewer_developer_id': attestation['operator_developer_id'],
+                    'reviewer_harness': 'controlled-native-independent-reviewer',
+                    'reviewer_session': 'native-renewal-' + str(uuid.uuid4()), 'review_time': attestation['issued_at'],
+                    'decision': 'approve', 'rationale': 'Controlled independent review of exact bank, artifact and complete invocation routes.'}}
+            good = envelope(attestation)
+            arguments = [command, '--json', 'install', '--development-source', source, '--presets', 'omp',
+                         '--omp-agent-dir', root, '--omp-peers-upgraded']
+            variants = []
+            wrong_artifact = copy.deepcopy(attestation)
+            wrong_artifact['runtime_artifact_digest'] = 'a' * 64
+            variants.append(envelope(wrong_artifact))
+            wrong_bank = copy.deepcopy(attestation)
+            wrong_bank['bank_path'] = str(repo / 'other-bank')
+            variants.append(envelope(wrong_bank))
+            missing_route = copy.deepcopy(attestation)
+            missing_route['declared_invocation_routes'].remove(str(root / 'extensions/agent-memory.ts'))
+            variants.append(envelope(missing_route))
+            missing_other_route = copy.deepcopy(attestation)
+            missing_other_route['declared_invocation_routes'].remove(str(root / 'skills/agent-memory'))
+            variants.append(envelope(missing_other_route))
+            unreviewed = copy.deepcopy(good)
+            unreviewed['review']['reviewer_harness'] = request['author']['harness']
+            unreviewed['review']['reviewer_session'] = request['author']['session']
+            variants.append(unreviewed)
+            before = snapshot(world.paths['state']), snapshot(bank), snapshot(root)
+            for value in variants:
+                result = world.run([*arguments, '--check', '--omp-layout-quiescence', recovery.save(world, value)],
+                                   check=False, timeout=30)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertEqual((snapshot(world.paths['state']), snapshot(bank), snapshot(root)), before)
+            proof = recovery.save(world, good)
+            preview = world.run([*arguments, '--check', '--omp-layout-quiescence', proof], timeout=30)
+            checked = json.loads(preview.stdout)
+            self.assertEqual(checked['schema'], 'agent-memory/install-plan-v1')
+            self.assertFalse(checked['installation_writes_performed'])
+            self.assertEqual(checked['private_compatibility']['required_capabilities'],
+                             ['layout-frontier-v1', 'omp-harness-v1', 'omp-stored-source-v2'])
+            self.assertEqual((snapshot(world.paths['state']), snapshot(bank), snapshot(root)), before)
+            with patch.dict(os.environ, world.env, clear=True):
+                self.assertEqual(transport.pending_inventory(repo), (rows, []))
+                self.assertEqual([transport.source(repo, row['session'], row['lifecycle'], row['observation_id'])
+                                  for row in rows], sources)
+                self.assertFalse(boundary.drain_source_capabilities(repo, quiesced=True, check=True)['drainable'])
+                self.assertFalse(list((base / 'omp-drains').glob('*.json')))
+            applied = json.loads(world.run([*arguments, '--omp-layout-quiescence', proof], timeout=30).stdout)
+            self.assertTrue(applied['verified'])
+            self.extension(applied['receipt'])
 
 class NativeSmokeQualification(unittest.TestCase):
     """Controlled protocol fixtures only: never native/provider qualification."""

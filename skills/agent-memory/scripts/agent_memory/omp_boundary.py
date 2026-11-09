@@ -255,27 +255,34 @@ def _source_state_bindings(installation, registered):
 
 
 def source_capability_repositories(installation=None):
-    """Union discovery retains unavailable paths so lifecycle cannot call them empty."""
+    """Discover accessible ordinary locations and all protected native bindings."""
     from .identity_git import git
     registered = _registry()
     roots = {Path(p) for p in registered['repositories']}
     roots.update(_source_state_bindings(installation, registered))
+    def present(path):
+        try:
+            path.lstat()
+        except FileNotFoundError:
+            return False
+        return True
     registry, _ = project_identity.observe()
     for checkout in registry['checkouts'].values():
         for location in checkout['locations']:
             path = Path(location)
-            if not path.is_dir():
-                # Retain unavailable inventory so activation cannot call it empty.
-                roots.add(path)
+            if not present(path):
+                # Missing ordinary history is not a protected binding.
                 continue
+            if not path.is_dir():
+                raise ContractError('Registered Git location is unavailable')
             listed = git(path, 'worktree', 'list', '--porcelain', optional=True)
             if listed is None:
                 if (path / '.git').exists() or path.name == '.git':
                     raise ContractError('Registered Git location cannot list native bank worktrees')
                 roots.add(path)
                 continue
-            roots.update(Path(line[9:]) for line in listed.splitlines()
-                         if line.startswith('worktree '))
+            roots.update(path for line in listed.splitlines() if line.startswith('worktree ')
+                         and present(path := Path(line[9:])))
     if installation:
         for key in ('rollback_repositories', 'observed_repositories'):
             roots.update(Path(p) for p in installation.get(key, []))
@@ -423,7 +430,10 @@ def required_source_capabilities(repo):
     has_evidence |= _shared_native_source_evidence(root, base)
     if not has_evidence:
         return set()
-    with private_lock(base / 'omp-transport.lock'):
+    # A valid drain was written under this persistent lock. Inspection may
+    # never recreate a missing lock or interpret its loss as empty evidence.
+    from .private_state import observation_barrier
+    with turn_sources.read_only_locks(), observation_barrier(repo), private_lock(base / 'omp-transport.lock', existing_only=True):
         binding, digest = _drain_inventory(repo)
         try:
             proof = load(turn_sources.read_bytes(base / 'omp-drains' / (digest + '.json'), 4096))
@@ -446,7 +456,7 @@ def _stream_proof(repo, base, inventory):
 
 def _verify_stream_drain(repo, base):
     from . import omp_stream
-    inventory = omp_stream.drain_state(repo, base=base)
+    inventory = omp_stream.drain_state(repo, base=base, read_only=True)
     expected = _stream_proof(repo, base, inventory)
     target = base / 'omp-stream-drains' / (inventory['inventory_sha256'] + '.json')
     try:
@@ -458,12 +468,34 @@ def _verify_stream_drain(repo, base):
     return inventory
 
 
+@contextmanager
+def _read_only_transport_lock(base):
+    """Observe an existing transport lock, or fence its continued absence."""
+    path = base / 'omp-transport.lock'
+    if os.path.lexists(path):
+        with private_lock(path, existing_only=True):
+            yield
+        return
+    evidence = ('omp-source-v1', 'omp-stream-v1', 'omp-stream-session-locks', 'omp-drains')
+    protected = bool(turn_sources._barriers.get().get(str(base)))
+    if not protected and any(os.path.lexists(base / name) for name in evidence):
+        raise ContractError('Native evidence lacks its source barrier; preserve private state')
+    yield
+    if os.path.lexists(path) or (not protected and
+            any(os.path.lexists(base / name) for name in evidence)):
+        raise ContractError('Native transport appeared during read-only drain observation')
+
+
 def drain_source_capabilities(repo, *, quiesced=False, check=False):
     """Aware lifecycle only, after binding disable and explicit writer quiescence."""
     if not quiesced:
         raise ContractError('Source drain requires disabled bindings and writer quiescence')
     base = _base(repo)
-    with source_barrier(repo, exclusive=True), private_lock(base / 'omp-transport.lock'):
+    if check:
+        from .private_state import observation_barrier
+    barrier = observation_barrier(repo) if check else source_barrier(repo, exclusive=True)
+    lock = _read_only_transport_lock(base) if check else private_lock(base / 'omp-transport.lock')
+    with (turn_sources.read_only_locks() if check else nullcontext()), barrier, lock:
         if not check:
             namespaces = {}
             for _, reference in _omp_index(repo):
@@ -478,7 +510,7 @@ def drain_source_capabilities(repo, *, quiesced=False, check=False):
                         turn_sources.cleanup(shared_base, directory, identity, root)
         binding, digest = _drain_inventory(repo)
         from . import omp_stream
-        streams = omp_stream.drain_state(repo, base=base)
+        streams = omp_stream.drain_state(repo, base=base, read_only=check)
         result = {'capability': CAPABILITY, 'pending': binding['pending'], 'faults': binding['faults'],
                   'transport_pending': streams['pending'], 'stream_inventory_sha256': streams['inventory_sha256'],
                   'inventory_sha256': digest,
@@ -653,7 +685,11 @@ def native_transition(plan, check=False):
         # separately owned capable reader, without any executable path to guess.
         with ExitStack() as locks:
             for repo in repositories:
-                locks.enter_context(source_barrier(repo, exclusive=True))
+                if check:
+                    from .private_state import observation_barrier
+                    locks.enter_context(observation_barrier(repo))
+                else:
+                    locks.enter_context(source_barrier(repo, exclusive=True))
             results = [drain_source_capabilities(repo, quiesced=True, check=check) for repo in repositories]
         if not check and any(not result['drainable'] for result in results):
             raise ContractError('Historical native sources remain pending; preserve their capable reader')
@@ -684,7 +720,11 @@ def native_transition(plan, check=False):
         for repo in repositories:
             if not repo.is_dir():
                 raise ContractError('Enrolled native bank is unavailable; compatibility remains unknown')
-            locks.enter_context(source_barrier(repo, exclusive=True))
+            if check:
+                from .private_state import observation_barrier
+                locks.enter_context(observation_barrier(repo))
+            else:
+                locks.enter_context(source_barrier(repo, exclusive=True))
         if check:
             for repo in repositories:
                 results.append(drain_source_capabilities(repo, quiesced=True, check=True))

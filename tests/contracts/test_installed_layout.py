@@ -2,6 +2,7 @@
 import hashlib
 import json
 import os
+import stat
 from pathlib import Path
 import shutil
 import sys
@@ -129,6 +130,26 @@ class InstalledLayoutContract(unittest.TestCase):
                             'sha256': hashlib.sha256(b'').hexdigest(), 'mode': 0o600})
                     self.assertEqual(observed, before)
                 result = install(world, root, mode, 'all', [custom]); self.assertTrue(result['verified'])
+                # Activation may enroll its persistent source coordinator; it
+                # must not alter any pre-existing private evidence.
+                writes = world.paths['state'] / 'agent-memory/writes'
+                previous = before[str(writes)]
+                current = snapshot(writes)
+                for name, value in previous.items():
+                    self.assertEqual(current.get(name), value)
+                namespace = hashlib.sha256(str(memory).encode()).hexdigest()
+                added = set(current) - set(previous)
+                self.assertLessEqual(added, {namespace, namespace + '/source-barrier.lock'})
+                for name in added:
+                    path = writes / name
+                    info = path.lstat()
+                    self.assertEqual(info.st_uid, os.geteuid())
+                    self.assertEqual(stat.S_IMODE(info.st_mode), 0o700 if path.is_dir() else 0o600)
+                    self.assertFalse(path.is_symlink())
+                    if not path.is_dir():
+                        self.assertTrue(stat.S_ISREG(info.st_mode))
+                        self.assertEqual(info.st_nlink, 1)
+                before[str(writes)] = current
                 receipt = result['receipt']; self.assert_layout(world, receipt)
                 actual = {Path(t['path']) for t in receipt['targets'] if t['kind'] in {'copy', 'link'}}
                 self.assertEqual(actual, {p / 'agent-memory' for p in [*roots.values(), custom]})

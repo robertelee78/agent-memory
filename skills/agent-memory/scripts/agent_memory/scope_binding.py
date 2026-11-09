@@ -22,6 +22,9 @@ from .frontmatter import ContractError
 SCHEMA = 'agent-memory/scope-binding-v1'
 FIELDS = {'schema', 'operation_id', 'developer_id', 'developer_sha256', 'project', 'base_files', 'transaction'}
 
+class IdentityUnresolved(ContractError):
+    """Identity evidence is explicitly missing, conflicting, or changed."""
+
 
 def result(operation, **values):
     return {'schema': 'agent-memory/scope-result-v1', 'operation': operation,
@@ -31,7 +34,7 @@ def result(operation, **values):
 def principal(repo, observations=(), harness=None, session=None):
     value = developer.status(observations, harness, session, repo)
     if value['setup_required'] or value['attribution_conflicts'] or value['lock_present']:
-        raise ContractError('Developer attribution is missing, conflicting or locked; explicitly create/adopt/select or repair it')
+        raise IdentityUnresolved('Developer attribution is missing, conflicting or locked; explicitly create/adopt/select or repair it')
     return value
 
 
@@ -74,14 +77,14 @@ def require(repo, project_id=None, *, expected=None, initialize=False, owned_loc
                 or proj['issues'] != ['Bank initialization or identity update is pending']):
             raise ContractError('Initialization requires an explicitly registered empty checkout with unambiguous authority')
     elif not proj['resolved']:
-        raise ContractError('Project identity is unresolved: ' + '; '.join(proj['issues']))
+        raise IdentityUnresolved('Project identity is unresolved: ' + '; '.join(proj['issues']))
     if project_id is not None and project_id != proj['project_id']:
-        raise ContractError('Operation project ID differs from the resolved repository')
+        raise IdentityUnresolved('Operation project ID differs from the resolved repository')
     context = {'developer_id': dev['developer_id'], 'project_id': proj['project_id'],
                'developer_sha256': dev['observed_sha256'], 'project_sha256': proj['observed_sha256'],
                'checkout_key': proj['evidence']['checkout_key'], 'repository_settings_sha256': digest(encoded(proj['evidence']['repository_settings'])), 'initialization_only': initialize}
     if expected is not None and context != expected:
-        raise ContractError('Resolved identity changed during the operation; retain original provenance and prepare again')
+        raise IdentityUnresolved('Resolved identity changed during the operation; retain original provenance and prepare again')
     return context
 
 

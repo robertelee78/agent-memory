@@ -62,33 +62,106 @@ def registry():
     return entries
 
 
+def _case_execution(entry, result):
+    """Validate a successful worker's discovered, selected, and started identities."""
+    selection = result.get("case_selection")
+    if (result.get("status") != "passed" or result.get("passed") is not True
+            or not isinstance(selection, dict) or selection.get("batch") != entry["name"]
+            or type(result.get("tests")) is not int or result["tests"] < 1
+            or any(type(result.get(key)) is not int or result[key] != 0 for key in
+                   ("failures", "errors", "skipped", "expected_failures", "unexpected_successes"))):
+        raise ValueError("Missing successful case execution proof: " + entry["name"])
+    for key in ("complete", "selected", "executed"):
+        identities = selection.get(key)
+        if (not isinstance(identities, list) or not identities
+                or any(not isinstance(case, str) or len(case.rsplit(".", 2)) != 3
+                       or any(not part for part in case.rsplit(".", 2)) for case in identities)
+                or identities != sorted(set(identities))):
+            raise ValueError("Invalid case identity inventory: " + entry["name"])
+    complete, selected, executed = (selection[key] for key in ("complete", "selected", "executed"))
+    if (result["tests"] != len(executed) or selected != executed
+            or not set(selected) <= set(complete)):
+        raise ValueError("Selected cases differ from actual execution: " + entry["name"])
+    if "tests" not in entry:
+        if selected != complete:
+            raise ValueError("Incomplete unsplit suite execution: " + entry["name"])
+    else:
+        selectors = entry["tests"]
+        if (not isinstance(selectors, list) or not selectors
+                or any(not isinstance(selector, str) or not selector for selector in selectors)):
+            raise ValueError("Invalid registered case selectors: " + entry["name"])
+        expected = set()
+        for selector in selectors:
+            parts = selector.split(".")
+            if len(parts) not in (1, 2) or (len(parts) == 2 and not parts[1].startswith("test_")):
+                raise ValueError("Invalid registered case selector: " + entry["name"])
+            matches = {case for case in complete if case.rsplit(".", 2)[-2] == parts[0]
+                       and (len(parts) == 1 or case.rsplit(".", 1)[-1] == parts[1])}
+            if not matches or expected.intersection(matches):
+                raise ValueError("Empty or overlapping registered case selectors: " + entry["name"])
+            expected.update(matches)
+        if set(selected) != expected:
+            raise ValueError("Execution differs from registered case selectors: " + entry["name"])
+    return complete, executed
+
+
 def case_batch_coverage(entries, suites):
     by_name = {suite["name"]: suite for suite in suites}
-    paths = {entry["path"] for entry in entries if "tests" in entry}
+    if len(by_name) != len(suites):
+        raise ValueError("Duplicate suite execution receipts")
+    paths = {entry["path"] for entry in entries if entry.get("path")}
     summaries = []
     for path in sorted(paths):
         complete, executed = None, set()
         batches = [entry for entry in entries if entry.get("path") == path]
+        split = ["tests" in entry for entry in batches]
+        if any(split) and not all(split):
+            raise ValueError("Mixed split and unsplit suites on one path")
         for entry in batches:
             result = by_name.get(entry["name"], {})
-            selection = result.get("case_selection")
-            if result.get("status") != "passed" or not isinstance(selection, dict):
-                raise ValueError("Missing successful registered case batch: " + entry["name"])
-            inventory, selected = selection.get("complete"), selection.get("selected")
-            if (selection.get("batch") != entry["name"] or not isinstance(inventory, list)
-                    or not inventory or any(not isinstance(case, str) for case in inventory)
-                    or len(inventory) != len(set(inventory)) or not isinstance(selected, list)
-                    or not selected or any(not isinstance(case, str) for case in selected)
-                    or len(selected) != len(set(selected)) or result.get("tests") != len(selected)):
-                raise ValueError("Invalid registered case-batch proof")
+            inventory, actual = _case_execution(entry, result)
             if complete is None:
                 complete = set(inventory)
-            if set(inventory) != complete or executed.intersection(selected):
+            if set(inventory) != complete or (all(split) and executed.intersection(actual)):
                 raise ValueError("Registered case batches disagree or overlap")
-            executed.update(selected)
+            executed.update(actual)
         if executed != complete:
             raise ValueError("Registered case batches omit actual tests")
         summaries.append({"path": path, "batches": len(batches), "cases": sorted(executed)})
+    return summaries
+
+def lifecycle_matrix_coverage(entries, suites):
+    matrix = json.loads((ROOT / "tests/lifecycle-matrix.json").read_text())
+    required = {"fresh-repeat", "modes", "spaces-optional-clients", "ownership-backups",
+                "sentinel-edits", "update-guards", "activation-interrupts", "lost-responses",
+                "rollback-locks", "removal-purge", "bank-preservation", "generated-state-loss",
+                "client-identity", "pack-validation", "isolation"}
+    rows = matrix.get("requirements") if isinstance(matrix, dict) else None
+    if (not isinstance(matrix, dict) or matrix.get("schema") != "agent-memory/lifecycle-test-matrix-v1"
+            or not isinstance(rows, list) or any(not isinstance(row, dict) for row in rows)
+            or len(rows) != len(required) or {row.get("requirement") for row in rows} != required):
+        raise ValueError("Invalid approved lifecycle requirements")
+    registry = {entry["name"]: entry for entry in entries}
+    results = {suite["name"]: suite for suite in suites}
+    summaries = []
+    for row in rows:
+        cases = row.get("cases")
+        if not isinstance(cases, list) or not cases:
+            raise ValueError("Lifecycle requirement has no executable cases")
+        for case in cases:
+            if not isinstance(case, dict):
+                raise ValueError("Invalid lifecycle case")
+            name, test = case.get("suite"), case.get("test")
+            if (not isinstance(name, str) or not name or not isinstance(test, str)
+                    or len(test.split(".")) != 2 or not test.split(".")[1].startswith("test_")):
+                raise ValueError("Invalid lifecycle case identity")
+            entry, result = registry.get(name, {}), results.get(name, {})
+            if entry.get("scope") != "v0.0.1" or not entry.get("path"):
+                raise ValueError("Missing successful lifecycle case suite: " + name)
+            _, executed = _case_execution(entry, result)
+            if "contract_suite." + test not in executed:
+                raise ValueError("Lifecycle case was not executed: " + name + " / " + test)
+        summaries.append({"requirement": row["requirement"], "cases": len(cases)})
     return summaries
 
 
@@ -146,14 +219,11 @@ def validate_rows(entries, rows):
             raise ValueError("Shard suite assignment differs from registry")
         if not entry.get("path"):
             if (entry.get("scope") != "future" or row.get("status") != "not-applicable"
-                    or row.get("tests") != 0 or row.get("reason") != entry.get("reason")):
+                    or type(row.get("tests")) is not int or row["tests"] != 0
+                    or row.get("reason") != entry.get("reason")):
                 raise ValueError("Missing or invalid required suite")
             continue
-        if (row.get("status") != "passed" or row.get("passed") is not True
-                or type(row.get("tests")) is not int or row["tests"] < 1
-                or any(type(row.get(key)) is not int or row[key] != 0 for key in
-                       ("failures", "errors", "skipped", "expected_failures", "unexpected_successes"))):
-            raise ValueError("Suite is failed, empty, skipped, or has invalid counts")
+        _case_execution(entry, row)
 
 
 def merge_shards(paths, count, entries, source, cell):
@@ -167,7 +237,8 @@ def merge_shards(paths, count, entries, source, cell):
         scope = shard.get("shard")
         if (shard.get("schema") != "agent-memory/test-gate-v1"
                 or shard.get("mode") != "release" or shard.get("passed") is not True
-                or shard.get("release_complete") is not False or shard.get("source") != source
+                or "error" in shard or shard.get("release_complete") is not False
+                or shard.get("source") != source
                 or shard.get("cell") != cell or not isinstance(scope, dict)
                 or type(scope.get("count")) is not int or scope["count"] != count
                 or type(scope.get("index")) is not int
@@ -232,15 +303,26 @@ def main(argv=None):
                                             ROOT / entry["path"], "--suite", entry["name"]],
                                            check=False, timeout=300, group=True)
                         output.append(result.stderr)
+                        if result.returncode != 0:
+                            output.append(f"\nWorker exit status: {result.returncode}\nWorker stdout:\n{result.stdout}\n")
                         stage = 'result-readback'
-                        counts = json.loads(result.stdout)
-                        item.update(counts)
-                        item["status"] = "passed" if result.returncode == 0 and counts["passed"] else "failed"
-                        if item['status'] == 'passed' and entry['name'] in OWNERS:
-                            item['fault_partition'] = partition_proof(result.stderr, entry['name'])
+                        try:
+                            counts = json.loads(result.stdout)
+                            if not isinstance(counts, dict):
+                                raise ValueError("Worker result must be a JSON object")
+                            item.update(counts)
+                            item["status"] = "passed" if result.returncode == 0 and counts.get("passed") is True else "failed"
+                            if item["status"] == "passed":
+                                _case_execution(entry, item)
+                            if item['status'] == 'passed' and entry['name'] in OWNERS:
+                                item['fault_partition'] = partition_proof(result.stderr, entry['name'])
+                        except (ValueError, KeyError):
+                            if result.returncode == 0:
+                                output.append(f"\nWorker exit status: {result.returncode}\nWorker stdout:\n{result.stdout}\n")
+                            raise
                     except (subprocess.TimeoutExpired, ValueError, KeyError) as exc:
                         output.append(diagnostic(exc))
-                        item.update(status="failed", reason=str(exc), tests=0)
+                        item.update(status="failed", passed=False, reason=str(exc), tests=0)
                     stage = 'world-cleanup'
         except (OSError, ValueError, KeyError) as exc:
             return item, stage, ''.join(output), exc
@@ -310,17 +392,21 @@ def main(argv=None):
             validate_rows(entries_to_run, report["suites"])
             report["passed"] = True
         else:
+            if args.release:
+                validate_rows(entries, report["suites"])
             active = 'lifecycle-fault-partitions'; stage = 'coverage-aggregation'
             report['fault_partition_coverage'] = partition_coverage(report['suites'])
             active = 'registered-case-batches'
             report['case_batch_coverage'] = case_batch_coverage(entries, report['suites'])
+            active = 'lifecycle-matrix'
+            report['lifecycle_matrix_coverage'] = lifecycle_matrix_coverage(entries, report['suites'])
             pending = any(s["status"] == "pending" for s in report["suites"])
             failed = any(s["status"] == "failed" for s in report["suites"])
             report["release_complete"] = not pending and not failed
             report["passed"] = not failed and (not args.release or report["release_complete"])
         if scoped and source_identity() != source:
             raise ValueError("Source inputs changed during gate execution")
-    except (OSError, ValueError, KeyError, TypeError) as exc:
+    except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as exc:
         report["passed"] = False
         report["release_complete"] = False
         sys.stderr.write(diagnostic(exc))

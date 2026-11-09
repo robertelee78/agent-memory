@@ -1450,11 +1450,12 @@ def failure_repair(exc):
     try:
         state, _ = locations()
         journal = read_journal(state)
+        committed = bool(journal and journal['status'] == 'activating' and _receipt_committed(state, journal))
     except (OSError, ValueError, TypeError, KeyError, UnicodeError):
         return ('Preserve reported paths and installation records; inspect diagnostics and reconcile '
                 'unreadable recovery metadata before retrying.')
     if journal and journal['status'] not in ('complete', 'rolled-back'):
-        if journal['status'] == 'activating' and _receipt_committed(state, journal):
+        if committed:
             command = 'install' if journal['receipt'].get('uninstalled') else 'install or update'
             return ('Preserve the committed receipt and journal. Use the trusted helper to re-plan '
                     + command + '; strict recover cannot accept changed targets.')

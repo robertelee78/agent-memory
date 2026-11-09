@@ -312,15 +312,27 @@ def file_topology(paths):
 
 def validate_files(files, *, parsed_records=None):
     bank_capacity.check_files(files)
+    if parsed_records is not None and (not isinstance(parsed_records, dict) or parsed_records):
+        raise ContractError('Parsed-record output must start empty and cannot supply validation authority')
+
+    def produce(source):
+        companion = {}
+        return _validate_files(source, parsed_records=companion), companion
+
     memo = validation_memo.current()
-    captured = validation_memo.map_input(files) if memo is not None and parsed_records is None else None
+    captured = validation_memo.map_input(files) if memo is not None else None
     if captured is None:
-        return _validate_files(files, parsed_records=parsed_records)
-    key, stable = captured
-    # canonical-remote normalization can resolve file:// symlinks. This ambient
-    # authority observation must run afresh even for otherwise identical bytes.
-    return memo.checked('bank-format', key, lambda: _validate_files(stable),
-                        fresh_guard=lambda: parse_router(stable['MEMORY.md']))
+        report, companion = produce(files)
+    else:
+        key, stable = captured
+        # canonical-remote normalization can resolve file:// symlinks. This ambient
+        # authority observation must run afresh even for otherwise identical bytes.
+        # Each operation stores one uniform report-and-companion value shape.
+        report, companion = memo.checked('bank-format', key, lambda: produce(stable),
+                                         fresh_guard=lambda: parse_router(stable['MEMORY.md']))
+    if parsed_records is not None:
+        parsed_records.update(companion)
+    return report
 
 
 def _validate_files(files, *, parsed_records=None):

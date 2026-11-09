@@ -1,5 +1,5 @@
 """Finite FIFO loss/phase/coverage boundaries; no native-runtime qualification."""
-from contextlib import ExitStack, nullcontext
+from contextlib import ExitStack, contextmanager, nullcontext
 import io
 import os
 from pathlib import Path
@@ -357,6 +357,22 @@ class CoverageFixture(unittest.TestCase):
         self.assertEqual(path.read_bytes(), original)
         self.assertEqual((self.coverage.last_sequence, self.coverage.refused_count), (0, 0))
         self.assertIsNone(self.coverage._invalid_attempt_retry)
+        path.unlink()
+        control = self.coverage.control
+        @contextmanager
+        def busy_after_precheck():
+            with control():
+                yield
+            raise turn_sources.SourceTransportBusy('Synthetic precheck exit deferral')
+        with mock.patch.object(self.coverage, 'control', side_effect=busy_after_precheck):
+            with self.assertRaises(turn_sources.SourceTransportBusy):
+                self.coverage.refuse_invalid(1, 'REQUEST', 'hint', 0)
+        stream._retain(path, value, stream.MAX_IDENTITY)
+        with self.assertRaises(ContractError) as refused:
+            self.coverage.refuse_invalid(1, 'REQUEST', 'hint', 0)
+        self.assertNotIsInstance(refused.exception, turn_sources.SourceTransportBusy)
+        self.assertEqual(path.read_bytes(), original)
+        self.assertEqual((self.coverage.last_sequence, self.coverage.refused_count), (0, 0))
 
     def test_partial_immutable_attempt_is_never_replaced_by_refusal(self):
         path = self.coverage.directory / 'attempts/1.json'

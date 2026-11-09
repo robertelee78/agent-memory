@@ -168,7 +168,7 @@ def preserved_reader(path, plan):
                 if target['kind'] in {'wrapper', 'hook-link', 'hook-config'}]}
 
 
-def run(args):
+def run(args, *, _native_preflight=False):
     state, code = install.locations()
     old = install.read_receipt(state)
     install.preflight_layout(args, state, code, old)
@@ -190,13 +190,23 @@ def run(args):
         if selection:
             plan['preserved_private_state_reader'] = preserved_reader(selection, plan)
         plan['layout_quiescence'] = list(getattr(args, 'layout_quiescence', None) or [])
-        if args.check:
-            from . import private_state
-            if plan.get('omp_transition'):
-                from . import omp_boundary
-                omp_boundary.native_transition(plan, check=True)
-            target = private_state.prepare_lifecycle(plan, check=True)
+        from . import private_state
+        if plan.get('omp_transition') and args.check and not _native_preflight:
+            from . import omp_boundary
+            omp_boundary.native_transition(plan, check=True)
+        target = private_state.prepare_lifecycle(plan, check=True)
+        if plan.get('omp_transition') and (_native_preflight or not args.check):
+            # Only the real transition can disable the owned route and prove
+            # a drain. Never project that future state into a public preview.
+            # Unknown evidence or any other missing capability still refuses
+            # before publishing even diagnostic lifecycle ownership.
+            proof = private_state.required_private_state_capabilities(current, target, 'uninstall')
+            native = {'omp-harness-v1', 'omp-stored-source-v2'}
+            install.require(not proof['unknown_state'] and set(proof['missing_capabilities']) <= native,
+                            'Private-state runtime compatibility is pending; preserve the capable active runtime and evidence')
+        else:
             private_state.require_compatible(current, target, 'uninstall')
+        if args.check:
             return {'operation':'uninstall', 'verified':False, 'check_complete':True,
                     'installation_writes_performed':False,
                     'targets':[{k:v for k,v in a.items() if k not in ('raw','mode_bits')} for a in plan['actions']],
@@ -208,6 +218,14 @@ def run(args):
     if args.check:
         install._require_replannable_journal(state)
         return work()
+    # Refuse a known private-state hold before publishing even diagnostic lock
+    # ownership. The locked path repeats this check and guards activation.
+    journal = install.read_journal(state)
+    if old is not None and (journal is None or journal['status'] in ('complete', 'rolled-back')
+                            or (journal['status'] == 'activating' and install._receipt_committed(state, journal))):
+        preview_args = argparse.Namespace(**vars(args))
+        preview_args.check = True
+        run(preview_args, _native_preflight=True)
     paths = [state, code, *(Path(t['path']) for t in (old['targets'] if old else []))]
     with runtime_faults.operation('uninstall', paths), install.locked(state):
         install.recover(state, for_install=True)

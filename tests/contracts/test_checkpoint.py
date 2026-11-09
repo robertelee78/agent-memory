@@ -1,6 +1,5 @@
 """Public single-file checkpoint, section preservation and separate omitted-context setup."""
 import json
-import os
 import time
 from pathlib import Path
 import shutil
@@ -235,19 +234,36 @@ class CheckpointContract(unittest.TestCase):
             select=self.good(w,'developer_identity','preview','--select',a)
             self.good(w,'developer_identity','apply','--proposal',self.save(w,select))
             before=self.files(bank);payload=self.save(w,self.payload(self.inspect(w,repo)),'input.json')
-            real_git=shutil.which('git',path=w.env['PATH']);directory=w.inside('identity-rendezvous');directory.mkdir()
-            ready,release=directory/'ready',directory/'release';bindir=w.inside('bin');bindir.mkdir();wrapper=bindir/'git'
-            wrapper.write_text('#!'+sys.executable+'\nimport os,sys,time\nfrom pathlib import Path\nready=Path('+repr(str(ready))+'); release=Path('+repr(str(release))+')\nif "--show-toplevel" in sys.argv and not ready.exists():\n ready.touch()\n deadline=time.monotonic()+10\n while not release.exists() and time.monotonic()<deadline:time.sleep(.005)\nos.execv('+repr(real_git)+',['+repr(real_git)+',*sys.argv[1:]])\n')
-            wrapper.chmod(0o700);w.env['PATH']=str(bindir)+os.pathsep+w.env['PATH']
-            child=w.spawn([sys.executable,'-I',SCRIPTS/'checkpoint.py','prepare','--repo',repo,'--input',payload])
+            directory=w.inside('identity-rendezvous');directory.mkdir()
+            ready,release=directory/'ready',directory/'release'
+            code = '''import json,sys,time
+from pathlib import Path
+sys.dont_write_bytecode=True
+scripts,repo,payload,ready,release=map(Path,sys.argv[1:])
+sys.path.insert(0,str(scripts))
+from agent_memory import checkpoint,recovery_frontier,scope_binding
+original=recovery_frontier.observe
+def observed_frontier(*args,**kwargs):
+ if not ready.exists():
+  developer=scope_binding.principal(args[0])
+  ready.write_text(json.dumps({'developer_id':developer['developer_id']}))
+  deadline=time.monotonic()+10
+  while not release.exists() and time.monotonic()<deadline:time.sleep(.005)
+  if not release.exists():raise RuntimeError('identity rendezvous was not released')
+ return original(*args,**kwargs)
+recovery_frontier.observe=observed_frontier
+sys.exit(checkpoint.main(['prepare','--repo',str(repo),'--input',str(payload)]))
+'''
+            child=w.spawn([sys.executable,'-I','-B','-c',code,ROOT/'skills/agent-memory/scripts',repo,payload,ready,release])
             deadline=time.monotonic()+5
             while not ready.exists() and child.poll() is None and time.monotonic()<deadline:time.sleep(.005)
             self.assertTrue(ready.exists(),child.poll())
+            self.assertEqual(json.loads(ready.read_text())['developer_id'],a)
             select=self.good(w,'developer_identity','preview','--select',b)
             self.good(w,'developer_identity','apply','--proposal',self.save(w,select,'select-b.json'))
             release.touch();out,err=child.communicate(timeout=20)
             self.assertFalse(err);self.assertEqual(child.returncode,1,out)
-            self.assertIn('identity changed',json.loads(out)['error']);self.assertEqual(self.files(bank),before)
+            self.assertFalse(json.loads(out)['verified']);self.assertEqual(self.files(bank),before)
 
 
 

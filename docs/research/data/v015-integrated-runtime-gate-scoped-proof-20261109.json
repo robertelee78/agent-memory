@@ -1,0 +1,138 @@
+{
+  "schema": "research/v015-integrated-runtime-gate-scoped-proof-v1",
+  "date": "2026-11-09",
+  "base_commit": "0c9ae73d5041c57c10326c035723f3e2e3124fd1",
+  "source_state": "Separately frozen uncommitted owned overlays on this public commit; not retroactively executed against a later commit. Raw receipts and reconstructible overlays retained in private archives.",
+  "observations": [
+    {
+      "id": "runtime-r1",
+      "passed": false,
+      "suites": 43,
+      "tests": 282,
+      "seconds": 605.0658914999804,
+      "boundary": "Actual guide command refusal blocked installation paths; direct-pack audit also saw inherited pre-existing source caches. No general cache-causation claim."
+    },
+    {
+      "id": "runtime-r2",
+      "passed": false,
+      "suites": 43,
+      "passing_suites": 41,
+      "tests": 282,
+      "source_hash": "9d21ec6150508dc111adea66f0a8ad2567f09d641d2835bc6534a1eb8be02722",
+      "source_unchanged": true,
+      "seconds": 1373.0153480420122,
+      "failed_suites": [
+        "public-cli-user-journey",
+        "installer"
+      ],
+      "boundary": "Only real shipped-updater consumers failed: old validator rejected new I-B guide command. Current-validator normalization did not repair an already-shipped validator."
+    },
+    {
+      "id": "gate-recovery-r3",
+      "passed": true,
+      "suites": 8,
+      "tests": 24,
+      "source_hash": "b7c2c5f102842ad8720bde4bcf477e7f17ef539241cfc7136b199179a5d227e9",
+      "source_unchanged": true,
+      "seconds": 149.16906320792623,
+      "suite_names": [
+        "layout-recovery-partial-staging",
+        "layout-recovery-first-replacement",
+        "layout-recovery-legacy-consumers",
+        "harness",
+        "gate-diagnostics",
+        "lifecycle-fault-partitions",
+        "gate-shard-aggregation",
+        "memory-refresh-current-untracked-canonical-memory-explains-full-review-without-writes"
+      ],
+      "boundary": "Actual gate positive/negative controls and public recovery contracts. Fabricated gate receipts are synthetic, not actual product interruption evidence."
+    },
+    {
+      "id": "upgrade-r4",
+      "passed": true,
+      "suites": 4,
+      "tests": 52,
+      "source_hash": "0004ba297855cadab2ba9222ffc1ca18a42082e99eb90e07b59c6b809a1ca276",
+      "source_unchanged": true,
+      "seconds": 196.82934445899446,
+      "suite_names": [
+        "read-only-runtime-audits",
+        "public-cli-user-journey",
+        "installer",
+        "portable-artifact"
+      ],
+      "public_smoke": {
+        "passed": true,
+        "actual_historical_updater": true,
+        "old_artifact": "e1f31421edb8a8bc47c359b2dc87ea6e448a2baf939068250ac3ff32e8bf5e5f",
+        "wrapper_preserved": true,
+        "helper_invoked_without_B": true,
+        "pack_bytes_modes_preserved": true,
+        "source_caches": 0
+      },
+      "boundary": "Historical python3 -I guide form restored; existing source-only startup supplies cache isolation. Broadening the current parser was removed."
+    }
+  ],
+  "execution_limits": {
+    "interpreter": "macOS arm64 Python 3.15",
+    "workers": 2,
+    "suite_deadline_seconds": 300,
+    "model_or_endpoint_calls": 0,
+    "omp_source_install_config_or_live_extension_changes": false,
+    "original_user_worktree_modified": false
+  },
+  "component_controls": {
+    "read_only_interrupt_precedence": {
+      "before": "All nine controlled boundary/interrupt combinations replaced the original interruption",
+      "after": "All nine preserved KeyboardInterrupt/SystemExit/MemoryError",
+      "boundary": "Two real temporary-lock races and controlled registry observation pin; not a public lifecycle or authority qualification."
+    },
+    "gate_unsplit_overlap": {
+      "before": "Two valid independent unsplit workers on one path were refused as overlapping",
+      "after": "Accepted matching full inventories; mixed split/unsplit and overlapping split registrations refused",
+      "boundary": "Synthetic component gate control only."
+    }
+  },
+  "source_reviews": {
+    "IntegratedNativeOpus": "Source-only native delta and interrupt closure PASS",
+    "IntegratedReuseOpus": "Source-only pure reuse/checkpoint and historical-command/cache-isolation closure PASS",
+    "IntegratedLifecycleOpus": "Source-only lifecycle delta and behavioral matrix-consumer closure PASS",
+    "FaultRoutingOpus": "New executed-case aggregation initially FAIL; unsplit-partition correction source closure PASS",
+    "CaseBatchCoverageOpus": "Initial production-shape overlap/control masking FAIL; corrected aggregation/production-shaped harness source closure PASS"
+  },
+  "private_archives": [
+    {
+      "name": "runtime-integrated-r1-negative-and-interrupt-before-after-20261109.tar.gz",
+      "sha256": "94190bdab599ea7a9d492528a04705ba52fd6cf980d88a63b5609ef82704a16f",
+      "bytes": 64342
+    },
+    {
+      "name": "runtime-integrated-r2-real-public-operations-and-legacy-upgrade-negative-20261109.tar.gz",
+      "sha256": "22d69ee1b6df5cd579df14799b7f4c2b16da91584f3be19a268d51eeeb6a02d6",
+      "bytes": 709848
+    },
+    {
+      "name": "gate-executed-case-matrix-and-recovery-r3-actual-20261109.tar.gz",
+      "sha256": "5640e368e4ff036a0c54cc98c11fe1a567435eff4b7bd8fd9f1ea3d99b97efe0",
+      "bytes": 242664
+    },
+    {
+      "name": "runtime-integrated-r2-exact-owned-source-overlays-20261109.tar.gz",
+      "sha256": "afda139b06ae4e3713da8e4a80289c942183e7c068525d9984ce016bc400f6fa",
+      "bytes": 223669
+    },
+    {
+      "name": "upgrade-compatible-r4-actual-shipped-updater-and-cache-isolation-20261109.tar.gz",
+      "sha256": "0fcd99c0b9c731216bf17ee1f23b56f5b3e95e0ad72624e5845a7e040e5fddfe",
+      "bytes": 296223
+    }
+  ],
+  "limits": [
+    "No full final-source hosted matrix, stock-native model campaign, semantic quality or performance acceptance.",
+    "The R3 gate controls use a separately frozen guide/parser state, not the later R4 source hash.",
+    "The 41 successful R2 suite receipts do not convert the failed R2 aggregate into a pass.",
+    "Accepted original G1 research stays accepted; these corrections do not reopen it.",
+    "No signed release or delivery claim."
+  ],
+  "native_platform_or_release_acceptance": false
+}
