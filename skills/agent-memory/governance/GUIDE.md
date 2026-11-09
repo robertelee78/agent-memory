@@ -166,9 +166,9 @@ With `SKILL_DIR` resolved, keep requests/proposals outside the canonical bank an
 sharing delta:
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/govern_memory.py" preview --repo /path/to/repo \
+python3 -I "$SKILL_DIR/scripts/govern_memory.py" preview --repo /path/to/repo \
   --request /private/path/governance-request.json > /private/path/governance.json
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/govern_memory.py" apply \
+python3 -I "$SKILL_DIR/scripts/govern_memory.py" apply \
   --proposal /private/path/governance.json
 ```
 

@@ -33,7 +33,7 @@ The session SHOULD start with the installed `am version --json` or
 the trusted source helper:
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/diagnose.py" version --json
+python3 -I "$SKILL_DIR/scripts/diagnose.py" version --json
 ```
 
 The session MUST distinguish `executing_source` from the installation's
@@ -46,7 +46,7 @@ is receipt history until doctor verifies ownership. An inactive receipt is
 For a quick current view, the session SHOULD run:
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/diagnose.py" status --repo /absolute/repository --json
+python3 -I "$SKILL_DIR/scripts/diagnose.py" status --repo /absolute/repository --json
 ```
 
 Status reads selected/default and indexed router candidates, local identity
@@ -79,7 +79,7 @@ initialize, restore a bank, clean markers or resume a purge automatically.
 The session SHOULD run the deeper read-only audit when setup or health is unclear:
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/diagnose.py" doctor --repo /absolute/repository --json
+python3 -I "$SKILL_DIR/scripts/diagnose.py" doctor --repo /absolute/repository --json
 ```
 
 The installed machine equivalents are `am status --json` and `am doctor --json`.
