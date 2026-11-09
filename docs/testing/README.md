@@ -9,6 +9,21 @@ scripts/test.sh --release --json
 scripts/test.sh --release --jobs 2 --json
 ```
 
+The hosted matrix uses two exhaustive shards per OS/Python cell:
+
+```sh
+scripts/test.sh --release --jobs 2 --shard 0/2 --json > shard-0.json
+scripts/test.sh --release --jobs 2 --shard 1/2 --json > shard-1.json
+python3 -I -B scripts/test_gate.py --release --aggregate shard-0.json shard-1.json --json
+```
+
+Shard indexes are zero-based. A shard receipt uses `mode:release-shard` and
+always keeps `release_complete:false`; `passed:true` only qualifies that shard.
+The aggregator requires every shard exactly once, the exact assigned registered
+suites, matching commit/tree, registry/gate bytes, Python minor, OS and
+architecture, then all original case and interruption proofs. Missing, failed,
+foreign or duplicated artifacts cannot qualify a complete release.
+
 The default mode runs every implemented suite and reports the remaining
 contracts as `pending`. A default pass establishes incremental coverage only.
 `--release` MUST fail until every v0.0.1 contract is implemented, nonempty,
@@ -26,12 +41,13 @@ Ubuntu/macOS and Python 3.11/3.15 when explicitly needed. Pushes and releases do
 not automatically start that expensive matrix. Each run retains actual results,
 failures and checked-out commit/tree evidence for each cell.
 
-Each suite retains its 300-second worker deadline. The complete gate has a
-separate 180-minute CI job budget. Local invocation defaults to one worker;
-`--jobs 2` permits at most two concurrent workers, each in a separate disposable
-World with its own home, registries, credentials directory and owned process
-supervisor. The hosted matrix selects two workers without changing either
-deadline, excluding suites or subdividing the total job budget.
+Each suite retains its 300-second worker deadline. Each CI shard retains a
+180-minute job budget. Local invocation defaults to one worker; `--jobs 2`
+permits at most two concurrent workers, each in a separate disposable World with
+its own home, registries, credentials directory and owned process supervisor.
+Each hosted OS/Python cell runs two shards and a required complete-coverage
+aggregation job. Distribution changes where suites run, not required coverage,
+assertions or suite deadlines.
 
 Results and buffered diagnostics remain in registry order. A fatal collector
 error cancels unstarted work, waits for started Worlds to finish their bounded
@@ -82,7 +98,7 @@ fixtures without exposing their TestCase as another discovered suite: comparison
 cases remain owned by their registered comparison contract. This removes
 duplicate execution, not frontier-specific assertions. Individual method
 deadlines and the total hosted runtime still require platform evidence; neither
-batching nor deduplication establishes that the complete gate fits 180 minutes.
+batching nor sharding establishes that each job fits its 180-minute budget.
 
 The [first-release safety canaries](canaries.md) cover structural routes,
 lifecycle selection, project isolation, shared developer attribution,

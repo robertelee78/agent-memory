@@ -18,5 +18,19 @@
     "all_six_reviewed_material_source_paragraphs_preserved_verbatim": true,
     "material_paragraphs_sha256": "721e2e8cae2c8c36e695370befddb3805f44b6c666a0d9f84fe6a22900e48a24"
   },
-  "accountability": "Exactrequirementexcerpt/sourcefreshnessreconciliationstillpending; nonewProjectorstorycreated"
+  "accountability": {
+    "result": "verified",
+    "verified": true,
+    "manifest_sha256": "a3d7b3c9e4afb3c8e2951e9badbeca2aaa63716aabadc56a4d6063d6885e72f8",
+    "issue": 209,
+    "root": 58,
+    "source_freshness": "Current",
+    "phase": "Executing",
+    "health": "At risk",
+    "published_amendment_commit": "0890f9ca6478019bbd1c609b21b7530eaf996a02",
+    "published_amendment_blob": "e372427fe288ef47e80bdd2217eb789a5996dc86",
+    "primary_adr9_binding_retained": true,
+    "new_project_or_story_created": false,
+    "workload_or_release_accepted": false
+  }
 }
