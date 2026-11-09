@@ -152,3 +152,37 @@ missing-slot propagation. The direct tracer/runpy route is not the shell hook
 route, tracing perturbs timing, and no elapsed busy duration was recorded.
 This does not identify R5b's original exception, repair its source gaps, qualify
 automatic wake or close any #249 acceptance criterion.
+
+## Actual R6c: transport closed; assessment remained pending
+
+The [R6c terminal disposition](data/native249-r6c-terminal-disposition-20261109.json)
+binds the actual run to AM `dc66d2a` and the unchanged stock binary. Print-short
+exited 0; its AM worker exited 0, closed the stream, and verified all 11 source
+attempts. No source gaps, executor faults or unresolved transitions were observed.
+Input, source-mode and unrelated installation/repository guards passed.
+
+The campaign nevertheless exited 1: its combined gate rejected two valid
+`pending-assessment` observations. RPC never started. Transport terminality and
+assessment completion are separate axes: finish-task/retain-pending policy permits
+this pending state, but it does not establish an assessment or learning success.
+The failed campaign and its original pending sources remain unchanged.
+
+The nonce-bearing wake request and clock handshake occurred. The companion
+observed cancellation 949.98 ms after that request, with no wake reservation.
+Executor-start and reservation-check timing were not observed; this does not
+prove the original R5b exception cause. The same helper observed approximately
+56.26 seconds of draining after peer EOF.
+
+A separate [model-free profile](data/native249-controlled-source-profile-20261109.json)
+used seven controlled source requests through the
+installed AM worker. All seven verified and the worker exited 0; canonical bank
+and frozen source files remained unchanged. It recorded 3,902 Git subprocesses,
+134 full private-enrollment observations and 773 repository-settings discoveries
+over 29.62 instrumented seconds. Overlapping cumulative profile timings MUST NOT
+be summed into an exclusive cost attribution. This identifies redundant AM-owned
+work to investigate, not a native latency qualification or a measured improvement.
+
+No omp source, configuration or live extension was customized. Ordinary stock
+authentication-cache refresh was separately disclosed and authorized for this
+run. Raw native transcripts remain private. Full print/RPC, positive
+model-forgets, lifecycle and platform acceptance remain open.

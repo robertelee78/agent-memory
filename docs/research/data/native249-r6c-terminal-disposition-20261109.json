@@ -1,0 +1,73 @@
+{
+  "schema": "am249/stock-r6c-scoped-terminal-disposition-v1",
+  "date": "2026-11-09",
+  "source_commit": "dc66d2af521017d7c09f2a56b28f535504671cac",
+  "artifact_digest": "b78fe88351c286384bf602c7a9dedf6ee7f14fc7cc9f4ca4cb582890db9f4caf",
+  "binary_sha256": "d4a10d97488d6054d2b18198bd24f461079952c7e0fb75ba66336ca0df0cb99e",
+  "model": "openai-codex/gpt-6.1-sol",
+  "campaign": {
+    "controller_exit": 1,
+    "seconds": 89.31,
+    "candidate_evidence_ready": false,
+    "full_native_qualification": false,
+    "attempted_phases": [
+      "print-short"
+    ],
+    "unattempted_phases": [
+      "rpc-switch-fork"
+    ],
+    "failures": [
+      {
+        "type": "Blocked",
+        "code": "worker-nonzero-unknown-OPEN-or-source-outcome-transition-incomplete"
+      }
+    ]
+  },
+  "bindings": {
+    "driver_sha256": "e3b0e9c84337e894248bb093ee2a49f5a05e87661cacc5bb54e8d7b71ea44c75",
+    "plan_sha256": "77fdac751fec0d13a067f0a49671c55e325f0a6eb77d5b13fc409254fabb0ef2",
+    "approval_sha256": "ce65e2339bf76c428b99de0ebfc1b11526d8f47ba3192ac80517c59d36380298",
+    "source_binding_sha256": "a37c2e2563f5c09cc24215b57b821846d9314791227cb3fa4e64764296003d17",
+    "result_sha256": "1459fe14530157c0ad661b70cc4a03c616ad9458e6f63155f59c8df002c4d52b",
+    "private_curated_evidence_archive_sha256": "13a11980aae9b69d422936955cd33af7ca01b059817d0f8fe51ee763fda85d9a"
+  },
+  "actual_print": {
+    "native_exit": 0,
+    "answer_sentinel_count": 1,
+    "accepted_attempts": 11,
+    "all_attempt_outcomes_verified": true,
+    "all_workers_terminal": true,
+    "all_streams_CLOSED": true,
+    "source_coverage_complete": true,
+    "source_gap_count": 0,
+    "pending_assessment_count": 2,
+    "public_fault_count": 0,
+    "wake_reservation_count": 0,
+    "capture_audit_count": 0,
+    "transaction_receipt_count": 0,
+    "observer_health": true,
+    "trace_coverage": true,
+    "first_executor_fault_count": 0,
+    "end_integrity": true,
+    "unrelated_feature_HEAD_index_extension_receipt_preserved": true,
+    "live_native_pids": [],
+    "bounded_causal_peer_EOF_ms": 6.690042
+  },
+  "actual_same_helper_clock": {
+    "source": "bounded companion metadata, one Python monotonic clock; no cross-process epoch subtraction",
+    "helper_lifetime_ms": 62120.6435,
+    "post_EOF_drain_ms": 56262.83775,
+    "wake_REQUEST_9_to_CANCEL_ms": 949.98325,
+    "CLOCK_reply_and_ACK_observed": true,
+    "wake_request_executor_start_and_reservation_check_timing": "UNOBSERVED"
+  },
+  "disposition": [
+    "Original exit-1 R6c campaign remains failed; RPC correctly never started under its approved controller.",
+    "The combined gate was false solely because two valid source-complete observations remained pending-assessment. Source/worker transport terminality and assessment completion are separate axes under the approved finish-task/retain-pending policy.",
+    "The actual nonce-bearing wake request and CLOCK handshake occurred; cancellation arrived at the 950ms callback boundary without a reservation or continuation.",
+    "No full native/source-campaign acceptance, no-learning assessment, wake/learning success, original R5b cause, full print-mode/platform or release acceptance is inferred.",
+    "Any separately approved follow-on diagnostic must retain these negatives and pending sources, keep original acceptance and deadlines, and not rerun print merely to confirm this outcome.",
+    "Stock omp code/configuration/live extensions were not customized. Ordinary stock authentication cache refresh was separately disclosed and Main-authorized; raw token/environment not retained by this controller.",
+    "Raw native session transcripts remain private in their original World, excluded from the curated evidence archive."
+  ]
+}
