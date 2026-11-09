@@ -154,6 +154,9 @@ for name,group in GROUPS.items():
                 for entry in manifest["suites"]:
                     if entry["scope"] in {"v0.0.1", "v0.0.2"}:
                         entry["path"] = "tests/contracts/fixture.py"
+                        # Product method selectors do not belong to this
+                        # controlled replacement module.
+                        entry.pop("tests", None)
                 (checkout / "tests/contracts.json").write_text(json.dumps(manifest))
                 result = world.run(["sh", checkout / "scripts/test.sh", "--release", "--json"], check=False)
                 report = json.loads(result.stdout)
