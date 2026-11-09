@@ -94,7 +94,11 @@ class ConcurrentBankWriters(unittest.TestCase):
     def test_concurrent_observer_sees_complete_old_or_new_bytes_through_atomic_replacement(self):
         with World() as w:
             h, repo, bank = self.fixture(w); before = self.git_state(w, repo); target = bank/'activeContext.md'
-            old = target.read_bytes(); new = old.decode() + '\n' + ('Retain a complete observed fact.\n' * 1000)
+            old = target.read_bytes()
+            sentence = 'Retain a complete observed fact.\n'
+            remaining = 16384 - len(old) - 1
+            new = old.decode() + '\n' + sentence * (remaining // len(sentence)) + ' ' * (remaining % len(sentence))
+            self.assertEqual(len(new.encode()), 16384)
             proposal = h.preview(w, bank, new)
             writer, release = self.pause(w, single.HELPER, h.saved(w, proposal), 'before-recheck')
             ready, stop = w.inside('reader.ready'), w.inside('reader.stop')

@@ -1,0 +1,83 @@
+{
+  "schema": "agent-memory/ordinary-bank-gate-corrections-v1",
+  "runtime_base": "44d38a1b0da893836985afeaf8a75dcbff6b829a",
+  "runtime_production_changes": false,
+  "platform": "Darwin27.2-arm64",
+  "python": "3.15.0",
+  "worker_deadline_seconds": 300,
+  "suites": [
+    {
+      "suite": "checkpoint",
+      "elapsed_seconds": 152.66437383298762,
+      "exit": 0,
+      "counts": {
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 17,
+        "unexpected_successes": 0
+      }
+    },
+    {
+      "suite": "concurrent-bank-writers",
+      "elapsed_seconds": 80.38374637509696,
+      "exit": 0,
+      "counts": {
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 6,
+        "unexpected_successes": 0
+      }
+    },
+    {
+      "suite": "bounded-bank-observation",
+      "elapsed_seconds": 1.8822885419940576,
+      "exit": 0,
+      "counts": {
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 12,
+        "unexpected_successes": 0
+      }
+    },
+    {
+      "suite": "memory-refresh",
+      "elapsed_seconds": 236.32110199995805,
+      "exit": 0,
+      "counts": {
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 14,
+        "unexpected_successes": 0
+      }
+    }
+  ],
+  "total_passed_methods": 49,
+  "source_files_sha256": {
+    "tests/contracts/test_checkpoint.py": "76654c5ca13744cab93b5a3c5d1619dbbdcb1708b8c90a995c9588978521d78a",
+    "tests/contracts/test_concurrent_bank_writers.py": "14a27fe5314eda805d80e00578feccc0c1dd4b74cdd618a985e1a171c9f804f3",
+    "tests/contracts/test_bounded_bank_observation.py": "8dcca744bd86cd7bd29ad6e1d81c8151c5d90dbdfc8575dfd4fe279e3dc3b2e3",
+    "tests/contracts/test_memory_refresh.py": "e5ccb6b7a72ff4e0860e7fb73cba555afb682fca28ffcab446892d03c8d8b0e3"
+  },
+  "private_raw_receipt_sha256": "1afdb92adf94693d453c98009d33d8487bba007322de8deb8cc596e6ec2f4901",
+  "original_full_gate": {
+    "source_commit": "081a6d55c38d60aff19feafa1b505c705f456e42",
+    "exit": 1,
+    "registered_suites": 263,
+    "failed_suites": 33,
+    "elapsed_seconds": 12068.61,
+    "raw_log_sha256": "ad485967e6b177deafc105e157a06fa87fb06650f70de85deda2a57df9498593"
+  },
+  "limits": "Complete four suites, not entire release gate; source corrections are meaningful fixture updates and deletion of incidental wording assertions, not weakened runtime limits or policy. Full original failures retained privately."
+}
