@@ -116,7 +116,7 @@
           "test": "ComparisonContract.test_newly_arrived_duplicate_invalidates_earlier_judgment_and_requires_recomparison"
         },
         {
-          "suite": "learning-consolidation",
+          "suite": "learning-consolidation-case-10",
           "test": "ConsolidationContract.test_qualified_duplicate_capture_retains_new_session_origin_without_new_active_identity"
         }
       ]
