@@ -196,6 +196,39 @@ class LayoutApplyFaults(unittest.TestCase):
     def test_originals_completed_exit(self):
         self.originals_completed('exit')
 
+    def test_partial_staging_exit(self):
+        helper = existing.LayoutRecoveryContract()
+        with World() as world:
+            command, _, repo, bank, _, originals, modes, git = helper.setup_fault_repair(world)
+            failed = world.run([command, 'bank', 'recover-layout', 'inspect', '--repo', repo,
+                                '--output', world.inside('partial-exit.json')], check=False, timeout=60,
+                               env={'AGENT_MEMORY_FAULT_STAGE': 'layout-recovery-partial-original-staging',
+                                    'AGENT_MEMORY_FAULT_MODE': 'exit'})
+            self.assertEqual(failed.returncode, 86, failed.stdout + failed.stderr)
+            recovery.unlock(world, command, repo)
+            root = (Path(world.env['AGENT_MEMORY_STATE_HOME']) / 'writes'
+                    / recovery.sha(str(bank).encode()) / 'layout-recovery')
+            staging = list(root.glob('*/staging.json'))
+            self.assertEqual(len(staging), 1)
+            directory = staging[0].parent
+            self.assertFalse(json.loads(staging[0].read_bytes())['observation_complete'])
+            blobs = {p.name: p.read_bytes() for p in (directory / 'originals').glob('*.bin')}
+            self.assertEqual(len(blobs), 1)
+            self.assertIn(next(iter(blobs.values())), originals.values())
+            self.assertFalse((directory / 'manifest.json').exists())
+            status = recovery.call(world, command, 'status', '--repo', repo, '--operation', directory.name)
+            self.assertEqual(status['state'], 'observation-incomplete')
+            safe, inspected = recovery.inspect(world, command, repo)
+            self.assertNotEqual(safe['operation_id'], directory.name)
+            fresh = recovery.private_directory(world, bank, safe['operation_id'])
+            self.assertEqual({row['path']: (fresh / row['blob']).read_bytes()
+                              for row in inspected['manifest']['sources']}, originals)
+            self.assertEqual({p.name: p.read_bytes() for p in (directory / 'originals').glob('*.bin')}, blobs)
+            self.assertEqual({p.relative_to(bank).as_posix(): p.read_bytes()
+                              for p in bank.rglob('*') if p.is_file()}, originals)
+            self.assertEqual({path: stat.S_IMODE((bank / path).stat().st_mode) for path in originals}, modes)
+            helper.assert_fault_work_unchanged(world, repo, git)
+
     def terminal_journey(self, stage, mode):
         helper = existing.LayoutRecoveryContract()
         with World() as world:
