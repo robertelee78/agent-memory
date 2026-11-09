@@ -187,13 +187,13 @@ def run(args):
         if selection:
             plan['preserved_private_state_reader'] = preserved_reader(selection, plan)
         plan['layout_quiescence'] = list(getattr(args, 'layout_quiescence', None) or [])
+        from . import private_state
+        if plan.get('omp_transition'):
+            from . import omp_boundary
+            omp_boundary.native_transition(plan, check=True)
+        target = private_state.prepare_lifecycle(plan, check=True)
+        private_state.require_compatible(current, target, 'uninstall')
         if args.check:
-            from . import private_state
-            if plan.get('omp_transition'):
-                from . import omp_boundary
-                omp_boundary.native_transition(plan, check=True)
-            target = private_state.prepare_lifecycle(plan, check=True)
-            private_state.require_compatible(current, target, 'uninstall')
             return {'operation':'uninstall', 'verified':False, 'check_complete':True,
                     'installation_writes_performed':False,
                     'targets':[{k:v for k,v in a.items() if k not in ('raw','mode_bits')} for a in plan['actions']],
@@ -213,6 +213,13 @@ def run(args):
                                 and install.fingerprint(state/'receipt.json')==recorded['receipt_identity'],
                                 'Completed installation receipt differs from its journal; preserve and reconcile ownership')
         return work()
+    # Refuse a known private-state hold before publishing even diagnostic lock
+    # ownership. The locked path repeats this check and guards activation.
+    journal = install.read_journal(state)
+    if old is not None and (journal is None or journal['status'] in ('complete', 'rolled-back')):
+        preview_args = argparse.Namespace(**vars(args))
+        preview_args.check = True
+        run(preview_args)
     paths = [state, code, *(Path(t['path']) for t in (old['targets'] if old else []))]
     with runtime_faults.operation('uninstall', paths), install.locked(state):
         install.recover(state, for_install=True)

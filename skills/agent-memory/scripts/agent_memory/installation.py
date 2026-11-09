@@ -1167,9 +1167,9 @@ def recover(state, *, for_install=False, complete_native=True):
         uninstall_output = journal.get('operation') == 'uninstall'
         require(uninstall_output == (journal['receipt'].get('uninstalled') is True),
                 'Lifecycle journal and receipt operation differ')
+        verify_targets(journal['receipt']['targets'], uninstall_output=uninstall_output)
         journal['status'] = 'complete'; replace_record(path, journal)
         restore_native()
-        verify_targets(journal['receipt']['targets'], uninstall_output=uninstall_output)
         result = {'operation': 'recover', 'verified': True, 'status': 'complete'}
         return finish_stored_source_activation(state, result) if complete_native else result
     result = rollback(state, journal)
