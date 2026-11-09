@@ -69,10 +69,48 @@ class HookFailureContract(unittest.TestCase):
             event={'hook_event_name':'UserPromptSubmit','session_id':str(uuid.uuid4()),'turn_id':str(uuid.uuid4()),'cwd':str(repo),'prompt':'SECRET PROMPT'}
             result=subprocess.run([sys.executable,'-I',str(helper.pack/'hooks/codex_prompt.py')],input=json.dumps(event),text=True,capture_output=True,env=w.env,timeout=10)
             self.assertEqual(result.returncode,0,result.stderr)
-            self.assertEqual(json.loads(result.stdout)['decision'],'block')
+            response=json.loads(result.stdout)
+            self.assertEqual(response['decision'],'block')
+            self.assertNotIn('SECRET',result.stdout+result.stderr)
             with patch.dict(os.environ,w.env,clear=True):
                 records=hook_failure.read(repo)
-                self.assertEqual(len(records),1);self.assertNotIn('SECRET',json.dumps(records))
+                self.assertEqual(len(records),1)
+                self.assertEqual((records[0]['stage'],records[0]['reason']),('identity','identity.unresolved'))
+                self.assertIn(records[0]['stage'],hook_failure.STAGES)
+                self.assertIn(records[0]['reason'],hook_failure.REASONS)
+                self.assertIn(f"[{records[0]['stage']}/{records[0]['reason']}]",response['reason'])
+                self.assertNotIn('SECRET',json.dumps(records))
+            self.assertEqual(before,helper.state(w,repo,bank))
+
+    def test_stop_scope_loss_reports_identity_code_without_bank_change(self):
+        import importlib.util
+        import io
+        from contextlib import redirect_stdout
+        from agent_memory import turn_sources
+        with World() as w:
+            helper=test_admission.AdmissionContract();repo,bank=helper.fixture(w)
+            before=helper.state(w,repo,bank)
+            registry=Path(w.env['XDG_CONFIG_HOME'])/'agent-memory/projects.json'
+            original=turn_sources.namespace
+            def lose_scope(*args,**kwargs):
+                value=json.loads(registry.read_text());value['checkouts']={};registry.write_text(json.dumps(value))
+                return original(*args,**kwargs)
+            event={'hook_event_name':'Stop','session_id':str(uuid.uuid4()),'turn_id':str(uuid.uuid4()),
+                   'cwd':str(repo),'stop_hook_active':False,'last_assistant_message':'SECRET FINAL'}
+            spec=importlib.util.spec_from_file_location('hook_stop_scope',helper.pack/'hooks/codex_stop.py')
+            module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+            output=io.StringIO()
+            with patch.dict(os.environ,w.env,clear=True), patch.object(sys,'stdin',io.TextIOWrapper(io.BytesIO(json.dumps(event).encode()))), patch.object(turn_sources,'namespace',side_effect=lose_scope), redirect_stdout(output):
+                self.assertEqual(module.main(),0)
+            response=json.loads(output.getvalue())
+            with patch.dict(os.environ,w.env,clear=True):
+                records=hook_failure.read(repo)
+            self.assertEqual(len(records),1)
+            self.assertEqual((records[0]['stage'],records[0]['reason']),('identity','identity.unresolved'))
+            self.assertIn(records[0]['stage'],hook_failure.STAGES)
+            self.assertIn(records[0]['reason'],hook_failure.REASONS)
+            self.assertIn(f"[{records[0]['stage']}/{records[0]['reason']}]",response['systemMessage'])
+            self.assertNotIn('SECRET',output.getvalue()+json.dumps(records))
             self.assertEqual(before,helper.state(w,repo,bank))
 
     def test_unsafe_or_oversized_metadata_is_preserved_and_refused(self):

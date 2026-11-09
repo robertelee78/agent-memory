@@ -85,10 +85,12 @@ def main():
         spec.loader.exec_module(module)
         suite, selection = registered_suite(module, path, args.suite)
         result = unittest.TextTestRunner(verbosity=2, stream=sys.stderr).run(suite)
-        sys.stdout.flush()
     finally:
-        os.dup2(receipt_fd, sys.stdout.fileno())
-        os.close(receipt_fd)
+        try:
+            sys.stdout.flush()
+        finally:
+            os.dup2(receipt_fd, sys.stdout.fileno())
+            os.close(receipt_fd)
     counts = {"tests": result.testsRun, "failures": len(result.failures),
               "errors": len(result.errors), "skipped": len(result.skipped),
               "expected_failures": len(result.expectedFailures),

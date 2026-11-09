@@ -38,6 +38,7 @@ def main():
         if not os.path.lexists(repository_config.bank_path(root)):
             diagnostic(root);print('{}');return 0
         from agent_memory import turn_sources
+        stage,reason='identity','identity.unresolved'
         enrollment=scope_binding.private_enrollment_context(root)
         stage,reason='boundary','state.unavailable'
         native_ids=[event[key] for key in ('event_id','prompt_id') if event.get(key) is not None]
