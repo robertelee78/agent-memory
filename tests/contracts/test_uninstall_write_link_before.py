@@ -1,8 +1,8 @@
-"""Interrupt before every observed uninstall logical write (link)."""
+"""Replay partition 0/4 of all observed uninstall-write-link-before interruptions."""
 import unittest
 from lifecycle_fault_fixtures import LifecycleWriteCases
 
 
-class LifecycleWriteContract(LifecycleWriteCases, unittest.TestCase):
-    def test_before_every_uninstall_link_write(self):
-        self.replay('uninstall', 'link', 'before')
+class UninstallLinkBeforePart0Contract(LifecycleWriteCases, unittest.TestCase):
+    def test_actual_logical_writes_in_partition_0(self):
+        self.replay('uninstall', 'link', 'before', partition=0)
