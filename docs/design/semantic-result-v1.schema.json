@@ -3,12 +3,13 @@
   "title": "Proposed G1 lifecycle and semantic result v1",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "operation", "status", "reason_code", "exit_code", "project_id", "namespace_id", "requested_mode", "effective_mode", "semantic_status", "resource_state", "generation_state", "generation_id", "profile_id", "identity_assurance", "destination_class", "source_currency", "semantic_coverage", "native_coverage", "remote_freshness", "graph_capability", "vector_capability", "results", "mandatory_groups", "selection_ref", "next_page", "queued_hints", "mutated", "resource_changed", "purge", "exclusions"],
+  "required": ["schema", "operation", "status", "reason_code", "semantic_reason_code", "exit_code", "project_id", "namespace_id", "requested_mode", "effective_mode", "semantic_status", "resource_state", "generation_state", "generation_id", "profile_id", "identity_assurance", "identity_status", "alias_stability_reliance", "destination_class", "source_currency", "semantic_coverage", "native_coverage", "remote_freshness", "graph_capability", "vector_capability", "results", "mandatory_groups", "selection_ref", "next_page", "queued_hints", "mutated", "resource_changed", "purge", "exclusions"],
   "properties": {
     "schema": {"const": "agent-memory/semantic-result-v1"},
-    "operation": {"enum": ["graph.setup", "graph.status", "graph.start", "graph.stop", "graph.build", "graph.rebuild", "graph.diagnose", "graph.purge-preview", "graph.purge-apply", "embeddings.setup", "embeddings.status", "embeddings.start", "embeddings.stop", "embeddings.reembed", "embeddings.diagnose", "embeddings.purge-preview", "embeddings.purge-apply", "search", "related"]},
+    "operation": {"enum": ["graph.setup", "graph.status", "graph.start", "graph.stop", "graph.build", "graph.rebuild", "graph.diagnose", "graph.purge-preview", "graph.purge-apply", "embeddings.setup", "embeddings.status", "embeddings.start", "embeddings.stop", "embeddings.reembed", "embeddings.diagnose", "embeddings.purge-preview", "embeddings.purge-apply", "search", "get", "explain", "related"]},
     "status": {"$ref": "#/$defs/status"},
-    "reason_code": {"enum": ["completed", "already-running", "already-stopped", "literal-fallback", "partial-coverage", "empty-input", "over-context", "invalid-response", "model-drift", "identity-unverified", "truncation-unverified", "endpoint-unavailable", "graph-unavailable", "profile-disabled", "approval-required", "remote-budget-exhausted", "source-stale", "missing-score", "resource-limit", "runtime-stopped", "erasure-pending", "byo-graph-erasure-unverifiable", "resource-set-changed", "foreign-scope", "foreign-reference", "stale-reference", "invalid-reference", "invalid-related-seed", "withheld", "clarification-required", "invalid-request", "operation-failed", "unsafe-endpoint", "ownership-unverified", "engine-unqualified", "termination-unverified"]},
+    "reason_code": {"$ref": "#/$defs/reason_code"},
+    "semantic_reason_code": {"anyOf": [{"$ref": "#/$defs/reason_code"}, {"type": "null"}]},
     "exit_code": {"type": "integer", "enum": [0, 1, 2]},
     "project_id": {"type": ["string", "null"]},
     "namespace_id": {"type": ["string", "null"]},
@@ -20,6 +21,8 @@
     "generation_id": {"type": ["string", "null"]},
     "profile_id": {"type": ["string", "null"]},
     "identity_assurance": {"enum": ["not-applicable", "managed-receipt-verified", "byo-attested", "provider-alias-unverified"]},
+    "identity_status": {"enum": ["provider model identity not verifiable", null]},
+    "alias_stability_reliance": {"type": "boolean"},
     "destination_class": {"enum": ["not-applicable", "managed-local", "loopback-byo", "remote"]},
     "source_currency": {"$ref": "#/$defs/assessment"},
     "semantic_coverage": {"$ref": "#/$defs/assessment"},
@@ -42,6 +45,9 @@
     {"if": {"properties": {"status": {"const": "invalid-request"}}, "required": ["status"]}, "then": {"properties": {"exit_code": {"const": 2}}}},
     {"if": {"properties": {"status": {"not": {"enum": ["qualified", "invalid-request"]}}}, "required": ["status"]}, "then": {"properties": {"exit_code": {"const": 1}}}},
     {"if": {"properties": {"requested_mode": {"const": "literal"}}}, "then": {"properties": {"semantic_status": {"const": "not-requested"}}}},
+    {"if": {"properties": {"identity_assurance": {"const": "provider-alias-unverified"}}}, "then": {"properties": {"identity_status": {"const": "provider model identity not verifiable"}}}, "else": {"properties": {"identity_status": {"const": null}, "alias_stability_reliance": {"const": false}}}},
+    {"if": {"properties": {"semantic_status": {"enum": ["qualified", "not-requested"]}}}, "then": {"properties": {"semantic_reason_code": {"const": null}}}, "else": {"properties": {"semantic_reason_code": {"$ref": "#/$defs/reason_code"}}}},
+    {"if": {"properties": {"reason_code": {"const": "literal-fallback"}}}, "then": {"properties": {"semantic_reason_code": {"not": {"enum": [null, "literal-fallback", "completed", "already-running", "already-stopped"]}}}}},
     {"if": {"properties": {"reason_code": {"const": "literal-fallback"}}}, "then": {"properties": {"requested_mode": {"const": "semantic"}, "effective_mode": {"const": "literal"}, "semantic_status": {"not": {"enum": ["qualified", "partial", "not-requested", "erasure-pending", "approval-required", "invalid-request", "withheld", "clarification-required"]}}}}},
     {"if": {"properties": {"requested_mode": {"const": "semantic"}, "effective_mode": {"const": "literal"}}}, "then": {"properties": {"reason_code": {"const": "literal-fallback"}, "semantic_status": {"not": {"enum": ["qualified", "partial", "not-requested", "erasure-pending", "approval-required", "invalid-request", "withheld", "clarification-required"]}}}}},
     {"if": {"properties": {"operation": {"enum": ["graph.purge-preview", "graph.purge-apply", "embeddings.purge-preview", "embeddings.purge-apply"]}}}, "then": {"properties": {"purge": {"$ref": "#/$defs/purge"}}}},
@@ -49,14 +55,15 @@
     {"if": {"properties": {"exclusions": {"contains": {"const": "missing-score"}}}}, "then": {"properties": {"semantic_status": {"const": "stale"}}}},
     {"if": {"properties": {"native_coverage": {"type": "object", "properties": {"semantic_coverage": {"const": "incomplete-recovery"}}, "required": ["semantic_coverage"]}}}, "then": {"properties": {"exclusions": {"contains": {"const": "pending-recovery"}}, "semantic_coverage": {"not": {"const": "complete"}}}}},
     {"if": {"properties": {"semantic_coverage": {"const": "complete"}}}, "then": {"properties": {"exclusions": {"items": {"const": "capped"}}, "native_coverage": {"$ref": "#/$defs/complete_native_coverage"}}}},
-    {"if": {"properties": {"operation": {"const": "search"}, "status": {"enum": ["qualified", "partial"]}}}, "then": {"properties": {"native_coverage": {"$ref": "#/$defs/native_coverage"}}}},
-    {"if": {"properties": {"operation": {"const": "search"}}}, "then": {"properties": {"results": {"items": {"$ref": "#/$defs/result"}}}}},
+    {"if": {"properties": {"operation": {"enum": ["search", "get", "explain"]}, "status": {"enum": ["qualified", "partial"]}}}, "then": {"properties": {"native_coverage": {"$ref": "#/$defs/native_coverage"}}}},
+    {"if": {"properties": {"operation": {"enum": ["search", "get", "explain"]}}}, "then": {"properties": {"results": {"items": {"$ref": "#/$defs/result"}}}}},
     {"if": {"properties": {"status": {"const": "invalid-request"}}}, "then": {"properties": {"native_coverage": {"type": "null"}, "exclusions": {"maxItems": 0}, "effective_mode": {"const": "none"}, "results": {"maxItems": 0}}}},
-    {"if": {"properties": {"operation": {"const": "search"}, "requested_mode": {"const": "semantic"}, "effective_mode": {"not": {"const": "literal"}}}}, "then": {"$ref": "#/$defs/semantic_outcome"}},
+    {"if": {"properties": {"operation": {"enum": ["search", "get", "explain"]}, "requested_mode": {"const": "semantic"}, "effective_mode": {"not": {"const": "literal"}}}}, "then": {"$ref": "#/$defs/semantic_outcome"}},
     {"if": {"properties": {"operation": {"const": "related"}}}, "then": {"properties": {"results": {"items": {"$ref": "#/$defs/related"}}}}}
   ],
   "$defs": {
     "status": {"enum": ["qualified", "partial", "unavailable", "stale", "incompatible", "refused", "approval-required", "pending", "erasure-pending", "invalid-request", "withheld", "clarification-required", "failed"]},
+    "reason_code": {"enum": ["completed", "already-running", "already-stopped", "literal-fallback", "partial-coverage", "empty-input", "over-context", "invalid-response", "model-drift", "identity-unverified", "truncation-unverified", "endpoint-unavailable", "graph-unavailable", "profile-disabled", "approval-required", "remote-budget-exhausted", "source-stale", "missing-score", "resource-limit", "runtime-stopped", "erasure-pending", "byo-graph-erasure-unverifiable", "resource-set-changed", "foreign-scope", "foreign-reference", "stale-reference", "invalid-reference", "invalid-related-seed", "withheld", "clarification-required", "invalid-request", "operation-failed", "unsafe-endpoint", "ownership-unverified", "engine-unqualified", "termination-unverified", "storage-exhausted", "acquisition-offline", "acquisition-failed", "vector-integrity", "cache-integrity", "manifest-integrity"]},
     "semantic_outcome": {
       "oneOf": [
         {"properties": {"status": {"const": "qualified"}, "semantic_status": {"const": "qualified"}}},
@@ -194,11 +201,10 @@
     },
     "result": {
       "type": "object", "additionalProperties": false,
-      "required": ["native", "selection_ref", "relation", "mandatory_caveats", "related", "related_next_page"],
+      "required": ["native", "selection_ref", "mandatory_caveats", "related", "related_next_page"],
       "properties": {
         "native": {"$ref": "#/$defs/native"},
         "selection_ref": {"type": ["string", "null"]},
-        "relation": {"enum": [null, "recorded", "inferred"]},
         "related": {"type": "array", "items": {"$ref": "#/$defs/related"}},
         "related_next_page": {"type": ["string", "null"]},
         "mandatory_caveats": {"type": "array", "items": {"$ref": "#/$defs/native"}}

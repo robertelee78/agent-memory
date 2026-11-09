@@ -69,6 +69,14 @@ decide permission for each deployment profile; technical review alone is not
 legal clearance. Unresolved permission MUST block that profile, not silently
 replace the graph with links or claim a legal conclusion.
 
+**Scope clarification, 2026-11-09.** The
+[recorded private-build scope decision](../research/data/g1-private-build-scope-disposition-20261109.json)
+satisfies this disposition requirement for the current private build and G1
+research delivery. Licensing MUST NOT remain a blocker for that scope; no further
+vendor, counsel or operator licensing approval is required. This changes no
+third-party license text or permission for deployment outside that scope, and
+does not waive technical artifact, disclosure, ownership or profile qualification.
+
 R1's reviewed result MAY propose a different graph/model/server profile when
 license, portability, resource, or measured quality constraints require it.
 Any changed selection MUST receive an explicit ADR amendment and independent
