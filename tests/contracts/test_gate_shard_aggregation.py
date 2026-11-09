@@ -142,8 +142,8 @@ class ShardAggregationContract(unittest.TestCase):
                 row.update(status='passed', passed=True, tests=len(cases), failures=0, errors=0,
                            skipped=0, expected_failures=0, unexpected_successes=0,
                            case_selection={'batch': entry['name'],
-                               'complete': inventory.get(entry['path'], cases),
-                               'selected': cases, 'executed': cases[:]})
+                               'complete': inventory.get(entry['path'], cases)[:],
+                               'selected': cases[:], 'executed': cases[:]})
                 if entry['name'] in gate['OWNERS']:
                     group, index = gate['OWNERS'][entry['name']]
                     count = len(fault_groups[group]['suites'])
