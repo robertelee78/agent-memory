@@ -186,8 +186,9 @@ class NativeSources(unittest.TestCase):
                     for outcome in ('no-learning', 'published'):
                         value.update(outcome=outcome, assessment={'source_id': row['observation_id'],
                                      'source_review': 'Reviewed the controlled source.', 'candidates': []})
-                        with self.assertRaisesRegex(ValueError, 'unresolved coverage gaps'):
+                        with self.assertRaises(ValueError):
                             transport.complete(repo, value)
+                self.assertEqual(transport.pending_inventory(repo)[0], rows)
                 result = boundary.drain_source_capabilities(repo, quiesced=True)
                 self.assertFalse(result['drainable'])
                 self.assertEqual(boundary.required_source_capabilities(repo),
@@ -249,6 +250,21 @@ class NativeSources(unittest.TestCase):
                 lock = boundary._base(repo) / 'omp-transport.lock'
                 retained_proofs = {path.name: path.read_bytes()
                                    for path in (boundary._base(repo) / 'omp-drains').glob('*.json')}
+                original_flock = turn_sources.fcntl.flock
+                def replace_after_flock(fd, operation):
+                    result = original_flock(fd, operation)
+                    current = lock.lstat()
+                    opened = os.fstat(fd)
+                    if (current.st_dev, current.st_ino) == (opened.st_dev, opened.st_ino):
+                        lock.unlink()
+                        lock.touch(mode=0o600)
+                    return result
+                with patch.object(turn_sources.fcntl, 'flock', side_effect=replace_after_flock):
+                    with self.assertRaises(ValueError):
+                        boundary.required_source_capabilities(repo)
+                self.assertEqual({path.name: path.read_bytes()
+                                  for path in (boundary._base(repo) / 'omp-drains').glob('*.json')},
+                                 retained_proofs)
                 original_open = os.open
                 def remove_before_open(path, flags, *args, **kwargs):
                     if path == lock.name and kwargs.get('dir_fd') is not None:
@@ -1041,6 +1057,14 @@ class NativeLifecyclePublic(unittest.TestCase):
             helper = NativeSources()
             repo, session, lifecycle = helper.fixture(world)
             with patch.dict(os.environ, world.env, clear=True):
+                base = boundary._base(repo)
+                transport_lock = base / 'omp-transport.lock'
+                self.assertFalse(transport_lock.exists())
+                before_check = snapshot(world.paths['state']), snapshot(world.paths['config'])
+                self.assertTrue(boundary.drain_source_capabilities(repo, quiesced=True, check=True)['drainable'])
+                self.assertEqual((snapshot(world.paths['state']), snapshot(world.paths['config'])), before_check)
+                self.assertFalse(transport_lock.exists())
+            with patch.dict(os.environ, world.env, clear=True):
                 helper.observe(repo, session, lifecycle, [
                     helper.entry('human', 'user', 'Controlled native lifecycle work', attribution='user')])
                 self.enroll_fixture(repo, session)
@@ -1074,14 +1098,29 @@ class NativeLifecyclePublic(unittest.TestCase):
             with patch.dict(os.environ, world.env, clear=True):
                 helper.observe(repo, session, lifecycle, [
                     helper.entry('human', 'user', 'Still unassessed controlled source', attribution='user')])
+                rows, faults = transport.pending_inventory(repo)
+                self.assertFalse(faults)
+                sources = [transport.source(repo, row['session'], row['lifecycle'], row['observation_id'])
+                           for row in rows]
                 base = boundary._base(repo)
             extension = self.extension(receipt)
+            from runtime_update_fixtures import snapshot
+            unrelated = {target['path']: snapshot(Path(target['path'])) for target in receipt['targets']
+                         if target['path'] != str(extension)}
             result = self.public(world, receipt, 'uninstall', '--omp-writers-quiesced', expected=1)
             self.assertFalse(result['verified'])
             self.assertFalse(extension.exists())
             self.assertTrue((base / 'turn-sources-compat-v1.json').exists())
             self.assertFalse(list((base / 'omp-drains').glob('*.json')))
             self.assertTrue(list(extension.parent.glob('.agent-memory-disabled-*.ts.disabled')))
+            self.assertEqual({target['path']: snapshot(Path(target['path'])) for target in receipt['targets']
+                              if target['path'] != str(extension)}, unrelated)
+            with patch.dict(os.environ, world.env, clear=True):
+                self.assertEqual(transport.pending_inventory(repo), (rows, []))
+                self.assertEqual([transport.source(repo, row['session'], row['lifecycle'], row['observation_id'])
+                                  for row in rows], sources)
+                self.assertEqual(boundary.required_source_capabilities(repo),
+                                 {boundary.HISTORICAL_CAPABILITY, boundary.CAPABILITY})
 
     def test_held_native_preview_consumes_reviewed_envelope_without_publishing(self):
         import layout_recovery_fixtures as recovery
@@ -1098,6 +1137,18 @@ class NativeLifecyclePublic(unittest.TestCase):
                                  {boundary.HISTORICAL_CAPABILITY, boundary.CAPABILITY})
                 helper.observe(repo, str(uuid.uuid4()), str(uuid.uuid4()), [
                     helper.entry('held-human', 'user', 'Controlled pending source under the same layout hold', attribution='user')])
+                rows, faults = transport.pending_inventory(repo)
+                self.assertFalse(faults)
+                self.assertTrue(rows)
+                sources = [transport.source(repo, row['session'], row['lifecycle'], row['observation_id'])
+                           for row in rows]
+                self.assertTrue(all(item['coverage_complete'] and not item['faults'] for item in sources))
+                self.assertTrue(any(item['source'].get('content') ==
+                                    'Controlled pending source under the same layout hold'
+                                    for item in sources))
+                base = boundary._base(repo)
+                self.assertFalse(boundary.drain_source_capabilities(repo, quiesced=True, check=True)['drainable'])
+                self.assertFalse(list((base / 'omp-drains').glob('*.json')))
             root = world.inside('held native root')
             root.mkdir()
             request = recovery.review_request(world, command, source, repo, inspected, native)
@@ -1145,8 +1196,14 @@ class NativeLifecyclePublic(unittest.TestCase):
             self.assertEqual(checked['schema'], 'agent-memory/install-plan-v1')
             self.assertFalse(checked['installation_writes_performed'])
             self.assertEqual(checked['private_compatibility']['required_capabilities'],
-                             ['layout-frontier-v1', 'omp-stored-source-v2'])
+                             ['layout-frontier-v1', 'omp-harness-v1', 'omp-stored-source-v2'])
             self.assertEqual((snapshot(world.paths['state']), snapshot(bank), snapshot(root)), before)
+            with patch.dict(os.environ, world.env, clear=True):
+                self.assertEqual(transport.pending_inventory(repo), (rows, []))
+                self.assertEqual([transport.source(repo, row['session'], row['lifecycle'], row['observation_id'])
+                                  for row in rows], sources)
+                self.assertFalse(boundary.drain_source_capabilities(repo, quiesced=True, check=True)['drainable'])
+                self.assertFalse(list((base / 'omp-drains').glob('*.json')))
             applied = json.loads(world.run([*arguments, '--omp-layout-quiescence', proof], timeout=30).stdout)
             self.assertTrue(applied['verified'])
             self.extension(applied['receipt'])

@@ -1,5 +1,5 @@
 """Native omp boundary CLI and conservative bank-wide lifecycle coordination."""
-from contextlib import ExitStack, nullcontext
+from contextlib import ExitStack, contextmanager, nullcontext
 import argparse
 import hashlib
 import os
@@ -411,7 +411,8 @@ def required_source_capabilities(repo):
         return set()
     # A valid drain was written under this persistent lock. Inspection may
     # never recreate a missing lock or interpret its loss as empty evidence.
-    with private_lock(base / 'omp-transport.lock', existing_only=True):
+    from .private_state import observation_barrier
+    with turn_sources.read_only_locks(), observation_barrier(repo), private_lock(base / 'omp-transport.lock', existing_only=True):
         binding, digest = _drain_inventory(repo)
         try:
             proof = load(turn_sources.read_bytes(base / 'omp-drains' / (digest + '.json'), 4096))
@@ -434,7 +435,7 @@ def _stream_proof(repo, base, inventory):
 
 def _verify_stream_drain(repo, base):
     from . import omp_stream
-    inventory = omp_stream.drain_state(repo, base=base)
+    inventory = omp_stream.drain_state(repo, base=base, read_only=True)
     expected = _stream_proof(repo, base, inventory)
     target = base / 'omp-stream-drains' / (inventory['inventory_sha256'] + '.json')
     try:
@@ -446,12 +447,36 @@ def _verify_stream_drain(repo, base):
     return inventory
 
 
+@contextmanager
+def _read_only_transport_lock(base):
+    """Observe an existing transport lock, or fence its continued absence."""
+    path = base / 'omp-transport.lock'
+    if os.path.lexists(path):
+        with private_lock(path, existing_only=True):
+            yield
+        return
+    evidence = ('omp-source-v1', 'omp-stream-v1', 'omp-stream-session-locks', 'omp-drains')
+    protected = bool(turn_sources._barriers.get().get(str(base)))
+    if not protected and any(os.path.lexists(base / name) for name in evidence):
+        raise ContractError('Native evidence lacks its source barrier; preserve private state')
+    try:
+        yield
+    finally:
+        if os.path.lexists(path) or (not protected and
+                any(os.path.lexists(base / name) for name in evidence)):
+            raise ContractError('Native transport appeared during read-only drain observation')
+
+
 def drain_source_capabilities(repo, *, quiesced=False, check=False):
     """Aware lifecycle only, after binding disable and explicit writer quiescence."""
     if not quiesced:
         raise ContractError('Source drain requires disabled bindings and writer quiescence')
     base = _base(repo)
-    with source_barrier(repo, exclusive=True), private_lock(base / 'omp-transport.lock'):
+    if check:
+        from .private_state import observation_barrier
+    barrier = observation_barrier(repo) if check else source_barrier(repo, exclusive=True)
+    lock = _read_only_transport_lock(base) if check else private_lock(base / 'omp-transport.lock')
+    with (turn_sources.read_only_locks() if check else nullcontext()), barrier, lock:
         if not check:
             namespaces = {}
             for _, reference in _omp_index(repo):
@@ -466,7 +491,7 @@ def drain_source_capabilities(repo, *, quiesced=False, check=False):
                         turn_sources.cleanup(shared_base, directory, identity, root)
         binding, digest = _drain_inventory(repo)
         from . import omp_stream
-        streams = omp_stream.drain_state(repo, base=base)
+        streams = omp_stream.drain_state(repo, base=base, read_only=check)
         result = {'capability': CAPABILITY, 'pending': binding['pending'], 'faults': binding['faults'],
                   'transport_pending': streams['pending'], 'stream_inventory_sha256': streams['inventory_sha256'],
                   'inventory_sha256': digest,
@@ -632,7 +657,11 @@ def native_transition(plan, check=False):
         # separately owned capable reader, without any executable path to guess.
         with ExitStack() as locks:
             for repo in repositories:
-                locks.enter_context(source_barrier(repo, exclusive=True))
+                if check:
+                    from .private_state import observation_barrier
+                    locks.enter_context(observation_barrier(repo))
+                else:
+                    locks.enter_context(source_barrier(repo, exclusive=True))
             results = [drain_source_capabilities(repo, quiesced=True, check=check) for repo in repositories]
         if not check and any(not result['drainable'] for result in results):
             raise ContractError('Historical native sources remain pending; preserve their capable reader')
@@ -663,7 +692,11 @@ def native_transition(plan, check=False):
         for repo in repositories:
             if not repo.is_dir():
                 raise ContractError('Enrolled native bank is unavailable; compatibility remains unknown')
-            locks.enter_context(source_barrier(repo, exclusive=True))
+            if check:
+                from .private_state import observation_barrier
+                locks.enter_context(observation_barrier(repo))
+            else:
+                locks.enter_context(source_barrier(repo, exclusive=True))
         if check:
             for repo in repositories:
                 results.append(drain_source_capabilities(repo, quiesced=True, check=True))

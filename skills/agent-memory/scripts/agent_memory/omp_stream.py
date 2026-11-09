@@ -1272,11 +1272,17 @@ def _incomplete_startup(directory):
         'pending': [{'code': 'startup-incomplete'}]}, pins
 
 
-def _inventory(repo, base=None):
+def _inventory(repo, base=None, *, read_only=False):
     """Complete sibling inventory. Lifecycle callers retain an EXCLUSIVE barrier."""
-    with turn_sources.source_barrier(repo):
+    if read_only:
+        from .private_state import observation_barrier
+    barrier = observation_barrier(repo) if read_only else turn_sources.source_barrier(repo)
+    with barrier:
         base = _base(repo) if base is None else Path(base)
         if not trust_paths.state(base)['present']:
+            if read_only:
+                return {'schema': 'agent-memory/omp-stream-inventory-v1', 'streams': [],
+                        'pending': [], 'inventory_sha256': _digest([])}
             raise ContractError('Finite stream private state is offline')
         namespace = base / 'omp-stream-v1'
         rows, pins = [], []
@@ -1307,7 +1313,7 @@ def _inventory(repo, base=None):
                         opened = _open_value(opened, directory)
                         if opened.get('repo_root') != str(Path(repo).resolve()):
                             raise ContractError('Foreign repository finite stream')
-                        with turn_sources.private_lock(directory / 'stream.lock', shared=True):
+                        with turn_sources.private_lock(directory / 'stream.lock', shared=True, existing_only=read_only):
                             row, stream_pins = _inspect(directory, opened)
                     rows.append(row)
                     pins.append([str(directory.relative_to(base)), stream_pins])
@@ -1319,17 +1325,17 @@ def _inventory(repo, base=None):
                 'inventory_sha256': _digest(pins)}
 
 
-def inventory(repo, base=None):
+def inventory(repo, base=None, *, read_only=False):
     try:
-        return _inventory(repo, base)
+        return _inventory(repo, base, read_only=read_only)
     except (OSError, ValueError, TypeError, KeyError) as exc:
         if isinstance(exc, ContractError):
             raise
         raise ContractError('Finite stream inventory is missing, offline or malformed') from None
 
 
-def drain_state(repo, base=None):
-    return inventory(repo, base)
+def drain_state(repo, base=None, *, read_only=False):
+    return inventory(repo, base, read_only=read_only)
 
 
 def validate_drain(repo, proof, base=None):

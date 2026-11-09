@@ -24,6 +24,15 @@ INTENT_SCHEMA='agent-memory/hold-source-enrollment-v1'
 UNIDENTIFIED_SCHEMA='agent-memory/unidentified-private-input-v1'
 MAX_RETAINED_INPUT=131072
 _barriers=ContextVar('agent_memory_source_barriers',default={})
+_read_only_locks=ContextVar('agent_memory_read_only_source_locks',default=False)
+
+
+@contextmanager
+def read_only_locks():
+    """Do not create source synchronization state during observation."""
+    token=_read_only_locks.set(True)
+    try:yield
+    finally:_read_only_locks.reset(token)
 
 
 class VerifiedReceipt(dict):
@@ -58,6 +67,7 @@ def private_mkdir(path):
 
 @contextmanager
 def private_lock(path, *, shared=False, existing_only=False):
+    existing_only=existing_only or _read_only_locks.get()
     parent_fd=None
     if existing_only:
         trust_paths.state(path.parent)
@@ -83,6 +93,13 @@ def private_lock(path, *, shared=False, existing_only=False):
             raise ContractError('Unsafe private source lock')
         try:fcntl.flock(fd,(fcntl.LOCK_SH if shared else fcntl.LOCK_EX)|fcntl.LOCK_NB)
         except BlockingIOError:raise SourceTransportBusy('Source transport busy; preserve pending work and retry') from None
+        named=path.lstat()
+        if (info.st_dev,info.st_ino)!=(named.st_dev,named.st_ino):
+            raise ContractError('Private source lock changed; retain pending evidence')
+        if parent_fd is not None:
+            named_parent=path.parent.lstat()
+            if (parent_info.st_dev,parent_info.st_ino)!=(named_parent.st_dev,named_parent.st_ino):
+                raise ContractError('Private source lock parent changed; retain pending evidence')
         yield
         named=path.lstat()
         if (info.st_dev,info.st_ino)!=(named.st_dev,named.st_ino):
@@ -423,6 +440,21 @@ def register(repo,harness,session,lifecycle,source_sha256,*,native_source_id=Non
 
 @contextmanager
 def locked(directory):
+    if _read_only_locks.get():
+        path=directory/'completion.lock'
+        if os.path.lexists(path):
+            with private_lock(path,existing_only=True):yield
+            return
+        if not _barriers.get().get(str(directory.parents[2])):
+            raise ContractError('Source completion lock is absent without a held source barrier')
+        trust_paths.state(directory)
+        parent=directory.lstat()
+        try:yield
+        finally:
+            named=directory.lstat()
+            if os.path.lexists(path) or (parent.st_dev,parent.st_ino)!=(named.st_dev,named.st_ino):
+                raise ContractError('Source completion lock appeared during read-only observation')
+        return
     trust_paths.state(directory)
     fd=os.open(directory/'completion.lock',os.O_RDWR|os.O_CREAT|os.O_NOFOLLOW|os.O_NONBLOCK,0o600)
     try:
