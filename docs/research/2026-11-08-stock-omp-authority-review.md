@@ -186,3 +186,19 @@ No omp source, configuration or live extension was customized. Ordinary stock
 authentication-cache refresh was separately disclosed and authorized for this
 run. Raw native transcripts remain private. Full print/RPC, positive
 model-forgets, lifecycle and platform acceptance remain open.
+
+### Scoped AM enrollment improvement
+
+The [R12 proof](data/native249-enrollment-progress-scoped-proof-20261109.json)
+retains 21 passing affected contracts, two independent Opus source verdicts, and
+the same seven-request model-free profile on the changed source. Fresh
+ordinary/raw discovery and deferred live guards reduce redundant observations;
+complete bounded pending-directory inventory replaces absent-slot probes.
+Transient churn consumes the original two-attempt budget rather than immediately
+creating a lasting registration fault. Malformed reservations, persistent churn,
+authority drift and overflow still refuse before unsafe progress.
+
+The frozen uncommitted source identity is explicit; this is not a retroactive
+run against a later commit. Earlier R11 negatives remain retained. All controlled
+source outcomes verified, but native callback timing and positive automatic
+assessment still require an actual stock-client run.

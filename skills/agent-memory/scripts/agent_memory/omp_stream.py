@@ -601,14 +601,15 @@ def _attest_binding(binding, receipt):
         receipt['omp_binding']['agent_dir'], receipt=receipt)
 
 
+@contextmanager
 def _verify_binding(repo, binding, receipt, proof):
     """Fast same-frame executable, marker and scope check under the source barrier."""
     from . import omp_installation
-    context = omp_installation.verify_observer_binding(repo, receipt, proof)
-    if (context.project_id != binding['project_id'] or str(context.root) != binding['repo_root']
-            or str(context.bank) != binding['bank_path'] or context.scope['checkout_key'] != binding['checkout_key']):
-        raise ContractError('Finite stream project/bank/checkout binding changed')
-    return context
+    with omp_installation._observe_observer_binding(repo, receipt, proof) as context:
+        if (context.project_id != binding['project_id'] or str(context.root) != binding['repo_root']
+                or str(context.bank) != binding['bank_path'] or context.scope['checkout_key'] != binding['checkout_key']):
+            raise ContractError('Finite stream project/bank/checkout binding changed')
+        yield context
 
 
 class _InvalidAttempt(ContractError):

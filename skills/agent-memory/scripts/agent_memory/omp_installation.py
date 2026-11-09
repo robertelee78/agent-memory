@@ -1,4 +1,5 @@
 """Explicit omp targets and receipt-v2 validation; never infer a native root."""
+from contextlib import contextmanager
 import json
 import re
 from pathlib import Path
@@ -221,7 +222,14 @@ def verified_observer_binding(artifact_digest, agent_dir, *, receipt=None):
 
 
 def verify_observer_binding(repo, receipt, proof):
-    """Fast same-frame checks under the source barrier; no artifact rehash."""
+    """Return an independently checked binding outside a live operation."""
+    with _observe_observer_binding(repo, receipt, proof) as context:
+        return context
+
+
+@contextmanager
+def _observe_observer_binding(repo, receipt, proof):
+    """Check ownership and mint scope at entry, then freshly check at exit."""
     from . import installation, omp_boundary, trust_paths, turn_sources
     if type(proof) is not ObserverBinding or proof._seal is not _OBSERVER_MINT:
         raise ContractError('Native observer requires its exact internally verified binding')
@@ -241,7 +249,8 @@ def verify_observer_binding(repo, receipt, proof):
         if (identity is None or identity.get('kind') != 'file'
                 or (identity['kind'], identity['hash'], identity['mode']) != proof._receipt_identity):
             raise ContractError('Native observer installation changed; preserve pending work and start a new instance')
-        return omp_boundary.verify_marker(repo)
+        with omp_boundary._observe_marker(repo) as context:
+            yield context
 
 
 _MANUAL_MINT = object()

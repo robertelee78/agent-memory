@@ -24,37 +24,14 @@ class EnrollmentProgress(unittest.TestCase):
         self.assertTrue(all(row['source_reference'].startswith(('omp:capture:', 'omp:seal:')) for row in rows))
         return {row['source_reference']: row for row in rows}
 
-    def _original_enrollment_projection(self, repo):
-        """Original full-mint composition, using the unchanged fresh public APIs."""
-        from agent_memory import bank_writes, layout_recovery_state, local_registry, recovery_frontier, scope_binding
-        from agent_memory.developer_identity import digest, encoded
-        root, bank = bank_writes.bank_path(repo)
-        turn_sources.check_source_compatibility(layout_recovery_state.paths(root)[2].parent)
-        hold = recovery_frontier.verified_hold(root)
-        scope = dict(hold.scope) if hold is not None else scope_binding.require(root)
-        token = hold.token if hold is not None else recovery_frontier.observe(root)
-        pins = {'scope': scope, 'frontier': token,
-                'binding': [[str(path), info.st_dev, info.st_ino, info.st_uid, info.st_gid, info.st_mode]
-                            for path in (root, bank.parent, bank) for info in [path.lstat()]],
-                'marker': digest(hold.marker) if hold is not None else None}
-        if hold is not None:
-            self.assertEqual((hold.root, hold.bank), (root, bank))
-            directory = layout_recovery_state._paths_for_bank(root, bank, hold.operation_id)[3]
-            pins.update(runtime_artifact_digest=hold.runtime_artifact_digest,
-                        private_bindings_sha256=digest(layout_recovery_state.read_bytes(
-                            local_registry.paths('layout-recovery-bindings')[1])),
-                        journal_sha256=digest(layout_recovery_state.read_bytes(directory / 'journal.json')))
-        return root, bank, scope, hold, pins, digest(encoded(pins))
+    def assert_pending_source_retained(self, repo, session, lifecycle, original):
+        sources = turn_sources.inspect(repo, 'omp', session, lifecycle)['sources']
+        self.assertEqual(len(sources), 1)
+        self.assertEqual(sources[0]['observation_id'], original['observation_id'])
+        self.assertEqual(sources[0]['source_sha256'], original['source_sha256'])
+        self.assertEqual(sources[0]['native_source_id'], original['native_source_id'])
+        self.assertFalse(sources[0]['completed'])
 
-    def _assert_original_enrollment_composition(self, repo):
-        from agent_memory import recovery_frontier, scope_binding
-        root, bank, scope, hold, pins, digest = self._original_enrollment_projection(repo)
-        actual = scope_binding.private_enrollment_context(repo)
-        self.assertEqual((actual.root, actual.bank, actual.scope, actual.held, actual._pins, actual.context_digest),
-                         (root, bank, scope, hold is not None, pins, digest))
-        if hold is not None:
-            self.assertTrue(recovery_frontier.same_hold(actual.hold, hold))
-        return actual
 
     def test_bounded_later_sweeps_enroll_oldest_and_keep_every_new_arrival(self):
         with World() as world:
@@ -398,8 +375,8 @@ class EnrollmentProgress(unittest.TestCase):
             alternate_base = bank_writes.state_paths(repo, alternate_bank, str(fixtures.uuid.uuid4()))[0].parent
             entries = [helper.entry('first-human', 'user', 'First actual stored source.', attribution='user'),
                        helper.entry('second-human', 'user', 'Second actual stored source.', attribution='user')]
-            capture = transport.capture; bank_path = bank_writes.bank_path
-            drifted = []; full_locations = []; started_locations = []
+            capture = transport.capture
+            drifted = []; started = []
             def capture_then_change_config(directory, cursor, entry, **kwargs):
                 result = capture(directory, cursor, entry, **kwargs)
                 if result is not None and not drifted:
@@ -407,23 +384,14 @@ class EnrollmentProgress(unittest.TestCase):
                     world.git('config', '--local', 'agent-memory.bankRoot', 'alternate-bank', cwd=repo)
                     drifted.append(True)
                 return result
-            def fresh_location(path):
-                if drifted:
-                    full_locations.append(scope_binding._observe_enrollment_location(path))
-                return bank_path(path)
             value = {'schema': 'agent-memory/omp-observer-request-v2', 'action': 'seal',
                      'session': session, 'lifecycle': lifecycle,
                      'payload': fixtures.observer_payload(repo, session, entries, terminal=True)}
             value['payload']['request_wake'] = False
-            with patch.object(transport, 'capture', side_effect=capture_then_change_config), \
-                    patch.object(bank_writes, 'bank_path', side_effect=fresh_location):
-                with self.assertRaisesRegex(ValueError, 'Competing memory bank locations'):
-                    helper.observe_request(repo, value,
-                        on_started=lambda: started_locations.append(scope_binding._observe_enrollment_location(repo)))
-            self.assertEqual(started_locations, [None], 'Worker start must precede observer locator reuse')
-            self.assertTrue(full_locations)
-            self.assertTrue(all(location is None for location in full_locations),
-                            'Full scope checks must suspend the transaction locator')
+            with patch.object(transport, 'capture', side_effect=capture_then_change_config):
+                with self.assertRaises(ValueError):
+                    helper.observe_request(repo, value, on_started=lambda: started.append(True))
+            self.assertEqual(started, [True])
             source_root = original_base / 'omp-source-v1' / hashlib.sha256(session.encode()).hexdigest()
             retained = {transport.read(path, 4096)['native_entry_id'] for path in source_root.glob('*/captures/*.json')}
             self.assertEqual(retained, {'first-human', 'second-human'})
@@ -443,29 +411,22 @@ class EnrollmentProgress(unittest.TestCase):
             self.assertFalse((alternate_base / 'omp-source-v1').exists())
             self.assertFalse((alternate_base / 'turn-sources-v2').exists())
 
-    def test_fresh_mint_matches_original_composition_in_regular_and_newline_worktree(self):
+    def test_fresh_mint_resolves_regular_and_newline_worktree_identity(self):
         import shutil
+        from agent_memory import scope_binding
         with World() as world, patch.dict(os.environ, world.env, clear=True):
             helper = fixtures.NativeSources(); repo, _, _ = helper.fixture(world)
-            ordinary = self._assert_original_enrollment_composition(repo)
+            ordinary = scope_binding.private_enrollment_context(repo)
             worktree = world.inside('linked worktree with space\n')
             world.git('worktree', 'add', '--detach', worktree, 'HEAD', cwd=repo)
             shutil.copytree(repo / 'memory-bank', worktree / 'memory-bank')
-            linked = self._assert_original_enrollment_composition(worktree)
+            linked = scope_binding.private_enrollment_context(worktree)
             self.assertEqual(linked.root, worktree.resolve())
             self.assertEqual(linked.project_id, ordinary.project_id)
             self.assertEqual(linked.scope['checkout_key'], ordinary.scope['checkout_key'])
 
-    def test_fresh_mint_matches_original_composition_for_actual_verified_hold(self):
-        from contracts.test_held_source_enrollment import HeldSourceEnrollment
-        with World() as world, patch.dict(os.environ, world.env, clear=True):
-            _, repo, _, _, _, _, _ = HeldSourceEnrollment().fixture(world)
-            context = self._assert_original_enrollment_composition(repo)
-            self.assertTrue(context.held)
-            self.assertIsNotNone(context._pins['marker'])
-            self.assertEqual(context._pins['runtime_artifact_digest'], context.hold.runtime_artifact_digest)
 
-    def test_fresh_mint_and_original_composition_both_refuse_foreign_bank_identity(self):
+    def test_fresh_mint_refuses_foreign_bank_identity_without_private_writes(self):
         import shutil
         from agent_memory import scope_binding
         with World() as world, World() as foreign, patch.dict(os.environ, world.env, clear=True):
@@ -477,16 +438,12 @@ class EnrollmentProgress(unittest.TestCase):
             world.git('config', '--local', 'agent-memory.bankRoot', 'foreign-bank', cwd=repo)
             before = {str(path.relative_to(world.paths['state'])): path.read_bytes()
                       for path in world.paths['state'].rglob('*') if path.is_file()}
-            failures = []
-            for mint in (self._original_enrollment_projection, scope_binding.private_enrollment_context):
-                with self.assertRaises(ValueError) as refused:
-                    mint(repo)
-                failures.append(str(refused.exception))
-            self.assertEqual(failures[0], failures[1])
+            with self.assertRaises(ValueError):
+                scope_binding.private_enrollment_context(repo)
             self.assertEqual({str(path.relative_to(world.paths['state'])): path.read_bytes()
                               for path in world.paths['state'].rglob('*') if path.is_file()}, before)
 
-    def test_fresh_mint_and_original_composition_refuse_bank_drift_after_actual_scope_read(self):
+    def test_fresh_mint_refuses_bank_drift_after_actual_scope_read(self):
         import shutil
         from agent_memory import scope_binding
         with World() as world, patch.dict(os.environ, world.env, clear=True):
@@ -494,24 +451,23 @@ class EnrollmentProgress(unittest.TestCase):
             config = repo / '.git/config'; original = config.read_bytes()
             require = scope_binding.require
             alternate = repo / 'late-bank'
-            for index, mint in enumerate((self._original_enrollment_projection, scope_binding.private_enrollment_context)):
-                changed = []
-                def scope_then_drift(*args, **kwargs):
-                    result = require(*args, **kwargs)
-                    if not changed:
-                        shutil.copytree(repo / 'memory-bank', alternate)
-                        world.git('config', '--local', 'agent-memory.bankRoot', 'late-bank', cwd=repo)
-                        changed.append(True)
-                    return result
-                try:
-                    with patch.object(scope_binding, 'require', side_effect=scope_then_drift):
-                        with self.assertRaisesRegex(ValueError, 'Competing memory bank locations'):
-                            mint(repo)
-                    self.assertTrue(changed, 'The actual scope read must precede the real configuration mutation')
-                finally:
-                    config.write_bytes(original)
-                    if alternate.exists():
-                        alternate.rename(world.inside('retained-late-bank-' + str(index)))
+            changed = []
+            def scope_then_drift(*args, **kwargs):
+                result = require(*args, **kwargs)
+                if not changed:
+                    shutil.copytree(repo / 'memory-bank', alternate)
+                    world.git('config', '--local', 'agent-memory.bankRoot', 'late-bank', cwd=repo)
+                    changed.append(True)
+                return result
+            try:
+                with patch.object(scope_binding, 'require', side_effect=scope_then_drift):
+                    with self.assertRaisesRegex(ValueError, 'Competing memory bank locations'):
+                        scope_binding.private_enrollment_context(repo)
+                self.assertTrue(changed, 'The actual scope read must precede the real configuration mutation')
+            finally:
+                config.write_bytes(original)
+                if alternate.exists():
+                    alternate.rename(world.inside('retained-late-bank'))
 
     def _assert_raw_locator_refusal_preserved(self, *, held, kind):
         from agent_memory import bank_writes, layout_recovery_state, recovery_frontier, scope_binding
@@ -547,14 +503,8 @@ class EnrollmentProgress(unittest.TestCase):
                        for path in bank.rglob('*') if path.is_file()},
                       (repo / '.git/index').read_bytes(),
                       world.git('rev-parse', 'HEAD', cwd=repo).stdout)
-            failures = []
-            for mint in (self._original_enrollment_projection, scope_binding.private_enrollment_context):
-                with self.assertRaises(ValueError) as refused:
-                    mint(repo)
-                failures.append(str(refused.exception))
-            self.assertEqual(failures[0], failures[1])
-            if kind != 'symlink':
-                self.assertIn('Competing memory bank locations', failures[0])
+            with self.assertRaises(ValueError):
+                scope_binding.private_enrollment_context(repo)
             self.assertEqual(
                 ({str(path.relative_to(world.paths['state'])): path.read_bytes()
                   for path in world.paths['state'].rglob('*') if path.is_file()},
@@ -574,9 +524,7 @@ class EnrollmentProgress(unittest.TestCase):
             self.assertEqual(world.git('ls-files', '--', 'memory-bank', cwd=repo).stdout, '')
             self.assertEqual(bank_writes.bank_path(repo), (repo.resolve(), bank))
             self.assertEqual(layout_recovery_state.paths(repo)[:2], (repo.resolve(), stray.parent))
-            # Both locators succeed, but the raw bank is not a valid router.
-            # The original frontier parser and the new early equality guard
-            # must both refuse rather than combine the two namespaces.
+            # Successful locators must still agree on the same namespace.
             def preserved():
                 return ({str(path.relative_to(world.paths['state'])): path.read_bytes()
                          for path in world.paths['state'].rglob('*') if path.is_file()},
@@ -584,10 +532,9 @@ class EnrollmentProgress(unittest.TestCase):
                          for path in repo.rglob('*') if path.is_file()},
                         world.git('rev-parse', 'HEAD', cwd=repo).stdout)
             before = preserved()
-            for mint in (self._original_enrollment_projection, scope_binding.private_enrollment_context):
-                with self.assertRaises(ValueError):
-                    mint(repo)
-                self.assertEqual(preserved(), before)
+            with self.assertRaises(ValueError):
+                scope_binding.private_enrollment_context(repo)
+            self.assertEqual(preserved(), before)
 
     def test_fresh_mint_preserves_raw_nonrouter_refusal_with_and_without_verified_hold(self):
         for held in (False, True):
@@ -617,25 +564,206 @@ class EnrollmentProgress(unittest.TestCase):
                 self.assertEqual(recovery_frontier.verified_hold(repo) is not None, held)
                 require = scope_binding.require
                 stray = repo / 'late-raw-locator' / 'MEMORY.md'
-                for index, mint in enumerate((self._original_enrollment_projection, scope_binding.private_enrollment_context)):
-                    changed = []
-                    def scope_then_add_raw_locator(*args, **kwargs):
-                        result = require(*args, **kwargs)
-                        if not changed:
-                            stray.parent.mkdir()
-                            stray.write_text('# Late raw locator\n\nNot a router.\n')
-                            changed.append(True)
-                        return result
-                    try:
-                        with patch.object(scope_binding, 'require', side_effect=scope_then_add_raw_locator):
-                            with self.assertRaisesRegex(ValueError, 'Competing memory bank locations'):
-                                mint(repo)
-                        self.assertTrue(changed)
-                        self.assertEqual(bank_writes.bank_path(repo), (repo.resolve(), bank),
-                                         'The ordinary locator must still accept the original bank')
-                    finally:
-                        if stray.parent.exists():
-                            stray.parent.rename(world.inside('retained-late-raw-locator-' + str(index)))
+                changed = []
+                def scope_then_add_raw_locator(*args, **kwargs):
+                    result = require(*args, **kwargs)
+                    if not changed:
+                        stray.parent.mkdir()
+                        stray.write_text('# Late raw locator\n\nNot a router.\n')
+                        changed.append(True)
+                    return result
+                try:
+                    with patch.object(scope_binding, 'require', side_effect=scope_then_add_raw_locator):
+                        with self.assertRaises(ValueError):
+                            scope_binding.private_enrollment_context(repo)
+                    self.assertTrue(changed)
+                    self.assertEqual(bank_writes.bank_path(repo), (repo.resolve(), bank))
+                finally:
+                    if stray.parent.exists():
+                        stray.parent.rename(world.inside('retained-late-raw-locator'))
+
+
+    def test_next_mint_refuses_a_new_raw_only_bank_locator(self):
+        from agent_memory import scope_binding
+        with World() as world, patch.dict(os.environ, world.env, clear=True):
+            repo, _, _ = fixtures.NativeSources().fixture(world)
+            scope_binding.private_enrollment_context(repo)
+            stray = repo / 'next-observation' / 'MEMORY.md'
+            stray.parent.mkdir()
+            stray.write_text('# A raw-only locator created between observations.\n')
+            with self.assertRaisesRegex(ValueError, 'Competing memory bank locations'):
+                scope_binding.private_enrollment_context(repo)
+            self.assertEqual(stray.read_text(), '# A raw-only locator created between observations.\n')
+
+    def test_live_marker_context_cannot_escape_its_read_lifetime(self):
+        from agent_memory import scope_binding
+        with World() as world, patch.dict(os.environ, world.env, clear=True):
+            repo, session, lifecycle = fixtures.NativeSources().fixture(world)
+            observation = fixtures.boundary._observe_marker(repo)
+            with turn_sources.source_barrier(repo), observation as context:
+                state = turn_sources._inspect_enrollment(repo, 'omp', session, lifecycle, context)
+                self.assertEqual(state['sources'], [])
+            with self.assertRaises(ValueError):
+                turn_sources._inspect_enrollment(repo, 'omp', session, lifecycle, context)
+
+    def test_live_marker_observation_refuses_late_authority_change_without_private_writes(self):
+        with World() as world, patch.dict(os.environ, world.env, clear=True):
+            repo, session, lifecycle = fixtures.NativeSources().fixture(world)
+            config = repo / '.git/config'; original = config.read_bytes()
+            before = {str(path.relative_to(world.paths['state'])): path.read_bytes()
+                      for path in world.paths['state'].rglob('*') if path.is_file()}
+            try:
+                with self.assertRaises(ValueError):
+                    with turn_sources.source_barrier(repo), fixtures.boundary._observe_marker(repo) as context:
+                        world.git('config', '--local', 'agent-memory.authorityRemote',
+                                  'missing-late-authority', cwd=repo)
+                        turn_sources._inspect_enrollment(repo, 'omp', session, lifecycle, context)
+            finally:
+                config.write_bytes(original)
+            self.assertEqual({str(path.relative_to(world.paths['state'])): path.read_bytes()
+                              for path in world.paths['state'].rglob('*') if path.is_file()}, before)
+
+    def test_sparse_pending_index_reads_last_slot_and_allocates_lowest_hole(self):
+        with World() as world, patch.dict(os.environ, world.env, clear=True):
+            repo, session, lifecycle = fixtures.NativeSources().fixture(world)
+            first = turn_sources.register(repo, 'omp', session, lifecycle, 'a' * 64,
+                                          native_source_id='first-index-source')
+            root, _, base, directory, identity = turn_sources.private_namespace(repo, 'omp', session, lifecycle)
+            pending = base / 'pending'; last = pending / (str(turn_sources.MAX_TURNS - 1) + '.json')
+            (pending / '0.json').rename(last)
+            retained = last.read_bytes()
+            # These were never fixed numeric slots and must not reserve holes.
+            for name in ('01.json', '-1.json', '4096.json', 'unrelated'):
+                (pending / name).write_text('unrelated existing name\n')
+            self.assertEqual(turn_sources.index(base, directory, identity, root), last)
+            second = turn_sources.register(repo, 'omp', session + '-next', lifecycle, 'b' * 64,
+                                           native_source_id='second-index-source')
+            self.assertTrue((pending / '0.json').is_file())
+            self.assertEqual(last.read_bytes(), retained)
+            self.assert_pending_source_retained(repo, session, lifecycle, first)
+            self.assert_pending_source_retained(repo, session + '-next', lifecycle, second)
+
+    def test_pending_index_refuses_malformed_or_symlink_last_slot_before_new_source(self):
+        for kind in ('malformed', 'symlink'):
+            with self.subTest(kind=kind), World() as world, patch.dict(os.environ, world.env, clear=True):
+                repo, session, lifecycle = fixtures.NativeSources().fixture(world)
+                first = turn_sources.register(repo, 'omp', session, lifecycle, 'a' * 64,
+                                              native_source_id='retained-index-source')
+                _, _, base, _, _ = turn_sources.private_namespace(repo, 'omp', session, lifecycle)
+                pending = base / 'pending'; retained = (pending / '0.json').read_bytes()
+                last = pending / (str(turn_sources.MAX_TURNS - 1) + '.json')
+                if kind == 'symlink':
+                    last.symlink_to(pending / '0.json')
+                else:
+                    last.write_bytes(b'not-json\n'); last.chmod(0o600)
+                with self.assertRaises(ValueError):
+                    turn_sources.register(repo, 'omp', session + '-new', lifecycle, 'b' * 64,
+                                          native_source_id='must-not-be-written')
+                _, _, _, new_directory, _ = turn_sources.private_namespace(repo, 'omp', session + '-new', lifecycle)
+                self.assertFalse((new_directory / 'source-0.json').exists())
+                self.assertEqual(turn_sources.read(new_directory / 'fault.json', 4096)['reason'],
+                                 'registration-unverified')
+                self.assertEqual((pending / '0.json').read_bytes(), retained)
+                self.assert_pending_source_retained(repo, session, lifecycle, first)
+
+    def test_full_pending_index_preserves_actual_4096_slot_capacity(self):
+        with World() as world, patch.dict(os.environ, world.env, clear=True):
+            repo, session, lifecycle = fixtures.NativeSources().fixture(world)
+            turn_sources.register(repo, 'omp', session, lifecycle, 'a' * 64,
+                                  native_source_id='retained-capacity-source')
+            _, _, base, _, _ = turn_sources.private_namespace(repo, 'omp', session, lifecycle)
+            pending = base / 'pending'; reference = (pending / '0.json').read_bytes()
+            self.assertEqual(turn_sources.MAX_TURNS, 4096)
+            for number in range(1, turn_sources.MAX_TURNS):
+                path = pending / (str(number) + '.json')
+                path.write_bytes(reference); path.chmod(0o600)
+            with self.assertRaisesRegex(ValueError, 'Pending turn index full'):
+                turn_sources.register(repo, 'omp', session + '-new', lifecycle, 'b' * 64,
+                                      native_source_id='must-not-exceed-capacity')
+            _, _, _, new_directory, _ = turn_sources.private_namespace(repo, 'omp', session + '-new', lifecycle)
+            self.assertFalse((new_directory / 'source-0.json').exists())
+            self.assertEqual(len(list(pending.iterdir())), 4096)
+            self.assertEqual((pending / '4095.json').read_bytes(), reference)
+
+    def test_pending_index_concurrent_slot_creation_keeps_both_sources_and_next_hole(self):
+        with World() as world, patch.dict(os.environ, world.env, clear=True):
+            repo, session, lifecycle = fixtures.NativeSources().fixture(world)
+            first = turn_sources.register(repo, 'omp', session, lifecycle, 'a' * 64,
+                                          native_source_id='original-racing-source')
+            _, _, base, _, _ = turn_sources.private_namespace(repo, 'omp', session, lifecycle)
+            pending = base / 'pending'; last = pending / (str(turn_sources.MAX_TURNS - 1) + '.json')
+            (pending / '0.json').rename(last)
+            old_reference = turn_sources.read(last, 4096)
+            exclusive = turn_sources.exclusive; attempted = []
+            def create_competing_slot(path, value, maximum):
+                if path.parent == pending:
+                    attempted.append(path.name)
+                    if len(attempted) == 1:
+                        exclusive(path, old_reference, maximum)
+                return exclusive(path, value, maximum)
+            with patch.object(turn_sources, 'exclusive', side_effect=create_competing_slot):
+                second = turn_sources.register(repo, 'omp', session + '-next', lifecycle, 'b' * 64,
+                                               native_source_id='new-racing-source')
+            self.assertEqual(attempted, ['0.json', '1.json'])
+            self.assertEqual(turn_sources.read(pending / '0.json', 4096), old_reference)
+            self.assert_pending_source_retained(repo, session, lifecycle, first)
+            self.assert_pending_source_retained(repo, session + '-next', lifecycle, second)
+
+    def test_pending_index_retries_transient_scan_change_and_refuses_persistent_churn(self):
+        from contextlib import contextmanager
+        for persistent in (False, True):
+            with self.subTest(persistent=persistent), World() as world, patch.dict(os.environ, world.env, clear=True):
+                repo, session, lifecycle = fixtures.NativeSources().fixture(world)
+                first = turn_sources.register(repo, 'omp', session, lifecycle, 'a' * 64,
+                                              native_source_id='original-scanned-source')
+                _, _, base, _, _ = turn_sources.private_namespace(repo, 'omp', session, lifecycle)
+                pending = base / 'pending'; scandir = os.scandir; changed = []
+                @contextmanager
+                def changing_scan(path):
+                    with scandir(path) as entries:
+                        def inventory():
+                            for position, entry in enumerate(entries):
+                                yield entry
+                                if position == 0 and (persistent or not changed):
+                                    (pending / ('late-unrelated-' + str(len(changed)))).write_text('retained concurrent entry\n')
+                                    changed.append(True)
+                        yield inventory()
+                def intercept(path):
+                    return changing_scan(path) if Path(path) == pending else scandir(path)
+                with patch.object(os, 'scandir', side_effect=intercept):
+                    if persistent:
+                        with self.assertRaises(ValueError):
+                            turn_sources.register(repo, 'omp', session + '-new', lifecycle, 'b' * 64,
+                                                  native_source_id='must-not-follow-incomplete-scan')
+                    else:
+                        second = turn_sources.register(repo, 'omp', session + '-new', lifecycle, 'b' * 64,
+                                                       native_source_id='retained-after-transient-scan')
+                _, _, _, new_directory, _ = turn_sources.private_namespace(repo, 'omp', session + '-new', lifecycle)
+                if persistent:
+                    self.assertFalse((new_directory / 'source-0.json').exists())
+                    self.assertFalse((pending / '1.json').exists())
+                else:
+                    self.assertTrue((pending / '1.json').is_file())
+                    self.assertFalse((new_directory / 'fault.json').exists())
+                    self.assert_pending_source_retained(repo, session + '-new', lifecycle, second)
+                self.assert_pending_source_retained(repo, session, lifecycle, first)
+
+    def test_pending_directory_overflow_retains_existing_source_without_allocating(self):
+        with World() as world, patch.dict(os.environ, world.env, clear=True):
+            repo, session, lifecycle = fixtures.NativeSources().fixture(world)
+            first = turn_sources.register(repo, 'omp', session, lifecycle, 'a' * 64,
+                                          native_source_id='retained-directory-overflow-source')
+            root, _, base, directory, identity = turn_sources.private_namespace(repo, 'omp', session, lifecycle)
+            pending = base / 'pending'
+            retained = (pending / '0.json').read_bytes()
+            for number in range(6):
+                (pending / ('unrelated-' + str(number))).write_text('retained unrelated entry\n')
+            with patch.object(turn_sources, 'MAX_TURNS', 3):
+                with self.assertRaisesRegex(ValueError, 'inventory bound'):
+                    turn_sources.index(base, directory, identity, root)
+            self.assertFalse((pending / '1.json').exists())
+            self.assertEqual((pending / '0.json').read_bytes(), retained)
+            self.assert_pending_source_retained(repo, session, lifecycle, first)
 
 
 if __name__ == '__main__':

@@ -1226,7 +1226,7 @@ def _verify_observer_receipt(receipt, *, repo=None, verified_binding=None):
     if repo is None:
         return omp_installation.verified_observer_binding(receipt['source']['artifact_digest'],
             receipt['omp_binding']['agent_dir'], receipt=receipt)
-    return omp_installation.verify_observer_binding(repo, receipt, verified_binding)
+    return omp_installation._observe_observer_binding(repo, receipt, verified_binding)
 
 
 def observe(repo, value, *, receipt=None, on_started=None, delivery_window=None, verified_binding=None):
@@ -1255,7 +1255,7 @@ def observe(repo, value, *, receipt=None, on_started=None, delivery_window=None,
     if verified_binding is None:
         verified_binding = _verify_observer_receipt(receipt)
     with source_barrier(repo), private_lock(_base(repo) / 'omp-transport.lock'):
-        with _verify_observer_receipt(receipt, repo=repo, verified_binding=verified_binding) as context, scope_binding._private_enrollment_reads(context), ExitStack() as locations:
+        with _verify_observer_receipt(receipt, repo=repo, verified_binding=verified_binding) as context, ExitStack() as locations:
             fences = []
             if value['action'] == 'ingest':
                 from . import omp_stream

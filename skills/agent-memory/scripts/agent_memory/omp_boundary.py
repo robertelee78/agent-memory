@@ -1,5 +1,5 @@
 """Native omp boundary CLI and conservative bank-wide lifecycle coordination."""
-from contextlib import ExitStack, nullcontext
+from contextlib import ExitStack, contextmanager, nullcontext
 import argparse
 import hashlib
 import os
@@ -43,10 +43,17 @@ def _marker(base):
 
 def verify_marker(repo):
     """Observer verification never enrolls or upgrades a bank."""
-    from . import scope_binding
+    with _observe_marker(repo) as context:
+        return context
+
+
+@contextmanager
+def _observe_marker(repo):
+    """Mint inside this live boundary; do not re-enter a just-minted context."""
+    from . import layout_recovery_state, scope_binding
     context = scope_binding.private_enrollment_context(repo)
     root, bank = context.root, context.bank
-    base = _base(root)
+    base = layout_recovery_state._paths_for_bank(root, bank)[2].parent
     expected = {'schema': 'agent-memory/omp-bank-binding-v1', 'repository': str(root),
                 'bank_path': str(bank), 'private_base': str(base), 'project_id': context.project_id}
     if _marker(base) != CAPABILITY or _bank_binding(base) != expected:
@@ -54,8 +61,8 @@ def verify_marker(repo):
     registered = _registry()
     if registered['private_bases'].get(str(root)) != str(base):
         raise ContractError('Native source bank registration differs from its protected binding')
-    scope_binding.recheck_private_enrollment(context)
-    return context
+    with scope_binding._private_enrollment_reads(context):
+        yield context
 
 
 def _activate_marker(repo, *, fresh_only=False):
