@@ -25,6 +25,15 @@ def compatibility(target):
     return set(tokens)
 
 
+def missing_path(path):
+    """Distinguish a deleted checkout from an inaccessible or linked one."""
+    try:
+        path.lstat()
+    except FileNotFoundError:
+        return True
+    return False
+
+
 def repository_inventory(installation=None):
     """Discovery is a union, not an intersection with currently available banks."""
     roots, unknown = set(), []
@@ -35,6 +44,9 @@ def repository_inventory(installation=None):
     for entry in registry['checkouts'].values():
         for location in entry['locations']:
             path = Path(location)
+            if missing_path(path):
+                # Active private producers are inventoried separately below.
+                continue
             if not path.is_dir():
                 unknown.append({'source': 'project-registry', 'location': location})
                 continue
@@ -47,7 +59,9 @@ def repository_inventory(installation=None):
                 continue
             for line in listed.splitlines():
                 if line.startswith('worktree '):
-                    roots.add(Path(line[9:]))
+                    worktree = Path(line[9:])
+                    if not missing_path(worktree):
+                        roots.add(worktree)
     bindings = state.bindings()
     for row in bindings['bindings'].values():
         if row['lifecycle_state'] in {'active', 'interrupted'}:
@@ -74,6 +88,25 @@ def repository_inventory(installation=None):
         raise ContractError('Private-state bank inventory exceeds its complete finite bound')
     pins = {'project_registry_sha256': registry_sha, 'layout_bindings_sha256': digest(encoded(bindings))}
     return roots, unknown, pins
+
+
+@contextmanager
+def observation_barrier(root):
+    """Observe without enrolling a source lock during a read-only check."""
+    from . import scope_binding
+    from .turn_sources import source_barrier
+    location = scope_binding._observe_enrollment_location(root)
+    _, _, recovery_base, _ = state.paths(root) if location is None else location
+    lock = recovery_base.parent / 'source-barrier.lock'
+    if os.path.lexists(lock):
+        with source_barrier(root, exclusive=True, existing_only=True):
+            yield
+    else:
+        try:
+            yield
+        finally:
+            if os.path.lexists(lock):
+                raise ContractError('Source barrier appeared during read-only compatibility observation')
 
 
 def required_private_state_capabilities(installation, target_artifact, operation):
@@ -115,9 +148,8 @@ def required_private_state_capabilities(installation, target_artifact, operation
                 held = _barriers.get()
                 if held is not None and str(root) not in held:
                     raise ContractError('A bank joined the private-state inventory after lifecycle quiescence')
-                from .turn_sources import source_barrier
                 if held is None:
-                    stack.enter_context(source_barrier(root, exclusive=True))
+                    stack.enter_context(observation_barrier(root))
                 located = state.paths(root)[:2]
                 root, bank = located
                 operations, _ = bank_writes.state_paths(root, bank, '00000000-0000-4000-8000-000000000000')

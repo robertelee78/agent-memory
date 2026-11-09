@@ -103,7 +103,8 @@ def banks(extra, compatibility, *, require_readable=False):
     from . import migration, bank_transactions
     roots = set(); gaps = []
     from . import private_state, recovery_frontier
-    private_roots, unknown_private, _ = private_state.repository_inventory({'rollback_repositories': list(extra)})
+    private_roots, unknown_private, _ = private_state.repository_inventory(
+        {'rollback_repositories': [str(value) for value in extra]})
     install.require(not unknown_private, 'Private-state bank inventory is unknown; preserve the active capable runtime')
     roots.update(private_roots)
     cwd = Path.cwd().resolve()
