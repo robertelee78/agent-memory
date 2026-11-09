@@ -29,6 +29,111 @@ class LayoutRecoveryContract(unittest.TestCase):
         return (Path(world.env['AGENT_MEMORY_STATE_HOME']) / 'writes'
                 / fixture.sha(str(bank).encode()) / 'layout-recovery' / operation)
 
+    def setup_fault_repair(self, world):
+        command, source = fixture.installed(world)
+        repo, bank, native = fixture.memory(world, oversized=True)
+        active = bank / 'activeContext.md'
+        active.write_text(native['activeContext.md'] + '\n' + native['activeContext.md'])
+        (bank / 'handoff-prompt.md').write_text(fixture.policy_body(0))
+        (repo / 'synthetic-policy.md').write_text(fixture.policy_body(0))
+        originals = {path.relative_to(bank).as_posix(): path.read_bytes()
+                     for path in bank.rglob('*') if path.is_file()}
+        modes = {path: stat.S_IMODE((bank / path).stat().st_mode) for path in originals}
+        feature = repo / 'feature.txt'; feature.write_text('Committed feature\n')
+        world.git('add', 'feature.txt', cwd=repo)
+        world.git('commit', '-m', 'Synthetic feature baseline', cwd=repo)
+        feature.write_text('Staged feature\n'); world.git('add', 'feature.txt', cwd=repo)
+        feature.write_text('Unstaged feature\n')
+        untracked = repo / 'untracked.txt'; untracked.write_bytes(b'Untracked feature\n')
+        git = ((repo / '.git/index').read_bytes(), world.git('rev-parse', 'HEAD', cwd=repo).stdout)
+        return command, source, repo, bank, native, originals, modes, git
+
+    def assert_fault_work_unchanged(self, world, repo, git):
+        self.assertEqual((repo / '.git/index').read_bytes(), git[0])
+        self.assertEqual(world.git('rev-parse', 'HEAD', cwd=repo).stdout, git[1])
+        self.assertEqual((repo / 'feature.txt').read_text(), 'Unstaged feature\n')
+        self.assertEqual((repo / 'untracked.txt').read_bytes(), b'Untracked feature\n')
+
+    def test_partial_original_staging_remains_incomplete_and_fresh_inspection_preserves_it(self):
+        with World() as world:
+            command, source, repo, bank, native, originals, modes, git = self.setup_fault_repair(world)
+            failed = fixture.call(world, command, 'inspect', '--repo', repo,
+                '--output', world.inside('partial-inspect.json'), expected=1,
+                env={'AGENT_MEMORY_FAULT_STAGE': 'layout-recovery-partial-original-staging'})
+            operation = failed['operation_id']
+            self.assertFalse(failed['canonical_mutation_may_have_occurred'])
+            directory = self.private_directory(world, bank, operation)
+            staging = (directory / 'staging.json').read_bytes()
+            self.assertFalse(json.loads(staging)['observation_complete'])
+            self.assertFalse((directory / 'manifest.json').exists())
+            blobs = {path.name: path.read_bytes() for path in (directory / 'originals').glob('*.bin')}
+            self.assertEqual(len(blobs), 1)
+            self.assertIn(next(iter(blobs.values())), originals.values())
+            status = fixture.call(world, command, 'status', '--repo', repo, '--operation', operation)
+            self.assertEqual(status['state'], 'observation-incomplete')
+            self.assertFalse(status['observation_complete'])
+            self.assertFalse(status['semantic_recovery_complete'])
+            refused = fixture.call(world, command, 'prepare', '--repo', repo, '--operation', operation,
+                '--input', fixture.save(world, {}), '--output', world.inside('incomplete-proposal.json'), expected=1)
+            self.assertFalse(refused['canonical_writes_performed'])
+            safe, inspected = fixture.inspect(world, command, repo)
+            self.assertNotEqual(safe['operation_id'], operation)
+            self.assertTrue(safe['observation_complete'])
+            complete = self.private_directory(world, bank, safe['operation_id'])
+            self.assertEqual({row['path']: (complete / row['blob']).read_bytes()
+                              for row in inspected['manifest']['sources']}, originals)
+            self.assertEqual((directory / 'staging.json').read_bytes(), staging)
+            self.assertEqual({path.name: path.read_bytes() for path in (directory / 'originals').glob('*.bin')}, blobs)
+            self.assertFalse((directory / 'manifest.json').exists())
+            self.assertEqual({path.relative_to(bank).as_posix(): path.read_bytes()
+                              for path in bank.rglob('*') if path.is_file()}, originals)
+            self.assertEqual({path: stat.S_IMODE((bank / path).stat().st_mode) for path in originals}, modes)
+            self.assert_fault_work_unchanged(world, repo, git)
+
+    def test_first_replacement_before_progress_supports_known_finish_and_rollback(self):
+        for mode in ('finish', 'rollback'):
+            with self.subTest(mode=mode), World() as world:
+                command, source, repo, bank, native, originals, modes, git = self.setup_fault_repair(world)
+                safe, inspected = fixture.inspect(world, command, repo)
+                proposal, prepared = fixture.prepare(world, command, source, repo, inspected, native)
+                actions = prepared['proposal']['actions']
+                first = actions[0]['path']
+                self.assertEqual(first, 'activeContext.md')
+                self.assertEqual(actions[0]['action'], 'replace')
+                failed = fixture.call(world, command, 'apply', '--repo', repo, '--proposal', proposal, expected=1,
+                    env={'AGENT_MEMORY_FAULT_STAGE': 'layout-recovery-after-rename:' + first})
+                self.assertTrue(failed['canonical_mutation_may_have_occurred'])
+                directory = self.private_directory(world, bank, safe['operation_id'])
+                self.assertEqual((bank / first).read_bytes(), native[first].encode())
+                self.assertNotEqual((bank / first).read_bytes(), originals[first])
+                self.assertFalse((directory / 'progress' / 'finish-00000000.json').exists())
+                self.assertEqual({row['path']: (directory / row['blob']).read_bytes()
+                                  for row in inspected['manifest']['sources']}, originals)
+                status = fixture.call(world, command, 'status', '--repo', repo, '--operation', safe['operation_id'])
+                self.assertEqual(status['state'], 'interrupted')
+                self.assertIsNot(status['canonical_eligibility'], True)
+                self.assertFalse(status['semantic_recovery_complete'])
+                self.assertTrue((bank / '.agent-memory-transaction.md').exists())
+                self.assertTrue((bank / '.agent-memory-recovery.md').exists())
+                output = world.inside('first-replacement-recovery.json')
+                fixture.call(world, command, 'recover', '--repo', repo, '--operation', safe['operation_id'],
+                             '--mode', mode, '--output', output)
+                outcome = fixture.call(world, command, 'recover', '--repo', repo, '--proposal', output)
+                self.assertTrue(outcome['verified'])
+                self.assertFalse(outcome['semantic_recovery_complete'])
+                self.assertGreater(outcome['pending_units'], 0)
+                wanted = {path: body.encode() for path, body in native.items()} if mode == 'finish' else originals
+                self.assertEqual({path.relative_to(bank).as_posix(): path.read_bytes()
+                                  for path in bank.rglob('*') if path.is_file()
+                                  and path.name not in ('.agent-memory-transaction.md', '.agent-memory-recovery.md')}, wanted)
+                self.assertEqual({path: stat.S_IMODE((bank / path).stat().st_mode) for path in wanted},
+                                 {path: modes[path] for path in wanted})
+                self.assertEqual({row['path']: (directory / row['blob']).read_bytes()
+                                  for row in inspected['manifest']['sources']}, originals)
+                self.assertTrue((bank / '.agent-memory-transaction.md').exists())
+                self.assertTrue((bank / '.agent-memory-recovery.md').exists())
+                self.assert_fault_work_unchanged(world, repo, git)
+
     def test_reported_sizes_fail_normal_gate_and_public_pages_reconstruct_every_original(self):
         with World() as world:
             command, _, repo, bank, _, originals = self.setup_repair(world, pending=True)
