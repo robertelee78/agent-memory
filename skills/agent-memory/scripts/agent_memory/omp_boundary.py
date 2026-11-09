@@ -241,27 +241,34 @@ def _source_state_bindings(installation, registered):
 
 
 def source_capability_repositories(installation=None):
-    """Union discovery retains unavailable paths so lifecycle cannot call them empty."""
+    """Discover accessible ordinary locations and all protected native bindings."""
     from .identity_git import git
     registered = _registry()
     roots = {Path(p) for p in registered['repositories']}
     roots.update(_source_state_bindings(installation, registered))
+    def present(path):
+        try:
+            path.lstat()
+        except FileNotFoundError:
+            return False
+        return True
     registry, _ = project_identity.observe()
     for checkout in registry['checkouts'].values():
         for location in checkout['locations']:
             path = Path(location)
-            if not path.is_dir():
-                # Retain unavailable inventory so activation cannot call it empty.
-                roots.add(path)
+            if not present(path):
+                # Missing ordinary history is not a protected binding.
                 continue
+            if not path.is_dir():
+                raise ContractError('Registered Git location is unavailable')
             listed = git(path, 'worktree', 'list', '--porcelain', optional=True)
             if listed is None:
                 if (path / '.git').exists() or path.name == '.git':
                     raise ContractError('Registered Git location cannot list native bank worktrees')
                 roots.add(path)
                 continue
-            roots.update(Path(line[9:]) for line in listed.splitlines()
-                         if line.startswith('worktree '))
+            roots.update(path for line in listed.splitlines() if line.startswith('worktree ')
+                         and present(path := Path(line[9:])))
     if installation:
         for key in ('rollback_repositories', 'observed_repositories'):
             roots.update(Path(p) for p in installation.get(key, []))
@@ -402,7 +409,9 @@ def required_source_capabilities(repo):
                     has_evidence |= source.get('harness') == 'omp'
     if not has_evidence:
         return set()
-    with private_lock(base / 'omp-transport.lock'):
+    # A valid drain was written under this persistent lock. Inspection may
+    # never recreate a missing lock or interpret its loss as empty evidence.
+    with private_lock(base / 'omp-transport.lock', existing_only=True):
         binding, digest = _drain_inventory(repo)
         try:
             proof = load(turn_sources.read_bytes(base / 'omp-drains' / (digest + '.json'), 4096))

@@ -81,7 +81,14 @@ class MixedPrivateCapabilities(unittest.TestCase):
             self.assertTrue(result['verified'])
             test_omp_boundary.NativeLifecyclePublic().extension(result['receipt'])
             self.assertEqual(snapshot(bank), before[0])
-            self.assertEqual(snapshot(world.paths['config']), before[2])
+            config_after = snapshot(world.paths['config'])
+            registry_path = world.paths['config'] / 'agent-memory/omp-banks.json'
+            registry = json.loads(registry_path.read_text())
+            self.assertIn(str(repo.resolve()), registry['repositories'])
+            self.assertEqual(registry['private_bases'][str(repo.resolve())],
+                             str(recovery.private_directory(world, bank, inspected['operation_id']).parent.parent))
+            config_after.pop('agent-memory/omp-banks.json')
+            self.assertEqual(config_after, before[2])
             self.assertEqual((repo / '.git/index').read_bytes(), before[3])
             self.assertEqual(world.git('rev-parse', 'HEAD', cwd=repo).stdout, before[4])
             self.assertEqual({row['source_id']: (directory / row['blob']).read_bytes()
@@ -217,7 +224,7 @@ class MixedPrivateCapabilities(unittest.TestCase):
             before = preserved()
             for args in (('update', '--check'), ('update',)):
                 denied = lifecycle.public(world, receipt, *args, expected=1)
-                self.assertIn('Candidate would remove the owned lifecycle command surface', denied['error'])
+                self.assertFalse(denied['verified'])
                 self.assertEqual(preserved(), before)
             # A genuinely new capable managed artifact needs a newly reviewed
             # attestation for its own digest and all receipt-owned routes.
@@ -349,7 +356,14 @@ class MixedPrivateCapabilities(unittest.TestCase):
             self.assertTrue(recovered['verified'])
             lifecycle.extension(receipt)
             checked = lifecycle.public(world, receipt, 'update', '--check')
-            self.assertEqual(checked['private_compatibility']['required_capabilities'], ['layout-frontier-v1'])
+            # Recovery restores the owned native route and reactivates its
+            # reader marker; the completed drain and unrelated hold persist.
+            self.assertTrue(marker.is_file())
+            self.assertTrue(list((base / 'omp-drains').glob('*.json')))
+            self.assertEqual(pending(), [])
+            self.assertEqual(checked['private_compatibility']['required_capabilities'],
+                             ['layout-frontier-v1', 'omp-harness-v1', 'omp-stored-source-v2'])
+            self.assertEqual(snapshot(directory), before[1])
             old = v014_runtime_fixture.extract(legacy.root)
             before_candidate = (snapshot(bank), snapshot(directory), snapshot(world.paths['config']),
                                 owned(receipt), (repo / '.git/index').read_bytes(),
@@ -360,7 +374,7 @@ class MixedPrivateCapabilities(unittest.TestCase):
             self.assertEqual((snapshot(bank), snapshot(directory), snapshot(world.paths['config']),
                               owned(receipt), (repo / '.git/index').read_bytes(),
                               world.git('rev-parse', 'HEAD', cwd=repo).stdout), before_candidate)
-            self.assertFalse(marker.exists())
+            self.assertTrue(marker.is_file())
             admission, transaction, _ = recovery.admission_proposal(world, command, pack, repo, bank,
                                                                     inspected, full=True)
             result = recovery.public(world, command, 'admission', 'apply', '--proposal', admission)
@@ -505,6 +519,11 @@ print(json.dumps(results))
             applied = lifecycle.public(world, receipt, 'update', '--repo', str(selected))
             self.assertTrue(applied['verified'])
             self.assertFalse(applied['changed'])
-            self.assertEqual((snapshot(bank), snapshot(world.paths['config']), owned(receipt),
+            config_after = snapshot(world.paths['config'])
+            registry = json.loads((world.paths['config'] / 'agent-memory/omp-banks.json').read_text())
+            self.assertIn(str(repo.resolve()), registry['repositories'])
+            self.assertIn(str(repo.resolve()), registry['private_bases'])
+            config_after.pop('agent-memory/omp-banks.json')
+            self.assertEqual((snapshot(bank), config_after, owned(receipt),
                               feature.read_bytes(), (repo / '.git/index').read_bytes(),
                               world.git('rev-parse', 'HEAD', cwd=repo).stdout), before)

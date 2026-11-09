@@ -182,11 +182,18 @@ class NativeSources(unittest.TestCase):
                 rows, _ = transport.pending_inventory(repo)
                 self.assertTrue(all(row['status'] == 'pending-coverage-gap' for row in rows))
                 for row in rows:
-                    with self.assertRaises(ValueError):
-                        self.acknowledge(repo, row)
+                    value = {key: row[key] for key in ('session', 'lifecycle', 'observation_id', 'source_sha256')}
+                    for outcome in ('no-learning', 'published'):
+                        value.update(outcome=outcome, assessment={'source_id': row['observation_id'],
+                                     'source_review': 'Reviewed the controlled source.', 'candidates': []})
+                        with self.assertRaisesRegex(ValueError, 'unresolved coverage gaps'):
+                            transport.complete(repo, value)
                 result = boundary.drain_source_capabilities(repo, quiesced=True)
                 self.assertFalse(result['drainable'])
-                self.assertEqual(boundary.required_source_capabilities(repo), {boundary.CAPABILITY})
+                self.assertEqual(boundary.required_source_capabilities(repo),
+                                 {boundary.HISTORICAL_CAPABILITY, boundary.CAPABILITY})
+                self.assertTrue((boundary._base(repo) / 'turn-sources-compat-v1.json').is_file())
+                self.assertFalse(list((boundary._base(repo) / 'omp-drains').glob('*.json')))
                 for path in (boundary._base(repo) / 'omp-source-v1').rglob('*.json'):
                     self.assertNotIn('must-not-retain', path.read_text())
 
@@ -239,6 +246,21 @@ class NativeSources(unittest.TestCase):
                 self.assertTrue(result['marker_cleared'])
                 self.assertEqual(boundary.required_source_capabilities(repo), set())
                 self.assertTrue((boundary._base(repo) / 'omp-source-v1').exists())
+                lock = boundary._base(repo) / 'omp-transport.lock'
+                original_open = os.open
+                def remove_before_open(path, flags, *args, **kwargs):
+                    if path == lock.name and kwargs.get('dir_fd') is not None:
+                        lock.unlink()
+                    return original_open(path, flags, *args, **kwargs)
+                with patch.object(turn_sources.os, 'open', side_effect=remove_before_open):
+                    with self.assertRaises(ValueError):
+                        boundary.required_source_capabilities(repo)
+                self.assertFalse(lock.exists())
+                self.assertTrue(list((boundary._base(repo) / 'omp-drains').glob('*.json')))
+                # Restore the fixture's synchronization file before testing
+                # the separate missing-proof refusal.
+                with turn_sources.private_lock(lock):
+                    pass
                 for proof in (boundary._base(repo) / 'omp-drains').glob('*.json'):
                     proof.unlink()
                 with self.assertRaises(ValueError):
@@ -326,8 +348,23 @@ class NativeSources(unittest.TestCase):
                 self.observe(repo, session, first['lifecycle'], [human, assistant, result], terminal=True)
                 self.assertEqual(transport.read(original_dir / 'segment.json'), original_manifest)
                 self.assertTrue(transport._coverage(original_dir, original_manifest))
-                self.assertFalse(transport.read(original_dir / 'cursor.json')['tool_lifecycles'])
-                self.assertFalse(transport.pending_inventory(repo)[1])
+                # A sealed cursor is historical evidence, not a live queue to
+                # mutate; the bound resolution establishes recovered coverage.
+                self.assertEqual(transport.read(original_dir / 'cursor.json')['tool_lifecycles'],
+                                 original_cursor['tool_lifecycles'])
+                rows, faults = transport.pending_inventory(repo)
+                self.assertFalse(faults)
+                segment = next(row for row in rows if row['lifecycle'] == original_cursor['lifecycle']
+                               and row['source_reference'].startswith('omp:seal:'))
+                readback = transport.source(repo, session, segment['lifecycle'], segment['observation_id'])
+                self.assertTrue(readback['coverage_complete'])
+                self.assertEqual(readback['source'], original_manifest)
+                resolution = next(item for item in readback['gap_resolutions']
+                                  if item['gap_id'] == next(gap['gap_id'] for gap in original_manifest['gaps']
+                                                            if gap['native_entry_id'] == 'tool:native-call'))
+                recovered = transport.read(original_dir / resolution['recovered_ref'])
+                self.assertEqual(recovered['toolCallId'], 'native-call')
+                self.assertEqual(recovered['content'], '12')
                 self.assertEqual(len(transport.segments(repo, session)), 2)
 
     def test_protected_private_root_cannot_silently_move_or_lose_binding(self):
@@ -1050,6 +1087,12 @@ class NativeLifecyclePublic(unittest.TestCase):
             command, source, repo, bank, native, inspected, _ = recovery.small_pending(world)
             helper = NativeSources()
             with patch.dict(os.environ, world.env, clear=True):
+                # This low-level synthetic observer fixture has no installed
+                # native stream to perform checked bank enrollment.
+                boundary._activate_marker(repo)
+                boundary.verify_marker(repo)
+                self.assertEqual(boundary.required_source_capabilities(repo),
+                                 {boundary.HISTORICAL_CAPABILITY, boundary.CAPABILITY})
                 helper.observe(repo, str(uuid.uuid4()), str(uuid.uuid4()), [
                     helper.entry('held-human', 'user', 'Controlled pending source under the same layout hold', attribution='user')])
             root = world.inside('held native root')

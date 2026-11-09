@@ -57,9 +57,26 @@ def private_mkdir(path):
 
 
 @contextmanager
-def private_lock(path, *, shared=False):
-    private_mkdir(path.parent)
-    fd=os.open(path,os.O_RDWR|os.O_CREAT|os.O_NOFOLLOW|os.O_NONBLOCK,0o600)
+def private_lock(path, *, shared=False, existing_only=False):
+    parent_fd=None
+    if existing_only:
+        trust_paths.state(path.parent)
+        parent_fd=os.open(path.parent,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW)
+        try:
+            parent_info=os.fstat(parent_fd)
+            named_parent=path.parent.lstat()
+            if (parent_info.st_dev,parent_info.st_ino)!=(named_parent.st_dev,named_parent.st_ino):
+                raise ContractError('Private source lock parent changed')
+            try:
+                fd=os.open(path.name,os.O_RDWR|os.O_NOFOLLOW|os.O_NONBLOCK,dir_fd=parent_fd)
+            except FileNotFoundError:
+                raise ContractError('Private source lock is unavailable; retain pending evidence') from None
+        except BaseException:
+            os.close(parent_fd)
+            raise
+    else:
+        private_mkdir(path.parent)
+        fd=os.open(path,os.O_RDWR|os.O_CREAT|os.O_NOFOLLOW|os.O_NONBLOCK,0o600)
     try:
         info=os.fstat(fd)
         if not stat.S_ISREG(info.st_mode) or info.st_uid!=os.geteuid() or info.st_nlink!=1 or info.st_mode&0o077:
@@ -70,7 +87,13 @@ def private_lock(path, *, shared=False):
         named=path.lstat()
         if (info.st_dev,info.st_ino)!=(named.st_dev,named.st_ino):
             raise ContractError('Private source lock changed; retain pending evidence')
-    finally:os.close(fd)
+        if parent_fd is not None:
+            named_parent=path.parent.lstat()
+            if (parent_info.st_dev,parent_info.st_ino)!=(named_parent.st_dev,named_parent.st_ino):
+                raise ContractError('Private source lock parent changed; retain pending evidence')
+    finally:
+        os.close(fd)
+        if parent_fd is not None:os.close(parent_fd)
 
 
 def check_source_compatibility(base):
@@ -85,7 +108,7 @@ def check_source_compatibility(base):
 
 
 @contextmanager
-def source_barrier(repo, *, exclusive=False):
+def source_barrier(repo, *, exclusive=False, existing_only=False):
     """First source lock family; reentrant reads cannot upgrade to writers."""
     from . import layout_recovery_state
     location=scope_binding._observe_enrollment_location(repo)
@@ -98,7 +121,7 @@ def source_barrier(repo, *, exclusive=False):
         yield
         check_source_compatibility(base)
         return
-    with private_lock(base/'source-barrier.lock',shared=not exclusive):
+    with private_lock(base/'source-barrier.lock',shared=not exclusive,existing_only=existing_only):
         check_source_compatibility(base)
         token=_barriers.set({**known,str(base):exclusive})
         try:
