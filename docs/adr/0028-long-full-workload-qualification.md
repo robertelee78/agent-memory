@@ -19,6 +19,10 @@ Linux. Its retained corrected baseline took 76,620.196 seconds; the different,
 smaller six-session pilot took 3,087.743 seconds. Neither is a matched final
 baseline or proof that the full candidate meets a minutes-long budget.
 
+The [sanitized historical pilot receipts](../research/data/2026-11-08-release-gate/stress-pilot-historical.json)
+bind both small runs to their exact sources, controller hashes and preserved
+negative qualification flags; raw fixture content remains private.
+
 The operator was offered bounded, state-verified stages or an explicit exception
 retaining the full controller. On 2026-11-09 the operator selected **“Allow long
 full-workload runs.”** The [durable decision](https://github.com/robertelee78/agent-memory/issues/209#issuecomment-6731154929)

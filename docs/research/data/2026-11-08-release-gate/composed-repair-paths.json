@@ -486,9 +486,9 @@
   },
   "hosted_matrix": {
     "schema": "agent-memory/hosted-qualification-source-binding-v1",
-    "run_id": 42544977249,
-    "url": "https://github.com/robertelee78/agent-memory/actions/runs/42544977249",
-    "source_commit": "1b5bcefe1b3488fc7749dedb920b3d923ed5da89",
+    "run_id": 42547164232,
+    "url": "https://github.com/robertelee78/agent-memory/actions/runs/42547164232",
+    "source_commit": "073cf197acbea86bb1e24c70d40c33b52ee3aa80",
     "branch": "integrate/v0.0.15-release",
     "matrix": {
       "os": [
@@ -504,7 +504,12 @@
     "jobs_per_cell": 2,
     "workflow_timeout_minutes": 180,
     "suite_registry_entries": 343,
-    "status": "launched; no terminal acceptance claimed"
+    "status": "launched; no terminal acceptance claimed",
+    "supersedes": {
+      "run_id": 42544977249,
+      "source_commit": "1b5bcefe1b3488fc7749dedb920b3d923ed5da89",
+      "disposition": "Cancelled after actual local execution and independent source review exposed one omitted still-existing native selector. Not accepted; no failed output relabelled. Original artifacts retained."
+    }
   },
   "invariants": [
     "Frozen source clones never edited",
@@ -684,5 +689,416 @@
     "blocking_finding": "One still-existing native late-tool regression selector dropped by merge; exhaustive registration guard correctly refuses all12batches from that module. Restore selector rather than delete test or loosen guard.",
     "verdict_sha256": "45e4ba7c79f68e96017a216df051720c05fc782cf1819ef75b9a16fc25153047",
     "other_reviewed_high_risk_source_areas": "No blocker found; not runtime or milestone acceptance."
+  },
+  "complete_native_module": {
+    "scope": "Complete real contract module, not actual stock-native/platform acceptance",
+    "source_commits": [
+      "073cf197acbea86bb1e24c70d40c33b52ee3aa80",
+      "e471b1181333ad68e6be5a9ee97d08600f16ee80"
+    ],
+    "portable_git_trees": {
+      "073cf197acbea86bb1e24c70d40c33b52ee3aa80": "fb3ccf953d594011e6265ae3ccb418d27949f5ea",
+      "e471b1181333ad68e6be5a9ee97d08600f16ee80": "fb3ccf953d594011e6265ae3ccb418d27949f5ea",
+      "c9ea819628453e4da71b87f94fbfd32382fcf39a": "fb3ccf953d594011e6265ae3ccb418d27949f5ea"
+    },
+    "production_payload_identical": true,
+    "coverage": {
+      "complete_discovered": 44,
+      "actually_executed": 44,
+      "unique_executed": 44,
+      "missing": [],
+      "extra": [],
+      "duplicate_count": 0
+    },
+    "workers": [
+      {
+        "suite": "omp-owned-instruction-metadata",
+        "passed": true,
+        "exit": 0,
+        "elapsed_seconds": 29.327277124975808,
+        "counts": {
+          "errors": 0,
+          "expected_failures": 0,
+          "failures": 0,
+          "passed": true,
+          "skipped": 0,
+          "tests": 5,
+          "unexpected_successes": 0
+        },
+        "stdout_sha256": "a4122f8a5c6d937d963c7882ef42e23dda39a37eb561f6f7310bfa309018fbb8",
+        "stderr_sha256": "090bd638a3585fd9f1002b51517268e84e750b437a6259bbc97d5a285a971585"
+      },
+      {
+        "suite": "omp-owned-instruction-capture",
+        "passed": true,
+        "exit": 0,
+        "elapsed_seconds": 58.7184916670667,
+        "counts": {
+          "errors": 0,
+          "expected_failures": 0,
+          "failures": 0,
+          "passed": true,
+          "skipped": 0,
+          "tests": 3,
+          "unexpected_successes": 0
+        },
+        "stdout_sha256": "a8017967766680c311031004ea45f958e84985fc278638c50419c650a7032abe",
+        "stderr_sha256": "66c118aa296c9941f61c3830544e917101571705af896c921cbb1acf16ecfc60"
+      },
+      {
+        "suite": "omp-owned-instruction-recovery",
+        "passed": true,
+        "exit": 0,
+        "elapsed_seconds": 80.74764004105236,
+        "counts": {
+          "errors": 0,
+          "expected_failures": 0,
+          "failures": 0,
+          "passed": true,
+          "skipped": 0,
+          "tests": 5,
+          "unexpected_successes": 0
+        },
+        "stdout_sha256": "6142394d4e210ec5c02220daf7bd914cc8562695e16cf887fe162cfa224c323e",
+        "stderr_sha256": "4c964471c7f6a28c395728deb17d60bdfc336e0dce1c02038b0cd78e2917b615"
+      },
+      {
+        "suite": "omp-owned-instruction-binding-races",
+        "passed": true,
+        "exit": 0,
+        "elapsed_seconds": 38.3845373330405,
+        "counts": {
+          "errors": 0,
+          "expected_failures": 0,
+          "failures": 0,
+          "passed": true,
+          "skipped": 0,
+          "tests": 2,
+          "unexpected_successes": 0
+        },
+        "stdout_sha256": "53926fd7a53564c0af7408c9142bf4b5a2747eec87e69ac2ea4c54e4f77ceaec",
+        "stderr_sha256": "56b9a59bc06414cf9a84185e07e2cca852b0b557988824a32faa81a9aecfb3f2"
+      },
+      {
+        "suite": "omp-native-source-admission",
+        "passed": true,
+        "exit": 0,
+        "elapsed_seconds": 108.79997045802884,
+        "counts": {
+          "errors": 0,
+          "expected_failures": 0,
+          "failures": 0,
+          "passed": true,
+          "skipped": 0,
+          "tests": 6,
+          "unexpected_successes": 0
+        },
+        "stdout_sha256": "0625c05a3c5c813bb5d98326de50b554a253b82187d621f10e554729cb1ac8c5",
+        "stderr_sha256": "d6f739ab95abf38f0fe6937ec6e11c6b5cda91de13bd72ed2792de796e40f1e6"
+      },
+      {
+        "suite": "omp-native-source-reconciliation",
+        "passed": true,
+        "exit": 0,
+        "elapsed_seconds": 109.39815804094542,
+        "counts": {
+          "errors": 0,
+          "expected_failures": 0,
+          "failures": 0,
+          "passed": true,
+          "skipped": 0,
+          "tests": 5,
+          "unexpected_successes": 0
+        },
+        "stdout_sha256": "1aceb50f497ec3f63f7cca34c4bdc2128cc5c026d2aa9203c8ba291668b8a909",
+        "stderr_sha256": "ac255cf70dc3d6d8905f63853ceb0eb551cb03e346ffd2424d7d42ec8775b36f"
+      },
+      {
+        "suite": "omp-native-private-root-preservation",
+        "passed": true,
+        "exit": 0,
+        "elapsed_seconds": 10.39660929189995,
+        "counts": {
+          "errors": 0,
+          "expected_failures": 0,
+          "failures": 0,
+          "passed": true,
+          "skipped": 0,
+          "tests": 1,
+          "unexpected_successes": 0
+        },
+        "stdout_sha256": "6f1c32ba1c6e4bf80bd54516767fcba32b8bf5e6e7f015d6fec493b473cb5903",
+        "stderr_sha256": "036ae0fcb6038b9b5a718bc2e0a8de4a294b90353e405aa8fbdee1f631a33d90"
+      },
+      {
+        "suite": "omp-native-smoke-human-identity",
+        "passed": true,
+        "exit": 0,
+        "elapsed_seconds": 116.27620416600257,
+        "counts": {
+          "errors": 0,
+          "expected_failures": 0,
+          "failures": 0,
+          "passed": true,
+          "skipped": 0,
+          "tests": 1,
+          "unexpected_successes": 0
+        },
+        "stdout_sha256": "08fc8495337bb4c4f826555b4550cd55132a2d5a7e3a734dacda022a95c25300",
+        "stderr_sha256": "ffa55042f997c20c94cf06bcff610eb26d71c41dcf1bdfbb27b17ac94de051eb"
+      },
+      {
+        "suite": "omp-native-smoke-source-verifier",
+        "passed": true,
+        "exit": 0,
+        "elapsed_seconds": 175.7314083330566,
+        "counts": {
+          "errors": 0,
+          "expected_failures": 0,
+          "failures": 0,
+          "passed": true,
+          "skipped": 0,
+          "tests": 3,
+          "unexpected_successes": 0
+        },
+        "stdout_sha256": "5bd6560e4a3a3f4d36fe91752352a8f9e6ea0da8d945621e36db2be9306445fe",
+        "stderr_sha256": "5ae3e5502c0b697a370194ad344a9b37fc8d4de655355cc489b1c3a9b8678d95"
+      },
+      {
+        "suite": "omp-native-smoke-profile-refusals",
+        "passed": true,
+        "exit": 0,
+        "elapsed_seconds": 47.509804417029954,
+        "counts": {
+          "errors": 0,
+          "expected_failures": 0,
+          "failures": 0,
+          "passed": true,
+          "skipped": 0,
+          "tests": 2,
+          "unexpected_successes": 0
+        },
+        "stdout_sha256": "5aa6e23d808401d0489dd1af0d278cb03a83d67973df911675547440cf6cd3d4",
+        "stderr_sha256": "3db16cd962b72b60bc35149c79af85f45ecfdaa669e0e42f429f1125694af43a"
+      },
+      {
+        "suite": "omp-native-smoke-late-frames",
+        "passed": true,
+        "exit": 0,
+        "elapsed_seconds": 181.17375808302313,
+        "counts": {
+          "errors": 0,
+          "expected_failures": 0,
+          "failures": 0,
+          "passed": true,
+          "skipped": 0,
+          "tests": 1,
+          "unexpected_successes": 0
+        },
+        "stdout_sha256": "510e82c5c43332b11d97b18cfdb830f50eeb3897a0257b9914e49402d4eccc05",
+        "stderr_sha256": "e240679275e23d4f946829b2b495806b350ba387e484ccac39e21ec75dc93d26"
+      },
+      {
+        "suite": "omp-native-public-lifecycle",
+        "passed": true,
+        "exit": 0,
+        "elapsed_seconds": 9.795950417057611,
+        "counts": {
+          "errors": 0,
+          "expected_failures": 0,
+          "failures": 0,
+          "passed": true,
+          "skipped": 0,
+          "tests": 1,
+          "unexpected_successes": 0
+        },
+        "stdout_sha256": "93888c1a2006d01ec45c585ad89bdd75e43f77949780413d24e8259e94367743",
+        "stderr_sha256": "d4a35b75c943c8ded999bcd9edebbeb5388e5e90528b07c07255eca8597d2a69"
+      },
+      {
+        "suite": "omp-native-public-lifecycle-case-02",
+        "passed": true,
+        "exit": 0,
+        "elapsed_seconds": 0.21376458299346268,
+        "counts": {
+          "errors": 0,
+          "expected_failures": 0,
+          "failures": 0,
+          "passed": true,
+          "skipped": 0,
+          "tests": 1,
+          "unexpected_successes": 0
+        },
+        "stdout_sha256": "dbca3d0e0f650d02c2b740a95b7bd35115f454f241e4f1998616eae01424b92e",
+        "stderr_sha256": "b687126b5c438a1be206cdfa912f7c52dd848ccfd41542af47b97539c3f39067"
+      },
+      {
+        "suite": "omp-native-public-lifecycle-case-03",
+        "passed": true,
+        "exit": 0,
+        "elapsed_seconds": 0.1749033749802038,
+        "counts": {
+          "errors": 0,
+          "expected_failures": 0,
+          "failures": 0,
+          "passed": true,
+          "skipped": 0,
+          "tests": 1,
+          "unexpected_successes": 0
+        },
+        "stdout_sha256": "ab43c20e8f770eeed437262eb7b3604d0bf9de6d5e53f6fc154d206f9407f080",
+        "stderr_sha256": "caab88f340c05e64593b285d5eecebeaa2d493df8e96275b342d7370a2c61e12"
+      },
+      {
+        "suite": "omp-native-public-lifecycle-case-04",
+        "passed": true,
+        "exit": 0,
+        "elapsed_seconds": 0.18587941594887525,
+        "counts": {
+          "errors": 0,
+          "expected_failures": 0,
+          "failures": 0,
+          "passed": true,
+          "skipped": 0,
+          "tests": 1,
+          "unexpected_successes": 0
+        },
+        "stdout_sha256": "168e3baacb71d294fc11420bb919f8fbaa621e464c8c3617db1edf4005ad7277",
+        "stderr_sha256": "76de70d889c055fbeaa8085dd3a27d66e4944b5fb3ebc1fb30804a8363a4733a"
+      },
+      {
+        "suite": "omp-native-public-lifecycle-case-05",
+        "passed": true,
+        "exit": 0,
+        "elapsed_seconds": 53.060143832932226,
+        "counts": {
+          "errors": 0,
+          "expected_failures": 0,
+          "failures": 0,
+          "passed": true,
+          "skipped": 0,
+          "tests": 1,
+          "unexpected_successes": 0
+        },
+        "stdout_sha256": "8882b0bee25c673ef267bb29bdf084f2df9514362c4c1b909b14bc6ca47644e6",
+        "stderr_sha256": "f90783eeca4a43db66649c8ecadc073d1cbf1384b45a3eaf6b95e82027556b90"
+      },
+      {
+        "suite": "omp-native-public-lifecycle-case-06",
+        "passed": true,
+        "exit": 0,
+        "elapsed_seconds": 38.4256651669275,
+        "counts": {
+          "errors": 0,
+          "expected_failures": 0,
+          "failures": 0,
+          "passed": true,
+          "skipped": 0,
+          "tests": 1,
+          "unexpected_successes": 0
+        },
+        "stdout_sha256": "1ea7eaa539309775838094470c2d1a4eec4ee9f72f1ad972d06cd9754f9a666b",
+        "stderr_sha256": "c29087d2b416da57e4bc6fb828b63246cc643e17d4fc490910c70c6c6ebb4c27"
+      },
+      {
+        "suite": "omp-native-public-lifecycle-case-07",
+        "passed": true,
+        "exit": 0,
+        "elapsed_seconds": 20.09322466608137,
+        "counts": {
+          "errors": 0,
+          "expected_failures": 0,
+          "failures": 0,
+          "passed": true,
+          "skipped": 0,
+          "tests": 1,
+          "unexpected_successes": 0
+        },
+        "stdout_sha256": "2459a628ddaffabef681e4c312b7e9f9e40c13d128d72764f7a8d0ba2faa6e6f",
+        "stderr_sha256": "f3877240677bd7f2861af026ab396886a144ff85f821951e505e86fdbb443246"
+      },
+      {
+        "suite": "omp-native-public-lifecycle-case-08",
+        "passed": true,
+        "exit": 0,
+        "elapsed_seconds": 40.03990450000856,
+        "counts": {
+          "errors": 0,
+          "expected_failures": 0,
+          "failures": 0,
+          "passed": true,
+          "skipped": 0,
+          "tests": 1,
+          "unexpected_successes": 0
+        },
+        "stdout_sha256": "4d32b4332dddcddcdb9a8fb689dbad591d9031a47fa8665bb09660faa3686d05",
+        "stderr_sha256": "32488a0c947c3f2fe6253617fa53da06462137a6a326cf1bef71da89a925cba3"
+      },
+      {
+        "suite": "omp-native-public-lifecycle-case-09",
+        "passed": true,
+        "exit": 0,
+        "elapsed_seconds": 30.925768958055414,
+        "counts": {
+          "errors": 0,
+          "expected_failures": 0,
+          "failures": 0,
+          "passed": true,
+          "skipped": 0,
+          "tests": 1,
+          "unexpected_successes": 0
+        },
+        "stdout_sha256": "860199f08962e68393787f145d7e5c6508cd4e0932690fb442026db44b2908f6",
+        "stderr_sha256": "8426e1f1a0b7930a559760d0ac6f902644d6dc970e1c1c0799e4f92df31aede6"
+      },
+      {
+        "suite": "omp-native-public-lifecycle-case-10",
+        "passed": true,
+        "exit": 0,
+        "elapsed_seconds": 53.3579642920522,
+        "counts": {
+          "errors": 0,
+          "expected_failures": 0,
+          "failures": 0,
+          "passed": true,
+          "skipped": 0,
+          "tests": 1,
+          "unexpected_successes": 0
+        },
+        "stdout_sha256": "87a86aa0e103870046b929c54810bf73e67931a2b22e90e3fed8fd8d26741d2d",
+        "stderr_sha256": "948fa44e1b0db691415f63625afab79392eb93765cc287f2f5d0e1a1fff9d603"
+      }
+    ],
+    "aggregate_worker_timeout_retained": {
+      "source_commit": "073cf197acbea86bb1e24c70d40c33b52ee3aa80",
+      "suite": "omp-native-public-lifecycle",
+      "worker_deadline_seconds": 300,
+      "outcome": "Nine methods completed; tenth in progress when aggregate worker deadline hit. Not a pass. All10 independently registered/executed below same300s individual worker budget; no case/deadline changed."
+    },
+    "new_case_batches_all_passed": true,
+    "independent_source_review": {
+      "model": "anthropic/claude-opus-5-5",
+      "source_commit": "073cf197acbea86bb1e24c70d40c33b52ee3aa80",
+      "verdict": "PASS",
+      "sha256": "606560344b9d8c7c64895c7679d79fbafb0f68c0b3bb4df28adda7909c6ddc4e",
+      "scope": "Exactregistryrestoration/latebarrier/errorpathrepairs; source-only, notstory/matrix/release acceptance"
+    }
+  },
+  "public_error_diagnostic_smoke": {
+    "before_source": "3d2e6321e3383a693e0e82407a5513fd2c55ecd0",
+    "after_source": "073cf197acbea86bb1e24c70d40c33b52ee3aa80",
+    "actual_euid": 502,
+    "before": {
+      "exit": 1,
+      "valid_machine_failure_with_repair": false,
+      "stderr_has_traceback": true
+    },
+    "after": {
+      "exit": 1,
+      "valid_machine_failure_with_repair": true,
+      "stderr_has_traceback": false
+    },
+    "both_preserve_unreadable_receipt_mode_and_all_world_bytes_modes": true,
+    "fixture_permission_restored_only_for_comparison_and_disposal": true
   }
 }

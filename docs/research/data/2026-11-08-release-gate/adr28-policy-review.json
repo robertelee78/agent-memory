@@ -1,0 +1,22 @@
+{
+  "schema": "agent-memory/adr28-policy-review-v1",
+  "requested_model": "anthropic/claude-fable-5",
+  "observed_assistant_models": [
+    "anthropic/claude-fable-5"
+  ],
+  "verdict": "PASS",
+  "reviewed_source": {
+    "commit": "c9ea819628453e4da71b87f94fbfd32382fcf39a",
+    "path": "docs/adr/0028-long-full-workload-qualification.md",
+    "blob": "ddb2f91913d96ea6bd67bb392791409d44ec3424"
+  },
+  "review_verdict_sha256": "2a5d6a258cc96c29f56d320b732585742dcae0d9042c2ebe31f58a80117facb5",
+  "scope": "Duration policy amendment only; no run protocol, implementation, runtime, platform or release acceptance.",
+  "operator_decision": "https://github.com/robertelee78/agent-memory/issues/209#issuecomment-6731154929",
+  "editorial_followup": {
+    "change": "Add public sanitized historical pilot receipt citation, resolving nonblocking provenance note.",
+    "all_six_reviewed_material_source_paragraphs_preserved_verbatim": true,
+    "material_paragraphs_sha256": "721e2e8cae2c8c36e695370befddb3805f44b6c666a0d9f84fe6a22900e48a24"
+  },
+  "accountability": "Exactrequirementexcerpt/sourcefreshnessreconciliationstillpending; nonewProjectorstorycreated"
+}
