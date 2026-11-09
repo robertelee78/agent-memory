@@ -291,6 +291,55 @@ class LayoutApplyFaults(unittest.TestCase):
     def test_sentinel_retirement_after_exit(self):
         self.terminal_journey('layout-recovery-sentinel-retirement', 'exit')
 
+    def hold_swap_journey(self, boundary, mode):
+        helper = existing.LayoutRecoveryContract()
+        with World() as world:
+            command, source, repo, bank, native, originals, modes, git = helper.setup_fault_repair(world)
+            safe, inspected = recovery.inspect(world, command, repo)
+            proposal, _ = recovery.prepare(world, command, source, repo, inspected, native)
+            recovery.call(world, command, 'apply', '--repo', repo, '--proposal', proposal, expected=1,
+                          env={'AGENT_MEMORY_FAULT_STAGE': 'layout-recovery-after-receipt'})
+            preview = world.inside('hold-swap-finish.json')
+            recovery.call(world, command, 'recover', '--repo', repo, '--operation', safe['operation_id'],
+                          '--mode', 'finish', '--output', preview)
+            fault = world.run([command, 'bank', 'recover-layout', 'recover', '--repo', repo, '--proposal', preview],
+                              check=False, timeout=60,
+                              env={'AGENT_MEMORY_FAULT_STAGE': 'layout-recovery-' + boundary + '-marker-swap',
+                                   'AGENT_MEMORY_FAULT_MODE': mode})
+            self.assertEqual(fault.returncode, 86 if mode == 'exit' else 1, fault.stdout + fault.stderr)
+            if mode == 'exit':
+                recovery.unlock(world, command, repo)
+            marker = bank / '.agent-memory-transaction.md'
+            self.assertTrue(marker.is_file())
+            next_preview = world.inside('hold-swap-resume.json')
+            recovery.call(world, command, 'recover', '--repo', repo, '--operation', safe['operation_id'],
+                          '--mode', 'finish', '--output', next_preview)
+            outcome = recovery.call(world, command, 'recover', '--repo', repo, '--proposal', next_preview)
+            self.assertTrue(outcome['verified'])
+            self.assertFalse(outcome['semantic_recovery_complete'])
+            self.assertEqual(json.loads(marker.read_bytes())['schema'], 'agent-memory/layout-frontier-hold-v1')
+            directory = recovery.private_directory(world, bank, safe['operation_id'])
+            self.assertEqual({row['path']: (directory / row['blob']).read_bytes()
+                              for row in inspected['manifest']['sources']}, originals)
+            self.assertEqual({p.relative_to(bank).as_posix(): p.read_bytes() for p in bank.rglob('*')
+                              if p.is_file() and p.name not in ('.agent-memory-transaction.md', '.agent-memory-recovery.md')},
+                             {path: body.encode() for path, body in native.items()})
+            self.assertEqual({path: stat.S_IMODE((bank / path).stat().st_mode) for path in native},
+                             {path: modes[path] for path in native})
+            helper.assert_fault_work_unchanged(world, repo, git)
+
+    def test_hold_swap_before_error(self):
+        self.hold_swap_journey('before', 'error')
+
+    def test_hold_swap_before_exit(self):
+        self.hold_swap_journey('before', 'exit')
+
+    def test_hold_swap_after_error(self):
+        self.hold_swap_journey('after', 'error')
+
+    def test_hold_swap_after_exit(self):
+        self.hold_swap_journey('after', 'exit')
+
 # Each path in the controlled proposal has its own worker case: temporary
 # writes exist for the two replacements, while the handoff is a deletion.
 def _path_case(stage, path, mode):

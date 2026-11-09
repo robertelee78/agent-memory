@@ -13,7 +13,7 @@ import v014_runtime_fixture
 
 
 class LayoutLegacySwap(unittest.TestCase):
-    def journey(self, boundary):
+    def journey(self, boundary, *, to_hold=False):
         with World() as legacy, World() as world:
             pack = v014_runtime_fixture.extract(legacy.root)
             installed = legacy.run([sys.executable, '-I', pack / 'scripts/installer.py', 'install',
@@ -29,12 +29,21 @@ class LayoutLegacySwap(unittest.TestCase):
             admission = test_admission.AdmissionContract()
             admission.pid = inspected['manifest']['project_id']
             admission.actor = inspected['manifest']['identity']['scope_context']['developer_id']
+            if to_hold:
+                recovery.call(world, command, 'apply', '--repo', repo, '--proposal', proposal, expected=1,
+                              env={'AGENT_MEMORY_FAULT_STAGE': 'layout-recovery-after-receipt'})
+                finish = world.inside('paused-finish.json')
+                recovery.call(world, command, 'recover', '--repo', repo, '--operation', safe['operation_id'],
+                              '--mode', 'finish', '--output', finish)
+                child_command = [command, 'bank', 'recover-layout', 'recover', '--repo', repo, '--proposal', finish]
+            else:
+                child_command = [command, 'bank', 'recover-layout', 'apply', '--repo', repo, '--proposal', proposal]
             capture = recovery.save(world, admission.request())
             rendezvous = world.inside('marker-rendezvous')
             stage = 'layout-recovery-' + boundary + '-marker-swap'
             world.env.update(AGENT_MEMORY_FAULT_STAGE=stage, AGENT_MEMORY_FAULT_MODE='pause',
                              AGENT_MEMORY_FAULT_DIR=str(rendezvous))
-            child = world.spawn([command, 'bank', 'recover-layout', 'apply', '--repo', repo, '--proposal', proposal])
+            child = world.spawn(child_command)
             for key in ('AGENT_MEMORY_FAULT_STAGE', 'AGENT_MEMORY_FAULT_MODE', 'AGENT_MEMORY_FAULT_DIR'):
                 world.env.pop(key)
             ready = rendezvous / (stage + '.ready')
@@ -73,3 +82,9 @@ class LayoutLegacySwap(unittest.TestCase):
 
     def test_old_consumers_after_swap(self):
         self.journey('after')
+
+    def test_old_consumers_before_hold_swap(self):
+        self.journey('before', to_hold=True)
+
+    def test_old_consumers_after_hold_swap(self):
+        self.journey('after', to_hold=True)
