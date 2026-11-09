@@ -150,8 +150,8 @@ class PrivateEnrollmentContext:
 
 
 def private_enrollment_context(repo):
-    """Always discover a fresh bank, including when called inside an observer."""
-    with _fresh_enrollment_locations():
+    """Fresh bounded discovery, independent of any outer observer or mint."""
+    with _fresh_enrollment_locations(), repository_config._observe_settings(repo):
         return _private_enrollment_context(repo)
 
 

@@ -1,0 +1,82 @@
+{
+  "schema": "am249/enrollment-progress-scoped-proof-v1",
+  "date": "2026-11-09",
+  "source": {
+    "commit": null,
+    "basis": "Exact uncommitted R12 snapshot based on21ed1e1; not retroactively a Git-commit run",
+    "manifest_sha256": "29e3a2560cabe504ffaba23ddb26df6c362c5b73c6a08d19626681382c98c644",
+    "artifact_digest": "624cbb4b7496cae2177e537e2c56611416ebaaeb18aa73158617431481bfe301",
+    "files": 217,
+    "private_evidence_archive_sha256": "ee516d895665efe7984df023c39c13640128176ef956b3399117ba20437ea8bd"
+  },
+  "contracts": {
+    "suites": 21,
+    "all_passed": true,
+    "source_unchanged_including_generated_files": true,
+    "source_cache_files": 0,
+    "per_suite_deadline_seconds": 300,
+    "tool_wall_seconds": 348.92,
+    "suite_names": [
+      "omp-enrollment-fresh-discovery",
+      "omp-enrollment-slot-inventory",
+      "omp-enrollment-worktree-identity",
+      "omp-enrollment-fresh-mint-foreign-refusal",
+      "omp-enrollment-fresh-mint-scope-drift",
+      "omp-enrollment-raw-nonrouter-refusal",
+      "omp-enrollment-raw-committed-refusal",
+      "omp-enrollment-raw-symlink-refusal",
+      "omp-enrollment-raw-late-refusal",
+      "omp-enrollment-disagreeing-locators",
+      "omp-enrollment-live-read-context",
+      "omp-enrollment-reused-mutation-guard",
+      "omp-enrollment-held-read-context",
+      "omp-enrollment-observe-locator-drift",
+      "omp-finite-stream",
+      "omp-stored-source-lifecycle",
+      "omp-stored-wake-budget",
+      "held-private-source-enrollment",
+      "held-source-mutable-final-recheck",
+      "scope-binding",
+      "bank-layout"
+    ]
+  },
+  "controlled_profile": {
+    "requests": 7,
+    "same_request_schedule_as_baseline": true,
+    "worker_exit": 0,
+    "all_requests_verified": true,
+    "canonical_bank_unchanged": true,
+    "source_unchanged": true,
+    "before_instrumented_seconds": 29.61890050000511,
+    "after_instrumented_seconds": 13.324157500057481,
+    "before_git_calls": 3902,
+    "after_git_calls": 1380,
+    "before_full_enrollment_observations": 134,
+    "after_full_enrollment_observations": 77,
+    "instrumented_time_reduction_fraction": 0.5501467888703302,
+    "profile_sha256": "828e240f229c44eeaa73505ccc39fc26b7f9fe82d2556d20fd2edf2290138a62",
+    "result_sha256": "ebed9b063e00f4f7bc61a8f098e38ed75ed62ce32b664dfef47bc291f6e12db0",
+    "approval_sha256": "2fd6c118b7de322540d2e2debe069288d01a0915ba8eb1b51232d5bab1486eb9",
+    "source_binding_sha256": "103c2b44b3359c2c8a3306d9bb4331f6f10ce0503197ec5571c558e023ff6229"
+  },
+  "source_reviews": {
+    "model": "anthropic/claude-opus-5-5",
+    "freshness": "R12 scoped source PASS",
+    "transport": "R12 scoped source PASS",
+    "not_native_acceptance": true
+  },
+  "previous_negative": {
+    "R11_suites_passed": 14,
+    "R11_suites_failed": 7,
+    "private_archive_sha256": "325697ffc675fda54c7b9bb8b056716550e271c2474b63227f39a03870fd010f",
+    "disposition": "Retained. Broken test-helper refs and incidental serialization/spy assertions corrected, not production exceptions suppressed. Normal scan churn now uses original two-attempt budget."
+  },
+  "limits": [
+    "Model-free controlled seven-request source stream; no native client, model, token or graph launched.",
+    "cProfile perturbs timing; cumulative thread timings overlap and are not exclusive cost attribution.",
+    "No stock-omp callback950ms, positive automatic assessment, mode/platform or release qualification is established.",
+    "Original source-slot capacity4096, source-first FIFO, counted frames, fresh mutation/end guards and deadlines remain unchanged. Complete directory inventory is bounded at8192entries and refuses before allocation on overflow.",
+    "Original source caches and failed native/pending evidence remain retained."
+  ],
+  "native_or_release_acceptance": false
+}

@@ -126,7 +126,7 @@ class NativeSources(unittest.TestCase):
         return {'type': 'message', 'id': identifier, 'parentId': parent,
                 'message': {'role': role, 'attribution': attribution, 'content': text, **extra}}
     def observe_request(self, repo, request, **kwargs):
-        with patch.object(transport, '_verify_observer_receipt', side_effect=lambda *args, **kwargs: boundary.verify_marker(repo)):
+        with patch.object(transport, '_verify_observer_receipt', side_effect=lambda *args, **kwargs: boundary._observe_marker(repo)):
             return transport.observe(repo, request, **kwargs)
 
 
@@ -581,7 +581,7 @@ class OwnedInstructionBoundary(unittest.TestCase):
         payload = observer_payload(repo, session, entries)
         if seal:
             payload['request_wake'] = False
-        with patch.object(transport, '_verify_observer_receipt', side_effect=lambda *args, **kwargs: boundary.verify_marker(repo)) if receipt is None else nullcontext():
+        with patch.object(transport, '_verify_observer_receipt', side_effect=lambda *args, **kwargs: boundary._observe_marker(repo)) if receipt is None else nullcontext():
             return transport.observe(repo, {'schema': 'agent-memory/omp-observer-request-v2',
                                           'action': 'seal' if seal else 'ingest', 'session': session,
                                           'lifecycle': lifecycle, 'payload': payload}, receipt=receipt)

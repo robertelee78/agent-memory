@@ -254,12 +254,29 @@ def index(base,directory,identity,root,context=None):
     private_mkdir(target)
     value=ref(directory,identity)
     for attempt in range(2):
-        free=None;matching=None
-        for i in range(MAX_TURNS):
+        # Read a complete name inventory rather than issue MAX_TURNS failed
+        # opens for an almost empty index. Names still reserve fixed slots,
+        # including symlinks/occupied files; unrelated names remain ignored.
+        from .layout_recovery_state import signature
+        before=target.lstat();occupied=set()
+        with os.scandir(target) as entries:
+            for count,entry in enumerate(entries):
+                if count>=2*MAX_TURNS:
+                    raise ContractError('Pending turn directory exceeds its inventory bound; preserve sources and inspect backlog')
+                number=entry.name.removesuffix('.json')
+                if (entry.name.endswith('.json') and len(number)<=len(str(MAX_TURNS-1))
+                        and number.isascii() and number.isdecimal()
+                        and str(int(number))==number and int(number)<MAX_TURNS):
+                    occupied.add(int(number))
+        if signature(before)!=signature(target.lstat()):
+            continue
+        free=next((target/(str(i)+'.json') for i in range(MAX_TURNS) if i not in occupied),None)
+        matching=None
+        for i in sorted(occupied):
             path=target/(str(i)+'.json')
             try:old=read(path,MAX_SOURCE)
             except FileNotFoundError:
-                if free is None:free=path
+                if free is None or i<int(free.stem):free=path
                 continue
             except (ValueError,OSError):
                 raise ContractError('Pending turn index has an unverifiable reservation; preserve it and inspect backlog') from None

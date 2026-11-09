@@ -1,4 +1,6 @@
 """One repository bank location; missing local settings never establish absence."""
+from contextlib import contextmanager
+from contextvars import ContextVar
 import os
 from pathlib import Path, PurePosixPath
 import re
@@ -10,6 +12,8 @@ from .identity_git import git
 MAX_ROUTERS = 64
 MAX_DISCOVERY_ENTRIES = 1000000
 ROUTER_FIELDS = {'schema', 'project-id', 'router-updated', 'canonical-remote'}
+
+_settings_reads = ContextVar('agent_memory_repository_settings_observation', default=None)
 
 
 def local_value(root, key):
@@ -130,10 +134,8 @@ def object_router_bytes(root, expression, cache):
     return raw
 
 
-def git_roots(root, *, router_reader=None, raw_locations=False):
-    # Git's fixed glob covers this one basename at every depth, including
-    # case variants. Status tags distinguish indexed versus untracked names
-    # without a second listing or parsing filename whitespace as metadata.
+def _router_inventory(root):
+    """One complete Git name inventory, shared by ordinary and raw readers."""
     listed = git(root, 'ls-files', '--cached', '--others', '--exclude-standard', '-t', '-z',
                  '--', ':(icase,glob)**/MEMORY.md', optional=True, glob_pathspecs=True)
     if listed is None or (listed and not listed.endswith('\0')):
@@ -151,6 +153,16 @@ def git_roots(root, *, router_reader=None, raw_locations=False):
     head = git(root, 'rev-parse', '--verify', 'HEAD', optional=True)
     committed = git(root, 'ls-tree', '-r', '--name-only', '-z', head) if head else ''
     committed_paths = set(committed.split('\0'))
+    return listed_paths, indexed_paths, head, committed_paths
+
+
+def git_roots(root, *, router_reader=None, raw_locations=False):
+    return _git_roots_at_inventory(root, _router_inventory(root),
+                                   router_reader=router_reader, raw_locations=raw_locations)
+
+
+def _git_roots_at_inventory(root, inventory, *, router_reader=None, raw_locations=False):
+    listed_paths, indexed_paths, head, committed_paths = inventory
     # Examine every inventory spelling, but construct path objects only for
     # possible locators. Ordinary source/record filenames cannot be routers.
     # A final dot component still needs PurePosixPath normalization before the
@@ -228,16 +240,32 @@ def physical_others(root, selected, *, router_reader=None, raw_locations=False):
 
 def settings(repo, *, router_reader=None, raw_locations=False):
     root = Path(repo).resolve()
+    observed = _settings_reads.get()
+    if (observed is not None and observed[0] == root and router_reader is None):
+        return dict(observed[2 if raw_locations else 1])
+    top, configured, inventory = _settings_inputs(root)
+    return _settings_at(root, top, configured, inventory,
+                        router_reader=router_reader, raw_locations=raw_locations)
+
+
+def _settings_inputs(root):
     top = git(root, 'rev-parse', '--show-toplevel', optional=True)
     if top is None and (root / '.git').exists():
         raise ContractError('Existing Git metadata/configuration cannot be inspected; do not guess the bank root')
     if top is not None and Path(top).resolve() != root:
         raise ContractError('Select the actual repository root for its one memory bank')
     configured = local_settings(root)
+    if configured.get('agent-memory.bankroot') is not None:
+        validate_root(configured['agent-memory.bankroot'])
+    return top, configured, _router_inventory(root) if top is not None else None
+
+
+def _settings_at(root, top, configured, inventory, *, router_reader=None, raw_locations=False):
     explicit = configured.get('agent-memory.bankroot')
     if explicit is not None:
         validate_root(explicit)
-    roots = git_roots(root, router_reader=router_reader, raw_locations=raw_locations) if top is not None else set()
+    roots = _git_roots_at_inventory(root, inventory, router_reader=router_reader,
+                                   raw_locations=raw_locations) if top is not None else set()
     if len(roots) > 1 or (explicit is not None and any(value != explicit for value in roots)):
         raise ContractError('Competing memory bank locations require explicit reconciliation; preserve every source')
     relative = explicit or (next(iter(roots)) if roots else 'memory-bank')
@@ -258,6 +286,34 @@ def settings(repo, *, router_reader=None, raw_locations=False):
     if branch is not None:
         validate_branch(branch)
     return {'bank_root': relative, 'authority_branch': branch}
+
+
+def _settings_pair(root):
+    top, configured, inventory = _settings_inputs(root)
+    ordinary = _settings_at(root, top, configured, inventory)
+    raw = _settings_at(root, top, configured, inventory, raw_locations=True)
+    return ordinary, raw
+
+
+@contextmanager
+def _observe_settings(repo):
+    """Coherent discovery for one synchronous enrollment mint, not a write proof.
+
+    Ordinary and raw locators interpret the same complete name/config inventory
+    independently. Every exit discovers both again, without inheriting an outer
+    observation. Scope, registries, router bytes and frontier are never cached.
+    """
+    root = Path(repo).resolve()
+    token = _settings_reads.set(None)
+    try:
+        ordinary, raw = _settings_pair(root)
+        _settings_reads.set((root, ordinary, raw))
+        yield
+        _settings_reads.set(None)
+        if _settings_pair(root) != (ordinary, raw):
+            raise ContractError('Private enrollment bank configuration changed during observation')
+    finally:
+        _settings_reads.reset(token)
 
 
 def recovery_settings(repo):
