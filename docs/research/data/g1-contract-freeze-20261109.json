@@ -1,0 +1,54 @@
+{
+  "schema": "agent-memory/g1-research-contract-freeze-v1",
+  "work_key": "robertelee78/agent-memory:ADR-0024:ssg-runtime-qualification",
+  "freeze_subject_commit": "d8f51fbea499169f5b6c625ddf500bb4fb7659c6",
+  "artifacts": [
+    {
+      "path": "docs/design/v0.0.16-graph-embedding-execution.md",
+      "git_blob": "eed861d92a03521cdf2729cec0b04b4048757e71",
+      "sha256": "55372060fa4462e33172ce5d2eaf6c1fdb077c8ea68328fdd533474a5c7d95cf"
+    },
+    {
+      "path": "docs/design/semantic-result-v1.schema.json",
+      "git_blob": "17941effc57089ec302ee15affb8b149a9728ece",
+      "sha256": "e752f889b7bcc784591ea593d934ad4a447cf5a40112f756bb208cc70c9eacad"
+    },
+    {
+      "path": "docs/research/data/g1-resource-target-disposition-20261109.json",
+      "git_blob": "e2b00ca48365ec539c693b2d6a772846d3d29a4a",
+      "sha256": "2733bb1d6bc6367edb36cc9c3b25d290e8cbfd19f10c93e451c30cb59a04fd01"
+    },
+    {
+      "path": "docs/research/data/g1-private-build-scope-disposition-20261109.json",
+      "git_blob": "ede6ae969c32ca53e0e3015971e5b9f783166c0a",
+      "sha256": "b28cf1bbd38b802952b6a3a46a81a75c045a1043c6c1d87dd54379ed6f91d2ea"
+    }
+  ],
+  "scope": "Source-bound G1 research execution contract and schema for later implementation, including the actual report-only resource and private-build scope dispositions",
+  "status": "frozen-for-research-acceptance",
+  "technical_review": {
+    "actual_model": "anthropic/claude-opus-5-5",
+    "verdict": "PASS",
+    "reviewed_commit": "67bc44de8efafc58a7aeca8cdf9b4c0203cc366c",
+    "session_sha256": "7be0049c2daf11a43fecad33cec1d11881a324f764ec2b100cafd5d18a6a0066",
+    "verdict_sha256": "fb75cd10b9ec73441f2a22a231907d63effe35382a1f91ec4f22e4a2b2184c63",
+    "ref": "https://github.com/robertelee78/agent-memory/issues/255#issuecomment-6734333195"
+  },
+  "operator_resource_disposition": {
+    "ref": "https://github.com/robertelee78/agent-memory/issues/255#issuecomment-6742932592",
+    "selection": "Report measurements; no resource pass"
+  },
+  "operator_private_scope_clarification": {
+    "ref": "https://github.com/robertelee78/agent-memory/issues/255#issuecomment-6749310495",
+    "licensing_is_a_current_private_build_or_research_gate": false,
+    "no_additional_licensing_question": true
+  },
+  "annotation_rule": "The current document receives a frozen-status annotation after this record is bound; the complete immutable subject artifacts above remain the frozen source, not a claim that their earlier draft-status line was already frozen. Later normative changes require a new reviewed freeze.",
+  "overall_original_criteria_acceptance": "Independent verdict pending",
+  "not_claimed": [
+    "v0.0.16 implementation or dependent Ready approval",
+    "Named-size/platform semantic quality, performance or resource pass",
+    "Runtime readiness of unqualified profiles",
+    "Signed release delivery"
+  ]
+}
