@@ -80,6 +80,43 @@ class HookFailureContract(unittest.TestCase):
                 self.assertIn(records[0]['reason'],hook_failure.REASONS)
                 self.assertIn(f"[{records[0]['stage']}/{records[0]['reason']}]",response['reason'])
                 self.assertNotIn('SECRET',json.dumps(records))
+            stop={**event,'hook_event_name':'Stop','stop_hook_active':False,'last_assistant_message':'SECRET FINAL'}
+            result=subprocess.run([sys.executable,'-I',str(helper.pack/'hooks/codex_stop.py')],input=json.dumps(stop),text=True,capture_output=True,env=w.env,timeout=10)
+            self.assertEqual(result.returncode,0,result.stderr)
+            response=json.loads(result.stdout)
+            self.assertNotIn('SECRET',result.stdout+result.stderr)
+            with patch.dict(os.environ,w.env,clear=True):
+                records=hook_failure.read(repo)
+            record=next(record for record in records if record['adapter']=='stop')
+            self.assertEqual((record['stage'],record['reason']),('identity','identity.unresolved'))
+            self.assertIn(record['stage'],hook_failure.STAGES)
+            self.assertIn(record['reason'],hook_failure.REASONS)
+            self.assertIn(f"[{record['stage']}/{record['reason']}]",response['systemMessage'])
+            self.assertNotIn('SECRET',json.dumps(records))
+            self.assertEqual(before,helper.state(w,repo,bank))
+
+    def test_source_compatibility_fault_is_not_misclassified_as_identity(self):
+        from agent_memory import layout_recovery_state
+        with World() as w:
+            helper=test_admission.AdmissionContract();repo,bank=helper.fixture(w)
+            before=helper.state(w,repo,bank)
+            with patch.dict(os.environ,w.env,clear=True):
+                base=layout_recovery_state.paths(repo)[2].parent
+            base.mkdir(parents=True,exist_ok=True)
+            marker=base/'turn-sources-compat-v1.json'
+            marker.write_text('{}')
+            event={'hook_event_name':'Stop','session_id':str(uuid.uuid4()),'turn_id':str(uuid.uuid4()),
+                   'cwd':str(repo),'stop_hook_active':False,'last_assistant_message':'SECRET FINAL'}
+            result=subprocess.run([sys.executable,'-I',str(helper.pack/'hooks/codex_stop.py')],input=json.dumps(event),text=True,capture_output=True,env=w.env,timeout=10)
+            self.assertEqual(result.returncode,0,result.stderr)
+            response=json.loads(result.stdout)
+            with patch.dict(os.environ,w.env,clear=True):
+                records=hook_failure.read(repo)
+            self.assertEqual(len(records),1)
+            self.assertEqual((records[0]['stage'],records[0]['reason']),('boundary','state.unavailable'))
+            self.assertIn('[boundary/state.unavailable]',response['systemMessage'])
+            self.assertNotIn('SECRET',result.stdout+result.stderr+json.dumps(records))
+            self.assertEqual(marker.read_text(),'{}')
             self.assertEqual(before,helper.state(w,repo,bank))
 
     def test_stop_scope_loss_reports_identity_code_without_bank_change(self):
