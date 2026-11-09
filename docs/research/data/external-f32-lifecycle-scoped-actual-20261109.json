@@ -59,6 +59,22 @@
     "ExternalF32R2ScienceOpus": "PASS source/plan only",
     "ExternalF32R2OwnershipOpus": "PASS source/ownership only"
   },
+  "actual_result_reviews": {
+    "observation_sha256": "0eefb970d7ce619437b98319845d4d978af839966cb8811c249c2108f27932a1",
+    "requested_model": "anthropic/claude-opus-5-5",
+    "method": "Read actual observation, terminal capture, approval and source; no rerun, rehash or independent execution.",
+    "ExternalF32R2ScienceOpus": {
+      "verdict": "PASS scoped actual scientific evidence",
+      "verdict_sha256": "b06776fb57dce3ab262f50420ac673a11786999e5db9fc4c3939d1dc54f23972",
+      "projection_note": "Add in-memory specimen and expected-pin limits; retained below."
+    },
+    "ExternalF32R2OwnershipOpus": {
+      "verdict": "PASS bounded actual ownership/lifecycle evidence",
+      "verdict_sha256": "58375ded3727551beaf91d7bcf0f6cc5775239c9f91bbd26812902a3714f431e",
+      "limits": "Current probe-file pins and private archive SHA not independently verified; delete-copy nlink inferred from source checks, not a recorded nlink field."
+    },
+    "product_or_profile_acceptance": false
+  },
   "limits": [
     "Retained old qualified component inputs; no fresh native eligibility or current production dataset.",
     "Four authentic stored model rows over authored evaluation assertions; not real admission evidence.",
@@ -69,6 +85,9 @@
     "No graph, model, network, semantic quality, scale, E2E latency or v0.0.16 implementation acceptance.",
     "Read/publish/reuse refusals for all three interrupted candidates rely on parent-written interruption marker, not crash-restart discovery. Marker-independent partial detection is exercised only by direct disk-read controls for partial-row and fill-before-manifest.",
     "Runtime executable/version binding is not transitive stdlib attestation. No full power/crash-restart or hostile filesystem qualification.",
+    "Malformed row/membership controls mutate in-memory specimens; root dev/ino/nonce probes change expected pins (mode changes the actual directory), not on-disk corrupted-store detection.",
+    "The full-copy nlink1/distinct-inode observation does not supply a recorded delete-copy nlink field; that copy's single-link property is inferred from the successful source checks.",
+    "The retained input locator still contains the deleted row's original bytes; owned generation disposal is not erasure of those excluded inputs or a canonical bank forget.",
     "All probes are component apparatus, not AM production external-store implementation; no canonical bank forget was executed."
   ],
   "acceptance": "No named-size, quality, latency, model selection, resource-fit, license/platform, or G1 acceptance."

@@ -94,6 +94,73 @@
       "independent_review": "Claude Opus5.5 source PASS for exact driver before execution"
     },
     {
+      "group": "connected-resolved-handoff-and-capacity-controls",
+      "recorded_date_utc": "2026-11-08T15:30:54.992027+00:00",
+      "runtime_source_commit": "081a6d55c38d60aff19feafa1b505c705f456e42",
+      "runtime_product_changes": false,
+      "platform": "macOS27.2-arm64",
+      "python": "3.15.0",
+      "deadline_seconds_per_consumer": 300,
+      "source_files_sha256": {
+        "tests/contracts/test_checkpoint.py": "569430266cfcec249a689950f8f29c175eb490e6e8607469ea7a200d5b05e3d0",
+        "tests/contracts/test_layout_recovery.py": "8c7281bcb823c2be35a9b3e932fce0cb40e5e36e0447aa4842cc3f5f6c667ab0",
+        "tests/contracts/test_layout_recovery_resolved_publication.py": "4c5fea3b9e62dd58d56f1bb847548b7a385e22dd074607d77ec1ad5106d37539",
+        "tests/contracts.json": "fcbe3b1543513af6155d74a03af2181bc8bbbd8e01ff20b26dff4d7f10769fef"
+      },
+      "runs": [
+        {
+          "consumer": "checkpoint-complete-byte-boundary",
+          "elapsed_seconds": 10.059672666946426,
+          "exit": 0,
+          "counts": {
+            "tests": 1,
+            "errors": 0,
+            "failures": 0,
+            "skipped": 0,
+            "passed": true
+          },
+          "private_receipt_sha256": "ce599e3316c9657868a327bdaf95af9303e2ac503079f9160b130f4115681e75"
+        },
+        {
+          "consumer": "layout-recovery-no-guidance-demotion",
+          "elapsed_seconds": 14.285634040948935,
+          "exit": 0,
+          "counts": {
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": true,
+            "skipped": 0,
+            "tests": 1,
+            "unexpected_successes": 0
+          },
+          "private_receipt_sha256": "b42b626545020a3df55ae13001f8a2cd2b7b7ab73400caa3ef86387e89f481e2"
+        },
+        {
+          "consumer": "layout-publication-resolved-handoff",
+          "elapsed_seconds": 108.59093608299736,
+          "exit": 0,
+          "counts": {
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": true,
+            "skipped": 0,
+            "tests": 1,
+            "unexpected_successes": 0
+          },
+          "private_receipt_sha256": "234cfc40e4562c8f748b55f206963fe433fb2ee7de5fe708bf042c5c15739353"
+        }
+      ],
+      "scope": "Three actual public consumer methods with controlled review attestations. Proves synthetic source-preservation/refusal/admission/publication/typed peer recall boundaries, not independent semantic truth, actual incident recovery, Linux, full original #244 acceptance or signed release. Concurrent full release gate on normally busy host; timings not performance comparisons.",
+      "retained_failed_attempt": {
+        "run": "244-acceptance-controls-smoke-01",
+        "consumer": "layout-recovery-no-guidance-demotion",
+        "exit": 1,
+        "cause": "Test incorrectly expected an error field in safe refusal envelope; both subcases produced KeyError. Replaced message assertion with documented structured pending/no-mutation fields and valid paired preserve preparation. Not a runtime defect or passing attempt."
+      }
+    },
+    {
       "group": "capable-managed-rollback-layout-first-independent-clearing",
       "recorded_date_utc": "2026-11-08",
       "source_commit": "77cf838fb1a73dc348f60c2fe4230e67c7aef814",
@@ -184,6 +251,12 @@
       "full_244_or_release_acceptance": false
     }
   ],
+  "peer_observation_import": {
+    "source_commit": "f148da42e0944adf323556685981b1545e0c8a9e",
+    "source_path": "docs/research/data/2026-11-06-layout-recovery/qualification.json",
+    "imported_group": "connected-resolved-handoff-and-capacity-controls",
+    "scope": "Peer-owned historical observation at its stated runtime/test identities; not a rerun or acceptance of the current integration source. All preexisting Main observations and remaining obligations are retained."
+  },
   "superseded_attempt_not_erased": "Earlier28-method run had27passes/one retention-fixture error and failed overall. Final combined run above passed after fixture corrections; this does not rewrite that earlier result.",
   "independent_review": "Opus scoped source PASS for97469a6 reservation/retirement delta only; no full acceptance verdict.",
   "remaining": "Full original admission/capacity/platform/metadata/legacy-reader/doctor/migration/stale-lock/multi-transaction/revision/catalog/deferred-invalidation/mixed-native-capability/hosted-CI/signed-release criteria remain separate obligations."

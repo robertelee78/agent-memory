@@ -1,0 +1,137 @@
+{
+  "acceptance": false,
+  "cells": [
+    {
+      "conclusion": "cancelled",
+      "gate_json_bytes": 0,
+      "gate_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "job": "https://github.com/robertelee78/agent-memory/actions/runs/42547164232/job/128934547984",
+      "name": "Contracts (macos-latest, Python 3.11)",
+      "recorded_commit": "073cf197acbea86bb1e24c70d40c33b52ee3aa80",
+      "runtime": {
+        "executable": "/Library/Frameworks/Python.framework/Versions/3.11/bin/python3",
+        "platform": "macOS-26.7.2-arm64-arm-64bit",
+        "python": "3.11.9 (v3.11.9:de54cf5be3, Apr  2 2024, 07:12:50) [Clang 13.0.0 (clang-1300.0.29.30)]"
+      },
+      "stderr_sha256": "79fe4e2912b437a1d8c9a9a5fcfe42b93d49ee1cef961adff773c1f29b96f726"
+    },
+    {
+      "aggregation_error": "Missing successful registered case batch: mixed-managed-ancestor-alias",
+      "conclusion": "failure",
+      "failed_workers": [
+        {
+          "name": "mixed-managed-ancestor-alias",
+          "tests": 1,
+          "timeout_seconds": null
+        },
+        {
+          "name": "uninstall-write-copy-before",
+          "tests": 0,
+          "timeout_seconds": 300
+        },
+        {
+          "name": "uninstall-write-copy-after",
+          "tests": 0,
+          "timeout_seconds": 300
+        },
+        {
+          "name": "uninstall-write-link-before",
+          "tests": 0,
+          "timeout_seconds": 300
+        },
+        {
+          "name": "uninstall-write-link-after",
+          "tests": 0,
+          "timeout_seconds": 300
+        }
+      ],
+      "gate_json_bytes": 745905,
+      "gate_passed": false,
+      "gate_sha256": "4bde998c257c5a38f0256906ae5571f23e47e79b19e893695a490e83c16d9792",
+      "job": "https://github.com/robertelee78/agent-memory/actions/runs/42547164232/job/128934548180",
+      "name": "Contracts (ubuntu-latest, Python 3.15)",
+      "not_applicable": [
+        "optional-stores"
+      ],
+      "passed_workers": 337,
+      "recorded_commit": "073cf197acbea86bb1e24c70d40c33b52ee3aa80",
+      "registered_workers": 343,
+      "release_complete": false,
+      "runtime": {
+        "executable": "/opt/hostedtoolcache/Python/3.15.2/x64/bin/python3",
+        "platform": "Linux-7.0.0-1019-azure-x86_64-with-glibc2.43",
+        "python": "3.15.2 (main, Oct 26 2026, 14:39:36) [GCC 15.2.0]"
+      },
+      "stderr_sha256": "18e46a61230e9957f9661571ac9f100f8cd3b4a99b873d320c9470281a803b8f"
+    },
+    {
+      "conclusion": "cancelled",
+      "gate_json_bytes": 0,
+      "gate_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "job": "https://github.com/robertelee78/agent-memory/actions/runs/42547164232/job/128934548184",
+      "name": "Contracts (macos-latest, Python 3.15)",
+      "recorded_commit": "073cf197acbea86bb1e24c70d40c33b52ee3aa80",
+      "runtime": {
+        "executable": "/Library/Frameworks/Python.framework/Versions/3.15/bin/python3",
+        "platform": "macOS-26.7.2-arm64-arm-64bit-Mach-O",
+        "python": "3.15.2 (v3.15.2:5e58eaad7c5, Oct 25 2026, 14:19:34) [Clang 21.0.0 (clang-2100.1.1.101)]"
+      },
+      "stderr_sha256": "e300899d80c0a5d2e270d195e2057487ce9fdc63ea4cc6c91b2d1c9da9ef0576"
+    },
+    {
+      "aggregation_error": "Missing successful registered case batch: mixed-managed-ancestor-alias",
+      "conclusion": "failure",
+      "failed_workers": [
+        {
+          "name": "mixed-managed-ancestor-alias",
+          "tests": 1,
+          "timeout_seconds": null
+        },
+        {
+          "name": "uninstall-write-copy-before",
+          "tests": 0,
+          "timeout_seconds": 300
+        },
+        {
+          "name": "uninstall-write-copy-after",
+          "tests": 0,
+          "timeout_seconds": 300
+        },
+        {
+          "name": "uninstall-write-link-before",
+          "tests": 0,
+          "timeout_seconds": 300
+        },
+        {
+          "name": "uninstall-write-link-after",
+          "tests": 0,
+          "timeout_seconds": 300
+        }
+      ],
+      "gate_json_bytes": 745909,
+      "gate_passed": false,
+      "gate_sha256": "885f5601ec15dfa44a5cc8e13ea9a078c6d7ef34bd5a38ff792b4571f0e7513b",
+      "job": "https://github.com/robertelee78/agent-memory/actions/runs/42547164232/job/128934548300",
+      "name": "Contracts (ubuntu-latest, Python 3.11)",
+      "not_applicable": [
+        "optional-stores"
+      ],
+      "passed_workers": 337,
+      "recorded_commit": "073cf197acbea86bb1e24c70d40c33b52ee3aa80",
+      "registered_workers": 343,
+      "release_complete": false,
+      "runtime": {
+        "executable": "/opt/hostedtoolcache/Python/3.11.18/x64/bin/python3",
+        "platform": "Linux-7.0.0-1019-azure-x86_64-with-glibc2.43",
+        "python": "3.11.18 (main, Oct 26 2026, 02:48:29) [GCC 15.2.0]"
+      },
+      "stderr_sha256": "9755240166ecd252b615f76a0f06953d0b42c04de295024f4eaad84b7f6d5298"
+    }
+  ],
+  "conclusion": "failure",
+  "interpretation": "Failures retained. Original per-suite300s and per-job180m limits unchanged. Optional stores not-applicable is not a failed contract.",
+  "run": "https://github.com/robertelee78/agent-memory/actions/runs/42547164232",
+  "schema": "agent-memory/hosted-contract-failure-v2",
+  "source_commit": "073cf197acbea86bb1e24c70d40c33b52ee3aa80",
+  "status": "completed"
+}

@@ -136,3 +136,47 @@ No AM integration, legal permission, fresh semantic/coding benefit, G1 acceptanc
 new model/server selection or v0.0.15 delivery is claimed. This evidence informs
 the execution contract and the next actual-profile comparison rather than
 turning a faster synthetic number into a release pass.
+
+## Related peer analysis and current execution policy
+
+The matching report at exact peer source
+`f148da42e0944adf323556685981b1545e0c8a9e` retains the same numerical findings
+and limitations above. Main's integration corrections and stronger delivery
+boundary remain intact; importing related analysis is not new Main/final-source
+runtime proof.
+
+The [retrieval failure taxonomy](2026-11-08-retrieval-failure-taxonomy.md)
+separates signed-score conversion, profile/cache drift, native source-domain and
+consumer gaps, exact-cosine semantic misses, template/label mismatches, authority/
+erasure accounting and storage operations. The
+[isolated storage-access contrast](2026-11-08-graph-storage-contrast.md) observed
+one idle CREATE success and one deliberately held-read CREATE error on the
+pinned MAGE binary. It does not establish the historical50k lock holder or
+snapshot cause, complete that failed study, or establish a full G1 runtime pass.
+
+The retained [future AM comparison proposal](data/2026-11-08-vector-alternatives/future-am-comparison-proposal.json)
+is historical peer source, proposed and unexecuted. Its32-case screen
+(eight calibration/24 blinded), actual-profile4096D comparison and separately
+optional bounded ANN arm describe a possible future scoped comparison, not a
+new approved study, resource/license gate or automatic replacement. Historical
+`assignment_actions`, `G1_acceptance=false` and remaining-obligation wording
+describe that proposal's original scope, not this import or a reversal of later
+accepted G1 research.
+
+The [current graph/embedding execution contract](../design/v0.0.16-graph-embedding-execution.md)
+is a proposed merged amendment pending independent review. Its§8.1 is stronger
+than the experiment's generic shortlist: exact-only v1 scoring outside the graph
+engine over source/profile-bound persisted float32 vectors, float64 accumulation
+and a resident provider; production ANN and graph vector-index DDL are disabled.
+Typed graph projection/querying and embeddings remain required useful core
+capabilities. This research neither selects a new embedding model/server nor
+removes that graph direction. The current§§2/13/13.2 private-build licensing,
+reported-resource/no-resource-pass and adopted-latency dispositions control;
+historical proposal wording cannot add approvals or reopen settled choices.
+
+The accepted original G1 research at peer
+`362ab0aac21399381f3379550726ca750c614b1d` and its
+[historical freeze](data/g1-contract-freeze-20261109.json) remain accepted.
+That historical acceptance does not bind this merged amendment's new bytes,
+erase the retained negatives/unqualified classes, establish product/runtime
+qualification, make downstream work Ready or demonstrate signed delivery.

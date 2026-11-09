@@ -1,0 +1,43 @@
+{
+  "final_platform_qualification": false,
+  "linux_replay_qualification": "Running separately on exact composed ac37 source; no pass inferred",
+  "raw_sha256": "e27c6dca99d3f3b396c14fa53916875fca5d26ccc2baa8f6751ae0a38b9afab1",
+  "runtime": {
+    "launcher_sha256": "47b99e694a542e193d51811d2b8bb95fc87b80f37f0b084d4651c2364fef5cac",
+    "loaded_library_sha256": "e49a48b3c69995e19c34d05c0e5945921e6c9bede45a5177f2c7ac4f7a82cdba",
+    "python": "3.15.0 (main, Nov  8 2026, 20:46:38) [Clang 21.0.0 (clang-2100.4.1.1)]"
+  },
+  "schema": "agent-memory/hosted-repair-focused-v1",
+  "scope": "Three complete macOS focused consumers only; not full platform/native/release acceptance",
+  "source_commit": "56dd6c320b5158c18e81eb76e651e71163743e17",
+  "source_review": {
+    "limits": "Read-only source review, not an execution pass. New d171 native changes separately retain their scoped independent reviews and qualification limits.",
+    "observed_model": "anthropic/claude-opus-5-5",
+    "read_source_commit": "ac37beff3c4caea8b2af2bce941b0a4da8a0da45",
+    "verdict": "PASS",
+    "verdict_sha256": "a3ef8d930810561a71475e81f9cab50ef8ee43d8ef01a83de7b5e844596e2c93"
+  },
+  "suites": [
+    {
+      "exit": 0,
+      "name": "gate-diagnostics",
+      "passed": true,
+      "seconds": 1.9464687920408323,
+      "tests": 4
+    },
+    {
+      "exit": 0,
+      "name": "lifecycle-fault-partitions",
+      "passed": true,
+      "seconds": 0.09630004095379263,
+      "tests": 2
+    },
+    {
+      "exit": 0,
+      "name": "mixed-managed-ancestor-alias",
+      "passed": true,
+      "seconds": 28.406707875081338,
+      "tests": 1
+    }
+  ]
+}
