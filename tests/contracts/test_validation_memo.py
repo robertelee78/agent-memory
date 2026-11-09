@@ -67,10 +67,21 @@ class ValidationMemoContract(PublicationFixture):
             files['MEMORY.md']=bank.router_text(meta,routes,omitted)
             with memo.operation():
                 bank.validate_files(files)
-                for _ in range(2):
-                    parsed={};bank.validate_files(files,parsed_records=parsed)
-                    self.assertIn(path,parsed);self.assertIn('Keep distinct source evidence.',parsed[path][2])
-                    parsed.clear()
+                parsed={};first=bank.validate_files(files,parsed_records=parsed)
+                self.assertIn(path,parsed);self.assertIn('Keep distinct source evidence.',parsed[path][2])
+                parsed[path][1]['caller-only']='untrusted'
+                parsed[path]=(parsed[path][0],parsed[path][1],'caller replacement')
+                first['entries'].clear()
+                again={};second=bank.validate_files(files,parsed_records=again)
+                self.assertTrue(second['entries'])
+                self.assertNotIn('caller-only',again[path][1])
+                self.assertIn('Keep distinct source evidence.',again[path][2])
+                for invalid in ({path:again[path]}, [], 'not an output'):
+                    with self.assertRaises(ContractError):bank.validate_files(files,parsed_records=invalid)
+                changed={**files,path:files[path].replace('Keep distinct source evidence.','Keep changed source evidence.')}
+                updated={};bank.validate_files(changed,parsed_records=updated)
+                self.assertIn('Keep changed source evidence.',updated[path][2])
+                self.assertIn('Keep distinct source evidence.',again[path][2])
 
     def test_exceptions_nesting_and_budget_fallback_do_not_leak_validation_state(self):
         with World() as w:
