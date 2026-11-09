@@ -1,7 +1,7 @@
 # Portable lifecycle release matrix
 
 The `portable-lifecycle` contract combines installed-command journeys with
-explicit executable bindings for the complete approved
+the release gate's executed-case coverage for the complete approved
 [ADR](../adr/0007-portable-pack-and-lifecycle.md) and
 [blueprint matrix](../design/lifecycle-blueprint.md#verification-matrix).
 
@@ -20,10 +20,12 @@ and client roots, actual installed commands and preserved source/index/history:
   and leave default client roots and identity/bank setup absent.
 
 `tests/lifecycle-matrix.json` maps fifteen approved obligations to concrete
-registered test methods. The binding check rejects missing suites/methods or
-pending/optional substitutions. Its references include no-client modes,
+registered test methods. At complete-gate aggregation, each case must belong
+to its declared required suite and current selector and appear among that
+suite's actually successful executed identities. Missing, stale, misrouted or
+unexecuted cases fail the receipt. Its references include no-client modes,
 unrelated-target refusal, owned backups, sentinel edits, source/ref/downgrade
-guards, all fifty real before/after fault workers, committed lost responses,
+guards, all seventy-four real before/after fault workers, committed lost responses,
 rollback/locks, modified-target preservation and confirmed purge. It also binds
 package validation and the isolation/worker-collection controls. The collector
 uses a supervisor that retains ownership of its process group through descendant
@@ -35,14 +37,15 @@ If that failure follows a worker timeout, the actual producer and disposable
 gate regressions require both worker streams, the record exception and the
 original timeout to survive collection.
 
-The ten expensive update/install/uninstall phase-and-mode inventories run as four
-mandatory disjoint batches each. Every batch observes the complete clean write
-inventory, interrupts its selected real writes, recovers, retries and retains
-the original preservation/ownership checks. The gate compares their actual
-artifact identities and complete observed inventories, then requires every
-point exactly once across all four batches. A missing batch, proof, interruption
-or retry fails the gate. The other ten fault workers retain their complete
-inventories. No fault point or public 300-second worker limit is removed.
+The six expensive update/install phase-and-mode inventories run as eight
+mandatory disjoint batches each; the four uninstall inventories use four each.
+Every batch observes the complete clean write inventory, interrupts its selected
+real writes, recovers, retries and retains the original preservation/ownership
+checks. The gate compares their actual artifact identities and complete observed
+inventories, then requires every point exactly once across its batches. A missing
+batch, proof, interruption or retry fails the gate. The other ten fault workers
+retain their complete inventories. No fault point or public 300-second worker
+limit is removed.
 
 Project identity discovery uses one coherent repository-settings observation
 per discovery and reuses it when the saved authority already matches the

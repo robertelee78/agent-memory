@@ -79,7 +79,8 @@ def case_batch_coverage(entries, suites):
                     or not inventory or any(not isinstance(case, str) for case in inventory)
                     or len(inventory) != len(set(inventory)) or not isinstance(selected, list)
                     or not selected or any(not isinstance(case, str) for case in selected)
-                    or len(selected) != len(set(selected)) or result.get("tests") != len(selected)):
+                    or len(selected) != len(set(selected)) or result.get("tests") != len(selected)
+                    or selection.get("executed") != sorted(selected)):
                 raise ValueError("Invalid registered case-batch proof")
             if complete is None:
                 complete = set(inventory)
@@ -89,6 +90,56 @@ def case_batch_coverage(entries, suites):
         if executed != complete:
             raise ValueError("Registered case batches omit actual tests")
         summaries.append({"path": path, "batches": len(batches), "cases": sorted(executed)})
+    return summaries
+
+def lifecycle_matrix_coverage(entries, suites):
+    matrix = json.loads((ROOT / "tests/lifecycle-matrix.json").read_text())
+    required = {"fresh-repeat", "modes", "spaces-optional-clients", "ownership-backups",
+                "sentinel-edits", "update-guards", "activation-interrupts", "lost-responses",
+                "rollback-locks", "removal-purge", "bank-preservation", "generated-state-loss",
+                "client-identity", "pack-validation", "isolation"}
+    rows = matrix.get("requirements") if isinstance(matrix, dict) else None
+    if (not isinstance(matrix, dict) or matrix.get("schema") != "agent-memory/lifecycle-test-matrix-v1"
+            or not isinstance(rows, list) or any(not isinstance(row, dict) for row in rows)
+            or len(rows) != len(required) or {row.get("requirement") for row in rows} != required):
+        raise ValueError("Invalid approved lifecycle requirements")
+    registry = {entry["name"]: entry for entry in entries}
+    results = {suite["name"]: suite for suite in suites}
+    summaries = []
+    for row in rows:
+        cases = row.get("cases")
+        if not isinstance(cases, list) or not cases:
+            raise ValueError("Lifecycle requirement has no executable cases")
+        for case in cases:
+            if not isinstance(case, dict):
+                raise ValueError("Invalid lifecycle case")
+            name, test = case.get("suite"), case.get("test")
+            if not isinstance(name, str) or not isinstance(test, str):
+                raise ValueError("Invalid lifecycle case identity")
+            entry, result = registry.get(name, {}), results.get(name, {})
+            selection = result.get("case_selection")
+            if (entry.get("scope") != "v0.0.1" or not entry.get("path")
+                    or result.get("status") != "passed" or not isinstance(selection, dict)):
+                raise ValueError("Missing successful lifecycle case suite: " + name)
+            complete, selected = selection.get("complete"), selection.get("selected")
+            if (selection.get("batch") != name or not isinstance(complete, list)
+                    or not complete or any(not isinstance(item, str) for item in complete)
+                    or len(complete) != len(set(complete)) or not isinstance(selected, list)
+                    or not selected or any(not isinstance(item, str) for item in selected)
+                    or len(selected) != len(set(selected)) or result.get("tests") != len(selected)
+                    or selection.get("executed") != sorted(selected)
+                    or not set(selected) <= set(complete)):
+                raise ValueError("Invalid lifecycle case execution proof: " + name)
+            selectors = entry.get("tests")
+            if selectors is None:
+                if set(selected) != set(complete):
+                    raise ValueError("Incomplete lifecycle suite execution: " + name)
+            elif not isinstance(selectors, list) or not any(
+                    selector == test or selector == test.split(".")[0] for selector in selectors):
+                raise ValueError("Lifecycle case is not selected by registered suite: " + name)
+            if "contract_suite." + test not in selected:
+                raise ValueError("Lifecycle case was not executed: " + name + " / " + test)
+        summaries.append({"requirement": row["requirement"], "cases": len(cases)})
     return summaries
 
 
@@ -322,6 +373,8 @@ def main(argv=None):
             report['fault_partition_coverage'] = partition_coverage(report['suites'])
             active = 'registered-case-batches'
             report['case_batch_coverage'] = case_batch_coverage(entries, report['suites'])
+            active = 'lifecycle-matrix'
+            report['lifecycle_matrix_coverage'] = lifecycle_matrix_coverage(entries, report['suites'])
             pending = any(s["status"] == "pending" for s in report["suites"])
             failed = any(s["status"] == "failed" for s in report["suites"])
             report["release_complete"] = not pending and not failed

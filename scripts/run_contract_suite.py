@@ -30,7 +30,13 @@ def registered_suite(module, path, name):
     if name is not None and sum(entry["name"] == name for entry in groups) != 1:
         raise ValueError("Named suite does not identify this registered contract file")
     if not any("tests" in entry for entry in groups):
-        return complete, None
+        if name is None:
+            return complete, None
+        identities = [case.id() for case in leaf_cases(complete)]
+        if len(identities) != len(set(identities)):
+            raise ValueError("Contract discovery contains duplicate case identities")
+        return complete, {"batch": name, "complete": sorted(identities),
+                          "selected": sorted(identities)}
     cases = list(leaf_cases(complete))
     identities = [case.id() for case in cases]
     if len(identities) != len(set(identities)):
@@ -64,6 +70,16 @@ def registered_suite(module, path, name):
                                       "selected": sorted(case.id() for case in chosen)}
 
 
+class RecordingResult(unittest.TextTestResult):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.successful_cases = []
+
+    def addSuccess(self, test):
+        super().addSuccess(test)
+        self.successful_cases.append(test.id())
+
+
 def main():
     require_world()
     parser = argparse.ArgumentParser(description=__doc__)
@@ -84,7 +100,7 @@ def main():
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
         suite, selection = registered_suite(module, path, args.suite)
-        result = unittest.TextTestRunner(verbosity=2, stream=sys.stderr).run(suite)
+        result = unittest.TextTestRunner(verbosity=2, stream=sys.stderr, resultclass=RecordingResult).run(suite)
     finally:
         try:
             sys.stdout.flush()
@@ -98,7 +114,9 @@ def main():
     counts["passed"] = result.wasSuccessful() and counts["tests"] > 0 and not any(
         counts[key] for key in counts if key != "tests")
     if selection is not None:
-        counts["passed"] = counts["passed"] and result.testsRun == len(selection["selected"])
+        selection["executed"] = sorted(result.successful_cases)
+        counts["passed"] = (counts["passed"] and result.testsRun == len(selection["selected"])
+                            and selection["executed"] == selection["selected"])
         counts["case_selection"] = selection
     print(json.dumps(counts, sort_keys=True))
     return 0 if counts["passed"] else 1
