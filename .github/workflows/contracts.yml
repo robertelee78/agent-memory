@@ -30,7 +30,7 @@ jobs:
           mkdir -p reports
           python3 -I -c 'import json,platform,sys; print(json.dumps({"python":sys.version,"executable":sys.executable,"platform":platform.platform()}))' > reports/runtime.json
           git rev-parse HEAD > reports/commit.txt
-          git rev-parse HEAD^{tree} > reports/tree.txt
+          git rev-parse 'HEAD^{tree}' > reports/tree.txt
           scripts/test.sh --release --jobs 2 --json --shard-index '${{ matrix.shard }}' --shard-count 3 --cell-os '${{ matrix.os }}' --cell-python '${{ matrix.python }}' --output reports/test-gate.json > reports/test-gate.stdout 2> reports/test-gate.stderr
       - name: Retain receipts and failures
         if: always()
@@ -61,19 +61,19 @@ jobs:
           python-version: ${{ matrix.python }}
       - name: Download shard 0
         continue-on-error: true
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
         with:
           name: contracts-${{ matrix.os }}-python-${{ matrix.python }}-shard-0
           path: shards/0
       - name: Download shard 1
         continue-on-error: true
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
         with:
           name: contracts-${{ matrix.os }}-python-${{ matrix.python }}-shard-1
           path: shards/1
       - name: Download shard 2
         continue-on-error: true
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
         with:
           name: contracts-${{ matrix.os }}-python-${{ matrix.python }}-shard-2
           path: shards/2
