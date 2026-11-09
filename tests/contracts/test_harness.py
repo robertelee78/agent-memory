@@ -132,6 +132,8 @@ for name,group in GROUPS.items():
         samples['passed-without-interruption-proof'] = passed
         samples['incomplete-interruption-proof'] = passed + proof_fixture.replace(
             "'executed':[observed[index]['point']]", "'executed':[] if index==0 else [observed[index]['point']]")
+        samples['missing-lifecycle-case'] = samples['passed']
+        samples['non-object-worker-receipt'] = "import os\nos.write(1, b'[]\\n')\nos._exit(0)\n"
         with World() as world:
             checkout = world.inside("checkout with spaces")
             (checkout / "scripts").mkdir(parents=True)
@@ -149,6 +151,7 @@ for name,group in GROUPS.items():
                 and any(isinstance(target,ast.Name) and target.id=='REQUIRED' for target in node.targets)))
             required |= set(OWNERS) | {'harness','optional-stores','lifecycle-fault-partitions'}
             manifest['suites'] = [entry for entry in manifest['suites'] if entry['name'] in required]
+            requirements = json.loads((ROOT / "tests/lifecycle-matrix.json").read_text())["requirements"]
             for sample, body in samples.items():
                 print('gate-control-sample: '+sample, file=sys.stderr, flush=True)
                 (checkout / "tests/contracts/fixture.py").write_text(body)
@@ -159,11 +162,20 @@ for name,group in GROUPS.items():
                         # controlled replacement module.
                         entry.pop("tests", None)
                 (checkout / "tests/contracts.json").write_text(json.dumps(manifest))
+                matrix = {"schema": "agent-memory/lifecycle-test-matrix-v1", "requirements": [
+                    {"requirement": row["requirement"],
+                     "cases": [{"suite": "harness", "test": "Contract.test_x"}]}
+                    for row in requirements]}
+                if sample == "missing-lifecycle-case":
+                    matrix["requirements"][0]["cases"][0]["test"] = "Contract.test_missing"
+                (checkout / "tests/lifecycle-matrix.json").write_text(json.dumps(matrix))
                 result = world.run(["sh", checkout / "scripts/test.sh", "--release", "--json"], check=False)
                 report = json.loads(result.stdout)
                 self.assertEqual(report["passed"], sample == "passed")
                 self.assertEqual(report["release_complete"], sample == "passed")
                 self.assertEqual(result.returncode == 0, sample == "passed")
+                if sample == "missing-lifecycle-case":
+                    self.assertEqual(report["error_suite"], "lifecycle-matrix")
             # Missing required entries and attempts to reclassify them cannot
             # make a falsely complete release report.
             manifest["suites"] = [e for e in manifest["suites"] if e["name"] != "bank-roundtrip"]

@@ -103,7 +103,7 @@ class World(_ActualWorld):
                 return gate.merge_shards(paths, 2, entries, source, cell)
             self.assertEqual([row['name'] for row in merge(reports[::-1])],
                              [entry['name'] for entry in entries])
-            for field, value in [('tests', 0), ('errors', 1), ('failures', 1),
+            for field, value in [('tests', 0), ('tests', True), ('errors', 1), ('failures', 1),
                                  ('expected_failures', 1), ('unexpected_successes', 1),
                                  ('status', 'not-applicable'), ('passed', False)]:
                 changed = copy.deepcopy(reports)

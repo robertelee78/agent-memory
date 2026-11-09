@@ -79,7 +79,8 @@ def case_batch_coverage(entries, suites):
                     or not inventory or any(not isinstance(case, str) for case in inventory)
                     or len(inventory) != len(set(inventory)) or not isinstance(selected, list)
                     or not selected or any(not isinstance(case, str) for case in selected)
-                    or len(selected) != len(set(selected)) or result.get("tests") != len(selected)
+                    or len(selected) != len(set(selected)) or type(result.get("tests")) is not int
+                    or result["tests"] != len(selected)
                     or selection.get("executed") != sorted(selected)):
                 raise ValueError("Invalid registered case-batch proof")
             if complete is None:
@@ -126,7 +127,8 @@ def lifecycle_matrix_coverage(entries, suites):
                     or not complete or any(not isinstance(item, str) for item in complete)
                     or len(complete) != len(set(complete)) or not isinstance(selected, list)
                     or not selected or any(not isinstance(item, str) for item in selected)
-                    or len(selected) != len(set(selected)) or result.get("tests") != len(selected)
+                    or len(selected) != len(set(selected)) or type(result.get("tests")) is not int
+                    or result["tests"] != len(selected)
                     or selection.get("executed") != sorted(selected)
                     or not set(selected) <= set(complete)):
                 raise ValueError("Invalid lifecycle case execution proof: " + name)
@@ -288,6 +290,8 @@ def main(argv=None):
                         stage = 'result-readback'
                         try:
                             counts = json.loads(result.stdout)
+                            if not isinstance(counts, dict):
+                                raise ValueError("Worker result must be a JSON object")
                         except ValueError:
                             output.append(f"\nWorker exit status: {result.returncode}\nWorker stdout:\n{result.stdout}\n")
                             raise
@@ -297,7 +301,7 @@ def main(argv=None):
                             item['fault_partition'] = partition_proof(result.stderr, entry['name'])
                     except (subprocess.TimeoutExpired, ValueError, KeyError) as exc:
                         output.append(diagnostic(exc))
-                        item.update(status="failed", reason=str(exc), tests=0)
+                        item.update(status="failed", passed=False, reason=str(exc), tests=0)
                     stage = 'world-cleanup'
         except (OSError, ValueError, KeyError) as exc:
             return item, stage, ''.join(output), exc
