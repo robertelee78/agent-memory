@@ -33,7 +33,7 @@ class UpdateWriteInterruptCases:
                             <= {event['kind'] for event in events})
             all_selected=[event for event in events if event['phase']==phase]
             self.assertEqual(len(all_selected),len(steps))
-            selected=partition_rows(all_selected,partition)
+            selected=partition_rows(all_selected,partition,group='update-write-'+phase)
             executed=[]
             for event in selected:
                 with self.subTest(point=event['point'],kind=event['kind']):

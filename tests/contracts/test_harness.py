@@ -118,11 +118,12 @@ class HarnessContract(unittest.TestCase):
         # interruption evidence. The real suites emit actual replay results.
         proof_fixture = '''
 import json,sys
-from fault_partitions import GROUPS,PARTITIONS
-observed=[{'step':i,'point':'controlled-'+str(i),'kind':'controlled-write'} for i in range(PARTITIONS)]
+from fault_partitions import GROUPS
 for name,group in GROUPS.items():
- for index in range(PARTITIONS):
-  proof={'group':name,'index':index,'count':PARTITIONS,'artifact_digest':'0'*64,
+ count=group['count']
+ observed=[{'step':i,'point':'controlled-'+str(i),'kind':'controlled-write'} for i in range(count)]
+ for index in range(count):
+  proof={'group':name,'index':index,'count':count,'artifact_digest':'0'*64,
          'observed':observed,'executed':[observed[index]['point']]}
   print(json.dumps({'lifecycle_fault_partition':proof}),file=sys.stderr)
 '''
