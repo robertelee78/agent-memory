@@ -1,0 +1,64 @@
+{
+  "schema": "research/native249-canonical-contention-scoped-proof-v1",
+  "date": "2026-11-09",
+  "base_commit": "d171f85ab79896231489748b1ace9247b29dfcd2",
+  "source_state": "uncommitted frozen R15 plus exact R16 three-file delta, not retroactively against later commit",
+  "r16_delta_binding_sha256": "3c3db1c21a414b71a4ee7255956efa7c8126c9cebb86917deefe0f537f858d12",
+  "r16_files": {
+    "skills/agent-memory/scripts/agent_memory/local_registry.py": "1fb44f5a8b0edc978d491b07ba3085c561d7b6ae817f17924a0b310088d66a79",
+    "skills/agent-memory/scripts/agent_memory/recovery_frontier.py": "1611923f2a3ac8bb3dd1cf2444faea10e00bf98858e74cf316ca4575371ec64d",
+    "tests/contracts/test_omp_finite_stream.py": "2b0405240c8ac60290783cffb74a781761bdf44f193ed941f95a70f134b4221e"
+  },
+  "private_evidence_archive_sha256": "97f9ab6190452d60551d0aaa7f92250963a1125de1ce21adaec616dc90178adb",
+  "controlled_before_after": {
+    "r15_valid_before_failures_observed": true,
+    "r15_after_registered_suites_passed": 25,
+    "r15_after_registered_suites_failed": 0,
+    "r15_source_unchanged": {
+      "after": true,
+      "before": true
+    },
+    "r16_noncontention_first_flock_errors": [
+      "ENOLCK",
+      "ENOTSUP"
+    ],
+    "r16_first_flock_before_failed_after_passed": true,
+    "r16_interrupts": [
+      "KeyboardInterrupt",
+      "SystemExit",
+      "MemoryError"
+    ],
+    "r16_interrupt_before_failed_after_passed": true,
+    "r16_full_finite_stream": {
+      "tests": 105,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "gate_negative_contract": {
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "behavior": [
+    "Live known local writer requires exact owner and actual kernel contention; bounded defer unwinds private observations before retry.",
+    "Empty O_EXCL slot is initializing only, never authority; no shared probe steals first EX.",
+    "Only live creator may discard same safe unchanged empty slot after any first EX OSError; unknown, changed, nonempty, replaced slots preserved.",
+    "Invalid-frame refusal retry retains one exact process-local attempt witness without replaying observer or double counting.",
+    "Process interrupts and MemoryError during marker read retain precedence over writer retry."
+  ],
+  "source_reviews": {
+    "NativeR15AuthorityOpus": "FAIL R15 first EX OSError cleanup; fixed in R16",
+    "NativeR15LifecycleOpus": "PASS R15 with interrupt P3; fixed in R16",
+    "NativeR16DeltaOpus": "PASS source-only exact corrective delta"
+  },
+  "limits": [
+    "R7b fault-time owner/marker not observed; controlled reproduction does not establish that native failure cause.",
+    "Successor replacement without pinned old inode unlink proof remains conservative hard refusal, not automatic replacement adoption.",
+    "No new actual stock-native, callback950ms, automatic model-forgets, full hosted matrix or release acceptance.",
+    "No omp source/install/config/live-extension changes. Original30s busy budget and950ms bound unchanged."
+  ],
+  "native_or_release_acceptance": false
+}

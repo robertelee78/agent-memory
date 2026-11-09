@@ -73,7 +73,7 @@
           "test": "InstallerContract.test_copy_replacement_backup_and_conversion_have_identical_artifact_identity"
         },
         {
-          "suite": "runtime-update",
+          "suite": "runtime-update-changed-owned-copy-update-retains-prior-payload-and-receipt-backups",
           "test": "RuntimeUpdateContract.test_changed_owned_copy_update_retains_prior_payload_and_receipt_backups"
         }
       ]
@@ -99,23 +99,23 @@
       "requirement": "update-guards",
       "cases": [
         {
-          "suite": "runtime-update",
+          "suite": "runtime-update-read-only-check-valid-update-and-repeat-preserve-user-text-and-source-channel",
           "test": "RuntimeUpdateContract.test_read_only_check_valid_update_and_repeat_preserve_user_text_and_source_channel"
         },
         {
-          "suite": "runtime-update",
+          "suite": "runtime-update-dirty-remote-ref-and-unowned-target-changes-refuse-without-activation",
           "test": "RuntimeUpdateContract.test_dirty_remote_ref_and_unowned_target_changes_refuse_without_activation"
         },
         {
-          "suite": "runtime-update",
+          "suite": "runtime-update-downgrade-non-fast-forward-and-invalid-candidate-keep-the-previous-runtime",
           "test": "RuntimeUpdateContract.test_downgrade_non_fast_forward_and_invalid_candidate_keep_the_previous_runtime"
         },
         {
-          "suite": "runtime-update",
+          "suite": "runtime-update-development-sources-are-never-mutated-by-update",
           "test": "RuntimeUpdateContract.test_development_sources_are_never_mutated_by_update"
         },
         {
-          "suite": "runtime-update",
+          "suite": "runtime-update-discovered-and-explicit-banks-remain-unchanged-and-unsupported-schema-refuses",
           "test": "RuntimeUpdateContract.test_discovered_and_explicit_banks_remain_unchanged_and_unsupported_schema_refuses"
         }
       ]
@@ -162,6 +162,54 @@
         {
           "suite": "uninstall-write-link-after",
           "test": "LifecycleWriteContract.test_after_every_uninstall_link_write"
+        },
+        {
+          "suite": "uninstall-write-copy-before-part-1",
+          "test": "UninstallCopyBeforePart1Contract.test_actual_logical_writes_in_partition_1"
+        },
+        {
+          "suite": "uninstall-write-copy-before-part-2",
+          "test": "UninstallCopyBeforePart2Contract.test_actual_logical_writes_in_partition_2"
+        },
+        {
+          "suite": "uninstall-write-copy-before-part-3",
+          "test": "UninstallCopyBeforePart3Contract.test_actual_logical_writes_in_partition_3"
+        },
+        {
+          "suite": "uninstall-write-copy-after-part-1",
+          "test": "UninstallCopyAfterPart1Contract.test_actual_logical_writes_in_partition_1"
+        },
+        {
+          "suite": "uninstall-write-copy-after-part-2",
+          "test": "UninstallCopyAfterPart2Contract.test_actual_logical_writes_in_partition_2"
+        },
+        {
+          "suite": "uninstall-write-copy-after-part-3",
+          "test": "UninstallCopyAfterPart3Contract.test_actual_logical_writes_in_partition_3"
+        },
+        {
+          "suite": "uninstall-write-link-before-part-1",
+          "test": "UninstallLinkBeforePart1Contract.test_actual_logical_writes_in_partition_1"
+        },
+        {
+          "suite": "uninstall-write-link-before-part-2",
+          "test": "UninstallLinkBeforePart2Contract.test_actual_logical_writes_in_partition_2"
+        },
+        {
+          "suite": "uninstall-write-link-before-part-3",
+          "test": "UninstallLinkBeforePart3Contract.test_actual_logical_writes_in_partition_3"
+        },
+        {
+          "suite": "uninstall-write-link-after-part-1",
+          "test": "UninstallLinkAfterPart1Contract.test_actual_logical_writes_in_partition_1"
+        },
+        {
+          "suite": "uninstall-write-link-after-part-2",
+          "test": "UninstallLinkAfterPart2Contract.test_actual_logical_writes_in_partition_2"
+        },
+        {
+          "suite": "uninstall-write-link-after-part-3",
+          "test": "UninstallLinkAfterPart3Contract.test_actual_logical_writes_in_partition_3"
         },
         {
           "suite": "recover-rollback-write-copy-before",
@@ -313,7 +361,7 @@
           "test": "LifecycleLostResponses.test_fault_trace_itself_cannot_escape_into_another_world"
         },
         {
-          "suite": "runtime-update",
+          "suite": "runtime-update-lost-response-and-partial-activation-recover-then-retry-without-duplicates",
           "test": "RuntimeUpdateContract.test_lost_response_and_partial_activation_recover_then_retry_without_duplicates"
         }
       ]
@@ -334,11 +382,11 @@
           "test": "InstallerContract.test_unrelated_lock_and_linked_state_are_never_adopted"
         },
         {
-          "suite": "runtime-update",
+          "suite": "runtime-update-competing-update-observes-the-live-lifecycle-lock",
           "test": "RuntimeUpdateContract.test_competing_update_observes_the_live_lifecycle_lock"
         },
         {
-          "suite": "runtime-diagnostics",
+          "suite": "runtime-diagnostics-live-runtime-lock-is-not-stolen-or-treated-as-an-orphan",
           "test": "RuntimeDiagnosticsContract.test_live_runtime_lock_is_not_stolen_or_treated_as_an_orphan"
         }
       ]
@@ -452,7 +500,7 @@
           "test": "InstalledLayoutContract.test_all_clients_share_one_artifact_and_installed_lifecycle_preserves_distinct_data"
         },
         {
-          "suite": "runtime-update",
+          "suite": "runtime-update-discovered-and-explicit-banks-remain-unchanged-and-unsupported-schema-refuses",
           "test": "RuntimeUpdateContract.test_discovered_and_explicit_banks_remain_unchanged_and_unsupported_schema_refuses"
         }
       ]
@@ -478,7 +526,7 @@
           "test": "InstalledLayoutContract.test_all_clients_share_one_artifact_and_installed_lifecycle_preserves_distinct_data"
         },
         {
-          "suite": "runtime-diagnostics",
+          "suite": "runtime-diagnostics-installed-version-binds-actual-artifact-revision-mode-and-channel",
           "test": "RuntimeDiagnosticsContract.test_installed_version_binds_actual_artifact_revision_mode_and_channel"
         },
         {
@@ -591,7 +639,7 @@
           "test": "SkillRouteContract.test_working_delegated_help_commands_are_valid_documented_commands"
         },
         {
-          "suite": "runtime-update",
+          "suite": "runtime-update-downgrade-non-fast-forward-and-invalid-candidate-keep-the-previous-runtime",
           "test": "RuntimeUpdateContract.test_downgrade_non_fast_forward_and_invalid_candidate_keep_the_previous_runtime"
         }
       ]

@@ -1,15 +1,20 @@
 """Finite FIFO loss/phase/coverage boundaries; no native-runtime qualification."""
-from contextlib import nullcontext
+from contextlib import ExitStack, nullcontext
 import io
+import os
 from pathlib import Path
 import sys
 import tempfile
+import threading
 import unittest
 from unittest import mock
 import uuid
 
+from world import World
+from contracts import test_checkpoint
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'skills/agent-memory/scripts'))
 from agent_memory import omp_stream as stream, turn_sources
+from agent_memory import bank_transactions, bank_writes, local_registry, omp_boundary, omp_installation, scope_binding
 from agent_memory.frontmatter import ContractError
 
 
@@ -338,6 +343,20 @@ class CoverageFixture(unittest.TestCase):
         self.execute(observe, sequence=4)
         self.assertEqual(self.outcome(4)['outcome'], 'verified')
         self.assertTrue(self.coverage.close(self.final(count=4)))
+
+    def test_matching_preexisting_invalid_attempt_is_not_a_live_retry_witness(self):
+        path = self.coverage.directory / 'attempts/1.json'
+        value = {'schema': 'agent-memory/omp-stream-attempt-v1', 'open_sha256': self.coverage.open_digest,
+            'instance_id': self.instance, 'sequence': 1, 'action': 'hint', 'event_ordinal': 0,
+            'disposition': 'refused', 'reason': 'invalid-request', 'identity': {'kind': 'unresolvable'},
+            'source_kind': None, 'frame_kind': 'REQUEST'}
+        stream._retain(path, value, stream.MAX_IDENTITY)
+        original = path.read_bytes()
+        with self.assertRaises(ContractError):
+            self.coverage.refuse_invalid(1, 'REQUEST', 'hint', 0)
+        self.assertEqual(path.read_bytes(), original)
+        self.assertEqual((self.coverage.last_sequence, self.coverage.refused_count), (0, 0))
+        self.assertIsNone(self.coverage._invalid_attempt_retry)
 
     def test_partial_immutable_attempt_is_never_replaced_by_refusal(self):
         path = self.coverage.directory / 'attempts/1.json'
@@ -891,6 +910,940 @@ class FrozenImports(unittest.TestCase):
         with self.assertRaises(ContractError):
             guard.find_spec('agent_memory.unpreloaded_new_module')
         self.assertIsNone(guard.find_spec('unrelated_external_package'))
+
+
+class CanonicalWriterContention(unittest.TestCase):
+    """Real bank/source authority and writer locks; not native qualification."""
+
+    def setUp(self):
+        self.stack = ExitStack()
+        self.addCleanup(self.stack.close)
+        self.world = self.stack.enter_context(World())
+        self.repo, self.bank = test_checkpoint.CheckpointContract().fixture(self.world)
+        self.stack.enter_context(mock.patch.dict(os.environ, self.world.env, clear=True))
+        omp_boundary._activate_marker(self.repo, fresh_only=True)
+        context = omp_boundary.verify_marker(self.repo)
+        self.session, self.instance, self.lifecycle = uid(), uid(), uid()
+        self.binding = {'project_id': context.project_id, 'repo_root': str(self.repo),
+            'bank_path': str(self.bank), 'checkout_key': context.scope['checkout_key'],
+            'artifact_digest': 'a' * 64, 'installation_id': uuid.uuid4().hex,
+            'initial_lifecycle': self.lifecycle}
+        # Executable installation is outside this regression. Keep the actual
+        # bank marker, source barrier, scope mint/rechecks and metadata locks.
+        self.stack.enter_context(mock.patch.object(stream, '_attest_binding', return_value=object()))
+        self.stack.enter_context(mock.patch.object(omp_installation, '_observe_observer_binding',
+            side_effect=lambda repo, receipt, proof: omp_boundary._observe_marker(repo)))
+        self.coverage = stream.Coverage(str(self.repo), self.session, self.instance,
+                                       self.lifecycle, self.binding)
+        self.stack.callback(self.coverage.close_live)
+        self.responses = Responses()
+        self.clocks = stream.ClockWindows(self.instance, lambda: self.responses.live, platform='darwin')
+        self.lock = self.bank / '.agent-memory.lock'
+        self.retained = None
+        self.observer_calls = 0
+        self.release_writer = None
+        self.transactional = False
+        self.writer_window = 'protected'
+        self.empty_shared_probes = 0
+        self.observer_result = None
+        self.observer_error = None
+
+    def request(self):
+        return {'request': {'schema': 'agent-memory/omp-observer-request-v2', 'action': 'ingest',
+            'session': self.session, 'lifecycle': self.lifecycle,
+            'payload': {'entries': [], 'view': {'leaf_id': 'native-a', 'source_kind': 'session-manager',
+                'native_parents': [{'id': 'native-a', 'parent_id': None}]}}},
+            'event_ordinal': 1, 'identity': {'view_id': uid(), 'leaf_id': 'native-a',
+                                           'native_ids': ['native-a'], 'tool_ids': []}}
+
+    def start_writer(self):
+        if self.transactional:
+            files = bank_transactions.files_at(self.bank)
+            files['activeContext.md'] += '\nCanonical transaction fixture update.\n'
+            proposal = bank_transactions.preview(self.repo, files, 'replace')
+            apply = bank_transactions.apply
+            pause_stage = 'transaction-after-marker'
+        else:
+            proposal = bank_writes.preview(self.repo, 'activeContext.md',
+                (self.bank / 'activeContext.md').read_text() + '\nCanonical writer fixture update.\n')
+            apply = bank_writes.apply
+            pause_stage = 'locked-before-inventory'
+        ready, release = threading.Event(), threading.Event()
+        results, errors = [], []
+        def pause():
+            ready.set()
+            if not release.wait(10):
+                raise RuntimeError('Fixture did not release its canonical writer')
+        def fault(stage):
+            if stage == pause_stage and self.writer_window == 'protected':
+                pause()
+        def is_marker(fd):
+            try:
+                opened, named = os.fstat(fd), self.lock.lstat()
+            except FileNotFoundError:
+                return False
+            return (opened.st_dev, opened.st_ino) == (named.st_dev, named.st_ino)
+        flock, fsync = local_registry.fcntl.flock, os.fsync
+        def publication_flock(fd, flags):
+            if is_marker(fd):
+                if flags & local_registry.fcntl.LOCK_SH:
+                    self.empty_shared_probes += int(os.fstat(fd).st_size == 0)
+                if flags & local_registry.fcntl.LOCK_EX and self.writer_window == 'pre-ex':
+                    pause()
+            return flock(fd, flags)
+        def publication_fsync(fd):
+            if self.writer_window == 'owner-fsync' and is_marker(fd):
+                pause()
+            return fsync(fd)
+        def run():
+            try:
+                results.append(apply(proposal))
+            except BaseException as exc:
+                errors.append(exc)
+                ready.set()
+        self.stack.enter_context(mock.patch.object(bank_writes, 'fault', side_effect=fault))
+        self.stack.enter_context(mock.patch.object(local_registry.fcntl, 'flock', side_effect=publication_flock))
+        self.stack.enter_context(mock.patch.object(local_registry.os, 'fsync', side_effect=publication_fsync))
+        writer = threading.Thread(target=run, daemon=True)
+        def finish():
+            release.set()
+            writer.join(10)
+            self.assertFalse(writer.is_alive(), 'Fixture writer failed to terminate')
+            self.assertEqual(errors, [])
+            self.assertEqual(len(results), 1)
+            self.assertTrue(results[0]['verified'])
+        self.stack.callback(finish)
+        writer.start()
+        self.assertTrue(ready.wait(10), 'Canonical writer did not reach its actual held-lock boundary')
+        self.assertEqual(errors, [])
+        self.release_writer = finish
+
+    def observe(self, repo, request, *, on_started, **kwargs):
+        self.observer_calls += 1
+        try:
+            on_started()
+            self.retained = turn_sources.register(repo, 'omp', self.session, self.lifecycle,
+                'b' * 64, native_source_id='native-a')
+            self.start_writer()
+            self.observer_result = {'verified': True, 'source_references': [{'session': self.session,
+                'lifecycle': self.lifecycle, 'observation_id': self.retained['observation_id'],
+                'source_sha256': self.retained['source_sha256']}]}
+            return self.observer_result
+        except BaseException as exc:
+            self.observer_error = exc
+            raise
+
+    def execute(self):
+        try:
+            stream.FiniteExecutor(self.coverage, self.responses, self.clocks,
+                observer=self.observe).execute('REQUEST', 1, None, bytearray(turn_sources.encoded(self.request())))
+        finally:
+            if self.observer_calls:
+                self.assertIsNone(self.observer_error,
+                    f'Fixture observer failed before metadata edge: {self.observer_error!r}')
+                self.assertIsNotNone(self.observer_result, 'Fixture observer did not return its real source result')
+
+    def final(self):
+        return {'last_attempt_seq': 1, 'refused_count': 0, 'last_event_ordinal': 1, 'transition': None}
+
+    def assert_retained(self):
+        inventory = turn_sources.inspect(self.repo, 'omp', self.session, self.lifecycle)
+        self.assertEqual(len(inventory['sources']), 1)
+        self.assertEqual(inventory['sources'][0]['observation_id'], self.retained['observation_id'])
+        self.assertEqual(inventory['sources'][0]['source_sha256'], self.retained['source_sha256'])
+        self.assertEqual(inventory['sources'][0]['native_source_id'], 'native-a')
+        self.assertFalse(inventory['complete'])
+        self.assertEqual(self.observer_calls, 1)
+        self.assertEqual(self.coverage.last_sequence, 1)
+
+    def assert_outcome_after_writer_release(self):
+        def release(seconds):
+            self.assertFalse((self.coverage.directory / 'outcomes/1.json').exists())
+            self.assertTrue((self.coverage.directory / 'started/1.json').exists())
+            owner = self.lock.read_bytes()
+            expected = (local_registry.CanonicalWriterInitializing if self.writer_window == 'pre-ex'
+                        else local_registry.CanonicalWriterBusy)
+            with self.assertRaises(expected):
+                scope_binding.require(self.repo)
+            self.assertEqual(self.lock.read_bytes(), owner)
+            if self.writer_window == 'pre-ex':
+                self.assertEqual(owner, b'')
+            if self.transactional:
+                marker = stream.load((self.bank / '.agent-memory-transaction.md').read_bytes())
+                self.assertEqual(marker['schema'], 'agent-memory/transaction-marker-v1')
+                self.assertEqual(marker['transaction_id'], stream.load(owner)['operation_id'])
+            # Retry must not wait while holding either source or stream locks.
+            with turn_sources.source_barrier(self.repo, exclusive=True):
+                with turn_sources.private_lock(self.coverage.lock_path):
+                    pass
+            self.release_writer()
+        # Isolate the stream clock rather than changing time.sleep used by Git
+        # subprocess internals or the real canonical writer thread.
+        with mock.patch.object(stream, 'time', wraps=stream.time) as clock:
+            clock.sleep.side_effect = release
+            self.execute()
+        clock.sleep.assert_called_once_with(stream.BUSY_BACKOFF)
+        self.assertEqual(self.empty_shared_probes, 0)
+        self.assert_retained()
+        outcome = turn_sources.read(self.coverage.directory / 'outcomes/1.json', stream.MAX_METADATA)
+        self.assertEqual(outcome['outcome'], 'verified')
+        self.assertEqual(outcome['source_references'][0]['observation_id'], self.retained['observation_id'])
+        self.assertTrue(self.coverage.close(self.final()))
+        inventory = stream.inventory(str(self.repo))
+        self.assertEqual(inventory['pending'], [])
+        self.assertTrue(inventory['streams'][0]['closed'])
+
+    def test_actual_writer_at_outcome_unwinds_then_closes_without_replaying_source(self):
+        self.assert_outcome_after_writer_release()
+
+    def test_actual_transaction_at_outcome_waits_without_adopting_its_marker(self):
+        self.transactional = True
+        self.assert_outcome_after_writer_release()
+
+    def test_real_writer_pre_ex_empty_publication_defers_without_stealing_its_lock(self):
+        self.writer_window = 'pre-ex'
+        self.assert_outcome_after_writer_release()
+
+    def test_real_writer_full_owner_fsync_window_has_ex_ownership_before_probe(self):
+        self.writer_window = 'owner-fsync'
+        self.assert_outcome_after_writer_release()
+
+    def test_transaction_left_after_writer_release_remains_interruption(self):
+        self.transactional = True
+        marker = self.bank / '.agent-memory-transaction.md'
+        preserved = []
+        def release(seconds):
+            preserved.append(marker.read_bytes())
+            self.release_writer()
+            marker.write_bytes(preserved[0])
+            marker.chmod(0o600)
+        with mock.patch.object(stream, 'time', wraps=stream.time) as clock:
+            clock.sleep.side_effect = release
+            with self.assertRaises(ContractError) as refused:
+                self.execute()
+        self.assertNotIsInstance(refused.exception, turn_sources.SourceTransportBusy)
+        self.assertEqual(clock.sleep.call_count, 1)
+        self.assertEqual(marker.read_bytes(), preserved[0])
+        self.assertFalse((self.coverage.directory / 'outcomes/1.json').exists())
+        marker.unlink()
+        self.assert_retained()
+        self.assertFalse(self.coverage.close(self.final()))
+
+    def assert_writer_metadata_exhaustion(self):
+        ticks = iter((0.0, 0.0, 30.0))
+        with mock.patch.object(stream, 'time', wraps=stream.time) as clock:
+            clock.monotonic.side_effect = lambda: next(ticks, 30.0)
+            with self.assertRaises(turn_sources.SourceTransportBusy):
+                self.execute()
+        clock.sleep.assert_not_called()
+        self.assertTrue(self.lock.exists())
+        self.assertFalse((self.coverage.directory / 'outcomes/1.json').exists())
+        self.assertEqual(self.observer_calls, 1)
+        self.release_writer()
+        self.assert_retained()
+        self.assertFalse(self.coverage.close(self.final()))
+        pending = stream.inventory(str(self.repo))['pending']
+        self.assertTrue(any(item['code'] == 'missing-outcome' for item in pending))
+        self.assertFalse(any(kind == 'OBSERVED' for kind, _, _ in self.responses.values))
+
+    def test_actual_writer_metadata_exhaustion_keeps_source_and_open_unknown(self):
+        self.assert_writer_metadata_exhaustion()
+
+    def test_real_initializing_writer_exhaustion_cannot_verify_or_close(self):
+        self.writer_window = 'pre-ex'
+        self.assert_writer_metadata_exhaustion()
+
+    def test_unheld_empty_publication_exhaustion_retains_source_without_outcome(self):
+        def unpublished():
+            fd = os.open(self.lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+            os.close(fd)
+        ticks = iter((0.0, 0.0, 30.0))
+        with mock.patch.object(self, 'start_writer', side_effect=unpublished), \
+                mock.patch.object(stream, 'time', wraps=stream.time) as clock:
+            clock.monotonic.side_effect = lambda: next(ticks, 30.0)
+            with self.assertRaises(turn_sources.SourceTransportBusy) as refused:
+                self.execute()
+        self.assertIsInstance(refused.exception.__cause__, local_registry.CanonicalWriterInitializing)
+        self.assertEqual(self.lock.read_bytes(), b'')
+        self.assertFalse((self.coverage.directory / 'outcomes/1.json').exists())
+        self.assertFalse(any(kind == 'OBSERVED' for kind, _, _ in self.responses.values))
+        clock.sleep.assert_not_called()
+        self.lock.unlink()
+        self.assert_retained()
+        self.assertFalse(self.coverage.close(self.final()))
+
+    def test_released_writer_with_unknown_transaction_is_hard_refusal_not_retry(self):
+        marker = self.bank / '.agent-memory-transaction.md'
+        def release(seconds):
+            self.release_writer()
+            marker.write_bytes(b'{"schema":"unknown-transaction"}')
+            marker.chmod(0o600)
+        with mock.patch.object(stream, 'time', wraps=stream.time) as clock:
+            clock.sleep.side_effect = release
+            with self.assertRaises(ContractError) as refused:
+                self.execute()
+        self.assertNotIsInstance(refused.exception, turn_sources.SourceTransportBusy)
+        self.assertEqual(clock.sleep.call_count, 1)
+        self.assertEqual(marker.read_bytes(), b'{"schema":"unknown-transaction"}')
+        self.assertFalse((self.coverage.directory / 'outcomes/1.json').exists())
+        marker.unlink()  # Own deliberately invalid fixture marker, not recovery.
+        self.assert_retained()
+        self.assertFalse(self.coverage.close(self.final()))
+
+    def test_writer_release_rediscovers_identity_instead_of_reusing_frame_scope(self):
+        router = self.bank / 'MEMORY.md'
+        original = router.read_bytes()
+        def release(seconds):
+            self.release_writer()
+            router.write_bytes(original.replace(self.binding['project_id'].encode(), uid().encode()))
+        with mock.patch.object(stream, 'time', wraps=stream.time) as clock:
+            clock.sleep.side_effect = release
+            with self.assertRaises(ContractError) as refused:
+                self.execute()
+        self.assertNotIsInstance(refused.exception, turn_sources.SourceTransportBusy)
+        self.assertEqual(clock.sleep.call_count, 1)
+        self.assertFalse((self.coverage.directory / 'outcomes/1.json').exists())
+        router.write_bytes(original)
+        self.assert_retained()
+
+    def test_unheld_local_owner_is_interruption_not_live_pid_authority(self):
+        with local_registry.exclusive(self.lock, uid(), 'bank-capture') as owner:
+            with self.assertRaises(turn_sources.SourceTransportBusy):
+                scope_binding.private_enrollment_context(self.repo)
+        self.lock.write_bytes(owner)
+        self.lock.chmod(0o600)
+        with self.assertRaises(ContractError) as refused:
+            scope_binding.private_enrollment_context(self.repo)
+        self.assertNotIsInstance(refused.exception, turn_sources.SourceTransportBusy)
+        self.assertEqual(self.lock.read_bytes(), owner)
+
+    def test_writer_arriving_after_preflight_is_classified_at_actual_identity_guard(self):
+        from agent_memory import recovery_frontier
+        original = recovery_frontier._verified_hold_at_bank
+        with ExitStack() as held:
+            def arrive(*args, **kwargs):
+                value = original(*args, **kwargs)
+                held.enter_context(local_registry.exclusive(self.lock, uid(), 'bank-capture'))
+                return value
+            with mock.patch.object(recovery_frontier, '_verified_hold_at_bank', side_effect=arrive):
+                with self.assertRaises(turn_sources.SourceTransportBusy):
+                    scope_binding.private_enrollment_context(self.repo)
+            owner = self.lock.read_bytes()
+            with self.assertRaises(local_registry.CanonicalWriterBusy):
+                scope_binding.require(self.repo)
+            self.assertEqual(self.lock.read_bytes(), owner)
+        self.assertEqual(scope_binding.private_enrollment_context(self.repo).project_id, self.binding['project_id'])
+
+    def test_rebound_inode_after_flock_observation_is_not_classified_as_busy(self):
+        displaced = self.world.inside('displaced-own-writer-marker')
+        flock = local_registry.fcntl.flock
+        with local_registry.exclusive(self.lock, uid(), 'bank-capture') as owner:
+            def rebind(fd, flags):
+                try:
+                    return flock(fd, flags)
+                except BlockingIOError:
+                    self.lock.rename(displaced)
+                    self.lock.write_bytes(owner)
+                    self.lock.chmod(0o600)
+                    raise
+            with mock.patch.object(local_registry.fcntl, 'flock', side_effect=rebind):
+                with self.assertRaises(ContractError) as refused:
+                    scope_binding.private_enrollment_context(self.repo)
+            self.assertNotIsInstance(refused.exception, turn_sources.SourceTransportBusy)
+            self.assertEqual(self.lock.read_bytes(), owner)
+            self.assertEqual(displaced.read_bytes(), owner)
+        self.lock.unlink()
+
+    def assert_invalid_attempt_exit_retry(self, kind, *, corruption=None):
+        path = self.coverage.directory / 'attempts/1.json'
+        retain = stream._retain
+        saved = []
+        observer = mock.Mock(side_effect=CoverageFixture.verified)
+        def persist(target, *args, **kwargs):
+            result = retain(target, *args, **kwargs)
+            if target == path and not saved:
+                saved.append((path.read_bytes(), path.stat().st_ino, path.stat().st_mtime_ns))
+                self.start_writer()
+            return result
+        def release(seconds):
+            self.assertEqual(seconds, stream.BUSY_BACKOFF)
+            self.assertEqual((self.coverage.last_sequence, self.coverage.refused_count), (0, 0))
+            key = self.coverage._invalid_attempt_retry
+            self.assertEqual(key, (self.coverage.open_digest, self.instance, 1, kind, 'hint', 0))
+            with self.assertRaises(ContractError) as refused:
+                self.coverage.refuse_invalid(1, kind, 'seal', 0)
+            self.assertNotIsInstance(refused.exception, turn_sources.SourceTransportBusy)
+            self.assertEqual(self.coverage._invalid_attempt_retry, key)
+            self.assertEqual(path.read_bytes(), saved[0][0])
+            observer.assert_not_called()
+            with turn_sources.source_barrier(self.repo, exclusive=True), turn_sources.private_lock(self.coverage.lock_path):
+                pass
+            self.release_writer()
+            if corruption == 'partial':
+                path.write_bytes(b'{')
+            elif corruption == 'different':
+                value = stream.load(saved[0][0])
+                value['event_ordinal'] = 1
+                path.write_bytes(turn_sources.encoded(value))
+        with mock.patch.object(stream, '_retain', side_effect=persist), \
+                mock.patch.object(stream, 'time', wraps=stream.time) as clock:
+            clock.sleep.side_effect = release
+            executor = stream.FiniteExecutor(self.coverage, self.responses, self.clocks, observer=observer)
+            if corruption is None:
+                executor.execute(kind, 1, None, bytearray(b'{'))
+            else:
+                with self.assertRaises((ContractError, ValueError)) as refused:
+                    executor.execute(kind, 1, None, bytearray(b'{'))
+                self.assertNotIsInstance(refused.exception, turn_sources.SourceTransportBusy)
+        clock.sleep.assert_called_once_with(stream.BUSY_BACKOFF)
+        observer.assert_not_called()
+        self.assertIsNone(self.coverage._invalid_attempt_retry)
+        if corruption is not None:
+            expected = b'{' if corruption == 'partial' else turn_sources.encoded(
+                {**stream.load(saved[0][0]), 'event_ordinal': 1})
+            self.assertEqual(path.read_bytes(), expected)
+            self.assertEqual((self.coverage.last_sequence, self.coverage.refused_count), (0, 0))
+            self.assertFalse((self.coverage.directory / 'outcomes/1.json').exists())
+            return
+        self.assertEqual((path.read_bytes(), path.stat().st_ino, path.stat().st_mtime_ns), saved[0])
+        outcome = turn_sources.read(self.coverage.directory / 'outcomes/1.json', stream.MAX_METADATA)
+        self.assertEqual((outcome['outcome'], outcome['code']), ('durable-refusal', 'invalid-request'))
+        refused_count = int(kind == 'REFUSED-ATTEMPT')
+        self.assertEqual((self.coverage.last_sequence, self.coverage.refused_count), (1, refused_count))
+        self.assertEqual([(frame, sequence) for frame, sequence, _ in self.responses.values], [('REFUSED', 1)])
+        executor.execute('REQUEST', 2, None, bytearray(turn_sources.encoded(self.request())))
+        self.assertEqual(observer.call_count, 1)
+        self.assertTrue(self.coverage.close({'last_attempt_seq': 2, 'refused_count': refused_count,
+                                            'last_event_ordinal': 1, 'transition': None}))
+
+    def test_invalid_request_durable_attempt_exit_busy_resumes_exactly_once(self):
+        self.assert_invalid_attempt_exit_retry('REQUEST')
+
+    def test_invalid_refused_frame_durable_attempt_exit_busy_counts_once(self):
+        self.assert_invalid_attempt_exit_retry('REFUSED-ATTEMPT')
+
+    def test_invalid_attempt_exit_busy_never_adopts_partial_retry_record(self):
+        self.assert_invalid_attempt_exit_retry('REQUEST', corruption='partial')
+
+    def test_invalid_attempt_exit_busy_never_adopts_different_retry_record(self):
+        self.assert_invalid_attempt_exit_retry('REQUEST', corruption='different')
+
+    def test_empty_held_and_unheld_slots_never_mint_scope_or_claim_known_writer(self):
+        for held in (False, True):
+            with self.subTest(held=held):
+                fd = os.open(self.lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+                try:
+                    if held:
+                        local_registry.fcntl.flock(fd, local_registry.fcntl.LOCK_EX | local_registry.fcntl.LOCK_NB)
+                    with mock.patch.object(local_registry.fcntl, 'flock', wraps=local_registry.fcntl.flock) as probe:
+                        with self.assertRaises(local_registry.CanonicalWriterInitializing):
+                            local_registry.check_canonical_writer(self.lock, bank_writes.OPERATIONS)
+                    probe.assert_not_called()
+                    with self.assertRaises(local_registry.CanonicalWriterInitializing):
+                        scope_binding.require(self.repo)
+                    with self.assertRaises(turn_sources.SourceTransportBusy) as refused:
+                        scope_binding.private_enrollment_context(self.repo)
+                    self.assertIsInstance(refused.exception.__cause__, local_registry.CanonicalWriterInitializing)
+                    self.assertNotIsInstance(refused.exception.__cause__, local_registry.CanonicalWriterBusy)
+                    self.assertEqual(self.lock.read_bytes(), b'')
+                finally:
+                    os.close(fd)
+                    self.lock.unlink()
+
+    def assert_late_transaction_deferral(self, boundary):
+        from agent_memory import recovery_frontier
+        self.transactional = True
+        fired = False
+        original = recovery_frontier._marker_bytes
+        original_hold = recovery_frontier._verified_hold_at_bank
+        def arrive():
+            nonlocal fired
+            fired = True
+            self.start_writer()
+        def observe(root, bank, *args, **kwargs):
+            if not fired:
+                arrive()
+            return original_hold(root, bank, *args, **kwargs)
+        def read(bank, name, *, expected):
+            selected = bank == self.bank and name == '.agent-memory-transaction.md' and not fired
+            if selected and boundary == 'during-read':
+                arrive()
+                # An actual contended writer, not this arbitrary error, is the
+                # only reason the wrapper may reclassify the failed read.
+                raise ContractError('Synthetic bounded marker read interrupted')
+            raw = original(bank, name, expected=expected)
+            if selected and boundary == 'after-read':
+                arrive()
+            return raw
+        target = '_verified_hold_at_bank' if boundary == 'entry' else '_marker_bytes'
+        callback = observe if boundary == 'entry' else read
+        with mock.patch.object(recovery_frontier, target, side_effect=callback):
+            with self.assertRaises(turn_sources.SourceTransportBusy) as refused:
+                scope_binding.private_enrollment_context(self.repo)
+        self.assertTrue(fired)
+        self.assertIsInstance(refused.exception.__cause__, local_registry.CanonicalWriterBusy)
+        self.release_writer()
+        self.assertEqual(scope_binding.private_enrollment_context(self.repo).project_id, self.binding['project_id'])
+
+    def test_late_transaction_before_frontier_entry_is_exact_writer_deferral(self):
+        self.assert_late_transaction_deferral('entry')
+
+    def test_late_transaction_during_failed_marker_read_is_exact_writer_deferral(self):
+        self.assert_late_transaction_deferral('during-read')
+
+    def test_late_transaction_after_marker_read_is_exact_writer_deferral(self):
+        self.assert_late_transaction_deferral('after-read')
+
+    def test_arbitrary_marker_read_failure_without_writer_is_not_retryable(self):
+        from agent_memory import recovery_frontier
+        with mock.patch.object(recovery_frontier, '_marker_bytes',
+                side_effect=ContractError('Synthetic bounded marker read interrupted')):
+            with self.assertRaises(ContractError) as refused:
+                scope_binding.private_enrollment_context(self.repo)
+        self.assertNotIsInstance(refused.exception, turn_sources.SourceTransportBusy)
+        self.assertFalse(self.lock.exists())
+
+    def test_failed_marker_read_with_unproven_empty_slot_keeps_original_refusal(self):
+        from agent_memory import recovery_frontier
+        failure = ContractError('Synthetic bounded marker read interrupted')
+        def read(*args, **kwargs):
+            fd = os.open(self.lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+            os.close(fd)
+            raise failure
+        with mock.patch.object(recovery_frontier, '_marker_bytes', side_effect=read):
+            with self.assertRaises(ContractError) as refused:
+                scope_binding.private_enrollment_context(self.repo)
+        self.assertIs(refused.exception, failure)
+        self.assertEqual(self.lock.read_bytes(), b'')
+
+    def test_held_unknown_foreign_malformed_and_unsafe_owners_never_become_busy(self):
+        for mutation in ('unknown-operation', 'foreign-host', 'invalid-pid', 'malformed', 'oversize', 'noncanonical', 'symlink', 'hardlink', 'mode'):
+            with self.subTest(mutation=mutation):
+                with local_registry.exclusive(self.lock, uid(), 'bank-capture') as owner:
+                    value = stream.load(owner)
+                    if mutation == 'unknown-operation':
+                        value['operation'] = 'bank-future-operation'
+                    elif mutation == 'foreign-host':
+                        value['host'] = 'foreign.fixture.invalid'
+                    elif mutation == 'invalid-pid':
+                        value['pid'] = 0
+                    raw = (b'{' if mutation == 'malformed' else b'x' * 4097 if mutation == 'oversize'
+                           else turn_sources.encoded(value) if mutation == 'noncanonical' else local_registry.encoded(value))
+                    if mutation == 'symlink':
+                        target = self.world.inside('foreign-owner.json')
+                        target.write_bytes(owner)
+                        self.lock.unlink()
+                        self.lock.symlink_to(target)
+                    else:
+                        self.lock.write_bytes(raw)
+                    if mutation == 'hardlink':
+                        os.link(self.lock, self.world.inside('unexpected-owner-alias'))
+                    elif mutation == 'mode':
+                        self.lock.chmod(0o640)
+                    with self.assertRaises(ContractError) as refused:
+                        scope_binding.private_enrollment_context(self.repo)
+                    self.assertNotIsInstance(refused.exception, turn_sources.SourceTransportBusy)
+                    if mutation == 'symlink':
+                        self.assertEqual(target.read_bytes(), owner)
+                    else:
+                        self.assertEqual(self.lock.read_bytes(), raw)
+                self.lock.unlink(missing_ok=True)
+
+
+class CanonicalWriterObservationBoundaries(unittest.TestCase):
+    """Real kernel locks with deterministic acquisition/release interleavings."""
+
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.root = Path(temporary.name).resolve()
+        self.bank = self.root / 'bank'
+        self.bank.mkdir(mode=0o700)
+        self.lock = self.bank / '.agent-memory.lock'
+
+    def interleave(self, boundary, *, replace=False):
+        writer = local_registry.exclusive(self.lock, uid(), 'bank-capture')
+        owner = writer.__enter__()
+        initial = self.lock.lstat()
+        fired = False
+        released = False
+        fstats = stats = 0
+        real_lstat, real_open, real_fstat, real_stat = Path.lstat, os.open, os.fstat, os.stat
+        real_flock = local_registry.fcntl.flock
+        def change(point):
+            nonlocal fired, released
+            if fired or point != boundary:
+                return
+            fired = True
+            if replace:
+                self.lock.rename(self.bank / 'displaced-own-marker')
+                self.lock.write_bytes(owner)
+                self.lock.chmod(0o600)
+            else:
+                writer.__exit__(None, None, None)
+                released = True
+        def lstat(path, *args, **kwargs):
+            info = real_lstat(path, *args, **kwargs)
+            if path == self.lock:
+                change('after-lstat')
+            return info
+        def opening(path, flags, *args, **kwargs):
+            selected = path == self.lock.name and kwargs.get('dir_fd') is not None
+            if selected:
+                change('before-open')
+            fd = real_open(path, flags, *args, **kwargs)
+            if selected:
+                change('after-open')
+            return fd
+        def fstat(fd):
+            nonlocal fstats
+            info = real_fstat(fd)
+            if (info.st_dev, info.st_ino) == (initial.st_dev, initial.st_ino):
+                fstats += 1
+                change({1: 'after-initial-fstat', 2: 'after-read-fstat', 3: 'after-final-fstat'}.get(fstats))
+            return info
+        def stat(path, *args, **kwargs):
+            nonlocal stats
+            info = real_stat(path, *args, **kwargs)
+            if path == self.lock.name and kwargs.get('dir_fd') is not None:
+                stats += 1
+                change({1: 'after-first-name-stat', 2: 'after-read-name-stat', 3: 'after-final-name-stat'}.get(stats))
+            return info
+        def flock(fd, flags):
+            if flags & local_registry.fcntl.LOCK_SH:
+                change('before-flock')
+            try:
+                return real_flock(fd, flags)
+            except BlockingIOError:
+                change('after-busy-flock')
+                raise
+        try:
+            with mock.patch.object(Path, 'lstat', new=lstat), \
+                    mock.patch.object(local_registry.os, 'open', side_effect=opening), \
+                    mock.patch.object(local_registry.os, 'fstat', side_effect=fstat), \
+                    mock.patch.object(local_registry.os, 'stat', side_effect=stat), \
+                    mock.patch.object(local_registry.fcntl, 'flock', side_effect=flock):
+                if replace:
+                    with self.assertRaises(ContractError) as refused:
+                        local_registry.check_canonical_writer(self.lock, {'capture'})
+                    self.assertNotIsInstance(refused.exception,
+                        (local_registry.CanonicalWriterBusy, local_registry.CanonicalWriterInitializing))
+                else:
+                    try:
+                        local_registry.check_canonical_writer(self.lock, {'capture'})
+                    except local_registry.CanonicalWriterBusy:
+                        # Release just after the last name observation may
+                        # retain the already-proved busy result, never authority.
+                        self.assertEqual(boundary, 'after-final-name-stat')
+            self.assertTrue(fired, f'Interleaving was not reached: {boundary}')
+            if replace:
+                self.assertEqual(self.lock.read_bytes(), owner)
+                self.assertEqual((self.bank / 'displaced-own-marker').read_bytes(), owner)
+            else:
+                self.assertFalse(self.lock.exists())
+                self.assertIsNone(local_registry.check_canonical_writer(self.lock, {'capture'}))
+        finally:
+            if not released:
+                writer.__exit__(None, None, None)
+            self.lock.unlink(missing_ok=True)
+            (self.bank / 'displaced-own-marker').unlink(missing_ok=True)
+
+    def test_clean_release_at_each_observation_boundary_is_not_recovery(self):
+        for boundary in ('after-lstat', 'before-open', 'after-open', 'after-initial-fstat',
+                         'after-first-name-stat', 'after-read-fstat', 'after-read-name-stat',
+                         'before-flock', 'after-busy-flock', 'after-final-fstat', 'after-final-name-stat'):
+            with self.subTest(boundary=boundary):
+                self.interleave(boundary)
+
+    def test_replacement_at_checked_boundaries_remains_hard_refusal(self):
+        for boundary in ('before-open', 'after-initial-fstat', 'after-read-fstat',
+                         'before-flock', 'after-busy-flock', 'after-final-fstat'):
+            with self.subTest(boundary=boundary):
+                self.interleave(boundary, replace=True)
+
+    def test_zero_initialization_requires_exact_safe_slot_properties(self):
+        for mutation in ('mode', 'hardlink', 'uid', 'symlink'):
+            with self.subTest(mutation=mutation):
+                self.lock.touch(mode=0o600)
+                alias = self.bank / 'unsafe-alias'
+                if mutation == 'mode':
+                    self.lock.chmod(0o640)
+                elif mutation == 'hardlink':
+                    os.link(self.lock, alias)
+                elif mutation == 'symlink':
+                    self.lock.rename(alias)
+                    self.lock.symlink_to(alias)
+                with ExitStack() as patches:
+                    if mutation == 'uid':
+                        actual_uid = os.geteuid()
+                        patches.enter_context(mock.patch.object(local_registry.os, 'geteuid', return_value=actual_uid + 1))
+                    with self.assertRaises(ContractError) as refused:
+                        local_registry.check_canonical_writer(self.lock, {'capture'})
+                self.assertNotIsInstance(refused.exception,
+                    (local_registry.CanonicalWriterBusy, local_registry.CanonicalWriterInitializing))
+                self.lock.unlink()
+                alias.unlink(missing_ok=True)
+
+    def test_zero_initialization_cannot_rebind_its_pinned_bank(self):
+        self.lock.touch(mode=0o600)
+        real_open = os.open
+        moved = self.root / 'displaced-bank'
+        def opening(path, flags, *args, **kwargs):
+            fd = real_open(path, flags, *args, **kwargs)
+            if path == self.lock.name and kwargs.get('dir_fd') is not None:
+                self.bank.rename(moved)
+                self.bank.mkdir(mode=0o700)
+            return fd
+        with mock.patch.object(local_registry.os, 'open', side_effect=opening):
+            with self.assertRaises(ContractError) as refused:
+                local_registry.check_canonical_writer(self.lock, {'capture'})
+        self.assertNotIsInstance(refused.exception,
+            (local_registry.CanonicalWriterBusy, local_registry.CanonicalWriterInitializing))
+        self.assertEqual((moved / self.lock.name).read_bytes(), b'')
+
+    def test_real_owner_publication_between_empty_samples_is_only_initialization(self):
+        for sample in (1, 2):
+            with self.subTest(sample=sample):
+                waiting, publish, published, release = (threading.Event() for _ in range(4))
+                owners, errors = [], []
+                write, fstat = os.write, os.fstat
+                def publication(fd, payload):
+                    waiting.set()
+                    if not publish.wait(10):
+                        raise RuntimeError('Fixture did not permit owner publication')
+                    return write(fd, payload)
+                def run():
+                    try:
+                        with local_registry.exclusive(self.lock, uid(), 'bank-capture') as owner:
+                            owners.append(owner)
+                            published.set()
+                            if not release.wait(10):
+                                raise RuntimeError('Fixture did not release published owner')
+                    except BaseException as exc:
+                        errors.append(exc)
+                        waiting.set()
+                        published.set()
+                with mock.patch.object(local_registry.os, 'write', side_effect=publication):
+                    writer = threading.Thread(target=run, daemon=True)
+                    writer.start()
+                    try:
+                        self.assertTrue(waiting.wait(10))
+                        self.assertEqual(errors, [])
+                        inode = self.lock.lstat().st_ino
+                        samples = 0
+                        def observe(fd):
+                            nonlocal samples
+                            info = fstat(fd)
+                            if info.st_ino == inode and info.st_size == 0:
+                                samples += 1
+                                if samples == sample:
+                                    publish.set()
+                                    self.assertTrue(published.wait(10))
+                                    self.assertEqual(errors, [])
+                            return info
+                        with mock.patch.object(local_registry.os, 'fstat', side_effect=observe), \
+                                mock.patch.object(local_registry.fcntl, 'flock', wraps=local_registry.fcntl.flock) as probe:
+                            with self.assertRaises(local_registry.CanonicalWriterInitializing):
+                                local_registry.check_canonical_writer(self.lock, {'capture'})
+                        probe.assert_not_called()
+                        self.assertEqual(samples, sample)
+                        self.assertEqual(self.lock.read_bytes(), owners[0])
+                    finally:
+                        publish.set()
+                        release.set()
+                        writer.join(10)
+                        self.assertFalse(writer.is_alive())
+                    self.assertEqual(errors, [])
+                self.assertFalse(self.lock.exists())
+
+    def test_nonempty_short_owner_write_remains_interruption_not_initialization(self):
+        write = os.write
+        def short(fd, payload):
+            return write(fd, payload[:1])
+        with mock.patch.object(local_registry.os, 'write', side_effect=short):
+            with self.assertRaises(ContractError):
+                with local_registry.exclusive(self.lock, uid(), 'bank-capture'):
+                    self.fail('A partial owner publication entered protected work')
+        self.assertEqual(self.lock.read_bytes(), b'{')
+        with self.assertRaises(ContractError) as refused:
+            local_registry.check_canonical_writer(self.lock, {'capture'})
+        self.assertNotIsInstance(refused.exception,
+            (local_registry.CanonicalWriterBusy, local_registry.CanonicalWriterInitializing))
+
+
+    def test_real_recovery_wins_first_ex_without_stranding_creators_empty_slot(self):
+        creator = threading.get_ident()
+        recovery_held, release_recovery = threading.Event(), threading.Event()
+        errors, recovered = [], []
+        flock = local_registry.fcntl.flock
+        def recover():
+            try:
+                recovered.append(local_registry.recover(self.bank / 'registry.json', self.lock, {'bank-capture'}))
+            except BaseException as exc:
+                errors.append(exc)
+                recovery_held.set()
+        recovery = threading.Thread(target=recover, daemon=True)
+        def contend(fd, flags):
+            if threading.get_ident() == creator:
+                recovery.start()
+                self.assertTrue(recovery_held.wait(10))
+                self.assertEqual(errors, [])
+                return flock(fd, flags)
+            result = flock(fd, flags)
+            recovery_held.set()
+            if not release_recovery.wait(10):
+                raise RuntimeError('Fixture did not release its actual recovery lock')
+            return result
+        try:
+            with mock.patch.object(local_registry.fcntl, 'flock', side_effect=contend):
+                with self.assertRaises(ContractError) as refused:
+                    with local_registry.exclusive(self.lock, uid(), 'bank-capture'):
+                        self.fail('Writer entered protected work without its first EX lock')
+                self.assertIsInstance(refused.exception.__cause__, BlockingIOError)
+                self.assertFalse(self.lock.exists())
+        finally:
+            release_recovery.set()
+            if recovery.ident is not None:
+                recovery.join(10)
+                self.assertFalse(recovery.is_alive())
+        self.assertEqual(recovered, [])
+        self.assertEqual(len(errors), 1)
+        self.assertIsInstance(errors[0], FileNotFoundError)
+
+    def test_noncontention_first_ex_error_removes_only_creators_empty_slot(self):
+        import errno
+        for code in (errno.ENOLCK, errno.ENOTSUP):
+            with self.subTest(errno=code):
+                failure = OSError(code, 'Synthetic first ownership lock failure')
+                with mock.patch.object(local_registry.fcntl, 'flock', side_effect=failure):
+                    with self.assertRaises(ContractError) as refused:
+                        with local_registry.exclusive(self.lock, uid(), 'bank-capture'):
+                            self.fail('Failed acquisition entered protected work')
+                self.assertIs(refused.exception.__cause__, failure)
+                self.assertFalse(self.lock.exists())
+                with local_registry.exclusive(self.lock, uid(), 'bank-capture'):
+                    self.assertTrue(self.lock.is_file())
+                self.assertFalse(self.lock.exists())
+
+    def test_interrupt_during_marker_read_is_not_reclassified_as_writer_retry(self):
+        from agent_memory import recovery_frontier
+        for failure in (KeyboardInterrupt(), SystemExit(7), MemoryError()):
+            with self.subTest(error=type(failure).__name__), ExitStack() as owners:
+                def read(*args, **kwargs):
+                    owners.enter_context(local_registry.exclusive(self.lock, uid(), 'bank-capture'))
+                    raise failure
+                with recovery_frontier._observe_source_markers(), \
+                        mock.patch.object(recovery_frontier, '_marker_bytes', side_effect=read):
+                    with self.assertRaises(type(failure)) as refused:
+                        recovery_frontier.marker_bytes(self.bank)
+                self.assertIs(refused.exception, failure)
+
+    def test_failed_first_ex_preserves_replacement_or_changed_empty_slot(self):
+        for mutation in ('replacement', 'mode', 'hardlink', 'uid', 'nonempty'):
+            with self.subTest(mutation=mutation), ExitStack() as patches:
+                holders = []
+                flock = local_registry.fcntl.flock
+                def contend(fd, flags):
+                    holder = os.open(self.lock, os.O_RDONLY | os.O_NOFOLLOW)
+                    holders.append(holder)
+                    flock(holder, local_registry.fcntl.LOCK_EX | local_registry.fcntl.LOCK_NB)
+                    if mutation == 'replacement':
+                        self.lock.rename(self.bank / 'displaced-empty-slot')
+                        self.lock.write_bytes(b'foreign replacement')
+                        self.lock.chmod(0o600)
+                    elif mutation == 'mode':
+                        self.lock.chmod(0o640)
+                    elif mutation == 'hardlink':
+                        os.link(self.lock, self.bank / 'extra-empty-alias')
+                    elif mutation == 'uid':
+                        actual_uid = os.geteuid()
+                        patches.enter_context(mock.patch.object(local_registry.os, 'geteuid', return_value=actual_uid + 1))
+                    else:
+                        os.write(fd, b'{')
+                    return flock(fd, flags)
+                try:
+                    with mock.patch.object(local_registry.fcntl, 'flock', side_effect=contend):
+                        with self.assertRaises(ContractError):
+                            with local_registry.exclusive(self.lock, uid(), 'bank-capture'):
+                                self.fail('Contended writer entered protected work')
+                    expected = b'foreign replacement' if mutation == 'replacement' else b'{' if mutation == 'nonempty' else b''
+                    self.assertEqual(self.lock.read_bytes(), expected)
+                    self.assertEqual(len(holders), 1)
+                    self.assertGreater(os.fstat(holders[0]).st_ino, 0)
+                finally:
+                    for holder in holders:
+                        os.close(holder)
+                    self.lock.unlink(missing_ok=True)
+                    (self.bank / 'displaced-empty-slot').unlink(missing_ok=True)
+                    (self.bank / 'extra-empty-alias').unlink(missing_ok=True)
+
+    def test_preexisting_empty_slot_is_never_creator_cleanup_authority(self):
+        self.lock.touch(mode=0o600)
+        original = self.lock.lstat()
+        with mock.patch.object(local_registry.os, 'unlink', wraps=os.unlink) as unlink:
+            with self.assertRaises(ContractError):
+                with local_registry.exclusive(self.lock, uid(), 'bank-capture'):
+                    self.fail('A preexisting empty slot was adopted')
+        unlink.assert_not_called()
+        self.assertEqual(self.lock.read_bytes(), b'')
+        self.assertEqual(self.lock.lstat().st_ino, original.st_ino)
+
+    def test_owner_write_oserror_preserves_publication_evidence_and_closes_creator(self):
+        opened = []
+        opening = os.open
+        failure = OSError('Synthetic owner publication I/O error')
+        def record(path, flags, *args, **kwargs):
+            fd = opening(path, flags, *args, **kwargs)
+            opened.append(fd)
+            return fd
+        with mock.patch.object(local_registry.os, 'open', side_effect=record), \
+                mock.patch.object(local_registry.os, 'write', side_effect=failure):
+            with self.assertRaises(ContractError) as refused:
+                with local_registry.exclusive(self.lock, uid(), 'bank-capture'):
+                    self.fail('A failed owner write entered protected work')
+        self.assertIs(refused.exception.__cause__, failure)
+        self.assertEqual(self.lock.read_bytes(), b'')
+        self.assertEqual(len(opened), 1)
+        with self.assertRaises(OSError):
+            os.fstat(opened[0])
+        with self.assertRaises(local_registry.CanonicalWriterInitializing):
+            local_registry.check_canonical_writer(self.lock, {'capture'})
+        self.assertEqual(self.lock.read_bytes(), b'')
+
+    def test_initial_lstat_io_error_is_typed_without_opening_descriptors(self):
+        lstat = Path.lstat
+        failure = PermissionError('Synthetic marker inspection denial')
+        def deny(path, *args, **kwargs):
+            if path == self.lock:
+                raise failure
+            return lstat(path, *args, **kwargs)
+        with mock.patch.object(Path, 'lstat', new=deny), \
+                mock.patch.object(local_registry.os, 'open', wraps=os.open) as opening:
+            with self.assertRaises(ContractError) as refused:
+                local_registry.check_canonical_writer(self.lock, {'capture'})
+        self.assertIs(refused.exception.__cause__, failure)
+        opening.assert_not_called()
+
+    def test_bank_replaced_by_symlink_before_open_is_typed_without_closing_foreign_fds(self):
+        self.lock.touch(mode=0o600)
+        lstat = Path.lstat
+        moved = self.root / 'replaced-before-pin'
+        replaced = False
+        def rebind(path, *args, **kwargs):
+            nonlocal replaced
+            info = lstat(path, *args, **kwargs)
+            if path == self.lock and not replaced:
+                replaced = True
+                self.bank.rename(moved)
+                self.bank.symlink_to(moved, target_is_directory=True)
+            return info
+        with mock.patch.object(Path, 'lstat', new=rebind), \
+                mock.patch.object(local_registry.os, 'close', wraps=os.close) as close:
+            with self.assertRaises(ContractError) as refused:
+                local_registry.check_canonical_writer(self.lock, {'capture'})
+        self.assertIsInstance(refused.exception.__cause__, OSError)
+        close.assert_not_called()
+        self.assertEqual((moved / self.lock.name).read_bytes(), b'')
 
 
 class DeadlineWindows(unittest.TestCase):

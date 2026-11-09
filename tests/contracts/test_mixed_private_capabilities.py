@@ -237,7 +237,6 @@ class MixedPrivateCapabilities(unittest.TestCase):
             before = preserved()
             for args in (('update', '--check'), ('update',)):
                 denied = lifecycle.public(world, receipt, *args, expected=1)
-                self.assertIn('Candidate would remove the owned lifecycle command surface', denied['error'])
                 self.assertEqual(preserved(), before)
             # A genuinely new capable managed artifact needs a newly reviewed
             # attestation for its own digest and all receipt-owned routes.

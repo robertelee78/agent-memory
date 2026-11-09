@@ -21,17 +21,32 @@ The [portable lifecycle matrix](../contracts/portable-lifecycle.md) binds every
 approved lifecycle obligation to registered executable cases and adds installed
 copy/all-client and link/custom-only journeys. Routine qualification runs locally
 on the available macOS and Linux machines, retaining source-bound results.
-The manually dispatched CI workflow can run the same complete gate on
-Ubuntu/macOS and Python 3.11/3.15 when explicitly needed. Pushes and releases do
-not automatically start that expensive matrix. Each run retains actual results,
-failures and checked-out commit/tree evidence for each cell.
+The manually dispatched CI workflow runs Ubuntu/macOS and Python 3.11/3.15
+when explicitly needed. Pushes and releases do not automatically start that
+expensive matrix. Each cell is divided into three registry-ordinal shards;
+each shard uses at most two isolated workers, a 300-second deadline per suite,
+and a 180-minute job budget. Shard receipts are partial, never release-complete.
+The cell aggregation requires all three compatible successful receipts and
+rechecks both batch and lifecycle-fault coverage before claiming completeness.
+The final gate requires every shard and every cell. CI retains shard and cell
+receipts, diagnostics, and checked-out commit/tree evidence.
 
-Each suite retains its 300-second worker deadline. The complete gate has a
-separate 180-minute CI job budget. Local invocation defaults to one worker;
-`--jobs 2` permits at most two concurrent workers, each in a separate disposable
-World with its own home, registries, credentials directory and owned process
-supervisor. The hosted matrix selects two workers without changing either
-deadline, excluding suites or subdividing the total job budget.
+For example, on a Linux Python 3.11 checkout, run each index 0, 1, and 2:
+
+```sh
+scripts/test.sh --release --jobs 2 --json --shard-index 0 --shard-count 3 \
+  --cell-os ubuntu-latest --cell-python 3.11 --output shard-0.json
+```
+
+Merge with `scripts/test.sh --release --json --shard-count 3 --cell-os
+ubuntu-latest --cell-python 3.11 --output cell.json --merge-shards shard-0.json
+shard-1.json shard-2.json`. The declared OS and Python must match the actual
+interpreter; all receipts and the merger must match the same observed cell and
+checkout source hash. The hash covers skills, scripts, tests, the checked-in
+memory bank, installer, workflow and recall-qualification label, receipt and
+controller fixtures, excluding Python bytecode. It rejects symlinks in source inputs. Changes to these inputs while a
+shard or merge runs invalidate its receipt.
+Local unsharded invocation remains available and defaults to one worker.
 
 Results and buffered diagnostics remain in registry order. A fatal collector
 error cancels unstarted work, waits for started Worlds to finish their bounded

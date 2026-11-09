@@ -31,7 +31,7 @@ class VerifiedReceipt(dict):
 
 
 class SourceTransportBusy(ContractError):
-    """A nonblocking source lock was unavailable before its protected work."""
+    """Bounded source-lock/authority deferral, including mutation exit rechecks."""
 
 
 def encoded(value):

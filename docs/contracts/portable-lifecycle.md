@@ -23,7 +23,7 @@ and client roots, actual installed commands and preserved source/index/history:
 registered test methods. The binding check rejects missing suites/methods or
 pending/optional substitutions. Its references include no-client modes,
 unrelated-target refusal, owned backups, sentinel edits, source/ref/downgrade
-guards, all thirty-eight real before/after fault workers, committed lost responses,
+guards, all fifty real before/after fault workers, committed lost responses,
 rollback/locks, modified-target preservation and confirmed purge. It also binds
 package validation and the isolation/worker-collection controls. The collector
 uses a supervisor that retains ownership of its process group through descendant
@@ -35,13 +35,13 @@ If that failure follows a worker timeout, the actual producer and disposable
 gate regressions require both worker streams, the record exception and the
 original timeout to survive collection.
 
-The six expensive update/install phase-and-mode inventories run as four
+The ten expensive update/install/uninstall phase-and-mode inventories run as four
 mandatory disjoint batches each. Every batch observes the complete clean write
 inventory, interrupts its selected real writes, recovers, retries and retains
 the original preservation/ownership checks. The gate compares their actual
 artifact identities and complete observed inventories, then requires every
 point exactly once across all four batches. A missing batch, proof, interruption
-or retry fails the gate. The other fourteen fault workers retain their complete
+or retry fails the gate. The other ten fault workers retain their complete
 inventories. No fault point or public 300-second worker limit is removed.
 
 Project identity discovery uses one coherent repository-settings observation

@@ -4,9 +4,10 @@ import sys
 
 PARTITIONS = 4
 GROUPS = {}
-for operation, mode in [('update', None), ('install', 'copy'), ('install', 'link')]:
+for operation, mode in [('update', None), ('install', 'copy'), ('install', 'link'),
+                        ('uninstall', 'copy'), ('uninstall', 'link')]:
     for phase in ('before', 'after'):
-        name = f'update-write-{phase}' if operation == 'update' else f'install-write-{mode}-{phase}'
+        name = f'update-write-{phase}' if operation == 'update' else f'{operation}-write-{mode}-{phase}'
         GROUPS[name] = {'operation': operation, 'mode': mode, 'phase': phase,
                         'suites': [name if index == 0 else f'{name}-part-{index}'
                                    for index in range(PARTITIONS)]}

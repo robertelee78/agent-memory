@@ -8,7 +8,43 @@ permissions:
 
 jobs:
   contracts:
-    name: Contracts (${{ matrix.os }}, Python ${{ matrix.python }})
+    name: Contracts (${{ matrix.os }}, Python ${{ matrix.python }}, shard ${{ matrix.shard }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python: ['3.11', '3.15']
+        shard: [0, 1, 2]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Run assigned isolated contracts
+        shell: bash
+        run: |
+          mkdir -p reports
+          python3 -I -c 'import json,platform,sys; print(json.dumps({"python":sys.version,"executable":sys.executable,"platform":platform.platform()}))' > reports/runtime.json
+          git rev-parse HEAD > reports/commit.txt
+          git rev-parse HEAD^{tree} > reports/tree.txt
+          scripts/test.sh --release --jobs 2 --json --shard-index '${{ matrix.shard }}' --shard-count 3 --cell-os '${{ matrix.os }}' --cell-python '${{ matrix.python }}' --output reports/test-gate.json > reports/test-gate.stdout 2> reports/test-gate.stderr
+      - name: Retain receipts and failures
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: contracts-${{ matrix.os }}-python-${{ matrix.python }}-shard-${{ matrix.shard }}
+          path: reports/
+          if-no-files-found: error
+          retention-days: 14
+
+  cells:
+    name: Aggregate (${{ matrix.os }}, Python ${{ matrix.python }})
+    needs: contracts
+    if: always()
     runs-on: ${{ matrix.os }}
     timeout-minutes: 180
     strategy:
@@ -23,19 +59,46 @@ jobs:
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: ${{ matrix.python }}
-      - name: Run the complete isolated contract gate
+      - name: Download shard 0
+        continue-on-error: true
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: contracts-${{ matrix.os }}-python-${{ matrix.python }}-shard-0
+          path: shards/0
+      - name: Download shard 1
+        continue-on-error: true
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: contracts-${{ matrix.os }}-python-${{ matrix.python }}-shard-1
+          path: shards/1
+      - name: Download shard 2
+        continue-on-error: true
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: contracts-${{ matrix.os }}-python-${{ matrix.python }}-shard-2
+          path: shards/2
+      - name: Verify complete cell
         shell: bash
         run: |
           mkdir -p reports
-          python3 -I -c 'import json,platform,sys; print(json.dumps({"python":sys.version,"executable":sys.executable,"platform":platform.platform()}))' > reports/runtime.json
-          git rev-parse HEAD > reports/commit.txt
-          git rev-parse HEAD^{tree} > reports/tree.txt
-          scripts/test.sh --release --jobs 2 --json > reports/test-gate.json 2> reports/test-gate.stderr
-      - name: Retain receipts and failures
+          scripts/test.sh --release --json --shard-count 3 --cell-os '${{ matrix.os }}' --cell-python '${{ matrix.python }}' --output reports/test-gate.json --merge-shards shards/0/test-gate.json shards/1/test-gate.json shards/2/test-gate.json > reports/test-gate.stdout 2> reports/test-gate.stderr
+      - name: Retain aggregate receipt
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: contracts-${{ matrix.os }}-python-${{ matrix.python }}
+          name: contracts-${{ matrix.os }}-python-${{ matrix.python }}-aggregate
           path: reports/
           if-no-files-found: error
           retention-days: 14
+
+  release-gate:
+    name: Complete release gate
+    needs: [contracts, cells]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require all shards and cells
+        env:
+          SHARDS: ${{ needs.contracts.result }}
+          CELLS: ${{ needs.cells.result }}
+        run: test "$SHARDS" = success && test "$CELLS" = success

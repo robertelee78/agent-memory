@@ -12,13 +12,14 @@ from pathlib import Path
 import pickle
 import subprocess
 import sys
+import threading
 import time
 import unittest
 import uuid
 from unittest.mock import patch
 
 from world import World
-from contracts import test_admission
+from contracts import test_admission, test_checkpoint
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS = ROOT / 'skills/agent-memory/scripts'
@@ -26,6 +27,7 @@ sys.path.insert(0, str(SCRIPTS))
 from agent_memory import artifact, bank_writes, codex_boundary, layout_recovery_observation as raw
 from agent_memory import layout_recovery_state as state, local_registry, recovery_frontier, scope_binding
 from agent_memory import turn_check, turn_sources as sources
+from agent_memory import checkpoint as checkpoint_api
 from agent_memory.developer_identity import digest, encoded
 
 
@@ -34,8 +36,8 @@ def uid():
 
 
 class HeldSourceEnrollment(unittest.TestCase):
-    def fixture(self, world):
-        helper = test_admission.AdmissionContract()
+    def fixture(self, world, *, checkpoint_context=False):
+        helper = test_checkpoint.CheckpointContract() if checkpoint_context else test_admission.AdmissionContract()
         repo, bank = helper.fixture(world)
         operation, proposal_id, hold_id, unit_id = uid(), uid(), uid(), uid()
         handoff = b'# Pending fixture\n\nRetain the source conditions until independently confirmed.\n'
@@ -148,6 +150,71 @@ class HeldSourceEnrollment(unittest.TestCase):
                 sources.register(repo, 'claude', session, lifecycle, 'b' * 64, native_source_id=event,
                                  source_reference='/private/fixture.jsonl')
             self.assertEqual(sources.inspect(repo, 'claude', session, lifecycle)['sources'][0]['observation_id'], first['observation_id'])
+
+    def test_rolled_back_raw_scope_defers_late_real_held_checkpoint_without_source_loss(self):
+        with World() as world, patch.dict(os.environ, world.env, clear=True):
+            helper, repo, bank, operation, directory, original, body = self.fixture(world, checkpoint_context=True)
+            index_path = state.paths(repo)[2] / 'index.json'
+            indexed = state.index(repo)
+            indexed['operations'][operation]['state'] = 'rolled-back'
+            state.set_index(repo, indexed, digest(state.read_bytes(index_path)))
+            context = scope_binding.private_enrollment_context(repo)
+            self.assertTrue(context.held)
+            prepared = checkpoint_api.preview(repo, helper.payload(checkpoint_api.inspect(repo)))
+            held_marker = (bank / '.agent-memory-transaction.md').read_bytes()
+            ledger = (directory / 'ledger-head.json').read_bytes()
+            ready, release = threading.Event(), threading.Event()
+            results, errors = [], []
+            raw_scope = scope_binding.raw_recovery_context
+            fired = False
+            def fault(stage):
+                if stage == 'layout-recovery-nested-before-receipt':
+                    ready.set()
+                    if not release.wait(10):
+                        raise RuntimeError('Fixture did not release its held checkpoint writer')
+            def write():
+                try:
+                    results.append(checkpoint_api.apply(prepared))
+                except BaseException as exc:
+                    errors.append(exc)
+                    ready.set()
+            writer = threading.Thread(target=write, daemon=True)
+            def late(repo, identity, owner=None, transaction=None):
+                nonlocal fired
+                if not fired and owner is None:
+                    fired = True
+                    writer.start()
+                    self.assertTrue(ready.wait(10))
+                    self.assertEqual(errors, [])
+                return raw_scope(repo, identity, owner, transaction)
+            try:
+                with patch.object(bank_writes, 'fault', side_effect=fault), \
+                        patch.object(scope_binding, 'raw_recovery_context', side_effect=late):
+                    with self.assertRaises(sources.SourceTransportBusy) as refused:
+                        scope_binding.private_enrollment_context(repo)
+                    self.assertTrue(fired)
+                    self.assertIsInstance(refused.exception.__cause__, local_registry.CanonicalWriterBusy)
+                    owner = json.loads((bank / '.agent-memory.lock').read_bytes())
+                    self.assertEqual(owner['operation'], 'bank-checkpoint')
+                    self.assertEqual((directory / original['blob']).read_bytes(), body)
+                    self.assertEqual((directory / 'ledger-head.json').read_bytes(), ledger)
+            finally:
+                release.set()
+                if writer.ident is not None:
+                    writer.join(10)
+                    self.assertFalse(writer.is_alive())
+            self.assertEqual(errors, [])
+            self.assertEqual(len(results), 1)
+            self.assertTrue(results[0]['verified'])
+            self.assertEqual((bank / '.agent-memory-transaction.md').read_bytes(), held_marker)
+            self.assertEqual(scope_binding.private_enrollment_context(repo).scope, context.scope)
+            session, lifecycle = uid(), uid()
+            retained = sources.register(repo, 'omp', session, lifecycle, 'a' * 64, native_source_id='late-checkpoint-source')
+            inventory = sources.inspect(repo, 'omp', session, lifecycle)
+            self.assertEqual([source['observation_id'] for source in inventory['sources']], [retained['observation_id']])
+            self.assertFalse(inventory['complete'])
+            self.assertEqual((directory / original['blob']).read_bytes(), body)
+            self.assertEqual((directory / 'ledger-head.json').read_bytes(), ledger)
 
     def assert_fault_boundaries(self, mode, stages):
         with World() as world, patch.dict(os.environ, world.env, clear=True):

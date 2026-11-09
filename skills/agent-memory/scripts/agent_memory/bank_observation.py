@@ -64,6 +64,13 @@ def markers(bank,owner,transaction=None):
             if expected is not None:raise ContractError('Owned bank lock disappeared; preserve work and retry with actual ownership')
             continue
         if expected is None:
+            if name == '.agent-memory.lock':
+                from . import local_registry
+                # Raw recovery identity uses this same final marker guard.
+                # No caller gains ownership; ordinary callers still refuse.
+                local_registry.check_canonical_writer(target, writes.OPERATIONS)
+                if not os.path.lexists(target):
+                    continue
             raise ContractError('Bank is busy/interrupted; preserve the operation and retry after recovery')
         if not stat.S_ISREG(mode):raise ContractError('Owned bank marker is not an ordinary record')
         directory=os.open(bank,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW)

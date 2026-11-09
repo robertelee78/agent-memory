@@ -629,6 +629,7 @@ class Coverage:
         self.last_sequence = 0
         self.refused_count = 0
         self.last_ordinal = 0
+        self._invalid_attempt_retry = None
         self.open = {'schema': 'agent-memory/omp-stream-open-v1', **binding,
                      'session': session, 'instance_id': instance, 'opened_at': str(time.time_ns())}
         self.attest_frame()
@@ -727,11 +728,29 @@ class Coverage:
         return digest
 
     def refuse_invalid(self, sequence, frame_kind, action, ordinal):
-        # Never replace an accepted/partial immutable slot after a real I/O fault.
-        with self.control():
-            if os.path.lexists(self.directory / 'attempts' / f'{sequence}.json'):
-                raise ContractError('Original finite attempt exists; preserve its unknown outcome')
-        return self.attempt(sequence, action, ordinal, 'refused', 'invalid-request', None, None, frame_kind)
+        # Only this live coverage instance can resume its own exact invalid
+        # metadata operation after a typed exit-recheck deferral. A serialized,
+        # accepted, partial or unrelated preexisting slot is never adopted.
+        key = (self.open_digest, self.instance, sequence, frame_kind, action, ordinal)
+        retry = self._invalid_attempt_retry == key
+        if self._invalid_attempt_retry is not None and not retry:
+            raise ContractError('Different invalid frame cannot resume pending finite metadata')
+        busy = False
+        try:
+            with self.control():
+                if os.path.lexists(self.directory / 'attempts' / f'{sequence}.json') and not retry:
+                    raise ContractError('Original finite attempt exists; preserve its unknown outcome')
+                if not retry:
+                    self._invalid_attempt_retry = key
+            # _retain still requires exact immutable bytes on a retry. attempt
+            # advances in-memory counts only after all exit rechecks succeed.
+            return self.attempt(sequence, action, ordinal, 'refused', 'invalid-request', None, None, frame_kind)
+        except turn_sources.SourceTransportBusy:
+            busy = True
+            raise
+        finally:
+            if not busy:
+                self._invalid_attempt_retry = None
 
     def started(self, sequence, attempt_digest):
         # Called inside source barrier -> omp-transport lock, never acquires transport.
