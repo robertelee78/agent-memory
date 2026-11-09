@@ -285,6 +285,12 @@ class LayoutApplyFaults(unittest.TestCase):
     def test_sentinel_retirement_before_exit(self):
         self.terminal_journey('layout-recovery-before-sentinel-retirement', 'exit')
 
+    def test_sentinel_retirement_after_error(self):
+        self.terminal_journey('layout-recovery-sentinel-retirement', 'error')
+
+    def test_sentinel_retirement_after_exit(self):
+        self.terminal_journey('layout-recovery-sentinel-retirement', 'exit')
+
 # Each path in the controlled proposal has its own worker case: temporary
 # writes exist for the two replacements, while the handoff is a deletion.
 def _path_case(stage, path, mode):

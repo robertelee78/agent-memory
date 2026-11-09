@@ -50,6 +50,8 @@
     {"name":"layout-apply-marker-removal-exit","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_apply_faults.py","tests":["LayoutApplyFaults.test_marker_removal_exit"]},
     {"name":"layout-apply-retirement-before-error","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_apply_faults.py","tests":["LayoutApplyFaults.test_sentinel_retirement_before_error"]},
     {"name":"layout-apply-retirement-before-exit","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_apply_faults.py","tests":["LayoutApplyFaults.test_sentinel_retirement_before_exit"]},
+    {"name":"layout-apply-retirement-after-error","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_apply_faults.py","tests":["LayoutApplyFaults.test_sentinel_retirement_after_error"]},
+    {"name":"layout-apply-retirement-after-exit","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_apply_faults.py","tests":["LayoutApplyFaults.test_sentinel_retirement_after_exit"]},
     {"name":"layout-apply-temp-active","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_apply_faults.py","tests":["LayoutApplyFaults.test_temp_active_error","LayoutApplyFaults.test_temp_active_exit"]},
     {"name":"layout-apply-temp-router","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_apply_faults.py","tests":["LayoutApplyFaults.test_temp_router_error","LayoutApplyFaults.test_temp_router_exit"]},
     {"name":"layout-apply-replace-active","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_apply_faults.py","tests":["LayoutApplyFaults.test_replace_active_error","LayoutApplyFaults.test_replace_active_exit"]},
