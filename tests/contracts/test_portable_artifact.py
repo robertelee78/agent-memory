@@ -177,6 +177,11 @@ class PortableArtifactContract(unittest.TestCase):
             with patch.object(sys, 'path', [str(PACK / 'scripts'), *sys.path]):
                 from agent_memory import artifact, pack_validation
             baseline = artifact.inspect(pack)
+            # Identical bytes at a different physical candidate share no trust:
+            # every subsequent inspection must still check that actual root.
+            other = world.inside('same artifact at another root')
+            shutil.copytree(pack, other)
+            pack = other
             # Returned validation data is caller-owned, never writable authority
             # for the next inspection of the same physical candidate.
             returned = pack_validation.validate(pack)
