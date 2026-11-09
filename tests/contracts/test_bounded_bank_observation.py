@@ -249,7 +249,11 @@ class BoundedBankObservation(unittest.TestCase):
 
     def test_exact_owned_large_transaction_marker_and_mismatch(self):
         marker = self.bank / '.agent-memory-transaction.md'
-        original = b'PRIVATE_BODY_CANARY' + b'x' * 5000
+        original = bank_transactions.marker_bytes({
+            'operation_id': '11111111-1111-4111-8111-111111111111', 'operation': 'replace',
+            'files': {}, 'observed_hashes': {
+                'topics/PRIVATE_BODY_CANARY-' + str(number) + '.md': 'a' * 64 for number in range(48)}})
+        self.assertGreater(len(original), 4096)
         marker.write_bytes(original)
         before = self.files()
         checked = bank_contract.validate(self.repo, owned_transaction=original)
