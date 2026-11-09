@@ -1,4 +1,6 @@
 """A failed collector must retain the underlying timeout and active suite."""
+import copy
+import importlib.util
 import json
 from pathlib import Path
 import shutil
@@ -74,6 +76,57 @@ class World(_ActualWorld):
                     for text in ('TimeoutExpired', 'IsADirectoryError', 'could not be persisted',
                                  'gate-producer-stdout-marker', 'gate-producer-stderr-marker', 'Traceback'):
                         self.assertIn(text, result.stderr)
+
+    def test_release_shards_require_complete_disjoint_same_source_coverage(self):
+        spec = importlib.util.spec_from_file_location("gate_shard_contract", ROOT/'scripts/test_gate.py')
+        gate = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(gate)
+        entries = [{'name': name, 'layer': 'bank', 'scope': 'v0.0.15'}
+                   for name in ('alpha', 'beta', 'gamma', 'delta')]
+        binding = {'commit': 'candidate-a', 'python': [3, 15], 'platform': 'linux'}
+        def receipt(index, names):
+            return {'schema': 'agent-memory/test-gate-v1', 'mode': 'release-shard',
+                    'binding': binding.copy(), 'shard': {'index': index, 'count': 2},
+                    'passed': True, 'release_complete': False, 'shard_complete': True,
+                    'suites': [{'name': name, 'layer': 'bank', 'status': 'passed'}
+                               for name in names]}
+        # Alphabetical distribution is alpha/delta and beta/gamma.
+        reports = [receipt(0, ['alpha', 'delta']), receipt(1, ['beta', 'gamma'])]
+        result = gate.aggregate_shards(entries, reports[::-1], binding)
+        self.assertEqual(sorted(row['name'] for row in result),
+                         ['alpha', 'beta', 'delta', 'gamma'])
+        invalid = {}
+        invalid['missing shard'] = reports[:1]
+        invalid['duplicate shard'] = [reports[0], reports[0]]
+        for label, change in (
+            ('foreign source', lambda r: r[0]['binding'].update(commit='candidate-b')),
+            ('foreign runtime', lambda r: r[0]['binding'].update(python=[3, 11])),
+            ('partial suite list', lambda r: r[0]['suites'].pop()),
+            ('duplicate suite', lambda r: r[0]['suites'].__setitem__(1, r[0]['suites'][0])),
+            ('failed worker with passing envelope',
+             lambda r: r[0]['suites'][0].update(status='failed')),
+            ('future-scope bypass',
+             lambda r: r[0]['suites'][0].update(status='not-applicable')),
+            ('partial shard', lambda r: r[0].update(shard_complete=False)),
+            ('pretended full release', lambda r: r[0].update(release_complete=True)),
+        ):
+            altered = copy.deepcopy(reports)
+            change(altered)
+            invalid[label] = altered
+        for label, altered in invalid.items():
+            with self.subTest(label=label), self.assertRaises(ValueError):
+                gate.aggregate_shards(entries, altered, binding)
+
+    def test_joined_worker_success_does_not_bypass_actual_fault_coverage(self):
+        spec = importlib.util.spec_from_file_location("gate_coverage_contract", ROOT/'scripts/test_gate.py')
+        gate = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(gate)
+        report = {'suites': [{'name': 'uninstall-write-copy-before', 'status': 'passed'}],
+                  'passed': False, 'release_complete': False}
+        with self.assertRaises(ValueError):
+            gate.complete_coverage([], report)
+        self.assertFalse(report['passed'])
+        self.assertFalse(report['release_complete'])
 
 
 if __name__ == '__main__':

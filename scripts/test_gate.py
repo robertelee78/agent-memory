@@ -5,8 +5,10 @@ from __future__ import annotations
 import argparse
 from collections import deque
 from concurrent.futures import ThreadPoolExecutor
+import hashlib
 import json
 from pathlib import Path
+import platform
 import subprocess
 import sys
 import traceback
@@ -89,6 +91,80 @@ def case_batch_coverage(entries, suites):
     return summaries
 
 
+def shard_argument(value):
+    try:
+        index, count = map(int, value.split("/"))
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError("Use zero-based INDEX/COUNT") from exc
+    if not 2 <= count <= 16 or not 0 <= index < count:
+        raise argparse.ArgumentTypeError("Require 2..16 shards and 0 <= INDEX < COUNT")
+    return index, count
+
+
+def shard_entries(entries, index, count):
+    return sorted(entries, key=lambda entry: entry["name"])[index::count]
+
+
+def qualification_binding():
+    revisions = subprocess.check_output(
+        ["git", "-C", str(ROOT), "rev-parse", "HEAD", "HEAD^{tree}"],
+        text=True, timeout=10).splitlines()
+    return {
+        "commit": revisions[0], "tree": revisions[1],
+        "registry_sha256": hashlib.sha256((ROOT / "tests/contracts.json").read_bytes()).hexdigest(),
+        "gate_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+        "python": list(sys.version_info[:2]), "platform": sys.platform,
+        "architecture": platform.machine(),
+    }
+
+
+def aggregate_shards(entries, reports, binding):
+    """Refuse partial, overlapping or foreign qualification as a release."""
+    if not reports or any(not isinstance(report, dict)
+                          or not isinstance(report.get("shard"), dict) for report in reports):
+        raise ValueError("No valid shard receipts")
+    count = reports[0].get("shard", {}).get("count")
+    if type(count) is not int or not 2 <= count <= 16 or len(reports) != count:
+        raise ValueError("Missing or invalid shard count")
+    indexes, suites = set(), []
+    for report in reports:
+        shard = report.get("shard", {})
+        index = shard.get("index")
+        if (report.get("schema") != "agent-memory/test-gate-v1"
+                or report.get("mode") != "release-shard"
+                or report.get("binding") != binding or shard.get("count") != count
+                or type(index) is not int or not 0 <= index < count or index in indexes
+                or report.get("release_complete") is not False
+                or report.get("shard_complete") is not True
+                or report.get("passed") is not True or "error" in report):
+            raise ValueError("Invalid, failed, duplicate or foreign shard receipt")
+        selected = shard_entries(entries, index, count)
+        expected = {entry["name"]: entry for entry in selected}
+        rows = report.get("suites")
+        if (not isinstance(rows, list) or any(not isinstance(row, dict) for row in rows)
+                or len(rows) != len(expected)
+                or {row.get("name") for row in rows} != set(expected)):
+            raise ValueError("Shard omits, duplicates or adds a registered suite")
+        for row in rows:
+            entry = expected[row["name"]]
+            status = "not-applicable" if entry["scope"] == "future" else "passed"
+            if row.get("layer") != entry["layer"] or row.get("status") != status:
+                raise ValueError("Shard contains failed or incorrectly scoped coverage")
+        indexes.add(index)
+        suites.extend(rows)
+    if indexes != set(range(count)):
+        raise ValueError("Shard indexes are incomplete")
+    return suites
+
+
+def complete_coverage(entries, report):
+    report["fault_partition_coverage"] = partition_coverage(report["suites"])
+    report["case_batch_coverage"] = case_batch_coverage(entries, report["suites"])
+    report["release_complete"] = all(
+        suite["status"] in {"passed", "not-applicable"} for suite in report["suites"])
+    report["passed"] = report["release_complete"]
+
+
 def main(argv=None):
     if sys.version_info < (3, 11):
         print("The offline contract gate requires Python 3.11+", file=sys.stderr)
@@ -98,7 +174,14 @@ def main(argv=None):
     parser.add_argument("--json", action="store_true", help="emit a machine-readable coverage receipt")
     parser.add_argument("--jobs", type=int, choices=(1, 2), default=1,
                         help="run one or two isolated contract workers (default: one)")
+    distribution = parser.add_mutually_exclusive_group()
+    distribution.add_argument("--shard", type=shard_argument, metavar="INDEX/COUNT",
+                              help="run one zero-based release shard; never a complete release")
+    distribution.add_argument("--aggregate", type=Path, nargs="+", metavar="RECEIPT",
+                              help="verify every release shard and aggregate complete coverage")
     args = parser.parse_args(argv)
+    if (args.shard or args.aggregate) and not args.release:
+        parser.error("--shard and --aggregate require --release")
     report = {"schema": "agent-memory/test-gate-v1", "mode": "release" if args.release else "incremental",
               "suites": [], "release_complete": False, "passed": False}
     active = None; stage = 'registry'
@@ -151,51 +234,74 @@ def main(argv=None):
 
     try:
         entries = registry()
-        pending = deque()
-        remaining = iter(entries)
-        with ThreadPoolExecutor(max_workers=args.jobs) as workers:
-            def enqueue():
-                entry = next(remaining, None)
-                if entry is not None:
-                    pending.append((entry, workers.submit(execute, entry)))
-            for _ in range(args.jobs):
-                enqueue()
-            try:
-                while pending:
-                    entry, future = pending.popleft()
-                    active = entry['name']
-                    item, stage, output, error = future.result()
-                    sys.stderr.write(output)
-                    if error is not None:
-                        item.update(status='failed', reason=str(error), tests=0)
-                        report["suites"].append(item)
-                        for _, waiting in pending:
-                            waiting.cancel()
-                        raise error
-                    report["suites"].append(item)
+        selected = entries
+        if args.shard or args.aggregate:
+            stage = "qualification-binding"
+            report["binding"] = qualification_binding()
+        if args.aggregate:
+            active = "release-shards"; stage = "shard-aggregation"
+            receipts = [json.loads(path.read_text()) for path in args.aggregate]
+            report["suites"] = aggregate_shards(entries, receipts, report["binding"])
+            stage = "coverage-aggregation"
+            complete_coverage(entries, report)
+        else:
+            if args.shard:
+                index, count = args.shard
+                selected = shard_entries(entries, index, count)
+                report.update(mode="release-shard", shard={"index": index, "count": count},
+                              shard_complete=False)
+            pending = deque()
+            remaining = iter(selected)
+            with ThreadPoolExecutor(max_workers=args.jobs) as workers:
+                def enqueue():
+                    entry = next(remaining, None)
+                    if entry is not None:
+                        pending.append((entry, workers.submit(execute, entry)))
+                for _ in range(args.jobs):
                     enqueue()
-            finally:
-                # Every started World owns its supervisor and finishes cleanup.
-                # Preserve its outcome even if an earlier collector failed.
-                for entry, future in pending:
-                    if future.cancelled():
-                        continue
-                    item, worker_stage, output, error = future.result()
-                    sys.stderr.write(output)
-                    if error is not None:
-                        sys.stderr.write(diagnostic(error))
-                        item.update(status='failed', reason=str(error), tests=0,
-                                    error_stage=worker_stage)
-                    report["suites"].append(item)
-        active = 'lifecycle-fault-partitions'; stage = 'coverage-aggregation'
-        report['fault_partition_coverage'] = partition_coverage(report['suites'])
-        active = 'registered-case-batches'
-        report['case_batch_coverage'] = case_batch_coverage(entries, report['suites'])
-        pending = any(s["status"] == "pending" for s in report["suites"])
-        failed = any(s["status"] == "failed" for s in report["suites"])
-        report["release_complete"] = not pending and not failed
-        report["passed"] = not failed and (not args.release or report["release_complete"])
-    except (OSError, ValueError, KeyError) as exc:
+                try:
+                    while pending:
+                        entry, future = pending.popleft()
+                        active = entry['name']
+                        item, stage, output, error = future.result()
+                        sys.stderr.write(output)
+                        if error is not None:
+                            item.update(status='failed', reason=str(error), tests=0)
+                            report["suites"].append(item)
+                            for _, waiting in pending:
+                                waiting.cancel()
+                            raise error
+                        report["suites"].append(item)
+                        enqueue()
+                finally:
+                    # Every started World owns its supervisor and finishes cleanup.
+                    # Preserve its outcome even if an earlier collector failed.
+                    for entry, future in pending:
+                        if future.cancelled():
+                            continue
+                        item, worker_stage, output, error = future.result()
+                        sys.stderr.write(output)
+                        if error is not None:
+                            sys.stderr.write(diagnostic(error))
+                            item.update(status='failed', reason=str(error), tests=0,
+                                        error_stage=worker_stage)
+                        report["suites"].append(item)
+            if args.shard:
+                report["shard_complete"] = (
+                    len(report["suites"]) == len(selected) and all(
+                        suite["status"] in {"passed", "not-applicable"}
+                        for suite in report["suites"]))
+                report["passed"] = report["shard_complete"]
+            else:
+                active = 'lifecycle-fault-partitions'; stage = 'coverage-aggregation'
+                report['fault_partition_coverage'] = partition_coverage(report['suites'])
+                active = 'registered-case-batches'
+                report['case_batch_coverage'] = case_batch_coverage(entries, report['suites'])
+                pending = any(s["status"] == "pending" for s in report["suites"])
+                failed = any(s["status"] == "failed" for s in report["suites"])
+                report["release_complete"] = not pending and not failed
+                report["passed"] = not failed and (not args.release or report["release_complete"])
+    except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as exc:
         sys.stderr.write(diagnostic(exc))
         report["error"] = str(exc)
         report['error_suite'] = active

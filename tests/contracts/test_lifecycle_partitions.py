@@ -1,33 +1,48 @@
-"""All independent fault batches are mandatory, correctly routed and exhaustive."""
-import ast
-import json
-from pathlib import Path
+"""A release must cover every observed interruption exactly once."""
+import copy
 import unittest
 
-from fault_partitions import GROUPS, registered
-
-ROOT = Path(__file__).resolve().parents[2]
+from fault_partitions import GROUPS, coverage
 
 
 class LifecyclePartitionContract(unittest.TestCase):
-    def test_every_observed_interruption_partition_is_mandatory_and_correctly_routed(self):
-        entries = json.loads((ROOT/'tests/contracts.json').read_text())['suites']
-        registered(entries)
-        registry = {entry['name']:entry for entry in entries}
-        for group in GROUPS.values():
-            for index,name in enumerate(group['suites']):
-                entry = registry[name]
-                self.assertEqual(entry['path'],'tests/contracts/test_'+name.replace('-','_')+'.py')
-                tree = ast.parse((ROOT/entry['path']).read_text())
-                calls = [node for node in ast.walk(tree) if isinstance(node,ast.Call)
-                         and isinstance(node.func,ast.Attribute) and node.func.attr=='replay']
-                self.assertEqual(len(calls),1,name)
-                call = calls[0]
-                expected = [group['phase']] if group['operation']=='update' else [
-                    group['operation'],group['mode'],group['phase']]
-                self.assertEqual([ast.literal_eval(arg) for arg in call.args],expected,name)
-                self.assertEqual({kw.arg:ast.literal_eval(kw.value) for kw in call.keywords},
-                                 {'partition':index},name)
+    def receipts(self):
+        suites = []
+        for group, contract in GROUPS.items():
+            observed = [{'step': i, 'point': f'write-{i}', 'kind': 'file-stage'}
+                        for i in range(8)]
+            for index, name in enumerate(contract['suites']):
+                suites.append({'name': name, 'status': 'passed', 'fault_partition': {
+                    'group': group, 'index': index, 'count': 4,
+                    'artifact_digest': 'a' * 64, 'observed': copy.deepcopy(observed),
+                    'executed': [f'write-{index}', f'write-{index + 4}']}})
+        return suites
+
+    def test_complete_actual_interruption_inventory_and_artifact_agree(self):
+        summaries = {row['group']: row for row in coverage(self.receipts())}
+        self.assertEqual(summaries['uninstall-write-copy-before'], {
+            'group': 'uninstall-write-copy-before', 'partitions': 4,
+            'observed_points': 8, 'actual_interruptions_and_retries': 8,
+            'artifact_digest': 'a' * 64})
+
+    def test_missing_duplicate_or_foreign_interruption_cannot_complete_release(self):
+        for failure in ('missing-partition', 'omitted-write', 'duplicate-write',
+                        'different-artifact', 'different-observed-inventory'):
+            suites = self.receipts()
+            target = next(row for row in suites if row['name'] == 'uninstall-write-copy-before')
+            proof = target['fault_partition']
+            if failure == 'missing-partition':
+                suites.remove(target)
+            elif failure == 'omitted-write':
+                proof['executed'].pop()
+            elif failure == 'duplicate-write':
+                proof['executed'][1] = proof['executed'][0]
+            elif failure == 'different-artifact':
+                proof['artifact_digest'] = 'b' * 64
+            else:
+                proof['observed'][0]['point'] = 'unobserved-write'
+            with self.subTest(failure=failure), self.assertRaises(ValueError):
+                coverage(suites)
 
 
 if __name__=='__main__':unittest.main()
