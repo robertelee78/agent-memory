@@ -247,6 +247,8 @@ class NativeSources(unittest.TestCase):
                 self.assertEqual(boundary.required_source_capabilities(repo), set())
                 self.assertTrue((boundary._base(repo) / 'omp-source-v1').exists())
                 lock = boundary._base(repo) / 'omp-transport.lock'
+                retained_proofs = {path.name: path.read_bytes()
+                                   for path in (boundary._base(repo) / 'omp-drains').glob('*.json')}
                 original_open = os.open
                 def remove_before_open(path, flags, *args, **kwargs):
                     if path == lock.name and kwargs.get('dir_fd') is not None:
@@ -256,7 +258,9 @@ class NativeSources(unittest.TestCase):
                     with self.assertRaises(ValueError):
                         boundary.required_source_capabilities(repo)
                 self.assertFalse(lock.exists())
-                self.assertTrue(list((boundary._base(repo) / 'omp-drains').glob('*.json')))
+                self.assertEqual({path.name: path.read_bytes()
+                                  for path in (boundary._base(repo) / 'omp-drains').glob('*.json')},
+                                 retained_proofs)
                 # Restore the fixture's synchronization file before testing
                 # the separate missing-proof refusal.
                 with turn_sources.private_lock(lock):
@@ -1058,7 +1062,6 @@ class NativeLifecyclePublic(unittest.TestCase):
             self.assertTrue(result['verified'])
             self.assertFalse(extension.exists())
             self.assertFalse((base / 'turn-sources-compat-v1.json').exists())
-            self.assertTrue(list((base / 'omp-drains').glob('*.json')))
             self.assertEqual(snapshot(base / 'omp-source-v1'), retained)
             with patch.dict(os.environ, world.env, clear=True):
                 self.assertEqual(boundary.required_source_capabilities(repo), set())

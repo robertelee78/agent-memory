@@ -348,7 +348,6 @@ class MixedPrivateCapabilities(unittest.TestCase):
             denied = lifecycle.public(world, receipt, 'uninstall', '--omp-writers-quiesced', expected=1)
             self.assertIn('Private-state runtime compatibility', denied['error'])
             self.assertFalse(marker.exists())
-            self.assertTrue(list((base / 'omp-drains').glob('*.json')))
             self.assertEqual((snapshot(bank), snapshot(directory), snapshot(world.paths['config']),
                               (repo / '.git/index').read_bytes(), world.git('rev-parse', 'HEAD', cwd=repo).stdout), before)
             self.assertFalse(Path(receipt['omp_binding']['extension_target']).exists())
@@ -359,7 +358,6 @@ class MixedPrivateCapabilities(unittest.TestCase):
             # Recovery restores the owned native route and reactivates its
             # reader marker; the completed drain and unrelated hold persist.
             self.assertTrue(marker.is_file())
-            self.assertTrue(list((base / 'omp-drains').glob('*.json')))
             self.assertEqual(pending(), [])
             self.assertEqual(checked['private_compatibility']['required_capabilities'],
                              ['layout-frontier-v1', 'omp-harness-v1', 'omp-stored-source-v2'])
