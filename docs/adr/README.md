@@ -47,6 +47,7 @@ MUST NOT be treated as evidence that a guide is semantically complete.
 | [0025](0025-project-and-shared-memory.md) | Project memory plus deliberately published shared memory | Accepted architecture; operator/team/ecosystem datasets, per-install configuration; execution gated |
 | [0026](0026-source-bound-sharing-performance.md) | Source-bound sharing performance for existing #209 | Accepted bounded fix after Fable review; implementation/qualification pending |
 | [0027](0027-managed-core-memgraph.md) | AM-managed core Memgraph selection for existing #255/#257 | Operator-selected graph direction; qualification, licensing disposition and execution readiness gated |
+| [0028](0028-long-full-workload-qualification.md) | Long full-workload qualification for existing #209 | Accepted operator duration exception only; exact protocol, execution and acceptance remain gated |
 
 [ADR-0013](0013-public-cli-and-corrective-releases.md) defines the corrective
 `v0.0.2` public command contract and the current future-release mapping. Older
