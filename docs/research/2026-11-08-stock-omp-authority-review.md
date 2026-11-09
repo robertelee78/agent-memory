@@ -202,3 +202,46 @@ The frozen uncommitted source identity is explicit; this is not a retroactive
 run against a later commit. Earlier R11 negatives remain retained. All controlled
 source outcomes verified, but native callback timing and positive automatic
 assessment still require an actual stock-client run.
+
+### Actual R7b: canonical guard fault, qualification failed
+
+The [source-bound R7b negative](data/native249-stock-native-negative-scoped-proof-20261109.json)
+ran against `d171f85` with unmodified stock omp18.16. Print-short closed and
+verified all11 source attempts, with two valid assessments still pending. RPC
+actually attempted switch, learning and fork, but a source worker exited1 with
+sequence135 missing its outcome and its stream OPEN. The old-session transition
+also remained unresolved. All four source workers and native processes were
+terminal at the end; no signals were sent.
+
+The first escaping `ContractError` reached the canonical marker guard at
+`project_identity.py:155`. Post-exception installation/project/developer/source
+pins matched, but marker bytes, owner and concurrency at the fault were not
+observed. A legitimate concurrent writer is a hypothesis, not an established
+cause or an explanation of the original R5b failure. AM must distinguish a
+proved live writer from stale/unsafe markers without weakening that guard.
+
+One finished canonical transaction receipt was verified, but no wake reservation
+or positive automatic model-forgets adjudication was established. The receipt
+does not substitute for complete source/transition/learning acceptance. The
+failed world and curated metadata remain retained; raw native sessions stay
+private and excluded from curated archives. Native/platform/release acceptance
+remains open.
+
+### Controlled canonical-writer contention correction
+
+The [R15/R16 scoped proof](data/native249-canonical-contention-scoped-proof-20261109.json)
+reproduces the old guard refusal with real canonical writers and records 25
+passing affected suites on frozen R15. Source review caught a stranded empty slot
+after a non-contention first-flock error. R16 reproduces ENOLCK/ENOTSUP before the
+fix and passes afterward, removing only the creator's unchanged empty slot.
+KeyboardInterrupt, SystemExit and MemoryError during a marker read also retain
+their original identity instead of becoming writer retries. The complete changed
+finite-stream suite passes 105 cases without skips.
+
+A known live owner still requires exact marker identity and kernel contention.
+An unpublished empty slot grants no authority; unsafe replacements remain hard
+refusals. Private observations unwind before bounded rediscovery, without
+replaying source work or double-counting invalid frames. These controlled
+observations do not identify R7b's unobserved fault-time owner or qualify stock
+native lifecycle/automatic learning. No omp customization is involved.
+

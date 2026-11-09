@@ -151,8 +151,16 @@ class PrivateEnrollmentContext:
 
 def private_enrollment_context(repo):
     """Fresh bounded discovery, independent of any outer observer or mint."""
-    with _fresh_enrollment_locations(), repository_config._observe_settings(repo):
-        return _private_enrollment_context(repo)
+    from .turn_sources import SourceTransportBusy
+    from . import recovery_frontier
+    try:
+        with _fresh_enrollment_locations(), repository_config._observe_settings(repo), recovery_frontier._observe_source_markers():
+            return _private_enrollment_context(repo)
+    except (storage.CanonicalWriterBusy, storage.CanonicalWriterInitializing) as exc:
+        # Known contention or an explicitly unproven empty publication slot
+        # permits bounded deferral only, never source/owner authority. All locks
+        # and contexts above unwind before the existing caller budget waits.
+        raise SourceTransportBusy('Canonical writer unavailable; preserve pending source work and rediscover') from exc
 
 
 def _private_enrollment_context(repo):
@@ -162,6 +170,10 @@ def _private_enrollment_context(repo):
     raw_root, raw_bank, recovery_base, _ = layout_recovery_state.paths(root)
     if (raw_root, raw_bank) != (root, bank):
         raise ContractError('Private enrollment raw recovery bank differs from the ordinary bank')
+    # A live canonical transaction may temporarily expose partial bank state or
+    # its transaction marker. Never resolve source authority through either
+    # while its writer is proved active; unwind and retry from fresh authority.
+    storage.check_canonical_writer(bank / '.agent-memory.lock', writes.OPERATIONS)
     turn_sources.check_source_compatibility(recovery_base.parent)
     hold = recovery_frontier._verified_hold_at_bank(raw_root, raw_bank)
     scope = dict(hold.scope) if hold is not None else require(root)

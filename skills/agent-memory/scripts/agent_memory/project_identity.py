@@ -152,6 +152,13 @@ def discover(repo, authority=None, *, owned_lock=None, owned_transaction=None, m
         for name, owned in ((".agent-memory.lock", owned_lock), (".agent-memory-transaction.md", owned_transaction)):
             path = bank / name
             if path.is_symlink() or (path.exists() and (owned is None or path.read_bytes() != owned)):
+                if name == '.agent-memory.lock' and owned is None:
+                    # Ordinary callers still refuse. Only private enrollment
+                    # translates this precise subtype into bounded source retry.
+                    from .bank_writes import OPERATIONS
+                    storage.check_canonical_writer(path, OPERATIONS)
+                    if not path.exists() and not path.is_symlink():
+                        continue
                 raise ContractError("Bank busy or interrupted; inspect/recover before resolving identity")
     if raw_identity is not None:
         from .layout_recovery_observation import read_source

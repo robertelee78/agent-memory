@@ -5,6 +5,8 @@ external binding, immutable evidence and full ledger; caller JSON is not a hold.
 """
 from __future__ import annotations
 
+from contextlib import contextmanager
+from contextvars import ContextVar
 import copy
 import os
 from pathlib import Path
@@ -23,6 +25,7 @@ SENTINEL = 'agent-memory/layout-recovery-sentinel-v1'
 TERMINAL = {'admitted', 'governed-terminal', 'reviewed-non-guidance-discard'}
 UNIT_FIELDS = {'unit_id', 'source_ranges', 'provenance', 'reason', 'required_actions',
     'detecting_developer_id', 'state', 'terminal_receipts'}
+_source_marker_observation = ContextVar('agent_memory_source_marker_observation', default=False)
 
 
 class VerifiedHold:
@@ -35,7 +38,37 @@ class VerifiedHold:
         self.runtime_artifact_digest = runtime_artifact_digest
 
 
+@contextmanager
+def _observe_source_markers():
+    """Private source reads only: no marker error becomes authority or repair."""
+    token = _source_marker_observation.set(True)
+    try:
+        yield
+    finally:
+        _source_marker_observation.reset(token)
+
+
 def marker_bytes(bank, name='.agent-memory-transaction.md', *, expected=None):
+    if not _source_marker_observation.get():
+        return _marker_bytes(bank, name, expected=expected)
+    storage.check_canonical_writer(bank / '.agent-memory.lock', writes.OPERATIONS)
+    try:
+        raw = _marker_bytes(bank, name, expected=expected)
+    except MemoryError:
+        raise
+    except Exception:
+        # Only an ordinary read failure can become an exact live-writer retry.
+        # Process interrupts and resource exhaustion must retain precedence.
+        try:
+            storage.check_canonical_writer(bank / '.agent-memory.lock', writes.OPERATIONS)
+        except storage.CanonicalWriterInitializing:
+            pass
+        raise
+    storage.check_canonical_writer(bank / '.agent-memory.lock', writes.OPERATIONS)
+    return raw
+
+
+def _marker_bytes(bank, name, *, expected):
     # Ordinary transaction markers contain complete base hashes. Only an exact
     # caller-owned byte witness can extend the unknown-marker disclosure bound.
     if expected is not None and (name != '.agent-memory-transaction.md'
