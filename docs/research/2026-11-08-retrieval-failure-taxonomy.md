@@ -10,7 +10,7 @@ and proposal `assignment_actions` describe their original slices, not this impor
 No controller, scorer, test, endpoint or study was executed for this import.
 
 The [current graph/embedding execution contract](../design/v0.0.16-graph-embedding-execution.md)
-remains a stronger **proposed merged amendment pending independent review**. Its
+has its own [amended research freeze](data/g1-amended-contract-freeze-20261109.json). Its
 §8.1 fixes exact-only v1 external scoring over persisted source/profile-bound
 float32 vectors, float64 accumulation and a resident provider; production ANN and
 graph vector-index DDL are disabled, while typed graph projection/querying remains

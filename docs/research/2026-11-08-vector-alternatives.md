@@ -164,7 +164,7 @@ describe that proposal's original scope, not this import or a reversal of later
 accepted G1 research.
 
 The [current graph/embedding execution contract](../design/v0.0.16-graph-embedding-execution.md)
-is a proposed merged amendment pending independent review. Its§8.1 is stronger
+has its own [amended research freeze](data/g1-amended-contract-freeze-20261109.json). Its§8.1 is stronger
 than the experiment's generic shortlist: exact-only v1 scoring outside the graph
 engine over source/profile-bound persisted float32 vectors, float64 accumulation
 and a resident provider; production ANN and graph vector-index DDL are disabled.

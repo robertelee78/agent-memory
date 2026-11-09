@@ -9,7 +9,7 @@ not run the controller or any study. The retained controller and result JSON are
 historical evidence; their hashes are not newly computed Main verification.
 
 The [current graph/embedding execution contract](../design/v0.0.16-graph-embedding-execution.md)
-is a stronger proposed merged amendment pending independent review. Its §§8.1/13
+has a separate [amended research freeze](data/g1-amended-contract-freeze-20261109.json). Its §§8.1/13
 require exact-only v1 scoring outside the graph engine while retaining typed graph
 projection/querying and the historical exact-versus-ANN evidence. Graph DB and
 embeddings remain useful selected core capabilities; this diagnostic neither
