@@ -132,7 +132,11 @@ def main(argv=None):
                                            check=False, timeout=300, group=True)
                         output.append(result.stderr)
                         stage = 'result-readback'
-                        counts = json.loads(result.stdout)
+                        try:
+                            counts = json.loads(result.stdout)
+                        except ValueError:
+                            output.append(f"\nWorker exit status: {result.returncode}\nWorker stdout:\n{result.stdout}\n")
+                            raise
                         item.update(counts)
                         item["status"] = "passed" if result.returncode == 0 and counts["passed"] else "failed"
                         if item['status'] == 'passed' and entry['name'] in OWNERS:

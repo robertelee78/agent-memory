@@ -42,7 +42,7 @@ class OneLineBootstrapContract(unittest.TestCase):
 
     def pipe(self, world, *args, expected=0, script=None):
         result = world.run(['/bin/bash', '-c',
-                            'set -o pipefail; cat "$1" | /bin/bash -s -- "${@:2}"',
+                            'set -o pipefail; /bin/cat "$1" | /bin/bash -s -- "${@:2}"',
                             'bootstrap-test', script or ROOT/'install.sh', '--json', *args], check=False)
         self.assertEqual(result.returncode, expected, result.stdout + result.stderr)
         self.assertEqual(list(world.paths['tmp'].glob('agent-memory-bootstrap.*')), [])
@@ -143,7 +143,9 @@ class OneLineBootstrapContract(unittest.TestCase):
             self.pipe(world, '--unknown', expected=2)
             tools = world.inside('old python tools'); tools.mkdir()
             python = tools/'python3'; python.write_text('#!/bin/sh\nexit 1\n'); python.chmod(0o755)
-            world.env['PATH'] = str(tools)+os.pathsep+world.env['PATH']
+            # The launcher searches every PATH entry for a supported Python.
+            # Provide only the rejected interpreter, not a later working one.
+            world.env['PATH'] = str(tools)
             result = self.pipe(world, expected=1)
             self.assertIn('Python 3.11+', result.stderr)
             self.assertFalse((world.paths['state']/'agent-memory').exists())

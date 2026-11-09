@@ -8,6 +8,7 @@ import re
 import subprocess
 import uuid
 import sys
+sys.dont_write_bytecode = True
 
 
 
