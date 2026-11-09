@@ -133,7 +133,9 @@ for name,group in GROUPS.items():
         samples['incomplete-interruption-proof'] = passed + proof_fixture.replace(
             "'executed':[observed[index]['point']]", "'executed':[] if index==0 else [observed[index]['point']]")
         samples['missing-lifecycle-case'] = samples['passed']
-        samples['non-object-worker-receipt'] = "import os\nos.write(1, b'[]\\n')\nos._exit(0)\n"
+        samples['non-object-worker-receipt'] = ("import json,unittest\n"
+            "json.dumps=lambda *a,**k:'[]'\n"
+            "class Contract(unittest.TestCase):\n def test_x(self): pass\n")
         with World() as world:
             checkout = world.inside("checkout with spaces")
             (checkout / "scripts").mkdir(parents=True)
@@ -176,6 +178,11 @@ for name,group in GROUPS.items():
                 self.assertEqual(result.returncode == 0, sample == "passed")
                 if sample == "missing-lifecycle-case":
                     self.assertEqual(report["error_suite"], "lifecycle-matrix")
+                if sample == "non-object-worker-receipt":
+                    failed = [row for row in report["suites"] if row["status"] == "failed"]
+                    self.assertTrue(failed)
+                    self.assertTrue(all(row.get("reason") == "Worker result must be a JSON object"
+                                        for row in failed))
             # Missing required entries and attempts to reclassify them cannot
             # make a falsely complete release report.
             manifest["suites"] = [e for e in manifest["suites"] if e["name"] != "bank-roundtrip"]

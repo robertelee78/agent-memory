@@ -1,0 +1,25 @@
+{
+  "schema": "agent-memory/research-acceptance-v1",
+  "work_key": "robertelee78/agent-memory:ADR-0024:ssg-runtime-qualification",
+  "candidate_commit": "362ab0aac21399381f3379550726ca750c614b1d",
+  "verdict": "PASS",
+  "reviewer": "G1OriginalAcceptance-opus",
+  "requested_model": "anthropic/claude-opus-5-5",
+  "review_scope": "Every original ADR-0024 G1 acceptance criterion",
+  "verdict_ref": "https://github.com/robertelee78/agent-memory/issues/255#issuecomment-6749790424",
+  "verdict_text_sha256": "40eca394e323e6643887b0e236b45c06415c963dda1cfb5927f747616499e132",
+  "integration_branch": "integrate/v0.0.15-release",
+  "integration_commit": "362ab0aac21399381f3379550726ca750c614b1d",
+  "phase": "Release ready",
+  "health": "On track",
+  "reconciliation_verified": true,
+  "reconciliation_manifest_digest": "e0d33a2567816721925fb87f1de2dacfe4656d154ba95179460b2830ef61a275",
+  "signed_release_delivered": false,
+  "not_claimed": [
+    "Dependent implementation Ready",
+    "Graph or embedding product implementation",
+    "Named-scale quality/performance/resource/platform pass",
+    "Acceptance of #206/#209/#244/#249",
+    "Signed release delivery"
+  ]
+}
