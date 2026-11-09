@@ -45,6 +45,7 @@ class LayoutLegacyStaleLock(unittest.TestCase):
             before = snapshot(bank), snapshot(directory), (repo / '.git/index').read_bytes()
             self.assertEqual(marker.read_bytes(), marker_bytes)
             for args in (['writes', 'recover', '--repo', repo],
+                         ['transaction', 'recover', '--repo', repo],
                          ['migrate', 'recover', '--repo', repo, '--mode', 'finish'],
                          ['migrate', 'recover', '--repo', repo, '--mode', 'rollback']):
                 refused = world.run([old, *args], check=False, timeout=60)

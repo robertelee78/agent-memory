@@ -116,3 +116,53 @@ class LayoutNestedFaults(unittest.TestCase):
 
     def test_retirement_binding_exit(self):
         self.receipt_journey('layout-recovery-retirement-after-binding', 'exit')
+
+    def early_journey(self, stage, mode):
+        helper = nested.NestedReconciliationContract()
+        with World() as world:
+            command, source, repo, bank, _, inspected, applied = recovery.small_pending(world)
+            operation = inspected['operation_id']
+            directory = recovery.private_directory(world, bank, operation)
+            originals = {row['path']: (directory / row['blob']).read_bytes() for row in inspected['manifest']['sources']}
+            hold = (bank / '.agent-memory-transaction.md').read_bytes()
+            before = nested.canonical(bank)
+            proposal, transaction, _ = recovery.admission_proposal(world, command, source, repo, bank, inspected, full=False)
+            if stage.endswith('after-rename'):
+                stage += ':history/events/' + transaction['operation_id'] + '.md'
+            fault = world.run([command, 'admission', 'apply', '--proposal', proposal], check=False, timeout=30,
+                              env={'AGENT_MEMORY_FAULT_STAGE': stage, 'AGENT_MEMORY_FAULT_MODE': mode})
+            self.assertEqual(fault.returncode, 86 if mode == 'exit' else 1, fault.stdout + fault.stderr)
+            if mode == 'exit':
+                recovery.unlock(world, command, repo)
+            if stage.endswith('before-nested-marker'):
+                self.assertEqual((bank / '.agent-memory-transaction.md').read_bytes(), hold)
+                self.assertEqual(nested.canonical(bank), before)
+                recovery.public(world, command, 'admission', 'apply', '--proposal', proposal)
+                status = recovery.call(world, command, 'status', '--repo', repo, '--operation', operation)
+                self.assertEqual(status['pending_unit_ids'], applied['pending_unit_ids'])
+            else:
+                helper.preview(world, command, repo, operation, transaction['operation_id'], 'finish', expected=1)
+                preview, _ = helper.preview(world, command, repo, operation, transaction['operation_id'], 'rollback')
+                recovery.call(world, command, 'recover-nested', '--repo', repo, '--proposal', preview)
+                self.assertEqual(nested.canonical(bank), before)
+                self.assertEqual((bank / '.agent-memory-transaction.md').read_bytes(), hold)
+            self.assertEqual({row['path']: (directory / row['blob']).read_bytes()
+                              for row in inspected['manifest']['sources']}, originals)
+
+    def test_marker_before_error(self):
+        self.early_journey('layout-recovery-before-nested-marker', 'error')
+
+    def test_marker_before_exit(self):
+        self.early_journey('layout-recovery-before-nested-marker', 'exit')
+
+    def test_marker_after_error(self):
+        self.early_journey('layout-recovery-after-nested-marker', 'error')
+
+    def test_marker_after_exit(self):
+        self.early_journey('layout-recovery-after-nested-marker', 'exit')
+
+    def test_rename_error(self):
+        self.early_journey('layout-recovery-nested-after-rename', 'error')
+
+    def test_rename_exit(self):
+        self.early_journey('layout-recovery-nested-after-rename', 'exit')
