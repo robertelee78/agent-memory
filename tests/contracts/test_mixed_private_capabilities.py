@@ -542,20 +542,45 @@ print(json.dumps(results))
             ancestor = world.root / 'symlinked-ancestor'
             ancestor.symlink_to(repo.parent, target_is_directory=True)
             selected = ancestor / repo.name
+            registry_key = 'agent-memory/omp-banks.json'
+            registry_path = world.paths['config'] / registry_key
+            registry_before = json.loads(registry_path.read_text()) if registry_path.exists() else None
             before = (snapshot(bank), snapshot(world.paths['config']), owned(receipt),
                       feature.read_bytes(), (repo / '.git/index').read_bytes(),
                       world.git('rev-parse', 'HEAD', cwd=repo).stdout)
             checked = lifecycle.public(world, receipt, 'update', '--repo', str(selected), '--check')
             self.assertTrue(checked['check_complete'])
+            self.assertEqual(snapshot(world.paths['config']), before[1])
             self.assertEqual(checked['compatibility']['private_state']['decision'], 'compatible')
             applied = lifecycle.public(world, receipt, 'update', '--repo', str(selected))
             self.assertTrue(applied['verified'])
-            self.assertFalse(applied['changed'])
+            config_before = before[1].copy()
             config_after = snapshot(world.paths['config'])
-            registry = json.loads((world.paths['config'] / 'agent-memory/omp-banks.json').read_text())
-            self.assertIn(str(repo.resolve()), registry['repositories'])
-            self.assertIn(str(repo.resolve()), registry['private_bases'])
-            config_after.pop('agent-memory/omp-banks.json')
+            registry = json.loads(registry_path.read_text())
+            canonical = str(repo.resolve())
+            previous_repositories = registry_before['repositories'] if registry_before else []
+            previous_bases = registry_before['private_bases'] if registry_before else {}
+            self.assertEqual(registry['schema'], 'agent-memory/omp-bank-registry-v1')
+            self.assertEqual(registry['repositories'], sorted(set(previous_repositories) | {canonical}))
+            self.assertEqual({key: value for key, value in registry['private_bases'].items()
+                              if key != canonical},
+                             {key: value for key, value in previous_bases.items() if key != canonical})
+            self.assertIn(canonical, registry['private_bases'])
+            if canonical in previous_bases:
+                self.assertEqual(registry['private_bases'][canonical], previous_bases[canonical])
+                self.assertEqual(config_after[registry_key], config_before[registry_key])
+            binding = json.loads((Path(registry['private_bases'][canonical]) /
+                                  'omp-bank-binding-v1.json').read_text())
+            self.assertEqual(binding['repository'], canonical)
+            self.assertEqual(binding['bank_path'], str(bank.resolve()))
+            self.assertEqual(binding['private_base'], registry['private_bases'][canonical])
+            if registry_before:
+                self.assertEqual(config_after[registry_key]['mode'], config_before[registry_key]['mode'])
+            else:
+                self.assertEqual(config_after[registry_key]['mode'], 0o600)
+            config_before.pop(registry_key, None)
+            config_after.pop(registry_key)
             self.assertEqual((snapshot(bank), config_after, owned(receipt),
                               feature.read_bytes(), (repo / '.git/index').read_bytes(),
-                              world.git('rev-parse', 'HEAD', cwd=repo).stdout), before)
+                              world.git('rev-parse', 'HEAD', cwd=repo).stdout),
+                             (before[0], config_before, *before[2:]))
