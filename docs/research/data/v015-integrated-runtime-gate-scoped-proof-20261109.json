@@ -2,7 +2,7 @@
   "schema": "research/v015-integrated-runtime-gate-scoped-proof-v1",
   "date": "2026-11-09",
   "base_commit": "0c9ae73d5041c57c10326c035723f3e2e3124fd1",
-  "source_state": "Separately frozen uncommitted owned overlays on this public commit; not retroactively executed against a later commit. Raw receipts and reconstructible overlays retained in private archives.",
+  "source_state": "Separately frozen uncommitted owned overlays; the top-level base applies to R1-R4, while R5 records its own later base. No observation is retroactively executed against a later commit. Raw receipts and reconstructible overlays remain private.",
   "observations": [
     {
       "id": "runtime-r1",
@@ -71,6 +71,38 @@
         "source_caches": 0
       },
       "boundary": "Historical python3 -I guide form restored; existing source-only startup supplies cache isolation. Broadening the current parser was removed."
+    },
+    {
+      "id": "consumer-companion-r5",
+      "passed": true,
+      "source_base_commit": "6c60f77dbab2f71244140574385cbe2dabbcb776",
+      "source_overlay_manifest_sha256": "3bac83bb9e403af0dc82d342618805cdea09fc329184be8bd52b20a057b49610",
+      "source_hash": "dc6728b05f994bc34d61ba43d2f5947dfccc03a404f882734d3cc09e9e0ee16e",
+      "source_unchanged": true,
+      "seconds": 34.114241166971624,
+      "registered_worker": "layout-recovery-router-identity",
+      "registered_tests": 1,
+      "connected_identity": "Conflicting present router UUID refused both without and with independently checked committed-router review; source bank, index and HEAD preserved.",
+      "profiler_before": {
+        "source_sha256": "d6ad93ca4c571a228d8e33ada9c021b6e8f518ac778466f2786ca264f88e907b",
+        "main_source_matches_peer_failed_source": true,
+        "actual_peer_failure": "Producer closure contains a function; serializing every closure cell raises TypeError inside the profile callback and refuses public refresh.",
+        "peer_evidence": "https://github.com/robertelee78/agent-memory/blob/4d4e1cc098fabbc0730f884d569c0e267e07b458/docs/research/data/2026-11-08-release-gate/recall-profiler-companion-compatibility-20261109.json",
+        "rerun_merely_to_confirm": false
+      },
+      "profiler_after": {
+        "source_sha256": "be5f0f22d11086322529c9c4c4edb4f22eabf05402e512cbb53030891c3bffdf",
+        "public_commands": ["inspect", "review", "prepare", "apply"],
+        "all_exits_zero": true,
+        "refresh_verified": true,
+        "actual_bank_format_calls": [13, 31, 65, 80],
+        "actual_bank_format_hits": [12, 30, 64, 79],
+        "actual_security_scan_calls": [165, 200, 432, 604],
+        "declared_pure_input_blobs_hash_verified": true,
+        "bank_feature_index_head_preserved": true,
+        "fixture_cleaned": true
+      },
+      "boundary": "Actual public compatibility smoke, not full 24-world memo retention, A/B/C quality/performance, native model, hosted-matrix or signed-release acceptance. Portable runtime algorithm unchanged."
     }
   ],
   "execution_limits": {
@@ -125,6 +157,11 @@
       "name": "upgrade-compatible-r4-actual-shipped-updater-and-cache-isolation-20261109.tar.gz",
       "sha256": "0fcd99c0b9c731216bf17ee1f23b56f5b3e95e0ad72624e5845a7e040e5fddfe",
       "bytes": 296223
+    },
+    {
+      "name": "profiler-companion-and-connected-identity-r5-actual-20261109.tar.gz",
+      "sha256": "f9240b2a899f79147031311bd3950d76bd49d1f23d3af2f49137f43dfb14ef4f",
+      "bytes": 59576
     }
   ],
   "limits": [

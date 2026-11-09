@@ -237,6 +237,12 @@ actual pre-existing membership/hit or miss, return completion, memo instance,
 and exact captured immutable input blobs addressed by SHA-256. Raw events
 remain available even when a check fails or is not stored. Instrumentation-off
 runs must return identical public outcomes and preserve the same state.
+The input blobs capture declared pure data only: `stable` for `bank-format`,
+and `content`/`maximum` for `security-scan`. Producer closure cells can also hold
+implementation functions (including parsed-companion producers); serializing
+those is not input accounting and can raise inside the profile callback.
+This selection leaves the complete key and actual membership/completion proof
+unchanged; a compatibility smoke is not the full 24-world keep/revert result.
 
 The rule reports `keep` only when all 48 paired applies per build actually
 complete, both namespace hit controls are observed, no baseline successful hit
