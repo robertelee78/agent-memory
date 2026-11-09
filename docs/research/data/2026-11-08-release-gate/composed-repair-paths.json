@@ -1,0 +1,688 @@
+{
+  "schema": "agent-memory/v015-composed-repair-qualification-v1",
+  "date": "2026-11-09",
+  "scope": "Actual public isolated consumers and complete focused registered workers; not whole release, full native, performance or milestone acceptance",
+  "source_candidates": [
+    {
+      "commit": "589572e5fe9925f8ee1b0e743b5c08228689a5f7",
+      "workers": [
+        {
+          "suite": "update-parallel-inventory",
+          "passed": true,
+          "exit": 0,
+          "elapsed_seconds": 0.6680295409169048,
+          "counts": {
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": true,
+            "skipped": 0,
+            "tests": 1,
+            "unexpected_successes": 0
+          },
+          "stdout_sha256": "e11e855e41c4875ba33024110ca9ace477b7493f2a5be3a23da743b713053956",
+          "stderr_sha256": "f4bf2b1bd71e75ddeb43c8e8c10c1d33119ceb1688f8174c1676628508db7436"
+        },
+        {
+          "suite": "layout-recovery-legacy-consumers",
+          "passed": true,
+          "exit": 0,
+          "elapsed_seconds": 23.298995541059412,
+          "counts": {
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": true,
+            "skipped": 0,
+            "tests": 1,
+            "unexpected_successes": 0
+          },
+          "stdout_sha256": "e11e855e41c4875ba33024110ca9ace477b7493f2a5be3a23da743b713053956",
+          "stderr_sha256": "13719dae66f5ef7c7a44202d3fd509288aa8316724b6b6d92c079ad1bbef27d2"
+        },
+        {
+          "suite": "omp-native-source-admission",
+          "passed": true,
+          "exit": 0,
+          "elapsed_seconds": 138.4270344999386,
+          "counts": {
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": true,
+            "skipped": 0,
+            "tests": 6,
+            "unexpected_successes": 0
+          },
+          "stdout_sha256": "925b4dc3d042563c4e27bb55c1f48c1bda762dcfefa9a413f14b5ea9982b14a2",
+          "stderr_sha256": "bf7710dd1bb2afd65d8ab8950afecbb2aada08569a8828c7f14939b04d0e42d9"
+        },
+        {
+          "suite": "omp-native-source-reconciliation",
+          "passed": true,
+          "exit": 0,
+          "elapsed_seconds": 141.26503912499174,
+          "counts": {
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": true,
+            "skipped": 0,
+            "tests": 5,
+            "unexpected_successes": 0
+          },
+          "stdout_sha256": "6ac046eff622ea43314aa00414f4f6bea415413060c5bab8c0140aef0721cc06",
+          "stderr_sha256": "706d0d9400c17cf21090a94377629d1fb132918ba202cb182e6a53e430882cf5"
+        },
+        {
+          "suite": "mixed-layout-first",
+          "passed": true,
+          "exit": 0,
+          "elapsed_seconds": 122.32653995801229,
+          "counts": {
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": true,
+            "skipped": 0,
+            "tests": 1,
+            "unexpected_successes": 0
+          },
+          "stdout_sha256": "7ce38a1f51a055ce26a003f8c7ab62731ec6d56a76667583864217dba77cfcf0",
+          "stderr_sha256": "4c69222c58ca99f476799a7211f65d11125d14e32cc7c1fc9e277d9a2398239b"
+        },
+        {
+          "suite": "mixed-managed-ancestor-alias",
+          "passed": true,
+          "exit": 0,
+          "elapsed_seconds": 23.80715883290395,
+          "counts": {
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": true,
+            "skipped": 0,
+            "tests": 1,
+            "unexpected_successes": 0
+          },
+          "stdout_sha256": "75506bdb11c32b8b7074963fa9c5a94b5c697ed864fdfb4bf5358c0cfb54769e",
+          "stderr_sha256": "9bb162582f3c6b13c5641393987556db90121de00a88f7cd7abbc923a87ea8c9"
+        },
+        {
+          "suite": "omp-native-public-lifecycle",
+          "passed": true,
+          "exit": 0,
+          "elapsed_seconds": 234.9428130830638,
+          "counts": {
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": true,
+            "skipped": 0,
+            "tests": 9,
+            "unexpected_successes": 0
+          },
+          "stdout_sha256": "3b55d139c2746d53b26abc2ba0e087f24f4fda2d939583d869d01c5f0fd81ffd",
+          "stderr_sha256": "d15ab6292627afd5aba5050a1acd744f1564e24c04daa64129fb0c3ce8fe1cd8"
+        },
+        {
+          "suite": "read-only-runtime-audits",
+          "passed": true,
+          "exit": 0,
+          "elapsed_seconds": 87.67805754207075,
+          "counts": {
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": true,
+            "skipped": 0,
+            "tests": 4,
+            "unexpected_successes": 0
+          },
+          "stdout_sha256": "f688d4032a593196e3e8868b7063c3df6576791fd664aef6b0afb17e60b17441",
+          "stderr_sha256": "afb2f817098a431f1c87a7220fa7190f484b9b078a6a3f71ed28848c8f741473"
+        },
+        {
+          "suite": "hook-failure-diagnostics",
+          "passed": true,
+          "exit": 0,
+          "elapsed_seconds": 19.79589904192835,
+          "counts": {
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": true,
+            "skipped": 0,
+            "tests": 12,
+            "unexpected_successes": 0
+          },
+          "stdout_sha256": "5692b163168123c0c44a00964d659be1fe522b81e70bbb5d25ce19bdda5f88ed",
+          "stderr_sha256": "af73f874aef13d4e26abc666cd1f4a634f8d53c94542e038ab8da6037b67244c"
+        },
+        {
+          "suite": "harness",
+          "passed": true,
+          "exit": 0,
+          "elapsed_seconds": 21.134988875011913,
+          "counts": {
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": true,
+            "skipped": 0,
+            "tests": 9,
+            "unexpected_successes": 0
+          },
+          "stdout_sha256": "6647e53db4601a3162ee249841702a27d1de7b942fc908e9e4d023a780c3ceed",
+          "stderr_sha256": "cfab682827588537745c2faa4c2b76ec4ca47352ec7ecd329b04cf7216e76c56"
+        },
+        {
+          "suite": "omp-enrollment-public-observer",
+          "passed": true,
+          "exit": 0,
+          "elapsed_seconds": 36.62786183296703,
+          "counts": {
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": true,
+            "skipped": 0,
+            "tests": 1,
+            "unexpected_successes": 0
+          },
+          "stdout_sha256": "da4c39a857799b11dd7ca8482f8696190f3cb2935d442ce6901406c35b251f58",
+          "stderr_sha256": "03551255b17d3f5f60e0c1bb3a5eb69cc6daca4e2e420a52dec52466637387ac"
+        },
+        {
+          "suite": "update-mutable-observations",
+          "passed": true,
+          "exit": 0,
+          "elapsed_seconds": 2.6932768329279497,
+          "counts": {
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": true,
+            "skipped": 0,
+            "tests": 1,
+            "unexpected_successes": 0
+          },
+          "stdout_sha256": "e11e855e41c4875ba33024110ca9ace477b7493f2a5be3a23da743b713053956",
+          "stderr_sha256": "267215e160de354a61e248f8990305734f6a6db38cd831c945d25e4744b8406c"
+        },
+        {
+          "suite": "update-mutable-public",
+          "passed": true,
+          "exit": 0,
+          "elapsed_seconds": 100.80562545894645,
+          "counts": {
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": true,
+            "skipped": 0,
+            "tests": 6,
+            "unexpected_successes": 0
+          },
+          "stdout_sha256": "83b584d7268106c18b9acf65f0b22d7dd1e9eb697c3f401dd4fc450e46bc6cb0",
+          "stderr_sha256": "2b42ddda03658f2ac1cda9a08f7d39cacb5e879f8521c0edf23d9cae26d11b65"
+        },
+        {
+          "suite": "installed-layout",
+          "passed": true,
+          "exit": 0,
+          "elapsed_seconds": 152.53358724992722,
+          "counts": {
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": true,
+            "skipped": 0,
+            "tests": 3,
+            "unexpected_successes": 0
+          },
+          "stdout_sha256": "d3a5842c48f7edd20015ee4b157f8d0e329e69280e90309e6498f5d70c79cf47",
+          "stderr_sha256": "b5b289711bccc1e66066ea6f875e540af4e2153645995a16a83542ef049eca1b"
+        },
+        {
+          "suite": "mixed-managed-candidates",
+          "passed": true,
+          "exit": 0,
+          "elapsed_seconds": 93.30098941700999,
+          "counts": {
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": true,
+            "skipped": 0,
+            "tests": 1,
+            "unexpected_successes": 0
+          },
+          "stdout_sha256": "8850e6d0b068b11792772242910eb7d3793fcd413f15eb01685125a19035a996",
+          "stderr_sha256": "0ed813b6f46ca8684fccd9d02d7930e1442d7b47fce38f5718351e95018ddef1"
+        },
+        {
+          "suite": "mixed-managed-late-private-races",
+          "passed": true,
+          "exit": 0,
+          "elapsed_seconds": 15.616225417004898,
+          "counts": {
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": true,
+            "skipped": 0,
+            "tests": 1,
+            "unexpected_successes": 0
+          },
+          "stdout_sha256": "7428032194d0191a5a836f902848dc0565e4b169c94080460ca7dc697d5d948c",
+          "stderr_sha256": "8a83cfd6d885282d8afa2b533c7345ed8e8f4cf31123023703ba2d28b1903869"
+        },
+        {
+          "suite": "mixed-omp-drain-first",
+          "passed": true,
+          "exit": 0,
+          "elapsed_seconds": 104.20949633303098,
+          "counts": {
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": true,
+            "skipped": 0,
+            "tests": 1,
+            "unexpected_successes": 0
+          },
+          "stdout_sha256": "d5b8b19948ac3ee10977ba8d38213a4960942bea8dd874fc2a696c9ba54bf0ea",
+          "stderr_sha256": "7f5cc9c2adee2b69d2e0d8a8f7b1d06b32f5dc85c3442cea855b32c0b86d4eba"
+        },
+        {
+          "suite": "turn-source-observations",
+          "passed": false,
+          "exit": 1,
+          "elapsed_seconds": 128.45574349991512,
+          "counts": {
+            "errors": 1,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": false,
+            "skipped": 0,
+            "tests": 10,
+            "unexpected_successes": 0
+          },
+          "stdout_sha256": "b596ad61d2bbe69ba434de13d730120643a46059c9cff81cfe199b3ed3843e54",
+          "stderr_sha256": "5b407dd18fb52774d20751b38a68a45be6ff1170db6f2113dca5a1e44e29a18f"
+        },
+        {
+          "suite": "runtime-uninstall",
+          "passed": true,
+          "exit": 0,
+          "elapsed_seconds": 103.75950854201801,
+          "counts": {
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": true,
+            "skipped": 0,
+            "tests": 11,
+            "unexpected_successes": 0
+          },
+          "stdout_sha256": "95d6fb4c24907f165032ea151bb576f9e6fe68ba2b179f806f29d85a1599f96d",
+          "stderr_sha256": "8d2d814ef07a9d38021198b397a2dca2a4b0722e6b64a5b9688250e01d729edf"
+        }
+      ],
+      "overall_passed": false,
+      "retained_failure": "turn-source-observations: actual capacity-refusal prompt child exceeded original15s deadline; no budget change or failed run relabel. Later published owner source moves authority recheck out of occupied-slot scans, not a claimed measured pass."
+    },
+    {
+      "commit": "1b5bcefe1b3488fc7749dedb920b3d923ed5da89",
+      "workers": [
+        {
+          "suite": "layout-recovery-partial-staging",
+          "passed": true,
+          "exit": 0,
+          "elapsed_seconds": 6.0891770829912275,
+          "counts": {
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": true,
+            "skipped": 0,
+            "tests": 1,
+            "unexpected_successes": 0
+          },
+          "stdout_sha256": "c00b322584c0aa5e3138dde5fdfbb940d545b0c13ea318e2b3b0c1d301afd815",
+          "stderr_sha256": "d213a09d41ec322b9a3034adb635d5dcc45c13bf5d9b2203e3873bff151add1e"
+        },
+        {
+          "suite": "layout-recovery-first-replacement",
+          "passed": true,
+          "exit": 0,
+          "elapsed_seconds": 34.9961742090527,
+          "counts": {
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": true,
+            "skipped": 0,
+            "tests": 1,
+            "unexpected_successes": 0
+          },
+          "stdout_sha256": "4e8c00bbf405d65bdafbb037721a0c41560b12ac0efd8e2ccb9ab60030cfc886",
+          "stderr_sha256": "847f8185a24740adf8840e2a48af5cd04e5fbfa8f5e49987d4e706320fbc6552"
+        },
+        {
+          "suite": "signed-release-lifecycle",
+          "passed": true,
+          "exit": 0,
+          "elapsed_seconds": 75.78863033291418,
+          "counts": {
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": true,
+            "skipped": 0,
+            "tests": 5,
+            "unexpected_successes": 0
+          },
+          "stdout_sha256": "660cff7cc81860770d56631889fc1e0c496927061a2532acb7fbfc057f0a0324",
+          "stderr_sha256": "27d96860ca07643eff26d5855bd2d8a6e54104a17d1af7ae590d932051bdd90e"
+        },
+        {
+          "suite": "portable-artifact",
+          "passed": true,
+          "exit": 0,
+          "elapsed_seconds": 33.19492475001607,
+          "counts": {
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": true,
+            "skipped": 0,
+            "tests": 8,
+            "unexpected_successes": 0
+          },
+          "stdout_sha256": "f3eb1c165df1df13075da1ea52a8dca0bfa3f859cc1850eaa2e8d36afcece590",
+          "stderr_sha256": "b86e6b9974a3c48587214b0b2e86cb7c3ace009c783acd705150f68b9fd60838"
+        },
+        {
+          "suite": "read-only-runtime-audits",
+          "passed": true,
+          "exit": 0,
+          "elapsed_seconds": 90.52490841702092,
+          "counts": {
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": true,
+            "skipped": 0,
+            "tests": 4,
+            "unexpected_successes": 0
+          },
+          "stdout_sha256": "f688d4032a593196e3e8868b7063c3df6576791fd664aef6b0afb17e60b17441",
+          "stderr_sha256": "aa15fd05f0a7cfe14cc7e6651f6298c9b68507e79e301a39c098a7a9111286cd"
+        },
+        {
+          "suite": "harness",
+          "passed": true,
+          "exit": 0,
+          "elapsed_seconds": 22.552492875023745,
+          "counts": {
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": true,
+            "skipped": 0,
+            "tests": 9,
+            "unexpected_successes": 0
+          },
+          "stdout_sha256": "6647e53db4601a3162ee249841702a27d1de7b942fc908e9e4d023a780c3ceed",
+          "stderr_sha256": "7b9b1a1d94e6955b1ad17e9a90dac86487300c447f2a0945897bd1875dd0d11c"
+        },
+        {
+          "suite": "private-lifecycle-observation",
+          "passed": false,
+          "exit": 1,
+          "elapsed_seconds": 89.89693045802414,
+          "counts": {
+            "errors": 1,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": false,
+            "skipped": 0,
+            "tests": 5,
+            "unexpected_successes": 0
+          },
+          "stdout_sha256": "c16d3470db3a469f22c9164f4a8f148cc53d65c4236b9b96f0dcd341662ad87c",
+          "stderr_sha256": "bd9b1c9828f60926e18dc99c28e48c6c11986493a3ab4fe1d1473db79e62f051"
+        },
+        {
+          "suite": "committed-lifecycle-replanning",
+          "passed": true,
+          "exit": 0,
+          "elapsed_seconds": 67.20811612496618,
+          "counts": {
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": true,
+            "skipped": 0,
+            "tests": 4,
+            "unexpected_successes": 0
+          },
+          "stdout_sha256": "f688d4032a593196e3e8868b7063c3df6576791fd664aef6b0afb17e60b17441",
+          "stderr_sha256": "3a750131eb494fd57868c3ca991a9d9e806078ba094cbec1793ccd3af517a78a"
+        }
+      ],
+      "overall_passed": false,
+      "retained_failure": "private-lifecycle-observation: source barrier appearing during read-only observation refused but raised during ExitStack teardown instead of returning typed pending proof; canonical and source preservation not relaxed."
+    }
+  ],
+  "independent_review": {
+    "model": "anthropic/claude-opus-5-5",
+    "source_commit": "589572e5fe9925f8ee1b0e743b5c08228689a5f7",
+    "verdict": "PASS",
+    "scope": "B1\u2013B4 and read-only locking/harness repairs only; no runtime or signed-predecessor acceptance implied",
+    "verdict_sha256": "657f31c8284fabe41b8d80bb7310ed994cd487a3da975fe3293b63d706ecac0a"
+  },
+  "hosted_matrix": {
+    "schema": "agent-memory/hosted-qualification-source-binding-v1",
+    "run_id": 42544977249,
+    "url": "https://github.com/robertelee78/agent-memory/actions/runs/42544977249",
+    "source_commit": "1b5bcefe1b3488fc7749dedb920b3d923ed5da89",
+    "branch": "integrate/v0.0.15-release",
+    "matrix": {
+      "os": [
+        "ubuntu-latest",
+        "macos-latest"
+      ],
+      "python": [
+        "3.11",
+        "3.15"
+      ]
+    },
+    "suite_worker_deadline_seconds": 300,
+    "jobs_per_cell": 2,
+    "workflow_timeout_minutes": 180,
+    "suite_registry_entries": 343,
+    "status": "launched; no terminal acceptance claimed"
+  },
+  "invariants": [
+    "Frozen source clones never edited",
+    "Original300-second worker budgets and15-second prompt deadline unchanged",
+    "No old fixture/parser modification",
+    "No original source deletion, bounds raised, skipped methods, no-op provider or empty-success fallback",
+    "Two new staging/first-rename controls preserve source bytes/modes, feature/index/HEAD and conservative semantic pending"
+  ],
+  "signed_upgrade_observation": {
+    "source_commit": "1b5bcefe1b3488fc7749dedb920b3d923ed5da89",
+    "actual_frozen_v002_umasks": [
+      "022",
+      "002"
+    ],
+    "signed_lifecycle_methods": 5,
+    "all_passed": true,
+    "first_activation_legacy_unsigned_not_retroactively_authenticated": true
+  },
+  "subsequent_correction": {
+    "source_commit": "3d2e6321e3383a693e0e82407a5513fd2c55ecd0",
+    "scope": "Late source-barrier teardown failures return typed pending; one no-create lock option retained, unused duplicate removed",
+    "workers": [
+      {
+        "suite": "private-lifecycle-observation",
+        "passed": true,
+        "exit": 0,
+        "elapsed_seconds": 88.07141987502109,
+        "counts": {
+          "errors": 0,
+          "expected_failures": 0,
+          "failures": 0,
+          "passed": true,
+          "skipped": 0,
+          "tests": 5,
+          "unexpected_successes": 0
+        },
+        "stdout_sha256": "660cff7cc81860770d56631889fc1e0c496927061a2532acb7fbfc057f0a0324",
+        "stderr_sha256": "be4ef9fee6d0a5a8fccd55f8251c405689726662773d44f0b671698b10044a69"
+      },
+      {
+        "suite": "turn-source-observations",
+        "passed": true,
+        "exit": 0,
+        "elapsed_seconds": 120.36993525002617,
+        "counts": {
+          "errors": 0,
+          "expected_failures": 0,
+          "failures": 0,
+          "passed": true,
+          "skipped": 0,
+          "tests": 10,
+          "unexpected_successes": 0
+        },
+        "stdout_sha256": "d227d1423037044966e570acc2097f80655d7453eb4adff40e619275d91d4c3a",
+        "stderr_sha256": "dfbcee32ad34947b10f48e337a4f07b5eb324e9c41f7ecb2c386b689659c939e"
+      },
+      {
+        "suite": "mixed-layout-first",
+        "passed": true,
+        "exit": 0,
+        "elapsed_seconds": 153.92388408293482,
+        "counts": {
+          "errors": 0,
+          "expected_failures": 0,
+          "failures": 0,
+          "passed": true,
+          "skipped": 0,
+          "tests": 1,
+          "unexpected_successes": 0
+        },
+        "stdout_sha256": "7ce38a1f51a055ce26a003f8c7ab62731ec6d56a76667583864217dba77cfcf0",
+        "stderr_sha256": "5875dc0256f6abbddc4c990b88abd4a19a05dfbed2e030e553720973617bb20a"
+      },
+      {
+        "suite": "mixed-managed-candidates",
+        "passed": true,
+        "exit": 0,
+        "elapsed_seconds": 149.50370704208035,
+        "counts": {
+          "errors": 0,
+          "expected_failures": 0,
+          "failures": 0,
+          "passed": true,
+          "skipped": 0,
+          "tests": 1,
+          "unexpected_successes": 0
+        },
+        "stdout_sha256": "8850e6d0b068b11792772242910eb7d3793fcd413f15eb01685125a19035a996",
+        "stderr_sha256": "7750b13fcbabf1c3ba1f226ae8e7d943d57cc07e0cee340cf1be18948591a789"
+      },
+      {
+        "suite": "mixed-managed-late-private-races",
+        "passed": true,
+        "exit": 0,
+        "elapsed_seconds": 28.410764249973,
+        "counts": {
+          "errors": 0,
+          "expected_failures": 0,
+          "failures": 0,
+          "passed": true,
+          "skipped": 0,
+          "tests": 1,
+          "unexpected_successes": 0
+        },
+        "stdout_sha256": "7428032194d0191a5a836f902848dc0565e4b169c94080460ca7dc697d5d948c",
+        "stderr_sha256": "14b0815dd2e5f60f07a8b7a5f25fd810e803477b4ac94ee475cec150e331b3e2"
+      },
+      {
+        "suite": "mixed-omp-drain-first",
+        "passed": true,
+        "exit": 0,
+        "elapsed_seconds": 165.9125920830993,
+        "counts": {
+          "errors": 0,
+          "expected_failures": 0,
+          "failures": 0,
+          "passed": true,
+          "skipped": 0,
+          "tests": 1,
+          "unexpected_successes": 0
+        },
+        "stdout_sha256": "d5b8b19948ac3ee10977ba8d38213a4960942bea8dd874fc2a696c9ba54bf0ea",
+        "stderr_sha256": "35fac2bbfcc914d5af133472c45429d279aca2e4078452bf815529b2c0df08f1"
+      },
+      {
+        "suite": "omp-native-public-lifecycle",
+        "passed": false,
+        "exit": 1,
+        "elapsed_seconds": 0.22904849995393306,
+        "counts": {},
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "668372fb0e1152d9d351d529c68a7baf9e406bab980d8daba2b16d8fba853de7"
+      },
+      {
+        "suite": "layout-recovery-legacy-consumers",
+        "passed": true,
+        "exit": 0,
+        "elapsed_seconds": 43.75535791693255,
+        "counts": {
+          "errors": 0,
+          "expected_failures": 0,
+          "failures": 0,
+          "passed": true,
+          "skipped": 0,
+          "tests": 1,
+          "unexpected_successes": 0
+        },
+        "stdout_sha256": "e11e855e41c4875ba33024110ca9ace477b7493f2a5be3a23da743b713053956",
+        "stderr_sha256": "3ca924f9935272e5276fbec4b3cbbc71787214cc02c20185b792360cbf82181d"
+      },
+      {
+        "suite": "runtime-uninstall",
+        "passed": true,
+        "exit": 0,
+        "elapsed_seconds": 154.43821962492075,
+        "counts": {
+          "errors": 0,
+          "expected_failures": 0,
+          "failures": 0,
+          "passed": true,
+          "skipped": 0,
+          "tests": 11,
+          "unexpected_successes": 0
+        },
+        "stdout_sha256": "95d6fb4c24907f165032ea151bb576f9e6fe68ba2b179f806f29d85a1599f96d",
+        "stderr_sha256": "e7b963b1465f52c99375aefb15850fc02401cc803c085600039e71f095a0a7ca"
+      }
+    ],
+    "overall_passed": false,
+    "positive_behavior": "Eight complete workers passed, including all5private lifecycle observation methods, all10turn source methods, four mixed-state/race workers, legacy consumers and all11runtime-uninstall methods. Original15s prompt and300s worker budgets unchanged.",
+    "retained_failure": "Native public-lifecycle worker refused before collection because merge dropped one still-existing late-tool regression selector; no consumer failure is inferred and no test is deleted. Registry restoration prepared; full native file remains to execute."
+  },
+  "independent_combined_review": {
+    "model": "anthropic/claude-opus-5-5",
+    "source_commit": "1b5bcefe1b3488fc7749dedb920b3d923ed5da89",
+    "verdict": "REQUEST CHANGES",
+    "blocking_finding": "One still-existing native late-tool regression selector dropped by merge; exhaustive registration guard correctly refuses all12batches from that module. Restore selector rather than delete test or loosen guard.",
+    "verdict_sha256": "45e4ba7c79f68e96017a216df051720c05fc782cf1819ef75b9a16fc25153047",
+    "other_reviewed_high_risk_source_areas": "No blocker found; not runtime or milestone acceptance."
+  }
+}
