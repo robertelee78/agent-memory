@@ -172,88 +172,92 @@ def required_private_state_capabilities(installation, target_artifact, operation
         from . import omp_boundary
     except ImportError:
         omp_boundary = None
-    with ExitStack() as stack:
-        # Stable order avoids same-family cross-bank inversion.
-        for root in sorted(roots, key=str):
-            if not root.is_absolute() or root.is_symlink() or not root.is_dir():
-                unknown.append({'source': 'bank-inventory', 'location': str(root)})
-                continue
-            try:
-                settings = repository_config.settings(root)
-                bank = root / settings['bank_root']
-                if not bank.exists():
-                    if str(root) in inventory_pins['required_bank_repositories']:
-                        raise ContractError('Bound private-state bank is unavailable')
+    try:
+        with ExitStack() as stack:
+            # Stable order avoids same-family cross-bank inversion.
+            for root in sorted(roots, key=str):
+                if not root.is_absolute() or root.is_symlink() or not root.is_dir():
+                    unknown.append({'source': 'bank-inventory', 'location': str(root)})
                     continue
-                capabilities = set()
-                held = _barriers.get()
-                if held is not None and str(root) not in held:
-                    raise ContractError('A bank joined the private-state inventory after lifecycle quiescence')
-                native_absence = None
-                if held is None:
-                    native_absence = stack.enter_context(observation_barrier(root))
-                located = state.paths(root)[:2]
-                root, bank = located
-                operations, _ = bank_writes.state_paths(root, bank, '00000000-0000-4000-8000-000000000000')
-                source_marker = operations.parent / 'turn-sources-compat-v1.json'
-                source_tree = operations.parent / 'omp-source-v1'
-                stream_tree = operations.parent / 'omp-stream-v1'
-                stream_locks = operations.parent / 'omp-stream-session-locks'
-                producer = getattr(omp_boundary, 'required_source_capabilities', None)
-                if producer is None:
-                    if any(os.path.lexists(path) for path in (source_marker, source_tree, stream_tree, stream_locks)):
-                        raise ContractError('Private native source requirement cannot be completely observed')
-                elif native_absence is None:
-                    capabilities.update(producer(root))
-                # Reuse only this read-only observation's located bank. The
-                # helpers still repeat filesystem/binding guards; below we
-                # recheck the full frontier and freshly locate the bank again.
-                token = recovery_frontier._observe_bank(root, bank, None, None, require_identity=False)
-                indexed = state._index_for_bank(root, bank)
-                layout_operations = []
-                for operation_id, indexed_row in indexed['operations'].items():
-                    if indexed_row['state'] in {'active', 'interrupted', 'rolled-back'}:
-                        _, _, value = recovery_frontier._ledger(root, operation_id, indexed_row, bank)
-                        if indexed_row['state'] != 'rolled-back' or any(unit['state'] == 'pending-admission' for unit in value['units']):
-                            layout_operations.append(operation_id)
-                active_layout = [operation_id for operation_id in layout_operations
-                    if indexed['operations'][operation_id]['state'] in {'active', 'interrupted'}]
-                if active_layout:
-                    layout_operations = active_layout
-                if layout_operations:
-                    capabilities.add('layout-frontier-v1')
-                    target_digest = target_artifact.get('artifact_digest') if target_artifact else None
-                    for frontier_operation in layout_operations:
-                        override = target_artifact.get('layout_quiescence_overrides', {}).get(frontier_operation) if target_artifact else None
-                        if override is not None:
-                            recovery_frontier.validate_quiescence(root, override, runtime_artifact_digest=target_digest,
-                                required_routes=target_artifact.get('layout_required_routes', ()))
-                        elif indexed['operations'][frontier_operation]['state'] in {'active', 'interrupted'}:
-                            recovery_frontier.verified_hold(root)
-                        if target_digest is not None:
-                            from .recovery_quiescence import _selected_attestation
-                            directory, _, ledger_value = recovery_frontier._ledger(
-                                root, frontier_operation, indexed['operations'][frontier_operation], bank)
-                            _, proposal = recovery_frontier.evidence(directory, ledger_value, indexed['operations'][frontier_operation])
-                            selected = _selected_attestation(directory, proposal, target_digest)
-                            if selected is None and override is None:
-                                raise ContractError('Target capable runtime has no renewed bank-bound quiescence attestation')
-                            if override is None and selected is not None and not set(target_artifact.get('layout_required_routes', ())).issubset(selected['declared_invocation_routes']):
-                                raise ContractError('Target capable reader has an invocation route omitted from quiescence')
-                if not capabilities.issubset(TOKENS):
-                    raise ContractError('A private-state producer returned an unknown capability')
-                if recovery_frontier._observe_bank(root, bank, None, None, require_identity=False) != token:
-                    raise ContractError('Private recovery frontier changed during compatibility observation')
-                if state.paths(root)[:2] != located:
-                    raise ContractError('Recovery bank location changed during compatibility observation')
-                if native_absence is not None and _native_absence(root, operations.parent) != native_absence:
-                    raise ContractError('Native registry changed during compatibility observation')
-                requirements[str(bank)] = sorted(capabilities)
-                pins.append({'repo_root': str(root), 'bank_path': str(bank), 'recovery_frontier': token,
-                    'requirements': sorted(capabilities)})
-            except (ContractError, OSError, ValueError, TypeError, KeyError) as exc:
-                unknown.append({'source': 'private-state', 'location': str(root),
-                    'reason': 'private state is missing, inaccessible, interrupted, malformed or changed'})
+                try:
+                    settings = repository_config.settings(root)
+                    bank = root / settings['bank_root']
+                    if not bank.exists():
+                        if str(root) in inventory_pins['required_bank_repositories']:
+                            raise ContractError('Bound private-state bank is unavailable')
+                        continue
+                    capabilities = set()
+                    held = _barriers.get()
+                    if held is not None and str(root) not in held:
+                        raise ContractError('A bank joined the private-state inventory after lifecycle quiescence')
+                    native_absence = None
+                    if held is None:
+                        native_absence = stack.enter_context(observation_barrier(root))
+                    located = state.paths(root)[:2]
+                    root, bank = located
+                    operations, _ = bank_writes.state_paths(root, bank, '00000000-0000-4000-8000-000000000000')
+                    source_marker = operations.parent / 'turn-sources-compat-v1.json'
+                    source_tree = operations.parent / 'omp-source-v1'
+                    stream_tree = operations.parent / 'omp-stream-v1'
+                    stream_locks = operations.parent / 'omp-stream-session-locks'
+                    producer = getattr(omp_boundary, 'required_source_capabilities', None)
+                    if producer is None:
+                        if any(os.path.lexists(path) for path in (source_marker, source_tree, stream_tree, stream_locks)):
+                            raise ContractError('Private native source requirement cannot be completely observed')
+                    elif native_absence is None:
+                        capabilities.update(producer(root))
+                    # Reuse only this read-only observation's located bank. The
+                    # helpers still repeat filesystem/binding guards; below we
+                    # recheck the full frontier and freshly locate the bank again.
+                    token = recovery_frontier._observe_bank(root, bank, None, None, require_identity=False)
+                    indexed = state._index_for_bank(root, bank)
+                    layout_operations = []
+                    for operation_id, indexed_row in indexed['operations'].items():
+                        if indexed_row['state'] in {'active', 'interrupted', 'rolled-back'}:
+                            _, _, value = recovery_frontier._ledger(root, operation_id, indexed_row, bank)
+                            if indexed_row['state'] != 'rolled-back' or any(unit['state'] == 'pending-admission' for unit in value['units']):
+                                layout_operations.append(operation_id)
+                    active_layout = [operation_id for operation_id in layout_operations
+                        if indexed['operations'][operation_id]['state'] in {'active', 'interrupted'}]
+                    if active_layout:
+                        layout_operations = active_layout
+                    if layout_operations:
+                        capabilities.add('layout-frontier-v1')
+                        target_digest = target_artifact.get('artifact_digest') if target_artifact else None
+                        for frontier_operation in layout_operations:
+                            override = target_artifact.get('layout_quiescence_overrides', {}).get(frontier_operation) if target_artifact else None
+                            if override is not None:
+                                recovery_frontier.validate_quiescence(root, override, runtime_artifact_digest=target_digest,
+                                    required_routes=target_artifact.get('layout_required_routes', ()))
+                            elif indexed['operations'][frontier_operation]['state'] in {'active', 'interrupted'}:
+                                recovery_frontier.verified_hold(root)
+                            if target_digest is not None:
+                                from .recovery_quiescence import _selected_attestation
+                                directory, _, ledger_value = recovery_frontier._ledger(
+                                    root, frontier_operation, indexed['operations'][frontier_operation], bank)
+                                _, proposal = recovery_frontier.evidence(directory, ledger_value, indexed['operations'][frontier_operation])
+                                selected = _selected_attestation(directory, proposal, target_digest)
+                                if selected is None and override is None:
+                                    raise ContractError('Target capable runtime has no renewed bank-bound quiescence attestation')
+                                if override is None and selected is not None and not set(target_artifact.get('layout_required_routes', ())).issubset(selected['declared_invocation_routes']):
+                                    raise ContractError('Target capable reader has an invocation route omitted from quiescence')
+                    if not capabilities.issubset(TOKENS):
+                        raise ContractError('A private-state producer returned an unknown capability')
+                    if recovery_frontier._observe_bank(root, bank, None, None, require_identity=False) != token:
+                        raise ContractError('Private recovery frontier changed during compatibility observation')
+                    if state.paths(root)[:2] != located:
+                        raise ContractError('Recovery bank location changed during compatibility observation')
+                    if native_absence is not None and _native_absence(root, operations.parent) != native_absence:
+                        raise ContractError('Native registry changed during compatibility observation')
+                    requirements[str(bank)] = sorted(capabilities)
+                    pins.append({'repo_root': str(root), 'bank_path': str(bank), 'recovery_frontier': token,
+                        'requirements': sorted(capabilities)})
+                except (ContractError, OSError, ValueError, TypeError, KeyError) as exc:
+                    unknown.append({'source': 'private-state', 'location': str(root),
+                        'reason': 'private state is missing, inaccessible, interrupted, malformed or changed'})
+    except (ContractError, OSError, ValueError, TypeError, KeyError):
+        unknown.append({'source': 'private-state-barrier',
+            'reason': 'private source synchronization changed during compatibility observation'})
     required = set().union(*(set(values) for values in requirements.values())) if requirements else set()
     if isinstance(target_artifact, dict) and target_artifact.get('already_active_verified') is True:
         from . import installation as install
