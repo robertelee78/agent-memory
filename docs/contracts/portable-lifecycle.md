@@ -52,11 +52,25 @@ per discovery and reuses it when the saved authority already matches the
 observed selection. Each final source/lock boundary still obtains a fresh
 observation; there is no cache across operations or sessions.
 
+Static package validation may reuse its single successful report for an exact
+relative-path, byte and file-mode inventory at another absolute root. This
+report conveys no source trust, installation ownership or runtime qualification.
+Every inspection still reads the actual complete physical artifact on entry and
+exit; declaration readbacks remain rooted in that candidate. Changed bytes,
+modes, paths, unsafe topology or an in-bracket mutation cannot inherit old
+validation. Returned reports are isolated, and failed brackets are not cached.
+
 The three independent installed-bank cases have separate mandatory workers for
 cold initialization/checkpoint, qualified recall and governance intent guards.
 Their method bodies and assertions are preserved. The complete automatic
 capture/publish/refresh journey remains one indivisible case; independent case
 separation does not replace or split that workflow.
+
+Six other expensive bank aggregates use exhaustive single-method registry
+batches. Their original methods and scopes remain unchanged, and matrix
+references name the batch that actually executes each required case. Complete
+coverage and non-overlap are checked from real successful worker receipts,
+not source-text wiring assertions.
 
 Bindings are coverage obligations, not additional executions or proof that an
 assertion is correct. The public gate executes each registered suite once;

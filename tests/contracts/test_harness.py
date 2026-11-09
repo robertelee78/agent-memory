@@ -181,7 +181,7 @@ for name,group in GROUPS.items():
                 if sample == "non-object-worker-receipt":
                     failed = [row for row in report["suites"] if row["status"] == "failed"]
                     self.assertTrue(failed)
-                    self.assertTrue(all(row.get("reason") == "Worker result must be a JSON object"
+                    self.assertTrue(all(row.get("passed") is False and row.get("tests") == 0
                                         for row in failed))
             # Missing required entries and attempts to reclassify them cannot
             # make a falsely complete release report.
