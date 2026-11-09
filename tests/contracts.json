@@ -110,6 +110,8 @@
     {"name":"layout-nested-rename-exit","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_nested_faults.py","tests":["LayoutNestedFaults.test_rename_exit"]},
     {"name": "layout-recovery-frontier", "layer": "bank", "scope": "v0.0.15", "path": "tests/contracts/test_layout_recovery_frontier.py"},
     {"name": "layout-recovery-legacy-consumers", "layer": "lifecycle", "scope": "v0.0.15", "path": "tests/contracts/test_layout_recovery_legacy.py"},
+    {"name":"layout-legacy-swap-before","layer":"lifecycle","scope":"v0.0.15","path":"tests/contracts/test_layout_legacy_swap.py","tests":["LayoutLegacySwap.test_old_consumers_before_swap"]},
+    {"name":"layout-legacy-swap-after","layer":"lifecycle","scope":"v0.0.15","path":"tests/contracts/test_layout_legacy_swap.py","tests":["LayoutLegacySwap.test_old_consumers_after_swap"]},
     {"name":"layout-legacy-stale-apply","layer":"lifecycle","scope":"v0.0.15","path":"tests/contracts/test_layout_legacy_stale.py","tests":["LayoutLegacyStaleLock.test_old_stale_lock_recovery_preserves_interrupted_apply"]},
     {"name": "private-lifecycle-observation", "layer": "lifecycle", "scope": "v0.0.15", "path": "tests/contracts/test_private_lifecycle_observation.py"},
     {"name": "layout-recovery-catalog", "layer": "bank", "scope": "v0.0.15", "path": "tests/contracts/test_layout_recovery_catalog.py"},
