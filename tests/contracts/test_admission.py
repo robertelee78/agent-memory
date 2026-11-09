@@ -301,9 +301,13 @@ class AdmissionContract(unittest.TestCase):
             p=self.prepared(w,repo,request);directory=w.inside('rendezvous')
             w.env.update(AGENT_MEMORY_FAULT_STAGE='transaction-before-receipt',AGENT_MEMORY_FAULT_MODE='pause',AGENT_MEMORY_FAULT_DIR=str(directory))
             child=w.spawn([sys.executable,'-I',self.pack/'scripts/admit_learning.py','apply','--proposal',self.save(w,p,'admission.json')])
-            ready=directory/'transaction-before-receipt.ready';deadline=time.monotonic()+10
-            while not ready.exists() and child.poll() is None and time.monotonic()<deadline:time.sleep(.01)
-            self.assertTrue(ready.exists())
+            ready=directory/'transaction-before-receipt.ready'
+            # Synchronize at the actual source-readback boundary. The contract
+            # worker's existing deadline bounds startup on a busy host.
+            while not ready.exists() and child.poll() is None:time.sleep(.01)
+            if not ready.exists():
+                stdout,stderr=child.communicate(timeout=15)
+                self.fail('Admission exited before the readback barrier: '+stdout+stderr)
             (repo/'evidence.md').write_text('# Changed during the final source readback\n')
             (directory/'transaction-before-receipt.release').touch()
             stdout,stderr=child.communicate(timeout=15);self.assertEqual(child.returncode,1,stdout+stderr)
