@@ -35,6 +35,28 @@ This foundation does not bypass publication checks or implement automatic
 semantic approval, landing or boundary invocation; those operations have their
 own contracts.
 
+### Layout-recovery holds and pending sources
+
+An eligible local layout MUST NOT be treated as a semantically complete bank
+while its verified recovery hold retains unresolved units. Ordinary sharing
+readback MUST NOT turn those private sources into successful absence or waive
+their frontier. A missing, corrupt or foreign hold, ledger or discovery binding
+MUST remain pending; do not delete markers or initialize over them.
+
+When a canonical source or authority tree cannot pass these ordinary native
+bounds, the session MUST use the [source-preserving recovery workflow](../../bank/GUIDE.md#source-preserving-layout-recovery)
+and its separate [recovery publication proof](../publication/GUIDE.md#source-preserving-layout-publication).
+Retain the exact originals, pending unit IDs and operation evidence privately.
+Both ordinary and recovery publication MUST remain pending until every unit has
+an actual reviewed terminal disposition and fresh complete source/policy checks
+succeed. A byte-preserving backup alone is not admission or publication.
+
+After an uncertain recovery publication response, inventory the actual authority
+and use that operation's checked historical readback; do not replay a push,
+restore an old bank or feed an invalid raw tree to ordinary merge reconciliation.
+Local layout restoration, semantic resolution, witnessed publication and fresh
+peer recall MUST be reported separately.
+
 ## Observe
 
 With `SKILL_DIR` resolved to this package:
