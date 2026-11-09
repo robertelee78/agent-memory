@@ -22,6 +22,13 @@ class LayoutLegacyNested(unittest.TestCase):
                              '4208c18e2288bdb3f6faf6354fe44b638559ba8ec1fede2cec7ce491bea726f7')
             old = Path(receipt['bin_dir']) / 'am'
             command, source, repo, bank, _, inspected, applied = recovery.small_pending(world)
+            feature = repo / 'feature.txt'
+            feature.write_text('Feature baseline\n')
+            world.git('add', 'feature.txt', cwd=repo)
+            world.git('commit', '-m', 'Synthetic feature baseline', cwd=repo)
+            feature.write_text('Staged feature\n')
+            world.git('add', 'feature.txt', cwd=repo)
+            feature.write_text('Unstaged feature\n')
             operation = inspected['operation_id']
             directory = recovery.private_directory(world, bank, operation)
             originals = {row['path']: (directory / row['blob']).read_bytes() for row in inspected['manifest']['sources']}
@@ -76,6 +83,7 @@ class LayoutLegacyNested(unittest.TestCase):
                               for row in inspected['manifest']['sources']}, originals)
             self.assertEqual((repo / '.git/index').read_bytes(), index)
             self.assertEqual(world.git('rev-parse', 'HEAD', cwd=repo).stdout, head)
+            self.assertEqual(feature.read_text(), 'Unstaged feature\n')
 
     def test_without_nested_receipt(self):
         self.journey(False)
