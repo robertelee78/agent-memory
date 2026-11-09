@@ -1128,6 +1128,27 @@ def _verify_rolled_back_targets(state, journal):
                 'Rolled-back target changed; preserve and reconcile: ' + action['path'])
 
 
+def _receipt_committed(state, journal):
+    return (journal.get('receipt_identity') is not None
+            and fingerprint(state/'receipt.json') == journal['receipt_identity'])
+
+
+def _require_replannable_journal(state):
+    journal = read_journal(state)
+    if journal is None:
+        return
+    status = journal['status']
+    require(status in ('complete', 'rolled-back')
+            or (status == 'activating' and _receipt_committed(state, journal)),
+            'Uncommitted lifecycle transaction; use the trusted recover helper before replanning')
+    if status in ('complete', 'activating'):
+        require(_receipt_committed(state, journal),
+                'Current receipt differs from its committed journal; preserve and reconcile ownership')
+    if status == 'activating':
+        require((journal.get('operation') == 'uninstall') == (journal['receipt'].get('uninstalled') is True),
+                'Lifecycle journal and receipt operation differ')
+
+
 def recover(state, *, for_install=False, complete_native=True):
     path = state/'journal.json'
     journal = read_journal(state)
@@ -1162,14 +1183,25 @@ def recover(state, *, for_install=False, complete_native=True):
                    if journal.get('opaque_cache_recovery') else {})}
         return finish_stored_source_activation(state, result) if complete_native and result['verified'] else result
     # Receipt activation is the commit point; a lost final response must not undo it.
-    receipt = state/'receipt.json'
-    if journal.get('receipt_identity') is not None and fingerprint(receipt) == journal['receipt_identity']:
+    if _receipt_committed(state, journal):
+        require(journal['status'] == 'activating', 'Committed receipt has an invalid lifecycle journal state')
         uninstall_output = journal.get('operation') == 'uninstall'
         require(uninstall_output == (journal['receipt'].get('uninstalled') is True),
                 'Lifecycle journal and receipt operation differ')
-        verify_targets(journal['receipt']['targets'], uninstall_output=uninstall_output)
+        try:
+            restore_native()
+            verify_targets(journal['receipt']['targets'],
+                           source=None if uninstall_output else journal['receipt']['source'],
+                           uninstall_output=uninstall_output)
+        except (trust_paths.TrustPathError, LayoutError):
+            raise
+        except ContractError:
+            if not for_install:
+                raise
+            # A fresh ownership plan may reconcile allowed surrounding edits.
+            # Strict recovery must never call this unverified state complete.
+            return {'operation': 'recover', 'verified': False, 'status': 'install-validation-pending'}
         journal['status'] = 'complete'; replace_record(path, journal)
-        restore_native()
         result = {'operation': 'recover', 'verified': True, 'status': 'complete'}
         return finish_stored_source_activation(state, result) if complete_native else result
     result = rollback(state, journal)
@@ -1422,6 +1454,10 @@ def failure_repair(exc):
         return ('Preserve reported paths and installation records; inspect diagnostics and reconcile '
                 'unreadable recovery metadata before retrying.')
     if journal and journal['status'] not in ('complete', 'rolled-back'):
+        if journal['status'] == 'activating' and _receipt_committed(state, journal):
+            command = 'install' if journal['receipt'].get('uninstalled') else 'install or update'
+            return ('Preserve the committed receipt and journal. Use the trusted helper to re-plan '
+                    + command + '; strict recover cannot accept changed targets.')
         return 'Preserve reported paths; rerun this trusted helper with recover before retrying installation.'
     return ('Preserve reported paths; resolve the reported planning or prerequisite error, then rerun '
             'install --check before retrying. No pending activation requires recovery.')
@@ -1525,8 +1561,7 @@ def main(argv=None):
                     result = finish_stored_source_activation(state, {key: value for key, value in result.items()
                                                                      if key != 'writes_performed'})
         elif args.command == 'install' and args.check:
-            require(not os.path.lexists(state/'journal.json') or load(state/'journal.json')['status'] in ('complete','rolled-back'),
-                    'An interrupted transaction requires recover before a new install plan')
+            _require_replannable_journal(state)
             with prepare(args, state, code, read_receipt(state)) as plan:
                 result = public_plan(plan)
                 if plan.get('omp_binding'):

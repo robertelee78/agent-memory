@@ -1,13 +1,18 @@
 # Signed-cosine alternatives: measured numeric findings
 
+Imported research from immutable `a2b728df7f57e5478bb18b5659230c8fec2b4191`,
+with the source/evidence-bound integration corrections recorded in
+[integration-review.json](data/2026-11-08-vector-alternatives/integration-review.json).
+Historical review hashes bind the original peer bytes, not this corrected report.
 ## Decision supported by this experiment
 
 Preserve signed cosine and keep an independent exact oracle. Do not promote the
 existing native `similarity` field to a signed-cosine authority, and do not assume
-switching from MAGE to core fixes it. The standalone USearch binding avoided the
-observed sign conversion on the tested controls. Its fixed approximate search
-also missed neighbors: changing the binding alone does not establish adequate
-retrieval quality.
+switching from MAGE to core fixes it. Memgraph's raw distance already preserves sign: `1 - distance`, or exact rescoring
+on original vectors, avoids its reported-similarity conversion without changing
+bindings. Standalone USearch also produced correct signed distances on these
+controls. This does not show a binding switch is necessary. Its fixed approximate
+search missed neighbors, so changing bindings does not establish retrieval quality.
 
 For the next AM-specific qualification, compare a correctly scored exact path
 with optional bounded candidate generation followed by exact rescoring. Prefer
@@ -24,10 +29,10 @@ The retained core/MAGE diagnostic observed an antiparallel vector with native
 exact cosine function agreed with the independent oracle. See the existing
 [core diagnostic](data/2026-11-05-ssg-runtime/core-comparison/diagnostic-20261106-opus/report.json).
 
-The primary [Memgraph v3.10.1 SearchNodes source](https://github.com/memgraph/memgraph/blob/v3.10.1/src/storage/v2/indices/vector_index.cpp)
+The primary [Memgraph v3.10.1 SearchNodes source](https://github.com/memgraph/memgraph/blob/0e77b786fc03fe4f92a18b9730940e11c62a0c32/src/storage/v2/indices/vector_index.cpp)
 constructs its result using
 `std::abs(SimilarityFromDistance(metric, distance))`.
-The [same-tag conversion helper](https://github.com/memgraph/memgraph/blob/v3.10.1/src/storage/v2/indices/vector_index_utils.hpp)
+The [same-tag conversion helper](https://github.com/memgraph/memgraph/blob/0e77b786fc03fe4f92a18b9730940e11c62a0c32/src/storage/v2/indices/vector_index_utils.hpp)
 returns `1.0 - distance` for cosine. Consequently, this source converts a valid
 signed result `-1` to `+1`. This is a source mechanism consistent with the actual
 pinned-binary observation; the image was not independently rebuilt from that tag.
@@ -53,12 +58,13 @@ oracle uses Python f64 values and `math.fsum`, with signed cosine and tie-aware
 membership. Score tolerance2e-5 was fixed before execution.
 
 Independent **Claude Opus5.5** reviewed the exact design/source before execution
-and returned PASS for bounded research execution. One1k run was reviewed before
-10k, then10k before50k; no tuning, retries or rebuild-until-pass. The initial
+and returned PASS for bounded research execution. The owner reported staged1k→10k→50k inspection; the executable gates only
+a passing1k smoke receipt, and the50k manifest also references that1k receipt.
+No executable10k-before50k gate is claimed. No tuning, retries or rebuild-until-pass. The initial
 unexecuted design selected an unavailable3.11.11 interpreter and was revised
 before this review. All three executed cells used the same reviewed source.
 
-| Synthetic vectors | Build ms | Median exact query ms | Median HNSW query ms | HNSW candidate recall@10 range | Mean candidate recall@10 | Saved index bytes |
+| Synthetic vectors | Build ms | Median exact query ms | Median HNSW query ms | Oracle top10 containment among32 HNSW candidates, range | Mean containment | Saved index bytes |
 | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | 1,000 | 43.693 | 0.0698 | 0.0471 | 0.9–1.0 | 0.975 | 403,784 |
 | 10,000 | 1,021.969 | 0.3384 | 0.1038 | 0.5–1.0 | 0.8125 | 4,044,788 |
@@ -80,7 +86,10 @@ violation. Sampled aggregate peaks were about49/69/167MB; short-lived peaks can
 be missed. The normal busy host and concurrent full release gate were retained,
 not treated as disqualifying. These single-run, eight-query medians are not p99s,
 a causal cross-stack speedup, representative AM timings or proof of semantic
-quality. Queries differ across sizes. Actual AM dimensions, embeddings, eligibility,
+quality. Queries differ across sizes. The random uniform64-d integer vectors
+are not AM embeddings; their50k recall loss predicts neither good nor bad AM
+embedding recall. These64-d exact-query timings do not measure4096-d costs.
+Actual AM dimensions, embeddings, eligibility,
 safety, deletion/fencing and lifecycle must receive their own qualification.
 
 ## What this changes—and does not
@@ -93,7 +102,7 @@ safety, deletion/fencing and lifecycle must receive their own qualification.
   hyperparameter was retuned after seeing results. Exact rescoring cannot repair
   these missing candidates; a new bounded search policy needs separate reviewed
   calibration/evaluation.
-- **Algorithm independence:** [Memgraph embeds USearch](https://github.com/memgraph/memgraph/blob/v3.10.1/src/storage/v2/indices/vector_index.cpp).
+- **Algorithm independence:** [Memgraph embeds USearch](https://github.com/memgraph/memgraph/blob/0e77b786fc03fe4f92a18b9730940e11c62a0c32/src/storage/v2/indices/vector_index.cpp).
   This alternative is a binding/version/architecture comparison within the HNSW
   family, not evidence that an independent algorithm wins or that one library
   is universally state of the art. [USearch's documented metric/API](https://github.com/unum-cloud/usearch/tree/v2.26.6)

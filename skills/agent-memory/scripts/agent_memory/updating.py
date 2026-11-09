@@ -50,14 +50,7 @@ def current(state, code, *, cache_recovery=None):
     else:
         actual = install.source_info(root, source['kind'], source['remote'], source['ref'])
     install.require(actual == source, 'Current source revision, version or artifact differs from its receipt')
-    journal_path = state/'journal.json'
-    if os.path.lexists(journal_path):
-        journal = install.load(journal_path)
-        install.require(journal.get('status') in ('complete','rolled-back'),
-                        'Incomplete lifecycle transaction; use the trusted recover helper before checking updates')
-        if journal['status']=='complete':
-            install.require(install.fingerprint(state/'receipt.json') == journal['receipt_identity'],
-                            'Current receipt differs from its committed journal')
+    install._require_replannable_journal(state)
     for target in old['targets']:
         if target['kind']=='activation':
             path = Path(target['path'])

@@ -1,0 +1,54 @@
+{
+  "schema": "agent-memory/native249-stock-r4-disposition-v1",
+  "source_commit": "77cf838fb1a73dc348f60c2fe4230e67c7aef814",
+  "archive_sha256": "9d7b6c0cca32cdfb4ce9f497717ed7fd491621e3bd1d4287084ad6bf012939ba",
+  "binary_sha256": "d4a10d97488d6054d2b18198bd24f461079952c7e0fb75ba66336ca0df0cb99e",
+  "native_version": "18.16.0",
+  "model": "openai-codex/gpt-6.1-sol",
+  "plan_sha256": "1e93bd77eeb5e69f0d3aac2384ad7821c2790c13c72487b45f9db466c45e8692",
+  "actual_result_sha256": "1243a2bd1440310aeec460e935497f7278d4e41ed7699aa69bba27417f243e2b",
+  "actual": {
+    "native_processes": 1,
+    "mode": "print",
+    "native_exit": 0,
+    "stored_human_entries": 1,
+    "stored_assistant_completions": 1,
+    "substantive_answer_sentinel_count": 1,
+    "provider_HTTP_attempts": "UNOBSERVED",
+    "rpc_launched": false,
+    "helper_exits": [
+      1,
+      1
+    ],
+    "durable_stream_instances": 2,
+    "durable_status": "OPEN_NO_ATTEMPTS_NO_OUTCOMES_NO_CLOSED",
+    "observed_READY_frames": 0,
+    "observed_EOF": false,
+    "source_captured": false,
+    "original_evidence_retained": true,
+    "HEAD_index_feature_extension_receipt_preserved": true
+  },
+  "apparatus_defects": [
+    {
+      "cause": "lexical_route_matching",
+      "evidence": "Both actual companion helper starts were present; hooks/../scripts/source_startup.py failed lexical comparison with scripts/source_startup.py",
+      "impact": "instrumentation-coverage false negative; NOT explanation of exit1"
+    },
+    {
+      "cause": "print_terminal_agent_end_not_idle",
+      "evidence": "foreign fixture refused not-idle-at-terminal-agent_end; both shutdown observers saw no large source",
+      "impact": "large-source gate NOT_EXERCISED, no >=256KiB or flush qualification"
+    }
+  ],
+  "worker_exception_cause": "UNKNOWN; stderr discarded; source inspection cannot establish definite cause",
+  "independent_read_only_reviews": [
+    "NativeFifoOpusDesign: actual runtime failure distinct from apparatus defects; no capture/EOF/wake/RPC/fork pass",
+    "Native249HostedJourney: same retained-record triage; provider HTTP attempts unknown"
+  ],
+  "candidate_evidence_ready": false,
+  "full_native_qualification": false,
+  "stock_omp_modified": false,
+  "operator_profile_modified": false,
+  "original_criteria": "ALL_REMAIN_REQUIRED",
+  "next": "Separately reviewed model-free diagnostic with new identities, no original stream closure/deletion; no model rerun authorized by this disposition"
+}

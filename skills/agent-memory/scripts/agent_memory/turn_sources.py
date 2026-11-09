@@ -66,8 +66,8 @@ def private_mkdir(path):
 
 
 @contextmanager
-def private_lock(path, *, shared=False, existing_only=False):
-    existing_only=existing_only or _read_only_locks.get()
+def private_lock(path, *, shared=False, existing_only=False, create=True):
+    existing_only=existing_only or not create or _read_only_locks.get()
     parent_fd=None
     if existing_only:
         trust_paths.state(path.parent)
@@ -125,7 +125,7 @@ def check_source_compatibility(base):
 
 
 @contextmanager
-def source_barrier(repo, *, exclusive=False, existing_only=False):
+def source_barrier(repo, *, exclusive=False, existing_only=False, create=True):
     """First source lock family; reentrant reads cannot upgrade to writers."""
     from . import layout_recovery_state
     location=scope_binding._observe_enrollment_location(repo)
@@ -138,7 +138,7 @@ def source_barrier(repo, *, exclusive=False, existing_only=False):
         yield
         check_source_compatibility(base)
         return
-    with private_lock(base/'source-barrier.lock',shared=not exclusive,existing_only=existing_only):
+    with private_lock(base/'source-barrier.lock',shared=not exclusive,existing_only=existing_only,create=create):
         check_source_compatibility(base)
         token=_barriers.set({**known,str(base):exclusive})
         try:
@@ -423,6 +423,9 @@ def register(repo,harness,session,lifecycle,source_sha256,*,native_source_id=Non
         index(base,directory,identity,root,context)
         for i in range(MAX_SOURCES):
             path=directory/('source-'+str(i)+'.json')
+            # Existing names reserve slots even when their contents are invalid.
+            # Only a possible create needs a fresh mutation-authority recheck.
+            if os.path.lexists(path):continue
             scope_binding.recheck_private_enrollment(context)
             try:exclusive(path,value,MAX_SOURCE)
             except FileExistsError:continue
@@ -431,6 +434,7 @@ def register(repo,harness,session,lifecycle,source_sha256,*,native_source_id=Non
             index(base,directory,identity,root,context)
             scope_binding.recheck_private_enrollment(context)
             return value
+        scope_binding.recheck_private_enrollment(context)
         fault(directory,'source-capacity')
         raise ContractError('Source capacity reached; preserve this turn and retry in a new turn after inspecting backlog')
     except (OSError,ValueError):

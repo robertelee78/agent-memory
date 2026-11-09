@@ -33,5 +33,5 @@ class FreshObservationControls(unittest.TestCase):
      return value
     with patch.object(pathlib.Path,'cwd',return_value=repo),patch.object(updating.project_identity,'observe',return_value=({'checkouts':{}},None)),patch.object(migration,'read_regular',side_effect=intercept):
      with self.assertRaises(ContractError):updating.banks(roots,compatibility)
-    print(mode,'refused',flush=True)
+    print(mode,'refused',flush=True,file=sys.stderr)
 if __name__=='__main__':unittest.main(verbosity=2)

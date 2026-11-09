@@ -141,7 +141,7 @@ raise SystemExit(publication.main(['land','--repo',str(repo),'--input',str(reque
                 (directory/'activeContext.md').write_text('# Current focus\n\nRetain the authored local learning.\n')
                 request=self.prepared(w,repo)['request'];before=self.state(w,repo,directory)
                 head=w.git('ls-remote','origin','refs/heads/main',cwd=repo).stdout
-                output=w.run([sys.executable,'-I','-c',program,self.pack/'scripts',repo,self.save(w,request),action,policy,peer],check=False,timeout=120)
+                output=w.run([sys.executable,'-I','-B','-c',program,self.pack/'scripts',repo,self.save(w,request),action,policy,peer],check=False,timeout=120)
                 self.assertEqual(output.returncode,1,output.stdout+output.stderr)
                 self.assertFalse(json.loads(output.stdout)['publication_verified'])
                 after=self.state(w,repo,directory)

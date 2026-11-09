@@ -254,12 +254,12 @@ def observe(repo, owner=None, transaction=None):
         raise ContractError('Recovery bank location changed during observation')
     return result
 
-def _observe_bank(root, bank, owner, transaction):
+def _observe_bank(root, bank, owner, transaction, *, require_identity=True):
     index = state._index_for_bank(root, bank)
-    return _observe_index(root, owner, transaction, index, bank)
+    return _observe_index(root, owner, transaction, index, bank, require_identity=require_identity)
 
 
-def _observe_index(repo, owner, transaction, index, bank=None):
+def _observe_index(repo, owner, transaction, index, bank=None, *, require_identity=True):
     """Internal read-only view after exact known-transition validation only."""
     root, bank, base, _ = (state.paths(repo) if bank is None
                            else state._paths_for_bank(repo, bank))
@@ -346,9 +346,12 @@ def _observe_index(repo, owner, transaction, index, bank=None):
         raise ContractError('Recovery private state conflicts on project identity')
     if project_ids:
         project_id = next(iter(project_ids))
-    else:
+    elif require_identity:
         from .bank_observation import read_source
         project_id = bank_contract.parse_router(read_source(bank, 'MEMORY.md', 16384).decode('utf-8'))[0]['project-id']
+    else:
+        # Lifecycle capability pins are not canonical identity or recall proof.
+        project_id = None
     index_raw = state.read_bytes(base / 'index.json', missing=True)
     if index_raw is not None:
         index_raw = encoded(index)

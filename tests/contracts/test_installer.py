@@ -196,10 +196,14 @@ class MacOSCommandContract(unittest.TestCase):
             # A new outside installer must not add an alias to the still-old
             # runtime: its actual old updater cannot preserve such a target.
             still_old = alias_install(world, channel)
-            self.assertFalse(still_old['changed']); self.assertFalse((directory/'am').exists())
+            self.assertEqual(still_old['receipt']['source']['artifact_digest'],
+                             first['receipt']['source']['artifact_digest'])
+            self.assertFalse((directory/'am').exists())
             candidate = advance_to_current(world, channel); alias_tmpdir(world)
             # This process imports the OLD installed updater before activation.
-            updated = json.loads(world.run([original, '--json', 'update'], timeout=120).stdout)
+            result = world.run([original, '--json', 'update'], check=False, timeout=120)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            updated = json.loads(result.stdout)
             self.assertTrue(updated['verified'])
             self.assertEqual(updated['receipt']['source']['revision'], candidate)
             self.assertFalse((directory/'am').exists())

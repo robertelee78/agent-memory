@@ -239,6 +239,50 @@ class PortableArtifactContract(unittest.TestCase):
             self.assertEqual(changed['files']['scripts/artifact.py']['sha256'],
                              baseline['files']['scripts/artifact.py']['sha256'])
 
+    def test_change_after_declaration_read_refuses_cold_and_cached_inspections(self):
+        with patch.object(sys, 'path', [str(PACK / 'scripts'), *sys.path]):
+            from agent_memory import artifact, pack_validation
+        for cached in (False, True):
+            for mutation in ('bytes', 'mode', 'added', 'removed'):
+                with self.subTest(cached=cached, mutation=mutation), World() as world:
+                    pack = self.copy(world)
+                    baseline = artifact.inspect(pack)
+                    asset = pack / 'hooks/boundary-prompt.txt'
+                    original, mode = asset.read_bytes(), asset.stat().st_mode & 0o777
+                    added = pack / 'inspection-arrival.txt'
+                    declaration = artifact.declaration
+                    changed = []
+                    def read_then_change(*args, **kwargs):
+                        value = declaration(*args, **kwargs)
+                        if not changed:
+                            if mutation == 'bytes':
+                                asset.write_bytes(original + b'\nChanged during inspection.\n')
+                            elif mutation == 'mode':
+                                asset.chmod(mode ^ 0o200)
+                            elif mutation == 'added':
+                                added.write_text('Arrived during inspection.\n')
+                            else:
+                                asset.unlink()
+                            changed.append(True)
+                        return value
+                    try:
+                        with patch.object(pack_validation, '_last_validation',
+                                          pack_validation._last_validation if cached else None), \
+                                patch.object(artifact, 'declaration', side_effect=read_then_change):
+                            with self.assertRaises(pack_validation.Invalid) as refused:
+                                artifact.inspect(pack)
+                        self.assertEqual(refused.exception.issue['code'], 'changed-pack')
+                        self.assertEqual(changed, [True])
+                    finally:
+                        if asset.exists():
+                            asset.chmod(mode | 0o200)
+                        asset.write_bytes(original)
+                        asset.chmod(mode)
+                        if added.exists():
+                            added.unlink()
+                    self.assertEqual(artifact.inspect(pack)['artifact_digest'],
+                                     baseline['artifact_digest'])
+
 
 if __name__ == '__main__':
     unittest.main()

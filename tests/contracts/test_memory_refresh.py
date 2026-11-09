@@ -272,7 +272,7 @@ with patch('os.mkdir',swap): private_mkdir(sys.argv[4])
                     's.write_private(sys.argv[2],value,sys.argv[3]);'
                     's.preflight_private_output(sys.argv[2],sys.argv[3]);'
                     's.write_private(sys.argv[2],value,sys.argv[3])')
-            response=w.run([sys.executable,'-I','-c',script,self.pack/'scripts',target,repo],check=False)
+            response=w.run([sys.executable,'-I','-B','-c',script,self.pack/'scripts',target,repo],check=False)
             self.assertEqual(response.returncode,0,response.stderr)
 
     def test_primed_unchanged_refresh_uses_catalog_and_matches_canonical_recall(self):

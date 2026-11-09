@@ -44,3 +44,63 @@ def extract(destination):
             stream.write(body)
         target.chmod(mode)
     return destination / 'skills/agent-memory'
+
+
+def install_with_pending_source(world):
+    """Run the released installer, identity helpers and hook without new coordinators."""
+    import subprocess
+    import sys
+    import uuid
+
+    channel = world.repository('released v014 channel')
+    pack = extract(channel)
+    world.git('add', '.', cwd=channel)
+    world.git('commit', '-m', 'Byte-verified released v0.0.14 runtime', cwd=channel)
+    repo = world.repository()
+
+    def command(script, *args):
+        result = world.run([sys.executable, '-I', '-B', pack/'scripts'/script, *args], timeout=120)
+        return json.loads(result.stdout)
+
+    def proposal(value):
+        path = world.root/('v014-proposal-'+uuid.uuid4().hex+'.json')
+        path.write_text(json.dumps(value))
+        path.chmod(0o600)
+        return path
+
+    installed = command('installer.py', 'install', '--remote', channel, '--ref', 'main',
+                        '--mode', 'copy', '--presets', 'codex')
+    assert installed['verified'] and installed['receipt']['source']['version'] == '0.0.14'
+    request = json.loads((pack/'templates/router-proposal.example.json').read_bytes())
+    request['project-id'] = str(uuid.uuid4())
+    rendered = command('bank_contract.py', 'render', '--input', proposal(request))
+    bank = repo/'memory-bank'
+    bank.mkdir()
+    for name, body in rendered['files'].items():
+        target = bank/name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(body)
+    command('developer_identity.py', 'apply', '--proposal',
+            proposal(command('developer_identity.py', 'preview', '--create', '--label',
+                             'Disposable released-hook source fixture')))
+    command('scope_binding.py', 'apply', '--proposal',
+            proposal(command('scope_binding.py', 'preview', '--repo', repo, '--action', 'bind',
+                             '--reason', 'Explicit released-hook fixture bank adoption')))
+    prompt = 'Public synthetic pre-barrier source.'
+    event = {'hook_event_name': 'UserPromptSubmit', 'session_id': str(uuid.uuid4()),
+             'turn_id': str(uuid.uuid4()), 'cwd': str(repo), 'prompt': prompt}
+    hook = subprocess.run([sys.executable, '-I', '-B', str(pack/'hooks/codex_prompt.py')],
+                          input=json.dumps(event), text=True, capture_output=True,
+                          cwd=repo, env=world.env, timeout=15)
+    assert hook.returncode == 0 and 'hookSpecificOutput' in json.loads(hook.stdout), hook.stderr
+    sources = list((world.paths['state']/'agent-memory/writes').glob('*/turn-sources-v2'))
+    assert len(sources) == 1
+    records = list(sources[0].glob('turns/*/source-0.json'))
+    assert len(records) == 1
+    observed = json.loads(records[0].read_bytes())
+    assert observed['schema'] == 'agent-memory/turn-source-v2'
+    assert observed['harness'] == 'codex' and observed['source_sha256'] == hashlib.sha256(prompt.encode()).hexdigest()
+    barrier = sources[0].parent/'source-barrier.lock'
+    assert not barrier.exists()
+    return {'repo': repo, 'bank': bank, 'channel': channel, 'pack': pack,
+            'receipt': installed['receipt'], 'sources': sources[0], 'barrier': barrier}

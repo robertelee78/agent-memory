@@ -1,0 +1,52 @@
+{
+  "schema": "am249/external-executor-fault-diagnostic-disposition-v1",
+  "status": "SCOPED_APPARATUS_AND_INDUCED_PROPAGATION_PASS",
+  "source_commit": "77cf838fb1a73dc348f60c2fe4230e67c7aef814",
+  "actual_result_sha256": "66bc879b5f5ea37a2a342dcfeb6b0aef0e5789965b74085436056b3727bfca45",
+  "parent_approval_sha256": "47c49c752719cdc1c3e01d5c5505aa5fca5328657d93234735cd1ef52b9e802e",
+  "plan_sha256": "c2c498045c2d544d32b816a440b56c01f37d9af78f77501df7f14327db0ce1d6",
+  "baseline": {
+    "fresh_world": true,
+    "verified_hints": [
+      1,
+      2
+    ],
+    "closed": true,
+    "worker_exit": 0,
+    "fault_file_empty": true
+  },
+  "induced_lock_case": {
+    "fresh_world": true,
+    "first_escaping_exception_type": "SourceTransportBusy",
+    "sequence": 1,
+    "fixed_stage": "run-execute-escaped",
+    "source_locations": [
+      "omp_stream.py:1564",
+      "omp_stream.py:923",
+      "omp_stream.py:860",
+      "omp_stream.py:716",
+      "omp_stream.py:666",
+      "turn_sources.py:68"
+    ],
+    "attempts": [],
+    "outcomes": [],
+    "closed": false,
+    "worker_exit": 1,
+    "later_sequence_not_durably_refused": true
+  },
+  "no_live_workers": true,
+  "observer_replaces_runtime_outcomes": false,
+  "timing_perturbation_possible": true,
+  "entry_route": "direct tracer/runpy into unchanged guarded entry; not hook shell route",
+  "limitations": [
+    "No elapsed busy duration was recorded; unchanged30s budget is source-bound, not a measured duration.",
+    "One induced cause does not identify original R5b sequence43 cause.",
+    "No native/model/provider/token path exercised; no249criterion closes.",
+    "Original retained Worlds not addressed by driver; no full byte-for-byte preservation measurement of all old Worlds claimed."
+  ],
+  "independent_review": {
+    "model": "anthropic/claude-opus-5-5",
+    "verdict": "scoped actual observer and induced-propagation proof only"
+  },
+  "original_native_failures_remain": true
+}

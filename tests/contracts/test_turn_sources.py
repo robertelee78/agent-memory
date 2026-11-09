@@ -152,7 +152,7 @@ class Sources(unittest.TestCase):
                 _,_,base,_,_=core.namespace(repo,'codex',s,t)
                 fifo=w.inside('fifo');os.mkfifo(fifo,0o600)
                 script="import sys;sys.path.insert(0,sys.argv[1]);from agent_memory import turn_sources as c\ntry:c.read(sys.argv[2],4096)\nexcept ValueError:print('refused')\nelse:raise SystemExit(9)"
-                result=subprocess.run([sys.executable,'-I','-c',script,str(Path(core.__file__).parent.parent),str(fifo)],env=w.env,text=True,capture_output=True,timeout=3)
+                result=subprocess.run([sys.executable,'-I','-B','-c',script,str(Path(core.__file__).parent.parent),str(fifo)],env=w.env,text=True,capture_output=True,timeout=3)
                 self.assertEqual(result.returncode,0,result.stderr);self.assertIn('refused',result.stdout)
                 reference=next((base/'pending').glob('*.json'))
                 for wrong in [{},'garbage']:

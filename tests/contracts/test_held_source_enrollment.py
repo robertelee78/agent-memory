@@ -439,6 +439,12 @@ class HeldSourceEnrollment(unittest.TestCase):
             refused = hook('codex_prompt.py', ambiguous)
             self.assertEqual(refused['decision'], 'block')
             self.assertIn('not an observation', refused['reason'])
+            from agent_memory import hook_failure
+            failure = next(row for row in hook_failure.read(repo)
+                           if row['harness'] == 'codex' and row['adapter'] == 'prompt')
+            self.assertEqual((failure['stage'], failure['reason']),
+                             ('identity', 'identity.unresolved'))
+            self.assertNotIn(ambiguous['prompt'], json.dumps(failure))
             _, _, _, turn, identity = sources.private_namespace(repo, 'codex', ambiguous['session_id'], ambiguous['turn_id'])
             retained = sources.unidentified_inventory(turn, identity)
             self.assertEqual(len(retained), 1)

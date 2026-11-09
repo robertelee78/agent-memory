@@ -179,6 +179,16 @@ python3 -I "$SKILL_DIR/scripts/installer.py" recover
 ```
 
 Recovery verifies a committed receipt or rolls back an incomplete activation.
-The session MUST inspect its verified result before retrying installation. It
-MUST preserve a recovery conflict caused by external edits rather than overwrite
-those edits. A lost response after receipt activation is recovered as committed.
+The session MUST inspect the result and preserve conflicts caused by external
+edits. A lost response after receipt activation MUST NOT undo that commit.
+Strict recovery MUST NOT report success or mark its journal complete until
+current targets verify; repeating it does not make an external edit trusted.
+
+When the trusted helper reports an unchanged committed receipt that needs an
+ownership re-plan, the session MUST preserve the pending journal and review the
+normal install or update preview. Only the exact committed `activating` state
+permits this pending-journal route; uncommitted or conflicting states still refuse.
+An authorized fresh plan MAY reconcile allowed surrounding user edits while
+retaining the prior journal. The session MUST require its verified readback.
+Changed receipts, unsafe paths and edits to owned content MUST NOT be bypassed
+by manually completing or deleting the journal.

@@ -67,8 +67,14 @@ class LegacyLayoutConsumers(unittest.TestCase):
                 self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
                 self.assertFalse(json.loads(result.stdout)['verified'])
                 self.assertEqual(state(), before)
-                self.assertEqual((snapshot(world.paths['state'] / 'agent-memory/install'),
-                                  snapshot(command.parent)), runtime_before)
+                runtime_after = (snapshot(world.paths['state'] / 'agent-memory/install'),
+                                 snapshot(command.parent))
+                if '--check' not in args:
+                    # Actual locking refreshes diagnostic PID/time metadata;
+                    # refusal must still preserve ownership and the journal.
+                    runtime_before[0].pop('owner.json', None)
+                    runtime_after[0].pop('owner.json', None)
+                self.assertEqual(runtime_after, runtime_before)
             for executable in (old, command):
                 result = world.run([executable, 'doctor', '--fix', '--repo', repo, '--json'],
                                    check=False, timeout=60)

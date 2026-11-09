@@ -15,8 +15,10 @@ merge, prune or migrate project memory.
 
 A session MUST first load and follow the [maintain domain](../../maintain/GUIDE.md).
 It MAY open the [shared model](../../model/GUIDE.md) when a memory meaning question
-remains. An interrupted installation or update MUST be recovered through the
-[installation operation](../install/GUIDE.md) before another check can proceed.
+remains. An interrupted installation or update MUST be resolved through the
+[installation operation](../install/GUIDE.md). Its explicit re-plan route permits
+a fresh preview when an exact committed receipt needs allowed surrounding edits
+reconciled; it does not turn strict recovery's refusal into verified success.
 
 ## Inputs and preconditions
 
@@ -168,8 +170,13 @@ non-fast-forward candidate, invalid package, ownership change or incompatible
 bank and resolve the reported condition before retrying. Failure before
 activation leaves the prior runtime active. Partial activation rolls back or
 retains an explicit external journal; user edits discovered during recovery
-MUST remain preserved. A lost receipt response is verified as committed and
-repeating update converges without duplicate activation blocks.
+MUST remain preserved. A lost response does not undo a committed receipt.
+Verification requires the exact committed receipt. Clean managed Git metadata
+MAY independently requalify against the unchanged payload, modes and channel;
+other changed targets can require the installation operation's explicit
+ownership re-plan. Repeating update converges
+without duplicate activation blocks; the old pending journal remains retained
+as archive evidence.
 
 ## Diagnostic fallback
 

@@ -71,9 +71,15 @@ class World:
         if git is None:
             self.close()
             raise RuntimeError("The offline contract gate requires Git")
+        node = shutil.which("node")
+        node_tools = self.root / "node-tools"
+        if node:
+            node_tools.mkdir(mode=0o700)
+            (node_tools / "node").symlink_to(Path(node).resolve())
         # Allowlist rather than remove a handful of known secret variable names.
         path = os.pathsep.join(dict.fromkeys([
-            str(Path(sys.executable).parent), str(Path(git).parent), "/usr/bin", "/bin",
+            str(Path(sys.executable).parent), str(Path(git).parent),
+            *([str(node_tools)] if node else []), "/usr/bin", "/bin",
         ]))
         self.env = {
             "PATH": path, "HOME": str(self.paths["home"]),

@@ -58,3 +58,131 @@ correct, ready to post; no concrete transport implementation approval.
 
 This clarification neither narrows the original #249 matrix nor unlocks graph,
 embedding or guided-recall implementation. Those retain their own roadmap gates.
+
+## Actual R4 campaign: failed, retained
+
+The [source-bound disposition](data/2026-11-06-omp-native/stock-r4-disposition-20261108.json)
+records the actual stock 18.16 print run against AM `77cf838`. Native exited 0
+with one stored human and one substantive Sol completion; both AM workers exited
+1 after creating OPEN metadata, before any observed READY, attempt or outcome.
+Their exception cause remains unknown because worker stderr was discarded.
+Original streams and the disposable World remain retained, not repaired or
+counted as source capture.
+
+Independent Opus and Sol triage separated two probe defects from that runtime
+failure: lexical route comparison rejected two real companion-start records,
+and print-mode terminal `agent_end` was not idle, so the large-source fixture
+correctly refused to send. The large-source case was **not exercised**. Neither
+defect explains worker exit 1.
+
+No RPC process, switch, fork or automatic continuation ran. Source capture,
+causal EOF, shutdown flush and positive model-forgets qualification remain open.
+A separately reviewed model-free diagnostic uses new synthetic stream identities
+to distinguish the original companion from worker startup; it does not authorize
+closing original streams, changing omp or repeating model prompts.
+
+### Model-free follow-up: observer defect isolated
+
+The [subsequent actual diagnostic](data/2026-11-06-omp-native/companion-parser-disposition-20261108.json)
+used two new synthetic stream identities, without a model or native process.
+The unchanged hook route without the companion returned READY, verified the
+neutral hint and closed successfully. With the frozen companion it returned
+READY but exited 1 with OPEN only.
+
+The companion cleared a bytearray backing its regex match before reading the
+capture groups. An isolated standard-library reproduction produced empty groups
+and `ValueError`; independent Opus source/evidence review traced that exception
+through the writer and reader catch paths. This explains the new companion arm's
+failure and missing observation records. Its absence of a READY log did not mean
+READY was absent from transport.
+
+The original R4 failures are consistent with this defect **[INFERENCE]**, not
+retroactively qualified or conclusively attributed. Original and new pending
+streams remain retained. The successful baseline covers neutral metadata only,
+not source capture, learning, native lifecycle or flush timing.
+
+The [corrected-companion smoke](data/2026-11-06-omp-native/corrected-companion-smoke-20261108.json)
+subsequently passed once on a new identity: direct stdout and observer frame
+metadata matched; healthy EOF, verified neutral hint and actual CLOSED were all
+observed. Independent Opus accepted only this apparatus proof. Original and R2
+pending states remained unchanged; no baseline was repeated. Synchronous observer
+logging perturbs timing, so this does not qualify native latency, wake or clocks.
+
+## Actual R5b campaign: failed after complete transport observation
+
+The [source-bound R5b disposition](data/2026-11-06-omp-native/stock-r5b-disposition-20261108.json)
+retains a separate failure against unchanged AM `77cf838`. The learn worker
+received contiguous REQUEST 1–141, FINAL 142 and complete EOF, with a healthy
+observer and no partial frames. Only attempts 1–42 have verified durable outcomes.
+The worker exited 1 and left OPEN; requests 43–141 remain unaccounted.
+
+Source review localizes the failure to an exception escaping the executor.
+`run` retains only an error flag and exits before `Coverage.close`; the original
+exception type and stage were not recorded. Later sequence refusals explain
+propagation, not the first failure. Contention, changed authority and filesystem
+errors remain unproven alternatives. A new bounded, metadata-only external
+diagnostic is being designed; no original pending state is repaired or waived.
+
+The instrumented run also had substantial executor backlog: request 42 waited
+approximately 106 seconds before its verified response. No root-wake reservation
+occurred; the queued seal was cancelled. The old switched stream still has a
+refused/unresolvable source identity and unresolved transition. A governed
+admission was observed, but the positive model-forgets condition is undetermined.
+RPC acceptance checks aborted at the closure gate.
+
+Print source capture/CLOSED and fork large-entry storage/EOF/CLOSED are scoped
+positives only. Independent Opus confirmed this failed disposition and identified
+a harness mislabel: healthy observation with worker exit 1 was called missing
+instrumentation. Separating those classifications MUST retain exit 1 and OPEN
+as fatal failures. No native retry or stock omp modification follows from this
+evidence, and no full #249, wake, timing or platform pass is claimed.
+
+### Distinct model-free executor diagnostic
+
+The [actual direct-route diagnostic](data/2026-11-06-omp-native/executor-fault-diagnostic-20261108.json)
+used two new disposable Worlds and unchanged AM `77cf838`, without a native
+client, model, provider or token. The neutral baseline verified two hints and
+closed with exit0. A real separately held stream lock caused the first hint's
+`SourceTransportBusy` to escape at the expected fixed source locations; the next
+sequence obtained no durable slot, and the worker exited1 OPEN. Both workers
+were terminal, with healthy output draining.
+
+Independent Opus confirmed only the external first-fault observer and induced
+missing-slot propagation. The direct tracer/runpy route is not the shell hook
+route, tracing perturbs timing, and no elapsed busy duration was recorded.
+This does not identify R5b's original exception, repair its source gaps, qualify
+automatic wake or close any #249 acceptance criterion.
+
+## Actual R6c: transport closed; assessment remained pending
+
+The [R6c terminal disposition](data/native249-r6c-terminal-disposition-20261109.json)
+binds the actual run to AM `dc66d2a` and the unchanged stock binary. Print-short
+exited 0; its AM worker exited 0, closed the stream, and verified all 11 source
+attempts. No source gaps, executor faults or unresolved transitions were observed.
+Input, source-mode and unrelated installation/repository guards passed.
+
+The campaign nevertheless exited 1: its combined gate rejected two valid
+`pending-assessment` observations. RPC never started. Transport terminality and
+assessment completion are separate axes: finish-task/retain-pending policy permits
+this pending state, but it does not establish an assessment or learning success.
+The failed campaign and its original pending sources remain unchanged.
+
+The nonce-bearing wake request and clock handshake occurred. The companion
+observed cancellation 949.98 ms after that request, with no wake reservation.
+Executor-start and reservation-check timing were not observed; this does not
+prove the original R5b exception cause. The same helper observed approximately
+56.26 seconds of draining after peer EOF.
+
+A separate [model-free profile](data/native249-controlled-source-profile-20261109.json)
+used seven controlled source requests through the
+installed AM worker. All seven verified and the worker exited 0; canonical bank
+and frozen source files remained unchanged. It recorded 3,902 Git subprocesses,
+134 full private-enrollment observations and 773 repository-settings discoveries
+over 29.62 instrumented seconds. Overlapping cumulative profile timings MUST NOT
+be summed into an exclusive cost attribution. This identifies redundant AM-owned
+work to investigate, not a native latency qualification or a measured improvement.
+
+No omp source, configuration or live extension was customized. Ordinary stock
+authentication-cache refresh was separately disclosed and authorized for this
+run. Raw native transcripts remain private. Full print/RPC, positive
+model-forgets, lifecycle and platform acceptance remain open.

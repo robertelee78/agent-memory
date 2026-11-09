@@ -11,7 +11,7 @@ import unittest
 
 from world import World
 from cli_alias_fixtures import channel, install, alias_tmpdir
-from runtime_update_fixtures import snapshot
+from runtime_update_fixtures import snapshot, version
 
 ROOT = Path(__file__).resolve().parents[2]
 HELPER = ROOT / 'skills/agent-memory/scripts/installer.py'
@@ -189,7 +189,7 @@ class LifecycleTrustContract(unittest.TestCase):
             self.assertEqual(receipt['source']['artifact_digest'], provenance['checkout_artifact_digest'])
             pack = remote / 'skills/agent-memory'; shutil.rmtree(pack)
             shutil.copytree(ROOT / 'skills/agent-memory', pack)
-            skill = pack / 'SKILL.md'; skill.write_text(skill.read_text().replace('"version": "0.0.2"', '"version": "0.0.3"'))
+            version(pack, '0.0.3')
             w.git('add', '.', cwd=remote); w.git('commit', '-m', 'Changed v0.0.3 candidate', cwd=remote)
             upgraded = w.run([sys.executable, '-I', '-c',
                 'import os,subprocess,sys;os.umask(0o002);sys.exit(subprocess.call(sys.argv[1:]))',
@@ -200,7 +200,8 @@ class LifecycleTrustContract(unittest.TestCase):
             self.assertTrue(payload.stat().st_mode & 0o020)
             self.assertTrue(w.run([cli, '--version']).stdout.startswith('am 0.0.3\n'))
             repeated = json.loads(w.run([cli, '--json', 'update']).stdout)
-            self.assertTrue(repeated['verified']); self.assertFalse(repeated['changed'])
+            self.assertTrue(repeated['verified'])
+            self.assertEqual(repeated['receipt']['source'], result['receipt']['source'])
             self.assertTrue(json.loads(w.run([cli, '--json', 'uninstall']).stdout)['verified'])
 
     def test_common_metadata_directory_with_real_trailing_space_is_not_rewritten(self):

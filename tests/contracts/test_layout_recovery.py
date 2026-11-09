@@ -142,9 +142,7 @@ class LayoutRecoveryContract(unittest.TestCase):
                 index = (repo / '.git/index').read_bytes()
                 head = (repo / '.git/HEAD').read_bytes()
                 safe, inspected = fixture.inspect(world, command, repo)
-                _, prepared = fixture.prepare(world, command, source, repo, inspected, native)
-                self.assertFalse(prepared['canonical_writes_performed'])
-                path = ('activeContext.md' if kind == 'context' else
+                path = ('projectbrief.md' if kind == 'context' else
                         next(path for path in native if path.startswith('topics/')))
                 request = fixture.review_request(world, command, source, repo, inspected, native,
                                                  pending_paths=(path,))
@@ -180,6 +178,8 @@ class LayoutRecoveryContract(unittest.TestCase):
                 self.assertEqual(feature.read_text(), 'Staged unrelated work\n')
                 self.assertFalse((bank / '.agent-memory-transaction.md').exists())
                 self.assertFalse((bank / '.agent-memory-recovery.md').exists())
+                _, prepared = fixture.prepare(world, command, source, repo, inspected, native)
+                self.assertFalse(prepared['canonical_writes_performed'])
 
     def test_changed_source_or_metadata_invalidates_apply_before_any_canonical_replacement(self):
         for change in ('bytes', 'mode', 'index'):

@@ -137,6 +137,11 @@ package, even when the installed command and managed source are gone:
 python3 -I "$SKILL_DIR/scripts/installer.py" recover
 ```
 
-The session MUST read the verified recovery result before retrying uninstall.
+The session MUST inspect the recovery result before retrying uninstall.
 Recovery restores an incomplete removal or verifies its committed receipt;
 external edits discovered during recovery remain preserved for reconciliation.
+An already-uninstalled receipt with a pending, unverified journal MUST NOT be
+reported as verified merely by repeating uninstall. The session MUST preserve
+that journal and the edits. If re-establishing the runtime is authorized, it MAY
+use the recorded reinstall recipe through the installation operation's explicit
+ownership re-plan; it MUST NOT delete evidence or initialize replacement memory.

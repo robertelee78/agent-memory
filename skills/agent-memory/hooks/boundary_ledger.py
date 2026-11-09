@@ -8,6 +8,10 @@ import re
 import sys
 sys.dont_write_bytecode = True
 from pathlib import Path
+sys.dont_write_bytecode = True
+import runpy
+_cache_guard = runpy.run_path(str(Path(__file__).resolve().parent.parent/'scripts/source_startup.py'),
+                              run_name='am_source_startup')['isolate']()
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 from agent_memory import trust_paths
 

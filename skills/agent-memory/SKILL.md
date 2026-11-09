@@ -13,11 +13,11 @@ session SHOULD use its own worktree or branch. This skill is harness agnostic.
 The words MUST, MUST NOT, SHOULD and MAY carry their RFC 2119 meanings in this
 file and its linked guides. A session MUST resolve `SKILL_DIR` to the directory
 containing this file before using a packaged script. Use the installed `am` command
-when available. For packaged scripts, a session MUST use Python 3.11 or later
-with `-I`, as in the examples. Each packaged helper disables bytecode writes
-before importing product modules. Installed `am` and client hooks select a
-supported interpreter. If an older system Python appears first on PATH, put a
-supported Python first before running the examples.
+when available. For packaged scripts, a session MUST use the documented
+helper commands with Python 3.11 or later in isolated mode. Each documented helper
+disables bytecode writes and isolates its cache before importing package code.
+Installed `am` and client hooks select a supported interpreter. If an older system Python
+appears first on PATH, put a supported Python first before running the examples.
 
 A session MUST NOT use ad hoc bare-Python imports of a managed AM installation
 as routine troubleshooting. Prefer the public CLI or documented helper. Any

@@ -182,7 +182,7 @@ sys.exit(semantic_sharing.main(['inspect-v2','--repo',repo,'--output',output,'--
                 with self.subTest(mode=mode):
                     source.write_text('# Current focus\n\nChecked export mutation fixture.\n')
                     output = w.inside(mode+'.json'); directory = w.inside(mode+'-pages')
-                    result = w.run([sys.executable, '-I', '-c', script, self.pack/'scripts', mode,
+                    result = w.run([sys.executable, '-I', '-B', '-c', script, self.pack/'scripts', mode,
                                     repo, output, directory, source], check=False, timeout=120)
                     self.assertEqual(result.returncode, 1, (result.stdout, result.stderr))
                     self.assertFalse((directory/'complete.json').exists())

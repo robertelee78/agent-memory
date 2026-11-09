@@ -220,7 +220,8 @@ class EnrollmentProgress(unittest.TestCase):
             self.assertEqual((repo / '.git/index').read_bytes(), index)
             print(json.dumps({'proof': 'public-observer-and-no-learning', 'elapsed_seconds': elapsed,
                               'retained_entries': len(entries), 'sources': source_proofs,
-                              'native_loading': 'not-exercised', 'model_provider': 'not-exercised'}, sort_keys=True))
+                              'native_loading': 'not-exercised', 'model_provider': 'not-exercised'}, sort_keys=True),
+                  file=sys.stderr)
 
     def test_transaction_local_read_reuse_requires_exact_live_context_and_preserves_inventory(self):
         from agent_memory import bank_writes, layout_recovery_state, scope_binding

@@ -1,0 +1,67 @@
+{
+  "schema": "agent-memory/native249-model-free-companion-disposition-v1",
+  "runtime_source_commit": "77cf838fb1a73dc348f60c2fe4230e67c7aef814",
+  "diagnostic_source_sha256": "512580a74db35b600db33e42266958ab9e8e56771d9d2c0d867279afb9d4e108",
+  "diagnostic_plan_sha256": "d2b862720cc8e0279d9f122997e5e500d746bdaa3ba062ebcb9b1852cfd642f1",
+  "result_sha256": "0e85a8b7843153f483aaec331e852890d77008defe6ee82ec26edebaab482bab",
+  "model_provider_calls": 0,
+  "native_processes_launched": 0,
+  "actual_controller_exit": 0,
+  "actual_arms": [
+    {
+      "companion": false,
+      "exit": 0,
+      "ready_observed": true,
+      "observed_verified_hint": true,
+      "durable_closed": true,
+      "new_OPEN_pending": false,
+      "live_pid": null,
+      "stderr_exception_metadata": []
+    },
+    {
+      "companion": true,
+      "exit": 1,
+      "ready_observed": true,
+      "observed_verified_hint": false,
+      "durable_closed": false,
+      "new_OPEN_pending": true,
+      "live_pid": null,
+      "stderr_exception_metadata": []
+    }
+  ],
+  "original_metadata_features_native_session_stat_preserved": true,
+  "companion_defect": {
+    "source_sha256": "3b0cfd7b84a5e42a9cfa5194ed6ac518bd3952dd632d5be2d38757bbb298dee9",
+    "symbol": "Frames.feed",
+    "cause": "Regex match references mutable bytearray; header.clear() runs before match.groups(), invalidating all capture bytes. int(size) raises ValueError before wire-header log.",
+    "actual_isolated_stdlib_reproduction": {
+      "groups_before_clear": [
+        "READY",
+        "0",
+        "146",
+        "-"
+      ],
+      "groups_after_clear": [
+        "",
+        "",
+        "",
+        ""
+      ],
+      "size_conversion_exception_type": "ValueError"
+    },
+    "worker_effect": "Real stdout write precedes observer feed, so actual READY can arrive despite missing observer log; ResponseWriter catches ValueError and marks dead. Input reader catches observer exception before queueing REQUEST, ends with error, no attempt/outcome/CLOSED.",
+    "independent_actual_source_review": {
+      "reviewer": "Native249DiagnosticOpus",
+      "model": "anthropic/claude-opus-5-5",
+      "verdict": "New companion arm failure explained; baseline neutral-HINT-only scope",
+      "reviewer_executed_worker": false,
+      "review_boundary_disclosure": "Reviewer fetched public CPython3.13.12 sre.c despite source-review no-network instruction; no private data sent or runtime imported. Claim does not rely on absent reviewer artifact."
+    }
+  },
+  "original_R4_cause": "[INFERENCE] Original exit1/no-wire-header consistent with same immutable companion defect; original stderr discarded, timing different. Original campaign remains FAILED, no retroactive pass.",
+  "source_or_learning_coverage_proven": false,
+  "original_and_new_pending_streams": "RETAIN_UNMODIFIED_NO_REPAIR_NO_DELETE",
+  "next": "New corrected companion and new shim/new identities, exact-source Opus review and separate model-free authorization before proof. No model campaign authorized.",
+  "stock_omp_modified": false,
+  "full_native_qualification": false
+}
