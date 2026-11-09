@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 import sys
 import unittest
+import uuid
 
 from world import World
 from runtime_update_fixtures import snapshot
@@ -12,7 +13,7 @@ import v014_runtime_fixture
 
 
 class LayoutLegacyNested(unittest.TestCase):
-    def journey(self, receipted):
+    def journey(self, receipted, decoy=False):
         with World() as legacy, World() as world:
             pack = v014_runtime_fixture.extract(legacy.root)
             installed = legacy.run([sys.executable, '-I', pack / 'scripts/installer.py', 'install',
@@ -43,6 +44,16 @@ class LayoutLegacyNested(unittest.TestCase):
             marker = bank / '.agent-memory-transaction.md'
             marker_bytes = marker.read_bytes()
             self.assertEqual(json.loads(marker_bytes)['schema'], 'agent-memory/layout-frontier-transaction-v1')
+            decoy_path = None
+            if decoy:
+                decoy_id = str(uuid.uuid4())
+                decoy_path = directory.parent.parent / 'transactions' / decoy_id
+                decoy_path.mkdir(parents=True, mode=0o700)
+                journal = decoy_path / 'journal.json'
+                journal.write_text(json.dumps({'schema': 'agent-memory/transaction-journal-v1',
+                                               'proposal': {'operation_id': decoy_id}, 'base_files': {}}))
+                journal.chmod(0o600)
+            decoy_before = snapshot(decoy_path) if decoy_path else None
             preview = world.run([old, 'writes', 'recover', '--repo', repo], check=False, timeout=60)
             self.assertEqual(preview.returncode, 0, preview.stdout + preview.stderr)
             unlock = world.run([old, 'writes', 'recover', '--repo', repo,
@@ -63,6 +74,7 @@ class LayoutLegacyNested(unittest.TestCase):
             doctor = world.run([old, 'doctor', '--fix', '--repo', repo, '--json'], check=False, timeout=60)
             self.assertFalse(json.loads(doctor.stdout)['repairs_performed'])
             self.assertEqual((snapshot(bank), snapshot(directory)), (bank_before, private_before))
+            self.assertEqual(snapshot(decoy_path) if decoy_path else None, decoy_before)
             helper = nested.NestedReconciliationContract()
             mode = 'finish' if receipted else 'rollback'
             helper.preview(world, command, repo, operation, transaction['operation_id'],
@@ -90,3 +102,9 @@ class LayoutLegacyNested(unittest.TestCase):
 
     def test_with_nested_receipt(self):
         self.journey(True)
+
+    def test_without_nested_receipt_with_decoy(self):
+        self.journey(False, decoy=True)
+
+    def test_with_nested_receipt_with_decoy(self):
+        self.journey(True, decoy=True)

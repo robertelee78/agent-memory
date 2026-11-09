@@ -106,6 +106,8 @@ def _case(kind, decoy):
     return run
 
 
-for _kind in ('hold', 'finish', 'rollback', 'terminal'):
+for _kind in ('hold', 'apply', 'finish', 'rollback', 'terminal'):
     for _decoy in (False, True):
+        if _kind == 'apply' and not _decoy:
+            continue  # The standalone stale-apply journey owns this case.
         setattr(LayoutLegacyMarkers, 'test_' + _kind + ('_decoy' if _decoy else '_plain'), _case(_kind, _decoy))
