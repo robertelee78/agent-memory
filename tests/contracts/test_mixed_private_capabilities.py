@@ -113,6 +113,14 @@ class MixedPrivateCapabilities(unittest.TestCase):
                 return json.loads(response.stdout)['pending']
             rows = pending()
             self.assertEqual(len(rows), 2)
+            # Native writer quiescence does not authorize removing the sole
+            # capable reader while the independent layout hold is active.
+            held_before = preserved(), snapshot(world.paths['state']), snapshot(root)
+            refused = world.run([command, '--json', 'uninstall', '--omp-writers-quiesced'],
+                                check=False, timeout=60)
+            self.assertNotEqual(refused.returncode, 0, refused.stdout + refused.stderr)
+            self.assertFalse(json.loads(refused.stdout)['verified'])
+            self.assertEqual((preserved(), snapshot(world.paths['state']), snapshot(root)), held_before)
             checked = json.loads(world.run([*args, '--check'], timeout=60).stdout)
             self.assertEqual(checked['private_compatibility']['required_capabilities'],
                              ['layout-frontier-v1', 'omp-harness-v1', 'omp-stored-source-v2'])
@@ -344,19 +352,21 @@ class MixedPrivateCapabilities(unittest.TestCase):
             self.assertEqual(check['private_compatibility']['required_capabilities'],
                              ['layout-frontier-v1', 'omp-harness-v1', 'omp-stored-source-v2'])
             before = (snapshot(bank), snapshot(directory), snapshot(world.paths['config']),
-                      (repo / '.git/index').read_bytes(), world.git('rev-parse', 'HEAD', cwd=repo).stdout)
+                      (repo / '.git/index').read_bytes(), world.git('rev-parse', 'HEAD', cwd=repo).stdout,
+                      snapshot(world.paths['state']), snapshot(agent_dir), snapshot(world.paths['backups']))
             denied = lifecycle.public(world, receipt, 'uninstall', '--omp-writers-quiesced', expected=1)
             self.assertIn('Private-state runtime compatibility', denied['error'])
-            self.assertFalse(marker.exists())
+            self.assertTrue(marker.is_file())
             self.assertEqual((snapshot(bank), snapshot(directory), snapshot(world.paths['config']),
-                              (repo / '.git/index').read_bytes(), world.git('rev-parse', 'HEAD', cwd=repo).stdout), before)
-            self.assertFalse(Path(receipt['omp_binding']['extension_target']).exists())
+                              (repo / '.git/index').read_bytes(), world.git('rev-parse', 'HEAD', cwd=repo).stdout,
+                              snapshot(world.paths['state']), snapshot(agent_dir), snapshot(world.paths['backups'])), before)
+            lifecycle.extension(receipt)
             recovered = json.loads(world.run([command, '--json', 'recover'], timeout=60).stdout)
             self.assertTrue(recovered['verified'])
             lifecycle.extension(receipt)
             checked = lifecycle.public(world, receipt, 'update', '--check')
-            # Recovery restores the owned native route and reactivates its
-            # reader marker; the completed drain and unrelated hold persist.
+            # Refusal did not disable the native route or drain its marker;
+            # recovery leaves the capable reader and unrelated hold intact.
             self.assertTrue(marker.is_file())
             self.assertEqual(pending(), [])
             self.assertEqual(checked['private_compatibility']['required_capabilities'],
