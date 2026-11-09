@@ -97,6 +97,18 @@ class RecoveryReconciliationContract(unittest.TestCase):
                         f.call(world, command, 'inspect', '--repo', repo, '--identity-review', f.save(world, wrong),
                             '--output', world.inside('wrong-' + str(uuid.uuid4()) + '.json'), expected=1)
                         self.assertEqual(bank_bytes(bank), before)
+            conflicting = committed.replace(identity['project_id'].encode(), str(uuid.uuid4()).encode())
+            (bank / 'MEMORY.md').write_bytes(conflicting)
+            before = bank_bytes(bank)
+            index = (repo / '.git/index').read_bytes()
+            checked = {**review, 'router_sha256': f.sha(conflicting)}
+            for supplied in (None, checked):
+                args = ['--identity-review', f.save(world, supplied)] if supplied else []
+                f.call(world, command, 'inspect', '--repo', repo, *args,
+                    '--output', world.inside('conflicting-' + str(uuid.uuid4()) + '.json'), expected=1)
+                self.assertEqual(bank_bytes(bank), before)
+                self.assertEqual((repo / '.git/index').read_bytes(), index)
+                self.assertEqual(world.git('rev-parse', 'HEAD', cwd=repo).stdout.strip(), head)
 
     def test_retained_rollback_repair_handoff_keeps_both_independent_obligations(self):
         for completed in (False, True):
