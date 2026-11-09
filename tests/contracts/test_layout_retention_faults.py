@@ -44,6 +44,12 @@ class LayoutRetentionFaults(unittest.TestCase):
                 self.assertFalse((directory / ordered[0]).exists())
                 self.assertEqual({name: (directory / name).read_bytes() for name in ordered[1:]},
                                  {name: before[name] for name in ordered[1:]})
+            elif 'retention-after-delete-' in stage:
+                sequence = int(stage.rsplit('-', 1)[1])
+                self.assertLess(sequence, len(ordered))
+                self.assertTrue(all(not (directory / name).exists() for name in ordered[:sequence + 1]))
+                self.assertEqual({name: (directory / name).read_bytes() for name in ordered[sequence + 1:]},
+                                 {name: before[name] for name in ordered[sequence + 1:]})
             else:
                 self.assertTrue(all(not (directory / name).exists() for name in ordered))
             recovery.call(world, command, 'retention', 'apply', '--repo', repo,
@@ -78,3 +84,28 @@ class LayoutRetentionFaults(unittest.TestCase):
 
     def test_tombstone_exit(self):
         self.journey('layout-recovery-retention-final-tombstone', 'exit')
+
+    def deletion_partition(self, partition, mode):
+        helper = retention.LayoutRetentionContract()
+        with World() as world:
+            command, _, repo, _, observed, _, layout_proposal, _ = helper.public_repair(world)
+            _, proposal = helper.reviewed_cleanup(world, command, repo, observed, layout_proposal)
+            count = len(proposal['delete'])
+        indices = [number for number in range(count) if number % 4 == partition
+                   and not (number == 0 and mode == 'error')]
+        self.assertTrue(indices)
+        for number in indices:
+            with self.subTest(sequence=number, mode=mode):
+                self.journey('layout-recovery-retention-after-delete-' + str(number), mode)
+
+
+def _deletion_case(partition, mode):
+    def run(self):
+        self.deletion_partition(partition, mode)
+    return run
+
+
+for _partition in range(4):
+    for _mode in ('error', 'exit'):
+        setattr(LayoutRetentionFaults, 'test_delete_' + str(_partition) + '_' + _mode,
+                _deletion_case(_partition, _mode))
