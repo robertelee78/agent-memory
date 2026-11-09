@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+sys.dont_write_bytecode = True
 
 
 def main(event=None):

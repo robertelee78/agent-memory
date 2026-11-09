@@ -2,8 +2,10 @@
 import json
 from pathlib import Path
 import shutil
+import subprocess
 import sys
 import unittest
+import uuid
 
 from world import World
 from runtime_update_fixtures import ROOT, fixture, bank, snapshot
@@ -26,6 +28,27 @@ class ReadOnlyAudits(unittest.TestCase):
                 self.assertNotEqual(r.returncode, 0)
                 self.assertFalse(json.loads(r.stdout)['valid'])
                 self.assertEqual(snapshot(w.root), before)
+
+    def test_direct_hook_and_boundary_helpers_do_not_create_source_caches(self):
+        with World() as w:
+            pack = w.inside('direct-pack')
+            shutil.copytree(ROOT / 'skills/agent-memory', pack)
+            repo = w.repository()
+            event = {'hook_event_name': 'UserPromptSubmit', 'session_id': str(uuid.uuid4()),
+                     'turn_id': str(uuid.uuid4()), 'cwd': str(repo), 'prompt': 'fixture input'}
+            before = snapshot(pack)
+            result = subprocess.run([sys.executable, '-I', str(pack / 'hooks/codex_prompt.py')],
+                                    input=json.dumps(event), text=True, capture_output=True,
+                                    env=w.env, cwd=repo, timeout=60)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(json.loads(result.stdout), {})
+            for helper in ('codex_boundary.py', 'claude_boundary.py', 'private_workspace.py'):
+                result = w.run([sys.executable, '-I', pack / 'scripts' / helper, '--help'],
+                               check=False)
+                self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(snapshot(pack), before)
+            self.assertFalse(list(pack.rglob('*.pyc')))
+            self.assertFalse(list(pack.rglob('__pycache__')))
 
     def test_repeated_installed_and_documented_source_audits_preserve_every_byte_and_mode(self):
         for mode in ('copy', 'link'):

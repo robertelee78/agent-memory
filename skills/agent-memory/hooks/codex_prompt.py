@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Bind a Codex user prompt to its turn without retaining its content."""
 import hashlib,json,os,re,subprocess,sys,uuid
+sys.dont_write_bytecode = True
 from pathlib import Path
 
 

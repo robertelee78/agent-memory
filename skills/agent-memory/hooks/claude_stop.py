@@ -12,6 +12,7 @@ import stat
 import uuid
 from pathlib import Path
 import sys
+sys.dont_write_bytecode = True
 
 MAX_INPUT = 64 * 1024
 

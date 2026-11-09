@@ -3,6 +3,7 @@
 import argparse
 import importlib.util
 import json
+import os
 from pathlib import Path
 import sys
 import unittest
@@ -72,11 +73,22 @@ def main():
     path = args.path.resolve()
     if not path.is_relative_to(ROOT / "tests") or not path.is_file():
         raise ValueError("Suite must be a test file in this checkout")
-    spec = importlib.util.spec_from_file_location("contract_suite", path)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    suite, selection = registered_suite(module, path, args.suite)
-    result = unittest.TextTestRunner(verbosity=2, stream=sys.stderr).run(suite)
+    # Test and inherited child output is diagnostic, not part of the single
+    # machine-readable worker receipt. Redirect the descriptor as well as
+    # Python writes so subprocesses cannot corrupt that receipt.
+    sys.stdout.flush()
+    receipt_fd = os.dup(sys.stdout.fileno())
+    try:
+        os.dup2(sys.stderr.fileno(), sys.stdout.fileno())
+        spec = importlib.util.spec_from_file_location("contract_suite", path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        suite, selection = registered_suite(module, path, args.suite)
+        result = unittest.TextTestRunner(verbosity=2, stream=sys.stderr).run(suite)
+        sys.stdout.flush()
+    finally:
+        os.dup2(receipt_fd, sys.stdout.fileno())
+        os.close(receipt_fd)
     counts = {"tests": result.testsRun, "failures": len(result.failures),
               "errors": len(result.errors), "skipped": len(result.skipped),
               "expected_failures": len(result.expectedFailures),
