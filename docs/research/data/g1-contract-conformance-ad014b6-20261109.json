@@ -1,0 +1,67 @@
+{
+  "scope": "Schema/examples and four-by-three signed-numeric conformance only; NOT implementation, semantic quality, production profile or G1 acceptance",
+  "schema_sha256": "e752f889b7bcc784591ea593d934ad4a447cf5a40112f756bb208cc70c9eacad",
+  "jsonschema_version": "4.26.0",
+  "numpy_version": "2.5.2",
+  "positive_examples": [
+    "constructed-semantic-unavailable",
+    "constructed-search-fallback-with-real-native-payload",
+    "constructed-get-fallback-with-real-native-payload",
+    "constructed-explain-fallback-with-real-native-payload",
+    "constructed-alias-lifecycle-without-vector-reuse",
+    "constructed-explicit-alias-reliance",
+    "constructed-storage-exhausted",
+    "constructed-acquisition-offline",
+    "constructed-acquisition-failed",
+    "constructed-vector-integrity",
+    "constructed-cache-integrity",
+    "constructed-manifest-integrity"
+  ],
+  "negative_examples_rejected": [
+    "fallback-loses-cause-None",
+    "fallback-loses-cause-completed",
+    "fallback-loses-cause-literal-fallback",
+    "fallback-loses-cause-already-running",
+    "fallback-loses-cause-already-stopped",
+    "get-missing-native-coverage",
+    "explain-missing-native-coverage",
+    "opaque-alias-without-warning",
+    "verified-identity-claims-alias-reliance",
+    "removed-undefined-primary-relation",
+    "promoted-native-authority",
+    "qualified-with-failure-exit",
+    "unknown-semantic-reason"
+  ],
+  "actual_native_retrieval_payload_valid": true,
+  "actual_bank_feature_index_HEAD_preserved": true,
+  "numeric_fixture": {
+    "shape": [
+      4,
+      3
+    ],
+    "storage": "little-endian-float32",
+    "accumulation": "numpy-einsum-float64",
+    "scores": [
+      1.0,
+      -1.0,
+      0.0,
+      0.9999999950000003
+    ],
+    "max_absolute_error_vs_fsum_on_stored_f32": 0.0,
+    "qualification_ceiling": 2e-05,
+    "scale_or_model_qualification": false
+  },
+  "schema": "agent-memory/g1-contract-conformance-observation-v1",
+  "source_commit": "ad014b6d9dbd0eb1921a41ca2570f29a301fb4ff",
+  "schema_identity_matches_reviewed_candidate": true,
+  "driver_sha256": "f6c6f1ac6daf19ea5ea14ef25b576e0d9a194920732942ffb6a8f07037ab8157",
+  "outcome_sha256": "e88209b8166e6159e9538585d2364ebec76746cb8b10a3930b80501229548b86",
+  "python_version": "3.13.12",
+  "prior_failed_launch": {
+    "failure": "ModuleNotFoundError: jsonschema",
+    "interpreter": "255-release-venv/bin/python",
+    "before_schema_or_native_runtime": true,
+    "resolution": "Use observed existing pyenv3.13.12 installation with jsonschema4.26.0 and NumPy2.5.2; no new installation"
+  },
+  "independent_technical_review": "Pending final corrected-doc review, not G1 acceptance"
+}
