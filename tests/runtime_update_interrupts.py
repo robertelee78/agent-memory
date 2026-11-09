@@ -6,12 +6,14 @@ import sys
 import unittest
 
 from world import World
-from fault_partitions import select as partition_rows, emit as emit_partition
+from fault_partitions import select as partition_rows, emit as emit_partition, selected_partition
 from runtime_update_fixtures import ROOT,fixture,advance,call,snapshot,owned,receipt_path,bank
 
 
 class UpdateWriteInterruptCases:
-    def replay(self, phase, partition=None):
+    def replay(self, phase):
+        group = 'update-write-' + phase
+        partition = selected_partition(group)
         with World() as world:
             channel,pack,receipt=fixture(world)
             memory=bank(world,world.paths['repo']); memory_before=snapshot(memory)
@@ -65,7 +67,7 @@ class UpdateWriteInterruptCases:
                     sys.stderr.write(json.dumps(row)+'\n'); executed.append(event['point'])
             self.assertEqual(executed,[event['point'] for event in selected])
             if partition is not None:
-                emit_partition('update-write-'+phase,partition,all_selected,executed,
+                emit_partition(group,partition,all_selected,executed,
                                clean['receipt']['source']['artifact_digest'])
             sys.stderr.write(json.dumps({'phase':phase,'observed_points':len(selected),
                                          'actual_interruptions_and_retries':len(executed)})+'\n')

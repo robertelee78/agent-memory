@@ -118,13 +118,20 @@ class HarnessContract(unittest.TestCase):
         # interruption evidence. The real suites emit actual replay results.
         proof_fixture = '''
 import json,sys
-from fault_partitions import GROUPS,PARTITIONS
-observed=[{'step':i,'point':'controlled-'+str(i),'kind':'controlled-write'} for i in range(PARTITIONS)]
-for name,group in GROUPS.items():
- for index in range(PARTITIONS):
+from fault_partitions import GROUPS,PARTITIONS,selected_partition
+original_controlled_test = Contract.test_x
+def controlled_test(self):
+ original_controlled_test(self)
+ observed=[{'step':i,'point':'controlled-'+str(i),'kind':'controlled-write'} for i in range(PARTITIONS)]
+ for name in GROUPS:
+  try: index=selected_partition(name)
+  except ValueError: continue
+  if index is None: continue
   proof={'group':name,'index':index,'count':PARTITIONS,'artifact_digest':'0'*64,
          'observed':observed,'executed':[observed[index]['point']]}
+  print(file=sys.stderr)
   print(json.dumps({'lifecycle_fault_partition':proof}),file=sys.stderr)
+Contract.test_x = controlled_test
 '''
         passed = samples['passed']
         samples['passed'] += proof_fixture
@@ -154,6 +161,9 @@ for name,group in GROUPS.items():
                 for entry in manifest["suites"]:
                     if entry["scope"] in {"v0.0.1", "v0.0.2"}:
                         entry["path"] = "tests/contracts/fixture.py"
+                        # This disposable file has one controlled case, not the
+                        # production file's independent case-selection batches.
+                        entry.pop("tests", None)
                 (checkout / "tests/contracts.json").write_text(json.dumps(manifest))
                 result = world.run(["sh", checkout / "scripts/test.sh", "--release", "--json"], check=False)
                 report = json.loads(result.stdout)
@@ -175,6 +185,7 @@ for name,group in GROUPS.items():
             (checkout / "tests/contracts").mkdir(parents=True)
             shutil.copy2(ROOT / "scripts/run_contract_suite.py", checkout / "scripts/run_contract_suite.py")
             shutil.copy2(ROOT / "tests/world.py", checkout / "tests/world.py")
+            shutil.copy2(ROOT / "tests/fault_partitions.py", checkout / "tests/fault_partitions.py")
             log = world.inside("actually-executed-cases")
             target = checkout / "tests/contracts/controlled.py"
             target.write_text(

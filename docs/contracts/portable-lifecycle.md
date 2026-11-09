@@ -23,7 +23,7 @@ and client roots, actual installed commands and preserved source/index/history:
 registered test methods. The binding check rejects missing suites/methods or
 pending/optional substitutions. Its references include no-client modes,
 unrelated-target refusal, owned backups, sentinel edits, source/ref/downgrade
-guards, all fifty real before/after fault workers, committed lost responses,
+guards, all 170 real before/after fault workers, committed lost responses,
 rollback/locks, modified-target preservation and confirmed purge. It also binds
 package validation and the isolation/worker-collection controls. The collector
 uses a supervisor that retains ownership of its process group through descendant
@@ -35,14 +35,21 @@ If that failure follows a worker timeout, the actual producer and disposable
 gate regressions require both worker streams, the record exception and the
 original timeout to survive collection.
 
-The ten expensive update/install/uninstall phase-and-mode inventories run as four
-mandatory disjoint batches each. Every batch observes the complete clean write
-inventory, interrupts its selected real writes, recovers, retries and retains
-the original preservation/ownership checks. The gate compares their actual
-artifact identities and complete observed inventories, then requires every
-point exactly once across all four batches. A missing batch, proof, interruption
-or retry fails the gate. The other ten fault workers retain their complete
-inventories. No fault point or public 300-second worker limit is removed.
+The ten expensive update/install/uninstall phase-and-mode inventories run as
+sixteen mandatory disjoint batches each: 160 partition workers plus ten other
+full-inventory fault workers, for 170 total. The trusted isolated worker binds
+its registered `--suite` name and actual registered file to one group/index.
+The ten scenario files share their fixture's selected replay; an unnamed direct
+run still executes the full inventory. A suite cannot request another group's
+writes, and no environment flag selects or authorizes a partition.
+Every partition observes the complete clean write inventory, interrupts exactly
+the writes whose observed step modulo sixteen equals its index, recovers,
+retries and retains the original preservation/ownership checks. The gate compares
+their actual artifact identities and complete observed inventories, then requires
+every point exactly once across all sixteen batches. A missing/duplicate batch,
+proof, interruption or retry, changed artifact/inventory, empty replay or wrong
+case count fails the gate. No fault point or public 300-second worker limit is
+removed.
 
 Project identity discovery uses one coherent repository-settings observation
 per discovery and reuses it when the saved authority already matches the

@@ -11,6 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(ROOT / "tests"))
 from world import require_world
+from fault_partitions import bind as bind_fault_partition
 
 
 def leaf_cases(suite):
@@ -28,6 +29,7 @@ def registered_suite(module, path, name):
     groups = [entry for entry in entries if entry.get("path") == path.relative_to(ROOT).as_posix()]
     if name is not None and sum(entry["name"] == name for entry in groups) != 1:
         raise ValueError("Named suite does not identify this registered contract file")
+    bind_fault_partition(name, path.relative_to(ROOT).as_posix(), entries)
     if not any("tests" in entry for entry in groups):
         return complete, None
     cases = list(leaf_cases(complete))

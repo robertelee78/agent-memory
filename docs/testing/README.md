@@ -61,9 +61,19 @@ deadline. Registry validation alone does not execute a suite.
 For expensive independent interruption cases, the gate requires every declared
 batch and aggregates actual fault proofs before reporting completeness. The
 proofs must describe the same runtime artifact and observed write inventory,
-with no missing or duplicate interruption/recovery/retry. Controlled gate
-fixtures exercise rejection of absent/incomplete proofs; their simulated
-metadata is not production interruption evidence.
+with no missing or duplicate interruption/recovery/retry. Each update,
+install-copy/link and uninstall-copy/link before/after group has sixteen
+mandatory registered partitions. Their names route through the ten existing
+scenario wrappers: the isolated worker binds `--suite NAME` to the matching
+fault group and partition, rejecting a name bound to the wrong scenario.
+Every name, including the original unsuffixed name, replays only its selected
+partition of the complete observed inventory; none takes a full-inventory
+shortcut. These fault partitions are not `tests` selector batches: each uses
+the wrapper's same replay method, while separate fault proofs enforce the
+disjoint and complete interruption union. Controlled consumer fixtures exercise
+rejection of missing/duplicate proofs, changed artifacts or inventories, and
+inconsistent case counts; simulated metadata is not production interruption
+evidence.
 
 The [shared-learning matrix](../contracts/multi-machine-learning.md) retains all
 approved multi-machine obligations and adds installed-command journeys for
@@ -98,6 +108,24 @@ cases remain owned by their registered comparison contract. This removes
 duplicate execution, not frontier-specific assertions. Individual method
 deadlines and the total hosted runtime still require platform evidence; neither
 batching nor deduplication establishes that the complete gate fits 180 minutes.
+
+The aggregate suites that timed out in the hosted gate now explicitly register
+each existing method separately for receipt-covered refresh, bank transactions,
+admission, governance, portable handoff, consolidation, restricted publication,
+memory refresh, validation reuse, known-hold capacity and quarantined sharing.
+The original suite name owns the first source-order method; later names append
+the method's hyphenated name, following the runtime-update convention. Existing
+method batches remain unchanged, with all cases still mandatory in their
+original scope and layer. Subtest loops, fault points and physical boundaries
+remain inside their original methods.
+
+`bank-roundtrip` already consists of one inherited installed sharing-loop
+journey and remains one explicit mandatory method. Its hosted macOS/Python
+3.15 worker exceeded 300 seconds; it cannot be made bounded merely by adding
+registry batches. The full capture, publication and separate-actor refresh/
+recall assertions remain required without a deadline increase. Source-only
+batching does not resolve that indivisible-case runtime blocker or establish
+new platform timing results.
 
 The [first-release safety canaries](canaries.md) cover structural routes,
 lifecycle selection, project isolation, shared developer attribution,
