@@ -57,7 +57,9 @@ with output.open('x') as log:
    identity=(namespace,key)
    if identity not in inputs:
     produce=values['produce']
-    captured={name:typed(cell.cell_contents) for name,cell in zip(produce.__code__.co_freevars,produce.__closure__ or ())}
+    closure=dict(zip(produce.__code__.co_freevars,produce.__closure__ or ()))
+    names=('stable',) if namespace=='bank-format' else ('content','maximum')
+    captured={name:typed(closure[name].cell_contents) for name in names}
     raw=json.dumps(captured,sort_keys=True,separators=(',',':')).encode()
     digest=hashlib.sha256(raw).hexdigest();target=blobs/(digest+'.json')
     if not target.exists():target.write_bytes(raw)
