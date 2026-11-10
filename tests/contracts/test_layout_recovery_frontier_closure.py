@@ -511,6 +511,15 @@ class RecoveryFrontierClosureContract(unittest.TestCase):
                 governance = test_governance.GovernanceContract('runTest')
                 governance.pid, governance.actor = helper.pid, helper.actor
                 plan_input = governance.request(bank, old, first, operation='revoke')
+                context_names = w.run([sys.executable, '-I', '-B', '-c',
+                    "import json,sys;sys.path.insert(0,sys.argv[1]);"
+                    "from agent_memory import bank_contract;print(json.dumps(bank_contract.CONTEXTS))",
+                    source / 'scripts'], check=False, timeout=30)
+                self.assertEqual(context_names.returncode, 0, context_names.stderr)
+                plan_input['context_review'] = {
+                    path: f.sha((bank / path).read_bytes())
+                    for path in ('MEMORY.md', *json.loads(context_names.stdout))
+                    if (bank / path).is_file()}
                 plan_input['comparison'] = {'request': request, 'judgment': judgment}
                 verb, input_flag = 'govern', '--request'
             else:

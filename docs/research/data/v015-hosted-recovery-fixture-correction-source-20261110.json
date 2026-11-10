@@ -1,0 +1,97 @@
+{
+  "actual_completed_shards": [
+    {
+      "failure": "layout-consumer-closure-nested-02",
+      "os": "ubuntu-latest",
+      "python": "3.11",
+      "shard": 0
+    },
+    {
+      "failure": "layout-consumer-closure-nested-06",
+      "os": "ubuntu-latest",
+      "python": "3.11",
+      "shard": 1
+    },
+    {
+      "failure": "layout-consumer-closure-frontier-governance-plan",
+      "os": "ubuntu-latest",
+      "python": "3.11",
+      "shard": 2
+    },
+    {
+      "failure": "layout-consumer-closure-frontier-governance-plan",
+      "os": "ubuntu-latest",
+      "python": "3.15",
+      "shard": 2
+    }
+  ],
+  "actual_failed_campaign": "https://github.com/robertelee78/agent-memory/actions/runs/42741861016",
+  "actual_failed_source_commit": "634605346a29bacc768e2b061651535884d362e2",
+  "boundary": "Source-only fixture candidate pending actual supported-profile execution; negative/platform/source evidence not relabeled green.",
+  "changed_sources": [
+    {
+      "path": "tests/contracts/test_layout_recovery_frontier_closure.py",
+      "sha256": "d2fd48dbc86dd633c6e413c0a313f8073d2e6c4abc3b25fed1798d77d30eef89",
+      "syntax_parsed": true,
+      "test_methods": [
+        "test_more_than_64_optional_rows_allow_selective_but_not_broad_comparison",
+        "test_unsafe_or_oversized_indivisible_source_cannot_become_a_pending_frontier",
+        "test_private_comparison_does_not_put_original_hash_or_ranges_in_envelope_or_audit",
+        "test_approval_heading_and_unresolved_version_conflict_remain_private_pending_source",
+        "test_reservation_allows_full_credit_proof_and_rejects_unreviewable_frontier",
+        "test_reservation_transition_accepts_last_complete_frontier_and_refuses_next",
+        "test_pending_frontier_is_included_in_update_consolidation_and_governance_routes",
+        "test_partial_claims_need_two_receipts_and_independent_complete_union",
+        "test_pending_repair_preserves_both_canonical_versions_for_comparison",
+        "test_pending_update_applies_only_the_independently_reviewed_plan",
+        "test_pending_consolidation_applies_the_independently_reviewed_plan",
+        "test_pending_governance_applies_the_independently_reviewed_plan",
+        "test_consumers_review_and_commit_without_pending_frontier",
+        "test_pending_consumers_accept_independently_reviewed_exact_intended_output"
+      ]
+    },
+    {
+      "path": "tests/contracts/test_layout_recovery_nested_closure.py",
+      "sha256": "b91205d39bc500878d6cd70e587b33300c801e81048572a0256186e239a79ff9",
+      "syntax_parsed": true,
+      "test_methods": [
+        "test_receipted_nested_finish_reconciles_resolution_receipt_window",
+        "test_unfinished_resolution_excludes_nested_child_finish",
+        "test_changed_review_pin_refuses_interrupted_finish_without_replacement",
+        "test_child_transaction_marker_binds_child_operation_id",
+        "test_legacy_reader_does_not_recognize_runtime_only_sentinel",
+        "test_interrupted_activation_refuses_incapable_only_rollback_target"
+      ]
+    }
+  ],
+  "date": "2026-11-10",
+  "production_runtime_changed": false,
+  "raw_evidence": {
+    "name": "hosted-42741861016-four-completed-ubuntu-shards-real-held-and-nested-failures-20261110.tar.gz",
+    "sha256": "24fdb29ba9c489cd9ba5fca319716dc69a28d3ec4bec6f6284f27f69a76e1810"
+  },
+  "runtime_status": {
+    "corrected_subtests_exercised": false,
+    "existing_linux_carrier_default_filesystems": [
+      "/tmp and /dev/shm both expose security.selinux on newly created directory/file; /run unprivileged creation refused. No metadata/security-policy changes or product code imported."
+    ],
+    "full_task_acceptance": false,
+    "independent_exact_opus_review": false,
+    "local_darwin_positive_blocked_by_actual_metadata": true,
+    "signed_release_delivery": false,
+    "supported_linux_required": true
+  },
+  "schema": "am/hosted-recovery-fixture-correction-source-v1",
+  "source_base_commit": "d72fdccb45dbbd844db2474babeaa1b6f536f051",
+  "source_checks": {
+    "all_original_suites_and_deadlines_retained": true,
+    "syntax_parsed": true,
+    "test_method_counts_unchanged": true
+  },
+  "source_findings": {
+    "governance_plan": "Fixture GovernanceContract.request enumerated bank.glob(*.md), including private recovery marker Markdown. Actual _observe_current refuses context_review mismatch before semantic judgment/planning/check_sources. Corrected to exact canonical MEMORY.md + present bank.CONTEXTS using existing consumer pattern; no production revalidation defect proved.",
+    "nested06": "Later d72 fixture already excludes only diagnostic owner.json from stable semantic snapshot; original634 failure was diagnostic PID/time turnover, not proven ownership/semantic mutation. Actual stable flock inode and all canonical/private/history/index preservation remain.",
+    "nested_child_first": "Original fixture treated a resolution refusal unrelated to a committed unfinished resolution as establishing exclusion. Current real interrupted child binding is not in recovery index; strict guard refuses new resolution before receipt. Corrected case asserts real refusal and full unchanged state, then permits truthful child recovery with retained obligations and historical mutation-free retry.",
+    "nested_resolution_first": "Independent real resolution receipt/journal exists before conflicting child rollback attempt; exact reviewed proposal/review hashes checked, conflicting rollback refuses with full preservation, resolution resumes, stale child proposal refuses. No impossible interrupted-binding + created-resolution state fabricated."
+  }
+}
