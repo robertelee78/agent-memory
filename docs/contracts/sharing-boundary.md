@@ -25,6 +25,11 @@ of a working/staged file cannot hide existing ownership. Git object readers are
 bounded and run no filters. Discovery does not restore source bytes. Effective
 resolved settings remain pinned across writes and recovery. Listed unsafe labels
 are withheld before printing the directory prefix, branch or selected remote name.
+First-bank initialization and its transaction recovery use this ordinary
+schema-aware locator for the source fence, so an unrelated ignored `memory.md`
+is not itself a bank. The fence still checks shared-source compatibility and
+excludes concurrent source observers. Malformed-layout recovery continues to
+use the separate raw locator.
 
 `sharing_boundary.py --repo` inspects canonical source safety, Git index modes,
 ignore rules and the selected remote/default-branch observation without writes
@@ -38,3 +43,13 @@ Private locks, transaction markers, registries, journals, backups and projection
 remain outside the admitted sharing delta. A clean boundary is not semantic
 admission, publication or authentication. Publication, refresh, conflict handling
 and retries are distinct reviewed work; this inspection does not implement them.
+
+Current canonical writers take the exclusive source barrier before the canonical
+bank lock and retain it through marker removal. Finite OMP attempts retain the
+shared barrier through their durable outcome, not only the observer call.
+Entry contention waits at most the existing 30-second busy budget and never
+replays a started body. A finite frame whose entry budget expires receives an
+explicit unknown/pending refusal and ends the stream; later frames are not
+executed. A public admission failure after a possible commit reports unknown
+write state and preserves the durable receipt for exact recovery/replay.
+Older or uncooperative writers are not serialized by this current-runtime fence.

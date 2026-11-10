@@ -78,7 +78,6 @@ class NestedRecoveryClosure(unittest.TestCase):
             child_file = world.inside('child.json')
             child = f.call(world, command, 'rollback', '--repo', repo, '--operation', parent, '--output', child_file)
             child_id = child['operation_id']
-            resolution = f.discard_proposal(world, command, repo, bank, inspected, applied['pending_unit_ids'][0])
             # The child journal is durable, but the parent hold still owns the
             # marker, so the standalone resolution can reach its receipt window.
             f.call(world, command, 'rollback', '--repo', repo, '--proposal', child_file, expected=1,
@@ -88,9 +87,15 @@ class NestedRecoveryClosure(unittest.TestCase):
             finish = world.inside('finish-child.json')
             f.call(world, command, 'recover', '--repo', repo, '--operation', child_id,
                    '--mode', 'finish', '--output', finish)
+            resolution = f.discard_proposal(world, command, repo, bank, inspected, applied['pending_unit_ids'][0])
             f.call(world, command, 'resolve', '--repo', repo, '--proposal', resolution, expected=1,
                    env={'AGENT_MEMORY_FAULT_STAGE': 'layout-recovery-resolution-after-receipt'})
             base = f.private_directory(world, bank, parent).parent
+            resolution_id = json.loads(resolution.read_text())['proposal']['resolution_id']
+            parent_directory = f.private_directory(world, bank, parent)
+            self.assertTrue((parent_directory / 'resolutions' / (resolution_id + '.json')).is_file())
+            self.assertTrue((parent_directory / 'resolution-journals' / (resolution_id + '.json')).is_file())
+            self.assertFalse((parent_directory / 'resolution-completions' / (resolution_id + '.json')).exists())
             before = snapshot(bank), snapshot(base), snapshot(repo / '.git/index')
             f.call(world, command, 'recover', '--repo', repo, '--proposal', finish, expected=1)
             self.assertEqual((snapshot(bank), snapshot(base), snapshot(repo / '.git/index')), before)
@@ -201,12 +206,18 @@ class NestedRecoveryClosure(unittest.TestCase):
             f.call(world, command, 'apply', '--repo', repo, '--proposal', proposal)
             directory = f.private_directory(world, bank, inspected['operation_id'])
             state = receipt_path(world).parent
-            before = snapshot(bank), snapshot(directory), owned(receipt), snapshot(state), snapshot(repo / '.git/index')
+            prior_state = snapshot(state)
+            # Public lifecycle entry updates only its diagnostic lock owner.
+            prior_state.pop('owner.json', None)
+            before = snapshot(bank), snapshot(directory), owned(receipt), prior_state, snapshot(repo / '.git/index')
             recovered = world.run([sys.executable, '-I', '-B', ROOT / 'scripts/installer.py', 'recover'],
                                   check=False, timeout=60)
             self.assertNotEqual(recovered.returncode, 0, recovered.stdout + recovered.stderr)
-            self.assertFalse(json.loads(recovered.stdout)['verified'])
-            self.assertEqual((snapshot(bank), snapshot(directory), owned(receipt), snapshot(state),
+            refusal = json.loads(recovered.stdout)
+            self.assertFalse(refusal['verified'])
+            current_state = snapshot(state)
+            current_state.pop('owner.json', None)
+            self.assertEqual((snapshot(bank), snapshot(directory), owned(receipt), current_state,
                               snapshot(repo / '.git/index')), before)
 
 

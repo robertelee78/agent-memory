@@ -50,6 +50,13 @@ plus a concrete next action; they MUST NOT echo arbitrary secret content. Doctor
 MUST exercise the relevant local prerequisite or label it not exercised, without
 claiming a fresh remote observation from a local check.
 
+Cooperating canonical writers may briefly defer before taking their writer slot
+when a source observer holds the bank source barrier. Exhausting the bounded
+30-second wait MUST report contention without a new canonical marker or
+transaction; it MUST NOT imply that a write completed. A failure after an
+already committed transaction retains its existing durable receipt and must be
+reported separately from an uncommitted attempt.
+
 Tests MUST reproduce protected 0775 intermediate directories below a trusted 0700
 barrier, and MUST preserve refusal for unprotected writable paths, foreign owners,
 symlinks, changed source/context and directory rebinding. No canonical bank,

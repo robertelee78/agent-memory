@@ -78,11 +78,21 @@ class NestedReconciliationContract(unittest.TestCase):
                     while not ready.exists() and child.poll() is None and time.monotonic() < deadline:
                         time.sleep(.01)
                     self.assertTrue(ready.exists())
-                    self.preview(world, command, repo, operation, transaction['operation_id'], 'finish', expected=1)
-                    self.assertEqual(canonical(bank), bank_before)
-                    (rendezvous / 'layout-recovery-admission-receipt-before-resolution.release').touch()
+                    competing_output = world.inside('concurrent-nested-preview.json')
+                    competing = world.spawn([command, 'bank', 'recover-layout', 'recover-nested',
+                        '--repo', repo, '--operation', operation, '--nested', transaction['operation_id'],
+                        '--mode', 'finish', '--output', competing_output])
+                    try:
+                        self.assertEqual(canonical(bank), bank_before)
+                    finally:
+                        # A fenced aware preview may wait for the current owner;
+                        # do not synchronously wait out the owner's pause.
+                        (rendezvous / 'layout-recovery-admission-receipt-before-resolution.release').touch()
                     stdout, stderr = child.communicate(timeout=30)
                     self.assertEqual(child.returncode, 0, stdout + stderr)
+                    compared, diagnostic = competing.communicate(timeout=30)
+                    self.assertIn(competing.returncode, (0, 1), compared + diagnostic)
+                    self.assertFalse(json.loads(compared)['canonical_writes_performed'])
                 else:
                     f.call(world, command, 'recover-nested', '--repo', repo, '--proposal', recovery)
                 self.assertEqual(canonical(bank), bank_before)

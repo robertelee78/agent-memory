@@ -80,6 +80,11 @@ Complete coverage and non-overlap are checked from real successful worker
 receipts, not source-text wiring assertions. Unsplit suites must likewise
 actually execute their complete discovered inventories.
 
+The disposable gate and shard-merger controls use explicitly synthetic receipts
+only to exercise the harness's rejection and aggregation rules. Their fabricated
+fault metadata and case identities are not product executions or interruption
+qualification; product coverage comes from actual started, completed workers.
+
 Bindings are coverage obligations, not additional executions or proof that an
 assertion is correct. The public gate executes each registered suite once;
 independent acceptance checks the source, actual results and scope. The ordinary

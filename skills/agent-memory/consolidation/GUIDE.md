@@ -71,6 +71,10 @@ planned output, supply actual full/partial/none claims, and obtain the ordinary
 source-bound comparison proof. Final preview MUST use that proof and `--plan`;
 it rechecks current sources and exact rebuilt bytes before producing a proposal.
 An edited, foreign or stale plan MUST refuse rather than bypass qualification.
+Full or partial claims MUST identify the actual future record IDs, versions and
+file hashes in the private plan. Planning and final preview MUST leave every unit
+pending; only the actual matching canonical receipt and ledger linkage may resolve
+reviewed coverage. A `coverage:none` decision MUST remain pending after apply.
 
 ## Apply
 

@@ -1,4 +1,5 @@
 """Bootstrap contract: exercise real subprocesses/files, not product internals."""
+import ast
 import copy
 import json
 import os
@@ -137,7 +138,9 @@ if suite in OWNERS:
         samples['incomplete-interruption-proof'] = passed + proof_fixture.replace(
             "'executed':[observed[index]['point']]", "'executed':[] if index==0 else [observed[index]['point']]")
         samples['missing-lifecycle-case'] = samples['passed']
-        samples['non-object-worker-receipt'] = "import os\nos.write(1, b'[]\\n')\nos._exit(0)\n"
+        samples['non-object-worker-receipt'] = ("import json,unittest\n"
+            "json.dumps=lambda *a,**k:'[]'\n"
+            "class Contract(unittest.TestCase):\n def test_x(self): pass\n")
         with World() as world:
             checkout = world.inside("checkout with spaces")
             (checkout / "scripts").mkdir(parents=True)
@@ -150,7 +153,11 @@ if suite in OWNERS:
             # Every unrelated foundation would run the same disposable body.
             # Retain the full required contract set and every fault partition;
             # production gate runs still execute the complete real registry.
-            required = runpy.run_path(str(ROOT / "scripts/test_gate.py"))["REQUIRED"]
+            tree = ast.parse((checkout / "scripts/test_gate.py").read_text())
+            required = ast.literal_eval(next(node.value for node in tree.body
+                if isinstance(node, ast.Assign) and any(
+                    isinstance(target, ast.Name) and target.id == "REQUIRED"
+                    for target in node.targets)))
             required |= set(OWNERS) | {'harness','optional-stores','lifecycle-fault-partitions'}
             manifest['suites'] = [entry for entry in manifest['suites'] if entry['name'] in required]
             matrix = copy.deepcopy(json.loads((ROOT / "tests/lifecycle-matrix.json").read_text()))
@@ -181,35 +188,11 @@ if suite in OWNERS:
                 self.assertEqual(result.returncode == 0, sample == "passed")
                 if sample == "missing-lifecycle-case":
                     self.assertEqual(report["error_suite"], "lifecycle-matrix")
-            # Keep interruption controls above distinct from lifecycle
-            # and malformed-worker controls. Valid counts cannot replace an
-            # actually executed matrix binding or an object-shaped receipt.
-            for entry in manifest["suites"]:
-                if entry.get("path"):
-                    (checkout / entry["path"]).write_text(samples["passed"])
-            missing = copy.deepcopy(matrix)
-            missing["requirements"][0]["cases"][0]["test"] = "Contract.test_missing"
-            (checkout / "tests/lifecycle-matrix.json").write_text(json.dumps(missing))
-            result = world.run(["sh", checkout / "scripts/test.sh", "--release", "--json"], check=False)
-            report = json.loads(result.stdout)
-            self.assertNotEqual(result.returncode, 0)
-            self.assertFalse(report["passed"])
-            self.assertFalse(report["release_complete"])
-            self.assertEqual(report["error_suite"], "lifecycle-matrix")
-            (checkout / "tests/lifecycle-matrix.json").write_text(json.dumps(matrix))
-            for entry in manifest["suites"]:
-                if entry.get("path"):
-                    (checkout / entry["path"]).write_text(
-                        "import json,unittest\njson.dumps=lambda *a,**k:'[]'\n"
-                        "class Contract(unittest.TestCase):\n def test_x(self): pass\n")
-            result = world.run(["sh", checkout / "scripts/test.sh", "--release", "--json"], check=False)
-            report = json.loads(result.stdout)
-            self.assertNotEqual(result.returncode, 0)
-            self.assertFalse(report["passed"])
-            self.assertFalse(report["release_complete"])
-            failed = [row for row in report["suites"] if row["status"] == "failed"]
-            self.assertTrue(failed)
-            self.assertTrue(all(row.get("passed") is False and row.get("tests") == 0 for row in failed))
+                if sample == "non-object-worker-receipt":
+                    failed = [row for row in report["suites"] if row["status"] == "failed"]
+                    self.assertTrue(failed)
+                    self.assertTrue(all(row.get("passed") is False and row.get("tests") == 0
+                                        for row in failed))
             # Missing required entries and attempts to reclassify them cannot
             # make a falsely complete release report.
             for entry in manifest["suites"]:
@@ -229,7 +212,8 @@ if suite in OWNERS:
             checkout = world.inside("case batch checkout")
             (checkout / "scripts").mkdir(parents=True)
             (checkout / "tests/contracts").mkdir(parents=True)
-            shutil.copy2(ROOT / "scripts/run_contract_suite.py", checkout / "scripts/run_contract_suite.py")
+            for name in ("test_gate.py", "run_contract_suite.py"):
+                shutil.copy2(ROOT / "scripts" / name, checkout / "scripts" / name)
             shutil.copy2(ROOT / "tests/world.py", checkout / "tests/world.py")
             shutil.copy2(ROOT / "tests/fault_partitions.py", checkout / "tests/fault_partitions.py")
             (checkout / "tests/controlled_base.py").write_text(
@@ -298,7 +282,7 @@ if suite in OWNERS:
                     result = world.run([*command, "--suite", unregistered], check=False)
                     self.assertEqual(result.returncode, 2, result.stderr)
                     self.assertFalse(log.exists())
-            aggregate = runpy.run_path(str(ROOT / "scripts/test_gate.py"))["case_batch_coverage"]
+            aggregate = runpy.run_path(str(checkout / "scripts/test_gate.py"))["case_batch_coverage"]
             summary = aggregate(entries, reports)
             self.assertEqual(summary[0]["cases"], reports[0]["case_selection"]["complete"])
             bad_reports = [

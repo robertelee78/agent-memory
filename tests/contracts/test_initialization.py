@@ -1,4 +1,5 @@
 """Initialize from real bounded sources, preserve prior bank, recover empty-bank writes."""
+import hashlib
 import json
 from pathlib import Path
 import shutil
@@ -113,6 +114,60 @@ class InitializationContract(unittest.TestCase):
             r, replay = self.apply(w, p)
             self.assertEqual(r.returncode, 0, replay);self.assertTrue(replay['verified'])
             self.assertFalse(replay['writes_performed'])
+
+    def test_first_bank_ignores_nonrouter_memory_file_and_preserves_it(self):
+        with World() as w:
+            repo, _, _ = self.setup(w)
+            (repo / '.gitignore').write_text('build/\n')
+            (repo / 'build').mkdir()
+            artifact = repo / 'build/memory.md'
+            artifact.write_text('ordinary build output\n')
+            p = self.preview(w, repo, self.review(self.inventory(w, repo)))
+            r, receipt = self.apply(w, p)
+            self.assertEqual(r.returncode, 0, receipt)
+            self.assertTrue(receipt['verified'])
+            self.assertTrue((repo / 'memory-bank/MEMORY.md').is_file())
+            self.assertEqual(artifact.read_text(), 'ordinary build output\n')
+
+    def test_first_bank_refuses_foreign_router_or_unknown_source_marker(self):
+        for obstruction in ('router', 'marker'):
+            with self.subTest(obstruction=obstruction), World() as w:
+                repo, _, _ = self.setup(w)
+                (repo / '.gitignore').write_text('build/\n')
+                (repo / 'build').mkdir()
+                artifact = repo / 'build/memory.md'
+                artifact.write_text('ordinary build output\n')
+                p = self.preview(w, repo, self.review(self.inventory(w, repo)))
+                if obstruction == 'router':
+                    artifact.write_text('---\nschema: agent-memory/v1\n---\n# Other bank\n')
+                else:
+                    key = hashlib.sha256(str(repo / 'memory-bank').encode()).hexdigest()
+                    base = Path(w.env['AGENT_MEMORY_STATE_HOME']) / 'writes' / key
+                    base.mkdir(parents=True, mode=0o700, exist_ok=True)
+                    marker = base / 'turn-sources-compat-v1.json'
+                    marker.write_text('{"schema":"unknown"}')
+                r, result = self.apply(w, p)
+                self.assertNotEqual(r.returncode, 0, result)
+                self.assertFalse((repo / 'memory-bank/MEMORY.md').exists())
+                if obstruction == 'router':
+                    self.assertIn('schema: agent-memory/v1', artifact.read_text())
+                else:
+                    self.assertEqual(marker.read_text(), '{"schema":"unknown"}')
+
+    def test_first_bank_interrupted_recovery_with_ignored_nonrouter(self):
+        with World() as w:
+            repo, _, _ = self.setup(w)
+            (repo / '.gitignore').write_text('build/\n')
+            (repo / 'build').mkdir()
+            artifact = repo / 'build/memory.md'
+            artifact.write_text('ordinary build output\n')
+            p = self.preview(w, repo, self.review(self.inventory(w, repo)))
+            self.interrupted(w, repo, p)
+            recovery = self.good(w, 'bank_transactions', 'recover', '--repo', repo, '--mode', 'finish')
+            done = self.good(w, 'bank_transactions', 'recover', '--repo', repo, '--proposal', self.save(w, recovery))
+            self.assertTrue(done['verified'])
+            self.assertEqual(done['outcome'], 'finished')
+            self.assertEqual(artifact.read_text(), 'ordinary build output\n')
 
     def test_actual_peer_intent_conflict_prompts_detecting_developer_and_never_chooses_landing_order(self):
         with World() as w:

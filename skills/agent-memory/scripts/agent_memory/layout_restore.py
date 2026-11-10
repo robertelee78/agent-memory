@@ -87,7 +87,8 @@ def preview(repo, operation_id):
     if head['generation'] != 0 or ledger != recovery.ledger_value(original):
         raise ContractError('Later admission/governance/revision depends on the repaired bank')
     child = str(uuid.uuid4())
-    with storage.exclusive(bank / '.agent-memory.lock', child, 'bank-recover') as owner:
+    from .turn_sources import canonical_writer_barrier
+    with canonical_writer_barrier(root), storage.exclusive(bank / '.agent-memory.lock', child, 'bank-recover') as owner:
         from . import layout_resolution
         layout_resolution.require_completed_resolutions(root)
         frontier.require_scope(root, original['project_id'], expected=original['scope_context'],
@@ -192,7 +193,8 @@ def apply(repo, supplied, plan=None):
         raise ContractError('Child restore parent/source evidence is damaged')
     mode = plan['mode'] if plan else 'finish'
     mutated = False
-    with storage.exclusive(bank / '.agent-memory.lock', p['operation_id'], 'bank-recover') as owner:
+    from .turn_sources import canonical_writer_barrier
+    with canonical_writer_barrier(root), storage.exclusive(bank / '.agent-memory.lock', p['operation_id'], 'bank-recover') as owner:
         from . import layout_resolution
         layout_resolution.require_completed_resolutions(root)
         current_marker = frontier.marker_bytes(bank)

@@ -154,6 +154,10 @@ then obtain the normal comparison proof with actual full/partial/none mappings.
 Final `preview --plan` MUST rebuild against fresh source and authority and match
 the entire plan before applying the unchanged authorizing checks. A plan itself
 MUST NOT authorize a write or be accepted by apply.
+Full or partial coverage MUST bind the actual future record IDs, versions and
+file hashes in that private plan, including a versioned supersession replacement.
+Planning and preview MUST NOT resolve a unit: resolution requires the actual
+matching canonical receipt and ledger linkage. `coverage:none` MUST remain pending.
 
 Deletion MUST come from explicit current operator authority. The session MUST
 identify authorized independent duplicate copies as well as linked derivatives;

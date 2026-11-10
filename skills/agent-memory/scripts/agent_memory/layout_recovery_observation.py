@@ -53,18 +53,15 @@ def metadata_supported(path):
     info = path.lstat()
     if getattr(info, 'st_flags', 0):
         raise ContractError('pending-metadata-preservation')
-    if hasattr(os, 'listxattr') and os.listxattr(path, follow_symlinks=False):
-        raise ContractError('pending-metadata-preservation')
     if sys.platform == 'darwin':
         libc = ctypes.CDLL(None, use_errno=True)
         encoded_path = os.fsencode(path)
-        if not hasattr(os, 'listxattr'):
-            libc.listxattr.argtypes = [ctypes.c_char_p, ctypes.c_void_p, ctypes.c_size_t, ctypes.c_int]
-            libc.listxattr.restype = ctypes.c_ssize_t
-            # Darwin's no-follow size query observes attributes without copying
-            # their names or values; a negative result is not proof of absence.
-            if libc.listxattr(encoded_path, None, 0, 1) != 0:
-                raise ContractError('pending-metadata-preservation')
+        libc.listxattr.argtypes = [ctypes.c_char_p, ctypes.c_void_p, ctypes.c_size_t, ctypes.c_int]
+        libc.listxattr.restype = ctypes.c_ssize_t
+        # Darwin's no-follow size query observes attributes without copying
+        # their names or values; a negative result is not proof of absence.
+        if libc.listxattr(encoded_path, None, 0, 1) != 0:
+            raise ContractError('pending-metadata-preservation')
         libc.acl_get_file.argtypes = [ctypes.c_char_p, ctypes.c_int]
         libc.acl_get_file.restype = ctypes.c_void_p
         libc.acl_get_entry.argtypes = [ctypes.c_void_p, ctypes.c_int, ctypes.POINTER(ctypes.c_void_p)]
@@ -83,6 +80,8 @@ def metadata_supported(path):
                 raise ContractError('pending-metadata-preservation')
         finally:
             libc.acl_free(acl)
+    elif not hasattr(os, 'listxattr') or os.listxattr(path, follow_symlinks=False):
+        raise ContractError('pending-metadata-preservation')
 
 
 def read_source(bank, relative, limit=MAX_FILE, *, hash_only=False):

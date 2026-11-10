@@ -58,6 +58,74 @@ class RecoveryPublicationClosure(unittest.TestCase):
                     self.assertEqual(prepared_bytes, prepared_path.read_bytes())
                     self.assertEqual(request, json.loads(request_path.read_text()))
 
+    def test_policy_at_observation_refuses_prepare_or_required_review_land(self):
+        for expected, policy_changes in (
+                ('pending-policy', {'rules': [{'type': 'required_deployments'}]}),
+                ('pending-repository-rules', {'rules': [], 'protected': True, 'review': 'REVIEW_REQUIRED'})):
+            with self.subTest(expected=expected), World() as w:
+                helper = publication_fixture.LayoutPublicationContract()
+                command, _, repo, bank, _, operation, intended = helper.public_repair(w)
+                policy = w.inside('github-policy.json')
+                data = json.loads(policy.read_text())
+                data.update(policy_changes)
+                policy.write_text(json.dumps(data))
+                observed_path = w.inside('closure-publication-observation.json')
+                call(w, command, 'publish', 'inspect', '--repo', repo, '--operation', operation,
+                     '--output', observed_path)
+                observed_bytes = observed_path.read_bytes()
+                observation = json.loads(observed_bytes)['observation']
+                request_input = {'schema': 'agent-memory/layout-publication-prepare-v1',
+                                 'observation_id': observation['observation_id'], 'intended_files': intended,
+                                 'review': helper.publication_review(observation, intended)}
+                input_path = save(w, request_input)
+                input_bytes = input_path.read_bytes()
+                prepared_path = w.inside('closure-publication-prepared.json')
+                before = helper.state(w, repo, bank)
+                directory = private_directory(w, bank, operation)
+                private_before = snapshot(directory)
+                head = w.git('ls-remote', 'origin', 'refs/heads/main', cwd=repo).stdout
+                prepared = call(w, command, 'publish', 'prepare', '--repo', repo, '--operation', operation,
+                                '--input', input_path, '--output', prepared_path,
+                                expected=1 if expected == 'pending-policy' else 0)
+                if expected == 'pending-policy':
+                    # Unsupported rules refuse before a candidate can exist.
+                    pending = prepared
+                    self.assertNotIn('request', json.loads(prepared_path.read_text()))
+                else:
+                    self.assertEqual(prepared['state'], 'prepared')
+                    prepared_bytes = prepared_path.read_bytes()
+                    request = json.loads(prepared_bytes)['request']
+                    request_path = save(w, request)
+                    private_before = snapshot(directory)
+                    candidate = w.git('cat-file', 'commit', request['candidate'], cwd=repo).stdout
+                    changed = json.loads(policy.read_text())
+                    changed['rules'] = [{'type': 'required_deployments'}]
+                    policy.write_text(json.dumps(changed))
+                    stale = call(w, command, 'publish', 'land', '--repo', repo, '--operation', operation,
+                                 '--input', request_path, '--output', w.inside('closure-stale-rules.json'),
+                                 expected=1)
+                    self.assertFalse(stale['publication_verified'])
+                    self.assertEqual(before, helper.state(w, repo, bank))
+                    self.assertEqual(private_before, snapshot(directory))
+                    self.assertEqual(head, w.git('ls-remote', 'origin', 'refs/heads/main', cwd=repo).stdout)
+                    self.assertEqual(candidate, w.git('cat-file', 'commit', request['candidate'], cwd=repo).stdout)
+                    self.assertEqual(prepared_bytes, prepared_path.read_bytes())
+                    changed['rules'] = []
+                    policy.write_text(json.dumps(changed))
+                    pending = call(w, command, 'publish', 'land', '--repo', repo, '--operation', operation,
+                                   '--input', request_path, '--output', w.inside('closure-rules.json'),
+                                   expected=1)
+                    self.assertEqual(candidate, w.git('cat-file', 'commit', request['candidate'], cwd=repo).stdout)
+                    self.assertEqual(prepared_bytes, prepared_path.read_bytes())
+                    self.assertEqual(request, json.loads(request_path.read_text()))
+                self.assertEqual(pending['state'], expected)
+                self.assertFalse(pending['publication_verified'])
+                self.assertEqual(head, w.git('ls-remote', 'origin', 'refs/heads/main', cwd=repo).stdout)
+                self.assertEqual(before, helper.state(w, repo, bank))
+                self.assertEqual(private_before, snapshot(directory))
+                self.assertEqual(observed_bytes, observed_path.read_bytes())
+                self.assertEqual(input_bytes, input_path.read_bytes())
+
     def test_ordinary_publish_refuses_a_previously_reviewed_proof_after_pending_handoff(self):
         helper = publication_fixture.LayoutPublicationContract()
         with World() as w:

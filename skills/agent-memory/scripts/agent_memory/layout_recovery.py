@@ -136,7 +136,8 @@ def inspect(repo, identity_review=None):
     # Unknown/live ownership precedes reading any source body.
     predecessor, _ = predecessor_value(root)
     bank_observation.markers(target, None, predecessor.marker if predecessor else None)
-    with storage.exclusive(target / '.agent-memory.lock', operation_id, 'bank-recover') as owner:
+    from .turn_sources import canonical_writer_barrier
+    with canonical_writer_barrier(root), storage.exclusive(target / '.agent-memory.lock', operation_id, 'bank-recover') as owner:
         from . import layout_resolution
         layout_resolution.require_completed_resolutions(root)
         try:
@@ -408,7 +409,8 @@ def pending_rows(directory, manifest, units):
 
 def prepare(repo, operation_id, request):
     root, target, _, _ = state.paths(repo, operation_id)
-    with storage.exclusive(target / '.agent-memory.lock', operation_id, 'bank-recover') as owner:
+    from .turn_sources import canonical_writer_barrier
+    with canonical_writer_barrier(root), storage.exclusive(target / '.agent-memory.lock', operation_id, 'bank-recover') as owner:
         from . import layout_resolution
         layout_resolution.require_completed_resolutions(root)
         return _prepare(root, operation_id, request, owner)
@@ -1038,7 +1040,8 @@ def apply(repo, supplied):
     if known is not None:
         return historical(root, proposal, directory, known)
     _, _, _, _, manifest = operation(root, proposal['operation_id'])
-    with storage.exclusive(target / '.agent-memory.lock', proposal['operation_id'], 'bank-recover') as owner:
+    from .turn_sources import canonical_writer_barrier
+    with canonical_writer_barrier(root), storage.exclusive(target / '.agent-memory.lock', proposal['operation_id'], 'bank-recover') as owner:
         from . import layout_resolution
         layout_resolution.require_completed_resolutions(root)
         predecessor, predecessor_pin = predecessor_value(root, manifest, owner)
@@ -1225,7 +1228,8 @@ def recover(repo, operation_id=None, mode=None, proposal=None):
         return result('recover', preview['operation_id'], state=completed['outcome'], verified=True,
                       receipt=completed, receipt_is_historical=True, already_applied=True)
     root, target, base, directory, manifest, original, journal = recovery_source(repo, preview['operation_id'])
-    with storage.exclusive(target / '.agent-memory.lock', original['operation_id'], 'bank-recover') as owner:
+    from .turn_sources import canonical_writer_barrier
+    with canonical_writer_barrier(root), storage.exclusive(target / '.agent-memory.lock', original['operation_id'], 'bank-recover') as owner:
         from . import layout_resolution
         layout_resolution.require_completed_resolutions(root)
         current_marker = frontier.marker_bytes(target)

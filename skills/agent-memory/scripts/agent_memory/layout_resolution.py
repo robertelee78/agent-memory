@@ -392,7 +392,8 @@ def resolve(repo, operation_id=None, unit_id=None, terminal=None, proposal=None)
     if proposal is None:
         resolution_id = str(uuid.uuid4())
         root, bank, _, _ = state.paths(repo, operation_id)
-        with storage.exclusive(bank / '.agent-memory.lock', resolution_id, 'bank-recover') as owner:
+        from .turn_sources import canonical_writer_barrier
+        with canonical_writer_barrier(root), storage.exclusive(bank / '.agent-memory.lock', resolution_id, 'bank-recover') as owner:
             preview = _resolution_preview(root, operation_id, unit_id, terminal, resolution_id, owner)
         return {'proposal': preview, 'canonical_writes_performed': False, 'writes_performed': False,
             'temporary_lock_writes_performed': True}
@@ -418,7 +419,8 @@ def resolve(repo, operation_id=None, unit_id=None, terminal=None, proposal=None)
         from . import layout_history
         layout_history.check(root, journal['scope_context'], p['recovery_frontier']['project_id'])
         return {'receipt': known, 'already_applied': True, 'receipt_is_historical': True, 'writes_performed': False}
-    with storage.exclusive(bank / '.agent-memory.lock', resolution_id, 'bank-recover') as owner:
+    from .turn_sources import canonical_writer_barrier
+    with canonical_writer_barrier(root), storage.exclusive(bank / '.agent-memory.lock', resolution_id, 'bank-recover') as owner:
         require_completed_resolutions(root, retry=p)
         units = resolution_units(directory, p, receipt)
         if known is None:

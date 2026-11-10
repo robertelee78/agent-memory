@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import argparse
 from collections import deque
-from contextlib import contextmanager
+from contextlib import ExitStack, contextmanager
 import hashlib
 import importlib
 import os
@@ -910,6 +910,17 @@ class FiniteExecutor:
         self.writer.send('REFUSED', sequence, code='invalid-request', outcome='durable-refusal')
 
     def execute(self, kind, sequence, nonce, raw):
+        # Retry only acquisition: once entered, never replay the finite frame.
+        # The observer's own guards and all metadata binding checks still run.
+        with ExitStack() as stack:
+            def enter():
+                gate = turn_sources.source_barrier(self.coverage.repo)
+                gate.__enter__()
+                stack.push(gate.__exit__)
+            self.metadata(enter)
+            self._execute(kind, sequence, nonce, raw)
+
+    def _execute(self, kind, sequence, nonce, raw):
         if kind not in {'REQUEST', 'REFUSED-ATTEMPT'}:
             raise ContractError('Invalid source frame type')
         value = None
@@ -1597,6 +1608,12 @@ def run(repo, session, instance_id, lifecycle, *, startup, receipt=None, input=N
                 frame = queue.popleft()
             try:
                 executor.execute(*frame)
+            except turn_sources.SourceTransportBusy:
+                # The current frame may already have durable metadata or a
+                # started observer. Preserve that uncertainty and stop before
+                # executing another frame with a potentially missing sequence.
+                writer.send('REFUSED', frame[1], code='busy-exhausted', outcome='unknown', status='pending')
+                return 1
             except Exception:
                 # Malformed metadata cannot become an arbitrary verified receipt.
                 state['error'] = True
