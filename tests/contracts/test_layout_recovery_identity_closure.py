@@ -192,10 +192,18 @@ class RecoveryIdentityClosureContract(unittest.TestCase):
                 w.git('commit', '-m', 'Feature baseline', cwd=repo)
                 _, observed = f.inspect(w, command, repo)
                 proposal, _ = f.prepare(w, command, source, repo, observed, native)
-                feature.write_text('Changed independent feature.\n')
-                w.git('add', 'feature.txt', cwd=repo)
+                baseline_index = (repo / '.git/index').read_bytes()
+                baseline_head = w.git('rev-parse', 'HEAD', cwd=repo).stdout
                 if change == 'head':
-                    w.git('commit', '-m', 'New feature history', cwd=repo)
+                    commit = w.git('commit-tree', 'HEAD^{tree}', '-p', 'HEAD',
+                                   '-m', 'New feature history', cwd=repo).stdout.strip()
+                    w.git('update-ref', 'HEAD', commit, cwd=repo)
+                    self.assertEqual((repo / '.git/index').read_bytes(), baseline_index)
+                else:
+                    feature.write_text('Changed independent feature.\n')
+                    w.git('add', 'feature.txt', cwd=repo)
+                    self.assertNotEqual((repo / '.git/index').read_bytes(), baseline_index)
+                    self.assertEqual(w.git('rev-parse', 'HEAD', cwd=repo).stdout, baseline_head)
                 before = bank_bytes(bank), feature.read_bytes(), (repo / '.git/index').read_bytes()
                 head = w.git('rev-parse', 'HEAD', cwd=repo).stdout
                 result = f.call(w, command, 'apply', '--repo', repo, '--proposal', proposal, expected=1)
@@ -223,15 +231,26 @@ class RecoveryIdentityClosureContract(unittest.TestCase):
     def test_conflicting_historical_checkout_decisions_refuse_inspection(self):
         with World() as w:
             command, _ = f.installed(w)
+            original_repository = w.repository
+            def repository(*args, **kwargs):
+                result = original_repository(*args, **kwargs)
+                w.git('remote', 'add', 'origin', 'https://github.com/example/memory-fixture.git', cwd=result)
+                return result
+            w.repository = repository
             repo, bank, _ = f.memory(w)
             registry = Path(w.env['AGENT_MEMORY_CONFIG_HOME']) / 'projects.json'
             data = json.loads(registry.read_bytes())
             info = (repo / '.git').stat()
             key = str(info.st_dev) + ':' + str(info.st_ino)
             entry = data['checkouts'].pop(key)
+            data['checkouts'][str(info.st_dev + 1) + ':' + str(info.st_ino)] = entry
+            registry.write_bytes(f.encoded(data))
+            status = w.run([command, 'identity', 'status', '--repo', repo], check=False)
+            positive = json.loads(status.stdout)
+            self.assertTrue(positive['resolved'], positive)
+            self.assertEqual(positive['evidence']['binding_source'], 'historical-device-change')
             other = json.loads(json.dumps(entry))
             other['authority_name'] = 'different-authority'
-            data['checkouts'][str(info.st_dev + 1) + ':' + str(info.st_ino)] = entry
             data['checkouts'][str(info.st_dev + 2) + ':' + str(info.st_ino)] = other
             registry.write_bytes(f.encoded(data))
             before = bank_bytes(bank), registry.read_bytes()
@@ -239,6 +258,23 @@ class RecoveryIdentityClosureContract(unittest.TestCase):
                             '--output', w.inside('historical-conflict.json'), expected=1)
             self.assertFalse(result['canonical_writes_performed'])
             self.assertEqual((bank_bytes(bank), registry.read_bytes()), before)
+
+    def test_distinct_supplementary_group_survives_apply(self):
+        groups = sorted(set(os.getgroups()) - {os.getegid()})
+        if not groups:
+            self.skipTest('No distinct supplementary group available for collaborative-bank fixture')
+        with World() as w:
+            command, source = f.installed(w)
+            repo, bank, native = f.memory(w, oversized=True)
+            os.chown(bank, -1, groups[0])
+            bank.chmod(0o2770)
+            self.assertEqual(bank.stat().st_gid, groups[0])
+            _, observed = f.inspect(w, command, repo)
+            proposal, _ = f.prepare(w, command, source, repo, observed, native)
+            result = f.call(w, command, 'apply', '--repo', repo, '--proposal', proposal)
+            self.assertTrue(result['canonical_eligibility'])
+            self.assertEqual(bank.stat().st_mode & 0o7777, 0o2770)
+            self.assertEqual(bank.stat().st_gid, groups[0])
 
     def test_setgid_collaborative_bank_mode_and_group_survive_apply(self):
         with World() as w:
@@ -266,11 +302,17 @@ class RecoveryIdentityClosureContract(unittest.TestCase):
                 elif change == 'xdg-state':
                     w.env.pop('AGENT_MEMORY_STATE_HOME')
                     w.env['XDG_STATE_HOME'] = str(w.inside('other-xdg-state'))
-                elif change == 'config':
-                    w.env['AGENT_MEMORY_CONFIG_HOME'] = str(w.inside('other-config'))
                 else:
-                    w.env.pop('AGENT_MEMORY_CONFIG_HOME')
-                    w.env['XDG_CONFIG_HOME'] = str(w.inside('other-xdg-config'))
+                    original_config = Path(w.env['AGENT_MEMORY_CONFIG_HOME'])
+                    root = w.inside('other-config' if change == 'config' else 'other-xdg-config')
+                    target = root if change == 'config' else root / 'agent-memory'
+                    shutil.copytree(original_config, target)
+                    (target / 'layout-recovery-bindings.json').unlink()
+                    if change == 'config':
+                        w.env['AGENT_MEMORY_CONFIG_HOME'] = str(target)
+                    else:
+                        w.env.pop('AGENT_MEMORY_CONFIG_HOME')
+                        w.env['XDG_CONFIG_HOME'] = str(root)
                 result, value = helper.recall(w, command, repo, inspected['manifest']['project_id'])
                 self.assertNotEqual(result.returncode, 0)
                 self.assertNotIn('results', value)
@@ -283,6 +325,19 @@ class RecoveryIdentityClosureContract(unittest.TestCase):
             self.assertFalse(applied['semantic_recovery_complete'])
             copied = w.inside('copied-checkout')
             shutil.copytree(repo, copied, symlinks=True)
+            config = Path(w.env['AGENT_MEMORY_CONFIG_HOME'])
+            target = w.inside('copied-config')
+            shutil.copytree(config, target)
+            (target / 'layout-recovery-bindings.json').unlink()
+            registry = target / 'projects.json'
+            data = json.loads(registry.read_bytes())
+            old = (repo / '.git').stat()
+            new = (copied / '.git').stat()
+            entry = json.loads(json.dumps(data['checkouts'][str(old.st_dev) + ':' + str(old.st_ino)]))
+            entry['locations'].append(str(copied))
+            data['checkouts'][str(new.st_dev) + ':' + str(new.st_ino)] = entry
+            registry.write_bytes(f.encoded(data))
+            w.env['AGENT_MEMORY_CONFIG_HOME'] = str(target)
             copied_bank = copied / bank.relative_to(repo)
             before = bank_bytes(bank), bank_bytes(copied_bank)
             result, value = helper.recall(w, command, copied, inspected['manifest']['project_id'])
@@ -299,6 +354,16 @@ class RecoveryIdentityClosureContract(unittest.TestCase):
             moved = w.inside('moved-checkout')
             relative_bank = bank.relative_to(repo)
             shutil.move(str(repo), str(moved))
+            config = Path(w.env['AGENT_MEMORY_CONFIG_HOME'])
+            target = w.inside('moved-config')
+            shutil.copytree(config, target)
+            (target / 'layout-recovery-bindings.json').unlink()
+            registry = target / 'projects.json'
+            data = json.loads(registry.read_bytes())
+            info = (moved / '.git').stat()
+            data['checkouts'][str(info.st_dev) + ':' + str(info.st_ino)]['locations'].append(str(moved))
+            registry.write_bytes(f.encoded(data))
+            w.env['AGENT_MEMORY_CONFIG_HOME'] = str(target)
             w.paths['repo'] = moved
             result, value = helper.recall(w, command, moved, inspected['manifest']['project_id'])
             self.assertNotEqual(result.returncode, 0)
@@ -320,16 +385,6 @@ class RecoveryIdentityClosureContract(unittest.TestCase):
             self.assertNotIn('results', value)
             self.assertEqual((bank_bytes(bank), bank_bytes(directory)), before)
 
-    def test_changed_config_home_cannot_make_held_reader_report_complete(self):
-        helper = frontier_tests.RecoveryFrontierContract('runTest')
-        with World() as w:
-            command, repo, bank, inspected, _ = helper.pending(w)
-            before = bank_bytes(bank)
-            w.env['AGENT_MEMORY_CONFIG_HOME'] = str(w.inside('different-config-home'))
-            result, value = helper.recall(w, command, repo, inspected['manifest']['project_id'])
-            self.assertNotEqual(result.returncode, 0)
-            self.assertNotIn('results', value)
-            self.assertEqual(bank_bytes(bank), before)
 
     def test_deleting_every_discovery_record_loses_the_pending_obligation(self):
         # This is a documented limitation, not a claim that deleted private

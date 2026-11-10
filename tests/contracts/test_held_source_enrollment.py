@@ -480,6 +480,9 @@ class HeldSourceEnrollment(unittest.TestCase):
                     self.assertEqual(len(current['sources']), 1)
                     self.assertEqual(current['sources'][0]['source_sha256'],
                                      hashlib.sha256(event['prompt'].encode()).hexdigest())
+                    if harness == 'claude':
+                        self.assertEqual(current['sources'][0]['source_reference'],
+                                         str(Path(event['transcript_path']).resolve()))
             status = recovery.call(world, command, 'status', '--repo', repo,
                                    '--operation', inspected['operation_id'])
             self.assertFalse(status['semantic_recovery_complete'])

@@ -210,10 +210,17 @@ class LayoutRetentionContract(unittest.TestCase):
             self.assertEqual(before, {p.relative_to(bank).as_posix(): p.read_bytes() for p in bank.rglob('*') if p.is_file()})
 
     def test_public_purge_and_age_cannot_retire_pending_hold(self):
-        from layout_recovery_fixtures import call, private_directory
+        from layout_recovery_fixtures import call, inspect, installed, memory, prepare, private_directory
         from runtime_update_fixtures import snapshot
         with World() as w:
-            command, _, repo, bank, observed, _, _, applied = self.public_repair(w, pending=True)
+            command, source = installed(w)
+            repo, bank, intended = memory(w, handoff=True)
+            preview = w.run([command, '--json', 'purge-data', '--repo', repo,
+                             '--path', bank, '--check'], timeout=60)
+            confirmation = json.loads(preview.stdout)['preview']['confirmation']
+            _, observed = inspect(w, command, repo)
+            proposal_path, _ = prepare(w, command, source, repo, observed, intended)
+            applied = call(w, command, 'apply', '--repo', repo, '--proposal', proposal_path)
             operation = observed['operation_id']
             directory = private_directory(w, bank, operation)
             pending = set(applied['pending_unit_ids'])
@@ -225,7 +232,7 @@ class LayoutRetentionContract(unittest.TestCase):
             status = call(w, command, 'status', '--repo', repo, '--operation', operation)
             self.assertFalse(status['semantic_recovery_complete'])
             self.assertEqual(set(status['pending_unit_ids']), pending)
-            for args in (['--check'], []):
+            for args in (['--check'], ['--confirm', confirmation]):
                 result = w.run([command, '--json', 'purge-data', '--repo', repo,
                                 '--path', bank, *args], check=False, timeout=60)
                 self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
