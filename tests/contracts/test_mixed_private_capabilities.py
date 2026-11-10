@@ -220,6 +220,7 @@ class MixedPrivateCapabilities(unittest.TestCase):
             attestation['declared_invocation_routes'] += [str(command.parent / 'agent-memory'),
                 receipt['omp_binding']['extension_target'], str(agent_dir / 'skills/agent-memory'),
                 str(agent_dir / 'AGENTS.md')]
+            layout['review']['quiescence_attestation_sha256'] = recovery.sha(recovery.encoded(attestation))
             proposal = world.inside('omp-first-layout.json')
             recovery.call(world, command, 'prepare', '--repo', repo, '--operation', inspected['operation_id'],
                           '--input', recovery.save(world, layout), '--output', proposal)
@@ -349,6 +350,7 @@ class MixedPrivateCapabilities(unittest.TestCase):
             attestation['declared_invocation_routes'] += [str(command.parent / 'agent-memory'),
                 receipt['omp_binding']['extension_target'], str(agent_dir / 'skills/agent-memory'),
                 str(agent_dir / 'AGENTS.md')]
+            layout['review']['quiescence_attestation_sha256'] = recovery.sha(recovery.encoded(attestation))
             proposal = world.inside('completed-omp-layout.json')
             recovery.call(world, command, 'prepare', '--repo', repo, '--operation', inspected['operation_id'],
                           '--input', recovery.save(world, layout), '--output', proposal)

@@ -69,6 +69,7 @@ class HeldSourceEnrollment(unittest.TestCase):
             'declared_principals': [scope['developer_id']], 'declared_invocation_routes': ['fixture-current-runtime'],
             'stopped_sessions': ['fixture-legacy-session'],
             'statement': 'All authorized legacy routes are disabled or quiesced.', 'review_id': review['review_id']}
+        review['quiescence_attestation_sha256'] = digest(encoded(attestation))
         proposal = {'schema': 'agent-memory/layout-recovery-proposal-v1', 'operation_id': operation,
             'proposal_id': proposal_id, 'scope_context': scope, 'manifest_sha256': digest(encoded(manifest)),
             'unit_map_sha256': digest(encoded(unit_map)), 'review': review, 'review_sha256': digest(encoded(review)),

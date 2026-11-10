@@ -186,6 +186,15 @@ It also binds `inherited_frontier_sha256` and explicit `retain-pending`
 `inherited_unit_decisions` for every retained rolled-back obligation (empty
 lists still have an explicit digest). Reviews are fallible self-reported
 attestations, not authenticated truth or operator approval by inference.
+The review also requires `quiescence_attestation_sha256`: the SHA-256 of the
+canonical encoded complete attestation, including its review ID, or explicit
+`null` when no attestation is supplied. Allocate the review ID first, put it
+in the attestation, then compute the digest and independently review the exact
+inventory. An optional attestation in an all-preserve plan is bound the same
+way; omitting the field is never equivalent to `null`. A changed declaration
+requires a fresh independent review and review ID. Retain prior frozen review
+and unresolved evidence; do not backfill approval into old review records.
+
 
 Pending recovery requires the exact `layout-quiescence-attestation-v1` tied to
 the real runtime artifact, state root, project/checkout, review and actual
@@ -193,6 +202,11 @@ detecting developer. All authorized old invocation routes/in-flight sessions
 MUST be disabled/quiesced or use the independently verified capable runtime
 and bound private state. The persistent typed transaction hold additionally
 fails closed for legacy readers. Do not delete its marker or sentinel.
+This is an operator-and-reviewer attestation of the declared inventory, not
+an operating-system process, user or installation discovery oracle. Unknown or
+unverified routes, principals or sessions remain pending; direct edits,
+uncooperative software and undiscovered installations are not controlled by
+the hold. The operator MUST establish and maintain quiescence.
 
 ### Transactions, pending state and recovery
 

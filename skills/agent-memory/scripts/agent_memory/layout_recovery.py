@@ -258,11 +258,11 @@ def unit_map_value(value, manifest, intended, retained=None):
     return value
 
 
-def review_value(review, manifest, unit_map, intended, author, metadata, inherited=()):
+def review_value(review, manifest, unit_map, intended, author, metadata, attestation, inherited=()):
     fields(review, {'schema', 'review_id', 'operation_id', 'manifest_sha256', 'unit_map_sha256',
                     'intended_files_sha256', 'metadata_plan_sha256', 'authority_sha256', 'author', 'reviewer', 'reviewed_at',
                     'unit_decisions', 'inherited_frontier_sha256', 'inherited_unit_decisions',
-                    'semantic_preservation', 'security', 'identity', 'decision', 'evidence'},
+                    'quiescence_attestation_sha256', 'semantic_preservation', 'security', 'identity', 'decision', 'evidence'},
            'agent-memory/layout-review-v1')
     independent(author, review['reviewer'])
     storage.time_value(review['reviewed_at'])
@@ -272,6 +272,8 @@ def review_value(review, manifest, unit_map, intended, author, metadata, inherit
             or review['intended_files_sha256'] != digest(encoded(intended))
             or review['metadata_plan_sha256'] != digest(encoded(metadata))
             or review['authority_sha256'] != digest(encoded(manifest['identity']['project_evidence']))
+            or review['quiescence_attestation_sha256'] != (digest(encoded(attestation)) if attestation is not None else None)
+            or (attestation is not None and (not isinstance(attestation, dict) or attestation.get('review_id') != review['review_id']))
             or review['author'] != author or review['decision'] != 'approve'
             or any(review[key] is not True for key in ('semantic_preservation', 'security', 'identity'))
             or not isinstance(review['evidence'], str) or not review['evidence'].strip()):
@@ -444,7 +446,8 @@ def _prepare(repo, operation_id, request, owner):
         security.ensure_safe({path: path + '\n' + body})
     unit_map = unit_map_value(request['unit_map'], manifest, intended, retained)
     metadata = metadata_plan(request['metadata_plan'], manifest, intended, retained_ids)
-    review = review_value(request['review'], manifest, unit_map, intended, request['author'], metadata, inherited)
+    attestation = request['quiescence_attestation']
+    review = review_value(request['review'], manifest, unit_map, intended, request['author'], metadata, attestation, inherited)
     preserve_records(directory, manifest, intended, unit_map)
     bank.file_topology({source['path'] for source in manifest['sources']} | set(intended))
     tx.check_layout(target, {source['path'] for source in manifest['sources']} | set(intended),
@@ -453,7 +456,7 @@ def _prepare(repo, operation_id, request, owner):
     capacity_token = frontier.prospective_token(root, manifest, units, predecessor=predecessor, owner=owner)
     reserve = frontier.reservation(intended, pending_rows(directory, manifest, units) + inherited, capacity_token)
     runtime = artifact.inspect(artifact.PACK)
-    attestation = request['quiescence_attestation']
+    # The review above binds even an optional attestation, or explicit null.
     if units or inherited:
         attestation_value(attestation, manifest, runtime)
         if attestation['review_id'] != review['review_id']:
@@ -678,7 +681,8 @@ def check_review(root, directory, manifest, proposal):
     if (proposal['inherited_unit_ids'] != sorted(row['unit_id'] for row in inherited)
             or proposal['inherited_frontier_sha256'] != digest(encoded(inherited))):
         raise ContractError('Recovery inherited private obligations changed')
-    review_value(review, manifest, unit_map, proposal['intended_files'], proposal['author'], proposal['metadata_plan'], inherited)
+    review_value(review, manifest, unit_map, proposal['intended_files'], proposal['author'], proposal['metadata_plan'],
+                 proposal['quiescence_attestation'], inherited)
     preserve_records(directory, manifest, proposal['intended_files'], unit_map)
     metadata_plan(proposal['metadata_plan'], manifest, proposal['intended_files'], proposal['retained_source_ids'])
     for path, body in proposal['intended_files'].items():

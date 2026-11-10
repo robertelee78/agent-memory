@@ -217,6 +217,7 @@ def review_request(world, command, source, repo, inspected, intended, *, pending
                        'declared_principals': [author['developer_id']], 'declared_invocation_routes': [str(command)],
                        'stopped_sessions': [], 'statement': 'All authorized legacy invocation routes and in-flight sessions are disabled or quiesced until terminal recovery retirement, or use the independently verified capable runtime and bound private state.',
                        'review_id': review_id}
+    review['quiescence_attestation_sha256'] = sha(encoded(attestation)) if attestation is not None else None
     return {'schema': 'agent-memory/layout-prepare-v1', 'operation_id': operation, 'author': author,
             'unit_map': unit_map, 'intended_files': intended, 'metadata_plan': metadata, 'review': review,
             'quiescence_attestation': attestation, 'retained_source_ids': []}

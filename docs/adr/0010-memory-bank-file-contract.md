@@ -307,6 +307,17 @@ canonical tree only through the reviewed pending-candidate disposition above;
 unknown concurrent edits MUST NOT disappear to make the result fit. Global normal limits,
 personal memory, cross-repository transfer and implicit schema migration remain
 out of scope.
+Where pending or inherited units require quiescence, the operator SHALL declare
+the authorized principals, invocation routes and stopped sessions and attest
+their quiescence against the pinned bank, state and runtime. The independent
+review SHALL bind the SHA-256 of that exact complete attestation; an absent
+attestation requires an explicit null review pin, and an optional supplied
+attestation is bound identically. Changed declarations require a fresh
+qualified review, never a rewritten historical approval. This is an explicit
+operator and reviewer attestation, not automatic operating-system process,
+principal or installation discovery. Unknown routes or sessions remain pending,
+and the hold does not control direct edits or uncooperative software.
+
 
 ### Transaction, retry and sharing
 
