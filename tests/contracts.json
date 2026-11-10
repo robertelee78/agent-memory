@@ -1,6 +1,7 @@
 {
   "schema": "agent-memory/test-contracts-v1",
   "suites": [
+    {"name":"omp-finite-prestart-exhaustion","layer":"client","scope":"v0.0.15","path":"tests/contracts/test_omp_finite_outcome_fence.py","tests":["FiniteOutcomeFence.test_contended_entry_refuses_current_frame_and_stops"]},
     {"name":"omp-finite-outcome-fence","layer":"client","scope":"v0.0.15","path":"tests/contracts/test_omp_finite_outcome_fence.py","tests":["FiniteOutcomeFence.test_public_capture_cannot_interpose_before_verified_outcome"]},
     {"name":"omp-writer-fence-ordering","layer":"client","scope":"v0.0.15","path":"tests/contracts/test_omp_writer_fence.py","tests":["InstalledCanonicalFence.test_actual_capture_and_installed_observer_in_both_orders"]},
     {"name":"omp-writer-fence-exhaustion","layer":"client","scope":"v0.0.15","path":"tests/contracts/test_omp_writer_fence.py","tests":["InstalledCanonicalFence.test_public_capture_exhausts_real_shared_barrier_without_canonical_write"]},
