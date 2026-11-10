@@ -66,7 +66,7 @@ class RecoverySemanticDependenciesContract(unittest.TestCase):
             proposal = f.discard_proposal(w, command, repo, bank, inspected, unit_id)
             first = f.call(w, command, 'resolve', '--repo', repo, '--proposal', proposal)
             self.assertTrue(first['semantic_recovery_complete'])
-            context = bank / 'activeContext.md'
+            context = bank / 'projectbrief.md'
             context.write_bytes(context.read_bytes() + b'\nLater independently retained context.\n')
             later = context.read_bytes()
             head = (directory / 'ledger-head.json').read_bytes()
@@ -84,6 +84,14 @@ class RecoverySemanticDependenciesContract(unittest.TestCase):
             with self.subTest(placement=placement), World() as w:
                 command, source = f.installed(w)
                 repo, bank, native = f.memory(w)
+                if placement == 'intended':
+                    native['activeContext.md'] = '# Active context\n\nRetain the current fixture context.\n'
+                    route = '| [activeContext.md](<activeContext.md>) | Fixture context | repository | active | When resuming the fixture |'
+                    native['MEMORY.md'] = native['MEMORY.md'].replace(
+                        '\n## Omitted contexts', '\n' + route + '\n\n## Omitted contexts').replace(
+                        '- `activeContext.md`: No applicable evidence yet\n', '')
+                    (bank / 'activeContext.md').write_text(native['activeContext.md'])
+                    (bank / 'MEMORY.md').write_text(native['MEMORY.md'])
                 transcript = 'User: Private fixture question.\nAssistant: Private fixture response.\n'
                 (bank / 'handoff-prompt.md').write_text(transcript)
                 before = {p.relative_to(bank).as_posix(): p.read_bytes() for p in bank.rglob('*') if p.is_file()}
