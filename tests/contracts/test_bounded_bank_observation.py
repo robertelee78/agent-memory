@@ -1,4 +1,5 @@
 """Complete bank observation enforces bounded, stable, read-only eligibility."""
+import errno
 import json
 import os
 from pathlib import Path
@@ -283,6 +284,33 @@ class BoundedBankObservation(unittest.TestCase):
                 for fd in set(descriptors):
                     with self.assertRaises(OSError):
                         os.fstat(fd)
+
+    def test_stream_construction_failure_preserves_an_unrelated_descriptor(self):
+        source = self.bank / 'projectbrief.md'
+        original = source.read_bytes()
+        outside = self.repo / 'independent-descriptor'
+        outside.write_bytes(b'Independent descriptor must remain usable')
+        real_fdopen = os.fdopen
+        descriptors = []
+
+        def interrupted_constructor(fd, *args, **kwargs):
+            stream = real_fdopen(fd, *args, **kwargs)
+            stream.close()
+            descriptors.append(os.open(outside, os.O_RDONLY))
+            raise OSError(errno.EIO, 'Synthetic stream construction failure')
+
+        try:
+            with patch.object(bank_observation.os, 'fdopen', side_effect=interrupted_constructor):
+                with self.assertRaises(ContractError):
+                    bank_observation.read_source(self.bank, 'projectbrief.md', 16384)
+            self.assertEqual(os.read(descriptors[0], 128), outside.read_bytes())
+            self.assertEqual(source.read_bytes(), original)
+        finally:
+            for fd in descriptors:
+                try:
+                    os.close(fd)
+                except OSError:
+                    pass
 
     def test_symlink_and_nonregular_markdown_are_noncapacity_refusals(self):
         path = self.bank / 'outside.md'

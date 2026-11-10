@@ -52,26 +52,25 @@ def _read_pinned_source(bank, relative, limit, parts, descriptors):
     try:
         fd=os.open(parts[-1], os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=descriptors[-1])
         try:
-            stream=os.fdopen(fd,'rb')
-        except BaseException:
+            # Keep ownership even if buffered-stream construction fails.
+            with os.fdopen(fd,'rb',closefd=False) as stream:
+                before=os.fstat(stream.fileno())
+                if not stat.S_ISREG(before.st_mode):
+                    raise ContractError('Canonical source is no longer ordinary')
+                raw=stream.read(limit+1)
+                after=os.fstat(stream.fileno())
+                named=os.stat(parts[-1],dir_fd=descriptors[-1],follow_symlinks=False)
+                if ((before.st_size <= limit and len(raw) != before.st_size)
+                        or signature(before)!=signature(after)
+                        or signature(after)!=signature(named)):
+                    raise ContractError('Canonical source changed during bounded observation')
+                _check_parents(bank,parts,descriptors)
+                if before.st_size>sharing_limits.MAX_FILE:
+                    raise BankCapacityError('bank-source-byte-capacity',relative,
+                                            sharing_limits.MAX_FILE,before.st_size,measurement='exact')
+                return raw
+        finally:
             os.close(fd)
-            raise
-        with stream:
-            before=os.fstat(stream.fileno())
-            if not stat.S_ISREG(before.st_mode):
-                raise ContractError('Canonical source is no longer ordinary')
-            raw=stream.read(limit+1)
-            after=os.fstat(stream.fileno())
-            named=os.stat(parts[-1],dir_fd=descriptors[-1],follow_symlinks=False)
-            if ((before.st_size <= limit and len(raw) != before.st_size)
-                    or signature(before)!=signature(after)
-                    or signature(after)!=signature(named)):
-                raise ContractError('Canonical source changed during bounded observation')
-            _check_parents(bank,parts,descriptors)
-            if before.st_size>sharing_limits.MAX_FILE:
-                raise BankCapacityError('bank-source-byte-capacity',relative,
-                                        sharing_limits.MAX_FILE,before.st_size,measurement='exact')
-            return raw
     except OSError as exc:
         raise ContractError('Canonical source or parent changed, became unsafe, or cannot be read; preserve it and retry') from exc
 
