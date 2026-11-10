@@ -1,6 +1,11 @@
 {
   "schema": "agent-memory/test-contracts-v1",
   "suites": [
+    {"name":"omp-writer-fence-ordering","layer":"client","scope":"v0.0.15","path":"tests/contracts/test_omp_writer_fence.py","tests":["InstalledCanonicalFence.test_actual_capture_and_installed_observer_in_both_orders"]},
+    {"name":"omp-writer-fence-exhaustion","layer":"client","scope":"v0.0.15","path":"tests/contracts/test_omp_writer_fence.py","tests":["InstalledCanonicalFence.test_public_capture_exhausts_real_shared_barrier_without_canonical_write"]},
+    {"name":"omp-writer-fence-compatibility","layer":"client","scope":"v0.0.15","path":"tests/contracts/test_omp_writer_fence.py","tests":["InstalledCanonicalFence.test_public_capture_refuses_unknown_marker_and_shared_upgrade"]},
+    {"name":"layout-consumer-closure-frontier-11","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_recovery_frontier_closure.py","tests":["RecoveryFrontierClosureContract.test_consumers_review_and_commit_without_pending_frontier"]},
+    {"name":"layout-consumer-closure-unsafe-01","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_recovery_unsafe_apply.py","tests":["RecoveryUnsafeApplyContract.test_changed_secret_or_oversized_pending_original_refuses_apply_before_mutation"]},
     {"name": "checked-page-export", "layer": "concurrency", "scope": "v0.0.15", "path": "tests/contracts/test_checked_page_export.py"},
     {"name":"layout-recovery-preserve","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_recovery.py","tests":["LayoutRecoveryContract.test_all_preserve_apply_keeps_metadata_feature_head_and_exact_original_index"]},
     {"name":"layout-recovery-changed-sources","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_recovery.py","tests":["LayoutRecoveryContract.test_changed_source_or_metadata_invalidates_apply_before_any_canonical_replacement"]},
