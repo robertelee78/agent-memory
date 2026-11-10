@@ -748,7 +748,7 @@
     {"name":"layout-revision-closure-after-head-exit","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_revision_faults.py","tests":["LayoutRevisionFaults.test_after_head_exit"]},
     {"name":"layout-crash-closure-nested-faults-rollback-after-rename-error","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_nested_faults.py","tests":["LayoutNestedFaults.test_rollback_after_rename_error"]},
     {"name":"layout-crash-closure-nested-faults-before-receipt-exit","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_nested_faults.py","tests":["LayoutNestedFaults.test_before_receipt_exit"]},
-    {"name":"layout-crash-closure-legacy-stale-lock-old-stale-lock-before-handoff","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_legacy_stale_lock.py","tests":["LayoutLegacyStaleLock.test_old_stale_lock_before_handoff"]},
+    {"name":"layout-crash-closure-legacy-stale-lock-old-stale-lock-before-handoff","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_legacy_stale.py","tests":["LayoutLegacyStaleLock.test_old_stale_lock_before_handoff"]},
     {"name":"layout-crash-closure-legacy-hold-receipt-after-hold-restore","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_legacy_hold_receipt.py","tests":["LayoutLegacyHoldReceipt.test_after_hold_restore"]},
     {"name": "semantic-discovery", "layer": "bank", "scope": "v0.0.3", "path": "tests/contracts/test_discovery.py"}
   ]

@@ -256,7 +256,10 @@ class MixedPrivateCapabilities(unittest.TestCase):
             shutil.rmtree(pack)
             shutil.copytree(PACK, pack)
             advance(world, channel, pack, '1.0.0')
-            renewed = recovery.review_request(world, command, pack, repo, inspected, native)['quiescence_attestation']
+            candidate_source = world.inside('measured update candidate')
+            world.git('clone', '--', channel, candidate_source)
+            renewed = recovery.review_request(world, command, candidate_source / 'skills/agent-memory',
+                                              repo, inspected, native)['quiescence_attestation']
             renewed['declared_invocation_routes'] = sorted(set(renewed['declared_invocation_routes']
                 + [target['path'] for target in receipt['targets']]))
             envelope = {'attestation': renewed, 'review': {

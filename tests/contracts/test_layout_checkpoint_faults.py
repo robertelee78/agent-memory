@@ -67,7 +67,7 @@ class LayoutCheckpointFaults(unittest.TestCase):
             self.assertEqual(nested.canonical(bank), changed if after_receipt else before)
             if after_receipt:
                 historical = recovery.public(world, command, 'checkpoint', 'apply', '--proposal', proposal_file)
-                self.assertTrue(historical['already_applied'])
+                self.assertTrue(historical['write']['already_applied'])
                 self.assertFalse(historical['writes_performed'])
             self.assertEqual(journal.read_bytes(), journal_bytes)
             self.assertEqual((bank / '.agent-memory-transaction.md').read_bytes(), hold)
