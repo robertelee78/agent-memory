@@ -10,7 +10,7 @@
       "requirement": "fresh-repeat",
       "cases": [
         {
-          "suite": "installer",
+          "suite": "installer-fresh-plan-link-install-repeat-and-installed-command-preserve-source-and-user-config",
           "test": "InstallerContract.test_fresh_plan_link_install_repeat_and_installed_command_preserve_source_and_user_config"
         },
         {
@@ -65,11 +65,11 @@
       "requirement": "ownership-backups",
       "cases": [
         {
-          "suite": "installer",
+          "suite": "installer-all-targets-preflight-before-activation-and-unrelated-types-are-preserved",
           "test": "InstallerContract.test_all_targets_preflight_before_activation_and_unrelated_types_are_preserved"
         },
         {
-          "suite": "installer",
+          "suite": "installer-copy-replacement-backup-and-conversion-have-identical-artifact-identity",
           "test": "InstallerContract.test_copy_replacement_backup_and_conversion_have_identical_artifact_identity"
         },
         {
@@ -82,7 +82,7 @@
       "requirement": "sentinel-edits",
       "cases": [
         {
-          "suite": "installer",
+          "suite": "installer-activation-outside-edits-survive-and-inside-edits-refuse",
           "test": "InstallerContract.test_activation_outside_edits_survive_and_inside_edits_refuse"
         },
         {
@@ -850,15 +850,15 @@
       "requirement": "rollback-locks",
       "cases": [
         {
-          "suite": "installer",
+          "suite": "installer-partial-activation-failure-rolls-back-and-retry-converges",
           "test": "InstallerContract.test_partial_activation_failure_rolls_back_and_retry_converges"
         },
         {
-          "suite": "installer",
+          "suite": "installer-failed-replacement-restores-existing-copies-and-the-exact-prior-receipt",
           "test": "InstallerContract.test_failed_replacement_restores_existing_copies_and_the_exact_prior_receipt"
         },
         {
-          "suite": "installer",
+          "suite": "installer-unrelated-lock-and-linked-state-are-never-adopted",
           "test": "InstallerContract.test_unrelated_lock_and_linked_state_are_never_adopted"
         },
         {
@@ -1132,31 +1132,31 @@
           "test": "HarnessContract.test_worker_is_isolated_and_credentials_are_absent"
         },
         {
-          "suite": "harness",
+          "suite": "harness-public-command-runs-with-spaces-and-clean-environment",
           "test": "HarnessContract.test_public_command_runs_with_spaces_and_clean_environment"
         },
         {
-          "suite": "harness",
+          "suite": "harness-real-git-bare-remote-clones-and-worktree",
           "test": "HarnessContract.test_real_git_bare_remote_clones_and_worktree"
         },
         {
-          "suite": "harness",
+          "suite": "harness-escape-and-live-root-overrides-are-refused",
           "test": "HarnessContract.test_escape_and_live_root_overrides_are_refused"
         },
         {
-          "suite": "harness",
+          "suite": "harness-command-failure-and-timeout-are-not-success",
           "test": "HarnessContract.test_command_failure_and_timeout_are_not_success"
         },
         {
-          "suite": "harness",
+          "suite": "harness-world-cleanup-does-not-follow-escape-symlink",
           "test": "HarnessContract.test_world_cleanup_does_not_follow_escape_symlink"
         },
         {
-          "suite": "harness",
+          "suite": "harness-worker-rejects-a-live-home-before-importing-suite",
           "test": "HarnessContract.test_worker_rejects_a_live_home_before_importing_suite"
         },
         {
-          "suite": "harness",
+          "suite": "harness-actual-gate-rejects-empty-skipped-and-failing-suites",
           "test": "HarnessContract.test_actual_gate_rejects_empty_skipped_and_failing_suites"
         },
         {

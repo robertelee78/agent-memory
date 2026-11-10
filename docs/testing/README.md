@@ -132,7 +132,8 @@ batching nor sharding establishes that each job fits its 180-minute budget.
 The aggregate suites that timed out in the hosted gate now explicitly register
 each existing method separately for receipt-covered refresh, bank transactions,
 admission, governance, portable handoff, consolidation, restricted publication,
-memory refresh, validation reuse, known-hold capacity and quarantined sharing.
+memory refresh, validation reuse, known-hold capacity, quarantined sharing,
+installer and harness contracts.
 The original suite name owns the first source-order method; later names append
 the method's hyphenated name, following the runtime-update convention. Existing
 method batches remain unchanged, with all cases still mandatory in their
@@ -148,6 +149,15 @@ bound. This is not a hosted platform pass. The separate coupled pagination
 controller remains intact at 90 seconds with 30-second public children; local
 instrumented success does not resolve its historical hosted timeout. See the
 [scoped evidence and open failures](../research/data/v015-hosted-timeout-corrections-scoped-proof-20261110.json).
+
+The completed `ca558a7` hosted run also exhausted the unsplit installer and
+harness workers. All 33 installer methods and nine harness methods now have
+independent once-only registrations; 14 lifecycle bindings follow their exact
+methods. Actual local macOS/Python3.15.0 execution passed those 42 methods and
+three complete gate-consumer suites: 45 workers / 54 tests, with the original
+300-second worker bound. The full coupled journeys, subtests and command bounds
+are unchanged. This is not hosted Python3.15.2 qualification; see the
+[exact source and execution receipt](../research/data/v015-installer-harness-exhaustive-batches-scoped-proof-20261110.json).
 
 Current cooperative canonical writers now take the source fence before their
 bank slot, so legacy overlap controls MUST use a genuinely pre-fence writer.
