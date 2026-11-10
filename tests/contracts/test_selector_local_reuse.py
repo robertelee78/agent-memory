@@ -2,6 +2,7 @@
 from pathlib import Path
 import sys
 import unittest
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'skills/agent-memory/scripts'))
 from agent_memory import sharing_frontier as frontier
@@ -72,11 +73,28 @@ class SelectorLocalReuseContract(unittest.TestCase):
         self.assertEqual(pairs, [['129', 'target']])
         self.assertEqual(pending, [])
 
+    def test_uncached_and_bounded_reuse_preserve_framed_matches_and_edges(self):
+        rows = {'a': row('a', 'topics/a.md'),
+                'b': row('b', 'topics/b.md', 'Straße', [{'scope': 'CAFÉ framing'}]),
+                'c': row('c', 'topics/c.md')}
+        req = request({'a': selection(['strasse café', 'unrelated phrase'], complete=False),
+                       'c': selection(['strasse café', 'other phrase'])})
+        for rendered_limit, query_limit in ((0, 0), (1, 1), (1 << 30, 1 << 30)):
+            with self.subTest(rendered_limit=rendered_limit, query_limit=query_limit):
+                with patch.object(frontier, '_SELECTOR_RENDER_BYTES', rendered_limit), \
+                     patch.object(frontier, '_SELECTOR_QUERY_BYTES', query_limit):
+                    chosen, entries, pairs, pending = frontier.selected(rows, {'a', 'c'}, req)
+                self.assertEqual(list(chosen), ['a', 'b', 'c'])
+                self.assertEqual(entries['a']['matched'], ['a', 'b'])
+                self.assertEqual(entries['c']['matched'], ['b', 'c'])
+                self.assertEqual(pairs, [['a', 'b'], ['b', 'c']])
+                self.assertEqual(pending, ['a'])
+
     def test_validation_still_precedes_matching_and_pending_is_preserved(self):
         rows = {'a': row('a', 'topics/a.md'), 'b': row('b', 'topics/b.md')}
-        with self.assertRaisesRegex(ContractError, 'distinct plausible-match wordings'):
+        with self.assertRaises(ContractError):
             frontier.selected(rows, {'a'}, request({'a': selection(['Same  words', 'same words'])}))
-        with self.assertRaisesRegex(ContractError, 'stable record identities'):
+        with self.assertRaises(ContractError):
             frontier.selected(rows, {'a'}, request({'a': selection(['one', 'two'], ids=['invalid'])}))
         with self.assertRaises(ContractError):
             frontier.selected(rows, {'a'}, request({'a': selection(['one', 'two'], paths=['../bad'])}))

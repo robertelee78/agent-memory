@@ -15,6 +15,9 @@ INSPECTION = 'agent-memory/semantic-sharing-inspection-v2'
 JUDGMENT = 'agent-memory/semantic-sharing-judgment-v2'
 PROOF = 'agent-memory/semantic-sharing-proof-v2'
 MAX_EDGES=262144
+_SELECTOR_RENDER_BYTES=24*1024*1024
+_SELECTOR_QUERY_BYTES=8*1024*1024
+_SELECTOR_QUERY_ENTRIES=256
 
 
 def add_edges(edges,values):
@@ -142,20 +145,21 @@ def selected(rows,changed,request):
     def query_matches(search):
         nonlocal rendered_bytes,query_bytes
         if search in queries:return queries[search]
+        match_request={'ids':[],'paths':[],'query':search}
         found=[]
         for other,value in rows.items():
             text=rendered.get(other)
             if text is None:
                 text=value['body']+'\n'+str(value['effective_framing'])
                 charge=sys.getsizeof(text)+128
-                if rendered_bytes+charge<=24*1024*1024:
+                if rendered_bytes+charge<=_SELECTOR_RENDER_BYTES:
                     rendered[other]=text;rendered_bytes+=charge
-            if retrieval.match({'ids':[],'paths':[],'query':search},
+            if retrieval.match(match_request,
                                {'path':value['path'],'body':text}) is not None:
                 found.append(other)
         result=tuple(found)
         charge=sys.getsizeof(search)+sys.getsizeof(result)+128
-        if len(queries)<256 and query_bytes+charge<=8*1024*1024:
+        if len(queries)<_SELECTOR_QUERY_ENTRIES and query_bytes+charge<=_SELECTOR_QUERY_BYTES:
             queries[search]=result;query_bytes+=charge
         return result
     selected_keys=set(changed);edges=set();entries={};pending=[]
