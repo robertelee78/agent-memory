@@ -562,16 +562,19 @@ class RecoveryFrontierClosureContract(unittest.TestCase):
                     args = [source / 'scripts', repo, f.save(w, consumer_input), operation_id, stamp]
                     result_path, result_id = second, replacement['id']
                 else:
-                    evidence = {'comparison_request': request, 'comparison_proof': reviewed, 'recorded_at': stamp}
-                    plan = {'primary': next(row for row in targets if row['path'] == first), 'targets': targets,
-                            'qualified': {'scope_context': {'developer_id': helper.actor}}}
+                    # Revalidate the real proof to obtain the live plan, including
+                    # the source metadata's serialized order. A JSON-round-tripped
+                    # hand-built plan changes exact frontmatter bytes.
                     build = ("import json,sys;from pathlib import Path;sys.path.insert(0,sys.argv[1]);"
-                             "from agent_memory import consolidation,bank_transactions;"
+                             "from agent_memory import consolidation,bank_transactions,layout_resolution,retrieval;"
                              "v=json.load(open(sys.argv[3]));"
-                             "files=consolidation.build(bank_transactions.files_at(Path(sys.argv[2])),"
-                             "v['evidence'],sys.argv[4],v['plan'],None);"
+                             "e={**v,'recorded_at':sys.argv[5],'git_context':retrieval.git_context(Path(sys.argv[2]))};"
+                             "e.update(layout_resolution.evidence_fields(e['comparison_proof']));"
+                             "_,plan,captured=consolidation.inspect(sys.argv[2],e);"
+                             "_,bank=consolidation.writes.bank_path(sys.argv[2]);"
+                             "files=consolidation.build(bank_transactions.files_at(bank),e,sys.argv[4],plan,captured);"
                              "print(json.dumps({'files':files,'deferred':None}))")
-                    args = [source / 'scripts', bank, f.save(w, {'evidence': evidence, 'plan': plan}), operation_id]
+                    args = [source / 'scripts', repo, f.save(w, consumer_input), operation_id, stamp]
                     result_path, result_id = first, old['id']
                 built = w.run([sys.executable, '-I', '-B', '-c', build, *args], check=False, timeout=60)
                 self.assertEqual(built.returncode, 0, built.stdout + built.stderr)
