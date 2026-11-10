@@ -28,6 +28,9 @@ class RecoverySemanticDependenciesContract(unittest.TestCase):
             unit = next(row for row in ledger['units'] if row['unit_id'] == unit_id)
             marker = (bank / '.agent-memory-transaction.md').read_bytes()
             canonical = {p.relative_to(bank).as_posix(): p.read_bytes() for p in bank.rglob('*') if p.is_file()}
+            private = {p.relative_to(directory).as_posix(): p.read_bytes()
+                       for p in directory.rglob('*') if p.is_file()}
+            refused_output = w.inside('refused-discard.json')
             authority = {'schema': 'agent-memory/layout-nonguidance-discard-v1', 'review_id': str(uuid.uuid4()),
                 'operation_id': operation, 'unit_id': unit_id, 'manifest_sha256': ledger['manifest_sha256'],
                 'unit_map_sha256': ledger['unit_map_sha256'], 'ledger_head_sha256': head['sha256'],
@@ -39,8 +42,11 @@ class RecoverySemanticDependenciesContract(unittest.TestCase):
                 'reason': 'Controlled review of the exact disposable scratch source.', 'decision': 'discard'}
             result = f.call(w, command, 'resolve', '--repo', repo, '--operation', operation, '--unit', unit_id,
                             '--input', f.save(w, {'discard_authority': authority}),
-                            '--output', w.inside('refused-discard.json'), expected=1)
-            self.assertFalse(result['canonical_writes_performed'])
+                            '--output', refused_output, expected=1)
+            self.assertEqual(result['canonical_writes_performed'], 'unknown')
+            self.assertFalse(refused_output.exists())
+            self.assertEqual({p.relative_to(directory).as_posix(): p.read_bytes()
+                              for p in directory.rglob('*') if p.is_file()}, private)
             self.assertEqual(blob.read_bytes(), original)
             self.assertEqual(original, body.encode())
             self.assertEqual(head_path.read_bytes(), head_bytes)

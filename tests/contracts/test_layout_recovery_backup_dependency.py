@@ -31,7 +31,8 @@ class RecoveryBackupDependencyContract(unittest.TestCase):
             unit['targets'] = []
             bad['review']['unit_map_sha256'] = f.sha(f.encoded(bad['unit_map']))
             before_bank, before_private = files(bank), files(directory)
-            index = (repo / '.git/index').read_bytes()
+            index_path = repo / '.git/index'
+            index = index_path.read_bytes() if index_path.exists() else None
             output = w.inside('backup-only.json')
             refusal = f.call(w, command, 'prepare', '--repo', repo, '--operation', operation,
                              '--input', f.save(w, bad), '--output', output, expected=1)
@@ -39,7 +40,7 @@ class RecoveryBackupDependencyContract(unittest.TestCase):
             self.assertFalse(output.exists())
             self.assertEqual(files(bank), before_bank)
             self.assertEqual(files(directory), before_private)
-            self.assertEqual((repo / '.git/index').read_bytes(), index)
+            self.assertEqual(index_path.read_bytes() if index_path.exists() else None, index)
             self.assertEqual(blob.read_bytes(), before_bank[history])
             proposal = w.inside('preserved.json')
             f.call(w, command, 'prepare', '--repo', repo, '--operation', operation,
@@ -77,22 +78,23 @@ class RecoveryBackupDependencyContract(unittest.TestCase):
             before_bank, before_private = files(bank), files(directory)
             child = f.private_directory(w, bank, preview['operation_id'])
             before_child = files(child)
-            index = (repo / '.git/index').read_bytes()
+            index_path = repo / '.git/index'
+            index = index_path.read_bytes() if index_path.exists() else None
             refused = f.call(w, command, 'rollback', '--repo', repo, '--proposal', restore, expected=1)
             self.assertFalse(refused['canonical_writes_performed'])
             self.assertEqual(files(bank), before_bank)
             self.assertEqual(files(directory), before_private)
             self.assertEqual(files(child), before_child)
-            self.assertEqual((repo / '.git/index').read_bytes(), index)
+            self.assertEqual(index_path.read_bytes() if index_path.exists() else None, index)
             fresh = w.inside('after-admission-restore.json')
             refused = f.call(w, command, 'rollback', '--repo', repo, '--operation', operation,
                              '--output', fresh, expected=1)
-            self.assertFalse(refused['canonical_writes_performed'])
+            self.assertEqual(refused['canonical_writes_performed'], 'unknown')
             self.assertFalse(fresh.exists())
             self.assertEqual(files(bank), before_bank)
             self.assertEqual(files(directory), before_private)
             self.assertEqual(files(child), before_child)
-            self.assertEqual((repo / '.git/index').read_bytes(), index)
+            self.assertEqual(index_path.read_bytes() if index_path.exists() else None, index)
 
     def test_completed_repair_without_later_admission_can_restore(self):
         with World() as w:

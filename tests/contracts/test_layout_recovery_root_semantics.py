@@ -87,13 +87,14 @@ class RecoveryRootSemanticsContract(unittest.TestCase):
             before = files(bank)
             directory = f.private_directory(world, bank, inspected['operation_id'])
             private_before = files(directory)
-            index = (repo / '.git/index').read_bytes()
+            index_path = repo / '.git/index'
+            index = index_path.read_bytes() if index_path.exists() else None
             output = world.inside('rewritten-history-proposal.json')
             result = prepare_process(world, command, repo, inspected, request, output)
             self.assertNotEqual(result.returncode, 0)
             self.assertFalse(output.exists())
             self.assertEqual(files(bank), before)
-            self.assertEqual((repo / '.git/index').read_bytes(), index)
+            self.assertEqual(index_path.read_bytes() if index_path.exists() else None, index)
             self.assertEqual(files(directory), private_before)
             accepted = prepare_process(world, command, repo, inspected, control, world.inside('original-history-proposal.json'))
             self.assertEqual(accepted.returncode, 0, accepted.stdout + accepted.stderr)

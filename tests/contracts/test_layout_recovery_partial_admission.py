@@ -12,6 +12,7 @@ class PartialRecoveryAdmissionContract(unittest.TestCase):
     def test_oversized_bank_refuses_ordinary_read_and_capture_without_mutation(self):
         with World() as world:
             command, _ = f.installed(world)
+            world.env['AGENT_MEMORY_NO_RECALL_CATALOG'] = '1'
             repo, bank, native = f.memory(world, oversized=True, handoff=True)
             _, inspected = f.inspect(world, command, repo)
             identity = inspected['manifest']['identity']['scope_context']
@@ -35,21 +36,20 @@ class PartialRecoveryAdmissionContract(unittest.TestCase):
                         ('search', '--repo', repo, '--request', f.save(world, request)),
                         ('capture', '--repo', repo, '--request', f.save(world, capture)))
             for args in requests:
-                result = world.run([command, *args], check=False, timeout=60,
-                                   env={'AGENT_MEMORY_NO_RECALL_CATALOG': '1'})
+                result = world.run([command, *args], check=False, timeout=60)
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             active.write_bytes(oversized_bytes)
             (bank / 'MEMORY.md').write_bytes(router_bytes)
             handoff.write_bytes(handoff_bytes)
             before = {p.relative_to(bank).as_posix(): p.read_bytes() for p in bank.rglob('*') if p.is_file()}
-            index = (repo / '.git/index').read_bytes()
+            index_path = repo / '.git/index'
+            index = index_path.read_bytes() if index_path.exists() else None
             for args in requests:
-                result = world.run([command, *args], check=False, timeout=60,
-                                   env={'AGENT_MEMORY_NO_RECALL_CATALOG': '1'})
+                result = world.run([command, *args], check=False, timeout=60)
                 self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
                 self.assertEqual({p.relative_to(bank).as_posix(): p.read_bytes()
                                   for p in bank.rglob('*') if p.is_file()}, before)
-                self.assertEqual((repo / '.git/index').read_bytes(), index)
+                self.assertEqual(index_path.read_bytes() if index_path.exists() else None, index)
 
     def test_one_of_eight_is_admitted_without_consuming_the_other_sources(self):
         with World() as world:
