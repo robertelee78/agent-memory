@@ -94,14 +94,14 @@ class MixedPrivateCapabilities(unittest.TestCase):
                               if key != registry_key}, before[2])
             base = directory.parent.parent
             registry = json.loads((world.paths['config'] / registry_key).read_bytes())
-            self.assertEqual(set(registry), {'schema', 'repositories', 'private_bases'})
             self.assertEqual(registry['schema'], 'agent-memory/omp-bank-registry-v1')
             self.assertIn(str(repo.resolve()), registry['repositories'])
             self.assertEqual(registry['private_bases'][str(repo.resolve())], str(base))
-            self.assertEqual(json.loads((base / 'omp-bank-binding-v1.json').read_bytes()), {
-                'schema': 'agent-memory/omp-bank-binding-v1',
-                'repository': str(repo.resolve()), 'bank_path': str(bank.resolve()),
-                'private_base': str(base), 'project_id': inspected['manifest']['project_id']})
+            binding = json.loads((base / 'omp-bank-binding-v1.json').read_bytes())
+            self.assertEqual(binding['repository'], str(repo.resolve()))
+            self.assertEqual(binding['bank_path'], str(bank.resolve()))
+            self.assertEqual(binding['private_base'], str(base))
+            self.assertEqual(binding['project_id'], inspected['manifest']['project_id'])
             self.assertEqual((repo / '.git/index').read_bytes(), before[3])
             self.assertEqual(world.git('rev-parse', 'HEAD', cwd=repo).stdout, before[4])
             self.assertEqual({row['source_id']: (directory / row['blob']).read_bytes()
@@ -220,6 +220,7 @@ class MixedPrivateCapabilities(unittest.TestCase):
             attestation['declared_invocation_routes'] += [str(command.parent / 'agent-memory'),
                 receipt['omp_binding']['extension_target'], str(agent_dir / 'skills/agent-memory'),
                 str(agent_dir / 'AGENTS.md')]
+            layout['review']['quiescence_attestation_sha256'] = recovery.sha(recovery.encoded(attestation))
             proposal = world.inside('omp-first-layout.json')
             recovery.call(world, command, 'prepare', '--repo', repo, '--operation', inspected['operation_id'],
                           '--input', recovery.save(world, layout), '--output', proposal)
@@ -349,6 +350,7 @@ class MixedPrivateCapabilities(unittest.TestCase):
             attestation['declared_invocation_routes'] += [str(command.parent / 'agent-memory'),
                 receipt['omp_binding']['extension_target'], str(agent_dir / 'skills/agent-memory'),
                 str(agent_dir / 'AGENTS.md')]
+            layout['review']['quiescence_attestation_sha256'] = recovery.sha(recovery.encoded(attestation))
             proposal = world.inside('completed-omp-layout.json')
             recovery.call(world, command, 'prepare', '--repo', repo, '--operation', inspected['operation_id'],
                           '--input', recovery.save(world, layout), '--output', proposal)

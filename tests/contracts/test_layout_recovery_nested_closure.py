@@ -25,6 +25,11 @@ class NestedRecoveryClosure(unittest.TestCase):
                     world, command, source, repo, bank, inspected, full=True)
                 f.public(world, command, 'admission', 'apply', '--proposal', proposal, expected=1,
                          env={'AGENT_MEMORY_FAULT_STAGE': stage})
+                audit = next(Path(world.env['AGENT_MEMORY_STATE_HOME']).rglob(
+                    transaction['operation_id'] + '.capture.started.*.json'))
+                audit_bytes = audit.read_bytes()
+                self.assertEqual(json.loads(audit_bytes)['source_classes'],
+                                 [transaction['admission_evidence']['capture']['request']['source_class']])
                 nested = transaction['operation_id']
                 marker = json.loads((bank / '.agent-memory-transaction.md').read_text())
                 self.assertEqual(marker['operation_id'], operation)
@@ -70,6 +75,7 @@ class NestedRecoveryClosure(unittest.TestCase):
                 f.call(world, command, 'recover-nested', '--repo', repo, '--proposal', retry)
                 self.assertEqual((snapshot(bank), (directory / 'ledger-head.json').read_bytes(),
                                   receipt_path.read_bytes()), before)
+                self.assertEqual(audit.read_bytes(), audit_bytes)
 
     def test_unfinished_resolution_excludes_nested_child_finish(self):
         for first in ('child', 'resolution'):

@@ -174,6 +174,23 @@ transaction/recovery outcomes and Git state remain the consumer-visible guards.
 The [real-writer consumer proof](../research/data/v015-real95-writer-consumer-scoped-proof-20261110.json)
 separates complete local Py3.15 consumer passes from the failed hosted matrix.
 
+Recovery metadata/probe and old-reader fault workers are additive to the
+original Main journeys. Their explicit mapping omits duplicate error cells,
+keeps complementary exit cells and preserves the original 16-way lifecycle
+fault partitions. Exact metadata, private evidence, feature/index/HEAD state
+and complete public recovery outcomes are the oracles—not filenames or
+diagnostic wording. The
+[integrated source-bound campaign](../research/data/v015-integrated-peer-recovery-recall-scoped-proof-20261110.json)
+records all 920 method executions, including its one failed ordering worker;
+it MUST NOT be described as a passing aggregate.
+
+An installed finite child's verified result and its later supplementary CLOSED
+inventory are separate observations. A test that intentionally overlaps a
+canonical writer MUST wait for that writer's actual exit before the latter
+readback; it MUST NOT suppress `SourceTransportBusy`, retry source execution or
+disable a fence. Both acquisition orders, actual CLOSED coverage and original
+bounds remain mandatory.
+
 `bank-roundtrip` already consists of one inherited installed sharing-loop
 journey and remains one explicit mandatory method. Its hosted macOS/Python
 3.15 worker exceeded 300 seconds; it cannot be made bounded merely by adding

@@ -54,6 +54,54 @@ class LayoutRecoveryContract(unittest.TestCase):
         self.assertEqual((repo / 'feature.txt').read_text(), 'Unstaged feature\n')
         self.assertEqual((repo / 'untracked.txt').read_bytes(), b'Untracked feature\n')
 
+    def test_initial_quiescence_requires_exact_independent_review(self):
+        with World() as world:
+            command, source, repo, bank, native, originals = self.setup_repair(world, pending=True)
+            (repo / 'feature.txt').write_text('Fixture baseline\n')
+            world.git('add', 'feature.txt', cwd=repo)
+            world.git('commit', '-m', 'Fixture baseline', cwd=repo)
+            index = (repo / '.git/index').read_bytes()
+            head = world.git('rev-parse', 'HEAD', cwd=repo).stdout
+            safe, inspected = fixture.inspect(world, command, repo)
+            good = fixture.review_request(world, command, source, repo, inspected, native)
+            output = world.inside('initial-reviewed.json')
+            fixture.call(world, command, 'prepare', '--repo', repo, '--operation', safe['operation_id'],
+                         '--input', fixture.save(world, good), '--output', output)
+            directory = self.private_directory(world, bank, safe['operation_id'])
+            review_path = directory / 'reviews' / (good['review']['review_id'] + '.json')
+            original_review = review_path.read_bytes()
+            altered = copy.deepcopy(good)
+            altered['quiescence_attestation']['attestation_id'] = str(uuid.uuid4())
+            altered['quiescence_attestation']['declared_invocation_routes'].append('/unreviewed-route')
+            missing = copy.deepcopy(good)
+            del missing['review']['quiescence_attestation_sha256']
+            wrong_pin = copy.deepcopy(good)
+            wrong_pin['review']['quiescence_attestation_sha256'] = '0' * 64
+            missing_metadata = copy.deepcopy(good)
+            del missing_metadata['review']['metadata_plan_sha256']
+            wrong_metadata = copy.deepcopy(good)
+            wrong_metadata['review']['metadata_plan_sha256'] = '0' * 64
+            same_session = copy.deepcopy(good)
+            same_session['review']['reviewer']['session'] = same_session['author']['session']
+            same_session['review']['reviewer']['harness'] = same_session['author']['harness']
+            for request in (altered, missing, wrong_pin, missing_metadata, wrong_metadata, same_session):
+                refused = fixture.call(world, command, 'prepare', '--repo', repo, '--operation', safe['operation_id'],
+                    '--input', fixture.save(world, request), '--output', world.inside(str(uuid.uuid4()) + '.json'),
+                    expected=1)
+                self.assertFalse(refused['canonical_writes_performed'])
+                self.assertEqual(review_path.read_bytes(), original_review)
+            fresh = copy.deepcopy(altered)
+            fresh['review']['review_id'] = str(uuid.uuid4())
+            fresh['quiescence_attestation']['review_id'] = fresh['review']['review_id']
+            fresh['review']['quiescence_attestation_sha256'] = fixture.sha(fixture.encoded(fresh['quiescence_attestation']))
+            fixture.call(world, command, 'prepare', '--repo', repo, '--operation', safe['operation_id'],
+                         '--input', fixture.save(world, fresh), '--output', world.inside('fresh-reviewed.json'))
+            self.assertEqual(review_path.read_bytes(), original_review)
+            self.assertEqual({p.relative_to(bank).as_posix(): p.read_bytes()
+                              for p in bank.rglob('*') if p.is_file()}, originals)
+            self.assertEqual((repo / '.git/index').read_bytes(), index)
+            self.assertEqual(world.git('rev-parse', 'HEAD', cwd=repo).stdout, head)
+
     def test_partial_original_staging_remains_incomplete_and_fresh_inspection_preserves_it(self):
         with World() as world:
             command, source, repo, bank, native, originals, modes, git = self.setup_fault_repair(world)

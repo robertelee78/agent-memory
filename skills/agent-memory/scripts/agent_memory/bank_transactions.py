@@ -3,10 +3,12 @@ from __future__ import annotations
 
 import argparse
 from datetime import datetime, timezone
+import errno
 import json
 import os
 from pathlib import Path
 import re
+import stat
 import sys
 import tempfile
 import uuid
@@ -103,15 +105,28 @@ def preview(repo, files, operation="compact"):
 def check_layout(bank, participants, observed):
     contract.bank_root(bank)
     contract.portable_aliases([*contract.physical_paths(bank), *participants])
+
+    def mode_or_missing(target):
+        try:
+            return os.stat(target, follow_symlinks=False).st_mode
+        except OSError as exc:
+            if exc.errno in (errno.ENOENT, errno.ENOTDIR):
+                return None
+            raise ContractError("Cannot inspect canonical target layout; preserve the existing layout") from exc
+        except ValueError as exc:
+            raise ContractError("Cannot inspect canonical target layout; preserve the existing layout") from exc
+
+    bank_path = os.fspath(bank)
     for path in participants:
-        target = bank / path
-        if target.exists() and (not target.is_file() or path not in observed):
+        mode = mode_or_missing(os.path.join(bank_path, path))
+        if mode is not None and (not stat.S_ISREG(mode) or path not in observed):
             raise ContractError("Canonical target has an unobserved physical occupant; preserve it for inspection")
-        for parent in target.parents:
-            if parent == bank:
-                break
-            if parent.exists() and not parent.is_dir():
+        parent = path.rpartition("/")[0]
+        while parent:
+            mode = mode_or_missing(os.path.join(bank_path, parent))
+            if mode is not None and not stat.S_ISDIR(mode):
                 raise ContractError("Canonical target has a non-directory parent; preserve the existing layout")
+            parent = parent.rpartition("/")[0]
 
 
 def preflight(bank, p, observed=None):
@@ -364,6 +379,20 @@ def validate_outcome(root, bank, desired, p, owner, marker, *, admission_sources
     return contract.validate(root, owned_lock=owner, owned_transaction=marker)
 
 
+def source_classes(p):
+    """Keep governed audit attribution stable across held and ordinary writes."""
+    if 'admission_evidence' in p:
+        return [p['admission_evidence']['capture']['request']['source_class']]
+    if 'governance_evidence' in p:
+        return [p['governance_evidence']['request']['authority']['source_class']]
+    if 'consolidation_evidence' in p and p['consolidation_evidence']['capture'] is not None:
+        return [p['consolidation_evidence']['capture']['request']['source_class']]
+    if p['operation'] == 'initialize':
+        evidence = p['initialization_evidence']['inventory']
+        return ['assistant'] + (['verified-repository'] if evidence['sources'] else []) + (['tool'] if evidence['awa']['sources'] else [])
+    return ['assistant'] if 'checkpoint_evidence' in p else ['external']
+
+
 def apply(prepared):
     from .scope_binding import require
     p = proposal_value(prepared)
@@ -408,18 +437,7 @@ def apply(prepared):
     if proposed_remote != project_status(p['repo_root'])['evidence']['canonical_remote']:
         raise ContractError('Authority identity changes require explicit scope binding, including during initialization')
     from . import security
-    classes = ['external']
-    if 'admission_evidence' in p:
-        classes = [p['admission_evidence']['capture']['request']['source_class']]
-    if 'governance_evidence' in p:
-        classes = [p['governance_evidence']['request']['authority']['source_class']]
-    if 'consolidation_evidence' in p and p['consolidation_evidence']['capture'] is not None:
-        classes = [p['consolidation_evidence']['capture']['request']['source_class']]
-    if p['operation'] == 'initialize':
-        evidence = p['initialization_evidence']['inventory']
-        classes = ['assistant'] + (['verified-repository'] if evidence['sources'] else []) + (['tool'] if evidence['awa']['sources'] else [])
-    if 'checkpoint_evidence' in p:
-        classes = ['assistant']
+    classes = source_classes(p)
     def check(owner):
         require(p['repo_root'], p['project_id'], expected=context, owned_lock=owner, initialize=initializing)
         if 'governance_evidence' in p:

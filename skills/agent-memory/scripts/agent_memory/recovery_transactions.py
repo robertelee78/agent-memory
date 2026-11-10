@@ -160,7 +160,7 @@ def apply_transaction(prepared):
         base_files = tx.files_at(bank)
         tx.preflight(bank, p)
         security.guarded_start(root, p['operation_id'], held.scope,
-            {path: p['files'][path] for path in tx.changed(p) if path in p['files']}, ['external'], action=p['operation'])
+            {path: p['files'][path] for path in tx.changed(p) if path in p['files']}, tx.source_classes(p), action=p['operation'])
         marker = marker_for(held, p['operation_id'])
         directory = state.paths(root, held.operation_id)[3] / 'nested' / p['operation_id']
         journal = {'schema': 'agent-memory/layout-nested-journal-v1', 'operation_id': held.operation_id,

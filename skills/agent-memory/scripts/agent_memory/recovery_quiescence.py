@@ -49,8 +49,12 @@ def _selected_attestation(directory, proposal, runtime_digest):
     row = heads.get(runtime_digest)
     if row is None:
         attestation = proposal.get('quiescence_attestation')
-        if (attestation is None or attestation.get('runtime_artifact_digest') != runtime_digest
-                or digest(encoded(attestation)) != proposal.get('quiescence_attestation_sha256')):
+        review = proposal.get('review')
+        if (not isinstance(attestation, dict) or attestation.get('runtime_artifact_digest') != runtime_digest
+                or digest(encoded(attestation)) != proposal.get('quiescence_attestation_sha256')
+                or not isinstance(review, dict) or digest(encoded(review)) != proposal.get('review_sha256')
+                or review.get('review_id') != attestation.get('review_id')
+                or review.get('quiescence_attestation_sha256') != digest(encoded(attestation))):
             return None
         return attestation
     attestation = state.read(directory / 'attestations' / (row['attestation_id'] + '.json'))

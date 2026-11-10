@@ -1,0 +1,806 @@
+{
+  "all_method_selections_executed_exactly_once": true,
+  "base_commit": "3166f019f44767b1d9b9f42d1d86ab218fe7ad0e",
+  "computed_merge_base": "b743117ca7e33cb12e88deb5248203e8b3645728",
+  "consumer_files": 79,
+  "errors": 0,
+  "execution": {
+    "passed": false,
+    "python": "3.15.0 (main, Oct  9 2026, 11:16:41) [Clang 21.0.0 (clang-2100.3.34.2)]",
+    "seconds": 7124.071715208003,
+    "source_after": "d50b48845fdae388de1a10ea3a76806ee699979e53a2d502038c2f8c8ff4359b",
+    "source_before": "d50b48845fdae388de1a10ea3a76806ee699979e53a2d502038c2f8c8ff4359b",
+    "worker_deadline_seconds": 300,
+    "workers": 2
+  },
+  "failures": 1,
+  "negative_result": {
+    "corrected_execution": "Pending separate all-helper-consumer campaign; not folded into this failed aggregate.",
+    "correction": "Fixture-only synchronization defers supplementary inventory until actual writer exit; both ordering subcases, verified finite result, actual CLOSED inventory and original deadlines remain mandatory. No exception retry or product guard suppression.",
+    "exception": "SourceTransportBusy",
+    "source_derived_diagnosis": "Installed helper verifies the finite subprocess result before supplementary CLOSED inventory; the latter is a separate source-barrier observation that may race the intentionally overlapping writer. This is not proof of the unrecorded historical native event158 cause.",
+    "subcase": "writer_first=False",
+    "suite": "omp-writer-fence-ordering"
+  },
+  "open_gates": [
+    "Corrected all-helper-consumer execution",
+    "Independent exact Opus review",
+    "Exact final-source full hosted matrix",
+    "Final stock-omp native and wake qualification",
+    "Matched recall quality/performance and one overall3456adapter-call reservation policy",
+    "Separate unreachable embedding endpoint qualification",
+    "Independent acceptance and signed delivery"
+  ],
+  "overlay_files": [
+    {
+      "bytes": 20463,
+      "path": "skills/agent-memory/bank/GUIDE.md",
+      "sha256": "9053a350946fd3106daab148b50417c5723d6c75b9a3f2e2b25e231b0e4c7f3f"
+    },
+    {
+      "bytes": 20627,
+      "path": "skills/agent-memory/scripts/agent_memory/bank_contract.py",
+      "sha256": "47a09b420bf80e6c58a0c0f97ce7b55361397b92f9d103c203ce478760103687"
+    },
+    {
+      "bytes": 11885,
+      "path": "skills/agent-memory/scripts/agent_memory/bank_observation.py",
+      "sha256": "c508237b4e6586434128d2dbebd45995e696af2a091622be71d17430e97e3195"
+    },
+    {
+      "bytes": 37873,
+      "path": "skills/agent-memory/scripts/agent_memory/bank_transactions.py",
+      "sha256": "24f3a8d16424738f8db1f302ea8413293c91211284819091449494539138c5f8"
+    },
+    {
+      "bytes": 106305,
+      "path": "skills/agent-memory/scripts/agent_memory/layout_recovery.py",
+      "sha256": "235aef6afc8baf23bf7e164ce5cf339ffed119ed30a74cd9adc1faf1a74f8cc0"
+    },
+    {
+      "bytes": 22321,
+      "path": "skills/agent-memory/scripts/agent_memory/layout_recovery_observation.py",
+      "sha256": "ecc1a4fbcc7a6258aacbab5763fdad6fc7a131b7ded454ee776f34dc6f1a134b"
+    },
+    {
+      "bytes": 39235,
+      "path": "skills/agent-memory/scripts/agent_memory/layout_recovery_retention.py",
+      "sha256": "a05414b78fc06e8e137ff0a29db1751fbda826a15e1cc7ad813373c606b54c37"
+    },
+    {
+      "bytes": 34958,
+      "path": "skills/agent-memory/scripts/agent_memory/layout_recovery_temps.py",
+      "sha256": "ea26fc0f2d3694550e1a145d12185e880492dcce6e62ddf18f84718a60042a57"
+    },
+    {
+      "bytes": 25956,
+      "path": "skills/agent-memory/scripts/agent_memory/layout_restore.py",
+      "sha256": "00f82a0c0d92340db12250486183cfde636b956fd382e29c3921256fe4a48a08"
+    },
+    {
+      "bytes": 49364,
+      "path": "skills/agent-memory/scripts/agent_memory/omp_boundary.py",
+      "sha256": "3804bda12ef4f47c4d791c1764ac7f10b9c2492da1efcb7fdec8173c8f51b7f4"
+    },
+    {
+      "bytes": 21510,
+      "path": "skills/agent-memory/scripts/agent_memory/private_state.py",
+      "sha256": "fc4dd6890da838eec813740744e505af6948bf3f6ddc8a8d5c19d248a4e13616"
+    },
+    {
+      "bytes": 9586,
+      "path": "skills/agent-memory/scripts/agent_memory/recovery_quiescence.py",
+      "sha256": "ab2f03464d842d86986735e53153f87a5127eafe7fd2c0d6e532c5b551b07d19"
+    },
+    {
+      "bytes": 33244,
+      "path": "skills/agent-memory/scripts/agent_memory/recovery_transactions.py",
+      "sha256": "07bb9e6c7d24401e8d1669dd6b0427f4e85c7c62f20a5373ca465ebd6b8be37c"
+    },
+    {
+      "bytes": 20768,
+      "path": "skills/agent-memory/scripts/agent_memory/sharing_frontier.py",
+      "sha256": "a33d527911eddbcb9cca70b4496bf948f6177b9c033dd2fedd265da883aee524"
+    },
+    {
+      "bytes": 52660,
+      "path": "skills/agent-memory/scripts/agent_memory/turn_sources.py",
+      "sha256": "26f68b51d807f98d6e93ac401a78b45a9c9ac0cec8713baf8d14537a12b4d40d"
+    },
+    {
+      "bytes": 190129,
+      "path": "tests/contracts.json",
+      "sha256": "3969bc790e39ddd90b71b4c243096555aa5993bb0067d57247bb0d830aa5c174"
+    },
+    {
+      "bytes": 28967,
+      "path": "tests/contracts/test_bounded_bank_observation.py",
+      "sha256": "9ead2e7bbceced3652f746c74e10602283fa34a1526a1884c3971fc9c40d4fe7"
+    },
+    {
+      "bytes": 37417,
+      "path": "tests/contracts/test_held_source_enrollment.py",
+      "sha256": "96e9c242826baadb17b7fe861559c9c60698d15ca5bc33b116f1b68324447cc2"
+    },
+    {
+      "bytes": 22925,
+      "path": "tests/contracts/test_layout_apply_faults.py",
+      "sha256": "9f3c487c6e09ab7b209a32159064483ede38f898b2b4a416e09be887ca5a2adc"
+    },
+    {
+      "bytes": 5686,
+      "path": "tests/contracts/test_layout_damaged_evidence.py",
+      "sha256": "d7b8eeb3a02431420e602db083508521411250fab645fac39a12a011746bf54c"
+    },
+    {
+      "bytes": 3887,
+      "path": "tests/contracts/test_layout_legacy_child.py",
+      "sha256": "5340dbda6354e6ae10b5c37e748c7d6b163a5b1770c497f5f702e9f5c3d35162"
+    },
+    {
+      "bytes": 4027,
+      "path": "tests/contracts/test_layout_legacy_hold_receipt.py",
+      "sha256": "c1873d4bbcd2f5191c5f3c7b139ad7ea5d6fe5c19e2bfef11f66f059b19ef908"
+    },
+    {
+      "bytes": 9309,
+      "path": "tests/contracts/test_layout_legacy_markers.py",
+      "sha256": "f70a8162517f0e71318155d7a70746d5fca2b74b7a8b360d9ba538e14006d21c"
+    },
+    {
+      "bytes": 7261,
+      "path": "tests/contracts/test_layout_legacy_nested.py",
+      "sha256": "97856030ab6893c6787095d4a62349353f7b97d2a32897552946f7854fe02b4d"
+    },
+    {
+      "bytes": 2830,
+      "path": "tests/contracts/test_layout_legacy_stale.py",
+      "sha256": "fc05158c875d94bb2b9b48aece550bea957c1300fb4735681efa58ddaa6436f0"
+    },
+    {
+      "bytes": 5293,
+      "path": "tests/contracts/test_layout_legacy_swap.py",
+      "sha256": "234b9ab7fc0349064ef68c51942f7e876a420a0985fcda03443af10e7024185f"
+    },
+    {
+      "bytes": 25897,
+      "path": "tests/contracts/test_layout_metadata_probe_faults.py",
+      "sha256": "efae4192cf978946bbc6e5529ec3ea6143f1bb6270fb899e38808f1e4eafd2f0"
+    },
+    {
+      "bytes": 6145,
+      "path": "tests/contracts/test_layout_metadata_probe_retention.py",
+      "sha256": "dfff6d51a5c9b091aeb9bd052262124e4e4a718afc95ff66e58bc2e17182de1a"
+    },
+    {
+      "bytes": 14179,
+      "path": "tests/contracts/test_layout_nested_faults.py",
+      "sha256": "c6d559891bc6ec295ea2ca14175ae48807f47b090ebabe58d7de6f0b3804c404"
+    },
+    {
+      "bytes": 4197,
+      "path": "tests/contracts/test_layout_publication_faults.py",
+      "sha256": "a5b69c8a113aeb4b1bc123654671b1e8fbb8ed863644c686f76d470ad24e2c61"
+    },
+    {
+      "bytes": 35739,
+      "path": "tests/contracts/test_layout_recovery.py",
+      "sha256": "028c7e15d5604738cf7a12afcac561454625149bd66c71d4f7c6a53245ea1833"
+    },
+    {
+      "bytes": 8372,
+      "path": "tests/contracts/test_layout_recovery_darwin_provenance.py",
+      "sha256": "96de0432b74a60f28cceed6618b97d6f4adda1a3528a0558955cb3378aa79c2a"
+    },
+    {
+      "bytes": 19811,
+      "path": "tests/contracts/test_layout_recovery_nested_closure.py",
+      "sha256": "1bfcf10490152645d4e8266ac75c7341fd7d73c82995032d51d5324fa18f4b4d"
+    },
+    {
+      "bytes": 3888,
+      "path": "tests/contracts/test_layout_resolution_faults.py",
+      "sha256": "66aad5e33bf097600c1270fc969479baf8a8b9061bea86a73079fd659549529e"
+    },
+    {
+      "bytes": 6297,
+      "path": "tests/contracts/test_layout_retention_faults.py",
+      "sha256": "ab3384805c64f7721880014376dc154979230fb64b8cb3876db2300ab604edab"
+    },
+    {
+      "bytes": 40473,
+      "path": "tests/contracts/test_mixed_private_capabilities.py",
+      "sha256": "85e7848b52d22ed81eb9b60b39357a7b6502d6d968b42d4e1c0735f4e427d09e"
+    },
+    {
+      "bytes": 9033,
+      "path": "tests/contracts/test_selector_local_reuse.py",
+      "sha256": "3ce59ac2fac0e82a4c79124f0b3a20d24f6e3e8965d6c30220e981a576e391bf"
+    },
+    {
+      "bytes": 24866,
+      "path": "tests/layout_recovery_fixtures.py",
+      "sha256": "91cdddf9dd061d1d236ddb5eec925aeee813db45ad23060de8aba53d826bbd71"
+    },
+    {
+      "bytes": 5510,
+      "path": "tests/legacy_recovery_fixtures.py",
+      "sha256": "2e78112a53ae0a3e0b4c915d6fcdd74581b04021ab157fee9d22cb50b18642b0"
+    }
+  ],
+  "passed_workers": 503,
+  "peer_qualification_transferred": false,
+  "peer_source_commit": "0d58a8b3158b5d08fcbe70a65e172f3454e1ce76",
+  "per_file": {
+    "tests/contracts/test_admission.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 17,
+      "workers": 17
+    },
+    "tests/contracts/test_bank_eligibility_writes.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 10,
+      "workers": 1
+    },
+    "tests/contracts/test_bank_layout.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 9,
+      "workers": 1
+    },
+    "tests/contracts/test_bank_transactions.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 21,
+      "workers": 21
+    },
+    "tests/contracts/test_bank_usability.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 2,
+      "workers": 1
+    },
+    "tests/contracts/test_bank_writes.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 15,
+      "workers": 1
+    },
+    "tests/contracts/test_bounded_bank_observation.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 19,
+      "workers": 1
+    },
+    "tests/contracts/test_checkpoint.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 17,
+      "workers": 1
+    },
+    "tests/contracts/test_consolidation.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 13,
+      "workers": 13
+    },
+    "tests/contracts/test_governance.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 21,
+      "workers": 21
+    },
+    "tests/contracts/test_governance_recovery.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 5,
+      "workers": 1
+    },
+    "tests/contracts/test_held_source_enrollment.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 12,
+      "workers": 8
+    },
+    "tests/contracts/test_initialization.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 20,
+      "workers": 1
+    },
+    "tests/contracts/test_initialization_routes.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 3,
+      "workers": 1
+    },
+    "tests/contracts/test_known_holds_v2.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 5,
+      "workers": 5
+    },
+    "tests/contracts/test_large_refresh_security.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 2,
+      "workers": 1
+    },
+    "tests/contracts/test_layout_apply_faults.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 102,
+      "workers": 73
+    },
+    "tests/contracts/test_layout_comparison_byte_boundaries.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 5,
+      "workers": 1
+    },
+    "tests/contracts/test_layout_damaged_evidence.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 4,
+      "workers": 4
+    },
+    "tests/contracts/test_layout_legacy_child.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 2,
+      "workers": 2
+    },
+    "tests/contracts/test_layout_legacy_hold_receipt.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 2,
+      "workers": 2
+    },
+    "tests/contracts/test_layout_legacy_markers.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 34,
+      "workers": 34
+    },
+    "tests/contracts/test_layout_legacy_nested.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 9,
+      "workers": 9
+    },
+    "tests/contracts/test_layout_legacy_stale.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 1,
+      "workers": 1
+    },
+    "tests/contracts/test_layout_legacy_swap.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 4,
+      "workers": 4
+    },
+    "tests/contracts/test_layout_metadata_probe_faults.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 34,
+      "workers": 34
+    },
+    "tests/contracts/test_layout_metadata_probe_retention.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 5,
+      "workers": 5
+    },
+    "tests/contracts/test_layout_nested_faults.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 26,
+      "workers": 26
+    },
+    "tests/contracts/test_layout_nested_reconciliation.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 6,
+      "workers": 6
+    },
+    "tests/contracts/test_layout_publication_faults.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 4,
+      "workers": 4
+    },
+    "tests/contracts/test_layout_recovery.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 16,
+      "workers": 16
+    },
+    "tests/contracts/test_layout_recovery_catalog.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 1,
+      "workers": 1
+    },
+    "tests/contracts/test_layout_recovery_comparison.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 1,
+      "workers": 1
+    },
+    "tests/contracts/test_layout_recovery_darwin_provenance.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 5,
+      "workers": 5
+    },
+    "tests/contracts/test_layout_recovery_eight_admission.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 1,
+      "workers": 1
+    },
+    "tests/contracts/test_layout_recovery_frontier.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 4,
+      "workers": 1
+    },
+    "tests/contracts/test_layout_recovery_frontier_closure.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 14,
+      "workers": 14
+    },
+    "tests/contracts/test_layout_recovery_identity_closure.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 8,
+      "workers": 8
+    },
+    "tests/contracts/test_layout_recovery_legacy.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 1,
+      "workers": 1
+    },
+    "tests/contracts/test_layout_recovery_nested_closure.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 6,
+      "workers": 6
+    },
+    "tests/contracts/test_layout_recovery_publication.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 10,
+      "workers": 10
+    },
+    "tests/contracts/test_layout_recovery_publication_closure.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 3,
+      "workers": 3
+    },
+    "tests/contracts/test_layout_recovery_reconciliation.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 5,
+      "workers": 5
+    },
+    "tests/contracts/test_layout_recovery_resolved_publication.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 1,
+      "workers": 1
+    },
+    "tests/contracts/test_layout_recovery_retention.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 9,
+      "workers": 1
+    },
+    "tests/contracts/test_layout_recovery_unsafe_apply.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 1,
+      "workers": 1
+    },
+    "tests/contracts/test_layout_resolution_faults.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 5,
+      "workers": 5
+    },
+    "tests/contracts/test_layout_retention_faults.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 14,
+      "workers": 14
+    },
+    "tests/contracts/test_manual_checkpoint.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 4,
+      "workers": 1
+    },
+    "tests/contracts/test_memory_refresh.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 14,
+      "workers": 14
+    },
+    "tests/contracts/test_mixed_private_capabilities.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 5,
+      "workers": 5
+    },
+    "tests/contracts/test_omp_boundary.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 49,
+      "workers": 24
+    },
+    "tests/contracts/test_omp_enrollment_progress.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 27,
+      "workers": 18
+    },
+    "tests/contracts/test_omp_finite_outcome_fence.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 2,
+      "workers": 2
+    },
+    "tests/contracts/test_omp_finite_stream.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 105,
+      "workers": 1
+    },
+    "tests/contracts/test_omp_projection.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 4,
+      "workers": 1
+    },
+    "tests/contracts/test_omp_stored_authority_v2.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 32,
+      "workers": 8
+    },
+    "tests/contracts/test_omp_stored_source_lifecycle.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 6,
+      "workers": 1
+    },
+    "tests/contracts/test_omp_writer_fence.py": {
+      "errors": 0,
+      "failures": 1,
+      "skipped": 0,
+      "tests": 3,
+      "workers": 3
+    },
+    "tests/contracts/test_publication_admission.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 1,
+      "workers": 1
+    },
+    "tests/contracts/test_quarantined_sharing_v2.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 4,
+      "workers": 4
+    },
+    "tests/contracts/test_recall_catalog.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 17,
+      "workers": 1
+    },
+    "tests/contracts/test_refresh_conflicts.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 2,
+      "workers": 1
+    },
+    "tests/contracts/test_refresh_cursor.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 2,
+      "workers": 1
+    },
+    "tests/contracts/test_refresh_integration.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 2,
+      "workers": 1
+    },
+    "tests/contracts/test_refresh_invalidation.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 2,
+      "workers": 1
+    },
+    "tests/contracts/test_refresh_path_policy.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 10,
+      "workers": 1
+    },
+    "tests/contracts/test_refresh_pending.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 3,
+      "workers": 1
+    },
+    "tests/contracts/test_refresh_receipt_snapshot.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 4,
+      "workers": 4
+    },
+    "tests/contracts/test_refresh_recovery.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 2,
+      "workers": 1
+    },
+    "tests/contracts/test_refresh_v2.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 2,
+      "workers": 1
+    },
+    "tests/contracts/test_retrieval.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 13,
+      "workers": 1
+    },
+    "tests/contracts/test_scope_binding.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 9,
+      "workers": 1
+    },
+    "tests/contracts/test_selector_local_reuse.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 7,
+      "workers": 1
+    },
+    "tests/contracts/test_semantic_sharing.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 9,
+      "workers": 1
+    },
+    "tests/contracts/test_shared_learning_loop.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 1,
+      "workers": 1
+    },
+    "tests/contracts/test_sharing_boundary.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 20,
+      "workers": 1
+    },
+    "tests/contracts/test_sharing_recovery.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 18,
+      "workers": 1
+    },
+    "tests/contracts/test_validation_memo.py": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 7,
+      "workers": 7
+    }
+  },
+  "portable_pack": {
+    "artifact_digest": "e31e78ac66e9023059e7bd80e638814f4f603b1a85a06c728915bf3d6fa2719b",
+    "source_bytecode_count_at_freeze": 0,
+    "valid": true
+  },
+  "raw_evidence": {
+    "bytes": 265793,
+    "name": "integrated-peer-complete79files-504workers-920tests-one-ordering-readback-failure-actual-20261110.tar.gz",
+    "original_private_location": "/tmp/am-v15-delivery/peer-recovery-recall-integrated-complete-py315-actual-20261110; /tmp/am-v15-delivery/integrated_peer_consumers_20261110.py; /tmp/am-v15-delivery/peer-recovery-recall-integrated-complete-consumer-paths-20261110.json; /tmp/am-v15-delivery/peer-recovery-recall-integrated-source-overlay-20261110.json; /tmp/am-v15-delivery/peer-recovery-recall-integrated-clean-pack-inspection-20261110.json",
+    "sha256": "b89404679ec566ea04cafca5e1d47ed2883a808e565ffcc47b3f3a1f959e9a39"
+  },
+  "registered_workers": 504,
+  "schema": "am/integrated-peer-recovery-recall-scoped-proof-v1",
+  "scope": "Source-bound local physical/public consumer execution; not a release or stock-native/platform/performance acceptance",
+  "skipped": 0,
+  "source_overlay_manifest_sha256": "fe62594175b171a400baf3fc4fe7805bc6abfcedac4ee6db1e363eec7f06c299",
+  "tests": 920
+}

@@ -3,6 +3,7 @@ from __future__ import annotations
 import errno
 
 import ctypes
+import fcntl
 import hashlib
 import os
 from pathlib import Path, PurePosixPath
@@ -48,40 +49,103 @@ def path_value(relative):
     return relative
 
 
-def metadata_supported(path):
-    """Refuse metadata which this per-file protocol cannot reproduce exactly."""
-    info = path.lstat()
-    if getattr(info, 'st_flags', 0):
-        raise ContractError('pending-metadata-preservation')
-    if sys.platform == 'darwin':
-        libc = ctypes.CDLL(None, use_errno=True)
-        encoded_path = os.fsencode(path)
-        libc.listxattr.argtypes = [ctypes.c_char_p, ctypes.c_void_p, ctypes.c_size_t, ctypes.c_int]
-        libc.listxattr.restype = ctypes.c_ssize_t
-        # Darwin's no-follow size query observes attributes without copying
-        # their names or values; a negative result is not proof of absence.
-        if libc.listxattr(encoded_path, None, 0, 1) != 0:
-            raise ContractError('pending-metadata-preservation')
-        libc.acl_get_file.argtypes = [ctypes.c_char_p, ctypes.c_int]
-        libc.acl_get_file.restype = ctypes.c_void_p
-        libc.acl_get_entry.argtypes = [ctypes.c_void_p, ctypes.c_int, ctypes.POINTER(ctypes.c_void_p)]
-        libc.acl_free.argtypes = [ctypes.c_void_p]
-        ctypes.set_errno(0)
-        acl = libc.acl_get_file(encoded_path, 0x100)
-        if not acl:
-            if ctypes.get_errno() in {errno.ENOENT, getattr(errno, 'ENODATA', errno.ENOENT)}:
-                return
-            raise ContractError('pending-metadata-preservation')
+def valid_xattrs(value):
+    if not isinstance(value, dict) or any(name != 'com.apple.provenance' for name in value):
+        return False
+    for body in value.values():
+        if not isinstance(body, str) or len(body) > 32768 or len(body) % 2:
+            return False
         try:
-            entry = ctypes.c_void_p()
-            ctypes.set_errno(0)
-            result = libc.acl_get_entry(acl, 0, ctypes.byref(entry))
-            if result == 0 or (result == -1 and ctypes.get_errno() not in {errno.EINVAL, errno.ENOENT}):
+            if bytes.fromhex(body).hex() != body:
+                return False
+        except ValueError:
+            return False
+    return True
+
+
+def inode_flags(descriptor):
+    """Inspect filesystem flags on the pinned inode, including Linux ioctl flags."""
+    if sys.platform == 'linux':
+        request = (2 << 30) | (ctypes.sizeof(ctypes.c_long) << 16) | (ord('f') << 8) | 1
+        return int.from_bytes(fcntl.ioctl(descriptor, request, bytes(4)), sys.byteorder)
+    return getattr(os.fstat(descriptor), 'st_flags', 0)
+
+
+def metadata_supported(path):
+    """Return exact reproducible metadata, refusing every unsupported attribute."""
+    descriptor = None
+    try:
+        before = path.lstat()
+        if getattr(before, 'st_flags', 0):
+            raise ContractError('pending-metadata-preservation')
+        descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+        if signature(os.fstat(descriptor)) != signature(before):
+            raise ContractError('pending-metadata-preservation')
+        attributes = {}
+        flags = inode_flags(descriptor)
+        if sys.platform == 'linux':
+            # EXTENT and INDEX describe kernel-managed storage, not mutable
+            # backup, access, inheritance or write semantics.
+            if flags & ~(0x00080000 | 0x00001000):
                 raise ContractError('pending-metadata-preservation')
-        finally:
-            libc.acl_free(acl)
-    elif not hasattr(os, 'listxattr') or os.listxattr(path, follow_symlinks=False):
-        raise ContractError('pending-metadata-preservation')
+        elif flags:
+            raise ContractError('pending-metadata-preservation')
+        if sys.platform == 'darwin':
+            libc = ctypes.CDLL(None, use_errno=True)
+            libc.flistxattr.argtypes = [ctypes.c_int, ctypes.c_void_p, ctypes.c_size_t, ctypes.c_int]
+            libc.flistxattr.restype = ctypes.c_ssize_t
+            libc.fgetxattr.argtypes = [ctypes.c_int, ctypes.c_char_p, ctypes.c_void_p, ctypes.c_size_t,
+                                     ctypes.c_uint32, ctypes.c_int]
+            libc.fgetxattr.restype = ctypes.c_ssize_t
+            size = libc.flistxattr(descriptor, None, 0, 0)
+            if size < 0 or size > 16384:
+                raise ContractError('pending-metadata-preservation')
+            buf = ctypes.create_string_buffer(size)
+            if size and libc.flistxattr(descriptor, buf, size, 0) != size:
+                raise ContractError('pending-metadata-preservation')
+            if size and not buf.raw.endswith(b'\0'):
+                raise ContractError('pending-metadata-preservation')
+            names = buf.raw.split(b'\0')[:-1] if size else []
+            if len(set(names)) != len(names) or any(name != b'com.apple.provenance' for name in names):
+                raise ContractError('pending-metadata-preservation')
+            for name in names:
+                count = libc.fgetxattr(descriptor, name, None, 0, 0, 0)
+                if count < 0 or count > 16384:
+                    raise ContractError('pending-metadata-preservation')
+                value = ctypes.create_string_buffer(count)
+                if libc.fgetxattr(descriptor, name, value, count, 0, 0) != count:
+                    raise ContractError('pending-metadata-preservation')
+                attributes[name.decode('ascii')] = value.raw.hex()
+            libc.acl_get_fd_np.argtypes = [ctypes.c_int, ctypes.c_int]
+            libc.acl_get_fd_np.restype = ctypes.c_void_p
+            libc.acl_get_entry.argtypes = [ctypes.c_void_p, ctypes.c_int, ctypes.POINTER(ctypes.c_void_p)]
+            libc.acl_free.argtypes = [ctypes.c_void_p]
+            ctypes.set_errno(0)
+            acl = libc.acl_get_fd_np(descriptor, 0x100)
+            if not acl:
+                if ctypes.get_errno() not in {errno.ENOENT, getattr(errno, 'ENODATA', errno.ENOENT)}:
+                    raise ContractError('pending-metadata-preservation')
+            else:
+                try:
+                    entry = ctypes.c_void_p()
+                    ctypes.set_errno(0)
+                    result = libc.acl_get_entry(acl, 0, ctypes.byref(entry))
+                    if result == 0 or (result == -1 and ctypes.get_errno() not in {errno.EINVAL, errno.ENOENT}):
+                        raise ContractError('pending-metadata-preservation')
+                finally:
+                    libc.acl_free(acl)
+        elif not hasattr(os, 'listxattr') or os.listxattr(descriptor):
+            raise ContractError('pending-metadata-preservation')
+        if inode_flags(descriptor) != flags:
+            raise ContractError('pending-metadata-preservation')
+        if signature(os.fstat(descriptor)) != signature(before) or signature(path.lstat()) != signature(before):
+            raise ContractError('pending-metadata-preservation')
+        return attributes
+    except OSError as exc:
+        raise ContractError('pending-metadata-preservation') from exc
+    finally:
+        if descriptor is not None:
+            os.close(descriptor)
 
 
 def read_source(bank, relative, limit=MAX_FILE, *, hash_only=False):
@@ -199,7 +263,7 @@ class ManifestBudget:
         self.check()
 
 
-def inventory(bank, *, retain_directory=None, prior_sources=None, allow_temporaries=False, envelope=None):
+def inventory(bank, *, retain_directory=None, prior_sources=None, allow_temporaries=False, envelope=None, ignored_paths=()):
     physical = []; sources = []
     totals = {'source_bytes': 0, 'source_files': 0, 'physical_entries': 0, 'depth': 0}
     budget = ManifestBudget(envelope or {}, totals)
@@ -228,6 +292,8 @@ def inventory(bank, *, retain_directory=None, prior_sources=None, allow_temporar
             if not prefix and name == '.agent-memory.lock':
                 continue
             relative = path_value(prefix + name)
+            if relative in ignored_paths:
+                continue
             level = depth + 1
             if level > MAX_DEPTH:
                 raise RawCapacityError('depth', MAX_DEPTH, level)
@@ -237,14 +303,14 @@ def inventory(bank, *, retain_directory=None, prior_sources=None, allow_temporar
             kind = 'directory' if stat.S_ISDIR(info.st_mode) else 'file' if stat.S_ISREG(info.st_mode) else 'unsupported'
             if kind == 'unsupported' or (kind == 'file' and info.st_nlink != 1):
                 raise ContractError('Unsupported raw source type/alias; preserve the bank')
-            metadata_supported(bank / relative)
+            xattrs = metadata_supported(bank / relative)
             runtime = contract.runtime_path(relative)
             if runtime and any(part.startswith('.agent-memory-layout-') for part in Path(relative).parts) and not allow_temporaries:
                 raise ContractError('Unknown layout staging artifact requires its known operation recovery')
             if runtime and ('transaction' in relative or 'recovery' in relative):
                 if relative not in ('.agent-memory-transaction.md', '.agent-memory-recovery.md'):
                     raise ContractError('Unknown runtime recovery artifact')
-            row = {'path': relative, 'type': kind, 'runtime': runtime, **signature(info)}
+            row = {'path': relative, 'type': kind, 'runtime': runtime, 'xattrs': xattrs, **signature(info)}
             if kind == 'directory':
                 child = os.open(name, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=descriptor)
                 try:
@@ -318,8 +384,9 @@ def observe(repo, operation_id, *, owner=None, transaction=None, retain=True, id
                 'inspected_at': local_registry.now(), 'repo_root': str(root), 'bank_path': str(bank),
                 'project_id': resolved['scope_context']['project_id'], 'identity': resolved, 'observation_complete': True,
                 'git': before_git, 'runtime_artifact': runtime_identity, 'predecessor': predecessor,
-                'metadata_policy': 'ordinary-modes-ownership-no-acl-xattr-flags',
-                'bank_binding': {key: signature(bank.stat())[key] for key in ('dev', 'ino', 'mode', 'uid', 'gid')}}
+                'metadata_policy': 'ordinary-modes-ownership-darwin-provenance-exact-no-acl-other-xattr-flags',
+                'bank_binding': {**{key: signature(bank.stat())[key] for key in ('dev', 'ino', 'mode', 'uid', 'gid')},
+                                 'xattrs': metadata_supported(bank)}}
     physical, sources, totals = inventory(bank, retain_directory=directory, envelope=envelope)
     after, after_sources, measured = inventory(bank, prior_sources=sources, envelope=envelope)
     if (after, after_sources, measured) != (physical, sources, totals) or git_pins(root) != before_git:
@@ -336,7 +403,8 @@ def recheck(repo, manifest, owner=None, transaction=None):
         raise ContractError('Recovery manifest location/completeness changed')
     bank_observation.markers(bank, owner, transaction)
     physical, sources, totals = inventory(bank, prior_sources=manifest['sources'])
-    binding = {key: signature(bank.stat())[key] for key in ('dev', 'ino', 'mode', 'uid', 'gid')}
+    binding = {**{key: signature(bank.stat())[key] for key in ('dev', 'ino', 'mode', 'uid', 'gid')},
+               'xattrs': metadata_supported(bank)}
     router, _ = read_source(bank, 'MEMORY.md')
     resolved = identity(root, router, manifest['identity'].get('identity_review'), owner=owner, transaction=transaction)
     if (physical != manifest['physical_entries'] or sources != manifest['sources'] or totals != manifest['totals']
