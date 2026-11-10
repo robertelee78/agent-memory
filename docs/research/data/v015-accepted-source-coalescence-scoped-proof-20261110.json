@@ -1,0 +1,254 @@
+{
+  "actual_public_plan": {
+    "passed": true,
+    "rows": [
+      {
+        "applied_verified": true,
+        "feature_index_head_preserved": true,
+        "foreign_plan_and_raw_apply_refused": true,
+        "historical_apply_retry": true,
+        "passed": true,
+        "plan_non_authorizing": true,
+        "planned_proposed_bytes_equal": true,
+        "private_output_only": true,
+        "route": "update",
+        "seconds": 26.707046333001927,
+        "stable_record_identity_and_provenance": true,
+        "stale_plan_rejected": true
+      },
+      {
+        "applied_verified": true,
+        "feature_index_head_preserved": true,
+        "foreign_plan_and_raw_apply_refused": null,
+        "historical_apply_retry": null,
+        "passed": true,
+        "plan_non_authorizing": true,
+        "planned_proposed_bytes_equal": true,
+        "private_output_only": true,
+        "route": "consolidate",
+        "seconds": 19.409521624911577,
+        "stable_record_identity_and_provenance": true,
+        "stale_plan_rejected": null
+      },
+      {
+        "applied_verified": true,
+        "feature_index_head_preserved": true,
+        "foreign_plan_and_raw_apply_refused": null,
+        "historical_apply_retry": null,
+        "passed": true,
+        "plan_non_authorizing": true,
+        "planned_proposed_bytes_equal": true,
+        "private_output_only": true,
+        "route": "governance",
+        "seconds": 8.162852083100006,
+        "stable_record_identity_and_provenance": true,
+        "stale_plan_rejected": null
+      }
+    ],
+    "schema": "am/public-governed-judgment-plan-smoke-v1",
+    "scope": "Real installed public plan/review/preview/apply for update/consolidation/revocation on ordinary eligible banks. Not held-unit/full-coverage, raw layout, platform, independent-review, native/model/hosted or signed release acceptance.",
+    "seconds": 54.32562074996531
+  },
+  "additional_actual_installed_journey_passed": true,
+  "aggregate_passed": false,
+  "candidate_commit": "ca558a7e487fb1a34420308adecc9da012995e7f",
+  "candidate_tree": "144c87cc56d0fd4481cbfdd6eeec213d545373e4",
+  "date": "2026-11-10",
+  "failed_prerequisite": {
+    "canonical_writes_performed": false,
+    "code": "pending-metadata-preservation",
+    "qualification": "Expected unsupported local metadata profile, not a target-stage pass or newly inferred race defect. Not rerun/stripped/waived.",
+    "stage": "Raw recovery fixture inspect before lifecycle race target stage",
+    "suite": "mixed-managed-late-private-races"
+  },
+  "first_real_merge": {
+    "commit": "46d538f99e0d835da9af263ef2782a5f41d80850",
+    "parents": [
+      "634605346a29bacc768e2b061651535884d362e2",
+      "362ab0aac21399381f3379550726ca750c614b1d"
+    ]
+  },
+  "full_required_matrix": {
+    "head_sha": "ca558a7e487fb1a34420308adecc9da012995e7f",
+    "observed_result": "Pending at dispatch/source readback; no pass claimed",
+    "os": [
+      "ubuntu-latest",
+      "macos-latest"
+    ],
+    "python": [
+      "3.11",
+      "3.15"
+    ],
+    "shards": [
+      0,
+      1,
+      2
+    ],
+    "suite_deadline_seconds": 300,
+    "url": "https://github.com/robertelee78/agent-memory/actions/runs/42744501004",
+    "workers": 2
+  },
+  "interpreter": "Darwin arm64 Python3.13.12",
+  "limits": [
+    "No blanket ours merge or rewriting accepted362 research acceptance.",
+    "Historical original and additive G1 freeze receipts retain their exact subjects; neither automatically binds this integration tree.",
+    "No local held full-claim/raw-recovery positive or full 160-fault-worker union inferred.",
+    "New required exact Opus5.5 review remains blocked by recorded account HTTP429; these coding-agent handoffs are not independent reviews.",
+    "No original b85 sequence158 exact-exception attribution.",
+    "No actual stock-native model/wake, performance, full-platform or signed-release pass.",
+    "No omp source/install/config/live-extension mutation, original user worktree mutation, model/token/endpoint request or study budget reservation."
+  ],
+  "pack_inspection": {
+    "semantic_completeness_verified": false,
+    "valid": true,
+    "writes_performed": false
+  },
+  "passed_suites": [
+    {
+      "name": "omp-finite-prestart-exhaustion",
+      "seconds": 55.90390508295968,
+      "tests": 1
+    },
+    {
+      "name": "omp-finite-outcome-fence",
+      "seconds": 29.10322637495119,
+      "tests": 1
+    },
+    {
+      "name": "omp-writer-fence-ordering",
+      "seconds": 56.89213275001384,
+      "tests": 1
+    },
+    {
+      "name": "omp-writer-fence-exhaustion",
+      "seconds": 49.87360666599125,
+      "tests": 1
+    },
+    {
+      "name": "omp-writer-fence-compatibility",
+      "seconds": 19.564232915989123,
+      "tests": 1
+    },
+    {
+      "name": "omp-owned-instruction-metadata",
+      "seconds": 10.103176624979824,
+      "tests": 5
+    },
+    {
+      "name": "omp-owned-instruction-capture",
+      "seconds": 28.434534250060096,
+      "tests": 3
+    },
+    {
+      "name": "omp-owned-instruction-recovery",
+      "seconds": 37.27670958300587,
+      "tests": 5
+    },
+    {
+      "name": "omp-owned-instruction-binding-races",
+      "seconds": 17.18161579198204,
+      "tests": 2
+    },
+    {
+      "name": "omp-owned-guide-capture",
+      "seconds": 17.446051083039492,
+      "tests": 1
+    },
+    {
+      "name": "omp-owned-guide-negative-controls",
+      "seconds": 17.215427667018957,
+      "tests": 2
+    },
+    {
+      "name": "omp-owned-guide-binding-history",
+      "seconds": 18.320356832933612,
+      "tests": 2
+    },
+    {
+      "name": "omp-native-source-reconciliation",
+      "seconds": 52.067252874956466,
+      "tests": 5
+    },
+    {
+      "name": "omp-native-private-root-preservation",
+      "seconds": 5.338661749963649,
+      "tests": 1
+    },
+    {
+      "name": "mixed-managed-ancestor-alias",
+      "seconds": 17.684316167025827,
+      "tests": 1
+    },
+    {
+      "name": "harness",
+      "seconds": 105.69094916700851,
+      "tests": 9
+    },
+    {
+      "name": "checkpoint",
+      "seconds": 163.5638746250188,
+      "tests": 17
+    },
+    {
+      "name": "learning-admission-recorded-admission-recovers-lost-response-without-replaying-or-requiring-new-evidence",
+      "seconds": 77.81472095905337,
+      "tests": 1
+    },
+    {
+      "name": "initialize-evidence",
+      "seconds": 91.34533158398699,
+      "tests": 20
+    },
+    {
+      "name": "installed-layout",
+      "seconds": 135.96569175005425,
+      "tests": 3
+    },
+    {
+      "name": "gate-diagnostics",
+      "seconds": 1.920168083976023,
+      "tests": 4
+    },
+    {
+      "name": "lifecycle-fault-partitions",
+      "seconds": 7.952065290999599,
+      "tests": 4
+    },
+    {
+      "name": "gate-shard-aggregation",
+      "seconds": 2.9862099160673097,
+      "tests": 4
+    },
+    {
+      "name": "learning-comparison",
+      "seconds": 89.45157433394343,
+      "tests": 13
+    },
+    {
+      "name": "consolidation-private-output-plan",
+      "seconds": 20.69045808305964,
+      "tests": 1
+    }
+  ],
+  "private_actual_evidence": {
+    "bytes": 47558,
+    "name": "accepted-source-ca558a7-actual-108-tests-public-three-routes-and-metadata-limit-20261110.tar.gz",
+    "sha256": "b342014ed23fd5c82a414722bd5ba581d13fe9e2812bf9e35f7fe066a1260897"
+  },
+  "registered_suites": 26,
+  "registered_suites_passed": 25,
+  "registered_tests": 109,
+  "registered_tests_passed": 108,
+  "schema": "am/accepted-source-coalescence-scoped-proof-v1",
+  "second_real_merge_parents": [
+    "46d538f99e0d835da9af263ef2782a5f41d80850",
+    "b743117ca7e33cb12e88deb5248203e8b3645728"
+  ],
+  "seconds": 608.5783938750392,
+  "source_archive_sha256": "17919e1011c1c6cd8053573611734b0a291881af9cd69092c81b7e29f914831d",
+  "source_bytecode_files_at_export": 0,
+  "source_hash": "ca4db729aa4ba7a048f0e5d002b2553dfefa1b7a7fc7d3bec2e3b25c049cc64e",
+  "source_unchanged": true,
+  "worker_deadline_seconds": 300,
+  "workers": 2
+}
