@@ -164,3 +164,145 @@ class RecoveryPublicationClosure(unittest.TestCase):
             self.assertEqual(proof_bytes, proof_path.read_bytes())
             self.assertEqual(head, w.git('ls-remote', 'origin', 'refs/heads/main', cwd=repo).stdout)
             self.assertNotIn('Unknown provenance requires independent review.', process.stdout + process.stderr)
+
+    def recovery_publication_request(self, w, helper, command, repo, operation, intended):
+        observation_path = w.inside('publication-observation.json')
+        call(w, command, 'publish', 'inspect', '--repo', repo, '--operation', operation,
+             '--output', observation_path)
+        observation = json.loads(observation_path.read_text())['observation']
+        preparation = {'schema': 'agent-memory/layout-publication-prepare-v1',
+                       'observation_id': observation['observation_id'], 'intended_files': intended,
+                       'review': helper.publication_review(observation, intended)}
+        prepared_path = w.inside('publication-prepared.json')
+        result = call(w, command, 'publish', 'prepare', '--repo', repo, '--operation', operation,
+                      '--input', save(w, preparation), '--output', prepared_path)
+        self.assertEqual(result['state'], 'prepared')
+        return json.loads(prepared_path.read_text())['request']
+
+    def advance_authority(self, w, remote, name, path, suffix):
+        peer = w.clone(str(remote), name)
+        target = peer / path
+        target.write_text(target.read_text() + suffix)
+        w.git('add', '--', path, cwd=peer)
+        w.git('commit', '-m', 'Independent authority correction', cwd=peer)
+        w.git('push', 'origin', 'HEAD:main', cwd=peer)
+        return w.git('rev-parse', 'HEAD', cwd=peer).stdout.strip()
+
+    def test_recovery_land_refuses_authority_advance_after_prepare(self):
+        helper = publication_fixture.LayoutPublicationContract()
+        with World() as w:
+            command, _, repo, bank, remote, operation, intended = helper.public_repair(w)
+            request = self.recovery_publication_request(w, helper, command, repo, operation, intended)
+            request_path = save(w, request)
+            request_bytes = request_path.read_bytes()
+            candidate = w.git('cat-file', 'commit', request['candidate'], cwd=repo).stdout
+            advanced = self.advance_authority(w, remote, 'authority-advance', 'code.py',
+                                              '\n# Independent authority advance.\n')
+            self.assertNotEqual(advanced, request['base'])
+            before = helper.state(w, repo, bank)
+            directory = private_directory(w, bank, operation)
+            retained = snapshot(directory)
+            refs = w.git('ls-remote', 'origin', cwd=repo).stdout
+            self.assertIn(advanced + '\trefs/heads/main', refs)
+            pending = call(w, command, 'publish', 'land', '--repo', repo, '--operation', operation,
+                           '--input', request_path, '--output', w.inside('stale-land.json'), expected=1)
+            self.assertEqual(pending['state'], 'pending')
+            self.assertFalse(pending['publication_verified'])
+            for field in ('canonical_writes_performed', 'canonical_mutation_may_have_occurred',
+                          'original_index_writes_performed', 'head_writes_performed',
+                          'feature_writes_performed', 'history_writes_performed'):
+                self.assertFalse(pending[field], field)
+            self.assertEqual(refs, w.git('ls-remote', 'origin', cwd=repo).stdout)
+            self.assertEqual(before, helper.state(w, repo, bank))
+            self.assertEqual(retained, snapshot(directory))
+            self.assertEqual(request_bytes, request_path.read_bytes())
+            self.assertEqual(candidate, w.git('cat-file', 'commit', request['candidate'], cwd=repo).stdout)
+
+    def test_recovery_historical_retry_preserves_later_authority_correction(self):
+        helper = publication_fixture.LayoutPublicationContract()
+        with World() as w:
+            command, _, repo, bank, remote, operation, intended = helper.public_repair(w)
+            request = self.recovery_publication_request(w, helper, command, repo, operation, intended)
+            request_path = save(w, request)
+            first_path = w.inside('first-land.json')
+            first = call(w, command, 'publish', 'land', '--repo', repo, '--operation', operation,
+                         '--input', request_path, '--output', first_path)
+            self.assertEqual(first['state'], 'landed')
+            self.assertTrue(first['publication_verified'])
+            first_detail = json.loads(first_path.read_text())
+            self.assertEqual(first_detail['witnessed_commit'], request['candidate'])
+            correction = '\nA later independently made authority correction takes precedence.\n'
+            advanced = self.advance_authority(w, remote, 'authority-correction',
+                                              'memory-bank/activeContext.md', correction)
+            self.assertNotEqual(advanced, first_detail['witnessed_commit'])
+            before = helper.state(w, repo, bank)
+            retained = snapshot(private_directory(w, bank, operation))
+            request_bytes = request_path.read_bytes()
+            refs = w.git('ls-remote', 'origin', cwd=repo).stdout
+            self.assertIn(advanced + '\trefs/heads/main', refs)
+            retry_path = w.inside('historical-land.json')
+            retry = call(w, command, 'publish', 'land', '--repo', repo, '--operation', operation,
+                         '--input', request_path, '--output', retry_path)
+            detail = json.loads(retry_path.read_text())
+            self.assertEqual(retry['state'], 'already-landed')
+            self.assertTrue(retry['publication_verified'])
+            self.assertTrue(retry['receipt_is_historical'])
+            self.assertTrue(retry['already_applied'])
+            self.assertEqual(detail['witnessed_commit'], first_detail['witnessed_commit'])
+            self.assertEqual(detail['receipt'], first_detail['receipt'])
+            self.assertFalse(detail['intended_delta_current'])
+            self.assertEqual(refs, w.git('ls-remote', 'origin', cwd=repo).stdout)
+            self.assertEqual(w.git('show', advanced + ':memory-bank/activeContext.md', cwd=repo).stdout,
+                             intended['activeContext.md'] + correction)
+            self.assertEqual(before, helper.state(w, repo, bank))
+            self.assertEqual(retained, snapshot(private_directory(w, bank, operation)))
+            self.assertEqual(request_bytes, request_path.read_bytes())
+
+    def test_ordinary_prepared_land_refuses_pending_recovery_frontier(self):
+        for pending_recovery in (False, True):
+            with self.subTest(pending_recovery=pending_recovery), World() as w:
+                helper = publication_fixture.LayoutPublicationContract()
+                command, source = installed(w)
+                repo, bank, peer, _ = helper.fixture(w)
+                helper.github(w, repo, bank, peer)
+                context = bank / 'activeContext.md'
+                context.write_text(context.read_text().replace('# Current focus\n', '# Active context\n', 1)
+                                   + '\nUnder the controlled fixture condition, preserve the source before acting.\n')
+                proof_path = save(w, helper.proof(w, repo))
+                prepared = w.run([command, 'publish', 'prepare', '--repo', repo, '--input', proof_path],
+                                 check=False, timeout=60)
+                self.assertEqual(prepared.returncode, 0, prepared.stdout + prepared.stderr)
+                prepared_value = json.loads(prepared.stdout)
+                self.assertEqual(prepared_value['sharing_state'], 'prepared')
+                request = prepared_value['request']
+                request_path = save(w, request)
+                if not pending_recovery:
+                    control = w.run([command, 'publish', 'land', '--repo', repo, '--input', request_path],
+                                    check=False, timeout=60)
+                    self.assertEqual(control.returncode, 0, control.stdout + control.stderr)
+                    self.assertTrue(json.loads(control.stdout)['publication_verified'])
+                    self.assertIn(request['candidate'], w.git('ls-remote', 'origin', 'refs/heads/main', cwd=repo).stdout)
+                    continue
+                intended = {p.relative_to(bank).as_posix(): p.read_text() for p in bank.rglob('*.md')
+                            if not p.name.startswith('.agent-memory')}
+                (bank / 'handoff-prompt.md').write_text(
+                    '# Unconfirmed synthetic handoff\n\nUnknown provenance requires independent review.\n')
+                _, observed = inspect(w, command, repo)
+                proposal, _ = prepare(w, command, source, repo, observed, intended)
+                applied = call(w, command, 'apply', '--repo', repo, '--proposal', proposal)
+                self.assertFalse(applied['semantic_recovery_complete'])
+                self.assertGreater(applied['pending_units'], 0)
+                before = helper.state(w, repo, bank)
+                retained = snapshot(private_directory(w, bank, observed['operation_id']))
+                request_bytes = request_path.read_bytes()
+                candidate = w.git('cat-file', 'commit', request['candidate'], cwd=repo).stdout
+                refs = w.git('ls-remote', 'origin', cwd=repo).stdout
+                refused = w.run([command, 'publish', 'land', '--repo', repo, '--input', request_path],
+                                check=False, timeout=60)
+                self.assertNotEqual(refused.returncode, 0)
+                self.assertFalse(json.loads(refused.stdout)['publication_verified'])
+                self.assertEqual(refs, w.git('ls-remote', 'origin', cwd=repo).stdout)
+                self.assertEqual(before, helper.state(w, repo, bank))
+                self.assertEqual(retained, snapshot(private_directory(w, bank, observed['operation_id'])))
+                self.assertEqual(request_bytes, request_path.read_bytes())
+                self.assertEqual(candidate, w.git('cat-file', 'commit', request['candidate'], cwd=repo).stdout)
