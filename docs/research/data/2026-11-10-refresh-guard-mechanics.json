@@ -3,7 +3,7 @@
   "observed_date": "2026-11-10",
   "work_key": "robertelee78/agent-memory:ADR-0009:bounded-24-session-stress",
   "acceptance": false,
-  "scope": "Measured internal guard mechanics and exact design/document review; not public apply, full stress, platform, native, model quality or release acceptance.",
+  "scope": "Measured internal guard mechanics, scoped public refresh successes/failures and exact design/document review; not full stress, platform, native, model quality or release acceptance.",
   "retained_stress_failure": {
     "source_commit": "b16e1ff3918afc3c8885e87b729ce26dfd0ea6b1",
     "wall_seconds": 26990.36,
@@ -495,6 +495,194 @@
         ]
       }
     ],
+    "linux_qualification": {
+      "source_commit": "8dabc28f577b28c108d0c757fb24c00f45e54f4a",
+      "system": "Linux",
+      "architecture": "arm64",
+      "python": "3.15.2",
+      "workers": 25,
+      "tests": 70,
+      "wall_seconds": 152.35,
+      "worker_deadline_seconds": 300,
+      "scope": "Scoped functional closures only; not full original acceptance or hosted platform gate.",
+      "rows": [
+        {
+          "suite": "bank-eligibility-writes",
+          "tests": 12,
+          "passed": true,
+          "skipped": 0,
+          "receipt_sha256": "cb0ace75a90748a8e96128da6b6b2f64db7675bb8186c72b2044ff53e0fcadbb"
+        },
+        {
+          "suite": "bank-transactions-case-02",
+          "tests": 1,
+          "passed": true,
+          "skipped": 0,
+          "receipt_sha256": "7fc8fdc3e054cee7c74e43a235b06cafce6ef2c73e388ae93e7cd6b3f0c84d52"
+        },
+        {
+          "suite": "bank-transactions-case-03",
+          "tests": 1,
+          "passed": true,
+          "skipped": 0,
+          "receipt_sha256": "32388907fac9372cca81a60ad5b8aa16914157659658af828fa73902836e4fa8"
+        },
+        {
+          "suite": "bank-transactions-case-04",
+          "tests": 1,
+          "passed": true,
+          "skipped": 0,
+          "receipt_sha256": "69e54a18ed636dc89d2d0ea398265d3549886b9d40fc4ebd291eac601935454f"
+        },
+        {
+          "suite": "bank-transactions-case-05",
+          "tests": 1,
+          "passed": true,
+          "skipped": 0,
+          "receipt_sha256": "b709e54d4695b24cd50dc99e5f33736ee852b21ccd65f7e0f9b70e88cc048237"
+        },
+        {
+          "suite": "bank-transactions-case-06",
+          "tests": 1,
+          "passed": true,
+          "skipped": 0,
+          "receipt_sha256": "543c163a3741fd33b86779d90dc387cea8469a4c3de5baeb976cba0d4b0fa717"
+        },
+        {
+          "suite": "bank-transactions-case-07",
+          "tests": 1,
+          "passed": true,
+          "skipped": 0,
+          "receipt_sha256": "e9d8a2a2b5d53f43c5a5808acba7adc0ab0af00ace54859a71bbc28057df0ea6"
+        },
+        {
+          "suite": "bank-transactions-case-08",
+          "tests": 1,
+          "passed": true,
+          "skipped": 0,
+          "receipt_sha256": "fcb7eeda04b55aceada62ab64896d835b3c41ff9c35df01a8ee1523c5addd698"
+        },
+        {
+          "suite": "bank-transactions-case-09",
+          "tests": 1,
+          "passed": true,
+          "skipped": 0,
+          "receipt_sha256": "6673b88fe32bb66a315a26dbc39d72398cfe96f1088e7ad5f9088a9e4389907e"
+        },
+        {
+          "suite": "bank-transactions-case-10",
+          "tests": 1,
+          "passed": true,
+          "skipped": 0,
+          "receipt_sha256": "0e024cafd602cd4905571a9470ce9e9cb63a76c6c3f1122e0aa97432bb0e3e03"
+        },
+        {
+          "suite": "bank-transactions-case-11",
+          "tests": 1,
+          "passed": true,
+          "skipped": 0,
+          "receipt_sha256": "54c617ef2f1bcc62ec94e6c5e20272b60f8a5443887cac5d160e03602da6777d"
+        },
+        {
+          "suite": "bank-transactions-case-12",
+          "tests": 1,
+          "passed": true,
+          "skipped": 0,
+          "receipt_sha256": "5e3ee604e604b6bf4321d8bc20ca3bb5d8dd5670eec616c9d3383bb728f039a1"
+        },
+        {
+          "suite": "bank-transactions-case-13",
+          "tests": 1,
+          "passed": true,
+          "skipped": 0,
+          "receipt_sha256": "b8c58ad37313f2bd1dc6342d82f3d2213e888a7b9e0e5726533b386ee0791e4e"
+        },
+        {
+          "suite": "bank-transactions-case-14",
+          "tests": 1,
+          "passed": true,
+          "skipped": 0,
+          "receipt_sha256": "45dc8fee4a976756d613ac3b0e370d555b99545b2925d267a105c81e7f778373"
+        },
+        {
+          "suite": "bank-transactions-case-15",
+          "tests": 1,
+          "passed": true,
+          "skipped": 0,
+          "receipt_sha256": "5110b9c24f5a9b6008ed0c2a8b8e27215b46ec4b53b052d32dfcd94b0c193591"
+        },
+        {
+          "suite": "bank-transactions-case-16",
+          "tests": 1,
+          "passed": true,
+          "skipped": 0,
+          "receipt_sha256": "456437eaf538bf93885cfff31b2f0fba63803137d04ea05e3c3c067b27d0696c"
+        },
+        {
+          "suite": "bank-transactions-case-17",
+          "tests": 1,
+          "passed": true,
+          "skipped": 0,
+          "receipt_sha256": "e203141377f7d5d7b7d4d3a126c7a93b1ca80906bba559f022de98d143dcb818"
+        },
+        {
+          "suite": "bank-transactions-case-18",
+          "tests": 1,
+          "passed": true,
+          "skipped": 0,
+          "receipt_sha256": "f043e74c972afdced525b4ec0b1c449b7086dcac27224e01586d7876235fe053"
+        },
+        {
+          "suite": "bank-transactions-case-19",
+          "tests": 1,
+          "passed": true,
+          "skipped": 0,
+          "receipt_sha256": "be46cbdd49f13d91c185ec3004b73b60ce90245b5a9394882030b2ff3ecb79df"
+        },
+        {
+          "suite": "bank-transactions-case-20",
+          "tests": 1,
+          "passed": true,
+          "skipped": 0,
+          "receipt_sha256": "a74a3c138286d5054daf7666dc05da60f2a9ba759e3873f6b015f4047b0ce294"
+        },
+        {
+          "suite": "bank-transactions-case-21",
+          "tests": 1,
+          "passed": true,
+          "skipped": 0,
+          "receipt_sha256": "b59bd1239473231529e767a106589cd444bffdd3a3cc575b7258dd121afd9c90"
+        },
+        {
+          "suite": "bank-transactions",
+          "tests": 1,
+          "passed": true,
+          "skipped": 0,
+          "receipt_sha256": "9011a9ed7e781fd6981b67bb6193bfe34d12ea61b45a0fd609c368868a38255f"
+        },
+        {
+          "suite": "bounded-bank-observation",
+          "tests": 16,
+          "passed": true,
+          "skipped": 0,
+          "receipt_sha256": "544be70b8e5c6c81d95f5c893e205987746dd10c2016b41a2d9b8848bfcf83f1"
+        },
+        {
+          "suite": "initialize-evidence",
+          "tests": 20,
+          "passed": true,
+          "skipped": 0,
+          "receipt_sha256": "974de8583c841bcb454d89d0c89e6ca9c5e55d757efb77f4a221b4d7169ee39e"
+        },
+        {
+          "suite": "layout-recovery-preserve",
+          "tests": 1,
+          "passed": true,
+          "skipped": 0,
+          "receipt_sha256": "1d8f0c0032e86ae34e6b356dd74205238521e47655e63e7bbdbe8d72907fb022"
+        }
+      ]
+    },
     "actual_smokes": [
       {
         "artifact": "leaf-stream-ownership-before-41a0911-01.json",
@@ -544,8 +732,156 @@
       }
     ]
   },
+  "public_refresh_diagnostic": {
+    "source_commit": "8dabc28f577b28c108d0c757fb24c00f45e54f4a",
+    "input_base_files": 10220,
+    "input_final_files": 10289,
+    "changed_paths": 70,
+    "fixture_only": true,
+    "selection_policy": "Broad controlled archive-partition selectors; 144 sources and 10281pairs, not original stress456pairs.",
+    "single": {
+      "commands": [
+        {
+          "label": "inspect",
+          "deadline_s": 300,
+          "exit": 0,
+          "wall_s": 24.71050520904828,
+          "child_cpu_s": 23.92
+        },
+        {
+          "label": "selected",
+          "deadline_s": 300,
+          "exit": 0,
+          "wall_s": 61.4068712919252,
+          "child_cpu_s": 60.48
+        },
+        {
+          "label": "meaningful-selection",
+          "deadline_s": 300,
+          "exit": 0,
+          "wall_s": 66.64366287493613,
+          "child_cpu_s": 64.11
+        },
+        {
+          "label": "review",
+          "deadline_s": 300,
+          "exit": 0,
+          "wall_s": 82.29716233292129,
+          "child_cpu_s": 80.33
+        },
+        {
+          "label": "refresh-prepare",
+          "deadline_s": 300,
+          "exit": 0,
+          "wall_s": 160.33854812500067,
+          "child_cpu_s": 157.29000000000002
+        },
+        {
+          "label": "refresh-apply",
+          "deadline_s": 300,
+          "exit": 0,
+          "wall_s": 257.14957624999806,
+          "child_cpu_s": 252.22999999999996
+        }
+      ],
+      "refresh_applied": true,
+      "remote_freshness_verified": true,
+      "qualified_exact_id_recall_returned": true,
+      "whole_bank_authority_journal_and_feature_preservation_rechecked": true,
+      "independent_git_files": 3514,
+      "pack_files": 217,
+      "read_only_verification_sha256": "d5970a0b71126eb0909ea3fde7685d251fec8997ad92d2f3046be4b54f27d0b8",
+      "apparatus_failures_retained": [
+        "summary NameError before review/prepare/apply",
+        "summary TypeError after public success",
+        "readonly verifier initially used wrong nested record ID field"
+      ],
+      "public_commands_reissued_for_summary_repairs": 0
+    },
+    "four_concurrent": {
+      "all_applies_timed_out_at_300s": true,
+      "rows": [
+        {
+          "world": 0,
+          "prepare_exit": 0,
+          "prepare_wall_s": 177.2688840420451,
+          "apply_error": "TimeoutExpired",
+          "apply_wall_s": 300.04548370896373,
+          "apply_cpu": "unavailable: timeout handler did not record child CPU",
+          "marker_phase": "applying",
+          "changed_count": 70,
+          "applied_count": 70,
+          "ordered_applied_prefix": 70,
+          "remaining_count": 0,
+          "router_state": "intended",
+          "unchanged_paths_match_base": true,
+          "receipt_exists": false,
+          "refresh_output_exists": false
+        },
+        {
+          "world": 1,
+          "prepare_exit": 0,
+          "prepare_wall_s": 177.24387066601776,
+          "apply_error": "TimeoutExpired",
+          "apply_wall_s": 300.0399552079616,
+          "apply_cpu": "unavailable: timeout handler did not record child CPU",
+          "marker_phase": "applying",
+          "changed_count": 70,
+          "applied_count": 70,
+          "ordered_applied_prefix": 70,
+          "remaining_count": 0,
+          "router_state": "intended",
+          "unchanged_paths_match_base": true,
+          "receipt_exists": false,
+          "refresh_output_exists": false
+        },
+        {
+          "world": 2,
+          "prepare_exit": 0,
+          "prepare_wall_s": 175.70320345798973,
+          "apply_error": "TimeoutExpired",
+          "apply_wall_s": 300.04443424998317,
+          "apply_cpu": "unavailable: timeout handler did not record child CPU",
+          "marker_phase": "applying",
+          "changed_count": 70,
+          "applied_count": 70,
+          "ordered_applied_prefix": 70,
+          "remaining_count": 0,
+          "router_state": "intended",
+          "unchanged_paths_match_base": true,
+          "receipt_exists": false,
+          "refresh_output_exists": false
+        },
+        {
+          "world": 3,
+          "prepare_exit": 0,
+          "prepare_wall_s": 177.98721462499816,
+          "apply_error": "TimeoutExpired",
+          "apply_wall_s": 300.0470605000155,
+          "apply_cpu": "unavailable: timeout handler did not record child CPU",
+          "marker_phase": "applying",
+          "changed_count": 70,
+          "applied_count": 70,
+          "ordered_applied_prefix": 70,
+          "remaining_count": 0,
+          "router_state": "intended",
+          "unchanged_paths_match_base": true,
+          "receipt_exists": false,
+          "refresh_output_exists": false
+        }
+      ],
+      "phase_evidence_sha256": "cc86e3eb5496c5dbe5c1e92f61776de3f6283acff0f23f9ab86d0d2f3d2bd706",
+      "exact_timeout_stack": "unknown; all intended path hashes present while marker still applying, no receipt/output",
+      "host_load_and_apply_cpu": "unavailable",
+      "detached_descendants": "unknown",
+      "worlds_preserved": true,
+      "no_retry_or_recovery": true
+    },
+    "acceptance": false,
+    "original_stress_attribution": "Not comparable: original per-source selectors differ. Fresh original-selector diagnostic remains separately required."
+  },
   "remaining": [
-    "same-input Mac/Linux before-after measurements and fresh complete final-source four-cell matrix",
+    "fresh complete final-source four-cell matrix",
     "fresh comparable full S0/C source/runtime protocol and technical authorization",
     "all original functional/performance/platform/native/task acceptance and signed delivery"
   ]
