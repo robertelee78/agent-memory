@@ -12,7 +12,7 @@ import unittest
 
 from world import World
 from identity_fixtures import bind
-from contracts.test_sharing_recovery import SharingRecoveryContract
+import contracts.test_sharing_recovery as sharing_recovery
 
 ROOT = Path(__file__).resolve().parents[2]
 EVALUATIONS = ROOT / 'scripts/evaluations'
@@ -44,7 +44,7 @@ class RecallQualificationContract(unittest.TestCase):
                     argv.insert(1, '-B')
                 return original_run(argv, **kwargs)
             world.run = run
-            helper = SharingRecoveryContract()
+            helper = sharing_recovery.SharingRecoveryContract()
             repo, bank, _, _ = helper.fixture(world)
             pack = helper.pack
             git_dir = repo / '.git'
