@@ -480,11 +480,19 @@ def _read_only_transport_lock(base):
     protected = bool(turn_sources._barriers.get().get(str(base)))
     if not protected and any(os.path.lexists(base / name) for name in evidence):
         raise ContractError('Native evidence lacks its source barrier; preserve private state')
+    recheck = False
     try:
         yield
+        recheck = True
+    except MemoryError:
+        raise
+    except Exception:
+        recheck = True
+        raise
     finally:
-        if os.path.lexists(path) or (not protected and
-                any(os.path.lexists(base / name) for name in evidence)):
+        # Fatal exits must propagate without allocating another observation.
+        if recheck and (os.path.lexists(path) or (not protected and
+                any(os.path.lexists(base / name) for name in evidence))):
             raise ContractError('Native transport appeared during read-only drain observation')
 
 

@@ -40,6 +40,13 @@ MAY route there immediately. After a state change the session MUST route again
 from observed state. Diagnostic file repair MUST remain a fallback after the
 ordinary command cannot establish a verified result.
 
+When the harness supports skill URIs, a session SHOULD read linked AM guides
+through `skill://agent-memory/<relative-path>` (for example,
+`skill://agent-memory/bank/GUIDE.md`). This preserves the skill resource identity
+for receipt-bound instruction handling. Other harnesses MAY use the installed
+filesystem paths; a path or URI alone MUST NOT establish receipt ownership or
+source authority.
+
 ## Standing responsibility
 
 A starting or resuming session MUST follow [resume/GUIDE.md](resume/GUIDE.md)

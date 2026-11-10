@@ -3,6 +3,7 @@ from pathlib import Path
 import json
 import os
 import stat
+import sys
 import uuid
 from . import layout_recovery_state as state
 from . import layout_recovery_observation as raw, bank_observation, bank_writes as writes, sharing_limits
@@ -17,6 +18,9 @@ def source_name(operation_id, path):
 def entries(bank, operation_id, actions, base_view, final_facts, marker_payloads):
     base = {row['path']: row for row in base_view}
     candidates = {}
+    bank_stat = bank.stat()
+    inherited_gid = (bank_stat.st_gid
+                     if sys.platform != 'linux' or bank_stat.st_mode & stat.S_ISGID else os.getegid())
     for action in actions:
         path = action['path']
         values = []
@@ -27,7 +31,6 @@ def entries(bank, operation_id, actions, base_view, final_facts, marker_payloads
     for payload in marker_payloads:
         identity = json.loads(payload)['operation_id']
         path = '.agent-memory-layout-marker-' + identity + '.tmp'
-        inherited_gid = bank.stat().st_gid if bank.stat().st_mode & stat.S_ISGID else os.getegid()
         candidates.setdefault(path, []).append((digest(payload), os.geteuid(), inherited_gid, 0o600, None))
     result = []
     for path, allowed in sorted(candidates.items()):

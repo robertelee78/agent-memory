@@ -494,12 +494,21 @@ def locked(directory):
             raise ContractError('Source completion lock is absent without a held source barrier')
         trust_paths.state(directory)
         parent=directory.lstat()
+        recheck=False
         try:
             yield
+            recheck=True
+        except MemoryError:
+            raise
+        except Exception:
+            recheck=True
+            raise
         finally:
-            named=directory.lstat()
-            if os.path.lexists(path) or (parent.st_dev,parent.st_ino)!=(named.st_dev,named.st_ino):
-                raise ContractError('Source completion lock appeared during read-only observation')
+            # Cancellation/fatal exits leave evidence intact without new work.
+            if recheck:
+                named=directory.lstat()
+                if os.path.lexists(path) or (parent.st_dev,parent.st_ino)!=(named.st_dev,named.st_ino):
+                    raise ContractError('Source completion lock appeared during read-only observation')
         return
     trust_paths.state(directory)
     fd=os.open(directory/'completion.lock',os.O_RDWR|os.O_CREAT|os.O_NOFOLLOW|os.O_NONBLOCK,0o600)

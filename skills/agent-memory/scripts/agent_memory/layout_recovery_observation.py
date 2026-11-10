@@ -305,7 +305,7 @@ def inventory(bank, *, retain_directory=None, prior_sources=None, allow_temporar
                 raise ContractError('Unsupported raw source type/alias; preserve the bank')
             xattrs = metadata_supported(bank / relative)
             runtime = contract.runtime_path(relative)
-            if runtime and any(part.startswith('.agent-memory-layout-') for part in Path(relative).parts) and not allow_temporaries:
+            if runtime and any(part.startswith(('.agent-memory-layout-', '.agent-memory-probe-')) for part in Path(relative).parts) and not allow_temporaries:
                 raise ContractError('Unknown layout staging artifact requires its known operation recovery')
             if runtime and ('transaction' in relative or 'recovery' in relative):
                 if relative not in ('.agent-memory-transaction.md', '.agent-memory-recovery.md'):

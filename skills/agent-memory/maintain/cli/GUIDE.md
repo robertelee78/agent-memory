@@ -57,11 +57,19 @@ MUST remain one quoted argument. Invalid arguments exit 2; a refused operation
 exits nonzero and retains the helper's evidence/recovery instructions. A
 successful preview is not an applied mutation or verified publication.
 
-`admission preview`, `compact preview` and `govern preview` accept
-`--operation-id UUID --recorded-at RFC3339` when an independent recovery review
-binds the exact planned output. The session MUST choose and review those
-values with the intended files before preview; they are CLI options, not extra
-request fields, and MUST NOT replace source, authority or coverage review.
+`admission preview` accepts `--operation-id UUID --recorded-at RFC3339` when an
+independent recovery review binds those values and the exact intended files.
+They are CLI options, not extra request fields, and MUST NOT replace source,
+authority or coverage review.
+
+When independent recovery coverage review needs exact future output, a session
+using `compact` or `govern` MUST first use `plan --private-output`, retain that
+nonauthorizing plan, obtain the independent coverage review, then use
+`preview --plan` and apply the resulting proposal. Ordinary unplanned preview
+remains valid otherwise. Their preview commands MUST NOT be given
+`--operation-id` or `--recorded-at`; a retained plan binds those values. See the
+[consolidation](../../consolidation/GUIDE.md) and
+[governance](../../governance/GUIDE.md) guides for the exact input envelopes.
 
 Bare `am`, `am help`, `am --help` and `am -h` show public help. `am --version`,
 `am -V` and `am version` show the executing version, revision/cleanliness and

@@ -155,6 +155,30 @@ class LayoutMetadataProbeFaults(unittest.TestCase):
             return {str(p.relative_to(bank)): (p.lstat().st_uid, p.lstat().st_gid,
                     stat.S_IMODE(p.lstat().st_mode), attributes(p)) for p in (bank, *bank.rglob('*'))}
         before = snapshot(bank), snapshot(attempt), (directory / 'journal.json').read_bytes(), metadata()
+        private_before = snapshot(directory)
+        inspected_output = world.inside('ambiguous-probe-fresh-inspect.json')
+        inspected = recovery.call(world, command, 'inspect', '--repo', repo,
+                                  '--output', inspected_output, expected=1)
+        self.assertEqual(inspected['state'], 'pending')
+        self.assertFalse(inspected['verified'])
+        self.assertFalse(inspected['semantic_recovery_complete'])
+        self.assertIsNot(inspected['canonical_eligibility'], True)
+        self.assertIsNot(inspected.get('observation_complete'), True)
+        self.assertFalse(inspected['canonical_writes_performed'])
+        self.assertFalse(inspected['canonical_mutation_may_have_occurred'])
+        self.assertTrue(inspected['required_actions'])
+        self.assertFalse(inspected_output.exists())
+        self.assertNotEqual(inspected['operation_id'], operation)
+        refused = recovery.private_directory(world, bank, inspected['operation_id'])
+        self.assertFalse(json.loads((refused / 'staging.json').read_bytes())['observation_complete'])
+        self.assertFalse((refused / 'manifest.json').exists())
+        self.assertFalse((refused / 'proposal.json').exists())
+        self.assertEqual((snapshot(bank), snapshot(attempt), (directory / 'journal.json').read_bytes(), metadata()), before)
+        self.assertEqual(snapshot(directory), private_before)
+        self.assertFalse(marker.exists())
+        if flags is not None:
+            self.assertEqual(exact_metadata.inode_flags(target), flags)
+        helper.assert_fault_work_unchanged(world, repo, git)
         output = world.inside('ambiguous-probe-recovery.json')
         pending = world.run([command, 'bank', 'recover-layout', 'recover', '--repo', repo,
                              '--operation', operation, '--mode', 'finish', '--output', output],
@@ -280,6 +304,15 @@ class LayoutMetadataProbeFaults(unittest.TestCase):
             self.assertEqual(pin.exists(), bool(foreign))
             if mode == 'error':
                 self.assertFalse(target.exists())
+                before_inspect = snapshot(bank), snapshot(directory)
+                safe, observed = recovery.inspect(world, command, repo)
+                self.assertTrue(safe['verified'])
+                self.assertTrue(safe['observation_complete'])
+                self.assertFalse(safe['semantic_recovery_complete'])
+                self.assertNotEqual(safe['operation_id'], fixture[9])
+                self.assertEqual({row['path'] for row in observed['manifest']['physical_entries']},
+                                 set(before_inspect[0]))
+                self.assertEqual((snapshot(bank), snapshot(directory)), before_inspect)
                 self.finish(world, fixture, probes=[row['path'] for row in plan['nodes']])
                 return
             self.assertTrue(target.exists())

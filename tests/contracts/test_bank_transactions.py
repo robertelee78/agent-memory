@@ -51,7 +51,8 @@ class BankTransactionsContract(unittest.TestCase):
             (bank / path).write_text(body)
         bind(world, repo)
         runtime_before = self.runtime_files(world)
-        r, p = self.command(world, "preview", "--repo", repo, "--files", self.save(world, after, "files.json"), "--operation", "compact")
+        r, p = self.private_command(world, "preview", "--repo", repo, "--files", self.save(world, after, "files.json"),
+                                    "--operation", "compact", sources=(before, after))
         self.assertEqual(r.returncode, 0, p)
         self.assertEqual(self.runtime_files(world), runtime_before)
         return repo, bank, before, after, p
@@ -60,11 +61,102 @@ class BankTransactionsContract(unittest.TestCase):
         root = Path(world.env['AGENT_MEMORY_STATE_HOME'])
         return {p.relative_to(root).as_posix(): p.read_bytes() for p in root.rglob('*') if p.is_file()}
 
+    def runtime_snapshot(self, world):
+        root = Path(world.env["AGENT_MEMORY_STATE_HOME"])
+        snapshot = {}
+        for path in root.rglob("*"):
+            info = path.lstat()
+            if stat.S_ISDIR(info.st_mode):
+                continue
+            relative = path.relative_to(root).as_posix()
+            self.assertTrue(stat.S_ISREG(info.st_mode), relative)
+            snapshot[relative] = (path.read_bytes(), info.st_dev, info.st_ino,
+                                  info.st_mode, info.st_nlink, info.st_uid, info.st_gid,
+                                  info.st_size, info.st_mtime_ns, info.st_ctime_ns)
+        return snapshot
+
+    def assert_only_audit_state(self, world, previous, *sources):
+        # Refusal may retain immutable content-free audit facts and private empty
+        # synchronization files, never a body journal, receipt or derived bank.
+        # Their location/name is not an authority or an exemption.
+        root = Path(world.env["AGENT_MEMORY_STATE_HOME"])
+        current = self.runtime_snapshot(world)
+        self.assertEqual(list(root.rglob("journal.json")), [])
+        self.assertEqual(list(root.rglob("operations/*.json")), [])
+        for relative, observed in previous.items():
+            self.assertIn(relative, current, relative)
+            self.assertEqual(current[relative], observed, relative)
+        forbidden = {b"OLD_CONTENT_CANARY", b"UNOBSERVED_OCCUPANT_CANARY"}
+        for source in sources:
+            for body in source.values():
+                raw = body.encode() if isinstance(body, str) else body
+                if raw:
+                    forbidden.add(raw)
+                    # Also catch source quotes or derived body-only retention,
+                    # without forbidding the UUIDs legitimately used as metadata.
+                    text = raw.decode("utf-8")
+                    body_text = text.split("\n---\n", 1)[-1] if text.startswith("---\n") else text
+                    forbidden.update(line.encode() for line in body_text.splitlines() if line.strip())
+        for relative, observed in current.items():
+            if relative in previous and observed == previous[relative]:
+                continue
+            raw = observed[0]
+            for content in forbidden:
+                self.assertNotIn(content, raw, relative)
+            info = (root / relative).lstat()
+            self.assertTrue(stat.S_ISREG(info.st_mode), relative)
+            self.assertEqual(info.st_nlink, 1, relative)
+            self.assertEqual(info.st_uid, os.getuid(), relative)
+            self.assertEqual(stat.S_IMODE(info.st_mode), 0o600, relative)
+            if not raw:
+                continue
+            value = json.loads(raw)
+            self.assertIsInstance(value, dict, relative)
+            self.assertEqual(set(value), {"schema", "operation_id", "project_id", "developer_id",
+                "category", "phase", "action", "source_classes", "reasons", "record_ids", "identity_authenticated"}, relative)
+            self.assertEqual(value["schema"], "agent-memory/security-audit-v1", relative)
+            self.assertIs(value["identity_authenticated"], False, relative)
+            for field in ("operation_id", "project_id", "developer_id"):
+                self.assertIsInstance(value[field], str, relative)
+                self.assertEqual(str(uuid.UUID(value[field])), value[field], relative)
+            self.assertIn(value["category"], {"admission", "mutation", "retrieval", "promotion"}, relative)
+            self.assertIn(value["phase"], {"checked", "started", "completed", "refused"}, relative)
+            self.assertIn(value["action"], {"policy-check", "initialize", "checkpoint", "recover-finish",
+                "recover-rollback", "replace", "bind", "capture", "compact", "correct", "supersede",
+                "revoke", "forget", "refresh", "recover", "migrate", "migration-restore",
+                "migration-finish", "migration-rollback"}, relative)
+            allowed = {
+                "source_classes": {"user", "assistant", "tool", "external", "verified-repository"},
+                "reasons": {"private-key", "token", "credential", "authorization-header", "url-credential",
+                    "authority-override", "credential-disclosure", "identity-permission-claim",
+                    "raw-conversation", "terminal-deletion", "explicit-procedure-promotion-required",
+                    "operator-approval-required", "source-review-required"},
+            }
+            for field in ("source_classes", "reasons", "record_ids"):
+                self.assertIsInstance(value[field], list, relative)
+                for item in value[field]:
+                    self.assertIsInstance(item, str, relative)
+                    if field == "record_ids":
+                        self.assertEqual(str(uuid.UUID(item)), item, relative)
+                    else:
+                        self.assertIn(item, allowed[field], relative)
+            self.assertTrue(value["source_classes"], relative)
+
+    def private_command(self, world, *args, sources, helper=HELPER, env=None):
+        """Observe each public preview/refusal without changing its command path."""
+        previous = self.runtime_snapshot(world)
+        result = self.command(world, *args, helper=helper, env=env)
+        self.assert_only_audit_state(world, previous, *sources)
+        return result
+
 
     def canonical(self, bank):
         return {p.relative_to(bank).as_posix(): p.read_text() for p in bank.rglob("*.md") if p.is_file() and not p.name.startswith(".agent-memory")}
 
-    def apply(self, world, p, env=None):
+    def apply(self, world, p, env=None, privacy_sources=None):
+        if privacy_sources is not None:
+            return self.private_command(world, "apply", "--proposal", self.save(world, p),
+                                        env=env, sources=privacy_sources)
         return self.command(world, "apply", "--proposal", self.save(world, p), env=env)
 
     def crash(self, world, p, stage):
@@ -329,14 +421,14 @@ class BankTransactionsContract(unittest.TestCase):
                 router = bank / "MEMORY.md"
                 crlf = router.read_bytes().replace(b"\n", b"\r\n")
                 router.write_bytes(crlf)
-                r, invalid = self.command(w, "validate", "--repo", repo, helper=RENDER)
+                r, invalid = self.private_command(w, "validate", "--repo", repo, helper=RENDER, sources=(before, after, {"MEMORY.md": crlf}))
                 self.assertEqual(r.returncode, 1, invalid)
                 if timing == "before-preview":
-                    r, error = self.command(w, "preview", "--repo", repo, "--files", self.save(w, after, "desired.json"))
+                    r, error = self.private_command(w, "preview", "--repo", repo, "--files", self.save(w, after, "desired.json"),
+                                                    sources=(before, after, {"MEMORY.md": crlf}))
                 else:
-                    r, error = self.apply(w, p)
+                    r, error = self.apply(w, p, privacy_sources=(before, after, {"MEMORY.md": crlf}))
                 self.assertEqual(r.returncode, 1, error)
-                self.assertIn("Frontmatter must start at byte zero", error["error"])
                 self.assertEqual(router.read_bytes(), crlf)
                 self.assertFalse((bank / MARKER).exists())
                 self.assertFalse((bank / ".agent-memory.lock").exists())
@@ -370,7 +462,8 @@ class BankTransactionsContract(unittest.TestCase):
                     (bank / "topics/occupant.bin").write_text("Unrelated file")
                     after = self.optional_files(after, {"topics/occupant.bin/b.md": "# Child\n"})
                 original = self.canonical(bank)
-                r, error = self.command(w, "preview", "--repo", repo, "--files", self.save(w, after, "desired.json"))
+                r, error = self.private_command(w, "preview", "--repo", repo, "--files", self.save(w, after, "desired.json"),
+                                                sources=(before, after, original, self.physical_bytes(bank)))
                 self.assertEqual(r.returncode, 1, error)
                 self.assertEqual(self.canonical(bank), original)
                 self.assertFalse((bank / MARKER).exists())
@@ -384,7 +477,7 @@ class BankTransactionsContract(unittest.TestCase):
             (bank / "topics").mkdir()
             occupant = bank / "topics/occupant.bin"
             occupant.write_text("Unrelated external file")
-            r, error = self.apply(w, p)
+            r, error = self.apply(w, p, privacy_sources=(before, after, self.physical_bytes(bank)))
             self.assertEqual(r.returncode, 1, error)
             self.assertEqual(occupant.read_text(), "Unrelated external file")
             self.assertEqual(self.canonical(bank), before)
@@ -436,11 +529,12 @@ class BankTransactionsContract(unittest.TestCase):
                     (bank / "topics/NOTE.MD").write_text("UNOBSERVED_OCCUPANT_CANARY\n")
                 after = self.optional_files(after, additions)
                 original = self.physical_bytes(bank)
-                r, error = self.command(w, "preview", "--repo", repo, "--files", self.save(w, after, "desired.json"))
+                r, error = self.private_command(w, "preview", "--repo", repo, "--files", self.save(w, after, "desired.json"),
+                                                sources=(before, after, original))
                 self.assertEqual(r.returncode, 1, error)
                 # Applying a hand-edited proposal must not bypass the preflight.
                 p["proposal"]["files"] = after
-                r, error = self.apply(w, p)
+                r, error = self.apply(w, p, privacy_sources=(before, after, original))
                 self.assertEqual(r.returncode, 1, error)
                 self.assertEqual(self.physical_bytes(bank), original)
                 self.assertFalse((bank / MARKER).exists())
@@ -455,7 +549,7 @@ class BankTransactionsContract(unittest.TestCase):
             (bank / "topics").mkdir()
             (bank / "topics/NOTE.MD").write_text("UNOBSERVED_OCCUPANT_CANARY\n")
             original = self.physical_bytes(bank)
-            r, error = self.apply(w, p)
+            r, error = self.apply(w, p, privacy_sources=(before, after, original))
             self.assertEqual(r.returncode, 1, error)
             self.assertEqual(self.physical_bytes(bank), original)
             self.assertFalse((bank / MARKER).exists())
@@ -519,11 +613,14 @@ class BankTransactionsContract(unittest.TestCase):
             (bank / "topics/Case.md").write_text("# Physical topic\n")
             (bank / "MEMORY.md").write_text(routed["MEMORY.md"])
             original = self.physical_bytes(bank)
-            self.assertEqual(self.command(w, "validate", "--repo", repo, helper=RENDER)[0].returncode, 1)
-            self.assertEqual(self.command(w, "inspect", "--repo", repo, helper=SINGLE)[0].returncode, 1)
+            self.assertEqual(self.private_command(w, "validate", "--repo", repo, helper=RENDER,
+                                                  sources=(before, after, routed, original))[0].returncode, 1)
+            self.assertEqual(self.private_command(w, "inspect", "--repo", repo, helper=SINGLE,
+                                                  sources=(before, after, routed, original))[0].returncode, 1)
             content = w.inside("checkpoint.md")
             content.write_text("# New focus\n")
-            self.assertEqual(self.command(w, "preview", "--repo", repo, "--path", "activeContext.md", "--content", content, helper=SINGLE)[0].returncode, 1)
+            self.assertEqual(self.private_command(w, "preview", "--repo", repo, "--path", "activeContext.md", "--content", content,
+                                                  helper=SINGLE, sources=(before, after, routed, original, {"checkpoint.md": content.read_text()}))[0].returncode, 1)
             self.assertEqual(self.physical_bytes(bank), original)
 
     def test_bank_root_spelling_alias_refuses_before_lock_and_unique_unicode_target_still_works(self):

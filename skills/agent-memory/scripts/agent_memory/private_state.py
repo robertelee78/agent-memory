@@ -128,10 +128,18 @@ def observation_barrier(root):
             yield
     else:
         pin = _native_absence(root, recovery_base.parent)
+        recheck = False
         try:
             yield pin
+            recheck = True
+        except MemoryError:
+            raise
+        except Exception:
+            recheck = True
+            raise
         finally:
-            if _native_absence(root, recovery_base.parent) != pin:
+            # Do not turn cancellation or a fatal allocation failure into pending.
+            if recheck and _native_absence(root, recovery_base.parent) != pin:
                 raise ContractError('Native registry changed during read-only compatibility observation')
 
 
