@@ -44,6 +44,15 @@ class NestedRecoveryClosure(unittest.TestCase):
                 finish = world.inside('nested-finish.json')
                 f.call(world, command, 'recover-nested', '--repo', repo, '--operation', operation,
                        '--nested', nested, '--mode', 'finish', '--output', finish)
+                journal_path = directory / 'nested' / nested / 'journal.json'
+                journal_bytes = journal_path.read_bytes()
+                journal = json.loads(journal_bytes)
+                journal['resolution_plan']['ledgers'][0]['resolutions'][0]['review_sha256'] = '0' * 64
+                journal_path.write_bytes(f.encoded(journal))
+                blocked = snapshot(bank), snapshot(directory), snapshot(repo / '.git/index')
+                f.call(world, command, 'recover-nested', '--repo', repo, '--proposal', finish, expected=1)
+                self.assertEqual((snapshot(bank), snapshot(directory), snapshot(repo / '.git/index')), blocked)
+                journal_path.write_bytes(journal_bytes)
                 f.call(world, command, 'recover-nested', '--repo', repo, '--proposal', finish)
                 self.assertEqual({path.relative_to(bank).as_posix(): path.read_bytes()
                                   for path in bank.rglob('*')
@@ -70,6 +79,49 @@ class NestedRecoveryClosure(unittest.TestCase):
                 f.call(world, command, 'recover-nested', '--repo', repo, '--proposal', retry)
                 self.assertEqual((snapshot(bank), (directory / 'ledger-head.json').read_bytes(),
                                   receipt_path.read_bytes()), before)
+
+    def test_nested_marker_blocks_independent_scratch_resolution_until_finish(self):
+        with World() as world:
+            command, source = f.installed(world)
+            repo, bank, native = f.memory(world)
+            (bank / 'handoff-prompt.md').write_text(SCRATCH + f.policy_body(0))
+            (repo / 'synthetic-policy.md').write_text(f.policy_body(0))
+            _, inspected = f.inspect(world, command, repo)
+            operation = inspected['operation_id']
+            request = f.review_request(world, command, source, repo, inspected, native)
+            parent = next(unit for unit in request['unit_map']['units'] if unit['disposition'] == 'pending-admission')
+            span = parent['source_ranges'][0]
+            import uuid
+            units = [{**parent, 'unit_id': str(uuid.uuid4()), 'source_ranges': [{**span, 'start': start, 'end': end}]}
+                     for start, end in ((0, len(SCRATCH.encode())), (len(SCRATCH.encode()), span['end']))]
+            request['unit_map']['units'] = [unit for unit in request['unit_map']['units'] if unit != parent] + units
+            request['review']['unit_map_sha256'] = f.sha(f.encoded(request['unit_map']))
+            request['review']['unit_decisions'] = [{'unit_id': unit['unit_id'], 'disposition': unit['disposition'],
+                                                    'rationale': unit['reason']} for unit in request['unit_map']['units']]
+            layout = world.inside('split-layout.json')
+            f.call(world, command, 'prepare', '--repo', repo, '--operation', operation,
+                   '--input', f.save(world, request), '--output', layout)
+            f.call(world, command, 'apply', '--repo', repo, '--proposal', layout)
+            discard = f.discard_proposal(world, command, repo, bank, inspected, units[0]['unit_id'])
+            # No source credit is asserted for either unit: this transaction
+            # exists to exercise the genuinely interrupted nested marker.
+            admission, transaction, _ = f.admission_proposal(world, command, source, repo, bank, inspected, full=False)
+            f.public(world, command, 'admission', 'apply', '--proposal', admission, expected=1,
+                     env={'AGENT_MEMORY_FAULT_STAGE': 'layout-recovery-nested-after-receipt'})
+            marker = json.loads((bank / '.agent-memory-transaction.md').read_text())
+            self.assertEqual(marker['schema'], 'agent-memory/layout-frontier-transaction-v1')
+            directory = f.private_directory(world, bank, operation)
+            before = snapshot(bank), snapshot(directory.parent), snapshot(repo / '.git/index')
+            f.call(world, command, 'resolve', '--repo', repo, '--proposal', discard, expected=1)
+            self.assertEqual((snapshot(bank), snapshot(directory.parent), snapshot(repo / '.git/index')), before)
+            finish = world.inside('finish-nested.json')
+            f.call(world, command, 'recover-nested', '--repo', repo, '--operation', operation,
+                   '--nested', transaction['operation_id'], '--mode', 'finish', '--output', finish)
+            self.assertTrue(f.call(world, command, 'recover-nested', '--repo', repo, '--proposal', finish)['verified'])
+            refreshed = f.discard_proposal(world, command, repo, bank, inspected, units[0]['unit_id'])
+            f.call(world, command, 'resolve', '--repo', repo, '--proposal', refreshed)
+            status = f.call(world, command, 'status', '--repo', repo, '--operation', operation)
+            self.assertEqual(status['pending_unit_ids'], [units[1]['unit_id']])
 
     def test_unfinished_resolution_excludes_nested_child_finish(self):
         with World() as world:

@@ -60,6 +60,46 @@ class RecoveryReconciliationContract(unittest.TestCase):
         for source in inspected['manifest']['sources']:
             self.assertEqual((directory / source['blob']).read_bytes(), wanted[source['path']])
 
+    def test_revision_rejects_overlap_and_loss_then_exact_retry_is_historical(self):
+        with World() as world:
+            command, _, repo, bank, _, inspected, applied = f.small_pending(world, SCRATCH)
+            operation = inspected['operation_id']
+            parent = applied['pending_unit_ids'][0]
+            request = revision_request(world, bank, inspected, parent)
+            canonical = bank_bytes(bank)
+            directory = f.private_directory(world, bank, operation)
+            head_before = (directory / 'ledger-head.json').read_bytes()
+            for delta in (-1, 1):
+                invalid = copy.deepcopy(request)
+                invalid['replacements'][0]['new_units'][1]['source_ranges'][0]['start'] += delta
+                # The altered request is independently pinned; rejection must
+                # concern its source partition, not an old replacements hash.
+                invalid['review']['replacements_sha256'] = f.sha(f.encoded(invalid['replacements']))
+                f.call(world, command, 'revise-units', '--repo', repo, '--operation', operation,
+                       '--input', f.save(world, invalid), '--output',
+                       world.inside('invalid-revision-' + str(delta) + '.json'), expected=1)
+                self.assertEqual(bank_bytes(bank), canonical)
+                self.assertEqual((directory / 'ledger-head.json').read_bytes(), head_before)
+                self.assertEqual(f.call(world, command, 'status', '--repo', repo,
+                                        '--operation', operation)['pending_unit_ids'], [parent])
+            proposal = world.inside('valid-revision.json')
+            f.call(world, command, 'revise-units', '--repo', repo, '--operation', operation,
+                   '--input', f.save(world, request), '--output', proposal)
+            f.call(world, command, 'revise-units', '--repo', repo, '--proposal', proposal)
+            head = json.loads((directory / 'ledger-head.json').read_text())
+            ledger = json.loads((directory / 'ledger' / (str(head['generation']).zfill(8) + '.json')).read_text())
+            row = next(unit for unit in ledger['units'] if unit['unit_id'] == parent)
+            children = {unit['unit_id'] for unit in request['replacements'][0]['new_units']}
+            self.assertEqual(row['state'], 'superseded-by-revision')
+            self.assertEqual(set(row['child_unit_ids']), children)
+            self.assertEqual(set(f.call(world, command, 'status', '--repo', repo,
+                                        '--operation', operation)['pending_unit_ids']), children)
+            before_retry = retained(directory), bank_bytes(bank)
+            retry = f.call(world, command, 'revise-units', '--repo', repo, '--proposal', proposal)
+            self.assertTrue(retry['already_applied'])
+            self.assertTrue(retry['receipt_is_historical'])
+            self.assertEqual((retained(directory), bank_bytes(bank)), before_retry)
+
     def test_raw_router_bootstrap_uses_checked_committed_identity_not_normal_router_limits(self):
         with World() as world:
             command, _ = f.installed(world)
