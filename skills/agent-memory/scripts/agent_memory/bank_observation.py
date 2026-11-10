@@ -1,5 +1,6 @@
 """One invocation's exact validated bytes; never a persistent/caller-owned cache."""
 from __future__ import annotations
+from contextlib import contextmanager, ExitStack
 import hashlib
 import os
 from pathlib import Path
@@ -14,20 +15,48 @@ MAX_FILES=sharing_limits.MAX_FILES
 MAX_BYTES=sharing_limits.MAX_BANK
 
 
-def read_source(bank, relative, limit):
-    """Read bounded bytes and pin the named file and every opened parent."""
+@contextmanager
+def _parent_chain(bank, parts):
     descriptors=[]
+    try:
+        try:
+            descriptors.append(os.open(bank, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW))
+            for part in parts:
+                descriptors.append(os.open(part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW,
+                                           dir_fd=descriptors[-1]))
+        except OSError as exc:
+            raise ContractError('Canonical source or parent changed, became unsafe, or cannot be read; preserve it and retry') from exc
+        yield descriptors
+    finally:
+        for fd in reversed(descriptors):
+            os.close(fd)
+
+
+def _check_parents(bank, parts, descriptors):
+    try:
+        for index,descriptor in enumerate(descriptors):
+            current=(os.stat(bank,follow_symlinks=False) if index==0 else
+                     os.stat(parts[index-1],dir_fd=descriptors[index-1],follow_symlinks=False))
+            opened=os.fstat(descriptor)
+            if (not stat.S_ISDIR(current.st_mode) or not stat.S_ISDIR(opened.st_mode)
+                    or (current.st_dev,current.st_ino)!=(opened.st_dev,opened.st_ino)):
+                raise ContractError('Canonical source parent changed during bounded observation')
+    except OSError as exc:
+        raise ContractError('Canonical source or parent changed, became unsafe, or cannot be read; preserve it and retry') from exc
+
+
+def _read_pinned_source(bank, relative, limit, parts, descriptors):
     def signature(info):
         return (info.st_dev,info.st_ino,info.st_size,info.st_mtime_ns,
                 info.st_ctime_ns,info.st_mode)
     try:
-        descriptors.append(os.open(bank, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW))
-        parts=Path(relative).parts
-        for part in parts[:-1]:
-            descriptors.append(os.open(part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW,
-                                       dir_fd=descriptors[-1]))
         fd=os.open(parts[-1], os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=descriptors[-1])
-        with os.fdopen(fd,'rb') as stream:
+        try:
+            stream=os.fdopen(fd,'rb')
+        except BaseException:
+            os.close(fd)
+            raise
+        with stream:
             before=os.fstat(stream.fileno())
             if not stat.S_ISREG(before.st_mode):
                 raise ContractError('Canonical source is no longer ordinary')
@@ -38,22 +67,20 @@ def read_source(bank, relative, limit):
                     or signature(before)!=signature(after)
                     or signature(after)!=signature(named)):
                 raise ContractError('Canonical source changed during bounded observation')
-            for index,descriptor in enumerate(descriptors):
-                current=(os.stat(bank,follow_symlinks=False) if index==0 else
-                         os.stat(parts[index-1],dir_fd=descriptors[index-1],follow_symlinks=False))
-                opened=os.fstat(descriptor)
-                if (not stat.S_ISDIR(current.st_mode)
-                        or (current.st_dev,current.st_ino)!=(opened.st_dev,opened.st_ino)):
-                    raise ContractError('Canonical source parent changed during bounded observation')
+            _check_parents(bank,parts,descriptors)
             if before.st_size>sharing_limits.MAX_FILE:
                 raise BankCapacityError('bank-source-byte-capacity',relative,
                                         sharing_limits.MAX_FILE,before.st_size,measurement='exact')
             return raw
     except OSError as exc:
         raise ContractError('Canonical source or parent changed, became unsafe, or cannot be read; preserve it and retry') from exc
-    finally:
-        for fd in reversed(descriptors):
-            os.close(fd)
+
+
+def read_source(bank, relative, limit):
+    """Read bounded bytes and pin the named file and every opened parent."""
+    parts=Path(relative).parts
+    with _parent_chain(bank,parts[:-1]) as descriptors:
+        return _read_pinned_source(bank,relative,limit,parts,descriptors)
 
 
 def markers(bank,owner,transaction=None):
@@ -102,25 +129,32 @@ def scan(bank,*,read_sources,metrics=None,require_router=True):
         parent=Path(directory)
         directory_relative=parent.relative_to(bank).as_posix()
         prefix='' if directory_relative=='.' else directory_relative+'/'
-        for name in [*dirs,*files]:
-            path=parent/name;relative=prefix+name;mode=path.lstat().st_mode
-            if stat.S_ISLNK(mode):raise ContractError('Bank paths must not be symlinks')
-            physical[relative]='directory' if stat.S_ISDIR(mode) else 'file' if stat.S_ISREG(mode) else 'other'
-            if len(physical)>MAX_FILES*2:raise ContractError('Complete physical bank inventory exceeds its finite budget')
-            if path.suffix!='.md' or contract.runtime_path(relative):continue
-            if not stat.S_ISREG(mode):
-                raise ContractError('Canonical Markdown source must be an ordinary file')
-            # The read limit includes the remaining aggregate budget: no large
-            # source is loaded even when it races after the initial lstat.
-            remaining=MAX_BYTES-total
-            raw=read_source(bank,relative,min(sharing_limits.MAX_FILE,remaining))
-            if len(hashes)>=MAX_FILES:
-                raise BankCapacityError('bank-source-count-capacity',relative,MAX_FILES,len(hashes)+1)
-            total+=len(raw)
-            if total>MAX_BYTES:
-                raise BankCapacityError('bank-aggregate-byte-capacity',relative,MAX_BYTES,total)
-            hashes[relative]=hashlib.sha256(raw).hexdigest()
-            if read_sources:sources[relative]=raw
+        with ExitStack() as stack:
+            descriptors=None
+            parent_parts=() if directory_relative=='.' else Path(directory_relative).parts
+            for name in [*dirs,*files]:
+                path=parent/name;relative=prefix+name;mode=path.lstat().st_mode
+                if stat.S_ISLNK(mode):raise ContractError('Bank paths must not be symlinks')
+                physical[relative]='directory' if stat.S_ISDIR(mode) else 'file' if stat.S_ISREG(mode) else 'other'
+                if len(physical)>MAX_FILES*2:raise ContractError('Complete physical bank inventory exceeds its finite budget')
+                if path.suffix!='.md' or contract.runtime_path(relative):continue
+                if not stat.S_ISREG(mode):
+                    raise ContractError('Canonical Markdown source must be an ordinary file')
+                # Include the remaining aggregate budget even if the source races.
+                remaining=MAX_BYTES-total
+                if descriptors is None:
+                    descriptors=stack.enter_context(_parent_chain(bank,parent_parts))
+                else:
+                    _check_parents(bank,parent_parts,descriptors)
+                raw=_read_pinned_source(bank,relative,min(sharing_limits.MAX_FILE,remaining),
+                                        (*parent_parts,name),descriptors)
+                if len(hashes)>=MAX_FILES:
+                    raise BankCapacityError('bank-source-count-capacity',relative,MAX_FILES,len(hashes)+1)
+                total+=len(raw)
+                if total>MAX_BYTES:
+                    raise BankCapacityError('bank-aggregate-byte-capacity',relative,MAX_BYTES,total)
+                hashes[relative]=hashlib.sha256(raw).hexdigest()
+                if read_sources:sources[relative]=raw
     if require_router and 'MEMORY.md' not in hashes:
         raise ContractError('A complete canonical router is required')
     if metrics is not None:metrics.update(payload_bytes=total,file_reads=len(hashes))

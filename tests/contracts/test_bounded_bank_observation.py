@@ -145,23 +145,144 @@ class BoundedBankObservation(unittest.TestCase):
             (inventory / name).write_bytes(b'original')
         outside = self.repo / 'outside-source'
         outside.write_bytes(b'PRIVATE_BODY_CANARY')
-        original_read = bank_observation.read_source
+        real_open = os.open
         reads = 0
-        def redirect(bank, relative, limit):
+        def redirect(path, flags, *args, **kwargs):
             nonlocal reads
-            reads += 1
-            if reads == 2:
-                path = bank / relative
-                path.unlink()
-                path.symlink_to(outside)
-            return original_read(bank, relative, limit)
+            if kwargs.get('dir_fd') is not None and str(path).endswith('.md'):
+                reads += 1
+                if reads == 2:
+                    source = inventory / path
+                    source.unlink()
+                    source.symlink_to(outside)
+            return real_open(path, flags, *args, **kwargs)
         with patch.object(bank_observation, 'MAX_FILES', 1), \
-             patch.object(bank_observation, 'read_source', side_effect=redirect):
+             patch.object(bank_observation.os, 'open', side_effect=redirect):
             with self.assertRaises(ContractError) as caught:
                 bank_observation.scan(inventory, read_sources=False, require_router=False)
         self.assertEqual(reads, 2)
         self.assertNotIsInstance(caught.exception, bank_capacity.BankCapacityError)
         self.assertEqual(outside.read_bytes(), b'PRIVATE_BODY_CANARY')
+
+    def test_reused_parent_substitution_refuses_and_closes_descriptors(self):
+        inventory = self.repo / 'parent-race'
+        nested = inventory / 'nested'
+        nested.mkdir(parents=True)
+        originals = {'one.md': b'one', 'two.md': b'two'}
+        for name, data in originals.items():
+            (nested / name).write_bytes(data)
+        outside = self.repo / 'parent-outside'
+        outside.mkdir()
+        for name in originals:
+            (outside / name).write_bytes(b'outside')
+        moved = inventory / 'moved'
+        real_open, real_stat = os.open, os.stat
+        descriptors = []
+        first_read = False
+        first_parent_checked = False
+        changed = False
+
+        def record_open(path, flags, *args, **kwargs):
+            fd = real_open(path, flags, *args, **kwargs)
+            descriptors.append(fd)
+            return fd
+
+        def substitute(path, *args, **kwargs):
+            nonlocal first_read, first_parent_checked, changed
+            if kwargs.get('dir_fd') is not None:
+                if path in originals:
+                    first_read = True
+                elif path == 'nested' and first_read and not changed:
+                    if first_parent_checked:
+                        nested.rename(moved)
+                        nested.symlink_to(outside, target_is_directory=True)
+                        changed = True
+                    else:
+                        first_parent_checked = True
+            return real_stat(path, *args, **kwargs)
+
+        with patch.object(bank_observation.os, 'open', side_effect=record_open), \
+             patch.object(bank_observation.os, 'stat', side_effect=substitute):
+            with self.assertRaises(ContractError) as caught:
+                bank_observation.scan(inventory, read_sources=False, require_router=False)
+        self.assertTrue(changed)
+        self.assertNotIsInstance(caught.exception, bank_capacity.BankCapacityError)
+        for fd in set(descriptors):
+            with self.assertRaises(OSError):
+                os.fstat(fd)
+        self.assertEqual({p.name: p.read_bytes() for p in moved.iterdir()}, originals)
+        self.assertEqual({p.name: p.read_bytes() for p in outside.iterdir()},
+                         {name: b'outside' for name in originals})
+
+    def test_reused_parent_replaced_after_leaf_open_refuses_and_closes(self):
+        inventory = self.repo / 'post-open-race'
+        nested = inventory / 'nested'
+        nested.mkdir(parents=True)
+        originals = {'one.md': b'one', 'two.md': b'two'}
+        for name, data in originals.items():
+            (nested / name).write_bytes(data)
+        outside = self.repo / 'post-open-outside'
+        outside.mkdir()
+        for name in originals:
+            (outside / name).write_bytes(b'outside')
+        moved = inventory / 'moved'
+        real_open, real_stat = os.open, os.stat
+        descriptors = []
+        named_leaves = 0
+        changed = False
+
+        def record_open(path, flags, *args, **kwargs):
+            fd = real_open(path, flags, *args, **kwargs)
+            descriptors.append(fd)
+            return fd
+
+        def substitute(path, *args, **kwargs):
+            nonlocal named_leaves, changed
+            if kwargs.get('dir_fd') is not None and path in originals:
+                named_leaves += 1
+                if named_leaves == 2:
+                    nested.rename(moved)
+                    nested.symlink_to(outside, target_is_directory=True)
+                    changed = True
+            return real_stat(path, *args, **kwargs)
+
+        with patch.object(bank_observation.os, 'open', side_effect=record_open), \
+             patch.object(bank_observation.os, 'stat', side_effect=substitute):
+            with self.assertRaises(ContractError) as caught:
+                bank_observation.scan(inventory, read_sources=True, require_router=False)
+        self.assertTrue(changed)
+        self.assertNotIsInstance(caught.exception, bank_capacity.BankCapacityError)
+        for fd in set(descriptors):
+            with self.assertRaises(OSError):
+                os.fstat(fd)
+        self.assertEqual({p.name: p.read_bytes() for p in moved.iterdir()}, originals)
+        self.assertEqual({p.name: p.read_bytes() for p in outside.iterdir()},
+                         {name: b'outside' for name in originals})
+
+    def test_scan_closes_descriptors_on_success_and_count_capacity(self):
+        inventory = self.repo / 'descriptor-inventory'
+        inventory.mkdir()
+        for name in ('one.md', 'two.md'):
+            (inventory / name).write_bytes(b'original')
+        real_open = os.open
+        for maximum in (1, 10):
+            with self.subTest(maximum=maximum):
+                descriptors = []
+                def record_open(path, flags, *args, **kwargs):
+                    fd = real_open(path, flags, *args, **kwargs)
+                    descriptors.append(fd)
+                    return fd
+                with patch.object(bank_observation, 'MAX_FILES', maximum), \
+                     patch.object(bank_observation.os, 'open', side_effect=record_open):
+                    if maximum == 1:
+                        with self.assertRaises(bank_capacity.BankCapacityError):
+                            bank_observation.scan(inventory, read_sources=False, require_router=False)
+                    else:
+                        bank_observation.scan(inventory, read_sources=False, require_router=False)
+                self.assertTrue(descriptors)
+                for fd in set(descriptors):
+                    with self.assertRaises(OSError):
+                        os.fstat(fd)
 
     def test_symlink_and_nonregular_markdown_are_noncapacity_refusals(self):
         path = self.bank / 'outside.md'
@@ -203,10 +324,13 @@ class BoundedBankObservation(unittest.TestCase):
                 source.write_bytes(original)
                 real_stat = os.stat
                 changed = False
+                source_checked = False
                 def swap(path, *args, **kwargs):
-                    nonlocal changed
+                    nonlocal changed, source_checked
+                    if kwargs.get('dir_fd') is not None and path == 'source.md':
+                        source_checked = True
                     if not changed and kwargs.get('dir_fd') is not None and path == (
-                            'source.md' if change == 'source' else 'race-dir'):
+                            'source.md' if change == 'source' else 'race-dir') and source_checked:
                         changed = True
                         if change == 'source':
                             source.rename(nested / 'old.txt')
