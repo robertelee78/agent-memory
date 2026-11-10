@@ -34,6 +34,65 @@ Repeated pure parsing/format validation inside an operation is a separately iden
 
 The separately reviewed parsed-companion refinement uses the existing operation-local `bank-format` memo for a uniform pair of the format report and internally produced parsed records, including when the caller requests only the report. Capacity and the empty-output argument rule are checked before reuse; callers receive isolated results, and filesystem-dependent router normalization is rechecked on every hit. Exact complete map identity and the existing entry, map and byte budgets remain unchanged; larger companion values may cause eviction or uncached fallback. This reuses no source observation, authority decision or semantic judgment. Fable's technical design review passed this narrow refinement; source review and the required functional and performance qualification remain separate, and no performance outcome is established by that review.
 
+#### Measured guard-mechanics clarification (2026-11-10)
+
+The [residual RCA](../research/2026-11-06-sharing-performance-rca.md#2026-11-10-residual-refresh-failure-and-component-attribution)
+locates all six later 300-second refresh failures inside partially completed
+transactions, without establishing how much time each spent before mutation.
+A separately authenticated 10,220-file component completed the same 70 ordered
+changes in 136.380 seconds with one worker and 208.555–211.401 seconds per worker
+with four concurrent workers. Full source and layout guards dominated that
+component; public apply's other work was not measured by it. Unprofiled samples
+identify source scanning as the larger lever, not equal scan/layout shares.
+These observations do not certify the complete workload or transfer old timings
+to a new runtime.
+
+The implementation MAY reduce descriptor and path-processing mechanics inside
+each existing check. It MUST retain the complete marker/source/layout checks
+before staging and immediately before every individual change, all fresh byte
+reads/hashes, later authority/frontier/index/HEAD checks, fault boundaries,
+receipt ordering, router-last behavior, limits and the 300-second deadline.
+No source observation, hash map or filesystem metadata MAY become authority
+across checks or operations.
+
+Within one scan directory only, internally owned no-follow parent descriptors
+MAY remain open for sibling reads. Standalone reads and the first file after a
+fresh chain open MUST retain their existing check sequence. A reused sibling
+MUST freshly rebind every named ancestor before leaf open; every leaf MUST
+retain the post-read named ancestry check. Leaf type/signature checks precede
+the post-read parent check, then the per-file capacity check, then caller
+count/aggregate checks. All chain/read OSErrors MUST become the existing
+canonical-source refusal, without wrapping typed capacity causes; cleanup MUST
+cover later capacity failures as well. No request or proof can select this
+internal mechanism.
+
+Layout checks MUST use fresh no-follow stat for every participant target and
+each parent in the existing order, without deduplicating parent checks across
+participants. Callers MUST supply the already validated normalized relative
+paths. Only ENOENT/ENOTDIR mean missing where absence is allowed; all other
+OSError/ValueError outcomes MUST refuse. Present targets MUST be observed
+regular files and present parents directories. Complete fresh physical
+inventory, runtime-path symlink refusal and Unicode/case alias checks remain.
+Traversal or entry-stat failures and a walk-file entry freshly identified as a
+directory MUST refuse rather than silently omit that subtree.
+
+Declared semantic differences are fail-closed refusal of renamed/replaced
+parent directories or mount overlays between siblings; raced symlinks; unknown
+stat errors; and missing/unreadable physical inventories previously suppressed
+by pathlib. One permission difference remains: an already opened parent that
+loses read permission but retains search permission can still supply its exact
+bound canonical files. This is not a per-leaf reopen-permission check.
+Ephemeral swap-away-and-back remains undetectable; no atomic snapshot, global
+freshness lease or power-loss guarantee is added. Linux `openat2`, macOS-only
+resolver flags, `fwalk` with silent subtree omission, persistent stat caches and
+a new database/daemon are not selected.
+
+Independent design review MUST resolve the exact error, sequence and reused
+post-read race cases before integration. Source review, actual public smoke,
+same-input component measurements on macOS/Linux, the complete original
+workloads and independent acceptance remain separate gates. This clarification
+neither authorizes a full stress retry nor changes the accepted outcome.
+
 ### 3. Artifact safety and boundedness
 
 The exporter SHALL use a new absolute output directory outside canonical/runtime roots, owner-private checked parent directories, exclusive no-follow creation and bounded writes using existing private-workspace conventions. Both outputs SHALL be absent, distinct and non-overlapping. Symlink/traversal/output collision, permission/disk failure, partial artifact, missing/duplicate/reordered/corrupted/stale pages and response loss SHALL have explicit refusal/recovery behavior. Existing64KiBpage limits and whole-operation caps SHALL remain. No source/edge/hold truncation or empty-success fallback is permitted.

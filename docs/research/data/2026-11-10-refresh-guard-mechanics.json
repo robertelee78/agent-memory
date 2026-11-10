@@ -1,0 +1,293 @@
+{
+  "schema": "agent-memory/refresh-guard-mechanics-research-v1",
+  "observed_date": "2026-11-10",
+  "work_key": "robertelee78/agent-memory:ADR-0009:bounded-24-session-stress",
+  "acceptance": false,
+  "scope": "Measured internal guard mechanics and exact design/document review; not public apply, full stress, platform, native, model quality or release acceptance.",
+  "retained_stress_failure": {
+    "source_commit": "b16e1ff3918afc3c8885e87b729ce26dfd0ea6b1",
+    "wall_seconds": 26990.36,
+    "commands": 625,
+    "success_exits": 618,
+    "expected_missing_page_refusal": 1,
+    "refresh_apply_300s_timeouts": 6,
+    "cleanup": "unknown",
+    "old_worlds_preserved": true,
+    "candidate_and_linux_stress_started": false
+  },
+  "readonly_forensics": {
+    "base_files": 10220,
+    "intended_files": 10289,
+    "changed_paths": 70,
+    "ordered_applied_prefixes": [
+      24,
+      24,
+      23,
+      27,
+      43,
+      44
+    ],
+    "all_router_states": "base",
+    "all_journals_retained": true,
+    "all_canonical_receipts_present": false,
+    "basis": "Prepared input hashes, journal proposal equality, original hash maps and actual changed path bytes; no candidate imports or mutations."
+  },
+  "component": {
+    "source_commit": "d96020632201d3f6723d5441f03e8f267eca3627",
+    "system": "Darwin",
+    "architecture": "arm64",
+    "python": "3.15.0",
+    "input_files": 10220,
+    "input_bytes": 10584148,
+    "changes_per_worker": 70,
+    "worker_deadline_seconds": 300,
+    "real_internal_replace_file": true,
+    "fresh_disposable_copy_per_worker": true,
+    "source_archive_unchanged": true,
+    "live_checkout_head_index_unchanged": false,
+    "live_checkout_change": "Parent committed documentation during independent archived-source measurement; before/after live snapshots clean, no runtime source change.",
+    "workers": [
+      {
+        "worker": "one-0",
+        "mutation_wall_seconds": 136.38030079205055,
+        "mutation_cpu_seconds": 136.24169799999999,
+        "bank_after_matches_final": true,
+        "marker_after_matches": true,
+        "receipt_sha256": "6c0c179190f9528e93610d1cf576b408997cd1b6b77ca27e1942e73b174a0cb8",
+        "guard_totals": {
+          "check_observed": {
+            "calls": 140,
+            "completed": 140,
+            "failed": 0,
+            "wall_seconds": 89.26978895789944,
+            "cpu_seconds": 89.18261400000009
+          },
+          "check_layout": {
+            "calls": 140,
+            "completed": 140,
+            "failed": 0,
+            "wall_seconds": 47.00949407950975,
+            "cpu_seconds": 46.974979000000026
+          },
+          "flush_directory": {
+            "calls": 70,
+            "completed": 70,
+            "failed": 0,
+            "wall_seconds": 0.0020087059820070863,
+            "cpu_seconds": 0.0020179999999521137
+          },
+          "replace_file": {
+            "calls": 70,
+            "completed": 70,
+            "failed": 0,
+            "wall_seconds": 136.34817729296628,
+            "cpu_seconds": 136.21009
+          }
+        }
+      },
+      {
+        "worker": "four-0",
+        "mutation_wall_seconds": 208.55515604198445,
+        "mutation_cpu_seconds": 208.459519,
+        "bank_after_matches_final": true,
+        "marker_after_matches": true,
+        "receipt_sha256": "c855f2b9416bb48843fcf632b01dda0367b690e02c5bbf9c34a2b98761d991f1",
+        "guard_totals": {
+          "check_observed": {
+            "calls": 140,
+            "completed": 140,
+            "failed": 0,
+            "wall_seconds": 147.94587767042685,
+            "cpu_seconds": 147.88062400000018
+          },
+          "check_layout": {
+            "calls": 140,
+            "completed": 140,
+            "failed": 0,
+            "wall_seconds": 60.50669979117811,
+            "cpu_seconds": 60.49272000000006
+          },
+          "flush_directory": {
+            "calls": 70,
+            "completed": 70,
+            "failed": 0,
+            "wall_seconds": 0.002016958314925432,
+            "cpu_seconds": 0.002021000000026696
+          },
+          "replace_file": {
+            "calls": 70,
+            "completed": 70,
+            "failed": 0,
+            "wall_seconds": 208.51686807814986,
+            "cpu_seconds": 208.42512299999993
+          }
+        }
+      },
+      {
+        "worker": "four-1",
+        "mutation_wall_seconds": 210.34453033294994,
+        "mutation_cpu_seconds": 210.245992,
+        "bank_after_matches_final": true,
+        "marker_after_matches": true,
+        "receipt_sha256": "b2cf093405ea5bcab6f22c9df0ab1aab6717fb2b8fe00652f66a0dcf8985332f",
+        "guard_totals": {
+          "check_observed": {
+            "calls": 140,
+            "completed": 140,
+            "failed": 0,
+            "wall_seconds": 148.85732654912863,
+            "cpu_seconds": 148.79433799999987
+          },
+          "check_layout": {
+            "calls": 140,
+            "completed": 140,
+            "failed": 0,
+            "wall_seconds": 61.38582245528232,
+            "cpu_seconds": 61.370793000000035
+          },
+          "flush_directory": {
+            "calls": 70,
+            "completed": 70,
+            "failed": 0,
+            "wall_seconds": 0.0020022535463795066,
+            "cpu_seconds": 0.0020030000000481607
+          },
+          "replace_file": {
+            "calls": 70,
+            "completed": 70,
+            "failed": 0,
+            "wall_seconds": 210.30838141264394,
+            "cpu_seconds": 210.213531
+          }
+        }
+      },
+      {
+        "worker": "four-2",
+        "mutation_wall_seconds": 211.40067787503358,
+        "mutation_cpu_seconds": 211.29861400000001,
+        "bank_after_matches_final": true,
+        "marker_after_matches": true,
+        "receipt_sha256": "49a93766333a9e8995f1bb40cf9263c2a873f3ac5eef7211ef62dab974b24a03",
+        "guard_totals": {
+          "check_observed": {
+            "calls": 140,
+            "completed": 140,
+            "failed": 0,
+            "wall_seconds": 149.3801482054405,
+            "cpu_seconds": 149.31431499999988
+          },
+          "check_layout": {
+            "calls": 140,
+            "completed": 140,
+            "failed": 0,
+            "wall_seconds": 61.91996954136994,
+            "cpu_seconds": 61.904855999999924
+          },
+          "flush_directory": {
+            "calls": 70,
+            "completed": 70,
+            "failed": 0,
+            "wall_seconds": 0.0019100408535450697,
+            "cpu_seconds": 0.0019220000000412796
+          },
+          "replace_file": {
+            "calls": 70,
+            "completed": 70,
+            "failed": 0,
+            "wall_seconds": 211.3682645399822,
+            "cpu_seconds": 211.26649600000005
+          }
+        }
+      },
+      {
+        "worker": "four-3",
+        "mutation_wall_seconds": 209.05596262495965,
+        "mutation_cpu_seconds": 208.939294,
+        "bank_after_matches_final": true,
+        "marker_after_matches": true,
+        "receipt_sha256": "76e024a8d86ba6169e1ca5bc61a9b7414d9b6ba971b8b4b3bb3780ec4df82321",
+        "guard_totals": {
+          "check_observed": {
+            "calls": 140,
+            "completed": 140,
+            "failed": 0,
+            "wall_seconds": 148.1389501647791,
+            "cpu_seconds": 148.07523400000002
+          },
+          "check_layout": {
+            "calls": 140,
+            "completed": 140,
+            "failed": 0,
+            "wall_seconds": 60.78685746982228,
+            "cpu_seconds": 60.773417999999886
+          },
+          "flush_directory": {
+            "calls": 70,
+            "completed": 70,
+            "failed": 0,
+            "wall_seconds": 0.0019873747369274497,
+            "cpu_seconds": 0.0019919999999102878
+          },
+          "replace_file": {
+            "calls": 70,
+            "completed": 70,
+            "failed": 0,
+            "wall_seconds": 208.98684066173155,
+            "cpu_seconds": 208.89738199999996
+          }
+        }
+      }
+    ],
+    "limits": [
+      "one-worker arm before four-worker arm; no randomization or significance claim",
+      "normal busy host; no quieting or controlled contention attribution",
+      "timers nested within replace_file, not independent additive percentages",
+      "excludes public apply validation/authority/lock/journal/receipt/readback",
+      "prior profiling diagnostic read discarded token-bearing receipt lines; no token values parsed, retained, emitted or used; extension did not repeat access"
+    ]
+  },
+  "design_reviews": [
+    {
+      "review": "fable-initial",
+      "model": "anthropic/claude-fable-5",
+      "artifact": "209-guard-cost-design-01-fable-review.md",
+      "sha256": "d697333d928a1cd8d51eba6ac0b6e1fd268a1741617706e9e643b5a45cacce64",
+      "verdict": "PASS_DESIGN_ONLY",
+      "plan_sha256": "63797c2b6bfb60e17d2e85a4dabd9203d67f7b8a75bac2c6dc041de4dcfea14d"
+    },
+    {
+      "review": "opus-initial",
+      "model": "anthropic/claude-opus-5-5",
+      "artifact": "209-guard-cost-design-01-opus-review.md",
+      "sha256": "4d51bf5ca6829d1f941f288a644799f55e54cf7195fe925cc5aeed037f6e8ece",
+      "verdict": "REQUEST_CHANGES_DESIGN_ONLY",
+      "plan_sha256": "63797c2b6bfb60e17d2e85a4dabd9203d67f7b8a75bac2c6dc041de4dcfea14d"
+    },
+    {
+      "review": "opus-corrected-ADR",
+      "model": "anthropic/claude-opus-5-5",
+      "artifact": "209-guard-cost-design-02-opus-closure-review.md",
+      "sha256": "6bcec46edc380c67ec399469819ec08a768520a440d744be15bcf316ea378619",
+      "verdict": "PASS_DESIGN_AND_DOCUMENT_CLOSURE_ONLY",
+      "plan_sha256": "d85a7630681c3652e89e38a990e0cfde142b54cb0dbef2b00db98985b9fbaba0"
+    },
+    {
+      "review": "fable-corrected-ADR",
+      "model": "anthropic/claude-fable-5",
+      "artifact": "209-guard-cost-design-02-fable-closure-review.md",
+      "sha256": "c5fd5b174a2f0cb943ec03dbc8e14d6c2f8dc69f5d09d64d97a7ca9c6263f8e1",
+      "verdict": "PASS_DESIGN_AND_DOCUMENT_CLOSURE_ONLY",
+      "plan_sha256": "d85a7630681c3652e89e38a990e0cfde142b54cb0dbef2b00db98985b9fbaba0"
+    }
+  ],
+  "document_sha256": {
+    "docs/adr/0026-source-bound-sharing-performance.md": "d070fa80aa70813f830ebaeb5fa3d5b23f5c63991e989d077f8f0d1810b32750",
+    "docs/research/2026-11-06-sharing-performance-rca.md": "63ee5285f1b03deba4ca6b8d22cf24c856472a8017d8f335a8071d0684a85798"
+  },
+  "remaining": [
+    "independent exact composed source review",
+    "actual public smoke and same-input Mac/Linux before-after measurements",
+    "fresh comparable full S0/C source/runtime protocol and technical authorization",
+    "all original functional/performance/platform/native/task acceptance and signed delivery"
+  ]
+}

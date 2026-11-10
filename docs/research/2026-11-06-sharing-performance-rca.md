@@ -175,11 +175,23 @@ Private reports and receipts remain owner-only.
 
 The proposed narrow direction is cheaper mechanics *inside* each existing check:
 one internal no-follow parent descriptor chain per scanned directory, freshly
-rebound before and after every sibling read; fresh leaf reads/hashes unchanged;
-direct fresh layout stat/path processing without cross-check caching. No safety
+rebound before reused sibling reads and after every read. Standalone reads and
+the first leaf retain their existing sequence. Direct fresh no-follow layout
+stat/path processing does not cache observations across checks. No safety
 boundary, per-path full read set, fault, cap, authority check or 300-second limit
-is removed. Independent Fable/Opus design review and measured implementation
-qualification remain pending. A full guarded mutation component is being
-measured separately to distinguish scan/layout costs from staging/fsync and
-other residual work. No complete RCA or whole-workload improvement is claimed
-from these component samples alone.
+is removed. Fable passed the first design; Opus required precise error mapping,
+sequence, post-read race coverage and incomplete-traversal handling. The revised
+design and ADR clarification require actual closure review before integration.
+
+A separate direct internal `replace_file` component completed all 70 original
+ordered changes in five new private copies: 136.380 seconds for one worker and
+208.555–211.401 seconds per worker with four concurrent workers. Each worker made
+140 observed-bank and 140 layout checks. Those guard totals dominated the
+component; staging, marker checks, file/directory flushes and wrapper overhead
+were a small residual in this sample. All copies matched the complete intended
+hash map, with source export and marker unchanged. Public apply's other
+validations, locks, journal, receipt and readback were not run, so these results
+do not prove complete-operation compliance. The live integration HEAD/index
+changed through the parent's concurrent research commit; both observed states
+were clean, and the independently archived runtime imported by every worker
+remained unchanged. Failed Worlds were never mutated.
