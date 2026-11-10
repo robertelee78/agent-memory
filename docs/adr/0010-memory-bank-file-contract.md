@@ -319,6 +319,36 @@ rollback capability SHALL be established before the first replacement; no
 `chmod`, privileged ownership change or force-overwrite MAY substitute for that
 proof.
 
+The v0.0.15 metadata policy MAY support the Darwin kernel attribute
+`com.apple.provenance` only through exact per-path preservation. The private
+manifest and required metadata plan SHALL retain the complete attribute map;
+`metadata_plan_sha256` SHALL bind the entire reviewed uid/gid/mode/xattrs plan.
+Empty maps mean observed absence, not permission to ignore metadata. Other
+xattrs, ACL entries, nonzero file flags and unsupported filesystem behavior
+SHALL remain explicit refusals. Linux SELinux labels are not supported by this
+policy. Existing observation and private-artifact bounds SHALL remain unchanged
+and include the serialized metadata.
+
+Before source replacement or restoration, the unprivileged runtime SHALL prove
+that both forward and rollback temporaries reproduce the exact required
+metadata without setting, stripping or ignoring attributes. It SHALL recheck
+the temporary and resulting path and prove only the remaining actions when
+resuming a known operation. Probe plans SHALL be durable before probe creation
+and before any transaction marker or persistent frontier safeguard is published.
+Temporary probe entries are writes, not a read-only inspection.
+
+Probe cleanup SHALL require live creator ownership or durable physical,
+parent, exact-metadata and file-nonce pins. A probe name, journal entry,
+empty directory or matching owner alone MUST NOT establish ownership. An
+un-pinned create-before-pin crash or a mismatched occupant SHALL preserve the
+occupant and journal and report `pending-ambiguous-probe-ownership`, with
+truthful unknown mutation state and operator inspection actions. Only an
+operator, after inspection, MAY remove the exact ambiguous occupant before
+aware recovery resumes. Known pinned attempts and cleanup progress SHALL
+remain in the retention dependency inventory. Empty-directory inode reuse
+cannot always be distinguished from the pinned directory; the runtime MUST
+disclose that residual limitation rather than promise automatic recovery.
+
 The private workspace SHALL use owner-only directories (0700) and regular private
 files (0600), outside canonical banks and the installed payload. Runtime update
 or uninstall MUST preserve it; bank purge MUST NOT implicitly delete unknown or
