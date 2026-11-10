@@ -470,14 +470,14 @@ def _stamp(value):
 
 class VerifiedNativeDeliveryWindow:
     """Purpose-limited, internally minted calibration; never JSON authority."""
-    __slots__ = ('L', 'j3', 'j_deadline', 'nonce', 'instance', 'cancelled', '_eligible', '_platform')
+    __slots__ = ('L', 'j3', 'j_deadline', 'nonce', 'instance', 'cancelled', '_owner', '_platform', '_reserving')
 
-    def __init__(self, token, *, L, j3, j_deadline, nonce, instance, eligible, platform):
+    def __init__(self, token, *, L, j3, j_deadline, nonce, instance, owner, platform):
         if token is not _WINDOW_MINT:
             raise TypeError('Delivery windows are wire-executor internal')
         self.L, self.j3, self.j_deadline = L, j3, j_deadline
         self.nonce, self.instance, self.cancelled = nonce, instance, False
-        self._eligible, self._platform = eligible, platform
+        self._owner, self._platform, self._reserving = owner, platform, False
 
     def __reduce__(self):
         raise TypeError('Delivery windows cannot be serialized')
@@ -486,18 +486,23 @@ class VerifiedNativeDeliveryWindow:
     def support(self):
         return 'provisional-unqualified' if self._platform == 'darwin' else 'unqualified'
 
-    def allow_reservation(self, recipient_eligible=None):
-        if self.cancelled or self._platform != 'darwin' or not self._eligible():
-            return False
-        if recipient_eligible is not None and not recipient_eligible():
-            return False
-        remaining = self.j_deadline - self.j3
-        if remaining < 0:
-            return False
-        # Ceiling subtraction keeps integer arithmetic conservative: exact R3 D.
-        drift = (MAC_PROVISIONAL_RHO_NUMERATOR * remaining + RATE_DENOMINATOR - 1) // RATE_DENOMINATOR
-        deadline = self.j_deadline + self.L - drift
-        return time.monotonic_ns() + MARGIN_NS < deadline
+    def reserve(self):
+        owner = self._owner
+        with owner.lock:
+            if (owner.verified is not self or owner.instance != self.instance or owner.ended
+                    or self.cancelled or self._reserving or self._platform != 'darwin'
+                    or not owner.eligible()):
+                return False
+            remaining = self.j_deadline - self.j3
+            if remaining < 0:
+                return False
+            # Ceiling subtraction keeps integer arithmetic conservative: exact R3 D.
+            drift = (MAC_PROVISIONAL_RHO_NUMERATOR * remaining + RATE_DENOMINATOR - 1) // RATE_DENOMINATOR
+            deadline = self.j_deadline + self.L - drift
+            if time.monotonic_ns() + MARGIN_NS >= deadline:
+                return False
+            self._reserving = True
+            return True
 
 
 class ClockWindows:
@@ -543,7 +548,7 @@ class ClockWindows:
                 if j3 <= deadline:
                     self.verified = VerifiedNativeDeliveryWindow(_WINDOW_MINT, L=L, j3=j3,
                         j_deadline=deadline, nonce=nonce, instance=self.instance,
-                        eligible=lambda: not self.ended and self.eligible(), platform=self.platform)
+                        owner=self, platform=self.platform)
             else:
                 _exact(value, {'nonce'})
                 nonce = _uuid(value['nonce'])

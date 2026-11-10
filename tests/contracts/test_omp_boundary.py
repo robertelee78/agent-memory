@@ -47,9 +47,12 @@ def LiveDeliveryWindow(*, expired=False):
     """Real opaque capability minted only inside this controlled timing fixture."""
     from agent_memory import omp_stream
     now = time.monotonic_ns()
-    return omp_stream.VerifiedNativeDeliveryWindow(omp_stream._WINDOW_MINT, L=0, j3=now,
+    instance = str(uuid.uuid4())
+    owner = omp_stream.ClockWindows(instance, lambda: True, platform='darwin')
+    owner.verified = omp_stream.VerifiedNativeDeliveryWindow(omp_stream._WINDOW_MINT, L=0, j3=now,
         j_deadline=now - 1 if expired else now + 60_000_000_000, nonce=str(uuid.uuid4()),
-        instance=str(uuid.uuid4()), eligible=lambda: True, platform='darwin')
+        instance=instance, owner=owner, platform='darwin')
+    return owner.verified
 
 
 def observe_installed(world, command, repo, receipt, request, *, launcher=None, timeout=60):

@@ -1880,21 +1880,21 @@ class DeadlineWindows(unittest.TestCase):
         remaining = window.j_deadline - window.j3
         drift = (164 * remaining + 9999) // 10000
         deadline = window.j_deadline + window.L - drift
-        with mock.patch.object(stream.time, 'monotonic_ns', return_value=deadline - stream.MARGIN_NS - 1):
-            self.assertTrue(window.allow_reservation())
         with mock.patch.object(stream.time, 'monotonic_ns', return_value=deadline - stream.MARGIN_NS):
-            self.assertFalse(window.allow_reservation())
+            self.assertFalse(window.reserve())
+        with mock.patch.object(stream.time, 'monotonic_ns', return_value=deadline - stream.MARGIN_NS - 1):
+            self.assertTrue(window.reserve())
+            self.assertFalse(window.reserve())
         self.assertEqual(window.support, 'provisional-unqualified')
 
     def test_cancel_eof_broken_output_and_recipient_revoke_window(self):
         window = self.calibrated()
         with mock.patch.object(stream.time, 'monotonic_ns', return_value=0):
-            self.assertFalse(window.allow_reservation(lambda: False))
             self.responses.live = False
-            self.assertFalse(window.allow_reservation())
+            self.assertFalse(window.reserve())
             self.responses.live = True
             self.clocks.control('CANCEL', {'nonce': self.nonce}, self.responses)
-            self.assertFalse(window.allow_reservation())
+            self.assertFalse(window.reserve())
         self.clocks.end()
         self.assertIsNone(self.clocks.window(self.nonce))
 
@@ -1907,12 +1907,12 @@ class DeadlineWindows(unittest.TestCase):
         window = self.calibrated()
         window._platform = 'linux'
         with mock.patch.object(stream.time, 'monotonic_ns', return_value=0):
-            self.assertFalse(window.allow_reservation())
+            self.assertFalse(window.reserve())
 
     def test_windows_cannot_be_minted_or_serialized_by_json(self):
         with self.assertRaises(TypeError):
             stream.VerifiedNativeDeliveryWindow(None, L=0, j3=0, j_deadline=1,
-                nonce=self.nonce, instance=self.instance, eligible=lambda: True, platform='darwin')
+                nonce=self.nonce, instance=self.instance, owner=self.clocks, platform='darwin')
         window = self.calibrated()
         with self.assertRaises(TypeError):
             window.__reduce__()

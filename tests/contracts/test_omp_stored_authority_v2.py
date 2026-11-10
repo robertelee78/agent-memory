@@ -178,6 +178,32 @@ class NativeStoredAuthorityV2(unittest.TestCase):
             self.assertTrue(helper.observe_request(repo, value, delivery_window=fixtures.LiveDeliveryWindow())['continue'])
             self.assertFalse(helper.observe_request(repo, value, delivery_window=fixtures.LiveDeliveryWindow())['continue'])
 
+    def test_cancel_before_reservation_refuses_and_after_start_preserves_result(self):
+        with World() as world, patch.dict(os.environ, world.env, clear=True):
+            helper = fixtures.NativeSources(); repo, session, lifecycle = helper.fixture(world)
+            result = helper.observe(repo, session, lifecycle,
+                [helper.entry('human', 'user', 'Actual source.', attribution='user')])
+            value = {'schema': 'agent-memory/omp-observer-request-v2', 'action': 'wake',
+                     'session': session, 'lifecycle': result['lifecycle'], 'payload': result['wake_payload']}
+            cancelled = fixtures.LiveDeliveryWindow()
+            cancelled._owner.revoke()
+            refused = helper.observe_request(repo, value, delivery_window=cancelled)
+            self.assertFalse(refused['continue'])
+            self.assertEqual(refused['status'], 'pending-undeliverable-window')
+            self.assertFalse((transport.session_dir(repo, session) / 'root-wakes').exists())
+
+            window = fixtures.LiveDeliveryWindow()
+            retain = transport.retain
+            def cancel_after_start(path, payload, bound):
+                if path.parent.name == 'root-wakes':
+                    window._owner.control('CANCEL', {'nonce': window.nonce}, None)
+                return retain(path, payload, bound)
+            with patch.object(transport, 'retain', side_effect=cancel_after_start):
+                accepted = helper.observe_request(repo, value, delivery_window=window)
+            self.assertTrue(accepted['verified'])
+            self.assertTrue(accepted['continue'])
+            self.assertEqual(len(list((transport.session_dir(repo, session) / 'root-wakes').glob('*.json'))), 1)
+
     def test_on_started_runs_once_after_preflight_before_source_write(self):
         with World() as world, patch.dict(os.environ, world.env, clear=True):
             helper = fixtures.NativeSources(); repo, session, lifecycle = helper.fixture(world)
@@ -594,7 +620,7 @@ class NativeStoredAuthorityV2(unittest.TestCase):
             value = self.request(repo, session, lifecycle,
                 [helper.entry('human', 'user', 'Actual source.', attribution='user')], action='seal')
             value['payload']['request_wake'] = True
-            with patch.object(VerifiedNativeDeliveryWindow, 'allow_reservation', side_effect=OSError('Controlled read-only clock failure')):
+            with patch.object(VerifiedNativeDeliveryWindow, 'reserve', side_effect=OSError('Controlled read-only clock failure')):
                 result = helper.observe_request(repo, value, delivery_window=fixtures.LiveDeliveryWindow())
             self.assertTrue(result['verified']); self.assertFalse(result['continue'])
             self.assertEqual(result['status'], 'pending-wake-unavailable')
