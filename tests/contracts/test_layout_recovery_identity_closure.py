@@ -248,7 +248,7 @@ class RecoveryIdentityClosureContract(unittest.TestCase):
             status = w.run([command, 'identity', 'status', '--repo', repo], check=False)
             positive = json.loads(status.stdout)
             self.assertTrue(positive['resolved'], positive)
-            self.assertEqual(positive['evidence']['binding_source'], 'historical-device-change')
+            self.assertEqual(positive['project']['evidence']['binding_source'], 'historical-device-change')
             other = json.loads(json.dumps(entry))
             other['authority_name'] = 'different-authority'
             data['checkouts'][str(info.st_dev + 2) + ':' + str(info.st_ino)] = other
@@ -290,12 +290,16 @@ class RecoveryIdentityClosureContract(unittest.TestCase):
                     root = w.inside('other-config' if change == 'config' else 'other-xdg-config')
                     target = root if change == 'config' else root / 'agent-memory'
                     shutil.copytree(original_config, target)
-                    (target / 'layout-recovery-bindings.json').unlink()
                     if change == 'config':
                         w.env['AGENT_MEMORY_CONFIG_HOME'] = str(target)
                     else:
                         w.env.pop('AGENT_MEMORY_CONFIG_HOME')
                         w.env['XDG_CONFIG_HOME'] = str(root)
+                    positive_result, positive = helper.recall(
+                        w, command, repo, inspected['manifest']['project_id'])
+                    self.assertEqual(positive_result.returncode, 0, positive)
+                    self.assertEqual(positive['semantic_coverage'], 'incomplete-recovery')
+                    (target / 'layout-recovery-bindings.json').unlink()
                 result, value = helper.recall(w, command, repo, inspected['manifest']['project_id'])
                 self.assertNotEqual(result.returncode, 0)
                 self.assertNotIn('results', value)
