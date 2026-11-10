@@ -12,7 +12,7 @@ import v014_runtime_fixture
 
 
 class LayoutLegacyStaleLock(unittest.TestCase):
-    def test_old_stale_lock_recovery_preserves_interrupted_apply(self):
+    def journey(self, stage):
         with World() as legacy, World() as world:
             pack = v014_runtime_fixture.extract(legacy.root)
             installed = legacy.run([sys.executable, '-I', pack / 'scripts/installer.py', 'install',
@@ -27,7 +27,7 @@ class LayoutLegacyStaleLock(unittest.TestCase):
             safe, inspected = recovery.inspect(world, command, repo)
             proposal, _ = recovery.prepare(world, command, source, repo, inspected, native)
             fault = world.run([command, 'bank', 'recover-layout', 'apply', '--repo', repo, '--proposal', proposal],
-                              check=False, timeout=60, env={'AGENT_MEMORY_FAULT_STAGE': 'layout-recovery-after-marker',
+                              check=False, timeout=60, env={'AGENT_MEMORY_FAULT_STAGE': stage,
                                                            'AGENT_MEMORY_FAULT_MODE': 'exit'})
             self.assertEqual(fault.returncode, 86, fault.stdout + fault.stderr)
             directory = recovery.private_directory(world, bank, safe['operation_id'])
@@ -42,3 +42,9 @@ class LayoutLegacyStaleLock(unittest.TestCase):
                               for row in inspected['manifest']['sources']}, originals)
             self.assertTrue((bank / '.agent-memory-transaction.md').exists())
             helper.assert_fault_work_unchanged(world, repo, git)
+
+    def test_old_stale_lock_recovery_preserves_interrupted_apply(self):
+        self.journey('layout-recovery-after-marker')
+
+    def test_old_stale_lock_before_handoff(self):
+        self.journey('layout-recovery-before-marker-swap')

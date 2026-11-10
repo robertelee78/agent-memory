@@ -11,7 +11,7 @@ import v014_runtime_fixture
 
 
 class LayoutLegacyHoldReceipt(unittest.TestCase):
-    def journey(self, decoy):
+    def journey(self, decoy, stage='layout-recovery-before-nested-marker'):
         with World() as legacy, World() as world:
             pack = v014_runtime_fixture.extract(legacy.root)
             installed = legacy.run([sys.executable, '-I', pack / 'scripts/installer.py', 'install',
@@ -36,7 +36,7 @@ class LayoutLegacyHoldReceipt(unittest.TestCase):
             self.assertTrue(json.loads(receipt_bytes)['verified'])
             second, _, _ = recovery.admission_proposal(world, command, source, repo, bank, inspected, full=False)
             fault = world.run([command, 'admission', 'apply', '--proposal', second], check=False, timeout=30,
-                              env={'AGENT_MEMORY_FAULT_STAGE': 'layout-recovery-before-nested-marker',
+                              env={'AGENT_MEMORY_FAULT_STAGE': stage,
                                    'AGENT_MEMORY_FAULT_MODE': 'exit'})
             self.assertEqual(fault.returncode, 86, fault.stdout + fault.stderr)
             marker = bank / '.agent-memory-transaction.md'; marker_bytes = marker.read_bytes()
@@ -60,3 +60,6 @@ class LayoutLegacyHoldReceipt(unittest.TestCase):
 
     def test_existing_receipt_with_decoy(self):
         self.journey(True)
+
+    def test_after_hold_restore(self):
+        self.journey(False, 'layout-recovery-after-hold-restore')

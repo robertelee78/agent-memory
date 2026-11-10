@@ -41,7 +41,7 @@ class LayoutNestedFaults(unittest.TestCase):
                             env={'AGENT_MEMORY_FAULT_STAGE': 'layout-recovery-nested-before-receipt'})
             helper.preview(world, command, repo, operation, transaction['operation_id'], 'finish', expected=1)
             preview, _ = helper.preview(world, command, repo, operation, transaction['operation_id'], 'rollback')
-            if stage.endswith('after-progress'):
+            if stage.endswith(('after-progress', 'after-rename')):
                 paths = {'event': 'history/events/' + transaction['operation_id'] + '.md',
                          'target': target, 'router': 'MEMORY.md'}
                 stage += ':' + paths[changed_path]
@@ -75,6 +75,12 @@ class LayoutNestedFaults(unittest.TestCase):
 
     def test_progress_error(self):
         self.rollback_journey('layout-recovery-nested-rollback-after-progress', 'error')
+
+    def test_rollback_after_rename_error(self):
+        self.rollback_journey('layout-recovery-nested-rollback-after-rename', 'error')
+
+    def test_before_receipt_exit(self):
+        self.early_journey('layout-recovery-nested-before-receipt', 'exit')
 
     def receipt_journey(self, stage, mode, *, partial=False):
         helper = nested.NestedReconciliationContract()
