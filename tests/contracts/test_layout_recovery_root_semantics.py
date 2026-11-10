@@ -73,8 +73,6 @@ class RecoveryRootSemanticsContract(unittest.TestCase):
             _, inspected = f.inspect(world, command, repo)
             control = f.review_request(world, command, source, repo, inspected, native)
             rebind(control)
-            accepted = prepare_process(world, command, repo, inspected, control, world.inside('original-history-proposal.json'))
-            self.assertEqual(accepted.returncode, 0, accepted.stdout + accepted.stderr)
             path = next(p for p in native if p.startswith('history/sources/'))
             metadata, body = test_comparison.unpack(native[path])
             metadata = copy.deepcopy(metadata)
@@ -87,6 +85,8 @@ class RecoveryRootSemanticsContract(unittest.TestCase):
             unit['targets'][0]['sha256'] = f.sha(intended[path].encode())
             rebind(request)
             before = files(bank)
+            directory = f.private_directory(world, bank, inspected['operation_id'])
+            private_before = files(directory)
             index = (repo / '.git/index').read_bytes()
             output = world.inside('rewritten-history-proposal.json')
             result = prepare_process(world, command, repo, inspected, request, output)
@@ -94,6 +94,9 @@ class RecoveryRootSemanticsContract(unittest.TestCase):
             self.assertFalse(output.exists())
             self.assertEqual(files(bank), before)
             self.assertEqual((repo / '.git/index').read_bytes(), index)
+            self.assertEqual(files(directory), private_before)
+            accepted = prepare_process(world, command, repo, inspected, control, world.inside('original-history-proposal.json'))
+            self.assertEqual(accepted.returncode, 0, accepted.stdout + accepted.stderr)
 
     def test_terminal_marker_cannot_be_discarded_because_backup_exists(self):
         with World() as world:

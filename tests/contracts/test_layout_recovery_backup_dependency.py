@@ -96,7 +96,7 @@ class RecoveryBackupDependencyContract(unittest.TestCase):
 
     def test_completed_repair_without_later_admission_can_restore(self):
         with World() as w:
-            command, _, repo, bank, _, inspected, _ = f.small_pending(w)
+            command, _, repo, bank, _, inspected, applied = f.small_pending(w)
             directory = f.private_directory(w, bank, inspected['operation_id'])
             original = {row['path']: (directory / row['blob']).read_bytes()
                         for row in inspected['manifest']['sources']}
@@ -106,5 +106,10 @@ class RecoveryBackupDependencyContract(unittest.TestCase):
                            '--operation', inspected['operation_id'], '--output', restore)
             self.assertNotEqual(child['operation_id'], inspected['operation_id'])
             f.call(w, command, 'rollback', '--repo', repo, '--proposal', restore)
-            self.assertEqual(files(bank), original)
+            self.assertEqual({path: body for path, body in files(bank).items()
+                              if not path.startswith('.agent-memory')}, original)
+            self.assertTrue((bank / '.agent-memory-transaction.md').exists())
+            self.assertTrue((bank / '.agent-memory-recovery.md').exists())
+            status = f.call(w, command, 'status', '--repo', repo, '--operation', inspected['operation_id'])
+            self.assertEqual(status['pending_unit_ids'], applied['pending_unit_ids'])
             self.assertEqual((directory / 'receipt.json').read_bytes(), receipt)
