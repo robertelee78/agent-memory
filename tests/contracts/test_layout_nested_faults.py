@@ -97,6 +97,12 @@ class LayoutNestedFaults(unittest.TestCase):
     def test_receipt_exit(self):
         self.receipt_journey('layout-recovery-nested-after-receipt', 'exit')
 
+    def test_before_resolution_error(self):
+        self.receipt_journey('layout-recovery-admission-receipt-before-resolution', 'error')
+
+    def test_before_resolution_exit(self):
+        self.receipt_journey('layout-recovery-admission-receipt-before-resolution', 'exit')
+
     def test_hold_restore_before_error(self):
         self.receipt_journey('layout-recovery-before-hold-restore', 'error', partial=True)
 

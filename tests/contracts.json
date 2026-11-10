@@ -122,6 +122,8 @@
     {"name":"layout-nested-rollback-progress-router-exit","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_nested_faults.py","tests":["LayoutNestedFaults.test_progress_router_exit"]},
     {"name":"layout-nested-receipt-error","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_nested_faults.py","tests":["LayoutNestedFaults.test_receipt_error"]},
     {"name":"layout-nested-receipt-exit","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_nested_faults.py","tests":["LayoutNestedFaults.test_receipt_exit"]},
+    {"name":"layout-nested-before-resolution-error","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_nested_faults.py","tests":["LayoutNestedFaults.test_before_resolution_error"]},
+    {"name":"layout-nested-before-resolution-exit","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_nested_faults.py","tests":["LayoutNestedFaults.test_before_resolution_exit"]},
     {"name":"layout-nested-hold-before-error","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_nested_faults.py","tests":["LayoutNestedFaults.test_hold_restore_before_error"]},
     {"name":"layout-nested-hold-before-exit","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_nested_faults.py","tests":["LayoutNestedFaults.test_hold_restore_before_exit"]},
     {"name":"layout-nested-hold-after-error","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_nested_faults.py","tests":["LayoutNestedFaults.test_hold_restore_after_error"]},
