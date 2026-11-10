@@ -204,6 +204,28 @@ class NativeStoredAuthorityV2(unittest.TestCase):
             self.assertTrue(accepted['continue'])
             self.assertEqual(len(list((transport.session_dir(repo, session) / 'root-wakes').glob('*.json'))), 1)
 
+    def test_reparented_linux_window_cannot_reserve(self):
+        import threading
+        from agent_memory import omp_stream
+        with World() as world, patch.dict(os.environ, world.env, clear=True):
+            helper = fixtures.NativeSources(); repo, session, lifecycle = helper.fixture(world)
+            result = helper.observe(repo, session, lifecycle,
+                [helper.entry('human', 'user', 'Actual source.', attribution='user')])
+            value = {'schema': 'agent-memory/omp-observer-request-v2', 'action': 'wake',
+                     'session': session, 'lifecycle': result['lifecycle'], 'payload': result['wake_payload']}
+            window = fixtures.LiveDeliveryWindow()
+            image = omp_stream._LinuxNativeImage.__new__(omp_stream._LinuxNativeImage)
+            image.lock = threading.Lock()
+            image.closed = False
+            image.ready = (123, 124, os.getppid() + 1, 1, (), ())
+            window._platform = 'linux'
+            window._owner.native_image = image
+            with patch.object(omp_stream.select, 'select', return_value=([], [], [])):
+                refused = helper.observe_request(repo, value, delivery_window=window)
+            self.assertFalse(refused['continue'])
+            self.assertEqual(refused['status'], 'pending-undeliverable-window')
+            self.assertFalse((transport.session_dir(repo, session) / 'root-wakes').exists())
+
     def test_on_started_runs_once_after_preflight_before_source_write(self):
         with World() as world, patch.dict(os.environ, world.env, clear=True):
             helper = fixtures.NativeSources(); repo, session, lifecycle = helper.fixture(world)
