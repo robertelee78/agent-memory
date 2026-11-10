@@ -436,6 +436,7 @@ class RecoveryFrontierClosureContract(unittest.TestCase):
                                     '--operation', inspected['operation_id'])['semantic_recovery_complete'])
 
     def _consumer_flow(self, route, *, pending):
+        from agent_memory import bank_contract
         with World() as w:
             command, source = f.installed(w)
             repo, bank, _ = f.memory(w)
@@ -530,6 +531,10 @@ class RecoveryFrontierClosureContract(unittest.TestCase):
                 governance = test_governance.GovernanceContract('runTest')
                 governance.pid, governance.actor = helper.pid, helper.actor
                 consumer_input = governance.request(bank, old, first, 'supersede')
+                consumer_input['context_review'] = {
+                    path: f.sha((bank / path).read_bytes())
+                    for path in ('MEMORY.md', *bank_contract.CONTEXTS)
+                    if (bank / path).is_file()}
                 consumer_input['replacement'] = {
                     'path': second, 'id': replacement['id'], 'version': replacement['version'],
                     'sha256': f.sha((bank / second).read_bytes()),
@@ -589,6 +594,18 @@ class RecoveryFrontierClosureContract(unittest.TestCase):
                 arguments = ['govern', 'preview', '--repo', repo, '--request', f.save(w, consumer_input)]
             else:
                 arguments = ['compact', 'preview', '--repo', repo, '--input', f.save(w, consumer_input)]
+            if pending:
+                # A changed valid seed produces different event identities and
+                # must not reuse the independent exact-output approval.
+                changed = w.run([command, *arguments, '--operation-id', str(uuid.uuid4()),
+                                 '--recorded-at', stamp, '--private-output',
+                                 w.inside('consumer-changed-seed.json')], check=False, timeout=60)
+                self.assertNotEqual(changed.returncode, 0)
+                self.assertFalse(json.loads(changed.stdout)['canonical_writes_performed'])
+                self.assertEqual({p.relative_to(bank).as_posix(): p.read_text()
+                                  for p in bank.rglob('*.md')
+                                  if not p.name.startswith('.agent-memory')}, native)
+                arguments += ['--operation-id', operation_id, '--recorded-at', stamp]
             result = w.run([command, *arguments, '--private-output', preview], check=False, timeout=60)
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             preview_value = json.loads(preview.read_text()) if pending else json.loads(result.stdout)

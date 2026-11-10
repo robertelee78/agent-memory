@@ -11,7 +11,7 @@ import uuid
 
 from . import bank_capacity, admission, bank_contract as bank, bank_layout, bank_transactions as tx
 from . import bank_writes as writes, comparison, lifecycle, records, retrieval, scope_binding, security, recovery_frontier, layout_resolution
-from .developer_identity import digest, encoded
+from .developer_identity import digest, encoded, uuid_valid
 from .frontmatter import ContractError, read, write
 
 INPUT = {'comparison_request', 'comparison_proof', 'capture', 'context'}
@@ -242,10 +242,10 @@ def build(base, evidence, operation_id, plan, captured):
     return routed_files
 
 
-def preview(repo, value):
+def preview(repo, value, *, operation_id=None, recorded_at=None):
     input_value(value)
     root, _ = writes.bank_path(repo)
-    evidence = {**copy.deepcopy(value), 'recorded_at': datetime.now(timezone.utc).isoformat(), 'git_context': retrieval.git_context(root)}
+    evidence = {**copy.deepcopy(value), 'recorded_at': recorded_at or datetime.now(timezone.utc).isoformat(), 'git_context': retrieval.git_context(root)}
     if isinstance(evidence['comparison_proof'], dict):evidence['comparison_proof'] = evidence['comparison_proof'].get('proof', evidence['comparison_proof'])
     evidence.update(layout_resolution.evidence_fields(evidence['comparison_proof']))
     if isinstance(evidence['capture'], dict):evidence['capture'] = evidence['capture'].get('capture', evidence['capture'])
@@ -255,7 +255,10 @@ def preview(repo, value):
             proposal=None, canonical_writes_performed=False, detecting_developer_id=compared['detecting_developer_id'],
             other_developer_ids=compared['other_developer_ids'], messages_sent=False,
             recommend_other_developer_clarification=compared['recommend_other_developer_clarification'])
-    root, bank_path = writes.bank_path(repo);base = tx.files_at(bank_path);operation_id = str(uuid.uuid4())
+    root, bank_path = writes.bank_path(repo);base = tx.files_at(bank_path)
+    operation_id = operation_id or str(uuid.uuid4())
+    if not uuid_valid(operation_id):
+        raise ContractError('Maintenance planning requires a canonical operation UUIDv4')
     desired = build(base, evidence, operation_id, plan, captured)
     if desired is None:return result('preview', disposition='no-change', proposal=None, canonical_writes_performed=False)
     p = tx.preview(root, desired, 'compact')['proposal']
@@ -317,10 +320,12 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__);commands = parser.add_subparsers(dest='command', required=True)
     sub = commands.add_parser('preview');sub.add_argument('--repo', required=True);sub.add_argument('--input', required=True)
     sub.add_argument('--private-output')
+    sub.add_argument('--operation-id');sub.add_argument('--recorded-at')
     sub = commands.add_parser('apply');sub.add_argument('--proposal', required=True)
     args = parser.parse_args(argv)
     try:
-        value = (preview(args.repo, admission.read_input(args.input, 262144)) if args.command == 'preview'
+        value = (preview(args.repo, admission.read_input(args.input, 262144),
+                         operation_id=args.operation_id, recorded_at=args.recorded_at) if args.command == 'preview'
                  else apply(admission.read_input(args.proposal, 512*1024*1024)))
         if args.command == 'preview':
             value = recovery_frontier.private_preview(args.repo, value, args.private_output)

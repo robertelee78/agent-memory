@@ -448,7 +448,7 @@ def desired(observation, request, operation_id, at):
     return routed, None
 
 
-def preview(repo, request):
+def preview(repo, request, *, operation_id=None, recorded_at=None):
     request = copy.deepcopy(request)
     if isinstance(request.get('capture'), dict):request['capture'] = request['capture'].get('capture', request['capture'])
     if isinstance(request.get('comparison'), dict) and isinstance(request['comparison'].get('proof'), dict):
@@ -457,7 +457,10 @@ def preview(repo, request):
     if not qualified_authority(request):return pending(observation, 'clarification-required')
     if not permitted_impact(observation, request):
         return pending(observation, 'narrowing-required')
-    at = datetime.now(timezone.utc).isoformat();operation_id = str(uuid.uuid4())
+    at = recorded_at or datetime.now(timezone.utc).isoformat()
+    operation_id = operation_id or str(uuid.uuid4())
+    if not uuid_valid(operation_id):
+        raise ContractError('Governance planning requires a canonical operation UUIDv4')
     files, deferred = desired(observation, request, operation_id, at)
     if deferred:return pending(observation, **deferred)
     p = tx.preview(observation['root'], files, WRITE_ACTION[request['operation']])['proposal']
@@ -542,6 +545,7 @@ def main(argv=None, *, required_operations=None):
     parser = argparse.ArgumentParser(description=__doc__);commands = parser.add_subparsers(dest='command', required=True)
     sub = commands.add_parser('preview');sub.add_argument('--repo', required=True);sub.add_argument('--request', required=True)
     sub.add_argument('--private-output')
+    sub.add_argument('--operation-id');sub.add_argument('--recorded-at')
     sub = commands.add_parser('apply');sub.add_argument('--proposal', required=True)
     args = parser.parse_args(argv)
     try:
@@ -552,7 +556,8 @@ def main(argv=None, *, required_operations=None):
                        tx.proposal_value(prepared)['governance_evidence']['request'])
             if request['operation'] not in required_operations:
                 raise ContractError('The requested operation differs from the CLI intent')
-        value = preview(args.repo, prepared) if args.command == 'preview' else apply(prepared)
+        value = (preview(args.repo, prepared, operation_id=args.operation_id, recorded_at=args.recorded_at)
+                 if args.command == 'preview' else apply(prepared))
         if args.command == 'preview':
             value = recovery_frontier.private_preview(args.repo, value, args.private_output)
         print(json.dumps(value, indent=2, ensure_ascii=False));return 0

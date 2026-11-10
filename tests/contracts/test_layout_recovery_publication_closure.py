@@ -33,7 +33,8 @@ class RecoveryPublicationClosure(unittest.TestCase):
                 before = helper.state(w, repo, bank)
                 head = w.git('ls-remote', 'origin', 'refs/heads/main', cwd=repo).stdout
                 prepared = call(w, command, 'publish', 'prepare', '--repo', repo, '--operation', operation,
-                                '--input', input_path, '--output', prepared_path)
+                                '--input', input_path, '--output', prepared_path,
+                                expected=1 if expected == 'pending-policy' else 0)
                 if expected == 'pending-policy':
                     # Unsupported rules are refused at prepare, before a candidate can exist.
                     pending = prepared
@@ -57,7 +58,8 @@ class RecoveryPublicationClosure(unittest.TestCase):
                     changed['rules'] = []
                     policy.write_text(json.dumps(changed))
                     pending = call(w, command, 'publish', 'land', '--repo', repo, '--operation', operation,
-                                   '--input', request_path, '--output', w.inside('closure-rules.json'))
+                                   '--input', request_path, '--output', w.inside('closure-rules.json'),
+                                   expected=1)
                     self.assertEqual(prepared_bytes, prepared_path.read_bytes())
                     self.assertEqual(request, json.loads(request_path.read_text()))
                 self.assertEqual(pending['state'], expected)

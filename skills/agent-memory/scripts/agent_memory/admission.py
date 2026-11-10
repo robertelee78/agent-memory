@@ -16,7 +16,7 @@ from . import comparison, lifecycle, records, scope_binding, security, recovery_
 from .developer_identity import digest, encoded, load, uuid_valid
 from .frontmatter import ContractError, write
 from .identity_git import git
-from . import sharing_limits, trust_paths
+from . import sharing_limits, trust_paths, turn_sources
 
 REQUEST = {'project_id', 'candidate', 'source_class', 'repository_evidence', 'assessment'}
 ASSESSMENT = {'category', 'utility', 'durable', 'evidence_confidence', 'evidence_reason',
@@ -415,7 +415,10 @@ def main(argv=None):
         error = (str(exc) if isinstance(exc, bank_capacity.BankCapacityError) else
                  'Admission input must be a protected file in an owner-only directory. Use am private create and am private put; preserve the existing input.' if isinstance(exc, PrivateInputError) else
                  'Unsafe, ineligible, unavailable or changed admission; preserve sources and repeat evidence/comparison review')
-        print(json.dumps(result(args.command, admission_verified=False, canonical_writes_performed=False,
+        pending = args.command == 'apply' and not isinstance(exc, turn_sources.SourceTransportBusy)
+        print(json.dumps(result(args.command, admission_verified=False,
+                                canonical_writes_performed=None if pending else False,
+                                recovery_may_be_required=pending,
                                 error=error, **bank_capacity.details(exc))))
         return 1
 
