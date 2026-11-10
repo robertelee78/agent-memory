@@ -249,6 +249,77 @@
       "hosted_limit": "Connected publication uses a controlled local GitHub stand-in, not actual hosted branch policy or provider behavior",
       "independent_review": "Actual Claude Opus5.5 source review of corrected controls; no whole-task acceptance",
       "full_244_or_release_acceptance": false
+    },
+    {
+      "kind": "actual-protected-hosted-journey",
+      "source_commit": "0d58a8b3158b5d08fcbe70a65e172f3454e1ce76",
+      "platform": "macOS",
+      "status": "PASS",
+      "pull_request": "https://github.com/robertelee78/agent-memory-v015-qualification/pull/3",
+      "candidate": "fed44793bffe1682be9cda453f7aaf9395c65215",
+      "landed": "e248d9fa1dd5c6afc641913fb1d67747ff0bf536",
+      "required_external_status": "agent-memory-244-external-bank-validation",
+      "administrator_enforcement": true,
+      "pending_units": 8,
+      "resolved_units": 8,
+      "source_sizes": [79054, 28478],
+      "candidate_public_validation_exit": 0,
+      "memory_only_candidate": true,
+      "fresh_empty_profile_clone_recall": true,
+      "default_restored": "main",
+      "unchanged_main": "d58ebe90a39a3834bb52521e4d5a6fec236f26c9",
+      "logged_commands": 100,
+      "logged_command_span_seconds": 259.2,
+      "worker_limit_seconds": 300,
+      "independent_runtime_review": {
+        "model": "anthropic/claude-opus-5-5",
+        "verdict": "PASS",
+        "scope": "One actual protected hosted journey only",
+        "receipt_sha256": "7eabcd886ca43fe86775d134ec461a71cfbae42389cc8869bdeeb90d3d9e76c3"
+      },
+      "raw_result_sha256": "3726985572ccdbd0f9bd346e56ebe1914ef82f197df6e48d36ce86c666767e81",
+      "limits": [
+        "Status readback and fresh typed recall passed in-process checks; their raw outputs were not retained.",
+        "Protection GET was retained; protection PUT response and after-run feature hashes were not retained.",
+        "No direct push rejection test with the required check missing was performed.",
+        "An earlier protected attempt timed out during ordinary admission and remains a failure; restoring its default branch was not qualification.",
+        "Thin worker margin; not a complete platform matrix or final-source gate."
+      ],
+      "full_244_or_release_acceptance": false
+    },
+    {
+      "kind": "recovery-publication-and-review-regressions",
+      "platform": "macOS",
+      "worker_limit_seconds": 300,
+      "before": {
+        "source_commit": "8b19aeee6926b2cc3edbb352bcb0399996ca7f84",
+        "receipt_sha256": "c227d809dfc5c24e72d11387aa6f7fdb715588d311767a5384f8e3495a67b949",
+        "changed_coverage_review": "FAIL: unfinished nested recovery accepted changed review evidence",
+        "publication_authority_race": "PASS",
+        "historical_retry_after_authority_correction": "PASS",
+        "ordinary_prepared_land_with_pending_units": "PASS",
+        "source_bytes_types_modes_and_no_extras_verified": true
+      },
+      "after": {
+        "source_commit": "2317ed2e63b38f84f85b3f422b1c0a231518a424",
+        "receipt_sha256": "1aa5aa9049f04d1b33465e624c1a09aeed3f020da4aba85a482626d3c449d60d",
+        "registered_nested_workers_passed": 8,
+        "umask": "077",
+        "source_bytes_types_modes_and_no_extras_verified": true
+      },
+      "corrected_private_review_restore": {
+        "source_commit": "4b24c347ed38c464f475057e14d25aa73b1dbd93",
+        "receipt_sha256": "f3e1cd2834f176c18edfec9f00c96a6221b6b39e7d0251b0fb77959aa38e5821",
+        "suite": "layout-recovery-nested-coverage-review-pin",
+        "status": "PASS",
+        "umask": "022",
+        "seconds": 37.22542966599576,
+        "assertions": "Changed and missing review refuse without replacement; original evidence restores completion; completed historical retry retains its meaning.",
+        "source_bytes_types_modes_and_no_extras_verified": true
+      },
+      "independent_review": "Actual Opus source review accepted the runtime fix and corrected regression; no whole-task verdict.",
+      "remaining": "Linux coverage, functional recovery workload and final integrated source gate",
+      "full_244_or_release_acceptance": false
     }
   ],
   "superseded_attempt_not_erased": "Earlier28-method run had27passes/one retention-fixture error and failed overall. Final combined run above passed after fixture corrections; this does not rewrite that earlier result.",
