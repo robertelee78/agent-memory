@@ -719,6 +719,7 @@
     {"name":"layout-metadata-changed-before-apply","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_recovery_darwin_provenance.py","tests":["DarwinProvenanceRecoveryContract.test_changed_metadata_refuses_before_replacement"]},
     {"name":"layout-metadata-wrong-reviewed-value","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_recovery_darwin_provenance.py","tests":["DarwinProvenanceRecoveryContract.test_reviewed_wrong_provenance_refuses_without_replacement"]},
     {"name":"layout-metadata-unsupported-xattr","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_recovery_darwin_provenance.py","tests":["DarwinProvenanceRecoveryContract.test_unknown_xattr_refuses_inspection_without_mutation"]},
+    {"name":"layout-metadata-unsupported-inode-flags","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_recovery_darwin_provenance.py","tests":["DarwinProvenanceRecoveryContract.test_nondefault_inode_flags_refuse_inspection_without_mutation"]},
     {"name": "semantic-discovery", "layer": "bank", "scope": "v0.0.3", "path": "tests/contracts/test_discovery.py"}
   ]
 }

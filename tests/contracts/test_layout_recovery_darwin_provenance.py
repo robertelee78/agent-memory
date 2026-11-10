@@ -1,5 +1,6 @@
 """Exact metadata preservation and unsupported-xattr refusal via public recovery."""
 import ctypes
+import fcntl
 import os
 import stat
 import sys
@@ -59,6 +60,18 @@ def set_xattr(path, name, value):
     libc = native_xattrs()
     buffer = ctypes.create_string_buffer(value, len(value))
     checked(libc.setxattr(os.fsencode(path), os.fsencode(name), buffer, len(value), 0, 0))
+
+
+def inode_flags(path, value=None):
+    if sys.platform == 'darwin':
+        if value is not None:
+            os.chflags(path, value, follow_symlinks=False)
+        return path.stat(follow_symlinks=False).st_flags
+    request = (ctypes.sizeof(ctypes.c_long) << 16) | (ord('f') << 8)
+    with path.open('rb') as stream:
+        if value is not None:
+            fcntl.ioctl(stream.fileno(), (1 << 30) | request | 2, value.to_bytes(4, sys.byteorder))
+        return int.from_bytes(fcntl.ioctl(stream.fileno(), (2 << 30) | request | 1, bytes(4)), sys.byteorder)
 
 
 def snapshot(bank, paths):
@@ -135,3 +148,16 @@ class DarwinProvenanceRecoveryContract(unittest.TestCase):
                          '--output', world.inside('unknown-xattr.json'), expected=1)
             self.assertEqual(snapshot(bank, native), before)
             self.assertEqual(bytes.fromhex(xattrs(target)[name]), b'controlled')
+
+    def test_nondefault_inode_flags_refuse_inspection_without_mutation(self):
+        with World() as world:
+            command, _, repo, bank, native, _ = self.setup_repair(world)
+            target = bank / 'activeContext.md'
+            required = stat.UF_NODUMP if sys.platform == 'darwin' else 0x40
+            flags = inode_flags(target, inode_flags(target) | required)
+            self.assertEqual(flags & required, required)
+            before = snapshot(bank, native)
+            fixture.call(world, command, 'inspect', '--repo', repo,
+                         '--output', world.inside('unsupported-flags.json'), expected=1)
+            self.assertEqual(snapshot(bank, native), before)
+            self.assertEqual(inode_flags(target), flags)

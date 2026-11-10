@@ -324,10 +324,13 @@ The v0.0.15 metadata policy MAY support the Darwin kernel attribute
 manifest and required metadata plan SHALL retain the complete attribute map;
 `metadata_plan_sha256` SHALL bind the entire reviewed uid/gid/mode/xattrs plan.
 Empty maps mean observed absence, not permission to ignore metadata. Other
-xattrs, ACL entries, nonzero file flags and unsupported filesystem behavior
-SHALL remain explicit refusals. Linux SELinux labels are not supported by this
-policy. Existing observation and private-artifact bounds SHALL remain unchanged
-and include the serialized metadata.
+xattrs, ACL entries, nonzero BSD file flags and unsupported filesystem behavior
+SHALL remain explicit refusals. Linux SHALL read `FS_IOC_GETFLAGS` and refuse
+every bit except the kernel-managed EXTENT/INDEX storage-format bits; an
+unavailable or unstable check SHALL remain pending. It MUST NOT silently drop
+backup, access, inheritance or write-semantics flags. Linux SELinux labels are
+not supported by this policy. Existing observation and private-artifact bounds
+SHALL remain unchanged and include the serialized metadata.
 
 Before source replacement or restoration, the unprivileged runtime SHALL prove
 that both forward and rollback temporaries reproduce the exact required

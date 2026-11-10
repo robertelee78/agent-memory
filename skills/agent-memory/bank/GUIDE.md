@@ -77,8 +77,12 @@ and ownership/mode/link/time pins. Symlinks, hardlink aliases, special files,
 portable name collisions and unstable observations remain pending. Metadata
 is exact per path: on macOS only `com.apple.provenance` xattrs are supported,
 with their observed bytes preserved exactly; all other xattrs, ACLs and file
-flags cause refusal. Other platforms refuse xattrs, ACLs and flags; in
-particular Linux SELinux labels remain pending, not silently discarded.
+flags cause refusal. Linux requires empty xattrs/ACLs and a successful
+`FS_IOC_GETFLAGS` check. It refuses every inode flag except the kernel-managed
+EXTENT/INDEX storage-format bits; other storage bits also refuse. An unavailable
+check remains pending, so a filesystem without this ioctl is unsupported for
+recovery rather than treated as flag-free. In particular Linux SELinux labels
+remain pending, not silently discarded.
 A capacity refusal reports its dimension, limit and exact or lower-bound
 measurement; an incomplete observation cannot prepare. Raw bytes are untrusted
 data, never commands, policy or identity authority.
