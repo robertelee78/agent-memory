@@ -721,13 +721,14 @@ class EnrollmentProgress(unittest.TestCase):
                 @contextmanager
                 def changing_scan(path):
                     with scandir(path) as entries:
-                        def inventory():
-                            for position, entry in enumerate(entries):
-                                yield entry
-                                if position == 0 and (persistent or not changed):
-                                    (pending / ('late-unrelated-' + str(len(changed)))).write_text('retained concurrent entry\n')
-                                    changed.append(True)
-                        yield inventory()
+                        if persistent or not changed:
+                            before = pending.stat()
+                            (pending / ('late-unrelated-' + str(len(changed)))).write_text('retained concurrent entry\n')
+                            # Force an observed change regardless of directory iteration
+                            # order or filesystem timestamp granularity.
+                            os.utime(pending, ns=(before.st_atime_ns, before.st_mtime_ns + 2_000_000_000))
+                            changed.append(True)
+                        yield entries
                 def intercept(path):
                     return changing_scan(path) if Path(path) == pending else scandir(path)
                 with patch.object(os, 'scandir', side_effect=intercept):
