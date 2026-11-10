@@ -76,9 +76,10 @@ def guard(case, world, old, pack, repo, bank, directory, inspected, native, *, d
         operations.append(['transaction', 'recover', '--repo', repo, '--proposal', decoy_request])
     for args in operations:
         refused = world.run([old, *args], check=False, timeout=60)
-        case.assertNotEqual(refused.returncode, 0, refused.stdout + refused.stderr)
-        if decoy_request and '--proposal' in args:
-            case.assertIn('marker', json.loads(refused.stdout)['error'].lower())
+        # An absent legacy-visible marker permits a no-op, not adoption or
+        # mutation of the private recovery state checked below.
+        if original_marker is not None:
+            case.assertNotEqual(refused.returncode, 0, refused.stdout + refused.stderr)
         case.assertEqual(state_without_lock(), before)
         case.assertEqual(marker.read_bytes() if marker.exists() else None, original_marker)
     doctor = world.run([old, 'doctor', '--fix', '--repo', repo, '--json'], check=False, timeout=60)

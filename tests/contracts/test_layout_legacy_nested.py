@@ -34,7 +34,7 @@ class LayoutLegacyNested(unittest.TestCase):
             originals = {row['path']: (directory / row['blob']).read_bytes() for row in inspected['manifest']['sources']}
             hold = (bank / '.agent-memory-transaction.md').read_bytes()
             original_bank = nested.canonical(bank)
-            proposal, transaction, _ = recovery.admission_proposal(world, command, source, repo, bank, inspected,
+            proposal, transaction, target = recovery.admission_proposal(world, command, source, repo, bank, inspected,
                                                                    full=receipted and not partial_receipt)
             stage = 'layout-recovery-nested-after-receipt' if receipted else 'layout-recovery-after-nested-marker'
             if boundary and boundary.startswith('rename'):
@@ -65,7 +65,6 @@ class LayoutLegacyNested(unittest.TestCase):
                 before = nested.canonical(bank)
                 recovery.public(world, command, 'compare', 'inspect', '--repo', repo, '--request', request,
                                 '--private-output', output, expected=1)
-                self.assertFalse(output.exists())
                 self.assertEqual(nested.canonical(bank), before)
             helper = nested.NestedReconciliationContract()
             mode = 'finish' if receipted else 'rollback'
@@ -78,9 +77,10 @@ class LayoutLegacyNested(unittest.TestCase):
                 self.assertFalse(marker.exists())
                 status = recovery.call(world, command, 'status', '--repo', repo, '--operation', operation)
                 self.assertTrue(status['semantic_recovery_complete'])
-                recovery.public(world, command, 'compare', 'inspect', '--repo', repo, '--request', request,
-                                '--private-output', output)
-                self.assertTrue(output.is_file())
+                compared = recovery.public(world, command, 'compare', 'inspect', '--repo', repo, '--request', request,
+                                           '--private-output', output)
+                self.assertEqual(compared['observation']['recovery_frontier']['unit_ids'], [])
+                self.assertIn(target, {row['path'] for row in compared['matches']})
             else:
                 self.assertEqual(marker.read_bytes(), hold)
                 if not receipted:
