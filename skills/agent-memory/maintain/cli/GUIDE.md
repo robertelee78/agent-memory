@@ -59,7 +59,7 @@ successful preview is not an applied mutation or verified publication.
 
 `admission preview`, `compact preview` and `govern preview` accept
 `--operation-id UUID --recorded-at RFC3339` when an independent recovery review
-must bind the exact planned output. The session MUST choose and review those
+binds the exact planned output. The session MUST choose and review those
 values with the intended files before preview; they are CLI options, not extra
 request fields, and MUST NOT replace source, authority or coverage review.
 
