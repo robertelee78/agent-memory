@@ -201,7 +201,7 @@ class CoverageFixture(unittest.TestCase):
 
     def execute(self, observer, value=None, sequence=1, raw=None, *, coverage=None):
         current = self.coverage if coverage is None else coverage
-        clocks = self.clocks if coverage is None else stream.ClockWindows(current.instance, lambda: self.responses.live)
+        clocks = self.clocks if coverage is None else stream.ClockWindows(current.instance, lambda: self.responses.live, platform='darwin')
         executor = stream.FiniteExecutor(current, self.responses, clocks, observer=observer)
         executor.execute('REQUEST', sequence, None,
                          bytearray(stream.turn_sources.encoded(self.request() if value is None else value)) if raw is None else raw)
