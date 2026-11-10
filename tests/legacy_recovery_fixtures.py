@@ -1,11 +1,11 @@
 """Pinned old-runtime recovery guards against real layout markers."""
 import json
-import os
 from pathlib import Path
 import sys
 import uuid
 
 from runtime_update_fixtures import snapshot
+from contracts import test_layout_recovery_darwin_provenance as exact_metadata
 import layout_recovery_fixtures as recovery
 
 
@@ -51,8 +51,7 @@ def guard(case, world, old, pack, repo, bank, directory, inspected, native, *, d
             if exclude_lock and path == lock:
                 continue
             facts = path.lstat()
-            attrs = {name: os.getxattr(path, name, follow_symlinks=False)
-                     for name in os.listxattr(path, follow_symlinks=False)}
+            attrs = exact_metadata.xattrs(path)
             rows[str(path.relative_to(root))] = (facts.st_uid, facts.st_gid, facts.st_mode, attrs)
         return rows
     def state_without_lock():

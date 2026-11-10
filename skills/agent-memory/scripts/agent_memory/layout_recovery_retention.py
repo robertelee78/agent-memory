@@ -255,7 +255,7 @@ def _probe_dependencies(bank, other, operation_id, inventory):
         completion = state.read(other/prefix/'completion.json', missing=True)
         expected = {'schema': 'agent-memory/layout-metadata-probe-completion-v1',
                     'operation_id': operation_id, 'attempt_id': attempt, 'plan_sha256': digest(encoded(plan))}
-        if completion != expected or any(_probe_path_present(bank, node['path']) for node in nodes.values()):
+        if completion != expected:
             blockers.append({'kind': 'unfinished-metadata-probe-attempt',
                              'operation_id': operation_id, 'attempt_id': attempt})
     return blockers
