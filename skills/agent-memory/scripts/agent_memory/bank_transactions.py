@@ -364,6 +364,20 @@ def validate_outcome(root, bank, desired, p, owner, marker, *, admission_sources
     return contract.validate(root, owned_lock=owner, owned_transaction=marker)
 
 
+def source_classes(p):
+    """Keep governed audit attribution stable across held and ordinary writes."""
+    if 'admission_evidence' in p:
+        return [p['admission_evidence']['capture']['request']['source_class']]
+    if 'governance_evidence' in p:
+        return [p['governance_evidence']['request']['authority']['source_class']]
+    if 'consolidation_evidence' in p and p['consolidation_evidence']['capture'] is not None:
+        return [p['consolidation_evidence']['capture']['request']['source_class']]
+    if p['operation'] == 'initialize':
+        evidence = p['initialization_evidence']['inventory']
+        return ['assistant'] + (['verified-repository'] if evidence['sources'] else []) + (['tool'] if evidence['awa']['sources'] else [])
+    return ['assistant'] if 'checkpoint_evidence' in p else ['external']
+
+
 def apply(prepared):
     from .scope_binding import require
     p = proposal_value(prepared)
@@ -408,18 +422,7 @@ def apply(prepared):
     if proposed_remote != project_status(p['repo_root'])['evidence']['canonical_remote']:
         raise ContractError('Authority identity changes require explicit scope binding, including during initialization')
     from . import security
-    classes = ['external']
-    if 'admission_evidence' in p:
-        classes = [p['admission_evidence']['capture']['request']['source_class']]
-    if 'governance_evidence' in p:
-        classes = [p['governance_evidence']['request']['authority']['source_class']]
-    if 'consolidation_evidence' in p and p['consolidation_evidence']['capture'] is not None:
-        classes = [p['consolidation_evidence']['capture']['request']['source_class']]
-    if p['operation'] == 'initialize':
-        evidence = p['initialization_evidence']['inventory']
-        classes = ['assistant'] + (['verified-repository'] if evidence['sources'] else []) + (['tool'] if evidence['awa']['sources'] else [])
-    if 'checkpoint_evidence' in p:
-        classes = ['assistant']
+    classes = source_classes(p)
     def check(owner):
         require(p['repo_root'], p['project_id'], expected=context, owned_lock=owner, initialize=initializing)
         if 'governance_evidence' in p:

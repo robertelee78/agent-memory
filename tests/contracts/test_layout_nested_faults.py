@@ -1,4 +1,6 @@
 """Real nested admission rollback interruption preserves its hold and sources."""
+import json
+from pathlib import Path
 import unittest
 
 from world import World
@@ -91,6 +93,11 @@ class LayoutNestedFaults(unittest.TestCase):
             self.assertEqual(fault.returncode, 86 if mode == 'exit' else 1, fault.stdout + fault.stderr)
             if mode == 'exit':
                 recovery.unlock(world, command, repo)
+            audit = next(Path(world.env['AGENT_MEMORY_STATE_HOME']).rglob(
+                transaction['operation_id'] + '.capture.started.*.json'))
+            audit_bytes = audit.read_bytes()
+            self.assertEqual(json.loads(audit_bytes)['source_classes'],
+                             [transaction['admission_evidence']['capture']['request']['source_class']])
             committed = nested.canonical(bank)
             self.assertEqual(committed[target], transaction['files'][target].encode())
             if not stage.endswith('after-hold-restore'):
@@ -108,6 +115,7 @@ class LayoutNestedFaults(unittest.TestCase):
                 self.assertTrue(status['semantic_recovery_complete'])
             historical = recovery.public(world, command, 'admission', 'apply', '--proposal', proposal)
             self.assertTrue(historical['already_applied'])
+            self.assertEqual(audit.read_bytes(), audit_bytes)
             self.assertEqual(nested.canonical(bank), committed)
             self.assertEqual({path: (bank / path).stat().st_mode & 0o7777 for path in modes}, modes)
             self.assertEqual({row['path']: (directory / row['blob']).read_bytes()
