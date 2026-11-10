@@ -34,17 +34,23 @@ class RecoveryBackupCaptureContract(unittest.TestCase):
                                  check=False, timeout=60)
             self.assertEqual(accepted.returncode, 0, accepted.stdout + accepted.stderr)
             self.assertEqual(json.loads(accepted.stdout)['decision'], 'eligible')
-            bad = copy.deepcopy(request)
-            bad['repository_evidence']['path'] = str(backup)
+            alias = repo / 'backup-evidence.md'
+            alias.symlink_to(backup)
             before_bank, before_private = snapshot(bank), snapshot(directory)
             index = (repo / '.git/index').read_bytes()
-            refused = world.run([command, 'capture', '--repo', repo, '--request', f.save(world, bad)],
-                                check=False, timeout=60)
-            self.assertNotEqual(refused.returncode, 0)
-            self.assertEqual(snapshot(bank), before_bank)
-            self.assertEqual(snapshot(directory), before_private)
-            self.assertEqual((repo / '.git/index').read_bytes(), index)
-            self.assertEqual(backup.read_bytes(), original)
+            for path in (str(backup), 'backup-evidence.md'):
+                with self.subTest(path=path):
+                    bad = copy.deepcopy(request)
+                    bad['repository_evidence']['path'] = path
+                    bad['candidate']['metadata']['evidence'] = [path]
+                    refused = world.run([command, 'capture', '--repo', repo, '--request', f.save(world, bad)],
+                                        check=False, timeout=60)
+                    self.assertNotEqual(refused.returncode, 0)
+                    self.assertEqual(snapshot(bank), before_bank)
+                    self.assertEqual(snapshot(directory), before_private)
+                    self.assertEqual((repo / '.git/index').read_bytes(), index)
+                    self.assertEqual(backup.read_bytes(), original)
+                    self.assertTrue(alias.is_symlink())
             status = f.call(world, command, 'status', '--repo', repo,
                             '--operation', inspected['operation_id'])
             self.assertEqual(status['pending_unit_ids'], applied['pending_unit_ids'])

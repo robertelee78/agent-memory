@@ -1,4 +1,4 @@
-""Public recovery refuses backup-only preservation and stale child restores."""
+"""Public recovery refuses backup-only preservation and stale child restores."""
 import copy
 import json
 import unittest
@@ -96,13 +96,10 @@ class RecoveryBackupDependencyContract(unittest.TestCase):
 
     def test_completed_repair_without_later_admission_can_restore(self):
         with World() as w:
-            command, source = f.installed(w)
-            repo, bank, native = f.memory(w, oversized=True)
-            original = files(bank)
-            _, inspected = f.inspect(w, command, repo)
-            proposal, _ = f.prepare(w, command, source, repo, inspected, native)
-            f.call(w, command, 'apply', '--repo', repo, '--proposal', proposal)
+            command, _, repo, bank, _, inspected, _ = f.small_pending(w)
             directory = f.private_directory(w, bank, inspected['operation_id'])
+            original = {row['path']: (directory / row['blob']).read_bytes()
+                        for row in inspected['manifest']['sources']}
             receipt = (directory / 'receipt.json').read_bytes()
             restore = w.inside('control-restore.json')
             child = f.call(w, command, 'rollback', '--repo', repo,

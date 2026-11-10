@@ -71,13 +71,17 @@ class RecoveryRootSemanticsContract(unittest.TestCase):
             command, source = f.installed(world)
             repo, bank, native = f.memory(world, oversized=True)
             _, inspected = f.inspect(world, command, repo)
+            control = f.review_request(world, command, source, repo, inspected, native)
+            rebind(control)
+            accepted = prepare_process(world, command, repo, inspected, control, world.inside('original-history-proposal.json'))
+            self.assertEqual(accepted.returncode, 0, accepted.stdout + accepted.stderr)
             path = next(p for p in native if p.startswith('history/sources/'))
             metadata, body = test_comparison.unpack(native[path])
             metadata = copy.deepcopy(metadata)
             metadata['origin']['session'] = 'different-unverified-session'
             intended = dict(native)
             intended[path] = test_comparison.render(metadata, body)
-            request = f.review_request(world, command, source, repo, inspected, native)
+            request = copy.deepcopy(control)
             request['intended_files'] = intended
             unit = next(u for u in request['unit_map']['units'] if u['targets'] and u['targets'][0]['path'] == path)
             unit['targets'][0]['sha256'] = f.sha(intended[path].encode())

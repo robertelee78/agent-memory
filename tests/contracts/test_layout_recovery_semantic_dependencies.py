@@ -92,6 +92,18 @@ class RecoverySemanticDependenciesContract(unittest.TestCase):
                 if placement == 'intended':
                     intended['activeContext.md'] += '\n' + transcript
                 request = f.review_request(w, command, source, repo, inspected, intended)
+                if placement == 'intended':
+                    source_id = next(row['source_id'] for row in inspected['manifest']['sources']
+                                     if row['path'] == 'handoff-prompt.md')
+                    unit = next(unit for unit in request['unit_map']['units']
+                                if any(span['source_id'] == source_id for span in unit['source_ranges']))
+                    unit.update(disposition='preserve', required_actions=[],
+                                targets=[{'path': 'activeContext.md',
+                                          'sha256': f.sha(intended['activeContext.md'].encode())}])
+                    request['review']['unit_map_sha256'] = f.sha(f.encoded(request['unit_map']))
+                    request['review']['unit_decisions'] = [
+                        {'unit_id': unit['unit_id'], 'disposition': unit['disposition'], 'rationale': unit['reason']}
+                        for unit in request['unit_map']['units']]
                 directory = f.private_directory(w, bank, inspected['operation_id'])
                 row = next(row for row in inspected['manifest']['sources'] if row['path'] == 'handoff-prompt.md')
                 blob = directory / row['blob']
