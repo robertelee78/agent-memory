@@ -259,23 +259,6 @@ class RecoveryIdentityClosureContract(unittest.TestCase):
             self.assertFalse(result['canonical_writes_performed'])
             self.assertEqual((bank_bytes(bank), registry.read_bytes()), before)
 
-    def test_distinct_supplementary_group_survives_apply(self):
-        groups = sorted(set(os.getgroups()) - {os.getegid()})
-        if not groups:
-            self.skipTest('No distinct supplementary group available for collaborative-bank fixture')
-        with World() as w:
-            command, source = f.installed(w)
-            repo, bank, native = f.memory(w, oversized=True)
-            os.chown(bank, -1, groups[0])
-            bank.chmod(0o2770)
-            self.assertEqual(bank.stat().st_gid, groups[0])
-            _, observed = f.inspect(w, command, repo)
-            proposal, _ = f.prepare(w, command, source, repo, observed, native)
-            result = f.call(w, command, 'apply', '--repo', repo, '--proposal', proposal)
-            self.assertTrue(result['canonical_eligibility'])
-            self.assertEqual(bank.stat().st_mode & 0o7777, 0o2770)
-            self.assertEqual(bank.stat().st_gid, groups[0])
-
     def test_setgid_collaborative_bank_mode_and_group_survive_apply(self):
         with World() as w:
             command, source = f.installed(w)
