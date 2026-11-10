@@ -100,3 +100,86 @@ A search covering2025/2026pagination surfaced production guidance and secondary 
 ## Evidence retention
 
 Raw private source-bound profiles/fixture streams remain under `/tmp/agent-memory-v15-readiness/209-rca-profile-run-01`; baseline receipts are durably indexed under local state `research/209-baseline-handoff/corrected-shared-20261106/`. Raw artifacts can contain fixture credentials and withheld bodies: publish sanitized statistics and digests only. Scripts run with isolated Python and bytecode writes disabled. No product optimization or canonical-checkout modification occurred.
+
+## 2026-11-10 residual refresh failure and component attribution
+
+This addendum has its own November 10 observation date; it does not extend the
+November 6 literature cutoff retroactively. The second frozen S0 run
+(`b16e1ff3918afc3c8885e87b729ce26dfd0ea6b1`) terminated unsuccessfully after
+26,990.36 seconds: 625 commands, six 300-second `refresh.apply` timeouts, 618
+successful exits and one expected missing-page refusal. Cleanup is unknown,
+failed Worlds remain retained, and candidate/Linux stress arms were not started.
+The prior independent 641-command failure remains a separate failed attempt.
+
+Read-only, standard-library forensics authenticated all six prepared inputs,
+journal proposals and original hash maps. Each operation had 10,220 base files,
+10,289 intended files and 70 changed paths. The journals and actual bytes show
+legal ordered applied prefixes of 24, 24, 23, 27, 43 and 44 changes, with every
+router still at its original state and no canonical transaction receipt.
+Therefore all six entered the mutation loop; they did not spend the entire
+deadline waiting for its ordinary nonblocking lock. Exact historical guard
+durations and time spent before mutation remain unavailable.
+
+A new owner-private diagnostic reconstructed the authenticated 10,220-file,
+10,584,148-byte base separately from every failed World. Current runtime
+`d96020632201d3f6723d5441f03e8f267eca3627` was independently authenticated from
+Git before importing a cache-free source export with official macOS Python
+3.15.0, `-I -B`. These are component measurements, not a replay or acceptance
+of either the old or current complete workload.
+
+| Component | Profiled wall seconds | Measured detail |
+| --- | ---: | --- |
+| Complete source scan | 0.817763 | 10,220 reads; 51,087 Python `posix.open` calls, 0.388430 self seconds |
+| Complete layout check | 0.804451 | 82,034 Python `posix.stat` calls plus path construction/processing |
+| Cold format validation | 4.652352 | One ordinary operation-local memo entry |
+| Warm format validation | 0.334001 | `deepcopy` 0.302086 inclusive seconds; no observation/currentness reuse |
+
+The Python call counts are not independently traced kernel syscalls. Profiling
+overhead is present. The transaction performs two source scans and two layout
+checks per changed path, in addition to initial/final semantic and safety checks.
+Multiplying these two profiled samples by 140 gives approximately 227.1 seconds;
+that is an inference, not a runtime prediction or proof of historical timeout
+attribution.
+
+A separate unprofiled, ordered one-worker then four-worker diagnostic ran three
+read-only scan/layout pairs per worker on the same authenticated base, with
+source/input verification before and after. Mean pair wall time was 0.916390
+seconds for one worker and 1.563620 seconds for four concurrent workers. This
+short sample demonstrates cost amplification in that arrangement, not a
+distribution, isolated contention effect or complete apply duration. No host
+quieting, workload change or deadline extension occurred.
+
+The first diagnostic inadvertently read preceding token-bearing command-receipt
+lines while locating an input hash. It did not parse, retain, emit or use token
+values. This protocol deviation is retained; the extension used only the known
+journal and already authenticated diagnostic inputs and did not repeat it.
+Private reports and receipts remain owner-only.
+
+### Applicable methods checked for this residual
+
+- [PEP 471](https://peps.python.org/pep-0471/) explains reducing directory/path
+  overhead and explicitly warns that `DirEntry` metadata is cached. Reusing a
+  directory-entry result cannot replace a fresh authorization check.
+- [Python 3.15 descriptor-relative filesystem APIs](https://docs.python.org/3.15/library/os.html)
+  and [open/openat](https://man7.org/linux/man-pages/man2/open.2.html) permit
+  reducing repeated path resolution. An open descriptor remains valid after
+  rename, so fresh canonical ancestry-to-descriptor binding remains essential.
+  Linux-only `openat2` is not a portable Mac/Linux solution.
+- [Git's racy-stat analysis](https://git-scm.com/docs/racy-git) rejects treating
+  unchanged timestamps/size as general proof of unchanged bytes. No stat-only
+  source cache or watcher-as-authority is selected.
+- [SQLite atomic commit](https://www.sqlite.org/atomiccommit.html) separates
+  journaling, cooperative locks and durability assumptions. It does not justify
+  treating AM's lock as excluding editors or replacing canonical Markdown with
+  a database merely to avoid repeated checks.
+
+The proposed narrow direction is cheaper mechanics *inside* each existing check:
+one internal no-follow parent descriptor chain per scanned directory, freshly
+rebound before and after every sibling read; fresh leaf reads/hashes unchanged;
+direct fresh layout stat/path processing without cross-check caching. No safety
+boundary, per-path full read set, fault, cap, authority check or 300-second limit
+is removed. Independent Fable/Opus design review and measured implementation
+qualification remain pending. A full guarded mutation component is being
+measured separately to distinguish scan/layout costs from staging/fsync and
+other residual work. No complete RCA or whole-workload improvement is claimed
+from these component samples alone.
