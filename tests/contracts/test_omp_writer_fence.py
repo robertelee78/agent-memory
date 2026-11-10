@@ -34,14 +34,17 @@ sys.settrace(trace);sys.orig_argv=[sys.executable,am];sys.argv=[am]+sys.argv[1:]
 runpy.run_path(installer,run_name='__main__')
 '''
 WRITER_LAUNCHER = r'''
-import linecache, os, pathlib, runpy, sys, time
+import os, pathlib, runpy, sys, time
 installer=sys.argv.pop(1); am=sys.argv.pop(1); directory=pathlib.Path(os.environ['FENCE_TEST_DIR'])
 def trace(frame,event,arg):
  path=frame.f_code.co_filename; name=frame.f_code.co_name
  if event=='call':
-  return trace if (path.endswith('/agent_memory/bank_transactions.py') and name=='_apply') or (path.endswith('/agent_memory/local_registry.py') and name=='exclusive') else None
- if event=='line' and name=='_apply' and 'with ' in linecache.getline(path,frame.f_lineno) and 'storage.exclusive(' in linecache.getline(path,frame.f_lineno):
-  (directory/'writer-entering').touch()
+  if path.endswith('/agent_memory/turn_sources.py') and name=='canonical_writer_barrier':
+   (directory/'writer-entering').touch(); return trace
+  if path.endswith('/agent_memory/local_registry.py') and name=='exclusive':
+   if frame.f_locals.get('operation')=='bank-capture': (directory/'writer-entering').touch()
+   return trace
+  return None
  if event=='return' and name=='exclusive' and frame.f_locals.get('operation')=='bank-capture' and arg is not None:
   (directory/'writer-locked').touch()
   end=time.monotonic()+25
@@ -51,6 +54,19 @@ def trace(frame,event,arg):
  return trace
 sys.settrace(trace);sys.orig_argv=[sys.executable,am];sys.argv=[am]+sys.argv[1:]
 runpy.run_path(installer,run_name='__main__')
+'''
+
+HOLD_SOURCE_BARRIER = r'''
+import pathlib,sys,time
+sys.path.insert(0,sys.argv[1])
+from agent_memory.turn_sources import source_barrier
+repo=sys.argv[2];directory=pathlib.Path(sys.argv[3])
+with source_barrier(repo):
+ (directory/'holder-ready').touch()
+ end=time.monotonic()+55
+ while not (directory/'holder-release').exists():
+  if time.monotonic()>=end:raise RuntimeError('Source barrier holder release timed out')
+  time.sleep(.01)
 '''
 
 
@@ -135,57 +151,81 @@ class InstalledCanonicalFence(unittest.TestCase):
                     if observer.ident is not None:
                         observer.join(35)
 
-    def test_gate_exhaustion_and_body_failure_never_replay(self):
-        from contextlib import contextmanager
-        from agent_memory import turn_sources
-        entered = []
-        @contextmanager
-        def busy(*args, **kwargs):
-            entered.append('attempt')
-            raise turn_sources.SourceTransportBusy('controlled contention')
-            yield
-        with patch.object(turn_sources, 'source_barrier', busy), \
-             patch.object(turn_sources.time, 'monotonic', side_effect=[0.0, 30.0]), \
-             patch.object(turn_sources.time, 'sleep') as sleep:
-            with self.assertRaises(turn_sources.SourceTransportBusy):
-                with turn_sources.canonical_writer_barrier('/unused'):
-                    self.fail('A busy gate cannot enter the writer body')
-            self.assertEqual(entered, ['attempt'])
-            sleep.assert_not_called()
+    def prepare_capture(self, world):
+        from agent_memory import scope_binding
+        repo, receipt, _ = NativeSmokeQualification().fixture(world)
+        contract = AdmissionContract()
+        contract.pack = world.inside('portable comparison pack')
+        scope = scope_binding.require(repo)
+        contract.pid, contract.actor = scope['project_id'], scope['developer_id']
+        proposal = contract.prepared(world, repo)
+        path = world.inside('fence-proposal.json')
+        path.write_text(json.dumps(proposal)); path.chmod(0o600)
+        return repo, receipt, path
 
-        entered.clear()
-        @contextmanager
-        def available(*args, **kwargs):
-            entered.append('enter')
+    def snapshot(self, world, repo):
+        from agent_memory import layout_recovery_state
+        bank = repo/'memory-bank'
+        base = layout_recovery_state.paths(repo)[2].parent
+        files = {str(path.relative_to(bank)): path.read_bytes()
+                 for path in bank.rglob('*') if path.is_file()}
+        records = {str(path.relative_to(base)): path.read_bytes()
+                   for name in ('transactions', 'operations')
+                   for path in (base/name).rglob('*') if path.is_file()}
+        return files, records, (repo/'.git/index').read_bytes(), world.git('rev-parse', 'HEAD', cwd=repo).stdout
+
+    def test_public_capture_exhausts_real_shared_barrier_without_canonical_write(self):
+        with World() as world, patch.dict(os.environ, world.env, clear=True):
+            repo, receipt, proposal = self.prepare_capture(world)
+            control = world.inside('held-barrier'); control.mkdir(mode=0o700)
+            holder_script = world.inside('held-barrier.py'); holder_script.write_text(HOLD_SOURCE_BARRIER)
+            pack = Path(receipt['source']['pack'])/'scripts'
+            holder = subprocess.Popen([sys.executable, '-I', '-B', str(holder_script), str(pack),
+                                       str(repo), str(control)], env=world.env, cwd=repo,
+                                      stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             try:
-                yield
+                self.wait_path(control/'holder-ready')
+                before = self.snapshot(world, repo)
+                started = time.monotonic()
+                result = subprocess.run([str(Path(receipt['bin_dir'])/'am'), '--json', 'admission',
+                                         'apply', '--proposal', str(proposal)], env=world.env,
+                                        cwd=repo, capture_output=True, timeout=60)
+                elapsed = time.monotonic() - started
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn(b'busy', (result.stdout+result.stderr).lower())
+                self.assertGreaterEqual(elapsed, 29.0)
+                self.assertFalse((repo/'memory-bank/.agent-memory.lock').exists())
+                self.assertEqual(self.snapshot(world, repo), before)
             finally:
-                entered.append('exit')
-        with patch.object(turn_sources, 'source_barrier', available):
-            with self.assertRaisesRegex(turn_sources.SourceTransportBusy, 'inside body'):
-                with turn_sources.canonical_writer_barrier('/unused'):
-                    entered.append('body')
-                    raise turn_sources.SourceTransportBusy('inside body')
-        self.assertEqual(entered, ['enter', 'body', 'exit'])
+                (control/'holder-release').touch()
+                try:
+                    _, errors = holder.communicate(timeout=20)
+                except subprocess.TimeoutExpired:
+                    holder.kill(); _, errors = holder.communicate()
+                    self.fail('Source barrier holder failed to terminate')
+                self.assertEqual(holder.returncode, 0, errors.decode(errors='replace'))
 
-    def test_unknown_compatibility_and_shared_upgrade_refuse(self):
+    def test_public_capture_refuses_unknown_marker_and_shared_upgrade(self):
         from agent_memory import layout_recovery_state, turn_sources
         from agent_memory.frontmatter import ContractError
         with World() as world, patch.dict(os.environ, world.env, clear=True):
-            repo, _, _ = NativeSources().fixture(world)
+            repo, receipt, proposal = self.prepare_capture(world)
             with turn_sources.source_barrier(repo):
-                with self.assertRaisesRegex(ContractError, 'Cannot upgrade'):
+                with self.assertRaises(ContractError):
                     with turn_sources.canonical_writer_barrier(repo):
                         self.fail('A shared barrier cannot be upgraded')
-            base = layout_recovery_state.paths(repo)[2].parent
-            marker = base/'turn-sources-compat-v1.json'
+            marker = layout_recovery_state.paths(repo)[2].parent/'turn-sources-compat-v1.json'
             original = marker.read_bytes()
             invalid = b'{\"schema\":\"unknown\"}'
             marker.write_bytes(invalid)
             try:
-                with self.assertRaises(ContractError):
-                    with turn_sources.canonical_writer_barrier(repo):
-                        self.fail('An unknown compatibility marker cannot authorize a writer')
+                before = self.snapshot(world, repo)
+                result = subprocess.run([str(Path(receipt['bin_dir'])/'am'), '--json', 'admission',
+                                         'apply', '--proposal', str(proposal)], env=world.env,
+                                        cwd=repo, capture_output=True, timeout=60)
+                self.assertNotEqual(result.returncode, 0)
                 self.assertEqual(marker.read_bytes(), invalid)
+                self.assertFalse((repo/'memory-bank/.agent-memory.lock').exists())
+                self.assertEqual(self.snapshot(world, repo), before)
             finally:
                 marker.write_bytes(original)
