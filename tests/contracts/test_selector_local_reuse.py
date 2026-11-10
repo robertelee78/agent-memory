@@ -32,7 +32,7 @@ class SelectorLocalReuseContract(unittest.TestCase):
             'a': row('a', 'topics/a.md'),
             'b': row('b', 'topics/b.md'),
             'c': row('c', 'topics/shared.md', 'introduction', metadata={'id': identity}),
-            'd': row('d', 'topics/shared.md', 'different route prose'),
+            'd': row('d', 'topics/shared.md', 'strasse café prose'),
             'e': row('e', 'topics/text.md', 'Straße', [{'scope': 'CAFÉ framing'}]),
             'f': row('f', 'topics/other.md'),
         }
@@ -43,11 +43,11 @@ class SelectorLocalReuseContract(unittest.TestCase):
         chosen, entries, pairs, pending = frontier.selected(rows, {'a', 'b', 'f'},
             request(selections, {'topics/b.md': ['topics/other.md']}, [['d', 'e']]))
         self.assertEqual(entries['a']['matched'], ['a', 'c', 'd', 'e'])
-        self.assertEqual(entries['b']['matched'], ['b', 'c', 'e'])
+        self.assertEqual(entries['b']['matched'], ['b', 'c', 'd', 'e'])
         self.assertEqual(entries['f'], {'complete': False, 'matched': ['f']})
         self.assertEqual(list(chosen), ['a', 'b', 'c', 'd', 'e', 'f'])
         self.assertEqual(pairs, [['a', 'c'], ['a', 'd'], ['a', 'e'],
-                                 ['b', 'c'], ['b', 'e'], ['b', 'f'], ['d', 'e']])
+                                 ['b', 'c'], ['b', 'd'], ['b', 'e'], ['b', 'f'], ['d', 'e']])
         self.assertEqual(pending, ['b', 'f'])
 
     def test_changed_body_and_framing_are_observed_on_the_next_call(self):

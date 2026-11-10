@@ -9,6 +9,7 @@
     {"name":"layout-consumer-closure-frontier-11","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_recovery_frontier_closure.py","tests":["RecoveryFrontierClosureContract.test_update_reviews_and_commits_without_pending_frontier"]},
     {"name":"layout-consumer-closure-unsafe-01","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_recovery_unsafe_apply.py","tests":["RecoveryUnsafeApplyContract.test_changed_secret_or_oversized_pending_original_refuses_apply_before_mutation"]},
     {"name": "checked-page-export", "layer": "concurrency", "scope": "v0.0.15", "path": "tests/contracts/test_checked_page_export.py"},
+    {"name":"selector-local-reuse","layer":"concurrency","scope":"v0.0.15","path":"tests/contracts/test_selector_local_reuse.py"},
     {"name":"layout-recovery-preserve","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_recovery.py","tests":["LayoutRecoveryContract.test_all_preserve_apply_keeps_metadata_feature_head_and_exact_original_index"]},
     {"name":"layout-recovery-changed-sources","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_recovery.py","tests":["LayoutRecoveryContract.test_changed_source_or_metadata_invalidates_apply_before_any_canonical_replacement"]},
     {"name":"layout-recovery-restore","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_recovery.py","tests":["LayoutRecoveryContract.test_completed_restore_has_distinct_child_and_keeps_parent_historical_receipt"]},
