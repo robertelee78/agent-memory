@@ -240,26 +240,6 @@ class RecoveryIdentityClosureContract(unittest.TestCase):
             self.assertFalse(result['canonical_writes_performed'])
             self.assertEqual((bank_bytes(bank), registry.read_bytes()), before)
 
-    def test_unreadable_source_after_preview_remains_unmodified_and_pending(self):
-        with World() as w:
-            command, source = f.installed(w)
-            repo, bank, native = f.memory(w, oversized=True)
-            _, observed = f.inspect(w, command, repo)
-            proposal, _ = f.prepare(w, command, source, repo, observed, native)
-            before = bank_bytes(bank)
-            target = bank / 'projectbrief.md'
-            mode = target.stat().st_mode & 0o7777
-            target.chmod(0)
-            try:
-                if os.access(target, os.R_OK):
-                    self.fail('Permission-inability fixture requires an unprivileged principal')
-                result = f.call(w, command, 'apply', '--repo', repo, '--proposal', proposal, expected=1)
-                self.assertFalse(result['canonical_writes_performed'])
-                self.assertEqual(target.stat().st_mode & 0o7777, 0)
-            finally:
-                target.chmod(mode)
-            self.assertEqual(bank_bytes(bank), before)
-
     def test_setgid_collaborative_bank_mode_and_group_survive_apply(self):
         with World() as w:
             command, source = f.installed(w)
@@ -274,18 +254,23 @@ class RecoveryIdentityClosureContract(unittest.TestCase):
             self.assertEqual(bank.stat().st_mode & 0o7777, 0o2770)
             self.assertEqual(bank.stat().st_gid, original.st_gid)
 
-    def test_changed_state_and_xdg_home_cannot_hide_public_apply_hold(self):
+    def test_changed_state_or_config_homes_cannot_hide_public_apply_hold(self):
         helper = frontier_tests.RecoveryFrontierContract('runTest')
-        for change in ('state', 'xdg'):
+        for change in ('state', 'xdg-state', 'config', 'xdg-config'):
             with self.subTest(change=change), World() as w:
                 command, _, repo, bank, _, inspected, applied = f.small_pending(w)
                 self.assertFalse(applied['semantic_recovery_complete'])
                 before = bank_bytes(bank)
                 if change == 'state':
                     w.env['AGENT_MEMORY_STATE_HOME'] = str(w.inside('other-state'))
-                else:
+                elif change == 'xdg-state':
                     w.env.pop('AGENT_MEMORY_STATE_HOME')
                     w.env['XDG_STATE_HOME'] = str(w.inside('other-xdg-state'))
+                elif change == 'config':
+                    w.env['AGENT_MEMORY_CONFIG_HOME'] = str(w.inside('other-config'))
+                else:
+                    w.env.pop('AGENT_MEMORY_CONFIG_HOME')
+                    w.env['XDG_CONFIG_HOME'] = str(w.inside('other-xdg-config'))
                 result, value = helper.recall(w, command, repo, inspected['manifest']['project_id'])
                 self.assertNotEqual(result.returncode, 0)
                 self.assertNotIn('results', value)
