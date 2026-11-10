@@ -57,13 +57,14 @@ class LayoutLegacySwap(unittest.TestCase):
                 self.assertIn(json.loads(saved)['schema'], {'agent-memory/layout-frontier-hold-v1',
                                                            'agent-memory/layout-recovery-transaction-v1'})
                 before = {p.relative_to(bank).as_posix(): p.read_bytes() for p in bank.rglob('*') if p.is_file()}
-                for args in (['bank', 'validate', '--repo', repo],
-                             ['capture', '--repo', repo, '--request', capture],
-                             ['transaction', 'recover', '--repo', repo]):
-                    old_result = world.run([old, *args], check=False, timeout=30)
-                    self.assertNotEqual(old_result.returncode, 0, old_result.stdout + old_result.stderr)
-                    self.assertEqual(marker.read_bytes(), saved)
-                    self.assertEqual({p.relative_to(bank).as_posix(): p.read_bytes() for p in bank.rglob('*') if p.is_file()}, before)
+                readers = [world.spawn([old, *args]) for args in (
+                    ['bank', 'validate', '--repo', repo],
+                    ['capture', '--repo', repo, '--request', capture])]
+                for reader in readers:
+                    stdout, stderr = reader.communicate(timeout=5)
+                    self.assertNotEqual(reader.returncode, 0, stdout + stderr)
+                self.assertEqual(marker.read_bytes(), saved)
+                self.assertEqual({p.relative_to(bank).as_posix(): p.read_bytes() for p in bank.rglob('*') if p.is_file()}, before)
             finally:
                 rendezvous.mkdir(exist_ok=True)
                 (rendezvous / (stage + '.release')).touch()

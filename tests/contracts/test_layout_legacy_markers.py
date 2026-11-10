@@ -3,17 +3,16 @@ import json
 from pathlib import Path
 import sys
 import unittest
-import uuid
 
 from world import World
-from runtime_update_fixtures import snapshot
 from contracts import test_layout_recovery as existing
 import layout_recovery_fixtures as recovery
+import legacy_recovery_fixtures as legacy_guard
 import v014_runtime_fixture
 
 
 class LayoutLegacyMarkers(unittest.TestCase):
-    def journey(self, kind, decoy, receipted=False):
+    def journey(self, kind, decoy, receipted=False, boundary=None):
         with World() as legacy, World() as world:
             pack = v014_runtime_fixture.extract(legacy.root)
             installed = legacy.run([sys.executable, '-I', pack / 'scripts/installer.py', 'install',
@@ -57,7 +56,8 @@ class LayoutLegacyMarkers(unittest.TestCase):
             else:
                 command, source, repo, bank, native, originals, _, git = helper.setup_fault_repair(world)
             safe, inspected = recovery.inspect(world, command, repo)
-            proposal, _ = recovery.prepare(world, command, source, repo, inspected, native)
+            proposal, prepared = recovery.prepare(world, command, source, repo, inspected, native)
+            actions = prepared['proposal']['actions']
             if kind in ('finish', 'rollback'):
                 recovery.call(world, command, 'apply', '--repo', repo, '--proposal', proposal, expected=1,
                               env={'AGENT_MEMORY_FAULT_STAGE': 'layout-recovery-after-rename:' +
@@ -70,46 +70,33 @@ class LayoutLegacyMarkers(unittest.TestCase):
             else:
                 args = [command, 'bank', 'recover-layout', 'apply', '--repo', repo, '--proposal', proposal]
                 stage = 'layout-recovery-after-hold' if kind == 'hold' else 'layout-recovery-after-marker'
+            if boundary is not None:
+                if boundary.startswith('rename'):
+                    number = int(boundary.removeprefix('rename'))
+                    paths = (json.loads(preview.read_text())['proposal']['rollback_plan']['actions']
+                             if kind == 'rollback' else actions)
+                    self.assertEqual(len(paths), 1 if kind == 'rollback' else 2 if kind == 'terminal' else 3)
+                    self.assertLess(number, len(paths))
+                    stage = 'layout-recovery-after-rename:' + paths[number]['path']
+                else:
+                    stage = {'receipt': 'layout-recovery-after-receipt',
+                             'index': 'layout-recovery-final-index',
+                             'removal': 'layout-recovery-marker-removal'}[boundary]
             fault = world.run(args, check=False, timeout=60,
                               env={'AGENT_MEMORY_FAULT_STAGE': stage, 'AGENT_MEMORY_FAULT_MODE': 'exit'})
             self.assertEqual(fault.returncode, 86, fault.stdout + fault.stderr)
             marker = bank / '.agent-memory-transaction.md'
-            marker_bytes = marker.read_bytes()
-            marker_value = json.loads(marker_bytes)
-            if kind == 'hold':
-                self.assertEqual(marker_value['schema'], 'agent-memory/layout-frontier-hold-v1')
+            if boundary == 'removal':
+                self.assertFalse(marker.exists())
+                self.assertTrue((bank / '.agent-memory-recovery.md').exists())
             else:
-                self.assertEqual(marker_value['schema'], 'agent-memory/layout-recovery-transaction-v1')
+                marker_value = json.loads(marker.read_bytes())
+                if kind == 'hold':
+                    self.assertEqual(marker_value['schema'], 'agent-memory/layout-frontier-hold-v1')
+                else:
+                    self.assertEqual(marker_value['schema'], 'agent-memory/layout-recovery-transaction-v1')
             directory = recovery.private_directory(world, bank, safe['operation_id'])
-            decoy_path = None
-            if decoy:
-                decoy_id = str(uuid.uuid4())
-                decoy_path = directory.parent.parent / 'transactions' / decoy_id
-                decoy_path.mkdir(parents=True, mode=0o700)
-                journal = decoy_path / 'journal.json'
-                journal.write_text(json.dumps({'schema': 'agent-memory/transaction-journal-v1',
-                                               'proposal': {'operation_id': decoy_id}, 'base_files': {}}))
-                journal.chmod(0o600)
-            lock_preview = world.run([old, 'writes', 'recover', '--repo', repo], check=False, timeout=60)
-            self.assertEqual(lock_preview.returncode, 0, lock_preview.stdout + lock_preview.stderr)
-            unlocked = world.run([old, 'writes', 'recover', '--repo', repo,
-                                  '--proposal', recovery.save(world, json.loads(lock_preview.stdout))],
-                                 check=False, timeout=60)
-            self.assertEqual(unlocked.returncode, 0, unlocked.stdout + unlocked.stderr)
-            self.assertFalse((bank / '.agent-memory.lock').exists())
-            before = snapshot(bank), snapshot(directory), snapshot(decoy_path) if decoy_path else None
-            for args in (['transaction', 'recover', '--repo', repo],
-                         ['migrate', 'recover', '--repo', repo, '--mode', 'finish'],
-                         ['migrate', 'recover', '--repo', repo, '--mode', 'rollback']):
-                refused = world.run([old, *args], check=False, timeout=60)
-                self.assertNotEqual(refused.returncode, 0, refused.stdout + refused.stderr)
-                self.assertEqual((snapshot(bank), snapshot(directory), snapshot(decoy_path) if decoy_path else None), before)
-                self.assertEqual(marker.read_bytes(), marker_bytes)
-                if actual_receipt is not None:
-                    self.assertEqual(actual_receipt.read_bytes(), receipt_bytes)
-            doctor = world.run([old, 'doctor', '--fix', '--repo', repo, '--json'], check=False, timeout=60)
-            self.assertFalse(json.loads(doctor.stdout)['repairs_performed'])
-            self.assertEqual((snapshot(bank), snapshot(directory), snapshot(decoy_path) if decoy_path else None), before)
+            legacy_guard.guard(self, world, old, pack, repo, bank, directory, inspected, native, decoy=decoy)
             if actual_receipt is not None:
                 self.assertEqual(actual_receipt.read_bytes(), receipt_bytes)
             output = world.inside('aware-known-recovery.json')
@@ -143,3 +130,20 @@ for _kind in ('hold', 'apply', 'finish', 'rollback', 'terminal'):
             _name = ('test_' + _kind + ('_decoy' if _decoy else '_plain')
                      + ('_receipted' if _receipted else ''))
             setattr(LayoutLegacyMarkers, _name, _case(_kind, _decoy, _receipted))
+
+
+def _boundary_case(kind, boundary):
+    def run(self):
+        self.journey(kind, False, boundary=boundary)
+    return run
+
+
+for _kind, _boundary in (
+        ('apply', 'rename0'), ('apply', 'rename1'), ('apply', 'rename2'),
+        ('apply', 'receipt'), ('apply', 'index'),
+        ('finish', 'rename1'), ('finish', 'rename2'), ('finish', 'receipt'),
+        ('rollback', 'rename0'), ('rollback', 'receipt'),
+        ('terminal', 'rename0'), ('terminal', 'rename1'),
+        ('terminal', 'receipt'), ('terminal', 'index'), ('terminal', 'removal')):
+    setattr(LayoutLegacyMarkers, 'test_boundary_' + _kind + '_' + _boundary,
+            _boundary_case(_kind, _boundary))

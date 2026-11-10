@@ -5,9 +5,9 @@ import sys
 import unittest
 
 from world import World
-from runtime_update_fixtures import snapshot
 from contracts import test_layout_recovery as existing
 import layout_recovery_fixtures as recovery
+import legacy_recovery_fixtures as legacy_guard
 import v014_runtime_fixture
 
 
@@ -30,31 +30,8 @@ class LayoutLegacyStaleLock(unittest.TestCase):
                               check=False, timeout=60, env={'AGENT_MEMORY_FAULT_STAGE': 'layout-recovery-after-marker',
                                                            'AGENT_MEMORY_FAULT_MODE': 'exit'})
             self.assertEqual(fault.returncode, 86, fault.stdout + fault.stderr)
-            marker = bank / '.agent-memory-transaction.md'
-            marker_bytes = marker.read_bytes()
-            self.assertTrue((bank / '.agent-memory.lock').exists())
-            preview = world.run([old, 'writes', 'recover', '--repo', repo], check=False, timeout=60)
-            self.assertEqual(preview.returncode, 0, preview.stdout + preview.stderr)
-            lock_request = json.loads(preview.stdout)
-            self.assertTrue(lock_request.get('proposal'))
-            unlocked = world.run([old, 'writes', 'recover', '--repo', repo, '--proposal', recovery.save(world, lock_request)],
-                                 check=False, timeout=60)
-            self.assertEqual(unlocked.returncode, 0, unlocked.stdout + unlocked.stderr)
-            self.assertFalse((bank / '.agent-memory.lock').exists())
             directory = recovery.private_directory(world, bank, safe['operation_id'])
-            before = snapshot(bank), snapshot(directory), (repo / '.git/index').read_bytes()
-            self.assertEqual(marker.read_bytes(), marker_bytes)
-            for args in (['writes', 'recover', '--repo', repo],
-                         ['transaction', 'recover', '--repo', repo],
-                         ['migrate', 'recover', '--repo', repo, '--mode', 'finish'],
-                         ['migrate', 'recover', '--repo', repo, '--mode', 'rollback']):
-                refused = world.run([old, *args], check=False, timeout=60)
-                self.assertNotEqual(refused.returncode, 0, refused.stdout + refused.stderr)
-                self.assertEqual((snapshot(bank), snapshot(directory), (repo / '.git/index').read_bytes()), before)
-                self.assertEqual(marker.read_bytes(), marker_bytes)
-            doctor = world.run([old, 'doctor', '--fix', '--repo', repo, '--json'], check=False, timeout=60)
-            self.assertFalse(json.loads(doctor.stdout)['repairs_performed'])
-            self.assertEqual((snapshot(bank), snapshot(directory), (repo / '.git/index').read_bytes()), before)
+            legacy_guard.guard(self, world, old, pack, repo, bank, directory, inspected, native)
             preview_path = world.inside('legacy-stale-aware-finish.json')
             recovery.call(world, command, 'recover', '--repo', repo, '--operation', safe['operation_id'],
                           '--mode', 'finish', '--output', preview_path)
