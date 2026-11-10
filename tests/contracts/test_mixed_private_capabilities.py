@@ -214,7 +214,7 @@ class MixedPrivateCapabilities(unittest.TestCase):
                                            '--offset', '0'], timeout=60).stdout)['pending']
             self.assertEqual(len(pending), 2)
             _, inspected = recovery.inspect(world, command, repo)
-            layout = recovery.review_request(world, command, pack, repo, inspected, native)
+            layout = recovery.review_request(world, command, Path(receipt['source']['pack']), repo, inspected, native)
             attestation = layout['quiescence_attestation']
             agent_dir = Path(receipt['omp_binding']['agent_dir'])
             attestation['declared_invocation_routes'] += [str(command.parent / 'agent-memory'),
@@ -344,7 +344,7 @@ class MixedPrivateCapabilities(unittest.TestCase):
                 self.assertTrue(json.loads(done.stdout)['verified'])
             self.assertEqual(pending(), [])
             _, inspected = recovery.inspect(world, command, repo)
-            layout = recovery.review_request(world, command, pack, repo, inspected, native)
+            layout = recovery.review_request(world, command, Path(receipt['source']['pack']), repo, inspected, native)
             attestation = layout['quiescence_attestation']
             agent_dir = Path(receipt['omp_binding']['agent_dir'])
             attestation['declared_invocation_routes'] += [str(command.parent / 'agent-memory'),
