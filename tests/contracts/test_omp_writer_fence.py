@@ -191,7 +191,9 @@ class InstalledCanonicalFence(unittest.TestCase):
                                         cwd=repo, capture_output=True, timeout=60)
                 elapsed = time.monotonic() - started
                 self.assertNotEqual(result.returncode, 0)
-                self.assertIn(b'busy', (result.stdout+result.stderr).lower())
+                refusal = json.loads(result.stdout)
+                self.assertFalse(refusal['admission_verified'])
+                self.assertFalse(refusal['canonical_writes_performed'])
                 self.assertGreaterEqual(elapsed, 29.0)
                 self.assertFalse((repo/'memory-bank/.agent-memory.lock').exists())
                 self.assertEqual(self.snapshot(world, repo), before)
