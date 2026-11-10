@@ -1,6 +1,7 @@
 """Public recovery-frontier capacity and disclosure boundaries."""
 import copy
 import json
+from datetime import datetime, timezone
 import sys
 import unittest
 from pathlib import Path
@@ -450,6 +451,8 @@ class RecoveryFrontierClosureContract(unittest.TestCase):
             replacement, second = helper.add(bank, 'consumer-second', body=original_body)
             native = {p.relative_to(bank).as_posix(): p.read_text() for p in bank.rglob('*.md')}
             inspected = applied = directory = head = ledger = None
+            operation_id = str(uuid.uuid4())
+            stamp = datetime.now(timezone.utc).isoformat()
             if pending:
                 (bank / 'handoff-prompt.md').write_text(original_body)
                 _, inspected = f.inspect(w, command, repo)
@@ -549,7 +552,6 @@ class RecoveryFrontierClosureContract(unittest.TestCase):
                                   'capture': None, 'context': {}}
 
             if pending:
-                operation_id = str(uuid.uuid4())
                 stamp = inspected['manifest']['inspected_at']
                 if route == 'governance':
                     build = ("import json,sys;sys.path.insert(0,sys.argv[1]);"
@@ -609,7 +611,7 @@ class RecoveryFrontierClosureContract(unittest.TestCase):
                 self.assertEqual({p.relative_to(bank).as_posix(): p.read_text()
                                   for p in bank.rglob('*.md')
                                   if not p.name.startswith('.agent-memory')}, native)
-                arguments += ['--operation-id', operation_id, '--recorded-at', stamp]
+            arguments += ['--operation-id', operation_id, '--recorded-at', stamp]
             result = w.run([command, *arguments, '--private-output', preview], check=False, timeout=60)
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             preview_value = json.loads(preview.read_text()) if pending else json.loads(result.stdout)
