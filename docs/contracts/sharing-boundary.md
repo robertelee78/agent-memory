@@ -25,6 +25,11 @@ of a working/staged file cannot hide existing ownership. Git object readers are
 bounded and run no filters. Discovery does not restore source bytes. Effective
 resolved settings remain pinned across writes and recovery. Listed unsafe labels
 are withheld before printing the directory prefix, branch or selected remote name.
+First-bank initialization and its transaction recovery use this ordinary
+schema-aware locator for the source fence, so an unrelated ignored `memory.md`
+is not itself a bank. The fence still checks shared-source compatibility and
+excludes concurrent source observers. Malformed-layout recovery continues to
+use the separate raw locator.
 
 `sharing_boundary.py --repo` inspects canonical source safety, Git index modes,
 ignore rules and the selected remote/default-branch observation without writes

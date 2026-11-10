@@ -126,11 +126,16 @@ def check_source_compatibility(base):
 
 
 @contextmanager
-def source_barrier(repo, *, exclusive=False, existing_only=False):
+def source_barrier(repo, *, exclusive=False, existing_only=False, ordinary_bank=None):
     """First source lock family; reentrant reads cannot upgrade to writers."""
     from . import layout_recovery_state
     location=scope_binding._observe_enrollment_location(repo)
+    if location is None and ordinary_bank is not None:
+        root,bank=bank_writes.bank_path(repo)
+        location=layout_recovery_state._paths_for_bank(root,bank)
     root,bank,recovery_base,_=(layout_recovery_state.paths(repo) if location is None else location)
+    if ordinary_bank is not None and bank != ordinary_bank:
+        raise ContractError('Bank location changed before acquiring the source barrier')
     base=recovery_base.parent
     check_source_compatibility(base)
     known=_barriers.get()
@@ -148,11 +153,11 @@ def source_barrier(repo, *, exclusive=False, existing_only=False):
         finally:_barriers.reset(token)
 
 @contextmanager
-def canonical_writer_barrier(repo):
+def canonical_writer_barrier(repo, *, ordinary_bank=None):
     """Fence canonical slot ownership without replaying a writer's body."""
     deadline=time.monotonic()+30.0
     while True:
-        gate=source_barrier(repo,exclusive=True)
+        gate=source_barrier(repo,exclusive=True,ordinary_bank=ordinary_bank)
         try:
             gate.__enter__()
         except SourceTransportBusy:

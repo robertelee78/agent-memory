@@ -469,7 +469,7 @@ def _apply(prepared, *, check_identity):
     root, bank = writes.bank_path(p["repo_root"])
     journal, receipt_path = locations(root, bank, p["operation_id"])
     from .turn_sources import canonical_writer_barrier
-    with canonical_writer_barrier(root), storage.exclusive(bank / ".agent-memory.lock", p["operation_id"], "bank-" + p["operation"]) as owner:
+    with canonical_writer_barrier(root, ordinary_bank=bank if p['operation'] == 'initialize' else None), storage.exclusive(bank / ".agent-memory.lock", p["operation_id"], "bank-" + p["operation"]) as owner:
         writes.fault('transaction-locked-before-inventory')
         check_identity(owner)
         known = receipt_value(receipt_path, p)
@@ -547,12 +547,12 @@ def recover(repo, mode=None, prepared=None):
                 {path: p['files'][path] for path in changed(p) if path in p['files']}, ['tool'], action=action)
         else:
             security.audit(root, p['operation_id'], 'mutation', 'started', context, ['tool'], action=action)
-    receipt = _recover(root, prepared=prepared, check_identity=check)
+    receipt = _recover(root, prepared=prepared, check_identity=check, initializing=p['operation'] == 'initialize')
     receipt['security_audit'] = security.audit(root, p['operation_id'], 'mutation', 'completed', context, ['tool'], action=action)
     return {**receipt, 'resolved_scope': context}
 
 
-def _recover(repo, mode=None, prepared=None, *, check_identity=None):
+def _recover(repo, mode=None, prepared=None, *, check_identity=None, initializing=False):
     root, bank = writes.bank_path(repo)
     if prepared is not None:
         r = prepared.get("proposal", prepared) if isinstance(prepared, dict) else prepared
@@ -561,7 +561,7 @@ def _recover(repo, mode=None, prepared=None, *, check_identity=None):
             raise ContractError("Invalid transaction recovery proposal")
         # Bank lock recovery is deliberately separate; never steal a lock by age.
         from .turn_sources import canonical_writer_barrier
-        with canonical_writer_barrier(root), storage.exclusive(bank / ".agent-memory.lock", r["operation_id"], "bank-recover") as owner:
+        with canonical_writer_barrier(root, ordinary_bank=bank if initializing else None), storage.exclusive(bank / ".agent-memory.lock", r["operation_id"], "bank-recover") as owner:
             marker = bank / MARKER
             journal, receipt_path = locations(root, bank, r["operation_id"])
             raw = limits.read_bytes(journal)
