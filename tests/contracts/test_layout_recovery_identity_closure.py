@@ -2,6 +2,7 @@
 import os
 from pathlib import Path
 import shutil
+import subprocess
 import sys
 import unittest
 
@@ -56,13 +57,21 @@ class RecoveryIdentityClosureContract(unittest.TestCase):
             repo, bank, _ = f.memory(w)
             target = bank / 'projectbrief.md'
             name = 'com.agent-memory.test' if sys.platform == 'darwin' else 'user.agent-memory-test'
-            os.setxattr(target, name, b'preserve')
+            if sys.platform == 'darwin':
+                w.run(['xattr', '-w', name, 'preserve', target])
+                attribute = lambda: w.run(['xattr', '-p', name, target]).stdout
+                self.assertEqual(attribute(), 'preserve\n')
+            else:
+                os.setxattr(target, name, b'preserve')
+                attribute = lambda: os.getxattr(target, name)
+                self.assertEqual(attribute(), b'preserve')
+            original_attribute = attribute()
             before = bank_bytes(bank)
             result = f.call(w, command, 'inspect', '--repo', repo,
                             '--output', w.inside('xattr-refused.json'), expected=1)
             self.assertEqual(result['failure_code'], 'pending-metadata-preservation')
             self.assertFalse(result['canonical_writes_performed'])
-            self.assertEqual(os.getxattr(target, name), b'preserve')
+            self.assertEqual(attribute(), original_attribute)
             self.assertEqual(bank_bytes(bank), before)
 
     def test_darwin_acl_refuses_without_modification(self):
@@ -157,11 +166,28 @@ class RecoveryIdentityClosureContract(unittest.TestCase):
                 peer = w.clone(str(remote), 'alias-peer')
                 body = w.inside('alias-blob'); body.write_text('Distinct raw authority source.\n')
                 blob = w.git('hash-object', '-w', body, cwd=peer).stdout.strip()
-                for name in names:
-                    w.git('update-index', '--add', '--cacheinfo',
-                          '100644,' + blob + ',memory-bank/' + name, cwd=peer)
-                w.git('commit', '-m', 'Aliased authority sources', cwd=peer)
-                w.git('push', 'origin', 'HEAD:main', cwd=peer)
+                # Construct Git trees directly: neither the filesystem nor
+                # Git's platform-dependent index normalization may fold names.
+                def make_tree(entries):
+                    return subprocess.run(
+                        ['git', 'mktree', '-z'], cwd=peer, env=w.env,
+                        input=''.join(entry + '\0' for entry in entries),
+                        text=True, capture_output=True, check=True, timeout=60,
+                    ).stdout.strip()
+
+                bank_entries = w.git('ls-tree', '-z', 'HEAD:memory-bank', cwd=peer).stdout.split('\0')[:-1]
+                bank_entries.extend('100644 blob ' + blob + '\t' + name for name in names)
+                bank_tree = make_tree(bank_entries)
+                raw_entries = w.git('ls-tree', '-z', bank_tree, cwd=peer).stdout.split('\0')[:-1]
+                self.assertTrue(all('100644 blob ' + blob + '\t' + name in raw_entries for name in names))
+                root_entries = w.git('ls-tree', '-z', 'HEAD', cwd=peer).stdout.split('\0')[:-1]
+                root_entries = [entry for entry in root_entries if entry.partition('\t')[2] != 'memory-bank']
+                root_entries.append('040000 tree ' + bank_tree + '\tmemory-bank')
+                tree = make_tree(root_entries)
+                parent = w.git('rev-parse', 'HEAD', cwd=peer).stdout.strip()
+                commit = w.git('commit-tree', tree, '-p', parent, '-m',
+                               'Aliased authority sources', cwd=peer).stdout.strip()
+                w.git('push', 'origin', commit + ':refs/heads/main', cwd=peer)
                 before = bank_bytes(bank)
                 index = (repo / '.git/index').read_bytes()
                 result = f.call(w, command, 'publish', 'inspect', '--repo', repo,

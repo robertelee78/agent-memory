@@ -1,5 +1,6 @@
 """Public recovery boundaries at nested and legacy lifecycle transitions."""
 import json
+import os
 import shutil
 import sys
 import unittest
@@ -90,9 +91,9 @@ class NestedRecoveryClosure(unittest.TestCase):
             f.call(world, command, 'resolve', '--repo', repo, '--proposal', resolution, expected=1,
                    env={'AGENT_MEMORY_FAULT_STAGE': 'layout-recovery-resolution-after-receipt'})
             base = f.private_directory(world, bank, parent).parent
-            before = snapshot(bank), snapshot(base), (repo / '.git/index').read_bytes()
+            before = snapshot(bank), snapshot(base), snapshot(repo / '.git/index')
             f.call(world, command, 'recover', '--repo', repo, '--proposal', finish, expected=1)
-            self.assertEqual((snapshot(bank), snapshot(base), (repo / '.git/index').read_bytes()), before)
+            self.assertEqual((snapshot(bank), snapshot(base), snapshot(repo / '.git/index')), before)
             done = f.call(world, command, 'resolve', '--repo', repo, '--proposal', resolution)
             self.assertTrue(done['semantic_recovery_complete'])
             # The old child preview is pinned to the former hold/frontier.
@@ -116,9 +117,9 @@ class NestedRecoveryClosure(unittest.TestCase):
             altered = json.loads(original)
             altered['evidence'] += ' Changed after review.'
             review.write_bytes(f.encoded(altered))
-            before = snapshot(bank), snapshot(directory), (repo / '.git/index').read_bytes()
+            before = snapshot(bank), snapshot(directory), snapshot(repo / '.git/index')
             f.call(world, command, 'recover', '--repo', repo, '--proposal', finish, expected=1)
-            self.assertEqual((snapshot(bank), snapshot(directory), (repo / '.git/index').read_bytes()), before)
+            self.assertEqual((snapshot(bank), snapshot(directory), snapshot(repo / '.git/index')), before)
             review.write_bytes(original)
             result = f.call(world, command, 'recover', '--repo', repo, '--proposal', finish)
             self.assertTrue(result['verified'])
@@ -159,13 +160,18 @@ class NestedRecoveryClosure(unittest.TestCase):
             # sentinel alone is not a substitute for quiescing old consumers.
             marker.unlink()
             directory = f.private_directory(world, bank, inspected['operation_id'])
-            before = snapshot(bank), snapshot(directory), (repo / '.git/index').read_bytes()
+            before = snapshot(bank), snapshot(directory), snapshot(repo / '.git/index')
             read = world.run([old, '--json', 'bank', 'validate', '--repo', repo], check=False, timeout=60)
             self.assertEqual(read.returncode, 0, read.stdout + read.stderr)
-            self.assertEqual((snapshot(bank), snapshot(directory), (repo / '.git/index').read_bytes()), before)
+            self.assertEqual((snapshot(bank), snapshot(directory), snapshot(repo / '.git/index')), before)
 
     def test_interrupted_activation_refuses_incapable_only_rollback_target(self):
         with World() as world, World() as helper:
+            # Match the recovery fixture's realizable group before creating
+            # the bank; the independently installed helper has its own World.
+            for directory in [world.root, *(path for path in world.root.rglob('*') if path.is_dir())]:
+                if directory.stat().st_gid != os.getegid():
+                    os.chown(directory, -1, os.getegid())
             old = v014_runtime_fixture.extract(world.inside('published-old'))
             channel = world.repository('legacy channel')
             pack = channel / 'skills/agent-memory'
@@ -194,13 +200,15 @@ class NestedRecoveryClosure(unittest.TestCase):
             f.call(world, command, 'apply', '--repo', repo, '--proposal', proposal)
             directory = f.private_directory(world, bank, inspected['operation_id'])
             state = receipt_path(world).parent
-            before = snapshot(bank), snapshot(directory), owned(receipt), snapshot(state), (repo / '.git/index').read_bytes()
+            before = snapshot(bank), snapshot(directory), owned(receipt), snapshot(state), snapshot(repo / '.git/index')
             recovered = world.run([sys.executable, '-I', '-B', ROOT / 'scripts/installer.py', 'recover'],
                                   check=False, timeout=60)
             self.assertNotEqual(recovered.returncode, 0, recovered.stdout + recovered.stderr)
-            self.assertFalse(json.loads(recovered.stdout)['verified'])
+            refusal = json.loads(recovered.stdout)
+            self.assertFalse(refusal['verified'])
+            self.assertIn('Private-state runtime compatibility is pending', refusal['error'])
             self.assertEqual((snapshot(bank), snapshot(directory), owned(receipt), snapshot(state),
-                              (repo / '.git/index').read_bytes()), before)
+                              snapshot(repo / '.git/index')), before)
 
 
 if __name__ == '__main__':
