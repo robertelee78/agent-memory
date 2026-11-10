@@ -190,6 +190,7 @@ print('exact validated provider identity accepted; wrong, mixed and unvalidated 
             target = world.repository('target-source')
             (target / 'tests').mkdir()
             shutil.copy2(ROOT / 'tests/world.py', target / 'tests/world.py')
+            (target / 'tests/world.py').chmod(0o644)
             (target / '.gitignore').write_text('__pycache__/\n*.pyc\n')
             (target / '.gitignore').chmod(0o644)
             for name in ('recall_quality_qualification.py', 'recall_refresh_qualification.py',
@@ -263,6 +264,7 @@ print('bytecode-free source binding passed')
                     helper = target / directory / 'world.py'
                     helper.parent.mkdir(parents=True, exist_ok=True)
                     shutil.copy2(ROOT / 'tests/world.py', helper)
+                    helper.chmod(0o644)
                     (target / '.gitignore').write_text('__pycache__\n*.pyc\n')
                     (target / '.gitignore').chmod(0o644)
                     world.git('add', '.', cwd=target); world.git('commit', '-m', 'Source binding control', cwd=target)
