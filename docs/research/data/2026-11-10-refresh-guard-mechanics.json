@@ -878,7 +878,100 @@
       "no_retry_or_recovery": true
     },
     "acceptance": false,
-    "original_stress_attribution": "Not comparable: original per-source selectors differ. Fresh original-selector diagnostic remains separately required."
+    "original_stress_attribution": "Dense selectors differ from original. A separate original-selector diagnostic passed narrowly with different checkout state; see original_selector_four for exact scope."
+  },
+  "original_selector_four": {
+    "source_commit": "8dabc28f577b28c108d0c757fb24c00f45e54f4a",
+    "actual_selectors_match_original_controller": true,
+    "frontier_sources": 138,
+    "required_pairs": 444,
+    "original_frontier_sources": 144,
+    "original_required_pairs": 456,
+    "fixture_difference": "Reconstruction committed all10220basefiles; originalHEADheld10217 and partition0 index/record/history were uncommitted already-landed working files. Six sourcecomponents/twelvepairs therefore not in reconstructedchangedfrontier.",
+    "input_base_files": 10220,
+    "input_final_files": 10289,
+    "changed_paths": 70,
+    "stage_wall_seconds": {
+      "inspect": [
+        28.669,
+        28.565,
+        28.652,
+        27.709
+      ],
+      "selected": [
+        69.19,
+        68.629,
+        69.14,
+        68.898
+      ],
+      "review": [
+        90.693,
+        91.201,
+        90.561,
+        90.29
+      ],
+      "prepare": [
+        173.189,
+        173.361,
+        170.536,
+        170.437
+      ],
+      "apply": [
+        293.341,
+        294.037,
+        292.059,
+        293.449
+      ]
+    },
+    "stage_child_cpu_seconds": {
+      "inspect": [
+        27.79,
+        27.67,
+        27.78,
+        26.84
+      ],
+      "selected": [
+        67.88,
+        67.34,
+        67.85,
+        67.66
+      ],
+      "review": [
+        87.21,
+        86.99,
+        87.0,
+        85.74
+      ],
+      "prepare": [
+        168.24,
+        168.41,
+        165.63,
+        165.57
+      ],
+      "apply": [
+        287.94,
+        288.59,
+        286.73,
+        288.03
+      ]
+    },
+    "apply_start_spread_ms": 42.124,
+    "per_public_command_deadline_seconds": 300,
+    "all_four_applies_completed": true,
+    "all_receipts_finished_verified_and_current": true,
+    "exact_single_recall_record_and_body_verified": true,
+    "full_bank_authority_remote_index_head_and_feature_preservation_verified": true,
+    "journals_and_markers_absent_after_success": true,
+    "host_load": "unsampled",
+    "minimum_deadline_headroom_seconds": 5.963000000000022,
+    "raw_summary_sha256": "67437b53dab6140d6127f87b5b7e0569c8f55f4c5b414070cf178c8b89a159f9",
+    "actual_Opus_diagnostic_review": {
+      "verdict": "PASS bounded diagnostic only",
+      "receipt_sha256": "b03686cbc9bfcab408f9f88faed5b8fe9e6683a9ba12c74d438a5bec4ff51bb4",
+      "risk": "CPU-bound292\u2013294s,6\u20138sheadroom; no full-stress readiness, latency distribution or later-source transfer. The reconstructedcheckoutdiffers from original. Densefailurecannotbe attributedsolelyto paircount withoutsampledload."
+    },
+    "acceptance": false,
+    "final_source_applicability": "Pending separate review after ownedGUIDE/governedplanning/attestation fixes; no fullstress started."
   },
   "remaining": [
     "fresh complete final-source four-cell matrix",

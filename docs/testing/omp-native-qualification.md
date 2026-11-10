@@ -123,9 +123,10 @@ assessment. A manual classification cannot clear an older native/tool gap or
 authorize historical role/position event-gap reassociation.
 
 Fresh copy/link observer smokes reproduced the owned admission-guide coverage gap
-before the GUIDE extension and retained body-free metadata without native/tool
-gaps on a previous source candidate. Smoke verification and independent review
-of the current candidate remain pending. The smokes use the public guide and
+before the GUIDE extension. Integrated candidate `776e13c` received actual Opus
+source/design PASS, then both fresh observer smokes retained body-free metadata
+without native/tool gaps and preserved surrounding source and retry snapshots.
+The smokes use the public guide and
 exact measured renderer, not a replay or repair of the original native World.
 They do not attribute the separate b85 `unknown-after-start` outcome or pass
 full native qualification. The final stock-omp campaign MUST exercise an actual
