@@ -57,7 +57,7 @@ MUST remain one quoted argument. Invalid arguments exit 2; a refused operation
 exits nonzero and retains the helper's evidence/recovery instructions. A
 successful preview is not an applied mutation or verified publication.
 
-When recovery coverage must bind exact future maintenance output, a session MUST
+When recovery coverage binds exact future maintenance output, a session MUST
 first use `compact plan` or `govern plan`, independently review the actual planned
 files through the owning operation, then use `preview --plan` with that review.
 `admission preview` retains its documented seeded review workflow. Unplanned
