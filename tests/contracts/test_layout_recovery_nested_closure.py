@@ -196,13 +196,18 @@ class NestedRecoveryClosure(unittest.TestCase):
             self.assertEqual(f.sha(original), token['review_digest'])
             altered = json.loads(original)
             altered['rationale'] += ' Changed after recovery preview.'
-            review.write_bytes(f.encoded(altered))
             head = snapshot(repo / '.git/HEAD'), snapshot(repo / '.git/refs')
-            before = snapshot(bank), snapshot(directory), snapshot(repo / '.git/index')
-            f.call(world, command, 'recover-nested', '--repo', repo, '--proposal', finish, expected=1)
-            self.assertEqual((snapshot(bank), snapshot(directory), snapshot(repo / '.git/index')), before)
-            self.assertEqual((snapshot(repo / '.git/HEAD'), snapshot(repo / '.git/refs')), head)
-            review.write_bytes(original)
+            for missing in (False, True):
+                with self.subTest(missing=missing):
+                    if missing:
+                        review.unlink()
+                    else:
+                        review.write_bytes(f.encoded(altered))
+                    before = snapshot(bank), snapshot(directory), snapshot(repo / '.git/index')
+                    f.call(world, command, 'recover-nested', '--repo', repo, '--proposal', finish, expected=1)
+                    self.assertEqual((snapshot(bank), snapshot(directory), snapshot(repo / '.git/index')), before)
+                    self.assertEqual((snapshot(repo / '.git/HEAD'), snapshot(repo / '.git/refs')), head)
+                    review.write_bytes(original)
             result = f.call(world, command, 'recover-nested', '--repo', repo, '--proposal', finish)
             self.assertTrue(result['verified'])
             self.assertEqual((bank / target).read_bytes(), transaction['files'][target].encode())
@@ -210,6 +215,16 @@ class NestedRecoveryClosure(unittest.TestCase):
                                    '--operation', operation)['semantic_recovery_complete'])
             self.assertEqual(snapshot(repo / '.git/index'), before[2])
             self.assertEqual((snapshot(repo / '.git/HEAD'), snapshot(repo / '.git/refs')), head)
+            # A completed retry reports its witnessed history, not fresh approval.
+            review.write_bytes(f.encoded(altered))
+            historical_before = snapshot(bank), snapshot(directory), snapshot(repo / '.git/index')
+            retry = world.inside('nested-reviewed-historical-finish.json')
+            f.call(world, command, 'recover-nested', '--repo', repo, '--operation', operation,
+                   '--nested', transaction['operation_id'], '--mode', 'finish', '--output', retry)
+            self.assertTrue(f.call(world, command, 'recover-nested', '--repo', repo,
+                                   '--proposal', retry)['verified'])
+            self.assertEqual((snapshot(bank), snapshot(directory), snapshot(repo / '.git/index')),
+                             historical_before)
 
     def test_changed_review_pin_refuses_interrupted_finish_without_replacement(self):
         with World() as world:

@@ -303,6 +303,29 @@ def retired_nested(root, operation_id, nested_id, journal, receipt, indexed, own
         'marker_sha256': digest(marker), 'sentinel_sha256': digest(sentinel)}
 
 
+def _retained_coverage_review(journal):
+    """Recheck immutable review evidence, not a pre-commit frontier's freshness."""
+    _, proof, _ = resolution.transaction_evidence(journal['proposal'])
+    if proof is None:
+        return
+    token = proof['judgment']['observation']['recovery_frontier']
+    if not token['unit_ids']:
+        return
+    review_digest = token['review_digest']
+    if not state.sha(review_digest):
+        raise ContractError('Nested finish requires its exact retained independent coverage review')
+    matches = 0
+    for operation in token['operation_ids']:
+        directory = state.paths(journal['proposal']['repo_root'], operation)[3]
+        review = state.read(directory / 'coverage-reviews' / (review_digest + '.json'), missing=True)
+        if review is not None:
+            if digest(encoded(review)) != review_digest:
+                raise ContractError('Nested finish independent coverage review changed')
+            matches += 1
+    if matches != 1:
+        raise ContractError('Nested finish requires one exact retained independent coverage review')
+
+
 def nested_preview(repo, operation_id, nested_id, mode, owner=None):
     root, bank, _, directory = state.paths(repo, operation_id)
     if mode not in {'finish', 'rollback'} or not uuid_valid(nested_id):
@@ -357,6 +380,8 @@ def nested_preview(repo, operation_id, nested_id, mode, owner=None):
     else:
         bank_observation.markers(bank, owner, marker)
         frontier_token = frontier._observe_index(root, owner, marker, indexed)
+    if mode == 'finish' and retirement is None:
+        _retained_coverage_review(journal)
     if receipt is None:
         frontier.check(journal['frontier'], root, owner, marker)
     if receipt is None and mode != 'rollback':
