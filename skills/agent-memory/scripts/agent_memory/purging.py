@@ -310,7 +310,8 @@ def run(args):
                 record['completed_at']=datetime.now(timezone.utc).isoformat()
                 save(record_path,record)
                 return outcome(record,bank,changed=False)
-        with bank_lock(bank) as owner:
+        from .turn_sources import canonical_writer_barrier
+        with canonical_writer_barrier(repo), bank_lock(bank) as owner:
             fault('purge-bank-lock-ready')
             selected = preview(repo,bank,owner=owner)
             install.require(selected['confirmation']==args.confirm, 'Purge preview is stale; inspect a fresh exact preview')

@@ -468,7 +468,8 @@ def _apply(prepared, *, check_identity):
     p = proposal_value(prepared)
     root, bank = writes.bank_path(p["repo_root"])
     journal, receipt_path = locations(root, bank, p["operation_id"])
-    with storage.exclusive(bank / ".agent-memory.lock", p["operation_id"], "bank-" + p["operation"]) as owner:
+    from .turn_sources import canonical_writer_barrier
+    with canonical_writer_barrier(root), storage.exclusive(bank / ".agent-memory.lock", p["operation_id"], "bank-" + p["operation"]) as owner:
         writes.fault('transaction-locked-before-inventory')
         check_identity(owner)
         known = receipt_value(receipt_path, p)
@@ -559,7 +560,8 @@ def _recover(repo, mode=None, prepared=None, *, check_identity=None):
                 or not uuid_valid(r["operation_id"]) or r["repo_root"] != str(root) or r["mode"] not in {"finish", "rollback"}):
             raise ContractError("Invalid transaction recovery proposal")
         # Bank lock recovery is deliberately separate; never steal a lock by age.
-        with storage.exclusive(bank / ".agent-memory.lock", r["operation_id"], "bank-recover") as owner:
+        from .turn_sources import canonical_writer_barrier
+        with canonical_writer_barrier(root), storage.exclusive(bank / ".agent-memory.lock", r["operation_id"], "bank-recover") as owner:
             marker = bank / MARKER
             journal, receipt_path = locations(root, bank, r["operation_id"])
             raw = limits.read_bytes(journal)

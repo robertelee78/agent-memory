@@ -61,6 +61,15 @@ but evidence MUST be checked again before completion is recorded. Stop MUST
 repeat its source inventory/pins before a quiet result, so a concurrently
 registered source cannot be credited by an older acknowledgment.
 
+For cooperating current runtimes, canonical bank-slot owners MUST acquire the
+bank source barrier exclusively before creating the canonical writer marker and
+retain it until that marker is released. Source observers retain their existing
+shared barrier and all fresh identity and recovery checks. Contention may be
+retried only before acquiring the writer slot, within the existing bounded
+30-second source-busy interval; a started observer is never replayed. Existing
+unknown and interrupted writer markers remain pending, and older or external
+writers that do not participate cannot be claimed to be serialized.
+
 The v2 namespace MUST be scoped per checkout/session/turn, with at most 128
 observations per turn, observation records at most4KiB and completion records at
 most64KiB. Both encoded output bounds MUST be checked before exclusive/atomic

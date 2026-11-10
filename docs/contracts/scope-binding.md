@@ -64,6 +64,13 @@ The shared lock order is lifecycle, bank source barrier, native transport
 registration, source completion in stable namespace order, then bank write.
 The source barrier is reentrant for shared operations; a shared-to-exclusive
 upgrade refuses rather than deadlocking or dropping a sibling capability.
+Cooperating canonical slot owners take this same barrier exclusively before
+the bank write lock and retain it through release. Entry contention is bounded
+to 30 seconds and retries only before ownership; no writer body or started
+source observer is replayed. Existing canonical marker and fresh enrollment
+checks remain authoritative. Noncooperating older or external writers are not
+fenced and may still leave source coverage explicitly unknown.
+
 Before accessing the shared source index, all source operations also read the
 private `turn-sources-compat-v1.json` marker through the same bounded stable
 reader. Only the exact known `omp-harness-v1` declaration is accepted;

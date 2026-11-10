@@ -1,6 +1,6 @@
 """Private append-only source observations; coverage does not establish truth."""
 from __future__ import annotations
-from contextlib import contextmanager
+from contextlib import contextmanager, ExitStack
 from contextvars import ContextVar
 from functools import wraps
 import base64
@@ -10,6 +10,7 @@ import json
 import os
 from pathlib import Path
 import stat
+import time
 import uuid
 from . import bank_writes, scope_binding, trust_paths
 from .frontmatter import ContractError
@@ -145,6 +146,24 @@ def source_barrier(repo, *, exclusive=False, existing_only=False):
             yield
             check_source_compatibility(base)
         finally:_barriers.reset(token)
+
+@contextmanager
+def canonical_writer_barrier(repo):
+    """Fence canonical slot ownership without replaying a writer's body."""
+    deadline=time.monotonic()+30.0
+    while True:
+        gate=source_barrier(repo,exclusive=True)
+        try:
+            gate.__enter__()
+        except SourceTransportBusy:
+            remaining=deadline-time.monotonic()
+            if remaining<=0:raise
+            time.sleep(min(0.025,remaining))
+            continue
+        break
+    with ExitStack() as stack:
+        stack.push(gate.__exit__)
+        yield
 
 
 def source_operation(function):

@@ -201,7 +201,8 @@ def _apply(prepared, *, check_identity):
     expected[proposal["path"]] = digest(proposal["content"].encode("utf-8"))
     temporary = None
     # No bank inventory or previous receipt is read until this lock is acquired.
-    with storage.exclusive(bank / ".agent-memory.lock", proposal["operation_id"], "bank-" + proposal["operation"]) as owner:
+    from .turn_sources import canonical_writer_barrier
+    with canonical_writer_barrier(root), storage.exclusive(bank / ".agent-memory.lock", proposal["operation_id"], "bank-" + proposal["operation"]) as owner:
         fault("locked-before-inventory")
         check_identity(owner)
         from . import bank_observation

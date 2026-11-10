@@ -113,7 +113,8 @@ def validate(repo, value, *, runtime_artifact_digest, required_routes=(), publis
     frontier.check(live, root, owner)
     if publish:
         if owner is None:
-            with storage.exclusive(bank / '.agent-memory.lock', str(uuid.uuid4()), 'bank-recover') as owned:
+            from .turn_sources import canonical_writer_barrier
+            with canonical_writer_barrier(root), storage.exclusive(bank / '.agent-memory.lock', str(uuid.uuid4()), 'bank-recover') as owned:
                 return validate(root, value, runtime_artifact_digest=runtime_artifact_digest,
                     required_routes=required_routes, publish=True, owner=owned)
         state.write_once(directory / 'attestations' / (attestation['attestation_id'] + '.json'), attestation)

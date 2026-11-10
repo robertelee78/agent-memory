@@ -143,7 +143,8 @@ def apply_transaction(prepared):
         return tx.result('apply', **{key: value for key, value in known.items() if key != 'schema'},
             writes_performed=False, already_applied=True, receipt_is_historical=True,
             still_current=None, receipt_path=str(receipt_path), interrupted=frontier.marker_bytes(bank) is not None)
-    with storage.exclusive(bank / '.agent-memory.lock', p['operation_id'], 'bank-' + p['operation']) as owner:
+    from .turn_sources import canonical_writer_barrier
+    with canonical_writer_barrier(root), storage.exclusive(bank / '.agent-memory.lock', p['operation_id'], 'bank-' + p['operation']) as owner:
         resolution.require_completed_resolutions(root)
         held = frontier.verified_hold(root, owner)
         if held is None or held.scope != p['scope_context'] or writes.snapshot(root, owner)[1] != p['observed_hashes']:
@@ -375,12 +376,14 @@ def nested_preview(repo, operation_id, nested_id, mode, owner=None):
 def recover_nested(repo, operation_id=None, nested_id=None, mode=None, proposal=None):
     if proposal is None:
         root, bank, _, _ = state.paths(repo, operation_id)
-        with storage.exclusive(bank / '.agent-memory.lock', nested_id, 'bank-recover') as owner:
+        from .turn_sources import canonical_writer_barrier
+        with canonical_writer_barrier(root), storage.exclusive(bank / '.agent-memory.lock', nested_id, 'bank-recover') as owner:
             preview = nested_preview(root, operation_id, nested_id, mode, owner)
         return {'proposal': preview, 'writes_performed': False, 'temporary_lock_writes_performed': True}
     p = proposal.get('proposal', proposal)
     root, bank, _, directory = state.paths(repo, p['operation_id'])
-    with storage.exclusive(bank / '.agent-memory.lock', p['recovery_id'], 'bank-recover') as owner:
+    from .turn_sources import canonical_writer_barrier
+    with canonical_writer_barrier(root), storage.exclusive(bank / '.agent-memory.lock', p['recovery_id'], 'bank-recover') as owner:
         current = nested_preview(root, p['operation_id'], p['nested_id'], p['mode'], owner)
         current['recovery_id'] = p['recovery_id']
         if current != p:
@@ -456,7 +459,8 @@ def apply_checkpoint(prepared):
             raise ContractError('Checkpoint ID was reused for different evidence')
         return writes.result('apply', **{key: value for key, value in known.items() if key != 'schema'},
             already_applied=True, writes_performed=False, still_current=None, receipt_path=str(receipt_path))
-    with storage.exclusive(bank / '.agent-memory.lock', write['operation_id'], 'bank-checkpoint') as owner:
+    from .turn_sources import canonical_writer_barrier
+    with canonical_writer_barrier(root), storage.exclusive(bank / '.agent-memory.lock', write['operation_id'], 'bank-checkpoint') as owner:
         resolution.require_completed_resolutions(root)
         held = frontier.verified_hold(root, owner)
         if held is None or held.scope != write['scope_context'] or writes.snapshot(root, owner)[1] != write['observed_hashes']:

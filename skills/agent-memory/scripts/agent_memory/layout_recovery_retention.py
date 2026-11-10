@@ -457,7 +457,8 @@ def apply(repo, proposal):
         return publication.result('retention-apply', operation_id, 'retention-cleaned', cleanup_id=cleanup_id,
                                   receipt=known, already_applied=True, receipt_is_historical=True,
                                   original_bytes_available=False, rollback_available=False)
-    with storage.exclusive(bank/'.agent-memory.lock', cleanup_id, 'layout-recovery-retention') as owner:
+    from .turn_sources import canonical_writer_barrier
+    with canonical_writer_barrier(root), storage.exclusive(bank/'.agent-memory.lock', cleanup_id, 'layout-recovery-retention') as owner:
         scope_binding.require(root, proposal['project_id'], expected=proposal['scope_context'], owned_lock=owner)
         intent = state.read(cleanup/'intent.json', missing=True)
         if intent is None:

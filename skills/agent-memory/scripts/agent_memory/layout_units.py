@@ -75,7 +75,8 @@ def map_at(directory, current):
 
 def preview(repo, operation_id, request):
     root, bank, _, _ = state.paths(repo, operation_id)
-    with storage.exclusive(bank / '.agent-memory.lock', operation_id, 'bank-recover') as owner:
+    from .turn_sources import canonical_writer_barrier
+    with canonical_writer_barrier(root), storage.exclusive(bank / '.agent-memory.lock', operation_id, 'bank-recover') as owner:
         return _preview(root, operation_id, request, owner)
 
 
@@ -154,7 +155,8 @@ def apply(repo, supplied):
             or digest(encoded(successor)) != proposal['intended_ledger_sha256'] or successor['unit_map_sha256'] != digest(encoded(new_map))
             or digest(encoded(manifest)) != proposal['manifest_sha256']):
         raise ContractError('Revision source/review/journal evidence changed')
-    with storage.exclusive(bank / '.agent-memory.lock', proposal['revision_id'], 'bank-recover') as owner:
+    from .turn_sources import canonical_writer_barrier
+    with canonical_writer_barrier(root), storage.exclusive(bank / '.agent-memory.lock', proposal['revision_id'], 'bank-recover') as owner:
         resolution.require_completed_resolutions(root)
         marker = frontier.marker_bytes(bank)
         if digest(marker) != journal['hold_sha256']:
