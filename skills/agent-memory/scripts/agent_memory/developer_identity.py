@@ -10,7 +10,6 @@ import os
 from pathlib import Path
 import re
 import socket
-import subprocess
 import sys
 import tempfile
 import uuid
@@ -152,16 +151,22 @@ def status(observations, harness=None, session=None, repo="."):
     data, sha = observe()
     _, registry, lock = paths()
     observed = list(observations)
+    from .identity_git import git
+    configured = git(repo, "config", "--null", "--get-regexp", r"^user\.(email|name)$", optional=True)
+    values = {}
+    if configured is not None:
+        if not configured.endswith("\0"):
+            raise ContractError("Incomplete Git attribution config evidence")
+        for record in configured[:-1].split("\0"):
+            key, _, value = record.partition("\n")
+            if key not in {"user.email", "user.name"}:
+                raise ContractError("Unknown Git attribution config evidence")
+            values[key] = value
     for key, kind in (("user.email", "git-author-email"), ("user.name", "git-author-name")):
-        try:
-            from .identity_git import git
-            value = git(repo, "config", "--get", key, optional=True)
-            if value:
-                item = alias({"kind": kind, "value": value})
-                if item not in observed:
-                    observed.append(item)
-        except (FileNotFoundError, subprocess.TimeoutExpired):
-            pass
+        if values.get(key):
+            item = alias({"kind": kind, "value": values[key]})
+            if item not in observed:
+                observed.append(item)
     if os.environ.get("USER"):
         item = alias({"kind": "os-user", "value": os.environ["USER"]})
         if item not in observed:

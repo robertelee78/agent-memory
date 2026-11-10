@@ -593,10 +593,8 @@ def all_segments(repo, errors=None, *, enrollment_context=None):
     return result
 
 
-def registration(repo, directory, cursor, enrollment, *, perform=False, enrollment_context=None):
-    if perform and not source_bound_origin(directory, cursor):
-        raise ContractError('Cannot register an unbound native root family')
-    state = _shared_inventory(repo, cursor, enrollment_context)
+def _registration_lookup(state, enrollment):
+    """Resolve one reference without observing or mutating its namespace."""
     matches = [s for s in state['sources'] if s['source_reference'] == enrollment['source_reference']]
     if matches:
         if len(matches) != 1 or matches[0]['source_sha256'] != enrollment['source_sha256']:
@@ -604,6 +602,16 @@ def registration(repo, directory, cursor, enrollment, *, perform=False, enrollme
         return matches[0], state['faults']
     if state['faults'] and state['faults'] != ['source-missing']:
         return None, state['faults']
+    return None, []
+
+
+def registration(repo, directory, cursor, enrollment, *, perform=False, enrollment_context=None):
+    if perform and not source_bound_origin(directory, cursor):
+        raise ContractError('Cannot register an unbound native root family')
+    state = _shared_inventory(repo, cursor, enrollment_context)
+    observation, faults = _registration_lookup(state, enrollment)
+    if observation is not None or faults:
+        return observation, faults
     attempt_path = directory / 'registration-attempts' / (digest(enrollment['source_reference']) + '.json')
     attempt = {'schema': 'agent-memory/omp-registration-attempt-v1', 'session': cursor['session'],
                'lifecycle': cursor['lifecycle'], 'source_reference': enrollment['source_reference'],
@@ -767,7 +775,24 @@ def historical_completed_family(repo, directory, cursor, *, enrollment_context=N
 
 
 
+def _segment_enrollments(directory, cursor, admission_path):
+    for path in _files(directory, 'enrollments', r'[0-9a-f]{64}\.json'):
+        enrollment = read(path, 4096)
+        exact(enrollment, {'schema', 'session', 'lifecycle', 'source_reference', 'source_sha256', 'snapshot_ref', 'kind', 'native_source_id'})
+        if (enrollment['schema'] != 'agent-memory/omp-enrollment-v1' or enrollment['session'] != cursor['session']
+                or enrollment['lifecycle'] != cursor['lifecycle'] or enrollment['kind'] not in {'admission', 'segment'}):
+            raise ContractError('Foreign native enrollment')
+        if enrollment['kind'] == 'admission' and not os.path.lexists(admission_path):
+            raise ContractError('Native source admission metadata remains unenrolled')
+        target = directory / 'segment.json' if enrollment['kind'] == 'segment' else _snapshot_path(directory, enrollment['snapshot_ref'])
+        if digest(read(target)) != enrollment['source_sha256']:
+            raise ContractError('Native enrollment source digest differs')
+        yield enrollment
+
+
 def segment_inventory(repo, directory, cursor, *, enrollment_context=None):
+    if enrollment_context is not None:
+        scope_binding._enrollment_read_context(repo, enrollment_context)
     rows = []
     if not source_bound_origin(directory, cursor) and not historical_completed_family(repo, directory, cursor, enrollment_context=enrollment_context):
         return [{'session': cursor['session'], 'lifecycle': cursor['lifecycle'],
@@ -849,6 +874,7 @@ def segment_inventory(repo, directory, cursor, *, enrollment_context=None):
             rows.append({'session': cursor['session'], 'lifecycle': cursor['lifecycle'], 'human_root': cursor['origin']['human_root'],
                          'status': 'legacy-unverified-notification', 'source_reference': 'omp:event:' + meta['capture_id'],
                          'actionable': False})
+    sampled_attempts = {}
     for path in _files(directory, 'registration-attempts', r'[0-9a-f]{64}\.json'):
         attempt = read(path, 4096)
         exact(attempt, {'schema', 'session', 'lifecycle', 'source_reference', 'source_sha256'})
@@ -859,19 +885,35 @@ def segment_inventory(repo, directory, cursor, *, enrollment_context=None):
         enrolled = read(directory / 'enrollments' / path.name, 4096)
         if any(attempt[key] != enrolled[key] for key in ('session', 'lifecycle', 'source_reference', 'source_sha256')):
             raise ContractError('Native registration attempt lost its enrollment identity')
-    for path in _files(directory, 'enrollments', r'[0-9a-f]{64}\.json'):
-        enrollment = read(path, 4096)
-        exact(enrollment, {'schema', 'session', 'lifecycle', 'source_reference', 'source_sha256', 'snapshot_ref', 'kind', 'native_source_id'})
-        if (enrollment['schema'] != 'agent-memory/omp-enrollment-v1' or enrollment['session'] != cursor['session']
-                or enrollment['lifecycle'] != cursor['lifecycle'] or enrollment['kind'] not in {'admission', 'segment'}):
-            raise ContractError('Foreign native enrollment')
-        if enrollment['kind'] == 'admission' and not os.path.lexists(admission_path):
-            raise ContractError('Native source admission metadata remains unenrolled')
-        target = directory / 'segment.json' if enrollment['kind'] == 'segment' else _snapshot_path(directory, enrollment['snapshot_ref'])
-        if digest(read(target)) != enrollment['source_sha256']:
-            raise ContractError('Native enrollment source digest differs')
+        if enrollment_context is not None:
+            sampled_attempts[attempt['source_reference']] = (path, attempt)
+    enrollments = _segment_enrollments(directory, cursor, admission_path)
+    if enrollment_context is not None:
+        # Validate every retained input before observing the shared namespace.
+        enrollments = list(enrollments)
+    state = None
+    inventory_failed = False
+    for enrollment in enrollments:
         try:
-            observation, errors = registration(repo, directory, cursor, enrollment, enrollment_context=enrollment_context)
+            if enrollment_context is None:
+                observation, errors = registration(repo, directory, cursor, enrollment, enrollment_context=enrollment_context)
+            else:
+                if state is None and not inventory_failed:
+                    try:
+                        state = _shared_inventory(repo, cursor, enrollment_context)
+                    except (OSError, ValueError):
+                        inventory_failed = True
+                if inventory_failed:
+                    observation, errors = None, ['source-unavailable']
+                else:
+                    sampled = sampled_attempts.get(enrollment['source_reference'])
+                    if sampled is not None and read(sampled[0], 4096) != sampled[1]:
+                        raise ContractError('Native registration attempt identity changed')
+                    observation, errors = _registration_lookup(state, enrollment)
+                    if observation is None and not errors and sampled is not None:
+                        errors = ['registration-fault-retained']
+                    # Rows must not share mutable fault lists, including state faults.
+                    errors = list(errors)
         except (OSError, ValueError):
             observation, errors = None, ['source-unavailable']
         status = 'registration-fault' if errors else ('completed' if observation and observation['completed'] else 'pending-assessment' if observation else 'enrollment-pending')

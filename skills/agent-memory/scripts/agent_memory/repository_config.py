@@ -7,13 +7,14 @@ import re
 import unicodedata
 
 from .frontmatter import ContractError, read
-from .identity_git import git
+from .identity_git import git, root_head
 
 MAX_ROUTERS = 64
 MAX_DISCOVERY_ENTRIES = 1000000
 ROUTER_FIELDS = {'schema', 'project-id', 'router-updated', 'canonical-remote'}
 
 _settings_reads = ContextVar('agent_memory_repository_settings_observation', default=None)
+_HEAD_UNOBSERVED = object()
 
 
 def local_value(root, key):
@@ -134,7 +135,7 @@ def object_router_bytes(root, expression, cache):
     return raw
 
 
-def _router_inventory(root):
+def _router_inventory(root, *, observed_head=_HEAD_UNOBSERVED):
     """One complete Git name inventory, shared by ordinary and raw readers."""
     listed = git(root, 'ls-files', '--cached', '--others', '--exclude-standard', '-t', '-z',
                  '--', ':(icase,glob)**/MEMORY.md', optional=True, glob_pathspecs=True)
@@ -150,7 +151,10 @@ def _router_inventory(root):
         listed_paths.add(path)
         if entry[0] != '?':
             indexed_paths.add(path)
-    head = git(root, 'rev-parse', '--verify', 'HEAD', optional=True)
+    head = (git(root, 'rev-parse', '--verify', 'HEAD', optional=True)
+            if observed_head is _HEAD_UNOBSERVED else observed_head)
+    if head is not None and not re.fullmatch('[0-9a-f]{40}|[0-9a-f]{64}', head):
+        raise ContractError('Repository HEAD observation is incomplete; do not infer absence')
     committed = git(root, 'ls-tree', '-r', '--name-only', '-z', head) if head else ''
     committed_paths = set(committed.split('\0'))
     return listed_paths, indexed_paths, head, committed_paths
@@ -249,7 +253,9 @@ def settings(repo, *, router_reader=None, raw_locations=False):
 
 
 def _settings_inputs(root):
-    top = git(root, 'rev-parse', '--show-toplevel', optional=True)
+    # HEAD is sampled beside the root, before config/index enumeration. This
+    # is not an atomic snapshot; each enrollment entry/exit observes it anew.
+    top, head = root_head(root)
     if top is None and (root / '.git').exists():
         raise ContractError('Existing Git metadata/configuration cannot be inspected; do not guess the bank root')
     if top is not None and Path(top).resolve() != root:
@@ -257,7 +263,7 @@ def _settings_inputs(root):
     configured = local_settings(root)
     if configured.get('agent-memory.bankroot') is not None:
         validate_root(configured['agent-memory.bankroot'])
-    return top, configured, _router_inventory(root) if top is not None else None
+    return top, configured, _router_inventory(root, observed_head=head) if top is not None else None
 
 
 def _settings_at(root, top, configured, inventory, *, router_reader=None, raw_locations=False):

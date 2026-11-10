@@ -127,18 +127,20 @@ class LayoutMarkerGroupRecoveryContract(unittest.TestCase):
     def known_recovery(self, world, command, repo, operation, mode, temporary):
         preview = world.inside('known-' + str(uuid.uuid4()) + '.json')
         before = temporary.read_bytes(), self.metadata(temporary)
-        plan = f.call(world, command, 'recover', '--repo', repo, '--operation', operation,
-                      '--mode', mode, '--output', preview)
+        f.call(world, command, 'recover', '--repo', repo, '--operation', operation,
+               '--mode', mode, '--output', preview)
         self.assertEqual((temporary.read_bytes(), self.metadata(temporary)), before)
-        pins = plan['proposal']['temporary_entries']
+        pins = json.loads(preview.read_text())['proposal']['temporary_entries']
         self.assertEqual(len(pins), 1)
         self.assertEqual(pins[0]['path'], temporary.name)
         self.assertEqual(pins[0]['facts']['gid'], temporary.stat().st_gid)
         self.assertEqual(pins[0]['sha256'], f.sha(temporary.read_bytes()))
-        outcome = f.call(world, command, 'recover', '--repo', repo, '--proposal', preview)
+        applied = world.inside('known-applied-' + str(uuid.uuid4()) + '.json')
+        outcome = f.call(world, command, 'recover', '--repo', repo, '--proposal', preview,
+                         '--output', applied)
         self.assertTrue(outcome['verified'])
         self.assertFalse(outcome['semantic_recovery_complete'])
-        self.assertGreater(len(outcome['receipt']['pending_unit_ids_at_commit']), 0)
+        self.assertGreater(len(json.loads(applied.read_text())['receipt']['pending_unit_ids_at_commit']), 0)
         self.assertFalse(temporary.exists())
         return preview
 
