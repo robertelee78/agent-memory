@@ -2,7 +2,7 @@
   "schema": "agent-memory/layout-recovery-platform-limitation-v1",
   "source_commit": "fb2a731ac5a9c239b3c596e0bd0f5bff80e4ad8a",
   "platform": "Linux-7.2.7-200.fc44.aarch64-aarch64-with-glibc2.36",
-  "runtime": "Linuxarm64 rootlessPodman on SELinux host, immutablepublicPythonimage0d539227a5680f3930ee694bba8b37d8d990f7ff247ae834668096df4af5a294",
+  "runtime": "Linuxarm64 unprivileged502:20 container on SELinux-enabled Podman host, rootful daemon connection, immutablepublicPythonimage0d539227a5680f3930ee694bba8b37d8d990f7ff247ae834668096df4af5a294",
   "observed_directory_xattrs": [
     "security.selinux"
   ],
