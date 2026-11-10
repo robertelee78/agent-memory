@@ -367,6 +367,7 @@ def main(argv=None):
                         item.update(status='failed', reason=str(error), tests=0,
                                     error_stage=worker_stage)
                     report["suites"].append(item)
+        active = 'registered-suite-results'; stage = 'result-validation'
         if args.shard_index is not None:
             validate_rows(entries_to_run, report["suites"])
             report["passed"] = True

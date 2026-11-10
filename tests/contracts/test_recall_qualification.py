@@ -190,6 +190,7 @@ print('exact validated provider identity accepted; wrong, mixed and unvalidated 
             (target / 'tests').mkdir()
             shutil.copy2(ROOT / 'tests/world.py', target / 'tests/world.py')
             (target / '.gitignore').write_text('__pycache__/\n*.pyc\n')
+            (target / '.gitignore').chmod(0o644)
             for name in ('recall_quality_qualification.py', 'recall_refresh_qualification.py',
                          'recall_navigation_qualification.py', 'recall_qualification_matrix.py',
                          'recall_comparison_builds.py'):
@@ -341,6 +342,7 @@ print(json.dumps(binding))
             data = target / 'docs/research/data'
             data.mkdir(parents=True)
             (data / 'labels.json').write_text('{"expected": ["qualified-record"]}\n')
+            (data / 'labels.json').chmod(0o644)
             (data / 'archived-link.json').symlink_to('labels.json')
             world.git('add', '.', cwd=target); world.git('commit', '-m', 'Frozen input authority', cwd=target)
             self.assert_controller(world, controller, '''

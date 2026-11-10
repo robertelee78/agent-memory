@@ -77,6 +77,42 @@ class World(_ActualWorld):
                                  'gate-producer-stdout-marker', 'gate-producer-stderr-marker', 'Traceback'):
                         self.assertIn(text, result.stderr)
 
+    def test_failed_suite_validation_does_not_report_successful_world_cleanup_as_the_error(self):
+        with World() as world:
+            checkout = world.inside('failed result checkout')
+            (checkout / 'scripts').mkdir(parents=True)
+            (checkout / 'tests/contracts').mkdir(parents=True)
+            for name in ('test.sh', 'test_gate.py', 'run_contract_suite.py'):
+                shutil.copy2(ROOT / 'scripts' / name, checkout / 'scripts' / name)
+            for name in ('world.py', 'fault_partitions.py'):
+                shutil.copy2(ROOT / 'tests' / name, checkout / 'tests' / name)
+            (checkout / 'tests/contracts/fixture.py').write_text(
+                'import unittest\n'
+                'class FailedContract(unittest.TestCase):\n'
+                '    def test_failure(self):\n'
+                '        self.fail("actual-contract-failure")\n')
+            manifest = json.loads((ROOT / 'tests/contracts.json').read_text())
+            for entry in manifest['suites']:
+                if entry.get('path'):
+                    entry['path'] = 'tests/contracts/fixture.py'
+                    entry.pop('tests', None)
+            index = next(i for i, entry in enumerate(manifest['suites']) if entry['name'] == 'harness')
+            (checkout / 'tests/contracts.json').write_text(json.dumps(manifest))
+            result = world.run(['sh', checkout / 'scripts/test.sh', '--release', '--json',
+                '--shard-index', str(index), '--shard-count', str(len(manifest['suites'])),
+                '--cell-os', 'macos-latest' if sys.platform == 'darwin' else 'ubuntu-latest',
+                '--cell-python', f'{sys.version_info.major}.{sys.version_info.minor}'], check=False)
+            report = json.loads(result.stdout)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertFalse(report['passed'])
+            self.assertFalse(report['release_complete'])
+            self.assertEqual(report['error_suite'], 'registered-suite-results')
+            self.assertEqual(report['error_stage'], 'result-validation')
+            self.assertEqual(len(report['suites']), 1)
+            self.assertEqual(report['suites'][0]['tests'], 1)
+            self.assertEqual(report['suites'][0]['failures'], 1)
+            self.assertIn('actual-contract-failure', result.stderr)
+
     def test_merge_rejects_invalid_rows_and_accepts_complete_reordered_shards(self):
         import tempfile
         spec = importlib.util.spec_from_file_location("gate_shard_contract", ROOT/'scripts/test_gate.py')
