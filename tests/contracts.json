@@ -734,6 +734,22 @@
     {"name":"layout-metadata-wrong-reviewed-value","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_recovery_darwin_provenance.py","tests":["DarwinProvenanceRecoveryContract.test_reviewed_wrong_provenance_refuses_without_replacement"]},
     {"name":"layout-metadata-unsupported-xattr","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_recovery_darwin_provenance.py","tests":["DarwinProvenanceRecoveryContract.test_unknown_xattr_refuses_inspection_without_mutation"]},
     {"name":"layout-metadata-unsupported-inode-flags","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_recovery_darwin_provenance.py","tests":["DarwinProvenanceRecoveryContract.test_nondefault_inode_flags_refuse_inspection_without_mutation"]},
+    {"name":"layout-checkpoint-closure-before-receipt-error","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_checkpoint_faults.py","tests":["LayoutCheckpointFaults.test_before_receipt_error"]},
+    {"name":"layout-checkpoint-closure-before-receipt-exit","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_checkpoint_faults.py","tests":["LayoutCheckpointFaults.test_before_receipt_exit"]},
+    {"name":"layout-checkpoint-closure-after-receipt-error","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_checkpoint_faults.py","tests":["LayoutCheckpointFaults.test_after_receipt_error"]},
+    {"name":"layout-checkpoint-closure-after-receipt-exit","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_checkpoint_faults.py","tests":["LayoutCheckpointFaults.test_after_receipt_exit"]},
+    {"name":"layout-restore-closure-after-receipt-error","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_restore_faults.py","tests":["LayoutRestoreFaults.test_after_receipt_error"]},
+    {"name":"layout-restore-closure-probe-journal-error","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_restore_faults.py","tests":["LayoutRestoreFaults.test_probe_journal_error"]},
+    {"name":"layout-restore-closure-probe-journal-exit","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_restore_faults.py","tests":["LayoutRestoreFaults.test_probe_journal_exit"]},
+    {"name":"layout-restore-closure-partial-state-and-validate-refuse-without-adoption","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_restore_faults.py","tests":["LayoutRestoreFaults.test_partial_state_and_validate_refuse_without_adoption"]},
+    {"name":"layout-revision-closure-before-head-error","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_revision_faults.py","tests":["LayoutRevisionFaults.test_before_head_error"]},
+    {"name":"layout-revision-closure-before-head-exit","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_revision_faults.py","tests":["LayoutRevisionFaults.test_before_head_exit"]},
+    {"name":"layout-revision-closure-after-head-error","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_revision_faults.py","tests":["LayoutRevisionFaults.test_after_head_error"]},
+    {"name":"layout-revision-closure-after-head-exit","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_revision_faults.py","tests":["LayoutRevisionFaults.test_after_head_exit"]},
+    {"name":"layout-crash-closure-nested-faults-rollback-after-rename-error","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_nested_faults.py","tests":["LayoutNestedFaults.test_rollback_after_rename_error"]},
+    {"name":"layout-crash-closure-nested-faults-before-receipt-exit","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_nested_faults.py","tests":["LayoutNestedFaults.test_before_receipt_exit"]},
+    {"name":"layout-crash-closure-legacy-stale-lock-old-stale-lock-before-handoff","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_legacy_stale_lock.py","tests":["LayoutLegacyStaleLock.test_old_stale_lock_before_handoff"]},
+    {"name":"layout-crash-closure-legacy-hold-receipt-after-hold-restore","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_legacy_hold_receipt.py","tests":["LayoutLegacyHoldReceipt.test_after_hold_restore"]},
     {"name": "semantic-discovery", "layer": "bank", "scope": "v0.0.3", "path": "tests/contracts/test_discovery.py"}
   ]
 }
