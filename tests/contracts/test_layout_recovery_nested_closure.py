@@ -78,31 +78,53 @@ class NestedRecoveryClosure(unittest.TestCase):
             child_file = world.inside('child.json')
             child = f.call(world, command, 'rollback', '--repo', repo, '--operation', parent, '--output', child_file)
             child_id = child['operation_id']
-            # The child journal is durable, but the parent hold still owns the
-            # marker, so the standalone resolution can reach its receipt window.
+            resolution = f.discard_proposal(world, command, repo, bank, inspected, applied['pending_unit_ids'][0])
+            resolution_p = json.loads(resolution.read_text())['proposal']
+            # Before the marker swap the parent hold remains, but the durable
+            # child journal still makes the frontier unavailable to resolution.
             f.call(world, command, 'rollback', '--repo', repo, '--proposal', child_file, expected=1,
                    env={'AGENT_MEMORY_FAULT_STAGE': 'layout-recovery-before-marker-swap'})
             marker = bank / '.agent-memory-transaction.md'
             self.assertEqual(json.loads(marker.read_text())['operation_id'], parent)
+            child_directory = f.private_directory(world, bank, child_id)
+            self.assertTrue((child_directory / 'journal.json').is_file())
+            base = child_directory.parent
+            before = snapshot(bank), snapshot(base), snapshot(repo / '.git/index')
+            f.call(world, command, 'resolve', '--repo', repo, '--operation', parent,
+                   '--unit', resolution_p['unit_id'], '--input', f.save(world, resolution_p['terminal']),
+                   '--output', world.inside('blocked-resolution.json'), expected=1)
+            f.call(world, command, 'resolve', '--repo', repo, '--proposal', resolution, expected=1)
+            self.assertEqual((snapshot(bank), snapshot(base), snapshot(repo / '.git/index')), before)
             finish = world.inside('finish-child.json')
             f.call(world, command, 'recover', '--repo', repo, '--operation', child_id,
                    '--mode', 'finish', '--output', finish)
+            self.assertTrue(f.call(world, command, 'recover', '--repo', repo, '--proposal', finish)['verified'])
+
+        with World() as world:
+            command, _, repo, bank, _, inspected, applied = f.small_pending(world, SCRATCH)
+            parent = inspected['operation_id']
+            child_file = world.inside('child.json')
+            child = f.call(world, command, 'rollback', '--repo', repo, '--operation', parent, '--output', child_file)
             resolution = f.discard_proposal(world, command, repo, bank, inspected, applied['pending_unit_ids'][0])
             f.call(world, command, 'resolve', '--repo', repo, '--proposal', resolution, expected=1,
                    env={'AGENT_MEMORY_FAULT_STAGE': 'layout-recovery-resolution-after-receipt'})
-            base = f.private_directory(world, bank, parent).parent
-            resolution_id = json.loads(resolution.read_text())['proposal']['resolution_id']
             parent_directory = f.private_directory(world, bank, parent)
+            child_directory = f.private_directory(world, bank, child['operation_id'])
+            resolution_id = json.loads(resolution.read_text())['proposal']['resolution_id']
             self.assertTrue((parent_directory / 'resolutions' / (resolution_id + '.json')).is_file())
             self.assertTrue((parent_directory / 'resolution-journals' / (resolution_id + '.json')).is_file())
             self.assertFalse((parent_directory / 'resolution-completions' / (resolution_id + '.json')).exists())
-            before = snapshot(bank), snapshot(base), snapshot(repo / '.git/index')
-            f.call(world, command, 'recover', '--repo', repo, '--proposal', finish, expected=1)
-            self.assertEqual((snapshot(bank), snapshot(base), snapshot(repo / '.git/index')), before)
+            self.assertFalse((child_directory / 'journal.json').exists())
+            before = snapshot(bank), snapshot(parent_directory.parent), snapshot(repo / '.git/index')
+            f.call(world, command, 'rollback', '--repo', repo, '--proposal', child_file, expected=1)
+            f.call(world, command, 'rollback', '--repo', repo, '--operation', parent,
+                   '--output', world.inside('blocked-child.json'), expected=1)
+            self.assertEqual((snapshot(bank), snapshot(parent_directory.parent), snapshot(repo / '.git/index')), before)
+            self.assertFalse((child_directory / 'journal.json').exists())
             done = f.call(world, command, 'resolve', '--repo', repo, '--proposal', resolution)
             self.assertTrue(done['semantic_recovery_complete'])
             # The old child preview is pinned to the former hold/frontier.
-            f.call(world, command, 'recover', '--repo', repo, '--proposal', finish, expected=1)
+            f.call(world, command, 'rollback', '--repo', repo, '--proposal', child_file, expected=1)
 
     def test_changed_review_pin_refuses_interrupted_finish_without_replacement(self):
         with World() as world:
