@@ -54,3 +54,34 @@ class LayoutDamagedEvidence(unittest.TestCase):
 
     def test_review_refuses_changed_or_missing(self):
         self.journey('review')
+
+    def external_change(self, variant):
+        helper = existing.LayoutRecoveryContract()
+        with World() as world:
+            command, source, repo, bank, native, originals, modes, git = helper.setup_fault_repair(world)
+            safe, inspected = recovery.inspect(world, command, repo)
+            proposal, _ = recovery.prepare(world, command, source, repo, inspected, native)
+            recovery.call(world, command, 'apply', '--repo', repo, '--proposal', proposal, expected=1,
+                          env={'AGENT_MEMORY_FAULT_STAGE': 'layout-recovery-after-rename:activeContext.md'})
+            changed = bank / ('unexpected.md' if variant == 'new' else 'projectbrief.md')
+            if variant == 'new':
+                changed.write_bytes(b'Independent external file stays intact.\n')
+            else:
+                changed.chmod(stat.S_IMODE(changed.stat().st_mode) ^ 0o100)
+            canonical = {p.relative_to(bank).as_posix(): (p.read_bytes(), stat.S_IMODE(p.stat().st_mode))
+                         for p in bank.rglob('*') if p.is_file()}
+            for mode in ('finish', 'rollback'):
+                recovery.call(world, command, 'recover', '--repo', repo, '--operation', safe['operation_id'],
+                              '--mode', mode, '--output', world.inside('refused-' + mode + '.json'), expected=1)
+                self.assertEqual({p.relative_to(bank).as_posix(): (p.read_bytes(), stat.S_IMODE(p.stat().st_mode))
+                                  for p in bank.rglob('*') if p.is_file()}, canonical)
+                helper.assert_fault_work_unchanged(world, repo, git)
+            directory = recovery.private_directory(world, bank, safe['operation_id'])
+            self.assertEqual({row['path']: (directory / row['blob']).read_bytes()
+                              for row in inspected['manifest']['sources']}, originals)
+
+    def test_interrupted_external_file_refuses_finish_and_rollback(self):
+        self.external_change('new')
+
+    def test_interrupted_metadata_edit_refuses_finish_and_rollback(self):
+        self.external_change('mode')

@@ -19,6 +19,8 @@
     {"name":"layout-recovery-first-replacement","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_recovery.py","tests":["LayoutRecoveryContract.test_first_replacement_before_progress_supports_known_finish_and_rollback"]},
     {"name":"layout-damaged-original","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_damaged_evidence.py","tests":["LayoutDamagedEvidence.test_original_evidence_refuses_changed_or_missing"]},
     {"name":"layout-damaged-review","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_damaged_evidence.py","tests":["LayoutDamagedEvidence.test_review_refuses_changed_or_missing"]},
+    {"name":"layout-interrupted-external-file","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_damaged_evidence.py","tests":["LayoutDamagedEvidence.test_interrupted_external_file_refuses_finish_and_rollback"]},
+    {"name":"layout-interrupted-external-metadata","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_damaged_evidence.py","tests":["LayoutDamagedEvidence.test_interrupted_metadata_edit_refuses_finish_and_rollback"]},
     {"name":"layout-apply-readback-error","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_apply_faults.py","tests":["LayoutApplyFaults.test_readback_error"]},
     {"name":"layout-apply-readback-exit","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_apply_faults.py","tests":["LayoutApplyFaults.test_readback_exit"]},
     {"name":"layout-apply-index-error","layer":"bank","scope":"v0.0.15","path":"tests/contracts/test_layout_apply_faults.py","tests":["LayoutApplyFaults.test_index_error"]},
