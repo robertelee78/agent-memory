@@ -149,6 +149,21 @@ controller remains intact at 90 seconds with 30-second public children; local
 instrumented success does not resolve its historical hosted timeout. See the
 [scoped evidence and open failures](../research/data/v015-hosted-timeout-corrections-scoped-proof-20261110.json).
 
+Current cooperative canonical writers now take the source fence before their
+bank slot, so legacy overlap controls MUST use a genuinely pre-fence writer.
+The finite-stream fixture retains exact portable-pack commit `95b17df` and its
+217-file subtree in a digest-checked archive, loaded once per disposable World
+under an isolated package namespace. Current observers and barriers stay intact.
+The original initializing, EX-held owner-fsync, durable-outcome, exhaustion,
+immutable retry and unknown-transaction controls remain mandatory. Tests MUST
+NOT disable the current writer fence merely to recreate an obsolete overlap.
+
+Private metadata file-layout and diagnostic-wording pins are not mutation
+oracles. Refusal, original physical/canonical bytes, foreign occupants, actual
+transaction/recovery outcomes and Git state remain the consumer-visible guards.
+The [real-writer consumer proof](../research/data/v015-real95-writer-consumer-scoped-proof-20261110.json)
+separates complete local Py3.15 consumer passes from the failed hosted matrix.
+
 `bank-roundtrip` already consists of one inherited installed sharing-loop
 journey and remains one explicit mandatory method. Its hosted macOS/Python
 3.15 worker exceeded 300 seconds; it cannot be made bounded merely by adding

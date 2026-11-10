@@ -1,0 +1,291 @@
+{
+  "shared_archived_pack_helper": {
+    "passed": true,
+    "source_hash": "3ce2c974c8b2583de4b11869e6c2f3af9b99ae6f010044c1c604d977ae6a22a3",
+    "source_unchanged": true,
+    "seconds": 50.20699920807965,
+    "tests": 19,
+    "rows": [
+      {
+        "name": "public-cli-user-journey",
+        "passed": true,
+        "tests": 7,
+        "seconds": 50.17114870902151,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      },
+      {
+        "name": "lifecycle-trust-paths",
+        "passed": true,
+        "tests": 12,
+        "seconds": 47.91944579198025,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      }
+    ]
+  },
+  "coupled_timing_diagnostic": {
+    "passed": true,
+    "source_hash": "3ce2c974c8b2583de4b11869e6c2f3af9b99ae6f010044c1c604d977ae6a22a3",
+    "source_unchanged": true,
+    "seconds": 306.52233458298724,
+    "tests": 53,
+    "rows": [
+      {
+        "name": "harness",
+        "passed": true,
+        "tests": 9,
+        "seconds": 105.57584416703321,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      },
+      {
+        "name": "bank-roundtrip",
+        "passed": true,
+        "tests": 1,
+        "seconds": 156.50440420897212,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      },
+      {
+        "name": "multi-machine-compatible",
+        "passed": true,
+        "tests": 1,
+        "seconds": 154.66674616700038,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      },
+      {
+        "name": "installer",
+        "passed": true,
+        "tests": 33,
+        "seconds": 118.39853933395352,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      },
+      {
+        "name": "recall-qualification",
+        "passed": true,
+        "tests": 9,
+        "seconds": 46.24372241704259,
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0
+      }
+    ],
+    "instrumentation": "Flushed start/end timing records around unchanged World.run and unchanged actual registered runner; original selection and assertions execute. Diagnostic overhead, not performance or hosted acceptance.",
+    "unchanged_worker_deadline_seconds": 300,
+    "unchanged_public_and_controller_deadlines": true,
+    "qualification": "Actual local Python3.15.0 complete coupled suites; not the hostedPython3.15.2 failures, not shared-host universal time or resolved latency cause."
+  },
+  "additional_private_actual_evidence": {
+    "name": "real95-shared-helper-and-full-coupled-py315-timing-consumers-actual-20261110.tar.gz",
+    "sha256": "0963b8688a2057ffadb10e3d5e515d0c11e72fe6dfe4fba674ea30f8991ec90d",
+    "bytes": 46754
+  },
+  "actual_execution": {
+    "bank_transaction_tests": 21,
+    "complete_finite_stream_tests": 105,
+    "errors": 0,
+    "failures": 0,
+    "finite_stream_worker_seconds": 103.4471521669766,
+    "interpreter": "macOS27.2 arm64 Homebrew Python3.15.0; not hosted Python3.15.2",
+    "passed": true,
+    "registered_suites": 22,
+    "seconds": 138.02052104100585,
+    "skipped": 0,
+    "suite_rows": [
+      {
+        "name": "omp-finite-stream",
+        "passed": true,
+        "seconds": 103.4471521669766,
+        "tests": 105
+      },
+      {
+        "name": "bank-transactions",
+        "passed": true,
+        "seconds": 3.2568489169934765,
+        "tests": 1
+      },
+      {
+        "name": "bank-transactions-every-interruption-boundary-refuses-normal-reads-and-converges-in-both-directions",
+        "passed": true,
+        "seconds": 60.13652204209939,
+        "tests": 1
+      },
+      {
+        "name": "bank-transactions-external-unchanged-read-set-edit-blocks-finish-and-rollback-without-overwrite",
+        "passed": true,
+        "seconds": 5.768331500003114,
+        "tests": 1
+      },
+      {
+        "name": "bank-transactions-recovery-preview-is-observed-and-a-subsequent-even-owned-version-change-refuses",
+        "passed": true,
+        "seconds": 3.2944326249416918,
+        "tests": 1
+      },
+      {
+        "name": "bank-transactions-missing-corrupt-or-changed-journal-is-not-guessed-or-reconstructed",
+        "passed": true,
+        "seconds": 9.151505959103815,
+        "tests": 1
+      },
+      {
+        "name": "bank-transactions-lost-response-after-receipt-finishes-cleanup-without-replacing-and-cannot-switch-to-rollback",
+        "passed": true,
+        "seconds": 5.460044292034581,
+        "tests": 1
+      },
+      {
+        "name": "bank-transactions-crash-after-marker-removal-replays-known-outcome-and-purges-leftover-backup",
+        "passed": true,
+        "seconds": 4.185570125002414,
+        "tests": 1
+      },
+      {
+        "name": "bank-transactions-recovery-itself-can-be-interrupted-and-resumed",
+        "passed": true,
+        "seconds": 9.218852124991827,
+        "tests": 1
+      },
+      {
+        "name": "bank-transactions-stale-proposals-unknown-markers-invalid-projection-and-symlinks-preserve-originals",
+        "passed": true,
+        "seconds": 3.46811937505845,
+        "tests": 1
+      },
+      {
+        "name": "bank-transactions-exclusive-marker-creation-preserves-a-new-unknown-marker-and-readset-edit-at-write-boundary",
+        "passed": true,
+        "seconds": 5.034352250047959,
+        "tests": 1
+      },
+      {
+        "name": "bank-transactions-portable-copy-uses-same-protocol-and-memory-body-remains-unexecuted-data",
+        "passed": true,
+        "seconds": 3.102448249934241,
+        "tests": 1
+      },
+      {
+        "name": "bank-transactions-raw-crlf-router-rejected-before-preview-or-journal-even-if-changed-after-preview",
+        "passed": true,
+        "seconds": 4.448801874998026,
+        "tests": 1
+      },
+      {
+        "name": "bank-transactions-impossible-projection-and-leaf-directory-conversions-refuse-before-journaling",
+        "passed": true,
+        "seconds": 11.277254250016995,
+        "tests": 1
+      },
+      {
+        "name": "bank-transactions-noncanonical-physical-blocker-arriving-after-preview-is-checked-before-journal",
+        "passed": true,
+        "seconds": 2.9393199579790235,
+        "tests": 1
+      },
+      {
+        "name": "bank-transactions-external-omitted-context-directory-before-receipt-cannot-be-reported-as-a-usable-bank",
+        "passed": true,
+        "seconds": 2.672252624994144,
+        "tests": 1
+      },
+      {
+        "name": "bank-transactions-case-unicode-parent-and-existing-occupant-aliases-reject-preview-and-forged-apply-without-loss",
+        "passed": true,
+        "seconds": 15.478051207959652,
+        "tests": 1
+      },
+      {
+        "name": "bank-transactions-alias-arriving-after-preview-is-not-inventoried-as-an-owned-target",
+        "passed": true,
+        "seconds": 2.925964333000593,
+        "tests": 1
+      },
+      {
+        "name": "bank-transactions-late-alias-at-replacement-boundary-stops-and-recovery-preserves-foreign-occupant",
+        "passed": true,
+        "seconds": 4.331806791014969,
+        "tests": 1
+      },
+      {
+        "name": "bank-transactions-alias-arriving-after-recovery-preview-cannot-be-overwritten-in-either-direction",
+        "passed": true,
+        "seconds": 7.381534082931466,
+        "tests": 1
+      },
+      {
+        "name": "bank-transactions-single-file-reader-and-writer-share-exact-component-spelling-validation",
+        "passed": true,
+        "seconds": 2.635651499964297,
+        "tests": 1
+      },
+      {
+        "name": "bank-transactions-bank-root-spelling-alias-refuses-before-lock-and-unique-unicode-target-still-works",
+        "passed": true,
+        "seconds": 3.5854197500739247,
+        "tests": 1
+      }
+    ],
+    "tests": 126,
+    "worker_deadline_seconds": 300,
+    "workers": 2
+  },
+  "base_commit": "717cf657c0a3e17f3270b81c6bb8e1bf9115acc7",
+  "date": "2026-11-10",
+  "incidental_oracles_removed": [
+    "Private runtime contains only security-audit files: contradicted by permitted content-free source lock. Removed rather than pinning a replacement file layout.",
+    "Diagnostic non-directory/alias error wording pins removed; actual refusal, original physical bytes, unowned occupants, canonical markers and lock preservation remain.",
+    "Old blanket ability to take source EX from inside current frame SH removed rather than pinning a new internal lock mode."
+  ],
+  "legacy_writer": {
+    "archive_bytes": 648789,
+    "archive_sha256": "b1a9760fbb90fe1adc6192745db11e0df6c739840cd73d4769286302ca8baff7",
+    "commit": "95b17dfe2173a7befcd363ca91c57ff710e6a654",
+    "files": 217,
+    "mechanism": "Actual unchanged historic writer/transaction/owner modules isolated per World; current observers and product barriers remain untouched.",
+    "semantic_windows_retained": [
+      "pre-EX initializing publication",
+      "EX-before-owner full fsync window",
+      "durable outcome overlap",
+      "invalid request/refused-attempt retry exactness",
+      "partial/different immutable retry refusal",
+      "metadata exhaustion",
+      "unknown transaction after writer release",
+      "identity rediscovery after release"
+    ],
+    "subtree": "skills/agent-memory",
+    "tree": "ce18fa9d035b6f732b678ce09d852df19899d5f4"
+  },
+  "model_token_endpoint_requests": 0,
+  "negative_matrix_source": {
+    "all_cells_failed": true,
+    "commit": "ca558a7e487fb1a34420308adecc9da012995e7f",
+    "raw_archive_sha256": "adb37d8832baa6f42c71b9622dad5696c8c3189941a98099c3422628780c31fa",
+    "run": "https://github.com/robertelee78/agent-memory/actions/runs/42744501004"
+  },
+  "no_omp_or_original_user_worktree_changes": true,
+  "private_actual_evidence": {
+    "bytes": 697731,
+    "name": "real95-writer-migration-full105-and-21-transaction-consumers-actual-py315-20261110.tar.gz",
+    "sha256": "b89b3b5807025597748c53e457539d2a51677f27e7faadaa3e5f3bb36d46a808"
+  },
+  "remaining_gates": [
+    "Actual latest hosted macOS/Linux/Python matrix and full fault union remain required.",
+    "Required exact Opus review provider429 remains blocked, not substituted.",
+    "No actual stock-omp/native/model/wake/performance or signed release acceptance."
+  ],
+  "runtime_changed": false,
+  "schema": "am/real-pre-source-fence-writer-consumer-proof-v1",
+  "source_hash": "3ce2c974c8b2583de4b11869e6c2f3af9b99ae6f010044c1c604d977ae6a22a3",
+  "source_overlay_sha256": "204eb184c89190804b27f67290f7a66e2a4031587b83da1b237aff75eee16f57",
+  "source_unchanged": true,
+  "why": "Current cooperative canonical writers serialize before the bank slot. Older metadata-race fixtures tried to reach a current writer bank-lock boundary from inside a frame-long source SH barrier and therefore could not establish their intended oldwriter overlap."
+}

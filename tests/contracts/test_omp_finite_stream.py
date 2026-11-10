@@ -11,10 +11,11 @@ from unittest import mock
 import uuid
 
 from world import World
+from cli_alias_fixtures import pre_source_fence_writers
 from contracts import test_checkpoint
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'skills/agent-memory/scripts'))
 from agent_memory import omp_stream as stream, turn_sources
-from agent_memory import bank_transactions, bank_writes, local_registry, omp_boundary, omp_installation, scope_binding
+from agent_memory import bank_writes, local_registry, omp_boundary, omp_installation, scope_binding
 from agent_memory.frontmatter import ContractError
 
 
@@ -929,7 +930,7 @@ class FrozenImports(unittest.TestCase):
 
 
 class CanonicalWriterContention(unittest.TestCase):
-    """Real bank/source authority and writer locks; not native qualification."""
+    """Exact pre-fence writers against current observers; not native qualification."""
 
     def setUp(self):
         self.stack = ExitStack()
@@ -963,6 +964,7 @@ class CanonicalWriterContention(unittest.TestCase):
         self.empty_shared_probes = 0
         self.observer_result = None
         self.observer_error = None
+        self.writer_modules = None
 
     def request(self):
         return {'request': {'schema': 'agent-memory/omp-observer-request-v2', 'action': 'ingest',
@@ -973,16 +975,23 @@ class CanonicalWriterContention(unittest.TestCase):
                                            'native_ids': ['native-a'], 'tool_ids': []}}
 
     def start_writer(self):
+        # Current writers serialize before publishing their bank slot. These
+        # metadata races exercise the real older writer that lacks that fence,
+        # including its EX-before-owner-publication order, without weakening
+        # either the current executor or the current writer implementation.
+        if self.writer_modules is None:
+            self.writer_modules = self.stack.enter_context(pre_source_fence_writers(self.world))
+        writes, transactions, storage = self.writer_modules
         if self.transactional:
-            files = bank_transactions.files_at(self.bank)
+            files = transactions.files_at(self.bank)
             files['activeContext.md'] += '\nCanonical transaction fixture update.\n'
-            proposal = bank_transactions.preview(self.repo, files, 'replace')
-            apply = bank_transactions.apply
+            proposal = transactions.preview(self.repo, files, 'replace')
+            apply = transactions.apply
             pause_stage = 'transaction-after-marker'
         else:
-            proposal = bank_writes.preview(self.repo, 'activeContext.md',
+            proposal = writes.preview(self.repo, 'activeContext.md',
                 (self.bank / 'activeContext.md').read_text() + '\nCanonical writer fixture update.\n')
-            apply = bank_writes.apply
+            apply = writes.apply
             pause_stage = 'locked-before-inventory'
         ready, release = threading.Event(), threading.Event()
         results, errors = [], []
@@ -1017,9 +1026,9 @@ class CanonicalWriterContention(unittest.TestCase):
             except BaseException as exc:
                 errors.append(exc)
                 ready.set()
-        self.stack.enter_context(mock.patch.object(bank_writes, 'fault', side_effect=fault))
-        self.stack.enter_context(mock.patch.object(local_registry.fcntl, 'flock', side_effect=publication_flock))
-        self.stack.enter_context(mock.patch.object(local_registry.os, 'fsync', side_effect=publication_fsync))
+        self.stack.enter_context(mock.patch.object(writes, 'fault', side_effect=fault))
+        self.stack.enter_context(mock.patch.object(storage.fcntl, 'flock', side_effect=publication_flock))
+        self.stack.enter_context(mock.patch.object(storage.os, 'fsync', side_effect=publication_fsync))
         writer = threading.Thread(target=run, daemon=True)
         def finish():
             release.set()
@@ -1088,10 +1097,10 @@ class CanonicalWriterContention(unittest.TestCase):
                 marker = stream.load((self.bank / '.agent-memory-transaction.md').read_bytes())
                 self.assertEqual(marker['schema'], 'agent-memory/transaction-marker-v1')
                 self.assertEqual(marker['transaction_id'], stream.load(owner)['operation_id'])
-            # Retry must not wait while holding either source or stream locks.
-            with turn_sources.source_barrier(self.repo, exclusive=True):
-                with turn_sources.private_lock(self.coverage.lock_path):
-                    pass
+            # Metadata retry must release its private stream lock. The outer
+            # frame source fence now intentionally lasts through the outcome.
+            with turn_sources.private_lock(self.coverage.lock_path):
+                pass
             self.release_writer()
         # Isolate the stream clock rather than changing time.sleep used by Git
         # subprocess internals or the real canonical writer thread.
@@ -1292,7 +1301,7 @@ class CanonicalWriterContention(unittest.TestCase):
             self.assertEqual(self.coverage._invalid_attempt_retry, key)
             self.assertEqual(path.read_bytes(), saved[0][0])
             observer.assert_not_called()
-            with turn_sources.source_barrier(self.repo, exclusive=True), turn_sources.private_lock(self.coverage.lock_path):
+            with turn_sources.private_lock(self.coverage.lock_path):
                 pass
             self.release_writer()
             if corruption == 'partial':
