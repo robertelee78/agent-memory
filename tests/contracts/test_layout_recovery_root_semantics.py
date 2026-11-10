@@ -70,6 +70,13 @@ class RecoveryRootSemanticsContract(unittest.TestCase):
         with World() as world:
             command, source = f.installed(world)
             repo, bank, native = f.memory(world, oversized=True)
+            feature = repo / 'feature.txt'
+            feature.write_text('Committed feature\n')
+            world.git('add', 'feature.txt', cwd=repo)
+            world.git('commit', '-m', 'Feature baseline', cwd=repo)
+            feature.write_text('Staged feature\n')
+            world.git('add', 'feature.txt', cwd=repo)
+            feature.write_text('Unstaged feature\n')
             _, inspected = f.inspect(world, command, repo)
             control = f.review_request(world, command, source, repo, inspected, native)
             rebind(control)
@@ -88,16 +95,20 @@ class RecoveryRootSemanticsContract(unittest.TestCase):
             directory = f.private_directory(world, bank, inspected['operation_id'])
             private_before = files(directory)
             index_path = repo / '.git/index'
-            index = index_path.read_bytes() if index_path.exists() else None
+            index = index_path.read_bytes()
+            feature_before = feature.read_bytes()
             output = world.inside('rewritten-history-proposal.json')
             result = prepare_process(world, command, repo, inspected, request, output)
             self.assertNotEqual(result.returncode, 0)
             self.assertFalse(output.exists())
             self.assertEqual(files(bank), before)
-            self.assertEqual(index_path.read_bytes() if index_path.exists() else None, index)
+            self.assertEqual(index_path.read_bytes(), index)
+            self.assertEqual(feature.read_bytes(), feature_before)
             self.assertEqual(files(directory), private_before)
             accepted = prepare_process(world, command, repo, inspected, control, world.inside('original-history-proposal.json'))
             self.assertEqual(accepted.returncode, 0, accepted.stdout + accepted.stderr)
+            self.assertEqual(index_path.read_bytes(), index)
+            self.assertEqual(feature.read_bytes(), feature_before)
 
     def test_terminal_marker_cannot_be_discarded_because_backup_exists(self):
         with World() as world:

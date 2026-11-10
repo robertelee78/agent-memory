@@ -38,7 +38,7 @@ class RecoveryBackupCaptureContract(unittest.TestCase):
             alias.symlink_to(backup)
             before_bank, before_private = snapshot(bank), snapshot(directory)
             index_path = repo / '.git/index'
-            index = index_path.read_bytes() if index_path.exists() else None
+            self.assertFalse(index_path.exists())
             for path in (str(backup), 'backup-evidence.md'):
                 with self.subTest(path=path):
                     bad = copy.deepcopy(request)
@@ -49,7 +49,7 @@ class RecoveryBackupCaptureContract(unittest.TestCase):
                     self.assertNotEqual(refused.returncode, 0)
                     self.assertEqual(snapshot(bank), before_bank)
                     self.assertEqual(snapshot(directory), before_private)
-                    self.assertEqual(index_path.read_bytes() if index_path.exists() else None, index)
+                    self.assertFalse(index_path.exists())
                     self.assertEqual(backup.read_bytes(), original)
                     self.assertTrue(alias.is_symlink())
             status = f.call(world, command, 'status', '--repo', repo,

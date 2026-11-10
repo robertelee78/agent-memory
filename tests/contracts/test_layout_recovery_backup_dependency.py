@@ -17,6 +17,13 @@ class RecoveryBackupDependencyContract(unittest.TestCase):
         with World() as w:
             command, source = f.installed(w)
             repo, bank, native = f.memory(w, oversized=True)
+            feature = repo / 'feature.txt'
+            feature.write_text('Committed feature\n')
+            w.git('add', 'feature.txt', cwd=repo)
+            w.git('commit', '-m', 'Feature baseline', cwd=repo)
+            feature.write_text('Staged feature\n')
+            w.git('add', 'feature.txt', cwd=repo)
+            feature.write_text('Unstaged feature\n')
             _, inspected = f.inspect(w, command, repo)
             operation = inspected['operation_id']
             directory = f.private_directory(w, bank, operation)
@@ -32,7 +39,8 @@ class RecoveryBackupDependencyContract(unittest.TestCase):
             bad['review']['unit_map_sha256'] = f.sha(f.encoded(bad['unit_map']))
             before_bank, before_private = files(bank), files(directory)
             index_path = repo / '.git/index'
-            index = index_path.read_bytes() if index_path.exists() else None
+            index = index_path.read_bytes()
+            feature_before = feature.read_bytes()
             output = w.inside('backup-only.json')
             refusal = f.call(w, command, 'prepare', '--repo', repo, '--operation', operation,
                              '--input', f.save(w, bad), '--output', output, expected=1)
@@ -40,7 +48,8 @@ class RecoveryBackupDependencyContract(unittest.TestCase):
             self.assertFalse(output.exists())
             self.assertEqual(files(bank), before_bank)
             self.assertEqual(files(directory), before_private)
-            self.assertEqual(index_path.read_bytes() if index_path.exists() else None, index)
+            self.assertEqual(index_path.read_bytes(), index)
+            self.assertEqual(feature.read_bytes(), feature_before)
             self.assertEqual(blob.read_bytes(), before_bank[history])
             proposal = w.inside('preserved.json')
             f.call(w, command, 'prepare', '--repo', repo, '--operation', operation,
@@ -49,6 +58,8 @@ class RecoveryBackupDependencyContract(unittest.TestCase):
             self.assertTrue(completed['semantic_recovery_complete'])
             self.assertEqual((bank / history).read_text(), native[history])
             self.assertEqual(blob.read_bytes(), before_bank[history])
+            self.assertEqual(index_path.read_bytes(), index)
+            self.assertEqual(feature.read_bytes(), feature_before)
 
     def test_later_admission_refuses_completed_repair_restore(self):
         with World() as w:
@@ -79,13 +90,13 @@ class RecoveryBackupDependencyContract(unittest.TestCase):
             child = f.private_directory(w, bank, preview['operation_id'])
             before_child = files(child)
             index_path = repo / '.git/index'
-            index = index_path.read_bytes() if index_path.exists() else None
+            self.assertFalse(index_path.exists())
             refused = f.call(w, command, 'rollback', '--repo', repo, '--proposal', restore, expected=1)
             self.assertFalse(refused['canonical_writes_performed'])
             self.assertEqual(files(bank), before_bank)
             self.assertEqual(files(directory), before_private)
             self.assertEqual(files(child), before_child)
-            self.assertEqual(index_path.read_bytes() if index_path.exists() else None, index)
+            self.assertFalse(index_path.exists())
             fresh = w.inside('after-admission-restore.json')
             refused = f.call(w, command, 'rollback', '--repo', repo, '--operation', operation,
                              '--output', fresh, expected=1)
@@ -94,7 +105,32 @@ class RecoveryBackupDependencyContract(unittest.TestCase):
             self.assertEqual(files(bank), before_bank)
             self.assertEqual(files(directory), before_private)
             self.assertEqual(files(child), before_child)
-            self.assertEqual(index_path.read_bytes() if index_path.exists() else None, index)
+            self.assertFalse(index_path.exists())
+
+    def test_later_ledger_resolution_blocks_restore_without_canonical_change(self):
+        with World() as w:
+            command, _, repo, bank, _, inspected, applied = f.small_pending(
+                w, '# Disposable scratch\n\nA temporary work-state note, not guidance.\n')
+            operation = inspected['operation_id']
+            directory = f.private_directory(w, bank, operation)
+            before = {path: body for path, body in files(bank).items()
+                      if not path.startswith('.agent-memory')}
+            f.call(w, command, 'rollback', '--repo', repo, '--operation', operation,
+                   '--output', w.inside('before-resolution-restore.json'))
+            unit_id, = applied['pending_unit_ids']
+            resolution = f.discard_proposal(w, command, repo, bank, inspected, unit_id)
+            f.call(w, command, 'resolve', '--repo', repo, '--proposal', resolution)
+            self.assertEqual({path: body for path, body in files(bank).items()
+                              if not path.startswith('.agent-memory')}, before)
+            head = json.loads((directory / 'ledger-head.json').read_text())
+            self.assertGreater(head['generation'], 0)
+            before_bank, before_private = files(bank), files(directory)
+            output = w.inside('after-resolution-restore.json')
+            f.call(w, command, 'rollback', '--repo', repo, '--operation', operation,
+                   '--output', output, expected=1)
+            self.assertFalse(output.exists())
+            self.assertEqual(files(bank), before_bank)
+            self.assertEqual(files(directory), before_private)
 
     def test_completed_repair_without_later_admission_can_restore(self):
         with World() as w:

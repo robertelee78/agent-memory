@@ -14,6 +14,13 @@ class PartialRecoveryAdmissionContract(unittest.TestCase):
             command, _ = f.installed(world)
             world.env['AGENT_MEMORY_NO_RECALL_CATALOG'] = '1'
             repo, bank, native = f.memory(world, oversized=True, handoff=True)
+            feature = repo / 'feature.txt'
+            feature.write_text('Committed feature\n')
+            world.git('add', 'feature.txt', cwd=repo)
+            world.git('commit', '-m', 'Feature baseline', cwd=repo)
+            feature.write_text('Staged feature\n')
+            world.git('add', 'feature.txt', cwd=repo)
+            feature.write_text('Unstaged feature\n')
             _, inspected = f.inspect(world, command, repo)
             identity = inspected['manifest']['identity']['scope_context']
             helper = test_admission.AdmissionContract('runTest')
@@ -35,21 +42,25 @@ class PartialRecoveryAdmissionContract(unittest.TestCase):
             requests = (('writes', 'inspect', '--repo', repo),
                         ('search', '--repo', repo, '--request', f.save(world, request)),
                         ('capture', '--repo', repo, '--request', f.save(world, capture)))
+            index_path = repo / '.git/index'
+            index = index_path.read_bytes()
+            feature_before = feature.read_bytes()
             for args in requests:
                 result = world.run([command, *args], check=False, timeout=60)
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertEqual(index_path.read_bytes(), index)
+                self.assertEqual(feature.read_bytes(), feature_before)
             active.write_bytes(oversized_bytes)
             (bank / 'MEMORY.md').write_bytes(router_bytes)
             handoff.write_bytes(handoff_bytes)
             before = {p.relative_to(bank).as_posix(): p.read_bytes() for p in bank.rglob('*') if p.is_file()}
-            index_path = repo / '.git/index'
-            index = index_path.read_bytes() if index_path.exists() else None
             for args in requests:
                 result = world.run([command, *args], check=False, timeout=60)
                 self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
                 self.assertEqual({p.relative_to(bank).as_posix(): p.read_bytes()
                                   for p in bank.rglob('*') if p.is_file()}, before)
-                self.assertEqual(index_path.read_bytes() if index_path.exists() else None, index)
+                self.assertEqual(index_path.read_bytes(), index)
+                self.assertEqual(feature.read_bytes(), feature_before)
 
     def test_one_of_eight_is_admitted_without_consuming_the_other_sources(self):
         with World() as world:
