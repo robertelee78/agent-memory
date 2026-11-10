@@ -7,7 +7,7 @@ import layout_recovery_fixtures as recovery
 
 
 class LayoutNestedFaults(unittest.TestCase):
-    def rollback_journey(self, stage, mode):
+    def rollback_journey(self, stage, mode, *, changed_path='event'):
         helper = nested.NestedReconciliationContract()
         with World() as world:
             command, source, repo, bank, native, inspected, applied = recovery.small_pending(world)
@@ -23,8 +23,9 @@ class LayoutNestedFaults(unittest.TestCase):
             helper.preview(world, command, repo, operation, transaction['operation_id'], 'finish', expected=1)
             preview, _ = helper.preview(world, command, repo, operation, transaction['operation_id'], 'rollback')
             if stage.endswith('after-progress'):
-                event = 'history/events/' + transaction['operation_id'] + '.md'
-                stage += ':' + event
+                paths = {'event': 'history/events/' + transaction['operation_id'] + '.md',
+                         'target': target, 'router': 'MEMORY.md'}
+                stage += ':' + paths[changed_path]
             fault = world.run([command, 'bank', 'recover-layout', 'recover-nested', '--repo', repo, '--proposal', preview],
                               check=False, timeout=30,
                               env={'AGENT_MEMORY_FAULT_STAGE': stage, 'AGENT_MEMORY_FAULT_MODE': mode})
@@ -117,7 +118,7 @@ class LayoutNestedFaults(unittest.TestCase):
     def test_retirement_binding_exit(self):
         self.receipt_journey('layout-recovery-retirement-after-binding', 'exit')
 
-    def early_journey(self, stage, mode):
+    def early_journey(self, stage, mode, *, changed_path='event'):
         helper = nested.NestedReconciliationContract()
         with World() as world:
             command, source, repo, bank, _, inspected, applied = recovery.small_pending(world)
@@ -126,9 +127,11 @@ class LayoutNestedFaults(unittest.TestCase):
             originals = {row['path']: (directory / row['blob']).read_bytes() for row in inspected['manifest']['sources']}
             hold = (bank / '.agent-memory-transaction.md').read_bytes()
             before = nested.canonical(bank)
-            proposal, transaction, _ = recovery.admission_proposal(world, command, source, repo, bank, inspected, full=False)
+            proposal, transaction, target = recovery.admission_proposal(world, command, source, repo, bank, inspected, full=False)
             if stage.endswith('after-rename'):
-                stage += ':history/events/' + transaction['operation_id'] + '.md'
+                paths = {'event': 'history/events/' + transaction['operation_id'] + '.md',
+                         'target': target, 'router': 'MEMORY.md'}
+                stage += ':' + paths[changed_path]
             fault = world.run([command, 'admission', 'apply', '--proposal', proposal], check=False, timeout=30,
                               env={'AGENT_MEMORY_FAULT_STAGE': stage, 'AGENT_MEMORY_FAULT_MODE': mode})
             self.assertEqual(fault.returncode, 86 if mode == 'exit' else 1, fault.stdout + fault.stderr)
@@ -166,3 +169,27 @@ class LayoutNestedFaults(unittest.TestCase):
 
     def test_rename_exit(self):
         self.early_journey('layout-recovery-nested-after-rename', 'exit')
+
+    def test_rename_target_error(self):
+        self.early_journey('layout-recovery-nested-after-rename', 'error', changed_path='target')
+
+    def test_rename_target_exit(self):
+        self.early_journey('layout-recovery-nested-after-rename', 'exit', changed_path='target')
+
+    def test_rename_router_error(self):
+        self.early_journey('layout-recovery-nested-after-rename', 'error', changed_path='router')
+
+    def test_rename_router_exit(self):
+        self.early_journey('layout-recovery-nested-after-rename', 'exit', changed_path='router')
+
+    def test_progress_target_error(self):
+        self.rollback_journey('layout-recovery-nested-rollback-after-progress', 'error', changed_path='target')
+
+    def test_progress_target_exit(self):
+        self.rollback_journey('layout-recovery-nested-rollback-after-progress', 'exit', changed_path='target')
+
+    def test_progress_router_error(self):
+        self.rollback_journey('layout-recovery-nested-rollback-after-progress', 'error', changed_path='router')
+
+    def test_progress_router_exit(self):
+        self.rollback_journey('layout-recovery-nested-rollback-after-progress', 'exit', changed_path='router')
