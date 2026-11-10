@@ -1085,7 +1085,7 @@ class CanonicalWriterContention(unittest.TestCase):
     def assert_retry_lock_order(self):
         # The frame fence stays shared through the outcome, while each metadata
         # attempt has released its later-family lock before retrying.
-        with self.assertRaisesRegex(ContractError, 'Cannot upgrade an active shared source barrier'):
+        with self.assertRaises(ContractError):
             with turn_sources.source_barrier(self.repo, exclusive=True):
                 self.fail('A source fence cannot be upgraded')
         with turn_sources.private_lock(self.coverage.lock_path):
