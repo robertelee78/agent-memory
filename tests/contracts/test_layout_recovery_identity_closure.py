@@ -1,4 +1,5 @@
 """Public recovery identity and private-discovery boundary contracts."""
+import fcntl
 import json
 import os
 from pathlib import Path
@@ -44,15 +45,19 @@ class RecoveryIdentityClosureContract(unittest.TestCase):
             command, _ = f.installed(w)
             repo, bank, _ = f.memory(w)
             lock = bank / '.agent-memory.lock'
-            lock.write_text(json.dumps({'operation_id': str(uuid.uuid4()), 'operation': 'bank-capture',
-                                        'host': socket.gethostname(), 'pid': os.getpid(),
-                                        'start': '2026-10-22T18:00:00Z'}))
-            lock.chmod(0o600)
-            before = bank_bytes(bank)
-            result = f.call(w, command, 'inspect', '--repo', repo,
-                            '--output', w.inside('live-lock-inspect.json'), expected=1)
-            self.assertFalse(result['canonical_writes_performed'])
-            self.assertEqual(bank_bytes(bank), before)
+            owner = {'operation_id': str(uuid.uuid4()), 'operation': 'bank-capture',
+                     'host': socket.gethostname(), 'pid': os.getpid(), 'start': '2026-10-22T18:00:00Z'}
+            with lock.open('x') as held:
+                lock.chmod(0o600)
+                fcntl.flock(held.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+                json.dump(owner, held)
+                held.flush()
+                os.fsync(held.fileno())
+                before = bank_bytes(bank)
+                result = f.call(w, command, 'inspect', '--repo', repo,
+                                '--output', w.inside('live-lock-inspect.json'), expected=1)
+                self.assertFalse(result['canonical_writes_performed'])
+                self.assertEqual(bank_bytes(bank), before)
 
     def test_authority_fetch_push_disagreement_refuses_recovery_inspection(self):
         with World() as w:
