@@ -15,15 +15,16 @@
   },
   "failures": 1,
   "negative_result": {
-    "corrected_execution": "Pending separate all-helper-consumer campaign; not folded into this failed aggregate.",
+    "corrected_execution": "Separate complete six-file helper-consumer execution passed 60 workers / 118 tests after fixture-only synchronization. The original 504-worker aggregate remains failed; see the separate corrected execution receipt.",
     "correction": "Fixture-only synchronization defers supplementary inventory until actual writer exit; both ordering subcases, verified finite result, actual CLOSED inventory and original deadlines remain mandatory. No exception retry or product guard suppression.",
     "exception": "SourceTransportBusy",
     "source_derived_diagnosis": "Installed helper verifies the finite subprocess result before supplementary CLOSED inventory; the latter is a separate source-barrier observation that may race the intentionally overlapping writer. This is not proof of the unrecorded historical native event158 cause.",
     "subcase": "writer_first=False",
     "suite": "omp-writer-fence-ordering"
   },
+  "corrected_execution_receipt": "v015-corrected-ordering-readback-helper-consumers-scoped-proof-20261110.json",
+  "installed_public_journeys_receipt": "v015-integrated-peer-public-journeys-scoped-proof-20261110.json",
   "open_gates": [
-    "Corrected all-helper-consumer execution",
     "Independent exact Opus review",
     "Exact final-source full hosted matrix",
     "Final stock-omp native and wake qualification",
