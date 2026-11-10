@@ -8,7 +8,7 @@ import uuid
 
 from world import World
 import layout_recovery_fixtures as recovery
-from runtime_update_fixtures import ROOT, advance, call, fixture, owned, receipt_path, snapshot
+from runtime_update_fixtures import advance, call, fixture, owned, receipt_path, snapshot
 
 
 class HeldRuntimeRollbackContract(unittest.TestCase):
@@ -56,7 +56,10 @@ class HeldRuntimeRollbackContract(unittest.TestCase):
             call(world, receipt, '--layout-quiescence', renewal, expected=86,
                  env={'AGENT_MEMORY_FAULT_STAGE': 'update-after-activate-0', 'AGENT_MEMORY_FAULT_MODE': 'exit'})
             before_private = snapshot(directory)
-            result = world.run([sys.executable, '-I', ROOT / 'scripts/installer.py', 'recover'],
+            # The active artifact has the reviewed declaration for this hold;
+            # the unrelated checkout helper does not.
+            result = world.run([sys.executable, '-I', '-B',
+                                Path(receipt['source']['pack']) / 'scripts/installer.py', 'recover'],
                                check=False, timeout=60)
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             self.assertTrue(json.loads(result.stdout)['verified'])
