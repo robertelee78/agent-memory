@@ -124,13 +124,15 @@ class RecoveryBackupDependencyContract(unittest.TestCase):
                               if not path.startswith('.agent-memory')}, before)
             head = json.loads((directory / 'ledger-head.json').read_text())
             self.assertGreater(head['generation'], 0)
-            before_bank, before_private = files(bank), files(directory)
+            before_bank, before_private = files(bank), files(directory.parent)
+            self.assertFalse((repo / '.git/index').exists())
             output = w.inside('after-resolution-restore.json')
             f.call(w, command, 'rollback', '--repo', repo, '--operation', operation,
                    '--output', output, expected=1)
             self.assertFalse(output.exists())
             self.assertEqual(files(bank), before_bank)
-            self.assertEqual(files(directory), before_private)
+            self.assertEqual(files(directory.parent), before_private)
+            self.assertFalse((repo / '.git/index').exists())
 
     def test_completed_repair_without_later_admission_can_restore(self):
         with World() as w:
