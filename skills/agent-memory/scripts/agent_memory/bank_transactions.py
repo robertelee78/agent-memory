@@ -3,10 +3,12 @@ from __future__ import annotations
 
 import argparse
 from datetime import datetime, timezone
+import errno
 import json
 import os
 from pathlib import Path
 import re
+import stat
 import sys
 import tempfile
 import uuid
@@ -103,15 +105,28 @@ def preview(repo, files, operation="compact"):
 def check_layout(bank, participants, observed):
     contract.bank_root(bank)
     contract.portable_aliases([*contract.physical_paths(bank), *participants])
+
+    def mode_or_missing(target):
+        try:
+            return os.stat(target, follow_symlinks=False).st_mode
+        except OSError as exc:
+            if exc.errno in (errno.ENOENT, errno.ENOTDIR):
+                return None
+            raise ContractError("Cannot inspect canonical target layout; preserve the existing layout") from exc
+        except ValueError as exc:
+            raise ContractError("Cannot inspect canonical target layout; preserve the existing layout") from exc
+
+    bank_path = os.fspath(bank)
     for path in participants:
-        target = bank / path
-        if target.exists() and (not target.is_file() or path not in observed):
+        mode = mode_or_missing(os.path.join(bank_path, path))
+        if mode is not None and (not stat.S_ISREG(mode) or path not in observed):
             raise ContractError("Canonical target has an unobserved physical occupant; preserve it for inspection")
-        for parent in target.parents:
-            if parent == bank:
-                break
-            if parent.exists() and not parent.is_dir():
+        parent = path.rpartition("/")[0]
+        while parent:
+            mode = mode_or_missing(os.path.join(bank_path, parent))
+            if mode is not None and not stat.S_ISDIR(mode):
                 raise ContractError("Canonical target has a non-directory parent; preserve the existing layout")
+            parent = parent.rpartition("/")[0]
 
 
 def preflight(bank, p, observed=None):

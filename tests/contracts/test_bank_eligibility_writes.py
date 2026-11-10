@@ -1,5 +1,6 @@
 """Intended-bank capacity and owned transaction marker regressions."""
 import copy
+import errno
 import json
 import os
 from pathlib import Path
@@ -54,6 +55,91 @@ class BankEligibilityWritesContract(unittest.TestCase):
     def oversized(self):
         # The character count is below the bound; complete UTF-8 bytes exceed it.
         return '# BODY_SECRET_CANARY\n\n' + 'é' * 8190 + '\n'
+
+    def test_transaction_preflight_refuses_incomplete_inventory_and_failed_target_stat(self):
+        with World() as w:
+            repo, bank, _, _, proposal = self.transaction.fixture(w)
+            self.feature(w, repo)
+            hidden = bank / 'topics'
+            hidden.mkdir()
+            occupant = hidden / 'unobserved.bin'
+            occupant.write_bytes(b'preserve foreign occupant')
+            before = self.protected(w, repo, bank)
+            real_scandir = os.scandir
+
+            def inaccessible(path):
+                if os.fspath(path) == os.fspath(hidden):
+                    raise PermissionError(errno.EACCES, 'inaccessible directory', path)
+                return real_scandir(path)
+
+            with patch.object(os, 'scandir', side_effect=inaccessible):
+                with self.assertRaises(ContractError):
+                    bank_transactions.preflight(bank, proposal['proposal'])
+            self.assertEqual(self.protected(w, repo, bank), before)
+
+            class UnclassifiableEntry:
+                def __init__(self, entry):
+                    self.name = entry.name
+
+                def is_dir(self):
+                    raise OSError(errno.EIO, 'unavailable entry type')
+
+            class IncompleteScan:
+                def __init__(self, scan):
+                    self.scan = scan
+
+                def __enter__(self):
+                    self.scan.__enter__()
+                    return self
+
+                def __exit__(self, *args):
+                    return self.scan.__exit__(*args)
+
+                def __iter__(self):
+                    return self
+
+                def __next__(self):
+                    entry = next(self.scan)
+                    return UnclassifiableEntry(entry) if entry.name == hidden.name else entry
+
+            def unclassifiable(path):
+                scan = real_scandir(path)
+                return IncompleteScan(scan) if os.fspath(path) == os.fspath(bank) else scan
+
+            with patch.object(os, 'scandir', side_effect=unclassifiable):
+                with self.assertRaises(ContractError):
+                    bank_transactions.preflight(bank, proposal['proposal'])
+            self.assertEqual(self.protected(w, repo, bank), before)
+
+            real_stat = os.stat
+            target = bank / 'activeContext.md'
+
+            def failed_stat(path, *args, **kwargs):
+                if os.fspath(path) == os.fspath(target):
+                    raise OSError(errno.EIO, 'unavailable metadata', path)
+                return real_stat(path, *args, **kwargs)
+
+            with patch.object(os, 'stat', side_effect=failed_stat):
+                with self.assertRaises(ContractError):
+                    bank_transactions.preflight(bank, proposal['proposal'])
+            self.assertEqual(self.protected(w, repo, bank), before)
+
+    def test_transaction_preflight_refuses_symlink_inside_runtime_directory(self):
+        with World() as w:
+            repo, bank, _, _, proposal = self.transaction.fixture(w)
+            self.feature(w, repo)
+            runtime = bank / '.agent-memory-private'
+            runtime.mkdir()
+            outside = w.inside('outside')
+            outside.write_bytes(b'preserve outside')
+            (runtime / 'link').symlink_to(outside)
+            before = self.protected(w, repo, bank)
+            with self.assertRaises(ContractError):
+                bank_transactions.preflight(bank, proposal['proposal'])
+            self.assertEqual(self.protected(w, repo, bank), before)
+            self.assertTrue((runtime / 'link').is_symlink())
+            self.assertEqual(outside.read_bytes(), b'preserve outside')
+
 
     def test_render_and_single_preview_reject_complete_utf8_source(self):
         with World() as w:

@@ -3,9 +3,11 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import posixpath
 from pathlib import Path, PurePosixPath
 import re
+import stat
 import sys
 import unicodedata
 import uuid
@@ -293,12 +295,26 @@ def bank_root(bank):
 
 def physical_paths(bank):
     paths = []
-    for target in bank.rglob("*"):
-        if target.is_symlink():
-            raise ContractError("Bank paths must not be symlinks")
-        path = target.relative_to(bank).as_posix()
-        if not runtime_path(path):
-            paths.append(path)
+
+    def traversal_error(exc):
+        raise ContractError("Cannot completely inspect bank paths; preserve the existing layout") from exc
+
+    for directory, directories, files in os.walk(bank, followlinks=False, onerror=traversal_error):
+        relative = os.path.relpath(directory, bank)
+        for entries, classified_as_file in ((directories, False), (files, True)):
+            for name in entries:
+                target = os.path.join(directory, name)
+                try:
+                    mode = os.lstat(target).st_mode
+                except (OSError, ValueError) as exc:
+                    raise ContractError("Cannot inspect bank path; preserve the existing layout") from exc
+                if stat.S_ISLNK(mode):
+                    raise ContractError("Bank paths must not be symlinks")
+                if classified_as_file and stat.S_ISDIR(mode):
+                    raise ContractError("Cannot completely inspect bank paths; preserve the existing layout")
+                path = name if relative == "." else os.path.join(relative, name)
+                if not runtime_path(path):
+                    paths.append(path)
     return paths
 
 
