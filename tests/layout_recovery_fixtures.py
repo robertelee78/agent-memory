@@ -179,9 +179,22 @@ def review_request(world, command, source, repo, inspected, intended, *, pending
                 'manifest_sha256': sha(encoded(manifest)), 'units': units}
     stamp = manifest['inspected_at']; review_id = str(uuid.uuid4())
     inherited = inherited_rows(world, manifest)
+    physical = {row['path']: row for row in manifest['physical_entries']}
+    generated_xattrs = physical['MEMORY.md']['xattrs']
+    new_directories = {str(parent) for path in intended for parent in Path(path).parents
+                       if str(parent) != '.' and str(parent) not in physical}
+    metadata = {'files': {path: {'uid': physical[path]['uid'] if path in physical else os.geteuid(),
+                                'gid': physical[path]['gid'] if path in physical else os.getegid(),
+                                'mode': physical[path]['mode'] & 0o777 if path in physical else 0o644,
+                                'xattrs': dict(physical[path]['xattrs'] if path in physical else generated_xattrs)}
+                          for path in intended},
+                'directories': {path: {'uid': os.geteuid(), 'gid': os.getegid(), 'mode': 0o755,
+                                       'xattrs': dict(manifest['bank_binding']['xattrs'])}
+                                for path in new_directories}}
     review = {'schema': 'agent-memory/layout-review-v1', 'review_id': review_id, 'operation_id': operation,
               'manifest_sha256': sha(encoded(manifest)), 'unit_map_sha256': sha(encoded(unit_map)),
-              'intended_files_sha256': sha(encoded(intended)), 'authority_sha256': sha(encoded(manifest['identity']['project_evidence'])),
+              'intended_files_sha256': sha(encoded(intended)), 'metadata_plan_sha256': sha(encoded(metadata)),
+              'authority_sha256': sha(encoded(manifest['identity']['project_evidence'])),
               'author': author, 'reviewer': reviewer, 'reviewed_at': stamp,
               'unit_decisions': [{'unit_id': unit['unit_id'], 'disposition': unit['disposition'], 'rationale': unit['reason']} for unit in units],
               'inherited_frontier_sha256': sha(encoded(inherited)),
@@ -189,11 +202,6 @@ def review_request(world, command, source, repo, inspected, intended, *, pending
                   'rationale': 'Retain original reviewed obligation and stable identity; no admission by this repair'} for row in inherited],
               'semantic_preservation': True, 'security': True, 'identity': True, 'decision': 'approve',
               'evidence': 'Controlled fixture review of full original/context pages and complete native intended map'}
-    physical = {row['path']: row for row in manifest['physical_entries']}
-    metadata = {'files': {path: {'uid': physical[path]['uid'] if path in physical else os.geteuid(),
-                                'gid': physical[path]['gid'] if path in physical else os.getegid(),
-                                'mode': physical[path]['mode'] & 0o777 if path in physical else 0o644} for path in intended},
-                'directories': {}}
     attestation = None
     if inherited or any(unit['disposition'] == 'pending-admission' for unit in units):
         completed = world.run([sys.executable, '-I', source / 'scripts/artifact.py', 'inspect', '--pack', source], check=False)

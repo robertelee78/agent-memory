@@ -90,7 +90,7 @@ def operation(repo, operation_id):
     if (not uuid_valid(manifest['project_id']) or not isinstance(manifest['sources'], list)
             or len(manifest['sources']) > raw.MAX_FILES or not isinstance(manifest['physical_entries'], list)
             or len(manifest['physical_entries']) > raw.MAX_ENTRIES
-            or manifest['metadata_policy'] != 'ordinary-modes-ownership-no-acl-xattr-flags'):
+            or manifest['metadata_policy'] != 'ordinary-modes-ownership-darwin-provenance-exact-no-acl-other-xattr-flags'):
         raise ContractError('Recovery manifest identity/type/capacity is invalid')
     storage.time_value(manifest['inspected_at'])
     ids = set(); paths = set()
@@ -258,9 +258,9 @@ def unit_map_value(value, manifest, intended, retained=None):
     return value
 
 
-def review_value(review, manifest, unit_map, intended, author, inherited=()):
+def review_value(review, manifest, unit_map, intended, author, metadata, inherited=()):
     fields(review, {'schema', 'review_id', 'operation_id', 'manifest_sha256', 'unit_map_sha256',
-                    'intended_files_sha256', 'authority_sha256', 'author', 'reviewer', 'reviewed_at',
+                    'intended_files_sha256', 'metadata_plan_sha256', 'authority_sha256', 'author', 'reviewer', 'reviewed_at',
                     'unit_decisions', 'inherited_frontier_sha256', 'inherited_unit_decisions',
                     'semantic_preservation', 'security', 'identity', 'decision', 'evidence'},
            'agent-memory/layout-review-v1')
@@ -270,6 +270,7 @@ def review_value(review, manifest, unit_map, intended, author, inherited=()):
             or review['manifest_sha256'] != digest(encoded(manifest))
             or review['unit_map_sha256'] != digest(encoded(unit_map))
             or review['intended_files_sha256'] != digest(encoded(intended))
+            or review['metadata_plan_sha256'] != digest(encoded(metadata))
             or review['authority_sha256'] != digest(encoded(manifest['identity']['project_evidence']))
             or review['author'] != author or review['decision'] != 'approve'
             or any(review[key] is not True for key in ('semantic_preservation', 'security', 'identity'))
@@ -358,11 +359,12 @@ def metadata_plan(value, manifest, intended, retained_source_ids=()):
         raise ContractError('Required metadata plan must cover the full intended map')
     original = {row['path']: row for row in manifest['physical_entries']}
     for path, facts in value['files'].items():
-        fields(facts, {'uid', 'gid', 'mode'})
-        if any(type(facts[key]) is not int for key in facts) or not 0 <= facts['mode'] <= 0o777:
-            raise ContractError('Recovery metadata requires ordinary exact ownership/mode')
+        fields(facts, {'uid', 'gid', 'mode', 'xattrs'})
+        if (any(type(facts[key]) is not int for key in ('uid', 'gid', 'mode')) or not 0 <= facts['mode'] <= 0o777
+                or not raw.valid_xattrs(facts['xattrs'])):
+            raise ContractError('Recovery metadata requires ordinary exact ownership/mode and supported xattrs')
         old = original.get(path)
-        if old and (old['type'] != 'file' or facts != {'uid': old['uid'], 'gid': old['gid'], 'mode': stat.S_IMODE(old['mode'])}):
+        if old and (old['type'] != 'file' or facts != {'uid': old['uid'], 'gid': old['gid'], 'mode': stat.S_IMODE(old['mode']), 'xattrs': old['xattrs']}):
             raise ContractError('Recovery must preserve original required file metadata')
         changed = old is None or old.get('sha256') != digest(intended[path].encode())
         if changed and (facts['uid'] != os.geteuid() or facts['gid'] not in {os.getegid(), *os.getgroups()}):
@@ -371,9 +373,9 @@ def metadata_plan(value, manifest, intended, retained_source_ids=()):
     if set(value['directories']) != needed:
         raise ContractError('Recovery must pin every newly created directory')
     for path, facts in value['directories'].items():
-        raw.path_value(path); fields(facts, {'uid', 'gid', 'mode'})
+        raw.path_value(path); fields(facts, {'uid', 'gid', 'mode', 'xattrs'})
         if (facts['uid'] != os.geteuid() or facts['gid'] not in {os.getegid(), *os.getgroups()}
-                or type(facts['mode']) is not int or not 0 <= facts['mode'] <= 0o777):
+                or type(facts['mode']) is not int or not 0 <= facts['mode'] <= 0o777 or not raw.valid_xattrs(facts['xattrs'])):
             raise ContractError('pending-metadata-preservation')
     for row in manifest['physical_entries']:
         if (row['type'] == 'file' and not row['runtime'] and row['path'] not in intended
@@ -441,9 +443,9 @@ def _prepare(repo, operation_id, request, owner):
     for path, body in intended.items():
         security.ensure_safe({path: path + '\n' + body})
     unit_map = unit_map_value(request['unit_map'], manifest, intended, retained)
-    review = review_value(request['review'], manifest, unit_map, intended, request['author'], inherited)
-    preserve_records(directory, manifest, intended, unit_map)
     metadata = metadata_plan(request['metadata_plan'], manifest, intended, retained_ids)
+    review = review_value(request['review'], manifest, unit_map, intended, request['author'], metadata, inherited)
+    preserve_records(directory, manifest, intended, unit_map)
     bank.file_topology({source['path'] for source in manifest['sources']} | set(intended))
     tx.check_layout(target, {source['path'] for source in manifest['sources']} | set(intended),
                     {source['path']: source['sha256'] for source in manifest['sources']})
@@ -586,14 +588,14 @@ def atomic_marker(target, before, after, owner, *, name=MARKER, transaction=None
 
 
 def view(target, ignore=()):
-    physical, _, _ = raw.inventory(target, allow_temporaries=True)
+    physical, _, _ = raw.inventory(target, allow_temporaries=True, ignored_paths=set(ignore))
     ignored = {'.agent-memory.lock', MARKER, SENTINEL, *ignore}
     rows = []
     for row in physical:
         if row['path'] in ignored:
             continue
         if row['type'] == 'directory':
-            row = {key: row[key] for key in ('path', 'type', 'runtime', 'dev', 'ino', 'mode', 'uid', 'gid')}
+            row = {key: row[key] for key in ('path', 'type', 'runtime', 'dev', 'ino', 'mode', 'uid', 'gid', 'xattrs')}
         rows.append(row)
     return rows
 
@@ -605,7 +607,7 @@ def manifest_view(manifest):
             continue
         row = dict(item)
         if row['type'] == 'directory':
-            row = {key: row[key] for key in ('path', 'type', 'runtime', 'dev', 'ino', 'mode', 'uid', 'gid')}
+            row = {key: row[key] for key in ('path', 'type', 'runtime', 'dev', 'ino', 'mode', 'uid', 'gid', 'xattrs')}
         rows.append(row)
     return rows
 
@@ -632,7 +634,8 @@ def rebind(root, manifest, owner, transaction):
     old = manifest['identity']
     if resolved['scope_context'] != old['scope_context'] or raw.git_pins(root) != manifest['git']:
         raise ContractError('Recovery identity/authority/settings/HEAD/index pins changed')
-    binding = {key: raw.signature(target.stat())[key] for key in ('dev', 'ino', 'mode', 'uid', 'gid')}
+    binding = {**{key: raw.signature(target.stat())[key] for key in ('dev', 'ino', 'mode', 'uid', 'gid')},
+               'xattrs': raw.metadata_supported(target)}
     if binding != manifest['bank_binding']:
         raise ContractError('Recovery bank binding changed')
     # Keep remote/checkout facts, excluding only the router extraction replaced
@@ -675,7 +678,7 @@ def check_review(root, directory, manifest, proposal):
     if (proposal['inherited_unit_ids'] != sorted(row['unit_id'] for row in inherited)
             or proposal['inherited_frontier_sha256'] != digest(encoded(inherited))):
         raise ContractError('Recovery inherited private obligations changed')
-    review_value(review, manifest, unit_map, proposal['intended_files'], proposal['author'], inherited)
+    review_value(review, manifest, unit_map, proposal['intended_files'], proposal['author'], proposal['metadata_plan'], inherited)
     preserve_records(directory, manifest, proposal['intended_files'], unit_map)
     metadata_plan(proposal['metadata_plan'], manifest, proposal['intended_files'], proposal['retained_source_ids'])
     for path, body in proposal['intended_files'].items():
@@ -728,12 +731,8 @@ def install_sentinel(root, target, proposal, owner, transaction):
 
 
 def set_metadata(descriptor, facts):
-    before = os.fstat(descriptor)
-    if before.st_uid != facts['uid'] or before.st_gid != facts['gid']:
-        os.fchown(descriptor, facts['uid'], facts['gid'])
-    os.fchmod(descriptor, facts['mode'])
     after = os.fstat(descriptor)
-    if {'uid': after.st_uid, 'gid': after.st_gid, 'mode': stat.S_IMODE(after.st_mode)} != facts:
+    if {'uid': after.st_uid, 'gid': after.st_gid, 'mode': stat.S_IMODE(after.st_mode)} != {key: facts[key] for key in ('uid', 'gid', 'mode')}:
         raise ContractError('pending-metadata-preservation')
 
 
@@ -749,11 +748,11 @@ def replace_source(root, target, path, body, facts, running, context):
     if body is not None:
         if context.proposal['schema'] == 'agent-memory/layout-child-restore-v1':
             rows = context.proposal['base_view'] + context.proposal['desired_view']
-            allowed = [{'uid': row['uid'], 'gid': row['gid'], 'mode': stat.S_IMODE(row['mode'])}
+            allowed = [{'uid': row['uid'], 'gid': row['gid'], 'mode': stat.S_IMODE(row['mode']), 'xattrs': row['xattrs']}
                        for row in rows if row['path'] == path and row.get('sha256') == body_sha]
         else:
             rows = context.manifest['physical_entries']
-            allowed = [{'uid': row['uid'], 'gid': row['gid'], 'mode': stat.S_IMODE(row['mode'])}
+            allowed = [{'uid': row['uid'], 'gid': row['gid'], 'mode': stat.S_IMODE(row['mode']), 'xattrs': row['xattrs']}
                        for row in rows if row['path'] == path and row.get('sha256') == body_sha]
             if path in context.proposal['metadata_plan']['files'] and action['after'] == body_sha:
                 allowed.append(context.proposal['metadata_plan']['files'][path])
@@ -771,12 +770,15 @@ def replace_source(root, target, path, body, facts, running, context):
         parent = descriptors[-1]
         if body is not None:
             candidate = Path(temps.source_name(json.loads(transaction)['operation_id'], path)).name
-            fd = os.open(candidate, os.O_CREAT | os.O_EXCL | os.O_WRONLY | os.O_NOFOLLOW, 0o600, dir_fd=parent)
+            fd = os.open(candidate, os.O_CREAT | os.O_EXCL | os.O_WRONLY | os.O_NOFOLLOW, facts['mode'], dir_fd=parent)
             temporary = candidate
             with os.fdopen(fd, 'wb') as stream:
                 set_metadata(stream.fileno(), facts)
                 stream.write(body); stream.flush(); os.fsync(stream.fileno())
+            if raw.metadata_supported(target / Path(path).parent / candidate) != facts['xattrs']:
+                raise ContractError('pending-metadata-preservation')
             writes.fault('layout-recovery-temporary-write:' + path)
+            temporary_facts = raw.signature(os.stat(candidate, dir_fd=parent, follow_symlinks=False))
         ignored = str(Path(path).parent / temporary) if temporary else None
         if ignored and ignored.startswith('./'):
             ignored = ignored[2:]
@@ -791,11 +793,24 @@ def replace_source(root, target, path, body, facts, running, context):
             if (opened.st_dev, opened.st_ino) != (actual.st_dev, actual.st_ino):
                 raise ContractError('Recovery replacement parent binding changed')
         writes.fault('layout-recovery-before-replace:' + path)
+        original = next((row for row in running if row['path'] == path), None)
+        if original is not None:
+            current_hash, current_facts = raw.read_source(target, path, hash_only=True)
+            if (current_hash != original['sha256'] or any(current_facts[key] != original[key] for key in current_facts)
+                    or raw.metadata_supported(target / path) != original['xattrs']):
+                raise ContractError('Recovery source changed immediately before replacement')
+        if temporary is not None:
+            current_hash, current_facts = raw.read_source(target, ignored, hash_only=True)
+            if (current_hash != body_sha or current_facts != temporary_facts
+                    or raw.metadata_supported(target / ignored) != facts['xattrs']):
+                raise ContractError('Recovery temporary changed immediately before replacement')
         if body is None:
             os.unlink(Path(path).name, dir_fd=parent)
         else:
             os.replace(temporary, Path(path).name, src_dir_fd=parent, dst_dir_fd=parent)
             temporary = None
+            if raw.metadata_supported(target / path) != facts['xattrs']:
+                raise ContractError('pending-metadata-preservation')
         os.fsync(parent)
         writes.fault('layout-recovery-after-rename:' + path)
     finally:
@@ -812,21 +827,15 @@ def new_directories(target, proposal):
             parts = Path(path).parts
             for part in parts[:-1]:
                 descriptors.append(os.open(part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=descriptors[-1]))
-            created = False
             try:
                 os.mkdir(parts[-1], facts['mode'], dir_fd=descriptors[-1])
-                created = True
             except FileExistsError:
                 pass
             child = os.open(parts[-1], os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=descriptors[-1])
             try:
-                info = os.fstat(child)
-                if {'uid': info.st_uid, 'gid': info.st_gid, 'mode': stat.S_IMODE(info.st_mode)} != facts:
-                    # Only a just-created ordinary directory can receive its
-                    # reviewed metadata, never an unexpected existing occupant.
-                    if not created:
-                        raise ContractError('Recovery directory plan has an unknown occupant')
-                    set_metadata(child, facts)
+                set_metadata(child, facts)
+                if raw.metadata_supported(target / path) != facts['xattrs']:
+                    raise ContractError('pending-metadata-preservation')
                 os.fsync(child); os.fsync(descriptors[-1])
             finally:
                 os.close(child)
@@ -852,7 +861,8 @@ def expected_result(proposal, manifest, current, *, rollback=False):
     for path, value in desired.items():
         row, facts = actual[path], value['facts']
         mode = stat.S_IMODE(facts['mode'])
-        if row['sha256'] != value['sha256'] or (row['uid'], row['gid'], stat.S_IMODE(row['mode'])) != (facts['uid'], facts['gid'], mode):
+        if (row['sha256'] != value['sha256'] or row['xattrs'] != facts['xattrs']
+                or (row['uid'], row['gid'], stat.S_IMODE(row['mode'])) != (facts['uid'], facts['gid'], mode)):
             raise ContractError('Recovery readback bytes/required metadata do not match the reviewed outcome')
     # Every runtime aid and preexisting directory remains physically bound.
     original_rows = {row['path']: row for row in manifest_view(manifest)}
@@ -864,6 +874,10 @@ def expected_result(proposal, manifest, current, *, rollback=False):
     extra_dirs = {path for path, row in current_rows.items() if row['type'] == 'directory'} - {path for path, row in original_rows.items() if row['type'] == 'directory'}
     if extra_dirs != (set() if rollback else set(proposal['metadata_plan']['directories'])):
         raise ContractError('Unknown directory introduced into recovery result')
+    for path in extra_dirs:
+        row, facts = current_rows[path], proposal['metadata_plan']['directories'][path]
+        if (row['uid'], row['gid'], stat.S_IMODE(row['mode']), row['xattrs']) != (facts['uid'], facts['gid'], facts['mode'], facts['xattrs']):
+            raise ContractError('Recovery directory metadata readback differs from the reviewed plan')
     return True
 
 
@@ -952,7 +966,7 @@ def run_journal(root, target, directory, manifest, proposal, owner, transaction,
             facts = proposal['metadata_plan']['files'].get(path)
         else:
             old = next((row for row in manifest['physical_entries'] if row['path'] == path), None)
-            facts = {'uid': old['uid'], 'gid': old['gid'], 'mode': stat.S_IMODE(old['mode'])} if old else None
+            facts = {'uid': old['uid'], 'gid': old['gid'], 'mode': stat.S_IMODE(old['mode']), 'xattrs': old['xattrs']} if old else None
         replace_source(root, target, path, body, facts, running, context)
         running = view(target)
         progress = {'schema': 'agent-memory/layout-recovery-progress-v1', 'operation_id': proposal['operation_id'],
@@ -969,6 +983,11 @@ def run_journal(root, target, directory, manifest, proposal, owner, transaction,
             if location.exists():
                 if location.is_symlink() or not location.is_dir() or any(location.iterdir()):
                     raise ContractError('Created directory gained an unrelated occupant; preserve it')
+                info = location.stat(follow_symlinks=False)
+                facts = proposal['metadata_plan']['directories'][path]
+                if ({'uid': info.st_uid, 'gid': info.st_gid, 'mode': stat.S_IMODE(info.st_mode),
+                     'xattrs': raw.metadata_supported(location)} != facts):
+                    raise ContractError('Recovery directory metadata changed before rollback removal')
                 location.rmdir(); tx.flush_directory(location.parent)
         running = view(target)
     writes.fault('layout-recovery-before-final-readback')
@@ -985,6 +1004,7 @@ def run_journal(root, target, directory, manifest, proposal, owner, transaction,
                'intended_manifest_sha256': digest(encoded(proposal['intended_files'])),
                'outcome': 'layout-restored' if mode == 'finish' else 'rolled-back',
                'readback_at': storage.now(), 'verified': True, 'byte_metadata_readback_verified': True,
+               'exact_xattr_readback_verified': True,
                'resulting_view': running,
                'changed_memory_paths': [path['path'] for path in proposal['actions']],
                'canonical_eligibility_at_commit': eligible, 'pending_unit_ids_at_commit': units,
@@ -1005,7 +1025,7 @@ def partial_boundary(proposal, manifest, current):
         if path not in before and path not in proposal['intended_files'] and path not in planned_dirs:
             raise ContractError('Interrupted recovery contains an unknown physical occupant')
         if path in planned_dirs and (row['type'] != 'directory' or
-                {'uid': row['uid'], 'gid': row['gid'], 'mode': stat.S_IMODE(row['mode'])} != proposal['metadata_plan']['directories'][path]):
+                {'uid': row['uid'], 'gid': row['gid'], 'mode': stat.S_IMODE(row['mode']), 'xattrs': row['xattrs']} != proposal['metadata_plan']['directories'][path]):
             raise ContractError('Interrupted recovery directory metadata changed')
     def equivalent(observed, expected, changed):
         if expected is None:
@@ -1015,8 +1035,8 @@ def partial_boundary(proposal, manifest, current):
         if not changed:
             return observed == expected
         return (observed['type'] == 'file' and observed.get('sha256') == expected.get('sha256')
-                and (observed['uid'], observed['gid'], stat.S_IMODE(observed['mode']), observed['nlink'])
-                == (expected['uid'], expected['gid'], stat.S_IMODE(expected['mode']), 1))
+                and (observed['uid'], observed['gid'], stat.S_IMODE(observed['mode']), observed['nlink'], observed['xattrs'])
+                == (expected['uid'], expected['gid'], stat.S_IMODE(expected['mode']), 1, expected['xattrs']))
     changed = set()
     participants = set(before) | set(proposal['intended_files'])
     for boundary in range(len(proposal['actions']) + 1):
@@ -1029,8 +1049,24 @@ def partial_boundary(proposal, manifest, current):
             else:
                 facts = proposal['metadata_plan']['files'][path]
                 before[path] = {'type': 'file', 'sha256': action['after'], 'uid': facts['uid'],
-                                'gid': facts['gid'], 'mode': facts['mode']}
+                                'gid': facts['gid'], 'mode': facts['mode'], 'xattrs': facts['xattrs']}
     raise ContractError('Interrupted recovery is not an attainable ordered action boundary')
+
+
+def probe_requirements(proposal, manifest, actions, *, mode):
+    old = {row['path']: row for row in manifest['physical_entries'] if row['type'] == 'file'}
+    result = []
+    for action in actions:
+        path = action['path']
+        needs_old = (mode == 'initial' and action.get('before') is not None
+                     or mode == 'rollback' and action.get('after') is not None)
+        if needs_old and path in old:
+            row = old[path]
+            result.append({'path': path, 'facts': {'uid': row['uid'], 'gid': row['gid'],
+                           'mode': stat.S_IMODE(row['mode']), 'xattrs': row['xattrs']}})
+        if mode in ('initial', 'finish') and action.get('after') is not None:
+            result.append({'path': path, 'facts': proposal['metadata_plan']['files'][path]})
+    return result
 
 
 def apply(repo, supplied):
@@ -1053,15 +1089,22 @@ def apply(repo, supplied):
                                       owner=owner) != proposal['capacity_token']:
             raise ContractError('Actual complete recovery reservation changed before installation')
         transaction = marker(proposal)
+        requirements = probe_requirements(proposal, manifest, proposal['actions'], mode='initial')
+        probes = temps.probe_plan(proposal['operation_id'], requirements, proposal['metadata_plan']['directories'])
         journal = {'schema': JOURNAL, 'operation_id': proposal['operation_id'], 'proposal_id': proposal['proposal_id'],
                    'proposal_sha256': digest(encoded(proposal)), 'manifest_sha256': proposal['manifest_sha256'],
                    'review_sha256': proposal['review_sha256'], 'marker': json.loads(transaction),
                    'hold': json.loads(hold(proposal)), 'actions': proposal['actions'],
                    'original_view': manifest_view(manifest), 'initial_ledger_sha256': digest(encoded(ledger_value(proposal))),
-                   'parent_operation_id': None, 'parent_receipt_sha256': None}
+                   'parent_operation_id': None, 'parent_receipt_sha256': None, 'metadata_probes': probes}
         writes.fault('layout-recovery-before-journal')
         state.write_once(directory / 'journal.json', journal)
         writes.fault('layout-recovery-after-journal')
+        writes.fault('layout-recovery-probe-journal')
+        temps.probe(target, probes, directory, owner=owner, transaction=predecessor.marker if predecessor else None)
+        rebind(root, manifest, owner, predecessor.marker if predecessor else None)
+        if view(target) != manifest_view(manifest):
+            raise ContractError('Recovery source changed during metadata preflight')
         ensure_setup(root, target, directory, proposal, owner, predecessor)
         writes.fault('layout-recovery-before-marker')
         before = predecessor.marker if predecessor else None
@@ -1107,7 +1150,9 @@ def recovery_source(repo, operation_id):
     proposal_value(root, proposal)
     if (journal.get('proposal_sha256') != digest(encoded(proposal))
             or journal.get('manifest_sha256') != digest(encoded(manifest))
-            or journal.get('review_sha256') != proposal['review_sha256']):
+            or journal.get('review_sha256') != proposal['review_sha256']
+            or journal.get('metadata_probes') != temps.probe_plan(proposal['operation_id'],
+                probe_requirements(proposal, manifest, proposal['actions'], mode='initial'), proposal['metadata_plan']['directories'])):
         raise ContractError('Known recovery journal/proposal/source pins do not agree')
     return root, target, base, directory, manifest, proposal, journal
 
@@ -1151,8 +1196,8 @@ def rollback_boundary(plan, manifest, current):
             elif desired is None:
                 if row is not None:
                     valid = False; break
-            elif row is None or (row.get('sha256'), row['uid'], row['gid'], stat.S_IMODE(row['mode']), row['nlink']) != (
-                    desired.get('sha256'), desired['uid'], desired['gid'], stat.S_IMODE(desired['mode']), 1):
+            elif row is None or (row.get('sha256'), row['uid'], row['gid'], stat.S_IMODE(row['mode']), row['nlink'], row['xattrs']) != (
+                    desired.get('sha256'), desired['uid'], desired['gid'], stat.S_IMODE(desired['mode']), 1, desired['xattrs']):
                 valid = False; break
         if valid:
             return boundary
@@ -1185,7 +1230,8 @@ def recover(repo, operation_id=None, mode=None, proposal=None):
             raise ContractError('Unknown operation marker; preserve it')
         temporary_entries = temps.entries(target, original['operation_id'], original['actions'], manifest_view(manifest),
             original['metadata_plan']['files'], marker_payloads(root, original))
-        current = view(target, [pin['path'] for pin in temporary_entries])
+        probe_entries = temps.probe_entries(target, journal['metadata_probes'], directory)
+        current = view(target, [pin['path'] for pin in temporary_entries + probe_entries])
         known = receipt_value(directory, original)
         if known is not None:
             if mode == 'rollback' and known['outcome'] == 'layout-restored':
@@ -1207,7 +1253,8 @@ def recover(repo, operation_id=None, mode=None, proposal=None):
                    'index_sha256': digest(state.read_bytes(base / 'index.json', missing=True)),
                    'ledger_head_sha256': digest(state.read_bytes(directory / 'ledger-head.json', missing=True)),
                    'receipt_sha256': digest(encoded(known)) if known is not None else None,
-                   'observed_view': view(target), 'temporary_entries': temporary_entries, 'git': raw.git_pins(root),
+                   'observed_view': view(target, [pin['path'] for pin in probe_entries]), 'temporary_entries': temporary_entries, 'probe_entries': probe_entries,
+                   'git': raw.git_pins(root),
                    'rollback_plan': recovery_plan(directory, original, manifest, current, mode) if known is None else None}
         state.write_once(directory / 'recovery' / (preview['recovery_id'] + '.json'), preview)
         return result('recover', operation_id, state='recovery-preview', verified=True, proposal=preview,
@@ -1216,7 +1263,7 @@ def recover(repo, operation_id=None, mode=None, proposal=None):
     preview = proposal.get('proposal', proposal)
     fields(preview, {'schema', 'recovery_id', 'operation_id', 'repo_root', 'mode', 'proposal_sha256', 'journal_sha256',
                      'marker_sha256', 'sentinel_sha256', 'index_sha256', 'ledger_head_sha256', 'receipt_sha256',
-                     'observed_view', 'temporary_entries', 'git', 'rollback_plan'}, 'agent-memory/layout-known-recovery-v1')
+                     'observed_view', 'temporary_entries', 'probe_entries', 'git', 'rollback_plan'}, 'agent-memory/layout-known-recovery-v1')
     root, target, base, directory = state.paths(repo, preview['operation_id'])
     if not uuid_valid(preview['recovery_id']) or state.read(directory / 'recovery' / (preview['recovery_id'] + '.json')) != preview:
         raise ContractError('Known recovery preview is unknown or changed')
@@ -1236,17 +1283,20 @@ def recover(repo, operation_id=None, mode=None, proposal=None):
         known = receipt_value(directory, original)
         temporary_entries = temps.entries(target, original['operation_id'], original['actions'], manifest_view(manifest),
             original['metadata_plan']['files'], marker_payloads(root, original))
+        probe_entries = temps.probe_entries(target, journal['metadata_probes'], directory)
         checks = {'repo_root': str(root), 'proposal_sha256': digest(encoded(original)),
                   'journal_sha256': digest(encoded(journal)), 'marker_sha256': digest(current_marker),
                   'sentinel_sha256': digest(frontier.marker_bytes(target, SENTINEL)),
                   'index_sha256': digest(state.read_bytes(base / 'index.json', missing=True)),
                   'ledger_head_sha256': digest(state.read_bytes(directory / 'ledger-head.json', missing=True)),
                   'receipt_sha256': digest(encoded(known)) if known is not None else None,
-                  'observed_view': view(target), 'temporary_entries': temporary_entries, 'git': raw.git_pins(root)}
+                  'observed_view': view(target, [pin['path'] for pin in probe_entries]), 'temporary_entries': temporary_entries, 'probe_entries': probe_entries, 'git': raw.git_pins(root)}
         if any(preview[key] != value for key, value in checks.items()):
             raise ContractError('Known recovery preview became stale; preserve newer state')
         rebind(root, manifest, owner, current_marker)
         temps.clean(target, temporary_entries, owner, current_marker)
+        temps.probe_clean(target, probe_entries, owner, current_marker)
+        temps.probe_complete(target, journal['metadata_probes'], directory)
         cleaned_view = view(target)
         if known is not None:
             expected_result(original, manifest, cleaned_view, rollback=known['outcome'] == 'rolled-back')
@@ -1267,6 +1317,19 @@ def recover(repo, operation_id=None, mode=None, proposal=None):
                 if plan != preview['rollback_plan']:
                     raise ContractError('Rollback action plan changed')
                 state.write_once(directory / 'rollback-plan.json', plan)
+            if preview['mode'] == 'finish':
+                boundary = partial_boundary(original, manifest, cleaned_view)
+                remaining = original['actions'][boundary:]
+                directories = [path for path in original['metadata_plan']['directories'] if not (target / path).exists()]
+            else:
+                boundary = rollback_boundary(plan, manifest, cleaned_view)
+                remaining = plan['actions'][boundary:]
+                directories = []
+            requirements = probe_requirements(original, manifest, remaining, mode=preview['mode'])
+            temps.probe(target, journal['metadata_probes'], directory, requirements=requirements, directories=directories,
+                        owner=owner, transaction=current_marker)
+            if view(target) != cleaned_view:
+                raise ContractError('Recovery sources changed during metadata preflight')
             before_setup = predecessor_marker(root, original)
             predecessor = None
             if original['operation_id'] not in state.index(root)['operations']:
@@ -1314,6 +1377,8 @@ def status(repo, operation_id=None):
                       required_actions=['Preserve the partial private staging evidence; inspect a new complete operation before prepare'])
     _, _, _, _, manifest = operation(root, operation_id)
     journal = state.read(directory / 'journal.json', missing=True)
+    if journal is not None and 'metadata_probes' in journal:
+        temps.probe_entries(target, journal['metadata_probes'], directory)
     if journal is not None and journal.get('parent_operation_id') is not None:
         return result('status', operation_id, state=receipt['outcome'] if receipt else 'interrupted',
                       verified=True, receipt_is_historical=receipt is not None,
@@ -1371,7 +1436,7 @@ def safe_envelope(value, exported=None):
                    'truth_verified', 'code_freshness_verified', 'publication_verified', 'other_machine_import_verified',
                    'observation_complete', 'source_files', 'source_bytes', 'page_count', 'receipt_is_historical',
                    'already_applied', 'current_receipt_match', 'parent_operation_id', 'operations',
-                   'canonical_mutation_may_have_occurred', 'failure_code', 'capacity', 'original_evidence_available',
+                   'canonical_mutation_may_have_occurred', 'failure_code', 'capacity', 'original_evidence_available', 'probe_path',
                    'private_artifact_deletions_performed', 'cleanup_id', 'original_bytes_available', 'rollback_available',
                    'git_metadata_writes_performed', 'remote_freshness_verified', 'source_assertions_verified',
                    'feature_code_freshness_verified', 'cleanup_complete', 'intended_canonical_eligibility'}
@@ -1534,14 +1599,20 @@ def main(argv=None):
                 changed = state.read(directory / 'journal.json', missing=True) is not None
         except (ContractError, OSError, ValueError):
             changed = True
-        failure = result(args.command, getattr(exc, 'operation_id', failure_operation), state='interrupted' if changed else 'pending',
+        ambiguous = isinstance(exc, temps.ProbeOwnershipError)
+        failure = result(args.command, getattr(exc, 'operation_id', failure_operation), state='pending' if ambiguous else 'interrupted' if changed else 'pending',
                          failure_code=('pending-recovery-capacity' if isinstance(exc, raw.RawCapacityError)
-                                       else str(exc) if str(exc) in {'pending-identity-review', 'pending-runtime-compatibility', 'pending-metadata-preservation'}
+                                       else str(exc) if str(exc) in {'pending-identity-review', 'pending-runtime-compatibility', 'pending-metadata-preservation', 'pending-ambiguous-probe-ownership'}
                                        else 'pending-evidence-or-state'),
-                         canonical_writes_performed='unknown' if changed else False,
-                         canonical_mutation_may_have_occurred=changed,
+                         writes_performed='unknown' if changed or ambiguous else False,
+                         temporary_lock_writes_performed='unknown' if execution_started else False,
+                         canonical_writes_performed='unknown' if changed or ambiguous else False,
+                         canonical_mutation_may_have_occurred=changed or ambiguous,
                          private_artifact_writes_performed='unknown' if execution_started and args.command != 'status' else False,
-                         required_actions=['Preserve original sources and private evidence; inspect status and use only the exact known-operation review/recovery path'])
+                         required_actions=(['Operator: inspect the named probe and its private journal; only after independently establishing ownership, manually remove the ambiguous entry, then repeat known-operation recovery.']
+                                           if ambiguous else ['Preserve original sources and private evidence; inspect status and use only the exact known-operation review/recovery path']))
+        if ambiguous:
+            failure['probe_path'] = exc.probe_path
         if args.command == 'publish' and execution_started:
             failure['git_metadata_writes_performed'] = 'unknown'
         if args.command == 'retention' and execution_started:

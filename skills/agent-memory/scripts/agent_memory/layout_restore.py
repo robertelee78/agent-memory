@@ -45,7 +45,8 @@ def boundary(p, current, plan=None):
             found, row = actual.get(path), expected.get(path)
             if path in p['directories_to_remove']:
                 if found is not None and (found['type'] != 'directory' or
-                        {key: found[key] for key in ('uid', 'gid')} != {key: (row or desired[path])[key] for key in ('uid', 'gid')}):
+                        {key: found[key] for key in ('uid', 'gid', 'mode', 'xattrs')} !=
+                        {key: (row or desired[path])[key] for key in ('uid', 'gid', 'mode', 'xattrs')}):
                     valid = False; break
                 continue
             if path not in changed:
@@ -54,7 +55,7 @@ def boundary(p, current, plan=None):
             elif row is None:
                 if found is not None:
                     valid = False; break
-            elif found is None or any(found[key] != row[key] for key in ('type', 'uid', 'gid', 'mode', 'sha256')):
+            elif found is None or any(found[key] != row[key] for key in ('type', 'uid', 'gid', 'mode', 'sha256', 'xattrs')):
                 valid = False; break
         if valid:
             return position
@@ -100,14 +101,19 @@ def preview(repo, operation_id):
         state.put_bytes(directory / 'manifest.sha256', (digest(encoded(observed)) + '\n').encode())
         old = {source['path']: source for source in manifest['sources']}
         now = {source['path']: source for source in observed['sources']}
+        before = {row['path']: row for row in current if row['type'] == 'file' and not row['runtime']}
+        desired_view = recovery.manifest_view(manifest)
+        after = {row['path']: row for row in desired_view if row['type'] == 'file' and not row['runtime']}
+        keys = ('sha256', 'uid', 'gid', 'mode', 'xattrs')
         actions = [{'path': path, 'before': now.get(path, {}).get('sha256'), 'after': old.get(path, {}).get('sha256')}
                    for path in sorted(set(old) | set(now), key=lambda path: (path == 'MEMORY.md', path))
-                   if old.get(path, {}).get('sha256') != now.get(path, {}).get('sha256')]
+                   if (before.get(path) is None or after.get(path) is None or
+                       any(before[path][key] != after[path][key] for key in keys))]
         p = {'schema': SCHEMA, 'operation_id': child, 'proposal_id': str(uuid.uuid4()), 'parent_operation_id': operation_id,
              'parent_receipt_sha256': digest(encoded(receipt)), 'parent_proposal_sha256': digest(encoded(original)),
              'parent_ledger_head_sha256': digest(encoded(head)), 'manifest_sha256': digest(encoded(observed)),
              'repo_root': str(root), 'bank_path': str(bank), 'project_id': manifest['project_id'],
-             'scope_context': original['scope_context'], 'base_view': current, 'desired_view': recovery.manifest_view(manifest),
+             'scope_context': original['scope_context'], 'base_view': current, 'desired_view': desired_view,
              'actions': actions, 'directories_to_remove': original['metadata_plan']['directories'],
              'parent_marker': json.loads(existing_marker) if existing_marker else None, 'parent_index_row': indexed,
              'frontier': source_frontier, 'git': raw.git_pins(root), 'prepared_at': storage.now()}
@@ -125,11 +131,23 @@ def temporaries(bank, p):
         {row['path']: row for row in p['desired_view'] if row['type'] == 'file'}, markers)
 
 
+def metadata_probes(p):
+    paths = {action['path'] for action in p['actions']}
+    requirements = [{'path': row['path'], 'facts': {'uid': row['uid'], 'gid': row['gid'],
+                     'mode': stat.S_IMODE(row['mode']), 'xattrs': row['xattrs']}}
+                    for rows in (p['base_view'], p['desired_view']) for row in rows
+                    if row['type'] == 'file' and row['path'] in paths]
+    return recovery.temps.probe_plan(p['operation_id'], requirements, p['directories_to_remove'])
+
+
 def recover(repo, operation_id=None, mode=None, proposal=None):
     if proposal is None:
         root, bank, _, directory, observed = recovery.operation(repo, operation_id)
         journal = state.read(directory / 'journal.json')
         p = value(root, state.read(directory / 'proposals' / (journal['proposal_id'] + '.json')))
+        probes = metadata_probes(p)
+        if journal.get('metadata_probes') != probes:
+            raise ContractError('Child recovery metadata probe journal changed')
         marker = frontier.marker_bytes(bank)
         recovery.bank_observation.markers(bank, None, marker)
         known = state.read(directory / 'receipt.json', missing=True)
@@ -142,7 +160,8 @@ def recover(repo, operation_id=None, mode=None, proposal=None):
         if marker not in allowed:
             raise ContractError('Child recovery refuses an unknown operation marker')
         temporary_entries = temporaries(bank, p)
-        current = recovery.view(bank, [pin['path'] for pin in temporary_entries])
+        probe_entries = recovery.temps.probe_entries(bank, probes, directory)
+        current = recovery.view(bank, [pin['path'] for pin in temporary_entries + probe_entries])
         if known is None:
             active = state.read(directory / 'child-rollback-plan.json', missing=True)
             boundary(p, current, active if mode == 'rollback' else None)
@@ -150,7 +169,7 @@ def recover(repo, operation_id=None, mode=None, proposal=None):
             raise ContractError('Later external edits prevent child marker cleanup')
         plan = {'schema': 'agent-memory/layout-child-recovery-v1', 'recovery_id': str(uuid.uuid4()),
                 'operation_id': operation_id, 'mode': mode, 'proposal_sha256': digest(encoded(p)),
-                'observed_view': recovery.view(bank), 'temporary_entries': temporary_entries,
+                'observed_view': current, 'temporary_entries': temporary_entries, 'probe_entries': probe_entries,
                 'marker_sha256': digest(marker), 'journal_sha256': digest(encoded(journal)),
                 'receipt_sha256': digest(encoded(known)) if known else None, 'git': raw.git_pins(root)}
         state.write_once(directory / 'recovery' / (plan['recovery_id'] + '.json'), plan)
@@ -158,7 +177,8 @@ def recover(repo, operation_id=None, mode=None, proposal=None):
                                private_artifact_writes_performed=True)
     plan = proposal.get('proposal', proposal)
     recovery.fields(plan, {'schema', 'recovery_id', 'operation_id', 'mode', 'proposal_sha256', 'observed_view',
-                           'marker_sha256', 'journal_sha256', 'receipt_sha256', 'git', 'temporary_entries'}, 'agent-memory/layout-child-recovery-v1')
+                           'marker_sha256', 'journal_sha256', 'receipt_sha256', 'git', 'temporary_entries',
+                           'probe_entries'}, 'agent-memory/layout-child-recovery-v1')
     root, _, _, directory = state.paths(repo, plan['operation_id'])
     if state.read(directory / 'recovery' / (plan['recovery_id'] + '.json')) != plan:
         raise ContractError('Child recovery preview is unknown or changed')
@@ -201,13 +221,17 @@ def apply(repo, supplied, plan=None):
         starting_marker = encoded(p['parent_marker']) if p['parent_marker'] else None
         transaction = encoded({'schema': frontier.TRANSACTION, 'project_id': p['project_id'],
                                'operation_id': p['operation_id'], 'transaction_kind': 'rollback'})
-        current = recovery.view(bank)
+        probes = metadata_probes(p)
+        ignored = ([pin['path'] for pin in plan['temporary_entries'] + plan['probe_entries']] if plan else [])
+        current = recovery.view(bank, ignored)
         if plan:
             journal = state.read(directory / 'journal.json')
             if (current != plan['observed_view'] or digest(current_marker) != plan['marker_sha256']
                     or digest(encoded(journal)) != plan['journal_sha256'] or raw.git_pins(root) != plan['git']
                     or (digest(encoded(known)) if known else None) != plan['receipt_sha256']
-                    or temporaries(bank, p) != plan['temporary_entries']):
+                    or journal.get('metadata_probes') != probes
+                    or temporaries(bank, p) != plan['temporary_entries']
+                    or recovery.temps.probe_entries(bank, probes, directory) != plan['probe_entries']):
                 raise ContractError('Child recovery pins changed')
         elif current != p['base_view'] or current_marker != starting_marker:
             raise ContractError('Child restore would overwrite a later edit')
@@ -220,6 +244,8 @@ def apply(repo, supplied, plan=None):
         proxy = observed
         recovery.rebind(root, proxy, owner, current_marker)
         if plan:
+            recovery.temps.probe_clean(bank, plan['probe_entries'], owner, current_marker)
+            recovery.temps.probe_complete(bank, probes, directory)
             recovery.temps.clean(bank, plan['temporary_entries'], owner, current_marker)
             current = recovery.view(bank)
         if known is not None and current != known['resulting_view']:
@@ -227,8 +253,29 @@ def apply(repo, supplied, plan=None):
         journal = {'schema': recovery.JOURNAL, 'operation_id': p['operation_id'], 'proposal_id': p['proposal_id'],
                    'proposal_sha256': digest(encoded(p)), 'manifest_sha256': p['manifest_sha256'],
                    'review_sha256': original['review_sha256'], 'marker': json.loads(transaction),
-                   'parent_operation_id': p['parent_operation_id'], 'parent_receipt_sha256': p['parent_receipt_sha256']}
+                   'parent_operation_id': p['parent_operation_id'], 'parent_receipt_sha256': p['parent_receipt_sha256'],
+                   'metadata_probes': probes}
         state.write_once(directory / 'journal.json', journal)
+        if known is None:
+            writes.fault('layout-recovery-probe-journal')
+            if plan is None:
+                recovery.temps.probe(bank, probes, directory, owner=owner, transaction=current_marker)
+            else:
+                target_view = p['desired_view'] if mode == 'finish' else p['base_view']
+                actual = {row['path']: row for row in current}
+                paths = {action['path'] for action in p['actions']}
+                keys = ('type', 'sha256', 'uid', 'gid', 'mode', 'xattrs')
+                remaining = [{'path': row['path'], 'facts': {'uid': row['uid'], 'gid': row['gid'],
+                              'mode': stat.S_IMODE(row['mode']), 'xattrs': row['xattrs']}}
+                             for row in target_view if row['type'] == 'file' and row['path'] in paths
+                             and (row['path'] not in actual or
+                                  any(actual[row['path']].get(key) != row.get(key) for key in keys))]
+                directories = ([path for path in p['directories_to_remove'] if path not in actual]
+                               if mode == 'rollback' else [])
+                recovery.temps.probe(bank, probes, directory, requirements=remaining, directories=directories,
+                                     owner=owner, transaction=current_marker)
+            if recovery.view(bank) != current or frontier.marker_bytes(bank) != current_marker:
+                raise ContractError('Child restore changed during metadata preflight')
         state.bind(root, p['operation_id'], p['project_id'], p['scope_context']['checkout_key'], 'interrupted')
         if current_marker != transaction:
             recovery.atomic_marker(bank, current_marker, transaction, owner)
@@ -242,9 +289,12 @@ def apply(repo, supplied, plan=None):
                 if reverse is None:
                     boundary(p, current)
                     expected = {source['path']: source for source in observed['sources']}
-                    current_sources = {row['path']: row.get('sha256') for row in current if row['type'] == 'file' and not row['runtime']}
+                    current_sources = {row['path']: row for row in current if row['type'] == 'file' and not row['runtime']}
+                    base_sources = {row['path']: row for row in p['base_view'] if row['type'] == 'file' and not row['runtime']}
+                    keys = ('sha256', 'uid', 'gid', 'mode', 'xattrs')
                     actions = [{'path': path} for path in sorted(set(expected) | set(current_sources), key=lambda path: (path == 'MEMORY.md', path))
-                               if expected.get(path, {}).get('sha256') != current_sources.get(path)]
+                               if (base_sources.get(path) is None or current_sources.get(path) is None or
+                                   any(base_sources[path][key] != current_sources[path][key] for key in keys))]
                     reverse = {'initial_view': current, 'desired_view': p['base_view'], 'actions': actions}
                     state.write_once(directory / 'child-rollback-plan.json', reverse)
                 position = boundary(p, current, reverse); actions = reverse['actions'][position:]
@@ -256,7 +306,8 @@ def apply(repo, supplied, plan=None):
             for action in actions:
                 path = action['path']; source = sources.get(path); row = facts.get(path)
                 body = state.read_bytes(desired_dir / source['blob'], raw.MAX_FILE) if source else None
-                required = {'uid': row['uid'], 'gid': row['gid'], 'mode': stat.S_IMODE(row['mode'])} if row else None
+                required = {'uid': row['uid'], 'gid': row['gid'], 'mode': stat.S_IMODE(row['mode']),
+                            'xattrs': row['xattrs']} if row else None
                 recovery.replace_source(root, bank, path, body, required, running, context)
                 mutated = True
                 running = recovery.view(bank)
@@ -264,15 +315,20 @@ def apply(repo, supplied, plan=None):
                 for path in sorted(p['directories_to_remove'], key=lambda path: -len(Path(path).parts)):
                     location = bank / path
                     if location.exists():
-                        if location.is_symlink() or not location.is_dir() or any(location.iterdir()):
-                            raise ContractError('Child restore directory gained an unrelated occupant')
+                        expected_dir = next(row for row in p['base_view'] if row['path'] == path)
+                        actual_dir = next((row for row in recovery.view(bank) if row['path'] == path), None)
+                        if (location.is_symlink() or not location.is_dir() or any(location.iterdir()) or
+                                actual_dir is None or any(actual_dir[key] != expected_dir[key]
+                                                          for key in ('type', 'uid', 'gid', 'mode', 'xattrs'))):
+                            raise ContractError('Child restore directory gained an unrelated occupant or metadata change')
                         location.rmdir(); tx.flush_directory(location.parent)
             final = p['desired_view'] if mode == 'finish' else p['base_view']
-            actual = {row['path']: row for row in recovery.view(bank)}
+            readback = recovery.view(bank)
+            actual = {row['path']: row for row in readback}
             if set(actual) != {row['path'] for row in final}:
                 raise ContractError('Child restore physical readback failed')
             for row in final:
-                keys = ('type', 'runtime', 'uid', 'gid', 'mode') + (('sha256',) if row['type'] == 'file' else ())
+                keys = ('type', 'runtime', 'uid', 'gid', 'mode', 'xattrs') + (('sha256',) if row['type'] == 'file' else ())
                 if any(actual[row['path']][key] != row[key] for key in keys):
                     raise ContractError('Child restore bytes/metadata readback failed')
             context.check()
@@ -280,7 +336,8 @@ def apply(repo, supplied, plan=None):
                      'project_id': p['project_id'], 'request_sha256': digest(encoded(p)),
                      'parent_operation_id': p['parent_operation_id'], 'parent_receipt_sha256': p['parent_receipt_sha256'],
                      'outcome': 'rolled-back' if mode == 'finish' else 'layout-restored', 'restore_mode': mode,
-                     'verified': True, 'readback_at': storage.now(), 'resulting_view': recovery.view(bank),
+                     'verified': True, 'readback_at': storage.now(), 'resulting_view': readback,
+                     'byte_metadata_readback_verified': True, 'exact_xattr_readback_verified': True,
                      'canonical_eligibility_at_commit': recovery.eligibility(root, owner, transaction),
                      'semantic_recovery_complete_at_commit': False,
                      'pending_unit_ids_at_commit': p['frontier']['unit_ids'],
