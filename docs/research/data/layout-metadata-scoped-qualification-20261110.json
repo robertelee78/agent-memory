@@ -418,7 +418,378 @@
     {
       "artifact": "244-metadata-linux-flags-ff0580f-Opus-review-02.md",
       "sha256": "43178a32b30ff1ce254093c75efe3f1c94819390fca2f9f3927c65df99b96174"
+    },
+    {
+      "artifact": "244-audit-d960206-Opus-review-01.md",
+      "sha256": "6a0d8c27e8669c1122f4b34ed77166c680fc304fb4abf73ef81687bc2625b92a",
+      "source_commit": "d96020632201d3f6723d5441f03e8f267eca3627",
+      "verdict": "PASS",
+      "scope": "Narrow source-class and immutable-audit correctness review only; no full task, platform, native, performance or release acceptance."
     }
   ],
-  "remaining": "Complete218registered crash/probe workers, corrected held-consumer journeys, full final four-cell gate, actual final stock-native and matched performance workloads, independent original-criteria acceptance and signed delivery. No old timing/native or matrix result transfers."
+  "fault_matrix_and_regression_closure": {
+    "scope": "Two complete 218-worker waves failed on older sources. All eleven common failures now pass scoped targeted reruns; no fresh complete final-source matrix or release acceptance claimed.",
+    "full_waves": [
+      {
+        "system": "Darwin",
+        "source_commit": "ff0580ffbd1feaf4d37a0488c4bc3afb66c546d3",
+        "workers": 218,
+        "passed": 207,
+        "failed": [
+          "layout-legacy-nested-credited-unlinked",
+          "layout-legacy-nested-receipted",
+          "layout-legacy-nested-receipted-decoy",
+          "layout-legacy-terminal-marker-removal",
+          "layout-metadata-probe-legacy-unpinned",
+          "layout-nested-before-resolution-error",
+          "layout-nested-before-resolution-exit",
+          "layout-nested-receipt-error",
+          "layout-nested-receipt-exit",
+          "layout-nested-retirement-binding-error",
+          "layout-nested-retirement-binding-exit"
+        ],
+        "skipped": 0,
+        "worker_deadline_seconds": 300
+      },
+      {
+        "system": "Linux",
+        "source_commit": "b9f04c40b9b9b0539b9cf8b8e5168419043d4880",
+        "workers": 218,
+        "passed": 207,
+        "failed": [
+          "layout-legacy-nested-credited-unlinked",
+          "layout-legacy-nested-receipted",
+          "layout-legacy-nested-receipted-decoy",
+          "layout-legacy-terminal-marker-removal",
+          "layout-metadata-probe-legacy-unpinned",
+          "layout-nested-before-resolution-error",
+          "layout-nested-before-resolution-exit",
+          "layout-nested-receipt-error",
+          "layout-nested-receipt-exit",
+          "layout-nested-retirement-binding-error",
+          "layout-nested-retirement-binding-exit"
+        ],
+        "skipped": 0,
+        "worker_deadline_seconds": 300
+      }
+    ],
+    "corrected_runs": [
+      {
+        "run": "macos_regressions",
+        "source_commit": "d96020632201d3f6723d5441f03e8f267eca3627",
+        "wall_seconds": 732.04,
+        "worker_deadline_seconds": 300,
+        "workers": [
+          {
+            "suite": "layout-consumer-closure-frontier-10",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "result_sha256": "424e2f01bc2d356475d12c081ccf69161944b7865467c5d3382fa769bbbaf666"
+          },
+          {
+            "suite": "layout-consumer-closure-frontier-11",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "result_sha256": "4554584209127f1a3b6ccdef4f5350eaa6f10f0adfb4b19a1e69aaff4bc7e53f"
+          },
+          {
+            "suite": "layout-consumer-closure-nested-01",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "result_sha256": "20ed0803caf72c3aac2e04426848d24f1ad05be1c2054d49ebec4f8b22fa2d76"
+          },
+          {
+            "suite": "layout-consumer-closure-nested-02",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "result_sha256": "ae6ba5123637691d909494af9e101d0322eca42ef41af1be4440b9dde82c1012"
+          },
+          {
+            "suite": "layout-consumer-closure-nested-03",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "result_sha256": "82a563c5589be6cf2e750659c347a9891f205ac487b51a77182aac3447be4214"
+          },
+          {
+            "suite": "layout-consumer-closure-nested-04",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "result_sha256": "9d3821fe93e0b1486fb86785f1b3f1e8faa9b61c92652e7027584f65ba693374"
+          },
+          {
+            "suite": "layout-consumer-closure-nested-05",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "result_sha256": "ed662ee631fa137e4e97961a27f74a4fd81466168fc5a0369348e359cc46dd38"
+          },
+          {
+            "suite": "layout-consumer-closure-nested-06",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "result_sha256": "a7c96a615fb40cdffe4dc23471428a95d771f2ac0b7217becd20e27f0bc42718"
+          },
+          {
+            "suite": "layout-legacy-nested-credited-unlinked",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "result_sha256": "6828ca31cf848939a6ca0be1b314c90ef90dddc6043ee4d4a5192ecaa3ebf0be"
+          },
+          {
+            "suite": "layout-legacy-nested-receipted-decoy",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "result_sha256": "10f8fbb087d9b1c95aca943697d29caf4e3963f0a41d0d77c81b9a4dd5aea3b1"
+          },
+          {
+            "suite": "layout-legacy-nested-receipted",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "result_sha256": "2560236f20733237ed592860f695e7a37d0eb73f3deb3f377be350c157ccc598"
+          },
+          {
+            "suite": "layout-legacy-terminal-marker-removal",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "result_sha256": "8779bdc37fa152c0714261b75f240c343a7014ecc03eba8ec14e3e0e9831e888"
+          },
+          {
+            "suite": "layout-metadata-probe-legacy-unpinned",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "result_sha256": "04623a838559b47682391bcd001955b8f6b225ddab6602cd0539c66e876d88d6"
+          },
+          {
+            "suite": "layout-nested-before-resolution-error",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "result_sha256": "6984c5b23c0ac794dbc066264334c112004edfc65be2d40b91c0897639f443e2"
+          },
+          {
+            "suite": "layout-nested-before-resolution-exit",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "result_sha256": "179ac76eca0c16a9a84a18601cea63dc055b8c131fec0ff5b24783f74ff9d712"
+          },
+          {
+            "suite": "layout-nested-receipt-error",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "result_sha256": "d9423e95a0127fcf1db7445d315ef8f41c3050caeffe55fc3a3b60d0243c338d"
+          },
+          {
+            "suite": "layout-nested-receipt-exit",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "result_sha256": "4c40e5970b11e0667a460ae569cadb0203a885c3feb3ee6c915576481454d2bb"
+          },
+          {
+            "suite": "layout-nested-retirement-binding-error",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "result_sha256": "af747e94920bf72615d24f85b5ef9d6e49a36eab7022f76650724668995d3868"
+          },
+          {
+            "suite": "layout-nested-retirement-binding-exit",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "result_sha256": "3ca690b302a3d012e08cfb694522b4e1cce0e8d6e1644f33ebbf425c544b71cc"
+          }
+        ]
+      },
+      {
+        "run": "macos_connected",
+        "source_commit": "d96020632201d3f6723d5441f03e8f267eca3627",
+        "wall_seconds": 716.71,
+        "worker_deadline_seconds": 300,
+        "workers": [
+          {
+            "suite": "layout-nested-canonical-receipt",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "result_sha256": "201a097e42330e3e234c433977fb20778bd298b4c599c08b7a31ede6e8c04da7"
+          },
+          {
+            "suite": "layout-nested-marker-retirement",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "result_sha256": "6113ad4a6ee4c3264818fca16efe1a3eb5928dcd62f4eaaf73d7f2460569f290"
+          },
+          {
+            "suite": "layout-nested-pre-receipt-rollback",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "result_sha256": "289193aa77d5e282a137c59dbaa96b07cbf283600d7cedad6a1a46229217f2f0"
+          },
+          {
+            "suite": "layout-nested-sentinel-removed",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "result_sha256": "4ca3ed8e763438b375a26d1487d5b7d41bcf0f571ada2d507a4c6280ee3b8dc8"
+          },
+          {
+            "suite": "layout-nested-sentinel-retirement",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "result_sha256": "b329416928b85f7f1efba435b96d95029287c94e1c3b54002f33e006e645c7eb"
+          },
+          {
+            "suite": "layout-nested-terminal-index",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "result_sha256": "8b98bfa955ead20da5c7feb1d92db669432b7d975079c8a02b67479a106af602"
+          },
+          {
+            "suite": "layout-recovery-resolution-exclusion",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "result_sha256": "35784ce94c436d3ad0f83032b6e96a23f7ac6a64d08433bf11350005d356b838"
+          },
+          {
+            "suite": "layout-recovery-resolution-retirement",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "result_sha256": "eee78bd6989230b0160936c7878ffd13fe5b28388bedc81f05bfdff6099812ca"
+          },
+          {
+            "suite": "layout-recovery-rollback-exclusion",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "result_sha256": "4ee8cb55a16becb5e178435daadeb87c189653535869f1306158da53951bd5a3"
+          },
+          {
+            "suite": "layout-recovery-rollback-handoff",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "result_sha256": "e6fe33f46542b551d74e15f97f31c4f759880561b94479a465c963fa5efbeaaf"
+          },
+          {
+            "suite": "layout-recovery-router-identity",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "result_sha256": "ea1e16e4119bc7bc0c9ff6fdcfff82b28e326a4d5d218ac1c7e0913b3f183b24"
+          }
+        ]
+      },
+      {
+        "run": "linux_regressions",
+        "source_commit": "d96020632201d3f6723d5441f03e8f267eca3627",
+        "wall_seconds": 145.32,
+        "worker_deadline_seconds": 300,
+        "workers": [
+          {
+            "suite": "layout-legacy-nested-credited-unlinked",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "result_sha256": "6828ca31cf848939a6ca0be1b314c90ef90dddc6043ee4d4a5192ecaa3ebf0be"
+          },
+          {
+            "suite": "layout-legacy-nested-receipted-decoy",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "result_sha256": "10f8fbb087d9b1c95aca943697d29caf4e3963f0a41d0d77c81b9a4dd5aea3b1"
+          },
+          {
+            "suite": "layout-legacy-nested-receipted",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "result_sha256": "2560236f20733237ed592860f695e7a37d0eb73f3deb3f377be350c157ccc598"
+          },
+          {
+            "suite": "layout-legacy-terminal-marker-removal",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "result_sha256": "8779bdc37fa152c0714261b75f240c343a7014ecc03eba8ec14e3e0e9831e888"
+          },
+          {
+            "suite": "layout-metadata-probe-legacy-unpinned",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "result_sha256": "04623a838559b47682391bcd001955b8f6b225ddab6602cd0539c66e876d88d6"
+          },
+          {
+            "suite": "layout-nested-before-resolution-error",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "result_sha256": "6984c5b23c0ac794dbc066264334c112004edfc65be2d40b91c0897639f443e2"
+          },
+          {
+            "suite": "layout-nested-before-resolution-exit",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "result_sha256": "179ac76eca0c16a9a84a18601cea63dc055b8c131fec0ff5b24783f74ff9d712"
+          },
+          {
+            "suite": "layout-nested-receipt-error",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "result_sha256": "d9423e95a0127fcf1db7445d315ef8f41c3050caeffe55fc3a3b60d0243c338d"
+          },
+          {
+            "suite": "layout-nested-receipt-exit",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "result_sha256": "4c40e5970b11e0667a460ae569cadb0203a885c3feb3ee6c915576481454d2bb"
+          },
+          {
+            "suite": "layout-nested-retirement-binding-error",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "result_sha256": "af747e94920bf72615d24f85b5ef9d6e49a36eab7022f76650724668995d3868"
+          },
+          {
+            "suite": "layout-nested-retirement-binding-exit",
+            "tests": 1,
+            "passed": true,
+            "skipped": 0,
+            "result_sha256": "3ca690b302a3d012e08cfb694522b4e1cce0e8d6e1644f33ebbf425c544b71cc"
+          }
+        ]
+      }
+    ],
+    "root_causes": {
+      "production": "Held admission logged capture.started as external while ordinary historical replay logged verified-repository; immutable audit rejected conflicting metadata. d960206 reuses the unchanged normal classifier in both paths, without weakening audit immutability.",
+      "fixtures": "28e8654 accepts a preservation-only old migration no-op when no legacy-visible marker exists, and checks genuine normal comparison JSON after terminal resolution instead of an incidental private-output file."
+    }
+  },
+  "remaining": "Fresh complete final-source four-cell gate, final stock-native and matched performance workloads, independent original-criteria acceptance and signed delivery. The older full fault waves failed; scoped corrected reruns do not turn them into passes. No old timing/native or matrix result transfers."
 }
