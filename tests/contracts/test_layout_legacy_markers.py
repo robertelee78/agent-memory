@@ -32,7 +32,8 @@ class LayoutLegacyMarkers(unittest.TestCase):
                 receipt_bytes = actual_receipt.read_bytes()
                 native = {p.relative_to(bank).as_posix(): p.read_text() for p in bank.rglob('*.md')
                           if not p.name.startswith('.agent-memory')}
-                (bank / 'projectbrief.md').write_text(native['projectbrief.md'] * 2)
+                body = native['projectbrief.md']
+                (bank / 'projectbrief.md').write_text(body * (16385 // len(body.encode()) + 1))
                 if kind != 'terminal':
                     (bank / 'handoff-prompt.md').write_text(recovery.policy_body(0))
                 originals = {p.relative_to(bank).as_posix(): p.read_bytes()
