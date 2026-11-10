@@ -6,14 +6,14 @@ import uuid
 
 from world import World
 from contracts import test_layout_recovery_retention as retention
+from contracts import test_layout_recovery_darwin_provenance as exact_metadata
 from runtime_update_fixtures import snapshot
 import layout_recovery_fixtures as recovery
 
 
 def metadata(root):
     return {str(path.relative_to(root)): (path.lstat().st_uid, path.lstat().st_gid, path.lstat().st_mode,
-            {name: os.getxattr(path, name, follow_symlinks=False)
-             for name in os.listxattr(path, follow_symlinks=False)})
+                                        exact_metadata.xattrs(path))
             for path in (root, *root.rglob('*'))}
 
 

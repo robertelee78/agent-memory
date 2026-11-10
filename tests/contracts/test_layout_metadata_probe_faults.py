@@ -9,14 +9,14 @@ import unittest
 from world import World
 from runtime_update_fixtures import snapshot
 from contracts import test_layout_recovery as existing
+from contracts import test_layout_recovery_darwin_provenance as exact_metadata
 import layout_recovery_fixtures as recovery
 import legacy_recovery_fixtures as legacy_guard
 import v014_runtime_fixture
 
 
 def attributes(path):
-    return {name: os.getxattr(path, name, follow_symlinks=False)
-            for name in os.listxattr(path, follow_symlinks=False)}
+    return {name: bytes.fromhex(value) for name, value in exact_metadata.xattrs(path).items()}
 
 
 class LayoutMetadataProbeFaults(unittest.TestCase):
