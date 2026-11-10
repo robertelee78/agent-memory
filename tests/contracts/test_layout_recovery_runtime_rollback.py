@@ -27,6 +27,8 @@ class HeldRuntimeRollbackContract(unittest.TestCase):
             request['quiescence_attestation']['declared_invocation_routes'] = sorted(set(
                 request['quiescence_attestation']['declared_invocation_routes']
                 + [target['path'] for target in receipt['targets']]))
+            request['review']['quiescence_attestation_sha256'] = recovery.sha(
+                recovery.encoded(request['quiescence_attestation']))
             proposal = world.inside('held-rollback-layout.json')
             recovery.call(world, command, 'prepare', '--repo', repo,
                           '--operation', inspected['operation_id'], '--input', recovery.save(world, request),

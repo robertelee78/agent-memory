@@ -1,0 +1,221 @@
+{
+  "schema": "agent-memory/selector-local-reuse-scoped-proof-v1",
+  "candidate_commit": "0d58a8b3158b5d08fcbe70a65e172f3454e1ce76",
+  "baseline_commit": "cdf99580df484485f47aac2bcb961ba9b11614c7",
+  "scope": "One synthetic original-HEAD public refresh and pure source-bound selector differential per OS. Not a full stress/native/release acceptance or statistical workload speed claim.",
+  "source_reviews": {
+    "design": [
+      "anthropic/claude-fable-5",
+      "anthropic/claude-opus-5-5"
+    ],
+    "implementation": "anthropic/claude-opus-5-5",
+    "apparatus_revision": "04",
+    "apparatus_review": "anthropic/claude-opus-5-5"
+  },
+  "input_shape": {
+    "head_files": 10217,
+    "base_files": 10220,
+    "final_files": 10289,
+    "changed_paths": 70,
+    "changed_sources": 144,
+    "sources": 144,
+    "original_pairs": 456,
+    "dense_pairs": 10296
+  },
+  "platforms": {
+    "macos": {
+      "complete": true,
+      "differential_cases": 20,
+      "all_differential_results_and_errors_equal": true,
+      "public_manifest_and_pages_byte_equal": true,
+      "public_calls": [
+        {
+          "label": "inspect",
+          "exit": 0,
+          "wall_s": 36.601027250057086
+        },
+        {
+          "label": "baseline-inspect",
+          "exit": 0,
+          "wall_s": 35.72097691707313
+        },
+        {
+          "label": "selected",
+          "exit": 0,
+          "wall_s": 42.812499416060746
+        },
+        {
+          "label": "baseline-selected",
+          "exit": 0,
+          "wall_s": 73.52670858299825
+        },
+        {
+          "label": "review",
+          "exit": 0,
+          "wall_s": 58.457318583037704
+        },
+        {
+          "label": "prepare",
+          "exit": 0,
+          "wall_s": 117.85563216696028
+        },
+        {
+          "label": "apply",
+          "exit": 0,
+          "wall_s": 227.01045641698875
+        }
+      ],
+      "measurements": [
+        {
+          "case": "real-original-selectors",
+          "original": {
+            "wall_s": 39.55438441701699,
+            "process_cpu_s": 39.543307,
+            "retrieval_match_calls": 5926608
+          },
+          "candidate": {
+            "wall_s": 7.26720770902466,
+            "process_cpu_s": 7.2201689999999985,
+            "retrieval_match_calls": 2963664
+          },
+          "pairs": 456
+        },
+        {
+          "case": "real-dense-frontier",
+          "original": {
+            "wall_s": 41.040931625058874,
+            "process_cpu_s": 41.02024900000001,
+            "retrieval_match_calls": 5906160
+          },
+          "candidate": {
+            "wall_s": 0.2313826670870185,
+            "process_cpu_s": 0.23133400000000393,
+            "retrieval_match_calls": 41162
+          },
+          "pairs": 10296
+        }
+      ],
+      "actual_typed_record_recall": true,
+      "whole_intended_bank_and_authority_feature_index_HEAD_checks": true,
+      "input_unchanged": true,
+      "source_after": {
+        "baseline": {
+          "commit": "cdf99580df484485f47aac2bcb961ba9b11614c7",
+          "entries": 3516,
+          "inventory_sha256": "9c2b068e901787f1238e973cfcfcd1812e13b27e014ef0d1463bb4cfa0a524ae",
+          "cache_absent": true,
+          "blob_bytes_modes_checked": true
+        },
+        "candidate": {
+          "commit": "0d58a8b3158b5d08fcbe70a65e172f3454e1ce76",
+          "entries": 3517,
+          "inventory_sha256": "8ae5fe30f8a1f26d91eb3d360e2a144db998a23ddae6529ad8df8d5d3decf208",
+          "cache_absent": true,
+          "blob_bytes_modes_checked": true
+        }
+      },
+      "copied_candidate_and_baseline_pack_checked": true
+    },
+    "linux": {
+      "complete": true,
+      "differential_cases": 20,
+      "all_differential_results_and_errors_equal": true,
+      "public_manifest_and_pages_byte_equal": true,
+      "public_calls": [
+        {
+          "label": "inspect",
+          "exit": 0,
+          "wall_s": 26.08564536400081
+        },
+        {
+          "label": "baseline-inspect",
+          "exit": 0,
+          "wall_s": 25.363365886001702
+        },
+        {
+          "label": "selected",
+          "exit": 0,
+          "wall_s": 33.370876485001645
+        },
+        {
+          "label": "baseline-selected",
+          "exit": 0,
+          "wall_s": 63.12509386700185
+        },
+        {
+          "label": "review",
+          "exit": 0,
+          "wall_s": 43.773906433001684
+        },
+        {
+          "label": "prepare",
+          "exit": 0,
+          "wall_s": 82.82808239500446
+        },
+        {
+          "label": "apply",
+          "exit": 0,
+          "wall_s": 144.26186039699678
+        }
+      ],
+      "measurements": [
+        {
+          "case": "real-original-selectors",
+          "original": {
+            "wall_s": 38.4682256039996,
+            "process_cpu_s": 38.468567773000004,
+            "retrieval_match_calls": 5926608
+          },
+          "candidate": {
+            "wall_s": 7.004998790998798,
+            "process_cpu_s": 7.0057085090000015,
+            "retrieval_match_calls": 2963664
+          },
+          "pairs": 456
+        },
+        {
+          "case": "real-dense-frontier",
+          "original": {
+            "wall_s": 39.36770229400281,
+            "process_cpu_s": 39.367290065000006,
+            "retrieval_match_calls": 5906160
+          },
+          "candidate": {
+            "wall_s": 0.23548425999979372,
+            "process_cpu_s": 0.23552433300000075,
+            "retrieval_match_calls": 41162
+          },
+          "pairs": 10296
+        }
+      ],
+      "actual_typed_record_recall": true,
+      "whole_intended_bank_and_authority_feature_index_HEAD_checks": true,
+      "input_unchanged": true,
+      "source_after": {
+        "baseline": {
+          "commit": "cdf99580df484485f47aac2bcb961ba9b11614c7",
+          "entries": 3516,
+          "inventory_sha256": "9c2b068e901787f1238e973cfcfcd1812e13b27e014ef0d1463bb4cfa0a524ae",
+          "cache_absent": true,
+          "blob_bytes_modes_checked": true
+        },
+        "candidate": {
+          "commit": "0d58a8b3158b5d08fcbe70a65e172f3454e1ce76",
+          "entries": 3517,
+          "inventory_sha256": "8ae5fe30f8a1f26d91eb3d360e2a144db998a23ddae6529ad8df8d5d3decf208",
+          "cache_absent": true,
+          "blob_bytes_modes_checked": true
+        }
+      },
+      "copied_candidate_and_baseline_pack_checked": true
+    }
+  },
+  "retained_prior_failures": {
+    "03": "Both OS failed before differential at Python-version AST representation pin. Four public inspections completed with byte-equal manifests/pages. Exact source-file hash unchanged; observed AST identity corrected in 04.",
+    "dense_shape": "Earlier 10281-pair dense fixture had 138 changed and six unchanged sources; it is not this all-144-changed fixture."
+  },
+  "unchanged_limits": {
+    "public_command_seconds": 300,
+    "whole_diagnostic_seconds": 7200
+  }
+}
