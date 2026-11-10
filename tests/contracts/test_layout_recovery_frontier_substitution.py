@@ -55,6 +55,30 @@ class RecoveryFrontierSubstitutionContract(unittest.TestCase):
             self.assertEqual(len(status['pending_unit_ids']), 2)
             self.assertFalse(status['semantic_recovery_complete'])
 
+    def test_missing_coverage_review_refuses_full_claim_without_changing_source(self):
+        with World() as world:
+            command, source, repo, bank, _, inspected, applied = f.small_pending(world)
+            _, transaction, _ = f.admission_proposal(world, command, source, repo, bank, inspected, full=True)
+            evidence = transaction['admission_evidence']
+            request, proof = evidence['comparison_request'], evidence['comparison_proof']
+            f.public(world, command, 'compare', 'check', '--repo', repo, '--request', f.save(world, request),
+                     '--proof', f.save(world, proof), '--private-output', world.inside('reviewed.json'))
+            directory = f.private_directory(world, bank, inspected['operation_id'])
+            before = {p.relative_to(bank).as_posix(): p.read_bytes() for p in bank.rglob('*') if p.is_file()}
+            private = {p.relative_to(directory).as_posix(): p.read_bytes()
+                       for p in directory.rglob('*') if p.is_file()}
+            missing = copy.deepcopy(proof)
+            missing['judgment']['observation']['recovery_frontier']['review_digest'] = None
+            refused = world.run([command, 'compare', 'check', '--repo', repo, '--request', f.save(world, request),
+                                 '--proof', f.save(world, missing), '--private-output', world.inside('unreviewed.json')],
+                                check=False, timeout=60)
+            self.assertNotEqual(refused.returncode, 0)
+            self.assertEqual({p.relative_to(bank).as_posix(): p.read_bytes() for p in bank.rglob('*') if p.is_file()}, before)
+            self.assertEqual({p.relative_to(directory).as_posix(): p.read_bytes()
+                              for p in directory.rglob('*') if p.is_file()}, private)
+            self.assertEqual(f.call(world, command, 'status', '--repo', repo,
+                                    '--operation', inspected['operation_id'])['pending_unit_ids'], applied['pending_unit_ids'])
+
     def test_corrupt_private_index_blocks_public_comparison_without_canonical_write(self):
         with World() as world:
             command, source, repo, bank, _, inspected, applied = f.small_pending(world)

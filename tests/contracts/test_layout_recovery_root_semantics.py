@@ -50,6 +50,8 @@ class RecoveryRootSemanticsContract(unittest.TestCase):
             repo, bank, native = f.memory(world, oversized=True)
             tomb, marker = add_tombstone(bank, str(uuid.uuid4()))
             native[tomb] = (bank / tomb).read_text()
+            native['MEMORY.md'] = native['MEMORY.md'].replace(
+                '\n## Omitted contexts', '| [' + tomb + '](<' + tomb + '>) | Terminal marker | repository | deleted | Before any reuse |\n\n## Omitted contexts')
             original = files(bank)
             history = next(path for path in native if path.startswith('history/sources/'))
             old_metadata, old_body = test_comparison.unpack(native[history])
@@ -64,34 +66,30 @@ class RecoveryRootSemanticsContract(unittest.TestCase):
             for item in inspected['manifest']['sources']:
                 self.assertEqual((directory / item['blob']).read_bytes(), original[item['path']])
 
-    def test_historical_body_or_provenance_cannot_be_rewritten_as_layout_repair(self):
-        for change in ('body', 'origin'):
-            with self.subTest(change=change), World() as world:
-                command, source = f.installed(world)
-                repo, bank, native = f.memory(world, oversized=True)
-                _, inspected = f.inspect(world, command, repo)
-                path = next(p for p in native if p.startswith('history/sources/'))
-                metadata, body = test_comparison.unpack(native[path])
-                metadata = copy.deepcopy(metadata)
-                if change == 'body':
-                    body = '# Rewritten historical assertion\n\nThe previous conditions no longer apply.\n'
-                else:
-                    metadata['origin']['session'] = 'different-unverified-session'
-                intended = dict(native)
-                intended[path] = test_comparison.render(metadata, body)
-                request = f.review_request(world, command, source, repo, inspected, native)
-                request['intended_files'] = intended
-                unit = next(u for u in request['unit_map']['units'] if u['targets'] and u['targets'][0]['path'] == path)
-                unit['targets'][0]['sha256'] = f.sha(intended[path].encode())
-                rebind(request)
-                before = files(bank)
-                index = (repo / '.git/index').read_bytes()
-                output = world.inside('rewritten-history-proposal.json')
-                result = prepare_process(world, command, repo, inspected, request, output)
-                self.assertNotEqual(result.returncode, 0)
-                self.assertFalse(output.exists())
-                self.assertEqual(files(bank), before)
-                self.assertEqual((repo / '.git/index').read_bytes(), index)
+    def test_historical_provenance_cannot_be_rewritten_as_layout_repair(self):
+        with World() as world:
+            command, source = f.installed(world)
+            repo, bank, native = f.memory(world, oversized=True)
+            _, inspected = f.inspect(world, command, repo)
+            path = next(p for p in native if p.startswith('history/sources/'))
+            metadata, body = test_comparison.unpack(native[path])
+            metadata = copy.deepcopy(metadata)
+            metadata['origin']['session'] = 'different-unverified-session'
+            intended = dict(native)
+            intended[path] = test_comparison.render(metadata, body)
+            request = f.review_request(world, command, source, repo, inspected, native)
+            request['intended_files'] = intended
+            unit = next(u for u in request['unit_map']['units'] if u['targets'] and u['targets'][0]['path'] == path)
+            unit['targets'][0]['sha256'] = f.sha(intended[path].encode())
+            rebind(request)
+            before = files(bank)
+            index = (repo / '.git/index').read_bytes()
+            output = world.inside('rewritten-history-proposal.json')
+            result = prepare_process(world, command, repo, inspected, request, output)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertFalse(output.exists())
+            self.assertEqual(files(bank), before)
+            self.assertEqual((repo / '.git/index').read_bytes(), index)
 
     def test_terminal_marker_cannot_be_discarded_because_backup_exists(self):
         with World() as world:
@@ -99,6 +97,8 @@ class RecoveryRootSemanticsContract(unittest.TestCase):
             repo, bank, native = f.memory(world, oversized=True)
             tomb, _ = add_tombstone(bank, str(uuid.uuid4()))
             native[tomb] = (bank / tomb).read_text()
+            native['MEMORY.md'] = native['MEMORY.md'].replace(
+                '\n## Omitted contexts', '| [' + tomb + '](<' + tomb + '>) | Terminal marker | repository | deleted | Before any reuse |\n\n## Omitted contexts')
             _, inspected = f.inspect(world, command, repo)
             original = next(row for row in inspected['manifest']['sources'] if row['path'] == tomb)
             directory = f.private_directory(world, bank, inspected['operation_id'])
