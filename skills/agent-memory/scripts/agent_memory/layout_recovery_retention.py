@@ -15,6 +15,8 @@ import uuid
 from . import bank_writes as writes, local_registry as storage, scope_binding
 from . import layout_recovery_state as state, recovery_frontier as frontier
 from . import layout_recovery_publication as publication
+from . import layout_recovery_observation as observation, sharing_limits
+from . import layout_recovery_temps as temps
 from .developer_identity import digest, encoded, load, uuid_valid
 from .frontmatter import ContractError
 from . import trust_paths
@@ -40,11 +42,14 @@ OWNED = re.compile(
     r'nested/'+UUID+r'/(?:progress|rollback-progress)/[0-9]{8}\.json|'
     r'publication/'+UUID+r'/(?:observation|request|receipt)\.json|'
     r'publication/'+UUID+r'/originals/'+UUID+r'\.bin|'
+    r'metadata-probe-attempts/'+UUID+r'/(?:plan|completion)\.json|'
+    r'metadata-probe-attempts/'+UUID+r'/pins/\.agent-memory-probe-'+UUID+r'\.json|'
     r'retention/'+UUID+r'/(?:intent|proposal|receipt|progress/[0-9]{8})\.json\Z')
 OWNED_DIRECTORY = re.compile(
-    r'(?:originals|intended|proposals|reviews|attestations|resolutions|resolution-journals|resolution-completions|ledger|progress|recovery|unit-maps|revisions|nested|publication|retention|coverage-reviews|union-reviews|discard-reviews|ledger-transitions|quiescence-reviews)|'
-    r'(?:revisions|nested|publication|retention)/'+UUID+r'|'
-    r'publication/'+UUID+r'/originals|retention/'+UUID+r'/progress|nested/'+UUID+r'/(?:progress|rollback-progress)')
+    r'(?:originals|intended|proposals|reviews|attestations|resolutions|resolution-journals|resolution-completions|ledger|progress|recovery|unit-maps|revisions|nested|publication|retention|coverage-reviews|union-reviews|discard-reviews|ledger-transitions|quiescence-reviews|metadata-probe-attempts)|'
+    r'(?:revisions|nested|publication|retention|metadata-probe-attempts)/'+UUID+r'|'
+    r'publication/'+UUID+r'/originals|retention/'+UUID+r'/progress|nested/'+UUID+r'/(?:progress|rollback-progress)|'
+    r'metadata-probe-attempts/'+UUID+r'/pins')
 
 
 def require(condition, message):
@@ -222,6 +227,40 @@ def _operation_evidence(repo, operation_id, *, owner=None):
         'parent_ledger_head_sha256': proposal['parent_ledger_head_sha256']}
 
 
+
+def _probe_dependencies(bank, other, operation_id, inventory):
+    attempts = sorted(key.split('/')[1] for key in inventory['directories']
+                      if key.startswith('metadata-probe-attempts/') and len(key.split('/')) == 2)
+    probe_dirs = [key for key in inventory['directories']
+                  if key == 'metadata-probe-attempts' or key.startswith('metadata-probe-attempts/')]
+    probe_files = [pin for key, pin in inventory['files'].items() if key.startswith('metadata-probe-attempts/')]
+    require(len(probe_dirs) + len(probe_files) <= observation.MAX_ENTRIES
+            and sum(pin['bytes'] for pin in probe_files) <= sharing_limits.MAX_PRIVATE,
+            'Metadata probe evidence exceeds its complete aggregate bound')
+    if not attempts:
+        return []
+    journal = state.read(other/'journal.json', missing=True)
+    require(isinstance(journal, dict) and isinstance(journal.get('metadata_probes'), dict),
+            'Missing parent journal for metadata probe evidence')
+    require(journal['metadata_probes'].get('operation_id') == operation_id,
+            'Metadata probe plan belongs to a different operation')
+    live = temps.probe_entries(bank, journal['metadata_probes'], other)
+    blockers = ([{'kind': 'live-metadata-probe', 'operation_id': operation_id}] if live else [])
+    for attempt in attempts:
+        prefix = 'metadata-probe-attempts/'+attempt+'/'
+        require(prefix+'plan.json' in inventory['files'], 'Metadata probe attempt has no owned plan')
+        plan = state.read(other/prefix/'plan.json')
+        # probe_entries has already validated every complete attempt and pin
+        # against this exact journal, without deleting any occupied path.
+        completion = state.read(other/prefix/'completion.json', missing=True)
+        expected = {'schema': 'agent-memory/layout-metadata-probe-completion-v1',
+                    'operation_id': operation_id, 'attempt_id': attempt, 'plan_sha256': digest(encoded(plan))}
+        if completion != expected or any(_probe_path_present(bank, node['path']) for node in nodes.values()):
+            blockers.append({'kind': 'unfinished-metadata-probe-attempt',
+                             'operation_id': operation_id, 'attempt_id': attempt})
+    return blockers
+
+
 def _dependencies(root, operation_id, base, directory, *, cleanup_id=None):
     index = state.index(root)
     # Union registry and physical discovery; a typed child need not invent an
@@ -245,6 +284,7 @@ def _dependencies(root, operation_id, base, directory, *, cleanup_id=None):
         other = base/other_id
         inventory = inventories[other_id]
         row = rows[other_id]
+        blockers.extend(_probe_dependencies(Path(index['bank_path']), other, other_id, inventory))
         if row.get('kind') == 'child-restore' and not row['completed']:
             blockers.append({'kind': 'unfinished-child-restore', 'operation_id': other_id})
         for name, pin in inventory['files'].items():
@@ -312,11 +352,12 @@ def _dependencies(root, operation_id, base, directory, *, cleanup_id=None):
 
 
 def _retained(name):
-    return (name in {'receipt.json', 'retention-requirements.json', 'quiescence-attestations.json', 'staging.json',
+    return (name in {'receipt.json', 'journal.json', 'retention-requirements.json', 'quiescence-attestations.json', 'staging.json',
                     'retirement.json', 'reference-map.json'}
             or name.startswith(('retention/', 'resolutions/', 'resolution-journals/', 'resolution-completions/',
                                 'nested/', 'proposals/', 'recovery/', 'revisions/',
                                 'coverage-reviews/', 'union-reviews/', 'discard-reviews/', 'ledger-transitions/',
+                                'metadata-probe-attempts/',
                                 'quiescence-reviews/', 'attestations/', 'reviews/'))
             or (name.startswith('publication/') and '/originals/' not in name))
 

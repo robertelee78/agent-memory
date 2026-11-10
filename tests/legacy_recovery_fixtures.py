@@ -1,5 +1,6 @@
 """Pinned old-runtime recovery guards against real layout markers."""
 import json
+import os
 from pathlib import Path
 import sys
 import uuid
@@ -42,12 +43,25 @@ def guard(case, world, old, pack, repo, bank, directory, inspected, native, *, d
         decoy_request = recovery.save(world, request)
     lock = bank / '.agent-memory.lock'
     case.assertTrue(lock.is_file())
+    def metadata(root, *, exclude_lock=False):
+        if not root.exists():
+            return None
+        rows = {}
+        for path in (root, *root.rglob('*')):
+            if exclude_lock and path == lock:
+                continue
+            facts = path.lstat()
+            attrs = {name: os.getxattr(path, name, follow_symlinks=False)
+                     for name in os.listxattr(path, follow_symlinks=False)}
+            rows[str(path.relative_to(root))] = (facts.st_uid, facts.st_gid, facts.st_mode, attrs)
+        return rows
     def state_without_lock():
         value = snapshot(bank)
         value.pop('.agent-memory.lock', None)
         index = repo / '.git/index'
         head = world.git('rev-parse', '--verify', '--quiet', 'HEAD', cwd=repo, check=False)
-        return (value, snapshot(directory.parent.parent), index.read_bytes() if index.exists() else None,
+        return (value, snapshot(directory.parent.parent), metadata(bank, exclude_lock=True),
+                metadata(directory.parent.parent), index.read_bytes() if index.exists() else None,
                 (head.returncode, head.stdout), snapshot(repo / 'feature.txt'), snapshot(repo / 'untracked.txt'))
     before = state_without_lock()
     preview = world.run([old, 'writes', 'recover', '--repo', repo], check=False, timeout=60)
