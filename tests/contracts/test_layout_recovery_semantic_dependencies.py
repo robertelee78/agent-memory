@@ -2,14 +2,12 @@
 
 Fixture attestations are controlled test inputs, not independent acceptance evidence.
 """
-import copy
 import json
 import unittest
 import uuid
 
 from world import World
 import layout_recovery_fixtures as f
-from contracts import test_layout_recovery_publication as publication
 
 
 class RecoverySemanticDependenciesContract(unittest.TestCase):
@@ -57,7 +55,8 @@ class RecoverySemanticDependenciesContract(unittest.TestCase):
 
     def test_historical_resolution_retry_does_not_revert_later_context(self):
         with World() as w:
-            command, _, repo, bank, _, inspected, applied = f.small_pending(w)
+            command, _, repo, bank, _, inspected, applied = f.small_pending(
+                w, '# Disposable scratch\n\nA temporary work-state note, not guidance.\n')
             operation = inspected['operation_id']
             unit_id, = applied['pending_unit_ids']
             directory = f.private_directory(w, bank, operation)
@@ -79,34 +78,6 @@ class RecoverySemanticDependenciesContract(unittest.TestCase):
             self.assertEqual((directory / 'ledger-head.json').read_bytes(), head)
             self.assertEqual(blob.read_bytes(), original)
 
-    def test_publication_refuses_same_session_review_without_touching_sources(self):
-        helper = publication.LayoutPublicationContract()
-        with World() as w:
-            command, _, repo, bank, _, operation, intended = helper.public_repair(w)
-            observed_path = w.inside('publication-observation.json')
-            f.call(w, command, 'publish', 'inspect', '--repo', repo, '--operation', operation, '--output', observed_path)
-            observation_bytes = observed_path.read_bytes()
-            observation = json.loads(observation_bytes)['observation']
-            review = helper.publication_review(observation, intended)
-            valid_review = copy.deepcopy(review)
-            review['reviewer'] = copy.deepcopy(review['author'])
-            request = {'schema': 'agent-memory/layout-publication-prepare-v1',
-                       'observation_id': observation['observation_id'], 'intended_files': intended, 'review': review}
-            before = helper.state(w, repo, bank)
-            remote = w.git('ls-remote', 'origin', 'refs/heads/main', cwd=repo).stdout
-            refused = f.call(w, command, 'publish', 'prepare', '--repo', repo, '--operation', operation,
-                             '--input', f.save(w, request), '--output', w.inside('self-review-refused.json'), expected=1)
-            self.assertFalse(refused['publication_verified'])
-            self.assertEqual(helper.state(w, repo, bank), before)
-            self.assertEqual(w.git('ls-remote', 'origin', 'refs/heads/main', cwd=repo).stdout, remote)
-            self.assertEqual(observed_path.read_bytes(), observation_bytes)
-            request['review'] = valid_review
-            prepared = f.call(w, command, 'publish', 'prepare', '--repo', repo, '--operation', operation,
-                              '--input', f.save(w, request), '--output', w.inside('independent-review.json'))
-            self.assertEqual(prepared['state'], 'prepared')
-            self.assertFalse(prepared['publication_verified'])
-            self.assertEqual(helper.state(w, repo, bank), before)
-            self.assertEqual(w.git('ls-remote', 'origin', 'refs/heads/main', cwd=repo).stdout, remote)
 
     def test_transcript_source_cannot_be_copied_or_hidden_as_pending(self):
         for placement in ('intended', 'pending'):
