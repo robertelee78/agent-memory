@@ -2,7 +2,7 @@
   "schema": "agent-memory/selector-local-reuse-scoped-proof-v1",
   "candidate_commit": "0d58a8b3158b5d08fcbe70a65e172f3454e1ce76",
   "baseline_commit": "cdf99580df484485f47aac2bcb961ba9b11614c7",
-  "scope": "One synthetic original-HEAD public refresh and pure source-bound selector differential per OS. Not a full stress/native/release acceptance or statistical workload speed claim.",
+  "scope": "Synthetic original-HEAD public refresh and pure source-bound selector differential per OS, followed by four concurrent faithful-shape refreshes per OS. Not a full stress/native/release acceptance or statistical workload speed claim.",
   "source_reviews": {
     "design": [
       "anthropic/claude-fable-5",
@@ -209,6 +209,36 @@
       },
       "copied_candidate_and_baseline_pack_checked": true
     }
+  },
+  "four_concurrent_worlds": {
+    "scope": "One four-World diagnostic per OS; command intervals include supervisor overhead. No full-stress, statistical performance, World cleanup or release acceptance claim.",
+    "apparatus_public_sha256": "23698e83282f0b8ab51bae315ba135665ca3e0225dbcbd3e0d0bf731e177d514",
+    "independent_runtime_review": "anthropic/claude-opus-5-5: PASS for scoped four-World proof on both OS",
+    "worlds_per_os": 4,
+    "commands_per_os": 20,
+    "all_commands_exit_zero_within_300_seconds": true,
+    "all_prepared_before_gate": true,
+    "all_four_apply_intervals_overlap_on_each_os": true,
+    "apply_wall_s": {
+      "macos": [285.0661019580439, 289.0191404588986, 288.86566795792896, 289.576411709073],
+      "linux": [172.1860030789976, 170.32319972700498, 171.20036571600212, 171.9031642100017]
+    },
+    "each_world": {
+      "changed_paths": 70,
+      "changed_sources": 144,
+      "sources": 144,
+      "required_pairs": 456,
+      "pages": 10,
+      "receipt_and_typed_record_recall_verified": true,
+      "whole_intended_bank_authority_feature_index_HEAD_preserved": true,
+      "source_copied_packs_and_input_preserved": true
+    },
+    "risks": [
+      "Busy reference host, one sample only; macOS worst apply has about 10 seconds of margin against the unchanged 300-second limit.",
+      "The original six full-stress timeouts and unknown cleanup are not resolved by this diagnostic.",
+      "The first Linux launch exited 127 on an interpreter-path typo before execution; that failure is retained separately."
+    ],
+    "world_cleanup_claimed": false
   },
   "retained_prior_failures": {
     "03": "Both OS failed before differential at Python-version AST representation pin. Four public inspections completed with byte-equal manifests/pages. Exact source-file hash unchanged; observed AST identity corrected in 04.",
