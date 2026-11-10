@@ -197,11 +197,11 @@ class NestedRecoveryClosure(unittest.TestCase):
             altered = json.loads(original)
             altered['rationale'] += ' Changed after recovery preview.'
             review.write_bytes(f.encoded(altered))
-            head = world.git('rev-parse', 'HEAD', cwd=repo).stdout
+            head = snapshot(repo / '.git/HEAD'), snapshot(repo / '.git/refs')
             before = snapshot(bank), snapshot(directory), snapshot(repo / '.git/index')
             f.call(world, command, 'recover-nested', '--repo', repo, '--proposal', finish, expected=1)
             self.assertEqual((snapshot(bank), snapshot(directory), snapshot(repo / '.git/index')), before)
-            self.assertEqual(world.git('rev-parse', 'HEAD', cwd=repo).stdout, head)
+            self.assertEqual((snapshot(repo / '.git/HEAD'), snapshot(repo / '.git/refs')), head)
             review.write_bytes(original)
             result = f.call(world, command, 'recover-nested', '--repo', repo, '--proposal', finish)
             self.assertTrue(result['verified'])
@@ -209,7 +209,7 @@ class NestedRecoveryClosure(unittest.TestCase):
             self.assertTrue(f.call(world, command, 'status', '--repo', repo,
                                    '--operation', operation)['semantic_recovery_complete'])
             self.assertEqual(snapshot(repo / '.git/index'), before[2])
-            self.assertEqual(world.git('rev-parse', 'HEAD', cwd=repo).stdout, head)
+            self.assertEqual((snapshot(repo / '.git/HEAD'), snapshot(repo / '.git/refs')), head)
 
     def test_changed_review_pin_refuses_interrupted_finish_without_replacement(self):
         with World() as world:
