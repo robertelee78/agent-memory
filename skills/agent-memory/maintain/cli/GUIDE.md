@@ -57,11 +57,13 @@ MUST remain one quoted argument. Invalid arguments exit 2; a refused operation
 exits nonzero and retains the helper's evidence/recovery instructions. A
 successful preview is not an applied mutation or verified publication.
 
-`admission preview`, `compact preview` and `govern preview` accept
-`--operation-id UUID --recorded-at RFC3339` when an independent recovery review
-binds the exact planned output. The session MUST choose and review those
-values with the intended files before preview; they are CLI options, not extra
-request fields, and MUST NOT replace source, authority or coverage review.
+When recovery coverage must bind exact future maintenance output, a session MUST
+first use `compact plan` or `govern plan`, independently review the actual planned
+files through the owning operation, then use `preview --plan` with that review.
+`admission preview` retains its documented seeded review workflow. Unplanned
+previews MAY accept `--operation-id UUID --recorded-at RFC3339` as CLI options,
+not request fields; those seeds grant no source, authority or coverage credit
+and MUST NOT replace the required planning and independent review.
 
 Bare `am`, `am help`, `am --help` and `am -h` show public help. `am --version`,
 `am -V` and `am version` show the executing version, revision/cleanliness and
@@ -81,8 +83,8 @@ retain the separately previewed installation operation.
 | `context` | `assemble_context.py` | Bounded, source-labeled context preview/check |
 | `capture` | `admit_learning.py capture` | Private durable-learning candidate, not admission |
 | `admission`, `compare` | `admit_learning.py`, `compare_learning.py` | Search/read existing memory, semantic judgment and governed admission |
-| `compact`, `checkpoint` | `consolidate_learning.py`, `checkpoint.py` | Condition-preserving consolidation or observed active-context checkpoint |
-| `correct`, `supersede`, `revoke`, `forget`, `govern` | `govern_memory.py` | Evidence-bound governance preview/apply |
+| `compact`, `checkpoint` | `consolidate_learning.py`, `checkpoint.py` | Plan/review/preview/apply condition-preserving consolidation or observed active-context checkpoint |
+| `correct`, `supersede`, `revoke`, `forget`, `govern` | `govern_memory.py` | Evidence-bound governance plan/review/preview/apply |
 | `semantic`, `publish` | `reconcile_memory.py`, `publish_memory.py` | Review shared meaning and land memory independently of feature code |
 | `refresh`, `boundary` | `refresh_memory.py` | Inspect/prepare/apply newly landed same-repository memory and qualified imported recall |
 | `omp-boundary` | `omp_boundary.py` | Private native source inspection and exact single-observation assessment, using ordinary approved tools; callbacks expose observation only |

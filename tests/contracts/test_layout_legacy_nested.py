@@ -77,8 +77,9 @@ class LayoutLegacyNested(unittest.TestCase):
                 self.assertFalse(marker.exists())
                 status = recovery.call(world, command, 'status', '--repo', repo, '--operation', operation)
                 self.assertTrue(status['semantic_recovery_complete'])
-                compared = recovery.public(world, command, 'compare', 'inspect', '--repo', repo, '--request', request,
-                                           '--private-output', output)
+                recovery.public(world, command, 'compare', 'inspect', '--repo', repo, '--request', request,
+                                '--private-output', output)
+                compared = json.loads(output.read_text())
                 self.assertEqual(compared['observation']['recovery_frontier']['unit_ids'], [])
                 self.assertIn(target, {row['path'] for row in compared['matches']})
             else:
