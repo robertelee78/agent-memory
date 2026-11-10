@@ -1520,7 +1520,6 @@ def observe(repo, value, *, receipt=None, on_started=None, delivery_window=None,
                             and any(block.get('type') == 'toolCall' and block.get('id') == call_id
                                     and block.get('name') == 'read'
                                     and isinstance(block.get('arguments'), dict)
-                                    and block['arguments'].get('path') == 'skill://agent-memory'
                                     for block in candidates[0]['message']['content'] if isinstance(block, dict))
                             and call_id not in retained_tool_gaps
                             and len(invocations.get(call_id, set())) == 1
@@ -1538,9 +1537,15 @@ def observe(repo, value, *, receipt=None, on_started=None, delivery_window=None,
                                     and retained_invocation.get('snapshot_ref') == str(invocation_path.relative_to(invocation_owner))
                                     and retained_invocation.get('snapshot_sha256') == digest(projected_invocation)
                                     and projected_invocation == read(invocation_path)):
-                                from . import omp_installation
-                                witness = omp_installation._owned_manual(receipt)
-                                invocation = candidates[0]
+                                call = next(block for block in candidates[0]['message']['content']
+                                            if isinstance(block, dict) and block.get('type') == 'toolCall'
+                                            and block.get('id') == call_id and block.get('name') == 'read'
+                                            and isinstance(block.get('arguments'), dict))
+                                relative = omp_projection._instruction_relative(call['arguments'].get('path'))
+                                if relative is not None:
+                                    from . import omp_installation
+                                    witness = omp_installation._owned_manual(receipt, relative)
+                                    invocation = candidates[0]
                     cap = capture(d, c, entry, mapping='verified' if native in payload['branch_ids'] else 'absent',
                                   invocation=invocation, witness=witness, persisted=view['source_kind'] == 'retired-file')
                     order = (c['control_interval'] or {}).get('capture_order', [])

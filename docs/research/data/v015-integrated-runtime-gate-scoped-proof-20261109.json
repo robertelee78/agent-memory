@@ -125,6 +125,97 @@
       "boundary": "Synthetic component gate control only."
     }
   },
+  "owned_guides": {
+    "base_commit": "e4b935ccbbcd110158d20ba4e97380fdc722a459",
+    "production_files": {
+      "skills/agent-memory/scripts/agent_memory/omp_installation.py": {
+        "sha256": "49e923fa953d8b4200abedb32531cb2256b3320aaf5dfc0945bbff2eec69b5c3",
+        "mode": "0o644"
+      },
+      "skills/agent-memory/scripts/agent_memory/omp_projection.py": {
+        "sha256": "9a6bee30ce2bf877ae8aacf9abe4cbb4a6cab1ebb543296e505edfdb76d0eadd",
+        "mode": "0o644"
+      },
+      "skills/agent-memory/scripts/agent_memory/omp_transport.py": {
+        "sha256": "e268cbeff1215ffb9d70c8795c842346c4b6ee98cd738d55201d65ff52c498df",
+        "mode": "0o644"
+      }
+    },
+    "before": {
+      "actual_owned_guide_native_metadata": "Exact standard renderer/content/details match to public admission guide; original native World unchanged.",
+      "public_guide_sha256": "7d6ce2ba27d0a6e587c7e780fd6d1b00eaba7c221c4ee4676503bdc4d0dc4c7b",
+      "fresh_copy_link_observer": "Both retain unsafe-representation native gap and missing-stored-source tool gap at baseline."
+    },
+    "r2": {
+      "source_hash": "ae12b3f3316e2412cd1ba606c947d3f85477570e55c5df9388c7cb7e71f2ccff",
+      "source_unchanged": true,
+      "aggregate_passed": false,
+      "registered_suites": 7,
+      "tests": 20,
+      "passed_suites": 6,
+      "failed_suites": [
+        "omp-owned-guide-binding-history"
+      ],
+      "failure": "One new test expected a re-bound receipt with a hyphenated UUID installation_id to qualify; the receipt contract correctly requires 32 lowercase hex characters. Production code unchanged.",
+      "actual_copy_link_observer_journey": "PASS; no gaps, body-free metadata, surrounding source and retry bytes preserved.",
+      "seconds": 85.90826170798391
+    },
+    "r3": {
+      "source_hash": "56105befdec284d13f9df32013b48ffc5b8d3cf33587bb8100aa10c112df6796",
+      "source_unchanged": true,
+      "source_overlay_sha256": "0bbdee81e163daa853baaf5a7a8587de6ea52415e1fa5dcd1fb7f305a6147683",
+      "production_hashes_unchanged_from_r2": true,
+      "correction": "New binding test now uses valid uuid.hex identity; only failed suite rerun. Design status records exact-model provider refusal.",
+      "suite": "omp-owned-guide-binding-history",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "passed": true,
+      "seconds": 19.56224233296234,
+      "initial_harness_refusal": "A direct invocation outside the required World refused before tests. Subsequent isolated World runner passed; both observations retained.",
+      "public_source": {
+        "passed": true,
+        "seconds": 20.374806917039678,
+        "modes": [
+          "copy",
+          "link"
+        ],
+        "public_exits": [
+          0,
+          0
+        ],
+        "coverage_complete": true,
+        "faults": [],
+        "gaps": [],
+        "body_free_provenance": true,
+        "historical_not_current_authentication_qualification": true,
+        "source_digest_and_retry_bytes_verified": true,
+        "canonical_writes_performed": false
+      }
+    },
+    "review": {
+      "required_model": "anthropic/claude-opus-5-5",
+      "completed": false,
+      "verdict": null,
+      "provider_refusals": 2,
+      "http_status": 429,
+      "error_type": "rate_limit_error",
+      "reported_retry_after_ms": 60053000,
+      "substitution_or_automatic_retry": false
+    },
+    "private_evidence": {
+      "name": "owned-guide-r2-negative-r3-corrected-and-public-source-actual-20261109.tar.gz",
+      "sha256": "0ec12d937e0abda2dc4a5d64fbcc6227a82d6b6d1f5ec845f6fb00e6e5f442f6",
+      "bytes": 109253
+    },
+    "limits": [
+      "No original native transcript body copied/printed/archived or original World mutated.",
+      "No omp source/install/config mutation, endpoint/key access, model or new native campaign.",
+      "Separate sequence158 unknown-after-start cause remains unproved.",
+      "No relabeling R2 aggregate as passed or single-final-source whole-suite/matrix/native/signed-release acceptance.",
+      "Final stock-omp campaign still must exercise actual owned GUIDE read."
+    ]
+  },
   "source_reviews": {
     "IntegratedNativeOpus": "Source-only native delta and interrupt closure PASS",
     "IntegratedReuseOpus": "Source-only pure reuse/checkpoint and historical-command/cache-isolation closure PASS",
