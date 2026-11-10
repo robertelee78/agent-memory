@@ -133,7 +133,7 @@ Markdown.
 
 Before canonical replacement or restoration, metadata preservation is
 preflighted against what the actual filesystem and unprivileged principal can
-produce. Naturally generated provenance on new files or directories must match
+produce. Naturally generated provenance on new files or directories MUST match
 the reviewed per-path plan exactly; a mismatch or an inability to reproduce
 required ownership, mode or metadata remains pending. Recovery does not set,
 remove or alter xattrs, use elevated privilege, or bypass unsupported metadata.
@@ -143,7 +143,7 @@ If a probe is interrupted with an unpinned or mismatched occupant, the intended
 behavior is `pending-ambiguous-probe-ownership` with the affected path:
 preserve the occupant and journal, without publishing a transaction marker or
 automatically deleting it. Only an operator, after manually inspecting the exact
-named path, may remove that occupant and then resume recovery. A residual
+named path, MAY remove that occupant and then resume recovery. A residual
 limitation remains for pinned probe directories: if a foreign actor deletes an
 empty directory and the filesystem reuses its inode for an empty directory at
 the same name, the replacement cannot be distinguished from the pinned

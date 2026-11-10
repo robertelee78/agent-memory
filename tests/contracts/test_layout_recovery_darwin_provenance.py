@@ -1,4 +1,4 @@
-"""Public recovery controls using naturally generated macOS provenance."""
+"""Exact metadata preservation and unsupported-xattr refusal via public recovery."""
 import ctypes
 import os
 import stat
@@ -33,6 +33,9 @@ def checked(result):
 
 
 def xattrs(path):
+    if sys.platform != 'darwin':
+        return {name: os.getxattr(path, name, follow_symlinks=False).hex()
+                for name in os.listxattr(path, follow_symlinks=False)}
     libc = native_xattrs()
     encoded_path = os.fsencode(path)
     size = checked(libc.listxattr(encoded_path, None, 0, 0))
@@ -50,6 +53,9 @@ def xattrs(path):
 
 
 def set_xattr(path, name, value):
+    if sys.platform != 'darwin':
+        os.setxattr(path, name, value, follow_symlinks=False)
+        return
     libc = native_xattrs()
     buffer = ctypes.create_string_buffer(value, len(value))
     checked(libc.setxattr(os.fsencode(path), os.fsencode(name), buffer, len(value), 0, 0))
@@ -60,14 +66,10 @@ def snapshot(bank, paths):
                    xattrs(bank / path)) for path in paths}
 
 
-@unittest.skipUnless(sys.platform == 'darwin', 'macOS provenance is Darwin-specific')
 class DarwinProvenanceRecoveryContract(unittest.TestCase):
     def setup_repair(self, world):
         command, source = fixture.installed(world)
         repo, bank, native = fixture.memory(world, oversized=True)
-        active = bank / 'activeContext.md'
-        if PROVENANCE not in xattrs(active):
-            self.skipTest('filesystem did not generate macOS provenance on fixture file')
         originals = snapshot(bank, native)
         return command, source, repo, bank, native, originals
 
@@ -101,11 +103,12 @@ class DarwinProvenanceRecoveryContract(unittest.TestCase):
             _, inspected = fixture.inspect(world, command, repo)
             proposal, _ = fixture.prepare(world, command, source, repo, inspected, native)
             target = bank / 'activeContext.md'
-            set_xattr(target, 'org.agent-memory.drift-control', b'controlled drift')
+            name = 'org.agent-memory.drift-control' if sys.platform == 'darwin' else 'user.org.agent-memory.drift-control'
+            set_xattr(target, name, b'controlled drift')
             before = snapshot(bank, native)
             fixture.call(world, command, 'apply', '--repo', repo, '--proposal', proposal, expected=1)
             self.assertEqual(snapshot(bank, native), before)
-            self.assertEqual(xattrs(target)[PROVENANCE], originals['activeContext.md'][2][PROVENANCE])
+            self.assertEqual(xattrs(target).get(PROVENANCE), originals['activeContext.md'][2].get(PROVENANCE))
 
     def test_reviewed_wrong_provenance_refuses_without_replacement(self):
         with World() as world:
@@ -113,7 +116,7 @@ class DarwinProvenanceRecoveryContract(unittest.TestCase):
             _, inspected = fixture.inspect(world, command, repo)
             request = fixture.review_request(world, command, source, repo, inspected, native)
             attrs = request['metadata_plan']['files']['activeContext.md']['xattrs']
-            value = bytes.fromhex(attrs[PROVENANCE])
+            value = bytes.fromhex(attrs.get(PROVENANCE, ''))
             attrs[PROVENANCE] = (value + b'\x00').hex()
             request['review']['metadata_plan_sha256'] = fixture.sha(fixture.encoded(request['metadata_plan']))
             fixture.call(world, command, 'prepare', '--repo', repo, '--operation', inspected['operation_id'],
@@ -125,9 +128,10 @@ class DarwinProvenanceRecoveryContract(unittest.TestCase):
         with World() as world:
             command, _, repo, bank, native, _ = self.setup_repair(world)
             target = bank / 'activeContext.md'
-            set_xattr(target, 'org.agent-memory.contract-control', b'controlled')
+            name = 'org.agent-memory.contract-control' if sys.platform == 'darwin' else 'user.org.agent-memory.contract-control'
+            set_xattr(target, name, b'controlled')
             before = snapshot(bank, native)
             fixture.call(world, command, 'inspect', '--repo', repo,
                          '--output', world.inside('unknown-xattr.json'), expected=1)
             self.assertEqual(snapshot(bank, native), before)
-            self.assertEqual(bytes.fromhex(xattrs(target)['org.agent-memory.contract-control']), b'controlled')
+            self.assertEqual(bytes.fromhex(xattrs(target)[name]), b'controlled')
