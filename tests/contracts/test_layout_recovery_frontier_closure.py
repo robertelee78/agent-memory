@@ -436,7 +436,6 @@ class RecoveryFrontierClosureContract(unittest.TestCase):
                                     '--operation', inspected['operation_id'])['semantic_recovery_complete'])
 
     def _consumer_flow(self, route, *, pending):
-        from agent_memory import bank_contract
         with World() as w:
             command, source = f.installed(w)
             repo, bank, _ = f.memory(w)
@@ -531,9 +530,14 @@ class RecoveryFrontierClosureContract(unittest.TestCase):
                 governance = test_governance.GovernanceContract('runTest')
                 governance.pid, governance.actor = helper.pid, helper.actor
                 consumer_input = governance.request(bank, old, first, 'supersede')
+                context_names = w.run([sys.executable, '-I', '-B', '-c',
+                    "import json,sys;sys.path.insert(0,sys.argv[1]);"
+                    "from agent_memory import bank_contract;print(json.dumps(bank_contract.CONTEXTS))",
+                    source / 'scripts'], check=False, timeout=30)
+                self.assertEqual(context_names.returncode, 0, context_names.stderr)
                 consumer_input['context_review'] = {
                     path: f.sha((bank / path).read_bytes())
-                    for path in ('MEMORY.md', *bank_contract.CONTEXTS)
+                    for path in ('MEMORY.md', *json.loads(context_names.stdout))
                     if (bank / path).is_file()}
                 consumer_input['replacement'] = {
                     'path': second, 'id': replacement['id'], 'version': replacement['version'],
