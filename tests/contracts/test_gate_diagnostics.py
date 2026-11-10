@@ -86,6 +86,15 @@ class World(_ActualWorld):
                 shutil.copy2(ROOT / 'scripts' / name, checkout / 'scripts' / name)
             for name in ('world.py', 'fault_partitions.py'):
                 shutil.copy2(ROOT / 'tests' / name, checkout / 'tests' / name)
+            for name in ('skills', 'memory-bank'):
+                (checkout / name).mkdir()
+            for name in ('install.sh', '.github/workflows/contracts.yml',
+                         'docs/research/data/2026-10-26-recall-native/literal-quality/1000-labels.json',
+                         'docs/research/data/2026-10-25-recall-final/semantic-1000/wall-disagreement.json',
+                         'docs/research/data/2026-10-25-recall-final/semantic-controller-v5.py'):
+                target = checkout / name
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(ROOT / name, target)
             (checkout / 'tests/contracts/fixture.py').write_text(
                 'import unittest\n'
                 'class FailedContract(unittest.TestCase):\n'

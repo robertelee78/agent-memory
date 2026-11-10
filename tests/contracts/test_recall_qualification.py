@@ -163,7 +163,8 @@ print('exact validated provider identity accepted; wrong, mixed and unvalidated 
         self.assertGreater(len(original), len(malicious))
         target.write_bytes(malicious + b'#' * (len(original) - len(malicious)))
         os.utime(target, ns=(stat.st_atime_ns, stat.st_mtime_ns))
-        cache = Path(py_compile.compile(str(target), doraise=True))
+        target_cache = target.parent / '__pycache__' / f'{target.stem}.{sys.implementation.cache_tag}.pyc'
+        cache = Path(py_compile.compile(str(target), cfile=str(target_cache), doraise=True))
         target.write_bytes(original)
         os.utime(target, ns=(stat.st_atime_ns, stat.st_mtime_ns))
         return cache
@@ -263,6 +264,7 @@ print('bytecode-free source binding passed')
                     helper.parent.mkdir(parents=True, exist_ok=True)
                     shutil.copy2(ROOT / 'tests/world.py', helper)
                     (target / '.gitignore').write_text('__pycache__\n*.pyc\n')
+                    (target / '.gitignore').chmod(0o644)
                     world.git('add', '.', cwd=target); world.git('commit', '-m', 'Source binding control', cwd=target)
                     cache, before = self.linked_cache(world, helper, 'external-' + directory.replace('/', '-'))
                     self.assertEqual(world.git('status', '--porcelain', '--untracked-files=all', cwd=target).stdout, '')
