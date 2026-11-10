@@ -195,3 +195,21 @@ do not prove complete-operation compliance. The live integration HEAD/index
 changed through the parent's concurrent research commit; both observed states
 were clean, and the independently archived runtime imported by every worker
 remained unchanged. Failed Worlds were never mutated.
+
+### Operation-local selector derivation (2026-11-10)
+
+An original-shape disposable public diagnostic used 144 sources and 456 pairs
+and completed prepare in 173.093 seconds and apply in 271.051 seconds. Sampled
+stacks located repeated literal selection before and under the transaction lock;
+13 of 27 samples were malformed, so they do not measure phase durations. An
+earlier four-worker reconstruction had only 138 sources and 444 pairs because
+its memory state differed, and its 292–294 second applies do not establish
+full-stress viability.
+
+The independently reviewed refinement reuses only invocation-local row
+derivations, with finite rendered-text and query-result budgets and uncached
+fallback. It preserves canonical literal matching and all fresh source,
+authority and lock-boundary checks. Separate source review, differential
+consumer tests, public smoke and same-input measurements remain necessary;
+neither these observations nor the refinement establish a runtime improvement
+or full-workload qualification.

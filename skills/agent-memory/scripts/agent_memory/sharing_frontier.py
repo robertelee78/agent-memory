@@ -2,6 +2,7 @@
 from __future__ import annotations
 import copy
 import itertools
+import sys
 from pathlib import Path
 
 from . import bank_contract as bank, bank_layout as layout, records, retrieval, security
@@ -130,10 +131,33 @@ def request_value(request):
 def selected(rows,changed,request):
     from . import semantic_sharing as semantic
     if set(request['selections'])-changed:raise ContractError('Selectors cannot substitute an unchanged or absent change reference')
-    logical={};identity={}
+    logical={};identity={};paths={}
     for key,row in rows.items():
         logical.setdefault(row['logical_key'],set()).add(key)
         for ref in identities(row):identity.setdefault(ref,set()).add(key)
+        paths.setdefault(row['path'],set()).add(key)
+    rendered={};queries={}
+    rendered_bytes=sys.getsizeof(rendered);query_bytes=sys.getsizeof(queries)
+
+    def query_matches(search):
+        nonlocal rendered_bytes,query_bytes
+        if search in queries:return queries[search]
+        found=[]
+        for other,value in rows.items():
+            text=rendered.get(other)
+            if text is None:
+                text=value['body']+'\n'+str(value['effective_framing'])
+                charge=sys.getsizeof(text)+128
+                if rendered_bytes+charge<=24*1024*1024:
+                    rendered[other]=text;rendered_bytes+=charge
+            if retrieval.match({'ids':[],'paths':[],'query':search},
+                               {'path':value['path'],'body':text}) is not None:
+                found.append(other)
+        result=tuple(found)
+        charge=sys.getsizeof(search)+sys.getsizeof(result)+128
+        if len(queries)<256 and query_bytes+charge<=8*1024*1024:
+            queries[search]=result;query_bytes+=charge
+        return result
     selected_keys=set(changed);edges=set();entries={};pending=[]
     for key in sorted(changed):
         row=rows[key];selection=request['selections'].get(key)
@@ -158,8 +182,9 @@ def selected(rows,changed,request):
             if any(not uuid_valid(ref) for ref in selection['ids']):raise ContractError('Select actual stable record identities')
             for path in selection['paths']:
                 if path!='MEMORY.md':bank.path_value(path)
-            for other,value in rows.items():
-                if value['path'] in selection['paths'] or identities(value)&set(selection['ids']) or any(retrieval.match({'ids':[],'paths':[],'query':search},{'path':value['path'],'body':value['body']+'\n'+str(value['effective_framing'])}) is not None for search in searches):matches.add(other)
+            for path in selection['paths']:matches.update(paths.get(path,()))
+            for ref in selection['ids']:matches.update(identity.get(ref,()))
+            for search in searches:matches.update(query_matches(search))
             entries[key]={**selection,'matched':sorted(matches)}
             if not selection['complete']:pending.append(key)
         selected_keys.update(matches)

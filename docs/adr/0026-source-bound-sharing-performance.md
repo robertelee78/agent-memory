@@ -93,6 +93,47 @@ same-input component measurements on macOS/Linux, the complete original
 workloads and independent acceptance remain separate gates. This clarification
 neither authorizes a full stress retry nor changes the accepted outcome.
 
+#### Operation-local selector derivation refinement (2026-11-10)
+
+A fresh original-shape public diagnostic retained144sources/456pairs and completed
+prepare173.093s/apply271.051s under300s. Sampled stacks identify repeated literal
+selection in `sharing_frontier.selected` both before and under the transaction
+lock;13of27samples are malformed and MUST NOT support phase-duration claims.
+The prior four-worker reconstruction differed in committed memory state and had
+only6–8seconds deadline headroom. Neither establishes fullstress readiness.
+
+One invocation MAY reuse only derivations from its already-built component rows:
+exact path-to-key-set and identity-ref-to-key-set multimaps, rendered text and
+source-key match sets for identical already-validated normalized literal queries.
+The canonical `retrieval.match` implementation SHALL remain unchanged and decide
+all text matches. Per-selection validation, mandatory logical/identity links,
+pending flags, dependencies, consolidation, sorted source/edge output, complete
+semantic comparisons and every existing limit SHALL remain unchanged.
+
+Reuse SHALL be local to one `selected` call, not survive it, and MUST NOT cross
+pre-lock/held-lock source/proof validation. It SHALL perform no filesystem
+observation and grant no source-currentness, policy, identity, authority or
+recovery-frontier credit. Later calls SHALL derive from their fresh actual rows.
+Use at most256cachedquery entries,24MiB of rendered strings and8MiB of query
+strings/complete immutable matching-key tuples, including full string/container
+allocation sizes, initial dict headers and conservative128byte slot charges.
+Shared existing keys need no recount. Retain only rendered body/framing strings,
+not candidate dictionaries or per-row identity caches; row dictionaries MUST
+remain unchanged. Reuse inability SHALL fall back to the identical uncached
+canonical matcher without refusal, truncation or source omission, preserving
+all normal query/edge/source refusal limits. No global cache or eviction exists.
+Memory accounting, short-circuit/error behavior and bounded fallback require
+independent review and differential consumer tests before integration.
+
+Python3.15.2 [memoization guidance](https://docs.python.org/3.15/library/functools.html)
+limits reuse to pure repeated computations and warns about retained values and
+unbounded caches. A finite invocation-local dictionary is chosen over a global
+cache, persistent index or second text-matching implementation. No novel2026
+algorithm or exhaustive SOTA claim is made. Source/design review, actual public
+smoke, same-input measurements, comparable final S0/C workload qualification and
+independent acceptance remain separate requirements. This proposal authorizes no
+fullrun and changes no300second deadline or original workload.
+
 ### 3. Artifact safety and boundedness
 
 The exporter SHALL use a new absolute output directory outside canonical/runtime roots, owner-private checked parent directories, exclusive no-follow creation and bounded writes using existing private-workspace conventions. Both outputs SHALL be absent, distinct and non-overlapping. Symlink/traversal/output collision, permission/disk failure, partial artifact, missing/duplicate/reordered/corrupted/stale pages and response loss SHALL have explicit refusal/recovery behavior. Existing64KiBpage limits and whole-operation caps SHALL remain. No source/edge/hold truncation or empty-success fallback is permitted.
