@@ -166,6 +166,9 @@ class CoverageFixture(unittest.TestCase):
             'initial_lifecycle': self.lifecycle}
         self.addCleanup(mock.patch.stopall)
         mock.patch.object(stream, '_base', return_value=self.base).start()
+        # These in-process coverage controls do not qualify a Linux image.
+        # Avoid a real hashing thread overlapping the image controls' OS mocks.
+        mock.patch.object(stream, '_LinuxNativeImage', return_value=None).start()
         mock.patch.object(turn_sources, 'source_barrier', side_effect=lambda *a, **kw: nullcontext()).start()
         self.binding_verifier = mock.patch.object(stream, '_verify_binding', return_value=nullcontext()).start()
         self.full_binding_verifier = mock.patch.object(stream, '_attest_binding', return_value=object()).start()
@@ -202,7 +205,7 @@ class CoverageFixture(unittest.TestCase):
 
     def execute(self, observer, value=None, sequence=1, raw=None, *, coverage=None):
         current = self.coverage if coverage is None else coverage
-        clocks = self.clocks if coverage is None else stream.ClockWindows(current.instance, lambda: self.responses.live)
+        clocks = self.clocks if coverage is None else stream.ClockWindows(current.instance, lambda: self.responses.live, platform='darwin')
         executor = stream.FiniteExecutor(current, self.responses, clocks, observer=observer)
         executor.execute('REQUEST', sequence, None,
                          bytearray(stream.turn_sources.encoded(self.request() if value is None else value)) if raw is None else raw)
@@ -1871,6 +1874,123 @@ class CanonicalWriterObservationBoundaries(unittest.TestCase):
         self.assertEqual((moved / self.lock.name).read_bytes(), b'')
 
 
+class LinuxImageControls(unittest.TestCase):
+    """Controlled negative and arithmetic controls, not native provenance."""
+
+    def image(self):
+        image = stream._LinuxNativeImage.__new__(stream._LinuxNativeImage)
+        image.lock = threading.Lock()
+        image.ready = None
+        image.closed = False
+        return image
+
+    def observe(self, *, implementation='cpython', minor=11, clock='clock_gettime(CLOCK_MONOTONIC)',
+                monotonic=True, mode=0o100755, size=3, reads=(b'abc', b''),
+                changed=False, allowed=True, close_during_hash=False, namespaces=None):
+        image = self.image()
+        info = mock.Mock(st_mode=mode, st_size=size, st_dev=1, st_ino=2, st_mtime_ns=3, st_ctime_ns=4)
+        other = mock.Mock(st_mode=mode, st_size=size, st_dev=1, st_ino=2, st_mtime_ns=5, st_ctime_ns=4)
+        closed = []
+        def read(fd, count):
+            if close_during_hash:
+                image.close()
+            return next(blocks)
+        blocks = iter(reads)
+        digest = stream.hashlib.sha256(b'abc').hexdigest()
+        with ExitStack() as stack:
+            stack.enter_context(mock.patch.object(stream.sys, 'implementation', mock.Mock(name=implementation)))
+            stream.sys.implementation.name = implementation
+            stack.enter_context(mock.patch.object(stream.sys, 'version_info', mock.Mock(major=3, minor=minor)))
+            stack.enter_context(mock.patch.object(stream.time, 'get_clock_info',
+                return_value=mock.Mock(implementation=clock, monotonic=monotonic)))
+            stack.enter_context(mock.patch.object(stream.os, 'getppid', return_value=44))
+            stack.enter_context(mock.patch.object(stream.os, 'getpid', return_value=45))
+            stack.enter_context(mock.patch.object(stream.os, 'pidfd_open', return_value=102, create=True))
+            stack.enter_context(mock.patch.object(stream, '_linux_process_start', return_value=99))
+            stack.enter_context(mock.patch.object(stream, '_linux_time_namespace',
+                side_effect=namespaces or [('time', 1, 2), ('time', 1, 3)]))
+            stack.enter_context(mock.patch.object(stream.os, 'open', return_value=101))
+            stack.enter_context(mock.patch.object(stream.os, 'fstat', side_effect=[info, other if changed else info]))
+            stack.enter_context(mock.patch.object(stream.os, 'read', side_effect=read))
+            stack.enter_context(mock.patch.object(stream.os, 'close', side_effect=closed.append))
+            stack.enter_context(mock.patch.object(stream, '_LINUX_MONOTONIC_IMAGES', {digest} if allowed else set()))
+            image._observe()
+        return image, closed, info
+
+    def test_self_check_rejects_unsupported_interpreters_and_clocks(self):
+        for args in ({'minor': 10}, {'minor': 16}, {'implementation': 'pypy'},
+                     {'clock': 'clock_gettime(CLOCK_HIGHRES)'}, {'monotonic': False}):
+            with self.subTest(args=args):
+                image, closed, _ = self.observe(**args)
+                self.assertIsNone(image.ready)
+                self.assertEqual(closed, [])
+
+    def test_image_hash_size_type_and_changes_refuse(self):
+        cases = ({'allowed': False}, {'mode': 0o040755}, {'size': 0},
+                 {'size': stream._MAX_NATIVE_IMAGE_BYTES + 1}, {'reads': (b'ab', b'')},
+                 {'reads': (b'abc', b'x')}, {'changed': True})
+        for args in cases:
+            with self.subTest(args=args):
+                image, closed, _ = self.observe(**args)
+                self.assertIsNone(image.ready)
+                self.assertEqual(sorted(closed), [101, 102])
+
+    def test_namespace_classification_and_mixed_absence(self):
+        present = mock.Mock(st_dev=7, st_ino=8)
+        with mock.patch.object(stream.os, 'stat', return_value=present):
+            self.assertEqual(stream._linux_time_namespace(1), ('time', 7, 8))
+        with mock.patch.object(stream.os, 'stat', side_effect=[FileNotFoundError(), FileNotFoundError(), present]):
+            self.assertEqual(stream._linux_time_namespace(1), ('absent',))
+        with mock.patch.object(stream.os, 'stat', side_effect=[FileNotFoundError(), present]):
+            with self.assertRaises(ValueError):
+                stream._linux_time_namespace(1)
+        with mock.patch.object(stream.os, 'stat', side_effect=PermissionError()):
+            with self.assertRaises(PermissionError):
+                stream._linux_time_namespace(1)
+        image, closed, _ = self.observe(namespaces=[('absent',), ('time', 1, 3)])
+        self.assertIsNone(image.ready)
+        self.assertEqual(closed, [102])
+
+    def test_valid_rechecks_process_namespaces_and_image(self):
+        image, _, info = self.observe()
+        self.assertIsNotNone(image.ready)
+        cases = ('ok', 'exited', 'reparented', 'start', 'own-ns', 'parent-ns', 'image')
+        for case in cases:
+            with self.subTest(case=case), ExitStack() as stack:
+                stack.enter_context(mock.patch.object(stream.select, 'select',
+                    return_value=([102], [], []) if case == 'exited' else ([], [], [])))
+                stack.enter_context(mock.patch.object(stream.os, 'getppid',
+                    return_value=43 if case == 'reparented' else 44))
+                stack.enter_context(mock.patch.object(stream.os, 'getpid', return_value=45))
+                stack.enter_context(mock.patch.object(stream, '_linux_process_start', return_value=100 if case == 'start' else 99))
+                namespaces = [('time', 1, 2), ('time', 1, 3)]
+                if case == 'own-ns': namespaces[0] = ('time', 1, 9)
+                if case == 'parent-ns': namespaces[1] = ('time', 1, 9)
+                stack.enter_context(mock.patch.object(stream, '_linux_time_namespace',
+                    side_effect=lambda pid: namespaces[0] if pid == 45 else namespaces[1]))
+                stack.enter_context(mock.patch.object(stream.os, 'fstat', return_value=info))
+                fresh = mock.Mock(st_mode=0o100755, st_dev=1, st_ino=9 if case == 'image' else 2,
+                                  st_size=3, st_mtime_ns=3, st_ctime_ns=4)
+                stack.enter_context(mock.patch.object(stream.os, 'stat', return_value=fresh))
+                self.assertEqual(image.valid(), case == 'ok')
+                if case == 'ok':
+                    owner = stream.ClockWindows(uid(), lambda: True, platform='darwin')
+                    owner.platform, owner.native_image = 'linux', image
+                    owner.verified = stream.VerifiedNativeDeliveryWindow(stream._WINDOW_MINT,
+                        L=10, j3=1, j_deadline=stream.MARGIN_NS + 100,
+                        nonce=uid(), instance=owner.instance, owner=owner, platform='linux')
+                    with mock.patch.object(stream.time, 'monotonic_ns', return_value=110):
+                        self.assertFalse(owner.verified.reserve())
+                    with mock.patch.object(stream.time, 'monotonic_ns', return_value=109):
+                        self.assertTrue(owner.verified.reserve())
+
+    def test_close_during_hash_does_not_publish_or_leak(self):
+        image, closed, _ = self.observe(close_during_hash=True)
+        self.assertIsNone(image.ready)
+        self.assertTrue(image.closed)
+        self.assertEqual(sorted(closed), [101, 102])
+
+
 class DeadlineWindows(unittest.TestCase):
     def setUp(self):
         self.instance, self.nonce = uid(), uid()
@@ -1889,21 +2009,23 @@ class DeadlineWindows(unittest.TestCase):
         remaining = window.j_deadline - window.j3
         drift = (164 * remaining + 9999) // 10000
         deadline = window.j_deadline + window.L - drift
-        with mock.patch.object(stream.time, 'monotonic_ns', return_value=deadline - stream.MARGIN_NS - 1):
-            self.assertTrue(window.allow_reservation())
         with mock.patch.object(stream.time, 'monotonic_ns', return_value=deadline - stream.MARGIN_NS):
-            self.assertFalse(window.allow_reservation())
+            self.assertFalse(window.reserve())
+        with mock.patch.object(stream.time, 'monotonic_ns', return_value=deadline - stream.MARGIN_NS - 1):
+            self.assertTrue(window.reserve())
+            self.assertFalse(window.reserve())
         self.assertEqual(window.support, 'provisional-unqualified')
 
     def test_cancel_eof_broken_output_and_recipient_revoke_window(self):
         window = self.calibrated()
         with mock.patch.object(stream.time, 'monotonic_ns', return_value=0):
-            self.assertFalse(window.allow_reservation(lambda: False))
+            with mock.patch.object(self.clocks, 'eligible', return_value=False):
+                self.assertFalse(window.reserve())
             self.responses.live = False
-            self.assertFalse(window.allow_reservation())
+            self.assertFalse(window.reserve())
             self.responses.live = True
             self.clocks.control('CANCEL', {'nonce': self.nonce}, self.responses)
-            self.assertFalse(window.allow_reservation())
+            self.assertFalse(window.reserve())
         self.clocks.end()
         self.assertIsNone(self.clocks.window(self.nonce))
 
@@ -1914,14 +2036,184 @@ class DeadlineWindows(unittest.TestCase):
 
     def test_linux_has_no_rate_bound_and_cannot_reserve(self):
         window = self.calibrated()
+        # An unverified Linux image cannot borrow the provisional Darwin bound.
         window._platform = 'linux'
         with mock.patch.object(stream.time, 'monotonic_ns', return_value=0):
-            self.assertFalse(window.allow_reservation())
+            self.assertFalse(window.reserve())
+
+    def test_linux_same_clock_envelope_is_strict_and_single_use(self):
+        # Arithmetic control only: the stand-in is not provenance or qualification.
+        self.clocks.platform = 'linux'
+        self.clocks.native_image = mock.Mock()
+        self.clocks.native_image.observed.return_value = True
+        self.clocks.native_image.valid.return_value = True
+        window = self.calibrated()
+        boundary = window.j_deadline + window.L - stream.MARGIN_NS
+        with mock.patch.object(stream.time, 'monotonic_ns', return_value=boundary):
+            self.assertFalse(window.reserve())
+        with mock.patch.object(stream.time, 'monotonic_ns', return_value=boundary - 1):
+            self.assertTrue(window.reserve())
+            self.assertFalse(window.reserve())
+
+    def test_same_clock_causal_envelope_never_overstates_remaining_time(self):
+        # Drive every original integer schedule through the real clock/window.
+        # The image stand-in qualifies arithmetic only, not Linux provenance.
+        image = mock.Mock()
+        image.observed.return_value = image.valid.return_value = True
+        unit = stream.MARGIN_NS
+        epoch = 10 * unit
+        for offset in range(-3, 4):
+            for j0 in range(4):
+                for p1_at in range(j0, 5):
+                    for p2_at in range(p1_at, 5):
+                        for j3 in range(p2_at, 5):
+                            lower = p2_at + offset - j3
+                            upper = p1_at + offset - j0
+                            self.assertLessEqual(lower, upper)
+                            for now in range(j3, 6):
+                                for deadline in range(j3, 7):
+                                    with self.subTest(offset=offset, j0=j0, p1=p1_at,
+                                                      p2=p2_at, j3=j3, now=now, deadline=deadline):
+                                        owner = stream.ClockWindows(self.instance, lambda: True,
+                                                                    platform='darwin')
+                                        owner.platform, owner.native_image = 'linux', image
+                                        with mock.patch.object(stream.time, 'monotonic_ns',
+                                                side_effect=[epoch + (p1_at + offset) * unit,
+                                                             epoch + (p2_at + offset) * unit]):
+                                            owner.control('CLOCK', {'nonce': self.nonce,
+                                                'j0': str(j0 * unit),
+                                                'j_deadline': str(deadline * unit)}, self.responses)
+                                        owner.control('CLOCK-ACK', {'nonce': self.nonce,
+                                            'j0': str(j0 * unit), 'j3': str(j3 * unit)}, self.responses)
+                                        window = owner.window(self.nonce)
+                                        self.assertIsNotNone(window)
+                                        with mock.patch.object(stream.time, 'monotonic_ns',
+                                                return_value=epoch + (now + offset) * unit):
+                                            reserved = window.reserve()
+                                        self.assertEqual(reserved,
+                                            now + offset + 1 < deadline + lower)
+                                        if reserved:
+                                            self.assertLess(now + 1, deadline)
+
+    def test_replayed_old_nonce_cannot_remint_after_new_clock(self):
+        window = self.calibrated()
+        with mock.patch.object(stream.time, 'monotonic_ns', side_effect=[1000, 1010, 1020]):
+            self.clocks.control('CLOCK', {'nonce': uid(), 'j0': '100', 'j_deadline': '950000100'}, self.responses)
+            with self.assertRaises(ContractError):
+                self.clocks.control('CLOCK', {'nonce': self.nonce, 'j0': '100', 'j_deadline': '950000100'}, self.responses)
+        with mock.patch.object(stream.time, 'monotonic_ns', return_value=0):
+            self.assertFalse(window.reserve())
+
+    def test_linux_hash_in_progress_does_not_block_clock_reply(self):
+        started, release = threading.Event(), threading.Event()
+        def paused_hash(image):
+            started.set()
+            release.wait(10)
+        with mock.patch.object(stream._LinuxNativeImage, '_observe', paused_hash):
+            clocks = stream.ClockWindows(self.instance, lambda: self.responses.live, platform='linux')
+            try:
+                self.assertTrue(started.wait(10))
+                with mock.patch.object(stream.time, 'monotonic_ns', side_effect=[1000, 1010]):
+                    clocks.control('CLOCK', {'nonce': self.nonce, 'j0': '100', 'j_deadline': '950000100'}, self.responses)
+                clocks.control('CLOCK-ACK', {'nonce': self.nonce, 'j0': '100', 'j3': '200'}, self.responses)
+                self.assertIsNone(clocks.window(self.nonce))
+                self.assertTrue(any(row[0] == 'CLOCK-REPLY' for row in self.responses.values))
+            finally:
+                release.set()
+                clocks.end()
+
+    def test_cancel_replacement_revoke_and_end_before_reservation_refuse(self):
+        for control in ('CANCEL', 'CLOCK', 'revoke', 'end'):
+            with self.subTest(control=control):
+                self.nonce = uid()
+                self.clocks = stream.ClockWindows(self.instance, lambda: self.responses.live, platform='darwin')
+                window = self.calibrated()
+                with mock.patch.object(stream.time, 'monotonic_ns', return_value=0):
+                    if control == 'CANCEL':
+                        self.clocks.control('CANCEL', {'nonce': self.nonce}, self.responses)
+                    elif control == 'CLOCK':
+                        replacement = uid()
+                        self.clocks.control('CLOCK', {'nonce': replacement, 'j0': '100',
+                            'j_deadline': '950000100'}, self.responses)
+                        self.clocks.control('CLOCK-ACK', {'nonce': replacement, 'j0': '100',
+                            'j3': '200'}, self.responses)
+                    else:
+                        getattr(self.clocks, control)()
+                    self.assertFalse(window.reserve())
+                    if control == 'CLOCK':
+                        self.assertTrue(self.clocks.window(replacement).reserve())
+
+    def test_cancel_replacement_revoke_and_end_after_reservation_do_not_reopen(self):
+        for control in ('CANCEL', 'CLOCK', 'revoke', 'end'):
+            with self.subTest(control=control):
+                self.nonce = uid()
+                self.clocks = stream.ClockWindows(self.instance, lambda: self.responses.live, platform='darwin')
+                window = self.calibrated()
+                with mock.patch.object(stream.time, 'monotonic_ns', return_value=0):
+                    self.assertTrue(window.reserve())
+                    if control == 'CANCEL':
+                        self.clocks.control('CANCEL', {'nonce': self.nonce}, self.responses)
+                    elif control == 'CLOCK':
+                        replacement = uid()
+                        self.clocks.control('CLOCK', {'nonce': replacement, 'j0': '100',
+                            'j_deadline': '950000100'}, self.responses)
+                        self.clocks.control('CLOCK-ACK', {'nonce': replacement, 'j0': '100',
+                            'j3': '200'}, self.responses)
+                    else:
+                        getattr(self.clocks, control)()
+                    self.assertFalse(window.reserve())
+                    if control == 'CLOCK':
+                        self.assertTrue(self.clocks.window(replacement).reserve())
+
+    def test_concurrent_reservations_spend_window_once(self):
+        window = self.calibrated()
+        ready = threading.Barrier(3)
+        results, failures = [], []
+        def reserve():
+            try:
+                ready.wait(10)
+                results.append(window.reserve())
+            except BaseException as error:
+                failures.append(error)
+        workers = [threading.Thread(target=reserve) for _ in range(2)]
+        with mock.patch.object(stream.time, 'monotonic_ns', return_value=0):
+            try:
+                for worker in workers:
+                    worker.start()
+                ready.wait(10)
+            except BaseException:
+                ready.abort()
+                raise
+            finally:
+                for worker in workers:
+                    if worker.ident is not None:
+                        worker.join(10)
+            self.assertTrue(all(not worker.is_alive() for worker in workers))
+            self.assertEqual(failures, [])
+            self.assertEqual(sorted(results), [False, True])
+
+    def test_nonce_cannot_be_replayed_after_cancel_or_reservation(self):
+        for action in ('cancel', 'reserve', 'revoke'):
+            with self.subTest(action=action):
+                self.nonce = uid()
+                self.clocks = stream.ClockWindows(self.instance, lambda: self.responses.live, platform='darwin')
+                window = self.calibrated()
+                with mock.patch.object(stream.time, 'monotonic_ns', return_value=0):
+                    if action == 'cancel':
+                        self.clocks.control('CANCEL', {'nonce': self.nonce}, self.responses)
+                    elif action == 'reserve':
+                        self.assertTrue(window.reserve())
+                    else:
+                        self.clocks.revoke()
+                    with self.assertRaises(ContractError):
+                        self.clocks.control('CLOCK', {'nonce': self.nonce, 'j0': '100',
+                            'j_deadline': '950000100'}, self.responses)
+                    self.assertFalse(window.reserve())
 
     def test_windows_cannot_be_minted_or_serialized_by_json(self):
         with self.assertRaises(TypeError):
             stream.VerifiedNativeDeliveryWindow(None, L=0, j3=0, j_deadline=1,
-                nonce=self.nonce, instance=self.instance, eligible=lambda: True, platform='darwin')
+                nonce=self.nonce, instance=self.instance, owner=self.clocks, platform='darwin')
         window = self.calibrated()
         with self.assertRaises(TypeError):
             window.__reduce__()

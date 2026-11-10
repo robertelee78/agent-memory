@@ -7,6 +7,7 @@ from contextlib import ExitStack, contextmanager
 import hashlib
 import importlib
 import os
+import stat
 from pathlib import Path
 import pkgutil
 import re
@@ -45,6 +46,9 @@ REFUSAL_CODES = frozenset({'capture-refused', 'identity-changed', 'unsafe-view',
 _HEADER = re.compile(rb'AM249 ([A-Z-]+) (0|[1-9][0-9]{0,15}) (0|[1-9][0-9]{0,8}) (-|[0-9a-f-]{36})\n')
 _HEX = re.compile(r'[0-9a-f]{64}')
 _WINDOW_MINT = object()
+# The exact upstream 18.16.0 Linux arm64 image; see the v0.0.15 clock contract.
+_LINUX_MONOTONIC_IMAGES = frozenset({'c2be1ea85ce17c4270854b57efff2a7ea1d5a03c7557fd08721f2b9bb32698de'})
+_MAX_NATIVE_IMAGE_BYTES = 512 * 1024 * 1024
 _NONLEARNING_MINT = object()
 
 
@@ -468,16 +472,132 @@ def _stamp(value):
     return int(value)
 
 
+def _linux_process_start(pid):
+    with open(f'/proc/{pid}/stat', 'rb') as source:
+        value = source.read(8193)
+    if len(value) > 8192:
+        raise ValueError('Unbounded process identity')
+    end = value.rfind(b')')
+    if end < 0:
+        raise ValueError('Invalid process identity')
+    fields = value[end + 2:].split()
+    return int(fields[19])
+
+
+def _linux_time_namespace(pid):
+    base = f'/proc/{pid}/ns'
+    try:
+        info = os.stat(base + '/time')
+        return ('time', info.st_dev, info.st_ino)
+    except FileNotFoundError:
+        try:
+            os.stat(base + '/time_for_children')
+        except FileNotFoundError:
+            os.stat(base + '/mnt')
+            return ('absent',)
+        raise ValueError('Ambiguous time namespace')
+
+
+class _LinuxNativeImage:
+    """One helper's background parent-image observation; never caller authority."""
+    def __init__(self):
+        self.lock = threading.Lock()
+        self.ready = None
+        self.closed = False
+        threading.Thread(target=self._observe, daemon=True).start()
+
+    def _observe(self):
+        fd = pidfd = None
+        try:
+            info = time.get_clock_info('monotonic')
+            if (sys.implementation.name != 'cpython' or not (11 <= sys.version_info.minor <= 15)
+                    or sys.version_info.major != 3 or not info.monotonic
+                    or info.implementation != 'clock_gettime(CLOCK_MONOTONIC)'):
+                return
+            parent = os.getppid()
+            if not hasattr(os, 'pidfd_open'):
+                return
+            pidfd = os.pidfd_open(parent, 0)
+            start = _linux_process_start(parent)
+            namespaces = (_linux_time_namespace(os.getpid()), _linux_time_namespace(parent))
+            if (namespaces[0][0] == 'absent') != (namespaces[1][0] == 'absent'):
+                return
+            fd = os.open(f'/proc/{parent}/exe', os.O_RDONLY | getattr(os, 'O_CLOEXEC', 0))
+            image = os.fstat(fd)
+            if not stat.S_ISREG(image.st_mode) or not 0 < image.st_size <= _MAX_NATIVE_IMAGE_BYTES:
+                return
+            digest = hashlib.sha256()
+            total = 0
+            while total < image.st_size:
+                with self.lock:
+                    if self.closed:
+                        return
+                block = os.read(fd, min(1024 * 1024, image.st_size - total))
+                if not block:
+                    return
+                total += len(block)
+                digest.update(block)
+            if os.read(fd, 1) or digest.hexdigest() not in _LINUX_MONOTONIC_IMAGES:
+                return
+            identity = (image.st_dev, image.st_ino, image.st_size, image.st_mtime_ns, image.st_ctime_ns)
+            current = os.fstat(fd)
+            if identity != (current.st_dev, current.st_ino, current.st_size, current.st_mtime_ns, current.st_ctime_ns):
+                return
+            with self.lock:
+                if not self.closed:
+                    self.ready = (fd, pidfd, parent, start, namespaces, identity)
+                    fd = pidfd = None
+        except (OSError, ValueError, IndexError, OverflowError):
+            return
+        finally:
+            if fd is not None:
+                os.close(fd)
+            if pidfd is not None:
+                os.close(pidfd)
+
+    def observed(self):
+        with self.lock:
+            return not self.closed and self.ready is not None
+
+    def valid(self):
+        with self.lock:
+            if self.closed or self.ready is None:
+                return False
+            fd, pidfd, parent, start, namespaces, identity = self.ready
+            try:
+                if select.select([pidfd], [], [], 0)[0]:
+                    return False
+                if os.getppid() != parent or _linux_process_start(parent) != start:
+                    return False
+                if namespaces != (_linux_time_namespace(os.getpid()), _linux_time_namespace(parent)):
+                    return False
+                held = os.fstat(fd)
+                fresh = os.stat(f'/proc/{parent}/exe')
+                return (stat.S_ISREG(fresh.st_mode)
+                        and identity == (held.st_dev, held.st_ino, held.st_size, held.st_mtime_ns, held.st_ctime_ns)
+                        and identity == (fresh.st_dev, fresh.st_ino, fresh.st_size, fresh.st_mtime_ns, fresh.st_ctime_ns))
+            except (OSError, ValueError, IndexError, OverflowError):
+                return False
+
+    def close(self):
+        with self.lock:
+            self.closed = True
+            if self.ready is not None:
+                os.close(self.ready[0])
+                os.close(self.ready[1])
+                self.ready = None
+
+
 class VerifiedNativeDeliveryWindow:
     """Purpose-limited, internally minted calibration; never JSON authority."""
-    __slots__ = ('L', 'j3', 'j_deadline', 'nonce', 'instance', 'cancelled', '_eligible', '_platform')
+    __slots__ = ('L', 'j3', 'j_deadline', 'nonce', 'instance', 'cancelled', '_owner', '_platform', '_reserving')
 
-    def __init__(self, token, *, L, j3, j_deadline, nonce, instance, eligible, platform):
+    def __init__(self, token, *, L, j3, j_deadline, nonce, instance, owner, platform):
         if token is not _WINDOW_MINT:
             raise TypeError('Delivery windows are wire-executor internal')
         self.L, self.j3, self.j_deadline = L, j3, j_deadline
         self.nonce, self.instance, self.cancelled = nonce, instance, False
-        self._eligible, self._platform = eligible, platform
+        self._owner, self._platform, self._reserving = owner, platform, False
 
     def __reduce__(self):
         raise TypeError('Delivery windows cannot be serialized')
@@ -486,18 +606,29 @@ class VerifiedNativeDeliveryWindow:
     def support(self):
         return 'provisional-unqualified' if self._platform == 'darwin' else 'unqualified'
 
-    def allow_reservation(self, recipient_eligible=None):
-        if self.cancelled or self._platform != 'darwin' or not self._eligible():
-            return False
-        if recipient_eligible is not None and not recipient_eligible():
-            return False
-        remaining = self.j_deadline - self.j3
-        if remaining < 0:
-            return False
-        # Ceiling subtraction keeps integer arithmetic conservative: exact R3 D.
-        drift = (MAC_PROVISIONAL_RHO_NUMERATOR * remaining + RATE_DENOMINATOR - 1) // RATE_DENOMINATOR
-        deadline = self.j_deadline + self.L - drift
-        return time.monotonic_ns() + MARGIN_NS < deadline
+    def reserve(self):
+        owner = self._owner
+        with owner.lock:
+            if (owner.verified is not self or owner.instance != self.instance or owner.ended
+                    or self.cancelled or self._reserving or not owner.eligible()):
+                return False
+            remaining = self.j_deadline - self.j3
+            if remaining < 0:
+                return False
+            if self._platform == 'darwin':
+                # Ceiling subtraction keeps integer arithmetic conservative: exact R3 D.
+                drift = (MAC_PROVISIONAL_RHO_NUMERATOR * remaining + RATE_DENOMINATOR - 1) // RATE_DENOMINATOR
+            elif self._platform == 'linux' and owner.native_image is not None and owner.native_image.valid():
+                # Both qualified clocks use integer CLOCK_MONOTONIC, so E = 0.
+                drift = 0
+            else:
+                return False
+            deadline = self.j_deadline + self.L - drift
+            now = time.monotonic_ns()
+            if not 0 <= now < 10**24 or now + MARGIN_NS >= deadline:
+                return False
+            self._reserving = True
+            return True
 
 
 class ClockWindows:
@@ -508,26 +639,29 @@ class ClockWindows:
         self.pending = None
         self.verified = None
         self.ended = False
+        self.native_image = _LinuxNativeImage() if self.platform == 'linux' else None
+        self.used_nonces = set()
 
     def control(self, kind, value, writer):
         with self.lock:
             if kind == 'CLOCK':
+                image_observed = self.native_image is not None and self.native_image.observed()
                 p1 = time.monotonic_ns()
                 _exact(value, {'nonce', 'j0', 'j_deadline'})
                 nonce = _uuid(value['nonce'])
                 j0, deadline = _stamp(value['j0']), _stamp(value['j_deadline'])
                 if deadline < j0 or deadline - j0 > 950_000_000 or self.ended:
                     raise ContractError('Invalid callback clock interval')
-                if ((self.pending is not None and self.pending[0] == nonce)
-                        or (self.verified is not None and self.verified.nonce == nonce)):
-                    raise ContractError('Callback clock nonce was already used')
+                if nonce in self.used_nonces or len(self.used_nonces) >= MAX_FRAMES:
+                    raise ContractError('Callback clock nonce was already used or capacity reached')
+                self.used_nonces.add(nonce)
                 if self.verified is not None:
                     self.verified.cancelled = True
                 self.verified = None
                 p2 = time.monotonic_ns()
-                if p2 < p1:
+                if not 0 <= p1 <= p2 < 10**24:
                     raise ContractError('Local callback clock regressed')
-                self.pending = (nonce, j0, deadline, p1, p2)
+                self.pending = (nonce, j0, deadline, p1, p2, image_observed)
                 writer.send('CLOCK-REPLY', nonce=nonce, p1=str(p1), p2=str(p2))
             elif kind == 'CLOCK-ACK':
                 _exact(value, {'nonce', 'j0', 'j3'})
@@ -536,14 +670,14 @@ class ClockWindows:
                 self.pending = None
                 if pending is None or pending[0] != nonce or pending[1] != j0 or j3 < j0 or self.ended:
                     raise ContractError('Unmatched callback clock acknowledgement')
-                _, _, deadline, p1, p2 = pending
+                _, _, deadline, p1, p2, image_observed = pending
                 L, U = p2 - j3, p1 - j0
                 if L > U:
                     raise ContractError('Contradictory callback clock calibration')
-                if j3 <= deadline:
+                if j3 <= deadline and (self.platform != 'linux' or image_observed):
                     self.verified = VerifiedNativeDeliveryWindow(_WINDOW_MINT, L=L, j3=j3,
                         j_deadline=deadline, nonce=nonce, instance=self.instance,
-                        eligible=lambda: not self.ended and self.eligible(), platform=self.platform)
+                        owner=self, platform=self.platform)
             else:
                 _exact(value, {'nonce'})
                 nonce = _uuid(value['nonce'])
@@ -569,6 +703,8 @@ class ClockWindows:
             self.pending = None
             if self.verified is not None:
                 self.verified.cancelled = True
+        if self.native_image is not None:
+            self.native_image.close()
 
 
 def _binding(value, repo, session, instance, lifecycle):

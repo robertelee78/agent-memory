@@ -1126,7 +1126,7 @@ def wake(repo, session, lifecycle, payload, *, delivery_window=None, enrollment_
         scope_binding._enrollment_read_context(repo, enrollment_context)
         scope_binding.recheck_private_enrollment(enrollment_context)
     from .omp_stream import VerifiedNativeDeliveryWindow
-    if type(delivery_window) is not VerifiedNativeDeliveryWindow or not delivery_window.allow_reservation():
+    if type(delivery_window) is not VerifiedNativeDeliveryWindow or not delivery_window.reserve():
         return {'continue': False, 'status': 'pending-undeliverable-window', 'canonical_writes_performed': False}
     try:
         retain(target, value, 4096)
