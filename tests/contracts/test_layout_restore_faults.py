@@ -57,7 +57,7 @@ class LayoutRestoreFaults(unittest.TestCase):
             safe, inspected = recovery.inspect(world, command, repo)
             proposal, _ = recovery.prepare(world, command, source, repo, inspected, native)
             fault = world.run([command, 'bank', 'recover-layout', 'apply', '--repo', repo, '--proposal', proposal],
-                              check=False, timeout=60, env={'AGENT_MEMORY_FAULT_STAGE': 'layout-recovery-after-marker',
+                              check=False, timeout=60, env={'AGENT_MEMORY_FAULT_STAGE': 'layout-recovery-after-rename:activeContext.md',
                                                             'AGENT_MEMORY_FAULT_MODE': 'exit'})
             self.assertEqual(fault.returncode, 86, fault.stdout + fault.stderr)
             recovery.unlock(world, command, repo)
@@ -71,12 +71,18 @@ class LayoutRestoreFaults(unittest.TestCase):
             occupant = bank / 'foreign-occupant.md'
             occupant.write_text('Unrelated external edit\n')
             changed = {p.relative_to(bank).as_posix(): p.read_bytes() for p in bank.rglob('*') if p.is_file()}
-            output = world.inside('impossible.json')
+            for mode in ('finish', 'rollback'):
+                output = world.inside('impossible-' + mode + '.json')
+                recovery.call(world, command, 'recover', '--repo', repo, '--operation', safe['operation_id'],
+                              '--mode', mode, '--output', output, expected=1)
+                self.assertFalse(output.exists())
+                self.assertEqual({p.relative_to(bank).as_posix(): p.read_bytes() for p in bank.rglob('*') if p.is_file()}, changed)
+                self.assertEqual((bank / '.agent-memory-transaction.md').read_bytes(), marker)
+                self.assertEqual((directory / 'journal.json').read_bytes(), journal)
+            occupant.unlink()
+            preview = world.inside('known-partial-finish.json')
             recovery.call(world, command, 'recover', '--repo', repo, '--operation', safe['operation_id'],
-                          '--mode', 'finish', '--output', output, expected=1)
-            self.assertFalse(output.exists())
-            self.assertEqual({p.relative_to(bank).as_posix(): p.read_bytes() for p in bank.rglob('*') if p.is_file()}, changed)
-            self.assertEqual((bank / '.agent-memory-transaction.md').read_bytes(), marker)
-            self.assertEqual((directory / 'journal.json').read_bytes(), journal)
+                          '--mode', 'finish', '--output', preview)
+            self.assertTrue(preview.is_file())
             self.assertEqual({row['path']: (directory / row['blob']).read_bytes() for row in inspected['manifest']['sources']}, originals)
             helper.assert_fault_work_unchanged(world, repo, git)

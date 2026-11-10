@@ -43,7 +43,10 @@ class LayoutLegacyHoldReceipt(unittest.TestCase):
             self.assertEqual(json.loads(marker_bytes)['schema'], 'agent-memory/layout-frontier-hold-v1')
             legacy_guard.guard(self, world, old, pack, repo, bank, directory, inspected, native, decoy=decoy)
             self.assertEqual(actual_receipt.read_bytes(), receipt_bytes)
-            recovery.public(world, command, 'admission', 'apply', '--proposal', second)
+            retry = recovery.public(world, command, 'admission', 'apply', '--proposal', second)
+            if stage == 'layout-recovery-after-hold-restore':
+                self.assertTrue(retry['already_applied'])
+                self.assertFalse(retry['writes_performed'])
             self.assertEqual(marker.read_bytes(), marker_bytes)
             status = recovery.call(world, command, 'status', '--repo', repo, '--operation', inspected['operation_id'])
             self.assertEqual(status['pending_unit_ids'], applied['pending_unit_ids'])

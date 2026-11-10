@@ -33,11 +33,27 @@ class LayoutRevisionFaults(unittest.TestCase):
             proposal = world.inside('revision.json')
             recovery.call(world, command, 'revise-units', '--repo', repo, '--operation', operation,
                           '--input', recovery.save(world, request), '--output', proposal)
+            head_before = (directory / 'ledger-head.json').read_bytes()
+            generation = json.loads(head_before)['generation'] + 1
+            next_name = str(generation).zfill(8) + '.json'
+            index_path = directory.parent / 'index.json'
+            index_before = index_path.read_bytes()
             fault = world.run([command, 'bank', 'recover-layout', 'revise-units', '--repo', repo, '--proposal', proposal],
                               check=False, timeout=60, env={'AGENT_MEMORY_FAULT_STAGE': stage, 'AGENT_MEMORY_FAULT_MODE': mode})
             self.assertEqual(fault.returncode, 86 if mode == 'exit' else 1, fault.stdout + fault.stderr)
             if mode == 'exit':
                 recovery.unlock(world, command, repo)
+            if stage == 'layout-recovery-ledger-generation-before-head':
+                # The outer revision hook fires before advance_ledger writes.
+                self.assertEqual((directory / 'ledger-head.json').read_bytes(), head_before)
+                self.assertFalse((directory / 'ledger' / next_name).exists())
+                self.assertFalse((directory / 'ledger-transitions' / next_name).exists())
+            else:
+                # The inner after-head hook precedes the index update.
+                head_after = json.loads((directory / 'ledger-head.json').read_bytes())
+                self.assertEqual(head_after['generation'], generation)
+                self.assertNotEqual((directory / 'ledger-head.json').read_bytes(), head_before)
+                self.assertEqual(index_path.read_bytes(), index_before)
             result = recovery.call(world, command, 'revise-units', '--repo', repo, '--proposal', proposal)
             self.assertTrue(result['verified'])
             retry = recovery.call(world, command, 'revise-units', '--repo', repo, '--proposal', proposal)
