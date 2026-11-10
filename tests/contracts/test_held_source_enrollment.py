@@ -448,6 +448,46 @@ class HeldSourceEnrollment(unittest.TestCase):
             # independently owned and is not fabricated by this shared reader.
             self.assertEqual(len(sources.inspect(repo, 'codex', session, lifecycle)['sources']), 1)
 
+    def test_public_layout_hold_enrolls_real_codex_and_claude_prompt_hooks(self):
+        import layout_recovery_fixtures as recovery
+        from runtime_update_fixtures import snapshot
+        with World() as world:
+            command, pack, repo, bank, _, inspected, applied = recovery.small_pending(world)
+            self.assertFalse(applied['semantic_recovery_complete'])
+            directory = recovery.private_directory(world, bank, inspected['operation_id'])
+            originals = {row['source_id']: (directory / row['blob']).read_bytes()
+                         for row in inspected['manifest']['sources']}
+            before = snapshot(bank), snapshot(directory)
+            with patch.dict(os.environ, world.env, clear=True):
+                for harness in ('codex', 'claude'):
+                    session, lifecycle = uid(), uid()
+                    event = {'hook_event_name': 'UserPromptSubmit', 'cwd': str(repo),
+                             'session_id': session, 'prompt': 'Disposable native prompt observation.'}
+                    if harness == 'codex':
+                        event.update(turn_id=lifecycle, event_id=uid())
+                    else:
+                        event.update(prompt_id=lifecycle,
+                                     transcript_path=str(world.inside('native-transcript.jsonl')))
+                    for _ in range(2):
+                        result = subprocess.run([sys.executable, '-I', '-B',
+                                                 str(pack / 'hooks' / (harness + '_prompt.py'))],
+                                                input=json.dumps(event), text=True, capture_output=True,
+                                                env=world.env, timeout=30)
+                        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                        self.assertIn('hookSpecificOutput', json.loads(result.stdout))
+                    current = sources.inspect(repo, harness, session, lifecycle)
+                    self.assertFalse(current['complete'])
+                    self.assertEqual(len(current['sources']), 1)
+                    self.assertEqual(current['sources'][0]['source_sha256'],
+                                     hashlib.sha256(event['prompt'].encode()).hexdigest())
+            status = recovery.call(world, command, 'status', '--repo', repo,
+                                   '--operation', inspected['operation_id'])
+            self.assertFalse(status['semantic_recovery_complete'])
+            self.assertEqual(set(status['pending_unit_ids']), set(applied['pending_unit_ids']))
+            self.assertEqual({row['source_id']: (directory / row['blob']).read_bytes()
+                              for row in inspected['manifest']['sources']}, originals)
+            self.assertEqual((snapshot(bank), snapshot(directory)), before)
+
     def test_real_codex_claude_hooks_keep_task_active_but_boundaries_pending(self):
         with World() as world, patch.dict(os.environ, world.env, clear=True):
             long_parent = world.inside('長い設置場所' * 10)

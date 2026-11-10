@@ -128,6 +128,91 @@ class RecoveryIdentityClosureContract(unittest.TestCase):
                     self.assertEqual(bank.stat().st_mode & 0o777,
                                      (observed['manifest']['bank_binding']['mode'] & 0o777) ^ 0o020)
 
+    def test_apply_rejects_changed_reviewed_quiescence_attestation(self):
+        with World() as w:
+            command, source = f.installed(w)
+            repo, bank, native = f.memory(w)
+            (bank / 'handoff-prompt.md').write_text(f.policy_body(0))
+            _, observed = f.inspect(w, command, repo)
+            _, prepared = f.prepare(w, command, source, repo, observed, native)
+            prepared['proposal']['quiescence_attestation']['declared_invocation_routes'] = []
+            altered = f.save(w, prepared)
+            before = bank_bytes(bank)
+            index = repo / '.git/index'
+            before_index = index.read_bytes() if index.exists() else None
+            result = f.call(w, command, 'apply', '--repo', repo, '--proposal', altered, expected=1)
+            self.assertFalse(result['canonical_writes_performed'])
+            self.assertEqual(bank_bytes(bank), before)
+            self.assertEqual(index.read_bytes() if index.exists() else None, before_index)
+
+    def test_head_or_index_change_after_preview_refuses_before_bank_mutation(self):
+        for change in ('head', 'index'):
+            with self.subTest(change=change), World() as w:
+                command, source = f.installed(w)
+                repo, bank, native = f.memory(w, oversized=True)
+                feature = repo / 'feature.txt'
+                feature.write_text('Original independent feature.\n')
+                w.git('add', 'feature.txt', cwd=repo)
+                w.git('commit', '-m', 'Feature baseline', cwd=repo)
+                _, observed = f.inspect(w, command, repo)
+                proposal, _ = f.prepare(w, command, source, repo, observed, native)
+                feature.write_text('Changed independent feature.\n')
+                w.git('add', 'feature.txt', cwd=repo)
+                if change == 'head':
+                    w.git('commit', '-m', 'New feature history', cwd=repo)
+                before = bank_bytes(bank), feature.read_bytes(), (repo / '.git/index').read_bytes()
+                head = w.git('rev-parse', 'HEAD', cwd=repo).stdout
+                result = f.call(w, command, 'apply', '--repo', repo, '--proposal', proposal, expected=1)
+                self.assertFalse(result['canonical_writes_performed'])
+                self.assertEqual((bank_bytes(bank), feature.read_bytes(),
+                                  (repo / '.git/index').read_bytes()), before)
+                self.assertEqual(w.git('rev-parse', 'HEAD', cwd=repo).stdout, head)
+
+    def test_setgid_collaborative_bank_mode_and_group_survive_apply(self):
+        with World() as w:
+            command, source = f.installed(w)
+            repo, bank, native = f.memory(w, oversized=True)
+            bank.chmod(0o2770)
+            original = bank.stat()
+            self.assertEqual(original.st_mode & 0o7777, 0o2770)
+            _, observed = f.inspect(w, command, repo)
+            proposal, _ = f.prepare(w, command, source, repo, observed, native)
+            result = f.call(w, command, 'apply', '--repo', repo, '--proposal', proposal)
+            self.assertTrue(result['canonical_eligibility'])
+            self.assertEqual(bank.stat().st_mode & 0o7777, 0o2770)
+            self.assertEqual(bank.stat().st_gid, original.st_gid)
+
+    def test_changed_state_and_xdg_home_cannot_hide_public_apply_hold(self):
+        helper = frontier_tests.RecoveryFrontierContract('runTest')
+        for change in ('state', 'xdg'):
+            with self.subTest(change=change), World() as w:
+                command, _, repo, bank, _, inspected, applied = f.small_pending(w)
+                self.assertFalse(applied['semantic_recovery_complete'])
+                before = bank_bytes(bank)
+                if change == 'state':
+                    w.env['AGENT_MEMORY_STATE_HOME'] = str(w.inside('other-state'))
+                else:
+                    w.env.pop('AGENT_MEMORY_STATE_HOME')
+                    w.env['XDG_STATE_HOME'] = str(w.inside('other-xdg-state'))
+                result, value = helper.recall(w, command, repo, inspected['manifest']['project_id'])
+                self.assertNotEqual(result.returncode, 0)
+                self.assertNotIn('results', value)
+                self.assertEqual(bank_bytes(bank), before)
+
+    def test_copied_checkout_cannot_treat_public_hold_as_complete(self):
+        helper = frontier_tests.RecoveryFrontierContract('runTest')
+        with World() as w:
+            command, _, repo, bank, _, inspected, applied = f.small_pending(w)
+            self.assertFalse(applied['semantic_recovery_complete'])
+            copied = w.inside('copied-checkout')
+            shutil.copytree(repo, copied, symlinks=True)
+            copied_bank = copied / bank.relative_to(repo)
+            before = bank_bytes(bank), bank_bytes(copied_bank)
+            result, value = helper.recall(w, command, copied, inspected['manifest']['project_id'])
+            self.assertNotEqual(result.returncode, 0)
+            self.assertNotIn('results', value)
+            self.assertEqual((bank_bytes(bank), bank_bytes(copied_bank)), before)
+
     def test_changed_config_home_cannot_make_held_reader_report_complete(self):
         helper = frontier_tests.RecoveryFrontierContract('runTest')
         with World() as w:

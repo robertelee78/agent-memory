@@ -209,6 +209,31 @@ class LayoutRetentionContract(unittest.TestCase):
                  '--output', w.inside('refused retention.json'), expected=1)
             self.assertEqual(before, {p.relative_to(bank).as_posix(): p.read_bytes() for p in bank.rglob('*') if p.is_file()})
 
+    def test_public_purge_and_age_cannot_retire_pending_hold(self):
+        from layout_recovery_fixtures import call, private_directory
+        from runtime_update_fixtures import snapshot
+        with World() as w:
+            command, _, repo, bank, observed, _, _, applied = self.public_repair(w, pending=True)
+            operation = observed['operation_id']
+            directory = private_directory(w, bank, operation)
+            pending = set(applied['pending_unit_ids'])
+            self.assertTrue(pending)
+            for path in directory.rglob('*'):
+                if path.is_file():
+                    os.utime(path, (946684800, 946684800))
+            before = snapshot(bank), snapshot(directory)
+            status = call(w, command, 'status', '--repo', repo, '--operation', operation)
+            self.assertFalse(status['semantic_recovery_complete'])
+            self.assertEqual(set(status['pending_unit_ids']), pending)
+            for args in (['--check'], []):
+                result = w.run([command, '--json', 'purge-data', '--repo', repo,
+                                '--path', bank, *args], check=False, timeout=60)
+                self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertEqual((snapshot(bank), snapshot(directory)), before)
+            status = call(w, command, 'status', '--repo', repo, '--operation', operation)
+            self.assertFalse(status['semantic_recovery_complete'])
+            self.assertEqual(set(status['pending_unit_ids']), pending)
+
     def test_public_child_restore_cleanup_uses_real_parent_receipts_without_child_ledger(self):
         from layout_recovery_fixtures import call
         with World() as w:
