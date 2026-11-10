@@ -1,0 +1,63 @@
+{
+  "schema": "agent-memory/current-writer-fence-scoped-proof-v1",
+  "release": "0.0.15",
+  "scope": "Controlled installed-consumer regressions; not stock-native, platform, timing or release acceptance",
+  "workers": [
+    {
+      "suite": "omp-writer-fence-ordering",
+      "source_commit": "a7d210e26ebb120d9149da7dd48b70a51c44bd1a",
+      "tests": 1,
+      "passed": true,
+      "receipt_sha256": "9b1bd88c9422f173f32032a792a9506fedafc206a7c99b8cfd949ff7222722b3",
+      "stderr_sha256": "504a06624ad2556ca2c0a65e50ebb5b974944b2b5a00adf70773345683bf44d1"
+    },
+    {
+      "suite": "omp-writer-fence-exhaustion",
+      "source_commit": "a7d210e26ebb120d9149da7dd48b70a51c44bd1a",
+      "tests": 1,
+      "passed": true,
+      "receipt_sha256": "0dbf4cd9833055870288b3ca515ac3d5e832abbe21877ecd248ea8ccb94e4fb2",
+      "stderr_sha256": "3b3085eeff2c7692412f427477df9f44a43870cfd47ccf06dfffe46abef02381"
+    },
+    {
+      "suite": "omp-writer-fence-compatibility",
+      "source_commit": "a7d210e26ebb120d9149da7dd48b70a51c44bd1a",
+      "tests": 1,
+      "passed": true,
+      "receipt_sha256": "3760f84903f299308c3fdf00cc0f0322d7acbfcbd2f9ba35d98b7fa1a11d8603",
+      "stderr_sha256": "dc599c931465970f907adfe58d92224ee266897c87a2d2b7522a684ee2191890"
+    },
+    {
+      "suite": "omp-finite-outcome-fence",
+      "source_commit": "a7d210e26ebb120d9149da7dd48b70a51c44bd1a",
+      "tests": 1,
+      "passed": true,
+      "receipt_sha256": "2ebc88bdb9680acbb4d03b2051e2adcef35eefe6d0962f3eb3de258d5d3c6bd2",
+      "stderr_sha256": "290182ef5446ca8087ce032a6da6c5559314804dd8678ebd7fe0f9f37b2d51d5"
+    },
+    {
+      "suite": "omp-finite-prestart-exhaustion",
+      "source_commit": "9a1c983ccd4b36fdfad6b87b6ce01e0b0c5923f1",
+      "tests": 1,
+      "passed": true,
+      "receipt_sha256": "c40946ce2487868dac3587524ed96f8907279591aaf6e8c0b25cfc5de2905aca",
+      "stderr_sha256": "1899ea49b0a203d75267d9f16e272918c55ca6dd17bbf160aa134c3be6e3ee2c"
+    }
+  ],
+  "worker_bound_seconds": 300,
+  "full_native_pass": false,
+  "full_platform_pass": false,
+  "old_timing_transfers": false,
+  "source_limit": "Four old ignored CPython3.15 cache files were observed in the integration worktree. These scoped worktree runs are not a cache-free Git-archive release proof; final qualification must bind a clean archive.",
+  "additional_public_smoke": {
+    "source_commit": "c950001976f1acc9945fc7c18f4812f6916b9e16",
+    "source_archive_sha256": "73b94d695f0df23ad8034982baac06681c5f664c886df734bf06e204ec81a7a2",
+    "cache_free": true,
+    "actual_postcommit_error": "transaction-after-marker-removal",
+    "public_admission_reports_unknown_write_state": true,
+    "durable_verified_receipt_retained": true,
+    "actual_same_proposal_replay_verified": true,
+    "feature_index_HEAD_preserved": true,
+    "firstbank_unknown_compatibility_marker_refusal": true
+  }
+}

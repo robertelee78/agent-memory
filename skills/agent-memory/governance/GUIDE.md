@@ -139,6 +139,13 @@ clarification, narrowing, consolidation or explicit deletion scope still needed.
 It MUST NOT invent stronger evidence to bypass one. Complete source/meaning review
 remains the session's job; the helper verifies exact sources and mechanical guards.
 
+For an independently reviewed exact recovery-coverage output, `preview` MAY take
+`--operation-id UUID --recorded-at RFC3339`, matching admission and consolidation.
+The session MUST choose these values before constructing the intended files and
+coverage review, and MUST reuse them in preview. They are separate CLI options,
+not request keys. Current authority, context, source, valid-time and exact-output
+checks still apply; a seed is not approval or permission to replay another request.
+
 Deletion MUST come from explicit current operator authority. The session MUST
 identify authorized independent duplicate copies as well as linked derivatives;
 semantic equivalence is not inferred from UUID links. `delete_ids` may include

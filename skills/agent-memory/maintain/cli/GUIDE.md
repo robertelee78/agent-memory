@@ -57,6 +57,12 @@ MUST remain one quoted argument. Invalid arguments exit 2; a refused operation
 exits nonzero and retains the helper's evidence/recovery instructions. A
 successful preview is not an applied mutation or verified publication.
 
+`admission preview`, `compact preview` and `govern preview` accept
+`--operation-id UUID --recorded-at RFC3339` when an independent recovery review
+must bind the exact planned output. The session MUST choose and review those
+values with the intended files before preview; they are CLI options, not extra
+request fields, and MUST NOT replace source, authority or coverage review.
+
 Bare `am`, `am help`, `am --help` and `am -h` show public help. `am --version`,
 `am -V` and `am version` show the executing version, revision/cleanliness and
 source without memory setup. `--verbose` adds diagnostic detail. A session MUST

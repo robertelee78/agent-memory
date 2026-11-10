@@ -57,6 +57,14 @@ If another developer originated a conflicting claim, the session SHOULD recommen
 clarification with that developer. The helper sends no messages. A real unresolved
 code, approved-intent or work-record conflict MAY require a focused PM Q&A.
 
+When an independent recovery-coverage review binds the complete intended output,
+the session MAY pass `--operation-id UUID --recorded-at RFC3339` to `preview`.
+It MUST choose those values before constructing and reviewing the intended files,
+then reuse the same values for that preview. These are CLI options, not additional
+input-object fields. They MUST NOT bypass current comparison, source, time,
+coverage or exact-output checks; a different request under a completed operation
+ID remains refused.
+
 ## Apply
 
 With `SKILL_DIR` resolved, save evidence and proposals outside canonical memory:

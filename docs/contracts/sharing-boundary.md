@@ -43,3 +43,13 @@ Private locks, transaction markers, registries, journals, backups and projection
 remain outside the admitted sharing delta. A clean boundary is not semantic
 admission, publication or authentication. Publication, refresh, conflict handling
 and retries are distinct reviewed work; this inspection does not implement them.
+
+Current canonical writers take the exclusive source barrier before the canonical
+bank lock and retain it through marker removal. Finite OMP attempts retain the
+shared barrier through their durable outcome, not only the observer call.
+Entry contention waits at most the existing 30-second busy budget and never
+replays a started body. A finite frame whose entry budget expires receives an
+explicit unknown/pending refusal and ends the stream; later frames are not
+executed. A public admission failure after a possible commit reports unknown
+write state and preserves the durable receipt for exact recovery/replay.
+Older or uncooperative writers are not serialized by this current-runtime fence.
