@@ -97,6 +97,12 @@ execution counts before reporting completeness. Existing lifecycle write-fault
 proofs remain separately required. Batching MUST NOT change assertions, omit
 subcases, introduce skips or increase the 300-second worker deadline.
 
+The transaction and quarantined-sharing contracts also use complete-method
+batches after their whole-file workers exceeded 300 seconds on hosted
+macOS/Python 3.15. All 21 transaction methods and four quarantined-sharing
+methods remain required. A passing registry check proves only exhaustive
+selection; actual worker and final platform receipts establish execution.
+
 The recovery and publication contracts use one complete discovered method per
 worker, including the physical inventory boundaries; the selection proof still
 requires every method exactly once. The frontier consumer imports comparison
