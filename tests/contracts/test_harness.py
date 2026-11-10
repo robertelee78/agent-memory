@@ -136,6 +136,8 @@ if suite in OWNERS:
         samples['passed-without-interruption-proof'] = passed
         samples['incomplete-interruption-proof'] = passed + proof_fixture.replace(
             "'executed':[observed[index]['point']]", "'executed':[] if index==0 else [observed[index]['point']]")
+        samples['missing-lifecycle-case'] = samples['passed']
+        samples['non-object-worker-receipt'] = "import os\nos.write(1, b'[]\\n')\nos._exit(0)\n"
         with World() as world:
             checkout = world.inside("checkout with spaces")
             (checkout / "scripts").mkdir(parents=True)
@@ -156,7 +158,7 @@ if suite in OWNERS:
             # this synthetic fixture cannot certify product lifecycle behavior.
             for row in matrix["requirements"]:
                 row["cases"] = [{"suite": "harness", "test": "Contract.test_x"}]
-            (checkout / "tests/lifecycle-matrix.json").write_text(json.dumps(matrix))
+            matrix_template = copy.deepcopy(matrix)
             for sample, body in samples.items():
                 print('gate-control-sample: '+sample, file=sys.stderr, flush=True)
                 for entry in manifest["suites"]:
@@ -168,12 +170,18 @@ if suite in OWNERS:
                         entry.pop("tests", None)
                         (checkout / entry["path"]).write_text(body)
                 (checkout / "tests/contracts.json").write_text(json.dumps(manifest))
+                matrix = copy.deepcopy(matrix_template)
+                if sample == "missing-lifecycle-case":
+                    matrix["requirements"][0]["cases"][0]["test"] = "Contract.test_missing"
+                (checkout / "tests/lifecycle-matrix.json").write_text(json.dumps(matrix))
                 result = world.run(["sh", checkout / "scripts/test.sh", "--release", "--json"], check=False)
                 report = json.loads(result.stdout)
                 self.assertEqual(report["passed"], sample == "passed")
                 self.assertEqual(report["release_complete"], sample == "passed")
                 self.assertEqual(result.returncode == 0, sample == "passed")
-            # Keep the six interruption controls above distinct from lifecycle
+                if sample == "missing-lifecycle-case":
+                    self.assertEqual(report["error_suite"], "lifecycle-matrix")
+            # Keep interruption controls above distinct from lifecycle
             # and malformed-worker controls. Valid counts cannot replace an
             # actually executed matrix binding or an object-shaped receipt.
             for entry in manifest["suites"]:

@@ -118,7 +118,8 @@ class LifecycleWriteCases:
                               if t['kind'] != 'source' or expected.get('uninstalled')}
             clean_rows = read_trace(clean_path)
             all_selected = [row for row in clean_rows if row['phase'] == phase]
-            selected = partition_rows(all_selected, partition)
+            selected = partition_rows(all_selected, partition,
+                                      group=f'{operation}-write-{mode}-{phase}')
             kinds = {row['kind'] for row in clean_rows}
             self.assertTrue({'file-stage', 'record-publication'} <= kinds)
             if operation in {'install', 'uninstall', 'recover-rollback'}:

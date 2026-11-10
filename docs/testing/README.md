@@ -31,7 +31,7 @@ rechecks both batch and lifecycle-fault coverage before claiming completeness.
 The final gate requires every shard and every cell. CI retains shard and cell
 receipts, diagnostics, and checked-out commit/tree evidence.
 
-For example, on a Linux Python 3.11 checkout, run each index 0, 1, and 2:
+For example, on Linux with Python 3.11, run each index 0, 1, and 2:
 
 ```sh
 scripts/test.sh --release --jobs 2 --json --shard-index 0 --shard-count 3 \
@@ -40,13 +40,19 @@ scripts/test.sh --release --jobs 2 --json --shard-index 0 --shard-count 3 \
 
 Merge with `scripts/test.sh --release --json --shard-count 3 --cell-os
 ubuntu-latest --cell-python 3.11 --output cell.json --merge-shards shard-0.json
-shard-1.json shard-2.json`. The declared OS and Python must match the actual
-interpreter; all receipts and the merger must match the same observed cell and
-checkout source hash. The hash covers skills, scripts, tests, the checked-in
-memory bank, installer, workflow and recall-qualification label, receipt and
-controller fixtures, excluding Python bytecode. It rejects symlinks in source inputs. Changes to these inputs while a
-shard or merge runs invalidate its receipt.
-Local unsharded invocation remains available and defaults to one worker.
+shard-1.json shard-2.json`. Each shard uses `mode:release` and remains
+`release_complete:false`; a passing shard is not a complete release. The
+declared OS and Python must match the actual interpreter; all receipts and the
+merger must match the same observed cell and checkout source hash. The hash
+covers skills, scripts, tests, the checked-in memory bank, installer, workflow,
+and recall-qualification label, receipt and controller fixtures, excluding
+Python bytecode. It rejects symlinks in source inputs. Changes to these inputs
+while a shard or merge runs invalidate its receipt.
+
+Local unsharded invocation defaults to one worker; `--jobs 2` permits two
+concurrent workers, each in a separate disposable World with its own home,
+registries, credentials directory and owned process supervisor. Distribution
+does not change required coverage, assertions, or suite deadlines.
 
 Results and buffered diagnostics remain in registry order. A fatal collector
 error cancels unstarted work, waits for started Worlds to finish their bounded
@@ -121,7 +127,7 @@ fixtures without exposing their TestCase as another discovered suite: comparison
 cases remain owned by their registered comparison contract. This removes
 duplicate execution, not frontier-specific assertions. Individual method
 deadlines and the total hosted runtime still require platform evidence; neither
-batching nor deduplication establishes that the complete gate fits 180 minutes.
+batching nor sharding establishes that each job fits its 180-minute budget.
 
 The aggregate suites that timed out in the hosted gate now explicitly register
 each existing method separately for receipt-covered refresh, bank transactions,

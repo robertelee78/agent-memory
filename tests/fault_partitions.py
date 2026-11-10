@@ -8,9 +8,10 @@ for operation, mode in [('update', None), ('install', 'copy'), ('install', 'link
                         ('uninstall', 'copy'), ('uninstall', 'link')]:
     for phase in ('before', 'after'):
         name = f'update-write-{phase}' if operation == 'update' else f'{operation}-write-{mode}-{phase}'
-        GROUPS[name] = {'operation': operation, 'mode': mode, 'phase': phase,
+        count = PARTITIONS
+        GROUPS[name] = {'operation': operation, 'mode': mode, 'phase': phase, 'count': count,
                         'suites': [name if index == 0 else f'{name}-part-{index}'
-                                   for index in range(PARTITIONS)]}
+                                   for index in range(count)]}
 OWNERS = {suite: (name, index) for name, group in GROUPS.items()
           for index, suite in enumerate(group['suites'])}
 
@@ -39,14 +40,17 @@ def selected_partition(group):
     return owner[1]
 
 
-def select(rows, partition):
+def select(rows, partition, *, group=None):
     if partition is None:
         return rows
-    if type(partition) is not int or not 0 <= partition < PARTITIONS:
+    if group is not None and group not in GROUPS:
+        raise ValueError('Invalid lifecycle fault group')
+    count = PARTITIONS
+    if type(partition) is not int or not 0 <= partition < count:
         raise ValueError('Invalid lifecycle fault partition')
     if [row['step'] for row in rows] != list(range(len(rows))):
         raise ValueError('The complete observed fault inventory must be contiguous')
-    selected = [row for row in rows if row['step'] % PARTITIONS == partition]
+    selected = [row for row in rows if row['step'] % count == partition]
     if not selected:
         raise ValueError('A registered lifecycle fault partition cannot be empty')
     return selected
@@ -55,10 +59,10 @@ def select(rows, partition):
 def emit(group, partition, rows, executed, artifact_digest):
     if group not in GROUPS or partition is None:
         raise ValueError('An actual partition proof requires a registered lifecycle fault group')
-    expected = [row['point'] for row in select(rows, partition)]
+    expected = [row['point'] for row in select(rows, partition, group=group)]
     if executed != expected:
         raise ValueError('Actual interruptions do not cover the selected observed writes')
-    proof = {'group': group, 'index': partition, 'count': PARTITIONS,
+    proof = {'group': group, 'index': partition, 'count': GROUPS[group]['count'],
              'artifact_digest': artifact_digest,
              'observed': [{key: row[key] for key in ('step', 'point', 'kind')} for row in rows],
              'executed': executed}
@@ -113,7 +117,7 @@ def validate(proof, group, index):
     digest = proof.get('artifact_digest')
     if not isinstance(digest, str) or len(digest) != 64 or any(c not in '0123456789abcdef' for c in digest):
         raise ValueError('Missing actual artifact identity for interruption coverage')
-    expected = [row['point'] for row in select(rows, index)]
+    expected = [row['point'] for row in select(rows, index, group=group)]
     if proof.get('executed') != expected:
         raise ValueError('Missing or extra actual interruption/recovery/retry')
     return rows, digest
@@ -126,7 +130,7 @@ def coverage(suites):
     by_name = {suite['name']: suite for suite in suites}
     summaries = []
     for name, group in GROUPS.items():
-        observed = None; artifact = None; collected = []
+        observed = None; artifact = None; collected = []; count = group['count']
         for index, suite_name in enumerate(group['suites']):
             suite = by_name.get(suite_name, {})
             proof = suite.get('fault_partition')
@@ -138,10 +142,11 @@ def coverage(suites):
                 observed = rows; artifact = digest
             elif rows != observed or digest != artifact:
                 raise ValueError('Partitions observed different writes or runtime artifacts: ' + name)
+
             collected.extend(proof['executed'])
         points = [row['point'] for row in observed]
         if len(points) != len(set(points)) or sorted(collected) != sorted(points):
             raise ValueError('Lifecycle interruption coverage has duplicates or omissions: ' + name)
-        summaries.append({'group': name, 'partitions': PARTITIONS, 'observed_points': len(points),
+        summaries.append({'group': name, 'partitions': count, 'observed_points': len(points),
                           'actual_interruptions_and_retries': len(collected), 'artifact_digest': artifact})
     return summaries

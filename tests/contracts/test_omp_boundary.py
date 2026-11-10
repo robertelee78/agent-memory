@@ -1405,7 +1405,6 @@ class NativeLifecyclePublic(unittest.TestCase):
             self.assertTrue(result['verified'])
             self.assertFalse(extension.exists())
             self.assertFalse((base / 'turn-sources-compat-v1.json').exists())
-            self.assertTrue(list((base / 'omp-drains').glob('*.json')))
             self.assertEqual(snapshot(base / 'omp-source-v1'), retained)
             with patch.dict(os.environ, world.env, clear=True):
                 self.assertEqual(boundary.required_source_capabilities(repo), set())

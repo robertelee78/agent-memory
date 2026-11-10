@@ -81,7 +81,6 @@ class World(_ActualWorld):
                                  'gate-producer-stdout-marker', 'gate-producer-stderr-marker', 'Traceback'):
                         self.assertIn(text, result.stderr)
 
-
     def test_merge_rejects_invalid_rows_and_accepts_complete_reordered_shards(self):
         import tempfile
         spec = importlib.util.spec_from_file_location("gate_shard_contract", ROOT/'scripts/test_gate.py')

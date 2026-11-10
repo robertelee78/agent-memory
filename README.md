@@ -2,7 +2,7 @@
 
 A portable, local-first Memory Bank for coding agents.
 
-## v0.0.14
+## v0.0.15 release candidate
 
 One repository owns one shared Markdown memory bank. The skill captures durable
 learning, reads existing memory before adding it, combines duplicates without
@@ -11,13 +11,17 @@ independently of unfinished feature code and refresh into other sessions,
 worktrees and clones through the repository's existing Git rules. Contradictions
 go to the detecting developer for clarification.
 
-The [v0.0.14 release guide](docs/releases/v0.0.14.md) covers consistent bounded
-bank eligibility and entry-scoped Codex/Claude hook health. Unreadable sources
-cannot be bypassed by an unrelated selector. Source-preserving recovery is
-documented separately below. Unrelated valid hook settings no longer
-cause a whole-file ownership failure. Signed-download diagnostics, publisher
-authentication and strict managed-runtime ownership checks remain in force.
-[Published releases](https://github.com/robertelee78/agent-memory/releases)
+The [v0.0.15 release guide](docs/releases/v0.0.15.md) covers source-preserving
+layout recovery, stock omp native integration, checked semantic-page export and
+the reviewed research deliverables. Candidate source is not published-release
+or full-platform qualification evidence; the remaining acceptance gates stay
+explicit until verified. Research protocols do not ship federation, graph-backed
+recall or a coding-benefit study.
+
+The [previous v0.0.14 guide](docs/releases/v0.0.14.md) records consistent bounded
+bank eligibility and entry-scoped Codex/Claude hook health. Signed-download
+diagnostics, publisher authentication and strict managed-runtime ownership
+checks remain in force. [Published releases](https://github.com/robertelee78/agent-memory/releases)
 hold the immutable source and actual qualification evidence for each version.
 
 ### Source-preserving layout recovery (#244)

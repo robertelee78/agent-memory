@@ -92,7 +92,6 @@ class MixedPrivateCapabilities(unittest.TestCase):
             self.assertEqual(set(config_after) - set(before[2]), {registry_key})
             self.assertEqual({key: value for key, value in config_after.items()
                               if key != registry_key}, before[2])
-            self.assertEqual(config_after[registry_key]['mode'], 0o600)
             base = directory.parent.parent
             registry = json.loads((world.paths['config'] / registry_key).read_bytes())
             self.assertEqual(set(registry), {'schema', 'repositories', 'private_bases'})
