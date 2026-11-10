@@ -929,7 +929,7 @@ class FrozenImports(unittest.TestCase):
 
 
 class CanonicalWriterContention(unittest.TestCase):
-    """Real bank/source authority and writer locks; not native qualification."""
+    """Uncooperative legacy writer with real bank marker and kernel locks."""
 
     def setUp(self):
         self.stack = ExitStack()
@@ -1021,6 +1021,16 @@ class CanonicalWriterContention(unittest.TestCase):
         self.stack.enter_context(mock.patch.object(local_registry.fcntl, 'flock', side_effect=publication_flock))
         self.stack.enter_context(mock.patch.object(local_registry.os, 'fsync', side_effect=publication_fsync))
         writer = threading.Thread(target=run, daemon=True)
+        # Model a legacy writer that predates the exclusive source fence. Only
+        # this writer thread bypasses acquisition; all source-side barriers and
+        # the actual canonical writer/marker/flock implementation remain live.
+        writer_barrier = turn_sources.canonical_writer_barrier
+        def legacy_writer_barrier(repo, **kwargs):
+            if threading.current_thread() is writer:
+                return nullcontext()
+            return writer_barrier(repo, **kwargs)
+        self.stack.enter_context(mock.patch.object(turn_sources, 'canonical_writer_barrier',
+                                                  side_effect=legacy_writer_barrier))
         def finish():
             release.set()
             writer.join(10)
@@ -1072,6 +1082,15 @@ class CanonicalWriterContention(unittest.TestCase):
         self.assertEqual(self.observer_calls, 1)
         self.assertEqual(self.coverage.last_sequence, 1)
 
+    def assert_retry_lock_order(self):
+        # The frame fence stays shared through the outcome, while each metadata
+        # attempt has released its later-family lock before retrying.
+        with self.assertRaisesRegex(ContractError, 'Cannot upgrade an active shared source barrier'):
+            with turn_sources.source_barrier(self.repo, exclusive=True):
+                self.fail('A source fence cannot be upgraded')
+        with turn_sources.private_lock(self.coverage.lock_path):
+            pass
+
     def assert_outcome_after_writer_release(self):
         def release(seconds):
             self.assertFalse((self.coverage.directory / 'outcomes/1.json').exists())
@@ -1088,10 +1107,7 @@ class CanonicalWriterContention(unittest.TestCase):
                 marker = stream.load((self.bank / '.agent-memory-transaction.md').read_bytes())
                 self.assertEqual(marker['schema'], 'agent-memory/transaction-marker-v1')
                 self.assertEqual(marker['transaction_id'], stream.load(owner)['operation_id'])
-            # Retry must not wait while holding either source or stream locks.
-            with turn_sources.source_barrier(self.repo, exclusive=True):
-                with turn_sources.private_lock(self.coverage.lock_path):
-                    pass
+            self.assert_retry_lock_order()
             self.release_writer()
         # Isolate the stream clock rather than changing time.sleep used by Git
         # subprocess internals or the real canonical writer thread.
@@ -1292,8 +1308,7 @@ class CanonicalWriterContention(unittest.TestCase):
             self.assertEqual(self.coverage._invalid_attempt_retry, key)
             self.assertEqual(path.read_bytes(), saved[0][0])
             observer.assert_not_called()
-            with turn_sources.source_barrier(self.repo, exclusive=True), turn_sources.private_lock(self.coverage.lock_path):
-                pass
+            self.assert_retry_lock_order()
             self.release_writer()
             if corruption == 'partial':
                 path.write_bytes(b'{')
