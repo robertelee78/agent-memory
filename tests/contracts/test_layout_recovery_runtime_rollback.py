@@ -22,7 +22,8 @@ class HeldRuntimeRollbackContract(unittest.TestCase):
             repo, bank, native = recovery.memory(world)
             (bank / 'handoff-prompt.md').write_text(recovery.policy_body(0))
             _, inspected = recovery.inspect(world, command, repo)
-            request = recovery.review_request(world, command, pack, repo, inspected, native)
+            request = recovery.review_request(world, command, Path(receipt['source']['pack']),
+                                              repo, inspected, native)
             request['quiescence_attestation']['declared_invocation_routes'] = sorted(set(
                 request['quiescence_attestation']['declared_invocation_routes']
                 + [target['path'] for target in receipt['targets']]))
@@ -34,7 +35,11 @@ class HeldRuntimeRollbackContract(unittest.TestCase):
             self.assertFalse(applied['semantic_recovery_complete'])
             previous = owned(receipt), receipt_path(world).read_bytes()
             advance(world, channel, pack)
-            attestation = recovery.review_request(world, command, pack, repo, inspected, native)['quiescence_attestation']
+            candidate_source = world.inside('measured rollback update candidate')
+            world.git('clone', '--', channel, candidate_source)
+            attestation = recovery.review_request(
+                world, command, candidate_source / 'skills/agent-memory', repo, inspected, native
+            )['quiescence_attestation']
             attestation['declared_invocation_routes'] = sorted(set(attestation['declared_invocation_routes']
                                                                      + [target['path'] for target in receipt['targets']]))
             envelope = {'attestation': attestation, 'review': {

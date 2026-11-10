@@ -1,4 +1,5 @@
 """Released identity commands must not mistake a public layout hold for a free bank."""
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -98,8 +99,11 @@ class ReleasedIdentityHoldContract(unittest.TestCase):
                                    '--presets', 'none'], timeout=60)
             receipt = json.loads(installed.stdout)['receipt']
             self.assertEqual(receipt['source']['version'], '0.0.14')
-            self.assertEqual(receipt['source']['artifact_digest'],
-                             '4208c18e2288bdb3f6faf6354fe44b638559ba8ec1fede2cec7ce491bea726f7')
+            released_files = json.loads((v014_runtime_fixture.FIXTURE / 'provenance.json').read_bytes())['files']
+            installed_pack = Path(receipt['source']['pack'])
+            for name, facts in released_files.items():
+                installed_file = installed_pack.joinpath(*Path(name).parts[2:])
+                self.assertEqual(hashlib.sha256(installed_file.read_bytes()).hexdigest(), facts['sha256'], name)
             old = Path(receipt['bin_dir']) / 'am'
             command, source = recovery.installed(capable)
             repo, bank, native = recovery.memory(world)
