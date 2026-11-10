@@ -197,17 +197,21 @@ class NestedRecoveryClosure(unittest.TestCase):
             altered = json.loads(original)
             altered['rationale'] += ' Changed after recovery preview.'
             head = snapshot(repo / '.git/HEAD'), snapshot(repo / '.git/refs')
+            aside = world.inside('retained-coverage-review.json')
             for missing in (False, True):
                 with self.subTest(missing=missing):
                     if missing:
-                        review.unlink()
+                        review.rename(aside)
                     else:
                         review.write_bytes(f.encoded(altered))
                     before = snapshot(bank), snapshot(directory), snapshot(repo / '.git/index')
                     f.call(world, command, 'recover-nested', '--repo', repo, '--proposal', finish, expected=1)
                     self.assertEqual((snapshot(bank), snapshot(directory), snapshot(repo / '.git/index')), before)
                     self.assertEqual((snapshot(repo / '.git/HEAD'), snapshot(repo / '.git/refs')), head)
-                    review.write_bytes(original)
+                    if missing:
+                        aside.rename(review)
+                    else:
+                        review.write_bytes(original)
             result = f.call(world, command, 'recover-nested', '--repo', repo, '--proposal', finish)
             self.assertTrue(result['verified'])
             self.assertEqual((bank / target).read_bytes(), transaction['files'][target].encode())
