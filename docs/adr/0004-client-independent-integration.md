@@ -116,6 +116,10 @@ peer-harness, lifecycle, permission and macOS/Linux acceptance. Detailed capture
 transport and recovery changes still require independent engineering review and
 actual stock-client qualification.
 
+The task-specific [native delivery-window contract](../design/v0.0.15-omp-integration.md#helper-actions-acknowledgement-and-bounded-wakes)
+defines the reviewed Linux same-monotonic profile and atomic reservation-start
+transition. Source review does not substitute for the original native matrix.
+
 ### v0.0.15: verified installed instructions are operating context
 
 Task #249 SHALL distinguish an exactly verified full native read of AM's own

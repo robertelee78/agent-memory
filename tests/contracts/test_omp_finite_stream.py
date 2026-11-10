@@ -1903,11 +1903,65 @@ class DeadlineWindows(unittest.TestCase):
         with self.assertRaises(ContractError):
             self.clocks.control('CLOCK-ACK', {'nonce': uid(), 'j0': '100', 'j3': '200'}, self.responses)
 
-    def test_linux_has_no_rate_bound_and_cannot_reserve(self):
+    def test_unverified_linux_image_cannot_reserve(self):
         window = self.calibrated()
         window._platform = 'linux'
         with mock.patch.object(stream.time, 'monotonic_ns', return_value=0):
             self.assertFalse(window.reserve())
+
+    def test_linux_same_clock_envelope_is_strict_and_single_use(self):
+        # Arithmetic control only: the stand-in is not provenance or qualification.
+        self.clocks.platform = 'linux'
+        self.clocks.native_image = mock.Mock()
+        self.clocks.native_image.observed.return_value = True
+        self.clocks.native_image.valid.return_value = True
+        window = self.calibrated()
+        boundary = window.j_deadline + window.L - stream.MARGIN_NS
+        with mock.patch.object(stream.time, 'monotonic_ns', return_value=boundary):
+            self.assertFalse(window.reserve())
+        with mock.patch.object(stream.time, 'monotonic_ns', return_value=boundary - 1):
+            self.assertTrue(window.reserve())
+            self.assertFalse(window.reserve())
+
+    def test_same_clock_causal_envelope_never_overstates_remaining_time(self):
+        # Integer schedules include identical reads, offsets and adverse delays.
+        for offset in range(-3, 4):
+            for j0 in range(4):
+                for p1_at in range(j0, 5):
+                    for p2_at in range(p1_at, 5):
+                        for j3 in range(p2_at, 5):
+                            lower = p2_at + offset - j3
+                            upper = p1_at + offset - j0
+                            self.assertLessEqual(lower, upper)
+                            for now in range(j3, 6):
+                                for deadline in range(j3, 7):
+                                    if now + offset + 1 < deadline + lower:
+                                        self.assertLess(now + 1, deadline)
+
+    def test_replayed_old_nonce_cannot_remint_after_new_clock(self):
+        self.calibrated()
+        with mock.patch.object(stream.time, 'monotonic_ns', side_effect=[1000, 1010, 1020]):
+            self.clocks.control('CLOCK', {'nonce': uid(), 'j0': '100', 'j_deadline': '950000100'}, self.responses)
+            with self.assertRaises(ContractError):
+                self.clocks.control('CLOCK', {'nonce': self.nonce, 'j0': '100', 'j_deadline': '950000100'}, self.responses)
+
+    def test_linux_hash_in_progress_does_not_block_clock_reply(self):
+        started, release = threading.Event(), threading.Event()
+        def paused_hash(image):
+            started.set()
+            release.wait(10)
+        with mock.patch.object(stream._LinuxNativeImage, '_observe', paused_hash):
+            clocks = stream.ClockWindows(self.instance, lambda: self.responses.live, platform='linux')
+            try:
+                self.assertTrue(started.wait(10))
+                with mock.patch.object(stream.time, 'monotonic_ns', side_effect=[1000, 1010]):
+                    clocks.control('CLOCK', {'nonce': self.nonce, 'j0': '100', 'j_deadline': '950000100'}, self.responses)
+                clocks.control('CLOCK-ACK', {'nonce': self.nonce, 'j0': '100', 'j3': '200'}, self.responses)
+                self.assertIsNone(clocks.window(self.nonce))
+                self.assertTrue(any(row[0] == 'CLOCK-REPLY' for row in self.responses.values))
+            finally:
+                release.set()
+                clocks.end()
 
     def test_windows_cannot_be_minted_or_serialized_by_json(self):
         with self.assertRaises(TypeError):

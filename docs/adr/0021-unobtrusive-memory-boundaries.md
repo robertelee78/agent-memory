@@ -24,6 +24,10 @@ capability is assumed. The operator requested fixes and release; the one-command
 implementation default within the existing skill/CLI contract, not a claim of an
 explicit preference vote. No new approval question blocks the clear defects.
 
+The #249 [native delivery-window contract](../design/v0.0.15-omp-integration.md#helper-actions-acknowledgement-and-bounded-wakes)
+is a client-specific clock and reservation detail; it does not change this ADR's
+T2/T3 outcomes or wake policy.
+
 ## Decision
 
 ### T1: Consistent state trust and specific refresh diagnostics
