@@ -11,8 +11,7 @@ import uuid
 from unittest.mock import patch
 
 from world import World
-from contracts.test_admission import AdmissionContract
-from contracts.test_omp_boundary import NativeSmokeQualification, NativeSources, observer_payload, observe_installed
+from contracts import test_admission, test_omp_boundary
 
 
 # These launch the installed code and coordinate actual lock ownership; they do
@@ -82,10 +81,10 @@ class InstalledCanonicalFence(unittest.TestCase):
         from agent_memory import scope_binding
         for writer_first in (False, True):
             with self.subTest(writer_first=writer_first), World() as world, patch.dict(os.environ, world.env, clear=True):
-                repo, receipt, _ = NativeSmokeQualification().fixture(world)
+                repo, receipt, _ = test_omp_boundary.NativeSmokeQualification().fixture(world)
                 control = world.inside('fence-control'); control.mkdir(mode=0o700)
                 world.env['FENCE_TEST_DIR'] = str(control)
-                contract = AdmissionContract()
+                contract = test_admission.AdmissionContract()
                 contract.pack = world.inside('portable comparison pack')
                 scope = scope_binding.require(repo)
                 contract.pid, contract.actor = scope['project_id'], scope['developer_id']
@@ -97,14 +96,14 @@ class InstalledCanonicalFence(unittest.TestCase):
                 am = Path(receipt['bin_dir']) / 'am'
                 installer = Path(receipt['source']['pack']) / 'scripts/installer.py'
                 session, lifecycle = str(uuid.uuid4()), str(uuid.uuid4())
-                human = NativeSources().entry('fence-human', 'user', 'Controlled governed source.', attribution='user')
+                human = test_omp_boundary.NativeSources().entry('fence-human', 'user', 'Controlled governed source.', attribution='user')
                 request = {'schema': 'agent-memory/omp-observer-request-v2', 'action': 'ingest',
                            'session': session, 'lifecycle': lifecycle,
-                           'payload': observer_payload(repo, session, [human])}
+                           'payload': test_omp_boundary.observer_payload(repo, session, [human])}
                 observed, errors = [], []
                 def observe():
                     try:
-                        observed.append(observe_installed(world, am, repo, receipt, request,
+                        observed.append(test_omp_boundary.observe_installed(world, am, repo, receipt, request,
                             launcher=[sys.executable, '-I', '-B', observer_script, installer, am, 'omp-boundary'], timeout=60))
                     except BaseException as exc:
                         errors.append(exc)
@@ -153,8 +152,8 @@ class InstalledCanonicalFence(unittest.TestCase):
 
     def prepare_capture(self, world):
         from agent_memory import scope_binding
-        repo, receipt, _ = NativeSmokeQualification().fixture(world)
-        contract = AdmissionContract()
+        repo, receipt, _ = test_omp_boundary.NativeSmokeQualification().fixture(world)
+        contract = test_admission.AdmissionContract()
         contract.pack = world.inside('portable comparison pack')
         scope = scope_binding.require(repo)
         contract.pid, contract.actor = scope['project_id'], scope['developer_id']
