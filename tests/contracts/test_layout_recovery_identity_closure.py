@@ -1,10 +1,13 @@
 """Public recovery identity and private-discovery boundary contracts."""
+import json
 import os
 from pathlib import Path
 import shutil
+import socket
 import subprocess
 import sys
 import unittest
+import uuid
 
 from world import World
 import layout_recovery_fixtures as f
@@ -35,6 +38,21 @@ class RecoveryIdentityClosureContract(unittest.TestCase):
             self.assertFalse(result['canonical_writes_performed'])
             self.assertEqual(bank_bytes(bank), before)
             self.assertEqual((repo / '.git/index').read_bytes(), index)
+
+    def test_live_bank_lock_refuses_inspection_without_stealing_lock(self):
+        with World() as w:
+            command, _ = f.installed(w)
+            repo, bank, _ = f.memory(w)
+            lock = bank / '.agent-memory.lock'
+            lock.write_text(json.dumps({'operation_id': str(uuid.uuid4()), 'operation': 'bank-capture',
+                                        'host': socket.gethostname(), 'pid': os.getpid(),
+                                        'start': '2026-10-22T18:00:00Z'}))
+            lock.chmod(0o600)
+            before = bank_bytes(bank)
+            result = f.call(w, command, 'inspect', '--repo', repo,
+                            '--output', w.inside('live-lock-inspect.json'), expected=1)
+            self.assertFalse(result['canonical_writes_performed'])
+            self.assertEqual(bank_bytes(bank), before)
 
     def test_authority_fetch_push_disagreement_refuses_recovery_inspection(self):
         with World() as w:
@@ -134,6 +152,19 @@ class RecoveryIdentityClosureContract(unittest.TestCase):
             repo, bank, native = f.memory(w)
             (bank / 'handoff-prompt.md').write_text(f.policy_body(0))
             _, observed = f.inspect(w, command, repo)
+            for omission in ('attestation', 'routes'):
+                request = f.review_request(w, command, source, repo, observed, native)
+                if omission == 'attestation':
+                    request['quiescence_attestation'] = None
+                else:
+                    request['quiescence_attestation']['declared_invocation_routes'] = []
+                before = bank_bytes(bank)
+                refused = f.call(w, command, 'prepare', '--repo', repo,
+                                 '--operation', observed['operation_id'],
+                                 '--input', f.save(w, request),
+                                 '--output', w.inside('refused-' + omission + '.json'), expected=1)
+                self.assertFalse(refused['canonical_writes_performed'])
+                self.assertEqual(bank_bytes(bank), before)
             _, prepared = f.prepare(w, command, source, repo, observed, native)
             prepared['proposal']['quiescence_attestation']['declared_invocation_routes'] = []
             altered = f.save(w, prepared)
@@ -167,6 +198,62 @@ class RecoveryIdentityClosureContract(unittest.TestCase):
                 self.assertEqual((bank_bytes(bank), feature.read_bytes(),
                                   (repo / '.git/index').read_bytes()), before)
                 self.assertEqual(w.git('rev-parse', 'HEAD', cwd=repo).stdout, head)
+
+    def test_registry_change_after_preview_refuses_apply(self):
+        with World() as w:
+            command, source = f.installed(w)
+            repo, bank, native = f.memory(w, oversized=True)
+            _, observed = f.inspect(w, command, repo)
+            proposal, _ = f.prepare(w, command, source, repo, observed, native)
+            registry = Path(w.env['AGENT_MEMORY_CONFIG_HOME']) / 'projects.json'
+            value = json.loads(registry.read_bytes())
+            key = observed['manifest']['identity']['scope_context']['checkout_key']
+            value['checkouts'][key]['locations'].append(str(w.inside('additional-checkout-location')))
+            registry.write_bytes(f.encoded(value))
+            before = bank_bytes(bank), registry.read_bytes()
+            result = f.call(w, command, 'apply', '--repo', repo, '--proposal', proposal, expected=1)
+            self.assertFalse(result['canonical_writes_performed'])
+            self.assertEqual((bank_bytes(bank), registry.read_bytes()), before)
+
+    def test_conflicting_historical_checkout_decisions_refuse_inspection(self):
+        with World() as w:
+            command, _ = f.installed(w)
+            repo, bank, _ = f.memory(w)
+            registry = Path(w.env['AGENT_MEMORY_CONFIG_HOME']) / 'projects.json'
+            data = json.loads(registry.read_bytes())
+            info = (repo / '.git').stat()
+            key = str(info.st_dev) + ':' + str(info.st_ino)
+            entry = data['checkouts'].pop(key)
+            other = json.loads(json.dumps(entry))
+            other['authority_name'] = 'different-authority'
+            data['checkouts'][str(info.st_dev + 1) + ':' + str(info.st_ino)] = entry
+            data['checkouts'][str(info.st_dev + 2) + ':' + str(info.st_ino)] = other
+            registry.write_bytes(f.encoded(data))
+            before = bank_bytes(bank), registry.read_bytes()
+            result = f.call(w, command, 'inspect', '--repo', repo,
+                            '--output', w.inside('historical-conflict.json'), expected=1)
+            self.assertFalse(result['canonical_writes_performed'])
+            self.assertEqual((bank_bytes(bank), registry.read_bytes()), before)
+
+    def test_unreadable_source_after_preview_remains_unmodified_and_pending(self):
+        with World() as w:
+            command, source = f.installed(w)
+            repo, bank, native = f.memory(w, oversized=True)
+            _, observed = f.inspect(w, command, repo)
+            proposal, _ = f.prepare(w, command, source, repo, observed, native)
+            before = bank_bytes(bank)
+            target = bank / 'projectbrief.md'
+            mode = target.stat().st_mode & 0o7777
+            target.chmod(0)
+            try:
+                if os.access(target, os.R_OK):
+                    self.fail('Permission-inability fixture requires an unprivileged principal')
+                result = f.call(w, command, 'apply', '--repo', repo, '--proposal', proposal, expected=1)
+                self.assertFalse(result['canonical_writes_performed'])
+                self.assertEqual(target.stat().st_mode & 0o7777, 0)
+            finally:
+                target.chmod(mode)
+            self.assertEqual(bank_bytes(bank), before)
 
     def test_setgid_collaborative_bank_mode_and_group_survive_apply(self):
         with World() as w:
@@ -212,6 +299,36 @@ class RecoveryIdentityClosureContract(unittest.TestCase):
             self.assertNotEqual(result.returncode, 0)
             self.assertNotIn('results', value)
             self.assertEqual((bank_bytes(bank), bank_bytes(copied_bank)), before)
+
+    def test_moved_checkout_cannot_treat_public_hold_as_complete(self):
+        helper = frontier_tests.RecoveryFrontierContract('runTest')
+        with World() as w:
+            command, _, repo, bank, _, inspected, applied = f.small_pending(w)
+            self.assertFalse(applied['semantic_recovery_complete'])
+            before = bank_bytes(bank)
+            moved = w.inside('moved-checkout')
+            relative_bank = bank.relative_to(repo)
+            shutil.move(str(repo), str(moved))
+            w.paths['repo'] = moved
+            result, value = helper.recall(w, command, moved, inspected['manifest']['project_id'])
+            self.assertNotEqual(result.returncode, 0)
+            self.assertNotIn('results', value)
+            self.assertEqual(bank_bytes(moved / relative_bank), before)
+
+    def test_orphaned_public_hold_cannot_be_read_as_empty_frontier(self):
+        helper = frontier_tests.RecoveryFrontierContract('runTest')
+        with World() as w:
+            command, _, repo, bank, _, inspected, applied = f.small_pending(w)
+            self.assertFalse(applied['semantic_recovery_complete'])
+            directory = f.private_directory(w, bank, inspected['operation_id'])
+            index = directory.parent / 'index.json'
+            self.assertTrue(index.is_file())
+            index.unlink()
+            before = bank_bytes(bank), bank_bytes(directory)
+            result, value = helper.recall(w, command, repo, inspected['manifest']['project_id'])
+            self.assertNotEqual(result.returncode, 0)
+            self.assertNotIn('results', value)
+            self.assertEqual((bank_bytes(bank), bank_bytes(directory)), before)
 
     def test_changed_config_home_cannot_make_held_reader_report_complete(self):
         helper = frontier_tests.RecoveryFrontierContract('runTest')
