@@ -17,15 +17,26 @@ class RecoveryFrontierSubstitutionContract(unittest.TestCase):
             proposal, transaction, _ = f.admission_proposal(world, command, source, repo, bank, inspected, full=True)
             evidence = transaction['admission_evidence']
             request, proof = evidence['comparison_request'], evidence['comparison_proof']
+            directory = f.private_directory(world, bank, operation)
+            accepted = world.run([command, 'compare', 'check', '--repo', repo, '--request', f.save(world, request),
+                                  '--proof', f.save(world, proof), '--private-output', world.inside('valid.json')],
+                                 check=False, timeout=60)
+            self.assertEqual(accepted.returncode, 0, accepted.stdout + accepted.stderr)
             before = {p.relative_to(bank).as_posix(): p.read_bytes() for p in bank.rglob('*') if p.is_file()}
+            private_before = {p.relative_to(directory).as_posix(): p.read_bytes()
+                              for p in directory.rglob('*') if p.is_file()}
             foreign = copy.deepcopy(proof)
-            foreign['judgment']['pending_decisions'][0]['coverage_claim']['unit_id'] = str(uuid.uuid4())
-            for changed in (foreign,):
-                refused = world.run([command, 'compare', 'check', '--repo', repo, '--request', f.save(world, request),
-                                     '--proof', f.save(world, changed), '--private-output', world.inside('foreign.json')],
-                                    check=False, timeout=60)
-                self.assertNotEqual(refused.returncode, 0)
-                self.assertEqual({p.relative_to(bank).as_posix(): p.read_bytes() for p in bank.rglob('*') if p.is_file()}, before)
+            decision = foreign['judgment']['pending_decisions'][0]
+            foreign_id = str(uuid.uuid4())
+            decision['unit_id'] = foreign_id
+            decision['coverage_claim']['unit_id'] = foreign_id
+            refused = world.run([command, 'compare', 'check', '--repo', repo, '--request', f.save(world, request),
+                                 '--proof', f.save(world, foreign), '--private-output', world.inside('foreign.json')],
+                                check=False, timeout=60)
+            self.assertNotEqual(refused.returncode, 0)
+            self.assertEqual({p.relative_to(bank).as_posix(): p.read_bytes() for p in bank.rglob('*') if p.is_file()}, before)
+            self.assertEqual({p.relative_to(directory).as_posix(): p.read_bytes()
+                              for p in directory.rglob('*') if p.is_file()}, private_before)
             revision = world.inside('revision.json')
             f.call(world, command, 'revise-units', '--repo', repo, '--operation', operation,
                    '--input', f.save(world, revision_request(world, bank, inspected, applied['pending_unit_ids'][0])),

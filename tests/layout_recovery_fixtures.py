@@ -282,7 +282,7 @@ def discard_proposal(world, command, repo, bank, inspected, unit_id):
     return output
 
 
-def admission_proposal(world, command, source, repo, bank, inspected, *, full, policy_number=0):
+def admission_proposal(world, command, source, repo, bank, inspected, *, full, policy_number=0, unit_id=None):
     """Construct controlled attestations; actual installed consumers verify them."""
     from contracts.test_admission import AdmissionContract
     helper = AdmissionContract('runTest')
@@ -315,7 +315,8 @@ def admission_proposal(world, command, source, repo, bank, inspected, *, full, p
     target = 'topics/' + captured['request']['candidate']['metadata']['id'] + '.md'
     pending = []
     for number, row in enumerate(view['pending_matches']):
-        credited = full and (policy_number is None or number == policy_number)
+        credited = full and (row['unit_id'] == unit_id if unit_id is not None
+                             else policy_number is None or number == policy_number)
         claim = {'unit_id': row['unit_id'], 'coverage': 'full' if credited else 'none',
             'covered_source_ranges': row['source_ranges'] if credited else [],
             'target_record_refs': [{'id': captured['request']['candidate']['metadata']['id'], 'version': 1,
