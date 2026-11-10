@@ -7,16 +7,33 @@ import layout_recovery_fixtures as recovery
 
 
 class LayoutNestedFaults(unittest.TestCase):
+    def feature(self, world, repo):
+        path = repo / 'feature.txt'
+        path.write_text('Feature baseline\n')
+        world.git('add', 'feature.txt', cwd=repo)
+        world.git('commit', '-m', 'Synthetic feature baseline', cwd=repo)
+        path.write_text('Staged feature\n')
+        world.git('add', 'feature.txt', cwd=repo)
+        path.write_text('Unstaged feature\n')
+        return (repo / '.git/index').read_bytes(), world.git('rev-parse', 'HEAD', cwd=repo).stdout
+
+    def assert_feature(self, world, repo, saved):
+        self.assertEqual((repo / '.git/index').read_bytes(), saved[0])
+        self.assertEqual(world.git('rev-parse', 'HEAD', cwd=repo).stdout, saved[1])
+        self.assertEqual((repo / 'feature.txt').read_text(), 'Unstaged feature\n')
+
     def rollback_journey(self, stage, mode, *, changed_path='event'):
         helper = nested.NestedReconciliationContract()
         with World() as world:
             command, source, repo, bank, native, inspected, applied = recovery.small_pending(world)
+            feature = self.feature(world, repo)
             operation = inspected['operation_id']
             directory = recovery.private_directory(world, bank, operation)
             originals = {row['path']: (directory / row['blob']).read_bytes() for row in inspected['manifest']['sources']}
             hold = (bank / '.agent-memory-transaction.md').read_bytes()
             sentinel = (bank / '.agent-memory-recovery.md').read_bytes()
             before = nested.canonical(bank)
+            modes = {path: (bank / path).stat().st_mode & 0o7777 for path in before}
             proposal, transaction, target = recovery.admission_proposal(world, command, source, repo, bank, inspected, full=False)
             recovery.public(world, command, 'admission', 'apply', '--proposal', proposal, expected=1,
                             env={'AGENT_MEMORY_FAULT_STAGE': 'layout-recovery-nested-before-receipt'})
@@ -38,6 +55,7 @@ class LayoutNestedFaults(unittest.TestCase):
             recovery.call(world, command, 'recover-nested', '--repo', repo, '--proposal', again)
             self.assertEqual(nested.canonical(bank), before)
             self.assertEqual({path: (bank / path).read_text() for path in native}, native)
+            self.assertEqual({path: (bank / path).stat().st_mode & 0o7777 for path in before}, modes)
             self.assertEqual((bank / '.agent-memory-transaction.md').read_bytes(), hold)
             self.assertEqual((bank / '.agent-memory-recovery.md').read_bytes(), sentinel)
             status = recovery.call(world, command, 'status', '--repo', repo, '--operation', operation)
@@ -45,6 +63,7 @@ class LayoutNestedFaults(unittest.TestCase):
             self.assertFalse(status['semantic_recovery_complete'])
             self.assertEqual({row['path']: (directory / row['blob']).read_bytes()
                               for row in inspected['manifest']['sources']}, originals)
+            self.assert_feature(world, repo, feature)
 
     def test_plan_error(self):
         self.rollback_journey('layout-recovery-nested-rollback-after-plan', 'error')
@@ -59,10 +78,12 @@ class LayoutNestedFaults(unittest.TestCase):
         helper = nested.NestedReconciliationContract()
         with World() as world:
             command, source, repo, bank, _, inspected, applied = recovery.small_pending(world)
+            feature = self.feature(world, repo)
             operation = inspected['operation_id']
             directory = recovery.private_directory(world, bank, operation)
             originals = {row['path']: (directory / row['blob']).read_bytes() for row in inspected['manifest']['sources']}
             hold = (bank / '.agent-memory-transaction.md').read_bytes()
+            modes = {path: (bank / path).stat().st_mode & 0o7777 for path in nested.canonical(bank)}
             proposal, transaction, target = recovery.admission_proposal(world, command, source, repo, bank, inspected,
                                                                         full=not partial)
             fault = world.run([command, 'admission', 'apply', '--proposal', proposal], check=False, timeout=30,
@@ -88,8 +109,10 @@ class LayoutNestedFaults(unittest.TestCase):
             historical = recovery.public(world, command, 'admission', 'apply', '--proposal', proposal)
             self.assertTrue(historical['already_applied'])
             self.assertEqual(nested.canonical(bank), committed)
+            self.assertEqual({path: (bank / path).stat().st_mode & 0o7777 for path in modes}, modes)
             self.assertEqual({row['path']: (directory / row['blob']).read_bytes()
                               for row in inspected['manifest']['sources']}, originals)
+            self.assert_feature(world, repo, feature)
 
     def test_receipt_error(self):
         self.receipt_journey('layout-recovery-nested-after-receipt', 'error')
@@ -128,11 +151,13 @@ class LayoutNestedFaults(unittest.TestCase):
         helper = nested.NestedReconciliationContract()
         with World() as world:
             command, source, repo, bank, _, inspected, applied = recovery.small_pending(world)
+            feature = self.feature(world, repo)
             operation = inspected['operation_id']
             directory = recovery.private_directory(world, bank, operation)
             originals = {row['path']: (directory / row['blob']).read_bytes() for row in inspected['manifest']['sources']}
             hold = (bank / '.agent-memory-transaction.md').read_bytes()
             before = nested.canonical(bank)
+            modes = {path: (bank / path).stat().st_mode & 0o7777 for path in before}
             proposal, transaction, target = recovery.admission_proposal(world, command, source, repo, bank, inspected, full=False)
             if stage.endswith('after-rename'):
                 paths = {'event': 'history/events/' + transaction['operation_id'] + '.md',
@@ -155,8 +180,10 @@ class LayoutNestedFaults(unittest.TestCase):
                 recovery.call(world, command, 'recover-nested', '--repo', repo, '--proposal', preview)
                 self.assertEqual(nested.canonical(bank), before)
                 self.assertEqual((bank / '.agent-memory-transaction.md').read_bytes(), hold)
+                self.assertEqual({path: (bank / path).stat().st_mode & 0o7777 for path in before}, modes)
             self.assertEqual({row['path']: (directory / row['blob']).read_bytes()
                               for row in inspected['manifest']['sources']}, originals)
+            self.assert_feature(world, repo, feature)
 
     def test_marker_before_error(self):
         self.early_journey('layout-recovery-before-nested-marker', 'error')
