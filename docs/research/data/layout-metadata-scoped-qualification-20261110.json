@@ -1,0 +1,424 @@
+{
+  "schema": "agent-memory/layout-metadata-scoped-qualification-v1",
+  "release_acceptance": false,
+  "scope": "Actual public metadata repair, child restore, controlled interruption, ambiguous ownership and retention regressions; NOT final source/platform/task/native/performance acceptance.",
+  "policy": {
+    "darwin": "Only exact per-path private com.apple.provenance maps; missing/different required values remain pending. Unknown xattrs, ACL entries, nonzero BSD file flags and metadata errors refuse. No original attribute value or value-derived hash is published.",
+    "linux": "Empty xattrs/ACLs plus repeated descriptor FS_IOC_GETFLAGS. Only kernel-managed EXTENT0x80000 and INDEX0x1000 storage-format bits pass; every other bit or unavailable/unstable ioctl refuses. Unsupported tmpfs/NFS/FUSE/overlay configurations and SELinux labels remain pending.",
+    "review_binding": "Required metadata_plan_sha256 over the whole uid/gid/mode/xattrs plan; original and replacement metadata readback remains exact within declared policy.",
+    "ambiguity": "Create-before-pin crash or changed/unpinned occupant is pending-ambiguous-probe-ownership. Preserve occupant/journal; only operator inspection/removal permits aware retry. Names alone never authorize cleanup.",
+    "residual": "A foreign empty directory replacement with an indistinguishable reused inode cannot always be detected; automatic cleanup is not guaranteed."
+  },
+  "observed_linux_flag_regression": {
+    "system": "Linux6.8.0-142-generic aarch64",
+    "filesystem": "ext4",
+    "before_source_commit": "126a624",
+    "before_decision": "accepted",
+    "after_source_commit": "ff0580ffbd1feaf4d37a0488c4bc3afb66c546d3",
+    "after_decision": "refused",
+    "flags_before_setting_nodump": 524288,
+    "flags_with_nodump": 524352,
+    "nodump_unchanged_after_refusal": true,
+    "source_bytes_unchanged": true,
+    "privileged_changes": false,
+    "production_flag_writes": false,
+    "sources": [
+      "https://man7.org/linux/man-pages/man2/ioctl_iflags.2.html",
+      "https://github.com/torvalds/linux/blob/v6.11/include/uapi/linux/fs.h"
+    ]
+  },
+  "retained_failures": [
+    {
+      "source_commit": "126a624",
+      "workers": 7,
+      "result": "fixture ERROR before probe paths: macOS Python has no os.listxattr; fixed by native independent test observer, no empty-attribute fallback."
+    },
+    {
+      "source_commit": "748c26e",
+      "worker": "layout-metadata-probe-retention-complete",
+      "result": "Actual public retention inspect NameError from obsolete undefined occupancy expression; removed in c87a8e4, existing validated probe_entries ownership/blocker checks retained."
+    },
+    {
+      "source_commit": "748c26e",
+      "workers": 28,
+      "passed": 26,
+      "failed": [
+        "layout-consumer-closure-frontier-10",
+        "layout-consumer-closure-nested-02"
+      ],
+      "result": "Consumer fixture repairs integrated in47880d6/b9f04c4; qualification pending, no production guard relaxation."
+    },
+    {
+      "source_commit": "ff0580f",
+      "surface": "private Linux archive verification apparatus",
+      "result": "Two pre-execution refusals: data extraction normalizes archive write bits, and a legitimate tracked malformed-data symlink must be checked by exact link target rather than treated as a regular file. Corrected verifier validates complete Git bytes/types/executable bits/link targets before executing all5 passing Linux workers; neither failed apparatus attempt was a product run."
+    }
+  ],
+  "actual_runs": [
+    {
+      "run": "macos-exact-metadata",
+      "source_commit": "126a624aa5d94ed020a3a3b9a753f46075405613",
+      "wall_seconds": 44.28,
+      "worker_deadline_seconds": 300,
+      "workers": [
+        {
+          "suite": "layout-metadata-exact-apply-restore",
+          "passed": true,
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "result_sha256": "87d040078b08de8b555bfbd21552bb92531df339d916b74d95f3baeb2d941d32",
+          "diagnostics_sha256": "94ae47c611b8db25c2138bd26b3f12f2697122de9947cc3b470291a2c71f5fde"
+        },
+        {
+          "suite": "layout-metadata-changed-before-apply",
+          "passed": true,
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "result_sha256": "89cc39ca8681caf955659171d45ac018e6418f7e0fb5dfaf81c02f7e7750e1cc",
+          "diagnostics_sha256": "6ad364828d6430afb43bf4884bf91433ff4e775cac06d820a8a0502cf19adc35"
+        },
+        {
+          "suite": "layout-metadata-wrong-reviewed-value",
+          "passed": true,
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "result_sha256": "b587614ec199749489b2f53c5b7f6b80ae4933a9fa294c4ac35db879a5b7e3ff",
+          "diagnostics_sha256": "ef1d9fd3b7268925f593d8999688f1e3f185e0225fbf2bac8c85ad691a8c4b36"
+        },
+        {
+          "suite": "layout-metadata-unsupported-xattr",
+          "passed": true,
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "result_sha256": "859a959950dc4040fa976c4a0b32c1114669ee18c64f20b5bf575eef6a0b0790",
+          "diagnostics_sha256": "51723ba2e0968fa985dae989a0dcd2c5c10f7507851a6f232d6beb455bd7f128"
+        }
+      ],
+      "passing_workers": 4,
+      "failed_workers": 0,
+      "source_preparation": "cache-free proper Git clone",
+      "archive_sha256": null,
+      "host": {
+        "system": "Darwin",
+        "machine": "arm64",
+        "python": "3.15.0"
+      }
+    },
+    {
+      "run": "macos-probe-interruptions",
+      "source_commit": "748c26ec7879ef4a2b49063fce35e603722d731f",
+      "wall_seconds": 176.6,
+      "worker_deadline_seconds": 300,
+      "workers": [
+        {
+          "suite": "layout-metadata-probe-journal-error",
+          "passed": true,
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "result_sha256": "78e54c96040c348bcf53fcf7f6b7f97ec54e0de65d2d3c2717af63c7d6e534d1",
+          "diagnostics_sha256": "5fbd37f08324b061e2cec4f2ce68c6870453ffbbe6da20576cc09cad03758d2b"
+        },
+        {
+          "suite": "layout-metadata-probe-journal-exit",
+          "passed": true,
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "result_sha256": "722f583f849166dbd43865b5deffe3eb1b502c27b6a7ccb02088814bc34b40a4",
+          "diagnostics_sha256": "dd5d1484177e29e32917e673cd5c86ad8354b22b146a7515d15ced43ff038631"
+        },
+        {
+          "suite": "layout-metadata-probe-created-0-error",
+          "passed": true,
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "result_sha256": "b394c1548e2153ce0a5918f383f1478215b4ae892b9011885b3b12bcaa452163",
+          "diagnostics_sha256": "33fcdeafd860935483f87b8ffeedeeaccd5f96c8b0b3c06014b6d1847a43633e"
+        },
+        {
+          "suite": "layout-metadata-probe-created-0-exit",
+          "passed": true,
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "result_sha256": "6121f91c14c2f795f8d34dff878dc6ac9311b234d1114814f2858f5d03a39a90",
+          "diagnostics_sha256": "66e96bf67e7a90932dcb833eadf0bd9f9721b7723484f52f4a38cd1bca417007"
+        },
+        {
+          "suite": "layout-metadata-probe-before-pin-file-exit",
+          "passed": true,
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "result_sha256": "acf63a4c2e5907421753f9e271b39e5af6597134aec4067eeb57b8b567c7dace",
+          "diagnostics_sha256": "2d3732ee70cc527d68639d2cb931ed0e2ec4f90a166f65dbd9cddcbde26f7615"
+        },
+        {
+          "suite": "layout-metadata-probe-before-pin-directory-error",
+          "passed": true,
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "result_sha256": "80ea6e046a2bacd590ea5a1ebdeb248ccf5d753a280e5af444ff2fbfd7cffe57",
+          "diagnostics_sha256": "1f229e4efb00e75a0ad1b81b6f2cd6d066896f17b32cd99356b78b6171842567"
+        },
+        {
+          "suite": "layout-metadata-probe-retention-complete",
+          "passed": false,
+          "tests": 1,
+          "failures": 1,
+          "errors": 0,
+          "skipped": 0,
+          "result_sha256": "18ee8914379a4c1e87edf1c2f9ed905f8d6d7d6af77125d6b0cf4abbba7c91fb",
+          "diagnostics_sha256": "a7e6ad30f8117051352531cc9a4945a92a48139c589cf01c43c6e9380e4c5691"
+        }
+      ],
+      "passing_workers": 6,
+      "failed_workers": 1,
+      "source_preparation": "cache-free proper Git clone",
+      "archive_sha256": null,
+      "host": {
+        "system": "Darwin",
+        "machine": "arm64",
+        "python": "3.15.0"
+      }
+    },
+    {
+      "run": "macos-retention-legacy-fix",
+      "source_commit": "c87a8e440e68bec6ea5d0c201fde078499e4354c",
+      "wall_seconds": 155.58,
+      "worker_deadline_seconds": 300,
+      "workers": [
+        {
+          "suite": "layout-metadata-probe-retention-complete",
+          "passed": true,
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "result_sha256": "ede73711667699d40459a6d2a139910d60e90e79e0bc61ff03c208d5928a30ed",
+          "diagnostics_sha256": "377e46daff2041be6fce5452f268794760df2c6528150c10bbcb601cf1f6175f"
+        },
+        {
+          "suite": "layout-metadata-probe-retention-incomplete",
+          "passed": true,
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "result_sha256": "b958dad0c4f207ed3cb8190c30bbd57d51f421ba9b72fc59dacada7444946e6f",
+          "diagnostics_sha256": "5a4e62057745ceac469f960becf2a4b4e9aa5ee77cd653e45d3aa50606be18d6"
+        },
+        {
+          "suite": "layout-metadata-probe-retention-foreign",
+          "passed": true,
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "result_sha256": "ac6c667f60e1085c3b2ce5aac63425f479aab3645aea28bc47306305ce77c370",
+          "diagnostics_sha256": "da6f04998e7bdf912fe201a616d0842cd6cc96a1899fe970bd60c4303acb3347"
+        },
+        {
+          "suite": "layout-metadata-probe-retention-changed-plan",
+          "passed": true,
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "result_sha256": "d02b9fe890c5170d9fcb7f746ce080706f473436b819a9c3c495cb4be9b40f08",
+          "diagnostics_sha256": "519cba6fccc47d41fe8128e848429bc6e5b9382f187555e1de2f232e068cd8fd"
+        },
+        {
+          "suite": "layout-metadata-probe-retention-unknown-pin",
+          "passed": true,
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "result_sha256": "87c11cb2625ab5a3aa97150075b0e7cf676594e3599e9a636ff1a4800d14259a",
+          "diagnostics_sha256": "d53ce05fe0294ad4f5065c101af89554b7126b6b835c4b684edca6a535730961"
+        },
+        {
+          "suite": "layout-legacy-stale-apply",
+          "passed": true,
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "result_sha256": "400cf7dfeb660c59067ac420bbaa5d5626c4050201d51733ff831729b4b55766",
+          "diagnostics_sha256": "0704d57c33642431f5605e8711d2a3338dab943a725c80f5b6b5695e068aaf19"
+        },
+        {
+          "suite": "layout-legacy-child-handoff",
+          "passed": true,
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "result_sha256": "201bf1993b06d509cea97515dbb978ba904b82909e685b25e7a9830911d385af",
+          "diagnostics_sha256": "12ccd535860a2f37c389ba119b5621178c99d8c80d06e550eafa273cb2217ed3"
+        },
+        {
+          "suite": "layout-legacy-child-receipt",
+          "passed": true,
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "result_sha256": "fa0efb85a58b93af1a05e2b99d4581ee0f0deea2cf77fcf0a577315397c123c8",
+          "diagnostics_sha256": "2574a80aa493ddf43e1091962608db897ac843d9ef72c3317f7b24378d9d8f3c"
+        }
+      ],
+      "passing_workers": 8,
+      "failed_workers": 0,
+      "source_preparation": "cache-free proper Git clone",
+      "archive_sha256": null,
+      "host": {
+        "system": "Darwin",
+        "machine": "arm64",
+        "python": "3.15.0"
+      }
+    },
+    {
+      "run": "macos-flag-and-restore",
+      "source_commit": "ff0580ffbd1feaf4d37a0488c4bc3afb66c546d3",
+      "wall_seconds": 25.89,
+      "worker_deadline_seconds": 300,
+      "workers": [
+        {
+          "suite": "layout-metadata-unsupported-inode-flags",
+          "passed": true,
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "result_sha256": "d255cb8a87038bb33eb0c98638d26660e8ef4de1f0e115bceabd1f3b2610e451",
+          "diagnostics_sha256": "689934a7a97f622a55653024032ef25ef706dc590316a6d60843dc9e3b9ffd40"
+        },
+        {
+          "suite": "layout-metadata-exact-apply-restore",
+          "passed": true,
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "result_sha256": "d1a83a2ed17433101a4477537c346028b30152f41209dd3640647b807e71272f",
+          "diagnostics_sha256": "0d5ba578c4c02142dc35003d98510c0f5c42ee69cd6860f1976feeb9a6521105"
+        }
+      ],
+      "passing_workers": 2,
+      "failed_workers": 0,
+      "source_preparation": "cache-free proper Git clone",
+      "archive_sha256": null,
+      "host": {
+        "system": "Darwin",
+        "machine": "arm64",
+        "python": "3.15.0"
+      }
+    },
+    {
+      "run": "linux-exact-metadata-flags",
+      "source_commit": "ff0580ffbd1feaf4d37a0488c4bc3afb66c546d3",
+      "wall_seconds": 18.27,
+      "worker_deadline_seconds": 300,
+      "workers": [
+        {
+          "suite": "layout-metadata-exact-apply-restore",
+          "passed": true,
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "result_sha256": "d1a83a2ed17433101a4477537c346028b30152f41209dd3640647b807e71272f",
+          "diagnostics_sha256": "c06ee740e2953dc6d4a06839be823fcd9c1840120bb559e50e3498c6f099a954"
+        },
+        {
+          "suite": "layout-metadata-changed-before-apply",
+          "passed": true,
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "result_sha256": "2694ab0a0536bad08a2113f974ad0016a1cd2ab6dabf19e8795113cd5d730139",
+          "diagnostics_sha256": "7edd576efabec81dd64e5e30214b62e0e28025f641d655093ce4da457a612e53"
+        },
+        {
+          "suite": "layout-metadata-wrong-reviewed-value",
+          "passed": true,
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "result_sha256": "4d88f906b7f8f2431ae1881e8f95afaafd314f6132aaeebc98a762138f71dc8e",
+          "diagnostics_sha256": "18ed92deb84a08b760f8a58243e5d5bac3dba8bce64166fb07198b2dc290b065"
+        },
+        {
+          "suite": "layout-metadata-unsupported-xattr",
+          "passed": true,
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "result_sha256": "879cafef785d05258a9aaba3a1c4138b79175fc0ab9bc57245c4eb7e4881d044",
+          "diagnostics_sha256": "5984da2e21cd1524fb550eba5fb98915075404b672c8e157b223ad5cd2d7922e"
+        },
+        {
+          "suite": "layout-metadata-unsupported-inode-flags",
+          "passed": true,
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "result_sha256": "d255cb8a87038bb33eb0c98638d26660e8ef4de1f0e115bceabd1f3b2610e451",
+          "diagnostics_sha256": "8164f1417c140393c5dd2579f5d23fce1c322644c5060f8d8a7353f1481f84f1"
+        }
+      ],
+      "passing_workers": 5,
+      "failed_workers": 0,
+      "source_preparation": "all archive file bytes/types/executable bits and exact symlink target verified before importing World; Git archive commit header and full SHA256 bound",
+      "archive_sha256": "b7ef7ad3f0b390b0a1e830fbd08730b0e8d9a34b6452c0d5b7bcfa3fdaa0ff77",
+      "host": {
+        "system": "Linux",
+        "machine": "aarch64",
+        "python": "3.15.2",
+        "filesystem": "ext4"
+      }
+    }
+  ],
+  "independent_opus_source_reviews": [
+    {
+      "artifact": "244-metadata-composed-126a624-Opus-review-01.json",
+      "sha256": "861be0de4e3d9ef9922fbcb45d4cf31ade78eae9f29a53064577242e7883d38d"
+    },
+    {
+      "artifact": "244-metadata-production-126a624-Opus-review-02.json",
+      "sha256": "268e155893dba3e51aa504cbb38365c9b3723f393a604a348c5ea47bbd2673fb"
+    },
+    {
+      "artifact": "244-metadata-production-c87a8e4-F1-closure-Opus-addendum-02.md",
+      "sha256": "d836c6c62c283424743995c610b32898fbaa2f362258eda4473cc7e95a249b50"
+    },
+    {
+      "artifact": "244-metadata-linux-flags-ff0580f-Opus-review-02.md",
+      "sha256": "43178a32b30ff1ce254093c75efe3f1c94819390fca2f9f3927c65df99b96174"
+    }
+  ],
+  "remaining": "Complete218registered crash/probe workers, corrected held-consumer journeys, full final four-cell gate, actual final stock-native and matched performance workloads, independent original-criteria acceptance and signed delivery. No old timing/native or matrix result transfers."
+}
