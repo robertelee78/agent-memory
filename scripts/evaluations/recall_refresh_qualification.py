@@ -96,6 +96,21 @@ def hits(path):
                 counts[(row['namespace'], json.dumps(row['key'], sort_keys=True))] += 1
     return counts
 
+def restore_world(root, repo, snapshot):
+    """Restore fixture bytes while retaining the registered Git directory identity."""
+    git_dir = repo / '.git'
+    if git_dir.is_symlink() or not git_dir.is_dir():
+        raise RuntimeError('Fixture checkout no longer has its original Git directory')
+    for parent, keep in ((root, repo), (repo, git_dir), (git_dir, None)):
+        for child in parent.iterdir():
+            if child == keep:
+                continue
+            if child.is_dir() and not child.is_symlink():
+                shutil.rmtree(child)
+            else:
+                child.unlink()
+    shutil.copytree(snapshot, root, dirs_exist_ok=True)
+
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
@@ -417,26 +432,41 @@ def main():
                         'tests/contracts/test_sharing_recovery.py', 'tests/contracts/test_semantic_sharing.py',
                         'scripts/evaluations/daily_use.py', 'scripts/evaluations/recall_refresh_smoke.py')}}
                 save(directory / 'fixture.json', fixture)
+                initial_scope, _ = operation(world, pack, 'fixture-scope', 'scope_binding.py', 'status', '--repo', repo)
+                if not initial_scope['resolved'] or initial_scope['project_id'] != pid:
+                    raise RuntimeError('Fixture scope was not resolved to its original project')
+                identity = (initial_scope['developer_id'], initial_scope['project_id'],
+                            initial_scope['project']['evidence']['checkout_key'])
+                git_dir = repo / '.git'
+                git_identity = (git_dir.stat().st_dev, git_dir.stat().st_ino)
+                original_state = protected(world, repo, bank)
+                save(directory / 'fixture-scope.json', initial_scope)
                 snapshot = directory / 'frozen-world'
                 shutil.copytree(world.root, snapshot, ignore=shutil.ignore_patterns('__pycache__'))
-                save(directory / 'frozen-world-inventory.json', inventory(snapshot))
+                frozen_inventory = inventory(snapshot)
+                save(directory / 'frozen-world-inventory.json', frozen_inventory)
                 labels = ('A', 'C') if args.mode == 'memo' else ('A', 'B', 'C')
                 for build in labels:
                     for control in (('on', 'off') if args.mode == 'memo' else ('off',)):
                         current_directory = directory / (build + '-instrument-' + control)
                         current_directory.mkdir(mode=0o700)
                         try:
-                            for child in world.root.iterdir():
-                                if child.is_dir() and not child.is_symlink():
-                                    shutil.rmtree(child)
-                                else:
-                                    child.unlink()
-                            shutil.copytree(snapshot, world.root, dirs_exist_ok=True)
+                            restore_world(world.root, repo, snapshot)
+                            if (git_dir.stat().st_dev, git_dir.stat().st_ino) != git_identity:
+                                raise RuntimeError('Restored checkout changed its registered Git identity')
+                            if inventory(world.root) != frozen_inventory or protected(world, repo, bank) != original_state:
+                                raise RuntimeError('Restored fixture differs from its frozen world')
                             shutil.rmtree(pack)
                             shutil.copytree(roots[build] / 'skills/agent-memory', pack)
                             if inventory(pack) != manifest['builds'][build]['source']['portable']:
                                 raise RuntimeError('Executing portable pack is not the frozen build')
                             save(current_directory / 'executed-pack.json', inventory(pack))
+                            restored_scope, _ = operation(world, pack, 'restored-scope', 'scope_binding.py', 'status', '--repo', repo)
+                            restored_identity = (restored_scope['developer_id'], restored_scope['project_id'],
+                                                 restored_scope['project']['evidence']['checkout_key'])
+                            if not restored_scope['resolved'] or restored_identity != identity:
+                                raise RuntimeError('Restored checkout no longer has the original public identity')
+                            save(current_directory / 'restored-scope.json', restored_scope)
                             scenario(world, pack, repo, bank, peer, selected, (group, leaf), condition, conflicts,
                                      build, control, 2 if args.mode == 'memo' else args.samples + 1)
                             if inventory(pack) != manifest['builds'][build]['source']['portable']:

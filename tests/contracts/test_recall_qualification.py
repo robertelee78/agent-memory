@@ -12,6 +12,7 @@ import unittest
 
 from world import World
 from identity_fixtures import bind
+from contracts.test_sharing_recovery import SharingRecoveryContract
 
 ROOT = Path(__file__).resolve().parents[2]
 EVALUATIONS = ROOT / 'scripts/evaluations'
@@ -33,6 +34,58 @@ class RecallQualificationContract(unittest.TestCase):
         process = self.controller(world, root, program, *args, timeout=timeout)
         self.assertEqual(process.returncode, 0, process.stdout + process.stderr)
         return process
+
+    def test_refresh_restore_retains_public_checkout_binding(self):
+        with World() as world, World() as controller_world:
+            original_run = world.run
+            def run(argv, **kwargs):
+                argv = list(map(str, argv))
+                if argv[0] == sys.executable and '-B' not in argv:
+                    argv.insert(1, '-B')
+                return original_run(argv, **kwargs)
+            world.run = run
+            helper = SharingRecoveryContract()
+            repo, bank, _, _ = helper.fixture(world)
+            pack = helper.pack
+            git_dir = repo / '.git'
+            git_id = (git_dir.stat().st_dev, git_dir.stat().st_ino)
+            index = (git_dir / 'index').read_bytes()
+            head = world.git('rev-parse', 'HEAD', cwd=repo).stdout
+            def scope():
+                result = world.run([sys.executable, '-I', '-B', pack / 'scripts/scope_binding.py',
+                                    'status', '--repo', repo])
+                return json.loads(result.stdout)
+            before = scope()
+            self.assertTrue(before['resolved'])
+            snapshot = controller_world.inside('snapshot')
+            shutil.copytree(world.root, snapshot, ignore=shutil.ignore_patterns('__pycache__'))
+            controller_root = self.stage(controller_world)
+            def files(root):
+                return {p.relative_to(root).as_posix(): (p.read_bytes(), p.stat().st_mode & 0o777)
+                        for p in root.rglob('*') if p.is_file()}
+            expected = files(snapshot)
+            for iteration in range(2):
+                (repo / 'extra').write_text(str(iteration))
+                (git_dir / 'extra').write_text(str(iteration))
+                self.assert_controller(controller_world, controller_root, '''
+from pathlib import Path
+from recall_refresh_qualification import restore_world
+restore_world(Path(sys.argv[2]), Path(sys.argv[3]), Path(sys.argv[4]))
+''', world.root, repo, snapshot)
+                self.assertEqual(files(world.root), expected)
+                self.assertEqual((git_dir.stat().st_dev, git_dir.stat().st_ino), git_id)
+                self.assertEqual((git_dir / 'index').read_bytes(), index)
+                self.assertEqual(world.git('rev-parse', 'HEAD', cwd=repo).stdout, head)
+                after = scope()
+                self.assertTrue(after['resolved'])
+                for key in ('developer_id', 'project_id'):
+                    self.assertEqual(after[key], before[key])
+                self.assertEqual(after['project']['evidence']['checkout_key'],
+                                 before['project']['evidence']['checkout_key'])
+                result = world.run([sys.executable, '-I', '-B', pack / 'scripts/discover_memory.py',
+                                    'start', '--repo', repo, '--intent', 'recall',
+                                    '--task', 'Find the current project context'], check=False)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def literal_results(self, world):
         # Reuse the frozen template and corpus without changing any fixture gate.
