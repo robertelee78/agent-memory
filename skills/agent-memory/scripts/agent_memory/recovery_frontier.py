@@ -856,9 +856,9 @@ def capture_scope(repo):
 
 def private_preview(repo, value, output=None):
     token = observe(repo)
-    if value.get('proposal') is not None and token['unit_ids']:
+    if output is not None or value.get('output_plan') is not None or (value.get('proposal') is not None and token['unit_ids']):
         if output is None:
-            raise ContractError('Recovery-bound proposal contains private coverage claims; use checked --private-output')
+            raise ContractError('Governed output plans and recovery-bound proposals require checked --private-output')
         return {'schema': value['schema'], 'operation': value['operation'],
             'private_artifact': sharing_limits.write_private(output, value, repo),
             'pending_recovery_units': len(token['unit_ids']), 'canonical_writes_performed': False}

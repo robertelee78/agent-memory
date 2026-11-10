@@ -327,7 +327,7 @@ def main(argv=None):
             review(args.repo, request, cli_judgment(read_input(args.judgment)),
                 coverage_review=read_input(args.coverage_review) if args.coverage_review else None) if args.command == 'review'
             else check(args.repo, request, read_input(args.proof)))
-        if value['observation']['recovery_frontier']['unit_ids']:
+        if args.private_output or value['observation']['recovery_frontier']['unit_ids']:
             artifact = sharing_limits.write_private(args.private_output, value, args.repo)
             print(json.dumps({'schema': 'agent-memory/comparison-result-v2', 'operation': args.command,
                 'private_artifact': artifact, 'operation_ids': token['operation_ids'],

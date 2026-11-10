@@ -11,7 +11,6 @@ from pathlib import Path, PurePosixPath
 import tempfile
 import resource
 import subprocess
-import unicodedata
 import uuid
 
 from . import bank_contract as bank, bank_observation, bank_transactions as tx
@@ -192,7 +191,7 @@ def observe_tree(repo, revision, prefix, directory=None, *, expected=None):
             continue
         require(full.startswith(prefix + '/'), 'Raw inventory escaped the selected bank')
         path = _path(full[len(prefix) + 1:])
-        alias = unicodedata.normalize('NFC', path).casefold()
+        alias = bank.portable_key(path)
         require(alias not in names, 'Raw source aliases require explicit review')
         if len(physical) >= MAX_ENTRIES:
             raise raw_sources.RawCapacityError('physical-entries', MAX_ENTRIES, len(physical)+1)

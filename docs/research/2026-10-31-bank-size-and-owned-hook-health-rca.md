@@ -108,7 +108,7 @@ not a larger normal cap, a skipped source, an initialization over existing data,
 or a direct edit of the reported bank. It must preserve the exact originals and
 resolve meaning before producing bounded native sources.
 
-Proposed outcome: [ADR-0010 recovery amendment](../adr/0010-memory-bank-file-contract.md#proposed-amendment-source-preserving-layout-recovery).
+Proposed outcome: [ADR-0010 recovery amendment](../adr/0010-memory-bank-file-contract.md#amendment-source-preserving-layout-recovery).
 
 ## Cause 3: runtime doctor and lifecycle verification use different ownership units
 

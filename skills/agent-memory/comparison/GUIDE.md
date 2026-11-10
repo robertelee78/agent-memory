@@ -116,6 +116,16 @@ the entire ledger frontier and the private reference map. A matching hash is
 not authenticated truth. Contradiction, uncertainty and unresolved scope remain
 pending rather than authorizing a new record.
 
+An explicitly requested `--private-output` MUST also be honored when the freshly
+checked frontier is empty; the CLI MUST NOT silently print the complete result.
+Where final coverage depends on a future maintenance UUID, version or hash, the
+session MUST use the read-only [consolidation plan](../consolidation/GUIDE.md) or
+[governance plan](../governance/GUIDE.md) with complete current semantic judgments
+and initial `coverage:none`. This is not comparison approval. A distinct reviewing
+session MUST inspect the actual planned files before completing the independent
+coverage review and final comparison proof. The ordinary final proof MUST bind
+every actual claim and intended output; planning MUST NOT weaken that contract.
+
 The complete encoded proof and disclosure each retain their separate 65,536-byte
 limits and the combined canonical/pending row count remains at most 64.
 No caller may silently omit a frontier field, generation or unresolved unit.

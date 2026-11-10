@@ -258,6 +258,67 @@ def claims_for(p, *, owner=None, transaction=None):
     return claims, review
 
 
+OUTPUT_PLAN = 'agent-memory/governed-output-plan-v1'
+OUTPUT_PLAN_FIELDS = {'schema', 'operation', 'repo_root', 'project_id', 'operation_id',
+                      'recorded_at', 'request_input_sha256', 'observed_hashes', 'files'}
+
+
+def _output_proof_basis(proof):
+    """Planning fixes meaning/source; final review supplies prospective coverage."""
+    value = copy.deepcopy(proof)
+    value['judgment']['observation']['recovery_frontier']['review_digest'] = None
+    for decision in value['judgment']['pending_decisions']:
+        decision.pop('coverage_claim')
+    return value
+
+
+def _output_input_digest(value):
+    """Bind semantic planning input, not the later output-coverage attestation."""
+    if 'comparison_proof' in value:
+        value = {**value, 'comparison_proof': _output_proof_basis(value['comparison_proof'])}
+    elif value.get('comparison') is not None:
+        comparison = value['comparison']
+        value = {**value, 'comparison': {**comparison, 'proof': _output_proof_basis(comparison['proof'])}}
+    return digest(encoded(value))
+
+
+def make_output_plan(p, value):
+    """Expose reproducible private output, never an apply-capable proposal."""
+    evidence = p.get('consolidation_evidence', p.get('governance_evidence'))
+    return {'schema': OUTPUT_PLAN, 'operation': p['operation'], 'repo_root': p['repo_root'],
+            'project_id': p['project_id'], 'operation_id': p['operation_id'],
+            'recorded_at': evidence['recorded_at'], 'request_input_sha256': _output_input_digest(value),
+            'observed_hashes': p['observed_hashes'], 'files': p['files']}
+
+
+def output_plan_context(plan, value):
+    """A detached plan supplies stable IDs/time, not source or write authority."""
+    from datetime import datetime, timezone
+    from . import lifecycle
+    if (not isinstance(plan, dict) or set(plan) != OUTPUT_PLAN_FIELDS
+            or plan['schema'] != OUTPUT_PLAN or not uuid_valid(plan['operation_id'])
+            or not uuid_valid(plan['project_id']) or not isinstance(plan['operation'], str)
+            or not isinstance(plan['repo_root'], str) or not isinstance(plan['observed_hashes'], dict)
+            or not isinstance(plan['files'], dict)
+            or plan['request_input_sha256'] != _output_input_digest(value)):
+        raise ContractError('Output plan differs from the exact governed request and comparison input')
+    at = lifecycle.time_value(plan['recorded_at'])
+    if at > lifecycle.time_value(datetime.now(timezone.utc).isoformat()):
+        raise ContractError('Output plan cannot supply a future event time')
+    return plan['operation_id'], plan['recorded_at']
+
+
+def check_output_plan(p, value, plan):
+    """Rebuilding must reproduce every planned byte against the same actual base."""
+    output_plan_context(plan, value)
+    evidence = p.get('consolidation_evidence', p.get('governance_evidence'))
+    expected = {'operation': p['operation'], 'repo_root': p['repo_root'], 'project_id': p['project_id'],
+                'operation_id': p['operation_id'], 'recorded_at': evidence['recorded_at'],
+                'observed_hashes': p['observed_hashes'], 'files': p['files']}
+    if any(encoded(plan[key]) != encoded(current) for key, current in expected.items()):
+        raise ContractError('Current governed output or source differs from the independently reviewed plan')
+
+
 def evidence_fields(proof):
     if proof is None:
         return {'unit_resolution_claims': [], 'comparison_proof_sha256': None,

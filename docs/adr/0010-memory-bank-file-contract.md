@@ -180,12 +180,15 @@ visible statement's scope and current/stale status can be understood, and no
 active transaction marker is present. Search indexes, databases, MCP, hooks,
 federation, caches, and recovery journals are not part of that definition.
 
-## Proposed amendment: Source-preserving layout recovery
+## Amendment: Source-preserving layout recovery
 
-**Proposal dated 2026-10-31; outside the accepted v0.0.1 scope.** Stable proposed
-work key: `ADR-0010:source-preserving-layout-recovery`. This is a separate outcome
-from bank-validation consistency and owned-hook health, with no v0.0.13 release
-assignment or implementation authorization.
+**Proposed 2026-10-31; implementation design approved 2026-11-04 for v0.0.15.**
+Work key: `ADR-0010:source-preserving-layout-recovery`. This is separate from
+bank-validation consistency and owned-hook health and does not expand the
+earlier accepted release scopes. [Task-specific design approval](https://github.com/robertelee78/agent-memory/issues/244#issuecomment-6633503972)
+authorizes implementation; independent acceptance and signed delivery remain
+separate. The implementation and scoped qualification are on the release
+integration branch, not evidence that v0.0.15 has shipped.
 
 The [secondary RCA](../research/2026-10-31-bank-size-and-owned-hook-health-rca.md)
 shows that ordinary governed operations cannot repair a bank whose initial
@@ -195,10 +198,11 @@ to edit that bank, invent a definition or infer its source producer.
 
 ### Separate observation and review boundary
 
-A proposed explicit `bank recover-layout` workflow SHALL provide inspect,
-prepare, apply and known-operation recovery stages. These are **proposed future
-interfaces**, not commands presently available. Ordinary initialization,
-checkpoint, admission and sharing SHALL retain their existing source gates.
+The explicit `bank recover-layout` workflow provides inspect, prepare, apply and
+known-operation recovery stages in the v0.0.15 candidate. User-facing operations
+and pending-state handling are documented in the [bank guide](../../skills/agent-memory/bank/GUIDE.md#source-preserving-layout-recovery).
+Ordinary initialization, checkpoint, admission and sharing SHALL retain their
+existing source gates.
 
 Recovery inspect SHALL use a dedicated bounded raw-source observer rather than
 pretend that the invalid bank passed its normal snapshot. It SHALL resolve the
@@ -211,7 +215,7 @@ failed ordinary bank snapshot to succeed first. It MUST NOT invent an alternate
 identity algorithm or treat bank prose as permission. Existing live locks or
 unknown transaction markers SHALL retain precedence.
 
-The initial proposed recovery allowance is 1 MiB per ordinary raw source,
+The recovery allowance is 1 MiB per ordinary raw source,
 64 MiB total source bytes, 65,536 source files, at most 131,072 physical entries
 and directory depth 64. It SHALL read in bounded chunks and disclose complete
 source context in bounded pages. Exceeding this distinct allowance SHALL leave

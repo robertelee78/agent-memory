@@ -1,0 +1,37 @@
+{
+  "actual_consumer_scope": {
+    "additional_real_xattr_smoke_passed": true,
+    "aggregate_passed": false,
+    "consumer_failures": 10,
+    "failure_boundary": "All ten fail during raw recovery inspect with pending-metadata-preservation before their target consumer stage; not a pass or new target-stage root-cause verdict.",
+    "registered_suites_attempted": 44,
+    "registered_suites_passed": 34
+  },
+  "after": {
+    "canonical_writes_performed": false,
+    "failure_code": "pending-metadata-preservation",
+    "original_bank_and_xattr_preserved": true,
+    "public_exit": 1,
+    "state": "pending",
+    "verified": false
+  },
+  "before": "Public recovery inspect incorrectly reported observed/verified at exit0 despite real extended attributes when os.listxattr was unavailable.",
+  "disposition": "Preserve originals and explicit unsupported-metadata refusal; no stripping, attribute-name exemption, chmod/chown or security-policy workaround. Obtain actual required hosted Mac/Linux qualification; no universal OS limitation/pass inferred.",
+  "hash_bindings": {
+    "corrected_xattr_observation_sha256": "b22770448f850c0f745f3b379aeaf720079a236d58a8f8ac59d3ec9a62ad3fa4",
+    "metadata_only_diagnostic_artifact_sha256": "e478899b163f11958d70d3a298e2ff9fa660ef82858da01b41e64ad60b20ecf8"
+  },
+  "metadata_guard_sha256": "98f737c9512bdad9df984ecb5b95bd4b7dd9174907ecd19b274a48efebfb072f",
+  "not_a_positive_layout_platform_or_release_pass": true,
+  "observed_ambient_attribute_names": [
+    "com.apple.provenance"
+  ],
+  "observed_objects": "Fresh synthetic bank directory, MEMORY.md and projectbrief.md; no attribute values disclosed.",
+  "os_listxattr_available": false,
+  "platform": "Darwin arm64 local execution context; Python3.13.12",
+  "schema": "agent-memory/layout-recovery-platform-limitation-v1",
+  "scope": "This local filesystem/launch context only. Same-value setter capability probe is not proof of arbitrary attribute preservation and does not implement attribute support.",
+  "source_base_commit": "cbcc9ce67714b11083a75e4c43dcea816af88b4e",
+  "source_hash": "82c71045ef754b22c3ce7eec88d76fa68db20447541f680e27fb42829568aeec",
+  "source_overlay_sha256": "4f4f4611c044e6272b47a11f058ccde29712e09f0398096f76359923ac5989c6"
+}

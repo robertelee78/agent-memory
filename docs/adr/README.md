@@ -29,7 +29,7 @@ MUST NOT be treated as evidence that a guide is semantically complete.
 | [0007](0007-portable-pack-and-lifecycle.md) | Portable skill pack and installation lifecycle | Accepted (v0.0.1) |
 | [0008](0008-project-bank-and-optional-federation.md) | Project Memory Bank first; optional ecosystem federation | Accepted (v0.0.1) |
 | [0009](0009-contract-tests-and-fault-injection.md) | End-to-end contract tests and incident-derived regressions | Accepted (v0.0.1) |
-| [0010](0010-memory-bank-file-contract.md) | Concrete Memory Bank file and scope contract | Accepted (v0.0.1) |
+| [0010](0010-memory-bank-file-contract.md) | Concrete Memory Bank file and scope contract | Accepted (v0.0.1); #244 v0.0.15 implementation design approved, independent acceptance/delivery pending |
 | [0011](0011-principal-and-project-identity.md) | Stable developer attribution and project identity | Accepted (v0.0.1) |
 | [0012](0012-git-shared-memory.md) | Git-shared memory across worktrees, machines, and developers | Accepted (v0.0.1) |
 | [0013](0013-public-cli-and-corrective-releases.md) | AWA-style public CLI and corrective release tracking | Accepted (v0.0.2) |

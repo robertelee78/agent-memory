@@ -216,6 +216,90 @@
       "Final stock-omp campaign still must exercise actual owned GUIDE read."
     ]
   },
+  "recovery_consumers_and_planning": {
+    "source_base_commit": "cbcc9ce67714b11083a75e4c43dcea816af88b4e",
+    "design": "../../design/v0.0.15-governed-output-planning.md",
+    "interpreter": "Darwin arm64 Python3.13.12",
+    "source_state": "Separate frozen uncommitted overlays, not retroactive execution of later source.",
+    "r2": {
+      "source_hash": "852f410256d2e40f28a6a12970450c8a8fd03961e09c9027592f98de8b434c30",
+      "aggregate_passed": false,
+      "registered_suites": 26,
+      "passing_suites": 17,
+      "failed_suites": 9,
+      "seconds": 314.2990951659158,
+      "boundary": "Raw consumer failures retained: unstable future output review, fixture/platform assumptions and target-stage preconditions; not all attributed to production."
+    },
+    "r3": {
+      "source_hash": "82c71045ef754b22c3ce7eec88d76fa68db20447541f680e27fb42829568aeec",
+      "aggregate_passed": false,
+      "registered_suites": 44,
+      "passing_registered_suites": 34,
+      "metadata_prerequisite_blocked": 10,
+      "additional_real_xattr_smoke_passed": true,
+      "seconds": 355.39068120904267,
+      "boundary": "All 33 existing compact/governance suites pass. Ten raw recovery cases stop at pending-metadata-preservation before their consumer stages; no positive held/platform verdict."
+    },
+    "r4": {
+      "source_hash": "b8c5e2c47ce9e084ae755e069b34fd7fdf706780f2e24ca5cf2c367ed85dd2a7",
+      "aggregate_passed": false,
+      "passing_existing_consumer_suites": 33,
+      "seconds": 285.34207245800644,
+      "boundary": "Ordinary smoke initially assumed an explicit private comparison destination was honored; corrected smoke then exposed the same preview issue. Both failed receipts retained; no aggregate pass."
+    },
+    "r5": {
+      "source_hash": "bb00611725ec4a2d0a27fc39482ab7f399d23f5de22f1312092a674126fc4c45",
+      "aggregate_passed": false,
+      "source_overlay_sha256": "cf4d3882f9f39787c30269dd414bacf239254a7142cd13ef4794052cc0599749",
+      "seconds": 52.618577582994476,
+      "private_consolidation_regression": {
+        "passed": true,
+        "tests": 1,
+        "seconds": 20.434773624991067
+      },
+      "actual_installed_public_journey": {
+        "passed": true,
+        "routes": [
+          "update",
+          "consolidation",
+          "revocation"
+        ],
+        "seconds": 52.44526991609018,
+        "private_only_and_non_authorizing_plan": true,
+        "planned_and_proposed_bytes_equal": true,
+        "actual_apply_verified": true,
+        "feature_index_head_preserved": true,
+        "update_negative_controls": [
+          "foreign plan",
+          "direct plan apply",
+          "missing private destination",
+          "stale plan re-preview"
+        ],
+        "historical_apply_retry_preserved": true
+      },
+      "boundary": "Aggregate fails before comparison tests because an invalid split selector overlapped an existing unsplit suite; the throwaway JSON parser did not retain raw pretest stderr. Only the invalid selector was removed, not the new test."
+    },
+    "r6": {
+      "source_hash": "b9dfb09c74602981f7bd9a376b3d9da0fc60595d3483ce868daa31ed602810b1",
+      "source_overlay_sha256": "c6fd1ff5c3bdc0b9d1db6108fbc2668dc42f59bb7d22511c4e126295f32dd706",
+      "suite": "learning-comparison",
+      "passed": true,
+      "tests": 13,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 84.97034700005315,
+      "production_unchanged_from_r5": true,
+      "boundary": "Full existing unsplit comparison suite, including the real explicit-private-output regression; no case removed or deadline increased."
+    },
+    "qualification_limits": [
+      "No held future-hash/full-claim resolution pass on this local metadata profile.",
+      "No attribute stripping/exemption or invented metadata support.",
+      "Required exact Opus5.5 review remains blocked by recorded provider HTTP429.",
+      "No full hosted matrix, native/model, performance or signed-release acceptance.",
+      "No omp source/install/config/live-extension or original user worktree mutation."
+    ]
+  },
   "source_reviews": {
     "IntegratedNativeOpus": "Source-only native delta and interrupt closure PASS",
     "IntegratedReuseOpus": "Source-only pure reuse/checkpoint and historical-command/cache-isolation closure PASS",
