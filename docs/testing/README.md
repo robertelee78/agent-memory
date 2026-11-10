@@ -139,6 +139,16 @@ method batches remain unchanged, with all cases still mandatory in their
 original scope and layer. Subtest loops, fault points and physical boundaries
 remain inside their original methods.
 
+The later completed hosted run also exhausted the unsplit `known-holds-v2`
+worker after three completed methods and entry into a fourth. All five original
+independent methods now have exact once-only registrations; their subcases and
+assertions stay unchanged. A source-bound local run exercised all five public
+review/prepare/refresh/ledger journeys within the original 300-second worker
+bound. This is not a hosted platform pass. The separate coupled pagination
+controller remains intact at 90 seconds with 30-second public children; local
+instrumented success does not resolve its historical hosted timeout. See the
+[scoped evidence and open failures](../research/data/v015-hosted-timeout-corrections-scoped-proof-20261110.json).
+
 `bank-roundtrip` already consists of one inherited installed sharing-loop
 journey and remains one explicit mandatory method. Its hosted macOS/Python
 3.15 worker exceeded 300 seconds; it cannot be made bounded merely by adding
