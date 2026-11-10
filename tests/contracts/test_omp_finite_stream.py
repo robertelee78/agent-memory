@@ -1862,6 +1862,122 @@ class CanonicalWriterObservationBoundaries(unittest.TestCase):
         self.assertEqual((moved / self.lock.name).read_bytes(), b'')
 
 
+class LinuxImageControls(unittest.TestCase):
+    """Controlled negative and arithmetic controls, not native provenance."""
+
+    def image(self):
+        image = stream._LinuxNativeImage.__new__(stream._LinuxNativeImage)
+        image.lock = threading.Lock()
+        image.ready = None
+        image.closed = False
+        return image
+
+    def observe(self, *, implementation='cpython', minor=11, clock='clock_gettime(CLOCK_MONOTONIC)',
+                monotonic=True, mode=0o100755, size=3, reads=(b'abc', b''),
+                changed=False, allowed=True, close_during_hash=False, namespaces=None):
+        image = self.image()
+        info = mock.Mock(st_mode=mode, st_size=size, st_dev=1, st_ino=2, st_mtime_ns=3, st_ctime_ns=4)
+        other = mock.Mock(st_mode=mode, st_size=size, st_dev=1, st_ino=2, st_mtime_ns=5, st_ctime_ns=4)
+        closed = []
+        def read(fd, count):
+            if close_during_hash:
+                image.close()
+            return next(blocks)
+        blocks = iter(reads)
+        digest = stream.hashlib.sha256(b'abc').hexdigest()
+        with ExitStack() as stack:
+            stack.enter_context(mock.patch.object(stream.sys, 'implementation', mock.Mock(name=implementation)))
+            stream.sys.implementation.name = implementation
+            stack.enter_context(mock.patch.object(stream.sys, 'version_info', mock.Mock(major=3, minor=minor)))
+            stack.enter_context(mock.patch.object(stream.time, 'get_clock_info',
+                return_value=mock.Mock(implementation=clock, monotonic=monotonic)))
+            stack.enter_context(mock.patch.object(stream.os, 'getppid', return_value=44))
+            stack.enter_context(mock.patch.object(stream.os, 'getpid', return_value=45))
+            stack.enter_context(mock.patch.object(stream.os, 'pidfd_open', return_value=102, create=True))
+            stack.enter_context(mock.patch.object(stream, '_linux_process_start', return_value=99))
+            stack.enter_context(mock.patch.object(stream, '_linux_time_namespace',
+                side_effect=namespaces or [('time', 1, 2), ('time', 1, 3)]))
+            stack.enter_context(mock.patch.object(stream.os, 'open', return_value=101))
+            stack.enter_context(mock.patch.object(stream.os, 'fstat', side_effect=[info, other if changed else info]))
+            stack.enter_context(mock.patch.object(stream.os, 'read', side_effect=read))
+            stack.enter_context(mock.patch.object(stream.os, 'close', side_effect=closed.append))
+            stack.enter_context(mock.patch.object(stream, '_LINUX_MONOTONIC_IMAGES', {digest} if allowed else set()))
+            image._observe()
+        return image, closed, info
+
+    def test_self_check_rejects_unsupported_interpreters_and_clocks(self):
+        for args in ({'minor': 10}, {'minor': 16}, {'implementation': 'pypy'},
+                     {'clock': 'clock_gettime(CLOCK_HIGHRES)'}, {'monotonic': False}):
+            with self.subTest(args=args):
+                image, closed, _ = self.observe(**args)
+                self.assertIsNone(image.ready)
+                self.assertEqual(closed, [])
+
+    def test_image_hash_size_type_and_changes_refuse(self):
+        cases = ({'allowed': False}, {'mode': 0o040755}, {'size': 0},
+                 {'size': stream._MAX_NATIVE_IMAGE_BYTES + 1}, {'reads': (b'ab', b'')},
+                 {'reads': (b'abc', b'x')}, {'changed': True})
+        for args in cases:
+            with self.subTest(args=args):
+                image, closed, _ = self.observe(**args)
+                self.assertIsNone(image.ready)
+                self.assertEqual(sorted(closed), [101, 102])
+
+    def test_namespace_classification_and_mixed_absence(self):
+        present = mock.Mock(st_dev=7, st_ino=8)
+        with mock.patch.object(stream.os, 'stat', return_value=present):
+            self.assertEqual(stream._linux_time_namespace(1), ('time', 7, 8))
+        with mock.patch.object(stream.os, 'stat', side_effect=[FileNotFoundError(), FileNotFoundError(), present]):
+            self.assertEqual(stream._linux_time_namespace(1), ('absent',))
+        with mock.patch.object(stream.os, 'stat', side_effect=[FileNotFoundError(), present]):
+            with self.assertRaises(ValueError):
+                stream._linux_time_namespace(1)
+        with mock.patch.object(stream.os, 'stat', side_effect=PermissionError()):
+            with self.assertRaises(PermissionError):
+                stream._linux_time_namespace(1)
+        image, closed, _ = self.observe(namespaces=[('absent',), ('time', 1, 3)])
+        self.assertIsNone(image.ready)
+        self.assertEqual(closed, [102])
+
+    def test_valid_rechecks_process_namespaces_and_image(self):
+        image, _, info = self.observe()
+        self.assertIsNotNone(image.ready)
+        cases = ('ok', 'exited', 'start', 'own-ns', 'parent-ns', 'image')
+        for case in cases:
+            with self.subTest(case=case), ExitStack() as stack:
+                stack.enter_context(mock.patch.object(stream.select, 'select',
+                    return_value=([102], [], []) if case == 'exited' else ([], [], [])))
+                stack.enter_context(mock.patch.object(stream.os, 'getppid', return_value=44))
+                stack.enter_context(mock.patch.object(stream.os, 'getpid', return_value=45))
+                stack.enter_context(mock.patch.object(stream, '_linux_process_start', return_value=100 if case == 'start' else 99))
+                namespaces = [('time', 1, 2), ('time', 1, 3)]
+                if case == 'own-ns': namespaces[0] = ('time', 1, 9)
+                if case == 'parent-ns': namespaces[1] = ('time', 1, 9)
+                stack.enter_context(mock.patch.object(stream, '_linux_time_namespace',
+                    side_effect=lambda pid: namespaces[0] if pid == 45 else namespaces[1]))
+                stack.enter_context(mock.patch.object(stream.os, 'fstat', return_value=info))
+                fresh = mock.Mock(st_mode=0o100755, st_dev=1, st_ino=9 if case == 'image' else 2,
+                                  st_size=3, st_mtime_ns=3, st_ctime_ns=4)
+                stack.enter_context(mock.patch.object(stream.os, 'stat', return_value=fresh))
+                self.assertEqual(image.valid(), case == 'ok')
+                if case == 'ok':
+                    owner = stream.ClockWindows(uid(), lambda: True, platform='darwin')
+                    owner.platform, owner.native_image = 'linux', image
+                    owner.verified = stream.VerifiedNativeDeliveryWindow(stream._WINDOW_MINT,
+                        L=10, j3=1, j_deadline=stream.MARGIN_NS + 100,
+                        nonce=uid(), instance=owner.instance, owner=owner, platform='linux')
+                    with mock.patch.object(stream.time, 'monotonic_ns', return_value=110):
+                        self.assertFalse(owner.verified.reserve())
+                    with mock.patch.object(stream.time, 'monotonic_ns', return_value=109):
+                        self.assertTrue(owner.verified.reserve())
+
+    def test_close_during_hash_does_not_publish_or_leak(self):
+        image, closed, _ = self.observe(close_during_hash=True)
+        self.assertIsNone(image.ready)
+        self.assertTrue(image.closed)
+        self.assertEqual(sorted(closed), [101, 102])
+
+
 class DeadlineWindows(unittest.TestCase):
     def setUp(self):
         self.instance, self.nonce = uid(), uid()
