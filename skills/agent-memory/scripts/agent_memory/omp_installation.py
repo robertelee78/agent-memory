@@ -260,14 +260,15 @@ _MEASURED_MANUAL_KINDS = frozenset({'copy', 'link'})
 
 class _OwnedManual:
     """In-process evidence, valid only while the same installation re-verifies."""
-    __slots__ = ('_receipt_sha', '_artifact', '_agent_dir', '_comparison')
+    __slots__ = ('_receipt_sha', '_artifact', '_agent_dir', '_relative_path', '_comparison')
 
-    def __init__(self, token, receipt_sha, artifact, agent_dir, comparison):
+    def __init__(self, token, receipt_sha, artifact, agent_dir, relative, comparison):
         if token is not _MANUAL_MINT:
             raise TypeError('Owned manual evidence is internally minted')
         object.__setattr__(self, '_receipt_sha', receipt_sha)
         object.__setattr__(self, '_artifact', artifact)
         object.__setattr__(self, '_agent_dir', agent_dir)
+        object.__setattr__(self, '_relative_path', relative)
         object.__setattr__(self, '_comparison', comparison)
 
     def __setattr__(self, name, value):
@@ -277,11 +278,15 @@ class _OwnedManual:
         raise TypeError('Owned manual evidence cannot be serialized')
 
     def _verify(self):
-        current = _manual_comparison(self._receipt_sha, self._artifact, self._agent_dir)
+        current = _manual_comparison(self._receipt_sha, self._artifact, self._agent_dir, self._relative_path)
         return current if current == self._comparison else None
 
     def revalidate(self):
         return self._verify() is not None
+
+    @property
+    def relative_path(self):
+        return self._relative_path
 
     @property
     def text(self):
@@ -308,7 +313,7 @@ class _OwnedManual:
         return self._comparison[5]
 
 
-def _manual_comparison(receipt_sha, artifact_digest, agent_dir):
+def _manual_comparison(receipt_sha, artifact_digest, agent_dir, relative='SKILL.md'):
     """Reobserve the binding and read through pinned no-follow descriptors."""
     import hashlib
     import os
@@ -317,6 +322,8 @@ def _manual_comparison(receipt_sha, artifact_digest, agent_dir):
 
     descriptors, link_descriptors = [], []
     try:
+        if omp_projection._instruction_uri(relative) is None:
+            return None
         receipt = observer_binding(artifact_digest, agent_dir)
         if omp_transport.digest(receipt) != receipt_sha:
             return None
@@ -326,10 +333,14 @@ def _manual_comparison(receipt_sha, artifact_digest, agent_dir):
             return None
         target = targets[0]
         installation.verify_targets([target], source=receipt['source'])
-        expected = receipt['artifact_files']['SKILL.md']['sha256']
-        if not isinstance(expected, str) or not re.fullmatch(r'[0-9a-f]{64}', expected):
+        selected = receipt['artifact_files'][relative]
+        if not isinstance(selected, dict) or set(selected) != {'sha256', 'mode'}:
             return None
-        logical_path = Path(skill_path) / 'SKILL.md'
+        expected = selected['sha256']
+        if (not isinstance(expected, str) or not re.fullmatch(r'[0-9a-f]{64}', expected)
+                or not isinstance(selected['mode'], str)):
+            return None
+        logical_path = Path(skill_path) / relative
         link_pin = None
         if target['kind'] == 'link':
             link = Path(skill_path)
@@ -357,7 +368,7 @@ def _manual_comparison(receipt_sha, artifact_digest, agent_dir):
             if not stat.S_ISLNK(link_value.st_mode) or os.readlink(link_parts[-1], dir_fd=fd) != str(destination):
                 return None
             link_pin = (link, link_parts[-1], fd, link_value, link_dirs, str(destination))
-            path = destination / 'SKILL.md'
+            path = destination / relative
         else:
             path = logical_path
         if not path.is_absolute() or '..' in path.parts:
@@ -388,6 +399,7 @@ def _manual_comparison(receipt_sha, artifact_digest, agent_dir):
             value = os.fstat(fd)
             protected, _ = trust_paths.inspect_entry(node, value, protected, final=final)
             if final and (not stat.S_ISREG(value.st_mode) or value.st_nlink != 1
+                          or oct(stat.S_IMODE(value.st_mode)) != selected['mode']
                           or value.st_size > omp_projection.MAX_SOURCE):
                 return None
             pins.append(pin(value) if final else directory_pin(value))
@@ -435,16 +447,16 @@ def _manual_comparison(receipt_sha, artifact_digest, agent_dir):
             os.close(fd)
 
 
-def _owned_manual(receipt):
+def _owned_manual(receipt, relative='SKILL.md'):
     """Mint comparison evidence only for the current explicitly owned binding."""
     from . import omp_transport
     try:
         receipt_sha = omp_transport.digest(receipt)
         artifact_digest = receipt['source']['artifact_digest']
         agent_dir = receipt['omp_binding']['agent_dir']
-        comparison = _manual_comparison(receipt_sha, artifact_digest, agent_dir)
+        comparison = _manual_comparison(receipt_sha, artifact_digest, agent_dir, relative)
         if comparison is None:
             return None
-        return _OwnedManual(_MANUAL_MINT, receipt_sha, artifact_digest, agent_dir, comparison)
+        return _OwnedManual(_MANUAL_MINT, receipt_sha, artifact_digest, agent_dir, relative, comparison)
     except (ValueError, TypeError, KeyError, ContractError):
         return None

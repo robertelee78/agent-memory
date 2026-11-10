@@ -92,20 +92,23 @@ boundary still captures a FULL checked stored view immediately. The last FULL
 view, never a hint, anchors OLD transition coverage. Shared unsafe screening
 remains unchanged, and unknown secrets or unavailable payloads remain limits.
 
-For the supported omp 18.16 stored-source renderer, a fresh full
-`read` of `skill://agent-memory` can be recognized as installed operating
-context only when its unique invocation/result pair and complete rendered
-content match the internally verified receipt-owned `SKILL.md`. The
-installation binding, target and manual are checked again before publication.
+For the supported omp 18.16 stored-source renderer, a fresh full `read` of
+`skill://agent-memory` or `skill://agent-memory/<relative>/GUIDE.md` can be
+recognized as installed operating context only when its unique invocation/result
+pair and complete rendered content match the internally verified receipt-owned
+instruction file. A guide MUST be a canonical artifact-declared domain, operation
+or model instruction; filename shape alone is insufficient. The selected bytes,
+mode, installation binding and whole target are checked again before publication.
 The native result and model input are unchanged. The learning snapshot retains
 the result identity and an empty content list with an `instruction_context`
 annotation, not the manual body or duplicated display content. Partial reads,
-foreign or modified skills, unsupported wrappers and other tool results follow
-ordinary screening and gap policy; this is not a general tool-result exemption.
+aliases, traversal, foreign or modified instructions, unsupported wrappers and
+other tool results follow ordinary screening and gap policy; this is not a
+general tool-result exemption.
 
 The annotation records the installation ID, observed receipt and artifact
-digests, manual file digest, fixed relative path and renderer, and invocation
-and tool-call identities. It is an observer assertion of a comparison at
+digests, selected instruction-file digest and canonical relative path, fixed
+renderer, and invocation and tool-call identities. It is an observer assertion of a comparison at
 capture time, not publisher authentication, an instruction-authority grant,
 or proof of current installation integrity. Historical `--source` readback
 validates the immutable metadata-only snapshot, not the continued presence of
@@ -118,6 +121,15 @@ the empty own-maintenance companion allowlist or pure-batch rules: a manual read
 after a wake can still leave an ambiguous interval requiring enrollment and
 assessment. A manual classification cannot clear an older native/tool gap or
 authorize historical role/position event-gap reassociation.
+
+Fresh copy/link observer smokes reproduced the owned admission-guide coverage gap
+before the GUIDE extension and retained body-free metadata without native/tool
+gaps on a previous source candidate. Smoke verification and independent review
+of the current candidate remain pending. The smokes use the public guide and
+exact measured renderer, not a replay or repair of the original native World.
+They do not attribute the separate b85 `unknown-after-start` outcome or pass
+full native qualification. The final stock-omp campaign MUST exercise an actual
+owned GUIDE read.
 
 Private snapshots, manifests, unresolved gaps and enrollment records remain
 under owner-only `omp-source-v1`. Neutral hints, counted attempts/outcomes,

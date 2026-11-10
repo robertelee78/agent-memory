@@ -22,6 +22,31 @@ FORBIDDEN_KEYS = {'providerPayload', 'provider_payload', 'thinking', 'reasoning'
 PERSISTENCE_TRUNCATION_NOTICE = '\n\n[Session persistence truncated large content]'
 
 
+def _instruction_uri(relative):
+    """Return only the canonical native URI for a complete instruction file."""
+    if not isinstance(relative, str):
+        return None
+    if relative == 'SKILL.md':
+        return 'skill://agent-memory'
+    if re.fullmatch(r'(?:[a-z][a-z0-9-]*/)+GUIDE\.md', relative):
+        return 'skill://agent-memory/' + relative
+    return None
+
+
+def _instruction_relative(uri):
+    """Invert canonical instruction URIs without normalizing aliases."""
+    if not isinstance(uri, str):
+        return None
+    if uri == 'skill://agent-memory':
+        return 'SKILL.md'
+    prefix = 'skill://agent-memory/'
+    if uri.startswith(prefix):
+        relative = uri[len(prefix):]
+        if _instruction_uri(relative) == uri:
+            return relative
+    return None
+
+
 def stored_timestamp(value):
     if value is None:
         return None
@@ -311,7 +336,7 @@ def _valid_instruction_context(snapshot):
                 or snapshot['content'] != [] or type(snapshot['content']) is not list
                 or context['schema'] != 'agent-memory/owned-instruction-context-v1'
                 or context['kind'] != 'installed-am-manual'
-                or context['manual_relative_path'] != 'SKILL.md'
+                or _instruction_uri(context['manual_relative_path']) is None
                 or context['renderer'] != 'omp-18.16-full-skill-v1'
                 or context['tool_call_id'] != snapshot['toolCallId']):
             return False
@@ -343,6 +368,10 @@ def _project_owned_manual(entry, invocation, witness, verified):
                 or verified != witness._comparison):
             return None
         text, path, installation_id, receipt_hash, artifact_hash, manual_hash = verified
+        relative = witness.relative_path
+        uri = _instruction_uri(relative)
+        if uri is None:
+            return None
         if (not isinstance(entry, dict) or set(entry) != {'type', 'id', 'parentId', 'message'}
                 or entry['type'] != 'message' or not isinstance(entry['message'], dict)):
             return None
@@ -364,7 +393,7 @@ def _project_owned_manual(entry, invocation, witness, verified):
             return None
         arguments = calls[0]['arguments']
         if (not isinstance(arguments, dict) or set(arguments) not in ({'path'}, {'i', 'path'})
-                or arguments['path'] != 'skill://agent-memory'):
+                or arguments['path'] != uri):
             return None
         if 'i' in arguments:
             _text(arguments['i'])
@@ -380,7 +409,7 @@ def _project_owned_manual(entry, invocation, witness, verified):
                     'contentType': 'text/markdown', 'resolvedPath': path, 'rowPrefixes': False,
                     'totalLines': lines, 'displayContent': {'lineNumbers': list(range(1, lines + 1)),
                                                             'startLine': 1, 'text': body},
-                    'meta': {'source': {'type': 'internal', 'value': 'skill://agent-memory'}}}):
+                    'meta': {'source': {'type': 'internal', 'value': uri}}}):
             return None
         # Python equality otherwise treats booleans and integers as interchangeable.
         details = message['details']
@@ -395,7 +424,7 @@ def _project_owned_manual(entry, invocation, witness, verified):
                         'schema': 'agent-memory/owned-instruction-context-v1',
                         'kind': 'installed-am-manual', 'installation_id': installation_id,
                         'observed_receipt_sha256': receipt_hash, 'artifact_digest': artifact_hash,
-                        'manual_file_sha256': manual_hash, 'manual_relative_path': 'SKILL.md',
+                        'manual_file_sha256': manual_hash, 'manual_relative_path': relative,
                         'renderer': 'omp-18.16-full-skill-v1',
                         'invocation_native_entry_id': _text(invocation.get('id')), 'tool_call_id': call_id}}
         if 'attribution' in message:

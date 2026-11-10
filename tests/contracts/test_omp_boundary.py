@@ -425,7 +425,7 @@ class StoredBatchControls(unittest.TestCase):
 class OwnedInstructionBoundary(unittest.TestCase):
     """Structural carrier fixtures exercise real installation ownership, not native support."""
 
-    def installed(self, world, mode='copy'):
+    def installed(self, world, mode='copy', relative='SKILL.md'):
         source = Path(__file__).resolve().parents[2]
         root = world.inside('owned native root')
         root.mkdir()
@@ -435,27 +435,29 @@ class OwnedInstructionBoundary(unittest.TestCase):
                             '--omp-agent-dir', root, '--omp-peers-upgraded', '--mode', mode,
                             '--bin-dir', world.inside('owned bin')], timeout=30)
         receipt = json.loads(result.stdout)['receipt']
-        witness = omp_installation._owned_manual(receipt)
+        witness = omp_installation._owned_manual(receipt, relative)
         self.assertIsNotNone(witness)
         return receipt, witness
 
-    def pair(self, witness, *, verified=None):
+    def pair(self, witness, *, verified=None, prefix='manual'):
         text, path, _, _, _, _ = witness._verify() if verified is None else verified
+        uri = omp_projection._instruction_uri(witness.relative_path)
+        self.assertIsNotNone(uri)
         body = text.rstrip('\n')
         lines = len(body.split('\n'))
-        invocation = {'type': 'message', 'id': 'manual-invocation', 'parentId': 'human',
+        invocation = {'type': 'message', 'id': prefix + '-invocation', 'parentId': 'human',
                       'message': {'role': 'assistant', 'content': [
-                          {'type': 'toolCall', 'id': 'manual-call', 'name': 'read',
-                           'arguments': {'i': 'Reading installed guide', 'path': 'skill://agent-memory'}}]}}
-        entry = {'type': 'message', 'id': 'manual-result', 'parentId': 'manual-invocation',
-                 'message': {'role': 'toolResult', 'toolCallId': 'manual-call', 'toolName': 'read',
+                          {'type': 'toolCall', 'id': prefix + '-call', 'name': 'read',
+                           'arguments': {'i': 'Reading installed guide', 'path': uri}}]}}
+        entry = {'type': 'message', 'id': prefix + '-result', 'parentId': prefix + '-invocation',
+                 'message': {'role': 'toolResult', 'toolCallId': prefix + '-call', 'toolName': 'read',
                              'isError': False, 'content': [{'type': 'text',
                                  'text': '[Skill file: ' + path + ']\n' + body}],
                              'details': {'contentType': 'text/markdown', 'resolvedPath': path,
                                  'rowPrefixes': False, 'totalLines': lines,
                                  'displayContent': {'lineNumbers': list(range(1, lines + 1)),
                                                     'startLine': 1, 'text': body},
-                                 'meta': {'source': {'type': 'internal', 'value': 'skill://agent-memory'}}}}}
+                                 'meta': {'source': {'type': 'internal', 'value': uri}}}}}
         return invocation, entry
 
     def test_exact_carrier_and_unforgeable_witness(self):
@@ -612,6 +614,279 @@ class OwnedInstructionBoundary(unittest.TestCase):
                 self.assertFalse(any(g['native_entry_id'] == 'tool:manual-call' for g in manifest['gaps']))
                 self.observe(repo, session, result['lifecycle'], entries, receipt)
                 self.assertEqual(path.read_bytes(), original)
+
+    def test_fresh_owned_guides_capture_exact_metadata_in_copy_and_link_modes(self):
+        relatives = ('capture/GUIDE.md', 'admission/GUIDE.md',
+                     'lifecycle/install/GUIDE.md', 'model/GUIDE.md')
+        for mode in ('copy', 'link'):
+            with self.subTest(mode=mode), World() as world, patch.dict(os.environ, world.env, clear=True):
+                receipt, _ = self.installed(world, mode)
+                helper = NativeSources()
+                repo, session, lifecycle = helper.fixture(world)
+                entries = [helper.entry('human', 'user', 'Review the owned instruction tree.', attribution='user')]
+                selected = []
+                for index, relative in enumerate(relatives):
+                    witness = omp_installation._owned_manual(receipt, relative)
+                    self.assertIsNotNone(witness, relative)
+                    self.assertEqual(witness.relative_path, relative)
+                    with self.assertRaises(AttributeError):
+                        witness.relative_path = 'SKILL.md'
+                    invocation, entry = self.pair(witness, prefix='guide-' + str(index))
+                    invocation['parentId'] = entries[-1]['id']
+                    entries.extend((invocation, entry))
+                    selected.append((relative, witness, invocation, entry))
+                answer = helper.entry('answer', 'assistant', 'The surrounding answer remains learning source.')
+                entries.append(answer)
+                result = self.observe(repo, session, lifecycle, entries, receipt, seal=True)
+                directory, _ = transport.segments(repo, session)[0]
+                manifest = transport.read(directory / 'segment.json')
+                self.assertEqual(manifest['gaps'], [])
+                self.assertFalse(list((directory / 'gaps').glob('*.json')))
+                for relative, witness, invocation, entry in selected:
+                    name = hashlib.sha256(entry['id'].encode()).hexdigest() + '.json'
+                    snapshot = transport.read(directory / 'snapshots' / name)
+                    self.assertEqual(snapshot, {
+                        'carrier': 'message', 'native_entry_id': entry['id'],
+                        'native_parent_id': invocation['id'], 'role': 'toolResult',
+                        'toolCallId': entry['message']['toolCallId'], 'toolName': 'read',
+                        'isError': False, 'content': [], 'instruction_context': {
+                            'schema': 'agent-memory/owned-instruction-context-v1',
+                            'kind': 'installed-am-manual', 'installation_id': receipt['installation_id'],
+                            'observed_receipt_sha256': transport.digest(receipt),
+                            'artifact_digest': receipt['source']['artifact_digest'],
+                            'manual_file_sha256': receipt['artifact_files'][relative]['sha256'],
+                            'manual_relative_path': relative, 'renderer': 'omp-18.16-full-skill-v1',
+                            'invocation_native_entry_id': invocation['id'],
+                            'tool_call_id': entry['message']['toolCallId']}})
+                    self.assertTrue(omp_projection._valid_instruction_context(snapshot))
+                for native in (entries[0], answer, *(item[2] for item in selected)):
+                    name = hashlib.sha256(native['id'].encode()).hexdigest() + '.json'
+                    snapshot = transport.read(directory / 'snapshots' / name)
+                    self.assertEqual(snapshot['content'], native['message']['content'])
+                    self.assertNotIn('instruction_context', snapshot)
+                    self.assertTrue((directory / 'captures' / name).is_file())
+                immutable = {path: path.read_bytes() for kind in ('snapshots', 'captures', 'gaps')
+                             for path in (directory / kind).glob('*.json')}
+                immutable[directory / 'segment.json'] = (directory / 'segment.json').read_bytes()
+                self.observe(repo, session, result['lifecycle'], entries, receipt)
+                self.assertEqual({path: path.read_bytes() for path in immutable}, immutable)
+                self.assertEqual(len(transport.segments(repo, session)), 1)
+
+    def test_owned_guide_alias_partial_tamper_and_foreign_reads_keep_real_gaps(self):
+        with World() as world, patch.dict(os.environ, world.env, clear=True):
+            receipt, witness = self.installed(world, relative='admission/GUIDE.md')
+            helper = NativeSources()
+            repo, session, lifecycle = helper.fixture(world)
+            human = helper.entry('human', 'user', 'Review the actual read variants.', attribution='user')
+            entries, rejected = [human], []
+            aliases = (
+                'skill://agent-memory/SKILL.md', 'skill://agent-memory/admission/./GUIDE.md',
+                'skill://agent-memory/admission/../admission/GUIDE.md',
+                'skill://agent-memory//admission/GUIDE.md', 'skill://agent-memory/Admission/GUIDE.md',
+                'skill://agent-memory/admission/guide.md', 'skill://agent-memory/admission/GUIDE.md/',
+                'skill://agent-memory/%61dmission/GUIDE.md',
+                'skill://agent-memory/admission%2fGUIDE.md',
+                'skill://agent-memory/admission\\GUIDE.md',
+                'skill://agent-memory/admission/GUIDE.md:1-20',
+                'skill://agent-memory/admission/GUIDE.md?raw=true',
+                'skill://agent-memory/admission/GUIDE.md#section',
+                'skill://other/admission/GUIDE.md', witness.header_path, None, 7,
+            )
+            for index, uri in enumerate(aliases):
+                invocation, entry = self.pair(witness, prefix='alias-' + str(index))
+                invocation['message']['content'][0]['arguments']['path'] = uri
+                entry['message']['details']['meta']['source']['value'] = uri
+                invocation['parentId'] = entries[-1]['id']
+                entries.extend((invocation, entry))
+                rejected.append(entry)
+            for kind in ('partial', 'tamper', 'foreign', 'source-mismatch'):
+                invocation, entry = self.pair(witness, prefix=kind)
+                message = entry['message']
+                details = message['details']
+                if kind in {'partial', 'tamper'}:
+                    body = details['displayContent']['text']
+                    body = body.split('\n', 1)[1] if kind == 'partial' else body + '\nAltered source tail.'
+                    start = 2 if kind == 'partial' else 1
+                    count = len(body.split('\n'))
+                    message['content'][0]['text'] = '[Skill file: ' + witness.header_path + ']\n' + body
+                    details['displayContent'] = {'lineNumbers': list(range(start, start + count)),
+                                                 'startLine': start, 'text': body}
+                    details['totalLines'] = count + start - 1
+                elif kind == 'foreign':
+                    foreign = world.inside('foreign guide.md')
+                    foreign.write_text(witness.text)
+                    details['resolvedPath'] = str(foreign)
+                    message['content'][0]['text'] = '[Skill file: ' + str(foreign) + ']\n' + details['displayContent']['text']
+                else:
+                    details['meta']['source']['value'] = 'skill://agent-memory/capture/GUIDE.md'
+                invocation['parentId'] = entries[-1]['id']
+                entries.extend((invocation, entry))
+                rejected.append(entry)
+            answer = helper.entry('answer', 'assistant', 'The rejected reads do not hide this answer.')
+            entries.append(answer)
+            self.observe(repo, session, lifecycle, entries, receipt, seal=True)
+            directory, _ = transport.segments(repo, session)[0]
+            manifest = transport.read(directory / 'segment.json')
+            for entry in rejected:
+                with self.subTest(native=entry['id']):
+                    name = hashlib.sha256(entry['id'].encode()).hexdigest() + '.json'
+                    self.assertFalse((directory / 'snapshots' / name).exists())
+                    self.assertTrue(any(g['native_entry_id'] == entry['id']
+                                        and g['reason'] == 'unsafe-representation' for g in manifest['gaps']))
+            for native in (human, answer):
+                name = hashlib.sha256(native['id'].encode()).hexdigest() + '.json'
+                self.assertEqual(transport.read(directory / 'snapshots' / name)['content'],
+                                 native['message']['content'])
+            rows, faults = transport.pending_inventory(repo)
+            self.assertFalse(faults)
+            self.assertTrue(any(row['status'] == 'pending-coverage-gap' for row in rows))
+
+    def test_noninstruction_artifact_read_retains_ordinary_body_not_owned_metadata(self):
+        with World() as world, patch.dict(os.environ, world.env, clear=True):
+            receipt, witness = self.installed(world, relative='admission/GUIDE.md')
+            relative = 'templates/router-markdown.example.txt'
+            self.assertIn(relative, receipt['artifact_files'])
+            self.assertIsNone(omp_installation._owned_manual(receipt, relative))
+            self.assertIsNone(omp_installation._owned_manual(receipt, 'scripts/agent_memory/omp_projection.py'))
+            helper = NativeSources()
+            repo, session, lifecycle = helper.fixture(world)
+            path = Path(receipt['omp_binding']['skill_target']) / relative
+            comparison = (path.read_text(), str(path), *witness._comparison[2:])
+            invocation, entry = self.pair(witness, verified=comparison)
+            uri = 'skill://agent-memory/' + relative
+            invocation['message']['content'][0]['arguments']['path'] = uri
+            entry['message']['details']['meta']['source']['value'] = uri
+            human = helper.entry('human', 'user', 'Read the packaged example.', attribution='user')
+            self.observe(repo, session, lifecycle, [human, invocation, entry], receipt, seal=True)
+            directory, _ = transport.segments(repo, session)[0]
+            name = hashlib.sha256(entry['id'].encode()).hexdigest() + '.json'
+            snapshot = transport.read(directory / 'snapshots' / name)
+            self.assertNotIn('instruction_context', snapshot)
+            self.assertEqual(snapshot['content'], entry['message']['content'])
+            self.assertEqual(snapshot['details'], entry['message']['details'])
+
+    def test_historical_owned_guide_never_authorizes_read_after_installation_changes(self):
+        with World() as world, patch.dict(os.environ, world.env, clear=True):
+            receipt, witness = self.installed(world, relative='admission/GUIDE.md')
+            helper = NativeSources()
+            repo, session, lifecycle = helper.fixture(world)
+            invocation, entry = self.pair(witness)
+            human = helper.entry('human', 'user', 'Review the current owned guide.', attribution='user')
+            entries = [human, invocation, entry]
+            result = self.observe(repo, session, lifecycle, entries, receipt, seal=True)
+            directory, _ = transport.segments(repo, session)[0]
+            name = hashlib.sha256(entry['id'].encode()).hexdigest() + '.json'
+            path = directory / 'snapshots' / name
+            historical = path.read_bytes()
+            manual = Path(witness.header_path)
+            manual.write_text(witness.text + '\nInstallation changed after the observation.\n')
+            self.assertIsNone(witness._verify())
+            self.assertIsNone(omp_installation._owned_manual(receipt, witness.relative_path))
+            self.assertTrue(omp_projection._valid_instruction_context(transport.read(path)))
+            for invalid in ('admission/../admission/GUIDE.md', 'Admission/GUIDE.md',
+                            'admission/GUIDE.md:1-2', 'templates/router-markdown.example.txt'):
+                changed = transport.read(path)
+                changed['instruction_context']['manual_relative_path'] = invalid
+                self.assertFalse(omp_projection._valid_instruction_context(changed))
+            self.observe(repo, session, result['lifecycle'], entries, receipt)
+            self.assertEqual(path.read_bytes(), historical)
+            fresh_session, fresh_lifecycle = str(uuid.uuid4()), str(uuid.uuid4())
+            # Claimed old metadata in a native message cannot lend its historical
+            # authority to a fresh read after the selected installation changes.
+            forged_invocation, forged = self.pair(witness, verified=witness._comparison, prefix='forged')
+            forged_invocation['parentId'] = entry['id']
+            forged['message']['instruction_context'] = transport.read(path)['instruction_context']
+            self.observe(repo, fresh_session, fresh_lifecycle,
+                         [human, invocation, entry, forged_invocation, forged], receipt, seal=True)
+            fresh, _ = transport.segments(repo, fresh_session)[0]
+            gaps = transport.read(fresh / 'segment.json')['gaps']
+            for rejected in (entry, forged):
+                name = hashlib.sha256(rejected['id'].encode()).hexdigest() + '.json'
+                self.assertFalse((fresh / 'snapshots' / name).exists())
+                self.assertTrue(any(g['native_entry_id'] == rejected['id']
+                                    and g['reason'] == 'unsafe-representation' for g in gaps))
+            self.assertEqual(path.read_bytes(), historical)
+
+    def test_owned_guide_rechecks_receipt_selection_and_nested_symlinks(self):
+        with World() as world, patch.dict(os.environ, world.env, clear=True):
+            receipt, witness = self.installed(world, relative='lifecycle/install/GUIDE.md')
+            relative = witness.relative_path
+            for invalid in ('../lifecycle/install/GUIDE.md', '/lifecycle/install/GUIDE.md',
+                            'lifecycle//install/GUIDE.md', 'lifecycle/install/./GUIDE.md',
+                            'lifecycle/install/guide.md', 'lifecycle/install/GUIDE.md:1-2',
+                            'SKILL.md/extra', 'missing/GUIDE.md', '', None, 1):
+                with self.subTest(relative=invalid):
+                    self.assertIsNone(omp_installation._owned_manual(receipt, invalid))
+            for kind in ('missing-entry', 'other-file-hash', 'installation-rebind'):
+                changed = copy.deepcopy(receipt)
+                if kind == 'missing-entry':
+                    changed['artifact_files'].pop(relative)
+                elif kind == 'other-file-hash':
+                    changed['artifact_files'][relative] = changed['artifact_files']['SKILL.md']
+                else:
+                    changed['installation_id'] = uuid.uuid4().hex
+                with self.subTest(receipt=kind):
+                    self.assertIsNone(omp_installation._owned_manual(changed, relative))
+            manual = Path(witness.header_path)
+            original, mode = manual.read_bytes(), manual.stat().st_mode & 0o777
+            for kind in ('changed-bytes', 'writable', 'file-link', 'directory-link', 'hardlink'):
+                backup = manual.with_name('GUIDE.backup')
+                parent_backup = manual.parent.with_name('install-backup')
+                try:
+                    if kind == 'changed-bytes':
+                        manual.write_bytes(original + b'\nChanged guide.\n')
+                    elif kind == 'writable':
+                        manual.chmod(mode | 0o002)
+                    elif kind in {'file-link', 'hardlink'}:
+                        manual.rename(backup)
+                        if kind == 'file-link':
+                            manual.symlink_to(backup)
+                        else:
+                            os.link(backup, manual)
+                    else:
+                        manual.parent.rename(parent_backup)
+                        manual.parent.symlink_to(parent_backup, target_is_directory=True)
+                    with self.subTest(change=kind):
+                        self.assertIsNone(witness._verify())
+                        self.assertIsNone(omp_installation._owned_manual(receipt, relative))
+                finally:
+                    if kind == 'changed-bytes':
+                        manual.write_bytes(original)
+                    elif kind == 'writable':
+                        manual.chmod(mode)
+                    elif kind in {'file-link', 'hardlink'}:
+                        manual.unlink()
+                        backup.rename(manual)
+                    else:
+                        manual.parent.unlink()
+                        parent_backup.rename(manual.parent)
+            state, _ = installation.locations()
+            receipt_path = state / 'receipt.json'
+            original_receipt = receipt_path.read_bytes()
+            rebound = copy.deepcopy(receipt)
+            rebound['installation_id'] = uuid.uuid4().hex
+            helper = NativeSources()
+            repo, session, lifecycle = helper.fixture(world)
+            invocation, entry = self.pair(witness)
+            human = helper.entry('human', 'user', 'Read after the receipt is rebound.', attribution='user')
+            try:
+                receipt_path.write_text(json.dumps(rebound))
+                self.assertIsNone(witness._verify())
+                self.assertIsNone(omp_installation._owned_manual(receipt, relative))
+                fresh = omp_installation._owned_manual(rebound, relative)
+                self.assertIsNotNone(fresh)
+                self.assertNotEqual(fresh.observed_receipt_sha256, witness.observed_receipt_sha256)
+                with self.assertRaises(ValueError):
+                    self.observe(repo, session, lifecycle, [human, invocation, entry], receipt, seal=True)
+                self.assertEqual(transport.segments(repo, session), [])
+                self.observe(repo, session, lifecycle, [human, invocation, entry], rebound, seal=True)
+                directory, _ = transport.segments(repo, session)[0]
+                name = hashlib.sha256(entry['id'].encode()).hexdigest() + '.json'
+                context = transport.read(directory / 'snapshots' / name)['instruction_context']
+                self.assertEqual(context['installation_id'], rebound['installation_id'])
+                self.assertEqual(context['observed_receipt_sha256'], transport.digest(rebound))
+            finally:
+                receipt_path.write_bytes(original_receipt)
 
     def test_unrelated_ancestor_churn_preserves_witness_and_public_annotation(self):
         for mode in ('copy', 'link'):
