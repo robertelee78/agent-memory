@@ -178,6 +178,39 @@ class NestedRecoveryClosure(unittest.TestCase):
             # The old child preview is pinned to the former hold/frontier.
             f.call(world, command, 'rollback', '--repo', repo, '--proposal', child_file, expected=1)
 
+    def test_changed_coverage_review_refuses_nested_finish_without_replacement(self):
+        with World() as world:
+            command, source, repo, bank, _, inspected, _ = f.small_pending(world)
+            operation = inspected['operation_id']
+            directory = f.private_directory(world, bank, operation)
+            proposal, transaction, target = f.admission_proposal(
+                world, command, source, repo, bank, inspected, full=True)
+            f.public(world, command, 'admission', 'apply', '--proposal', proposal, expected=1,
+                     env={'AGENT_MEMORY_FAULT_STAGE': 'layout-recovery-nested-after-receipt'})
+            finish = world.inside('nested-reviewed-finish.json')
+            f.call(world, command, 'recover-nested', '--repo', repo, '--operation', operation,
+                   '--nested', transaction['operation_id'], '--mode', 'finish', '--output', finish)
+            token = transaction['admission_evidence']['comparison_proof']['judgment']['observation']['recovery_frontier']
+            review = directory / 'coverage-reviews' / (token['review_digest'] + '.json')
+            original = review.read_bytes()
+            self.assertEqual(f.sha(original), token['review_digest'])
+            altered = json.loads(original)
+            altered['rationale'] += ' Changed after recovery preview.'
+            review.write_bytes(f.encoded(altered))
+            head = world.git('rev-parse', 'HEAD', cwd=repo).stdout
+            before = snapshot(bank), snapshot(directory), snapshot(repo / '.git/index')
+            f.call(world, command, 'recover-nested', '--repo', repo, '--proposal', finish, expected=1)
+            self.assertEqual((snapshot(bank), snapshot(directory), snapshot(repo / '.git/index')), before)
+            self.assertEqual(world.git('rev-parse', 'HEAD', cwd=repo).stdout, head)
+            review.write_bytes(original)
+            result = f.call(world, command, 'recover-nested', '--repo', repo, '--proposal', finish)
+            self.assertTrue(result['verified'])
+            self.assertEqual((bank / target).read_bytes(), transaction['files'][target].encode())
+            self.assertTrue(f.call(world, command, 'status', '--repo', repo,
+                                   '--operation', operation)['semantic_recovery_complete'])
+            self.assertEqual(snapshot(repo / '.git/index'), before[2])
+            self.assertEqual(world.git('rev-parse', 'HEAD', cwd=repo).stdout, head)
+
     def test_changed_review_pin_refuses_interrupted_finish_without_replacement(self):
         with World() as world:
             command, source = f.installed(world)
