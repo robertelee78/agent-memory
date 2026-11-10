@@ -1,11 +1,11 @@
 """Public recovery-frontier capacity and disclosure boundaries."""
 import copy
 import json
-from datetime import datetime, timezone
 import sys
 import unittest
 from pathlib import Path
 import uuid
+from datetime import datetime, timezone
 
 from contracts import test_bank_layout, test_comparison, test_governance
 from identity_fixtures import bind
@@ -436,6 +436,174 @@ class RecoveryFrontierClosureContract(unittest.TestCase):
             self.assertFalse(f.call(w, command, 'status', '--repo', repo,
                                     '--operation', inspected['operation_id'])['semantic_recovery_complete'])
 
+    def test_pending_update_applies_only_the_independently_reviewed_plan(self):
+        self.reviewed_consumer_plan('update', negative_controls=True)
+
+    def test_pending_consolidation_applies_the_independently_reviewed_plan(self):
+        self.reviewed_consumer_plan('consolidate')
+
+    def test_pending_governance_applies_the_independently_reviewed_plan(self):
+        self.reviewed_consumer_plan('governance')
+
+    def reviewed_consumer_plan(self, route, *, negative_controls=False):
+        with World() as w:
+            command, source = f.installed(w)
+            repo, bank, _ = f.memory(w)
+            feature = repo / 'consumer-feature.txt'
+            feature.write_bytes(b'Unrelated staged feature remains exact.\n')
+            w.git('add', '--', feature.name, cwd=repo)
+            feature_bytes, index_bytes = feature.read_bytes(), (repo / '.git/index').read_bytes()
+            initial_head = w.git('rev-parse', '--verify', 'HEAD', cwd=repo, check=False)
+            helper = test_comparison.ComparisonContract('runTest')
+            helper.pid = project_id((bank / 'MEMORY.md').read_text())
+            helper.actor = bind(w, repo)['developer_id']
+            old, first = helper.add(bank, 'consumer-first')
+            _, second = helper.add(bank, 'consumer-second')
+            native = {p.relative_to(bank).as_posix(): p.read_text() for p in bank.rglob('*.md')}
+            pending_body = (test_comparison.unpack((bank / first).read_text())[1]
+                            + '\nRetain the reviewed source conditions.\n') if route == 'update' else f.policy_body(0)
+            (bank / 'handoff-prompt.md').write_text(pending_body)
+            _, inspected = f.inspect(w, command, repo)
+            layout, _ = f.prepare(w, command, source, repo, inspected, native)
+            applied = f.call(w, command, 'apply', '--repo', repo, '--proposal', layout)
+            directory = f.private_directory(w, bank, inspected['operation_id'])
+            head = json.loads((directory / 'ledger-head.json').read_text())
+            ledger = json.loads((directory / 'ledger/00000000.json').read_text())
+            request = helper.candidate()
+            body = test_comparison.unpack((bank / first).read_text())[1]
+            request['candidate'] = {'metadata': old, 'body': body if route == 'governance' else body + '\nRetain the reviewed source conditions.\n'}
+            request['searches'] = ['unmatched-consumer-one', 'unmatched-consumer-two']
+            request['read_paths'] = [first, second] if route == 'consolidate' else [first]
+            request_file = f.save(w, request)
+            private = w.inside('consumer-inspection.json')
+            f.public(w, command, 'compare', 'inspect', '--repo', repo,
+                     '--request', request_file, '--private-output', private)
+            view = json.loads(private.read_text())
+            decisions = [{'path': row['path'], 'classification': 'equivalent',
+                          'rationale': 'The reviewed existing meaning and conditions are retained.'}
+                         for row in view['matches']]
+            pending = [{'unit_id': row['unit_id'], 'classification': 'equivalent' if route == 'update' else 'distinct-knowledge',
+                        'rationale': 'The unconfirmed original remains pending.',
+                        'coverage_claim': {'unit_id': row['unit_id'], 'coverage': 'none',
+                                           'covered_source_ranges': [], 'target_record_refs': []}}
+                       for row in view['pending_matches']]
+            judgment = {'observation': view['observation'], 'decisions': decisions,
+                        'pending_decisions': pending, 'rationale': 'Complete independent comparison.'}
+            targets = [{'path': row['path'], 'sha256': row['sha256'], 'id': row['metadata']['id'],
+                        'version': row['metadata']['version'], 'required_preserved_metadata': row['metadata'],
+                        'scope_chain': row['scope_chain']} for row in view['matches']]
+            proof = {'schema': 'agent-memory/comparison-proof-v2', 'judgment': judgment,
+                     'disposition': 'consolidate-existing' if route == 'consolidate' else 'update-existing',
+                     'targets': targets}
+
+            def coverage(output_hash):
+                return {'schema': 'agent-memory/layout-coverage-review-v1', 'review_id': str(uuid.uuid4()),
+                        'operation_id': inspected['operation_id'], 'reviewer_developer_id': helper.actor,
+                        'reviewer_harness': 'consumer-independent-reviewer', 'reviewer_session': str(uuid.uuid4()),
+                        'review_time': datetime.now(timezone.utc).isoformat(), 'manifest_sha256': ledger['manifest_sha256'],
+                        'unit_map_sha256': ledger['unit_map_sha256'], 'ledger_head_sha256': head['sha256'],
+                        'comparison_proof_input_sha256': f.sha(f.encoded(proof)), 'intended_output_sha256': output_hash,
+                        'claims': [row['coverage_claim'] for row in proof['judgment']['pending_decisions']],
+                        'rationale': 'Independent review of complete intended output and unresolved original.',
+                        'decision': 'approve'}
+
+            if route == 'governance':
+                governance = test_governance.GovernanceContract('runTest')
+                governance.pid, governance.actor = helper.pid, helper.actor
+                plan_input = governance.request(bank, old, first, operation='revoke')
+                context_names = w.run([sys.executable, '-I', '-B', '-c',
+                    "import json,sys;sys.path.insert(0,sys.argv[1]);"
+                    "from agent_memory import bank_contract;print(json.dumps(bank_contract.CONTEXTS))",
+                    source / 'scripts'], check=False, timeout=30)
+                self.assertEqual(context_names.returncode, 0, context_names.stderr)
+                plan_input['context_review'] = {
+                    path: f.sha((bank / path).read_bytes())
+                    for path in ('MEMORY.md', *json.loads(context_names.stdout))
+                    if (bank / path).is_file()}
+                plan_input['comparison'] = {'request': request, 'judgment': judgment}
+                verb, input_flag = 'govern', '--request'
+            else:
+                plan_input = {'comparison_request': request, 'comparison_judgment': judgment,
+                              'capture': None, 'context': {}}
+                verb, input_flag = 'compact', '--input'
+            plan_input_file = f.save(w, plan_input)
+            before_plan = {p.relative_to(bank).as_posix(): p.read_bytes() for p in bank.rglob('*') if p.is_file()}
+            plan_file = w.inside('consumer-output-plan.json')
+            plan_summary = f.public(w, command, verb, 'plan', '--repo', repo,
+                                    input_flag, plan_input_file, '--private-output', plan_file)
+            planned = json.loads(plan_file.read_text())
+            output_plan = planned['output_plan']
+            self.assertIsNone(planned['proposal'])
+            self.assertFalse(planned['verified'])
+            self.assertNotIn(request['candidate']['body'], f.encoded(plan_summary).decode())
+            self.assertEqual(before_plan, {p.relative_to(bank).as_posix(): p.read_bytes() for p in bank.rglob('*') if p.is_file()})
+            final_judgment = copy.deepcopy(judgment)
+            if route == 'update':
+                updated, updated_body = test_comparison.unpack(output_plan['files'][first])
+                self.assertEqual(updated_body, pending_body)
+                by_unit = {row['unit_id']: row for row in view['pending_matches']}
+                for decision in final_judgment['pending_decisions']:
+                    decision['coverage_claim'] = {
+                        'unit_id': decision['unit_id'], 'coverage': 'full',
+                        'covered_source_ranges': by_unit[decision['unit_id']]['source_ranges'],
+                        'target_record_refs': [{'id': updated['id'], 'version': updated['version'],
+                            'path': first, 'resulting_sha256': f.sha(output_plan['files'][first].encode())}]}
+            proof['judgment'] = final_judgment
+            final = w.inside('consumer-reviewed.json')
+            f.public(w, command, 'compare', 'review', '--repo', repo, '--request', request_file,
+                     '--judgment', f.save(w, final_judgment),
+                     '--coverage-review', f.save(w, coverage(f.sha(f.encoded(output_plan['files'])))),
+                     '--private-output', final)
+            reviewed = json.loads(final.read_text())['proof']
+            if route == 'governance':
+                consumer_input = {**plan_input, 'comparison': {'request': request, 'proof': reviewed}}
+            else:
+                consumer_input = {'comparison_request': request, 'comparison_proof': reviewed,
+                                  'capture': None, 'context': {}}
+            input_file = f.save(w, consumer_input)
+            if negative_controls:
+                for field in ('repo_root', 'observed_hashes', 'files'):
+                    changed = copy.deepcopy(output_plan)
+                    if field == 'repo_root':
+                        changed[field] = str(w.inside('foreign-project'))
+                    elif field == 'observed_hashes':
+                        changed[field]['MEMORY.md'] = '0' * 64
+                    else:
+                        changed[field]['projectbrief.md'] += '\nUnreviewed plan edit.\n'
+                    refused = w.run([command, verb, 'preview', '--repo', repo, input_flag, input_file,
+                                     '--plan', f.save(w, changed), '--private-output', w.inside('refused-' + field + '.json')],
+                                    check=False, timeout=60)
+                    self.assertNotEqual(refused.returncode, 0)
+                    self.assertFalse(json.loads(refused.stdout)['canonical_writes_performed'])
+                refused = w.run([command, verb, 'apply', '--proposal', f.save(w, output_plan)],
+                                check=False, timeout=60)
+                self.assertNotEqual(refused.returncode, 0)
+                missing_private = w.run([command, verb, 'plan', '--repo', repo, input_flag, plan_input_file],
+                                        check=False, timeout=60)
+                self.assertNotEqual(missing_private.returncode, 0)
+                self.assertNotIn(request['candidate']['body'], missing_private.stdout + missing_private.stderr)
+                self.assertEqual(before_plan, {p.relative_to(bank).as_posix(): p.read_bytes() for p in bank.rglob('*') if p.is_file()})
+            preview = w.inside('consumer-preview.json')
+            f.public(w, command, verb, 'preview', '--repo', repo, input_flag, input_file,
+                     '--plan', plan_file, '--private-output', preview)
+            proposal = json.loads(preview.read_text())['proposal']
+            self.assertEqual(proposal['files'], output_plan['files'])
+            completed = f.public(w, command, verb, 'apply', '--proposal', preview)
+            self.assertTrue(completed['verified'])
+            status = f.call(w, command, 'status', '--repo', repo, '--operation', inspected['operation_id'])
+            self.assertEqual(status['pending_unit_ids'], [] if route == 'update' else applied['pending_unit_ids'])
+            self.assertEqual(status['semantic_recovery_complete'], route == 'update')
+            if negative_controls:
+                stale = w.run([command, verb, 'preview', '--repo', repo, input_flag, input_file,
+                               '--plan', plan_file, '--private-output', w.inside('stale-consumer-plan.json')],
+                              check=False, timeout=60)
+                self.assertNotEqual(stale.returncode, 0)
+                self.assertFalse(json.loads(stale.stdout)['canonical_writes_performed'])
+            self.assertEqual(feature.read_bytes(), feature_bytes)
+            self.assertEqual((repo / '.git/index').read_bytes(), index_bytes)
+            final_head = w.git('rev-parse', '--verify', 'HEAD', cwd=repo, check=False)
+            self.assertEqual((final_head.returncode, final_head.stdout), (initial_head.returncode, initial_head.stdout))
+
     def _consumer_flow(self, route, *, pending):
         with World() as w:
             command, source = f.installed(w)
@@ -451,8 +619,6 @@ class RecoveryFrontierClosureContract(unittest.TestCase):
             replacement, second = helper.add(bank, 'consumer-second', body=original_body)
             native = {p.relative_to(bank).as_posix(): p.read_text() for p in bank.rglob('*.md')}
             inspected = applied = directory = head = ledger = None
-            operation_id = str(uuid.uuid4())
-            stamp = datetime.now(timezone.utc).isoformat()
             if pending:
                 (bank / 'handoff-prompt.md').write_text(original_body)
                 _, inspected = f.inspect(w, command, repo)
@@ -471,9 +637,9 @@ class RecoveryFrontierClosureContract(unittest.TestCase):
             request['read_paths'] = [first, second] if route != 'update' else [first]
             request_file = f.save(w, request)
             private = w.inside('consumer-inspection.json')
-            inspected_view = f.public(w, command, 'compare', 'inspect', '--repo', repo,
-                                      '--request', request_file, '--private-output', private)
-            view = json.loads(private.read_text()) if pending else inspected_view
+            f.public(w, command, 'compare', 'inspect', '--repo', repo,
+                     '--request', request_file, '--private-output', private)
+            view = json.loads(private.read_text())
             self.assertEqual({row['path'] for row in view['matches']}, set(request['read_paths']))
             if pending:
                 self.assertEqual({row['unit_id'] for row in view['pending_matches']},
@@ -523,107 +689,107 @@ class RecoveryFrontierClosureContract(unittest.TestCase):
                     }
                     arguments += ['--coverage-review', f.save(w, coverage)]
                 output = w.inside('consumer-reviewed-' + str(uuid.uuid4()) + '.json')
-                public_review = f.public(w, command, *arguments, '--private-output', output)
-                value = json.loads(output.read_text()) if pending else public_review
+                f.public(w, command, *arguments, '--private-output', output)
+                value = json.loads(output.read_text())
                 self.assertEqual(value['disposition'], disposition)
                 return value['proof']
 
-            reviewed = review(f.sha(f.encoded(native)) if pending else None)
             if route == 'governance':
                 governance = test_governance.GovernanceContract('runTest')
                 governance.pid, governance.actor = helper.pid, helper.actor
-                consumer_input = governance.request(bank, old, first, 'supersede')
+                plan_input = governance.request(bank, old, first, 'supersede')
                 context_names = w.run([sys.executable, '-I', '-B', '-c',
                     "import json,sys;sys.path.insert(0,sys.argv[1]);"
                     "from agent_memory import bank_contract;print(json.dumps(bank_contract.CONTEXTS))",
                     source / 'scripts'], check=False, timeout=30)
                 self.assertEqual(context_names.returncode, 0, context_names.stderr)
-                consumer_input['context_review'] = {
+                plan_input['context_review'] = {
                     path: f.sha((bank / path).read_bytes())
                     for path in ('MEMORY.md', *json.loads(context_names.stdout))
                     if (bank / path).is_file()}
-                consumer_input['replacement'] = {
+                plan_input['replacement'] = {
                     'path': second, 'id': replacement['id'], 'version': replacement['version'],
                     'sha256': f.sha((bank / second).read_bytes()),
                 }
-                consumer_input['comparison'] = {'request': request, 'proof': reviewed}
+                plan_input['comparison'] = {'request': request, 'judgment': judgment}
+                verb, input_flag = 'govern', '--request'
+                result_path, result_id = second, replacement['id']
             else:
-                consumer_input = {'comparison_request': request, 'comparison_proof': reviewed,
-                                  'capture': None, 'context': {}}
+                plan_input = {'comparison_request': request, 'comparison_judgment': judgment,
+                              'capture': None, 'context': {}}
+                verb, input_flag = 'compact', '--input'
+                result_path, result_id = first, old['id']
 
+            plan_file = None
             if pending:
-                stamp = inspected['manifest']['inspected_at']
-                if route == 'governance':
-                    build = ("import json,sys;sys.path.insert(0,sys.argv[1]);"
-                             "from agent_memory import governance;"
-                             "r=json.load(open(sys.argv[3]));o=governance.observe(sys.argv[2],r);"
-                             "files,deferred=governance.desired(o,r,sys.argv[4],sys.argv[5]);"
-                             "print(json.dumps({'files':files,'deferred':deferred}))")
-                    args = [source / 'scripts', repo, f.save(w, consumer_input), operation_id, stamp]
-                    result_path, result_id = second, replacement['id']
-                else:
-                    # Revalidate the real proof to obtain the live plan, including
-                    # the source metadata's serialized order. A JSON-round-tripped
-                    # hand-built plan changes exact frontmatter bytes.
-                    build = ("import json,sys;from pathlib import Path;sys.path.insert(0,sys.argv[1]);"
-                             "from agent_memory import consolidation,bank_transactions,layout_resolution,retrieval;"
-                             "v=json.load(open(sys.argv[3]));"
-                             "e={**v,'recorded_at':sys.argv[5],'git_context':retrieval.git_context(Path(sys.argv[2]))};"
-                             "e.update(layout_resolution.evidence_fields(e['comparison_proof']));"
-                             "_,plan,captured=consolidation.inspect(sys.argv[2],e);"
-                             "_,bank=consolidation.writes.bank_path(sys.argv[2]);"
-                             "files=consolidation.build(bank_transactions.files_at(bank),e,sys.argv[4],plan,captured);"
-                             "print(json.dumps({'files':files,'deferred':None}))")
-                    args = [source / 'scripts', repo, f.save(w, consumer_input), operation_id, stamp]
-                    result_path, result_id = first, old['id']
-                built = w.run([sys.executable, '-I', '-B', '-c', build, *args], check=False, timeout=60)
-                self.assertEqual(built.returncode, 0, built.stdout + built.stderr)
-                intended = json.loads(built.stdout)
-                self.assertIsNone(intended['deferred'])
-                files = intended['files']
-                self.assertIsNotNone(files)
+                before_plan = {p.relative_to(bank).as_posix(): p.read_bytes()
+                               for p in bank.rglob('*') if p.is_file()}
+                plan_file = w.inside('consumer-output-plan.json')
+                plan_summary = f.public(w, command, verb, 'plan', '--repo', repo,
+                                        input_flag, f.save(w, plan_input), '--private-output', plan_file)
+                planned = json.loads(plan_file.read_text())
+                self.assertIsNone(planned['proposal'])
+                self.assertFalse(planned['verified'])
+                self.assertTrue(planned['coverage_review_required'])
+                self.assertNotIn(original_body, f.encoded(plan_summary).decode())
+                self.assertEqual(before_plan, {p.relative_to(bank).as_posix(): p.read_bytes()
+                                              for p in bank.rglob('*') if p.is_file()})
+                output_plan = planned['output_plan']
+                files = output_plan['files']
                 resulting_metadata, resulting_body = test_comparison.unpack(files[result_path])
                 self.assertEqual(resulting_metadata['id'], result_id)
                 self.assertEqual(resulting_metadata['version'], 2)
                 self.assertIn(f.POLICIES[0], resulting_body)
-                for row, decision in zip(view['pending_matches'], pending_decisions):
+                by_unit = {row['unit_id']: row for row in view['pending_matches']}
+                for decision in pending_decisions:
                     decision['coverage_claim'] = {
-                        'unit_id': row['unit_id'], 'coverage': 'full', 'covered_source_ranges': row['source_ranges'],
-                        'target_record_refs': [{'id': result_id, 'version': 2, 'path': result_path,
-                                                'resulting_sha256': f.sha(files[result_path].encode())}],
+                        'unit_id': decision['unit_id'], 'coverage': 'full',
+                        'covered_source_ranges': by_unit[decision['unit_id']]['source_ranges'],
+                        'target_record_refs': [{'id': resulting_metadata['id'],
+                            'version': resulting_metadata['version'], 'path': result_path,
+                            'resulting_sha256': f.sha(files[result_path].encode())}],
                     }
                 reviewed = review(f.sha(f.encoded(files)))
-                if route == 'governance':
-                    consumer_input['comparison']['proof'] = reviewed
-                else:
-                    consumer_input['comparison_proof'] = reviewed
+            else:
+                reviewed = review()
+            if route == 'governance':
+                consumer_input = {**plan_input, 'comparison': {'request': request, 'proof': reviewed}}
+            else:
+                consumer_input = {'comparison_request': request, 'comparison_proof': reviewed,
+                                  'capture': None, 'context': {}}
 
             preview = w.inside('consumer-preview.json')
-            if route == 'governance':
-                arguments = ['govern', 'preview', '--repo', repo, '--request', f.save(w, consumer_input)]
-            else:
-                arguments = ['compact', 'preview', '--repo', repo, '--input', f.save(w, consumer_input)]
+            arguments = [verb, 'preview', '--repo', repo, input_flag, f.save(w, consumer_input)]
             if pending:
-                # A changed valid seed produces different event identities and
-                # must not reuse the independent exact-output approval.
-                changed = w.run([command, *arguments, '--operation-id', str(uuid.uuid4()),
-                                 '--recorded-at', stamp, '--private-output',
-                                 w.inside('consumer-changed-seed.json')], check=False, timeout=60)
+                # A changed valid operation identity cannot reuse approval of
+                # the actual event paths and complete privately planned output.
+                changed_plan = copy.deepcopy(output_plan)
+                changed_plan['operation_id'] = str(uuid.uuid4())
+                changed = w.run([command, *arguments, '--plan', f.save(w, changed_plan),
+                                 '--private-output', w.inside('consumer-changed-plan.json')],
+                                check=False, timeout=60)
                 self.assertNotEqual(changed.returncode, 0)
                 self.assertFalse(json.loads(changed.stdout)['canonical_writes_performed'])
                 self.assertEqual({p.relative_to(bank).as_posix(): p.read_text()
                                   for p in bank.rglob('*.md')
                                   if not p.name.startswith('.agent-memory')}, native)
-            arguments += ['--operation-id', operation_id, '--recorded-at', stamp]
+                arguments += ['--plan', plan_file]
             result = w.run([command, *arguments, '--private-output', preview], check=False, timeout=60)
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-            preview_value = json.loads(preview.read_text()) if pending else json.loads(result.stdout)
+            preview_value = json.loads(preview.read_text())
             proposal = preview_value['proposal']
             self.assertIsNotNone(proposal)
-            if not pending:
-                preview = f.save(w, proposal)
+            self.assertNotIn(original_body, result.stdout + result.stderr)
             if pending:
                 self.assertEqual(proposal['files'], files)
+                unresolved = f.call(w, command, 'status', '--repo', repo,
+                                    '--operation', inspected['operation_id'])
+                self.assertFalse(unresolved['semantic_recovery_complete'])
+                self.assertEqual(unresolved['pending_unit_ids'], applied['pending_unit_ids'])
+                f.call(w, command, 'resolve', '--repo', repo, '--operation', inspected['operation_id'],
+                       '--unit', applied['pending_unit_ids'][0],
+                       '--input', f.save(w, {'transaction_proposal': proposal}),
+                       '--output', w.inside('consumer-without-receipt.json'), expected=1)
             completed = f.public(w, command, 'govern' if route == 'governance' else 'compact',
                                  'apply', '--proposal', preview)
             self.assertTrue(completed['verified'])
@@ -660,13 +826,20 @@ class RecoveryFrontierClosureContract(unittest.TestCase):
                 self.assertEqual(resolution['canonical_receipt_sha256'], f.sha(f.encoded(receipt)))
                 self.assertEqual(resolution['claims'], [pending_decisions[0]['coverage_claim']])
 
-    def test_consumers_review_and_commit_without_pending_frontier(self):
-        for route in ('update', 'consolidate', 'governance'):
-            with self.subTest(route=route):
-                self._consumer_flow(route, pending=False)
+    def test_update_reviews_and_commits_without_pending_frontier(self):
+        self._consumer_flow('update', pending=False)
 
-    def test_pending_consumers_accept_independently_reviewed_exact_intended_output(self):
-        """Require full source credit from real consumer writes and exact receipts."""
-        for route in ('update', 'consolidate', 'governance'):
-            with self.subTest(route=route):
-                self._consumer_flow(route, pending=True)
+    def test_consolidation_reviews_and_commits_without_pending_frontier(self):
+        self._consumer_flow('consolidate', pending=False)
+
+    def test_governance_reviews_and_commits_without_pending_frontier(self):
+        self._consumer_flow('governance', pending=False)
+
+    def test_pending_update_accepts_independently_reviewed_exact_intended_output(self):
+        self._consumer_flow('update', pending=True)
+
+    def test_pending_consolidation_accepts_independently_reviewed_exact_intended_output(self):
+        self._consumer_flow('consolidate', pending=True)
+
+    def test_pending_governance_accepts_independently_reviewed_exact_intended_output(self):
+        self._consumer_flow('governance', pending=True)

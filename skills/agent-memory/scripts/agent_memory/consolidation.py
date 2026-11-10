@@ -15,6 +15,7 @@ from .developer_identity import digest, encoded, uuid_valid
 from .frontmatter import ContractError, read, write
 
 INPUT = {'comparison_request', 'comparison_proof', 'capture', 'context'}
+PLAN_INPUT = {'comparison_request', 'comparison_judgment', 'capture', 'context'}
 EVIDENCE = INPUT | {'recorded_at', 'git_context', 'unit_resolution_claims', 'comparison_proof_sha256', 'reference_map_sha256'}
 AXES = ('kind', 'scope', 'conditions', 'applicability', 'valid-from', 'valid-until', 'trust', 'visibility')
 
@@ -63,12 +64,21 @@ def input_value(value, *, evidence=False):
     return recall
 
 
-def inspect(repo, value, *, owned_lock=None):
+def _source_context(repo, value, *, owned_lock=None):
     recall = input_value(value, evidence='recorded_at' in value)
     captured = admission.capture_value(repo, value['capture'], owned_lock=owned_lock) if value['capture'] is not None else None
     if captured and encoded(captured['request']['candidate']) != encoded(value['comparison_request']['candidate']):
         raise ContractError('Consolidate the exact qualified captured learning')
+    return recall, captured
+
+
+def inspect(repo, value, *, owned_lock=None):
+    recall, captured = _source_context(repo, value, owned_lock=owned_lock)
     compared = comparison.check(repo, value['comparison_request'], value['comparison_proof'], owned_lock=owned_lock)
+    return _qualify(repo, value, recall, captured, compared, owned_lock=owned_lock)
+
+
+def _qualify(repo, value, recall, captured, compared, *, owned_lock=None):
     root, _ = writes.bank_path(repo)
     if 'git_context' in value and encoded(retrieval.git_context(root)) != encoded(value['git_context']):
         raise ContractError('The observed checkout changed before maintenance')
@@ -242,32 +252,84 @@ def build(base, evidence, operation_id, plan, captured):
     return routed_files
 
 
-def preview(repo, value, *, operation_id=None, recorded_at=None):
+def _normalized_input(value):
     input_value(value)
+    value = copy.deepcopy(value)
+    if isinstance(value['comparison_proof'], dict):value['comparison_proof'] = value['comparison_proof'].get('proof', value['comparison_proof'])
+    if isinstance(value['capture'], dict):value['capture'] = value['capture'].get('capture', value['capture'])
+    return value
+
+
+def _evidence(repo, value, recorded_at):
     root, _ = writes.bank_path(repo)
-    evidence = {**copy.deepcopy(value), 'recorded_at': recorded_at or datetime.now(timezone.utc).isoformat(), 'git_context': retrieval.git_context(root)}
-    if isinstance(evidence['comparison_proof'], dict):evidence['comparison_proof'] = evidence['comparison_proof'].get('proof', evidence['comparison_proof'])
+    evidence = {**copy.deepcopy(value), 'recorded_at': recorded_at, 'git_context': retrieval.git_context(root)}
     evidence.update(layout_resolution.evidence_fields(evidence['comparison_proof']))
-    if isinstance(evidence['capture'], dict):evidence['capture'] = evidence['capture'].get('capture', evidence['capture'])
-    compared, plan, captured = inspect(repo, evidence)
+    return evidence
+
+
+def _proposal(repo, evidence, operation_id, checked):
+    """Build read-only output from internal source qualification, never write authority."""
+    compared, plan, captured = checked
     if plan is None:
-        return result('preview', disposition='proposal-only' if compared['disposition'] == 'create-distinct' else compared['disposition'],
-            proposal=None, canonical_writes_performed=False, detecting_developer_id=compared['detecting_developer_id'],
-            other_developer_ids=compared['other_developer_ids'], messages_sent=False,
-            recommend_other_developer_clarification=compared['recommend_other_developer_clarification'])
+        return None, {'disposition': 'proposal-only' if compared['disposition'] == 'create-distinct' else compared['disposition'],
+            'detecting_developer_id': compared['detecting_developer_id'],
+            'other_developer_ids': compared['other_developer_ids'], 'messages_sent': False,
+            'recommend_other_developer_clarification': compared['recommend_other_developer_clarification']}
     root, bank_path = writes.bank_path(repo);base = tx.files_at(bank_path)
-    operation_id = operation_id or str(uuid.uuid4())
-    if not uuid_valid(operation_id):
-        raise ContractError('Maintenance planning requires a canonical operation UUIDv4')
     desired = build(base, evidence, operation_id, plan, captured)
-    if desired is None:return result('preview', disposition='no-change', proposal=None, canonical_writes_performed=False)
+    if desired is None:return None, {'disposition': 'no-change'}
     p = tx.preview(root, desired, 'compact')['proposal']
     p.update(operation_id=operation_id, consolidation_evidence=evidence)
     from .sharing_limits import private_bytes
     private_bytes(p)
+    if (tx.file_hashes(base) != p['observed_hashes']
+            or compared['observation']['bank_observation_sha256'] != digest(encoded(
+                {'project_id': p['project_id'], 'sources': p['observed_hashes']}))):
+        raise ContractError('Maintenance sources changed while building read-only output')
+    recovery_frontier.require_scope(root, p['project_id'], expected=p['scope_context'])
+    return p, {'disposition': 'consolidate-existing', 'per_record_operator_approval_required': False,
+               'run_at_turn_boundary': True}
+
+
+def plan(repo, value):
+    if not isinstance(value, dict) or set(value) != PLAN_INPUT:
+        raise ContractError('Maintenance planning requires exact comparison request, judgment, capture and context')
+    planning = copy.deepcopy(value)
+    judgment = planning.pop('comparison_judgment')
+    compared = comparison.judge(comparison.inspect(repo, planning['comparison_request']),
+        planning['comparison_request'], judgment)
+    if any(decision['coverage_claim']['coverage'] != 'none' for decision in compared['proof']['judgment']['pending_decisions']):
+        raise ContractError('Maintenance planning cannot claim pending coverage before output review')
+    value = _normalized_input({**planning, 'comparison_proof': compared['proof']})
+    operation_id, recorded_at = str(uuid.uuid4()), datetime.now(timezone.utc).isoformat()
+    evidence = _evidence(repo, value, recorded_at)
+    recall, captured = _source_context(repo, evidence)
+    checked = _qualify(repo, evidence, recall, captured, compared)
+    p, details = _proposal(repo, evidence, operation_id, checked)
+    return result('plan', **details, output_plan=layout_resolution.make_output_plan(p, value) if p is not None else None,
+                  proposal=None, canonical_writes_performed=False, coverage_review_required=True, verified=False)
+
+
+def preview(repo, value, *, output_plan=None, operation_id=None, recorded_at=None):
+    value = _normalized_input(value)
+    if output_plan is None:
+        operation_id = operation_id or str(uuid.uuid4())
+        recorded_at = recorded_at or datetime.now(timezone.utc).isoformat()
+        if not uuid_valid(operation_id):
+            raise ContractError('Maintenance planning requires a canonical operation UUIDv4')
+    else:
+        if operation_id is not None or recorded_at is not None:
+            raise ContractError('Output plan cannot be combined with explicit operation context')
+        if isinstance(output_plan, dict):output_plan = output_plan.get('output_plan', output_plan)
+        operation_id, recorded_at = layout_resolution.output_plan_context(output_plan, value)
+    evidence = _evidence(repo, value, recorded_at)
+    p, details = _proposal(repo, evidence, operation_id, inspect(repo, evidence))
+    if p is None:
+        if output_plan is not None:raise ContractError('Output plan no longer produces a qualified maintenance change')
+        return result('preview', **details, proposal=None, canonical_writes_performed=False)
+    if output_plan is not None:layout_resolution.check_output_plan(p, value, output_plan)
     validate_transaction(p)
-    return result('preview', disposition='consolidate-existing', proposal=p, canonical_writes_performed=False,
-                  per_record_operator_approval_required=False, run_at_turn_boundary=True)
+    return result('preview', **details, proposal=p, canonical_writes_performed=False)
 
 
 def validate_transaction(p, *, owned_lock=None):
@@ -318,21 +380,28 @@ def apply(prepared):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__);commands = parser.add_subparsers(dest='command', required=True)
-    sub = commands.add_parser('preview');sub.add_argument('--repo', required=True);sub.add_argument('--input', required=True)
+    sub = commands.add_parser('plan');sub.add_argument('--repo', required=True);sub.add_argument('--input', required=True)
     sub.add_argument('--private-output')
+    sub = commands.add_parser('preview');sub.add_argument('--repo', required=True);sub.add_argument('--input', required=True)
+    sub.add_argument('--private-output');sub.add_argument('--plan')
     sub.add_argument('--operation-id');sub.add_argument('--recorded-at')
     sub = commands.add_parser('apply');sub.add_argument('--proposal', required=True)
     args = parser.parse_args(argv)
     try:
-        value = (preview(args.repo, admission.read_input(args.input, 262144),
-                         operation_id=args.operation_id, recorded_at=args.recorded_at) if args.command == 'preview'
-                 else apply(admission.read_input(args.proposal, 512*1024*1024)))
-        if args.command == 'preview':
+        if args.command == 'plan':
+            value = plan(args.repo, admission.read_input(args.input, 262144))
+        elif args.command == 'preview':
+            value = preview(args.repo, admission.read_input(args.input, 262144),
+                output_plan=admission.read_input(args.plan, 512*1024*1024) if args.plan is not None else None,
+                operation_id=args.operation_id, recorded_at=args.recorded_at)
+        else:
+            value = apply(admission.read_input(args.proposal, 512*1024*1024))
+        if args.command in {'plan', 'preview'}:
             value = recovery_frontier.private_preview(args.repo, value, args.private_output)
         print(json.dumps(value, indent=2, ensure_ascii=False));return 0
     except (ContractError, OSError, ValueError, UnicodeError, TypeError, KeyError, AttributeError, RecursionError) as exc:
         print(json.dumps(result(args.command, verified=False,
-            canonical_writes_performed=False if args.command == 'preview' else None,
+            canonical_writes_performed=False if args.command in {'plan', 'preview'} else None,
             recovery_may_be_required=args.command == 'apply',
             error=str(exc) if isinstance(exc, bank_capacity.BankCapacityError) else
                 'Incomplete, unsafe, changed or unqualified maintenance; preserve evidence and inspect before retry',

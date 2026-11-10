@@ -35,7 +35,7 @@ The portable `govern_memory.py preview` reads one UTF8 JSON request, at most
 | `operation` | One operation from the table above. |
 | `target` | Actual `{path,id,version,sha256}` of the canonical standalone target. |
 | `authority` | The explicit source assessment below. |
-| `comparison` | `{request,proof}` from fresh comparison for correction, supersession or reactivation; otherwise `null`. |
+| `comparison` | `{request,proof}` from fresh comparison for correction, supersession or reactivation; for deactivation/deletion, only the held-frontier case below permits comparison; otherwise `null`. |
 | `capture` | Eligible admission capture/response for correction/reactivation; otherwise `null`. |
 | `replacement` | Actual `{path,id,version,sha256}` for an existing supersession replacement; otherwise `null`. |
 | `delete_ids` | Explicitly authorized whole record IDs for deletion; otherwise `[]`. |
@@ -77,6 +77,14 @@ and 64 KiB. Root/index capacities and complete evidence still apply. Exhausted
 bounds MUST refuse rather than truncate provenance; the session MUST organize or
 split independently authorized work and review again. These bounds are not a
 large-bank latency guarantee; validation and hashing still read the whole bank.
+
+For read-only `plan`, a nonnull comparison MUST instead be exactly
+`{request,judgment}` with the complete current comparison judgment. Held planning
+MUST classify every pending unit with `coverage:none` before output review.
+Deactivation/deletion MAY carry read-only comparison only with a nonempty pending
+frontier and the target's complete unchanged metadata/body as candidate.
+`capture` and `replacement` MUST remain `null` for these operations. This seam
+MUST NOT admit new guidance, widen authority or relax deletion consent.
 
 ## Observe
 
@@ -139,12 +147,19 @@ clarification, narrowing, consolidation or explicit deletion scope still needed.
 It MUST NOT invent stronger evidence to bypass one. Complete source/meaning review
 remains the session's job; the helper verifies exact sources and mechanical guards.
 
-For an independently reviewed exact recovery-coverage output, `preview` MAY take
-`--operation-id UUID --recorded-at RFC3339`, matching admission and consolidation.
-The session MUST choose these values before constructing the intended files and
-coverage review, and MUST reuse them in preview. They are separate CLI options,
-not request keys. Current authority, context, source, valid-time and exact-output
-checks still apply; a seed is not approval or permission to replay another request.
+If recovery coverage review requires exact future output, the session MUST first
+produce a detached private plan from current authority and semantic judgments.
+A distinct session MUST review the complete sources and actual planned files,
+then obtain the normal comparison proof with actual full/partial/none mappings.
+Final `preview --plan` MUST rebuild against fresh source and authority and match
+the entire plan before applying the unchanged authorizing checks. A plan itself
+MUST NOT authorize a write or be accepted by apply.
+Full or partial coverage MUST bind the actual future record IDs, versions and
+file hashes in the private plan. Planning and preview do not resolve a unit:
+resolution requires the matching canonical receipt and ledger linkage.
+`coverage:none` MUST remain pending. Unplanned `preview` also accepts
+`--operation-id UUID --recorded-at RFC3339`; those options cannot be combined
+with `--plan` and do not grant authorization.
 
 Deletion MUST come from explicit current operator authority. The session MUST
 identify authorized independent duplicate copies as well as linked derivatives;
@@ -178,6 +193,25 @@ python3 -I "$SKILL_DIR/scripts/govern_memory.py" preview --repo /path/to/repo \
 python3 -I "$SKILL_DIR/scripts/govern_memory.py" apply \
   --proposal /private/path/governance.json
 ```
+
+The two-phase variant MUST use separate planning and final proof-bearing requests:
+
+```sh
+python3 -I "$SKILL_DIR/scripts/govern_memory.py" plan --repo /path/to/repo \
+  --request /private/path/planning-request.json --private-output /private/path/plan.json
+# Complete independent coverage review and ordinary comparison review here.
+python3 -I "$SKILL_DIR/scripts/govern_memory.py" preview --repo /path/to/repo \
+  --request /private/path/governance-request.json --plan /private/path/plan.json \
+  --private-output /private/path/governance.json
+python3 -I "$SKILL_DIR/scripts/govern_memory.py" apply \
+  --proposal /private/path/governance.json
+```
+
+`plan` MUST require a checked private destination and leave canonical memory
+unchanged (`proposal:null`, `verified:false`, `coverage_review_required:true`).
+An explicit preview private destination MUST also be honored without pending
+units; stdout MUST contain only the artifact summary. Changed sources, authority,
+request meaning, base hashes or planned files MUST refuse rather than waive checks.
 
 ## Read back
 

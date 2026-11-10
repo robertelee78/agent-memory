@@ -264,3 +264,36 @@ class ConsolidationContract(unittest.TestCase):
             self.assertIn('repository | superseded |', (bank / index_path).read_text())
             self.good(w, 'bank_contract.py', 'validate', '--repo', repo)
             self.assertEqual(before[1:], self.state(w, repo, bank)[1:])
+
+    def test_private_plan_and_preview_preserve_ordinary_bank_confidentiality(self):
+        with World() as w:
+            repo, bank = self.fixture(w)
+            old, path = self.add(bank, 'private-plan')
+            body = '# Retry policy\n\nStop after three attempts and retain the source conditions.\n'
+            value = self.compared(w, repo, old, body, [path])
+            planning = {'comparison_request': value['comparison_request'],
+                        'comparison_judgment': value['comparison_proof']['judgment'],
+                        'capture': None, 'context': {}}
+            before = self.state(w, repo, bank)
+            plan_file = w.inside('private-maintenance-plan.json')
+            planned, _ = self.call(w, 'consolidate_learning.py', 'plan', '--repo', repo,
+                                    '--input', self.save(w, planning, 'planning.json'), '--private-output', plan_file)
+            self.assertEqual(planned.returncode, 0, planned.stdout + planned.stderr)
+            output_plan = json.loads(plan_file.read_text())['output_plan']
+            preview_file = w.inside('private-maintenance-preview.json')
+            previewed, _ = self.call(w, 'consolidate_learning.py', 'preview', '--repo', repo,
+                                      '--input', self.save(w, value), '--plan', plan_file, '--private-output', preview_file)
+            self.assertEqual(previewed.returncode, 0, previewed.stdout + previewed.stderr)
+            proposal = json.loads(preview_file.read_text())['proposal']
+            self.assertEqual(proposal['files'], output_plan['files'])
+            for command in (planned, previewed):
+                self.assertNotIn(json.dumps(body)[1:-1], command.stdout)
+            self.assertEqual(self.state(w, repo, bank), before)
+            applied, receipt = self.apply(w, proposal)
+            self.assertEqual(applied.returncode, 0, receipt)
+            self.assertTrue(receipt['consolidation_verified'])
+            current, text = fixtures.unpack((bank / path).read_text())
+            self.assertEqual((current['id'], current['version'], current['origin']),
+                             (old['id'], old['version'] + 1, old['origin']))
+            self.assertEqual(text, body)
+            self.assertEqual(self.state(w, repo, bank)[1:], before[1:])

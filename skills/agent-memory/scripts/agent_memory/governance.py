@@ -48,7 +48,7 @@ def target_value(value):
     bank.path_value(value['path'])
 
 
-def request_value(value):
+def _request_value(value, comparison_member):
     if (not isinstance(value, dict) or set(value) != REQUEST or not uuid_valid(value['project_id'])
             or value['operation'] not in OPERATIONS):
         raise ContractError('Governance needs one explicit project operation and complete evidence')
@@ -75,7 +75,7 @@ def request_value(value):
     if value['operation'] != 'delete' and value['delete_ids']:
         raise ContractError('Only explicit deletion can authorize terminal identities')
     if value['operation'] in {'revoke', 'expire', 'retention', 'delete'} and any(
-            value[key] is not None for key in ('capture', 'comparison', 'replacement')):
+            value[key] is not None for key in ('capture', 'replacement')):
         raise ContractError('Deactivation and deletion cannot smuggle replacement or admission evidence')
     if value['operation'] in {'correct', 'reactivate'} and (value['capture'] is None or value['comparison'] is None or value['replacement'] is not None):
         raise ContractError('A new corrected version requires qualified capture and exact comparison')
@@ -83,8 +83,8 @@ def request_value(value):
         if value['capture'] is not None or value['comparison'] is None:raise ContractError('Supersession reviews an existing replacement')
         target_value(value['replacement'])
     if value['comparison'] is not None:
-        if not isinstance(value['comparison'], dict) or set(value['comparison']) != {'request', 'proof'}:
-            raise ContractError('Supply the exact comparison request and proof')
+        if not isinstance(value['comparison'], dict) or set(value['comparison']) != {'request', comparison_member}:
+            raise ContractError('Supply the exact comparison request and ' + comparison_member)
         comparison.request_value(value['comparison']['request'])
     if not isinstance(value['context_review'], dict) or not isinstance(value['context_edits'], dict):
         raise ContractError('Review ordinary context for copied guidance before invalidating its source')
@@ -99,8 +99,12 @@ def request_value(value):
     return a
 
 
-def observe(repo, request, *, owned_lock=None):
-    authority = request_value(request)
+def request_value(value):
+    return _request_value(value, 'proof')
+
+
+def _observe_current(repo, request, *, owned_lock=None):
+    authority = request['authority']
     root, bank_path = writes.bank_path(repo)
     scope = recovery_frontier.require_scope(root, request['project_id'], owned_lock=owned_lock)
     checked, observed = writes.snapshot(root, owned_lock=owned_lock)
@@ -122,12 +126,23 @@ def observe(repo, request, *, owned_lock=None):
             raise ContractError('Retain the observed repository source in governance evidence')
     context, git_context = retrieval.observed_context(root, request['context'])
     captured = admission.capture_value(root, request['capture'], owned_lock=owned_lock) if request['capture'] is not None else None
-    compared = None
+    return {'root': root, 'bank': bank_path, 'base': base, 'checked': checked, 'observed': observed,
+            'scope': scope, 'metadata': metadata, 'body': body, 'context': context, 'git_context': git_context,
+            'capture': captured, 'comparison': None, 'replacement': None}
+
+
+def _qualify_observation(observation, request, compared, *, owned_lock=None):
+    root = observation['root'];base = observation['base'];observed = observation['observed']
+    metadata = observation['metadata'];body = observation['body'];captured = observation['capture']
+    authority = request['authority']
     if request['comparison'] is not None:
         c = request['comparison']
-        compared = comparison.check(root, c['request'], c['proof'], owned_lock=owned_lock)
         if c['request']['project_id'] != request['project_id']:
             raise ContractError('Review sources from this project only')
+        if request['operation'] in {'revoke', 'expire', 'retention', 'delete'}:
+            if (not compared['proof']['judgment']['observation']['recovery_frontier']['unit_ids']
+                    or encoded(c['request']['candidate']) != encoded({'metadata': metadata, 'body': body})):
+                raise ContractError('Deactivation comparison only reviews pending sources against the exact unchanged target')
     if captured is not None:
         candidate = captured['request']['candidate']
         if (candidate['metadata']['id'] != metadata['id'] or captured['request']['project_id'] != request['project_id']
@@ -155,9 +170,15 @@ def observe(repo, request, *, owned_lock=None):
                 or recalled['bank_observation_sha256'] != digest(encoded({'project_id': request['project_id'], 'sources': observed}))):
             raise ContractError('Supersession needs a currently qualified canonical replacement')
         replacement = {'metadata': replacement_metadata, 'body': replacement_body}
-    return {'root': root, 'bank': bank_path, 'base': base, 'checked': checked, 'observed': observed,
-            'scope': scope, 'metadata': metadata, 'body': body, 'context': context, 'git_context': git_context,
-            'capture': captured, 'comparison': compared, 'replacement': replacement}
+    return {**observation, 'comparison': compared, 'replacement': replacement}
+
+
+def observe(repo, request, *, owned_lock=None):
+    request_value(request)
+    observation = _observe_current(repo, request, owned_lock=owned_lock)
+    c = request['comparison']
+    compared = comparison.check(observation['root'], c['request'], c['proof'], owned_lock=owned_lock) if c is not None else None
+    return _qualify_observation(observation, request, compared, owned_lock=owned_lock)
 
 
 def pending(observation, disposition, **fields):
@@ -448,27 +469,94 @@ def desired(observation, request, operation_id, at):
     return routed, None
 
 
-def preview(repo, request, *, operation_id=None, recorded_at=None):
+def _normalized_request(request, comparison_member):
     request = copy.deepcopy(request)
-    if isinstance(request.get('capture'), dict):request['capture'] = request['capture'].get('capture', request['capture'])
-    if isinstance(request.get('comparison'), dict) and isinstance(request['comparison'].get('proof'), dict):
-        request['comparison']['proof'] = request['comparison']['proof'].get('proof', request['comparison']['proof'])
-    observation = observe(repo, request)
-    if not qualified_authority(request):return pending(observation, 'clarification-required')
+    if isinstance(request, dict):
+        if isinstance(request.get('capture'), dict):
+            request['capture'] = request['capture'].get('capture', request['capture'])
+        if (comparison_member == 'proof' and isinstance(request.get('comparison'), dict)
+                and isinstance(request['comparison'].get('proof'), dict)):
+            request['comparison']['proof'] = request['comparison']['proof'].get('proof', request['comparison']['proof'])
+    _request_value(request, comparison_member)
+    return request
+
+
+def normalized_request(request):
+    return _normalized_request(request, 'proof')
+
+
+def _build_proposal(observation, request, *, output_context=None):
+    if not qualified_authority(request):return None, pending(observation, 'clarification-required')
     if not permitted_impact(observation, request):
-        return pending(observation, 'narrowing-required')
-    at = recorded_at or datetime.now(timezone.utc).isoformat()
-    operation_id = operation_id or str(uuid.uuid4())
-    if not uuid_valid(operation_id):
-        raise ContractError('Governance planning requires a canonical operation UUIDv4')
+        return None, pending(observation, 'narrowing-required')
+    operation_id, at = output_context or (str(uuid.uuid4()), datetime.now(timezone.utc).isoformat())
     files, deferred = desired(observation, request, operation_id, at)
-    if deferred:return pending(observation, **deferred)
+    if deferred:return None, pending(observation, **deferred)
     p = tx.preview(observation['root'], files, WRITE_ACTION[request['operation']])['proposal']
+    if p['observed_hashes'] != observation['observed']:
+        raise ContractError('Bank changed while building the exact governed output')
     p.update(operation_id=operation_id, governance_evidence={'request': request, 'recorded_at': at,
                                                           'git_context': observation['git_context']})
-    from . import layout_resolution
     compared = request['comparison']['proof'] if request['comparison'] is not None else None
     p['governance_evidence'].update(layout_resolution.evidence_fields(compared))
+    return p, None
+
+
+def _proposal(repo, request, *, output_context=None):
+    return _build_proposal(observe(repo, request), request, output_context=output_context)
+
+
+def plan(repo, request):
+    request = _normalized_request(request, 'judgment')
+    observation = _observe_current(repo, request)
+    c = request['comparison']
+    if c is None:
+        frontier = recovery_frontier.observe(observation['root'])
+        if frontier['hold_sha256'] is not None or frontier['unit_ids']:
+            raise ContractError('Held governance planning requires complete current semantic judgments')
+        compared = None
+    else:
+        compared = comparison.judge(comparison.inspect(observation['root'], c['request']), c['request'], c['judgment'])
+        frontier = compared['proof']['judgment']['observation']['recovery_frontier']
+        if (frontier['review_digest'] is not None
+                or any(row['coverage_claim']['coverage'] != 'none'
+                       for row in compared['proof']['judgment']['pending_decisions'])):
+            raise ContractError('Planning requires coverage:none for every pending source and no preliminary coverage review')
+        # The pure judgment's provisional proof stays private to construction.
+        # Normal observe/preview revalidate an independently reviewed proof.
+        request = {**request, 'comparison': {'request': c['request'], 'proof': compared['proof']}}
+    observation = _qualify_observation(observation, request, compared)
+    p, deferred = _build_proposal(observation, request)
+    recovery_frontier.check(frontier, observation['root'])
+    if deferred is not None:
+        return {**deferred, 'operation': 'plan', 'output_plan': None,
+                'coverage_review_required': True, 'verified': False}
+    check_sources(p)
+    return result('plan', disposition=request['operation'],
+        output_plan=layout_resolution.make_output_plan(p, request), proposal=None,
+        canonical_writes_performed=False, coverage_review_required=True, verified=False)
+
+
+def preview(repo, request, *, output_plan=None, operation_id=None, recorded_at=None):
+    request = normalized_request(request)
+    output_context = None
+    if output_plan is not None:
+        if operation_id is not None or recorded_at is not None:
+            raise ContractError('Output plan cannot be combined with explicit operation context')
+        if isinstance(output_plan, dict):output_plan = output_plan.get('output_plan', output_plan)
+        output_context = layout_resolution.output_plan_context(output_plan, request)
+    elif operation_id is not None or recorded_at is not None:
+        operation_id = operation_id or str(uuid.uuid4())
+        if not uuid_valid(operation_id):
+            raise ContractError('Governance planning requires a canonical operation UUIDv4')
+        output_context = (operation_id, recorded_at or datetime.now(timezone.utc).isoformat())
+    p, deferred = _proposal(repo, request, output_context=output_context)
+    if deferred is not None:
+        if output_plan is not None:
+            raise ContractError('Deferred governance cannot consume an output plan')
+        return deferred
+    if output_plan is not None:
+        layout_resolution.check_output_plan(p, request, output_plan)
     validate_transaction(p)
     return result('preview', disposition=request['operation'], proposal=p, canonical_writes_performed=False)
 
@@ -543,26 +631,35 @@ def apply(prepared):
 
 def main(argv=None, *, required_operations=None):
     parser = argparse.ArgumentParser(description=__doc__);commands = parser.add_subparsers(dest='command', required=True)
-    sub = commands.add_parser('preview');sub.add_argument('--repo', required=True);sub.add_argument('--request', required=True)
+    sub = commands.add_parser('plan');sub.add_argument('--repo', required=True);sub.add_argument('--request', required=True)
     sub.add_argument('--private-output')
+    sub = commands.add_parser('preview');sub.add_argument('--repo', required=True);sub.add_argument('--request', required=True)
+    sub.add_argument('--private-output');sub.add_argument('--plan')
     sub.add_argument('--operation-id');sub.add_argument('--recorded-at')
     sub = commands.add_parser('apply');sub.add_argument('--proposal', required=True)
     args = parser.parse_args(argv)
     try:
-        prepared = admission.read_input(args.request if args.command == 'preview' else args.proposal,
-                                        262144 if args.command == 'preview' else 512*1024*1024)
+        preparing = args.command in {'plan', 'preview'}
+        prepared = admission.read_input(args.request if preparing else args.proposal,
+                                        262144 if preparing else 512*1024*1024)
         if required_operations is not None:
-            request = (prepared if args.command == 'preview' else
+            request = (prepared if preparing else
                        tx.proposal_value(prepared)['governance_evidence']['request'])
             if request['operation'] not in required_operations:
                 raise ContractError('The requested operation differs from the CLI intent')
-        value = (preview(args.repo, prepared, operation_id=args.operation_id, recorded_at=args.recorded_at)
-                 if args.command == 'preview' else apply(prepared))
-        if args.command == 'preview':
+        if args.command == 'plan':
+            value = plan(args.repo, prepared)
+        elif args.command == 'preview':
+            output_plan = admission.read_input(args.plan, 512*1024*1024) if args.plan is not None else None
+            value = preview(args.repo, prepared, output_plan=output_plan,
+                            operation_id=args.operation_id, recorded_at=args.recorded_at)
+        else:
+            value = apply(prepared)
+        if preparing:
             value = recovery_frontier.private_preview(args.repo, value, args.private_output)
         print(json.dumps(value, indent=2, ensure_ascii=False));return 0
     except (ContractError, OSError, ValueError, TypeError, KeyError, AttributeError, RecursionError) as exc:
-        print(json.dumps(result(args.command, verified=False, canonical_writes_performed=False if args.command == 'preview' else None,
+        print(json.dumps(result(args.command, verified=False, canonical_writes_performed=False if args.command in {'plan', 'preview'} else None,
             recovery_may_be_required=args.command == 'apply',
             error=str(exc) if isinstance(exc, bank_capacity.BankCapacityError) else
                 'Unqualified, ambiguous, changed or incomplete governance; preserve evidence and inspect',

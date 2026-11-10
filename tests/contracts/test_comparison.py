@@ -236,3 +236,36 @@ class ComparisonContract(unittest.TestCase):
             inspection=self.inspect(w,repo,request);r,review=self.review(w,repo,request,self.judgment(inspection,'contradiction'));self.assertEqual(r.returncode,0,review)
             self.assertEqual(review['disposition'],'clarification-required');self.assertEqual(review['other_developer_ids'],[other]);self.assertTrue(review['recommend_other_developer_clarification'])
             self.assertEqual(review['detecting_developer_id'],self.actor);self.assertFalse(review['messages_sent'])
+
+    def test_explicit_private_output_keeps_ordinary_comparison_off_stdout(self):
+        with World() as w:
+            repo, bank = self.fixture(w)
+            body = '# Retry boundary\n\nRetain this synthetic three-attempt condition in the private observation.\n'
+            metadata, path = self.add(bank, 'private-observation', body=body)
+            request = self.candidate(body=body)
+            request['read_paths'] = [path]
+            request_file = self.save(w, request)
+            before = self.state(w, repo, bank)
+            inspection_file = w.inside('private-comparison-inspect.json')
+            inspected, _ = self.call(w, 'compare_learning.py', 'inspect', '--repo', repo,
+                                      '--request', request_file, '--private-output', inspection_file)
+            self.assertEqual(inspected.returncode, 0, inspected.stdout + inspected.stderr)
+            inspection = json.loads(inspection_file.read_text())
+            judgment = self.judgment(inspection)
+            review_file = w.inside('private-comparison-review.json')
+            reviewed, _ = self.call(w, 'compare_learning.py', 'review', '--repo', repo,
+                                     '--request', request_file, '--judgment', self.save(w, judgment, 'judgment.json'),
+                                     '--private-output', review_file)
+            self.assertEqual(reviewed.returncode, 0, reviewed.stdout + reviewed.stderr)
+            proof = json.loads(review_file.read_text())['proof']
+            checked_file = w.inside('private-comparison-check.json')
+            checked, _ = self.call(w, 'compare_learning.py', 'check', '--repo', repo,
+                                    '--request', request_file, '--proof', self.save(w, proof, 'proof.json'),
+                                    '--private-output', checked_file)
+            self.assertEqual(checked.returncode, 0, checked.stdout + checked.stderr)
+            result = json.loads(checked_file.read_text())
+            self.assertTrue(result['source_observation_current'])
+            self.assertEqual([(row['path'], row['id']) for row in result['proof']['targets']], [(path, metadata['id'])])
+            for command in (inspected, reviewed, checked):
+                self.assertNotIn(json.dumps(body)[1:-1], command.stdout)
+            self.assertEqual(self.state(w, repo, bank), before)
