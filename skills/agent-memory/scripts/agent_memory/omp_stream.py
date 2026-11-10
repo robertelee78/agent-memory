@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import argparse
 from collections import deque
-from contextlib import contextmanager
+from contextlib import ExitStack, contextmanager
 import hashlib
 import importlib
 import os
@@ -910,6 +910,17 @@ class FiniteExecutor:
         self.writer.send('REFUSED', sequence, code='invalid-request', outcome='durable-refusal')
 
     def execute(self, kind, sequence, nonce, raw):
+        # Retry only acquisition: once entered, never replay the finite frame.
+        # The observer's own guards and all metadata binding checks still run.
+        with ExitStack() as stack:
+            def enter():
+                gate = turn_sources.source_barrier(self.coverage.repo)
+                gate.__enter__()
+                stack.push(gate.__exit__)
+            self.metadata(enter)
+            self._execute(kind, sequence, nonce, raw)
+
+    def _execute(self, kind, sequence, nonce, raw):
         if kind not in {'REQUEST', 'REFUSED-ATTEMPT'}:
             raise ContractError('Invalid source frame type')
         value = None
