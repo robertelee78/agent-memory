@@ -10,7 +10,7 @@ import layout_recovery_fixtures as recovery
 
 
 class LayoutApplyFaults(unittest.TestCase):
-    def journey(self, stage, mode):
+    def journey(self, stage, mode, *, recovery_mode='finish'):
         helper = existing.LayoutRecoveryContract()
         with World() as world:
             command, source, repo, bank, native, originals, modes, git = helper.setup_fault_repair(world)
@@ -29,12 +29,13 @@ class LayoutApplyFaults(unittest.TestCase):
             helper.assert_fault_work_unchanged(world, repo, git)
             preview = world.inside('known-finish.json')
             recovery.call(world, command, 'recover', '--repo', repo, '--operation', safe['operation_id'],
-                          '--mode', 'finish', '--output', preview)
+                          '--mode', recovery_mode, '--output', preview)
             outcome = recovery.call(world, command, 'recover', '--repo', repo, '--proposal', preview)
             self.assertTrue(outcome['verified'])
             self.assertFalse(outcome['semantic_recovery_complete'])
             self.assertGreater(outcome['pending_units'], 0)
-            wanted = {path: body.encode() for path, body in native.items()}
+            wanted = ({path: body.encode() for path, body in native.items()}
+                      if recovery_mode == 'finish' else originals)
             self.assertEqual({p.relative_to(bank).as_posix(): p.read_bytes() for p in bank.rglob('*')
                               if p.is_file() and p.name not in ('.agent-memory-transaction.md', '.agent-memory-recovery.md')}, wanted)
             self.assertEqual({path: stat.S_IMODE((bank / path).stat().st_mode) for path in wanted},
@@ -361,3 +362,39 @@ for _stage, _label, _paths in (
                 continue  # The original first-replacement contract already exercises this exact cell.
             setattr(LayoutApplyFaults, 'test_' + _label + '_' + _path_label + '_' + _mode,
                     _path_case(_stage, _path, _mode))
+
+
+def _rollback_case(stage, mode):
+    def run(self):
+        self.journey('layout-recovery-' + stage, mode, recovery_mode='rollback')
+    return run
+
+
+for _label, _stage in (
+        ('journal', 'after-journal'),
+        ('index_intent', 'index-intent'),
+        ('marker_before', 'before-marker'),
+        ('hold_after', 'after-hold'),
+        ('swap_before', 'before-marker-swap'),
+        ('swap_after', 'after-marker-swap'),
+        ('sentinel_before', 'before-sentinel'),
+        ('sentinel_after', 'after-sentinel'),
+        ('router_before', 'before-router'),
+        ('readback', 'before-final-readback'),
+        ('receipt_before', 'before-receipt'),
+        ('temp_active', 'temporary-write:activeContext.md'),
+        ('temp_router', 'temporary-write:MEMORY.md'),
+        ('replace_active', 'before-replace:activeContext.md'),
+        ('replace_handoff', 'before-replace:handoff-prompt.md'),
+        ('replace_router', 'before-replace:MEMORY.md'),
+        ('rename_active', 'after-rename:activeContext.md'),
+        ('rename_handoff', 'after-rename:handoff-prompt.md'),
+        ('rename_router', 'after-rename:MEMORY.md'),
+        ('progress_active', 'after-progress:activeContext.md'),
+        ('progress_handoff', 'after-progress:handoff-prompt.md'),
+        ('progress_router', 'after-progress:MEMORY.md')):
+    for _mode in ('error', 'exit'):
+        if (_label, _mode) in {('journal', 'error'), ('receipt_before', 'error'),
+                              ('rename_active', 'error')}:
+            continue  # The original known-rollback cases cover these cells.
+        setattr(LayoutApplyFaults, 'test_rollback_' + _label + '_' + _mode, _rollback_case(_stage, _mode))
