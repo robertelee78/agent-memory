@@ -212,9 +212,10 @@ class InstalledCanonicalFence(unittest.TestCase):
         with World() as world, patch.dict(os.environ, world.env, clear=True):
             repo, receipt, proposal = self.prepare_capture(world)
             with turn_sources.source_barrier(repo):
-                with self.assertRaises(ContractError):
+                with self.assertRaises(ContractError) as refused:
                     with turn_sources.canonical_writer_barrier(repo):
                         self.fail('A shared barrier cannot be upgraded')
+                self.assertNotIsInstance(refused.exception, turn_sources.SourceTransportBusy)
             marker = layout_recovery_state.paths(repo)[2].parent/'turn-sources-compat-v1.json'
             original = marker.read_bytes()
             invalid = b'{\"schema\":\"unknown\"}'
