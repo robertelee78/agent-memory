@@ -316,10 +316,12 @@ def current(repo):
         for path in values['local']:
             target = bank / path
             mode = target.lstat().st_mode
-            if not stat.S_ISREG(mode) or stat.S_IMODE(mode) not in {0o644, 0o664}:
+            permissions = stat.S_IMODE(mode)
+            if (not stat.S_ISREG(mode) or not permissions & 0o444
+                    or permissions & (0o7000 | 0o111 | 0o002)):
                 raise CurrentFailure('current-source-changed',
                     'A local bank entry is not an ordinary readable Markdown file.', component='current.local-bank')
-            local_modes.append((path, stat.S_IMODE(mode)))
+            local_modes.append((path, permissions))
         prefix = observation['bank_root'] + '/'
         tree_raw = recovery.command(root, 'ls-tree', '-rz', '--full-tree', observation['local_head'],
                                     '--', observation['bank_root'], limit=recovery.MAX_LOCATOR_TREE_BYTES)
