@@ -105,7 +105,7 @@ def preview(value):
 
 
 def diagnostics(repo, receipt):
-    from . import installation, omp_boundary, omp_transport
+    from . import installation, omp_boundary, omp_transport, turn_sources
     selected = receipt.get('omp_binding') if receipt else None
     if selected is None:
         return {'binding': 'not-installed', 'native_loading': 'not-observed',
@@ -118,26 +118,26 @@ def diagnostics(repo, receipt):
               'source_assessment': 'not-inferred-from-loading', 'refresh': 'not-inferred-from-assessment',
               'publication': 'requires-witnessed-shared-publication',
               'retention': 'private-native-snapshots-preserved-on-uninstall'}
-    base = omp_boundary._base(repo)
-    if (base / 'omp-source-v1').exists():
-        pending = omp_transport.list_pending(repo)
-        result['observer_evidence'] = 'retained'
-        result['pending'] = pending
-    else:
-        result['observer_evidence'] = 'not-observed'
-    if any((base / name).exists() for name in ('omp-stream-v1', 'omp-stream-session-locks')):
-        from . import omp_stream
-        streams = omp_stream.inventory(repo, base=base)
-        result['transport_qualification'] = {
-            'instances': len(streams['streams']), 'pending': streams['pending'],
-            'assessment_authority': False, 'automatic_wake_support': 'unqualified'}
-    from . import turn_sources
-    try:
-        with turn_sources.source_barrier(repo):
-            omp_boundary.verify_marker(repo)
-        result['stored_source_activation'] = 'verified'
-    except (ContractError, OSError, ValueError, TypeError, KeyError):
-        result['stored_source_activation'] = 'required-or-unverified'
+    with turn_sources.read_only_locks():
+        base = omp_boundary._base(repo)
+        if (base / 'omp-source-v1').exists():
+            pending = omp_transport.list_pending(repo)
+            result['observer_evidence'] = 'retained'
+            result['pending'] = pending
+        else:
+            result['observer_evidence'] = 'not-observed'
+        if any((base / name).exists() for name in ('omp-stream-v1', 'omp-stream-session-locks')):
+            from . import omp_stream
+            streams = omp_stream.inventory(repo, base=base, read_only=True)
+            result['transport_qualification'] = {
+                'instances': len(streams['streams']), 'pending': streams['pending'],
+                'assessment_authority': False, 'automatic_wake_support': 'unqualified'}
+        try:
+            with turn_sources.source_barrier(repo, existing_only=True):
+                omp_boundary.verify_marker(repo)
+            result['stored_source_activation'] = 'verified'
+        except (ContractError, OSError, ValueError, TypeError, KeyError):
+            result['stored_source_activation'] = 'required-or-unverified'
     return result
 
 

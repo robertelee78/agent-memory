@@ -1,0 +1,97 @@
+{
+  "all_registered_diagnostics": {
+    "all_case_selection_and_execution_retained": true,
+    "cell": "macos311",
+    "each_worker_timeout_seconds": 300,
+    "passed": true,
+    "receipt_sha256": "80e7eaf252dcf89552566a2a6414b44c9603ee06f14b94f963b0eeae2d45725e",
+    "workers": 24
+  },
+  "base_commit": "359c942d3d9b4b6938eee5868c5343c1a383de4b",
+  "direct_public_smoke": {
+    "all_filesystem_snapshots_unchanged": true,
+    "all_returncode_zero_and_ok_true": true,
+    "cell": "macos315",
+    "modes": [
+      "copy",
+      "link"
+    ],
+    "operations": [
+      "status",
+      "doctor"
+    ],
+    "receipt_sha256": "c2627abc78c09e0e0ed93822683cfe328add03d8230a8cf214dfadc93baf9f87"
+  },
+  "focused_coverage": [
+    "Actual installed copy/link public am doctor with0644 extension",
+    "Extension and launcher byte/mode drift refuses without repair",
+    "Rebound matching fingerprints cannot substitute entrypoint bytes or non-executable launcher",
+    "Unknown wrapper path refuses; canonical receipt binding rejects launcher-as-extension spoof",
+    "Missing observer transport lock remains absent; every checked filesystem snapshot unchanged",
+    "Existing healthy copy/link and changed-wrapper/copy contracts remain passing"
+  ],
+  "focused_four_cell_runs": [
+    {
+      "cell": "macos315",
+      "passed": true,
+      "receipt_sha256": "eebc653349a24fd7207695ae477e02d2254b5e7acfc8fd6f0516735ebb71b6fa",
+      "workers": 5
+    },
+    {
+      "cell": "macos311",
+      "passed": true,
+      "receipt_sha256": "666d86f6d2500fb26b9a550409e35faa7d86c93d49b7086e93638cacbf28c1b5",
+      "workers": 5
+    },
+    {
+      "cell": "linux311",
+      "passed": true,
+      "receipt_sha256": "6613a94692630d03bdd3cfbb60674ba84c1b9e703d3532e7475efd660da70a25",
+      "workers": 5
+    },
+    {
+      "cell": "linux315",
+      "passed": true,
+      "receipt_sha256": "72e19a261ae56944797d027b6f2476bcb6f007d2a1f961976141695fe05f74d9",
+      "workers": 5
+    }
+  ],
+  "historical_negatives": [
+    {
+      "observed": "Real installed am doctor rejected receipt-owned0644 TypeScript extension in both copy/link modes; that first fixture also had no bank, so a separate native-boundary failure was present.",
+      "receipt_sha256": "6408f9bc999d1d3c2d504d3010720da9015b8709fa348d2c5cdf93d99fa63a62",
+      "result": "FAILED"
+    },
+    {
+      "observed": "After role fix, public doctor returned healthy but full-world snapshot detected new private source-barrier state; bank fixture was present. Two existing non-native workers passed.",
+      "receipt_sha256": "74ee1698ce7cad3b611ffd96b8e745d5759797ebe065a28e430f088011802ccb",
+      "result": "FAILED"
+    }
+  ],
+  "independent_review": {
+    "model": "anthropic/claude-opus-5-5",
+    "receipt_sha256": "dc0d04a4072f01b008b970eb7793187a3294ee2609d7b04271f2aa141f3427ab",
+    "runtime_execution_by_reviewer": false,
+    "verdict": "SOURCE PASS"
+  },
+  "limits": [
+    "Focused four-cell checks are not full corrected-source functional/performance qualification",
+    "No real retained pending segments, finite-stream concurrency or orphan-registration runtime proof in these focused runs",
+    "Read-only stream observation reuses the established non-blocking exclusive observation barrier; busy may report failure without retry",
+    "Missing synchronization state is not recreated or treated as verified activation",
+    "No stock omp, token, model, endpoint or semantic campaign execution",
+    "No native loading, native delivered wake, p99 or publisher/OS/credential isolation attestation",
+    "Old359 source-generator metadata and source-only preparations are retained historical, not current-candidate authority",
+    "Draft PR only; no main merge or signed release"
+  ],
+  "registered_release_batches": 953,
+  "runtime_input_sha256": "d9b863ab3ad8445b2435461be6f54fb182536db6b19683c445f25e5d6d7b21a7",
+  "schema": "agent-memory/scoped-native-diagnostic-proof-v1",
+  "scope": "Receipt-role wrapper checks and read-only native status/doctor; not native loading or release qualification",
+  "source_files_sha256": {
+    "skills/agent-memory/scripts/agent_memory/diagnostics.py": "0751a81ecb17529e6bd514a63bda5e77cd6e29fec3d8a0fe456e93d0d534e8ce",
+    "skills/agent-memory/scripts/agent_memory/omp_installation.py": "bc7c1708167e8a5c5211ee8d676bd08e0e2ac17cb6e8dcb58b4d8ef7cbe55fb5",
+    "tests/contracts.json": "74543606ea9c58e7c72461eec4938b7e8a3c08d7334f5d1846b20cd4c0715c10",
+    "tests/contracts/test_runtime_diagnostics.py": "7d28b66c4ea1d46b6b44be085739e51b7c4da11bfb280def1c71bbe4c339fec7"
+  }
+}
