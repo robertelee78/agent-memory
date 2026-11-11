@@ -1,0 +1,52 @@
+{
+  "base_commit": "f4aa10280ef30cafa72ffffa6254b802003cf9f3",
+  "driver_sha256": "fc41aaf732726b56c82ac5af7a11380089aed278cc9c4c19ff754026778c825d",
+  "original_driver_r4": {
+    "callback_elapsed_ns": 947056167,
+    "closed_verified": true,
+    "durable_root_wakes": 0,
+    "passed": false,
+    "source_after": "223006b78c50e0b6dfbeb45ee92c77f5625b2234e865f97c8a3d5db85a3e3927",
+    "source_before": "223006b78c50e0b6dfbeb45ee92c77f5625b2234e865f97c8a3d5db85a3e3927",
+    "stderr_empty": true,
+    "worker_exit": 0
+  },
+  "r4_correctness": {
+    "errors": 0,
+    "exact_once": true,
+    "failures": 0,
+    "files": 8,
+    "methods": 311,
+    "paths": [
+      "tests/contracts/test_identity_git_group.py",
+      "tests/contracts/test_omp_boundary.py",
+      "tests/contracts/test_omp_finite_stream.py",
+      "tests/contracts/test_omp_projection.py",
+      "tests/contracts/test_omp_source_phase.py",
+      "tests/contracts/test_omp_stored_authority_v2.py",
+      "tests/contracts/test_private_observer_interrupts.py",
+      "tests/contracts/test_repository_observation_batch.py"
+    ],
+    "registered_workers": 75,
+    "seconds": 660.6885299159912,
+    "source_unchanged": true
+  },
+  "r4_source_identity": "223006b78c50e0b6dfbeb45ee92c77f5625b2234e865f97c8a3d5db85a3e3927",
+  "r4_subject_sha256": "9363f8ca739d0baec314ccaa3d560f8defbc3789d110f0b72b17f9a263c78297",
+  "r5_physical_retirement_correction": {
+    "methods": 37,
+    "passed": true,
+    "registered_workers": 11,
+    "scope": "Test-only actual installed nonlive stream and instance retirement-path positive controls; all production bytes identical to R4; overlaps the R4 stored-authority file, not additional distinct coverage.",
+    "seconds": 107.86521466600243,
+    "source_identity": "1bc2c7cd10e5ee12a14f20606907069e23c3dfc893b7221d7eaa4adada675c7d",
+    "subject_sha256": "ea0c4cd263a5fff6a15d9141b82f152aabfc9cb1554862a0a9af3a2c03746174"
+  },
+  "schema": "agent-memory/scoped-native-locator-proof-v1",
+  "scope": "Actual local Darwin arm64/Python3.15.0 complete consumers plus installed synthetic finite-pipe negative callback. Source passes are not callback, clock/rate, stock-native, p99, corrected hosted matrix or signed release acceptance. No unchanged callback retry was used. Later guidance-only edits require their own scoped proof.",
+  "status": "local-correctness-pass-native-timing-open",
+  "timing_limits_unchanged": {
+    "callback_ns": 950000000,
+    "reservation_margin_ns": 100000000
+  }
+}

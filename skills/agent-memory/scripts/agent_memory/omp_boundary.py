@@ -48,12 +48,21 @@ def verify_marker(repo):
 
 
 @contextmanager
-def _observe_marker(repo):
+def _observe_marker(repo, *, held_source=None):
     """Mint inside this live boundary; do not re-enter a just-minted context."""
     from . import layout_recovery_state, scope_binding
     context = scope_binding.private_enrollment_context(repo)
     root, bank = context.root, context.bank
     base = layout_recovery_state._paths_for_bank(root, bank)[2].parent
+    if held_source is not None:
+        if type(held_source) is not turn_sources._HeldPrivateLock or not held_source._live:
+            raise ContractError('Native marker requires a live source barrier observation')
+        if base / 'source-barrier.lock' != held_source._path:
+            raise ContractError('Native bank scope differs from its held source barrier')
+        if (turn_sources._barrier_locks.get().get(str(base)) is not held_source
+                or str(base) not in turn_sources._barriers.get()):
+            raise ContractError('Native marker source barrier is not owned by this context')
+        held_source.recheck()
     expected = {'schema': 'agent-memory/omp-bank-binding-v1', 'repository': str(root),
                 'bank_path': str(bank), 'private_base': str(base), 'project_id': context.project_id}
     if _marker(base) != CAPABILITY or _bank_binding(base) != expected:

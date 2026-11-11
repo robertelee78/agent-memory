@@ -167,18 +167,35 @@ explicit pending cursors/faults account for omitted references. There is no
 shared-core wake reservation that can suppress the healthy new root.
 
 The total stop-callback bound remains **950 ms**, earlier on cancellation;
-helpers are never killed during shared writes. A source-first seal is handed
-off immediately without reserving a wake. After a fresh nonce-bound clock
-handshake, a second counted seal of the same detached view may request the
-one existing root wake. Bun hrtime and Python monotonic have different epochs.
-Four timestamps bound their offset; use the conservative lower bound and
-subtract the platform rate uncertainty before the pre-reservation check.
-The provisional 100 ms margin must cover measured post-reservation p99.
-Expired/cancelled/EOF/broken-output windows reserve nothing new. A timely
-reservation returned late remains one unknown attempt; late results cannot
-change the active request/lifecycle or deliver guidance. Rate, host-loop and
-warm-latency support remain unqualified until the required platform measurements.
-Source capture may finish after the callback; that is not delivered-wake proof.
+helpers are never killed during shared writes. Queue ONE source-first armed
+seal (`request_wake: true`, fresh nonce, `terminal: false`) before CLOCK and
+CLOCK-ACK. No prewarm or second seal is allowed. The single source outcome
+commits before wake preparation; missing ACK cannot prevent source retention.
+The checkpoint freshly rechecks scope/compatibility and the actual held
+source/transport descriptors. The late window must match this attempt's
+current nonce, with its own successful reservation transition.
+Bun hrtime and Python monotonic have different epochs. Four timestamps bound
+their offset; use the conservative lower bound and subtract platform rate
+uncertainty before the pre-reservation check. The provisional 100 ms margin
+must cover measured post-reservation p99. Expired/cancelled/EOF/broken-output
+windows reserve nothing new. A timely reservation returned late remains one
+unknown attempt; late results cannot change the active request/lifecycle or
+deliver guidance. Rate, host-loop and warm-latency support remain unqualified
+until the required platform measurements. Source capture may finish after
+the callback; that is not delivered-wake proof.
+
+Finite nested guards may reuse only the executor's exact live source descriptor
+as a locator, never a cached enrollment or canonical authority. All fresh
+scope entry/exit checks remain. Qualify released/foreign-thread/transport/stream/
+live observations, borrowed entry and exit inode swaps, same-root bank changes
+with real fresh-mint preconditions, canonical-writer busy-first behavior, and
+activated second-root retargets with an unreadable native-binding canary and a
+real exclusive source-lock holder. Wrong-bank refusal MUST precede native
+binding reads, STARTED, retirement and private-state creation. Its read-only
+scope mint may inspect that bank's compatibility and writer/hold state first.
+Final close outside the executor and post-response registration retain their
+own fresh guards. Local installed-pipe success is not actual stock-native,
+clock/rate, platform-matrix or uncensored p99 qualification.
 
 On shutdown, worker creation is disabled, the trailing hint timer is cancelled,
 and the adapter awaits actual stdin finish for at most 1.8 seconds within the
@@ -207,18 +224,19 @@ am omp-boundary --repo /absolute/project --source ACTUAL_ID_OR_ENROLLMENT_REFERE
 Follow `next_offset` until exhausted. A successful page never claims global
 source completeness. Registered rows have an actual `observation_id`;
 `enrollment-pending`/`registration-fault` rows preserve the original source
-reference and do not invent one. Later finite-worker ingest/seal calls first
-persist each arriving checked stored source and recheck scope, then run a
-separate registration-progress phase. Each phase selects oldest retained
-fault-free enrollments first and attempts at most eight, using their original
-references and digests. The bound is a count, not an elapsed-time check after
-expensive capture, inventory, scope or shared-state inspection: those costs
-cannot consume the next phase's entire opportunity to register. Already
-registered and faulted records do not consume attempt slots. Capacity can still
-leave enrollment pending; a later phase resumes without discarding new arrivals.
-A successful registration whose response was lost is recovered from the exact
-shared reference/digest. A shared fault or an uncertain attempted write is
-retained and never blindly registered again or erased by transport retry.
+reference and do not invent one. Ordinary ingest/seal registration retains its
+existing guarded path. An armed finite-worker source frame instead commits its
+source outcome and attempts its response before registration progress. After
+the observer and transport guards unwind, a separate fresh-guard phase selects
+the oldest retained fault-free enrollments and attempts at most eight, using
+their original references and digests. It also runs after a committed-source
+busy retry or ordinary output loss, without replaying source or wake, before
+the next FIFO request or FINAL. The bound is a count, not an elapsed-time check.
+Already registered and faulted records do not consume attempt slots. Capacity
+can leave enrollment pending; a later phase resumes without dropping arrivals.
+A successful registration whose response was lost is recovered from its exact
+shared reference/digest. A shared fault or uncertain attempted write is retained
+and never blindly registered again or erased by transport retry.
 
 The migrated `NativeSources` contracts in `tests/contracts/test_omp_boundary.py`
 and dedicated `tests/contracts/test_omp_enrollment_progress.py` regressions cover

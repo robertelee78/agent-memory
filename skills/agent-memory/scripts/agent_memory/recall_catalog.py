@@ -22,7 +22,7 @@ from contextlib import contextmanager
 import fcntl
 
 from . import _ENGINE_SOURCE_ROOT, _INITIAL_ENGINE_SOURCES, _engine_sources
-from . import bank_contract, bank_observation, bank_writes as writes, local_registry as storage, trust_paths, records, repository_config, validation_memo
+from . import bank_contract, bank_observation, bank_writes as writes, local_registry as storage, trust_paths, records, repository_config, validation_memo, turn_sources
 from .frontmatter import read as read_frontmatter
 from .developer_identity import digest
 from .frontmatter import ContractError
@@ -38,49 +38,123 @@ ENGINE_ROOTS=('frontmatter','developer_identity','scopes','lifecycle','records',
     'recovery_frontier','layout_recovery_state','layout_resolution','recovery_transactions','recovery_quiescence','turn_sources',
     'artifact','pack_validation','migration_contract')
 
+# Exact, stateless identity tokens, not a general object serializer. Capture the
+# actual boot references, then bind their source roles and alias relationships
+# across interpreter boots. A rebind is not a new equivalent token mid-runtime.
+OPAQUE_POLICY_BINDINGS=(('repository_config','_HEAD_UNOBSERVED',repository_config._HEAD_UNOBSERVED),
+    ('turn_sources','_LOCK_OBSERVATION_MINT',turn_sources._LOCK_OBSERVATION_MINT))
+
 
 class CacheMiss(Exception):
     pass
 
 
 class Generation(dict):
-    def __init__(self,value,seen):
-        super().__init__(value);self.seen=frozenset(seen)
+    def __init__(self,value,seen,runtime):
+        super().__init__(value);self.seen=frozenset(seen);self.runtime=dict(runtime)
 
 
 def compact(value):
     return json.dumps(value,sort_keys=True,separators=(',',':'),ensure_ascii=False,allow_nan=False).encode()
 
 
-def normalize(value):
+def opaque_bindings(modules):
+    bindings={}
+    for module,key,expected in OPAQUE_POLICY_BINDINGS:
+        value=getattr(modules[module],key,None)
+        if type(value) is not object or value is not expected:
+            raise CacheMiss('changed or unsupported engine identity token')
+        bindings['agent_memory.'+module+'.'+key]=value
+    return bindings
+
+
+def normalize(value,opaque=None,seen=None):
     if value is None or type(value) in (str,int,bool):return value
     if type(value) is float:
         if not math.isfinite(value):raise CacheMiss('unsupported engine policy')
         return value
+    if type(value) is object and opaque is not None:
+        aliases=sorted(label for label,bound in opaque.items() if value is bound)
+        if aliases:return {'opaque_identity':aliases}
+        raise CacheMiss('unbound engine identity token')
+    if isinstance(value,types.FunctionType):return {'function':function_identity(value,seen,opaque)}
+    if isinstance(value,type):return {'class':class_identity(value,seen,opaque)}
+    if isinstance(value,types.ModuleType):
+        name=value.__name__
+        if sys.modules.get(name) is not value or (name.startswith('agent_memory.')
+                and name.removeprefix('agent_memory.') not in ENGINE_ROOTS):
+            raise CacheMiss('unbound validator module binding')
+        return {'module':name}
     if isinstance(value,bytes):return {'bytes':value.hex()}
     if isinstance(value,Path):return {'path':str(value)}
     if isinstance(value,re.Pattern):return {'pattern':value.pattern,'flags':value.flags}
-    if isinstance(value,(list,tuple)):return [normalize(v) for v in value]
-    if isinstance(value,(set,frozenset)):return sorted((normalize(v) for v in value),key=lambda v:compact(v))
+    if isinstance(value,(list,tuple)):return [normalize(v,opaque,seen) for v in value]
+    if isinstance(value,(set,frozenset)):
+        return sorted((normalize(v,opaque,seen) for v in value),key=lambda v:compact(v))
     if isinstance(value,dict):
-        if all(isinstance(k,str) for k in value):return {k:normalize(v) for k,v in value.items()}
-        pairs=[[{'type':type(k).__name__,'value':normalize(k)},normalize(v)] for k,v in value.items()]
+        if all(isinstance(k,str) for k in value):
+            return {k:normalize(v,opaque,seen) for k,v in sorted(value.items())}
+        pairs=[[{'type':type(k).__name__,'value':normalize(k,opaque,seen)},normalize(v,opaque,seen)]
+            for k,v in value.items()]
         return {'typed_mapping':sorted(pairs,key=lambda row:compact(row[0]))}
     raise CacheMiss('unsupported engine policy')
 
 
-def function_identity(function,seen=None):
+def function_identity(function,seen=None,opaque=None):
     seen=set() if seen is None else seen
     label=function.__module__+'.'+function.__qualname__
+    if function.__module__.removeprefix('agent_memory.') not in ENGINE_ROOTS:
+        raise CacheMiss('unbound validator function binding')
     if id(function) in seen:return {'reference':label}
     seen.add(id(function));closure=[]
     for cell in function.__closure__ or ():
-        value=cell.cell_contents
-        if isinstance(value,types.FunctionType):closure.append({'function':function_identity(value,seen)})
-        elif isinstance(value,type):closure.append({'class':value.__module__+'.'+value.__qualname__})
-        else:closure.append(normalize(value))
-    return {'code':code_identity(function.__code__),'defaults':normalize(function.__defaults__),
-        'kwdefaults':normalize(function.__kwdefaults__),'closure':closure}
+        try:value=cell.cell_contents
+        except ValueError:raise CacheMiss('empty engine closure') from None
+        closure.append(normalize(value,opaque,seen))
+    return {'name':label,'runtime_name':function.__name__,'doc':function.__doc__,
+        'code':code_identity(function.__code__),
+        'defaults':normalize(function.__defaults__,opaque,seen),
+        'kwdefaults':normalize(function.__kwdefaults__,opaque,seen),'closure':closure,
+        'attributes':normalize(vars(function),opaque,seen),
+        'annotations':normalize(function.__annotations__,opaque,seen),
+        'annotate':normalize(getattr(function,'__annotate__',None),opaque,seen),
+        'type_parameters':normalize(getattr(function,'__type_params__',()),opaque,seen)}
+
+
+def class_identity(cls,seen=None,opaque=None):
+    seen=set() if seen is None else seen
+    label=cls.__module__+'.'+cls.__qualname__
+    if not cls.__module__.startswith('agent_memory.'):
+        # External base/annotation types are bound to their canonical runtime
+        # export and the interpreter identity, never an address-bearing repr.
+        target=sys.modules.get(cls.__module__)
+        for part in cls.__qualname__.split('.'):target=getattr(target,part,None)
+        if target is not cls:raise CacheMiss('unbound runtime class binding')
+        return {'runtime_class':label}
+    if cls.__module__.removeprefix('agent_memory.') not in ENGINE_ROOTS:
+        raise CacheMiss('unbound validator class binding')
+    if type(cls) is not type:raise CacheMiss('unsupported engine metaclass')
+    if id(cls) in seen:return {'reference':label}
+    seen.add(id(cls));attributes={}
+    for key,value in sorted(vars(cls).items()):
+        if type(value) in (staticmethod,classmethod):
+            attributes[key]={'descriptor':type(value).__name__,
+                'function':function_identity(value.__func__,seen,opaque),
+                'attributes':normalize(vars(value),opaque,seen)}
+        elif type(value) is property:
+            attributes[key]={'property':[normalize(part,opaque,seen)
+                for part in (value.fget,value.fset,value.fdel)],'doc':value.__doc__,
+                'name':getattr(value,'__name__',None)}
+        elif type(value) in (types.MemberDescriptorType,types.GetSetDescriptorType):
+            # CPython can share a weakref descriptor with a base owner. Bind
+            # both roles; an unrelated class's descriptor still refuses.
+            owner=value.__objclass__
+            if owner not in cls.__mro__:raise CacheMiss('unbound class descriptor')
+            attributes[key]={'descriptor':type(value).__name__,'declared_by':label,
+                'owner':class_identity(owner,seen,opaque),'name':value.__name__}
+        else:attributes[key]=normalize(value,opaque,seen)
+    return {'name':label,'runtime_name':cls.__name__,
+        'bases':[class_identity(base,seen,opaque) for base in cls.__bases__],'attributes':attributes}
 
 
 def code_identity(code):
@@ -104,7 +178,7 @@ def code_identity(code):
     return digest(compact(value))
 
 
-def generation_details():
+def generation_details(*,runtime=None):
     """Audited eager native-v1 closure; ambiguity disables reuse/publication."""
     if validation_memo.current() is not None:
         raise CacheMiss('native catalog reuse is separate from active operation validation reuse')
@@ -113,6 +187,8 @@ def generation_details():
     for name in ENGINE_ROOTS:importlib.import_module('agent_memory.'+name)
     modules={name:sys.modules['agent_memory.'+name] for name in ENGINE_ROOTS}
     payload={}
+    opaque=opaque_bindings(modules)
+    if runtime is not None:runtime.update(opaque)
     for name,module in sorted(modules.items()):
         name='agent_memory.'+name
         path=Path(getattr(module,'__file__','')).resolve()
@@ -130,18 +206,13 @@ def generation_details():
             elif isinstance(value,types.FunctionType) and value.__module__.startswith('agent_memory.'):
                 if value.__module__.removeprefix('agent_memory.') not in ENGINE_ROOTS:
                     raise CacheMiss('unbound validator function binding')
-                functions[key]=function_identity(value)
+                functions[key]=function_identity(value,opaque=opaque)
                 bindings[key]={'function':value.__module__+'.'+value.__qualname__}
             elif isinstance(value,type) and value.__module__.startswith('agent_memory.'):
-                methods={}
-                for method_name,method in vars(value).items():
-                    if isinstance(method,(staticmethod,classmethod)):method=method.__func__
-                    if isinstance(method,types.FunctionType):
-                        methods[method_name]=function_identity(method)
-                functions[key]={'methods':methods}
+                functions[key]=class_identity(value,opaque=opaque)
                 bindings[key]={'class':value.__module__+'.'+value.__qualname__}
             elif key.isupper() and not isinstance(value,(types.ModuleType,type)):
-                policy[key]=normalize(value)
+                policy[key]=normalize(value,opaque)
         payload[name]={'file':relative,'functions':functions,'policy':policy,'bindings':bindings}
     value={'python':list(sys.version_info),'implementation':sys.implementation.name,'cache_tag':sys.implementation.cache_tag,
         'package_sources':_INITIAL_ENGINE_SOURCES,'loaded':payload,'codec':SCHEMA}
@@ -149,14 +220,15 @@ def generation_details():
 
 
 def generation():
-    value=generation_details()
+    runtime={};value=generation_details(runtime=runtime)
     seen={name for name in sys.modules if name.startswith('agent_memory.')}
-    return Generation({'sha256':digest(compact(value)),'modules':sorted(value['loaded'])},seen)
+    return Generation({'sha256':digest(compact(value)),'modules':sorted(value['loaded'])},seen,runtime)
 
 
 def coherent(engine):
     current=generation()
-    if current!=engine or current.seen-engine.seen:
+    if (current!=engine or current.seen-engine.seen or current.runtime.keys()!=engine.runtime.keys()
+            or any(value is not engine.runtime[label] for label,value in current.runtime.items())):
         raise CacheMiss('validator generation or dependency closure changed')
 
 

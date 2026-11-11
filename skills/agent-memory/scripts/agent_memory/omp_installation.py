@@ -228,7 +228,7 @@ def verify_observer_binding(repo, receipt, proof):
 
 
 @contextmanager
-def _observe_observer_binding(repo, receipt, proof):
+def _observe_observer_binding(repo, receipt, proof, *, held_source=None):
     """Check ownership and mint scope at entry, then freshly check at exit."""
     from . import installation, omp_boundary, trust_paths, turn_sources
     if type(proof) is not ObserverBinding or proof._seal is not _OBSERVER_MINT:
@@ -239,7 +239,9 @@ def _observe_observer_binding(repo, receipt, proof):
             or receipt['source']['artifact_digest'] != proof._artifact_digest
             or receipt['source']['pack'] != proof._pack):
         raise ContractError('Native observer proof differs from its original receipt')
-    with turn_sources.source_barrier(repo):
+    guard = (turn_sources._borrowed_source_barrier(held_source) if held_source is not None
+             else turn_sources.source_barrier(repo))
+    with guard:
         state, _ = installation.locations()
         if state / 'receipt.json' != proof._receipt_path:
             raise ContractError('Native observer ownership location changed')
@@ -249,7 +251,7 @@ def _observe_observer_binding(repo, receipt, proof):
         if (identity is None or identity.get('kind') != 'file'
                 or (identity['kind'], identity['hash'], identity['mode']) != proof._receipt_identity):
             raise ContractError('Native observer installation changed; preserve pending work and start a new instance')
-        with omp_boundary._observe_marker(repo) as context:
+        with omp_boundary._observe_marker(repo, held_source=held_source) as context:
             yield context
 
 

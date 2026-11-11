@@ -381,9 +381,9 @@ export default function nativeMemory(pi: ExtensionAPI, binding?: Binding) {
     state.child.stdin.write(Buffer.concat([header, raw]));
     return { promise, payload: accepted ? payload : undefined };
   };
-  const capture = (ctx: ExtensionContext, action: 'ingest' | 'seal', terminal = false) => {
+  const capture = (ctx: ExtensionContext, action: 'ingest' | 'seal', terminal = false, requestWake = false, nonce?: string) => {
     const state = get(ctx); if (!state) return;
-    const result = { state, ...submit(state, ctx, action, () => checkedStoredView(ctx), terminal) };
+    const result = { state, ...submit(state, ctx, action, () => checkedStoredView(ctx), terminal, requestWake, nonce) };
     if (active && active !== state) transition(active, state, ctx);
     active = state;
     return result;
@@ -485,20 +485,22 @@ export default function nativeMemory(pi: ExtensionAPI, binding?: Binding) {
   });
   pi.on('session_stop', async (event, ctx) => {
     const deadline = process.hrtime.bigint() + 950000000n;
-    const current = capture(ctx, 'seal'); if (!current?.payload) return;
-    const { state, payload } = current; const nonce = randomUUID(); state.nonce = nonce;
+    const nonce = randomUUID();
+    const current = capture(ctx, 'seal', false, true, nonce); if (!current?.payload) return;
+    const { state } = current; state.nonce = nonce;
     const stoppedHuman = state.human;
     const { promise: calibration, resolve: calibrated } = Promise.withResolvers<{ p1: string; p2: string; j3: bigint } | undefined>();
     state.clock = { nonce, resolve: calibrated }; const j0 = process.hrtime.bigint();
     const abort = () => cancel(state); event.signal?.addEventListener('abort', abort, { once: true });
     try {
-      if (!control(state, 'CLOCK', { nonce, j0: j0.toString(), j_deadline: deadline.toString() })) return;
-      const clock = await bounded(calibration, deadline, event.signal);
-      if (!clock || active !== state || state.human !== stoppedHuman || state.retiring || state.closing || state.broken || event.signal?.aborted || state.nonce !== nonce || process.hrtime.bigint() >= deadline) return;
-      if (!control(state, 'CLOCK-ACK', { nonce, j0: j0.toString(), j3: clock.j3.toString() })) return;
-      const source = { entries: payload.entries, branch_ids: payload.branch_ids, view: payload.view };
-      const wake = submit(state, ctx, 'seal', () => source, false, true, nonce, false);
-      const result = await bounded(wake.promise, deadline, event.signal);
+      if (control(state, 'CLOCK', { nonce, j0: j0.toString(), j_deadline: deadline.toString() })) {
+        const clock = await bounded(calibration, deadline, event.signal);
+        if (clock && active === state && state.human === stoppedHuman && !state.retiring && !state.closing && !state.broken
+          && !event.signal?.aborted && state.nonce === nonce && process.hrtime.bigint() < deadline) {
+          control(state, 'CLOCK-ACK', { nonce, j0: j0.toString(), j3: clock.j3.toString() });
+        }
+      }
+      const result = await bounded(current.promise, deadline, event.signal);
       if (result?.verified === true && result.continue && typeof result.additionalContext === 'string'
         && process.hrtime.bigint() < deadline && active === state && state.human === stoppedHuman && state.nonce === nonce && !state.retiring && !state.closing && !event.signal?.aborted) {
         if (result.request_id) state.request = result.request_id;

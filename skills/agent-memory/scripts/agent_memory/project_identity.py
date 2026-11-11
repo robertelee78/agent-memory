@@ -17,7 +17,7 @@ from .developer_identity import digest, encoded, load, text, uuid_valid
 from .frontmatter import ContractError
 from . import local_registry as storage
 from .remote_identity import normalize
-from .identity_git import git
+from .identity_git import _git_group, git
 
 PACK = Path(__file__).resolve().parents[2]
 SPEC = json.loads((PACK / "schemas/projects.json").read_text())
@@ -97,15 +97,20 @@ def discover(repo, authority=None, *, owned_lock=None, owned_transaction=None, m
     common = (root / git(root, "rev-parse", "--git-common-dir")).resolve() if is_git else root
     stat = common.stat()
     issues, remotes = [], {}
-    configured = git(root, "config", "--get-all", "agent-memory.authorityRemote", optional=True) if is_git else None
-    configured_values = sorted(set(configured.splitlines())) if configured else []
-    if configured:
-        values = set(configured_values)
-        if len(values) != 1 and authority is None:
-            issues.append("Conflicting configured authority remotes; choose one explicitly")
-        configured = configured.splitlines()[-1]
+    configured, configured_values = None, []
     if is_git:
-        for name in git(root, "remote").splitlines():
+        with _git_group(root, (
+                (("config", "--get-all", "agent-memory.authorityRemote"), False),
+                (("remote",), False))) as group:
+            configured = group.value(0, optional=True)
+            configured_values = sorted(set(configured.splitlines())) if configured else []
+            if configured:
+                values = set(configured_values)
+                if len(values) != 1 and authority is None:
+                    issues.append("Conflicting configured authority remotes; choose one explicitly")
+                configured = configured.splitlines()[-1]
+            names = group.value(1)
+        for name in names.splitlines():
             candidates = []
             try:
                 for flags in (("--all",), ("--push", "--all")):

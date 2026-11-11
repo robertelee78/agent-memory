@@ -681,6 +681,10 @@ class ClockWindows:
             else:
                 _exact(value, {'nonce'})
                 nonce = _uuid(value['nonce'])
+                if nonce not in self.used_nonces:
+                    if len(self.used_nonces) >= MAX_FRAMES:
+                        raise ContractError('Callback clock nonce capacity reached')
+                    self.used_nonces.add(nonce)
                 if self.pending is not None and self.pending[0] == nonce:
                     self.pending = None
                 if self.verified is not None and self.verified.nonce == nonce:
@@ -706,6 +710,115 @@ class ClockWindows:
         if self.native_image is not None:
             self.native_image.close()
 
+
+
+class _LateNativeDeliveryWindow:
+    """One nonce-bound lookup, never a calibration or caller-supplied deadline."""
+    __slots__ = ('_owner', '_nonce', '_window', '_live', '_resolved', '_reservation_started')
+
+    def __init__(self, token, owner, nonce):
+        if token is not _WINDOW_MINT:
+            raise TypeError('Late delivery observations are executor internal')
+        self._owner, self._nonce = owner, _uuid(nonce)
+        self._window, self._live, self._resolved = None, True, False
+        self._reservation_started = False
+
+    def __reduce__(self):
+        raise TypeError('Late delivery observations cannot be serialized')
+
+    def reserve(self):
+        if not self._live or self._resolved:
+            return False
+        self._resolved = True
+        self._window = self._owner.window(self._nonce)
+        self._reservation_started = self._window is not None and self._window.reserve()
+        return self._reservation_started
+
+    @property
+    def reservation_started(self):
+        return self._reservation_started
+
+    def close(self):
+        self._live = False
+
+
+_SOURCE_COMPLETION_MINT = object()
+
+
+class _SourceCompletion:
+    """One finite attempt's historical source result, not reusable authority."""
+    __slots__ = ('executor', 'sequence', 'digest', 'request', 'window', 'started',
+                 'attempted', 'source_committed', '_source_bytes', '_live')
+
+    def __init__(self, token, executor, sequence, digest, request, window):
+        if token is not _SOURCE_COMPLETION_MINT:
+            raise TypeError('Source completions are executor internal')
+        self.executor, self.sequence, self.digest = executor, sequence, digest
+        self.request, self.window = request, window
+        self.started = self.attempted = self.source_committed = False
+        self._source_bytes, self._live = None, True
+
+    def __reduce__(self):
+        raise TypeError('Source completions cannot be serialized')
+
+    def validate(self, value, view):
+        if (not self._live or value is not self.request or not self.started
+                or value['action'] != 'seal' or value['payload']['request_wake'] is not True
+                or view['source_kind'] != 'session-manager'
+                or type(self.window) is not _LateNativeDeliveryWindow):
+            raise ContractError('Source completion requires the exact armed live finite seal')
+
+    def source_result(self):
+        if self._source_bytes is None:
+            raise ContractError('Source result has not completed')
+        return load(self._source_bytes.decode('utf-8'))
+
+    def commit_source(self, context, result):
+        if not self._live or not self.started or self.attempted or result.get('verified') is not True:
+            raise ContractError('Invalid finite source completion')
+        raw = turn_sources.encoded(result)
+        if len(raw) > MAX_RETAINED:
+            raise ContractError('Finite source completion exceeds retained-memory bound')
+        self._source_bytes, self.attempted = raw, True
+        from . import scope_binding
+        with scope_binding._fresh_enrollment_locations():
+            self._write_outcome()
+        self.source_committed = True
+
+    def _write_outcome(self):
+        self.executor.coverage.outcome(self.sequence, self.digest, 'verified', 'verified',
+                                       _returned_refs(self.source_result()))
+
+    def retry_busy_outcome(self):
+        # Only called after the observer and transport have completely unwound.
+        self.executor.metadata(self._write_outcome)
+        self.source_committed = True
+
+    def before_reserve(self, context):
+        coverage = self.executor.coverage
+        if not self._live or not self.source_committed:
+            raise ContractError('Wake requires a committed finite source')
+        binding = coverage.binding
+        with turn_sources.private_lock(coverage.lock_path):
+            if (turn_sources.read(coverage.directory / 'open.json', MAX_METADATA) != coverage.open
+                    or os.path.lexists(coverage.directory / 'retirement.json')
+                    or context.project_id != binding['project_id']
+                    or str(context.root) != binding['repo_root']
+                    or str(context.bank) != binding['bank_path']
+                    or context.scope['checkout_key'] != binding['checkout_key']):
+                raise ContractError('Finite stream binding changed before reservation')
+
+    def wake_failure(self, error):
+        result = self.source_result()
+        status = ('pending-wake-unknown-after-reservation' if self.window.reservation_started else
+                  'pending-wake-busy' if isinstance(error, turn_sources.SourceTransportBusy) else
+                  'pending-wake-unavailable')
+        result.update({'continue': False, 'status': status})
+        return result
+
+    def close(self):
+        self._live = False
+        self.window.close()
 
 def _binding(value, repo, session, instance, lifecycle):
     fields = {'project_id', 'repo_root', 'bank_path', 'checkout_key', 'artifact_digest',
@@ -738,10 +851,10 @@ def _attest_binding(binding, receipt):
 
 
 @contextmanager
-def _verify_binding(repo, binding, receipt, proof):
+def _verify_binding(repo, binding, receipt, proof, *, held_source=None):
     """Fast same-frame executable, marker and scope check under the source barrier."""
     from . import omp_installation
-    with omp_installation._observe_observer_binding(repo, receipt, proof) as context:
+    with omp_installation._observe_observer_binding(repo, receipt, proof, held_source=held_source) as context:
         if (context.project_id != binding['project_id'] or str(context.root) != binding['repo_root']
                 or str(context.bank) != binding['bank_path'] or context.scope['checkout_key'] != binding['checkout_key']):
             raise ContractError('Finite stream project/bank/checkout binding changed')
@@ -760,6 +873,7 @@ class Coverage:
         self.directory = _directory(self.base, session, instance)
         self.lock_path = self.directory / 'stream.lock'
         self._live_guard = None
+        self._frame_source = None
         self.previous_identity = None
         self.last_checked_identity = None
         self.last_sequence = 0
@@ -802,7 +916,8 @@ class Coverage:
 
     @contextmanager
     def control(self):
-        with turn_sources.source_barrier(self.repo), _verify_binding(self.repo, self.binding, self.receipt, self.frame_proof), turn_sources.private_lock(self.lock_path):
+        with _verify_binding(self.repo, self.binding, self.receipt, self.frame_proof,
+                             held_source=self._frame_source), turn_sources.private_lock(self.lock_path):
             if turn_sources.read(self.directory / 'open.json', MAX_METADATA) != self.open:
                 raise ContractError('Finite stream OPEN binding changed')
             yield
@@ -899,7 +1014,8 @@ class Coverage:
 
     def started(self, sequence, attempt_digest):
         # Called inside source barrier -> omp-transport lock, never acquires transport.
-        with _verify_binding(self.repo, self.binding, self.receipt, self.frame_proof), turn_sources.private_lock(self.lock_path):
+        with _verify_binding(self.repo, self.binding, self.receipt, self.frame_proof,
+                             held_source=self._frame_source), turn_sources.private_lock(self.lock_path):
             if os.path.lexists(self.directory / 'retirement.json'):
                 raise ContractError('Finite stream retirement fence prevents execution')
             _retain(self.directory / 'started' / f'{sequence}.json', {
@@ -1051,10 +1167,17 @@ class FiniteExecutor:
         with ExitStack() as stack:
             def enter():
                 gate = turn_sources.source_barrier(self.coverage.repo)
-                gate.__enter__()
+                held = gate.__enter__()
                 stack.push(gate.__exit__)
-            self.metadata(enter)
-            self._execute(kind, sequence, nonce, raw)
+                return held
+            held = self.metadata(enter)
+            if self.coverage._frame_source is not None:
+                raise ContractError('Finite source frame already owns a source barrier observation')
+            self.coverage._frame_source = held
+            try:
+                self._execute(kind, sequence, nonce, raw)
+            finally:
+                self.coverage._frame_source = None
 
     def _execute(self, kind, sequence, nonce, raw):
         if kind not in {'REQUEST', 'REFUSED-ATTEMPT'}:
@@ -1112,6 +1235,11 @@ class FiniteExecutor:
             return
         self.writer.send('RECEIVED', sequence)
         started = False
+        completion = None
+        if (action == 'seal' and nonce is not None and source_kind == 'session-manager'
+                and request['payload'].get('request_wake') is True):
+            completion = _SourceCompletion(_SOURCE_COMPLETION_MINT, self, sequence, digest, request,
+                _LateNativeDeliveryWindow(_WINDOW_MINT, self.clocks, nonce))
 
         def on_started():
             nonlocal started
@@ -1119,42 +1247,70 @@ class FiniteExecutor:
                 raise ContractError('Finite source attempt started twice')
             self.coverage.started(sequence, digest)
             started = True
+            if completion is not None:
+                completion.started = True
         on_started.instance_id = self.coverage.instance
         on_started.identity = identity(value['identity'])
         deadline = time.monotonic() + BUSY_SECONDS
         result = None
-        while True:
+        try:
+            while True:
+                try:
+                    result = self.observer(self.coverage.repo, request, receipt=self.receipt,
+                        on_started=on_started,
+                        delivery_window=completion.window if completion is not None else self.clocks.window(nonce) if nonce else None,
+                        verified_binding=self.coverage.frame_proof, source_completion=completion,
+                        held_source=self.coverage._frame_source)
+                except Exception as error:
+                    if completion is not None and completion.attempted and isinstance(error, (MemoryError, RecursionError)):
+                        raise
+                    if completion is not None and completion.source_committed:
+                        result = completion.wake_failure(error)
+                        outcome, code = 'verified', 'verified'
+                    elif completion is not None and completion.attempted:
+                        if not isinstance(error, turn_sources.SourceTransportBusy):
+                            raise
+                        completion.retry_busy_outcome()
+                        result = completion.wake_failure(error)
+                        outcome, code = 'verified', 'verified'
+                    elif isinstance(error, turn_sources.SourceTransportBusy):
+                        if started:
+                            outcome, code = 'unknown', 'unknown-after-start'
+                        elif time.monotonic() >= deadline:
+                            outcome, code = 'unknown', 'busy-exhausted'
+                        else:
+                            time.sleep(min(BUSY_BACKOFF, max(0, deadline - time.monotonic())))
+                            continue
+                    elif isinstance(error, ContractError):
+                        outcome, code = ('unknown', 'unknown-after-start') if started else ('durable-refusal', 'observer-refused')
+                    else:
+                        outcome, code = 'unknown', 'unknown-after-start' if started else 'unknown-outcome'
+                else:
+                    if isinstance(result, dict) and result.get('verified') is True and started:
+                        outcome, code = 'verified', 'verified'
+                    elif isinstance(result, dict) and result.get('verified') is True:
+                        outcome, code = 'unknown', 'unknown-outcome'
+                    else:
+                        outcome, code = ('unknown', 'unknown-after-start') if started else ('durable-refusal', 'observer-refused')
+                break
+            # Never overwrite a possibly retained source outcome after a failed exit.
+            if completion is None or not completion.source_committed:
+                if completion is not None and completion.attempted:
+                    raise ContractError('Finite source completion did not commit')
+                refs = _returned_refs(result) if outcome == 'verified' else []
+                self.metadata(self.coverage.outcome, sequence, digest, outcome, code, refs)
             try:
-                result = self.observer(self.coverage.repo, request, receipt=self.receipt,
-                    on_started=on_started, delivery_window=self.clocks.window(nonce) if nonce else None,
-                    verified_binding=self.coverage.frame_proof)
-            except turn_sources.SourceTransportBusy:
-                if started:
-                    outcome, code = 'unknown', 'unknown-after-start'
-                elif time.monotonic() >= deadline:
-                    outcome, code = 'unknown', 'busy-exhausted'
+                if outcome == 'verified':
+                    self.writer.send('OBSERVED', sequence, result=result)
                 else:
-                    time.sleep(min(BUSY_BACKOFF, max(0, deadline - time.monotonic())))
-                    continue
-            except ContractError:
-                outcome, code = ('unknown', 'unknown-after-start') if started else ('durable-refusal', 'observer-refused')
-            except Exception:
-                outcome, code = 'unknown', 'unknown-after-start' if started else 'unknown-outcome'
-            else:
-                if isinstance(result, dict) and result.get('verified') is True and started:
-                    outcome, code = 'verified', 'verified'
-                elif isinstance(result, dict) and result.get('verified') is True:
-                    outcome, code = 'unknown', 'unknown-outcome'
-                else:
-                    outcome, code = ('unknown', 'unknown-after-start') if started else ('durable-refusal', 'observer-refused')
-            break
-        # Persistence/output failures cannot re-enter or replay source execution.
-        refs = _returned_refs(result) if outcome == 'verified' else []
-        self.metadata(self.coverage.outcome, sequence, digest, outcome, code, refs)
-        if outcome == 'verified':
-            self.writer.send('OBSERVED', sequence, result=result)
-        else:
-            self.writer.send('OBSERVED', sequence, outcome=outcome, code=code)
+                    self.writer.send('OBSERVED', sequence, outcome=outcome, code=code)
+            finally:
+                if completion is not None and completion.source_committed:
+                    from .omp_transport import _drain_after_response
+                    _drain_after_response(self.coverage.repo, self.receipt, self.coverage.frame_proof)
+        finally:
+            if completion is not None:
+                completion.close()
 
 
 def _open_value(value, directory):

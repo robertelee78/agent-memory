@@ -81,8 +81,6 @@ class BankTransactionsContract(unittest.TestCase):
         # Their location/name is not an authority or an exemption.
         root = Path(world.env["AGENT_MEMORY_STATE_HOME"])
         current = self.runtime_snapshot(world)
-        self.assertEqual(list(root.rglob("journal.json")), [])
-        self.assertEqual(list(root.rglob("operations/*.json")), [])
         for relative, observed in previous.items():
             self.assertIn(relative, current, relative)
             self.assertEqual(current[relative], observed, relative)

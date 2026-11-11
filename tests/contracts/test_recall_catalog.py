@@ -284,6 +284,55 @@ print(json.dumps(checked))
             self.assertEqual(result.returncode,0,result.stderr)
             self.assertEqual(json.loads(result.stdout),['loaded-policy','loaded-code','substituted-namespace','unexpected-native-dependency'])
 
+    def test_warm_recall_refuses_changed_identity_tokens_defaults_and_callable_attributes(self):
+        with World() as w:
+            repo,bank,meta,request,pointer,before=self.ready(w)
+            program='''import sys,json
+from pathlib import Path
+sys.path.insert(0,sys.argv[1])
+from agent_memory import recall_catalog as c,records,retrieval,repository_config,turn_sources
+request=json.loads(Path(sys.argv[3]).read_text())
+def recall():
+ result=retrieval.retrieve(sys.argv[2],request)
+ assert [row['record']['id'] for row in result['results']]==[sys.argv[4]],result
+ assert result['results'][0]['body']=='# Attempt policy\\n\\nRepeat transient requests at most three times.\\n'
+ return result
+assert recall()['optional_indexes_used'],'The real consumer must reuse the unchanged warm catalog'
+checked=[]
+def changed(label,target,key,value,*,fallback=False):
+ catalog=c.load_catalog(sys.argv[2],request['project_id'])
+ missing=object();original=getattr(target,key,missing)
+ setattr(target,key,value)
+ try:
+  try:catalog.recheck()
+  except c.CacheMiss:pass
+  else:raise AssertionError(label+' released a changed warm witness')
+  if fallback:
+   result=recall()
+   assert not result['optional_indexes_used'],result
+   assert not result['metrics']['catalog_updated'],result
+ finally:
+  if original is missing:delattr(target,key)
+  else:setattr(target,key,original)
+ assert recall()['optional_indexes_used'],'Restoring actual bindings must restore warm reuse'
+ checked.append(label)
+changed('head-token',repository_config,'_HEAD_UNOBSERVED',object())
+changed('lock-token',turn_sources,'_LOCK_OBSERVATION_MINT',object(),fallback=True)
+changed('head-default',repository_config._router_inventory,'__kwdefaults__',{'observed_head':None})
+changed('wrapped-function',repository_config._observe_settings,'__wrapped__',records.record)
+changed('class-slots',turn_sources._HeldPrivateLock,'__slots__',
+        (*turn_sources._HeldPrivateLock.__slots__,'_changed_runtime_slot'))
+changed('unsupported-function-policy',records.record,'runtime_policy',object(),fallback=True)
+changed('unsupported-class-policy',turn_sources._HeldPrivateLock,'runtime_policy',object(),fallback=True)
+print(json.dumps(checked))
+'''
+            result=w.run([sys.executable,'-I','-B','-c',program,self.pack/'scripts',repo,
+                          self.save(w,request),meta['id']],check=False)
+            self.assertEqual(result.returncode,0,result.stderr)
+            self.assertEqual(json.loads(result.stdout),['head-token','lock-token','head-default',
+                'wrapped-function','class-slots','unsupported-function-policy','unsupported-class-policy'])
+            self.assertEqual(before,self.h.state(w,repo,bank))
+
     def test_hint_inventory_charges_excluded_runtime_entries_against_its_physical_budget(self):
         with World() as w:
             repo,bank=self.fixture(w);isolated=w.inside('hint-fixture');isolated.mkdir()

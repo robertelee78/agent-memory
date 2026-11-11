@@ -12,7 +12,7 @@ import uuid
 
 from world import World
 from cli_alias_fixtures import pre_source_fence_writers
-from contracts import test_checkpoint
+from contracts import test_checkpoint, test_omp_boundary
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'skills/agent-memory/scripts'))
 from agent_memory import omp_stream as stream, turn_sources
 from agent_memory import bank_writes, local_registry, omp_boundary, omp_installation, scope_binding
@@ -924,6 +924,86 @@ class CoverageFixture(unittest.TestCase):
         self.assertTrue((directory / 'closed.json').exists())
 
 
+class MetadataBarrierBoundaries(unittest.TestCase):
+    """Real installed bindings and physical final-close source-barrier faults."""
+
+    def setUp(self):
+        self.stack = ExitStack()
+        self.addCleanup(self.stack.close)
+        self.world = self.stack.enter_context(World())
+        self.stack.enter_context(mock.patch.dict(os.environ, self.world.env, clear=True))
+        self.helper = test_omp_boundary.NativeSources()
+        self.repo, self.session, self.lifecycle = self.helper.fixture(self.world)
+        root = Path(__file__).resolve().parents[2]
+        agent = self.world.inside('metadata-boundary-agent')
+        agent.mkdir()
+        self.receipt = stream.load(self.world.run([
+            sys.executable, '-I', '-B', root / 'skills/agent-memory/scripts/installer.py',
+            'install', '--development-source', root, '--presets', 'omp', '--omp-agent-dir', agent,
+            '--omp-peers-upgraded'], timeout=60).stdout)['receipt']
+        self.instance = uid()
+        self.binding = omp_boundary.stream_startup(self.repo, self.session, self.instance,
+            self.lifecycle, receipt=self.receipt)
+        self.base = stream._base(self.repo)
+        self.directory = stream._directory(self.base, self.session, self.instance)
+        self.barrier = self.base / 'source-barrier.lock'
+
+    @staticmethod
+    def final(count=0):
+        return {'last_attempt_seq': count, 'refused_count': 0, 'last_event_ordinal': count,
+                'transition': None}
+
+    def test_run_final_close_rejects_barrier_inode_replacement_after_metadata_write(self):
+        entries = [
+            self.helper.entry('metadata-human', 'user', 'Ephemeral metadata boundary request',
+                              attribution='user'),
+            self.helper.entry('metadata-answer', 'assistant', 'The substantive answer is delivered.')]
+        payload = test_omp_boundary.observer_payload(self.repo, self.session, entries)
+        value = {'request': {'schema': 'agent-memory/omp-observer-request-v2', 'action': 'ingest',
+            'session': self.session, 'lifecycle': self.lifecycle, 'payload': payload},
+            'event_ordinal': 1, 'identity': {'view_id': uid(), 'leaf_id': payload['view']['leaf_id'],
+                'native_ids': sorted(item['id'] for item in payload['view']['native_parents']),
+                'tool_ids': []}}
+        data = (stream.encode_frame('REQUEST', 1, value)
+                + stream.encode_frame('FINAL', 2, self.final(1)))
+        closed = self.directory / 'closed.json'
+        displaced = self.world.inside('displaced-final-source-barrier')
+        retain = stream._retain
+
+        def replace_barrier(path, *args, **kwargs):
+            result = retain(path, *args, **kwargs)
+            if path == closed:
+                self.barrier.rename(displaced)
+                fd = os.open(self.barrier, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+                os.close(fd)
+            return result
+
+        with mock.patch.object(stream, 'preload'), \
+                mock.patch.object(stream, '_retain', side_effect=replace_barrier):
+            result = stream.run(self.repo, self.session, self.instance, self.lifecycle,
+                startup=lambda *args: self.binding, receipt=self.receipt,
+                input=io.BytesIO(data), output=io.BytesIO())
+        self.assertEqual(turn_sources.read(self.directory / 'outcomes/1.json',
+                                          stream.MAX_METADATA)['outcome'], 'verified')
+        self.assertTrue(closed.exists())  # The body wrote; only its guarded exit can reject the close.
+        self.assertNotEqual((displaced.stat().st_dev, displaced.stat().st_ino),
+                            (self.barrier.stat().st_dev, self.barrier.stat().st_ino))
+        self.assertEqual(result, 1)
+
+    def test_exclusively_held_barrier_refuses_close_without_metadata_write(self):
+        from runtime_update_fixtures import snapshot
+        coverage = stream.Coverage(self.repo, self.session, self.instance, self.lifecycle,
+                                   self.binding, receipt=self.receipt)
+        self.stack.callback(coverage.close_live)
+        before = snapshot(self.base)
+        with turn_sources.private_lock(self.barrier, existing_only=True):
+            with self.assertRaises(turn_sources.SourceTransportBusy):
+                coverage.close(self.final())
+            self.assertEqual(snapshot(self.base), before)
+        self.assertFalse((self.directory / 'closed.json').exists())
+        self.assertTrue(coverage.close(self.final()))
+
+
 class FrozenImports(unittest.TestCase):
     def test_unpreloaded_late_packed_module_is_refused_without_blocking_stdlib(self):
         guard = stream._FrozenPackedImports()
@@ -952,7 +1032,8 @@ class CanonicalWriterContention(unittest.TestCase):
         # bank marker, source barrier, scope mint/rechecks and metadata locks.
         self.stack.enter_context(mock.patch.object(stream, '_attest_binding', return_value=object()))
         self.stack.enter_context(mock.patch.object(omp_installation, '_observe_observer_binding',
-            side_effect=lambda repo, receipt, proof: omp_boundary._observe_marker(repo)))
+            side_effect=lambda repo, receipt, proof, *, held_source=None:
+                omp_boundary._observe_marker(repo, held_source=held_source)))
         self.coverage = stream.Coverage(str(self.repo), self.session, self.instance,
                                        self.lifecycle, self.binding)
         self.stack.callback(self.coverage.close_live)

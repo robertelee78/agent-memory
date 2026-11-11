@@ -46,6 +46,14 @@ coverage gap. Use `am omp-boundary --repo REPO --list-pending --offset N` and
 for source-qualified recovery. Unregistered sources retain original references,
 not invented observation IDs. A pending page does not prove full coverage.
 
+An advisory means the substantive answer is already delivered: MUST NOT repeat
+or replace it. On busy, cancellation, refusal or unavailable authority, retain
+pending work and stop; MUST NOT automatically retry or force an unapproved tool.
+A wake may carry an unregistered `omp:capture:` or `omp:seal:` reference. Inspect
+that exact reference first. Assessment MUST use the actual registered
+`observation_id` and digest, never the enrollment reference as a fabricated ID;
+if registration is still pending, leave it pending for a later ordinary check.
+
 In supported omp 18.16 stored-source captures, `--source` MAY show a closed
 `instruction_context` annotation with empty content for a full read of the
 receipt-owned installed AM manual (`SKILL.md` or a linked `GUIDE.md`). Its

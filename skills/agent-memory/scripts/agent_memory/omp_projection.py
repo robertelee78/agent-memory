@@ -59,7 +59,7 @@ def stored_timestamp(value):
 
 
 def checked_view(repo, session, payload):
-    """Validate a detached public stored view, not notification ownership."""
+    """Return the validated detached stored view and its pre-guard Git root."""
     from . import turn_sources
     view = payload.get('view')
     fields = {'session', 'cwd', 'file', 'header', 'leaf_id', 'native_parents', 'source_kind', 'tail_status', 'fork_status'}
@@ -75,16 +75,12 @@ def checked_view(repo, session, payload):
     for cwd in (view['cwd'], header['cwd']):
         if not isinstance(cwd, str) or not Path(cwd).is_absolute():
             raise ContractError('Invalid checked native working directory')
-    from . import bank_writes
-    expected_root, expected_bank = bank_writes.bank_path(repo)
+    expected_root = Path(repo).resolve()
     from .identity_git import git
     actual_top = git(Path(view['cwd']), 'rev-parse', '--show-toplevel', optional=True)
     if actual_top is None:
         raise ContractError('Checked native source Git root is unavailable')
     if Path(actual_top).resolve() != expected_root:
-        raise ContractError('Checked native source belongs to another bank scope')
-    actual_root, actual_bank = bank_writes.bank_path(actual_top)
-    if (actual_root, actual_bank) != (expected_root, expected_bank):
         raise ContractError('Checked native source belongs to another bank scope')
     if view['file'] is not None and (not isinstance(view['file'], str) or not Path(view['file']).is_absolute()):
         raise ContractError('Invalid checked native source file')
@@ -152,7 +148,7 @@ def checked_view(repo, session, payload):
                        if expected_fork == 'verified' and time <= fork_time)
     if sorted(payload.get('inherited_ids', [])) != inherited:
         raise ContractError('Inherited native IDs differ from stored fork evidence')
-    return view
+    return view, expected_root
 
 
 def _persistence_truncated(value):

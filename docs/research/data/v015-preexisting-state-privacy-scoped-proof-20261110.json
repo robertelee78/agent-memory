@@ -1,0 +1,66 @@
+{
+  "base_commit": "f4aa10280ef30cafa72ffffa6254b802003cf9f3",
+  "changed_file": "tests/contracts/test_bank_transactions.py",
+  "changed_file_sha256": "0739cc065469f84cbe5cd5b795273a19bafc9a21db9cb295644bcdd08ccecb3c",
+  "complete_consumers": {
+    "all_methods_selected_and_executed_once": true,
+    "counts": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 30
+    },
+    "files": [
+      "tests/contracts/test_bank_transactions.py",
+      "tests/contracts/test_doctor_fix.py"
+    ],
+    "methods": 30,
+    "seconds": 147.30217929102946,
+    "worker_deadline_seconds": 300,
+    "workers": 22
+  },
+  "installed_public_scenario": {
+    "exact_committed_bank_retained": true,
+    "existing_runtime_files_unchanged_after_preview": true,
+    "exit": 0,
+    "passed": true,
+    "preexisting_journals": 1,
+    "seconds": 12.096098499954678,
+    "stderr_empty": true,
+    "transaction_marker_retired": true
+  },
+  "not_qualified": [
+    "Corrected Ubuntu execution",
+    "Full release matrix",
+    "Stock-native/model",
+    "Independent acceptance",
+    "Signed release"
+  ],
+  "original_failure": {
+    "cause": "Global no-journal/no-operations filename assertions rejected unchanged pre-existing runtime journals before preview. They were incidental layout pins; removed, not repinned.",
+    "method": "DoctorFixContract.test_receipted_bank_transaction_cleanup",
+    "observed_cells": [
+      "Ubuntu CPython3.11.18",
+      "Ubuntu CPython3.15.2"
+    ],
+    "run_id": 42897678857
+  },
+  "platform": "Darwin arm64",
+  "preserved_invariants": [
+    "All pre-existing runtime files retain exact bytes and device/inode/mode/link/owner/group/size/mtime/ctime",
+    "Every new nonempty file must match the exact content-free security-audit schema and bounded field values",
+    "Source/body/old-content/occupant canaries absent from every newly created file",
+    "Only private owned single-link regular files and empty synchronization files allowed"
+  ],
+  "python": "3.15.0 (main, Oct  9 2026, 11:16:41) [Clang 21.0.0 (clang-2100.3.34.2)]",
+  "retained_private_archive": {
+    "bytes": 20102,
+    "name": "doctor-preexisting-journal-privacy-complete30methods-and-installed-repair-pass-actual-20261110.tar.gz",
+    "original_private_location": "/tmp/am-v15-delivery/doctor-preexisting-state-privacy-complete-consumers-py315-actual-20261110; /tmp/am-v15-delivery/doctor-preexisting-journal-installed-public-smoke-actual-20261110.json; /tmp/am-v15-delivery/doctor_preexisting_journal_public_smoke_20261110.py; /tmp/am-v15-delivery/doctor-preexisting-state-privacy-overlay-f4aa102-subject-20261110.json; /tmp/am-v15-delivery/doctor-preexisting-state-privacy-overlay-f4aa102-clean-source-20261110/tests/contracts/test_bank_transactions.py",
+    "sha256": "f998b24507161032b14d9ce192fcb72f81feabdc70c791cec509592cd4d08a00"
+  },
+  "schema": "am/preexisting-state-privacy-scoped-proof-v1",
+  "source_identity": "8c32779039b942f1c1844591db51bf53bc5f3492c5e86e51f9d2d81bf24f2ccc",
+  "source_unchanged": true,
+  "status": "SCOPED LOCAL PASS; full hosted/combined/release acceptance remains open"
+}

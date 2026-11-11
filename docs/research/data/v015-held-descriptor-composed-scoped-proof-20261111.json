@@ -1,0 +1,75 @@
+{
+  "base_commit": "f4aa10280ef30cafa72ffffa6254b802003cf9f3",
+  "composition": {
+    "distinct_methods_exercised": 400,
+    "other_13_complete_files_and_production_byte_identical": true,
+    "scope": "R8 unaffected349 + complete correctedR10phase51, not a summed451-method final run or hostedmatrix.",
+    "single_full_r10_gate": false,
+    "source_phase_method_inventory_identical": true
+  },
+  "installed_r10": {
+    "hook_driver_sha256": "93ecef133e5d7119b1ce4929b3565faeab758ed0bf22381e4df23b3e45fb0aac",
+    "hook_faithful": {
+      "callback_elapsed_ns": 844314208,
+      "closed_verified": true,
+      "durable_root_wakes": 1,
+      "passed": true,
+      "source_after": "463787c3e1b1b689897daec63aac430e865c94782150389e6c8e9ae945a9a6b3",
+      "source_before": "463787c3e1b1b689897daec63aac430e865c94782150389e6c8e9ae945a9a6b3",
+      "stderr_empty": true,
+      "worker_exit": 0
+    },
+    "original_driver_sha256": "fc41aaf732726b56c82ac5af7a11380089aed278cc9c4c19ff754026778c825d",
+    "preserved_original": {
+      "callback_elapsed_ns": 860458750,
+      "closed_verified": true,
+      "durable_root_wakes": 1,
+      "passed": true,
+      "source_after": "463787c3e1b1b689897daec63aac430e865c94782150389e6c8e9ae945a9a6b3",
+      "source_before": "463787c3e1b1b689897daec63aac430e865c94782150389e6c8e9ae945a9a6b3",
+      "stderr_empty": true,
+      "worker_exit": 0
+    },
+    "scope": "One independent synthetic installed pipe per driver. Not actual stockomp/image/clockrate/rho, p99 or platform qualification; no unchanged repeat for green.",
+    "source_identity": "463787c3e1b1b689897daec63aac430e865c94782150389e6c8e9ae945a9a6b3"
+  },
+  "limits_unchanged": {
+    "callback_ns": 950000000,
+    "provisional_reservation_margin_ns": 100000000
+  },
+  "post_smoke_changes": "Unused shutil import removed from phase test and documentation/proof updated only. Production bytes unchanged; final committed/hosted source needs its own binding.",
+  "production_files_sha256": {
+    "skills/agent-memory/scripts/agent_memory/omp_boundary.py": "48ecb1da32c55cdbaaf1bfb053ff15e44c4141dedadc0fda4eb6a4d4ec8f8d26",
+    "skills/agent-memory/scripts/agent_memory/omp_installation.py": "2445271a500415d12b25ed3815e31ec2c673fb1a85d01350a18625a2a133e888",
+    "skills/agent-memory/scripts/agent_memory/omp_stream.py": "37d4c8edfe12d2f3a32bb77d12b0299629f9fa939b0f5c0c672f140a7a647b3d",
+    "skills/agent-memory/scripts/agent_memory/omp_transport.py": "7e8f0043517fd6ccbd2b9f209a8b03c5fce30aeffa37c78898478fd77cadd73b",
+    "skills/agent-memory/scripts/agent_memory/turn_sources.py": "ab68728b5cdf545b88c8b242f138079a2cfc150bb03b8e5cbbc3c9baf43adf35"
+  },
+  "r10": {
+    "complete_source_phase_methods": 51,
+    "exact_once": true,
+    "passed": true,
+    "registered_workers": 51,
+    "scope": "Test-only independent-root setup and entry-stage proof correction; all original cases and all production bytes identical R8. Not a single full14fileR10 run.",
+    "seconds": 218.34466804098338,
+    "source_identity": "463787c3e1b1b689897daec63aac430e865c94782150389e6c8e9ae945a9a6b3",
+    "source_unchanged": true,
+    "subject_sha256": "ea05d21278a68053c77da25cf032d8b4d27783cde789c6c6c667df3ebe8a2bf8"
+  },
+  "r8": {
+    "complete_files": 14,
+    "error_scope": "Four newly added activated-second-root cases fail during real bind setup, before injecting canary; copied A identity replaced later with established independent public bank-render fixture. Original failure retained.",
+    "errors": 4,
+    "failures": 0,
+    "methods": 400,
+    "passed": false,
+    "registered_workers": 127,
+    "source_identity": "5aa1190ff6590297a9d0500f5abb27859d445799f1acf1f2a9d13d570b7483db",
+    "source_unchanged": true,
+    "subject_sha256": "757680473c7df94ea85821ff14fa1e188d145f519087532e7c4c81bb35a82945",
+    "unaffected_complete_files": 13,
+    "unaffected_methods_passed": 349
+  },
+  "release_accepted": false,
+  "schema": "agent-memory/actual-held-source-composed-scoped-proof-v1"
+}
