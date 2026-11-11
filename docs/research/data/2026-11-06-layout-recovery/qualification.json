@@ -318,7 +318,41 @@
         "source_bytes_types_modes_and_no_extras_verified": true
       },
       "independent_review": "Actual Opus source review accepted the runtime fix and corrected regression; no whole-task verdict.",
-      "remaining": "Linux coverage, functional recovery workload and final integrated source gate",
+      "remaining": "Functional recovery workload and final integrated source gate; later Linux focused evidence follows",
+      "full_244_or_release_acceptance": false
+    },
+    {
+      "kind": "final-runtime-focused-linux",
+      "source_commit": "92745ae2eedcec6270203ab9ec9964c9956cf0e2",
+      "platform": "Linux 6.8.0-142-generic aarch64 glibc2.39",
+      "python": "3.15.2",
+      "status": "PASS",
+      "registered_workers": 12,
+      "methods": 16,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": 146.797570722003,
+      "worker_limit_seconds": 300,
+      "coverage": [
+        "Nested marker resolution, nested closure cases 01-06 and coverage-review pin",
+        "Publication authority race, historical correction and ordinary pending land",
+        "Byte boundaries: 16384/16385, 65536/65537 request/disclosure/proof and 64/65 mixed rows"
+      ],
+      "source_before_and_after": {
+        "tracked": 3529,
+        "bytes_types_executable_bits_match": true,
+        "no_extras_or_ignored_caches": true
+      },
+      "archive_sha256": "0a0b9d51b6a1115d8a98ed92f4f9885e7e753398c8bd321312fee85b4ad8c228",
+      "summary_sha256": "3673b96d61e1591d0c5492a071e6f5210df790616b545922c2c30019c2fa744b",
+      "launch_sha256": "f3bc921035f5b8f61e7689dc9adc2da06faede6614f0959947f769da5dade34d",
+      "independent_review": {
+        "model": "anthropic/claude-opus-5-5",
+        "scope": "Focused Linux coverage closes the missing new matrix and byte-boundary cases, not whole-task acceptance",
+        "receipt_sha256": "538ab9120f79181b0fa510e7883b8d4a391a3fe0acd6333e44aa245c0db2dace"
+      },
+      "remaining": "Final four-cell source gate, installed exit-86 finish smoke or accepted gate equivalent, daily_use v2 functional controls",
       "full_244_or_release_acceptance": false
     }
   ],

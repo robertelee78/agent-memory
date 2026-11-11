@@ -1100,5 +1100,59 @@
     },
     "both_preserve_unreadable_receipt_mode_and_all_world_bytes_modes": true,
     "fixture_permission_restored_only_for_comparison_and_disposal": true
+  },
+  "recall_qualification_fixture_repairs": {
+    "source_commit": "d3edf8bb779ed0faa2a14e7d61d1c22a86fc08d1",
+    "root_cause": "The evaluation controller deleted and recreated repo/.git while restoring a fixture. Its changed physical identity correctly made public discovery refuse the unregistered checkout.",
+    "diagnostics": {
+      "scope": "Fresh disposable Linux worlds, pinned old source, observational exception tracing; not matched qualification",
+      "without_restore": {
+        "public_start_exit": 0,
+        "receipt_sha256": "7c5f914596e08cf287a2fd5a31fb662faec5728e4fdc0a0e3ed0f49b1199d6dd"
+      },
+      "old_restore": {
+        "public_start_exit": 1,
+        "observed_exception": "IdentityUnresolved: Independent checkout is not registered",
+        "receipt_sha256": "82d5c91e69749703b43b9954996a79cef0fb5167655269866538b83cb4523e02"
+      },
+      "identity_preserving_restore": {
+        "public_start_exit": 0,
+        "unchanged_public_scope_and_exact_restored_bytes_modes": true,
+        "receipt_sha256": "db56eaf7939126d992c4303bc09bf5d76026b7d6e960b5c1135109da4ff5baf6"
+      }
+    },
+    "fix": "Preserve registered repo/.git directories; restore the complete fixture; verify its inventory, protected Git/feature state and public developer/project/checkout identity before each build/control.",
+    "other_repairs": [
+      "Gate validation failures identify result-validation instead of the last suite's successful cleanup.",
+      "Strict source fixtures explicitly use Git file modes, independent of checkout and creation umasks.",
+      "Stale-cache controls plant their actual cache beside the fixture, independent of the runner's private cache prefix.",
+      "Enrollment churn injection changes the observed directory signature independently of filesystem iteration order."
+    ],
+    "paired_focused_runs": {
+      "scope": "gate-diagnostics 5 methods and recall-qualification 10 methods, all passed without skips; runner umask 002",
+      "macos": {
+        "seconds": 64.05695508304052,
+        "summary_sha256": "49792ef2b50e8961e15a34b72f2aacbd2d14caa90ebe0163700a28256b04823a"
+      },
+      "linux": {
+        "seconds": 20.21144834900042,
+        "summary_sha256": "498081c2995c6fc5560c121180046a80afc00c507c4767933f8da0d954b94f7d",
+        "archive_sha256": "b9d784318b598eec9235b8c69b616ba3a356dffd02a5e2cf315ca361456d075f"
+      },
+      "source_before_and_after": {
+        "tracked": 3529,
+        "bytes_types_executable_bits_match": true,
+        "no_extras_or_ignored_caches": true
+      }
+    },
+    "independent_source_review": {
+      "model": "anthropic/claude-opus-5-5",
+      "verdict": "PASS",
+      "scope": "Controller restore, pairing and regression fixes only; no full performance or release acceptance",
+      "receipt_sha256": "d78f45e3ebf8ddedc55fd73f0913e1f631cb10b4fc09f395f32705498d0d052e"
+    },
+    "preserved_failures": "The old-source Linux launch, initial incomplete gate fixture, prefix-placed cache controls, copied-mode failure and accidentally imported 18 extra tests remain retained; none is rewritten as a final-source pass.",
+    "full_206_or_release_acceptance": false,
+    "remaining": "One final integrated A/B/C freeze, four platform/runtime cells, matched performance, 144 semantic quality cases and final release gate"
   }
 }
