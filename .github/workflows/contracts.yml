@@ -6,6 +6,12 @@ on:
 permissions:
   contents: read
 
+# A newer dispatch on the same branch supersedes the older one, so stale runs
+# never hold the account's shared macOS runner slots.
+concurrency:
+  group: contracts-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   contracts:
     name: Contracts (${{ matrix.os }}, Python ${{ matrix.python }}, shard ${{ matrix.shard }})
@@ -44,7 +50,7 @@ jobs:
   cells:
     name: Aggregate (${{ matrix.os }}, Python ${{ matrix.python }})
     needs: contracts
-    if: always()
+    if: ${{ !cancelled() }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 180
     strategy:
