@@ -636,6 +636,7 @@
     {"name":"memory-refresh-case-12","layer":"concurrency","scope":"v0.0.1","path":"tests/contracts/test_memory_refresh.py","tests":["MemoryRefreshContract.test_public_cli_rejects_relative_outputs_before_any_refresh_operation"]},
     {"name":"memory-refresh-case-13","layer":"concurrency","scope":"v0.0.1","path":"tests/contracts/test_memory_refresh.py","tests":["MemoryRefreshContract.test_public_sharing_commands_reject_unsafe_output_before_work"]},
     {"name":"memory-refresh-case-14","layer":"concurrency","scope":"v0.0.1","path":"tests/contracts/test_memory_refresh.py","tests":["MemoryRefreshContract.test_second_clone_import_is_recalled_with_conditions_without_code_index_or_local_learning_loss"]},
+    {"name":"memory-refresh-current-preserves-private-and-read-only-bank-permissions","layer":"concurrency","scope":"v0.0.1","path":"tests/contracts/test_memory_refresh.py","tests":["MemoryRefreshContract.test_current_preserves_private_and_read_only_bank_permissions"]},
     {"name": "refresh-v2", "layer": "concurrency", "scope": "v0.0.3", "path": "tests/contracts/test_refresh_v2.py"},
     {"name": "operation-validation-reuse", "layer": "concurrency", "scope": "v0.0.3", "path": "tests/contracts/test_validation_memo.py"},
     {"name":"known-hold-capacity","layer":"concurrency","scope":"v0.0.10","path":"tests/contracts/test_known_hold_capacity.py","tests":["KnownHoldCapacityContract.test_history_boundary_excess_and_retry"]},

@@ -88,6 +88,27 @@ with patch('os.mkdir',swap): private_mkdir(sys.argv[4])
         finally:
             os.umask(previous)
 
+    def test_current_preserves_private_and_read_only_bank_permissions(self):
+        with World() as w:
+            repo, bank, peer, base = self.fixture(w)
+            files = sorted(bank.rglob('*.md'))
+            for mode in (0o600, 0o640, 0o400):
+                with self.subTest(mode=oct(mode)):
+                    for path in files:
+                        path.chmod(mode)
+                    before = self.state(w, repo, bank)
+                    response = w.run([sys.executable, '-I', '-B', self.pack/'scripts/installer.py',
+                                      'refresh', 'current', '--repo', repo], check=False)
+                    result = json.loads(response.stdout)
+                    self.assertEqual(response.returncode, 0, result)
+                    self.assertEqual(result['sharing_state'], 'bank-synchronized')
+                    self.assertFalse(result['canonical_writes_performed'])
+                    self.assertFalse(result['original_index_writes_performed'])
+                    self.assertEqual(before, self.state(w, repo, bank))
+                    self.assertEqual({p.relative_to(bank).as_posix(): p.stat().st_mode & 0o7777
+                                      for p in files},
+                                     {p.relative_to(bank).as_posix(): mode for p in files})
+
     def test_current_rejects_executable_and_world_writable_bank_files(self):
         for mode in (0o755, 0o666):
             with self.subTest(mode=oct(mode)), World() as w:
