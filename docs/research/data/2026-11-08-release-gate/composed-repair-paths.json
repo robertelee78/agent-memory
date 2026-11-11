@@ -1153,6 +1153,6 @@
     },
     "preserved_failures": "The old-source Linux launch, initial incomplete gate fixture, prefix-placed cache controls, copied-mode failure and accidentally imported 18 extra tests remain retained; none is rewritten as a final-source pass.",
     "full_206_or_release_acceptance": false,
-    "remaining": "One final integrated A/B/C freeze, four platform/runtime cells, matched performance, 144 semantic quality cases and final release gate"
+    "remaining": "One final integrated A/B/C freeze; four platform/runtime cells; matched refresh/memo performance; frozen literal (24 cases) and semantic (16 meaning-based cases) quality at 1000/10000/50000 across A/B/C (216/144 observations); final release gate"
   }
 }
