@@ -115,6 +115,14 @@ or successful capture/publication. Actual supported-platform/mode/peer claims
 must be backed by the signed release's independent real-native qualification;
 the runnable minimal smoke is not the complete release matrix.
 
+On stock omp 18.16.0, an advisory stop-hook continuation may be lost on
+interruption or blocked before delivery. Retained source work remains pending
+until genuinely offered and assessed; a requested wake, a pending reference or
+a later offer does not establish that earlier guidance was delivered or that
+assessment completed. The native guide distinguishes the source-inferred limits
+of queued guidance from actual platform qualification; other versions and modes
+must not inherit a qualification without their own evidence.
+
 For a qualifying full read of the receipt-owned AM manual, the omp learning
 snapshot records historical instruction-context provenance without the manual
 body. This narrow stored-source treatment does not change the native result,

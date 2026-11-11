@@ -424,12 +424,32 @@ only; CLI-only or mocked harness runs cannot fill native rows.
 | Platforms/modes | Supported macOS and Linux; persistent TUI, print and RPC individually; disabled discovery and ephemeral recovery limits explicitly separated |
 | Learning | Initial qualified recall; model-forgets automatic capture; search/read-before-write duplicate/distinct candidates; governed durable admission; no-learning plus separate refresh; real memory-only Git exchange and applicability-qualified peer/clone readback |
 | Sources/privacy | Stored assistant placeholders versus deobfuscated display; native plaintext user/tool screening; file mentions/images/artifact gaps; developer/custom/autolearn/reminders; subagents/advisors; >128-message segment; actual native IDs and absent/unverified mapping; fork/resume/navigation/rewind/compaction |
-| Batch/wake | Joined own+foreign stop-hook text; same-batch new human+queued guidance after skipped/failed/deferred hidden turns; own+foreign hidden nextTurn; unknown preparation companions; goal/plan/vibe/todo/advisor/before-agent injections; N human roots ≤N requests; one open successor per root; original unsuppressed P carried at H2 and H3; >8,192-byte backlog with explicit cursor; faulted foreign namespace and completion contention |
+| Batch/wake | Joined own+foreign stop-hook text; source-bound failed-path SAME-batch real human+own queued guidance positive, skipped/lost guidance pending-and-recovery negative, and deferred/unsupported source inference plus real pending-and-recovery and separate foreign nextTurn control, as detailed immediately below; own+foreign hidden nextTurn; unknown preparation companions; goal/plan/vibe/todo/advisor/before-agent injections; N human roots ≤N requests; one open successor per root; original unsuppressed P carried at H2 and H3; >8,192-byte backlog with explicit cursor; faulted foreign namespace and completion contention |
 | Failure/recovery | Native permission refusal and rejected tool; executing-tool cancel; steering during tool with invocation-root ownership; crash/lost helper response; real unavailable/offline Git authority; safe snapshot/gap recovery; successful retry with original observations; concurrent same-bank and independent clone sessions without duplicate publication claims |
 | Capacity/idempotence | Full shared pending capacity retains arriving evidence before bounded drain; capacity frees registers original reference once; crash after shared registration reuses actual observation; registration-fault never re-enters register; no source-per-message exhaustion |
 | Lifecycle | Fresh/update `all` never enables omp; explicit missing root/attestation refusal; v1/v2 ownership; same-root repeat and changed-environment preservation; modified/colliding targets; duplicate module copies and disposal; actual install/update/status/doctor/uninstall/exact rollback/recovery; markerless completed snapshots with bound drain proof; pending/unknown refuses incapable restore; preserve unrelated files/Git/index/worktrees |
 | Mixed features/peers | Both source/layout capabilities active; either resolves first; old runtime refuses until both drain; native activation under layout hold has refreshed independent route attestation; live frontier-only changes affect next observation; retained Codex/Claude/OpenCode boundary regressions |
 | Stored-source API/transport | Actual public parser/leaf-selector exports and closed result shapes; strict malformed/truncated/multiheader/session/cwd/version controls; stable exact old-file read after writer drain; fork/activeLeafId/null and invalid graph controls; delayed old hint cannot create a new-session human; no positional gap waiver; source-first short print drains; normal cloned hints remain assessable; T/unsafe active-tail negatives; response pressure and expired/cancelled/lost-window behavior; warm and post-reservation p99 on both platforms |
+
+The queued-guidance cells use the exact definitions, pinned stock-source branches,
+positive and negative evidence, and pending rules in the
+[design](../design/v0.0.15-omp-integration.md#diagnostics-dependencies-and-acceptance).
+Record per platform and exercised native mode: observed stimulus, actual event
+and stored-source/parent-chain readback, independent evidence of a shared batch
+where required, source/root/wake identities and status, later original-identity
+recovery, and source-inferred or unknown limitations separately. A positive
+failed-path cell requires both the pre-dispatch failure prerequisite and an
+independently witnessed same batch; neither adjacency, event timing nor a
+`requested` wake alone proves either. An unapproved or unavailable safe
+credential/model stimulus, missing executable/artifact pin, missing required batch witness,
+or unexercised cell remains pending. A skipped/lost result must not be called
+guidance delivery, and deferred own guidance must not be fabricated using the
+foreign control. Preserve actual failed attempts. Source review or supported-case
+inference does not replace independently reviewed real native qualification.
+The entire remaining table and original platform/mode and peer requirements are
+unchanged; the callback's 950 ms deadline, 30 s contention limit and 300 s
+suite deadline remain unchanged. No increase, permission bypass, hidden retries,
+modified stock harness or reduction of the existing workloads is authorized.
 
 The retired-file reader uses only the exact file from a prior checked native
 view, public pure `parseSessionContent`/`resolveSessionLeafId`, strict UTF-8,

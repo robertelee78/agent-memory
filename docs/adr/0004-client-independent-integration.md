@@ -120,6 +120,17 @@ The task-specific [native delivery-window contract](../design/v0.0.15-omp-integr
 defines the reviewed Linux same-monotonic profile and atomic reservation-start
 transition. Source review does not substitute for the original native matrix.
 
+For #249's queued-guidance batch control only, the original same-prompt-batch
+requirement across all three previously undefined skipped/failed/deferred paths
+is replaced by the source-bound positive and negative controls in the
+[task design](../design/v0.0.15-omp-integration.md#diagnostics-dependencies-and-acceptance)
+and [native qualification matrix](../testing/omp-native-qualification.md#full-independent-native-release-matrix).
+They distinguish actual delivered guidance from loss and preserved pending work;
+a pending reference is not delivered guidance. Stock-source limitations are not
+runtime passes. This amendment changes no other #249 acceptance, permissions,
+platforms, modes, deadlines, provenance or recovery obligations, and requires
+independent review, operator approval and actual native qualification.
+
 ### v0.0.15: verified installed instructions are operating context
 
 Task #249 SHALL distinguish an exactly verified full native read of AM's own
