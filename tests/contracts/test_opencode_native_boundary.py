@@ -1,5 +1,6 @@
 """Native OpenCode inputs survive interruption and wake attempts remain bounded."""
 import concurrent.futures
+import errno
 import hashlib
 import importlib.util
 import json
@@ -43,6 +44,69 @@ class NativeLedger(unittest.TestCase):
             self.assertEqual(ledger.reserve(root,'session','source','wake',fingerprint='c'*64)['reason'],'wake-cap')
             ledger.reserve(root,'session','next-native-source','enroll')
             self.assertEqual(ledger.reserve(root,'session','next-native-source','wake',fingerprint='c'*64)['attempt'],1)
+
+    def test_racing_lock_creator_preserves_wake_budget_and_completion_across_restart(self):
+        from unittest.mock import patch
+        for first_action in ('wake','inspect'):
+            with self.subTest(first_action=first_action),tempfile.TemporaryDirectory() as raw:
+                root=os.path.realpath(raw);ledger.reserve(root,'session','source','enroll')
+                directory=Path(root)/'experimental-boundary'/hashlib.sha256(b'session').hexdigest()
+                key=hashlib.sha256(json.dumps(['session','source'],separators=(',',':')).encode()).hexdigest()
+                original_open=os.open;competed=False
+                def documented_darwin_race(path,flags,*args,**kwargs):
+                    nonlocal competed
+                    if path==key+'.wake-lock' and not competed:
+                        competed=True
+                        # Model Go #81246: a real competing creator wins, but
+                        # nonexclusive openat(O_CREAT) loses its parent lookup.
+                        # All file operations still use the real filesystem.
+                        winner=original_open(path,os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600,dir_fd=kwargs['dir_fd'])
+                        os.close(winner)
+                        if flags&os.O_CREAT and not flags&os.O_EXCL:
+                            raise FileNotFoundError(errno.ENOENT,'modeled Darwin first-create race',path)
+                    return original_open(path,flags,*args,**kwargs)
+                with patch.object(ledger.os,'open',side_effect=documented_darwin_race):
+                    if first_action=='inspect':
+                        self.assertEqual(ledger.reserve(root,'session','source','inspect')['status'],'pending-turn')
+                    self.assertEqual(ledger.reserve(root,'session','source','wake',fingerprint='a'*64)['attempt'],1)
+                    self.assertEqual(ledger.reserve(root,'session','source','wake',fingerprint='a'*64)['reason'],'wake-already-attempted')
+                    self.assertEqual(ledger.reserve(root,'session','source','wake',fingerprint='b'*64)['attempt'],2)
+                self.assertTrue(competed)
+                self.assertTrue((directory/(key+'.intent')).exists())
+                self.assertEqual(len(list(directory.glob(key+'.wake-[01]'))),2)
+                def restarted_wake(fingerprint):
+                    request={'root':root,'session':'session','source':'source','action':'wake','fingerprint':fingerprint}
+                    result=subprocess.run([sys.executable,'-I','-B',str(HOOKS/'boundary_ledger.py')],
+                        input=json.dumps(request),text=True,capture_output=True,timeout=5)
+                    self.assertEqual(result.returncode,0,result.stdout+result.stderr)
+                    return json.loads(result.stdout)
+                self.assertEqual(restarted_wake('c'*64)['reason'],'wake-cap')
+                assessment={'source_id':'source','source_review':'Reviewed retained source; no durable project learning.','candidates':[]}
+                complete=ledger.reserve(root,'session','source','assessed-no-learning',assessment=assessment)
+                self.assertFalse(complete['publication_verified'])
+                self.assertEqual(restarted_wake('c'*64)['status'],'assessed-no-learning')
+                self.assertFalse((directory/(key+'.intent')).exists())
+                self.assertTrue((directory/(key+'.assessed')).exists())
+                self.assertEqual(len(list(directory.glob(key+'.wake-[01]'))),2)
+
+    def test_lock_removed_after_exclusive_create_conflict_is_not_recreated_or_hidden(self):
+        from unittest.mock import patch
+        for action in ('wake','inspect'):
+            with self.subTest(action=action),tempfile.TemporaryDirectory() as raw:
+                root=os.path.realpath(raw);ledger.reserve(root,'session','source','enroll')
+                directory=Path(root)/'experimental-boundary'/hashlib.sha256(b'session').hexdigest()
+                key=hashlib.sha256(json.dumps(['session','source'],separators=(',',':')).encode()).hexdigest()
+                lock=directory/(key+'.wake-lock');lock.touch(mode=0o600)
+                original_open=os.open
+                def remove_before_existing_open(path,flags,*args,**kwargs):
+                    if path==lock.name and not flags&os.O_CREAT:lock.unlink()
+                    return original_open(path,flags,*args,**kwargs)
+                with patch.object(ledger.os,'open',side_effect=remove_before_existing_open):
+                    with self.assertRaises(FileNotFoundError):
+                        ledger.reserve(root,'session','source',action,fingerprint='a'*64)
+                self.assertFalse(lock.exists())
+                self.assertTrue((directory/(key+'.intent')).exists())
+                self.assertFalse((directory/(key+'.wake-0')).exists())
 
     def test_native_backlog_exposes_legacy_uncertainty_without_inventing_ids(self):
         with tempfile.TemporaryDirectory() as raw:

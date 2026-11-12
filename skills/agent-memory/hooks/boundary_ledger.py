@@ -42,9 +42,18 @@ def valid_completion(value,repository):
                      and re.fullmatch('[0-9a-f]{40}|[0-9a-f]{64}',value['witnessed_commit']))))
 
 
+def _open_wake_lock(fd,key):
+    """Create once or open the existing lock without a create-or-open race."""
+    # Darwin openat(O_CREAT) can lose its dirfd during a racing first create:
+    # https://github.com/golang/go/issues/81246. Do not retry or hide ENOENT.
+    flags=os.O_RDWR|os.O_NOFOLLOW|os.O_NONBLOCK
+    try:return os.open(key+'.wake-lock',flags|os.O_CREAT|os.O_EXCL,0o600,dir_fd=fd)
+    except FileExistsError:return os.open(key+'.wake-lock',flags,dir_fd=fd)
+
+
 def wake(fd,key,repository,session,source,fingerprint):
     if not isinstance(fingerprint,str) or not re.fullmatch('[0-9a-f]{64}',fingerprint):raise ValueError('invalid wake fingerprint')
-    lock=os.open(key+'.wake-lock',os.O_RDWR|os.O_CREAT|os.O_NOFOLLOW|os.O_NONBLOCK,0o600,dir_fd=fd)
+    lock=_open_wake_lock(fd,key)
     try:
         info=os.fstat(lock)
         if not stat.S_ISREG(info.st_mode) or info.st_uid!=os.getuid() or info.st_nlink!=1 or info.st_mode&0o077:raise ValueError('unsafe wake lock')
@@ -207,7 +216,7 @@ def reserve(root, session, source, action="reserve", repo=None, publication_requ
             try: os.stat(key+'.wake-lock',dir_fd=fd,follow_symlinks=False); native=True
             except FileNotFoundError:pass
             if native:
-                completion_lock=os.open(key+'.wake-lock',os.O_RDWR|os.O_CREAT|os.O_NOFOLLOW|os.O_NONBLOCK,0o600,dir_fd=fd)
+                completion_lock=_open_wake_lock(fd,key)
                 info=os.fstat(completion_lock)
                 if not stat.S_ISREG(info.st_mode) or info.st_uid!=os.getuid() or info.st_nlink!=1 or info.st_mode&0o077:raise ValueError('unsafe completion lock')
                 fcntl.flock(completion_lock,fcntl.LOCK_EX|fcntl.LOCK_NB)

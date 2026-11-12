@@ -6,6 +6,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: offline-release-contracts-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   contracts:
     name: Contracts (${{ matrix.os }}, Python ${{ matrix.python }}, shard ${{ matrix.shard }})
@@ -13,6 +17,7 @@ jobs:
     timeout-minutes: 180
     strategy:
       fail-fast: false
+      max-parallel: 2
       matrix:
         os: [ubuntu-latest, macos-latest]
         python: ['3.11', '3.15']
@@ -49,6 +54,7 @@ jobs:
     timeout-minutes: 180
     strategy:
       fail-fast: false
+      max-parallel: 2
       matrix:
         os: [ubuntu-latest, macos-latest]
         python: ['3.11', '3.15']

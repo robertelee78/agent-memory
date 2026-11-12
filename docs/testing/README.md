@@ -32,6 +32,12 @@ rechecks both batch and lifecycle-fault coverage before claiming completeness.
 The final gate requires every shard and every cell. CI retains shard and cell
 receipts, diagnostics, and checked-out commit/tree evidence.
 
+The contract and cell-aggregation phases each cap their matrix at two concurrent
+jobs. They run sequentially through their dependency, followed by the final
+gate. A per-branch concurrency group queues a later manual run rather than
+overlapping or cancelling the running one. These limits apply to this workflow
+and branch; they are not an account-wide runner cap across other branches.
+
 For example, on Linux with Python 3.11, run each index 0, 1, and 2:
 
 ```sh
