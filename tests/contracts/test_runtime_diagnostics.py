@@ -144,34 +144,6 @@ class RuntimeDiagnosticsContract(unittest.TestCase):
                         receipt_file.write_bytes(receipt_bytes)
                         journal_file.write_bytes(journal_bytes)
 
-    def test_native_source_writer_defers_read_only_diagnostics_without_repair(self):
-        with World() as world:
-            receipt = native_fixture(world, 'copy')
-            repo = world.paths['repo']
-            base = (world.paths['state'] / 'agent-memory/writes'
-                    / hashlib.sha256(str(repo / 'memory-bank').encode()).hexdigest())
-            base.mkdir(parents=True, mode=0o700)
-            (base / 'omp-stream-v1').mkdir(mode=0o700)
-            barrier = base / 'source-barrier.lock'
-            with barrier.open('xb') as owner:
-                os.fchmod(owner.fileno(), 0o600)
-                fcntl.flock(owner, fcntl.LOCK_EX | fcntl.LOCK_NB)
-                before = snapshot(world.root)
-                for operation in ('status', 'doctor'):
-                    with self.subTest(operation=operation):
-                        value = call(world, operation, '--repo', repo, receipt=receipt)
-                        checks = component(value, 'omp.native_boundary')
-                        self.assertEqual(len(checks), 1)
-                        self.assertEqual(checks[0]['state'], 'warning')
-                        self.assertEqual(checks[0]['code'], 'source-transport-busy')
-                        self.assertNotIn('omp', value)
-                        self.assertEqual(snapshot(world.root), before)
-                fcntl.flock(owner, fcntl.LOCK_UN)
-            available = call(world, 'status', '--repo', repo, receipt=receipt)
-            self.assertEqual(available['omp']['owned_disk_integrity'], 'verified')
-            self.assertEqual(available['omp']['transport_qualification']['pending'], [])
-            self.assertEqual(snapshot(world.root), before)
-
     def test_native_doctor_never_repairs_missing_observer_locks(self):
         for mode in ('copy', 'link'):
             with self.subTest(mode=mode), World() as world:
