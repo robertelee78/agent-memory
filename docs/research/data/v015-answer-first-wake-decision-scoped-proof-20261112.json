@@ -2,6 +2,7 @@
   "affected_contracts": {
     "batches": 134,
     "cell": "macos311",
+    "cell_provenance": "Main-attested from the actual selected Python3.11 launch argv and Darwin workstation context; batch worker receipts do not record interpreter/cell and do not qualify the host",
     "errors": 0,
     "expected_failures": 0,
     "failures": 0,
