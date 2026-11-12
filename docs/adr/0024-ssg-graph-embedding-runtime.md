@@ -3,6 +3,7 @@ id: ADR-0024
 status: accepted
 approval-scope: architecture and G1 research; v0.0.16 execution design gated on G1
 date: 2026-11-04
+amended: 2026-11-09
 amends: [ADR-0005, ADR-0008, ADR-0009]
 depends-on: [ADR-0001, ADR-0002, ADR-0010, ADR-0011]
 related: [ADR-0017, ADR-0023]
@@ -67,6 +68,14 @@ distribution, and hosted use. Recorded operator or counsel disposition MUST
 decide permission for each deployment profile; technical review alone is not
 legal clearance. Unresolved permission MUST block that profile, not silently
 replace the graph with links or claim a legal conclusion.
+
+**Scope clarification, 2026-11-09.** The
+[recorded private-build scope decision](../research/data/g1-private-build-scope-disposition-20261109.json)
+satisfies this disposition requirement for the current private build and G1
+research delivery. Licensing MUST NOT remain a blocker for that scope; no further
+vendor, counsel or operator licensing approval is required. This changes no
+third-party license text or permission for deployment outside that scope, and
+does not waive technical artifact, disclosure, ownership or profile qualification.
 
 R1's reviewed result MAY propose a different graph/model/server profile when
 license, portability, resource, or measured quality constraints require it.
@@ -163,6 +172,20 @@ require explicit provider/destination approval and MUST NOT inherit federation
 export approval. Model alias, response dimension, finite values, timeouts, and
 partial batches MUST be checked. Failure MUST be explicit; literal fallback MUST
 be labeled and MUST NOT become a successful semantic no-match.
+
+**Operator clarification, 2026-11-09 — remember the embedding-service choice.**
+After an explicit operator choice, AM MUST remember the approved service
+destination and permitted memory-disclosure scope for that project across agent
+sessions. A new session, lookup or ordinary permitted memory update MUST NOT
+alone trigger another approval. AM MUST ask again when the destination or
+permitted memory scope changes, and MUST stop relying on the choice when the
+operator revokes it. This permission MUST NOT authorize shared-memory export,
+sibling-project access or previously unapproved disclosure. Current source,
+privacy, endpoint, credential and resource checks still apply; the trusted
+approval channel and private receipt design remain G1 contract obligations.
+The [operator disposition](../research/data/g1-embedding-choice-lifetime-disposition-20261109.json)
+records this lifetime decision, not a present grant, implementation, runtime
+qualification, production-licensing approval or release.
 
 The ranking integration MUST preserve current native eligibility and source
 rechecks. Semantic candidate generation MAY use already-authorized private data,
@@ -342,8 +365,9 @@ Acceptance Criteria:
 - The contract MUST define OpenAI-compatible URL/optional-key/model selection,
   unambiguous discovery versus ambiguity refusal, same-profile document/query
   embeddings, model-change rebuild, local-default/approved-remote disclosure,
-  private credentials, managed versus bring-your-own ownership, and automatic
-  source-change maintenance without canonical-write blocking.
+  private credentials, remembered per-project service/disclosure choice across
+  sessions with change/revocation handling, managed versus bring-your-own
+  ownership, and automatic source-change maintenance without canonical-write blocking.
 - G1 MUST also freeze ADR-0017's machine response/exit-code schemas, supported
   profiles, and measured tolerances; provide the exact image license bill of
   materials, core-Memgraph comparison, and local/distribution/hosted assessments;
@@ -401,6 +425,13 @@ Acceptance Criteria:
   send secret-bearing, quarantined, deleted, or unadmitted content or start
   services. Model/database computation MUST NOT hold bank-write locks, and
   query vectors MUST NOT be retained by default.
+- Actual journeys through public operations MUST show that a completed explicit
+  embedding-service approval survives a new agent session, lookup and ordinary
+  permitted update for the same project, destination and permitted memory scope
+  without another prompt. A changed destination/scope or revoked approval MUST
+  prevent queued and new sends under the old choice and require a fresh applicable
+  approval before any further send. This MUST NOT grant shared export or access
+  to another project's memories.
 - Source/model/index identity, disclosure, resource costs, build latency, and
   retrieval quality MUST be retained at the agreed sizes and frozen tolerances;
   unavailable or literal-fallback results MUST NOT masquerade as semantic success.
