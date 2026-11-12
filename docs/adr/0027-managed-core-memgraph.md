@@ -1,8 +1,9 @@
 ---
 id: ADR-0027
 status: accepted
-approval-scope: operator-selected managed graph direction; technical profile, licensing and v0.0.16 execution gated on G1
+approval-scope: operator-selected managed graph direction; private-build licensing disposition recorded; technical profile and v0.0.16 execution gated on G1
 date: 2026-11-08
+amended: 2026-11-09
 amends: [ADR-0024]
 related: [ADR-0017, ADR-0023, ADR-0025]
 ---
@@ -24,9 +25,10 @@ permission. Both examined arm64 engines share the observed signed-cosine defect.
 
 This record follows ADR-0026's existing-task refinement convention: it amends
 existing outcomes, not a duplicate implementation story or a new release scope.
-Operator approval covers the graph deployment direction only. Independent
-technical review, exact profile qualification, licensing disposition, implementation
-acceptance and signed delivery remain separate gates.
+Operator approval covers the graph deployment direction. Independent technical
+review, exact profile qualification, implementation acceptance and signed delivery
+remain separate gates. The current private-build licensing disposition is recorded
+in D2; it is not a general legal or deployment permission.
 
 ## D1: Select managed core; retain the historical reference
 
@@ -76,6 +78,16 @@ operator or counsel disposition under ADR-0024 R1. Explicit setup acceptance alo
 MUST NOT be presented as curing an otherwise unauthorized deployment. Bundled
 redistribution and hosted profiles remain separately gated. No vendor approval,
 commercial license or legal clearance is claimed here.
+
+**Scope clarification, 2026-11-09.** The operator's
+[recorded private-build scope decision](../research/data/g1-private-build-scope-disposition-20261109.json)
+is the operator disposition this section and ADR-0024 R1 require for the current
+private build and G1 research delivery. Licensing MUST NOT remain a blocker for
+that scope, and no further vendor, counsel or operator licensing approval is
+required. This states no legal conclusion, changes no third-party license text
+and grants no permission for bundled redistribution, hosted offerings or other
+deployment outside that scope. Technical artifact identity, explicit setup,
+disclosure, ownership and profile qualification gates remain unchanged.
 
 ## D3: Preserve embedding and lifecycle choices
 

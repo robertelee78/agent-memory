@@ -1,0 +1,140 @@
+{
+  "schema": "agent-memory/g1-research-contract-amendment-freeze-v1",
+  "work_key": "robertelee78/agent-memory:ADR-0024:ssg-runtime-qualification",
+  "freeze_subject_commit": "717649660b950c716ee2ea6ae6191518cf48cf06",
+  "artifacts": [
+    {
+      "path": "docs/design/v0.0.16-graph-embedding-execution.md",
+      "git_blob": "950d100935ace5bbd6d703eb094a439af27b7954",
+      "git_mode": "100644",
+      "sha256": "d4ef5217698011cc2776089a4e6a2c5a1ffcd7043907d554c6231f9e62cff8dc"
+    },
+    {
+      "path": "docs/design/semantic-result-v1.schema.json",
+      "git_blob": "acf0637ffe1ffba015607f7845a869d4edc119d1",
+      "git_mode": "100644",
+      "sha256": "b7d11e2011e245b336365e7bd1977e05f05676acb802f982ff4df73f20e7c41a"
+    },
+    {
+      "path": "docs/adr/0024-ssg-graph-embedding-runtime.md",
+      "git_blob": "2fd40142423c5e8b852ee3598c747badb13b7681",
+      "git_mode": "100644",
+      "sha256": "a05cc893d6ae6a3b07b0652a6fd56e74601e98a601694a0eb440bfe98c55241c"
+    },
+    {
+      "path": "docs/adr/0027-managed-core-memgraph.md",
+      "git_blob": "23206eeacc3ade9d5cba9a3c6cffdb5fd5dfdc97",
+      "git_mode": "100644",
+      "sha256": "705df6abdd245492bee888f6afdc3c2492835261a3ef7f5e2df9a0eb7c7acbf1"
+    },
+    {
+      "path": "docs/research/v0.0.15-ssg-runtime-licenses.md",
+      "git_blob": "950270e45a873b93e49092b23684420f009e2cc8",
+      "git_mode": "100644",
+      "sha256": "06d845df388ee1d5c21749a3076b131bd739ed8ade0601f1e24274b4bac005e5"
+    },
+    {
+      "path": "docs/research/data/g1-resource-target-disposition-20261109.json",
+      "git_blob": "e2b00ca48365ec539c693b2d6a772846d3d29a4a",
+      "git_mode": "100644",
+      "sha256": "2733bb1d6bc6367edb36cc9c3b25d290e8cbfd19f10c93e451c30cb59a04fd01"
+    },
+    {
+      "path": "docs/research/data/g1-private-build-scope-disposition-20261109.json",
+      "git_blob": "ede6ae969c32ca53e0e3015971e5b9f783166c0a",
+      "git_mode": "100644",
+      "sha256": "b28cf1bbd38b802952b6a3a46a81a75c045a1043c6c1d87dd54379ed6f91d2ea"
+    },
+    {
+      "path": "docs/research/data/g1-embedding-choice-lifetime-disposition-20261109.json",
+      "git_blob": "47c7ce321acb246c688bef59a817552ded410837",
+      "git_mode": "100644",
+      "sha256": "760a5657706c084d47cd2c9d881592f43b44186598900692a784e1e1c791e373"
+    },
+    {
+      "path": "docs/research/data/g1-weak-match-policy-disposition-20261109.json",
+      "git_blob": "ebb4b92dbbc741332b10e99d112346494fa1ea0f",
+      "git_mode": "100644",
+      "sha256": "895aef259c0c533df71e0bcf3b101d16192f5e922024297b84adfd3e6df5496f"
+    },
+    {
+      "path": "docs/research/data/g1-latency-target-disposition-20261109.json",
+      "git_blob": "7fd6cc82c9d5ba4cb0ef1e6064bdd9fea16da67f",
+      "git_mode": "100644",
+      "sha256": "3b6ae100d91c14ffab71bc3c91392d1d1ab5219462f987331b6f4688417e93ac"
+    },
+    {
+      "path": "docs/research/data/core255-lifecycle-scoped-actual-20261109.json",
+      "git_blob": "07a29a657df62fb9795ed43b66e005ee5aa5e6d6",
+      "git_mode": "100644",
+      "sha256": "b258737d7530b538672d43f74bc8243dbacd7229bb01a0e5b53e3ae36826f849"
+    },
+    {
+      "path": "docs/research/data/external-f32-lifecycle-scoped-actual-20261109.json",
+      "git_blob": "29e9ee60af8fd2f3119e4d283e103fc0e5044df4",
+      "git_mode": "100644",
+      "sha256": "a5c2549a84b2b4c07b89abf7b41f50e109d05a01ce24704bfa6fb208daecfbb6"
+    },
+    {
+      "path": "docs/research/data/2026-11-05-ssg-runtime/core-comparison/numeric-r3-scoped-observations-20261108.json",
+      "git_blob": "d41881d240b6ed929b98c1f2773df93ac384a1a1",
+      "git_mode": "100644",
+      "sha256": "ea82f0192d9e4c2a5d7b326f1cb34020127711761828114f1a8f91a4a52cb0ac"
+    },
+    {
+      "path": "docs/research/data/2026-11-05-ssg-runtime/core-comparison/storage-mechanism-20261108.json",
+      "git_blob": "a407c36e0f5899f3ccdd784932365b84d39548dc",
+      "git_mode": "100644",
+      "sha256": "5dd5c1721e097b95449a885bc908bd16f9affe9069a993e9b942ecd90801a239"
+    }
+  ],
+  "scope": "Amended G1 research execution contract/schema, remembered per-project service/disclosure choice lifetime design (not a present send grant), and independently decided ADR-0027 additive core research. Original eight-criterion acceptance remains unchanged.",
+  "status": "frozen-research-design-amendment",
+  "original_research_acceptance": {
+    "candidate_commit": "362ab0aac21399381f3379550726ca750c614b1d",
+    "ref": "https://github.com/robertelee78/agent-memory/issues/255#issuecomment-6749790424",
+    "phase": "Release ready",
+    "health": "On track",
+    "reopened": false
+  },
+  "independent_amendment_reviews": {
+    "requested_model": "anthropic/claude-opus-5-5",
+    "evidence_ref": "https://github.com/robertelee78/agent-memory/issues/255#issuecomment-6753138125",
+    "method": "Read exact current contract/schema/ADRs, public frozen actual mechanism records and dispositions; no reviewer hashing, study rerun or independent execution. Main separately binds actual committed bytes.",
+    "G1MergedTechnicalOpus": {
+      "verdict": "PASS additive core research; R14 ready to freeze",
+      "verdict_sha256": "45f4b889566300ee49032c27206887720ebe24c819649f45d84c209cf99dd501"
+    },
+    "G1MergedScopeOpus": {
+      "verdict": "PASS additive core research with final missing-review note closed",
+      "verdict_sha256": "db40c4c08085ced38878e023a471061321d53529877800b8aad08e94dfc20bb2",
+      "closure_sha256": "9709512a8505a5440ae5a7663b80452d17be95464d2495029e36e8cf6fc48af4"
+    }
+  },
+  "schema_consumer_evidence": {
+    "positive_examples_passed": 35,
+    "negative_examples_refused": 32,
+    "scope": "Actual R13 example smoke on byte-identical R11 schema; not a producer implementation/fence or QE pass.",
+    "schema_sha256": "b7d11e2011e245b336365e7bd1977e05f05676acb802f982ff4df73f20e7c41a"
+  },
+  "additive_research_decision": {
+    "selected_core_contract_reconciliation": "PASS research boundary",
+    "license_BOM_assessment": "PASS with explicit core and full-rootfs unknowns; no current private-build licensing gate",
+    "separately_frozen_core_mechanisms": "PASS bounded numeric, storage and lifecycle records with historical limits",
+    "supporting_external_f32_component": "Two independent scoped actual-evidence PASSes; projection limits retained",
+    "resource_disposition": "Report measurements; no resource pass; no new numeric ceilings"
+  },
+  "annotation_rule": "A separate commit annotates current-document status and links this receipt. The immutable subject artifacts retain earlier draft-status wording; that wording was not already a freeze claim. No normative edits are authorized by the status annotation. Further normative changes require a separately reviewed freeze.",
+  "historical_freeze_preserved": "docs/research/data/g1-contract-freeze-20261109.json",
+  "signed_release_delivered": false,
+  "not_claimed": [
+    "v0.0.16 implementation or dependent Ready approval",
+    "Production profile enablement",
+    "Named-size semantic quality, latency, platform or resource pass",
+    "Linux-carrier/amd64/bare-metal qualification",
+    "Fresh held-out QE or tuned weak-match cutoff",
+    "Forensic/provider or canonical-bank erasure by the component smoke",
+    "Acceptance of #206/#209/#244/#249",
+    "Signed release delivery"
+  ]
+}
