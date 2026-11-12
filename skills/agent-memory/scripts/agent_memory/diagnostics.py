@@ -137,10 +137,15 @@ class Report:
         except DiagnosticFailure as exc:
             self.add(component, 'failure', str(exc), repair, path)
             return None
-        except ERRORS:
-            # Exceptions may contain remote URLs, private record bodies, or keys.
-            # Keep source data at its original path; report a bounded component.
-            self.add(component, 'failure', 'Cannot verify this component from its current local evidence.', repair, path)
+        except ERRORS as exc:
+            from .turn_sources import SourceTransportBusy
+            if isinstance(exc, SourceTransportBusy):
+                self.add(component, 'warning', 'Source observation is deferred while a source writer is active.', repair, path)
+                self.value['checks'][-1]['code'] = 'source-transport-busy'
+            else:
+                # Exceptions may contain remote URLs, private record bodies, or keys.
+                # Keep source data at its original path; report a bounded component.
+                self.add(component, 'failure', 'Cannot verify this component from its current local evidence.', repair, path)
             return None
 
     def finish(self):
