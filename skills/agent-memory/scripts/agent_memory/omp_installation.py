@@ -104,6 +104,26 @@ def preview(value):
             'qualification': 'disk ownership is not native loading, source completion or platform/provider acceptance'}
 
 
+def _answer_first_qualification(receipt):
+    from . import installation
+    selected = receipt['omp_binding']
+    state = 'unverified'
+    if receipt.get('no_guidance') is True or selected['activation_target'] is None:
+        state = 'no_guidance'
+    else:
+        try:
+            target = next(t for t in receipt['targets'] if t['path'] == selected['activation_target'])
+            template = installation._activation_template(Path(receipt['source']['pack']), omp=True)
+            expected = installation.sha(template.encode())
+            raw = Path(target['path']).read_bytes()
+            if (target['kind'] == 'activation' and target['block_hash'] == expected
+                    and installation.activation(raw, expected, shim=template) == raw):
+                state = 'receipt-owned'
+        except (ContractError, OSError, ValueError, TypeError, KeyError, StopIteration):
+            pass
+    return {'activation': state, 'automation': 'unqualified', 'native_loading': 'not-observed'}
+
+
 def diagnostics(repo, receipt):
     from . import installation, omp_boundary, omp_transport, turn_sources
     selected = receipt.get('omp_binding') if receipt else None
@@ -117,7 +137,8 @@ def diagnostics(repo, receipt):
               'native_loading': 'not-live-verified', 'supported_version_target': '18.16.0',
               'source_assessment': 'not-inferred-from-loading', 'refresh': 'not-inferred-from-assessment',
               'publication': 'requires-witnessed-shared-publication',
-              'retention': 'private-native-snapshots-preserved-on-uninstall'}
+              'retention': 'private-native-snapshots-preserved-on-uninstall',
+              'answer_first': _answer_first_qualification(receipt)}
     with turn_sources.read_only_locks():
         base = omp_boundary._base(repo)
         if (base / 'omp-source-v1').exists():
@@ -132,6 +153,12 @@ def diagnostics(repo, receipt):
             result['transport_qualification'] = {
                 'instances': len(streams['streams']), 'pending': streams['pending'],
                 'assessment_authority': False, 'automatic_wake_support': 'unqualified'}
+            try:
+                result['wake_decisions'] = omp_stream.wake_decisions(repo, streams, base=base)
+            except (MemoryError, RecursionError):
+                raise
+            except Exception:
+                result['wake_decisions'] = omp_stream._wake_decision_summary(available=False)
         try:
             with turn_sources.source_barrier(repo, existing_only=True):
                 omp_boundary.verify_marker(repo)

@@ -468,6 +468,174 @@ class InstallerContract(unittest.TestCase):
                 result[str(path)] = (path.read_bytes(), path.stat().st_mode & 0o777)
         return result
 
+    def test_omp_binding_installs_candidate_activation_in_copy_and_link_modes(self):
+        for mode in ('copy', 'link'):
+            with self.subTest(mode=mode), World() as world:
+                source = self.source(world)
+                root = world.inside('explicit omp root'); root.mkdir()
+                config = root/'AGENTS.md'
+                original = b'Unrelated omp instructions.\n'
+                config.write_bytes(original)
+                common = (source/'templates/activation-markdown.example.txt').read_bytes()
+                template = source/'templates/activation-omp-markdown.example.txt'
+                candidate = (BEGIN + '\nCandidate-owned omp invocation fixture.\n'
+                             '<!-- agent-memory:activation:end -->').encode()
+                template.write_bytes(candidate)
+                codex = world.paths['codex']/'AGENTS.md'
+                codex.write_bytes(b'Unrelated codex instructions.\n')
+                options = ('--presets', 'codex,omp', '--omp-agent-dir', root,
+                           '--omp-peers-upgraded', '--mode', mode)
+                before = snapshot(world.root)
+                preview = self.run_install(world, source, *options, '--check')
+                self.assertFalse(preview['installation_writes_performed'])
+                self.assertEqual(snapshot(world.root), before)
+                installed = self.run_install(world, source, *options)
+                receipt = installed['receipt']
+                self.assertEqual(config.read_bytes(), original + candidate + b'\n')
+                self.assertEqual(codex.read_bytes(), b'Unrelated codex instructions.\n' + common + b'\n')
+                for path, block in ((config, candidate), (codex, common)):
+                    target = next(t for t in receipt['targets'] if t['path'] == str(path))
+                    self.assertEqual(target['block_hash'], hashlib.sha256(block).hexdigest())
+                    self.assertEqual(target['identity']['hash'], hashlib.sha256(path.read_bytes()).hexdigest())
+                skill = Path(receipt['omp_binding']['skill_target'])
+                self.assertEqual(skill.is_symlink(), mode == 'link')
+                self.assertEqual((skill/template.relative_to(source)).read_bytes(), candidate)
+                command = Path(receipt['bin_dir'])/'am'
+                repeated = json.loads(world.run([command, '--json', 'install']).stdout)
+                self.assertTrue(repeated['verified'])
+                self.assertFalse(repeated['changed'])
+                config.write_bytes(b'Later unrelated prefix.\n' + config.read_bytes() + b'Later suffix.\n')
+                refreshed = self.run_install(world, source)
+                self.assertTrue(refreshed['verified'])
+                prefix, owned = config.read_bytes().split(BEGIN.encode())
+                _, suffix = owned.split(b'<!-- agent-memory:activation:end -->')
+                surrounding = prefix + suffix
+                removed = json.loads(world.run(
+                    [command, '--json', 'uninstall', '--omp-writers-quiesced']).stdout)
+                self.assertTrue(removed['verified'])
+                self.assertEqual(config.read_bytes(), surrounding)
+                self.assertEqual(codex.read_bytes(), b'Unrelated codex instructions.\n')
+
+    def test_omp_missing_or_malformed_candidate_activation_refuses_without_fallback(self):
+        end = '<!-- agent-memory:activation:end -->'
+        cases = {
+            'missing': None,
+            'unbounded': BEGIN + '\n' + 'x' * 4096 + '\n' + end,
+            'duplicate': BEGIN + '\n' + BEGIN + '\n' + end + end,
+            'reversed': end + '\n' + BEGIN,
+            'outside-text': 'Foreign prefix\n' + BEGIN + '\n' + end,
+        }
+        for mode in ('copy', 'link'):
+            for case, content in cases.items():
+                with self.subTest(mode=mode, case=case), World() as world:
+                    source = self.source(world)
+                    template = source/'templates/activation-omp-markdown.example.txt'
+                    if content is None:
+                        template.unlink()
+                    else:
+                        template.write_text(content)
+                    root = world.inside('omp root'); root.mkdir()
+                    config = root/'AGENTS.md'; config.write_bytes(b'Foreign instructions.\n')
+                    before = snapshot(root), snapshot(source)
+                    refused = self.run_install(world, source, '--presets', 'omp',
+                                               '--omp-agent-dir', root, '--omp-peers-upgraded',
+                                               '--mode', mode, expected=1)
+                    self.assertFalse(refused['verified'])
+                    self.assertEqual((snapshot(root), snapshot(source)), before)
+                    self.assertFalse((self.state(world)/'receipt.json').exists())
+                    self.assertFalse((world.paths['home']/'.local/bin/am').exists())
+
+    def test_other_clients_keep_shared_activation_without_omp_template(self):
+        with World() as world:
+            source = self.source(world)
+            common = (PACK/'templates/activation-markdown.example.txt').read_bytes()
+            (source/'templates/activation-omp-markdown.example.txt').unlink()
+            installed = self.run_install(world, source, '--presets', 'codex,claude,opencode')
+            self.assertTrue(installed['verified'])
+            for target in installed['receipt']['targets']:
+                if target['kind'] == 'activation':
+                    self.assertEqual(Path(target['path']).read_bytes(), common + b'\n')
+                    self.assertEqual(target['block_hash'], hashlib.sha256(common).hexdigest())
+
+    def test_omp_historical_owned_shared_block_updates_and_rolls_back_by_recorded_hash(self):
+        for mode in ('copy', 'link'):
+            with self.subTest(mode=mode), World() as world:
+                source = self.source(world)
+                root = world.inside('omp historical root'); root.mkdir()
+                config = root/'AGENTS.md'; config.write_bytes(b'Keep unrelated instructions.\n')
+                template = source/'templates/activation-omp-markdown.example.txt'
+                current = template.read_bytes()
+                historical = (source/'templates/activation-markdown.example.txt').read_bytes()
+                template.write_bytes(historical)
+                first = self.run_install(world, source, '--presets', 'omp', '--omp-agent-dir', root,
+                                         '--omp-peers-upgraded', '--mode', mode)
+                receipt_path = self.state(world)/'receipt.json'
+                prior_receipt, prior_config = receipt_path.read_bytes(), config.read_bytes()
+                template.write_bytes(current)
+                failed = self.run_install(world, source, expected=1,
+                    env={'AGENT_MEMORY_FAULT_STAGE': 'install-before-receipt'})
+                self.assertFalse(failed['verified'])
+                self.assertEqual(receipt_path.read_bytes(), prior_receipt)
+                self.assertEqual(config.read_bytes(), prior_config)
+                updated = self.run_install(world, source)
+                self.assertTrue(updated['verified'])
+                self.assertIn('omp', updated['restart_clients'])
+                target = next(t for t in updated['receipt']['targets'] if t['path'] == str(config))
+                self.assertEqual(target['block_hash'], hashlib.sha256(current).hexdigest())
+                self.assertEqual(config.read_bytes(), b'Keep unrelated instructions.\n' + current + b'\n')
+                command = Path(first['receipt']['bin_dir'])/'am'
+                removed = json.loads(world.run(
+                    [command, '--json', 'uninstall', '--omp-writers-quiesced']).stdout)
+                self.assertTrue(removed['verified'])
+                self.assertEqual(config.read_bytes(), b'Keep unrelated instructions.\n')
+
+    def test_omp_historical_shared_activation_uninstall_preserves_unrelated_text(self):
+        for mode in ('copy', 'link'):
+            with self.subTest(mode=mode), World() as world:
+                source = self.source(world)
+                root = world.inside('historical uninstall root'); root.mkdir()
+                historical = (source/'templates/activation-markdown.example.txt').read_bytes()
+                (source/'templates/activation-omp-markdown.example.txt').write_bytes(historical)
+                config = root/'AGENTS.md'; config.write_bytes(b'Original user rules.\n')
+                receipt = self.run_install(world, source, '--presets', 'omp', '--omp-agent-dir', root,
+                                           '--omp-peers-upgraded', '--mode', mode)['receipt']
+                config.write_bytes(config.read_bytes() + b'Later user rules.\n')
+                prefix, owned = config.read_bytes().split(BEGIN.encode())
+                _, suffix = owned.split(b'<!-- agent-memory:activation:end -->')
+                surrounding = prefix + suffix
+                command = Path(receipt['bin_dir'])/'am'
+                removed = json.loads(world.run(
+                    [command, '--json', 'uninstall', '--omp-writers-quiesced']).stdout)
+                self.assertTrue(removed['verified'])
+                self.assertEqual(config.read_bytes(), surrounding)
+
+    def test_omp_modified_or_foreign_activation_is_preserved(self):
+        for mode in ('copy', 'link'):
+            for owned in (False, True):
+                with self.subTest(mode=mode, owned=owned), World() as world:
+                    source = self.source(world)
+                    root = world.inside('omp preserved root'); root.mkdir()
+                    options = ('--presets', 'omp', '--omp-agent-dir', root,
+                               '--omp-peers-upgraded', '--mode', mode)
+                    config = root/'AGENTS.md'
+                    if owned:
+                        receipt = self.run_install(world, source, *options)['receipt']
+                        raw = config.read_bytes()
+                        config.write_bytes(raw.replace(BEGIN.encode(), BEGIN.encode() + b'\nUser modification', 1))
+                    else:
+                        config.write_text(BEGIN + '\nForeign owned block.\n<!-- agent-memory:activation:end -->\n')
+                    before = snapshot(root)
+                    refused = self.run_install(world, source, *options, expected=1)
+                    self.assertFalse(refused['verified'])
+                    self.assertEqual(snapshot(root), before)
+                    if owned:
+                        raw = config.read_bytes()
+                        command = Path(receipt['bin_dir'])/'am'
+                        removed = json.loads(world.run(
+                            [command, '--json', 'uninstall', '--omp-writers-quiesced']).stdout)
+                        self.assertTrue(any(row['path'] == str(config) for row in removed['preserved']))
+                        self.assertEqual(config.read_bytes(), raw)
+
     def test_fresh_plan_link_install_repeat_and_installed_command_preserve_source_and_user_config(self):
         with World() as world:
             source = self.source(world); source_before = snapshot(source)
@@ -546,7 +714,7 @@ class InstallerContract(unittest.TestCase):
             refreshed = self.run_install(world, source)
             self.assertTrue(refreshed['verified']); self.assertEqual(refreshed['restart_clients'], [])
             self.assertEqual(config.read_bytes(), outside)
-            config.write_text(config.read_text().replace('load the agent-memory skill', 'my custom changed block'))
+            config.write_text(config.read_text().replace(BEGIN, BEGIN + '\nUser modification', 1))
             before = self.owned(refreshed['receipt'])
             denied = self.run_install(world, source, expected=1)
             self.assertIn('modified', denied['error']); self.assertEqual(self.owned(refreshed['receipt']), before)

@@ -4,7 +4,7 @@ kind: domain
 
 # Capture project memory
 
-Initialize useful orientation, compare existing memory and capture a small qualified durable delta. Capture is automatic at natural boundaries when actual evidence supports it.
+Initialize useful orientation, compare existing memory and capture a small qualified durable delta. Capture is automatic at [natural boundaries](../SKILL.md#natural-turn-boundary) when actual evidence supports it.
 
 A session MUST load this domain before its selected operation leaf and MUST NOT
 preload sibling leaves for completeness. It MUST return to observed state before

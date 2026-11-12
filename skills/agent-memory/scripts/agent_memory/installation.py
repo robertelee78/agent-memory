@@ -402,6 +402,20 @@ def read_receipt(state):
     return value
 
 
+def _activation_template(pack, *, omp=False):
+    """Render only the selected binding's candidate-owned invocation block."""
+    path = Path(pack)/'templates'/('activation-omp-markdown.example.txt' if omp else 'activation-markdown.example.txt')
+    if omp:
+        require(path.is_file(), 'Candidate omp activation template is required')
+        shim = path.read_text()
+    else:
+        shim = path.read_text() if path.is_file() else SHIM
+    require(shim.startswith(BEGIN+'\n') and shim.endswith(END)
+            and shim.count(BEGIN)==shim.count(END)==1 and len(shim.encode())<=4096,
+            'Candidate activation shim must be one bounded invocation block')
+    return shim
+
+
 def activation(raw, expected=None, *, shim=SHIM):
     text = raw.decode('utf-8')
     require(text.count(BEGIN) == text.count(END) and text.count(BEGIN) <= 1,
@@ -684,11 +698,7 @@ def prepare(args, state, code, old, *, candidate_root=None, candidate_kind=None,
         require(not state.is_relative_to(root) and not root.is_relative_to(state),
                 'Installation state must not overlap the selected source')
         pack_source = Path(source['pack'])
-        shim_path = pack_source/'templates/activation-markdown.example.txt'
-        shim = shim_path.read_text() if shim_path.is_file() else SHIM
-        require(shim.startswith(BEGIN+'\n') and shim.endswith(END)
-                and shim.count(BEGIN)==shim.count(END)==1 and len(shim.encode())<=4096,
-                'Candidate activation shim must be one bounded invocation block')
+        shim = _activation_template(pack_source)
         active_root = root if source['kind'] == 'development' else code
         active_pack = active_root / pack_source.relative_to(root)
         source = {**source, 'path': str(active_root), 'pack': str(active_pack)}
@@ -702,8 +712,11 @@ def prepare(args, state, code, old, *, candidate_root=None, candidate_kind=None,
             previous = prior.get(str(path))
             if block:
                 require(before is None or before['kind'] == 'file', 'Activation file collision: ' + str(path))
+                binding = cfg['omp_binding']
+                block_template = (_activation_template(pack_source, omp=True)
+                                  if binding and str(path) == binding['activation_target'] else shim)
                 raw = activation(path.read_bytes() if before else b'',
-                                 previous.get('block_hash') if previous and previous['kind']=='activation' and not (repair_missing_hooks and before is None) else None, shim=shim)
+                                 previous.get('block_hash') if previous and previous['kind']=='activation' and not (repair_missing_hooks and before is None) else None, shim=block_template)
                 mode_bits = before['mode'] if before else 0o644
             elif kind == 'hook-config':
                 from . import client_hooks
@@ -763,6 +776,8 @@ def prepare(args, state, code, old, *, candidate_root=None, candidate_kind=None,
             actions.append({'path': str(path), 'kind': kind, 'before': before, 'after': after,
                             'raw': raw, 'source_path': str(source_path) if source_path else None,
                             'mode_bits': mode_bits, 'changed': before != after})
+            if block:
+                actions[-1]['block_hash'] = sha(block_template.encode())
             if hook_entry is not None:
                 actions[-1]['hook_entry'] = hook_entry
                 actions[-1]['hook_original_shape'] = original_shape
@@ -827,7 +842,7 @@ def prepare(args, state, code, old, *, candidate_root=None, candidate_kind=None,
             if item['kind'] in ('copy','link'):
                 return previous is None or previous.get('artifact_digest') != source['artifact_digest']
             if item['kind'] == 'activation':
-                return previous is None or previous.get('block_hash') != sha(shim.encode())
+                return previous is None or previous.get('block_hash') != item['block_hash']
             if item['kind'] in ('hook-config', 'hook-link'):
                 return previous is None or item['changed'] or previous.get('artifact_digest') != source['artifact_digest']
             if cfg['omp_binding'] and item['path'] == cfg['omp_binding']['extension_target']:
@@ -842,7 +857,7 @@ def prepare(args, state, code, old, *, candidate_root=None, candidate_kind=None,
                'omp_peers_upgraded': getattr(args, 'omp_peers_upgraded', False),
                'omp_layout_quiescence': getattr(args, 'omp_layout_quiescence', None),
                'layout_quiescence': getattr(args, 'layout_quiescence', None) or [],
-               'old': old, 'pack_source': pack_source, 'shim':shim, 'cache_recovery': cache_recovery}
+               'old': old, 'pack_source': pack_source, 'cache_recovery': cache_recovery}
 
 
 def make_parents(parent, journal, state):
@@ -1286,7 +1301,7 @@ def _install(plan, *, before_activate=None, after_activate=None):
             previous = next((t for t in (old['targets'] if old else []) if t['path']==action['path']), None)
             target['originally_absent'] = previous['originally_absent'] if previous else action['before'] is None
         if action['kind'] == 'activation' and operation != 'uninstall':
-            target['block_hash'] = sha(plan['shim'].encode())
+            target['block_hash'] = action['block_hash']
             previous = next((t for t in (old['targets'] if old else []) if t['path']==action['path']), None)
             target['originally_absent'] = previous['originally_absent'] if previous else action['before'] is None
         targets.append(target)

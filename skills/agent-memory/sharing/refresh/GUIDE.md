@@ -7,7 +7,7 @@ domain: sharing
 
 ## Use when
 
-At a natural turn boundary, a session MUST check for newly landed same-repository
+At a [natural turn boundary](../../SKILL.md#natural-turn-boundary), a session MUST check for newly landed same-repository
 memory and reconcile it before using it as current shared guidance or admitting
 new learning. It MUST preserve unpublished local learning, branch history, the
 original index and non-memory working files. It MUST NOT pull/rebase the whole

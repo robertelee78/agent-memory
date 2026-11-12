@@ -35,9 +35,11 @@ The session MUST inspect the current receipt and installation ownership. The
 updater checks source cleanliness, exact revision/artifact identity, recorded
 origin/ref, client links/copies, wrapper and owned activation blocks. User text
 outside those blocks remains outside installation ownership. The candidate
-[activation template](../../templates/activation-markdown.example.txt) is package
-data; the session MUST inspect it only when planning or verifying a changed
-activation block, rather than copy the memory protocol into client settings.
+[shared activation template](../../templates/activation-markdown.example.txt)
+and the omp-specific activation template in the same templates directory
+are package data. The session MUST inspect the template selected by the saved
+client binding only when planning or verifying a changed activation block,
+rather than copy the memory protocol into client settings.
 
 ## Plan
 

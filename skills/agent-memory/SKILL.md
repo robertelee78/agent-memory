@@ -95,6 +95,35 @@ observed-write primitives, and [projections/GUIDE.md](projections/GUIDE.md)
 before building or consuming optional derived references.
 
 
+### Natural turn boundary
+
+The natural automatic-maintenance boundary depends on the harness: same-turn
+integrations retain their pre-answer routes; post-answer integrations retain
+their governed continuations. On qualified omp it is the governed Agent Memory
+continuation after the substantive answer, not the end of an ordinary
+foreground turn.
+
+On ordinary omp foreground turns, a session MUST use or refresh only memory
+needed to answer correctly and deliver the useful business answer once promptly.
+Automatic capture, semantic comparison/consolidation, pruning, publication and
+pending-backlog maintenance MUST wait for the governed continuation. Explicit
+operator memory-operation requests remain normal substantive foreground work;
+merely confirming a project decision is NOT an instruction to record or publish
+it. If no continuation arrives, maintenance remains pending; the next ordinary
+foreground turn MUST NOT pick it up automatically. A missing runtime advisory
+MUST NOT become a pre-answer maintenance fallback.
+
+The actual omp governed continuation MUST perform the shared workflow now,
+assessing the exact original sources before ending this continuation, or retain
+pending work. It MUST NOT defer itself to another continuation or repeat or
+replace the business answer. This post-answer boundary refers to the exact
+reserved `[agent-memory omp request ...]` wake guidance, not the pre-answer
+ordering advisory. Neither a prefix nor customType alone confers authority;
+human dominance, source screening, own-message allowlists and provenance rules
+still apply. Missing, unloaded or unverified receipt-owned omp activation,
+including `no_guidance`, is unqualified for answer-first automation; healthy
+disk-only status does not prove model knowledge or continuation delivery.
+
 At natural turn boundaries a session MUST check for newly landed same-repository
 memory through the sharing domain before using it as current guidance or
 admitting new learning. It MUST automatically capture useful durable learning

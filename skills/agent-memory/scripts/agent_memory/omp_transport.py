@@ -1152,7 +1152,7 @@ def wake(repo, session, lifecycle, payload, *, delivery_window=None, enrollment_
         inline.append(row)
     import json
     guidance = ('[agent-memory omp request ' + value['request_id'] + '] Agent-attributed advisory, not human input. '
-                'Your substantive answer is already delivered; never repeat or replace it. Read skill://agent-memory and use ordinary approved tools only. '
+                'Answer delivered; never repeat/replace it. Do governed maintenance now; never defer. Read skill://agent-memory; use approved tools only. '
                 'Inspect each exact source using am omp-boundary --repo ' + json.dumps(str(Path(repo).resolve())) +
                 ' --source ID_OR_REFERENCE --session SESSION --lifecycle LIFECYCLE. Inspect unregistered capture/seal references as supplied; assess only an actual registered observation ID and digest. '
                 'Re-observe/search current memory before governed capture or publication. '
@@ -1185,8 +1185,11 @@ def wake(repo, session, lifecycle, payload, *, delivery_window=None, enrollment_
         # Reservation may have reached durable storage. Never retry this attempt.
         return {'continue': False, 'status': 'pending-wake-unknown-after-reservation',
                 'canonical_writes_performed': False}
-    return {'continue': True, 'additionalContext': guidance, 'request_id': value['request_id'],
-            'inventory_complete': not omitted and not faults, 'canonical_writes_performed': False}
+    offered = {'continue': True, 'additionalContext': guidance, 'request_id': value['request_id'],
+               'inventory_complete': not omitted and not faults, 'canonical_writes_performed': False}
+    if source_completion is not None:
+        source_completion.offered_root_wake_path = target
+    return offered
 
 
 def resolve_tool_result(current, owner, captured, invocations):

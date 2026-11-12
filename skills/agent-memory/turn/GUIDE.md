@@ -7,12 +7,14 @@ domain: capture
 
 ## Use when
 
-Use this route when a harness invokes the skill at a natural turn boundary.
+Use this route when a harness invokes the skill at the [natural turn boundary](../SKILL.md#natural-turn-boundary).
 
 ### Routine compact path
 
 Reuse this guide and the skill while their loaded content is unchanged. For an
-initialized, bound bank, assess the actual source before ending. When no durable
+initialized, bound bank, the turn performing the boundary MUST assess the actual
+source before ending: same-turn routes before the substantive answer, omp before
+ending the actual governed continuation, not an ordinary omp foreground turn. When no durable
 candidate exists, use exactly one maintenance call, with no private request
 workspace and no separate status, refresh, inventory or novelty scan:
 `am codex-boundary --repo REPO --stdin --refresh --quiet`, or
@@ -46,13 +48,16 @@ coverage gap. Use `am omp-boundary --repo REPO --list-pending --offset N` and
 for source-qualified recovery. Unregistered sources retain original references,
 not invented observation IDs. A pending page does not prove full coverage.
 
-An advisory means the substantive answer is already delivered: MUST NOT repeat
-or replace it. On busy, cancellation, refusal or unavailable authority, retain
+The exact reserved `[agent-memory omp request ...]` wake guidance means the
+substantive answer is already delivered: MUST NOT repeat or replace it. The
+pre-answer ordering advisory is not this wake. In the actual governed continuation,
+perform the shared workflow now or retain pending; MUST NOT defer to another
+continuation. On busy, cancellation, refusal or unavailable authority, retain
 pending work and stop; MUST NOT automatically retry or force an unapproved tool.
 A wake may carry an unregistered `omp:capture:` or `omp:seal:` reference. Inspect
 that exact reference first. Assessment MUST use the actual registered
 `observation_id` and digest, never the enrollment reference as a fabricated ID;
-if registration is still pending, leave it pending for a later ordinary check.
+if registration is still pending, leave it pending for a later governed boundary.
 
 In supported omp 18.16 stored-source captures, `--source` MAY show a closed
 `instruction_context` annotation with empty content for a full read of the
@@ -265,9 +270,11 @@ including identical follow-ups. Native turn IDs can cover several messages. The
 local `observation_id` identifies one observation; it is not a native message ID
 or proof of source completeness. The source envelope supplied to the agent includes
 native `session`, `prompt`, `observation_id` and `source_sha256`. A session MUST
-assess the exact original source before finalizing its substantive answer and MUST
-NOT attribute later instructions to an earlier source. When no durable learning
-exists, no admission, semantic novelty scan or memory record is required.
+assess the exact original source in the turn performing the boundary:
+same-turn routes before finalizing the substantive answer, omp before ending the
+governed continuation, not its ordinary foreground turn. It MUST NOT attribute
+later instructions to an earlier source. When no durable learning exists, no
+admission, semantic novelty scan or memory record is required.
 
 For each supplied observation, submit an explicit assessment containing exactly
 `session`, `prompt`, `observation_id`, `source_sha256`, `outcome`, and `assessment`.
