@@ -232,7 +232,7 @@ export default function nativeMemory(pi: ExtensionAPI, binding?: Binding) {
     if (!diagnosed) { diagnosed = true; ctx.ui.notify('Agent Memory: ' + code + '; sources remain pending. Use am status/doctor and am omp-boundary --list-pending.', 'warning'); }
   };
   const eligible = (ctx: ExtensionContext) => ctx.agent.kind !== 'sub';
-  const supported = () => pi.pi.VERSION === '18.16.0' && binding?.rolloutAttested === true
+  const supported = () => (pi.pi.VERSION === '18.16.0' || pi.pi.VERSION === '18.19.0') && binding?.rolloutAttested === true
     && binding.readerCapability === 'omp-stored-source-v2' && /^[0-9a-f]{64}$/.test(binding.artifact)
     && typeof pi.pi.parseSessionContent === 'function' && pi.pi.CURRENT_SESSION_VERSION === 3
     && typeof pi.pi.resolveSessionLeafId === 'function' && typeof pi.pi.sessionEntryLeafId === 'function'

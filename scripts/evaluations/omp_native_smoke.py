@@ -55,7 +55,7 @@ def run(argv, *, cwd, env, timeout=30, deadline=None):
     return result.stdout
 
 
-SUPPORTED_VERSION = '18.16.0'
+SUPPORTED_VERSIONS = ('18.16.0', '18.19.0')
 
 
 def source_digest(value):
@@ -177,7 +177,7 @@ def current_observations(am, repo, root, session, session_file, prompts, status,
 
 
 def current_native_leaf(stored):
-    """Pinned 18.16 session-entries public leaf-selector semantics, not file adjacency."""
+    """Reviewed v3 public leaf-selector semantics, not file adjacency."""
     entries = [entry for entry in stored if entry.get('type') not in {'session', 'title'}]
     ids = set(); leaf = None; newest_self_selected = None
     for entry in entries:
@@ -283,7 +283,7 @@ def main():
     result = {'schema': 'agent-memory/omp-installed-smoke-v1', 'qualified': False,
               'full_native_qualification': False, 'platform': sys.platform,
               'binary_sha256': hashlib.sha256(binary.read_bytes()).hexdigest(),
-              'native_version': None, 'supported_version': SUPPORTED_VERSION,
+              'native_version': None, 'supported_versions': SUPPORTED_VERSIONS,
               'installed_source': receipt['source'], 'receipt_sha256': hashlib.sha256(receipt_path.read_bytes()).hexdigest(),
               'extension_sha256': owned['identity']['hash'], 'command': argv,
               'model': args.model, 'approval_mode': args.approval_mode or 'native-existing-default',
@@ -357,9 +357,9 @@ def main():
     try:
         # This gate precedes process launch, provider/model use and human turns.
         result['native_version'] = run([str(binary), '--version'], cwd=repo, env=env).strip()
-        expected_version = 'omp/' + SUPPORTED_VERSION
-        if result['native_version'] != expected_version:
-            raise RuntimeError('Unsupported omp binary: require exactly ' + expected_version
+        expected_versions = tuple('omp/' + version for version in SUPPORTED_VERSIONS)
+        if result['native_version'] not in expected_versions:
+            raise RuntimeError('Unsupported omp binary: require exactly one of ' + ', '.join(expected_versions)
                                + ', observed ' + result['native_version'])
         process = subprocess.Popen(argv, cwd=repo, env=env, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE, text=True, bufsize=1)

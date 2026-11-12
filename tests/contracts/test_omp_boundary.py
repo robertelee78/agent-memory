@@ -1654,13 +1654,14 @@ for line in sys.stdin:
                 self.smoke(world, repo, receipt, path, self.binary(world, receipt, mode=mode))
 
     def test_unsupported_binary_refuses_before_native_launch_or_human_turns(self):
-        with World() as world:
-            repo, receipt, path = self.fixture(world)
-            binary = self.binary(world, receipt, version='18.14.0')
-            report = self.smoke(world, repo, receipt, path, binary)
-            self.assertEqual(report['native_version'], 'omp/18.14.0')
-            self.assertEqual(report['native_requests'], [])
-            self.assertFalse(binary.with_suffix('.launched').exists())
+        for version in ('18.14.0', '18.18.9', '18.19.1'):
+            with self.subTest(version=version), World() as world:
+                repo, receipt, path = self.fixture(world)
+                binary = self.binary(world, receipt, version=version)
+                report = self.smoke(world, repo, receipt, path, binary)
+                self.assertEqual(report['native_version'], 'omp/' + version)
+                self.assertEqual(report['native_requests'], [])
+                self.assertFalse(binary.with_suffix('.launched').exists())
 
     def test_source_verifier_binds_completed_human_ids_text_roots_and_digests(self):
         from runtime_update_fixtures import ROOT
@@ -1804,11 +1805,12 @@ for line in sys.stdin:
                 smoke.current_stream_outcomes(repo, session, native_file, status, world.env, [])
 
     def test_late_native_frames_cannot_reuse_initial_answer_or_settled_proof(self):
-        for mode in ('complete', 'late-duplicate', 'late-unsettled'):
-            with self.subTest(mode=mode), World() as world:
+        for version, mode in (('18.16.0', 'complete'), ('18.19.0', 'complete'),
+                              ('18.19.0', 'late-duplicate'), ('18.19.0', 'late-unsettled')):
+            with self.subTest(version=version, mode=mode), World() as world:
                 repo, receipt, path = self.fixture(world)
                 report = self.smoke(world, repo, receipt, path,
-                    self.binary(world, receipt, mode=mode),
+                    self.binary(world, receipt, version=version, mode=mode),
                     expected=0 if mode == 'complete' else 1, timeout=30)
                 if mode == 'complete':
                     self.assertEqual(len(report['current_human_observations']), 2)

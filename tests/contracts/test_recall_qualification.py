@@ -210,6 +210,41 @@ assert not complete_provider_evidence(mapped,requested+':high')
 print('exact validated provider identity accepted; wrong, mixed and unvalidated identities rejected')
 ''', ROOT)
 
+    def test_semantic_adapter_deadline_keeps_unknown_children_unsignalled(self):
+        with World() as world:
+            root = self.stage(world)
+            self.assert_controller(world, root, '''
+from types import SimpleNamespace
+from unittest.mock import Mock, patch
+import subprocess
+from recall_quality_qualification import _model_child_unknown
+
+def child(returncode, effect=None):
+    return SimpleNamespace(pid=4321, returncode=returncode, wait=Mock(side_effect=effect))
+
+with patch('recall_quality_qualification.os.killpg') as probe:
+    running = child(None, subprocess.TimeoutExpired(['adapter'], 180))
+    assert _model_child_unknown(running)
+    running.wait.assert_called_once_with(timeout=180)
+    probe.assert_not_called()
+    unknown = child(125)
+    assert _model_child_unknown(unknown)
+    probe.assert_not_called()
+    signalled = child(-9)
+    assert _model_child_unknown(signalled)
+    probe.assert_not_called()
+    live_group = child(0)
+    assert _model_child_unknown(live_group)
+    probe.assert_called_once_with(4321, 0)
+with patch('recall_quality_qualification.os.killpg', side_effect=ProcessLookupError) as probe:
+    finished = child(0)
+    assert not _model_child_unknown(finished)
+    finished.wait.assert_called_once_with(timeout=180)
+    probe.assert_called_once_with(4321, 0)
+with patch('recall_quality_qualification.os.killpg', side_effect=PermissionError):
+    assert _model_child_unknown(child(0))
+''')
+
     def stale_cache(self, target):
         original = target.read_bytes(); stat = target.stat()
         malicious = b"raise RuntimeError('STALE_HELPER_EXECUTED')\n"

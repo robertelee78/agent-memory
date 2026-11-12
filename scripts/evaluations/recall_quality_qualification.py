@@ -10,11 +10,15 @@ import argparse
 import ast
 import copy
 import json
+import os
 from pathlib import Path
 import shutil
 import statistics
 import subprocess
 import sys
+import stat
+import tempfile
+import threading
 import time
 import traceback
 
@@ -54,6 +58,20 @@ SEMANTIC_OUTCOMES = {
 # docs/research/data/2026-10-25-recall-final/semantic-1000/wall-disagreement.json.
 # No prefix stripping, fuzzy aliases, route/effort stripping or fallback models.
 CLAUDE_IDENTITIES = {'anthropic/claude-opus-5-5': 'claude-opus-5-5'}
+
+def _model_child_unknown(process):
+    """Keep the 180-second deadline without signalling an unverified child."""
+    try:
+        process.wait(timeout=180)
+        if process.returncode == 125 or process.returncode < 0:
+            return True
+        try:
+            os.killpg(process.pid, 0)
+        except ProcessLookupError:
+            return False
+        return True
+    except BaseException:
+        return True
 
 
 def semantic_outcome_checks(name, finish):
@@ -356,14 +374,67 @@ def main():
                                     tag = name + '-' + str(step)
                                     request_path = directory / (tag + '.model-request.json'); save(request_path, payload)
                                     began, model_start = stamp(), time.perf_counter()
-                                    try:
-                                        process = subprocess.run(model_argv, input=json.dumps(payload), text=True, capture_output=True,
-                                            timeout=180, cwd=directory)
-                                        stdout, stderr, code = process.stdout, process.stderr, process.returncode
-                                    except subprocess.TimeoutExpired as exc:
-                                        def text(v):
-                                            return v.decode(errors='replace') if isinstance(v, bytes) else v or ''
-                                        stdout, stderr, code = text(exc.output), text(exc.stderr), None
+                                    process = None
+                                    with request_path.open('rb') as model_input, \
+                                            tempfile.TemporaryFile(dir=directory) as model_stdout, \
+                                            tempfile.TemporaryFile(dir=directory) as model_stderr:
+                                        for stream in (model_stdout, model_stderr):
+                                            info = os.fstat(stream.fileno())
+                                            if not stat.S_ISREG(info.st_mode) or info.st_nlink != 0:
+                                                raise ValueError('Model output requires unlinked private regular files')
+                                        process = subprocess.Popen(model_argv, stdin=model_input, stdout=model_stdout,
+                                            stderr=model_stderr, cwd=directory, start_new_session=True)
+                                        try:
+                                            record_path = directory / (tag + '.model-process.json')
+                                            fd = os.open(record_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+                                            with os.fdopen(fd, 'w') as stream:
+                                                json.dump({'owner_pid': os.getpid(), 'adapter_pid': process.pid,
+                                                    'world': str(world.root), 'deadline_seconds': 180,
+                                                    'stdout_fd': model_stdout.fileno(), 'stderr_fd': model_stderr.fileno(),
+                                                    'output_storage': 'unlinked private regular files'}, stream)
+                                                stream.write('\n')
+                                                stream.flush()
+                                                os.fsync(stream.fileno())
+                                            unknown = _model_child_unknown(process)
+                                        except BaseException:
+                                            unknown = True
+                                        if unknown:
+                                            try:
+                                                # Only this owned World is retained; candidate test
+                                                # behavior and other World instances are unchanged.
+                                                world._temp._finalizer.detach()
+                                                world.close = lambda: None
+                                                summary['quality_passed'] = False
+                                                summary['unknown_model_child'] = {
+                                                    'owner_pid': os.getpid(), 'adapter_pid': process.pid,
+                                                    'world': str(world.root), 'build': build, 'count': count,
+                                                    'case': name, 'step': step, 'timeout_seconds': 180,
+                                                    'stdout_fd': model_stdout.fileno(), 'stderr_fd': model_stderr.fileno(),
+                                                    'adapter_returncode': process.returncode,
+                                                    'output_storage': 'unlinked regular files held by owner and child',
+                                                    'remaining_observations_not_qualified': True,
+                                                    'required_observations': len(args.counts) * 3 * len(cases),
+                                                    'completed_observations': len(observations),
+                                                    'signals_sent': False}
+                                                try:
+                                                    summary['sources_preserved'] = all(
+                                                        source(path) == manifest['builds'][label]['source']
+                                                        for label, path in roots.items())
+                                                except BaseException as exc:
+                                                    summary['sources_preserved'] = False
+                                                    summary['source_postcheck_error'] = repr(exc)
+                                                summary['finished_at'] = stamp()
+                                                persist()
+                                            finally:
+                                                # Hold even if retention or metadata fails; do not
+                                                # launch another observation or signal the worker.
+                                                threading.Event().wait()
+                                            raise RuntimeError('Unexpected return from unknown-state hold')
+                                        model_stdout.seek(0)
+                                        model_stderr.seek(0)
+                                        stdout = model_stdout.read().decode('utf-8', errors='replace')
+                                        stderr = model_stderr.read().decode('utf-8', errors='replace')
+                                        code = process.returncode
                                     (directory / (tag + '.model.stdout')).write_text(stdout)
                                     (directory / (tag + '.model.stderr')).write_text(stderr)
                                     response = json.loads(stdout) if stdout else {}

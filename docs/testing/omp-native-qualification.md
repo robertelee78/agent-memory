@@ -1,12 +1,42 @@
 # Native omp integration: setup, limits and qualification
 
-The target is **omp 18.16.0**, not an inferred version range. The
+The targets are **omp 18.16.0 and 18.19.0**, not an inferred version range. The
 [source-bound interface study](../research/2026-11-04-omp-native-interfaces.md)
-pins upstream `650f3a108229ee11bf68ba3377f4e8c3391cd424` and the originally
-inspected macOS binary. Source/binary equivalence is unproven. This document is
+pins the historical 18.16 source and binary. The current 18.19 target names
+upstream `04cd1a7549a02d62ad1d24826198d52507595683` and macOS arm64 binary
+`d469628ae8b847617087cc987a628868e4cac53deb5f99451c8cfc4eec5e7e8d`.
+An actual model-free RPC startup observed its public SDK version, v3 session
+header, parser keys/UTF-8 byte size and a single-entry leaf-selector case. This does not
+qualify AM source observation, automatic wake, another platform or model use.
+Historical 18.16 results do not qualify 18.19. Source/binary equivalence remains
+unproven. This document is
 an executable qualification recipe and support contract, **not a claim that
 its matrix has passed**. Signed release evidence must name the actual candidate,
 installed artifact, binary, provider, platform, client mode and independent reviewer.
+
+### Current 18.19 qualification blockers
+
+The 18.16-specific failed/skipped-lost/deferred acceptance bindings in the
+integration design remain pending re-review against 18.19's `04cd1a7` source.
+They do not transfer merely because the version gate admits this target.
+
+- On a session-file write conflict, stock `continuationOf` creates a new session
+  ID and parent-session header while carrying the transcript. AM conservatively
+  treats that as a fork: pre-header entries remain inherited, and an unavailable
+  final old view remains pending. This is not proof of a fresh human root.
+- Shutdown handlers start in load order but complete concurrently under stock's
+  two-second cap. AM's 1.8-second flush cannot prove that another handler did not
+  append after its final capture; current-producer qualification remains pending.
+- The Linux clock gate currently admits only the independently reviewed 18.16
+  image. The 18.19 image's clock contract must be reviewed and qualified before
+  admitting automatic wake; adding its hash without that proof is prohibited.
+- Exact recognition of receipt-owned manual reads is not yet qualified for
+  18.19. Unknown renderer differences remain ordinary screened evidence/gaps,
+  not instruction-context provenance. Qualify the actual result, not a
+  normalized or reconstructed approximation.
+
+These are unresolved release obligations, not accepted scope exclusions or a
+replacement for the existing native matrix.
 
 ## Explicit installed binding
 
@@ -316,7 +346,8 @@ Prepare a disposable existing bank/clone through the normal identity/init
 skill. Do not point a smoke at production project memory. Install this exact
 candidate into an explicit isolated native root, preserving real provider access
 and normal native permissions. The following driver verifies that the exact
-selected binary reports exactly **`omp/18.16.0` before launching RPC or using a provider/model**.
+selected binary reports exactly **`omp/18.16.0` or `omp/18.19.0` before
+launching RPC or using a provider/model**.
 It discovers the actual installed binding, uses two real RPC human turns and
 the real model/tools, checks original answers once, and requires both exact
 submitted texts and their distinct stored native human IDs/roots in the
@@ -335,7 +366,7 @@ misbound source evidence still refuses. A detached finite worker may remain a
 live child throughout the session: child-process quiescence is not required.
 Instead the driver enumerates the complete joined public pending inventory and
 checks actual per-instance contiguous received attempts and terminal outcomes.
-A verified full seal must cover the current stored native leaf. The pinned 18.16
+A verified full seal must cover the current stored native leaf. The reviewed v3
 public selector semantics honor explicit `activeLeafId` (including null), otherwise
 an entry selects itself; an unavailable selected ID falls back to the newest
 self-selecting entry. Physically later usage/background entries are not assumed

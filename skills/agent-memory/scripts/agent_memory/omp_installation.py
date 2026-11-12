@@ -114,7 +114,7 @@ def diagnostics(repo, receipt):
                {selected['skill_target'], selected['extension_target'], selected['activation_target']}]
     installation.verify_targets(targets, source=receipt['source'])
     result = {'binding': selected, 'owned_disk_integrity': 'verified',
-              'native_loading': 'not-live-verified', 'supported_version_target': '18.16.0',
+              'native_loading': 'not-live-verified', 'supported_version_targets': ['18.16.0', '18.19.0'],
               'source_assessment': 'not-inferred-from-loading', 'refresh': 'not-inferred-from-assessment',
               'publication': 'requires-witnessed-shared-publication',
               'retention': 'private-native-snapshots-preserved-on-uninstall'}

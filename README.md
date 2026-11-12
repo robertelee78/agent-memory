@@ -100,7 +100,8 @@ sources are separate from the managed channel and are not updated by the updater
 
 ### Explicit native omp binding
 
-The native omp integration targets **18.16.0** and is opt-in, separate from
+The native omp integration targets **18.16.0 and 18.19.0**, not an inferred
+version range, and is opt-in, separate from
 `all`. From a trusted complete candidate, preview `install --check --presets omp
 --omp-agent-dir /absolute/omp-agent --omp-peers-upgraded` before applying the
 same selection. The rollout flag attests that writers sharing the participating
@@ -122,6 +123,12 @@ a later offer does not establish that earlier guidance was delivered or that
 assessment completed. The native guide distinguishes the source-inferred limits
 of queued guidance from actual platform qualification; other versions and modes
 must not inherit a qualification without their own evidence.
+
+Current 18.19 qualification is still pending. Write-conflict continuation sessions
+are conservatively treated as forks: carried history is inherited and an
+unavailable final old view remains pending. Shutdown and own-manual-read behavior
+require current-producer qualification; the Linux 18.19 clock/wake image is not
+yet admitted. These are release blockers, not accepted reductions in coverage.
 
 For a qualifying full read of the receipt-owned AM manual, the omp learning
 snapshot records historical instruction-context provenance without the manual
