@@ -1,0 +1,107 @@
+{
+  "affected_contracts": {
+    "batches": 134,
+    "cell": "macos311",
+    "cell_provenance": "Main-attested from the actual selected Python3.11 launch argv and Darwin workstation context; batch worker receipts do not record interpreter/cell and do not qualify the host",
+    "errors": 0,
+    "expected_failures": 0,
+    "failures": 0,
+    "passed": true,
+    "result_sha256": "e3e045746635e9cd4f697008ad93586d98b6840df3df4f1b36be02e5694dcf13",
+    "selected_case_identities_equal_executed": true,
+    "skipped": 0,
+    "changed_source_files_pre_post_unchanged": true,
+    "changed_source_files_observation_scope": "All22 listed source/test/guide fingerprints were captured before the final public smoke and134batch launch, then unchanged afterward",
+    "tests": 253,
+    "unexpected_successes": 0,
+    "worker_deadline_seconds": 300,
+    "workers": 2
+  },
+  "base_commit": "54daf2db83ba4f37a2c77f77009173fa9b8b5adf",
+  "before_fix_regression": {
+    "after_fix": "Original frame returns exact True; substituted fixed notice returns a distinct internal value, leaving diagnostic unrecorded; wire/queue/source/root/drain unchanged",
+    "case": "substituted oversized OBSERVED result must not retain an offered-continuation diagnostic",
+    "observed_failure": "Actual fixed result-oversized notice was queued while optional offered record incorrectly existed"
+  },
+  "historical_evidence": {
+    "actual_stock_native_R2_failure_comment": "https://github.com/robertelee78/agent-memory/issues/249#issuecomment-6814719830",
+    "development_negatives_and_reviews_archive_sha256": "409cc4852ad4625542050b34f4da2a1ed2b314aae0fe15a226da9e9c06beea6a",
+    "final_proof_archive_sha256": "48e5ab9d34bced0d18ec9ea2681a0c38a3d2f41ada3626f6c384ee9277c25b01"
+  },
+  "independent_source_reviews": [
+    {
+      "closure_sha256": "2b613017d2cdc5a1bcd7f9e7034b7130ddca8756239524f1af8617f8c52a032e",
+      "model": "anthropic/claude-opus-5-5",
+      "review_sha256": "682756c771fd735fbade4c8eedfc47624aa3dbd15b2a9735dfaaf0146ba82d40",
+      "slice": "activation and instructions",
+      "verdict": "SOURCE PASS with final closure"
+    },
+    {
+      "closure_sha256": [
+        "ef8dd0f318a0bb5a0a4ac27c56791c34ff03e394e0a41828212127b4c6b6c8e5",
+        "9d3201947e1a4e1c83b4e7ff98c44cfedbc9d0b07b508afda438d2406903592c"
+      ],
+      "model": "anthropic/claude-opus-5-5",
+      "review_sha256": "59dfbc983e65d6308ddc7003ae9df0e5f2a0791223444eb176db0b74b58ef1d0",
+      "slice": "wake decision retention and readback",
+      "verdict": "SOURCE PASS with final closure"
+    }
+  ],
+  "limits": [
+    "No stock omp, token, model, embedding endpoint or semantic campaign was launched for this correction",
+    "No native first-turn ordering, automatic capture, delivered continuation, assessment, publication, peer, p99 or full platform/mode matrix acceptance",
+    "Offered is not delivered; fixed diagnostic readback is nonauthoritative and subject to explicit trusted-local-account limits",
+    "Current physical integration validation includes unexpected ignored cpython313 caches, preserved untouched; no clean canonical artifact or cache-provenance claim",
+    "All original950ms callback,100ms margin,240s waits,1200/720s native deadlines and every acceptance case/fault remain unchanged",
+    "Draft branch only; no default-main integration or signed release"
+  ],
+  "public_lifecycle_smoke": {
+    "all_returncode_zero": true,
+    "cell": "macos311",
+    "exact_outside_owned_block_bytes_preserved": true,
+    "modes": [
+      "copy",
+      "link"
+    ],
+    "native_automation_qualified": false,
+    "operations": [
+      "install --check",
+      "install",
+      "am status",
+      "am doctor",
+      "uninstall --omp-writers-quiesced"
+    ],
+    "passed": true,
+    "result_sha256": "f05420ab05caa0dc9c154bd396596220ebd96678c24332616e441a474f81e63b",
+    "status_doctor_ok": true
+  },
+  "registered_release_batches": 978,
+  "runtime_input_sha256": "445b0d2a4a60782d1d295748587e2e449d9a5fa9a41811650c25acceb225e0d2",
+  "runtime_input_observation_scope": "Full runtime input identity was observed early during the134batch run and unchanged afterward; not a prelaunch full-source or host/canonical-artifact guard",
+  "schema": "agent-memory/scoped-answer-first-wake-diagnostic-proof-v1",
+  "scope": "Binding-specific omp activation, answer-first instructions and optional finite wake-decision diagnostics; no native automation acceptance",
+  "source_files_sha256": {
+    "skills/agent-memory/SKILL.md": "74044a53196ad9791b8b449f506299c4e0a54ce676fb61248d002d34cbae864b",
+    "skills/agent-memory/admission/GUIDE.md": "396e7c3b751b7698a520c983e9f61241f3bfa4c9f0b5960d2db666c72caa2445",
+    "skills/agent-memory/capture/GUIDE.md": "1edff0e94164d65a1bb416002147e19f2e162fd9301b2dc73ec76ff7587fbe8a",
+    "skills/agent-memory/consolidation/GUIDE.md": "4590a832c762cbb7ba73bac977cdfc0267603c7703dfa84c4419946895b7a5c9",
+    "skills/agent-memory/governance/GUIDE.md": "5d6184297918d00f4943a0127620dbcdfaafbc270baf7869d1e28a9b67c87e59",
+    "skills/agent-memory/hooks/omp.ts": "48081d767884da11a50234e5fcdff8a7eba2ba1b81fa93ccd723cada6dfdd8b5",
+    "skills/agent-memory/lifecycle/update/GUIDE.md": "ff97f9a4d78c10697b10267fdb53c79ef10c66d358b549b056cff59b18e5fea7",
+    "skills/agent-memory/maintain/cli/GUIDE.md": "947bb3c9516786c73794c17822c7fc60fba42202166f894d96fe8b6f44a58b93",
+    "skills/agent-memory/resume/GUIDE.md": "eef9d41581d4b25a8104f5cf5a34654c31702e44ed3e7aeb055160cccb59023e",
+    "skills/agent-memory/scripts/agent_memory/installation.py": "c1bb78d51badc3b9291442ebb8b8d90045edccb46ab3500e18e276559bd2f56b",
+    "skills/agent-memory/scripts/agent_memory/omp_installation.py": "d67a45caa65437cf732d8c22b1a9ea372c08e9d0e274eb3d6eabae52cd5268ab",
+    "skills/agent-memory/scripts/agent_memory/omp_stream.py": "19ecfceb08b695ead0adf6a773fbc409404f1730ef7be69456bb8ba0e0e26eee",
+    "skills/agent-memory/scripts/agent_memory/omp_transport.py": "a5d73b3cab6f6d6c492cb5a7607b71f702f03d0c8949b90952993ed301d2cfdf",
+    "skills/agent-memory/sharing/GUIDE.md": "50565ce94bfb107ff162a0534c78593fa96743f0454d108a72a10b612bd219ed",
+    "skills/agent-memory/sharing/publication/GUIDE.md": "e5a9f78a62f731a3bb4d1f16a74b38de7577d1228fd9dde5a2bbe7640822b1a8",
+    "skills/agent-memory/sharing/refresh/GUIDE.md": "e3d4e0f9aa59dde1b6f214702405b596f12947e31f276a67aa9029ddf1d7ca66",
+    "skills/agent-memory/sharing/semantic/GUIDE.md": "695f7d5716b03ec7548a9cf8658eebce9c7db7e74eb7c5df6534800fc0294f67",
+    "skills/agent-memory/templates/activation-omp-markdown.example.txt": "12c4b80db058f199dc4affcea5ae72e0ffae88ae35c3ea59e42971f3056e9fa0",
+    "skills/agent-memory/turn/GUIDE.md": "5947aeefb7ce6ee36276b3d631b75b56005fac1dfb9bd7ab695fe851f4f36248",
+    "tests/contracts.json": "10433454459fc4f580786a6a89d80206cafe60502e942eb58aca776ee8707fd9",
+    "tests/contracts/test_installer.py": "5ed92fa0f02af06b595e37aa54ceead176fcee0dc98b7ad726fb65f81aedf2c1",
+    "tests/contracts/test_omp_wake_decisions.py": "ca764f3b64422fd409c01cfe0cab62c0f4a624b406af7d925a38a1bdd0878206"
+  }
+}

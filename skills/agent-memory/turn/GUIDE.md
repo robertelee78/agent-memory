@@ -7,12 +7,14 @@ domain: capture
 
 ## Use when
 
-Use this route when a harness invokes the skill at a natural turn boundary.
+Use this route when a harness invokes the skill at the [natural turn boundary](../SKILL.md#natural-turn-boundary).
 
 ### Routine compact path
 
 Reuse this guide and the skill while their loaded content is unchanged. For an
-initialized, bound bank, assess the actual source before ending. When no durable
+initialized, bound bank, the turn performing the boundary MUST assess the actual
+source before ending: same-turn routes before the substantive answer, omp before
+ending the actual governed continuation, not an ordinary omp foreground turn. When no durable
 candidate exists, use exactly one maintenance call, with no private request
 workspace and no separate status, refresh, inventory or novelty scan:
 `am codex-boundary --repo REPO --stdin --refresh --quiet`, or
@@ -33,6 +35,38 @@ category/durable/reason fields are not this contract. Candidate dispositions use
 the evidence rules below. Multiple current observations may use
 `{"schema":"agent-memory/turn-check-request-v1","assessments":[...]}`;
 retain their distinct IDs and one actual session/lifecycle.
+
+Native omp uses `am omp-boundary --repo REPO --stdin --quiet --refresh` with
+exactly one observation, replacing `prompt` with its supplied `lifecycle`.
+It MUST NOT accept the compact assessment-array wrapper. Each substantive native
+segment has at most an admission source plus one sealed manifest; inspect both
+exact sources, and use two explicit commands/receipts when both need assessment.
+The native tool retains ordinary approval. An admission cannot finish before its
+segment is registered, and no-learning or publication MUST NOT waive a substantive
+coverage gap. Use `am omp-boundary --repo REPO --list-pending --offset N` and
+`--source ACTUAL_ID_OR_REFERENCE --session ACTUAL_SESSION --lifecycle ACTUAL_LIFECYCLE`
+for source-qualified recovery. Unregistered sources retain original references,
+not invented observation IDs. A pending page does not prove full coverage.
+
+The exact reserved `[agent-memory omp request ...]` wake guidance means the
+substantive answer is already delivered: MUST NOT repeat or replace it. The
+pre-answer ordering advisory is not this wake. In the actual governed continuation,
+perform the shared workflow now or retain pending; MUST NOT defer to another
+continuation. On busy, cancellation, refusal or unavailable authority, retain
+pending work and stop; MUST NOT automatically retry or force an unapproved tool.
+A wake may carry an unregistered `omp:capture:` or `omp:seal:` reference. Inspect
+that exact reference first. Assessment MUST use the actual registered
+`observation_id` and digest, never the enrollment reference as a fabricated ID;
+if registration is still pending, leave it pending for a later governed boundary.
+
+In supported omp 18.16 stored-source captures, `--source` MAY show a closed
+`instruction_context` annotation with empty content for a full read of the
+receipt-owned installed AM manual (`SKILL.md` or a linked `GUIDE.md`). Its
+receipt, artifact and manual digests describe the observer's historical comparison;
+they do not authenticate the current installation or establish complete source
+coverage. The instruction body is intentionally not learning material.
+Other reads remain subject to ordinary screening; existing gaps and assessments
+remain authoritative.
 
 The combined `agent-memory/turn-check-v1` response keeps mechanical freshness and
 source assessment separate. Successful quiet checks emit nothing. A real source
@@ -152,7 +186,7 @@ Use actual source, harness/session, applicability and evidence; the assessment
 fields and legal values are defined in [admission](../admission/GUIDE.md).
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/admit_learning.py" draft --repo REPO --input PRIVATE_JSON
+python3 -I "$SKILL_DIR/scripts/admit_learning.py" draft --repo REPO --input PRIVATE_JSON
 ```
 
 Pass the returned `request` to `am admission capture`, then complete semantic
@@ -183,6 +217,46 @@ The adapter only supplies invocation context. The agent can still fail to follow
 it; no hook proves that capture or refresh occurred. Report unsupported adapters,
 missing trust, model failure and interrupted operations as pending.
 
+### Verified layout-recovery hold
+
+A checked persistent layout hold permits **private source enrollment only**.
+The prompt hook can let the substantive human task continue with a genuine
+pending observation; this is not source assessment, admitted guidance, refresh,
+no-learning or publication. Canonical writes and boundary acknowledgement remain
+inactive while held. Stop hooks report `recovery-pending` without repeatedly
+waking an agent to perform an acknowledgement that cannot succeed. Unknown,
+missing, corrupt, foreign or changing hold/private identity evidence still
+refuses input; do not force continuation or manufacture a receipt.
+
+Held enrollment requires the actual native event identity as well as session and
+lifecycle. An exact retry reuses its durable enrollment intent and observation
+UUID, even after a lost response or a source/index write followed by a failed
+identity recheck. Distinct steering events in one turn require distinct native
+event IDs. Changed source, registry, hold or ledger pins remain unverified and
+retain their original private evidence rather than allocating another slot.
+
+The `claude` adapter supplies its existing native `prompt_id` and transcript
+reference. The `codex` adapter accepts an actual unambiguous `event_id` or `prompt_id` when the
+provider supplies it; `turn_id` alone is a lifecycle, not a steering-event ID.
+Synthetic hook fixtures supplying those fields do **not** establish that an
+unexercised `codex` provider emits them. Without an unambiguous native ID, a held
+`codex` prompt is refused, its exact bounded prompt bytes and available original
+transcript reference are retained owner-only as an **unidentified input**, and
+the failure reports its opaque retention ID. That ID is not an observation or
+native identity. No body-digest deduplication, source completion or automatic
+association with a later identical prompt is permitted. Missing references stay
+explicitly unknown. Preserve the native original and restore verifiable event
+identity before enrolling; uncertain retained originals remain pending.
+
+The retained private bodies MUST NOT be pasted into public diagnostics, memory
+records or tracker evidence. Pending inventory exposes unidentified retention
+IDs and faults, never their bodies. It also discovers an enrollment intent
+whose source or pending-index publication was interrupted. Use
+`next_enrollment_offset` with `--enrollment-offset` on either boundary pending
+inventory to retrieve additional orphan-intent pages. Ordinary source/legacy
+pagination retains its existing independent offsets.
+
+
 ## Diagnostic fallback
 
 Preserve the bank, feature work and pending operations. Custom harnesses may
@@ -196,9 +270,11 @@ including identical follow-ups. Native turn IDs can cover several messages. The
 local `observation_id` identifies one observation; it is not a native message ID
 or proof of source completeness. The source envelope supplied to the agent includes
 native `session`, `prompt`, `observation_id` and `source_sha256`. A session MUST
-assess the exact original source before finalizing its substantive answer and MUST
-NOT attribute later instructions to an earlier source. When no durable learning
-exists, no admission, semantic novelty scan or memory record is required.
+assess the exact original source in the turn performing the boundary:
+same-turn routes before finalizing the substantive answer, omp before ending the
+governed continuation, not its ordinary foreground turn. It MUST NOT attribute
+later instructions to an earlier source. When no durable learning exists, no
+admission, semantic novelty scan or memory record is required.
 
 For each supplied observation, submit an explicit assessment containing exactly
 `session`, `prompt`, `observation_id`, `source_sha256`, `outcome`, and `assessment`.

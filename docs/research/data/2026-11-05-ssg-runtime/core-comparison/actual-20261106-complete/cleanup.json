@@ -1,0 +1,20 @@
+[
+  {
+    "absent": true,
+    "id": "731098a0efcbaaadf39184c10e4c72038d0e52e270017dc11cf5edf2c301cf04",
+    "name": "am255-compare-d6ecc3dfbb7c-core",
+    "type": "container"
+  },
+  {
+    "absent": true,
+    "created": "2026-11-06T11:19:59.052847397-08:00",
+    "name": "am255-compare-d6ecc3dfbb7c-core-data",
+    "type": "volume"
+  },
+  {
+    "absent": true,
+    "created": "2026-11-06T11:19:59.260857889-08:00",
+    "name": "am255-compare-d6ecc3dfbb7c-core-logs",
+    "type": "volume"
+  }
+]

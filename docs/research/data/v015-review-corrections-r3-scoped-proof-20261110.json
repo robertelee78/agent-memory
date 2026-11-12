@@ -1,0 +1,234 @@
+{
+  "acceptance_limitations": [
+    "R2 contract execution is still in progress; its eventual result MUST NOT be transferred to R3",
+    "R3 full selected-consumer execution remains required",
+    "Controlled native-format carriers are not actual stock-native renderer/wake qualification",
+    "Synthetic review attestations are not independent semantic acceptance",
+    "Final-source hosted, native, matched performance and story acceptance remain open",
+    "No stock omp modification, endpoint/model campaign, signed release or delivery claim"
+  ],
+  "base_commit": "21c971903f52bc02ac1910a5c3c1015406bf2314",
+  "changed_guides": {
+    "passed": true,
+    "rows": [
+      {
+        "artifact_digest": "4353566b41596e8bd59cf259498f2191eb192c024bad6041b38041ff0ecdfa55",
+        "exact_retry_immutable": true,
+        "guides": [
+          {
+            "gap_free": true,
+            "receipt_body_match": true,
+            "relative": "SKILL.md",
+            "retained_learning_body_empty": true
+          },
+          {
+            "gap_free": true,
+            "receipt_body_match": true,
+            "relative": "turn/GUIDE.md",
+            "retained_learning_body_empty": true
+          },
+          {
+            "gap_free": true,
+            "receipt_body_match": true,
+            "relative": "maintain/cli/GUIDE.md",
+            "retained_learning_body_empty": true
+          },
+          {
+            "gap_free": true,
+            "receipt_body_match": true,
+            "relative": "bank/GUIDE.md",
+            "retained_learning_body_empty": true
+          }
+        ],
+        "mode": "copy",
+        "public_cli_contracts": [
+          {
+            "action": "plan",
+            "documented_contract_matches": true,
+            "exit": 0,
+            "verb": "compact"
+          },
+          {
+            "action": "plan",
+            "documented_contract_matches": true,
+            "exit": 0,
+            "verb": "govern"
+          },
+          {
+            "action": "preview",
+            "documented_contract_matches": true,
+            "exit": 0,
+            "verb": "compact"
+          },
+          {
+            "action": "preview",
+            "documented_contract_matches": true,
+            "exit": 0,
+            "verb": "govern"
+          },
+          {
+            "action": "preview",
+            "documented_contract_matches": true,
+            "exit": 0,
+            "verb": "admission"
+          }
+        ],
+        "surrounding_source_preserved": true
+      },
+      {
+        "artifact_digest": "4353566b41596e8bd59cf259498f2191eb192c024bad6041b38041ff0ecdfa55",
+        "exact_retry_immutable": true,
+        "guides": [
+          {
+            "gap_free": true,
+            "receipt_body_match": true,
+            "relative": "SKILL.md",
+            "retained_learning_body_empty": true
+          },
+          {
+            "gap_free": true,
+            "receipt_body_match": true,
+            "relative": "turn/GUIDE.md",
+            "retained_learning_body_empty": true
+          },
+          {
+            "gap_free": true,
+            "receipt_body_match": true,
+            "relative": "maintain/cli/GUIDE.md",
+            "retained_learning_body_empty": true
+          },
+          {
+            "gap_free": true,
+            "receipt_body_match": true,
+            "relative": "bank/GUIDE.md",
+            "retained_learning_body_empty": true
+          }
+        ],
+        "mode": "link",
+        "public_cli_contracts": [
+          {
+            "action": "plan",
+            "documented_contract_matches": true,
+            "exit": 0,
+            "verb": "compact"
+          },
+          {
+            "action": "plan",
+            "documented_contract_matches": true,
+            "exit": 0,
+            "verb": "govern"
+          },
+          {
+            "action": "preview",
+            "documented_contract_matches": true,
+            "exit": 0,
+            "verb": "compact"
+          },
+          {
+            "action": "preview",
+            "documented_contract_matches": true,
+            "exit": 0,
+            "verb": "govern"
+          },
+          {
+            "action": "preview",
+            "documented_contract_matches": true,
+            "exit": 0,
+            "verb": "admission"
+          }
+        ],
+        "surrounding_source_preserved": true
+      }
+    ],
+    "schema": "am/changed-guides-copy-link-structural-observer-smoke-v1",
+    "scope": "Actual installed copy/link CLI contract discovery and production receipt-bound observer API with controlled native-format carriers. Not actual stock-native renderer/wake, model, platform, independent semantic or signed-release acceptance.",
+    "seconds": 21.99121483392082,
+    "source_after": "5f588f90a7489d50b5fb30955bd86da06accb0838d5036204b9ec090abbab15f",
+    "source_before": "5f588f90a7489d50b5fb30955bd86da06accb0838d5036204b9ec090abbab15f"
+  },
+  "planning": {
+    "passed": true,
+    "rows": [
+      {
+        "applied_verified": true,
+        "feature_index_head_preserved": true,
+        "foreign_plan_and_raw_apply_refused": true,
+        "historical_apply_retry": true,
+        "passed": true,
+        "plan_non_authorizing": true,
+        "planned_proposed_bytes_equal": true,
+        "private_output_only": true,
+        "route": "update",
+        "seconds": 30.892612708033994,
+        "stable_record_identity_and_provenance": true,
+        "stale_plan_rejected": true
+      },
+      {
+        "applied_verified": true,
+        "feature_index_head_preserved": true,
+        "foreign_plan_and_raw_apply_refused": null,
+        "historical_apply_retry": null,
+        "passed": true,
+        "plan_non_authorizing": true,
+        "planned_proposed_bytes_equal": true,
+        "private_output_only": true,
+        "route": "consolidate",
+        "seconds": 22.1167986249784,
+        "stable_record_identity_and_provenance": true,
+        "stale_plan_rejected": null
+      },
+      {
+        "applied_verified": true,
+        "feature_index_head_preserved": true,
+        "foreign_plan_and_raw_apply_refused": null,
+        "historical_apply_retry": null,
+        "passed": true,
+        "plan_non_authorizing": true,
+        "planned_proposed_bytes_equal": true,
+        "private_output_only": true,
+        "route": "governance",
+        "seconds": 9.912413834012114,
+        "stable_record_identity_and_provenance": true,
+        "stale_plan_rejected": null
+      }
+    ],
+    "schema": "am/public-governed-judgment-plan-smoke-v1",
+    "scope": "Real installed public plan/review/preview/apply for update/consolidation/revocation on ordinary eligible banks. Not held-unit/full-coverage, raw layout, platform, independent-review, native/model/hosted or signed release acceptance.",
+    "seconds": 63.04086762492079,
+    "source_after": "5f588f90a7489d50b5fb30955bd86da06accb0838d5036204b9ec090abbab15f",
+    "source_before": "5f588f90a7489d50b5fb30955bd86da06accb0838d5036204b9ec090abbab15f"
+  },
+  "portable_artifact_digest": "4353566b41596e8bd59cf259498f2191eb192c024bad6041b38041ff0ecdfa55",
+  "qualification_source_identity": "5f588f90a7489d50b5fb30955bd86da06accb0838d5036204b9ec090abbab15f",
+  "raw_evidence": {
+    "bytes": 8317,
+    "name": "review-corrections-r3-copy-link-guides-public-plan-and-raw-recovery-actual-20261110.tar.gz",
+    "original_private_location": "/tmp/am-v15-delivery/corrected_guides_copy_link_smoke_20261110.py; /tmp/am-v15-delivery/corrected-guides-copy-link-cli-contracts-actual-20261110-r3.json; /tmp/am-v15-delivery/integrated_peer_public_plan_20261110.py; /tmp/am-v15-delivery/integrated_peer_public_recovery_20261110.py; /tmp/am-v15-delivery/review-corrections-installed-public-plan-actual-20261110-r3.json; /tmp/am-v15-delivery/review-corrections-installed-public-recovery-actual-20261110-r3.json; /tmp/am-v15-delivery/review-corrections-base21c9719-source-overlay-20261110-r3.json; /tmp/am-v15-delivery/review-corrections-independent-subject-binding-20261110-r3.json",
+    "sha256": "68f2f17a7bfa7fa55f8337bb6b53a57fa021f09c2545d6bdd3fe1e760c8637ff"
+  },
+  "recovery": {
+    "distinct_child_restore": true,
+    "exact_natural_metadata_verified_forward_and_restore": true,
+    "feature_index_head_preserved": true,
+    "historical_retry_did_not_reapply": true,
+    "immutable_originals_and_parent_receipt_preserved": true,
+    "passed": true,
+    "pending_policy_units": 8,
+    "private_pages_reconstruct_all_originals": true,
+    "schema": "am/installed-public-recovery-restore-smoke-v1",
+    "scope": "Actual installed synthetic oversized/context and eight-policy handoff repair, exact metadata and child restore. Controlled fixture review labels are not independent semantic/Opus acceptance. No native/model/endpoint/hosted/performance or release claim.",
+    "seconds": 33.45589400001336,
+    "semantic_completion_not_inferred": true,
+    "source_after": "5f588f90a7489d50b5fb30955bd86da06accb0838d5036204b9ec090abbab15f",
+    "source_before": "5f588f90a7489d50b5fb30955bd86da06accb0838d5036204b9ec090abbab15f"
+  },
+  "review_scope": {
+    "historical_21c9719": "REQUEST_CHANGES: supplementary-group marker ownership, interrupted fresh-probe precedence, refused-write privacy oracle, stale compact/govern instruction flags",
+    "model": "anthropic/claude-opus-5-5",
+    "r2": "Targeted recovery/metadata, finite-fence/privacy and instruction-authority source reviews PASS; execution NOT READY",
+    "r3": "Instruction-authority guide-only closure SOURCE PASS; all Python and registered tests byte-identical to R2; execution NOT READY"
+  },
+  "schema": "am/review-corrections-r3-scoped-proof-v1",
+  "source_bytecode_count": 0,
+  "source_overlay_manifest_sha256": "8deab358b63760aa5cc5b5756fa61a58258b7799e93f9ab612f3ebe155ee238c"
+}

@@ -6,6 +6,10 @@ This is invocation guidance, not a memory operation or an admission receipt.
 import json
 from pathlib import Path
 import sys
+sys.dont_write_bytecode = True
+import runpy
+_cache_guard = runpy.run_path(str(Path(__file__).resolve().parent.parent/'scripts/source_startup.py'),
+                              run_name='am_source_startup')['isolate']()
 
 MAX_INPUT = 64 * 1024
 
@@ -24,7 +28,6 @@ def main():
             from claude_prompt import main as claude_prompt
             return claude_prompt(event)
         prompt = (directory / 'boundary-prompt.txt').read_text(encoding='utf-8').strip()
-        prompt = prompt.replace('{{SKILL_DIR}}', str(directory.parent))
         if not prompt or len(prompt.encode('utf-8')) > 4096:
             raise ValueError('invalid instruction')
         print(json.dumps({'hookSpecificOutput': {'hookEventName': 'UserPromptSubmit', 'additionalContext': prompt}}))

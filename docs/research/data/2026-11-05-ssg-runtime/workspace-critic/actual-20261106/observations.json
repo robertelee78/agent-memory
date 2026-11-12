@@ -1,0 +1,10 @@
+{
+  "critic_executed": false,
+  "critic_quality": "unmeasured",
+  "raw_receipts": "commands.json",
+  "run_id": "a04ee294f6864d8dbda5decef1b0892f",
+  "schema": "am255/workspace-critic-observations-v1",
+  "status": "unavailable",
+  "timings": "shared host descriptive only",
+  "unavailable_input_or_failure": "Required command unavailable: ['podman', 'run', '-d', '--rm', '--pull=never', '--name', 'am255-workspace-critic', '--label', 'org.agent-memory.workspace-critic=a04ee294f6864d8dbda5decef1b0892f', '--cpus=2', '--memory=2g', '-p', '127.0.0.1:17749:7687', '--tmpfs', '/var/lib/memgraph:rw,mode=0700,uid=101,gid=103', '--tmpfs', '/var/log/memgraph:rw,mode=0700,uid=101,gid=103', 'docker.io/memgraph/memgraph-mage@sha256:e8e03640071c57de6a13f2f4c5f9ed1789797dc5e8e771bbe62203b20e1b8c27', '--telemetry-enabled=false', '--storage-properties-on-edges=true', '--storage-wal-enabled=false', '--storage-snapshot-interval-sec=0', '--storage-snapshot-on-exit=false', '--log-level=WARNING']: Error: unknown mount option \"uid=101\": invalid mount option\n"
+}

@@ -46,14 +46,22 @@ def snapshot(repo, owned_lock=None):
     return observed.checked, observed.hashes
 
 
-def state_paths(repo, bank, operation_id):
+def state_root(repo=None):
     raw = os.environ.get("AGENT_MEMORY_STATE_HOME")
     root = Path(raw or str(Path(os.environ.get("XDG_STATE_HOME", str(Path.home() / ".local/state"))) / "agent-memory")).expanduser()
     if (not root.is_absolute() or any(p.is_symlink() for p in (root, *root.parents))
-            or root.resolve().is_relative_to(repo)):
+            or (repo is not None and root.resolve().is_relative_to(repo))):
         raise ContractError("Write receipts require a canonical absolute state root outside the repository")
+    for part in (root, *root.parents):
+        if part.exists() and not part.is_dir():
+            raise ContractError("Write receipt directories must be canonical directories without symlinks")
+    return root
+
+
+def state_paths(repo, bank, operation_id):
+    root = state_root(repo)
     directory = root / "writes" / digest(str(bank).encode()) / "operations"
-    for part in (directory, *directory.parents):
+    for part in (directory, directory.parent, directory.parent.parent):
         if part.is_symlink() or (part.exists() and not part.is_dir()):
             raise ContractError("Write receipt directories must be canonical directories without symlinks")
     receipt = directory / (operation_id + ".json")
@@ -74,13 +82,13 @@ def validate_replacement(observation, path, content):
 
 def preview(repo, path, content, operation="replace"):
     from . import bank_observation
-    from .scope_binding import capture
+    from .recovery_frontier import capture_scope
     root, _ = bank_path(repo)
     observation = bank_observation.observe(root)
     checked, observed = observation.checked, observation.hashes
     proposal = {"schema": "agent-memory/write-proposal-v1", "operation_id": str(uuid.uuid4()), "operation": operation,
                 "repo_root": str(root), "project_id": checked["project_id"], "observed_hashes": observed,
-                "path": path, "content": content, "scope_context": capture(root)}
+                "path": path, "content": content, "scope_context": capture_scope(root)}
     proposal_value(proposal)
     validate_replacement(observation, path, content)
     return result("preview", proposal=proposal, writes_performed=False, verified=False, changed_memory_paths=[])
@@ -154,6 +162,9 @@ def record(receipt_path, payload):
 def apply(prepared):
     from .scope_binding import require
     proposal = proposal_value(prepared)
+    from . import recovery_frontier, recovery_transactions
+    if recovery_frontier.observe(proposal['repo_root'])['hold_sha256'] is not None:
+        return recovery_transactions.apply_checkpoint(proposal)
     if proposal['scope_context'] is None:
         raise ContractError('Proposal has no resolved scope; finish identity setup and preview again')
     context = require(proposal['repo_root'], proposal['project_id'], expected=proposal['scope_context'])
@@ -190,7 +201,8 @@ def _apply(prepared, *, check_identity):
     expected[proposal["path"]] = digest(proposal["content"].encode("utf-8"))
     temporary = None
     # No bank inventory or previous receipt is read until this lock is acquired.
-    with storage.exclusive(bank / ".agent-memory.lock", proposal["operation_id"], "bank-" + proposal["operation"]) as owner:
+    from .turn_sources import canonical_writer_barrier
+    with canonical_writer_barrier(root), storage.exclusive(bank / ".agent-memory.lock", proposal["operation_id"], "bank-" + proposal["operation"]) as owner:
         fault("locked-before-inventory")
         check_identity(owner)
         from . import bank_observation

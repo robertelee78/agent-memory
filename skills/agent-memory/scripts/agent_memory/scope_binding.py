@@ -1,5 +1,7 @@
 """Shared attribution/project resolution and explicit, recoverable scope binding."""
 from __future__ import annotations
+from contextlib import contextmanager
+from contextvars import ContextVar
 
 import argparse
 import json
@@ -20,6 +22,9 @@ from .frontmatter import ContractError
 SCHEMA = 'agent-memory/scope-binding-v1'
 FIELDS = {'schema', 'operation_id', 'developer_id', 'developer_sha256', 'project', 'base_files', 'transaction'}
 
+class IdentityUnresolved(ContractError):
+    """Identity evidence is explicitly missing, conflicting, or changed."""
+
 
 def result(operation, **values):
     return {'schema': 'agent-memory/scope-result-v1', 'operation': operation,
@@ -29,7 +34,7 @@ def result(operation, **values):
 def principal(repo, observations=(), harness=None, session=None):
     value = developer.status(observations, harness, session, repo)
     if value['setup_required'] or value['attribution_conflicts'] or value['lock_present']:
-        raise ContractError('Developer attribution is missing, conflicting or locked; explicitly create/adopt/select or repair it')
+        raise IdentityUnresolved('Developer attribution is missing, conflicting or locked; explicitly create/adopt/select or repair it')
     return value
 
 
@@ -72,14 +77,206 @@ def require(repo, project_id=None, *, expected=None, initialize=False, owned_loc
                 or proj['issues'] != ['Bank initialization or identity update is pending']):
             raise ContractError('Initialization requires an explicitly registered empty checkout with unambiguous authority')
     elif not proj['resolved']:
-        raise ContractError('Project identity is unresolved: ' + '; '.join(proj['issues']))
+        raise IdentityUnresolved('Project identity is unresolved: ' + '; '.join(proj['issues']))
     if project_id is not None and project_id != proj['project_id']:
-        raise ContractError('Operation project ID differs from the resolved repository')
+        raise IdentityUnresolved('Operation project ID differs from the resolved repository')
     context = {'developer_id': dev['developer_id'], 'project_id': proj['project_id'],
                'developer_sha256': dev['observed_sha256'], 'project_sha256': proj['observed_sha256'],
                'checkout_key': proj['evidence']['checkout_key'], 'repository_settings_sha256': digest(encoded(proj['evidence']['repository_settings'])), 'initialization_only': initialize}
     if expected is not None and context != expected:
-        raise ContractError('Resolved identity changed during the operation; retain original provenance and prepare again')
+        raise IdentityUnresolved('Resolved identity changed during the operation; retain original provenance and prepare again')
+    return context
+
+
+def raw_recovery_context(repo, raw_identity, owner=None, transaction=None):
+    """Resolve the ordinary scope from independently checked raw-router evidence."""
+    if type(raw_identity) is not project.RawIdentityEvidence:
+        raise ContractError('Recovery scope requires internally observed raw identity evidence')
+    root = Path(repo).resolve()
+    if raw_identity.repo_root != str(root):
+        raise ContractError('Raw identity belongs to another checkout')
+    dev = principal(root)
+    proj = project.status(root, owned_lock=owner, owned_transaction=transaction, raw_identity=raw_identity)
+    if storage.paths('projects')[2].exists() or not proj['resolved']:
+        raise ContractError('Recovery project identity is unresolved; retain the original evidence')
+    proof = proj['evidence']
+    context = {'developer_id': dev['developer_id'], 'project_id': proj['project_id'],
+               'developer_sha256': dev['observed_sha256'], 'project_sha256': proj['observed_sha256'],
+               'checkout_key': proof['checkout_key'],
+               'repository_settings_sha256': digest(encoded(proof['repository_settings'])),
+               'initialization_only': False}
+    context_value(context)
+    return context
+
+
+_enrollment_seal = object()
+_enrollment_reads = ContextVar('agent_memory_private_enrollment_reads', default=None)
+_enrollment_locations = ContextVar('agent_memory_observe_enrollment_locations', default=None)
+
+
+class PrivateEnrollmentContext:
+    """Purpose-limited live identity; never a serialized scope or write proof."""
+    __slots__ = ('root', 'bank', '_scope', 'hold', 'context_digest', '_pins', '_seal')
+
+    def __init__(self, *args, **kwargs):
+        raise ContractError('Private enrollment context must be independently observed')
+
+    @property
+    def scope(self):
+        return dict(self._scope)
+
+    @property
+    def project_id(self):
+        return self._scope['project_id']
+
+    @property
+    def developer_id(self):
+        return self._scope['developer_id']
+
+    @property
+    def held(self):
+        return self.hold is not None
+
+    def __reduce_ex__(self, protocol):
+        raise TypeError('Private enrollment context cannot be serialized')
+
+    def __enter__(self):
+        return recheck_private_enrollment(self)
+
+    def __exit__(self, kind, value, traceback):
+        if kind is None:
+            recheck_private_enrollment(self)
+        return False
+
+
+def private_enrollment_context(repo):
+    """Fresh bounded discovery, independent of any outer observer or mint."""
+    from .turn_sources import SourceTransportBusy
+    from . import recovery_frontier
+    try:
+        with _fresh_enrollment_locations(), repository_config._observe_settings(repo), recovery_frontier._observe_source_markers():
+            return _private_enrollment_context(repo)
+    except (storage.CanonicalWriterBusy, storage.CanonicalWriterInitializing) as exc:
+        # Known contention or an explicitly unproven empty publication slot
+        # permits bounded deferral only, never source/owner authority. All locks
+        # and contexts above unwind before the existing caller budget waits.
+        raise SourceTransportBusy('Canonical writer unavailable; preserve pending source work and rediscover') from exc
+
+
+def _private_enrollment_context(repo):
+    """Allow only private source retention through an exact verified hold."""
+    from . import layout_recovery_state, recovery_frontier, turn_sources
+    root, bank = writes.bank_path(repo)
+    raw_root, raw_bank, recovery_base, _ = layout_recovery_state.paths(root)
+    if (raw_root, raw_bank) != (root, bank):
+        raise ContractError('Private enrollment raw recovery bank differs from the ordinary bank')
+    # A live canonical transaction may temporarily expose partial bank state or
+    # its transaction marker. Never resolve source authority through either
+    # while its writer is proved active; unwind and retry from fresh authority.
+    storage.check_canonical_writer(bank / '.agent-memory.lock', writes.OPERATIONS)
+    turn_sources.check_source_compatibility(recovery_base.parent)
+    hold = recovery_frontier._verified_hold_at_bank(raw_root, raw_bank)
+    scope = dict(hold.scope) if hold is not None else require(root)
+    # The ordinary path also checks the private index, so a removed hold is not
+    # an empty frontier. No caller supplies marker bytes or an owned lock.
+    token = hold.token if hold is not None else recovery_frontier._observe_bank(raw_root, raw_bank, None, None)
+    pins = {'scope': scope, 'frontier': token,
+            'binding': [[str(path), info.st_dev, info.st_ino, info.st_uid, info.st_gid, info.st_mode]
+                        for path in (root, bank.parent, bank) for info in [path.lstat()]],
+            'marker': digest(hold.marker) if hold is not None else None}
+    if hold is not None:
+        if (hold.root, hold.bank) != (root, bank):
+            raise ContractError('Private enrollment recovery location changed during observation')
+        directory = layout_recovery_state._paths_for_bank(root, bank, hold.operation_id)[3]
+        pins.update(runtime_artifact_digest=hold.runtime_artifact_digest,
+                    private_bindings_sha256=digest(layout_recovery_state.read_bytes(
+                        storage.paths('layout-recovery-bindings')[1])),
+                    journal_sha256=digest(layout_recovery_state.read_bytes(directory / 'journal.json')))
+    if writes.bank_path(root) != (root, bank):
+        raise ContractError('Private enrollment bank location changed during observation')
+    if layout_recovery_state.paths(root)[:2] != (root, bank):
+        raise ContractError('Private enrollment raw recovery bank location changed during observation')
+    context = object.__new__(PrivateEnrollmentContext)
+    context.root, context.bank, context._scope, context.hold = root, bank, scope, hold
+    context._pins, context.context_digest, context._seal = pins, digest(encoded(pins)), _enrollment_seal
+    return context
+
+
+@contextmanager
+def _private_enrollment_reads(context):
+    """Reuse only private namespace/read discovery in one synchronous operation.
+
+    Mutation guards still perform their full fresh rechecks. No ordinary scope
+    authority accepts this context, and leaving the operation rechecks it again.
+    """
+    if type(context) is not PrivateEnrollmentContext or context._seal is not _enrollment_seal:
+        raise ContractError('Private enrollment reads require an internally observed context')
+    token = _enrollment_reads.set(context)
+    try:
+        yield context
+        recheck_private_enrollment(context)
+    finally:
+        _enrollment_reads.reset(token)
+
+
+def _enrollment_read_context(repo, context):
+    if (type(context) is not PrivateEnrollmentContext or context._seal is not _enrollment_seal
+            or _enrollment_reads.get() is not context or Path(repo).resolve() != context.root):
+        raise ContractError('Private enrollment read context is foreign or outside its live operation')
+    return context
+
+
+@contextmanager
+def _fresh_enrollment_locations():
+    """Full scope checks and non-observer boundaries never inherit a locator."""
+    token = _enrollment_locations.set(None)
+    try:
+        yield
+    finally:
+        _enrollment_locations.reset(token)
+
+
+@contextmanager
+def _observe_enrollment_locations(context):
+    _enrollment_read_context(context.root, context)
+    token = _enrollment_locations.set(context)
+    try:
+        _observe_enrollment_location(context.root, context)
+        yield
+    finally:
+        _enrollment_locations.reset(token)
+
+
+def _observe_enrollment_location(repo, context=None):
+    """An existing observe barrier permits locator reuse, never scope reuse."""
+    active = _enrollment_locations.get()
+    if active is None:
+        if context is not None:
+            raise ContractError('Observer locator reuse is outside its live operation')
+        return None
+    if context is not None and context is not active:
+        raise ContractError('Observer locator differs from its exact active context')
+    if Path(repo).resolve() != active.root and context is None:
+        return None
+    _enrollment_read_context(repo, active)
+    from . import layout_recovery_state, turn_sources
+    location = layout_recovery_state._paths_for_bank(active.root, active.bank)
+    if str(location[2].parent) not in turn_sources._barriers.get():
+        raise ContractError('Observer locator reuse requires its already held source barrier')
+    return location
+
+
+def recheck_private_enrollment(context):
+    if type(context) is not PrivateEnrollmentContext or context._seal is not _enrollment_seal:
+        raise ContractError('Private enrollment requires an internally constructed live context')
+    current = private_enrollment_context(context.root)
+    from . import recovery_frontier
+    same_hold = ((current.hold is None and context.hold is None)
+                 or recovery_frontier.same_hold(current.hold, context.hold))
+    if ((current.root, current.bank, current.scope) != (context.root, context.bank, context.scope)
+            or not same_hold or current._pins != context._pins
+            or current.context_digest != context.context_digest):
+        raise ContractError('Private enrollment identity or recovery hold changed; retain the original pending source')
     return context
 
 

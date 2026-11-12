@@ -23,9 +23,10 @@ def version_key(value):
             tuple((0, int(v)) if v.isdecimal() else (1, v) for v in pre.split('.') if pre))
 
 
-def configuration(old):
+def configuration(old, *, omp_peers_upgraded=False):
     return argparse.Namespace(command='install', development_source=None, remote=None, ref=None,
-                              mode=None, presets=None, target_dir=None, bin_dir=None, no_guidance=False)
+                              mode=None, presets=None, target_dir=None, bin_dir=None, no_guidance=False,
+                              omp_agent_dir=None, omp_peers_upgraded=omp_peers_upgraded)
 
 
 def current(state, code, *, cache_recovery=None):
@@ -49,14 +50,7 @@ def current(state, code, *, cache_recovery=None):
     else:
         actual = install.source_info(root, source['kind'], source['remote'], source['ref'])
     install.require(actual == source, 'Current source revision, version or artifact differs from its receipt')
-    journal_path = state/'journal.json'
-    if os.path.lexists(journal_path):
-        journal = install.load(journal_path)
-        install.require(journal.get('status') in ('complete','rolled-back'),
-                        'Incomplete lifecycle transaction; use the trusted recover helper before checking updates')
-        if journal['status']=='complete':
-            install.require(install.fingerprint(state/'receipt.json') == journal['receipt_identity'],
-                            'Current receipt differs from its committed journal')
+    install._require_replannable_journal(state)
     for target in old['targets']:
         if target['kind']=='activation':
             path = Path(target['path'])
@@ -101,6 +95,10 @@ def banks(extra, compatibility, *, require_readable=False):
     from concurrent.futures import ThreadPoolExecutor
     from . import migration, bank_transactions
     roots = set(); gaps = []
+    from . import private_state, recovery_frontier
+    private_roots, unknown_private, _ = private_state.repository_inventory({'rollback_repositories': [str(value) for value in extra]})
+    install.require(not unknown_private, 'Private-state bank inventory is unknown; preserve the active capable runtime')
+    roots.update(private_roots)
     cwd = Path.cwd().resolve()
     top = install.git(cwd, 'rev-parse', '--show-toplevel', check=False)
     roots.add(Path(top.stdout.strip()).resolve() if top.returncode==0 else cwd)
@@ -138,9 +136,12 @@ def banks(extra, compatibility, *, require_readable=False):
         install.require(not bank.is_symlink() and not router.is_symlink() and router.is_file(),
                         'Discovered bank/router must be an ordinary readable path')
         def idle():
-            install.require(not any(os.path.lexists(bank/name) for name in
-                            ('.agent-memory.lock', bank_transactions.MARKER)),
-                            'Compatibility requires an idle bank; preserve its pending operation: ' + str(bank))
+            install.require(not os.path.lexists(bank/'.agent-memory.lock'),
+                            'Compatibility requires an idle bank; preserve its live writer')
+            if os.path.lexists(bank/bank_transactions.MARKER):
+                held = recovery_frontier.verified_hold(root)
+                install.require(held is not None and 'layout-frontier-v1' in private_state.compatibility(compatibility),
+                                'Target runtime cannot enforce the verified private recovery hold')
         idle()
         raw, _ = migration.read_regular(bank, 'MEMORY.md', 16384)
         metadata = migration.router_metadata(raw)
@@ -173,7 +174,10 @@ def banks(extra, compatibility, *, require_readable=False):
             if record and Path(record['bank']).resolve() not in seen:
                 seen.add(Path(record['bank']).resolve())
                 result.append(record)
+    private_compatibility = private_state.require_compatible(
+        {'observed_repositories': observed_roots, 'banks': result}, compatibility, 'rollback' if require_readable else 'activate')
     return {'banks':result, 'discovery_gaps':gaps, 'observed_repositories':observed_roots,
+            'private_state': private_state.public_summary(private_compatibility),
             'bank_writes_performed':False,
             'implicit_migration_performed':False}
 
@@ -262,8 +266,11 @@ def staged(old, *, cache_recovery=None):
 
 
 def wrapper_readback(old, targets=None):
+    commands = {str(Path(old['bin_dir']) / name) for name in install.COMMAND_NAMES}
+    owned = {target['path'] for target in old['targets']
+             if target['kind'] == 'wrapper' and target['path'] in commands}
     for target in old['targets'] if targets is None else targets:
-        if target['kind'] != 'wrapper':
+        if target['kind'] != 'wrapper' or target['path'] not in owned:
             continue
         for args in (('--help',), ('update','--help')):
             result = subprocess.run([target['path'],*args], text=True, capture_output=True, timeout=30)
@@ -306,7 +313,7 @@ def run(args):
     paths = [state, code, *(Path(t['path']) for t in before['targets']),
              *(Path(before['bin_dir'])/name for name in install.COMMAND_NAMES)]
     if not before.get('no_guidance', False):
-        for name, _, _ in install.presets(before['presets']):
+        for name, _, _ in install.presets(before['presets'], (before.get('omp_binding') or {}).get('agent_dir')):
             hook = install.hook_paths(name)
             if hook:
                 paths.append(install.absolute(hook))
@@ -322,27 +329,43 @@ def run(args):
             if cache_qualification is not None:
                 summary['cache_recovery'] = cache_qualification['summary']
             same_revision = not summary['update_available']
-            with install.prepare(configuration(old),state,code,old,
+            with install.prepare(configuration(old, omp_peers_upgraded=getattr(args, 'omp_peers_upgraded', False)),state,code,old,
                                  candidate_root=None if same_revision and cache_qualification is None else root, candidate_kind=candidate['kind'],
                                  cache_recovery=cache_qualification) as plan:
                 plan['operation']='update'
+                plan['omp_layout_quiescence'] = getattr(args, 'omp_layout_quiescence', None)
+                plan['layout_quiescence'] = getattr(args, 'layout_quiescence', None) or []
+                if getattr(args, 'omp_writers_quiesced', False):
+                    plan['omp_transition'] = {'writers_quiesced': True}
                 # With no candidate or target changes there are no bank writes to
                 # qualify. Still verify ownership and public wrapper dispatch.
-                if (not args.check and not args.repo and same_revision and old['source'] == plan['source']
+                if (not args.check and not args.repo and not plan.get('omp_transition') and same_revision and old['source'] == plan['source']
                         and not plan['restart'] and len(plan['actions']) == len(old['targets'])
                         and not any(a['changed'] for a in plan['actions'])
                         and all(t['identity'] == next(a['after'] for a in plan['actions'] if a['path'] == t['path'])
                                 for t in old['targets'])):
                     install.verify_targets(old['targets'], source=old['source'])
                     wrapper_readback(old)
-                    return {**summary, 'compatibility': {'bank_scan': 'not-needed-no-changes',
-                            'bank_writes_performed': False, 'implicit_migration_performed': False},
-                            'verified': True, 'changed': False, 'receipt': old,
-                            'restart_clients': [], 'receipt_path': str(state/'receipt.json')}
+                    result = {**summary, 'compatibility': {
+                              'bank_scan': 'native-private-activation' if old.get('omp_binding') else 'not-needed-no-changes',
+                              'bank_writes_performed': False, 'implicit_migration_performed': False},
+                              'verified': True, 'changed': False, 'receipt': old,
+                              'restart_clients': [], 'receipt_path': str(state/'receipt.json')}
+                    return install.finish_stored_source_activation(state, result)
                 compatibility = banks(args.repo,candidate['compatibility'])
                 summary['compatibility'] = compatibility
                 plan['rollback_repositories'] = compatibility['observed_repositories']
+                if args.check and plan.get('omp_transition'):
+                    from .omp_boundary import native_transition
+                    summary['native_transition'] = native_transition(plan, check=True)
+                if args.check and plan.get('omp_binding'):
+                    from .omp_boundary import native_activation
+                    summary['native_activation'] = native_activation(plan, check=True)
                 if args.check:
+                    from . import private_state
+                    target = private_state.prepare_lifecycle(plan, check=True)
+                    summary['private_compatibility'] = private_state.public_summary(
+                        private_state.require_compatible(old, target, 'update'))
                     return {**summary,'check_complete':True,'eligible':True,'verified':False,
                             'installation_writes_performed':False,'restart_clients':plan['restart']}
                 if same_revision and cache_qualification is None:
@@ -380,6 +403,10 @@ def main(argv=None):
     parser.add_argument('operation',choices=('update',))
     parser.add_argument('--check',action='store_true')
     parser.add_argument('--repo',action='append',default=[])
+    parser.add_argument('--omp-writers-quiesced',action='store_true')
+    parser.add_argument('--omp-peers-upgraded',action='store_true')
+    parser.add_argument('--omp-layout-quiescence',action='append')
+    parser.add_argument('--layout-quiescence',action='append',default=[])
     args = parser.parse_args(argv)
     args.command='update'
     return execute(args)

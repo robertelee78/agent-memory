@@ -1,7 +1,9 @@
 """Bootstrap contract: exercise real subprocesses/files, not product internals."""
 import ast
+import copy
 import json
 import os
+import runpy
 from pathlib import Path
 import shutil
 import subprocess
@@ -117,19 +119,28 @@ class HarnessContract(unittest.TestCase):
         # interruption evidence. The real suites emit actual replay results.
         proof_fixture = '''
 import json,sys
-from fault_partitions import GROUPS,PARTITIONS
-observed=[{'step':i,'point':'controlled-'+str(i),'kind':'controlled-write'} for i in range(PARTITIONS)]
-for name,group in GROUPS.items():
- for index in range(PARTITIONS):
-  proof={'group':name,'index':index,'count':PARTITIONS,'artifact_digest':'0'*64,
-         'observed':observed,'executed':[observed[index]['point']]}
-  print(json.dumps({'lifecycle_fault_partition':proof}),file=sys.stderr)
+from fault_partitions import GROUPS,OWNERS
+# Synthetic gate-control metadata, not product interruption evidence.
+suite=sys.argv[sys.argv.index('--suite')+1]
+if suite in OWNERS:
+ name,index=OWNERS[suite]
+ count=GROUPS[name].get('count',len(GROUPS[name]['suites']))
+ observed=[{'step':i,'point':'controlled-'+str(i),'kind':'controlled-write'} for i in range(count)]
+ proof={'group':name,'index':index,'count':count,'artifact_digest':'0'*64,
+        'observed':observed,'executed':[observed[index]['point']]}
+ print(file=sys.stderr)
+ print(json.dumps({'control_evidence':'synthetic gate control, not product evidence',
+                   'lifecycle_fault_partition':proof}),file=sys.stderr,flush=True)
 '''
         passed = samples['passed']
         samples['passed'] += proof_fixture
         samples['passed-without-interruption-proof'] = passed
         samples['incomplete-interruption-proof'] = passed + proof_fixture.replace(
             "'executed':[observed[index]['point']]", "'executed':[] if index==0 else [observed[index]['point']]")
+        samples['missing-lifecycle-case'] = samples['passed']
+        samples['non-object-worker-receipt'] = ("import json,unittest\n"
+            "json.dumps=lambda *a,**k:'[]'\n"
+            "class Contract(unittest.TestCase):\n def test_x(self): pass\n")
         with World() as world:
             checkout = world.inside("checkout with spaces")
             (checkout / "scripts").mkdir(parents=True)
@@ -142,30 +153,155 @@ for name,group in GROUPS.items():
             # Every unrelated foundation would run the same disposable body.
             # Retain the full required contract set and every fault partition;
             # production gate runs still execute the complete real registry.
-            tree = ast.parse((ROOT/'scripts/test_gate.py').read_text())
-            required = ast.literal_eval(next(node.value for node in tree.body if isinstance(node,ast.Assign)
-                and any(isinstance(target,ast.Name) and target.id=='REQUIRED' for target in node.targets)))
+            tree = ast.parse((checkout / "scripts/test_gate.py").read_text())
+            required = ast.literal_eval(next(node.value for node in tree.body
+                if isinstance(node, ast.Assign) and any(
+                    isinstance(target, ast.Name) and target.id == "REQUIRED"
+                    for target in node.targets)))
             required |= set(OWNERS) | {'harness','optional-stores','lifecycle-fault-partitions'}
             manifest['suites'] = [entry for entry in manifest['suites'] if entry['name'] in required]
+            matrix = copy.deepcopy(json.loads((ROOT / "tests/lifecycle-matrix.json").read_text()))
+            # All bindings deliberately name the real controlled method below;
+            # this synthetic fixture cannot certify product lifecycle behavior.
+            for row in matrix["requirements"]:
+                row["cases"] = [{"suite": "harness", "test": "Contract.test_x"}]
+            matrix_template = copy.deepcopy(matrix)
             for sample, body in samples.items():
                 print('gate-control-sample: '+sample, file=sys.stderr, flush=True)
-                (checkout / "tests/contracts/fixture.py").write_text(body)
                 for entry in manifest["suites"]:
-                    if entry["scope"] in {"v0.0.1", "v0.0.2"}:
-                        entry["path"] = "tests/contracts/fixture.py"
+                    if entry.get("path"):
+                        # Fault workers share a module but execute independent
+                        # partitions, matching the production registry shape.
+                        group = OWNERS[entry["name"]][0] if entry["name"] in OWNERS else entry["name"]
+                        entry["path"] = f"tests/contracts/fixture_{group}.py"
+                        entry.pop("tests", None)
+                        (checkout / entry["path"]).write_text(body)
                 (checkout / "tests/contracts.json").write_text(json.dumps(manifest))
+                matrix = copy.deepcopy(matrix_template)
+                if sample == "missing-lifecycle-case":
+                    matrix["requirements"][0]["cases"][0]["test"] = "Contract.test_missing"
+                (checkout / "tests/lifecycle-matrix.json").write_text(json.dumps(matrix))
                 result = world.run(["sh", checkout / "scripts/test.sh", "--release", "--json"], check=False)
                 report = json.loads(result.stdout)
                 self.assertEqual(report["passed"], sample == "passed")
                 self.assertEqual(report["release_complete"], sample == "passed")
                 self.assertEqual(result.returncode == 0, sample == "passed")
+                if sample == "missing-lifecycle-case":
+                    self.assertEqual(report["error_suite"], "lifecycle-matrix")
+                if sample == "non-object-worker-receipt":
+                    failed = [row for row in report["suites"] if row["status"] == "failed"]
+                    self.assertTrue(failed)
+                    self.assertTrue(all(row.get("passed") is False and row.get("tests") == 0
+                                        for row in failed))
             # Missing required entries and attempts to reclassify them cannot
             # make a falsely complete release report.
+            for entry in manifest["suites"]:
+                if entry.get("path"):
+                    (checkout / entry["path"]).write_text(samples["passed"])
             manifest["suites"] = [e for e in manifest["suites"] if e["name"] != "bank-roundtrip"]
             (checkout / "tests/contracts.json").write_text(json.dumps(manifest))
             result = world.run(["sh", checkout / "scripts/test.sh", "--release", "--json"], check=False)
             self.assertNotEqual(result.returncode, 0)
-            self.assertIn("every mandatory contract", json.loads(result.stdout)["error"])
+            report = json.loads(result.stdout)
+            self.assertFalse(report["release_complete"])
+            self.assertEqual(report["error_stage"], "registry")
+            self.assertEqual(report["suites"], [])
+
+    def test_registered_batches_cannot_omit_duplicate_or_invent_executed_cases(self):
+        with World() as world:
+            checkout = world.inside("case batch checkout")
+            (checkout / "scripts").mkdir(parents=True)
+            (checkout / "tests/contracts").mkdir(parents=True)
+            for name in ("test_gate.py", "run_contract_suite.py"):
+                shutil.copy2(ROOT / "scripts" / name, checkout / "scripts" / name)
+            shutil.copy2(ROOT / "tests/world.py", checkout / "tests/world.py")
+            shutil.copy2(ROOT / "tests/fault_partitions.py", checkout / "tests/fault_partitions.py")
+            (checkout / "tests/controlled_base.py").write_text(
+                "import unittest\nclass Base(unittest.TestCase):\n def test_inherited(self): pass\n")
+            log = world.inside("actually-executed-cases")
+            target = checkout / "tests/contracts/controlled.py"
+            target.write_text(
+                "from pathlib import Path\nimport controlled_base\n"
+                "class Controlled(controlled_base.Base):\n"
+                " def test_a(self):\n"
+                f"  with Path({str(log)!r}).open('a') as output: output.write('a')\n"
+                " def test_b(self):\n"
+                f"  with Path({str(log)!r}).open('a') as output: output.write('b')\n")
+            entries = [
+                {"name": "first", "path": "tests/contracts/controlled.py", "tests": ["Controlled.test_a"]},
+                {"name": "second", "path": "tests/contracts/controlled.py",
+                 "tests": ["Controlled.test_b", "Controlled.test_inherited"]}]
+            manifest = checkout / "tests/contracts.json"
+            manifest.write_text(json.dumps({"suites": entries}))
+            # A deliberate invalid-registration refusal has its own exit code;
+            # no assertion depends on incidental diagnostic wording.
+            wrapper = checkout / "controlled_worker.py"
+            wrapper.write_text(
+                "import runpy, sys\nsys.argv = sys.argv[1:]\n"
+                "try: runpy.run_path(sys.argv[0], run_name='__main__')\n"
+                "except ValueError: raise SystemExit(2)\n")
+            command = [sys.executable, "-I", "-B", wrapper,
+                       checkout / "scripts/run_contract_suite.py", target]
+            reports = []
+            for name in ("first", "second"):
+                result = world.run([*command, "--suite", name], check=False)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                counts = json.loads(result.stdout)
+                self.assertTrue(counts["passed"])
+                self.assertEqual(counts["case_selection"]["executed"],
+                                 counts["case_selection"]["selected"])
+                reports.append({**counts, "name": name, "status": "passed"})
+            self.assertEqual(log.read_text(), "ab")
+            log.unlink()
+            result = world.run(command, check=False)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(json.loads(result.stdout)["tests"], 3)
+            self.assertEqual(log.read_text(), "ab")
+            corruptions = [
+                entries[:1],
+                [entries[0], {**entries[1], "tests": ["Controlled"]}],
+                [entries[0], {**entries[1], "tests": ["Controlled.test_missing"]}],
+                [entries[0], {**entries[1], "tests": ["MissingClass"]}],
+                [entries[0], {**entries[1], "tests": ["Controlled.test_b", "Controlled.test_b"]}],
+                [entries[0], {**entries[1], "tests": ["Controlled.test_b.extra"]}],
+                [entries[0], {**entries[1], "tests": []}],
+                [entries[0], {**entries[1], "tests": ["Controlled.test_b"]}]]
+            for bad in corruptions:
+                with self.subTest(batch=bad):
+                    log.unlink(missing_ok=True)
+                    manifest.write_text(json.dumps({"suites": bad}))
+                    result = world.run([*command, "--suite", "first"], check=False)
+                    self.assertEqual(result.returncode, 2, result.stderr)
+                    self.assertFalse(log.exists(), "Invalid coverage must refuse before running a valid batch")
+            manifest.write_text(json.dumps({"suites": entries}))
+            for unregistered in ("missing", "other-file"):
+                with self.subTest(unregistered=unregistered):
+                    if unregistered == "other-file":
+                        manifest.write_text(json.dumps({"suites": [
+                            *entries, {"name": unregistered, "path": "tests/contracts/elsewhere.py"}]}))
+                    result = world.run([*command, "--suite", unregistered], check=False)
+                    self.assertEqual(result.returncode, 2, result.stderr)
+                    self.assertFalse(log.exists())
+            aggregate = runpy.run_path(str(checkout / "scripts/test_gate.py"))["case_batch_coverage"]
+            summary = aggregate(entries, reports)
+            self.assertEqual(summary[0]["cases"], reports[0]["case_selection"]["complete"])
+            bad_reports = [
+                reports[:1],
+                [reports[0], {**reports[1], "status": "failed"}],
+                [reports[0], {**reports[1], "tests": 3}],
+                [reports[0], {**reports[1], "case_selection": {
+                    **reports[1]["case_selection"], "complete": ["different.test"]}}],
+                [reports[0], {**reports[1], "case_selection": {
+                    **reports[1]["case_selection"], "selected": reports[0]["case_selection"]["selected"]}}],
+                [reports[0], {**reports[1], "case_selection": {
+                    **reports[1]["case_selection"], "executed": []}}],
+                [{**report, "case_selection": {
+                    **report["case_selection"], "complete": [
+                        *report["case_selection"]["complete"], "omitted.test"]}} for report in reports]]
+            for invalid in bad_reports:
+                with self.subTest(aggregate=invalid):
+                    with self.assertRaises(ValueError):
+                        aggregate(entries, invalid)
 
 
 if __name__ == "__main__":

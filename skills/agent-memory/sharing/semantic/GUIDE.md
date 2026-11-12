@@ -7,7 +7,7 @@ domain: sharing
 
 ## Use when
 
-At a natural boundary, a session MUST inspect both current local memory and the
+At a [natural boundary](../../SKILL.md#natural-turn-boundary), a session MUST inspect both current local memory and the
 actual landed authority bank before publishing or refreshing. It MUST follow
 this guide even if Git can merge the files cleanly: contradictory claims can
 live in separate paths, and different words can express duplicate learning.
@@ -79,9 +79,32 @@ v1 retains its64-component/64KiB disclosure and1MiB raw-input limits.
 With `SKILL_DIR` resolved to this portable package:
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/reconcile_memory.py" inspect-v2 --repo /path/to/repo --output /private/initial-inspection.json
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/reconcile_memory.py" inspect-v2 --repo /path/to/repo --input /private/selection.json --output /private/selected-inspection.json
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/reconcile_memory.py" page-v2 --repo /path/to/repo --input /private/selected-inspection.json --page 0
+python3 -I "$SKILL_DIR/scripts/reconcile_memory.py" inspect-v2 --repo /path/to/repo --output /private/initial-inspection.json
+python3 -I "$SKILL_DIR/scripts/reconcile_memory.py" inspect-v2 --repo /path/to/repo --input /private/selection.json --output /private/selected-inspection.json --pages-dir /private/selected-pages
+```
+
+For a multi-page review, the session SHOULD export the checked pages once rather
+than rebuild the complete frontier through a separate `page-v2` call per page.
+Both output paths MUST be new, distinct absolute paths in existing owner-only
+directories outside the repository and executing runtime. The bundle contains
+`0.json`, `1.json`, and so on, followed by `complete.json`. Total encoded page
+bytes are bounded to512MiB; every page retains its64KiB disclosure bound.
+
+Read each exported page with ordinary file tools. Before using it, the consumer
+MUST verify its bytes/hash, index, binding and source/edge membership against the
+manifest, plus the manifest/marker hashes and page count pinned by the returned
+receipt. It MUST reject missing, extra, mixed, reordered or edited artifacts.
+Actual judgments MUST follow the consumed source, edge and known-hold items.
+The completion marker proves artifact persistence only, not semantic truth,
+currentness or permission. Fresh review/publication/refresh checks remain
+mandatory. Partial output MUST be preserved as failure evidence, never accepted
+as a complete bundle; use new output paths for an explicit fresh inspection.
+
+Without `--pages-dir`, inspection keeps its existing behavior. Use `page-v2` for
+an independently rechecked page when not consuming an exported bundle:
+
+```sh
+python3 -I "$SKILL_DIR/scripts/reconcile_memory.py" page-v2 --repo /path/to/repo --input /private/selected-inspection.json --page 0
 ```
 
 For a shorter judgment handoff, `am semantic worklist-v2 --repo REPO --input
@@ -94,7 +117,7 @@ explicit groups, or `[]` if none) and `rationale`. Include `resolutions` only fo
 actual evidenced resolutions. Use:
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/reconcile_memory.py" review-indexed-v2 --repo REPO --inspection SELECTED \
+python3 -I "$SKILL_DIR/scripts/reconcile_memory.py" review-indexed-v2 --repo REPO --inspection SELECTED \
   --input PRIVATE_DECISIONS --output PRIVATE_REVIEWED
 ```
 
@@ -239,8 +262,8 @@ apply to this untyped correction.
 ## Apply
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/reconcile_memory.py" review-v2 --repo /path/to/repo --input /private/review.json --output /private/reviewed.json
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/reconcile_memory.py" check --v2 --repo /path/to/repo --input /private/proof.json --output /private/checked.json
+python3 -I "$SKILL_DIR/scripts/reconcile_memory.py" review-v2 --repo /path/to/repo --input /private/review.json --output /private/reviewed.json
+python3 -I "$SKILL_DIR/scripts/reconcile_memory.py" check --v2 --repo /path/to/repo --input /private/proof.json --output /private/checked.json
 ```
 
 ## Read back
@@ -352,7 +375,7 @@ reported known-hold recovery condition, the session SHOULD use the supported
 recovery with this repository's verified project UUID, then re-inspect sources:
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/reconcile_memory.py" recover-holds --repo /path/to/repo --project-id VERIFIED_PROJECT_UUID
+python3 -I "$SKILL_DIR/scripts/reconcile_memory.py" recover-holds --repo /path/to/repo --project-id VERIFIED_PROJECT_UUID
 ```
 
 Recovery verifies scope/ownership, restores a verified retained registry/journal

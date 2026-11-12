@@ -1,0 +1,17 @@
+{
+ "argv": [
+  "git",
+  "-C",
+  "/tmp/am-v15-delivery/llama-reference",
+  "merge-base",
+  "--is-ancestor",
+  "a578bb6b94529b7b2721d0ee49eaea5dbb2c6d07",
+  "refs/heads/master"
+ ],
+ "cwd": "/Users/robert.lee/.omp/wt/tba949e054/m/data/2026-11-05-ssg-runtime/licenses",
+ "exit": 1,
+ "seconds": 0.006,
+ "started_at": "2026-11-05T16:52:22.811573+00:00",
+ "stderr": "",
+ "stdout": ""
+}

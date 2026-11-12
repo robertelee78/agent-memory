@@ -1,0 +1,22 @@
+{
+  "argv": [
+    "/tmp/am-v15-delivery/qualification-venv/bin/python",
+    "-I",
+    "-B",
+    "/opt/agent-memory-worktrees/v015-delivery/docs/research/data/2026-11-05-ssg-runtime/independent-execution/compile_inputs.py",
+    "--am-root",
+    "/tmp/am-v15-delivery/independent-authored-source",
+    "--suite",
+    "/opt/agent-memory-worktrees/v015-delivery/docs/research/data/2026-11-05-ssg-runtime/independent-suite/suite.json",
+    "--output",
+    "/opt/agent-memory-worktrees/v015-delivery/docs/research/data/2026-11-05-ssg-runtime/independent-execution/authored-inputs-20261106.json",
+    "--scorer-map",
+    "/opt/agent-memory-worktrees/v015-delivery/docs/research/data/2026-11-05-ssg-runtime/independent-execution/scorer-map-20261106.json"
+  ],
+  "cwd": "/opt/agent-memory-worktrees/v015-delivery",
+  "started_at": "2026-11-06T21:12:00.220095+00:00",
+  "seconds": 0.6089480419759639,
+  "exit": 0,
+  "stdout": "{\"schema\": \"am255/oracle-separated-inputs-v1\", \"cases\": 101, \"output_sha256\": \"1986071901b4004618310b15f2ebcbf6f03e6ee7afc9e113eca6d4deff893ef2\", \"scorer_map_sha256\": \"ae01bb275058e098ac37ea47fab1ca7a75e4692c5680899406506f3d262488f2\", \"model_or_graph_executed\": false}\n",
+  "stderr": ""
+}

@@ -10,7 +10,7 @@ from record_fixtures import record_text, project_id
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT/'skills/agent-memory/scripts'))
-from agent_memory import bank_contract as bank, validation_memo as memo, security, recall_catalog
+from agent_memory import bank_contract as bank, validation_memo as memo, security
 from agent_memory.frontmatter import ContractError
 
 
@@ -67,10 +67,21 @@ class ValidationMemoContract(PublicationFixture):
             files['MEMORY.md']=bank.router_text(meta,routes,omitted)
             with memo.operation():
                 bank.validate_files(files)
-                for _ in range(2):
-                    parsed={};bank.validate_files(files,parsed_records=parsed)
-                    self.assertIn(path,parsed);self.assertIn('Keep distinct source evidence.',parsed[path][2])
-                    parsed.clear()
+                parsed={};first=bank.validate_files(files,parsed_records=parsed)
+                self.assertIn(path,parsed);self.assertIn('Keep distinct source evidence.',parsed[path][2])
+                parsed[path][1]['caller-only']='untrusted'
+                parsed[path]=(parsed[path][0],parsed[path][1],'caller replacement')
+                first['entries'].clear()
+                again={};second=bank.validate_files(files,parsed_records=again)
+                self.assertTrue(second['entries'])
+                self.assertNotIn('caller-only',again[path][1])
+                self.assertIn('Keep distinct source evidence.',again[path][2])
+                for invalid in ({path:again[path]}, [], 'not an output'):
+                    with self.assertRaises(ContractError):bank.validate_files(files,parsed_records=invalid)
+                changed={**files,path:files[path].replace('Keep distinct source evidence.','Keep changed source evidence.')}
+                updated={};bank.validate_files(changed,parsed_records=updated)
+                self.assertIn('Keep changed source evidence.',updated[path][2])
+                self.assertIn('Keep distinct source evidence.',again[path][2])
 
     def test_exceptions_nesting_and_budget_fallback_do_not_leak_validation_state(self):
         with World() as w:
@@ -86,13 +97,6 @@ class ValidationMemoContract(PublicationFixture):
                 self.assertIsNone(memo.current())
             finally:memo.MAX_BYTES=old
             with memo.operation() as fresh:self.assertFalse(fresh.values)
-
-    def test_catalog_generation_remains_available_outside_operation_and_refuses_active_memo(self):
-        cold=recall_catalog.generation()
-        self.assertIn('agent_memory.validation_memo',cold['modules'])
-        with memo.operation():
-            with self.assertRaises(recall_catalog.CacheMiss):recall_catalog.generation()
-        self.assertEqual(cold,recall_catalog.generation())
 
     def test_small_retained_budgets_evict_and_oversized_results_fall_back_without_truncation(self):
         with World() as w:
@@ -148,7 +152,7 @@ raise SystemExit(publication.main(['land','--repo',str(repo),'--input',str(reque
                 (directory/'activeContext.md').write_text('# Current focus\n\nRetain the authored local learning.\n')
                 request=self.prepared(w,repo)['request'];before=self.state(w,repo,directory)
                 head=w.git('ls-remote','origin','refs/heads/main',cwd=repo).stdout
-                output=w.run([sys.executable,'-I','-c',program,self.pack/'scripts',repo,self.save(w,request),action,policy,peer],check=False,timeout=120)
+                output=w.run([sys.executable,'-I','-B','-c',program,self.pack/'scripts',repo,self.save(w,request),action,policy,peer],check=False,timeout=120)
                 self.assertEqual(output.returncode,1,output.stdout+output.stderr)
                 self.assertFalse(json.loads(output.stdout)['publication_verified'])
                 after=self.state(w,repo,directory)

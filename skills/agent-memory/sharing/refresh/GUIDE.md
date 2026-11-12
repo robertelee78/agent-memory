@@ -7,7 +7,7 @@ domain: sharing
 
 ## Use when
 
-At a natural turn boundary, a session MUST check for newly landed same-repository
+At a [natural turn boundary](../../SKILL.md#natural-turn-boundary), a session MUST check for newly landed same-repository
 memory and reconcile it before using it as current shared guidance or admitting
 new learning. It MUST preserve unpublished local learning, branch history, the
 original index and non-memory working files. It MUST NOT pull/rebase the whole
@@ -44,6 +44,12 @@ review. Its recall request SHOULD name relevant paths/IDs from that review and
 MUST NOT reuse a single-view discovery trace from the pre-import bank: importing
 new memory changes that trace's inventory. A later new recall question MUST use
 fresh local semantic discovery against the actual resulting bank.
+
+When an unchanged inventory has an already primed optional recall catalog, a
+discovery-qualified recall within refresh MAY reuse it after checking the current
+canonical sources, scope, applicability and safety. Cache loss or an unusable
+catalog falls back to the complete reader; refresh does not publish a catalog.
+The catalog does not establish semantic completeness or freshness by itself.
 
 The session SHOULD use copied-pack public refresh, pending/conflict, recovery,
 linked-worktree and normal-integration workflows for changes here. Tests MUST
@@ -84,8 +90,8 @@ the full review below or its specific recovery. Do not treat this observation as
 proof that other sessions have no private pending work.
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/refresh_memory.py" inspect --v2 --repo /path/to/repo --output /private/refresh-inspection.json
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/refresh_memory.py" inspect --v2 --repo /path/to/repo --base FULL_SHARED_COMMIT --output /private/explicit-refresh-inspection.json
+python3 -I "$SKILL_DIR/scripts/refresh_memory.py" inspect --v2 --repo /path/to/repo --output /private/refresh-inspection.json
+python3 -I "$SKILL_DIR/scripts/refresh_memory.py" inspect --v2 --repo /path/to/repo --base FULL_SHARED_COMMIT --output /private/explicit-refresh-inspection.json
 ```
 
 The session MUST retain the stored complete result and extract its nested
@@ -114,7 +120,7 @@ canonical knowledge. Local state MUST remain outside Git and the bank.
 ## Plan
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/refresh_memory.py" prepare --v2 --repo /path/to/repo --input /private/refresh-input.json --output /private/prepared-refresh.json
+python3 -I "$SKILL_DIR/scripts/refresh_memory.py" prepare --v2 --repo /path/to/repo --input /private/refresh-input.json --output /private/prepared-refresh.json
 ```
 
 Only `prepared` contains a `proposal`. The session MUST retain the complete
@@ -141,7 +147,7 @@ The session MUST retain the conflict packet while independent imports proceed.
 ## Apply
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/refresh_memory.py" apply --v2 --input /private/prepared-refresh.json --output /private/applied-refresh.json
+python3 -I "$SKILL_DIR/scripts/refresh_memory.py" apply --v2 --input /private/prepared-refresh.json --output /private/applied-refresh.json
 ```
 
 ## Read back

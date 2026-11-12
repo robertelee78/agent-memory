@@ -1,0 +1,12 @@
+{
+  "schema": "am255/runtime-controls-host-v1",
+  "ssg": "/opt/ssg",
+  "ssg_binary": "/tmp/am-v15-delivery/ssg-target/release/ssg",
+  "engine": "podman",
+  "backend": "metal",
+  "reference_source": "/tmp/am-v15-delivery/llama-reference",
+  "reference_binary": "/tmp/am-v15-delivery/llama-reference-build/bin/llama-server",
+  "reference_weight": "/tmp/am-v15-delivery/Qwen3-Embedding-8B-Q8_0.gguf",
+  "alternate_binary": "/opt/homebrew/bin/llama-server",
+  "alternate_weight": "/tmp/am-v15-delivery/Qwen3-Embedding-0.6B-Q8_0.gguf"
+}

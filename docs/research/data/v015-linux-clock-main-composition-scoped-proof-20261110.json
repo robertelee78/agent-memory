@@ -1,0 +1,373 @@
+{
+  "acceptance_limitations": [
+    "Initial installed wire positive-wake smoke FAILED; do not relabel from other public passes",
+    "No final composition full contract, hosted, actual stock-native/wake, Linux image or Darwin rate qualification",
+    "No p99, model, endpoint, matched performance, independent semantic/story or signed release acceptance",
+    "The older R2 full contract campaign subsequently finished FAILED:531workers/977methods/87files, six marker-fixture subcase errors; no result transfer",
+    "Targeted exact Main clock source reviews subsequently passed as recorded in later_r2_closure; no execution acceptance"
+  ],
+  "base_commit": "399edaf8a72077e444cac82144f153d8c6cc3403",
+  "guides": {
+    "passed": true,
+    "rows": [
+      {
+        "artifact_digest": "8804916467b8fc12681f27301795d9bc9b36b89fc0f08cbf69f4c4d9104b4e62",
+        "exact_retry_immutable": true,
+        "guides": [
+          {
+            "gap_free": true,
+            "receipt_body_match": true,
+            "relative": "SKILL.md",
+            "retained_learning_body_empty": true
+          },
+          {
+            "gap_free": true,
+            "receipt_body_match": true,
+            "relative": "turn/GUIDE.md",
+            "retained_learning_body_empty": true
+          },
+          {
+            "gap_free": true,
+            "receipt_body_match": true,
+            "relative": "maintain/cli/GUIDE.md",
+            "retained_learning_body_empty": true
+          },
+          {
+            "gap_free": true,
+            "receipt_body_match": true,
+            "relative": "bank/GUIDE.md",
+            "retained_learning_body_empty": true
+          }
+        ],
+        "mode": "copy",
+        "public_cli_contracts": [
+          {
+            "action": "plan",
+            "documented_contract_matches": true,
+            "exit": 0,
+            "verb": "compact"
+          },
+          {
+            "action": "plan",
+            "documented_contract_matches": true,
+            "exit": 0,
+            "verb": "govern"
+          },
+          {
+            "action": "preview",
+            "documented_contract_matches": true,
+            "exit": 0,
+            "verb": "compact"
+          },
+          {
+            "action": "preview",
+            "documented_contract_matches": true,
+            "exit": 0,
+            "verb": "govern"
+          },
+          {
+            "action": "preview",
+            "documented_contract_matches": true,
+            "exit": 0,
+            "verb": "admission"
+          }
+        ],
+        "surrounding_source_preserved": true
+      },
+      {
+        "artifact_digest": "8804916467b8fc12681f27301795d9bc9b36b89fc0f08cbf69f4c4d9104b4e62",
+        "exact_retry_immutable": true,
+        "guides": [
+          {
+            "gap_free": true,
+            "receipt_body_match": true,
+            "relative": "SKILL.md",
+            "retained_learning_body_empty": true
+          },
+          {
+            "gap_free": true,
+            "receipt_body_match": true,
+            "relative": "turn/GUIDE.md",
+            "retained_learning_body_empty": true
+          },
+          {
+            "gap_free": true,
+            "receipt_body_match": true,
+            "relative": "maintain/cli/GUIDE.md",
+            "retained_learning_body_empty": true
+          },
+          {
+            "gap_free": true,
+            "receipt_body_match": true,
+            "relative": "bank/GUIDE.md",
+            "retained_learning_body_empty": true
+          }
+        ],
+        "mode": "link",
+        "public_cli_contracts": [
+          {
+            "action": "plan",
+            "documented_contract_matches": true,
+            "exit": 0,
+            "verb": "compact"
+          },
+          {
+            "action": "plan",
+            "documented_contract_matches": true,
+            "exit": 0,
+            "verb": "govern"
+          },
+          {
+            "action": "preview",
+            "documented_contract_matches": true,
+            "exit": 0,
+            "verb": "compact"
+          },
+          {
+            "action": "preview",
+            "documented_contract_matches": true,
+            "exit": 0,
+            "verb": "govern"
+          },
+          {
+            "action": "preview",
+            "documented_contract_matches": true,
+            "exit": 0,
+            "verb": "admission"
+          }
+        ],
+        "surrounding_source_preserved": true
+      }
+    ],
+    "schema": "am/changed-guides-copy-link-structural-observer-smoke-v1",
+    "scope": "Actual installed copy/link CLI contract discovery and production receipt-bound observer API with controlled native-format carriers. Not actual stock-native renderer/wake, model, platform, independent semantic or signed-release acceptance.",
+    "seconds": 22.301163916941732,
+    "source_after": "0e341d18650d732af62d9894cdb8faa8c0674a7fc188e0ef4849e3a487a44324",
+    "source_before": "0e341d18650d732af62d9894cdb8faa8c0674a7fc188e0ef4849e3a487a44324"
+  },
+  "installed_clock_wire": {
+    "closed_verified": true,
+    "continue": false,
+    "durable_root_wakes": 0,
+    "events": [
+      {
+        "kind": "READY",
+        "sequence": 0
+      },
+      {
+        "kind": "RECEIVED",
+        "sequence": 1
+      },
+      {
+        "kind": "OBSERVED",
+        "sequence": 1
+      },
+      {
+        "kind": "CLOCK-REPLY",
+        "sequence": 0
+      },
+      {
+        "kind": "RECEIVED",
+        "sequence": 2
+      },
+      {
+        "kind": "OBSERVED",
+        "sequence": 2
+      },
+      {
+        "kind": "RECEIVED",
+        "sequence": 3
+      },
+      {
+        "kind": "OBSERVED",
+        "sequence": 3
+      }
+    ],
+    "passed": false,
+    "private_world": "/private/tmp/agent-memory-test-rmizhugv",
+    "root_receipt_matches": false,
+    "same_root_retry_continues": false,
+    "same_root_retry_status": "pending-undeliverable-window",
+    "schema": "am/composed-installed-clock-wire-smoke-v1",
+    "scope": "Actual installed macOS helper, credential-free disposable World, real CLOCK/ACK and durable root-wake through public finite pipe with synthetic stored-source carriers. Not stock-native renderer/wake/model, Linux image, timing/p99 or story acceptance.",
+    "second_verified": true,
+    "seconds": 21.076106167049147,
+    "source_after": "0e341d18650d732af62d9894cdb8faa8c0674a7fc188e0ef4849e3a487a44324",
+    "source_before": "0e341d18650d732af62d9894cdb8faa8c0674a7fc188e0ef4849e3a487a44324",
+    "stderr_empty": true,
+    "wake_status": "pending-undeliverable-window",
+    "worker_exit": 0
+  },
+  "planning": {
+    "passed": true,
+    "rows": [
+      {
+        "applied_verified": true,
+        "feature_index_head_preserved": true,
+        "foreign_plan_and_raw_apply_refused": true,
+        "historical_apply_retry": true,
+        "passed": true,
+        "plan_non_authorizing": true,
+        "planned_proposed_bytes_equal": true,
+        "private_output_only": true,
+        "route": "update",
+        "seconds": 31.281406790949404,
+        "stable_record_identity_and_provenance": true,
+        "stale_plan_rejected": true
+      },
+      {
+        "applied_verified": true,
+        "feature_index_head_preserved": true,
+        "foreign_plan_and_raw_apply_refused": null,
+        "historical_apply_retry": null,
+        "passed": true,
+        "plan_non_authorizing": true,
+        "planned_proposed_bytes_equal": true,
+        "private_output_only": true,
+        "route": "consolidate",
+        "seconds": 23.35696508397814,
+        "stable_record_identity_and_provenance": true,
+        "stale_plan_rejected": null
+      },
+      {
+        "applied_verified": true,
+        "feature_index_head_preserved": true,
+        "foreign_plan_and_raw_apply_refused": null,
+        "historical_apply_retry": null,
+        "passed": true,
+        "plan_non_authorizing": true,
+        "planned_proposed_bytes_equal": true,
+        "private_output_only": true,
+        "route": "governance",
+        "seconds": 10.762738583027385,
+        "stable_record_identity_and_provenance": true,
+        "stale_plan_rejected": null
+      }
+    ],
+    "schema": "am/public-governed-judgment-plan-smoke-v1",
+    "scope": "Real installed public plan/review/preview/apply for update/consolidation/revocation on ordinary eligible banks. Not held-unit/full-coverage, raw layout, platform, independent-review, native/model/hosted or signed release acceptance.",
+    "seconds": 65.4966008750489,
+    "source_after": "0e341d18650d732af62d9894cdb8faa8c0674a7fc188e0ef4849e3a487a44324",
+    "source_before": "0e341d18650d732af62d9894cdb8faa8c0674a7fc188e0ef4849e3a487a44324"
+  },
+  "portable_artifact_digest": "8804916467b8fc12681f27301795d9bc9b36b89fc0f08cbf69f4c4d9104b4e62",
+  "portable_pack_valid": true,
+  "qualification_source_identity": "0e341d18650d732af62d9894cdb8faa8c0674a7fc188e0ef4849e3a487a44324",
+  "raw_evidence": [
+    {
+      "bytes": 135906,
+      "name": "linux-clock-main-composition-source-and-initial-public-smokes-with-negative-reservation-20261110.tar.gz",
+      "original_private_location": "/tmp/am-v15-delivery/linux-clock-composed-base399edaf-source-overlay-20261110.json; /tmp/am-v15-delivery/linux-clock-composed-independent-subject-binding-20261110.json; /tmp/am-v15-delivery/linux-clock-composed-independent-review-brief-20261110.md; /tmp/am-v15-delivery/linux-clock-composed-clean-code-identity-20261110.json; /tmp/am-v15-delivery/linux-clock-composed-clean-code-identity-20261110.launch.json; /tmp/am-v15-delivery/linux-clock-composed-clean-pack-inspection-20261110.json; /tmp/am-v15-delivery/linux-clock-composed-clean-pack-inspection-20261110.launch.json; /tmp/am-v15-delivery/linux-clock-composed-guides-copy-link-cli-contracts-actual-20261110.json; /tmp/am-v15-delivery/linux-clock-composed-installed-public-plan-actual-20261110.json; /tmp/am-v15-delivery/linux-clock-composed-installed-public-recovery-actual-20261110.json; /tmp/am-v15-delivery/composed_clock_installed_wire_smoke_20261110.py; /tmp/am-v15-delivery/linux-clock-composed-installed-clock-wire-actual-20261110.json; /tmp/am-v15-delivery/linux-clock-composed-base399edaf-clean-source-20261110/skills/agent-memory/scripts/agent_memory/omp_stream.py; /tmp/am-v15-delivery/linux-clock-composed-base399edaf-clean-source-20261110/skills/agent-memory/scripts/agent_memory/omp_transport.py; /tmp/am-v15-delivery/linux-clock-composed-base399edaf-clean-source-20261110/tests/contracts/test_omp_finite_stream.py; /tmp/am-v15-delivery/linux-clock-composed-base399edaf-clean-source-20261110/tests/contracts/test_omp_stored_authority_v2.py; /tmp/am-v15-delivery/linux-clock-composed-base399edaf-clean-source-20261110/tests/contracts/test_omp_boundary.py; /tmp/am-v15-delivery/linux-clock-composed-base399edaf-clean-source-20261110/tests/contracts.json",
+      "sha256": "1f869509e16627d38d40ccb80942be4776844dd438ebb1dbae76ca37189f60d9"
+    },
+    {
+      "bytes": 4647,
+      "name": "clock-reservation-diagnostic-r1-observer-failure-no-product-cause-20261110.tar.gz",
+      "original_private_location": "/tmp/am-v15-delivery/composed_clock_reserve_diagnostic_observer_20261110.py; /tmp/am-v15-delivery/composed_clock_installed_reservation_diagnostic_20261110.py; /tmp/am-v15-delivery/linux-clock-composed-installed-reservation-diagnostic-actual-20261110.json; /tmp/am-v15-delivery/linux-clock-composed-installed-reservation-diagnostic-actual-20261110.trace.jsonl",
+      "sha256": "7dc6973207f14ed9b796faf3beda94469e49437df6a05f0473e612b81cd26557"
+    },
+    {
+      "bytes": 5265,
+      "name": "clock-reservation-diagnostic-r2-exact-expired-window-source-preserved-20261110.tar.gz",
+      "original_private_location": "/tmp/am-v15-delivery/composed_clock_reserve_diagnostic_observer_20261110_r2.py; /tmp/am-v15-delivery/composed_clock_installed_reservation_diagnostic_20261110_r2.py; /tmp/am-v15-delivery/linux-clock-composed-installed-reservation-diagnostic-actual-20261110-r2.json; /tmp/am-v15-delivery/linux-clock-composed-installed-reservation-diagnostic-actual-20261110-r2.trace.jsonl",
+      "sha256": "86b6ed2c1702d43c256506086f09af3ceb9d7cdf0a39acef2633cc73c68f47c9"
+    }
+  ],
+  "recovery": {
+    "distinct_child_restore": true,
+    "exact_natural_metadata_verified_forward_and_restore": true,
+    "feature_index_head_preserved": true,
+    "historical_retry_did_not_reapply": true,
+    "immutable_originals_and_parent_receipt_preserved": true,
+    "passed": true,
+    "pending_policy_units": 8,
+    "private_pages_reconstruct_all_originals": true,
+    "schema": "am/installed-public-recovery-restore-smoke-v1",
+    "scope": "Actual installed synthetic oversized/context and eight-policy handoff repair, exact metadata and child restore. Controlled fixture review labels are not independent semantic/Opus acceptance. No native/model/endpoint/hosted/performance or release claim.",
+    "seconds": 34.22378045890946,
+    "semantic_completion_not_inferred": true,
+    "source_after": "0e341d18650d732af62d9894cdb8faa8c0674a7fc188e0ef4849e3a487a44324",
+    "source_before": "0e341d18650d732af62d9894cdb8faa8c0674a7fc188e0ef4849e3a487a44324"
+  },
+  "reservation_diagnostic": {
+    "conclusion": "This instrumented run reached the atomic reserve check after its adjusted deadline; correct fail-closed result. It does not establish the uninstrumented run precise timing or a platform/p99 profile.",
+    "durable_root_wakes": 0,
+    "instrumented": true,
+    "observer_r1": "Observer failed before first source result by matching unrelated Budget.reserve; retained independently, not a product-cause verdict.",
+    "qualification_claimed": false,
+    "reserve_actual_now_ns": 750147796501125,
+    "reserve_adjusted_deadline_ns": 750147102547705,
+    "reserve_cancelled": false,
+    "reserve_current_window": true,
+    "reserve_ended": false,
+    "source_before_after_unchanged": true,
+    "source_verified_and_closed": true,
+    "wake_observed": false,
+    "worker_exit": 0
+  },
+  "schema": "am/main-linux-clock-composition-scoped-proof-v1",
+  "source_bytecode_count": 0,
+  "source_inventory": {
+    "boundary_original_and_final": 49,
+    "finite_added": 13,
+    "finite_final": 118,
+    "finite_original": 105,
+    "removed_methods": 0,
+    "status": "source inventory only, not executed test counts",
+    "stored_added": 3,
+    "stored_final": 35,
+    "stored_original": 32
+  },
+  "later_r2_closure": {
+    "subject": {
+      "schema": "am/composed-linux-clock-independent-subject-v1",
+      "base_commit": "399edaf8a72077e444cac82144f153d8c6cc3403",
+      "root": "/private/tmp/am-v15-delivery/linux-clock-composed-base399edaf-clean-source-20261110-r2",
+      "qualification_source_identity": "99d1198a914b89722f2eaa42864e7f3cafcf9be7cb64ec0ff9d17b118c641422",
+      "portable_artifact_digest": "b618365d02d979ed7b43c59e02288eb7796ed0201b8b3f38bea921ca72e68396",
+      "source_overlay_manifest_sha256": "a21d7039b850d9ded89128488ff1353a29a786cb14ef9afc8e7a5598f39090e3",
+      "portable_pack_valid": true,
+      "source_bytecode_count": 0,
+      "execution_claimed": false
+    },
+    "delta_from_first_subject": [
+      "skills/agent-memory/scripts/agent_memory/omp_stream.py",
+      "tests/contracts/test_omp_finite_stream.py",
+      "docs/design/v0.0.15-omp-integration.md"
+    ],
+    "source_verdicts": [
+      {
+        "reviewer": "ComposedLinuxRuntimeOpus-r2-clock-closure-source-pass-not-execution-ready-20261110.json",
+        "model": "anthropic/claude-opus-5-5",
+        "verdict": "SOURCE PASS; execution NOT READY",
+        "sha256": "14562137425f6582ea4089ed4235b60fbc6419226a8bc132c65426bb031eaa4d"
+      },
+      {
+        "reviewer": "ComposedLinuxConsumersOpus-r2-clock-closure-source-pass-not-execution-ready-20261110.json",
+        "model": "anthropic/claude-opus-5-5",
+        "verdict": "SOURCE PASS; execution NOT READY",
+        "sha256": "918971505ed857ba028e342d744d7a78dea1e9b5e2b7aa68e06cfa199aafcc84"
+      }
+    ],
+    "controlled_image_window_classes": {
+      "scope": "two complete controlled image/window classes; not full finite suite/native/platform qualification",
+      "tests": 18,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "passed": true
+    },
+    "seconds": 0.7425108749885112,
+    "causal_schedules_exercise_production": 5642,
+    "source_before": "99d1198a914b89722f2eaa42864e7f3cafcf9be7cb64ec0ff9d17b118c641422",
+    "source_after": "99d1198a914b89722f2eaa42864e7f3cafcf9be7cb64ec0ff9d17b118c641422",
+    "raw_evidence": {
+      "name": "linux-clock-r2-p3-closures-exact-source-review-and18controls-actual-20261110.tar.gz",
+      "sha256": "6347a2750717f70d3e4073a8c0f58f3f80034525d835c9706714cbbcaadfaef3",
+      "bytes": 157123,
+      "original_private_location": "/tmp/am-v15-delivery/linux-clock-composed-source-overlay-20261110-r2.json; /tmp/am-v15-delivery/linux-clock-composed-independent-binding-20261110-r2.json; /tmp/am-v15-delivery/linux-clock-composed-r2-clean-code-identity-20261110.json; /tmp/am-v15-delivery/linux-clock-composed-r2-clean-code-identity-20261110.launch.json; /tmp/am-v15-delivery/linux-clock-composed-r2-clean-pack-inspection-20261110.json; /tmp/am-v15-delivery/linux-clock-composed-r2-clean-pack-inspection-20261110.launch.json; /tmp/am-v15-delivery/linux-clock-r2-all-image-and-deadline-controls-actual-20261110.json; /tmp/am-v15-delivery/linux-clock-r2-all-image-and-deadline-controls-actual-20261110.launch.json; /tmp/am-v15-delivery/linux-clock-r2-after-controlled-classes-source-identity-20261110.json; /tmp/am-v15-delivery/linux-clock-r2-after-controlled-classes-source-identity-20261110.launch.json; /tmp/am-v15-delivery/linux-clock-composed-base399edaf-clean-source-20261110-r2/skills/agent-memory/scripts/agent_memory/omp_stream.py; /tmp/am-v15-delivery/linux-clock-composed-base399edaf-clean-source-20261110-r2/skills/agent-memory/scripts/agent_memory/omp_transport.py; /tmp/am-v15-delivery/linux-clock-composed-base399edaf-clean-source-20261110-r2/tests/contracts/test_omp_finite_stream.py; /tmp/am-v15-delivery/linux-clock-composed-base399edaf-clean-source-20261110-r2/tests/contracts/test_omp_stored_authority_v2.py; /tmp/am-v15-delivery/linux-clock-composed-base399edaf-clean-source-20261110-r2/tests/contracts/test_omp_boundary.py; /tmp/am-v15-delivery/linux-clock-composed-base399edaf-clean-source-20261110-r2/tests/contracts.json; /tmp/am-v15-delivery/linux-clock-composed-base399edaf-clean-source-20261110-r2/docs/design/v0.0.15-omp-integration.md; /opt/agent-memory-worktrees/v015-delivery-evidence-private-20261108/ComposedLinuxRuntimeOpus-r2-clock-closure-source-pass-not-execution-ready-20261110.json; /opt/agent-memory-worktrees/v015-delivery-evidence-private-20261108/ComposedLinuxConsumersOpus-r2-clock-closure-source-pass-not-execution-ready-20261110.json"
+    },
+    "acceptance_limit": "Only two complete controlled classes executed. No transfer of initial public smokes or negative wire run as an R2 execution pass; full final-source, actual native/platform/rate/timing and delivery remain open."
+  },
+  "source_overlay_manifest_sha256": "17f3fca3a5af231723e25b848ff45f01cb3915370abe4032b93b919f5940b291"
+}

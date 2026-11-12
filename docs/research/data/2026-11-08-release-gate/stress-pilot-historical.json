@@ -1,0 +1,80 @@
+{
+  "schema": "agent-memory/stress-historical-pilot-observations-v1",
+  "status": "Historical small-workload observations, not a matched pair, final timing denominator or complete stress acceptance",
+  "pilots": [
+    {
+      "label": "pilot04",
+      "source_preservation": {
+        "commit": "69df2f36317581e541914002c73210d6464cfcd4",
+        "tracked": 3366,
+        "portable": 216,
+        "all_bytes_and_modes_match": true
+      },
+      "outcome": {
+        "complete_compatible_rounds": true,
+        "full_daily_use_v1_acceptance": false,
+        "required_fault_matrix_complete": false,
+        "recovery_controls_executed": true,
+        "sessions": 6,
+        "seed_lessons": 128,
+        "developers": 2,
+        "independent_clones": 3,
+        "captured_lessons": 19,
+        "all_sessions_expected_feature_state_preserved": true,
+        "ordinary_code_integration_explicitly_expected": true,
+        "seconds": 3362.2243454160052
+      },
+      "public_commands": 421,
+      "timeouts": 0,
+      "controller_sha256": "106af8c755a6131d65bb70e3f292ee99e146b5595b3c1deb20dbf41bfc1f4db8",
+      "retained_private_receipt_sha256": {
+        "outcome.json": "9678896eb1b3dd7c1dff7944676f3c40a47ff935f36326e53eba9210a94aea0a",
+        "source-before.json": "1bc1de43c1d7747b118ada3bb248556849b01ae49a33aa4f0e388c6423205e99",
+        "source-after.json": "1bc1de43c1d7747b118ada3bb248556849b01ae49a33aa4f0e388c6423205e99",
+        "source-binding.json": "c5a67a0b45e31012e01ea03926a32624aa0978f8a8175721482e65f8acc403b4",
+        "commands.json": "c4afbdd5de5a2d4a9a5515994031002ce06c73f5e306d56d0f9580922116a3ad",
+        "events.json": "48dd5cb8e117c1bd4bba60427c7e06ccae520dc718892074a82afb3615c94e65"
+      }
+    },
+    {
+      "label": "pilot05",
+      "source_preservation": {
+        "commit": "1be9ad0a5b67da637c5f1924831f6b52c9b2cbe0",
+        "tracked": 3368,
+        "portable": 216,
+        "all_bytes_and_modes_match": true
+      },
+      "outcome": {
+        "complete_compatible_rounds": true,
+        "full_daily_use_v1_acceptance": false,
+        "required_fault_matrix_complete": false,
+        "recovery_controls_executed": true,
+        "sessions": 6,
+        "seed_lessons": 128,
+        "developers": 2,
+        "independent_clones": 3,
+        "captured_lessons": 19,
+        "all_sessions_expected_feature_state_preserved": true,
+        "ordinary_code_integration_explicitly_expected": true,
+        "seconds": 3087.743309708021
+      },
+      "public_commands": 421,
+      "timeouts": 0,
+      "controller_sha256": "106af8c755a6131d65bb70e3f292ee99e146b5595b3c1deb20dbf41bfc1f4db8",
+      "retained_private_receipt_sha256": {
+        "outcome.json": "8af9f43297249dce6e03f02bfba3213b50f8d6e978665dacea0f21b0a1b21f36",
+        "source-before.json": "8ad2180a50b863cf6dad356d085c38630521d3492f44af6e03b417f6dd6b5594",
+        "source-after.json": "8ad2180a50b863cf6dad356d085c38630521d3492f44af6e03b417f6dd6b5594",
+        "source-binding.json": "0a7734406f40865f2e51dc91fbd858940d81ab320ce16180d0a547dba75f7f9c",
+        "commands.json": "9207f7cfe0eb70356aac91840c7356db485315224c7bd2c123803a6263399322",
+        "events.json": "4e222e35affe28b4255dff7c75cb6840559aeb55f51ba2e6d251ac5f96da6794"
+      }
+    }
+  ],
+  "limits": [
+    "Different source revisions and normalbusyhost timings; no causal speedup or repeat statistic",
+    "Six sessions/128seeds, not required24sessions/10000lessons",
+    "Declaredcompatible rounds/recoverycontrol completion is not fullDailyUse orcomplete faultmatrix",
+    "Rawfixturecommands/env/Worlds remainprivate; only numeric outcomes, sourcepreservation and digests published"
+  ]
+}

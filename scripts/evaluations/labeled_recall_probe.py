@@ -15,6 +15,7 @@ import json
 import os
 from pathlib import Path
 import platform
+import stat
 import shutil
 import statistics
 import subprocess
@@ -40,17 +41,56 @@ def source(root):
     for line in subprocess.check_output(['git', 'ls-tree', '-r', revision], cwd=root, text=True).splitlines():
         descriptor, name = line.split('\t', 1)
         mode, kind, oid = descriptor.split()
-        if kind != 'blob' or mode not in {'100644', '100755'}:
-            raise ValueError('Only ordinary tracked files qualify in source')
-        raw = (root / name).read_bytes()
+        if kind != 'blob' or mode not in {'100644', '100755', '120000'}:
+            raise ValueError('Unsupported tracked source type')
+        path = root / name
+        if mode == '120000':
+            # Archived negative fixtures are data, not executable helpers. Bind
+            # the link's literal Git blob without opening its target.
+            if not name.startswith('docs/research/data/') or not path.is_symlink():
+                raise ValueError('Executable source links cannot qualify')
+            raw = os.fsencode(os.readlink(path))
+            entry = {'sha256': hashlib.sha256(raw).hexdigest(), 'mode': 0o120000, 'kind': 'symlink'}
+        else:
+            if path.is_symlink():
+                raise ValueError('Tracked regular source was replaced by a link')
+            raw = path.read_bytes()
+            if (path.stat().st_mode & 0o777) != (0o755 if mode == '100755' else 0o644):
+                raise ValueError('Tracked source full modes differ from Git')
+            entry = {'sha256': hashlib.sha256(raw).hexdigest(), 'mode': int(mode[-3:], 8)}
         actual = hashlib.sha1(b'blob ' + str(len(raw)).encode() + b'\0' + raw).hexdigest()
-        if actual != oid or ((root/name).stat().st_mode & 0o777) != (0o755 if mode == '100755' else 0o644):
-            raise ValueError('Tracked source bytes/full modes differ from Git')
-        tracked[name] = {'sha256': hashlib.sha256(raw).hexdigest(), 'mode': int(mode[-3:], 8)}
+        if actual != oid:
+            raise ValueError('Tracked source bytes differ from Git')
+        tracked[name] = entry
     portable = {n.removeprefix('skills/agent-memory/'): v for n, v in tracked.items() if n.startswith('skills/agent-memory/')}
     if inventory(root/'skills/agent-memory') != portable:
         raise ValueError('Complete portable source differs from committed files')
     return {'commit': revision, 'tracked': tracked, 'portable': portable}
+
+
+def read_bound_source(root, relative, binding):
+    """Read one frozen ordinary input, never an archived symlink's target."""
+    parts = Path(relative).parts
+    entry = binding['tracked'].get(relative)
+    if (not parts or Path(relative).is_absolute() or '..' in parts or not entry
+            or entry.get('kind') == 'symlink' or entry.get('mode') not in (0o644, 0o755)):
+        raise ValueError('Qualification input must be a frozen ordinary source')
+    path = root
+    for part in parts:
+        path = path / part
+        if path.is_symlink():
+            raise ValueError('Qualification input cannot traverse a link')
+    try:
+        with os.fdopen(os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK), 'rb') as stream:
+            info = os.fstat(stream.fileno())
+            if not stat.S_ISREG(info.st_mode) or stat.S_IMODE(info.st_mode) != entry['mode']:
+                raise ValueError('Qualification input type or mode changed')
+            raw = stream.read()
+    except OSError as exc:
+        raise ValueError('Frozen qualification input is unavailable') from exc
+    if hashlib.sha256(raw).hexdigest() != entry['sha256']:
+        raise ValueError('Frozen qualification input bytes changed')
+    return raw
 
 
 def main():

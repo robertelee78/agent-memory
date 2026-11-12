@@ -1,0 +1,47 @@
+{
+  "status": "PASS",
+  "source_commit": "4d4e1cc098fabbc0730f884d569c0e267e07b458",
+  "source_tree": "4f12a8b0db9ee8669d408eaacb1ff8940d88fc7b",
+  "source_archive_sha256": "d35d6bbb41402b233c8bdc7824c62f1a4ccd3a1aabcb11d49397a4d95095b326",
+  "source_inventory_sha256": "8a4e5b7f8766bc29dab3ccc9cd338126634f81086a768c043f73afe51e4faab6",
+  "driver_sha256": "42515a1f9b7d77ca877c044d44f95df73ea66a4f3d103e1b1832e118548be332",
+  "launcher_sha256": "671e3b9c319d27adba5e8b3b81624cb558c2ea383ce895e299e14bc94bc179d6",
+  "repository": "robertelee78/agent-memory-v015-qualification",
+  "original_main": "4bf0851142b61ee510fb8ed283d65464af560d84",
+  "fixture_prs": [
+    "https://github.com/robertelee78/agent-memory-v015-qualification/pull/1",
+    "https://github.com/robertelee78/agent-memory-v015-qualification/pull/2"
+  ],
+  "invalid_authority": "da4f74e5854ff85bed8eeac65964f4923dfcdeaf",
+  "landed": "d58ebe90a39a3834bb52521e4d5a6fec236f26c9",
+  "pending_units": 8,
+  "resolved_units": 8,
+  "source_sizes": [
+    79054,
+    28478
+  ],
+  "memory_only_paths": [
+    "memory-bank/MEMORY.md",
+    "memory-bank/activeContext.md",
+    "memory-bank/history/events/7961317c-24ea-4a4f-8621-4cd8b93e45a9.md",
+    "memory-bank/topics/b2c15873-c95f-4d6f-84f3-646f42448730.md"
+  ],
+  "fresh_clone_recall": true,
+  "semantic_review": "controlled synthetic fixture; not model truth or independent acceptance",
+  "scope": "one actual hosted scenario; not registry or full platform matrix",
+  "schema": "agent-memory/layout-recovery-hosted-qualification-v1",
+  "raw_result_sha256": "bf83b631a32fc90a7b9e1337c499141067cc06508b74782f3f293d3f36685a16",
+  "raw_binding_sha256": "137099a3daf8e772f7e8fa3d4d5750531424226d3325eb0de1c8497587926db3",
+  "parent_observed_outer_seconds": 115.93,
+  "timing_scope": "Whole launcher wall, not individual operation or component latency",
+  "qualification_checks": [
+    "Original79054/28478-byte sources retained exactly",
+    "Publication refused while8privateunits unresolved without remote advancement",
+    "Ordinary independently sourced admission resolved all8exactunitIDs withlinkedreceipts",
+    "RealGitHub nonforce memory-only land frominvalidauthority",
+    "Publisherbank,feature,index,HEAD,branch preserved atcheckedboundaries",
+    "Freshclone emptyprivateprofile validatesandrecalls exacttypedrecord/provenance/evidence"
+  ],
+  "actual_policy_scope": "Unprotected defaultbranch, zero rules; no protected/check-gated behavior inferred",
+  "full_task_platform_or_release_acceptance": false
+}

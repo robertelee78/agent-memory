@@ -1,0 +1,25 @@
+{
+  "schema": "agent-memory/g1-private-build-scope-disposition-v1",
+  "issue": 255,
+  "source": "Explicit operator clarification in this session on2026-11-09",
+  "operator_statement": "This is all private build stuff nothing to worry about for you wrt licensing",
+  "scope": "Current private build and G1 research delivery in v0.0.15",
+  "decision": {
+    "licensing_is_a_current_build_or_research_blocker": false,
+    "additional_operator_vendor_or_counsel_license_approval_required_for_current_scope": false,
+    "prior_proposed_P1_P2_disabled_P3_P4_blocked_disposition_adopted": false,
+    "retain_observed_license_BOM_and_provenance_facts": true,
+    "future_bundled_third_party_graph_images_weights_or_hosted_offerings_are_current_scope": false
+  },
+  "correction": "The assistant incorrectly promoted hypothetical future deployment licensing questions into current private-build/research gates. Remove that gate; do not ask further licensing questions for this scope.",
+  "unchanged": [
+    "Original eight G1 research deliverables and recorded negative evidence",
+    "Actual report-only resource disposition and adopted latency gates",
+    "Technical artifact identity, explicit setup/disclosure, ownership and safety requirements",
+    "Original #206/#209/#244/#249 acceptance and signed release delivery"
+  ],
+  "not_claimed": [
+    "A legal conclusion or changed third-party license text",
+    "A new measured platform, performance, quality or production acceptance pass"
+  ]
+}

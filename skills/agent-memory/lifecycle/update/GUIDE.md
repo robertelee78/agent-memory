@@ -15,8 +15,10 @@ merge, prune or migrate project memory.
 
 A session MUST first load and follow the [maintain domain](../../maintain/GUIDE.md).
 It MAY open the [shared model](../../model/GUIDE.md) when a memory meaning question
-remains. An interrupted installation or update MUST be recovered through the
-[installation operation](../install/GUIDE.md) before another check can proceed.
+remains. An interrupted installation or update MUST be resolved through the
+[installation operation](../install/GUIDE.md). Its explicit re-plan route permits
+a fresh preview when an exact committed receipt needs allowed surrounding edits
+reconciled; it does not turn strict recovery's refusal into verified success.
 
 ## Inputs and preconditions
 
@@ -33,9 +35,11 @@ The session MUST inspect the current receipt and installation ownership. The
 updater checks source cleanliness, exact revision/artifact identity, recorded
 origin/ref, client links/copies, wrapper and owned activation blocks. User text
 outside those blocks remains outside installation ownership. The candidate
-[activation template](../../templates/activation-markdown.example.txt) is package
-data; the session MUST inspect it only when planning or verifying a changed
-activation block, rather than copy the memory protocol into client settings.
+[shared activation template](../../templates/activation-markdown.example.txt)
+and the omp-specific activation template in the same templates directory
+are package data. The session MUST inspect the template selected by the saved
+client binding only when planning or verifying a changed activation block,
+rather than copy the memory protocol into client settings.
 
 ## Plan
 
@@ -43,7 +47,7 @@ With `SKILL_DIR` resolved to a trusted complete package, the session MUST previe
 an update before activation:
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/update_runtime.py" update --check > /private/path/update-check.json
+python3 -I "$SKILL_DIR/scripts/update_runtime.py" update --check > /private/path/update-check.json
 ```
 
 The session MAY add repeated `--repo /absolute/repository` arguments for relevant
@@ -54,13 +58,44 @@ MUST prevent activation. Initial v1 declares no migrators. Unavailable registere
 locations remain explicit discovery gaps, and later ordinary bank use still
 requires its own schema guard.
 
+Compatibility MUST also preserve the union of every discovered bank's active
+`private_state_capabilities`, including `layout-frontier-v1` and any independent
+native source requirement. Missing legacy capability metadata means an empty
+set, never inferred support. The inventory includes local projects, saved
+bindings, recovery indexes/holds and native source registries; inaccessible,
+offline or corrupt private state leaves activation pending. Clearing one
+feature's requirement MUST NOT clear another's.
+
+An enabled stored-source route requires both `omp-harness-v1` and
+`omp-stored-source-v2`. Upgrading an older native binding MUST include a renewed
+`--omp-peers-upgraded`; a saved legacy approval is not sufficient. A committed
+update with `stored_source_activation: pending` MUST retain its runtime and
+private evidence. The session MUST restore unavailable banks, quiesce writers
+and run `am recover`; it MUST NOT roll back the committed receipt to hide the
+pending activation or count the update as verified.
+
+A pending layout frontier requires the exact bound state and independently
+reviewed operator quiescence for the measured target runtime and all same-bank
+invocation routes. Update, recovery and exact rollback recheck these pins before
+activation and readback. An incapable old rollback target MUST NOT be activated
+merely to finish a lifecycle journal. External recovery originals and ledgers
+are not installer-owned and remain intact.
+Use repeatable `--layout-quiescence /private/path/renewal.json` for each affected
+bank when the measured candidate or invocation routes differ from the retained
+review. Each protected file contains the exact `attestation` and independent
+`review` envelope described by layout recovery. Check mode validates without
+publishing renewals; apply durably retains them under the same source barriers
+before the final capability check. A capability declaration alone is not renewal.
+
+
+
 ## Apply
 
 After an acceptable authorized check, the session MUST invoke the same trusted
 helper without `--check`:
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/update_runtime.py" update > /private/path/update-receipt.json
+python3 -I "$SKILL_DIR/scripts/update_runtime.py" update > /private/path/update-receipt.json
 ```
 
 The installed `agent-memory update` command dispatches this operation. A trusted
@@ -137,8 +172,13 @@ non-fast-forward candidate, invalid package, ownership change or incompatible
 bank and resolve the reported condition before retrying. Failure before
 activation leaves the prior runtime active. Partial activation rolls back or
 retains an explicit external journal; user edits discovered during recovery
-MUST remain preserved. A lost receipt response is verified as committed and
-repeating update converges without duplicate activation blocks.
+MUST remain preserved. A lost response does not undo a committed receipt.
+Verification requires the exact committed receipt. Clean managed Git metadata
+MAY independently requalify against the unchanged payload, modes and channel;
+other changed targets can require the installation operation's explicit
+ownership re-plan. Repeating update converges
+without duplicate activation blocks; the old pending journal remains retained
+as archive evidence.
 
 ## Diagnostic fallback
 

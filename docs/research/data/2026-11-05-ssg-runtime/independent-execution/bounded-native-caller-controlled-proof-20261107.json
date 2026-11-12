@@ -1,0 +1,216 @@
+{
+  "before_source_commit": "d351eab6929c7103ffe948db7fe968a178384551",
+  "controls": [
+    {
+      "budget_control": "count-budget",
+      "downstream_attempt_counts": {
+        "ann": 0,
+        "exact_rank": 0,
+        "query_embed": 1,
+        "typed": 0
+      },
+      "first_forbidden_attempt": "query_embed",
+      "missing_prerequisite_rows": 0,
+      "native_selection": {
+        "canonical_bytes": 126508,
+        "pool": 83,
+        "ranked_domain_size": 80,
+        "result_byte_limit": 65536,
+        "result_count": 30,
+        "result_limit": 64,
+        "used_bytes": 63575
+      },
+      "operation": "semantic-recall",
+      "persisted_unexecuted_observations": 0,
+      "prerequisite": "Bounded native output cannot crosscheck the complete qualified domain",
+      "query_schedule_count": 1,
+      "source": "before"
+    },
+    {
+      "budget_control": "count-budget",
+      "downstream_attempt_counts": {
+        "ann": 0,
+        "exact_rank": 0,
+        "query_embed": 0,
+        "typed": 1
+      },
+      "first_forbidden_attempt": "typed",
+      "missing_prerequisite_rows": 0,
+      "native_selection": {
+        "canonical_bytes": 126508,
+        "pool": 83,
+        "ranked_domain_size": 80,
+        "result_byte_limit": 65536,
+        "result_count": 30,
+        "result_limit": 64,
+        "used_bytes": 63575
+      },
+      "operation": "template:controlled-boundary",
+      "persisted_unexecuted_observations": 0,
+      "prerequisite": "Bounded native output cannot crosscheck the complete qualified domain",
+      "query_schedule_count": 1,
+      "source": "before"
+    },
+    {
+      "budget_control": "count-budget",
+      "downstream_attempt_counts": {
+        "ann": 0,
+        "exact_rank": 0,
+        "query_embed": 0,
+        "typed": 0
+      },
+      "first_forbidden_attempt": null,
+      "missing_prerequisite_rows": 2,
+      "native_selection": {
+        "canonical_bytes": 126508,
+        "pool": 83,
+        "ranked_domain_size": 80,
+        "result_byte_limit": 65536,
+        "result_count": 30,
+        "result_limit": 64,
+        "used_bytes": 63575
+      },
+      "operation": "semantic-recall",
+      "persisted_unexecuted_observations": 2,
+      "prerequisite": "Bounded native output cannot crosscheck the complete qualified domain",
+      "query_schedule_count": 0,
+      "source": "after"
+    },
+    {
+      "budget_control": "count-budget",
+      "downstream_attempt_counts": {
+        "ann": 0,
+        "exact_rank": 0,
+        "query_embed": 0,
+        "typed": 0
+      },
+      "first_forbidden_attempt": null,
+      "missing_prerequisite_rows": 2,
+      "native_selection": {
+        "canonical_bytes": 126508,
+        "pool": 83,
+        "ranked_domain_size": 80,
+        "result_byte_limit": 65536,
+        "result_count": 30,
+        "result_limit": 64,
+        "used_bytes": 63575
+      },
+      "operation": "template:controlled-boundary",
+      "persisted_unexecuted_observations": 2,
+      "prerequisite": "Bounded native output cannot crosscheck the complete qualified domain",
+      "query_schedule_count": 0,
+      "source": "after"
+    },
+    {
+      "budget_control": "byte-budget",
+      "downstream_attempt_counts": {
+        "ann": 0,
+        "exact_rank": 0,
+        "query_embed": 1,
+        "typed": 0
+      },
+      "first_forbidden_attempt": "query_embed",
+      "missing_prerequisite_rows": 0,
+      "native_selection": {
+        "canonical_bytes": 137531,
+        "pool": 13,
+        "ranked_domain_size": 10,
+        "result_byte_limit": 65536,
+        "result_count": 7,
+        "result_limit": 64,
+        "used_bytes": 61227
+      },
+      "operation": "semantic-recall",
+      "persisted_unexecuted_observations": 0,
+      "prerequisite": "Bounded native output cannot crosscheck the complete qualified domain",
+      "query_schedule_count": 1,
+      "source": "before"
+    },
+    {
+      "budget_control": "byte-budget",
+      "downstream_attempt_counts": {
+        "ann": 0,
+        "exact_rank": 0,
+        "query_embed": 0,
+        "typed": 1
+      },
+      "first_forbidden_attempt": "typed",
+      "missing_prerequisite_rows": 0,
+      "native_selection": {
+        "canonical_bytes": 137531,
+        "pool": 13,
+        "ranked_domain_size": 10,
+        "result_byte_limit": 65536,
+        "result_count": 7,
+        "result_limit": 64,
+        "used_bytes": 61227
+      },
+      "operation": "template:controlled-boundary",
+      "persisted_unexecuted_observations": 0,
+      "prerequisite": "Bounded native output cannot crosscheck the complete qualified domain",
+      "query_schedule_count": 1,
+      "source": "before"
+    },
+    {
+      "budget_control": "byte-budget",
+      "downstream_attempt_counts": {
+        "ann": 0,
+        "exact_rank": 0,
+        "query_embed": 0,
+        "typed": 0
+      },
+      "first_forbidden_attempt": null,
+      "missing_prerequisite_rows": 2,
+      "native_selection": {
+        "canonical_bytes": 137531,
+        "pool": 13,
+        "ranked_domain_size": 10,
+        "result_byte_limit": 65536,
+        "result_count": 7,
+        "result_limit": 64,
+        "used_bytes": 61227
+      },
+      "operation": "semantic-recall",
+      "persisted_unexecuted_observations": 2,
+      "prerequisite": "Bounded native output cannot crosscheck the complete qualified domain",
+      "query_schedule_count": 0,
+      "source": "after"
+    },
+    {
+      "budget_control": "byte-budget",
+      "downstream_attempt_counts": {
+        "ann": 0,
+        "exact_rank": 0,
+        "query_embed": 0,
+        "typed": 0
+      },
+      "first_forbidden_attempt": null,
+      "missing_prerequisite_rows": 2,
+      "native_selection": {
+        "canonical_bytes": 137531,
+        "pool": 13,
+        "ranked_domain_size": 10,
+        "result_byte_limit": 65536,
+        "result_count": 7,
+        "result_limit": 64,
+        "used_bytes": 61227
+      },
+      "operation": "template:controlled-boundary",
+      "persisted_unexecuted_observations": 2,
+      "prerequisite": "Bounded native output cannot crosscheck the complete qualified domain",
+      "query_schedule_count": 0,
+      "source": "after"
+    }
+  ],
+  "execution_io_sha256": "5fb4596fb66f70e401f3fd1386d5dce34f342b392236ff19de7b3fd11a2fece3",
+  "executor_native_sha256": "7765ef70e6ac715925d081a9c8c7a629563f5332a9f54510aa7c29a6bf558735",
+  "held_out_informed": true,
+  "independent_held_out_qualification": false,
+  "model_graph_endpoint_service_calls": 0,
+  "new_independent_review_and_full_closure_freeze_required": true,
+  "schema": "am255/controlled-bounded-native-caller-proof-v1",
+  "scope": "Exact source-AST schedule and case-controller loops with real native canonical sources and qualification. Forbidden downstream callbacks abort without producing data; no services/model/graph/endpoint execution. Not a full run_size startup/cleanup test.",
+  "source_commit": "87758cee4a3b56141e14fc3cfa13e8558845d2a8",
+  "source_sha256": "4dead4a46d73fbcdbe7081ef869f037c376b0f4743f8db5345804624f2394ce8",
+  "temporal_delete_erasure_executed": false
+}

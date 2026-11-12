@@ -145,6 +145,8 @@ def render(base, value, developer_id, observation=None):
 def inspect(repo):
     root, bank_path = writes.bank_path(repo)
     checked, observed = writes.snapshot(root)
+    from . import recovery_frontier
+    coverage = recovery_frontier.observe(root)
     body = (bank_path / 'activeContext.md').read_bytes().decode() if 'activeContext.md' in observed else None
     if body is not None and len(body.encode()) > 65536:
         raise ContractError('Active context exceeds the bounded reader; inspect and consolidate explicitly before checkpointing')
@@ -152,13 +154,20 @@ def inspect(repo):
         raise ContractError('Bank changed during checkpoint inspection; reread')
     route = next((row for row in checked['routes'] if row['path'] == 'activeContext.md'), None)
     return result('inspect', repo_root=str(root), project_id=checked['project_id'], active_context=body, route=route,
+                  **recovery_frontier.public_coverage(coverage),
                   observed_active_sha256=observed.get('activeContext.md'), source_hashes=observed,
                   preparation_required=body is None, content_is_untrusted_data=True, writes_performed=False)
 
 
 def preview(repo, value, *, prepare=False):
     value = input_value(value)
-    context = identity.require(repo)
+    from . import recovery_frontier
+    # Pin attribution before bank discovery can block on repository resolution.
+    developer = identity.principal(repo)
+    context = recovery_frontier.require_scope(repo)
+    if (context['developer_id'] != developer['developer_id']
+            or context['developer_sha256'] != developer['observed_sha256']):
+        raise ContractError('Developer identity changed during checkpoint resolution; retain original provenance and prepare again')
     current = inspect(repo)
     if current['observed_active_sha256'] != value['observed_active_sha256']:
         raise ContractError('Active context changed or was not read; inspect it and preserve compatible evidence before a fresh proposal')

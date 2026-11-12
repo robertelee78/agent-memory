@@ -1,6 +1,5 @@
 """Public single-file checkpoint, section preservation and separate omitted-context setup."""
 import json
-import os
 import time
 from pathlib import Path
 import shutil
@@ -70,6 +69,46 @@ class CheckpointContract(unittest.TestCase):
             self.assertEqual((repo/'.git/index').read_bytes(),index);self.assertEqual((repo/'.git/HEAD').read_bytes(),head)
             self.assertEqual((repo/'feature.py').read_text(),'unfinished = True\n')
             again=self.preview(w,repo,self.payload(self.inspect(w,repo)));self.assertEqual(again['changed_memory_paths'],[])
+
+    def test_rendered_utf8_boundary_replaces_without_growth_and_refuses_one_extra_byte(self):
+        with World() as w:
+            repo,bank=self.fixture(w)
+            (repo/'feature.py').write_text('unfinished = True\n');w.git('add','feature.py',cwd=repo)
+            index,head=(repo/'.git/index').read_bytes(),(repo/'.git/HEAD').read_bytes()
+            payload=self.payload(self.inspect(w,repo))
+            sample=self.preview(w,repo,payload)['proposal']['write']['content']
+            prefix='\n## Boundary notes\n\n'
+            suffix='\n'
+            padding=16384-len(sample.encode('utf-8'))-len((prefix+suffix).encode('utf-8'))
+            self.assertGreater(padding,0)
+            # Use a multibyte character so this measures the actual UTF-8 envelope.
+            notes=prefix+'é'*(padding//2)+'x'*(padding%2)+suffix
+            active=bank/'activeContext.md';active.write_text(active.read_text()+notes)
+            original=self.files(bank)
+            payload['observed_active_sha256']=self.inspect(w,repo)['observed_active_sha256']
+            proposal=self.preview(w,repo,payload)
+            self.assertEqual(len(proposal['proposal']['write']['content'].encode('utf-8')),16384)
+            self.assertTrue(self.apply(w,proposal)[1]['verified'])
+            boundary=self.files(bank)
+            self.assertEqual(len(boundary['activeContext.md']),16384)
+            self.assertIn(LEGACY.encode(),boundary['activeContext.md'])
+            self.assertIn(notes.encode(),boundary['activeContext.md'])
+            self.assertEqual({k:v for k,v in boundary.items() if k!='activeContext.md'},
+                             {k:v for k,v in original.items() if k!='activeContext.md'})
+            for _ in range(2):
+                payload['observed_active_sha256']=self.inspect(w,repo)['observed_active_sha256']
+                proposal=self.preview(w,repo,payload)
+                self.assertEqual(proposal['changed_memory_paths'],[])
+                self.assertTrue(self.apply(w,proposal)[1]['verified'])
+                self.assertEqual(self.files(bank),boundary)
+            payload['observed_active_sha256']=self.inspect(w,repo)['observed_active_sha256']
+            payload['next_step']+='x'
+            r,value=self.command(w,'checkpoint','preview','--repo',repo,'--input',self.save(w,payload))
+            self.assertEqual(r.returncode,1,value)
+            self.assertEqual(self.files(bank),boundary)
+            self.assertEqual((repo/'.git/index').read_bytes(),index)
+            self.assertEqual((repo/'.git/HEAD').read_bytes(),head)
+            self.assertEqual((repo/'feature.py').read_text(),'unfinished = True\n')
 
     def test_stale_active_or_other_bank_edits_are_preserved_and_fresh_checkpoint_carries_manual_evidence(self):
         with World() as w:
@@ -195,19 +234,36 @@ class CheckpointContract(unittest.TestCase):
             select=self.good(w,'developer_identity','preview','--select',a)
             self.good(w,'developer_identity','apply','--proposal',self.save(w,select))
             before=self.files(bank);payload=self.save(w,self.payload(self.inspect(w,repo)),'input.json')
-            real_git=shutil.which('git',path=w.env['PATH']);directory=w.inside('identity-rendezvous');directory.mkdir()
-            ready,release=directory/'ready',directory/'release';bindir=w.inside('bin');bindir.mkdir();wrapper=bindir/'git'
-            wrapper.write_text('#!'+sys.executable+'\nimport os,sys,time\nfrom pathlib import Path\nready=Path('+repr(str(ready))+'); release=Path('+repr(str(release))+')\nif "--show-toplevel" in sys.argv and not ready.exists():\n ready.touch()\n deadline=time.monotonic()+10\n while not release.exists() and time.monotonic()<deadline:time.sleep(.005)\nos.execv('+repr(real_git)+',['+repr(real_git)+',*sys.argv[1:]])\n')
-            wrapper.chmod(0o700);w.env['PATH']=str(bindir)+os.pathsep+w.env['PATH']
-            child=w.spawn([sys.executable,'-I',SCRIPTS/'checkpoint.py','prepare','--repo',repo,'--input',payload])
+            directory=w.inside('identity-rendezvous');directory.mkdir()
+            ready,release=directory/'ready',directory/'release'
+            code = '''import json,sys,time
+from pathlib import Path
+sys.dont_write_bytecode=True
+scripts,repo,payload,ready,release=map(Path,sys.argv[1:])
+sys.path.insert(0,str(scripts))
+from agent_memory import checkpoint,recovery_frontier,scope_binding
+original=recovery_frontier.observe
+def observed_frontier(*args,**kwargs):
+ if not ready.exists():
+  developer=scope_binding.principal(args[0])
+  ready.write_text(json.dumps({'developer_id':developer['developer_id']}))
+  deadline=time.monotonic()+10
+  while not release.exists() and time.monotonic()<deadline:time.sleep(.005)
+  if not release.exists():raise RuntimeError('identity rendezvous was not released')
+ return original(*args,**kwargs)
+recovery_frontier.observe=observed_frontier
+sys.exit(checkpoint.main(['prepare','--repo',str(repo),'--input',str(payload)]))
+'''
+            child=w.spawn([sys.executable,'-I','-B','-c',code,ROOT/'skills/agent-memory/scripts',repo,payload,ready,release])
             deadline=time.monotonic()+5
             while not ready.exists() and child.poll() is None and time.monotonic()<deadline:time.sleep(.005)
             self.assertTrue(ready.exists(),child.poll())
+            self.assertEqual(json.loads(ready.read_text())['developer_id'],a)
             select=self.good(w,'developer_identity','preview','--select',b)
             self.good(w,'developer_identity','apply','--proposal',self.save(w,select,'select-b.json'))
             release.touch();out,err=child.communicate(timeout=20)
             self.assertFalse(err);self.assertEqual(child.returncode,1,out)
-            self.assertIn('identity changed',json.loads(out)['error']);self.assertEqual(self.files(bank),before)
+            self.assertFalse(json.loads(out)['verified']);self.assertEqual(self.files(bank),before)
 
 
 

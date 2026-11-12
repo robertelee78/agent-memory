@@ -1,0 +1,418 @@
+{
+  "acceptance_limitations": [
+    "Only four complete consumer files plus listed actual installed public journeys pass on this subject; full final source and hosted matrix remain open.",
+    "No actual stock-native renderer, delivery, Linux image, Darwin rate, uncensored p99 or full callback qualification.",
+    "No semantic model, additional embedding endpoint, matched recall, independent story acceptance, main integration or signed release claim.",
+    "Original aggregate failures and independent change requests remain negative; later correction is separate evidence."
+  ],
+  "actual_corrected_complete_consumers": {
+    "passed": true,
+    "python": "3.15.0 (main, Oct  9 2026, 11:16:41) [Clang 21.0.0 (clang-2100.3.34.2)]",
+    "schema": "am/integrated-peer-complete-registered-consumers-v1",
+    "scope": "Every registered method in each explicit selected consumer file; original case, worker and inner-command bounds. Not full hosted/stock-native/model/performance/independent-review or signed-release acceptance.",
+    "seconds": 220.2827227920061,
+    "selected_paths": [
+      "tests/contracts/test_developer_identity.py",
+      "tests/contracts/test_layout_marker_group_recovery.py",
+      "tests/contracts/test_omp_segment_inventory_batch.py",
+      "tests/contracts/test_repository_observation_batch.py"
+    ],
+    "source_after": "2bb3d52f1a91be8dc433dfb164a30d640607fd042d37eac6c9fcac884175d15a",
+    "source_before": "2bb3d52f1a91be8dc433dfb164a30d640607fd042d37eac6c9fcac884175d15a",
+    "worker_deadline_seconds": 300,
+    "workers": 2
+  },
+  "actual_positive_wake": {
+    "closed_verified": true,
+    "diagnostic": {
+      "actual_now_ns": 754963112713291,
+      "adjusted_deadline_ns": 754962357314568,
+      "cost_includes_post_reservation": true,
+      "instrumented": true,
+      "not_baseline_or_native_timing": true,
+      "reserve_accepted": false,
+      "whole_frame_git_processes": 171,
+      "whole_frame_seconds": 2.0024400850000004
+    },
+    "durable_roots": 0,
+    "passed": false,
+    "subject": "d83b305f4a978691d0274363c8fa97162dd308b7544e1665a295f2351f86a057",
+    "wake_status": "pending-undeliverable-window",
+    "worker_exit": 0
+  },
+  "actual_public_journeys": {
+    "guides": {
+      "passed": true,
+      "rows": [
+        {
+          "artifact_digest": "7e166bd21734167bd276b91960975da1bd479071da8881c8647ce9df6071bbbb",
+          "exact_retry_immutable": true,
+          "guides": [
+            {
+              "gap_free": true,
+              "receipt_body_match": true,
+              "relative": "SKILL.md",
+              "retained_learning_body_empty": true
+            },
+            {
+              "gap_free": true,
+              "receipt_body_match": true,
+              "relative": "turn/GUIDE.md",
+              "retained_learning_body_empty": true
+            },
+            {
+              "gap_free": true,
+              "receipt_body_match": true,
+              "relative": "maintain/cli/GUIDE.md",
+              "retained_learning_body_empty": true
+            },
+            {
+              "gap_free": true,
+              "receipt_body_match": true,
+              "relative": "bank/GUIDE.md",
+              "retained_learning_body_empty": true
+            }
+          ],
+          "mode": "copy",
+          "public_cli_contracts": [
+            {
+              "action": "plan",
+              "documented_contract_matches": true,
+              "exit": 0,
+              "verb": "compact"
+            },
+            {
+              "action": "plan",
+              "documented_contract_matches": true,
+              "exit": 0,
+              "verb": "govern"
+            },
+            {
+              "action": "preview",
+              "documented_contract_matches": true,
+              "exit": 0,
+              "verb": "compact"
+            },
+            {
+              "action": "preview",
+              "documented_contract_matches": true,
+              "exit": 0,
+              "verb": "govern"
+            },
+            {
+              "action": "preview",
+              "documented_contract_matches": true,
+              "exit": 0,
+              "verb": "admission"
+            }
+          ],
+          "surrounding_source_preserved": true
+        },
+        {
+          "artifact_digest": "7e166bd21734167bd276b91960975da1bd479071da8881c8647ce9df6071bbbb",
+          "exact_retry_immutable": true,
+          "guides": [
+            {
+              "gap_free": true,
+              "receipt_body_match": true,
+              "relative": "SKILL.md",
+              "retained_learning_body_empty": true
+            },
+            {
+              "gap_free": true,
+              "receipt_body_match": true,
+              "relative": "turn/GUIDE.md",
+              "retained_learning_body_empty": true
+            },
+            {
+              "gap_free": true,
+              "receipt_body_match": true,
+              "relative": "maintain/cli/GUIDE.md",
+              "retained_learning_body_empty": true
+            },
+            {
+              "gap_free": true,
+              "receipt_body_match": true,
+              "relative": "bank/GUIDE.md",
+              "retained_learning_body_empty": true
+            }
+          ],
+          "mode": "link",
+          "public_cli_contracts": [
+            {
+              "action": "plan",
+              "documented_contract_matches": true,
+              "exit": 0,
+              "verb": "compact"
+            },
+            {
+              "action": "plan",
+              "documented_contract_matches": true,
+              "exit": 0,
+              "verb": "govern"
+            },
+            {
+              "action": "preview",
+              "documented_contract_matches": true,
+              "exit": 0,
+              "verb": "compact"
+            },
+            {
+              "action": "preview",
+              "documented_contract_matches": true,
+              "exit": 0,
+              "verb": "govern"
+            },
+            {
+              "action": "preview",
+              "documented_contract_matches": true,
+              "exit": 0,
+              "verb": "admission"
+            }
+          ],
+          "surrounding_source_preserved": true
+        }
+      ],
+      "schema": "am/changed-guides-copy-link-structural-observer-smoke-v1",
+      "scope": "Actual installed copy/link CLI contract discovery and production receipt-bound observer API with controlled native-format carriers. Not actual stock-native renderer/wake, model, platform, independent semantic or signed-release acceptance.",
+      "seconds": 21.9196067500161,
+      "source_after": "2bb3d52f1a91be8dc433dfb164a30d640607fd042d37eac6c9fcac884175d15a",
+      "source_before": "2bb3d52f1a91be8dc433dfb164a30d640607fd042d37eac6c9fcac884175d15a"
+    },
+    "planning": {
+      "passed": true,
+      "rows": [
+        {
+          "applied_verified": true,
+          "feature_index_head_preserved": true,
+          "foreign_plan_and_raw_apply_refused": true,
+          "historical_apply_retry": true,
+          "passed": true,
+          "plan_non_authorizing": true,
+          "planned_proposed_bytes_equal": true,
+          "private_output_only": true,
+          "route": "update",
+          "seconds": 26.978231541928835,
+          "stable_record_identity_and_provenance": true,
+          "stale_plan_rejected": true
+        },
+        {
+          "applied_verified": true,
+          "feature_index_head_preserved": true,
+          "foreign_plan_and_raw_apply_refused": null,
+          "historical_apply_retry": null,
+          "passed": true,
+          "plan_non_authorizing": true,
+          "planned_proposed_bytes_equal": true,
+          "private_output_only": true,
+          "route": "consolidate",
+          "seconds": 17.41940266592428,
+          "stable_record_identity_and_provenance": true,
+          "stale_plan_rejected": null
+        },
+        {
+          "applied_verified": true,
+          "feature_index_head_preserved": true,
+          "foreign_plan_and_raw_apply_refused": null,
+          "historical_apply_retry": null,
+          "passed": true,
+          "plan_non_authorizing": true,
+          "planned_proposed_bytes_equal": true,
+          "private_output_only": true,
+          "route": "governance",
+          "seconds": 8.044577416963875,
+          "stable_record_identity_and_provenance": true,
+          "stale_plan_rejected": null
+        }
+      ],
+      "schema": "am/public-governed-judgment-plan-smoke-v1",
+      "scope": "Real installed public plan/review/preview/apply for update/consolidation/revocation on ordinary eligible banks. Not held-unit/full-coverage, raw layout, platform, independent-review, native/model/hosted or signed release acceptance.",
+      "seconds": 52.56355858303141,
+      "source_after": "2bb3d52f1a91be8dc433dfb164a30d640607fd042d37eac6c9fcac884175d15a",
+      "source_before": "2bb3d52f1a91be8dc433dfb164a30d640607fd042d37eac6c9fcac884175d15a"
+    },
+    "recovery": {
+      "distinct_child_restore": true,
+      "exact_natural_metadata_verified_forward_and_restore": true,
+      "feature_index_head_preserved": true,
+      "historical_retry_did_not_reapply": true,
+      "immutable_originals_and_parent_receipt_preserved": true,
+      "passed": true,
+      "pending_policy_units": 8,
+      "private_pages_reconstruct_all_originals": true,
+      "schema": "am/installed-public-recovery-restore-smoke-v1",
+      "scope": "Actual installed synthetic oversized/context and eight-policy handoff repair, exact metadata and child restore. Controlled fixture review labels are not independent semantic/Opus acceptance. No native/model/endpoint/hosted/performance or release claim.",
+      "seconds": 30.522222624975257,
+      "semantic_completion_not_inferred": true,
+      "source_after": "2bb3d52f1a91be8dc433dfb164a30d640607fd042d37eac6c9fcac884175d15a",
+      "source_before": "2bb3d52f1a91be8dc433dfb164a30d640607fd042d37eac6c9fcac884175d15a"
+    }
+  },
+  "all_selected_and_executed_exactly_once": true,
+  "base_commit": "1f30797083eeec64e65f3fb8c756ba2e38d002f8",
+  "consumer_rows": [
+    {
+      "errors": 0,
+      "failures": 0,
+      "name": "layout-marker-group",
+      "passed": true,
+      "path": "tests/contracts/test_layout_marker_group_recovery.py",
+      "seconds": 24.24948308407329,
+      "skipped": 0,
+      "tests": 1
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "name": "layout-marker-group-setgid-parent-marker-temp-known-finish-and-rollback",
+      "passed": true,
+      "path": "tests/contracts/test_layout_marker_group_recovery.py",
+      "seconds": 24.249360249959864,
+      "skipped": 0,
+      "tests": 1
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "name": "layout-marker-group-child-restore-marker-temp-known-finish",
+      "passed": true,
+      "path": "tests/contracts/test_layout_marker_group_recovery.py",
+      "seconds": 50.069154833909124,
+      "skipped": 0,
+      "tests": 1
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "name": "layout-marker-group-foreign-and-mismatched-marker-temps-refuse-without-mutation",
+      "passed": true,
+      "path": "tests/contracts/test_layout_marker_group_recovery.py",
+      "seconds": 46.61812166601885,
+      "skipped": 0,
+      "tests": 1
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "name": "omp-segment-inventory-batch",
+      "passed": true,
+      "path": "tests/contracts/test_omp_segment_inventory_batch.py",
+      "seconds": 149.37632754200604,
+      "skipped": 0,
+      "tests": 16
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "name": "developer-attribution",
+      "passed": true,
+      "path": "tests/contracts/test_developer_identity.py",
+      "seconds": 8.364763499936089,
+      "skipped": 0,
+      "tests": 17
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "name": "repository-observation-batch",
+      "passed": true,
+      "path": "tests/contracts/test_repository_observation_batch.py",
+      "seconds": 45.031752833980136,
+      "skipped": 0,
+      "tests": 16
+    }
+  ],
+  "design_sha256": "0e2dc484a9b359e737f23b89450d4d4dbe8aa302e918051db384d4182f8fbd11",
+  "portable_artifact_digest": "7e166bd21734167bd276b91960975da1bd479071da8881c8647ce9df6071bbbb",
+  "prior_failures": [
+    {
+      "cause": "Recovery fixture read proposal from safe stdout; later private receipt field also needed private output.",
+      "failed_workers": 3,
+      "files": 87,
+      "methods": 977,
+      "passed": false,
+      "subcase_errors": 6,
+      "subject": "21cf3c2b3651dfdbcbef657226acf8c397a579cea29c6dca351378699337f6f5",
+      "workers": 531
+    },
+    {
+      "assertion_failures": 1,
+      "cause": "Missing-source fixture assumed held enrollment intent after ordinary registration.",
+      "files": 3,
+      "methods": 48,
+      "passed": false,
+      "subject": "d83b305f4a978691d0274363c8fa97162dd308b7544e1665a295f2351f86a057"
+    },
+    {
+      "assertion_failures": 1,
+      "cause": "Active nonheld context did not produce held intent; marker apply still read private receipt from safe stdout.",
+      "files": 4,
+      "methods": 53,
+      "passed": false,
+      "subcase_errors": 6,
+      "subject": "9674f1f8140933b8e397909f21db20b3eb4d4dc44cb71df9687cdaab64faab29"
+    }
+  ],
+  "production_byte_identical_to_original_d83": true,
+  "raw_evidence": [
+    {
+      "bytes": 266598,
+      "name": "review-corrections-r2-complete87files-531workers-977tests-six-marker-fixture-errors-actual-20261110.tar.gz",
+      "original_private_location": "/tmp/am-v15-delivery/review-corrections-complete-py315-actual-20261110-r2; /tmp/am-v15-delivery/review-corrections-complete-consumer-paths-20261110-r2.json; /tmp/am-v15-delivery/review-corrections-base21c9719-source-overlay-20261110-r2.json; /tmp/am-v15-delivery/review-corrections-independent-subject-binding-20261110-r2.json; /tmp/am-v15-delivery/integrated_peer_consumers_20261110.py",
+      "sha256": "0a802608cc6df98028f3504a5d1294b982442714a157452b3d78ad484259d2da"
+    },
+    {
+      "bytes": 77286,
+      "name": "fresh-validation-batching-r1-complete48methods-one-fixture-failure-and-negative-wire-actual-20261110.tar.gz",
+      "original_private_location": "/tmp/am-v15-delivery/fresh-validation-batching-complete3files-py315-actual-20261110; /tmp/am-v15-delivery/fresh-validation-batching-installed-clock-wire-actual-20261110.json; /tmp/am-v15-delivery/fresh-validation-batching-source-overlay-20261110.json; /tmp/am-v15-delivery/fresh-validation-batching-independent-binding-20261110.json; /tmp/am-v15-delivery/fresh-validation-batching-base1f30797-clean-source-20261110/skills/agent-memory/scripts/agent_memory/identity_git.py; /tmp/am-v15-delivery/fresh-validation-batching-base1f30797-clean-source-20261110/skills/agent-memory/scripts/agent_memory/repository_config.py; /tmp/am-v15-delivery/fresh-validation-batching-base1f30797-clean-source-20261110/skills/agent-memory/scripts/agent_memory/developer_identity.py; /tmp/am-v15-delivery/fresh-validation-batching-base1f30797-clean-source-20261110/skills/agent-memory/scripts/agent_memory/omp_transport.py; /tmp/am-v15-delivery/fresh-validation-batching-base1f30797-clean-source-20261110/tests/contracts/test_repository_observation_batch.py; /tmp/am-v15-delivery/fresh-validation-batching-base1f30797-clean-source-20261110/tests/contracts/test_developer_identity.py; /tmp/am-v15-delivery/fresh-validation-batching-base1f30797-clean-source-20261110/tests/contracts/test_omp_segment_inventory_batch.py; /tmp/am-v15-delivery/fresh-validation-batching-base1f30797-clean-source-20261110/tests/contracts.json",
+      "sha256": "c7e2fe39d44792a626ed71b888dc8fd913e0d862ea1ccc6a92a357fe251b94a3"
+    },
+    {
+      "bytes": 23789,
+      "name": "fresh-validation-batching-r2-failed53methods-fixtures-and-opus-change-requests-actual-20261110.tar.gz",
+      "original_private_location": "/tmp/am-v15-delivery/fresh-validation-batching-corrected-complete4files-py315-actual-20261110-r2; /tmp/am-v15-delivery/fresh-validation-batching-source-overlay-20261110-r2.json; /tmp/am-v15-delivery/fresh-validation-batching-base1f30797-clean-source-20261110-r2/tests/contracts/test_layout_marker_group_recovery.py; /tmp/am-v15-delivery/fresh-validation-batching-base1f30797-clean-source-20261110-r2/tests/contracts/test_omp_segment_inventory_batch.py; /tmp/am-v15-delivery/MarkerPrivateOutputOpus-r2-request-changes-actual-20261110.json; /tmp/am-v15-delivery/SegmentIntentFixtureOpus-r2-request-changes-actual-20261110.json",
+      "sha256": "8eb93154994ce1b2304767669afb7283adcab5bf18c689d2f94f5a6b513832f8"
+    },
+    {
+      "bytes": 91220,
+      "name": "fresh-validation-batching-r3-source-reviews-and53methods-pass-actual-20261110.tar.gz",
+      "original_private_location": "/tmp/am-v15-delivery/fresh-validation-batching-corrected-complete4files-py315-actual-20261110-r3; /tmp/am-v15-delivery/fresh-validation-batching-source-overlay-20261110-r3.json; /tmp/am-v15-delivery/fresh-validation-batching-corrected-complete-consumers-20261110-r2.json; /tmp/am-v15-delivery/fresh-validation-batching-base1f30797-clean-source-20261110-r3/skills/agent-memory/scripts/agent_memory/identity_git.py; /tmp/am-v15-delivery/fresh-validation-batching-base1f30797-clean-source-20261110-r3/skills/agent-memory/scripts/agent_memory/repository_config.py; /tmp/am-v15-delivery/fresh-validation-batching-base1f30797-clean-source-20261110-r3/skills/agent-memory/scripts/agent_memory/developer_identity.py; /tmp/am-v15-delivery/fresh-validation-batching-base1f30797-clean-source-20261110-r3/skills/agent-memory/scripts/agent_memory/omp_transport.py; /tmp/am-v15-delivery/fresh-validation-batching-base1f30797-clean-source-20261110-r3/tests/contracts/test_repository_observation_batch.py; /tmp/am-v15-delivery/fresh-validation-batching-base1f30797-clean-source-20261110-r3/tests/contracts/test_developer_identity.py; /tmp/am-v15-delivery/fresh-validation-batching-base1f30797-clean-source-20261110-r3/tests/contracts/test_omp_segment_inventory_batch.py; /tmp/am-v15-delivery/fresh-validation-batching-base1f30797-clean-source-20261110-r3/tests/contracts.json; /tmp/am-v15-delivery/fresh-validation-batching-base1f30797-clean-source-20261110-r3/tests/contracts/test_layout_marker_group_recovery.py; /tmp/am-v15-delivery/MarkerPrivateOutputOpus-batching-r3-actual-20261110.json; /tmp/am-v15-delivery/SegmentIntentFixtureOpus-batching-r3-actual-20261110.json; /tmp/am-v15-delivery/ComposedLinuxRuntimeOpus-batching-original-d83-source-pass-actual-20261110.json; /tmp/am-v15-delivery/ComposedLinuxConsumersOpus-batching-original-d83-source-pass-actual-20261110.json",
+      "sha256": "90753f375f79c182362253e87eef186122680a021ddab7b51f7c60a04950085a"
+    },
+    {
+      "bytes": 175802,
+      "name": "fresh-validation-batching-negative-reservation-cost-and-next-source-investigation-actual-20261110.tar.gz",
+      "original_private_location": "/tmp/am-v15-delivery/fresh_validation_batched_wire_cost_diagnostic_20261110.py; /tmp/am-v15-delivery/composed_clock_reserve_diagnostic_observer_20261110_r3.py; /tmp/am-v15-delivery/fresh-validation-batching-installed-reservation-cost-diagnostic-actual-20261110.json; /tmp/am-v15-delivery/fresh-validation-batching-installed-reservation-cost-diagnostic-actual-20261110.trace.jsonl; /tmp/am-v15-delivery/fresh-validation-batching-frame2-whole-cost-diagnostic-20261110.json; /tmp/am-v15-delivery/fresh-validation-batching-installed-reservation-cost-diagnostic-actual-20261110.trace.jsonl.frame-1.pstats; /tmp/am-v15-delivery/fresh-validation-batching-installed-reservation-cost-diagnostic-actual-20261110.trace.jsonl.frame-2.pstats; /tmp/am-v15-delivery/fresh-validation-batching-installed-reservation-cost-diagnostic-actual-20261110.trace.jsonl.frame-3.pstats; /tmp/am-v15-delivery/FreshAuthorityCostScout-batching-r3-actual-20261110.json; /tmp/am-v15-delivery/FiniteGuardCostScout-batching-r3-actual-20261110.json",
+      "sha256": "4f7640f0740d51faca01fbfed61e040d97d27125c8c7ae2a7594e2e05cc8e497"
+    },
+    {
+      "bytes": 6934,
+      "name": "fresh-validation-batching-r3-installed-guides-planning-repair-restore-actual-20261110.tar.gz",
+      "original_private_location": "/tmp/am-v15-delivery/fresh-validation-batching-r3-copy-link-guides-actual-20261110.json; /tmp/am-v15-delivery/fresh-validation-batching-r3-installed-public-plan-actual-20261110.json; /tmp/am-v15-delivery/fresh-validation-batching-r3-installed-public-recovery-actual-20261110.json; /tmp/am-v15-delivery/corrected_guides_copy_link_smoke_20261110.py; /tmp/am-v15-delivery/integrated_peer_public_plan_20261110.py; /tmp/am-v15-delivery/integrated_peer_public_recovery_20261110.py",
+      "sha256": "05bdec7daad536fc2c65ffb4562191fface8fdf50571a98d9e7a1f16e3526cb0"
+    }
+  ],
+  "schema": "am/fresh-validation-batching-scoped-proof-v1",
+  "source_identity": "2bb3d52f1a91be8dc433dfb164a30d640607fd042d37eac6c9fcac884175d15a",
+  "source_reviews": {
+    "fixture_closures": {
+      "model": "anthropic/claude-opus-5-5",
+      "reviewers": [
+        "MarkerPrivateOutputOpus",
+        "SegmentIntentFixtureOpus"
+      ],
+      "subject": "2bb3d52f1a91be8dc433dfb164a30d640607fd042d37eac6c9fcac884175d15a",
+      "verdict": "SOURCE PASS"
+    },
+    "original_implementation": {
+      "limitation": "Original test assertions were subsequently disproved by execution; preserve both later fixture change requests.",
+      "model": "anthropic/claude-opus-5-5",
+      "reviewers": [
+        "ComposedLinuxRuntimeOpus",
+        "ComposedLinuxConsumersOpus"
+      ],
+      "subject": "d83b305f4a978691d0274363c8fa97162dd308b7544e1665a295f2351f86a057",
+      "verdict": "SOURCE PASS"
+    }
+  }
+}

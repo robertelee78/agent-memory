@@ -1,0 +1,95 @@
+{
+  "schema": "agent-memory/native249-corrected-companion-smoke-v1",
+  "source_commit": "77cf838fb1a73dc348f60c2fe4230e67c7aef814",
+  "companion_sha256": "dfd55e42c9e68d11ed276ad6095abeef1fa49eac3442e9a13b533069dd26d08f",
+  "smoke_source_sha256": "8f262731224d894849801a031670ff4869c6092893ec73889ba6df7876fbc7a1",
+  "plan_sha256": "ac17a85ee7aa1fc425aafe1890fc3c1fdc4c06ca56bcd60602a92017365010bc",
+  "actual_result_sha256": "d8fb37420c5a2da2ca0634f48d00d31d4ef3e7a2c080a70056f8d59c40f4e9b3",
+  "actual_exit": 0,
+  "actual_child_exit": 0,
+  "model_provider_calls": 0,
+  "native_processes_launched": 0,
+  "baseline_repeated": false,
+  "comparison": {
+    "qualified": true,
+    "healthy_companion_terminals": true,
+    "direct_stdout_equals_companion_output_metadata": true,
+    "own_REQUEST_FINAL_metadata_matches": true,
+    "actual_own_CLOSED": true,
+    "direct_stdout_metadata": [
+      {
+        "frame": "READY",
+        "sequence": 0,
+        "bytes": 146,
+        "code": null,
+        "outcome": null,
+        "verified": false,
+        "status": null
+      },
+      {
+        "frame": "OBSERVED",
+        "sequence": 1,
+        "bytes": 141,
+        "code": null,
+        "outcome": null,
+        "verified": true,
+        "status": "hint-recorded"
+      }
+    ],
+    "companion_output_metadata": [
+      {
+        "frame": "READY",
+        "sequence": 0,
+        "bytes": 146,
+        "code": null,
+        "outcome": null,
+        "verified": false,
+        "status": null
+      },
+      {
+        "frame": "OBSERVED",
+        "sequence": 1,
+        "bytes": 141,
+        "code": null,
+        "outcome": null,
+        "verified": true,
+        "status": "hint-recorded"
+      }
+    ],
+    "input_headers": [
+      {
+        "frame": "REQUEST",
+        "sequence": 1,
+        "bytes": 570
+      },
+      {
+        "frame": "FINAL",
+        "sequence": 2,
+        "bytes": 81
+      }
+    ],
+    "scope": "corrected apparatus HINT only; NOT source/native/model/wake/#249 acceptance"
+  },
+  "actual_original_R4_and_R2_preserved": true,
+  "qualified_scope": "One neutralHINT/ownFINAL apparatus correctness only",
+  "independent_actual_evidence_review": {
+    "reviewer": "Native249DiagnosticOpus",
+    "model": "anthropic/claude-opus-5-5",
+    "verdict": "PASS_APPARATUS_ONLY",
+    "executed_by_reviewer": false
+  },
+  "timing_limit": "Synchronousframe-logwrites perturb reader/writer/eventloop. Not uninstrumentednativecallbacklatency/p99/clockprofilequalification.",
+  "unexercised": [
+    ">=256KiB",
+    "REFUSED-ATTEMPT",
+    "CLOCK/nonces",
+    "multiplehelpers",
+    "sourcecapture",
+    "shutdown/transition",
+    "automaticwake/learning",
+    "stocknativecampaign"
+  ],
+  "wake_qualified": false,
+  "full_native_qualification": false,
+  "prior_negatives_rewritten": false
+}

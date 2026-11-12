@@ -1,0 +1,105 @@
+{
+  "base_commit": "f4aa10280ef30cafa72ffffa6254b802003cf9f3",
+  "cause_and_fix": [
+    "_HEAD_UNOBSERVED bare object entered the uppercase-policy/default witness and disabled catalog generation; preserve actual boot identity and deterministic audited role/alias labels, not attribute omission",
+    "Subsequent R1 class walk rejected ContractError.__weakref__ whose actual owner is builtins.object on Python3.15; bind actual MRO owner plus declaring class/type/name, still refuse foreign ownership",
+    "Class/function/default/closure/attribute and package/runtime dependencies remain bound; unsupported or changed state still fails closed"
+  ],
+  "complete_consumers": {
+    "counts": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 40
+    },
+    "exact_once": true,
+    "files": [
+      "tests/contracts/test_discovery_workflow.py",
+      "tests/contracts/test_layout_recovery_catalog.py",
+      "tests/contracts/test_memory_refresh.py",
+      "tests/contracts/test_recall_catalog.py"
+    ],
+    "methods": 40,
+    "recall_module_seconds": 123.21272491698619,
+    "seconds": 226.53103729197755,
+    "worker_deadline_seconds": 300,
+    "workers": 17
+  },
+  "frozen_subject_sha256": "d5391ddad7525dbb5e7c16a8fc59c021a06f0ae7ccc8d70e26e8c467a3e79994",
+  "installed_public_scenario": {
+    "canonical_state_unchanged": true,
+    "catalog_has_no_learning_body": true,
+    "passed": true,
+    "queries": [
+      {
+        "catalog_updated": false,
+        "exit": 0,
+        "ids": [
+          "1af6f467-e024-4b0a-bb39-32c0b09ed1b3"
+        ],
+        "optional_indexes_used": true,
+        "stderr_empty": true,
+        "step": "warm-first"
+      },
+      {
+        "catalog_updated": false,
+        "exit": 0,
+        "ids": [
+          "1af6f467-e024-4b0a-bb39-32c0b09ed1b3"
+        ],
+        "optional_indexes_used": true,
+        "stderr_empty": true,
+        "step": "warm-second"
+      },
+      {
+        "catalog_updated": true,
+        "exit": 0,
+        "ids": [
+          "1af6f467-e024-4b0a-bb39-32c0b09ed1b3"
+        ],
+        "optional_indexes_used": false,
+        "stderr_empty": true,
+        "step": "generation-removed"
+      },
+      {
+        "catalog_updated": false,
+        "exit": 0,
+        "ids": [
+          "1af6f467-e024-4b0a-bb39-32c0b09ed1b3"
+        ],
+        "optional_indexes_used": true,
+        "stderr_empty": true,
+        "step": "rebuilt-warm"
+      }
+    ],
+    "seconds": 9.386132625048049
+  },
+  "negative_history": {
+    "hosted_f4_run": 42897678857,
+    "original_results_not_relabelled": true,
+    "r1_archive_sha256": "5f97bdeb456be8e11ffd475393b1fc162702629e89ea8190d34009d9f93f6011",
+    "r1_errors": 1,
+    "r1_failures": 26,
+    "r1_local_source": "f21f282d20c10286b1d6018201b5cbf9ec61ee1f2007c3de5cb9fd3ecac58761",
+    "r1_methods": 40
+  },
+  "not_qualified": [
+    "Subsequent cleanup corrections in R3",
+    "Corrected Ubuntu/full platform/Python execution",
+    "Final-source A/B/C performance and semantic study",
+    "Stock-native/clock/rate/p99",
+    "Independent story acceptance or signed release"
+  ],
+  "platform": "Darwin arm64",
+  "python": "3.15.0 (main, Oct  9 2026, 11:16:41) [Clang 21.0.0 (clang-2100.3.34.2)]",
+  "retained_private_archive": {
+    "bytes": 15537,
+    "name": "recall-witness-r2-complete40methods-and-installed-warm-rebuild-pass-actual-20261110.tar.gz",
+    "original_private_location": "/tmp/am-v15-delivery/recall-witness-r2-complete-hosted-failure-consumers-py315-actual-20261110; /tmp/am-v15-delivery/recall-witness-r2-installed-public-smoke-actual-20261110.json; /tmp/am-v15-delivery/recall_witness_installed_public_smoke_20261110.py; /tmp/am-v15-delivery/RecallClosureR2Opus-source-phase-concurrency-recall-r2-source-verdict-20261110.txt",
+    "sha256": "62f399b463ee3bfbe60dc91ff322ea85bcfe9092ca842cd70d73c3d2884fc859"
+  },
+  "schema": "am/recall-witness-closure-scoped-proof-v1",
+  "source_identity": "e1ef90841f688954002d771578fa000819c6ab4b8b7195ce8ea48ae798ec28a8",
+  "source_unchanged": true,
+  "status": "SCOPED LOCAL PASS; corrected Ubuntu/full final-source/matched evaluation/release acceptance still open"
+}

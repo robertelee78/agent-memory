@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "podman",
+    "inspect",
+    "b93c772b9f66ed6e73344b1fae19a91b43a5c0bff80c56f3c153b538900ae3f8"
+  ],
+  "cwd": "/Users/robert.lee/.omp/wt/t4d88ac83b/m",
+  "exit": 125,
+  "seconds": 0.07757337496150285,
+  "started_at": "2026-11-06T19:23:29.649639+00:00",
+  "stderr": "Error: no such object: \"b93c772b9f66ed6e73344b1fae19a91b43a5c0bff80c56f3c153b538900ae3f8\"\n",
+  "stdout": "[]\n"
+}

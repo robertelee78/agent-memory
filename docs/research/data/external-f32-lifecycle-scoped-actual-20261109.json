@@ -1,0 +1,94 @@
+{
+  "schema": "research/external-f32-lifecycle-scoped-actual-v1",
+  "observed_date": "2026-11-09",
+  "qualification": "research-controls-observed",
+  "product_implementation_pass": false,
+  "runtime_acceptance_pass": false,
+  "source": "48bd945c0fc937eb5d3f6cae2696a5e774f381cdabf99193f6d27d67bee0fa7a",
+  "plan": "cfa2a68faf4efa58ba212e4ffbb16f4ffd482889a99e0a2b30489fc84cae8e11",
+  "source_binding": "da070965c971bbd45013ef419d4e0f5c77aee54d875ffa0658a7b7277e009edf",
+  "closure": "712b4667d80868cebca73818f0845503a555907b129afc538c53a6b75fe9d15f",
+  "locator": "e2aa966ebad349f6f7d4f8453fe13865d5059c3a94a55910839f045f43dfa5d0",
+  "runtime": {
+    "runtime_executable": "/Users/robert.lee/.pyenv/versions/3.13.12/bin/python3.13",
+    "runtime_sha256": "98b0cb3f8e341110132a94a0c64ba0e2c885f1edc0a8e4567640add88806fe02",
+    "runtime_version": "3.13.12 (main, May 27 2026, 12:03:16) [Clang 21.0.0 (clang-2100.1.1.101)]"
+  },
+  "private_evidence_archive_sha256": "898830dd1d739a21b4a12e305c3fcb4c7793ecb254615e94d9c6450ae6331a7e",
+  "observation_sha256": "0eefb970d7ce619437b98319845d4d978af839966cb8811c249c2108f27932a1",
+  "actual": {
+    "workers": 6,
+    "killed_owned_children": 3,
+    "all_killed_children_reaped_minus9": true,
+    "interrupted_vector_bytes": [
+      24576,
+      65536,
+      65536
+    ],
+    "independent_copy_same_bytes_distinct_inode_nlink1": true,
+    "copy_reread_after_original_erasure": true,
+    "delete_omitting_copy_bytes": 49152,
+    "delete_copy_reread_after_full_copy_erasure": true,
+    "deleted_key_absent": true,
+    "source_profile_epoch_namespace_read_and_publish_fences_refused": true,
+    "row_and_membership_negative_controls_refused": true,
+    "active_reader_disposal_refused": true,
+    "stale_pointer_CAS_refused": true,
+    "all_vector_generation_directories_absent": true,
+    "unknown_metadata_and_links_preserved": true,
+    "unknown_hardlink_nlink": 2,
+    "new_generation_allocation_after_unknown_refused": true
+  },
+  "bounds": {
+    "aggregate_cap_before_every_file_write": 33554432,
+    "child_deadline_seconds": 15.0,
+    "excluded_from_owned_file_cap": [
+      "read-only source/plan/source-binding/approval JSON and retained locator",
+      "read-only Python executable/stdlib and process memory",
+      "existing services, repositories, graph/model stores and all external files"
+    ],
+    "host_free_bytes_before_controller_allocation": 100272693248,
+    "max_entries": 128,
+    "max_file_bytes": 524288,
+    "max_process_admitted_owned_bytes_before_observation": 140288,
+    "parent_peak_admitted_owned_bytes_before_observation": 140288,
+    "peak_scope": "Per-process admission maxima over logical shared-root files; excludes final observation file and allocation blocks.",
+    "worker_stdout_checkpoint_cap": 8192
+  },
+  "source_reviews": {
+    "ExternalF32R2ScienceOpus": "PASS source/plan only",
+    "ExternalF32R2OwnershipOpus": "PASS source/ownership only"
+  },
+  "actual_result_reviews": {
+    "observation_sha256": "0eefb970d7ce619437b98319845d4d978af839966cb8811c249c2108f27932a1",
+    "requested_model": "anthropic/claude-opus-5-5",
+    "method": "Read actual observation, terminal capture, approval and source; no rerun, rehash or independent execution.",
+    "ExternalF32R2ScienceOpus": {
+      "verdict": "PASS scoped actual scientific evidence",
+      "verdict_sha256": "b06776fb57dce3ab262f50420ac673a11786999e5db9fc4c3939d1dc54f23972",
+      "projection_note": "Add in-memory specimen and expected-pin limits; retained below."
+    },
+    "ExternalF32R2OwnershipOpus": {
+      "verdict": "PASS bounded actual ownership/lifecycle evidence",
+      "verdict_sha256": "58375ded3727551beaf91d7bcf0f6cc5775239c9f91bbd26812902a3714f431e",
+      "limits": "Current probe-file pins and private archive SHA not independently verified; delete-copy nlink inferred from source checks, not a recorded nlink field."
+    },
+    "product_or_profile_acceptance": false
+  },
+  "limits": [
+    "Retained old qualified component inputs; no fresh native eligibility or current production dataset.",
+    "Four authentic stored model rows over authored evaluation assertions; not real admission evidence.",
+    "Controlled source/profile/namespace/privacy authority; no real repository mutation.",
+    "Quiescent in-process readers only; no concurrent reader or distributed lock qualification.",
+    "SIGKILL checkpoints and fsync calls do not establish power-failure atomicity or durability.",
+    "Metadata unlink only; excludes forensic recovery, snapshots, swap, backups and provider erasure.",
+    "No graph, model, network, semantic quality, scale, E2E latency or v0.0.16 implementation acceptance.",
+    "Read/publish/reuse refusals for all three interrupted candidates rely on parent-written interruption marker, not crash-restart discovery. Marker-independent partial detection is exercised only by direct disk-read controls for partial-row and fill-before-manifest.",
+    "Runtime executable/version binding is not transitive stdlib attestation. No full power/crash-restart or hostile filesystem qualification.",
+    "Malformed row/membership controls mutate in-memory specimens; root dev/ino/nonce probes change expected pins (mode changes the actual directory), not on-disk corrupted-store detection.",
+    "The full-copy nlink1/distinct-inode observation does not supply a recorded delete-copy nlink field; that copy's single-link property is inferred from the successful source checks.",
+    "The retained input locator still contains the deleted row's original bytes; owned generation disposal is not erasure of those excluded inputs or a canonical bank forget.",
+    "All probes are component apparatus, not AM production external-store implementation; no canonical bank forget was executed."
+  ],
+  "acceptance": "No named-size, quality, latency, model selection, resource-fit, license/platform, or G1 acceptance."
+}

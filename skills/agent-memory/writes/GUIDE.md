@@ -58,18 +58,18 @@ from a manual editor ignoring the protocol.
 ## Apply
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/bank_writes.py" inspect --repo /path/to/repo
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/bank_writes.py" preview --repo /path/to/repo \
+python3 -I "$SKILL_DIR/scripts/bank_writes.py" inspect --repo /path/to/repo
+python3 -I "$SKILL_DIR/scripts/bank_writes.py" preview --repo /path/to/repo \
   --path activeContext.md --content /private/path/reviewed.md > /private/path/proposal.json
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/bank_writes.py" apply --proposal /private/path/proposal.json
+python3 -I "$SKILL_DIR/scripts/bank_writes.py" apply --proposal /private/path/proposal.json
 ```
 
 Adding/removing routes or records requires the recoverable multi-file protocol:
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/bank_transactions.py" preview --repo /path/to/repo \
+python3 -I "$SKILL_DIR/scripts/bank_transactions.py" preview --repo /path/to/repo \
   --files /private/path/complete-reviewed-files.json --operation replace > /private/path/transaction.json
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/bank_transactions.py" apply --proposal /private/path/transaction.json
+python3 -I "$SKILL_DIR/scripts/bank_transactions.py" apply --proposal /private/path/transaction.json
 ```
 
 ## Read back
@@ -109,8 +109,8 @@ refresh/publication cursor or fresh projection source.
 A visible lock requires explicit lock recovery before bank resolution:
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/bank_writes.py" recover --repo /path/to/repo > /private/path/unlock.json
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/bank_writes.py" recover --repo /path/to/repo \
+python3 -I "$SKILL_DIR/scripts/bank_writes.py" recover --repo /path/to/repo > /private/path/unlock.json
+python3 -I "$SKILL_DIR/scripts/bank_writes.py" recover --repo /path/to/repo \
   --proposal /private/path/unlock.json
 ```
 
@@ -121,6 +121,17 @@ finish` (or `rollback`) and apply with `recover --repo ... --proposal FILE`.
 Initialization finish MUST revalidate original source evidence; identity-change
 transactions MUST resume through their original binding bundle. A session MUST
 preserve unknown markers or missing journals for explicit inspection.
+
+An invalid/oversized source cannot use an ordinary valid-base transaction.
+Route to [source-preserving layout recovery](../bank/GUIDE.md#source-preserving-layout-recovery)
+and its literal `am bank recover-layout` helper instead. Its typed raw read-set
+is internal, not a caller-selected normal-reader bypass. Its initial layout
+journal, pending ledger and immutable receipt are separate from admission.
+The persistent recovery hold is not a legacy transaction ID; ordinary recovery
+MUST NOT steal or retire it. Use `recover-nested` for a held ordinary transaction:
+rollback only before its canonical receipt, finish only after it. Completed
+layout restoration requires the distinct parent-receipt-bound child restore;
+pending units and their hold survive rollback until genuinely resolved.
 
 ## Diagnostic fallback
 

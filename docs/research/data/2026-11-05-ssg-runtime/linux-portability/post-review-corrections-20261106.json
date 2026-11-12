@@ -1,0 +1,85 @@
+{
+  "schema": "am255/linux-post-review-corrections-v1",
+  "recorded_date_utc": "2026-11-06",
+  "raw_files_unchanged": true,
+  "evidence_lineage": "../evidence-commit-map.json; refs/heads/evidence/v015-255-linux-20261106 preserves original source/freezes/results; later integrated commit dates are not freeze dates.",
+  "collector_failure": {
+    "supersedes_narrative_only": "amd64-contents-20261106/failure.json preserved/correction fields; original raw file intentionally unchanged",
+    "actual": "Core contents and file inventory completed valid JSON. Exact MAGE acquisition also completed exit0 in9.867608785629272s. Failure occurred while serializing MAGE contents.json (invalid JSON at character297404). MAGE selected-text archive and all acquired MAGE layers already existed; corrected collectors reused verified acquisitions, not a still-missing MAGE download.",
+    "failure_is_not": "No amd64 execution or platform failure."
+  },
+  "inventory_window": {
+    "supersedes": "concurrent-inventory-discrepancy.json actual_interval.end only",
+    "after_command_start_utc": "2026-11-06T20:39:26.886153Z",
+    "after_command_duration_seconds": 0.07169985771179199,
+    "limit": "Corrects one-second transcription error, not a precise time of any external replacement. Ownership/attribution remain unestablished; overall wrapper remains non-pass."
+  },
+  "source_files": {
+    "amd64-contents-20261106/failure.json": {
+      "sha256": "e86df7fb84935ecdd7ed6eccf53c95e3535904a7ea0d2b574fc35a63d217f6e4",
+      "bytes": 1352
+    },
+    "amd64-contents-20261106/core/contents.json": {
+      "sha256": "c288ccd6431d2739db40bd2d6eba225abcdefc23d4ea02e482cadbc3ada616e8",
+      "bytes": 364340
+    },
+    "amd64-contents-20261106/core/file-inventory.json": {
+      "sha256": "e2e3cb8b45f3f0f944f74436eccb30812e99dbed3f59254f021a1163a7bbca42",
+      "bytes": 3537990
+    },
+    "amd64-contents-20261106/core/selected-texts.tar.gz": {
+      "sha256": "819d0f2cff31d7dfa5eafb595b491249d9a1a400f817028d02d7b348a1b0738c",
+      "bytes": 2260073
+    },
+    "amd64-contents-20261106/mage-acquire.json": {
+      "sha256": "ed55a784ef8419bb41fbca0151440bf0dba3eeeabede32cd71ad0fc8765967eb",
+      "bytes": 1035
+    },
+    "amd64-contents-20261106/mage/contents.json": {
+      "sha256": "07a5847500d037ec494a3fe8ff6b9be11650c361986b9f9b064b4a8323e65d0f",
+      "bytes": 297404
+    },
+    "amd64-contents-20261106/mage/selected-texts.tar.gz": {
+      "sha256": "18869817ded850313404501a632168650de30e3b1ae262b994304e3b5028c807",
+      "bytes": 4487952
+    },
+    "actual-20261106/containers-after.json": {
+      "sha256": "15511b1c49f0d4f64d77ec78b902f6a25531815213671f0d8b7e3308bc08fc4b",
+      "bytes": 3825
+    },
+    "concurrent-inventory-discrepancy.json": {
+      "sha256": "da91c905e5e603cdcd216fc1252ef3f361f00e6f2e69237e1e470fab3517d894",
+      "bytes": 1442
+    }
+  },
+  "offline_reproduction": {
+    "generator": "derive_evidence.py",
+    "compare_argv": [
+      "python3",
+      "-B",
+      "derive_evidence.py",
+      "--output",
+      "NEW_COMPARISON.json",
+      "compare",
+      "--contents",
+      "amd64-contents-20261106-qualified"
+    ],
+    "static_argv": [
+      "python3",
+      "-B",
+      "derive_evidence.py",
+      "--output",
+      "NEW_STATIC.json",
+      "static",
+      "--archive",
+      "EXACT_B9360_ARCHIVE"
+    ],
+    "actual_output_files": [
+      "byte-comparison-reproduced-20261106.json",
+      "static-closure-reproduced-20261106.json"
+    ],
+    "compare": "All reported values and source hashes equal original; source paths now relative.",
+    "static": "Reacquired pinned11,497,759-byte archive, hash verified; all23 original server/shared-library ELF records and DT_NEEDED match by path. CLI executables outside original server/library scope omitted; no acquired code executed.",
+    "arm64_contrast": "Prior arm64 core and MAGE engines were byte-identical SHA2560b0e2855944de70376d4c3c866e8c920f5e9fe1267737b78db98716019f8a9f2. amd64 engines differ despite same version/size. All34 common amd64 module files match, including vector_search.so. No amd64 runtime parity follows."
+  }
+}

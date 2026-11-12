@@ -1,0 +1,84 @@
+{
+  "schema": "am255/same-weight-serving-interpretation-v1",
+  "evidence_class": "Corrected post-run factual interpretation of immutable actual-20261106 receipts; not retroactive attestation. New explicit-cache/dependency-bound execution is separately retained.",
+  "raw_results": "actual-20261106/results.json",
+  "raw_results_sha256": "6c03de5ba220e73c851dd754aee96d4bf166ec98894842709e41af669aba3cf5",
+  "executed_source_commit": "fef68d07d0a8617220c3f332b0de7694cec7ad20",
+  "executed_script_sha256": "6e0a0198822e939ec875c37cb9786379a95f220dec6a43c0204bafabd37c24b7",
+  "canonical_inputs_sha256": "5e7d61a18511bc8182685e04ae4777f260d737fe6e80ead901bb0be3ac0d9645",
+  "corrected_separate_execution": "cache-interpretation-results.json; completed run actual-cache-observed-20261106/results.json. Intermediate actual-cache, actual-cache-logfix and actual-cache-finalized directories are retained parser-failure attempts, not completed four-launch results.",
+  "actual_executable_smoke": {
+    "argv": ["python3", "-B", "docs/research/data/2026-11-05-ssg-runtime/serving-comparison/compare_serving.py", "run", "--output", "docs/research/data/2026-11-05-ssg-runtime/serving-comparison/actual-20261106"],
+    "exit": 0,
+    "stdout": "Actual comparison: explicit-prerequisite-no-serving-cutover\nCoordinate/cosine stable: False rank stable: True bounded API: False\n",
+    "stderr": "",
+    "tool_reported_wall_seconds": 24.41,
+    "exit_zero_means": "The real comparison completed and retained diagnostics, not that compatibility/G1/quality gates passed"
+  },
+  "software_identity": {
+    "fork": {"build": "9341", "ordinary_upstream_release": false, "source_commit": "a578bb6b94529b7b2721d0ee49eaea5dbb2c6d07", "binary_sha256": "b57ea6bb97b43a4f74b5a5ab71f1cc2ef292899d83c0e45ddfa9290b169598b5", "source_binding": "Existing checkout HEAD, existing binary version/hash and local dylib hashes; no reproduced build"},
+    "upstream": {"build": "9360", "tag": "b9360", "source_commit": "6b4e4bd582e457a47ee7cd498058495f47fee228", "binary_sha256": "619eff2bb5fa47bbcaec8804c5659ef426fa4a9aceb4e30ed33bc9d63a82d203", "source_binding": "b9360 Homebrew bottle built against ggml0.13.0, executed with installed ggml0.22.0. Metal/CPU/BLAS modules were loaded but not inventoried/hashed in this old run. The old output kernel closure is not pinned and cannot be retroactively attested by hashing files now."},
+    "weight": {"sha256": "d20ddc71e8a5c4344f2343481e242233a997dc5eaff442427a945836c97b4deb", "bytes": 8047105824, "same_for_all_four_launches": true},
+    "provider_echo_is_weight_identity": false
+  },
+  "observed": {
+    "cold_process_launches": 4,
+    "cold_process_launches_per_binary": 2,
+    "settings": "4 CPU generation/batch/HTTP threads; ctx8192; batch8192; ubatch8192; parallel1; last pooling; MTL0 Metal; gpu-layers99; flash-attn off; fit off; offline; same alias for document/query embedding. Cache CLI/request fields were not frozen; actual logs show default RAM prompt cache8192MiB and slot-prefix reuse.",
+    "dimension": 4096,
+    "cross_restart_baseline_coordinates": "Exactly equal for probes, queries, six own documents and six relationship documents for each binary",
+    "immediate_repeat_max_abs_coordinate": {"fork": 0.00009326823055744171, "upstream": 0.00012361444532871246},
+    "immediate_repeat_max_cosine_distance": {"fork": 0.000000328853894560055, "upstream": 0.00000036924480295574824},
+    "immediate_repeat_scope": "Only probe row0 differs between the first probe batch and the next two: the cold9-token evaluation changes to2 cached prefix tokens plus7 evaluated tokens. Same cache splits are bit-for-bit equal across restarts, probes1/probes2, and unknown-alias versus probes1 row0. The known-single request takes a near-full cache-hit path and differs by3.6e-6 fork/4.6e-6 upstream. Thus alias comparison is cache-path-confounded, not evidence of alias-induced differences. Log correlation establishes history dependence; it does not prove a particular kernel-level cause.",
+    "cross_server_max_abs_coordinate": 0.00011330842971801758,
+    "cross_server_max_cosine_distance": 0.00000023421633865705616,
+    "frozen_coordinate_tolerance": 0.00001,
+    "frozen_cosine_distance_tolerance": 0.00001,
+    "coordinate_tolerance_exceeded": true,
+    "cosine_distance_tolerance_exceeded": false,
+    "cross_server_rank_order_changes": 0,
+    "cross_restart_rank_order_changes": 0,
+    "cross_server_max_ranking_score_drift": 0.00013965302161811355,
+    "relationship_control": "Adding the frozen relationship text changed all four full ranking orders but no top1, on both binaries; all four synthetic expected items stayed rank1. Maximum rank displacement was4. Relationship vectors differ from own vectors by up to0.25703618946818574 cosine distance; this is text sensitivity, not serving drift or quality acceptance.",
+    "api": {
+      "catalog_aliases": 1,
+      "unknown_request_alias": "HTTP200 and echoed by both binaries despite absent independent metadata; local metadata selection refused model-not-in-independent-metadata",
+      "over_context": "Both binaries explicitly returned HTTP400 with actual8265 prompt tokens and8192 available context tokens, on both launches",
+      "empty_and_invalid_input": "Both binaries returned HTTP500 with explicit errors and no vectors. This fails closed and is a draft client-preflight item for ALL profiles, not a server-cutover blocker or evidence against upstream usability.",
+      "short_batch_sizes_observed_http200": [1, 4, 8, 9],
+      "local_maintenance_policy": "Offline policy function would refuse9 inputs and two4161-token inputs (8322 aggregate), using max8 inputs/aggregate8192 tokens. No actual AM production preflight exists here and no request was blocked: batch9 was sent and returned200. Large aggregate was tokenized but not submitted."
+    },
+    "costs_seconds": {
+      "fork_startup": [1.483089542016387, 1.059384333959315],
+      "upstream_startup": [1.0628622910007834, 1.0554420000407845],
+      "fork_mean_four_probe_batch": [0.19255295834348848, 0.16439058334799483],
+      "upstream_mean_four_probe_batch": [0.1884841386733266, 0.15908244465632984],
+      "fork_six_own_fill": [0.38798312505241483, 0.3910810829838738],
+      "upstream_six_own_fill": [0.3616313749807887, 0.36112733400659636],
+      "fork_six_relationship_fill": [0.5174523330060765, 0.5166235000360757],
+      "upstream_six_relationship_fill": [0.3766400829772465, 0.3768340420210734],
+      "tokens_per_probe_batch": 42,
+      "tokens_per_own_fill": 87,
+      "tokens_per_relationship_fill": 193,
+      "scope": "Normal shared host load, unpurged OS file cache and tiny synthetic fills. No statistical speed ranking, throughput/performance acceptance or production latency claim."
+    },
+    "cleanup": "All four owned Popen processes terminated/reaped with retained per-launch receipts/stdout/stderr; final pgrep -x llama-server exit1/no matches. No unrelated process was signaled."
+  },
+  "recommendation": {
+    "status": "diagnostic-only-no-eligibility-or-usability-verdict",
+    "decision": "The frozen1e-5 coordinate diagnostic was exceeded by both binaries, while the cosine/rank diagnostics were met. The old composite candidate label combined binary-independent repeat drift and identical invalid-input500 behavior; it is not an eligibility criterion or evidence against ordinary upstream usability.",
+    "boring_candidate_if_prerequisites_are_later_resolved": "Ordinary pinned upstream is a serving candidate, not an adopted profile; this old run is not dependency-closure-qualified because its backend modules were not hashed.",
+    "prerequisites": [
+      "A new source-bound run must freeze explicit RAM-cache/request settings and actual dependency/backend pins before outputs, then retain observed loaded paths and token/cache histories. No retroactive closure claim for this old run.",
+      "Draft client contract for every profile: refuse empty/non-string inputs before sending; enforce chosen local token/batch limits and fail on every non-2xx or invalid vector response. This is NOT an implemented AM production client. Generic BYO remains URL plus optional key and explicit model only when discovery is ambiguous; provider-specific cache fields are not universal requirements.",
+      "Parent owns the profile/fingerprint and persisted-vector rebuild/reuse decision. Four synthetic unchanged rankings are neither persisted-vector compatibility nor held-out quality acceptance. Diagnostic1e-5 is not an adoption threshold and is not relaxed.",
+      "Full quality, legal/distribution and other-platform qualification remain independently open. Parent alone owns final ADR/profile/G1 decisions."
+    ],
+    "own_vs_relationship": "For the narrow synthetic control, own text is the boring lower-token baseline and relationship text materially changes vectors/ranking tails without changing top1. This does not decide the production representation or establish full quality."
+  },
+  "proposed_parent_doc_additions": {
+    "legal_runtime_brief_sections4_and7": "The immutable old run compares fork9341 against b9360 built with ggml0.13.0 but executed with installed0.22.0; the old Metal/CPU/BLAS modules were not hashed. Default8192MiB RAM prompt cache was enabled and probe repeat drift correlates with cache-prefix splits; alias differences are cache-path-confounded. The1e-5 result is diagnostic only, not a verdict against upstream usability. Empty/malformed500 with no vectors belongs to the draft AM preflight for all profiles. Offline policy would refuse batch9, which was actually sent and returned200. No actual AM production client, profile/ADR freeze, G1, quality/legal/Linux or clean-performance claim.",
+    "runtime_controls_readme": "Old raw/frozen serving-comparison receipts remain immutable. Corrected interpretation records installed ggml0.22.0, unhashed old backends, cache-history-confounded drift and diagnostic-only semantics. The new cache-probe-spec/cache-frozen-inputs and separate actual-cache execution bind explicit --cache-ram0 with slot-prefix reuse still enabled, actual dyld backend closure and per-row token histories; no provider-specific field is imposed on generic BYO."
+  },
+  "tracker_and_shared_files": "Parent owns GitHub/Vox, shared prose and profile/G1 decisions; no tracker/shared-file edits by this slice."
+}

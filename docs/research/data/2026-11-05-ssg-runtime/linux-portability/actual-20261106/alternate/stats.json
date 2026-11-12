@@ -1,0 +1,15 @@
+{
+  "argv": [
+    "podman",
+    "stats",
+    "--no-stream",
+    "--format",
+    "json",
+    "79acf5e099bb8be917b3694e71973ba4d1bf8b5ae956161177d905cddec2b4aa"
+  ],
+  "duration_seconds": 0.0729057788848877,
+  "exit": 0,
+  "start_unix": 1793997566.305299,
+  "stderr": "",
+  "stdout": "[\n {\n  \"id\": \"79acf5e099bb\",\n  \"name\": \"am255-linux-302b5222e537-alternate\",\n  \"cpu_time\": \"5.143999s\",\n  \"cpu_percent\": \"194.08%\",\n  \"avg_cpu\": \"194.08%\",\n  \"mem_usage\": \"1.062GB / 12.88GB\",\n  \"mem_percent\": \"8.24%\",\n  \"net_io\": \"516B / 558B\",\n  \"block_io\": \"0B / 0B\",\n  \"pids\": \"17\"\n }\n]\n"
+}

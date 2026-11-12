@@ -1,0 +1,21 @@
+{
+  "source_commit": "2732df8bd2d11dfbc4999469cbdd0cd372427b60",
+  "source_root": "/private/tmp/am-v15-delivery/244-capacity-qualified-source",
+  "timeout_seconds": 300,
+  "started_at": "2026-11-06T23:38:50.761839+00:00",
+  "passed": false,
+  "command": [
+    "/tmp/am-v15-delivery/qualification-venv/bin/python",
+    "-I",
+    "-B",
+    "/private/tmp/am-v15-delivery/244-capacity-qualified-source/scripts/run_contract_suite.py",
+    "/private/tmp/am-v15-delivery/244-capacity-qualified-source/tests/contracts/test_layout_nested_reconciliation.py",
+    "--suite",
+    "layout-nested-reconciliation"
+  ],
+  "exit": null,
+  "stdout": "",
+  "stderr": "test_durable_canonical_receipt_reconciles_only_its_exact_journaled_head_gap (contract_suite.NestedReconciliationContract.test_durable_canonical_receipt_reconciles_only_its_exact_journaled_head_gap) ... ok\ntest_exact_nested_finish_resumes_terminal_retirement_without_replaying_canonical_bytes (contract_suite.NestedReconciliationContract.test_exact_nested_finish_resumes_terminal_retirement_without_replaying_canonical_bytes) ... ",
+  "timed_out": true,
+  "elapsed_seconds": 300.02281141700223
+}

@@ -1,0 +1,26 @@
+{
+  "controllers": {
+    "common.py": {
+      "ast_parse": true,
+      "sha256": "788a93404d84b1c19c29f572ebd2395e7e1a5306c99c78b4b004243ac13d7e10"
+    },
+    "endpoint_controls.py": {
+      "ast_parse": true,
+      "sha256": "ab6eb5adea154078fc44acb6200a6dca1f78fec3a7a7689dc4d70c317ff0d6ec"
+    },
+    "graph_controls.py": {
+      "ast_parse": true,
+      "sha256": "ede7d4e101b8a090fa087ea0c304c117d8627a741f97224e4bb61fe0f93ecc63"
+    },
+    "managed_endpoints.py": {
+      "ast_parse": true,
+      "sha256": "e96645e04e002b8ff59bd9a9af0caf5883a616978a68c87b50bc908749370bf0"
+    }
+  },
+  "database_requests": 0,
+  "elapsed_seconds": 0.007703790965024382,
+  "network_requests": 0,
+  "schema": "am255/final-source-bindings-v1",
+  "service_startups": 0,
+  "verification_scope": "Final AST source parse only. Earlier pure math/response simulation has its own hash-bound source-math-smoke.json; no runtime, build, lint, test-suite or performance qualification."
+}

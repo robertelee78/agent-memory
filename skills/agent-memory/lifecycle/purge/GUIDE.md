@@ -35,13 +35,22 @@ installation state, Git history and external backups. Deleting this local bank
 does not erase remote copies, other branches, other worktrees or Git history;
 the session MUST explain that scope when presenting the deletion request.
 
+Purge MUST also inspect the private recovery index and state binding before
+preview and under the bank lock. Unknown, interrupted or unresolved recovery
+dependencies refuse deletion even if a safeguard was removed manually. Purge
+MUST NOT delete external originals or resolve pending knowledge. Terminal
+recovery evidence requires the separate reviewed operation-scoped
+`am bank recover-layout retention inspect|apply` workflow; age and layout
+success alone are insufficient.
+
+
 ## Plan
 
 The session MUST obtain a read-only exact preview, with `SKILL_DIR` resolved to
 a trusted complete package:
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/uninstall_runtime.py" purge-data --repo /absolute/repository --path /absolute/repository/memory-bank --check > /private/path/purge-preview.json
+python3 -I "$SKILL_DIR/scripts/uninstall_runtime.py" purge-data --repo /absolute/repository --path /absolute/repository/memory-bank --check > /private/path/purge-preview.json
 ```
 
 The example bank path MUST be replaced by the repository's actual resolved bank,
@@ -58,7 +67,7 @@ MUST use the same repository/path selection and replace
 `CONFIRMED_PREVIEW_SHA256` with that operator-confirmed digest:
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/uninstall_runtime.py" purge-data --repo /absolute/repository --path /absolute/repository/memory-bank --confirm CONFIRMED_PREVIEW_SHA256 > /private/path/purge-receipt.json
+python3 -I "$SKILL_DIR/scripts/uninstall_runtime.py" purge-data --repo /absolute/repository --path /absolute/repository/memory-bank --confirm CONFIRMED_PREVIEW_SHA256 > /private/path/purge-receipt.json
 ```
 
 The installed `agent-memory purge-data` command uses the same options. Changed
@@ -107,3 +116,58 @@ Runtime `installer.py recover` is for runtime activation and MUST NOT be used
 as a substitute for this separately confirmed data operation. An unreadable,
 linked or mismatched purge journal requires bounded manual reconciliation;
 the session MUST NOT guess another deletion target.
+
+### Recovery evidence is separate from bank purge
+
+The session MUST NOT use bank purge, runtime update or uninstall to erase external
+layout-recovery evidence. Unknown/pending recovery operations, an unresolved
+frontier or a live restoration/publication dependency MUST refuse bank purge.
+Runtime-owned paths do not include the private recovery workspace.
+
+Only `am bank recover-layout retention inspect --repo R --operation ID --output O`
+may preview operation-scoped evidence cleanup. The preview enumerates exact
+owned files, bytes, physical/hash pins, child/nested/publication dependencies,
+operator retention requirements, retained receipts and rollback capability lost.
+Age, layout success and terminal units alone MUST NOT authorize deletion.
+Unknown backups, unindexed operations, missing/corrupt originals and unfinished
+publication/resolution/restore work remain pending.
+
+The session MUST obtain a separate independent dependency review and explicit
+operator acknowledgment of rollback loss. The private
+`agent-memory/layout-retention-review-v1` binds the exact preview with its new,
+stable cleanup UUID. The session MUST pass the resulting unchanged proposal to
+`am bank recover-layout retention apply --repo R --proposal P`; a generated
+digest, copied `approved` heading or elapsed time is not authorization.
+
+Apply writes a durable cleanup intent and truthful tombstone before retiring the
+terminal index and deleting the first individually listed file. It checks exact
+owner/type/link/bytes/physical and parent bindings before each unlink, fsyncs and
+records immutable progress. It never recursively deletes directories, follows
+redirects, deletes unresolved units or removes a live sentinel. An interrupted
+cleanup is resumed only with the exact same proposal and attainable remaining
+file state; unknown/replaced files stay untouched.
+
+The original completed receipt, resolution/nested historical receipts and
+publication requests/landing receipts remain private and available for exact
+historical retries. The safe tombstone says original bytes and future rollback
+are unavailable by reviewed cleanup; it MUST NOT call removed backups verified,
+rewrite an old layout receipt as later admission, or imply secure erasure.
+
+Known typed partial-staging metadata MUST remain retained with
+`observation_complete:false`, even when a later complete manifest exists.
+It MUST NOT become authority for semantic completion or be silently deleted.
+Malformed, foreign or unknown staging metadata remains a cleanup refusal.
+
+A completed child restore MUST be checked through its typed child proposal and
+real parent/child receipts and original parent-head pins. It has no invented
+child pending ledger or canonical admission. Dependency discovery inventories the
+union of physical operations, private bindings and the real operation index;
+missing/unknown entries and unfinished children refuse cleanup. An active parent
+retains its dependencies. After verified child completion, separately reviewed
+cleanup may surrender its rollback bytes while retaining both historical
+proposals/receipts. Retention success itself MUST NOT claim semantic recovery
+completion or make a restored invalid bank healthy.
+
+Quiescence heads, their referenced attestations and original/renewal reviews
+MUST remain retained together; cleanup MUST NOT leave a retained head pointing
+at evidence it removed.

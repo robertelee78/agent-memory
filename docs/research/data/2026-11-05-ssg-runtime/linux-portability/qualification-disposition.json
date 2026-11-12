@@ -1,0 +1,24 @@
+{
+  "schema": "am255/linux-portability-parent-disposition-v1",
+  "authority": "Main resource coordinator, response to retained concurrent-inventory discrepancy",
+  "disposition": "Return source-bound partial research results for independent parent review. Do not rerun servers, assign an unknown external container replacement to Main, or turn the failed wrapper into an overall pass.",
+  "global_inventory_result": {
+    "preservation_check": false,
+    "before_after_count": [55, 55],
+    "removed": "b72615a10d085196075826e151ccd00b842b8f301defe90602208f7663024aff",
+    "added": "79d14ae736e936b54edcfd2c0d20550f157b322480af76e97bd627933c53bbe1",
+    "owner": "unknown concurrent external owner; no source-bound attribution available",
+    "main_response": "Main native/recovery work uses disposable World filesystem/Git/Python/nativebinary and did not create/remove Podman containers. Workspace's known 3634d8e... container cleanup/release at 20:37:12Z predates this Linux interval.",
+    "preserved_failure_artifacts": ["actual-20261106/report.json", "final-qualification.json", "run-index.json", "concurrent-inventory-discrepancy.json"],
+    "foreign_data_or_container_mutation": "None performed to investigate or repair the discrepancy; no foreign owner is invented"
+  },
+  "separately_qualified_facts": [
+    "Actual exact-weight upstream b9360 8B/0.6B Linux-arm64 VM CPU API and synthetic own-text controls",
+    "Exact public amd64 core/MAGE layer identities, nonexecuting merged contents and scoped BOM comparisons",
+    "Exact own full container IDs and loopback listeners absent; no volumes created",
+    "Own downloaded/extracted acquisition directory absent; exact borrowed weights and carrier preserved"
+  ],
+  "overall_wrapper_pass": false,
+  "legal_profile_G1_quality_performance_acceptance": false,
+  "heavy_slot": "Released to Main after actual owned disposal; only light evidence/commit work remained"
+}

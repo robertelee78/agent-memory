@@ -1,0 +1,21 @@
+{
+  "schema": "am255/operator-embedding-choice-lifetime-disposition-v1",
+  "date": "2026-11-09",
+  "work_key": "robertelee78/agent-memory:ADR-0024:ssg-runtime-qualification",
+  "question": "Tomorrow’s session uses the same project and embedding server. Should AM remember your choice, or ask again?",
+  "operator_choice": "Remember my choice",
+  "selected_option_description": "No repeated prompts. Ask again if the server or permitted memory scope changes.",
+  "product_decision": {
+    "remember_across_agent_sessions": true,
+    "scope": "The same project, chosen embedding service destination and permitted memory-disclosure scope.",
+    "reapproval": "AM MUST ask again when the service destination or permitted memory scope changes, and MUST stop relying on the choice when the operator revokes it.",
+    "ordinary_use": "A new agent session, ordinary permitted memory update or lookup MUST NOT by itself require another approval.",
+    "authority_boundary": "This is embedding-service permission only. It MUST NOT authorize export into shared memory, sibling-project access or disclosure of previously unapproved content."
+  },
+  "limits": [
+    "This records the lifetime of a future explicit operator choice; it is not a new grant to send existing project content now.",
+    "The trusted approval channel, identity verification and exact private receipt design remain execution-contract work.",
+    "This does not approve a model, resource or spending ceiling, setup defaults, production licensing, calibration, runtime qualification or release.",
+    "Remembering a choice does not authorize retention/use terms outside its approved disclosure scope or bypass current source, privacy, credential, resource or endpoint checks."
+  ]
+}

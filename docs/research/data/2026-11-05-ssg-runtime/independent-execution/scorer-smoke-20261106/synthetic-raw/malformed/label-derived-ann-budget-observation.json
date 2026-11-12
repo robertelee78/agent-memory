@@ -1,0 +1,341 @@
+{
+  "case_ordinal": 1,
+  "caveats": {
+    "executed": false,
+    "prerequisite": "No reviewed caveat assembler"
+  },
+  "costs": {},
+  "executed": true,
+  "native": {
+    "context": {
+      "branch": "main"
+    },
+    "context_sha256": "6461b20cebcb7034bd8b13089d21a90cf5ce300bd7d74eb625c7a342cf6ccdac",
+    "crosscheck": {
+      "matched": true,
+      "scope": "SYNTHETIC assertion for scorer control flow, not native qualification"
+    },
+    "eligible": [
+      {
+        "id": "5b65484c-5b54-45da-90f2-c045f228d76e",
+        "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:5b65484c-5b54-45da-90f2-c045f228d76e:1",
+        "path": "topics/r/5b65484c-5b54-45da-90f2-c045f228d76e-v1.md",
+        "version": 1
+      },
+      {
+        "id": "5e84b6ba-4fa3-4ee8-a2e8-7014c5fd53c4",
+        "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:5e84b6ba-4fa3-4ee8-a2e8-7014c5fd53c4:1",
+        "path": "topics/r/5e84b6ba-4fa3-4ee8-a2e8-7014c5fd53c4-v1.md",
+        "version": 1
+      },
+      {
+        "id": "6993a696-6d7b-49ea-a918-2d815377ce45",
+        "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:6993a696-6d7b-49ea-a918-2d815377ce45:1",
+        "path": "topics/r/6993a696-6d7b-49ea-a918-2d815377ce45-v1.md",
+        "version": 1
+      },
+      {
+        "id": "9a2b24a7-3464-4ce4-b488-28e5c6de71d3",
+        "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:9a2b24a7-3464-4ce4-b488-28e5c6de71d3:1",
+        "path": "topics/r/9a2b24a7-3464-4ce4-b488-28e5c6de71d3-v1.md",
+        "version": 1
+      },
+      {
+        "id": "c7b17274-e5ae-433f-a9f9-a0a2198a1c67",
+        "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:c7b17274-e5ae-433f-a9f9-a0a2198a1c67:1",
+        "path": "topics/r/c7b17274-e5ae-433f-a9f9-a0a2198a1c67-v1.md",
+        "version": 1
+      },
+      {
+        "id": "c0df2f68-7867-447c-885c-6b0ba7e36866",
+        "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:c0df2f68-7867-447c-885c-6b0ba7e36866:1",
+        "path": "topics/r/c0df2f68-7867-447c-885c-6b0ba7e36866-v1.md",
+        "version": 1
+      },
+      {
+        "id": "612fc506-2490-4e5c-a38a-b318780b8260",
+        "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:612fc506-2490-4e5c-a38a-b318780b8260:1",
+        "path": "topics/r/612fc506-2490-4e5c-a38a-b318780b8260-v1.md",
+        "version": 1
+      },
+      {
+        "id": "b4e28e97-60cb-48ba-bf14-55c60de3f7f7",
+        "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:b4e28e97-60cb-48ba-bf14-55c60de3f7f7:1",
+        "path": "topics/r/b4e28e97-60cb-48ba-bf14-55c60de3f7f7-v1.md",
+        "version": 1
+      },
+      {
+        "id": "63a9c482-eebd-450d-a075-deb5c416a7d7",
+        "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:63a9c482-eebd-450d-a075-deb5c416a7d7:1",
+        "path": "topics/r/63a9c482-eebd-450d-a075-deb5c416a7d7-v1.md",
+        "version": 1
+      },
+      {
+        "id": "28dbf45e-d339-452b-bfcc-c95a4c1bbb7f",
+        "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:28dbf45e-d339-452b-bfcc-c95a4c1bbb7f:1",
+        "path": "topics/r/28dbf45e-d339-452b-bfcc-c95a4c1bbb7f-v1.md",
+        "version": 1
+      },
+      {
+        "id": "5c53ca49-b171-41cb-ba2c-ff574c5ebd5b",
+        "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:5c53ca49-b171-41cb-ba2c-ff574c5ebd5b:1",
+        "path": "topics/r/5c53ca49-b171-41cb-ba2c-ff574c5ebd5b-v1.md",
+        "version": 1
+      },
+      {
+        "id": "429ebfbe-7713-40be-bca4-c3b904f82517",
+        "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:429ebfbe-7713-40be-bca4-c3b904f82517:1",
+        "path": "topics/r/429ebfbe-7713-40be-bca4-c3b904f82517-v1.md",
+        "version": 1
+      },
+      {
+        "id": "9f9cda10-fa6d-48f1-a6e0-ad7260adb02f",
+        "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:9f9cda10-fa6d-48f1-a6e0-ad7260adb02f:1",
+        "path": "topics/r/9f9cda10-fa6d-48f1-a6e0-ad7260adb02f-v1.md",
+        "version": 1
+      },
+      {
+        "id": "6e174a9a-a99d-41ce-bc87-d6381849536c",
+        "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:6e174a9a-a99d-41ce-bc87-d6381849536c:1",
+        "path": "topics/r/6e174a9a-a99d-41ce-bc87-d6381849536c-v1.md",
+        "version": 1
+      },
+      {
+        "id": "b79c487b-034b-42ef-b971-613fe7073691",
+        "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:b79c487b-034b-42ef-b971-613fe7073691:1",
+        "path": "topics/r/b79c487b-034b-42ef-b971-613fe7073691-v1.md",
+        "version": 1
+      },
+      {
+        "id": "d9616a81-3651-44aa-92ea-fcadb9a0ed05",
+        "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:d9616a81-3651-44aa-92ea-fcadb9a0ed05:1",
+        "path": "topics/r/d9616a81-3651-44aa-92ea-fcadb9a0ed05-v1.md",
+        "version": 1
+      },
+      {
+        "id": "d20702f2-3282-478e-9285-e4a3bc4d2d65",
+        "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:d20702f2-3282-478e-9285-e4a3bc4d2d65:1",
+        "path": "topics/r/d20702f2-3282-478e-9285-e4a3bc4d2d65-v1.md",
+        "version": 1
+      },
+      {
+        "id": "5558f984-9dd6-46ef-a5d2-19ba1d2624bc",
+        "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:5558f984-9dd6-46ef-a5d2-19ba1d2624bc:1",
+        "path": "topics/r/5558f984-9dd6-46ef-a5d2-19ba1d2624bc-v1.md",
+        "version": 1
+      },
+      {
+        "id": "a047cdde-e308-4d32-8e70-6a0392230911",
+        "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:a047cdde-e308-4d32-8e70-6a0392230911:1",
+        "path": "topics/r/a047cdde-e308-4d32-8e70-6a0392230911-v1.md",
+        "version": 1
+      },
+      {
+        "id": "63db9c1f-87fd-4f69-bf92-1645294a6979",
+        "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:63db9c1f-87fd-4f69-bf92-1645294a6979:1",
+        "path": "topics/r/63db9c1f-87fd-4f69-bf92-1645294a6979-v1.md",
+        "version": 1
+      }
+    ],
+    "request_valid": true,
+    "source_binding": {
+      "canonical_sha256": "66e81470aa7f2c50591d9e6478cee36da7ed927b2cf802eeefce9c10884e0994",
+      "generation_id": "synthetic-base",
+      "profile_sha256": "ebbe3638d181babf56b36018f1dc2c24fb218cd134f03bd64c746c23f4d0e63f"
+    }
+  },
+  "operation": "semantic-recall",
+  "outcome": {
+    "executed": false,
+    "prerequisite": "No reviewed outcome mapper"
+  },
+  "prerequisites": [
+    "EXPLICITLY SYNTHETIC scorer/math fixture; never a model/graph/native qualification"
+  ],
+  "provider": {
+    "executed": false,
+    "prerequisite": "Synthetic scorer smoke sends nothing to a provider"
+  },
+  "schema": "am255/independent-case-observation-v1",
+  "semantic": {
+    "ann": {
+      "candidate_budget": 3,
+      "costs": {},
+      "domain_size": 20,
+      "exact_rescored": [
+        {
+          "cosine": 0.95,
+          "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:5b65484c-5b54-45da-90f2-c045f228d76e:1"
+        },
+        {
+          "cosine": 0.8,
+          "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:9a2b24a7-3464-4ce4-b488-28e5c6de71d3:1"
+        }
+      ],
+      "executed": true,
+      "interpretation": "SYNTHETIC ANN math only",
+      "raw_rows": [
+        {
+          "distance": 2.0,
+          "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:9a2b24a7-3464-4ce4-b488-28e5c6de71d3:1",
+          "similarity": -2.0
+        },
+        {
+          "distance": 2.0,
+          "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:5b65484c-5b54-45da-90f2-c045f228d76e:1",
+          "similarity": -2.0
+        }
+      ],
+      "reported_capacity": 20
+    },
+    "exact_ranking": [
+      {
+        "cosine": 0.95,
+        "id": "5b65484c-5b54-45da-90f2-c045f228d76e",
+        "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:5b65484c-5b54-45da-90f2-c045f228d76e:1",
+        "path": "topics/r/5b65484c-5b54-45da-90f2-c045f228d76e-v1.md",
+        "version": 1
+      },
+      {
+        "cosine": 0.9,
+        "id": "5e84b6ba-4fa3-4ee8-a2e8-7014c5fd53c4",
+        "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:5e84b6ba-4fa3-4ee8-a2e8-7014c5fd53c4:1",
+        "path": "topics/r/5e84b6ba-4fa3-4ee8-a2e8-7014c5fd53c4-v1.md",
+        "version": 1
+      },
+      {
+        "cosine": 0.85,
+        "id": "6993a696-6d7b-49ea-a918-2d815377ce45",
+        "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:6993a696-6d7b-49ea-a918-2d815377ce45:1",
+        "path": "topics/r/6993a696-6d7b-49ea-a918-2d815377ce45-v1.md",
+        "version": 1
+      },
+      {
+        "cosine": 0.8,
+        "id": "9a2b24a7-3464-4ce4-b488-28e5c6de71d3",
+        "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:9a2b24a7-3464-4ce4-b488-28e5c6de71d3:1",
+        "path": "topics/r/9a2b24a7-3464-4ce4-b488-28e5c6de71d3-v1.md",
+        "version": 1
+      },
+      {
+        "cosine": 0.7,
+        "id": "c7b17274-e5ae-433f-a9f9-a0a2198a1c67",
+        "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:c7b17274-e5ae-433f-a9f9-a0a2198a1c67:1",
+        "path": "topics/r/c7b17274-e5ae-433f-a9f9-a0a2198a1c67-v1.md",
+        "version": 1
+      },
+      {
+        "cosine": 0.62,
+        "id": "c0df2f68-7867-447c-885c-6b0ba7e36866",
+        "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:c0df2f68-7867-447c-885c-6b0ba7e36866:1",
+        "path": "topics/r/c0df2f68-7867-447c-885c-6b0ba7e36866-v1.md",
+        "version": 1
+      },
+      {
+        "cosine": 0.5399999999999999,
+        "id": "612fc506-2490-4e5c-a38a-b318780b8260",
+        "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:612fc506-2490-4e5c-a38a-b318780b8260:1",
+        "path": "topics/r/612fc506-2490-4e5c-a38a-b318780b8260-v1.md",
+        "version": 1
+      },
+      {
+        "cosine": 0.45999999999999996,
+        "id": "b4e28e97-60cb-48ba-bf14-55c60de3f7f7",
+        "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:b4e28e97-60cb-48ba-bf14-55c60de3f7f7:1",
+        "path": "topics/r/b4e28e97-60cb-48ba-bf14-55c60de3f7f7-v1.md",
+        "version": 1
+      },
+      {
+        "cosine": 0.37999999999999995,
+        "id": "63a9c482-eebd-450d-a075-deb5c416a7d7",
+        "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:63a9c482-eebd-450d-a075-deb5c416a7d7:1",
+        "path": "topics/r/63a9c482-eebd-450d-a075-deb5c416a7d7-v1.md",
+        "version": 1
+      },
+      {
+        "cosine": 0.29999999999999993,
+        "id": "28dbf45e-d339-452b-bfcc-c95a4c1bbb7f",
+        "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:28dbf45e-d339-452b-bfcc-c95a4c1bbb7f:1",
+        "path": "topics/r/28dbf45e-d339-452b-bfcc-c95a4c1bbb7f-v1.md",
+        "version": 1
+      },
+      {
+        "cosine": 0.21999999999999997,
+        "id": "5c53ca49-b171-41cb-ba2c-ff574c5ebd5b",
+        "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:5c53ca49-b171-41cb-ba2c-ff574c5ebd5b:1",
+        "path": "topics/r/5c53ca49-b171-41cb-ba2c-ff574c5ebd5b-v1.md",
+        "version": 1
+      },
+      {
+        "cosine": 0.1399999999999999,
+        "id": "429ebfbe-7713-40be-bca4-c3b904f82517",
+        "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:429ebfbe-7713-40be-bca4-c3b904f82517:1",
+        "path": "topics/r/429ebfbe-7713-40be-bca4-c3b904f82517-v1.md",
+        "version": 1
+      },
+      {
+        "cosine": 0.05999999999999994,
+        "id": "9f9cda10-fa6d-48f1-a6e0-ad7260adb02f",
+        "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:9f9cda10-fa6d-48f1-a6e0-ad7260adb02f:1",
+        "path": "topics/r/9f9cda10-fa6d-48f1-a6e0-ad7260adb02f-v1.md",
+        "version": 1
+      },
+      {
+        "cosine": -0.020000000000000018,
+        "id": "6e174a9a-a99d-41ce-bc87-d6381849536c",
+        "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:6e174a9a-a99d-41ce-bc87-d6381849536c:1",
+        "path": "topics/r/6e174a9a-a99d-41ce-bc87-d6381849536c-v1.md",
+        "version": 1
+      },
+      {
+        "cosine": -0.10000000000000009,
+        "id": "b79c487b-034b-42ef-b971-613fe7073691",
+        "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:b79c487b-034b-42ef-b971-613fe7073691:1",
+        "path": "topics/r/b79c487b-034b-42ef-b971-613fe7073691-v1.md",
+        "version": 1
+      },
+      {
+        "cosine": -0.18000000000000005,
+        "id": "d9616a81-3651-44aa-92ea-fcadb9a0ed05",
+        "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:d9616a81-3651-44aa-92ea-fcadb9a0ed05:1",
+        "path": "topics/r/d9616a81-3651-44aa-92ea-fcadb9a0ed05-v1.md",
+        "version": 1
+      },
+      {
+        "cosine": -0.26,
+        "id": "d20702f2-3282-478e-9285-e4a3bc4d2d65",
+        "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:d20702f2-3282-478e-9285-e4a3bc4d2d65:1",
+        "path": "topics/r/d20702f2-3282-478e-9285-e4a3bc4d2d65-v1.md",
+        "version": 1
+      },
+      {
+        "cosine": -0.3400000000000001,
+        "id": "5558f984-9dd6-46ef-a5d2-19ba1d2624bc",
+        "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:5558f984-9dd6-46ef-a5d2-19ba1d2624bc:1",
+        "path": "topics/r/5558f984-9dd6-46ef-a5d2-19ba1d2624bc-v1.md",
+        "version": 1
+      },
+      {
+        "cosine": -0.42000000000000015,
+        "id": "a047cdde-e308-4d32-8e70-6a0392230911",
+        "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:a047cdde-e308-4d32-8e70-6a0392230911:1",
+        "path": "topics/r/a047cdde-e308-4d32-8e70-6a0392230911-v1.md",
+        "version": 1
+      },
+      {
+        "cosine": -0.5,
+        "id": "63db9c1f-87fd-4f69-bf92-1645294a6979",
+        "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:63db9c1f-87fd-4f69-bf92-1645294a6979:1",
+        "path": "topics/r/63db9c1f-87fd-4f69-bf92-1645294a6979-v1.md",
+        "version": 1
+      }
+    ],
+    "executed": true
+  },
+  "size": 1000,
+  "typed": {
+    "executed": false,
+    "prerequisite": "Synthetic case has no typed execution"
+  },
+  "variant": "base"
+}

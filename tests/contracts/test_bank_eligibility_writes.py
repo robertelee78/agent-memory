@@ -16,7 +16,8 @@ MARKER = test_bank_transactions.MARKER
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / 'skills/agent-memory/scripts'))
-from agent_memory import bank_capacity, bank_observation, bank_transactions, bank_writes, sharing_limits
+from agent_memory import bank_capacity, bank_observation, bank_transactions, bank_writes, recovery_frontier, sharing_limits
+from agent_memory.frontmatter import ContractError
 
 
 class BankEligibilityWritesContract(unittest.TestCase):
@@ -217,6 +218,30 @@ class BankEligibilityWritesContract(unittest.TestCase):
             self.assertEqual((repo / '.git/index').read_bytes(), index)
             self.assertEqual((repo / '.git/HEAD').read_bytes(), head)
             self.assertEqual((repo / 'feature.txt').read_text(), 'Unfinished feature must remain intact.\n')
+
+    def test_large_owned_marker_keeps_frontier_but_unknown_or_changed_bytes_refuse(self):
+        with World() as w:
+            repo, bank, _, _, proposal = self.large_transaction(w)
+            with patch.dict(os.environ, w.env, clear=True):
+                before_frontier = recovery_frontier.observe(repo)
+            self.transaction.crash(w, proposal, 'transaction-after-marker')
+            self.transaction.unlock(w, repo)
+            marker = (bank / MARKER).read_bytes()
+            before = self.protected(w, repo, bank)
+            with patch.dict(os.environ, w.env, clear=True):
+                self.assertEqual(recovery_frontier.observe(repo, transaction=marker), before_frontier)
+                for witness in (None, marker[:-1], marker[:-1] + b' '):
+                    with self.subTest(witness_bytes=len(witness) if witness is not None else None):
+                        with self.assertRaises(ContractError):
+                            recovery_frontier.observe(repo, transaction=witness)
+                sentinel = bank / '.agent-memory-recovery.md'
+                sentinel.write_bytes(marker)
+                try:
+                    with self.assertRaises(ContractError):
+                        recovery_frontier.observe(repo, transaction=marker)
+                finally:
+                    sentinel.unlink()
+            self.assertEqual(self.protected(w, repo, bank), before)
 
     def test_large_marker_rollback_and_unknown_marker_refusal(self):
         with World() as w:

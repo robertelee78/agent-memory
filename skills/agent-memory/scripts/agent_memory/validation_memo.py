@@ -63,6 +63,16 @@ def operation():
         _current.reset(token)
 
 
+@contextmanager
+def suspended():
+    """Isolate a catalog attempt and restore the exact enclosing operation memo."""
+    token = _current.set(None)
+    try:
+        yield
+    finally:
+        _current.reset(token)
+
+
 def current():
     return _current.get()
 

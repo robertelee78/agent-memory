@@ -215,7 +215,7 @@ from agent_memory import local_registry as storage
 with storage.exclusive(Path(sys.argv[2])/'.agent-memory.lock',str(uuid.uuid4()),'semantic-review-holds'):
  os._exit(86)
 '''
-            result=w.run([sys.executable,'-I','-c',program,self.h.pack/'scripts',bank],check=False)
+            result=w.run([sys.executable,'-I','-B','-c',program,self.h.pack/'scripts',bank],check=False)
             self.assertEqual(result.returncode,86)
             def snapshot():return {str(p.relative_to(w.root)):(p.read_bytes(),p.stat().st_mode) for p in w.root.rglob('*') if p.is_file()}
             before=snapshot()

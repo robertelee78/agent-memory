@@ -3,10 +3,12 @@ from __future__ import annotations
 
 import argparse
 from datetime import datetime, timezone
+import errno
 import json
 import os
 from pathlib import Path
 import re
+import stat
 import sys
 import tempfile
 import uuid
@@ -90,12 +92,12 @@ def proposal_value(prepared):
 
 
 def preview(repo, files, operation="compact"):
-    from .scope_binding import capture
+    from .recovery_frontier import capture_scope
     root, bank = writes.bank_path(repo)
     checked, hashes = writes.snapshot(root)
     p = proposal_value({"schema": SCHEMA, "operation_id": str(uuid.uuid4()), "operation": operation,
                         "repo_root": str(root), "project_id": checked["project_id"], "observed_hashes": hashes,
-                        "files": files, "scope_context": capture(root)})
+                        "files": files, "scope_context": capture_scope(root)})
     preflight(bank, p)
     return result("preview", proposal=p, writes_performed=False, verified=False)
 
@@ -103,15 +105,28 @@ def preview(repo, files, operation="compact"):
 def check_layout(bank, participants, observed):
     contract.bank_root(bank)
     contract.portable_aliases([*contract.physical_paths(bank), *participants])
+
+    def mode_or_missing(target):
+        try:
+            return os.stat(target, follow_symlinks=False).st_mode
+        except OSError as exc:
+            if exc.errno in (errno.ENOENT, errno.ENOTDIR):
+                return None
+            raise ContractError("Cannot inspect canonical target layout; preserve the existing layout") from exc
+        except ValueError as exc:
+            raise ContractError("Cannot inspect canonical target layout; preserve the existing layout") from exc
+
+    bank_path = os.fspath(bank)
     for path in participants:
-        target = bank / path
-        if target.exists() and (not target.is_file() or path not in observed):
+        mode = mode_or_missing(os.path.join(bank_path, path))
+        if mode is not None and (not stat.S_ISREG(mode) or path not in observed):
             raise ContractError("Canonical target has an unobserved physical occupant; preserve it for inspection")
-        for parent in target.parents:
-            if parent == bank:
-                break
-            if parent.exists() and not parent.is_dir():
+        parent = path.rpartition("/")[0]
+        while parent:
+            mode = mode_or_missing(os.path.join(bank_path, parent))
+            if mode is not None and not stat.S_ISDIR(mode):
                 raise ContractError("Canonical target has a non-directory parent; preserve the existing layout")
+            parent = parent.rpartition("/")[0]
 
 
 def preflight(bank, p, observed=None):
@@ -354,6 +369,9 @@ def validate_outcome(root, bank, desired, p, owner, marker, *, admission_sources
     if admission_sources and 'consolidation_evidence' in p and desired == p['files']:
         from .consolidation import check_sources as check_consolidation_sources
         check_consolidation_sources(p, owner=owner, marker=marker)
+    if admission_sources and 'refresh_evidence' in p and desired == p['files']:
+        from .memory_refresh import check_sources as check_refresh_sources
+        check_refresh_sources(p, owner=owner, marker=marker)
     if not desired and p['operation'] == 'initialize' and p['observed_hashes'] == {}:
         if contract.physical_paths(bank) or writes.hashes(bank):
             raise ContractError('Uninitialized rollback has an unexpected occupant; preserve it')
@@ -361,9 +379,26 @@ def validate_outcome(root, bank, desired, p, owner, marker, *, admission_sources
     return contract.validate(root, owned_lock=owner, owned_transaction=marker)
 
 
+def source_classes(p):
+    """Keep governed audit attribution stable across held and ordinary writes."""
+    if 'admission_evidence' in p:
+        return [p['admission_evidence']['capture']['request']['source_class']]
+    if 'governance_evidence' in p:
+        return [p['governance_evidence']['request']['authority']['source_class']]
+    if 'consolidation_evidence' in p and p['consolidation_evidence']['capture'] is not None:
+        return [p['consolidation_evidence']['capture']['request']['source_class']]
+    if p['operation'] == 'initialize':
+        evidence = p['initialization_evidence']['inventory']
+        return ['assistant'] + (['verified-repository'] if evidence['sources'] else []) + (['tool'] if evidence['awa']['sources'] else [])
+    return ['assistant'] if 'checkpoint_evidence' in p else ['external']
+
+
 def apply(prepared):
     from .scope_binding import require
     p = proposal_value(prepared)
+    from . import recovery_frontier, recovery_transactions
+    if p['operation'] != 'initialize' and recovery_frontier.observe(p['repo_root'])['hold_sha256'] is not None:
+        return recovery_transactions.apply_transaction(p)
     if p['operation'] == 'bind':
         raise ContractError('Identity changes require scope_binding preview/apply, not an ordinary bank transaction')
     if p['scope_context'] is None:
@@ -402,18 +437,7 @@ def apply(prepared):
     if proposed_remote != project_status(p['repo_root'])['evidence']['canonical_remote']:
         raise ContractError('Authority identity changes require explicit scope binding, including during initialization')
     from . import security
-    classes = ['external']
-    if 'admission_evidence' in p:
-        classes = [p['admission_evidence']['capture']['request']['source_class']]
-    if 'governance_evidence' in p:
-        classes = [p['governance_evidence']['request']['authority']['source_class']]
-    if 'consolidation_evidence' in p and p['consolidation_evidence']['capture'] is not None:
-        classes = [p['consolidation_evidence']['capture']['request']['source_class']]
-    if p['operation'] == 'initialize':
-        evidence = p['initialization_evidence']['inventory']
-        classes = ['assistant'] + (['verified-repository'] if evidence['sources'] else []) + (['tool'] if evidence['awa']['sources'] else [])
-    if 'checkpoint_evidence' in p:
-        classes = ['assistant']
+    classes = source_classes(p)
     def check(owner):
         require(p['repo_root'], p['project_id'], expected=context, owned_lock=owner, initialize=initializing)
         if 'governance_evidence' in p:
@@ -462,7 +486,8 @@ def _apply(prepared, *, check_identity):
     p = proposal_value(prepared)
     root, bank = writes.bank_path(p["repo_root"])
     journal, receipt_path = locations(root, bank, p["operation_id"])
-    with storage.exclusive(bank / ".agent-memory.lock", p["operation_id"], "bank-" + p["operation"]) as owner:
+    from .turn_sources import canonical_writer_barrier
+    with canonical_writer_barrier(root, ordinary_bank=bank if p['operation'] == 'initialize' else None), storage.exclusive(bank / ".agent-memory.lock", p["operation_id"], "bank-" + p["operation"]) as owner:
         writes.fault('transaction-locked-before-inventory')
         check_identity(owner)
         known = receipt_value(receipt_path, p)
@@ -540,12 +565,12 @@ def recover(repo, mode=None, prepared=None):
                 {path: p['files'][path] for path in changed(p) if path in p['files']}, ['tool'], action=action)
         else:
             security.audit(root, p['operation_id'], 'mutation', 'started', context, ['tool'], action=action)
-    receipt = _recover(root, prepared=prepared, check_identity=check)
+    receipt = _recover(root, prepared=prepared, check_identity=check, initializing=p['operation'] == 'initialize')
     receipt['security_audit'] = security.audit(root, p['operation_id'], 'mutation', 'completed', context, ['tool'], action=action)
     return {**receipt, 'resolved_scope': context}
 
 
-def _recover(repo, mode=None, prepared=None, *, check_identity=None):
+def _recover(repo, mode=None, prepared=None, *, check_identity=None, initializing=False):
     root, bank = writes.bank_path(repo)
     if prepared is not None:
         r = prepared.get("proposal", prepared) if isinstance(prepared, dict) else prepared
@@ -553,7 +578,8 @@ def _recover(repo, mode=None, prepared=None, *, check_identity=None):
                 or not uuid_valid(r["operation_id"]) or r["repo_root"] != str(root) or r["mode"] not in {"finish", "rollback"}):
             raise ContractError("Invalid transaction recovery proposal")
         # Bank lock recovery is deliberately separate; never steal a lock by age.
-        with storage.exclusive(bank / ".agent-memory.lock", r["operation_id"], "bank-recover") as owner:
+        from .turn_sources import canonical_writer_barrier
+        with canonical_writer_barrier(root, ordinary_bank=bank if initializing else None), storage.exclusive(bank / ".agent-memory.lock", r["operation_id"], "bank-recover") as owner:
             marker = bank / MARKER
             journal, receipt_path = locations(root, bank, r["operation_id"])
             raw = limits.read_bytes(journal)

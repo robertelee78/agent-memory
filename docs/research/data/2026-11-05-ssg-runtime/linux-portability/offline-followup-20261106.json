@@ -1,0 +1,43 @@
+{
+  "schema": "am255/offline-reproduction-followup-v1",
+  "recorded_date_utc": "2026-11-06",
+  "archive_acquisition": {
+    "argv": [
+      "curl",
+      "--fail",
+      "--location",
+      "--retry",
+      "0",
+      "--max-time",
+      "120",
+      "--output",
+      "/tmp/am-v15-delivery/linux255-b9360-static-reproduction.tar.gz",
+      "https://github.com/ggml-org/llama.cpp/releases/download/b9360/llama-b9360-bin-ubuntu-arm64.tar.gz"
+    ],
+    "observed_exit": 0,
+    "tool_job": "bg_163",
+    "retained_bytes_before_removal": {
+      "path": "/tmp/am-v15-delivery/linux255-b9360-static-reproduction.tar.gz",
+      "bytes": 11497759,
+      "sha256": "ff85fef9c91027d8037c182cdb5a6f3d29ea0a12b31557338188810308b112dc"
+    },
+    "scope": "Public archive bytes only, no extraction/loading/execution"
+  },
+  "archive_disposal": {
+    "argv": [
+      "rm",
+      "--",
+      "/tmp/am-v15-delivery/linux255-b9360-static-reproduction.tar.gz"
+    ],
+    "exit": 0,
+    "path_absent": true
+  },
+  "derivation_smoke": {
+    "actual_retained_amd64_comparison_unchanged": true,
+    "synthetic_equal_engine_control": {
+      "engine_binaries_equal": true,
+      "unknowns_engine_line": "Actual amd64 core/MAGE engine hashes match; runtime equivalence unestablished"
+    },
+    "qualification": "Offline bytes/conditional conclusion only, not runtime or quality acceptance"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "source_commit": "2732df8bd2d11dfbc4999469cbdd0cd372427b60",
+  "source_root": "/private/tmp/am-v15-delivery/244-capacity-qualified-source",
+  "timeout_seconds": 300,
+  "started_at": "2026-11-06T23:28:18.918230+00:00",
+  "passed": true,
+  "command": [
+    "/tmp/am-v15-delivery/qualification-venv/bin/python",
+    "-I",
+    "-B",
+    "/private/tmp/am-v15-delivery/244-capacity-qualified-source/scripts/run_contract_suite.py",
+    "/private/tmp/am-v15-delivery/244-capacity-qualified-source/tests/contracts/test_layout_recovery_publication.py",
+    "--suite",
+    "layout-recovery-publication"
+  ],
+  "exit": 0,
+  "stdout": "{\"errors\": 0, \"expected_failures\": 0, \"failures\": 0, \"passed\": true, \"skipped\": 0, \"tests\": 10, \"unexpected_successes\": 0}\n",
+  "stderr": "test_complete_candidate_delta_excludes_original_feature_index (contract_suite.LayoutPublicationContract.test_complete_candidate_delta_excludes_original_feature_index) ... ok\ntest_complete_raw_local_side_includes_opaque_nonmarkdown_occupants (contract_suite.LayoutPublicationContract.test_complete_raw_local_side_includes_opaque_nonmarkdown_occupants) ... ok\ntest_current_committed_admission_addition_and_receipt_source_fence (contract_suite.LayoutPublicationContract.test_current_committed_admission_addition_and_receipt_source_fence) ... ok\ntest_new_unsupported_authority_source_cannot_be_admitted_by_publication_mapping (contract_suite.LayoutPublicationContract.test_new_unsupported_authority_source_cannot_be_admitted_by_publication_mapping) ... ok\ntest_offline_and_changed_sources_preserve_local_result_and_evidence (contract_suite.LayoutPublicationContract.test_offline_and_changed_sources_preserve_local_result_and_evidence) ... ok\ntest_public_raw_authority_publication_and_empty_profile_second_clone (contract_suite.LayoutPublicationContract.test_public_raw_authority_publication_and_empty_profile_second_clone) ... ok\ntest_publication_refuses_pending_frontier_before_network (contract_suite.LayoutPublicationContract.test_publication_refuses_pending_frontier_before_network) ... ok\ntest_publication_review_cannot_admit_fabricated_outputs_or_local_sources (contract_suite.LayoutPublicationContract.test_publication_review_cannot_admit_fabricated_outputs_or_local_sources) ... ok\ntest_raw_source_bound_alias_and_committed_hold_refuse (contract_suite.LayoutPublicationContract.test_raw_source_bound_alias_and_committed_hold_refuse) ... ok\ntest_reported_size_sources_are_raw_not_a_normal_snapshot (contract_suite.LayoutPublicationContract.test_reported_size_sources_are_raw_not_a_normal_snapshot) ... ok\n\n----------------------------------------------------------------------\nRan 10 tests in 271.709s\n\nOK\n",
+  "timed_out": false,
+  "elapsed_seconds": 271.8341782920179
+}

@@ -8,6 +8,7 @@ for argument in "$@"; do
     --help|-h)
       printf '%s\n' 'Install Agent Memory: install.sh [--check] [--json] [--mode link|copy] [--presets all|none|CLIENTS]' \
         'Custom discovery: --target-dir PATH, --bin-dir PATH, --no-guidance' \
+        'Native omp (excluded from all): --presets omp --omp-agent-dir ABSOLUTE_ROOT --omp-peers-upgraded' \
         'Explicit sources: --development-source PATH or --remote URL --ref BRANCH' \
         'After installation: am --version; am update; am uninstall'
       exit 0 ;;
@@ -49,7 +50,7 @@ def bootstrap():
     while index < len(args):
         word = args[index]
         option, separator, value = word.partition('=')
-        if option in ('--remote', '--ref', '--development-source', '--mode', '--presets', '--target-dir', '--bin-dir'):
+        if option in ('--remote', '--ref', '--development-source', '--mode', '--presets', '--target-dir', '--bin-dir', '--omp-agent-dir', '--omp-layout-quiescence', '--layout-quiescence'):
             if not separator:
                 index += 1
                 usage(index < len(args), option + ' requires a value')
@@ -57,7 +58,7 @@ def bootstrap():
             usage(value and not value.startswith('--'), option + ' requires a value')
             if option in ('--remote', '--ref', '--development-source'): choices[option] = value
         else:
-            usage(word in ('--check','--dry-run','--no-guidance','--json','--verbose','-v'),
+            usage(word in ('--check','--dry-run','--no-guidance','--json','--verbose','-v','--omp-peers-upgraded'),
                   'Unknown install option: '+word+' (use --help)')
         index += 1
     usage(not ('--development-source' in choices and ('--remote' in choices or '--ref' in choices)),

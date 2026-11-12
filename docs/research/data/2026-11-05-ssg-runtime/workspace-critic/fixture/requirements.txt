@@ -1,0 +1,2 @@
+# Declaration for static fingerprinting only; never installed by this recipe.
+Flask==3.1.2

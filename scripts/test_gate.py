@@ -3,7 +3,12 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
+from collections import deque
+from concurrent.futures import ThreadPoolExecutor
 import json
+import os
+import platform
 from pathlib import Path
 import subprocess
 import sys
@@ -42,7 +47,7 @@ def registry():
         if entry["name"] == "optional-stores":
             if entry.get("scope") != "future" or not entry.get("reason") or entry.get("path"):
                 raise ValueError("Optional stores must be explicitly outside v0.0.1")
-        elif entry.get("scope") not in {"v0.0.1", "v0.0.2", "v0.0.3", "v0.0.4", "v0.0.6", "v0.0.7", "v0.0.8", "v0.0.9", "v0.0.10"}:
+        elif entry.get("scope") not in {"v0.0.1", "v0.0.2", "v0.0.3", "v0.0.4", "v0.0.6", "v0.0.7", "v0.0.8", "v0.0.9", "v0.0.10", "v0.0.15"}:
             raise ValueError("Required contracts cannot be marked optional")
         if entry.get("path"):
             raw = ROOT / entry["path"]
@@ -57,6 +62,199 @@ def registry():
     return entries
 
 
+def _case_execution(entry, result):
+    """Validate a successful worker's discovered, selected, and started identities."""
+    selection = result.get("case_selection")
+    if (result.get("status") != "passed" or result.get("passed") is not True
+            or not isinstance(selection, dict) or selection.get("batch") != entry["name"]
+            or type(result.get("tests")) is not int or result["tests"] < 1
+            or any(type(result.get(key)) is not int or result[key] != 0 for key in
+                   ("failures", "errors", "skipped", "expected_failures", "unexpected_successes"))):
+        raise ValueError("Missing successful case execution proof: " + entry["name"])
+    for key in ("complete", "selected", "executed"):
+        identities = selection.get(key)
+        if (not isinstance(identities, list) or not identities
+                or any(not isinstance(case, str) or len(case.rsplit(".", 2)) != 3
+                       or any(not part for part in case.rsplit(".", 2)) for case in identities)
+                or identities != sorted(set(identities))):
+            raise ValueError("Invalid case identity inventory: " + entry["name"])
+    complete, selected, executed = (selection[key] for key in ("complete", "selected", "executed"))
+    if (result["tests"] != len(executed) or selected != executed
+            or not set(selected) <= set(complete)):
+        raise ValueError("Selected cases differ from actual execution: " + entry["name"])
+    if "tests" not in entry:
+        if selected != complete:
+            raise ValueError("Incomplete unsplit suite execution: " + entry["name"])
+    else:
+        selectors = entry["tests"]
+        if (not isinstance(selectors, list) or not selectors
+                or any(not isinstance(selector, str) or not selector for selector in selectors)):
+            raise ValueError("Invalid registered case selectors: " + entry["name"])
+        expected = set()
+        for selector in selectors:
+            parts = selector.split(".")
+            if len(parts) not in (1, 2) or (len(parts) == 2 and not parts[1].startswith("test_")):
+                raise ValueError("Invalid registered case selector: " + entry["name"])
+            matches = {case for case in complete if case.rsplit(".", 2)[-2] == parts[0]
+                       and (len(parts) == 1 or case.rsplit(".", 1)[-1] == parts[1])}
+            if not matches or expected.intersection(matches):
+                raise ValueError("Empty or overlapping registered case selectors: " + entry["name"])
+            expected.update(matches)
+        if set(selected) != expected:
+            raise ValueError("Execution differs from registered case selectors: " + entry["name"])
+    return complete, executed
+
+
+def case_batch_coverage(entries, suites):
+    by_name = {suite["name"]: suite for suite in suites}
+    if len(by_name) != len(suites):
+        raise ValueError("Duplicate suite execution receipts")
+    paths = {entry["path"] for entry in entries if entry.get("path")}
+    summaries = []
+    for path in sorted(paths):
+        complete, executed = None, set()
+        batches = [entry for entry in entries if entry.get("path") == path]
+        split = ["tests" in entry for entry in batches]
+        if any(split) and not all(split):
+            raise ValueError("Mixed split and unsplit suites on one path")
+        for entry in batches:
+            result = by_name.get(entry["name"], {})
+            inventory, actual = _case_execution(entry, result)
+            if complete is None:
+                complete = set(inventory)
+            if set(inventory) != complete or (all(split) and executed.intersection(actual)):
+                raise ValueError("Registered case batches disagree or overlap")
+            executed.update(actual)
+        if executed != complete:
+            raise ValueError("Registered case batches omit actual tests")
+        summaries.append({"path": path, "batches": len(batches), "cases": sorted(executed)})
+    return summaries
+
+def lifecycle_matrix_coverage(entries, suites):
+    matrix = json.loads((ROOT / "tests/lifecycle-matrix.json").read_text())
+    required = {"fresh-repeat", "modes", "spaces-optional-clients", "ownership-backups",
+                "sentinel-edits", "update-guards", "activation-interrupts", "lost-responses",
+                "rollback-locks", "removal-purge", "bank-preservation", "generated-state-loss",
+                "client-identity", "pack-validation", "isolation"}
+    rows = matrix.get("requirements") if isinstance(matrix, dict) else None
+    if (not isinstance(matrix, dict) or matrix.get("schema") != "agent-memory/lifecycle-test-matrix-v1"
+            or not isinstance(rows, list) or any(not isinstance(row, dict) for row in rows)
+            or len(rows) != len(required) or {row.get("requirement") for row in rows} != required):
+        raise ValueError("Invalid approved lifecycle requirements")
+    registry = {entry["name"]: entry for entry in entries}
+    results = {suite["name"]: suite for suite in suites}
+    summaries = []
+    for row in rows:
+        cases = row.get("cases")
+        if not isinstance(cases, list) or not cases:
+            raise ValueError("Lifecycle requirement has no executable cases")
+        for case in cases:
+            if not isinstance(case, dict):
+                raise ValueError("Invalid lifecycle case")
+            name, test = case.get("suite"), case.get("test")
+            if (not isinstance(name, str) or not name or not isinstance(test, str)
+                    or len(test.split(".")) != 2 or not test.split(".")[1].startswith("test_")):
+                raise ValueError("Invalid lifecycle case identity")
+            entry, result = registry.get(name, {}), results.get(name, {})
+            if entry.get("scope") != "v0.0.1" or not entry.get("path"):
+                raise ValueError("Missing successful lifecycle case suite: " + name)
+            _, executed = _case_execution(entry, result)
+            if "contract_suite." + test not in executed:
+                raise ValueError("Lifecycle case was not executed: " + name + " / " + test)
+        summaries.append({"requirement": row["requirement"], "cases": len(cases)})
+    return summaries
+
+
+def source_identity():
+    """Hash checkout inputs, independent of checkout location and generated bytecode."""
+    files = []
+    for name in ("skills", "scripts", "tests", "memory-bank"):
+        base = ROOT / name
+        if base.is_symlink() or not base.is_dir():
+            raise ValueError("Invalid source directory: " + str(base))
+        for directory, dirs, names in os.walk(base, followlinks=False):
+            dirs[:] = sorted(d for d in dirs if d != "__pycache__")
+            for entry in dirs:
+                if (Path(directory) / entry).is_symlink():
+                    raise ValueError("Symlink in source inputs")
+            for entry in sorted(names):
+                path = Path(directory) / entry
+                if path.suffix in {".pyc", ".pyo"}:
+                    continue
+                if path.is_symlink() or not path.is_file():
+                    raise ValueError("Non-regular source input: " + str(path))
+                files.append(path)
+    files.extend([ROOT / "install.sh", ROOT / ".github/workflows/contracts.yml",
+                  ROOT / "docs/research/data/2026-10-26-recall-native/literal-quality/1000-labels.json",
+                  ROOT / "docs/research/data/2026-10-25-recall-final/semantic-1000/wall-disagreement.json",
+                  ROOT / "docs/research/data/2026-10-25-recall-final/semantic-controller-v5.py"])
+    digest = hashlib.sha256()
+    for path in sorted(files, key=lambda p: p.relative_to(ROOT).as_posix()):
+        if (any(part.is_symlink() for part in (path, *path.parents) if part != ROOT and part.is_relative_to(ROOT))
+                or not path.is_file()):
+            raise ValueError("Invalid source input: " + str(path))
+        name = path.relative_to(ROOT).as_posix().encode()
+        data = path.read_bytes()
+        digest.update(len(name).to_bytes(8, "big") + name)
+        digest.update(len(data).to_bytes(8, "big") + data)
+    return digest.hexdigest()
+
+
+def cell_identity(os_label, python_label):
+    actual_os = platform.system()
+    expected_os = {"ubuntu-latest": "Linux", "macos-latest": "Darwin"}.get(os_label)
+    actual_python = f"{sys.version_info.major}.{sys.version_info.minor}"
+    if expected_os != actual_os or python_label != actual_python:
+        raise ValueError("Declared cell does not match actual OS/Python")
+    return {"os": os_label, "python": python_label, "system": actual_os,
+            "machine": platform.machine(), "python_version": platform.python_version(),
+            "implementation": platform.python_implementation()}
+
+
+def validate_rows(entries, rows):
+    if not isinstance(rows, list) or len(rows) != len(entries):
+        raise ValueError("Shard suite count differs from registry assignment")
+    for entry, row in zip(entries, rows):
+        if not isinstance(row, dict) or row.get("name") != entry["name"] or row.get("layer") != entry["layer"]:
+            raise ValueError("Shard suite assignment differs from registry")
+        if not entry.get("path"):
+            if (entry.get("scope") != "future" or row.get("status") != "not-applicable"
+                    or type(row.get("tests")) is not int or row["tests"] != 0
+                    or row.get("reason") != entry.get("reason")):
+                raise ValueError("Missing or invalid required suite")
+            continue
+        _case_execution(entry, row)
+
+
+def merge_shards(paths, count, entries, source, cell):
+    if len(paths) != count:
+        raise ValueError("Exactly one report per shard is required")
+    by_index = {}
+    for path in paths:
+        shard = json.loads(Path(path).read_text())
+        if not isinstance(shard, dict):
+            raise ValueError("Shard report must be an object")
+        scope = shard.get("shard")
+        if (shard.get("schema") != "agent-memory/test-gate-v1"
+                or shard.get("mode") != "release" or shard.get("passed") is not True
+                or "error" in shard or shard.get("release_complete") is not False
+                or shard.get("source") != source
+                or shard.get("cell") != cell or not isinstance(scope, dict)
+                or type(scope.get("count")) is not int or scope["count"] != count
+                or type(scope.get("index")) is not int
+                or not 0 <= scope["index"] < count or scope["index"] in by_index):
+            raise ValueError("Invalid, duplicate, incompatible, or failed shard report")
+        index = scope["index"]
+        assigned = entries[index::count]
+        validate_rows(assigned, shard.get("suites"))
+        by_index[index] = shard["suites"]
+    if set(by_index) != set(range(count)):
+        raise ValueError("Missing shard report")
+    rows = [None] * len(entries)
+    for index, shard_rows in by_index.items():
+        rows[index::count] = shard_rows
+    return rows
+
 def main(argv=None):
     if sys.version_info < (3, 11):
         print("The offline contract gate requires Python 3.11+", file=sys.stderr)
@@ -64,12 +262,20 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--release", action="store_true", help="fail on missing v0.0.1 coverage")
     parser.add_argument("--json", action="store_true", help="emit a machine-readable coverage receipt")
+    parser.add_argument("--jobs", type=int, choices=(1, 2), default=1,
+                        help="run one or two isolated contract workers (default: one)")
+    parser.add_argument("--shard-index", type=int)
+    parser.add_argument("--shard-count", type=int)
+    parser.add_argument("--cell-os")
+    parser.add_argument("--cell-python")
+    parser.add_argument("--merge-shards", nargs="+", metavar="REPORT")
+    parser.add_argument("--output", type=Path, help="write the JSON receipt to this path")
     args = parser.parse_args(argv)
     report = {"schema": "agent-memory/test-gate-v1", "mode": "release" if args.release else "incremental",
               "suites": [], "release_complete": False, "passed": False}
     active = None; stage = 'registry'
     def diagnostic(exc):
-        traceback.print_exc(file=sys.stderr)
+        parts = ["".join(traceback.format_exception(exc))]
         seen = set(); displayed = set()
         while exc is not None and id(exc) not in seen:
             seen.add(id(exc))
@@ -77,13 +283,15 @@ def main(argv=None):
                                  ('partial stderr', getattr(exc, 'stderr', None))):
                 if value and label not in displayed:
                     if isinstance(value, bytes): value = value.decode('utf-8', errors='replace')
-                    sys.stderr.write('\n' + label + ':\n' + value + '\n'); displayed.add(label)
+                    parts.append('\n' + label + ':\n' + value + '\n'); displayed.add(label)
             exc = exc.__cause__ or exc.__context__
-    try:
-        entries = registry()
-        for entry in entries:
-            active = entry['name']; stage = 'world-setup'
-            item = {"name": entry["name"], "layer": entry["layer"]}
+        return ''.join(parts)
+
+    def execute(entry):
+        item = {"name": entry["name"], "layer": entry["layer"]}
+        output = []
+        stage = 'world-setup'
+        try:
             if not entry.get("path"):
                 item.update(status="not-applicable" if entry["scope"] == "future" else "pending",
                             reason=entry["reason"], tests=0)
@@ -91,31 +299,122 @@ def main(argv=None):
                 with World() as world:
                     try:
                         stage = 'suite-execution-and-collection'
-                        result = world.run([sys.executable, "-I", ROOT / "scripts/run_contract_suite.py",
-                                            ROOT / entry["path"]], check=False, timeout=300, group=True)
-                        sys.stderr.write(result.stderr)
+                        result = world.run([sys.executable, "-I", "-B", ROOT / "scripts/run_contract_suite.py",
+                                            ROOT / entry["path"], "--suite", entry["name"]],
+                                           check=False, timeout=300, group=True)
+                        output.append(result.stderr)
+                        if result.returncode != 0:
+                            output.append(f"\nWorker exit status: {result.returncode}\nWorker stdout:\n{result.stdout}\n")
                         stage = 'result-readback'
-                        counts = json.loads(result.stdout)
-                        item.update(counts)
-                        item["status"] = "passed" if result.returncode == 0 and counts["passed"] else "failed"
-                        if item['status']=='passed' and entry['name'] in OWNERS:
-                            item['fault_partition'] = partition_proof(result.stderr, entry['name'])
+                        try:
+                            counts = json.loads(result.stdout)
+                            if not isinstance(counts, dict):
+                                raise ValueError("Worker result must be a JSON object")
+                            item.update(counts)
+                            item["status"] = "passed" if result.returncode == 0 and counts.get("passed") is True else "failed"
+                            if item["status"] == "passed":
+                                _case_execution(entry, item)
+                            if item['status'] == 'passed' and entry['name'] in OWNERS:
+                                item['fault_partition'] = partition_proof(result.stderr, entry['name'])
+                        except (ValueError, KeyError):
+                            if result.returncode == 0:
+                                output.append(f"\nWorker exit status: {result.returncode}\nWorker stdout:\n{result.stdout}\n")
+                            raise
                     except (subprocess.TimeoutExpired, ValueError, KeyError) as exc:
-                        diagnostic(exc)
-                        item.update(status="failed", reason=str(exc), tests=0)
+                        output.append(diagnostic(exc))
+                        item.update(status="failed", passed=False, reason=str(exc), tests=0)
                     stage = 'world-cleanup'
-            report["suites"].append(item)
-        active = 'lifecycle-fault-partitions'; stage = 'coverage-aggregation'
-        report['fault_partition_coverage'] = partition_coverage(report['suites'])
-        pending = any(s["status"] == "pending" for s in report["suites"])
-        failed = any(s["status"] == "failed" for s in report["suites"])
-        report["release_complete"] = not pending and not failed
-        report["passed"] = not failed and (not args.release or report["release_complete"])
-    except (OSError, ValueError, KeyError) as exc:
-        diagnostic(exc)
+        except (OSError, ValueError, KeyError) as exc:
+            return item, stage, ''.join(output), exc
+        return item, stage, ''.join(output), None
+
+    try:
+        scoped = args.shard_index is not None or args.merge_shards is not None
+        if scoped:
+            if (not args.release or args.shard_count is None or args.shard_count < 1
+                    or not args.cell_os or not args.cell_python
+                    or (args.merge_shards is not None and args.shard_index is not None)
+                    or (args.merge_shards is None and
+                        (args.shard_index is None or not 0 <= args.shard_index < args.shard_count))):
+                raise ValueError("Invalid release shard or merge arguments")
+            source = source_identity()
+            cell = cell_identity(args.cell_os, args.cell_python)
+            report.update(source=source, cell=cell)
+        elif args.shard_count is not None or args.cell_os or args.cell_python:
+            raise ValueError("Shard count and cell require a shard or merge")
+        entries = registry()
+        if args.merge_shards is not None:
+            report["merged_shards"] = args.shard_count
+            report["suites"] = merge_shards(args.merge_shards, args.shard_count, entries, source, cell)
+        else:
+            if scoped:
+                report["shard"] = {"index": args.shard_index, "count": args.shard_count}
+                entries_to_run = entries[args.shard_index::args.shard_count]
+            else:
+                entries_to_run = entries
+        pending = deque()
+        remaining = iter(entries_to_run if args.merge_shards is None else [])
+        with ThreadPoolExecutor(max_workers=args.jobs) as workers:
+            def enqueue():
+                entry = next(remaining, None)
+                if entry is not None:
+                    pending.append((entry, workers.submit(execute, entry)))
+            for _ in range(args.jobs):
+                enqueue()
+            try:
+                while pending:
+                    entry, future = pending.popleft()
+                    active = entry['name']
+                    item, stage, output, error = future.result()
+                    sys.stderr.write(output)
+                    if error is not None:
+                        item.update(status='failed', reason=str(error), tests=0)
+                        report["suites"].append(item)
+                        for _, waiting in pending:
+                            waiting.cancel()
+                        raise error
+                    report["suites"].append(item)
+                    enqueue()
+            finally:
+                # Every started World owns its supervisor and finishes cleanup.
+                # Preserve its outcome even if an earlier collector failed.
+                for entry, future in pending:
+                    if future.cancelled():
+                        continue
+                    item, worker_stage, output, error = future.result()
+                    sys.stderr.write(output)
+                    if error is not None:
+                        sys.stderr.write(diagnostic(error))
+                        item.update(status='failed', reason=str(error), tests=0,
+                                    error_stage=worker_stage)
+                    report["suites"].append(item)
+        if args.shard_index is not None:
+            validate_rows(entries_to_run, report["suites"])
+            report["passed"] = True
+        else:
+            if args.release:
+                validate_rows(entries, report["suites"])
+            active = 'lifecycle-fault-partitions'; stage = 'coverage-aggregation'
+            report['fault_partition_coverage'] = partition_coverage(report['suites'])
+            active = 'registered-case-batches'
+            report['case_batch_coverage'] = case_batch_coverage(entries, report['suites'])
+            active = 'lifecycle-matrix'
+            report['lifecycle_matrix_coverage'] = lifecycle_matrix_coverage(entries, report['suites'])
+            pending = any(s["status"] == "pending" for s in report["suites"])
+            failed = any(s["status"] == "failed" for s in report["suites"])
+            report["release_complete"] = not pending and not failed
+            report["passed"] = not failed and (not args.release or report["release_complete"])
+        if scoped and source_identity() != source:
+            raise ValueError("Source inputs changed during gate execution")
+    except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as exc:
+        report["passed"] = False
+        report["release_complete"] = False
+        sys.stderr.write(diagnostic(exc))
         report["error"] = str(exc)
         report['error_suite'] = active
         report['error_stage'] = stage
+    if args.output:
+        args.output.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n")
     if args.json:
         print(json.dumps(report, indent=2, sort_keys=True))
     else:

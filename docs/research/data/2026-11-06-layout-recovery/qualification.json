@@ -1,0 +1,263 @@
+{
+  "schema": "agent-memory/layout-recovery-partial-qualification-v1",
+  "recorded_date_utc": "2026-11-06",
+  "scope": "Actual disposable installed CLI/source preservation, reconciliation, publication and retention contracts only; not original incident recovery or full #244/platform/lifecycle/release acceptance.",
+  "source_fixes": {
+    "reservation_and_retirement": "97469a6",
+    "retention_fixture_and_crash_assertions": "8a581a9"
+  },
+  "source_scope": "Original2026-11-06 runs kept recovery/runtime/contract bytes unchanged while other edits affected #255 research/docs. Later entries bind their own immutable source/archive and do not inherit that earlier source scope.",
+  "runs": [
+    {
+      "group": "public-recovery",
+      "methods": 9,
+      "passed": true,
+      "elapsed_seconds": 188.3250562499743,
+      "receipt_sha256": "01dc88527878e96f2e8b15cef0c1c878bc7caa40bfdb0bf6fd28a261c6598e9c"
+    },
+    {
+      "group": "private-frontier-plus-imported-comparison",
+      "frontier_methods": 4,
+      "imported_comparison_methods": 12,
+      "passed": true,
+      "elapsed_seconds": 158.052,
+      "job": "bg_168"
+    },
+    {
+      "group": "reconciliation-nested-publication-retention-combined",
+      "methods": 28,
+      "passed": true,
+      "elapsed_seconds": 1557.593,
+      "job": "bg_170",
+      "release_budget_qualification": false,
+      "budget_limit": "Longer combined harness; does not prove each registered suite fits unchanged300second worker deadline. No timeout budget was changed.",
+      "provenance": "Observed auto-delivered output and completed-job readback; transient process record expired after readback, not reconstructed as a raw log."
+    },
+    {
+      "group": "real-count-raw-observer-boundaries",
+      "methods": 3,
+      "passed": true,
+      "elapsed_seconds": 44.128419249958824,
+      "timeout_seconds": 300,
+      "boundaries": {
+        "source_bytes": [67108864, 67108865],
+        "source_files": [65536, 65537],
+        "physical_entries": [131072, 131073]
+      },
+      "test_source_sha256": "5127257cc7c226b236255d0d4e313845825570a707478b0e5195a424f6763d52",
+      "receipt_sha256": "89c9e78ca5e4fe08f447ddc9a548ea372f7a7420465c53284f870cc2bf42bfaa",
+      "source_scope": "Test file was uncommitted over bf7722a at invocation; bound by its exact hash, not retroattested as committed bf7722a source. Product observer unchanged.",
+      "limit": "Real raw-observer API and preservation only; not installed public command, native provider, combined registered-suite budget or full original acceptance."
+    },
+    {
+      "group": "expanded-registered-layout-recovery",
+      "source_commit": "2732df8bd2d11dfbc4999469cbdd0cd372427b60",
+      "methods": 12,
+      "passed": true,
+      "elapsed_seconds": 216.7147336669732,
+      "timeout_seconds": 300,
+      "timed_out": false,
+      "exit": 0,
+      "skipped": 0,
+      "receipt_sha256": "0c620533dca7560e2ea79524d927bc4054d9ad08d426c0bf12f76d2deabeb74c",
+      "scope": "Actual registered worker: original9 public methods plus3 real-count raw-observer methods, within unchanged300second deadline. Other registered recovery suites and full acceptance remain separate."
+    },
+    {
+      "group": "outer-reservation-and-retirement-focused",
+      "methods": 2,
+      "subcases": 3,
+      "passed": true,
+      "elapsed_seconds": 162.353
+    },
+    {
+      "group": "separate-installed-cli-reservation-smoke",
+      "passed": true,
+      "elapsed_seconds": 28.684
+    },
+    {
+      "group": "exact-published-old-portable-copy-rollback-control-and-mixed-refusal",
+      "recorded_date_utc": "2026-11-08",
+      "source_commit": "295e80110737c0785761941d7cdf6366f65600ef",
+      "driver_sha256": "12848025d55f6e058affa88318b649285839eb7dcb73af9c3b9cd47b701e2ef0",
+      "receipt_sha256": "c634b0b03a21bc9515b62b5e06f806027af1b65c09668d9470ae9bdf10fcc9bc",
+      "old_artifact_digest": "4208c18e2288bdb3f6faf6354fe44b638559ba8ec1fede2cec7ce491bea726f7",
+      "exit": 2,
+      "timed_out": false,
+      "elapsed_seconds": 53.801438875030726,
+      "empty_union_exact_rollback_verified": true,
+      "mixed_old_rollback_refused": true,
+      "protected_evidence_unchanged": true,
+      "full_union_public_proof": false,
+      "acceptance": "NOT-ESTABLISHED-full-union-public-proof-target-digest-dependent-unknown-attributed-separately",
+      "scope": "Actual published v0.0.14 artifact installed as a development-source portable copy by its own installer; pre-receipt interruption/recover proves empty-union exact restoration plus mixed public refusal/preservation. Not a managed-channel install, full #244 or platform acceptance.",
+      "limitation": "Internal unknown attributed to the digest-gated block at skills/agent-memory/scripts/agent_memory/private_state.py lines159-168 (source295e801), not a specific unobserved failure within it; no production change made to turn the diagnostic exit green.",
+      "independent_review": "Claude Opus5.5 source PASS for exact driver before execution"
+    },
+    {
+      "group": "connected-resolved-handoff-and-capacity-controls",
+      "recorded_date_utc": "2026-11-08T15:30:54.992027+00:00",
+      "runtime_source_commit": "081a6d55c38d60aff19feafa1b505c705f456e42",
+      "runtime_product_changes": false,
+      "platform": "macOS27.2-arm64",
+      "python": "3.15.0",
+      "deadline_seconds_per_consumer": 300,
+      "source_files_sha256": {
+        "tests/contracts/test_checkpoint.py": "569430266cfcec249a689950f8f29c175eb490e6e8607469ea7a200d5b05e3d0",
+        "tests/contracts/test_layout_recovery.py": "8c7281bcb823c2be35a9b3e932fce0cb40e5e36e0447aa4842cc3f5f6c667ab0",
+        "tests/contracts/test_layout_recovery_resolved_publication.py": "4c5fea3b9e62dd58d56f1bb847548b7a385e22dd074607d77ec1ad5106d37539",
+        "tests/contracts.json": "fcbe3b1543513af6155d74a03af2181bc8bbbd8e01ff20b26dff4d7f10769fef"
+      },
+      "runs": [
+        {
+          "consumer": "checkpoint-complete-byte-boundary",
+          "elapsed_seconds": 10.059672666946426,
+          "exit": 0,
+          "counts": {
+            "tests": 1,
+            "errors": 0,
+            "failures": 0,
+            "skipped": 0,
+            "passed": true
+          },
+          "private_receipt_sha256": "ce599e3316c9657868a327bdaf95af9303e2ac503079f9160b130f4115681e75"
+        },
+        {
+          "consumer": "layout-recovery-no-guidance-demotion",
+          "elapsed_seconds": 14.285634040948935,
+          "exit": 0,
+          "counts": {
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": true,
+            "skipped": 0,
+            "tests": 1,
+            "unexpected_successes": 0
+          },
+          "private_receipt_sha256": "b42b626545020a3df55ae13001f8a2cd2b7b7ab73400caa3ef86387e89f481e2"
+        },
+        {
+          "consumer": "layout-publication-resolved-handoff",
+          "elapsed_seconds": 108.59093608299736,
+          "exit": 0,
+          "counts": {
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": true,
+            "skipped": 0,
+            "tests": 1,
+            "unexpected_successes": 0
+          },
+          "private_receipt_sha256": "234cfc40e4562c8f748b55f206963fe433fb2ee7de5fe708bf042c5c15739353"
+        }
+      ],
+      "scope": "Three actual public consumer methods with controlled review attestations. Proves synthetic source-preservation/refusal/admission/publication/typed peer recall boundaries, not independent semantic truth, actual incident recovery, Linux, full original #244 acceptance or signed release. Concurrent full release gate on normally busy host; timings not performance comparisons.",
+      "retained_failed_attempt": {
+        "run": "244-acceptance-controls-smoke-01",
+        "consumer": "layout-recovery-no-guidance-demotion",
+        "exit": 1,
+        "cause": "Test incorrectly expected an error field in safe refusal envelope; both subcases produced KeyError. Replaced message assertion with documented structured pending/no-mutation fields and valid paired preserve preparation. Not a runtime defect or passing attempt."
+      }
+    },
+    {
+      "group": "capable-managed-rollback-layout-first-independent-clearing",
+      "recorded_date_utc": "2026-11-08",
+      "source_commit": "77cf838fb1a73dc348f60c2fe4230e67c7aef814",
+      "source_archive_sha256": "9d7b6c0cca32cdfb4ce9f497717ed7fd491621e3bd1d4287084ad6bf012939ba",
+      "driver_sha256": "2617f1d836d34136dbf2df7150352b4200650bac1ebdb09796e087bbd9c33a43",
+      "source_files_compared_to_archive": 504,
+      "cells": [
+        {
+          "os": "Darwin 27.2.0 arm64",
+          "python": "3.13.12",
+          "exit": 0,
+          "timed_out": false,
+          "elapsed_seconds": 159.39465712499805,
+          "receipt_sha256": "53f441ba91cd64c97fccfd55f75e409b71298eaf79a7d897aa23396d80acc902",
+          "launch_sha256": "533cb4ed9eec34f08d49f63aedc268a938ddf04be053248375f5c350ff8f9ded",
+          "raw_directory": "/tmp/am-v15-delivery/recovery244-capable-managed-clear-r2-20261108",
+          "matrix_role": "Supplemental interpreter; not one of the required3.11/3.15 cells"
+        },
+        {
+          "os": "Darwin 27.2.0 arm64",
+          "python": "3.15.0",
+          "exit": 0,
+          "timed_out": false,
+          "elapsed_seconds": 170.3590415000217,
+          "receipt_sha256": "49ddf739fc11efc2dd013803d3766aec76ed6fd8b2412a943524ad96deaf0bbc",
+          "launch_sha256": "0a614f1c8e94a00be1bcfa6db1ca7bb13c558bfba2f917e5e89709a062ce057e",
+          "raw_directory": "/tmp/am-v15-delivery/recovery244-capable-managed-clear-r2-py315-20261108",
+          "matrix_role": "Required Darwin/Python3.15 cell for this scoped scenario only"
+        }
+      ],
+      "combined_cells_sha256": "053b7548559d3c6274b99344f2ee721ce782514db847ffb9ceeec4f6ea7faf46",
+      "required_cells_not_proved_here": ["Darwin/Python3.11", "Linux/Python3.11", "Linux/Python3.15"],
+      "actual_capability_transitions": {
+        "before_rollback": ["layout-frontier-v1", "omp-harness-v1", "omp-stored-source-v2"],
+        "after_layout_admission": ["omp-harness-v1", "omp-stored-source-v2"],
+        "after_native_assessments_before_drain": ["omp-harness-v1", "omp-stored-source-v2"]
+      },
+      "exact_capable_rollback_and_update_retry_verified": true,
+      "ordinary_admission_and_native_assessments_verified": true,
+      "actual_quiesced_drain_uninstall_verified": true,
+      "preservation": "Canonical data, all original source ranges/blobs, historical layout receipt, ledger/manifest, shared turns/native streams, config and unrelated staged/unstaged feature/index/HEAD/branch checked at the relevant boundaries",
+      "limits": "Original30/60second children and300second worker; no increase",
+      "independent_review": "Claude Opus5.5 exact driver source PASS before execution and scoped actual-outcome acceptance for these two runs; not whole #244/native/Linux/CI acceptance",
+      "scope": "Actual installed public managed lifecycle and ordinary admission with controlled finite observer source. Two actual interpreter cells on one OS only; no stock omp/provider callback, Linux, whole #244 or signed-release inference."
+    },
+    {
+      "group": "guidance-demotion-refusal-and-resolved-publication-handoff",
+      "recorded_date_utc": "2026-11-08",
+      "source_state": "Uncommitted corrective source, bound by complete source-before inventory; not retroattested to an unchanged commit",
+      "source_inventory_sha256": "17f844517c3cec595268c86bc07ab4cad9b5e7a5ffdfa4f4605a338d1f14937e",
+      "test_source_sha256": {
+        "tests/contracts/test_layout_recovery.py": "6925513e1db0a614d0c20705bb880141fdd3b260580fdd6889ee8573e6c2ed7b",
+        "tests/contracts/test_layout_recovery_resolved_publication.py": "4c5fea3b9e62dd58d56f1bb847548b7a385e22dd074607d77ec1ad5106d37539",
+        "tests/contracts/test_checkpoint.py": "569430266cfcec249a689950f8f29c175eb490e6e8607469ea7a200d5b05e3d0"
+      },
+      "cells": [
+        {
+          "suite": "layout-recovery-no-guidance-demotion",
+          "exit": 0,
+          "methods": 1,
+          "skipped": 0,
+          "elapsed_seconds": 10.73300358292181,
+          "receipt_sha256": "3153fb1e2944b706d57aa17d1f09725b9a897c8bfe478687ffadb1724f7adcfa"
+        },
+        {
+          "suite": "layout-publication-resolved-handoff",
+          "exit": 0,
+          "methods": 1,
+          "skipped": 0,
+          "elapsed_seconds": 84.57548670796677,
+          "receipt_sha256": "aa13b4ebe64e7c2066bf701d46e661d5577127e517f504b22c641f43938ae3bf"
+        }
+      ],
+      "checkpoint_utf8_boundary": {
+        "method": "test_rendered_utf8_boundary_replaces_without_growth_and_refuses_one_extra_byte",
+        "method_passed": true,
+        "parent_checkpoint_suite_passed": false,
+        "parent_receipt_sha256": "26f964e21d2c6d4ab865bfb8205792cefccd0632c09e8796b1d9e3bb2f7fc183",
+        "limit": "Only this method passed; a separate identity-switch race failed the 17-method checkpoint suite"
+      },
+      "parent_campaign_passed": false,
+      "parent_campaign": "23 suites:19 passed,4 failed; generated21 source cache files later in hook-failure suite. Source equality excluded caches and is not whole-source preservation.",
+      "private_terminal_archive_sha256": "73d65d8217d6201e132addf6ff2be90207dfdef90593ac04e3192b4dda52a6c1",
+      "private_cache_objects_archive_sha256": "a36c3b7614568ae1566b136f3434aec714d7bb7c18ea25df550f1e06779c728e",
+      "scope": "Darwin27.2/CPython3.13.12, unchanged300second grouped workers; resolved all eight large-source units, independently sourced ordinary admission, memory-only publication and empty-profile clone recall with feature/index/HEAD and provenance preservation",
+      "hosted_limit": "Connected publication uses a controlled local GitHub stand-in, not actual hosted branch policy or provider behavior",
+      "independent_review": "Actual Claude Opus5.5 source review of corrected controls; no whole-task acceptance",
+      "full_244_or_release_acceptance": false
+    }
+  ],
+  "peer_observation_import": {
+    "source_commit": "f148da42e0944adf323556685981b1545e0c8a9e",
+    "source_path": "docs/research/data/2026-11-06-layout-recovery/qualification.json",
+    "imported_group": "connected-resolved-handoff-and-capacity-controls",
+    "scope": "Peer-owned historical observation at its stated runtime/test identities; not a rerun or acceptance of the current integration source. All preexisting Main observations and remaining obligations are retained."
+  },
+  "superseded_attempt_not_erased": "Earlier28-method run had27passes/one retention-fixture error and failed overall. Final combined run above passed after fixture corrections; this does not rewrite that earlier result.",
+  "independent_review": "Opus scoped source PASS for97469a6 reservation/retirement delta only; no full acceptance verdict.",
+  "remaining": "Full original admission/capacity/platform/metadata/legacy-reader/doctor/migration/stale-lock/multi-transaction/revision/catalog/deferred-invalidation/mixed-native-capability/hosted-CI/signed-release criteria remain separate obligations."
+}

@@ -80,6 +80,12 @@ def inventory(bank, *, owner=None):
 
 
 def preview(repo, bank, *, owner=None):
+    from . import recovery_frontier, layout_recovery_state
+    token = recovery_frontier.observe(repo, owner)
+    indexed = layout_recovery_state.index(repo)
+    install.require(token['coverage_complete'] and token['hold_sha256'] is None
+                    and not any(row['state'] in {'active', 'interrupted'} for row in indexed['operations'].values()),
+                    'Recovery evidence/dependencies remain pending; bank purge cannot discard them')
     root, entries = inventory(bank, owner=owner)
     router = bank/'MEMORY.md'
     install.require(router.is_file() and not router.is_symlink() and router.stat().st_size<=16384,
@@ -304,7 +310,8 @@ def run(args):
                 record['completed_at']=datetime.now(timezone.utc).isoformat()
                 save(record_path,record)
                 return outcome(record,bank,changed=False)
-        with bank_lock(bank) as owner:
+        from .turn_sources import canonical_writer_barrier
+        with canonical_writer_barrier(repo), bank_lock(bank) as owner:
             fault('purge-bank-lock-ready')
             selected = preview(repo,bank,owner=owner)
             install.require(selected['confirmation']==args.confirm, 'Purge preview is stale; inspect a fresh exact preview')

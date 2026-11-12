@@ -45,12 +45,12 @@ A session MUST distinguish rendering a safe inactive representation from applyin
 The pure format helper compacts an **already inactive** standalone record:
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/inactive_records.py" compact \
+python3 -I "$SKILL_DIR/scripts/inactive_records.py" compact \
   --file /private/path/inactive-record.md
 ```
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/inactive_records.py" filter --repo /path/to/repo \
+python3 -I "$SKILL_DIR/scripts/inactive_records.py" filter --repo /path/to/repo \
   --input /private/path/derived-records.json
 ```
 

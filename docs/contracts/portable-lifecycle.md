@@ -1,7 +1,7 @@
 # Portable lifecycle release matrix
 
 The `portable-lifecycle` contract combines installed-command journeys with
-explicit executable bindings for the complete approved
+the release gate's executed-case coverage for the complete approved
 [ADR](../adr/0007-portable-pack-and-lifecycle.md) and
 [blueprint matrix](../design/lifecycle-blueprint.md#verification-matrix).
 
@@ -20,10 +20,14 @@ and client roots, actual installed commands and preserved source/index/history:
   and leave default client roots and identity/bank setup absent.
 
 `tests/lifecycle-matrix.json` maps fifteen approved obligations to concrete
-registered test methods. The binding check rejects missing suites/methods or
-pending/optional substitutions. Its references include no-client modes,
-unrelated-target refusal, owned backups, sentinel edits, source/ref/downgrade
-guards, all thirty-eight real before/after fault workers, committed lost responses,
+registered test methods. At complete-gate aggregation, each case must belong
+to its declared required suite and current selector and appear among that
+suite's actually started, successful executed identities. The gate requires
+nonempty, unique discovered/selected/executed inventories, equal selected and
+executed identities, matching actual test counts and zero skips or expected
+failures. Missing, stale, misrouted or unexecuted cases fail the receipt.
+Its references include no-client modes, unrelated-target refusal, owned backups,
+sentinel edits, source/ref/downgrade guards, all 170 real before/after fault workers, committed lost responses,
 rollback/locks, modified-target preservation and confirmed purge. It also binds
 package validation and the isolation/worker-collection controls. The collector
 uses a supervisor that retains ownership of its process group through descendant
@@ -35,25 +39,51 @@ If that failure follows a worker timeout, the actual producer and disposable
 gate regressions require both worker streams, the record exception and the
 original timeout to survive collection.
 
-The six expensive update/install phase-and-mode inventories run as four
-mandatory disjoint batches each. Every batch observes the complete clean write
-inventory, interrupts its selected real writes, recovers, retries and retains
-the original preservation/ownership checks. The gate compares their actual
-artifact identities and complete observed inventories, then requires every
-point exactly once across all four batches. A missing batch, proof, interruption
-or retry fails the gate. The other fourteen fault workers retain their complete
-inventories. No fault point or public 300-second worker limit is removed.
+The ten expensive update/install/uninstall phase-and-mode inventories run as
+sixteen mandatory disjoint batches each: 160 partition workers plus ten other
+full-inventory fault workers, for 170 total. The trusted isolated worker binds
+its registered `--suite` name and actual registered file to one group/index.
+The ten scenario files share their fixture's selected replay; an unnamed direct
+run still executes the full inventory. A suite cannot request another group's
+writes, and no environment flag selects or authorizes a partition.
+Every partition observes the complete clean write inventory, interrupts exactly
+the writes whose observed step modulo sixteen equals its index, recovers,
+retries and retains the original preservation/ownership checks. The gate compares
+their actual artifact identities and complete observed inventories, then requires
+every point exactly once across all sixteen batches. A missing/duplicate batch,
+proof, interruption or retry, changed artifact/inventory, empty replay or wrong
+case count fails the gate. No fault point or public 300-second worker limit is
+removed.
 
 Project identity discovery uses one coherent repository-settings observation
 per discovery and reuses it when the saved authority already matches the
 observed selection. Each final source/lock boundary still obtains a fresh
 observation; there is no cache across operations or sessions.
 
+Static package validation may reuse its single successful report for an exact
+relative-path, byte and file-mode inventory at another absolute root. This
+report conveys no source trust, installation ownership or runtime qualification.
+Every inspection still reads the actual complete physical artifact on entry and
+exit; declaration readbacks remain rooted in that candidate. Changed bytes,
+modes, paths, unsafe topology or an in-bracket mutation cannot inherit old
+validation. Returned reports are isolated, and failed brackets are not cached.
+
 The three independent installed-bank cases have separate mandatory workers for
 cold initialization/checkpoint, qualified recall and governance intent guards.
 Their method bodies and assertions are preserved. The complete automatic
 capture/publish/refresh journey remains one indivisible case; independent case
 separation does not replace or split that workflow.
+
+Other expensive bank aggregates use exhaustive single-method registry batches.
+Matrix references name the batch that actually executes each required case.
+Complete coverage and non-overlap are checked from real successful worker
+receipts, not source-text wiring assertions. Unsplit suites must likewise
+actually execute their complete discovered inventories.
+
+The disposable gate and shard-merger controls use explicitly synthetic receipts
+only to exercise the harness's rejection and aggregation rules. Their fabricated
+fault metadata and case identities are not product executions or interruption
+qualification; product coverage comes from actual started, completed workers.
 
 Bindings are coverage obligations, not additional executions or proof that an
 assertion is correct. The public gate executes each registered suite once;

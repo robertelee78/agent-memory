@@ -1,0 +1,98 @@
+{
+  "schema": "agent-memory/core255-storage-mechanism-disposition-v1",
+  "status": "ACTUAL_BOUNDED_MECHANISM_CHECK_NOT_G1",
+  "source_sha256": "91dc4be165bde02942e52616d6d7f16d27ffff73dad9528727c94dadea86c56b",
+  "freeze_sha256": "bbf18f15c24ffd4771a17ad13cc21ae9ac37dece77122b6aa29600bcb4840455",
+  "run_sha256": "8c4253f05194762451e23c7014ce9e36ebc2d2a09e108792139a552ce2d93619",
+  "image": {
+    "core_image": "docker.io/memgraph/memgraph@sha256:042c8642954a7bde971a9c7683c8b1360e7fcf129a5fae36d63f12449e7154aa",
+    "arm64_child": "sha256:334cd2a524cdb05bb68310c8338c91de8d44d2998a7aa0349a6de9674824846d",
+    "config_image": "3792294abf9a035895d8db16cbc56146d48a9fa1d379be6581631fdeae525c4f",
+    "fixture": "Exactly11 deterministic4096d synthetic vector_i=e_i, capacity16, idle versus explicit held-read transaction, single CREATE, same scalar/index-info/control queries",
+    "server_flags": [
+      "--telemetry-enabled=false",
+      "--storage-properties-on-edges=true",
+      "--storage-wal-enabled=true",
+      "--storage-snapshot-interval-sec=300",
+      "--storage-snapshot-on-exit=true",
+      "--log-level=WARNING",
+      "--also-log-to-stderr=true"
+    ],
+    "limits": "2CPUs,12GiB,expectedUID101/GID103,actualVMtotal+available>=12GiB; same60sreadiness,30scell,25sDDL/holder and existing bounded cancellation",
+    "provider_calls": "No model, tokenizer, embedding endpoint or real bank inputs; no hidden retry or server/profile tuning",
+    "state_change": "Container image-volume mode now explicitlyignore: /etc/memgraph is not an independently allocated volume and remains in the owned container writable-layer lifecycle. This new protocol is not an identical72a request replay or retroactive erasure fix."
+  },
+  "actual_exit": 0,
+  "launch_elapsed_seconds": 10.910444500041194,
+  "result": "deliberate-transaction-contention-mechanism-observed-not-historical-cause",
+  "arms": [
+    {
+      "arm": "idle",
+      "once_only_CREATE_attempt_count": 1,
+      "ddl_outcome": "success",
+      "ddl_error_code": null,
+      "holder_still_open_after_ddl": null,
+      "effective_storage_access_timeout_seconds": 1.0,
+      "within_deadline": true,
+      "full_config_rows": 96,
+      "cleanup_status": "disposed",
+      "all_owned_resources_absent": true
+    },
+    {
+      "arm": "held-transaction",
+      "once_only_CREATE_attempt_count": 1,
+      "ddl_outcome": "error",
+      "ddl_error_code": "Memgraph.TransientError.MemgraphError.MemgraphError",
+      "holder_still_open_after_ddl": true,
+      "effective_storage_access_timeout_seconds": 1.0,
+      "within_deadline": true,
+      "full_config_rows": 96,
+      "cleanup_status": "disposed",
+      "all_owned_resources_absent": true
+    }
+  ],
+  "mount_policy": {
+    "image_volume": "ignore",
+    "actual_mounts_per_container": 2,
+    "anonymous_config_volume_created": false,
+    "all_actual_mounts_verified": true,
+    "config_equals_both_prior72a_arms": "Independently verified by Core255ContrastOpus; 96 rows each, no configuration drift despite declared layout change"
+  },
+  "external_preservation": {
+    "after_container_ids": [
+      "6848a503d821f10f96c3ac5693d52021aace9a4e968b90ee3a4c48321e2bbbd8",
+      "86dc38fa2ad5a0f7a8574cccc4ab011b460d5ea1592cc71c4d6a45d7be8d69c7",
+      "f1b783b08bbc11fad8f5ff6c5ee250c3d90faa8d5b2b79d8298d82b481bdffd8"
+    ],
+    "after_volume_names": [],
+    "before_container_ids": [
+      "6848a503d821f10f96c3ac5693d52021aace9a4e968b90ee3a4c48321e2bbbd8",
+      "86dc38fa2ad5a0f7a8574cccc4ab011b460d5ea1592cc71c4d6a45d7be8d69c7",
+      "f1b783b08bbc11fad8f5ff6c5ee250c3d90faa8d5b2b79d8298d82b481bdffd8"
+    ],
+    "before_volume_names": [],
+    "unchanged": true,
+    "unknown_concurrent_owner_attribution": null
+  },
+  "independent_review": {
+    "reviewer": "Core255ContrastOpus",
+    "model": "anthropic/claude-opus-5-5",
+    "verdict": "PASS_SCOPED_ACTUAL_MECHANISM_AND_LOGICAL_CLEANUP_ONLY",
+    "executed_by_reviewer": false
+  },
+  "old_config_volume_recovery": {
+    "addendum_sha256": "267e53ac353b60420eb9f77ab4806facee4b2f7bc5db12ef7ae46608dc4bcc71",
+    "targets": 2,
+    "single_nonforced_removal_each": true,
+    "fresh_exact_identity_and_no_consumers": true,
+    "absence_by_inspect_and_successful_full_list": true,
+    "contents_inspected": false,
+    "forensic_erasure_claim": false
+  },
+  "historical72a_result": "UNCHANGED_INCONCLUSIVE_EXTERNAL_INVENTORY_CHANGED",
+  "historical_MAGE_50k_holder_cause": "UNKNOWN",
+  "snapshot_activity_instrumentation": "NOT_QUALIFIED_BY_THIS_CHECK; no independent outside-Bolt snapshot telemetry",
+  "ANN_numeric_semantic_scale_acceptance": false,
+  "G1_acceptance": false,
+  "original_eight_criteria": "ALL_REMAIN_REQUIRED"
+}

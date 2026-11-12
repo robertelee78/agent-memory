@@ -4,13 +4,13 @@
     "docs/adr/0007-portable-pack-and-lifecycle.md",
     "docs/design/lifecycle-blueprint.md#verification-matrix"
   ],
-  "limits": "Bindings enforce registration and named executable coverage; they do not prove assertions correct or replace actual whole-matrix execution and independent acceptance. Final release also requires all milestone delivery evidence.",
+  "limits": "The release gate requires each binding in its successful executed-case receipt; it does not prove assertions correct or replace independent acceptance. Final release also requires all milestone delivery evidence.",
   "requirements": [
     {
       "requirement": "fresh-repeat",
       "cases": [
         {
-          "suite": "installer",
+          "suite": "installer-fresh-plan-link-install-repeat-and-installed-command-preserve-source-and-user-config",
           "test": "InstallerContract.test_fresh_plan_link_install_repeat_and_installed_command_preserve_source_and_user_config"
         },
         {
@@ -65,15 +65,15 @@
       "requirement": "ownership-backups",
       "cases": [
         {
-          "suite": "installer",
+          "suite": "installer-all-targets-preflight-before-activation-and-unrelated-types-are-preserved",
           "test": "InstallerContract.test_all_targets_preflight_before_activation_and_unrelated_types_are_preserved"
         },
         {
-          "suite": "installer",
+          "suite": "installer-copy-replacement-backup-and-conversion-have-identical-artifact-identity",
           "test": "InstallerContract.test_copy_replacement_backup_and_conversion_have_identical_artifact_identity"
         },
         {
-          "suite": "runtime-update",
+          "suite": "runtime-update-case-08",
           "test": "RuntimeUpdateContract.test_changed_owned_copy_update_retains_prior_payload_and_receipt_backups"
         }
       ]
@@ -82,7 +82,7 @@
       "requirement": "sentinel-edits",
       "cases": [
         {
-          "suite": "installer",
+          "suite": "installer-activation-outside-edits-survive-and-inside-edits-refuse",
           "test": "InstallerContract.test_activation_outside_edits_survive_and_inside_edits_refuse"
         },
         {
@@ -99,23 +99,23 @@
       "requirement": "update-guards",
       "cases": [
         {
-          "suite": "runtime-update",
+          "suite": "runtime-update-case-04",
           "test": "RuntimeUpdateContract.test_read_only_check_valid_update_and_repeat_preserve_user_text_and_source_channel"
         },
         {
-          "suite": "runtime-update",
+          "suite": "runtime-update-case-05",
           "test": "RuntimeUpdateContract.test_dirty_remote_ref_and_unowned_target_changes_refuse_without_activation"
         },
         {
-          "suite": "runtime-update",
+          "suite": "runtime-update-case-06",
           "test": "RuntimeUpdateContract.test_downgrade_non_fast_forward_and_invalid_candidate_keep_the_previous_runtime"
         },
         {
-          "suite": "runtime-update",
+          "suite": "runtime-update-case-07",
           "test": "RuntimeUpdateContract.test_development_sources_are_never_mutated_by_update"
         },
         {
-          "suite": "runtime-update",
+          "suite": "runtime-update-case-10",
           "test": "RuntimeUpdateContract.test_discovered_and_explicit_banks_remain_unchanged_and_unsupported_schema_refuses"
         }
       ]
@@ -125,43 +125,355 @@
       "cases": [
         {
           "suite": "update-write-before",
-          "test": "UpdateWriteBeforeContract.test_actual_logical_writes_in_partition_0"
+          "test": "UpdateWriteBeforeContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "update-write-before-part-1",
+          "test": "UpdateWriteBeforeContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "update-write-before-part-2",
+          "test": "UpdateWriteBeforeContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "update-write-before-part-3",
+          "test": "UpdateWriteBeforeContract.test_actual_selected_logical_writes"
         },
         {
           "suite": "update-write-after",
-          "test": "UpdateWriteAfterContract.test_actual_logical_writes_in_partition_0"
+          "test": "UpdateWriteAfterContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "update-write-after-part-1",
+          "test": "UpdateWriteAfterContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "update-write-after-part-2",
+          "test": "UpdateWriteAfterContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "update-write-after-part-3",
+          "test": "UpdateWriteAfterContract.test_actual_selected_logical_writes"
         },
         {
           "suite": "install-write-copy-before",
-          "test": "InstallCopyBeforeContract.test_actual_logical_writes_in_partition_0"
+          "test": "InstallCopyBeforeContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-copy-before-part-1",
+          "test": "InstallCopyBeforeContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-copy-before-part-2",
+          "test": "InstallCopyBeforeContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-copy-before-part-3",
+          "test": "InstallCopyBeforeContract.test_actual_selected_logical_writes"
         },
         {
           "suite": "install-write-copy-after",
-          "test": "LifecycleWriteContract.test_actual_logical_writes_in_partition_0"
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-copy-after-part-1",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-copy-after-part-2",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-copy-after-part-3",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
         },
         {
           "suite": "install-write-link-before",
-          "test": "LifecycleWriteContract.test_actual_logical_writes_in_partition_0"
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-link-before-part-1",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-link-before-part-2",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-link-before-part-3",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
         },
         {
           "suite": "install-write-link-after",
-          "test": "LifecycleWriteContract.test_actual_logical_writes_in_partition_0"
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-link-after-part-1",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-link-after-part-2",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-link-after-part-3",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
         },
         {
           "suite": "uninstall-write-copy-before",
-          "test": "LifecycleWriteContract.test_before_every_uninstall_copy_write"
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-copy-before-part-1",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-copy-before-part-2",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-copy-before-part-3",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
         },
         {
           "suite": "uninstall-write-copy-after",
-          "test": "LifecycleWriteContract.test_after_every_uninstall_copy_write"
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-copy-after-part-1",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-copy-after-part-2",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-copy-after-part-3",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
         },
         {
           "suite": "uninstall-write-link-before",
-          "test": "LifecycleWriteContract.test_before_every_uninstall_link_write"
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-link-before-part-1",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-link-before-part-2",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-link-before-part-3",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
         },
         {
           "suite": "uninstall-write-link-after",
-          "test": "LifecycleWriteContract.test_after_every_uninstall_link_write"
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-link-after-part-1",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-link-after-part-2",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-link-after-part-3",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-copy-before-part-4",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-copy-before-part-5",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-copy-before-part-6",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-copy-before-part-7",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-copy-before-part-8",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-copy-before-part-9",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-copy-before-part-10",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-copy-before-part-11",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-copy-before-part-12",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-copy-before-part-13",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-copy-before-part-14",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-copy-before-part-15",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-copy-after-part-4",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-copy-after-part-5",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-copy-after-part-6",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-copy-after-part-7",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-copy-after-part-8",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-copy-after-part-9",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-copy-after-part-10",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-copy-after-part-11",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-copy-after-part-12",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-copy-after-part-13",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-copy-after-part-14",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-copy-after-part-15",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-link-before-part-4",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-link-before-part-5",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-link-before-part-6",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-link-before-part-7",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-link-before-part-8",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-link-before-part-9",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-link-before-part-10",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-link-before-part-11",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-link-before-part-12",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-link-before-part-13",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-link-before-part-14",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-link-before-part-15",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-link-after-part-4",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-link-after-part-5",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-link-after-part-6",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-link-after-part-7",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-link-after-part-8",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-link-after-part-9",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-link-after-part-10",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-link-after-part-11",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-link-after-part-12",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-link-after-part-13",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-link-after-part-14",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "uninstall-write-link-after-part-15",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
         },
         {
           "suite": "recover-rollback-write-copy-before",
@@ -208,76 +520,292 @@
           "test": "PurgeUnlockAfterContract.test_after_refused_purge_unlock"
         },
         {
-          "suite": "update-write-before-part-1",
-          "test": "UpdateWriteBeforePart1Contract.test_actual_logical_writes_in_partition_1"
+          "suite": "update-write-before-part-4",
+          "test": "UpdateWriteBeforeContract.test_actual_selected_logical_writes"
         },
         {
-          "suite": "update-write-before-part-2",
-          "test": "UpdateWriteBeforePart2Contract.test_actual_logical_writes_in_partition_2"
+          "suite": "update-write-before-part-5",
+          "test": "UpdateWriteBeforeContract.test_actual_selected_logical_writes"
         },
         {
-          "suite": "update-write-before-part-3",
-          "test": "UpdateWriteBeforePart3Contract.test_actual_logical_writes_in_partition_3"
+          "suite": "update-write-before-part-6",
+          "test": "UpdateWriteBeforeContract.test_actual_selected_logical_writes"
         },
         {
-          "suite": "update-write-after-part-1",
-          "test": "UpdateWriteAfterPart1Contract.test_actual_logical_writes_in_partition_1"
+          "suite": "update-write-before-part-7",
+          "test": "UpdateWriteBeforeContract.test_actual_selected_logical_writes"
         },
         {
-          "suite": "update-write-after-part-2",
-          "test": "UpdateWriteAfterPart2Contract.test_actual_logical_writes_in_partition_2"
+          "suite": "update-write-before-part-8",
+          "test": "UpdateWriteBeforeContract.test_actual_selected_logical_writes"
         },
         {
-          "suite": "update-write-after-part-3",
-          "test": "UpdateWriteAfterPart3Contract.test_actual_logical_writes_in_partition_3"
+          "suite": "update-write-before-part-9",
+          "test": "UpdateWriteBeforeContract.test_actual_selected_logical_writes"
         },
         {
-          "suite": "install-write-copy-before-part-1",
-          "test": "InstallCopyBeforePart1Contract.test_actual_logical_writes_in_partition_1"
+          "suite": "update-write-before-part-10",
+          "test": "UpdateWriteBeforeContract.test_actual_selected_logical_writes"
         },
         {
-          "suite": "install-write-copy-before-part-2",
-          "test": "InstallCopyBeforePart2Contract.test_actual_logical_writes_in_partition_2"
+          "suite": "update-write-before-part-11",
+          "test": "UpdateWriteBeforeContract.test_actual_selected_logical_writes"
         },
         {
-          "suite": "install-write-copy-before-part-3",
-          "test": "InstallCopyBeforePart3Contract.test_actual_logical_writes_in_partition_3"
+          "suite": "update-write-before-part-12",
+          "test": "UpdateWriteBeforeContract.test_actual_selected_logical_writes"
         },
         {
-          "suite": "install-write-copy-after-part-1",
-          "test": "LifecycleWritePart1Contract.test_actual_logical_writes_in_partition_1"
+          "suite": "update-write-before-part-13",
+          "test": "UpdateWriteBeforeContract.test_actual_selected_logical_writes"
         },
         {
-          "suite": "install-write-copy-after-part-2",
-          "test": "LifecycleWritePart2Contract.test_actual_logical_writes_in_partition_2"
+          "suite": "update-write-before-part-14",
+          "test": "UpdateWriteBeforeContract.test_actual_selected_logical_writes"
         },
         {
-          "suite": "install-write-copy-after-part-3",
-          "test": "LifecycleWritePart3Contract.test_actual_logical_writes_in_partition_3"
+          "suite": "update-write-before-part-15",
+          "test": "UpdateWriteBeforeContract.test_actual_selected_logical_writes"
         },
         {
-          "suite": "install-write-link-before-part-1",
-          "test": "LifecycleWritePart1Contract.test_actual_logical_writes_in_partition_1"
+          "suite": "update-write-after-part-4",
+          "test": "UpdateWriteAfterContract.test_actual_selected_logical_writes"
         },
         {
-          "suite": "install-write-link-before-part-2",
-          "test": "LifecycleWritePart2Contract.test_actual_logical_writes_in_partition_2"
+          "suite": "update-write-after-part-5",
+          "test": "UpdateWriteAfterContract.test_actual_selected_logical_writes"
         },
         {
-          "suite": "install-write-link-before-part-3",
-          "test": "LifecycleWritePart3Contract.test_actual_logical_writes_in_partition_3"
+          "suite": "update-write-after-part-6",
+          "test": "UpdateWriteAfterContract.test_actual_selected_logical_writes"
         },
         {
-          "suite": "install-write-link-after-part-1",
-          "test": "LifecycleWritePart1Contract.test_actual_logical_writes_in_partition_1"
+          "suite": "update-write-after-part-7",
+          "test": "UpdateWriteAfterContract.test_actual_selected_logical_writes"
         },
         {
-          "suite": "install-write-link-after-part-2",
-          "test": "LifecycleWritePart2Contract.test_actual_logical_writes_in_partition_2"
+          "suite": "update-write-after-part-8",
+          "test": "UpdateWriteAfterContract.test_actual_selected_logical_writes"
         },
         {
-          "suite": "install-write-link-after-part-3",
-          "test": "LifecycleWritePart3Contract.test_actual_logical_writes_in_partition_3"
+          "suite": "update-write-after-part-9",
+          "test": "UpdateWriteAfterContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "update-write-after-part-10",
+          "test": "UpdateWriteAfterContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "update-write-after-part-11",
+          "test": "UpdateWriteAfterContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "update-write-after-part-12",
+          "test": "UpdateWriteAfterContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "update-write-after-part-13",
+          "test": "UpdateWriteAfterContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "update-write-after-part-14",
+          "test": "UpdateWriteAfterContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "update-write-after-part-15",
+          "test": "UpdateWriteAfterContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-copy-before-part-4",
+          "test": "InstallCopyBeforeContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-copy-before-part-5",
+          "test": "InstallCopyBeforeContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-copy-before-part-6",
+          "test": "InstallCopyBeforeContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-copy-before-part-7",
+          "test": "InstallCopyBeforeContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-copy-before-part-8",
+          "test": "InstallCopyBeforeContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-copy-before-part-9",
+          "test": "InstallCopyBeforeContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-copy-before-part-10",
+          "test": "InstallCopyBeforeContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-copy-before-part-11",
+          "test": "InstallCopyBeforeContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-copy-before-part-12",
+          "test": "InstallCopyBeforeContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-copy-before-part-13",
+          "test": "InstallCopyBeforeContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-copy-before-part-14",
+          "test": "InstallCopyBeforeContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-copy-before-part-15",
+          "test": "InstallCopyBeforeContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-copy-after-part-4",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-copy-after-part-5",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-copy-after-part-6",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-copy-after-part-7",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-copy-after-part-8",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-copy-after-part-9",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-copy-after-part-10",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-copy-after-part-11",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-copy-after-part-12",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-copy-after-part-13",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-copy-after-part-14",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-copy-after-part-15",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-link-before-part-4",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-link-before-part-5",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-link-before-part-6",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-link-before-part-7",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-link-before-part-8",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-link-before-part-9",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-link-before-part-10",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-link-before-part-11",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-link-before-part-12",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-link-before-part-13",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-link-before-part-14",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-link-before-part-15",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-link-after-part-4",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-link-after-part-5",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-link-after-part-6",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-link-after-part-7",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-link-after-part-8",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-link-after-part-9",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-link-after-part-10",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-link-after-part-11",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-link-after-part-12",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-link-after-part-13",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-link-after-part-14",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
+        },
+        {
+          "suite": "install-write-link-after-part-15",
+          "test": "LifecycleWriteContract.test_actual_selected_logical_writes"
         }
       ]
     },
@@ -313,7 +841,7 @@
           "test": "LifecycleLostResponses.test_fault_trace_itself_cannot_escape_into_another_world"
         },
         {
-          "suite": "runtime-update",
+          "suite": "runtime-update-case-09",
           "test": "RuntimeUpdateContract.test_lost_response_and_partial_activation_recover_then_retry_without_duplicates"
         }
       ]
@@ -322,23 +850,23 @@
       "requirement": "rollback-locks",
       "cases": [
         {
-          "suite": "installer",
+          "suite": "installer-partial-activation-failure-rolls-back-and-retry-converges",
           "test": "InstallerContract.test_partial_activation_failure_rolls_back_and_retry_converges"
         },
         {
-          "suite": "installer",
+          "suite": "installer-failed-replacement-restores-existing-copies-and-the-exact-prior-receipt",
           "test": "InstallerContract.test_failed_replacement_restores_existing_copies_and_the_exact_prior_receipt"
         },
         {
-          "suite": "installer",
+          "suite": "installer-unrelated-lock-and-linked-state-are-never-adopted",
           "test": "InstallerContract.test_unrelated_lock_and_linked_state_are_never_adopted"
         },
         {
-          "suite": "runtime-update",
+          "suite": "runtime-update-case-13",
           "test": "RuntimeUpdateContract.test_competing_update_observes_the_live_lifecycle_lock"
         },
         {
-          "suite": "runtime-diagnostics",
+          "suite": "runtime-diagnostics-case-18",
           "test": "RuntimeDiagnosticsContract.test_live_runtime_lock_is_not_stolen_or_treated_as_an_orphan"
         }
       ]
@@ -452,7 +980,7 @@
           "test": "InstalledLayoutContract.test_all_clients_share_one_artifact_and_installed_lifecycle_preserves_distinct_data"
         },
         {
-          "suite": "runtime-update",
+          "suite": "runtime-update-case-10",
           "test": "RuntimeUpdateContract.test_discovered_and_explicit_banks_remain_unchanged_and_unsupported_schema_refuses"
         }
       ]
@@ -478,7 +1006,7 @@
           "test": "InstalledLayoutContract.test_all_clients_share_one_artifact_and_installed_lifecycle_preserves_distinct_data"
         },
         {
-          "suite": "runtime-diagnostics",
+          "suite": "runtime-diagnostics-case-10",
           "test": "RuntimeDiagnosticsContract.test_installed_version_binds_actual_artifact_revision_mode_and_channel"
         },
         {
@@ -591,7 +1119,7 @@
           "test": "SkillRouteContract.test_working_delegated_help_commands_are_valid_documented_commands"
         },
         {
-          "suite": "runtime-update",
+          "suite": "runtime-update-case-06",
           "test": "RuntimeUpdateContract.test_downgrade_non_fast_forward_and_invalid_candidate_keep_the_previous_runtime"
         }
       ]
@@ -604,31 +1132,31 @@
           "test": "HarnessContract.test_worker_is_isolated_and_credentials_are_absent"
         },
         {
-          "suite": "harness",
+          "suite": "harness-public-command-runs-with-spaces-and-clean-environment",
           "test": "HarnessContract.test_public_command_runs_with_spaces_and_clean_environment"
         },
         {
-          "suite": "harness",
+          "suite": "harness-real-git-bare-remote-clones-and-worktree",
           "test": "HarnessContract.test_real_git_bare_remote_clones_and_worktree"
         },
         {
-          "suite": "harness",
+          "suite": "harness-escape-and-live-root-overrides-are-refused",
           "test": "HarnessContract.test_escape_and_live_root_overrides_are_refused"
         },
         {
-          "suite": "harness",
+          "suite": "harness-command-failure-and-timeout-are-not-success",
           "test": "HarnessContract.test_command_failure_and_timeout_are_not_success"
         },
         {
-          "suite": "harness",
+          "suite": "harness-world-cleanup-does-not-follow-escape-symlink",
           "test": "HarnessContract.test_world_cleanup_does_not_follow_escape_symlink"
         },
         {
-          "suite": "harness",
+          "suite": "harness-worker-rejects-a-live-home-before-importing-suite",
           "test": "HarnessContract.test_worker_rejects_a_live_home_before_importing_suite"
         },
         {
-          "suite": "harness",
+          "suite": "harness-actual-gate-rejects-empty-skipped-and-failing-suites",
           "test": "HarnessContract.test_actual_gate_rejects_empty_skipped_and_failing_suites"
         },
         {
@@ -657,7 +1185,15 @@
         },
         {
           "suite": "lifecycle-fault-partitions",
-          "test": "LifecyclePartitionContract.test_every_observed_interruption_partition_is_mandatory_and_correctly_routed"
+          "test": "LifecyclePartitionContract.test_consumer_rejects_missing_duplicate_or_inconsistent_replay_proofs"
+        },
+        {
+          "suite": "lifecycle-fault-partitions",
+          "test": "LifecyclePartitionContract.test_every_required_partition_and_control_must_remain_registered"
+        },
+        {
+          "suite": "lifecycle-fault-partitions",
+          "test": "LifecyclePartitionContract.test_actual_worker_binds_registered_name_and_path_without_narrowing_direct_runs"
         }
       ]
     }

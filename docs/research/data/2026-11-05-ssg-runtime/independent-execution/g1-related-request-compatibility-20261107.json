@@ -1,0 +1,746 @@
+{
+  "schema": "am255/related-request-schema-compatibility-v1",
+  "base_commit": "d3e47fa",
+  "source_binding": "Exact locally modified design schema sha256; not attributed to base commit",
+  "raw_receipt_sha256": "27c6f800635c0841f3572c6384651574a8dc11abe38cbc08b01df62ca16fbfcb",
+  "driver_sha256": "2ef9a076ef8ea04f011b468fbb60fde336fc40ecea7aa4558fed6af20d02362d",
+  "schema_sha256": "2d051689c095df32fbd3803acf4fc45838246c24d020a87a28ba184dc6ff515e",
+  "record_schema_sha256": "7052928381ff74dd72d48f5756f13a246f7d96476660c1f32ad6faf21eae68bd",
+  "passed": true,
+  "checks": [
+    {
+      "name": "actual-native-records-and-top-level-coverage",
+      "expected_valid": true,
+      "valid": true,
+      "passed": true,
+      "errors": []
+    },
+    {
+      "name": "source-bound-caveat-retains-native-payload",
+      "expected_valid": true,
+      "valid": true,
+      "passed": true,
+      "errors": []
+    },
+    {
+      "name": "atomic-source-group-structure",
+      "expected_valid": true,
+      "valid": true,
+      "passed": true,
+      "errors": []
+    },
+    {
+      "name": "native-version-cannot-be-string",
+      "expected_valid": false,
+      "valid": false,
+      "passed": true,
+      "errors": [
+        {
+          "path": [
+            "results",
+            0
+          ],
+          "validator": "oneOf",
+          "message": "{'native': {'path': 'topics/records/cursor-empty.md', 'format': 'standalone-record', 'body': '# Pagination cursor: empty page\\n\\nAn empty page with a nonempty pagination cursor is not the end of the scan. Continue using the returned cursor until the server omits it.\\n', 'source_sha256': 'd0aa7121dd342a1bf58f0b79a5733a0b4426951205b25b5ceb00cefa52fd7"
+        },
+        {
+          "path": [
+            "results",
+            0,
+            "native"
+          ],
+          "validator": "oneOf",
+          "message": "{'path': 'topics/records/cursor-empty.md', 'format': 'standalone-record', 'body': '# Pagination cursor: empty page\\n\\nAn empty page with a nonempty pagination cursor is not the end of the scan. Continue using the returned cursor until the server omits it.\\n', 'source_sha256': 'd0aa7121dd342a1bf58f0b79a5733a0b4426951205b25b5ceb00cefa52fd7f20', 'scop"
+        },
+        {
+          "path": [
+            "results",
+            0,
+            "native"
+          ],
+          "validator": "unevaluatedProperties",
+          "message": "Unevaluated properties are not allowed ('record', 'selection' were unexpected)"
+        }
+      ]
+    },
+    {
+      "name": "native-conditions-cannot-be-flattened",
+      "expected_valid": false,
+      "valid": false,
+      "passed": true,
+      "errors": [
+        {
+          "path": [
+            "results",
+            0
+          ],
+          "validator": "oneOf",
+          "message": "{'native': {'path': 'topics/records/cursor-empty.md', 'format': 'standalone-record', 'body': '# Pagination cursor: empty page\\n\\nAn empty page with a nonempty pagination cursor is not the end of the scan. Continue using the returned cursor until the server omits it.\\n', 'source_sha256': 'd0aa7121dd342a1bf58f0b79a5733a0b4426951205b25b5ceb00cefa52fd7"
+        },
+        {
+          "path": [
+            "results",
+            0,
+            "native"
+          ],
+          "validator": "oneOf",
+          "message": "{'path': 'topics/records/cursor-empty.md', 'format': 'standalone-record', 'body': '# Pagination cursor: empty page\\n\\nAn empty page with a nonempty pagination cursor is not the end of the scan. Continue using the returned cursor until the server omits it.\\n', 'source_sha256': 'd0aa7121dd342a1bf58f0b79a5733a0b4426951205b25b5ceb00cefa52fd7f20', 'scop"
+        },
+        {
+          "path": [
+            "results",
+            0,
+            "native"
+          ],
+          "validator": "unevaluatedProperties",
+          "message": "Unevaluated properties are not allowed ('record', 'selection' were unexpected)"
+        }
+      ]
+    },
+    {
+      "name": "cannot-promote-source-truth",
+      "expected_valid": false,
+      "valid": false,
+      "passed": true,
+      "errors": [
+        {
+          "path": [
+            "results",
+            0
+          ],
+          "validator": "oneOf",
+          "message": "{'native': {'path': 'topics/records/cursor-empty.md', 'format': 'standalone-record', 'body': '# Pagination cursor: empty page\\n\\nAn empty page with a nonempty pagination cursor is not the end of the scan. Continue using the returned cursor until the server omits it.\\n', 'source_sha256': 'd0aa7121dd342a1bf58f0b79a5733a0b4426951205b25b5ceb00cefa52fd7"
+        },
+        {
+          "path": [
+            "results",
+            0,
+            "native",
+            "source_assertions_verified"
+          ],
+          "validator": "const",
+          "message": "False was expected"
+        }
+      ]
+    },
+    {
+      "name": "qualified-search-cannot-drop-native-coverage",
+      "expected_valid": false,
+      "valid": false,
+      "passed": true,
+      "errors": [
+        {
+          "path": [
+            "native_coverage"
+          ],
+          "validator": "type",
+          "message": "None is not of type 'object'"
+        }
+      ]
+    },
+    {
+      "name": "literal-request-cannot-claim-semantic-status",
+      "expected_valid": false,
+      "valid": false,
+      "passed": true,
+      "errors": [
+        {
+          "path": [
+            "semantic_status"
+          ],
+          "validator": "const",
+          "message": "'not-requested' was expected"
+        }
+      ]
+    },
+    {
+      "name": "complete-semantic-envelope-structure-only",
+      "expected_valid": true,
+      "valid": true,
+      "passed": true,
+      "errors": []
+    },
+    {
+      "name": "ordinary-top-k-retains-complete-domain-coverage",
+      "expected_valid": true,
+      "valid": true,
+      "passed": true,
+      "errors": []
+    },
+    {
+      "name": "held-cannot-claim-complete-domain-coverage",
+      "expected_valid": false,
+      "valid": false,
+      "passed": true,
+      "errors": [
+        {
+          "path": [
+            "exclusions",
+            0
+          ],
+          "validator": "const",
+          "message": "'capped' was expected"
+        }
+      ]
+    },
+    {
+      "name": "explicit-score-exclusion-is-partial",
+      "expected_valid": true,
+      "valid": true,
+      "passed": true,
+      "errors": []
+    },
+    {
+      "name": "exclusion-cannot-claim-complete-semantic-coverage",
+      "expected_valid": false,
+      "valid": false,
+      "passed": true,
+      "errors": [
+        {
+          "path": [
+            "exclusions",
+            0
+          ],
+          "validator": "const",
+          "message": "'capped' was expected"
+        }
+      ]
+    },
+    {
+      "name": "missing-score-is-stale",
+      "expected_valid": true,
+      "valid": true,
+      "passed": true,
+      "errors": []
+    },
+    {
+      "name": "missing-score-cannot-be-partial",
+      "expected_valid": false,
+      "valid": false,
+      "passed": true,
+      "errors": [
+        {
+          "path": [
+            "status"
+          ],
+          "validator": "const",
+          "message": "'stale' was expected"
+        },
+        {
+          "path": [
+            "semantic_status"
+          ],
+          "validator": "const",
+          "message": "'stale' was expected"
+        },
+        {
+          "path": [
+            "semantic_status"
+          ],
+          "validator": "const",
+          "message": "'stale' was expected"
+        }
+      ]
+    },
+    {
+      "name": "recovery-frontier-structure-keeps-unit-and-action",
+      "expected_valid": true,
+      "valid": true,
+      "passed": true,
+      "errors": []
+    },
+    {
+      "name": "pending-recovery-cannot-claim-semantic-complete",
+      "expected_valid": false,
+      "valid": false,
+      "passed": true,
+      "errors": [
+        {
+          "path": [
+            "semantic_coverage"
+          ],
+          "validator": "not",
+          "message": "'complete' should not be valid under {'const': 'complete'}"
+        },
+        {
+          "path": [
+            "exclusions",
+            0
+          ],
+          "validator": "const",
+          "message": "'capped' was expected"
+        },
+        {
+          "path": [
+            "native_coverage",
+            "semantic_coverage"
+          ],
+          "validator": "const",
+          "message": "'complete-canonical-observation' was expected"
+        },
+        {
+          "path": [
+            "native_coverage",
+            "pending_recovery_unit_ids"
+          ],
+          "validator": "maxItems",
+          "message": "['structural-pending-unit'] is expected to be empty"
+        },
+        {
+          "path": [
+            "native_coverage",
+            "pending_recovery_units"
+          ],
+          "validator": "const",
+          "message": "0 was expected"
+        },
+        {
+          "path": [
+            "native_coverage",
+            "recovery_required_actions"
+          ],
+          "validator": "maxItems",
+          "message": "['Structural example: resolve retained unit'] is expected to be empty"
+        }
+      ]
+    },
+    {
+      "name": "pending-recovery-cannot-hide-exclusion",
+      "expected_valid": false,
+      "valid": false,
+      "passed": true,
+      "errors": [
+        {
+          "path": [
+            "exclusions"
+          ],
+          "validator": "contains",
+          "message": "[] does not contain items matching the given schema"
+        }
+      ]
+    },
+    {
+      "name": "explicit-literal-fallback-structure",
+      "expected_valid": true,
+      "valid": true,
+      "passed": true,
+      "errors": []
+    },
+    {
+      "name": "fallback-cannot-claim-semantic-qualified",
+      "expected_valid": false,
+      "valid": false,
+      "passed": true,
+      "errors": [
+        {
+          "path": [
+            "semantic_status"
+          ],
+          "validator": "not",
+          "message": "'qualified' should not be valid under {'enum': ['qualified', 'not-requested']}"
+        },
+        {
+          "path": [
+            "semantic_status"
+          ],
+          "validator": "not",
+          "message": "'qualified' should not be valid under {'enum': ['qualified', 'not-requested']}"
+        },
+        {
+          "path": [
+            "semantic_status"
+          ],
+          "validator": "const",
+          "message": "'stale' was expected"
+        }
+      ]
+    },
+    {
+      "name": "body-free-related-pointer-with-path-and-page",
+      "expected_valid": true,
+      "valid": true,
+      "passed": true,
+      "errors": []
+    },
+    {
+      "name": "body-free-historical-pointer",
+      "expected_valid": true,
+      "valid": true,
+      "passed": true,
+      "errors": []
+    },
+    {
+      "name": "historical-related-pointer-rejects-body",
+      "expected_valid": false,
+      "valid": false,
+      "passed": true,
+      "errors": [
+        {
+          "path": [
+            "results",
+            0
+          ],
+          "validator": "oneOf",
+          "message": "{'target': {'tagged_key': 'RecordVersion:c7b17274-e5ae-433f-a9f9-a0a2198a1c67', 'path': 'topics/records/cursor-repeated.md', 'source_sha256': '959eea04b32e8e77bfc13bc54ac79fa267aa5b0141f1a86e0a71612a8918eaac', 'lifecycle': 'historical'}, 'paths': [[{'from': 'RecordVersion:6993a696-6d7b-49ea-a918-2d815377ce45', 'rel': 'CORRECTS', 'to': 'RecordVersio"
+        },
+        {
+          "path": [
+            "results",
+            0
+          ],
+          "validator": "additionalProperties",
+          "message": "Additional properties are not allowed ('body' was unexpected)"
+        }
+      ]
+    },
+    {
+      "name": "search-can-attach-body-free-related-reference",
+      "expected_valid": true,
+      "valid": true,
+      "passed": true,
+      "errors": []
+    },
+    {
+      "name": "search-cannot-replace-native-payload-with-pointer",
+      "expected_valid": false,
+      "valid": false,
+      "passed": true,
+      "errors": [
+        {
+          "path": [
+            "results",
+            0
+          ],
+          "validator": "additionalProperties",
+          "message": "Additional properties are not allowed ('paths', 'relation_channel', 'target' were unexpected)"
+        },
+        {
+          "path": [
+            "results",
+            0
+          ],
+          "validator": "required",
+          "message": "'native' is a required property"
+        },
+        {
+          "path": [
+            "results",
+            0
+          ],
+          "validator": "required",
+          "message": "'relation' is a required property"
+        },
+        {
+          "path": [
+            "results",
+            0
+          ],
+          "validator": "required",
+          "message": "'mandatory_caveats' is a required property"
+        },
+        {
+          "path": [
+            "results",
+            0
+          ],
+          "validator": "required",
+          "message": "'related' is a required property"
+        },
+        {
+          "path": [
+            "results",
+            0
+          ],
+          "validator": "required",
+          "message": "'related_next_page' is a required property"
+        }
+      ]
+    },
+    {
+      "name": "inferred-similarity-path-labelled",
+      "expected_valid": true,
+      "valid": true,
+      "passed": true,
+      "errors": []
+    },
+    {
+      "name": "inferred-edge-cannot-claim-recorded",
+      "expected_valid": false,
+      "valid": false,
+      "passed": true,
+      "errors": [
+        {
+          "path": [
+            "results",
+            0
+          ],
+          "validator": "oneOf",
+          "message": "{'target': {'tagged_key': 'RecordVersion:c7b17274-e5ae-433f-a9f9-a0a2198a1c67', 'path': 'topics/records/cursor-repeated.md', 'source_sha256': '959eea04b32e8e77bfc13bc54ac79fa267aa5b0141f1a86e0a71612a8918eaac', 'lifecycle': 'current'}, 'paths': [[{'from': 'RecordVersion:6993a696-6d7b-49ea-a918-2d815377ce45', 'rel': 'SIMILAR_SUGGESTION', 'to': 'Recor"
+        },
+        {
+          "path": [
+            "results",
+            0,
+            "paths",
+            0,
+            0,
+            "channel"
+          ],
+          "validator": "const",
+          "message": "'inferred' was expected"
+        },
+        {
+          "path": [
+            "results",
+            0,
+            "relation_channel"
+          ],
+          "validator": "const",
+          "message": "'recorded' was expected"
+        }
+      ]
+    },
+    {
+      "name": "inferred-path-cannot-claim-recorded-pointer",
+      "expected_valid": false,
+      "valid": false,
+      "passed": true,
+      "errors": [
+        {
+          "path": [
+            "results",
+            0
+          ],
+          "validator": "oneOf",
+          "message": "{'target': {'tagged_key': 'RecordVersion:c7b17274-e5ae-433f-a9f9-a0a2198a1c67', 'path': 'topics/records/cursor-repeated.md', 'source_sha256': '959eea04b32e8e77bfc13bc54ac79fa267aa5b0141f1a86e0a71612a8918eaac', 'lifecycle': 'current'}, 'paths': [[{'from': 'RecordVersion:6993a696-6d7b-49ea-a918-2d815377ce45', 'rel': 'SIMILAR_SUGGESTION', 'to': 'Recor"
+        },
+        {
+          "path": [
+            "results",
+            0,
+            "relation_channel"
+          ],
+          "validator": "const",
+          "message": "'inferred' was expected"
+        }
+      ]
+    },
+    {
+      "name": "status-inspection-can-report-queued-hints",
+      "expected_valid": true,
+      "valid": true,
+      "passed": true,
+      "errors": []
+    },
+    {
+      "name": "purge-cannot-omit-preview-object",
+      "expected_valid": false,
+      "valid": false,
+      "passed": true,
+      "errors": [
+        {
+          "path": [
+            "purge"
+          ],
+          "validator": "type",
+          "message": "None is not of type 'object'"
+        }
+      ]
+    },
+    {
+      "name": "purge-preview-object-structure",
+      "expected_valid": true,
+      "valid": true,
+      "passed": true,
+      "errors": []
+    },
+    {
+      "name": "envelope-is-closed",
+      "expected_valid": false,
+      "valid": false,
+      "passed": true,
+      "errors": [
+        {
+          "path": [],
+          "validator": "additionalProperties",
+          "message": "Additional properties are not allowed ('unknown_field' was unexpected)"
+        }
+      ]
+    },
+    {
+      "name": "actual-native-orientation-and-typed-coverage",
+      "expected_valid": true,
+      "valid": true,
+      "passed": true,
+      "errors": []
+    },
+    {
+      "name": "related-replacement-request-shape",
+      "expected_valid": true,
+      "valid": true,
+      "passed": true,
+      "errors": []
+    },
+    {
+      "name": "explicit-historical-request-shape",
+      "expected_valid": true,
+      "valid": true,
+      "passed": true,
+      "errors": []
+    },
+    {
+      "name": "component-attempts-request-shape",
+      "expected_valid": true,
+      "valid": true,
+      "passed": true,
+      "errors": []
+    },
+    {
+      "name": "component-path-cannot-escape-repository",
+      "expected_valid": false,
+      "valid": false,
+      "passed": true,
+      "errors": [
+        {
+          "path": [
+            "query"
+          ],
+          "validator": "oneOf",
+          "message": "{'template': 'component-attempts', 'arguments': {'component': '../other', 'task': None}, 'page_token': None} is not valid under any of the given schemas"
+        }
+      ]
+    },
+    {
+      "name": "component-path-cannot-be-absolute",
+      "expected_valid": false,
+      "valid": false,
+      "passed": true,
+      "errors": [
+        {
+          "path": [
+            "query"
+          ],
+          "validator": "oneOf",
+          "message": "{'template': 'component-attempts', 'arguments': {'component': '/absolute', 'task': None}, 'page_token': None} is not valid under any of the given schemas"
+        }
+      ]
+    },
+    {
+      "name": "recorded-related-request-shape",
+      "expected_valid": true,
+      "valid": true,
+      "passed": true,
+      "errors": []
+    },
+    {
+      "name": "reserved-inference-syntax-only-operationally-unavailable",
+      "expected_valid": true,
+      "valid": true,
+      "passed": true,
+      "errors": []
+    },
+    {
+      "name": "relation-set-cannot-be-empty",
+      "expected_valid": false,
+      "valid": false,
+      "passed": true,
+      "errors": [
+        {
+          "path": [
+            "query"
+          ],
+          "validator": "oneOf",
+          "message": "{'template': 'recorded-related', 'arguments': {'relations': []}, 'page_token': None} is not valid under any of the given schemas"
+        }
+      ]
+    },
+    {
+      "name": "relation-set-cannot-duplicate",
+      "expected_valid": false,
+      "valid": false,
+      "passed": true,
+      "errors": [
+        {
+          "path": [
+            "query"
+          ],
+          "validator": "oneOf",
+          "message": "{'template': 'recorded-related', 'arguments': {'relations': ['CORRECTS', 'CORRECTS']}, 'page_token': None} is not valid under any of the given schemas"
+        }
+      ]
+    },
+    {
+      "name": "provenance-hub-is-not-relatedness-selector",
+      "expected_valid": false,
+      "valid": false,
+      "passed": true,
+      "errors": [
+        {
+          "path": [
+            "query"
+          ],
+          "validator": "oneOf",
+          "message": "{'template': 'recorded-related', 'arguments': {'relations': ['ATTRIBUTED_TO']}, 'page_token': None} is not valid under any of the given schemas"
+        }
+      ]
+    },
+    {
+      "name": "arguments-cannot-cross-template-boundary",
+      "expected_valid": false,
+      "valid": false,
+      "passed": true,
+      "errors": [
+        {
+          "path": [
+            "query"
+          ],
+          "validator": "oneOf",
+          "message": "{'template': 'replacement-evidence', 'arguments': {'historical': False, 'component': 'src/x'}, 'page_token': None} is not valid under any of the given schemas"
+        }
+      ]
+    },
+    {
+      "name": "standalone-related-cannot-omit-seed-reference",
+      "expected_valid": false,
+      "valid": false,
+      "passed": true,
+      "errors": [
+        {
+          "path": [],
+          "validator": "required",
+          "message": "'selection_ref' is a required property"
+        }
+      ]
+    },
+    {
+      "name": "unknown-template-cannot-be-selected",
+      "expected_valid": false,
+      "valid": false,
+      "passed": true,
+      "errors": [
+        {
+          "path": [
+            "query",
+            "template"
+          ],
+          "validator": "enum",
+          "message": "'model-generated-cypher' is not one of ['replacement-evidence', 'component-attempts', 'recorded-related']"
+        },
+        {
+          "path": [
+            "query"
+          ],
+          "validator": "oneOf",
+          "message": "{'template': 'model-generated-cypher', 'arguments': {'historical': False}, 'page_token': None} is not valid under any of the given schemas"
+        }
+      ]
+    }
+  ],
+  "elapsed_seconds": 6.943750082980841,
+  "scope": "Actual existing public literal and context-prose payload compatibility plus explicitly synthetic related/semantic/frontier/lifecycle schema controls. No graph paths, semantic ranking, caveat/conflict classification, token authentication, native frontier behavior, production API or G1 acceptance.",
+  "limits": [
+    "Input examples validate only the proposed machine contract, not a production related command.",
+    "Reserved SIMILAR_SUGGESTION syntax is recognized but must return operational unavailable until a separately qualified builder exists.",
+    "No schema check authenticates tokens or establishes semantic/path truth."
+  ]
+}

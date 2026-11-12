@@ -204,7 +204,9 @@ class RetrievalContract(unittest.TestCase):
                     metadata['admission-reason'] = 'x' * 17000
                     body = '# Replacement\n\nConcise corrected learning.\n'
                 (bank / path).write_text(render(metadata, body))
-                self.good(w, 'bank_contract.py', 'validate', '--repo', repo)
+                refused, eligibility = self.command(w, 'bank_contract.py', 'validate', '--repo', repo)
+                self.assertEqual(refused.returncode, 1, (variant, eligibility))
+                self.assertEqual(eligibility['failure_code'], 'bank-source-byte-capacity')
                 before, code = self.state(bank), self.code(w, repo)
                 for selector in ({'ids': [old['id']]}, {'paths': [old_path]}, {'query': 'OBSOLETE_RETRY_ASSERTION'}):
                     r, value = self.retrieve(w, repo, project, **selector)

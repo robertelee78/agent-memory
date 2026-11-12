@@ -1,0 +1,1813 @@
+{
+  "cache_evidence": {
+    "frozen_profile": {
+      "cli": [
+        "--cache-ram",
+        "0",
+        "--log-verbosity",
+        "5"
+      ],
+      "not_prompt_cache_disabled": true,
+      "per_request_settings": {
+        "cache_prompt": "omitted on every embedding request; not assumed honored"
+      },
+      "purpose": "Pre-output diagnostic serving configuration only; not a managed profile or ADR freeze",
+      "ram_prompt_cache": "disabled by explicit CLI; must be confirmed by actual server log",
+      "request_sequence": "three probe batches; two query batches; two own batches; two relationship batches; tokenize short/over_context/aggregate_budget; short; over-context diagnostic; unknown alias single; known alias single; empty and malformed diagnostics; batch1/4/8/9 diagnostics",
+      "slot_local_prefix_reuse": "enabled task default; must retain actual prefix/evaluated-token logs per successful embedding row",
+      "source_evidence": {
+        "default_lines": "52; bool cache_prompt = true",
+        "default_path": "tools/server/server-task.h",
+        "default_sha256": "d41d2c681a3a3e02b4826decbd592769690cc6acc45477cdc6dea15790b6c92a",
+        "embedding_handler_lines": "4452-4547; tasks created directly at4512, only res_type/embd_normalize set at4518-4519; body.cache_prompt never parsed here",
+        "limit": "Direct source evidence is for the reference fork; upstream behavior must be established from new actual logs, not inferred from an accepted unknown HTTP field",
+        "path": "tools/server/server-context.cpp",
+        "ram_cache_lines": "958-969; --cache-ram0 disables the RAM prompt cache object, not slot-local reuse",
+        "sha256": "4c8bee10fa5629fb35d1f80c50ef56d9d0d04219c8afc6950bdf76684d4afb2b",
+        "slot_cache_lines": "2473-2475; task.params.cache_prompt enables longest-common-prefix reuse",
+        "source_commit": "a578bb6b94529b7b2721d0ee49eaea5dbb2c6d07"
+      }
+    },
+    "logged_completed_prompts": 69,
+    "logged_prefix_records": 69,
+    "per_request_cache_field_support_claimed": false,
+    "ram_cache_disabled_log_confirmed": true,
+    "requests": [
+      {
+        "completed_prompts": [
+          {
+            "actual_decode_batches": [
+              9
+            ],
+            "evaluated_batch_tokens": 9,
+            "task_id": 0,
+            "total_tokens": 9
+          },
+          {
+            "actual_decode_batches": [
+              8
+            ],
+            "evaluated_batch_tokens": 8,
+            "task_id": 1,
+            "total_tokens": 10
+          },
+          {
+            "actual_decode_batches": [
+              8
+            ],
+            "evaluated_batch_tokens": 8,
+            "task_id": 2,
+            "total_tokens": 10
+          },
+          {
+            "actual_decode_batches": [
+              11
+            ],
+            "evaluated_batch_tokens": 11,
+            "task_id": 3,
+            "total_tokens": 13
+          }
+        ],
+        "expected_rows": 4,
+        "input_sha256": "e2b18294b594a419a543c190ecbc0b7bceb89cf47da18a0d15d11453a377e904",
+        "name": "probes-0",
+        "prefix_splits": [
+          {
+            "cached_prefix_tokens": 0,
+            "memory_start": 0,
+            "task_id": 0
+          },
+          {
+            "cached_prefix_tokens": 2,
+            "memory_start": 2,
+            "task_id": 1
+          },
+          {
+            "cached_prefix_tokens": 2,
+            "memory_start": 2,
+            "task_id": 2
+          },
+          {
+            "cached_prefix_tokens": 2,
+            "memory_start": 2,
+            "task_id": 3
+          }
+        ],
+        "scope": "Actual task-ID-bound token logs, grouped in serial request order; not inferred from HTTP-field acceptance"
+      },
+      {
+        "completed_prompts": [
+          {
+            "actual_decode_batches": [
+              7
+            ],
+            "evaluated_batch_tokens": 7,
+            "task_id": 8,
+            "total_tokens": 9
+          },
+          {
+            "actual_decode_batches": [
+              8
+            ],
+            "evaluated_batch_tokens": 8,
+            "task_id": 9,
+            "total_tokens": 10
+          },
+          {
+            "actual_decode_batches": [
+              8
+            ],
+            "evaluated_batch_tokens": 8,
+            "task_id": 10,
+            "total_tokens": 10
+          },
+          {
+            "actual_decode_batches": [
+              11
+            ],
+            "evaluated_batch_tokens": 11,
+            "task_id": 11,
+            "total_tokens": 13
+          }
+        ],
+        "expected_rows": 4,
+        "input_sha256": "e2b18294b594a419a543c190ecbc0b7bceb89cf47da18a0d15d11453a377e904",
+        "name": "probes-1",
+        "prefix_splits": [
+          {
+            "cached_prefix_tokens": 2,
+            "memory_start": 2,
+            "task_id": 8
+          },
+          {
+            "cached_prefix_tokens": 2,
+            "memory_start": 2,
+            "task_id": 9
+          },
+          {
+            "cached_prefix_tokens": 2,
+            "memory_start": 2,
+            "task_id": 10
+          },
+          {
+            "cached_prefix_tokens": 2,
+            "memory_start": 2,
+            "task_id": 11
+          }
+        ],
+        "scope": "Actual task-ID-bound token logs, grouped in serial request order; not inferred from HTTP-field acceptance"
+      },
+      {
+        "completed_prompts": [
+          {
+            "actual_decode_batches": [
+              7
+            ],
+            "evaluated_batch_tokens": 7,
+            "task_id": 16,
+            "total_tokens": 9
+          },
+          {
+            "actual_decode_batches": [
+              8
+            ],
+            "evaluated_batch_tokens": 8,
+            "task_id": 17,
+            "total_tokens": 10
+          },
+          {
+            "actual_decode_batches": [
+              8
+            ],
+            "evaluated_batch_tokens": 8,
+            "task_id": 18,
+            "total_tokens": 10
+          },
+          {
+            "actual_decode_batches": [
+              11
+            ],
+            "evaluated_batch_tokens": 11,
+            "task_id": 19,
+            "total_tokens": 13
+          }
+        ],
+        "expected_rows": 4,
+        "input_sha256": "e2b18294b594a419a543c190ecbc0b7bceb89cf47da18a0d15d11453a377e904",
+        "name": "probes-2",
+        "prefix_splits": [
+          {
+            "cached_prefix_tokens": 2,
+            "memory_start": 2,
+            "task_id": 16
+          },
+          {
+            "cached_prefix_tokens": 2,
+            "memory_start": 2,
+            "task_id": 17
+          },
+          {
+            "cached_prefix_tokens": 2,
+            "memory_start": 2,
+            "task_id": 18
+          },
+          {
+            "cached_prefix_tokens": 2,
+            "memory_start": 2,
+            "task_id": 19
+          }
+        ],
+        "scope": "Actual task-ID-bound token logs, grouped in serial request order; not inferred from HTTP-field acceptance"
+      },
+      {
+        "completed_prompts": [
+          {
+            "actual_decode_batches": [
+              26
+            ],
+            "evaluated_batch_tokens": 26,
+            "task_id": 24,
+            "total_tokens": 26
+          },
+          {
+            "actual_decode_batches": [
+              12
+            ],
+            "evaluated_batch_tokens": 12,
+            "task_id": 25,
+            "total_tokens": 26
+          },
+          {
+            "actual_decode_batches": [
+              10
+            ],
+            "evaluated_batch_tokens": 10,
+            "task_id": 26,
+            "total_tokens": 24
+          },
+          {
+            "actual_decode_batches": [
+              10
+            ],
+            "evaluated_batch_tokens": 10,
+            "task_id": 27,
+            "total_tokens": 24
+          }
+        ],
+        "expected_rows": 4,
+        "input_sha256": "ddfe62792c525c178ddbbbc5ced31c76b394bc406c28b664c3880bddb2b22d59",
+        "name": "queries-0",
+        "prefix_splits": [
+          {
+            "cached_prefix_tokens": 0,
+            "memory_start": 0,
+            "task_id": 24
+          },
+          {
+            "cached_prefix_tokens": 14,
+            "memory_start": 14,
+            "task_id": 25
+          },
+          {
+            "cached_prefix_tokens": 14,
+            "memory_start": 14,
+            "task_id": 26
+          },
+          {
+            "cached_prefix_tokens": 14,
+            "memory_start": 14,
+            "task_id": 27
+          }
+        ],
+        "scope": "Actual task-ID-bound token logs, grouped in serial request order; not inferred from HTTP-field acceptance"
+      },
+      {
+        "completed_prompts": [
+          {
+            "actual_decode_batches": [
+              12
+            ],
+            "evaluated_batch_tokens": 12,
+            "task_id": 32,
+            "total_tokens": 26
+          },
+          {
+            "actual_decode_batches": [
+              12
+            ],
+            "evaluated_batch_tokens": 12,
+            "task_id": 33,
+            "total_tokens": 26
+          },
+          {
+            "actual_decode_batches": [
+              10
+            ],
+            "evaluated_batch_tokens": 10,
+            "task_id": 34,
+            "total_tokens": 24
+          },
+          {
+            "actual_decode_batches": [
+              10
+            ],
+            "evaluated_batch_tokens": 10,
+            "task_id": 35,
+            "total_tokens": 24
+          }
+        ],
+        "expected_rows": 4,
+        "input_sha256": "ddfe62792c525c178ddbbbc5ced31c76b394bc406c28b664c3880bddb2b22d59",
+        "name": "queries-1",
+        "prefix_splits": [
+          {
+            "cached_prefix_tokens": 14,
+            "memory_start": 14,
+            "task_id": 32
+          },
+          {
+            "cached_prefix_tokens": 14,
+            "memory_start": 14,
+            "task_id": 33
+          },
+          {
+            "cached_prefix_tokens": 14,
+            "memory_start": 14,
+            "task_id": 34
+          },
+          {
+            "cached_prefix_tokens": 14,
+            "memory_start": 14,
+            "task_id": 35
+          }
+        ],
+        "scope": "Actual task-ID-bound token logs, grouped in serial request order; not inferred from HTTP-field acceptance"
+      },
+      {
+        "completed_prompts": [
+          {
+            "actual_decode_batches": [
+              12
+            ],
+            "evaluated_batch_tokens": 12,
+            "task_id": 40,
+            "total_tokens": 12
+          },
+          {
+            "actual_decode_batches": [
+              19
+            ],
+            "evaluated_batch_tokens": 19,
+            "task_id": 41,
+            "total_tokens": 19
+          },
+          {
+            "actual_decode_batches": [
+              16
+            ],
+            "evaluated_batch_tokens": 16,
+            "task_id": 42,
+            "total_tokens": 16
+          },
+          {
+            "actual_decode_batches": [
+              16
+            ],
+            "evaluated_batch_tokens": 16,
+            "task_id": 43,
+            "total_tokens": 16
+          },
+          {
+            "actual_decode_batches": [
+              13
+            ],
+            "evaluated_batch_tokens": 13,
+            "task_id": 44,
+            "total_tokens": 13
+          },
+          {
+            "actual_decode_batches": [
+              9
+            ],
+            "evaluated_batch_tokens": 9,
+            "task_id": 45,
+            "total_tokens": 11
+          }
+        ],
+        "expected_rows": 6,
+        "input_sha256": "9b9d80f17b799a9c7b96d97965251447b4941fb8d846507f64a2f0b6ea114dae",
+        "name": "own-0",
+        "prefix_splits": [
+          {
+            "cached_prefix_tokens": 0,
+            "memory_start": 0,
+            "task_id": 40
+          },
+          {
+            "cached_prefix_tokens": 0,
+            "memory_start": 0,
+            "task_id": 41
+          },
+          {
+            "cached_prefix_tokens": 0,
+            "memory_start": 0,
+            "task_id": 42
+          },
+          {
+            "cached_prefix_tokens": 0,
+            "memory_start": 0,
+            "task_id": 43
+          },
+          {
+            "cached_prefix_tokens": 0,
+            "memory_start": 0,
+            "task_id": 44
+          },
+          {
+            "cached_prefix_tokens": 2,
+            "memory_start": 2,
+            "task_id": 45
+          }
+        ],
+        "scope": "Actual task-ID-bound token logs, grouped in serial request order; not inferred from HTTP-field acceptance"
+      },
+      {
+        "completed_prompts": [
+          {
+            "actual_decode_batches": [
+              12
+            ],
+            "evaluated_batch_tokens": 12,
+            "task_id": 52,
+            "total_tokens": 12
+          },
+          {
+            "actual_decode_batches": [
+              19
+            ],
+            "evaluated_batch_tokens": 19,
+            "task_id": 53,
+            "total_tokens": 19
+          },
+          {
+            "actual_decode_batches": [
+              16
+            ],
+            "evaluated_batch_tokens": 16,
+            "task_id": 54,
+            "total_tokens": 16
+          },
+          {
+            "actual_decode_batches": [
+              16
+            ],
+            "evaluated_batch_tokens": 16,
+            "task_id": 55,
+            "total_tokens": 16
+          },
+          {
+            "actual_decode_batches": [
+              13
+            ],
+            "evaluated_batch_tokens": 13,
+            "task_id": 56,
+            "total_tokens": 13
+          },
+          {
+            "actual_decode_batches": [
+              9
+            ],
+            "evaluated_batch_tokens": 9,
+            "task_id": 57,
+            "total_tokens": 11
+          }
+        ],
+        "expected_rows": 6,
+        "input_sha256": "9b9d80f17b799a9c7b96d97965251447b4941fb8d846507f64a2f0b6ea114dae",
+        "name": "own-1",
+        "prefix_splits": [
+          {
+            "cached_prefix_tokens": 0,
+            "memory_start": 0,
+            "task_id": 52
+          },
+          {
+            "cached_prefix_tokens": 0,
+            "memory_start": 0,
+            "task_id": 53
+          },
+          {
+            "cached_prefix_tokens": 0,
+            "memory_start": 0,
+            "task_id": 54
+          },
+          {
+            "cached_prefix_tokens": 0,
+            "memory_start": 0,
+            "task_id": 55
+          },
+          {
+            "cached_prefix_tokens": 0,
+            "memory_start": 0,
+            "task_id": 56
+          },
+          {
+            "cached_prefix_tokens": 2,
+            "memory_start": 2,
+            "task_id": 57
+          }
+        ],
+        "scope": "Actual task-ID-bound token logs, grouped in serial request order; not inferred from HTTP-field acceptance"
+      },
+      {
+        "completed_prompts": [
+          {
+            "actual_decode_batches": [
+              33
+            ],
+            "evaluated_batch_tokens": 33,
+            "task_id": 64,
+            "total_tokens": 33
+          },
+          {
+            "actual_decode_batches": [
+              33
+            ],
+            "evaluated_batch_tokens": 33,
+            "task_id": 65,
+            "total_tokens": 33
+          },
+          {
+            "actual_decode_batches": [
+              34
+            ],
+            "evaluated_batch_tokens": 34,
+            "task_id": 66,
+            "total_tokens": 34
+          },
+          {
+            "actual_decode_batches": [
+              34
+            ],
+            "evaluated_batch_tokens": 34,
+            "task_id": 67,
+            "total_tokens": 34
+          },
+          {
+            "actual_decode_batches": [
+              27
+            ],
+            "evaluated_batch_tokens": 27,
+            "task_id": 68,
+            "total_tokens": 27
+          },
+          {
+            "actual_decode_batches": [
+              30
+            ],
+            "evaluated_batch_tokens": 30,
+            "task_id": 69,
+            "total_tokens": 32
+          }
+        ],
+        "expected_rows": 6,
+        "input_sha256": "0e2ca01cb227de02f8b8bdf851aa47cc61e7f92ccfa26d78241a49ac6e30cf25",
+        "name": "relationship-0",
+        "prefix_splits": [
+          {
+            "cached_prefix_tokens": 0,
+            "memory_start": 0,
+            "task_id": 64
+          },
+          {
+            "cached_prefix_tokens": 0,
+            "memory_start": 0,
+            "task_id": 65
+          },
+          {
+            "cached_prefix_tokens": 0,
+            "memory_start": 0,
+            "task_id": 66
+          },
+          {
+            "cached_prefix_tokens": 0,
+            "memory_start": 0,
+            "task_id": 67
+          },
+          {
+            "cached_prefix_tokens": 0,
+            "memory_start": 0,
+            "task_id": 68
+          },
+          {
+            "cached_prefix_tokens": 2,
+            "memory_start": 2,
+            "task_id": 69
+          }
+        ],
+        "scope": "Actual task-ID-bound token logs, grouped in serial request order; not inferred from HTTP-field acceptance"
+      },
+      {
+        "completed_prompts": [
+          {
+            "actual_decode_batches": [
+              33
+            ],
+            "evaluated_batch_tokens": 33,
+            "task_id": 76,
+            "total_tokens": 33
+          },
+          {
+            "actual_decode_batches": [
+              33
+            ],
+            "evaluated_batch_tokens": 33,
+            "task_id": 77,
+            "total_tokens": 33
+          },
+          {
+            "actual_decode_batches": [
+              34
+            ],
+            "evaluated_batch_tokens": 34,
+            "task_id": 78,
+            "total_tokens": 34
+          },
+          {
+            "actual_decode_batches": [
+              34
+            ],
+            "evaluated_batch_tokens": 34,
+            "task_id": 79,
+            "total_tokens": 34
+          },
+          {
+            "actual_decode_batches": [
+              27
+            ],
+            "evaluated_batch_tokens": 27,
+            "task_id": 80,
+            "total_tokens": 27
+          },
+          {
+            "actual_decode_batches": [
+              30
+            ],
+            "evaluated_batch_tokens": 30,
+            "task_id": 81,
+            "total_tokens": 32
+          }
+        ],
+        "expected_rows": 6,
+        "input_sha256": "0e2ca01cb227de02f8b8bdf851aa47cc61e7f92ccfa26d78241a49ac6e30cf25",
+        "name": "relationship-1",
+        "prefix_splits": [
+          {
+            "cached_prefix_tokens": 0,
+            "memory_start": 0,
+            "task_id": 76
+          },
+          {
+            "cached_prefix_tokens": 0,
+            "memory_start": 0,
+            "task_id": 77
+          },
+          {
+            "cached_prefix_tokens": 0,
+            "memory_start": 0,
+            "task_id": 78
+          },
+          {
+            "cached_prefix_tokens": 0,
+            "memory_start": 0,
+            "task_id": 79
+          },
+          {
+            "cached_prefix_tokens": 0,
+            "memory_start": 0,
+            "task_id": 80
+          },
+          {
+            "cached_prefix_tokens": 2,
+            "memory_start": 2,
+            "task_id": 81
+          }
+        ],
+        "scope": "Actual task-ID-bound token logs, grouped in serial request order; not inferred from HTTP-field acceptance"
+      },
+      {
+        "completed_prompts": [
+          {
+            "actual_decode_batches": [
+              17
+            ],
+            "evaluated_batch_tokens": 17,
+            "task_id": 88,
+            "total_tokens": 17
+          }
+        ],
+        "expected_rows": 1,
+        "input_sha256": "19daa4f80c0a6768cb985ef42753d1da820991fa2c1efa540ea8f291c1f77395",
+        "name": "short",
+        "prefix_splits": [
+          {
+            "cached_prefix_tokens": 0,
+            "memory_start": 0,
+            "task_id": 88
+          }
+        ],
+        "scope": "Actual task-ID-bound token logs, grouped in serial request order; not inferred from HTTP-field acceptance"
+      },
+      {
+        "completed_prompts": [
+          {
+            "actual_decode_batches": [
+              7
+            ],
+            "evaluated_batch_tokens": 7,
+            "task_id": 93,
+            "total_tokens": 9
+          }
+        ],
+        "expected_rows": 1,
+        "input_sha256": "629a5b40a36f89f12b57814372529d64e625643b1fa1265d1cf00770ddafb44a",
+        "name": "unknown-model",
+        "prefix_splits": [
+          {
+            "cached_prefix_tokens": 2,
+            "memory_start": 2,
+            "task_id": 93
+          }
+        ],
+        "scope": "Actual task-ID-bound token logs, grouped in serial request order; not inferred from HTTP-field acceptance"
+      },
+      {
+        "completed_prompts": [
+          {
+            "actual_decode_batches": [
+              1
+            ],
+            "evaluated_batch_tokens": 1,
+            "task_id": 95,
+            "total_tokens": 9
+          }
+        ],
+        "expected_rows": 1,
+        "input_sha256": "629a5b40a36f89f12b57814372529d64e625643b1fa1265d1cf00770ddafb44a",
+        "name": "known-single",
+        "prefix_splits": [
+          {
+            "cached_prefix_tokens": 8,
+            "memory_start": 8,
+            "task_id": 95
+          }
+        ],
+        "scope": "Actual task-ID-bound token logs, grouped in serial request order; not inferred from HTTP-field acceptance"
+      },
+      {
+        "completed_prompts": [
+          {
+            "actual_decode_batches": [
+              5
+            ],
+            "evaluated_batch_tokens": 5,
+            "task_id": 97,
+            "total_tokens": 7
+          }
+        ],
+        "expected_rows": 1,
+        "input_sha256": "64bca61363f233e9192b97035c9f2e5bfbd8f2033462005c76479fd40c0378e9",
+        "name": "batch-1",
+        "prefix_splits": [
+          {
+            "cached_prefix_tokens": 2,
+            "memory_start": 2,
+            "task_id": 97
+          }
+        ],
+        "scope": "Actual task-ID-bound token logs, grouped in serial request order; not inferred from HTTP-field acceptance"
+      },
+      {
+        "completed_prompts": [
+          {
+            "actual_decode_batches": [
+              1
+            ],
+            "evaluated_batch_tokens": 1,
+            "task_id": 99,
+            "total_tokens": 7
+          },
+          {
+            "actual_decode_batches": [
+              2
+            ],
+            "evaluated_batch_tokens": 2,
+            "task_id": 100,
+            "total_tokens": 7
+          },
+          {
+            "actual_decode_batches": [
+              2
+            ],
+            "evaluated_batch_tokens": 2,
+            "task_id": 101,
+            "total_tokens": 7
+          },
+          {
+            "actual_decode_batches": [
+              2
+            ],
+            "evaluated_batch_tokens": 2,
+            "task_id": 102,
+            "total_tokens": 7
+          }
+        ],
+        "expected_rows": 4,
+        "input_sha256": "a6790f7e651f2c9264b1455b82ebe4ec0267295f2d37f4901e9025e9d0e355c8",
+        "name": "batch-4",
+        "prefix_splits": [
+          {
+            "cached_prefix_tokens": 6,
+            "memory_start": 6,
+            "task_id": 99
+          },
+          {
+            "cached_prefix_tokens": 5,
+            "memory_start": 5,
+            "task_id": 100
+          },
+          {
+            "cached_prefix_tokens": 5,
+            "memory_start": 5,
+            "task_id": 101
+          },
+          {
+            "cached_prefix_tokens": 5,
+            "memory_start": 5,
+            "task_id": 102
+          }
+        ],
+        "scope": "Actual task-ID-bound token logs, grouped in serial request order; not inferred from HTTP-field acceptance"
+      },
+      {
+        "completed_prompts": [
+          {
+            "actual_decode_batches": [
+              2
+            ],
+            "evaluated_batch_tokens": 2,
+            "task_id": 107,
+            "total_tokens": 7
+          },
+          {
+            "actual_decode_batches": [
+              2
+            ],
+            "evaluated_batch_tokens": 2,
+            "task_id": 108,
+            "total_tokens": 7
+          },
+          {
+            "actual_decode_batches": [
+              2
+            ],
+            "evaluated_batch_tokens": 2,
+            "task_id": 109,
+            "total_tokens": 7
+          },
+          {
+            "actual_decode_batches": [
+              2
+            ],
+            "evaluated_batch_tokens": 2,
+            "task_id": 110,
+            "total_tokens": 7
+          },
+          {
+            "actual_decode_batches": [
+              2
+            ],
+            "evaluated_batch_tokens": 2,
+            "task_id": 111,
+            "total_tokens": 7
+          },
+          {
+            "actual_decode_batches": [
+              2
+            ],
+            "evaluated_batch_tokens": 2,
+            "task_id": 112,
+            "total_tokens": 7
+          },
+          {
+            "actual_decode_batches": [
+              2
+            ],
+            "evaluated_batch_tokens": 2,
+            "task_id": 113,
+            "total_tokens": 7
+          },
+          {
+            "actual_decode_batches": [
+              2
+            ],
+            "evaluated_batch_tokens": 2,
+            "task_id": 114,
+            "total_tokens": 7
+          }
+        ],
+        "expected_rows": 8,
+        "input_sha256": "8b3656c4b3a0b1ae30236d6e61c9daacd87863dbd8c3735f60549cf8d5bb9cd5",
+        "name": "batch-8",
+        "prefix_splits": [
+          {
+            "cached_prefix_tokens": 5,
+            "memory_start": 5,
+            "task_id": 107
+          },
+          {
+            "cached_prefix_tokens": 5,
+            "memory_start": 5,
+            "task_id": 108
+          },
+          {
+            "cached_prefix_tokens": 5,
+            "memory_start": 5,
+            "task_id": 109
+          },
+          {
+            "cached_prefix_tokens": 5,
+            "memory_start": 5,
+            "task_id": 110
+          },
+          {
+            "cached_prefix_tokens": 5,
+            "memory_start": 5,
+            "task_id": 111
+          },
+          {
+            "cached_prefix_tokens": 5,
+            "memory_start": 5,
+            "task_id": 112
+          },
+          {
+            "cached_prefix_tokens": 5,
+            "memory_start": 5,
+            "task_id": 113
+          },
+          {
+            "cached_prefix_tokens": 5,
+            "memory_start": 5,
+            "task_id": 114
+          }
+        ],
+        "scope": "Actual task-ID-bound token logs, grouped in serial request order; not inferred from HTTP-field acceptance"
+      },
+      {
+        "completed_prompts": [
+          {
+            "actual_decode_batches": [
+              2
+            ],
+            "evaluated_batch_tokens": 2,
+            "task_id": 123,
+            "total_tokens": 7
+          },
+          {
+            "actual_decode_batches": [
+              2
+            ],
+            "evaluated_batch_tokens": 2,
+            "task_id": 124,
+            "total_tokens": 7
+          },
+          {
+            "actual_decode_batches": [
+              2
+            ],
+            "evaluated_batch_tokens": 2,
+            "task_id": 125,
+            "total_tokens": 7
+          },
+          {
+            "actual_decode_batches": [
+              2
+            ],
+            "evaluated_batch_tokens": 2,
+            "task_id": 126,
+            "total_tokens": 7
+          },
+          {
+            "actual_decode_batches": [
+              2
+            ],
+            "evaluated_batch_tokens": 2,
+            "task_id": 127,
+            "total_tokens": 7
+          },
+          {
+            "actual_decode_batches": [
+              2
+            ],
+            "evaluated_batch_tokens": 2,
+            "task_id": 128,
+            "total_tokens": 7
+          },
+          {
+            "actual_decode_batches": [
+              2
+            ],
+            "evaluated_batch_tokens": 2,
+            "task_id": 129,
+            "total_tokens": 7
+          },
+          {
+            "actual_decode_batches": [
+              2
+            ],
+            "evaluated_batch_tokens": 2,
+            "task_id": 130,
+            "total_tokens": 7
+          },
+          {
+            "actual_decode_batches": [
+              2
+            ],
+            "evaluated_batch_tokens": 2,
+            "task_id": 131,
+            "total_tokens": 7
+          }
+        ],
+        "expected_rows": 9,
+        "input_sha256": "e182b7a36acb3e7374465b6b13d336909dc8e2292bc40d8bcfbde6614ca1bf97",
+        "name": "batch-9",
+        "prefix_splits": [
+          {
+            "cached_prefix_tokens": 5,
+            "memory_start": 5,
+            "task_id": 123
+          },
+          {
+            "cached_prefix_tokens": 5,
+            "memory_start": 5,
+            "task_id": 124
+          },
+          {
+            "cached_prefix_tokens": 5,
+            "memory_start": 5,
+            "task_id": 125
+          },
+          {
+            "cached_prefix_tokens": 5,
+            "memory_start": 5,
+            "task_id": 126
+          },
+          {
+            "cached_prefix_tokens": 5,
+            "memory_start": 5,
+            "task_id": 127
+          },
+          {
+            "cached_prefix_tokens": 5,
+            "memory_start": 5,
+            "task_id": 128
+          },
+          {
+            "cached_prefix_tokens": 5,
+            "memory_start": 5,
+            "task_id": 129
+          },
+          {
+            "cached_prefix_tokens": 5,
+            "memory_start": 5,
+            "task_id": 130
+          },
+          {
+            "cached_prefix_tokens": 5,
+            "memory_start": 5,
+            "task_id": 131
+          }
+        ],
+        "scope": "Actual task-ID-bound token logs, grouped in serial request order; not inferred from HTTP-field acceptance"
+      }
+    ],
+    "scope": "Reference embedding source does not parse cache_prompt; field deliberately absent on both servers. RAM cache disabled does not disable slot-local reuse. Actual prefix/evaluated-token logs define upstream behavior independently.",
+    "slot_prefix_reuse_observed": true,
+    "successful_embedding_rows": 69
+  },
+  "costs": {
+    "own_fill_tokens": {
+      "prompt_tokens": 87,
+      "total_tokens": 87
+    },
+    "own_six_document_fill_seconds": 0.3610504579846747,
+    "performance_acceptance": false,
+    "probe_fraction_of_tiny_own_fill": 0.437455322885839,
+    "probe_mean_seconds": 0.15794344467576593,
+    "probe_tokens": {
+      "prompt_tokens": 42,
+      "total_tokens": 42
+    },
+    "relationship_fill_tokens": {
+      "prompt_tokens": 193,
+      "total_tokens": 193
+    },
+    "relationship_six_document_fill_seconds": 0.3736789579852484,
+    "startup_seconds": 1.0558728339965455
+  },
+  "identity": {
+    "catalog": [
+      "qwen3-embedding-8b-q8_0-d20ddc71e8a5"
+    ],
+    "dimension": 4096,
+    "identity_authority": "Owned launch + exact weight/binary/observed dependency closure; not response model echo",
+    "metadata_unknown_refusal": "model-not-in-independent-metadata",
+    "observed_closure_sha256": "53cd979703e2ba2182f36bc6be33be6f247ecccd562876afc338896e8a4c0c65",
+    "same_document_query_model": true,
+    "unknown_alias_http": 200,
+    "unknown_alias_in_catalog": false,
+    "unknown_alias_is_identity_proof": false,
+    "unknown_alias_vector_comparison": {
+      "dimension": 4096,
+      "exact_coordinates_equal": false,
+      "max_abs_coordinate": 4.589557647705078e-06,
+      "max_cosine_distance": 9.390153099531062e-10,
+      "rows": 1
+    }
+  },
+  "kind": "upstream",
+  "launch": 1,
+  "limits": {
+    "batch_statuses": {
+      "1": 200,
+      "4": 200,
+      "8": 200,
+      "9": 200
+    },
+    "empty_input_status": 500,
+    "invalid_input_status": 500,
+    "maintenance_policy": {
+      "aggregate_would_refuse": "maintenance-aggregate-token-limit",
+      "evidence_class": "Offline draft policy using actual tokenizer; would refuse, not an implemented AM client or blocked request",
+      "large_aggregate_embedding_request_sent": false,
+      "nine_input_embedding_request_sent": true,
+      "nine_inputs_would_refuse": "maintenance-batch-input-limit",
+      "two_input_aggregate_tokens": 8322
+    },
+    "over_context_refused": true,
+    "scope": "Observed short batches and one over-context input; no maximum-batch or universal no-truncation proof",
+    "token_counts": {
+      "aggregate_budget": 4161,
+      "over_context": 8265,
+      "short": 17
+    }
+  },
+  "own_to_relationship": {
+    "ranks": {
+      "changed_query_orders": 4,
+      "changed_top1": 0,
+      "max_rank_displacement": 4,
+      "max_score_drift": 0.3912637422761761
+    },
+    "repeated_ranks": {
+      "own": {
+        "changed_query_orders": 0,
+        "changed_top1": 0,
+        "max_rank_displacement": 0,
+        "max_score_drift": 0.0
+      },
+      "relationship": {
+        "changed_query_orders": 0,
+        "changed_top1": 0,
+        "max_rank_displacement": 0,
+        "max_score_drift": 0.0
+      }
+    },
+    "vectors": {
+      "dimension": 4096,
+      "exact_coordinates_equal": false,
+      "max_abs_coordinate": 0.07355771958827972,
+      "max_cosine_distance": 0.25703618946818574,
+      "rows": 6
+    }
+  },
+  "path": "upstream-cold-1",
+  "rankings": {
+    "own": [
+      {
+        "expected_rank": 1,
+        "expected_synthetic": "retry",
+        "order": [
+          "retry",
+          "deletion",
+          "pagination",
+          "publication",
+          "unrelated",
+          "orientation"
+        ],
+        "query_sha256": "1ab5db450107bcd13c25e966832c83ad28eda2c2df755fd0afcb7e35f47143f6",
+        "reciprocal_rank": 1.0,
+        "scores": {
+          "deletion": 0.36683850180142485,
+          "orientation": 0.19218775323434137,
+          "pagination": 0.28496807365374716,
+          "publication": 0.248811308795008,
+          "retry": 0.7072945402154653,
+          "unrelated": 0.20142228958968317
+        }
+      },
+      {
+        "expected_rank": 1,
+        "expected_synthetic": "pagination",
+        "order": [
+          "pagination",
+          "deletion",
+          "publication",
+          "orientation",
+          "retry",
+          "unrelated"
+        ],
+        "query_sha256": "ea5217cf113303746840813985e5ed703d953cc901aab88c24d0c4f270b98713",
+        "reciprocal_rank": 1.0,
+        "scores": {
+          "deletion": 0.31545035252894416,
+          "orientation": 0.2347313762168047,
+          "pagination": 0.6364184185222068,
+          "publication": 0.2776700791264397,
+          "retry": 0.181749921036417,
+          "unrelated": 0.1466570215055848
+        }
+      },
+      {
+        "expected_rank": 1,
+        "expected_synthetic": "publication",
+        "order": [
+          "publication",
+          "deletion",
+          "orientation",
+          "pagination",
+          "retry",
+          "unrelated"
+        ],
+        "query_sha256": "3707b69efa2444d6e70c818d919848fcd2cee0643c2642a466444416a50d5868",
+        "reciprocal_rank": 1.0,
+        "scores": {
+          "deletion": 0.3951729795050154,
+          "orientation": 0.267440707041168,
+          "pagination": 0.25027186083214636,
+          "publication": 0.4977003096478404,
+          "retry": 0.20956213207073493,
+          "unrelated": 0.19731619885337867
+        }
+      },
+      {
+        "expected_rank": 1,
+        "expected_synthetic": "deletion",
+        "order": [
+          "deletion",
+          "publication",
+          "retry",
+          "pagination",
+          "unrelated",
+          "orientation"
+        ],
+        "query_sha256": "0e04aa426545a7cfea41c917741d3a19e8d1b08227d5c640ddd632b867950134",
+        "reciprocal_rank": 1.0,
+        "scores": {
+          "deletion": 0.4398520466631463,
+          "orientation": 0.18889401560399088,
+          "pagination": 0.1966411653125215,
+          "publication": 0.24139850014196865,
+          "retry": 0.20699514481152712,
+          "unrelated": 0.19397482102160857
+        }
+      }
+    ],
+    "relationship": [
+      {
+        "expected_rank": 1,
+        "expected_synthetic": "retry",
+        "order": [
+          "retry",
+          "orientation",
+          "pagination",
+          "unrelated",
+          "deletion",
+          "publication"
+        ],
+        "query_sha256": "1ab5db450107bcd13c25e966832c83ad28eda2c2df755fd0afcb7e35f47143f6",
+        "reciprocal_rank": 1.0,
+        "scores": {
+          "deletion": 0.3219289933222297,
+          "orientation": 0.5834514955105174,
+          "pagination": 0.5526314846976176,
+          "publication": 0.31543071826734287,
+          "retry": 0.6850576062510564,
+          "unrelated": 0.32698784428639815
+        }
+      },
+      {
+        "expected_rank": 1,
+        "expected_synthetic": "pagination",
+        "order": [
+          "pagination",
+          "unrelated",
+          "retry",
+          "publication",
+          "deletion",
+          "orientation"
+        ],
+        "query_sha256": "ea5217cf113303746840813985e5ed703d953cc901aab88c24d0c4f270b98713",
+        "reciprocal_rank": 1.0,
+        "scores": {
+          "deletion": 0.30946717315717714,
+          "orientation": 0.2766297276421598,
+          "pagination": 0.58948364421339,
+          "publication": 0.3110191305670737,
+          "retry": 0.4914184527395583,
+          "unrelated": 0.5221980493250266
+        }
+      },
+      {
+        "expected_rank": 1,
+        "expected_synthetic": "publication",
+        "order": [
+          "publication",
+          "deletion",
+          "orientation",
+          "unrelated",
+          "pagination",
+          "retry"
+        ],
+        "query_sha256": "3707b69efa2444d6e70c818d919848fcd2cee0643c2642a466444416a50d5868",
+        "reciprocal_rank": 1.0,
+        "scores": {
+          "deletion": 0.5018396746044315,
+          "orientation": 0.3070895285029868,
+          "pagination": 0.26860904164473304,
+          "publication": 0.515527838721988,
+          "retry": 0.262834536740055,
+          "unrelated": 0.30112779441273324
+        }
+      },
+      {
+        "expected_rank": 1,
+        "expected_synthetic": "deletion",
+        "order": [
+          "deletion",
+          "publication",
+          "unrelated",
+          "orientation",
+          "retry",
+          "pagination"
+        ],
+        "query_sha256": "0e04aa426545a7cfea41c917741d3a19e8d1b08227d5c640ddd632b867950134",
+        "reciprocal_rank": 1.0,
+        "scores": {
+          "deletion": 0.39446832028435885,
+          "orientation": 0.27446579770208374,
+          "pagination": 0.24691442932460958,
+          "publication": 0.37036696995999624,
+          "retry": 0.25756609701233446,
+          "unrelated": 0.28352289444102935
+        }
+      }
+    ]
+  },
+  "repeated": {
+    "own": [
+      {
+        "dimension": 4096,
+        "exact_coordinates_equal": true,
+        "max_abs_coordinate": 0.0,
+        "max_cosine_distance": 0.0,
+        "rows": 6
+      }
+    ],
+    "probes": [
+      {
+        "dimension": 4096,
+        "exact_coordinates_equal": false,
+        "max_abs_coordinate": 0.00012361444532871246,
+        "max_cosine_distance": 3.6924480295574824e-07,
+        "rows": 4
+      },
+      {
+        "dimension": 4096,
+        "exact_coordinates_equal": false,
+        "max_abs_coordinate": 0.00012361444532871246,
+        "max_cosine_distance": 3.6924480295574824e-07,
+        "rows": 4
+      }
+    ],
+    "queries": [
+      {
+        "dimension": 4096,
+        "exact_coordinates_equal": true,
+        "max_abs_coordinate": 0.0,
+        "max_cosine_distance": 0.0,
+        "rows": 4
+      }
+    ],
+    "relationship": [
+      {
+        "dimension": 4096,
+        "exact_coordinates_equal": true,
+        "max_abs_coordinate": 0.0,
+        "max_cosine_distance": 0.0,
+        "rows": 6
+      }
+    ]
+  },
+  "responses": {
+    "batch-1": {
+      "error": null,
+      "indices": [
+        0
+      ],
+      "model": "qwen3-embedding-8b-q8_0-d20ddc71e8a5",
+      "response_bytes": 88068,
+      "response_sha256": "f309e3bb8f38d78eff7700550238e274aeb46aa997d52c8a14a471d7bc808a57",
+      "seconds": 0.027721374994143844,
+      "status": 200,
+      "usage": {
+        "prompt_tokens": 7,
+        "total_tokens": 7
+      }
+    },
+    "batch-4": {
+      "error": null,
+      "indices": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "model": "qwen3-embedding-8b-q8_0-d20ddc71e8a5",
+      "response_bytes": 352044,
+      "response_sha256": "9786d3c9951dee300265dbb497419eba71f6ee68a4e12b26c380c4c7c54640c7",
+      "seconds": 0.08594754099613056,
+      "status": 200,
+      "usage": {
+        "prompt_tokens": 28,
+        "total_tokens": 28
+      }
+    },
+    "batch-8": {
+      "error": null,
+      "indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "model": "qwen3-embedding-8b-q8_0-d20ddc71e8a5",
+      "response_bytes": 703896,
+      "response_sha256": "abc9717c70cd44de09e8f27b375fa483ada990b1b63ff104f2829da9d6c07ffc",
+      "seconds": 0.16328304196940735,
+      "status": 200,
+      "usage": {
+        "prompt_tokens": 56,
+        "total_tokens": 56
+      }
+    },
+    "batch-9": {
+      "error": null,
+      "indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "model": "qwen3-embedding-8b-q8_0-d20ddc71e8a5",
+      "response_bytes": 791845,
+      "response_sha256": "a29c37ac6276f97c0a2b24d6297825f8a6d7ce40a4aedd83036e3b5ed1cf8d32",
+      "seconds": 0.1809318329906091,
+      "status": 200,
+      "usage": {
+        "prompt_tokens": 63,
+        "total_tokens": 63
+      }
+    },
+    "empty-input": {
+      "error": {
+        "code": 500,
+        "message": "\"prompt\" must not be empty",
+        "type": "server_error"
+      },
+      "indices": [],
+      "model": null,
+      "response_bytes": 85,
+      "response_sha256": "8fb89c8161aa96cee2e0a56fe93656f37cdcc789759fd459a458cf112b9cf170",
+      "seconds": 0.0041939999791793525,
+      "status": 500,
+      "usage": null
+    },
+    "invalid-input": {
+      "error": {
+        "code": 500,
+        "message": "\"prompt\" elements must be a string, a list of tokens, a JSON object containing a prompt string, or a list of mixed strings & tokens.",
+        "type": "server_error"
+      },
+      "indices": [],
+      "model": null,
+      "response_bytes": 191,
+      "response_sha256": "775e4c305a7d09cb46c9c8e3ad6733ea42e4c05db2a74ff615ee9d5bf9e7f0ab",
+      "seconds": 0.004081375023815781,
+      "status": 500,
+      "usage": null
+    },
+    "known-single": {
+      "error": null,
+      "indices": [
+        0
+      ],
+      "model": "qwen3-embedding-8b-q8_0-d20ddc71e8a5",
+      "response_bytes": 88146,
+      "response_sha256": "43497d8e6f42bc6e84d380abc774e167a0e553847409f80e9915565d35459afb",
+      "seconds": 0.024478834006004035,
+      "status": 200,
+      "usage": {
+        "prompt_tokens": 9,
+        "total_tokens": 9
+      }
+    },
+    "models": {
+      "error": null,
+      "indices": [
+        null
+      ],
+      "model": null,
+      "response_bytes": 674,
+      "response_sha256": "2e083fa705329142a75e7773ee01ed8aa9ed1d5c7b897d1292b578dadbd39ade",
+      "seconds": 0.004153290996327996,
+      "status": 200,
+      "usage": null
+    },
+    "over-context": {
+      "error": {
+        "code": 400,
+        "message": "request (8265 tokens) exceeds the available context size (8192 tokens), try increasing it",
+        "n_ctx": 8192,
+        "n_prompt_tokens": 8265,
+        "type": "exceed_context_size_error"
+      },
+      "indices": [],
+      "model": null,
+      "response_bytes": 195,
+      "response_sha256": "77c119dd82048d38fec651284907fa86f3441063748074a8502e1506efd0bc15",
+      "seconds": 0.015319124970119447,
+      "status": 400,
+      "usage": null
+    },
+    "own-0": {
+      "error": null,
+      "indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "model": "qwen3-embedding-8b-q8_0-d20ddc71e8a5",
+      "response_bytes": 528195,
+      "response_sha256": "b1e8b06c4e71859438c9057d78c8bbce79b6a36ba654824d5619588b26abca1e",
+      "seconds": 0.3610504579846747,
+      "status": 200,
+      "usage": {
+        "prompt_tokens": 87,
+        "total_tokens": 87
+      }
+    },
+    "own-1": {
+      "error": null,
+      "indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "model": "qwen3-embedding-8b-q8_0-d20ddc71e8a5",
+      "response_bytes": 528195,
+      "response_sha256": "b1e8b06c4e71859438c9057d78c8bbce79b6a36ba654824d5619588b26abca1e",
+      "seconds": 0.3602794170146808,
+      "status": 200,
+      "usage": {
+        "prompt_tokens": 87,
+        "total_tokens": 87
+      }
+    },
+    "probes-0": {
+      "error": null,
+      "indices": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "model": "qwen3-embedding-8b-q8_0-d20ddc71e8a5",
+      "response_bytes": 352176,
+      "response_sha256": "1c5e829eea1525bbb9e458bc6f92b918888338a3626c58a670934309900fde29",
+      "seconds": 0.18166724999900907,
+      "status": 200,
+      "usage": {
+        "prompt_tokens": 42,
+        "total_tokens": 42
+      }
+    },
+    "probes-1": {
+      "error": null,
+      "indices": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "model": "qwen3-embedding-8b-q8_0-d20ddc71e8a5",
+      "response_bytes": 352134,
+      "response_sha256": "0759125cdf6d5fc3d7b3c424f7746f4dee6fda02fb6a483860a22ca651d51454",
+      "seconds": 0.1465019999886863,
+      "status": 200,
+      "usage": {
+        "prompt_tokens": 42,
+        "total_tokens": 42
+      }
+    },
+    "probes-2": {
+      "error": null,
+      "indices": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "model": "qwen3-embedding-8b-q8_0-d20ddc71e8a5",
+      "response_bytes": 352134,
+      "response_sha256": "0759125cdf6d5fc3d7b3c424f7746f4dee6fda02fb6a483860a22ca651d51454",
+      "seconds": 0.14566108403960243,
+      "status": 200,
+      "usage": {
+        "prompt_tokens": 42,
+        "total_tokens": 42
+      }
+    },
+    "props": {
+      "error": null,
+      "indices": [],
+      "model": null,
+      "response_bytes": 4327,
+      "response_sha256": "fe61dad7ac730cd10bc36c788fc5ed5edbd9dcfb3910c42ee959ef7a1f53196e",
+      "seconds": 0.0042027090094052255,
+      "status": 200,
+      "usage": null
+    },
+    "queries-0": {
+      "error": null,
+      "indices": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "model": "qwen3-embedding-8b-q8_0-d20ddc71e8a5",
+      "response_bytes": 352081,
+      "response_sha256": "74128f89f1cb52785bcab1dca2edc4699b07db4953c69608419a9d0ef887710e",
+      "seconds": 0.24441375001333654,
+      "status": 200,
+      "usage": {
+        "prompt_tokens": 100,
+        "total_tokens": 100
+      }
+    },
+    "queries-1": {
+      "error": null,
+      "indices": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "model": "qwen3-embedding-8b-q8_0-d20ddc71e8a5",
+      "response_bytes": 352081,
+      "response_sha256": "74128f89f1cb52785bcab1dca2edc4699b07db4953c69608419a9d0ef887710e",
+      "seconds": 0.2415892919525504,
+      "status": 200,
+      "usage": {
+        "prompt_tokens": 100,
+        "total_tokens": 100
+      }
+    },
+    "relationship-0": {
+      "error": null,
+      "indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "model": "qwen3-embedding-8b-q8_0-d20ddc71e8a5",
+      "response_bytes": 528048,
+      "response_sha256": "37f595eb392e426c776cdefdc1296d4ec8f1d1837cdd641e1b83f704b1995859",
+      "seconds": 0.3736789579852484,
+      "status": 200,
+      "usage": {
+        "prompt_tokens": 193,
+        "total_tokens": 193
+      }
+    },
+    "relationship-1": {
+      "error": null,
+      "indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "model": "qwen3-embedding-8b-q8_0-d20ddc71e8a5",
+      "response_bytes": 528048,
+      "response_sha256": "37f595eb392e426c776cdefdc1296d4ec8f1d1837cdd641e1b83f704b1995859",
+      "seconds": 0.3699832080164924,
+      "status": 200,
+      "usage": {
+        "prompt_tokens": 193,
+        "total_tokens": 193
+      }
+    },
+    "short": {
+      "error": null,
+      "indices": [
+        0
+      ],
+      "model": "qwen3-embedding-8b-q8_0-d20ddc71e8a5",
+      "response_bytes": 88103,
+      "response_sha256": "8381d120c53e10b2adda7606fc89e02e9ac107ca8272d2f87354915fe171c85e",
+      "seconds": 0.06452966597862542,
+      "status": 200,
+      "usage": {
+        "prompt_tokens": 17,
+        "total_tokens": 17
+      }
+    },
+    "tokenize-aggregate_budget": {
+      "error": null,
+      "indices": [],
+      "model": null,
+      "response_bytes": 24979,
+      "response_sha256": "5004ed0364b982d0d6044427229cfe3350d9f780d0f2f67ca7fa316224fce2b7",
+      "seconds": 0.014258792041800916,
+      "status": 200,
+      "usage": null
+    },
+    "tokenize-over_context": {
+      "error": null,
+      "indices": [],
+      "model": null,
+      "response_bytes": 49590,
+      "response_sha256": "aaf6e5a5e4297ba02feccf0b90d679e42f1a0f14033464806a5dc8820c32cf45",
+      "seconds": 0.01568179199239239,
+      "status": 200,
+      "usage": null
+    },
+    "tokenize-short": {
+      "error": null,
+      "indices": [],
+      "model": null,
+      "response_bytes": 94,
+      "response_sha256": "abcacc5e6a2523ef1c7a663edf6095cfcbd9b507fa44e493a77c59f45e1713ed",
+      "seconds": 0.004183375043794513,
+      "status": 200,
+      "usage": null
+    },
+    "unknown-model": {
+      "error": null,
+      "indices": [
+        0
+      ],
+      "model": "am255-synthetic-unknown-weight-alias",
+      "response_bytes": 88115,
+      "response_sha256": "654e8c89413ecd71f7a25aa877dd7ace550231eda43519a026cff981507880ed",
+      "seconds": 0.03136379201896489,
+      "status": 200,
+      "usage": {
+        "prompt_tokens": 9,
+        "total_tokens": 9
+      }
+    }
+  }
+}

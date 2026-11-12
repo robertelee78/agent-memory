@@ -1,0 +1,182 @@
+{
+  "schema": "agent-memory/private-readable-bank-modes-scoped-proof-v1",
+  "scope": "Public refresh-current consumer regression and four focusedactualworkers perrecordedcell; NOT fullcorrectedsource/platform/latency/performance/native/semantic/release acceptance",
+  "pre_fix_commit": "78841456366df2874d8930e9c0320e301b66f3d8",
+  "pre_fix_runtime_source_sha256": "3186c22f48b5fa8aea378a19c8c7ab48694de88315058d995637f6e867c613a9",
+  "corrected_Main_runtime_input_sha256": "124f13caec6a720458e3fdd6d52128589ad33f60f87b6867b9cc5d6141c8e269",
+  "corrected_source_sha256": {
+    "skills/agent-memory/scripts/agent_memory/memory_refresh.py": "a9f0d71d4e634f62878f3f635c949a5dee94019c03a1d74b9c2f5cee399343b1",
+    "tests/contracts/test_memory_refresh.py": "bd322991b481d62eb6c6e5eb95314042103ef18ea20b8ba3c490c030f3951f8c",
+    "tests/contracts.json": "0dace6c3f56be8c9764a428b6da84074e629cefcfc64858de204a3a4fbb9bf2b"
+  },
+  "before_public_probe": {
+    "host": "Owned Ubuntu24.04.5 aarch64 Lima, Python3.11.18",
+    "source_root_kind": "Unchanged frozen788C",
+    "raw_sha256": "2390b7817a2d2e03db388f0fd4985a7ba620373d2c6f503946678b8b91405e92",
+    "rows": [
+      {
+        "requested_mode": "0o600",
+        "returncode": 1,
+        "bank_feature_index_HEAD_branch_preserved": true,
+        "modes_preserved": true
+      },
+      {
+        "requested_mode": "0o644",
+        "returncode": 0,
+        "bank_feature_index_HEAD_branch_preserved": true,
+        "modes_preserved": true
+      }
+    ]
+  },
+  "after_public_probe": {
+    "host": "Same actual Linux/Python3.11 cell",
+    "source_root_kind": "New diagnostic-only independentGitclone withthreeexactchangedfiles; not frozen candidate or qualificationretry",
+    "raw_sha256": "a6c4fb46cddf8272d197fff48ed514b8439aa9f1fcd81c300816a3595f04528d",
+    "rows": [
+      {
+        "requested_mode": "0o600",
+        "returncode": 0,
+        "bank_feature_index_HEAD_branch_preserved": true,
+        "modes_preserved": true
+      },
+      {
+        "requested_mode": "0o644",
+        "returncode": 0,
+        "bank_feature_index_HEAD_branch_preserved": true,
+        "modes_preserved": true
+      }
+    ]
+  },
+  "focused_contracts": {
+    "macOS/Python3.15": {
+      "source_root_kind": "Actual dirtyintegrationtree withreviewedfix",
+      "raw_sha256": "9abf4602302e487eaaa92db15d68547e1ed6a4dd2dcda9db90ed33983a0ab137",
+      "original_worker_bound_seconds": 300,
+      "workers": [
+        {
+          "registered_suite": "memory-refresh-current-preserves-private-and-read-only-bank-permissions",
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "passed": true,
+          "executed_cases": [
+            "contract_suite.MemoryRefreshContract.test_current_preserves_private_and_read_only_bank_permissions"
+          ]
+        },
+        {
+          "registered_suite": "memory-refresh-current-rejects-executable-and-world-writable-bank-files",
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "passed": true,
+          "executed_cases": [
+            "contract_suite.MemoryRefreshContract.test_current_rejects_executable_and_world_writable_bank_files"
+          ]
+        },
+        {
+          "registered_suite": "memory-refresh-current-succeeds-with-group-writable-umask-for-new-runtime-state",
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "passed": true,
+          "executed_cases": [
+            "contract_suite.MemoryRefreshContract.test_current_succeeds_with_group_writable_umask_for_new_runtime_state"
+          ]
+        },
+        {
+          "registered_suite": "memory-refresh-current-refuses-local-and-authority-changes-at-final-recheck",
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "passed": true,
+          "executed_cases": [
+            "contract_suite.MemoryRefreshContract.test_current_refuses_local_and_authority_changes_at_final_recheck"
+          ]
+        }
+      ]
+    },
+    "Linux/Python3.11": {
+      "source_root_kind": "Explicitnewdiagnosticclone+samechangedfiles",
+      "raw_sha256": "5423e36aaaa560cca6c826d91839ac9da6abbac832d5c2d6e0ffd6f496153b65",
+      "original_worker_bound_seconds": 300,
+      "workers": [
+        {
+          "registered_suite": "memory-refresh-current-preserves-private-and-read-only-bank-permissions",
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "passed": true,
+          "executed_cases": [
+            "contract_suite.MemoryRefreshContract.test_current_preserves_private_and_read_only_bank_permissions"
+          ]
+        },
+        {
+          "registered_suite": "memory-refresh-current-rejects-executable-and-world-writable-bank-files",
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "passed": true,
+          "executed_cases": [
+            "contract_suite.MemoryRefreshContract.test_current_rejects_executable_and_world_writable_bank_files"
+          ]
+        },
+        {
+          "registered_suite": "memory-refresh-current-succeeds-with-group-writable-umask-for-new-runtime-state",
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "passed": true,
+          "executed_cases": [
+            "contract_suite.MemoryRefreshContract.test_current_succeeds_with_group_writable_umask_for_new_runtime_state"
+          ]
+        },
+        {
+          "registered_suite": "memory-refresh-current-refuses-local-and-authority-changes-at-final-recheck",
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "passed": true,
+          "executed_cases": [
+            "contract_suite.MemoryRefreshContract.test_current_refuses_local_and_authority_changes_at_final_recheck"
+          ]
+        }
+      ]
+    }
+  },
+  "original_qualification_negatives": {
+    "macOS/Python3.15": {
+      "required_rows": 30,
+      "attempted_rows": 30,
+      "failed_rows": 4,
+      "source_preserved": true,
+      "unsafe_cleanup_labels": [],
+      "postphase_G1_dependency_drift": []
+    },
+    "Linux/Python3.11": {
+      "required_rows": 30,
+      "attempted_rows": 30,
+      "failed_rows": 4,
+      "source_preserved": true,
+      "unsafe_cleanup_labels": [],
+      "postphase_supplemental_drift": []
+    }
+  },
+  "unchanged_guards": [
+    "actualbank/sourceobservations",
+    "before-and-final on-diskmode comparison",
+    "GitHEAD/indexordinary100644entries",
+    "symlink/nonregularrefusal",
+    "executable/world-write/specialpermissionrefusal",
+    "feature/index/HEAD/branchpreservation"
+  ],
+  "all_other_platform_cases_faults_deadlines": "Unchanged and still required; no original method removed or oldnegative relabeled",
+  "overall_acceptance": false
+}

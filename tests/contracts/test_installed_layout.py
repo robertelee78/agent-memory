@@ -1,9 +1,13 @@
 """Integrated installed lifecycle and storage boundaries through real commands."""
+import hashlib
 import json
+import os
+import stat
 from pathlib import Path
 import shutil
 import sys
 import unittest
+from unittest.mock import patch
 
 from world import World
 from identity_fixtures import bind
@@ -104,11 +108,48 @@ class InstalledLayoutContract(unittest.TestCase):
                 for directory in [*roots.values(), custom]:
                     neighbor = directory / 'neighbor-skill'; neighbor.mkdir(parents=True)
                     (neighbor / 'SKILL.md').write_text('# Unrelated skill\n'); neighbors.append(neighbor)
+                private_writes = world.paths['state'] / 'agent-memory/writes'
                 protected = [memory, cache, indices, world.paths['config'] / 'agent-memory',
-                             world.paths['state'] / 'agent-memory/writes', repo / '.git', repo / 'worker.py', *neighbors]
+                             private_writes, repo / '.git', repo / 'worker.py', *neighbors]
                 self.assertTrue(all(p.exists() for p in protected))
                 before = {str(p): snapshot(p) for p in protected}
+                with patch.object(sys, 'path', [str(PACK / 'scripts'), *sys.path]), \
+                        patch.dict(os.environ, world.env, clear=True):
+                    from agent_memory import bank_writes
+                    operations, _ = bank_writes.state_paths(repo, memory, '00000000-0000-4000-8000-000000000000')
+                coordination = str((operations.parent / 'source-barrier.lock').relative_to(private_writes))
+                def assert_preserved():
+                    observed = {str(path): snapshot(path) for path in protected}
+                    writes = observed[str(private_writes)]
+                    additions = set(writes) - set(before[str(private_writes)])
+                    # Actual lifecycle activation may allocate this one empty
+                    # private coordinator, never alter existing bank evidence.
+                    self.assertLessEqual(additions, {coordination})
+                    for name in additions:
+                        self.assertEqual(writes.pop(name), {
+                            'sha256': hashlib.sha256(b'').hexdigest(), 'mode': 0o600})
+                    self.assertEqual(observed, before)
                 result = install(world, root, mode, 'all', [custom]); self.assertTrue(result['verified'])
+                # Activation may enroll its persistent source coordinator; it
+                # must not alter any pre-existing private evidence.
+                writes = world.paths['state'] / 'agent-memory/writes'
+                previous = before[str(writes)]
+                current = snapshot(writes)
+                for name, value in previous.items():
+                    self.assertEqual(current.get(name), value)
+                namespace = hashlib.sha256(str(memory).encode()).hexdigest()
+                added = set(current) - set(previous)
+                self.assertLessEqual(added, {namespace, namespace + '/source-barrier.lock'})
+                for name in added:
+                    path = writes / name
+                    info = path.lstat()
+                    self.assertEqual(info.st_uid, os.geteuid())
+                    self.assertEqual(stat.S_IMODE(info.st_mode), 0o700 if path.is_dir() else 0o600)
+                    self.assertFalse(path.is_symlink())
+                    if not path.is_dir():
+                        self.assertTrue(stat.S_ISREG(info.st_mode))
+                        self.assertEqual(info.st_nlink, 1)
+                before[str(writes)] = current
                 receipt = result['receipt']; self.assert_layout(world, receipt)
                 actual = {Path(t['path']) for t in receipt['targets'] if t['kind'] in {'copy', 'link'}}
                 self.assertEqual(actual, {p / 'agent-memory' for p in [*roots.values(), custom]})
@@ -132,14 +173,14 @@ class InstalledLayoutContract(unittest.TestCase):
                 self.assert_layout(world, receipt)
                 self.assertTrue(receipt['backups'])
                 retained_backups = {p['path']: snapshot(Path(p['path'])) for p in receipt['backups']}
-                self.assertEqual({str(p): snapshot(p) for p in protected}, before)
+                assert_preserved()
                 removed = command(world, [cli, '--json', 'uninstall']); self.assertTrue(removed['verified'])
                 self.assertFalse(removed['preserved']); self.assertFalse(cli.exists())
                 self.assertFalse(Path(receipt['source']['path']).exists())
                 self.assertTrue(receipt_path(world).is_file()); self.assertTrue(receipt_path(world).parent.joinpath('journal.json').is_file())
                 self.assertTrue(json.loads(receipt_path(world).read_text())['uninstalled'])
                 self.assertEqual({p: snapshot(Path(p)) for p in retained_backups}, retained_backups)
-                self.assertEqual({str(p): snapshot(p) for p in protected}, before)
+                assert_preserved()
                 for path in settings:
                     self.assertEqual(path.read_text(), 'Keep existing client instructions.\n')
                 # Derived file loss leaves native file-only bank inspection useful.

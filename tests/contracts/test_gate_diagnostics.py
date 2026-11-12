@@ -1,4 +1,6 @@
 """A failed collector must retain the underlying timeout and active suite."""
+import copy
+import importlib.util
 import json
 from pathlib import Path
 import shutil
@@ -51,27 +53,97 @@ class World(_ActualWorld):
             (checkout/'tests/world.py').write_text(source)
             shutil.copy2(ROOT/'tests/fault_partitions.py',checkout/'tests/fault_partitions.py')
             manifest = json.loads((ROOT/'tests/contracts.json').read_text())
-            for entry in manifest['suites']:
-                if entry.get('path'):
-                    entry['path'] = 'tests/contracts/fixture.py'
-            (checkout/'tests/contracts/fixture.py').write_text(
+            body = (
                 'import os,sys,time\nfrom pathlib import Path\n'
                 'print("gate-producer-stdout-marker",flush=True)\n'
                 'print("gate-producer-stderr-marker",file=sys.stderr,flush=True)\n'
                 'next(Path(os.environ["AGENT_MEMORY_TEST_ROOT"]).glob("owned-command-*" )).joinpath("status.json").mkdir()\n'
                 'time.sleep(5)\n')
+            for entry in manifest['suites']:
+                if entry.get('path'):
+                    entry['path'] = f"tests/contracts/fixture_{entry['name']}.py"
+                    entry.pop('tests', None)
+                    (checkout/entry['path']).write_text(body)
             (checkout/'tests/contracts.json').write_text(json.dumps(manifest))
-            result = world.run(['sh', checkout/'scripts/test.sh', '--release', '--json'], check=False)
-            report = json.loads(result.stdout)
-            self.assertNotEqual(result.returncode, 0)
-            self.assertFalse(report['passed'])
-            self.assertFalse(report['release_complete'])
-            self.assertEqual(report['error_suite'], manifest['suites'][0]['name'])
-            self.assertEqual(report['error_stage'], 'suite-execution-and-collection')
-            for text in ('TimeoutExpired', 'IsADirectoryError', 'could not be persisted',
-                         'gate-producer-stdout-marker', 'gate-producer-stderr-marker', 'Traceback'):
-                self.assertIn(text, result.stderr)
+            for jobs in (1, 2):
+                with self.subTest(jobs=jobs):
+                    result = world.run(['sh', checkout/'scripts/test.sh', '--release',
+                                        '--jobs', str(jobs), '--json'], check=False)
+                    report = json.loads(result.stdout)
+                    self.assertNotEqual(result.returncode, 0)
+                    self.assertFalse(report['passed'])
+                    self.assertFalse(report['release_complete'])
+                    self.assertEqual(report['error_suite'], manifest['suites'][0]['name'])
+                    self.assertEqual(report['error_stage'], 'suite-execution-and-collection')
+                    # Exception classes and producer bytes are causal evidence;
+                    # the supervisor's prose around them is not a contract.
+                    for text in ('TimeoutExpired', 'IsADirectoryError',
+                                 'gate-producer-stdout-marker', 'gate-producer-stderr-marker', 'Traceback'):
+                        self.assertIn(text, result.stderr)
 
+    def test_merge_rejects_invalid_rows_and_accepts_complete_reordered_shards(self):
+        import tempfile
+        spec = importlib.util.spec_from_file_location("gate_shard_contract", ROOT/'scripts/test_gate.py')
+        gate = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(gate)
+        entries = [{'name': name, 'layer': 'bank', 'scope': 'v0.0.15', 'path': name}
+                   for name in ('alpha', 'beta', 'gamma', 'delta')]
+        # Synthetic merger controls, never product execution receipts.
+        source, cell = 'synthetic-source-a', {'os': 'synthetic-test'}
+        reports = []
+        for index in range(2):
+            rows = [dict(name=e['name'], layer=e['layer'], status='passed', passed=True,
+                         tests=1, failures=0, errors=0, skipped=0, expected_failures=0,
+                         unexpected_successes=0,
+                         case_selection={'batch': e['name'],
+                             'complete': ['contract_suite.Controlled.test_case'],
+                             'selected': ['contract_suite.Controlled.test_case'],
+                             'executed': ['contract_suite.Controlled.test_case']})
+                    for e in entries[index::2]]
+            reports.append(dict(schema='agent-memory/test-gate-v1', mode='release',
+                                source=source, cell=cell, shard=dict(index=index, count=2),
+                                passed=True, release_complete=False, suites=rows))
+        with tempfile.TemporaryDirectory() as tmp:
+            def merge(items):
+                paths = []
+                for index, item in enumerate(items):
+                    path = Path(tmp) / f'{index}.json'
+                    path.write_text(json.dumps(item))
+                    paths.append(path)
+                return gate.merge_shards(paths, 2, entries, source, cell)
+            self.assertEqual([row['name'] for row in merge(reports[::-1])],
+                             [entry['name'] for entry in entries])
+            for field, value in [('tests', 0), ('tests', True), ('errors', 1), ('failures', 1),
+                                 ('skipped', 1), ('expected_failures', 1), ('unexpected_successes', 1),
+                                 ('status', 'not-applicable'), ('passed', False)]:
+                changed = copy.deepcopy(reports)
+                changed[0]['suites'][0][field] = value
+                with self.subTest(field=field), self.assertRaises(ValueError):
+                    merge(changed)
+            for change in (lambda r: r[0]['suites'].pop(),
+                           lambda r: r[0]['suites'].__setitem__(1, r[0]['suites'][0]),
+                           lambda r: r[0].update(mode='incremental'),
+                           lambda r: r[0]['shard'].update(count=3),
+                           lambda r: r.__setitem__(0, [])):
+                changed = copy.deepcopy(reports)
+                change(changed)
+                with self.assertRaises(ValueError):
+                    merge(changed)
+
+    def test_optional_row_requires_exact_reason_and_integer_zero(self):
+        spec = importlib.util.spec_from_file_location("gate_optional_contract", ROOT/'scripts/test_gate.py')
+        gate = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(gate)
+        entry = {'name': 'optional', 'layer': 'optional', 'scope': 'future',
+                 'reason': 'outside release'}
+        row = {'name': 'optional', 'layer': 'optional', 'status': 'not-applicable',
+               'tests': 0, 'reason': 'outside release'}
+        gate.validate_rows([entry], [row])
+        for field, value in [('reason', 'different'), ('tests', False), ('tests', 1),
+                             ('status', 'passed')]:
+            changed = dict(row, **{field: value})
+            with self.subTest(field=field, value=value), self.assertRaises(ValueError):
+                gate.validate_rows([entry], [changed])
 
 if __name__ == '__main__':
     unittest.main()

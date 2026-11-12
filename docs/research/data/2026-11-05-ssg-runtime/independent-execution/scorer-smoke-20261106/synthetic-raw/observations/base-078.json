@@ -1,0 +1,70 @@
+{
+  "case_ordinal": 78,
+  "caveats": {
+    "executed": false,
+    "prerequisite": "No reviewed caveat assembler"
+  },
+  "costs": {},
+  "executed": true,
+  "native": {
+    "context": {
+      "branch": "main"
+    },
+    "context_sha256": "6461b20cebcb7034bd8b13089d21a90cf5ce300bd7d74eb625c7a342cf6ccdac",
+    "crosscheck": {
+      "matched": true,
+      "scope": "SYNTHETIC assertion for scorer control flow, not native qualification"
+    },
+    "eligible": [
+      {
+        "id": "b14eec5a-7ad6-4ac8-bd3b-6950aae11602",
+        "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:b14eec5a-7ad6-4ac8-bd3b-6950aae11602:2",
+        "path": "topics/r/b14eec5a-7ad6-4ac8-bd3b-6950aae11602-v2.md",
+        "version": 2
+      }
+    ],
+    "request_valid": true,
+    "source_binding": {
+      "canonical_sha256": "66e81470aa7f2c50591d9e6478cee36da7ed927b2cf802eeefce9c10884e0994",
+      "generation_id": "synthetic-base",
+      "profile_sha256": "ebbe3638d181babf56b36018f1dc2c24fb218cd134f03bd64c746c23f4d0e63f"
+    }
+  },
+  "operation": "template:replacement-evidence",
+  "outcome": {
+    "executed": false,
+    "prerequisite": "No reviewed outcome mapper"
+  },
+  "prerequisites": [
+    "EXPLICITLY SYNTHETIC scorer/math fixture; never a model/graph/native qualification"
+  ],
+  "provider": {
+    "executed": false,
+    "prerequisite": "Synthetic scorer smoke sends nothing to a provider"
+  },
+  "schema": "am255/independent-case-observation-v1",
+  "semantic": {
+    "executed": false,
+    "prerequisite": "Synthetic case has no semantic execution"
+  },
+  "size": 1000,
+  "typed": {
+    "costs": {},
+    "edges": [
+      {
+        "asserted_by": "record:7eea1199-8123-4989-8cde-012d3361c8ee:b14eec5a-7ad6-4ac8-bd3b-6950aae11602:2",
+        "channel": "recorded",
+        "from": "record:7eea1199-8123-4989-8cde-012d3361c8ee:b14eec5a-7ad6-4ac8-bd3b-6950aae11602:2",
+        "rel": "CORRECTS",
+        "source_sha256": "665b6c2ac7a4451dbd5a06c7076233f94599dc2faa100d0c10828c181cbfd788",
+        "to": "record:7eea1199-8123-4989-8cde-012d3361c8ee:b14eec5a-7ad6-4ac8-bd3b-6950aae11602:1"
+      }
+    ],
+    "executed": true,
+    "primary_candidates": [
+      "record:7eea1199-8123-4989-8cde-012d3361c8ee:b14eec5a-7ad6-4ac8-bd3b-6950aae11602:2"
+    ],
+    "route_pointers": []
+  },
+  "variant": "base"
+}

@@ -30,7 +30,7 @@ for values in (['topics/shared/a.md','topics/shared/b.md','topics/shared/a.md'],
  portable_aliases(values)
 print('portable alias and root-anchor controls passed')
 '''
-            result=w.run([sys.executable,'-I','-c',program,helper.pack/'scripts'],check=False)
+            result=w.run([sys.executable,'-I','-B','-c',program,helper.pack/'scripts'],check=False)
             self.assertEqual(result.returncode,0,result.stderr)
             self.assertIn('portable alias and root-anchor controls passed',result.stdout)
 

@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "skopeo",
+    "inspect",
+    "--raw",
+    "docker://docker.io/memgraph/memgraph-mage@sha256:fe2f37e45e263225129bcb6955612ac9956dea0e8db614f9c39eb74b105c6c39"
+  ],
+  "duration_seconds": 0.6287539005279541,
+  "exit": 0,
+  "start_unix": 1793996231.834819,
+  "stderr": "",
+  "stdout": "{\n   \"schemaVersion\": 2,\n   \"mediaType\": \"application/vnd.docker.distribution.manifest.v2+json\",\n   \"config\": {\n      \"mediaType\": \"application/vnd.docker.container.image.v1+json\",\n      \"size\": 7707,\n      \"digest\": \"sha256:44b5244a3622425584cae52b0cdf1ea1690ebb98e27110b3adfd1af7ab8227a9\"\n   },\n   \"layers\": [\n      {\n         \"mediaType\": \"application/vnd.docker.image.rootfs.diff.tar.gzip\",\n         \"size\": 29946643,\n         \"digest\": \"sha256:4d88d96e89e537c10a69b755c70c4f2b448950a4749458ab96635289bc066427\"\n      },\n      {\n         \"mediaType\": \"application/vnd.docker.image.rootfs.diff.tar.gzip\",\n         \"size\": 59354828,\n         \"digest\": \"sha256:41b777bf72a25536bc14b7f4377f3d110376f3d4b88ed3786424541843161457\"\n      },\n      {\n         \"mediaType\": \"application/vnd.docker.image.rootfs.diff.tar.gzip\",\n         \"size\": 32,\n         \"digest\": \"sha256:4f4fb700ef54461cfa02571ae0db9a0dc1e0cdb5577484a6d75e68dc38e8acc1\"\n      },\n      {\n         \"mediaType\": \"application/vnd.docker.image.rootfs.diff.tar.gzip\",\n         \"size\": 2684691,\n         \"digest\": \"sha256:43e564e9b2e7954fd4949f4d99b54ae5bd3cf99211e540d32e4ae6a75a49d9d6\"\n      },\n      {\n         \"mediaType\": \"application/vnd.docker.image.rootfs.diff.tar.gzip\",\n         \"size\": 537612482,\n         \"digest\": \"sha256:57d8773f47585f31a7729c65f8646631708b54c213af5eaae56535fd13ec0645\"\n      }\n   ]\n}"
+}

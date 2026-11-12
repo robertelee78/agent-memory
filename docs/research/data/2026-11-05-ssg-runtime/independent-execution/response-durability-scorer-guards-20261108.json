@@ -1,0 +1,296 @@
+{
+  "schema": "am255/pre-rebuild-generation-review-proof-v1",
+  "source_commit": "1e83e2b566032e5bf57c6fc6f26721f956f1526e",
+  "source_ref": "refs/heads/research/255-response-durability-source-20261108",
+  "source_hashes": {
+    "authored-inputs-20261106.json": "fc22d917544e865b9acf2ecc63ff410ccd8d3ced18e810c7755ffb62fa8892f1",
+    "compile_inputs.py": "584c5f2d3d3b1972d17ea77088e79bff8f2d50e68a174aded08c33782b1ea1c9",
+    "execute.py": "42c2872b8044bf485fce0b64ddaa6e36a925094ba0f68192d7bdcd87a70cccbe",
+    "execution-io.json": "2ffa6aae2073991514194202f467ab3b75ab090b8598210e3eaa8c1cab03dbbe",
+    "executor_native.py": "7765ef70e6ac715925d081a9c8c7a629563f5332a9f54510aa7c29a6bf558735",
+    "executor_runtime.py": "83c1eed9a7b150cb7018a5eaccb74683856901409bcaf21cb089805780f8c200",
+    "score.py": "b63174c202148abfc327bf2c415c91bcd64ee40e63b8cdcb21aed9d46d0c20a3",
+    "scorer-map-20261106.json": "b4d7bfde73ca473c90d1a75239b0daf39e10942887465a02f74484aa09cc3f37",
+    "spec.json": "f5efd0b189747f6e2f5e9a5f6fd83e24a19f9cf6e76a7b4a0a083ef864288ad7"
+  },
+  "scope": "Real producer selected_mutation, pinned native fixtures/qualification, exact source-bound controlled receipts and actual scorer CLI. Transport/vector payload fixtures are explicitly offline, not inference or temporal transition observations.",
+  "held_out_informed": true,
+  "new_independent_review_and_full_closure_freeze_required": true,
+  "model_graph_endpoint_service_calls": 0,
+  "temporal_delete_erasure_executed": false,
+  "prior_failed_proofs_retained": true,
+  "source_ref_scope": "Retained immutable local source reference; exact source commit is reachable on the public integration branch.",
+  "raw_receipt_sha256": "521cf5dff7a706b08b1e1cdc07492c46df115856a5218a1b535cbd43c893e6c0",
+  "valid_before_rebuild": {
+    "source_generation_pairs": [
+      {
+        "variant": "base",
+        "selected_mutation": null,
+        "actual_generation": {
+          "canonical_sha256": "fe470421f76be2112a58780588bc17d53475296f4a437c96625c7e61dd2c72e8",
+          "generation_id": "g-1000-base-fe470421f76be2112a58",
+          "mutation": null,
+          "stage": null
+        },
+        "native_request_valid": true,
+        "native_crosscheck": {
+          "excluded_counts": {
+            "active": 3,
+            "applicable": 4,
+            "missing-context:component": 978,
+            "missing-context:environment": 2,
+            "missing-context:prerequisite": 1,
+            "missing-context:session": 1,
+            "no-active-superseder": 2,
+            "non-guidance-format": 60,
+            "orientation-not-requested": 1,
+            "security:credential": 2,
+            "valid-time": 1,
+            "visible": 1
+          },
+          "gate_crosscheck": {
+            "excluded_counts": {
+              "active": 3,
+              "applicable": 4,
+              "missing-context:component": 978,
+              "missing-context:environment": 2,
+              "missing-context:prerequisite": 1,
+              "missing-context:session": 1,
+              "no-active-superseder": 2,
+              "non-guidance-format": 60,
+              "orientation-not-requested": 1,
+              "security:credential": 2,
+              "valid-time": 1,
+              "visible": 1
+            },
+            "matched": true,
+            "qualified_counts": {
+              "active": 3,
+              "applicable": 4,
+              "missing-context:component": 978,
+              "missing-context:environment": 2,
+              "missing-context:prerequisite": 1,
+              "missing-context:session": 1,
+              "no-active-superseder": 2,
+              "non-guidance-format": 60,
+              "orientation-not-requested": 1,
+              "security:credential": 2,
+              "valid-time": 1,
+              "visible": 1
+            }
+          },
+          "matched": true,
+          "native_selection": {
+            "canonical_bytes": 18663,
+            "pool": 13,
+            "ranked_domain_size": 10,
+            "result_byte_limit": 65536,
+            "result_count": 10,
+            "result_limit": 64,
+            "used_bytes": 20388
+          },
+          "qualified_counts": {
+            "active": 3,
+            "applicable": 4,
+            "missing-context:component": 978,
+            "missing-context:environment": 2,
+            "missing-context:prerequisite": 1,
+            "missing-context:session": 1,
+            "no-active-superseder": 2,
+            "non-guidance-format": 60,
+            "orientation-not-requested": 1,
+            "security:credential": 2,
+            "valid-time": 1,
+            "visible": 1
+          }
+        },
+        "runtime_prerequisite": "Actual changed canonical source with a stale prior generation and reviewed fencing observation required; ordinary rebuild does not exercise stale state"
+      },
+      {
+        "variant": "overlay",
+        "selected_mutation": null,
+        "actual_generation": {
+          "canonical_sha256": "c8034c687a059a6fd9e7b3c94ed52473104c4bc31b5039fed7aaf73a42d4ea01",
+          "generation_id": "g-1000-overlay-c8034c687a059a6fd9e7",
+          "mutation": null,
+          "stage": null
+        },
+        "native_request_valid": true,
+        "native_crosscheck": {
+          "excluded_counts": {
+            "active": 4,
+            "applicable": 4,
+            "missing-context:component": 989,
+            "missing-context:environment": 2,
+            "missing-context:prerequisite": 1,
+            "missing-context:session": 1,
+            "no-active-superseder": 2,
+            "non-guidance-format": 64,
+            "orientation-not-requested": 1,
+            "security:credential": 2,
+            "valid-time": 1,
+            "visible": 1
+          },
+          "gate_crosscheck": {
+            "excluded_counts": {
+              "active": 4,
+              "applicable": 4,
+              "missing-context:component": 989,
+              "missing-context:environment": 2,
+              "missing-context:prerequisite": 1,
+              "missing-context:session": 1,
+              "no-active-superseder": 2,
+              "non-guidance-format": 64,
+              "orientation-not-requested": 1,
+              "security:credential": 2,
+              "valid-time": 1,
+              "visible": 1
+            },
+            "matched": true,
+            "qualified_counts": {
+              "active": 4,
+              "applicable": 4,
+              "missing-context:component": 989,
+              "missing-context:environment": 2,
+              "missing-context:prerequisite": 1,
+              "missing-context:session": 1,
+              "no-active-superseder": 2,
+              "non-guidance-format": 64,
+              "orientation-not-requested": 1,
+              "security:credential": 2,
+              "valid-time": 1,
+              "visible": 1
+            }
+          },
+          "matched": true,
+          "native_selection": {
+            "canonical_bytes": 18663,
+            "pool": 13,
+            "ranked_domain_size": 10,
+            "result_byte_limit": 65536,
+            "result_count": 10,
+            "result_limit": 64,
+            "used_bytes": 20388
+          },
+          "qualified_counts": {
+            "active": 4,
+            "applicable": 4,
+            "missing-context:component": 989,
+            "missing-context:environment": 2,
+            "missing-context:prerequisite": 1,
+            "missing-context:session": 1,
+            "no-active-superseder": 2,
+            "non-guidance-format": 64,
+            "orientation-not-requested": 1,
+            "security:credential": 2,
+            "valid-time": 1,
+            "visible": 1
+          }
+        },
+        "runtime_prerequisite": "Actual changed canonical source with a stale prior generation and reviewed fencing observation required; ordinary rebuild does not exercise stale state"
+      }
+    ],
+    "cells": [
+      {
+        "native": {
+          "executed": false,
+          "failed_predicates": [],
+          "prerequisites": [
+            "Actual stale-generation transition lacks a reviewed receipt verifier"
+          ]
+        },
+        "semantic": {
+          "ann": {
+            "executed": false,
+            "failed_predicates": [],
+            "prerequisites": [
+              "Actual runtime/generation transition lacks a reviewed receipt verifier: ready-complete-generation"
+            ]
+          },
+          "executed": false,
+          "failed_predicates": [],
+          "prerequisites": [
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: ready-complete-generation"
+          ]
+        },
+        "typed": {
+          "executed": false,
+          "failed_predicates": [],
+          "prerequisites": [
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: ready-complete-generation"
+          ]
+        },
+        "variant": "base"
+      },
+      {
+        "native": {
+          "executed": false,
+          "failed_predicates": [],
+          "prerequisites": [
+            "Actual stale-generation transition lacks a reviewed receipt verifier"
+          ]
+        },
+        "semantic": {
+          "ann": {
+            "executed": false,
+            "failed_predicates": [],
+            "prerequisites": [
+              "Actual runtime/generation transition lacks a reviewed receipt verifier: ready-complete-generation"
+            ]
+          },
+          "executed": false,
+          "failed_predicates": [],
+          "prerequisites": [
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: ready-complete-generation"
+          ]
+        },
+        "typed": {
+          "executed": false,
+          "failed_predicates": [],
+          "prerequisites": [
+            "Actual runtime/generation transition lacks a reviewed receipt verifier: ready-complete-generation"
+          ]
+        },
+        "variant": "overlay"
+      }
+    ],
+    "scorer_exit": 0,
+    "scorer_report_sha256": "25d20faefdfe975c751927c2b051bdc0b94259fcff1d8cf75584c6dbf4fa808b"
+  },
+  "rejections": [
+    {
+      "control": "forged-before-base-without-prerequisite",
+      "error": "Canonical mutation/stage differs from requested case transition",
+      "exit": 2,
+      "report_sha256": "4e5837ba4d4a1a602909b50c5538c728683f1ba4c479f53ffb139f0e2b9dfa95"
+    },
+    {
+      "control": "forged-before-base-with-prerequisite",
+      "error": "Canonical mutation/stage differs from requested case transition",
+      "exit": 2,
+      "report_sha256": "4e5837ba4d4a1a602909b50c5538c728683f1ba4c479f53ffb139f0e2b9dfa95"
+    },
+    {
+      "control": "forged-before-overlay-without-prerequisite",
+      "error": "Canonical mutation/stage differs from requested case transition",
+      "exit": 2,
+      "report_sha256": "4e5837ba4d4a1a602909b50c5538c728683f1ba4c479f53ffb139f0e2b9dfa95"
+    },
+    {
+      "control": "forged-before-overlay-with-prerequisite",
+      "error": "Canonical mutation/stage differs from requested case transition",
+      "exit": 2,
+      "report_sha256": "4e5837ba4d4a1a602909b50c5538c728683f1ba4c479f53ffb139f0e2b9dfa95"
+    },
+    {
+      "control": "cached-response-final-bytes-tamper",
+      "error": "Artifact SHA256 mismatch: sizes/1000/controlled-tokenizer/response-1.json",
+      "exit": 2,
+      "report_sha256": "f5a4e21609380a5fb579b9489543fc665adfb4143fbc569973d357b628ab5dd7"
+    }
+  ],
+  "original_failed_receipt": {
+    "sha256": "6d9dc80392ef032c4435285c6569e9a206e4133bad6d41fb97f9d6c464927029",
+    "not_rescored": true
+  }
+}

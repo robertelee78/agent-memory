@@ -3,9 +3,11 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import posixpath
 from pathlib import Path, PurePosixPath
 import re
+import stat
 import sys
 import unicodedata
 import uuid
@@ -293,12 +295,26 @@ def bank_root(bank):
 
 def physical_paths(bank):
     paths = []
-    for target in bank.rglob("*"):
-        if target.is_symlink():
-            raise ContractError("Bank paths must not be symlinks")
-        path = target.relative_to(bank).as_posix()
-        if not runtime_path(path):
-            paths.append(path)
+
+    def traversal_error(exc):
+        raise ContractError("Cannot completely inspect bank paths; preserve the existing layout") from exc
+
+    for directory, directories, files in os.walk(bank, followlinks=False, onerror=traversal_error):
+        relative = os.path.relpath(directory, bank)
+        for entries, classified_as_file in ((directories, False), (files, True)):
+            for name in entries:
+                target = os.path.join(directory, name)
+                try:
+                    mode = os.lstat(target).st_mode
+                except (OSError, ValueError) as exc:
+                    raise ContractError("Cannot inspect bank path; preserve the existing layout") from exc
+                if stat.S_ISLNK(mode):
+                    raise ContractError("Bank paths must not be symlinks")
+                if classified_as_file and stat.S_ISDIR(mode):
+                    raise ContractError("Cannot completely inspect bank paths; preserve the existing layout")
+                path = name if relative == "." else os.path.join(relative, name)
+                if not runtime_path(path):
+                    paths.append(path)
     return paths
 
 
@@ -312,15 +328,27 @@ def file_topology(paths):
 
 def validate_files(files, *, parsed_records=None):
     bank_capacity.check_files(files)
+    if parsed_records is not None and (not isinstance(parsed_records, dict) or parsed_records):
+        raise ContractError('Parsed-record output must start empty and cannot supply validation authority')
+
+    def produce(source):
+        companion = {}
+        return _validate_files(source, parsed_records=companion), companion
+
     memo = validation_memo.current()
-    captured = validation_memo.map_input(files) if memo is not None and parsed_records is None else None
+    captured = validation_memo.map_input(files) if memo is not None else None
     if captured is None:
-        return _validate_files(files, parsed_records=parsed_records)
-    key, stable = captured
-    # canonical-remote normalization can resolve file:// symlinks. This ambient
-    # authority observation must run afresh even for otherwise identical bytes.
-    return memo.checked('bank-format', key, lambda: _validate_files(stable),
-                        fresh_guard=lambda: parse_router(stable['MEMORY.md']))
+        report, companion = produce(files)
+    else:
+        key, stable = captured
+        # canonical-remote normalization can resolve file:// symlinks. This ambient
+        # authority observation must run afresh even for otherwise identical bytes.
+        # Each operation stores one uniform report-and-companion value shape.
+        report, companion = memo.checked('bank-format', key, lambda: produce(stable),
+                                         fresh_guard=lambda: parse_router(stable['MEMORY.md']))
+    if parsed_records is not None:
+        parsed_records.update(companion)
+    return report
 
 
 def _validate_files(files, *, parsed_records=None):
@@ -353,13 +381,24 @@ def _validate_files(files, *, parsed_records=None):
 def validate(repo, *, owned_lock=None, owned_transaction=None):
     from . import bank_observation
     observed = bank_observation.observe(repo, owner=owned_lock, transaction=owned_transaction)
+    from .recovery_frontier import public_coverage
     return {**observed.checked, "validation_scope": "canonical-bank-eligibility",
+            **public_coverage(observed.recovery_frontier),
             "source_stability_verified": True}
 
 
+MEMORY_ROUTES = {'recover-layout': ('recover_layout.py', ())}
+
+
 def main(argv=None):
+    from . import cli
+    import sys
+    argv = cli.arguments(sys.argv[1:] if argv is None else argv)
+    if argv and argv[0] in MEMORY_ROUTES:
+        return cli.execute(argv[0], argv[1:], MEMORY_ROUTES[argv[0]])
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
+    commands.add_parser('recover-layout', help='Explicit source-preserving layout recovery; use recover-layout --help')
     renderer = commands.add_parser("render", help="emit a file proposal; write nothing")
     renderer.add_argument("--input", required=True, help="JSON file, or - for stdin")
     checker = commands.add_parser("validate", help="inspect the repository-root memory-bank")

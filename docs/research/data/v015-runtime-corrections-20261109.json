@@ -1,0 +1,721 @@
+{
+  "schema": "agent-memory/v015-runtime-corrections-observations-v1",
+  "date": "2026-11-09",
+  "base_commit": "02af460e8859279402370d65ad138df4bb73a25a",
+  "status": "scoped local proof; full hosted and native qualification pending",
+  "campaigns": [
+    {
+      "revision": "r7",
+      "source_manifest_sha256": "54e042e659abc261ad69f2a643b28aabedac1819db11e8de553ef8b97875b887",
+      "result_sha256": "daee2bcde8b5e541f9d6b67d733740d4095f0e28f710c80d70a6139ba55724d6",
+      "passed": false,
+      "source_unchanged_including_generated_files": true,
+      "source_cache_files": 0,
+      "suites": [
+        {
+          "name": "committed-lifecycle-replanning",
+          "passed": false,
+          "exit": 1,
+          "counts": {
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 1,
+            "passed": false,
+            "skipped": 0,
+            "tests": 3,
+            "unexpected_successes": 0
+          },
+          "seconds": 48.13302258402109
+        },
+        {
+          "name": "runtime-uninstall",
+          "passed": true,
+          "exit": 0,
+          "counts": {
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": true,
+            "skipped": 0,
+            "tests": 11,
+            "unexpected_successes": 0
+          },
+          "seconds": 99.15089545806404
+        },
+        {
+          "name": "lifecycle-trust-paths",
+          "passed": true,
+          "exit": 0,
+          "counts": {
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": true,
+            "skipped": 0,
+            "tests": 12,
+            "unexpected_successes": 0
+          },
+          "seconds": 55.268632582970895
+        },
+        {
+          "name": "runtime-update",
+          "passed": true,
+          "exit": 0,
+          "counts": {
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": true,
+            "skipped": 0,
+            "tests": 15,
+            "unexpected_successes": 0
+          },
+          "seconds": 297.8941532910103
+        },
+        {
+          "name": "read-only-runtime-audits",
+          "passed": true,
+          "exit": 0,
+          "counts": {
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": true,
+            "skipped": 0,
+            "tests": 3,
+            "unexpected_successes": 0
+          },
+          "seconds": 79.14953570801299
+        },
+        {
+          "name": "installer",
+          "passed": true,
+          "exit": 0,
+          "counts": {
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": true,
+            "skipped": 0,
+            "tests": 33,
+            "unexpected_successes": 0
+          },
+          "seconds": 133.52693862491287
+        }
+      ]
+    },
+    {
+      "revision": "r8",
+      "source_manifest_sha256": "03f5e3cdc79685b17ec16ff725296d56f6660e1f44705a1c307d204a2352abf7",
+      "result_sha256": "27570159e6105f184d5b92a52334a8a03a8004acaaaf96e92cd73058719ff007",
+      "passed": true,
+      "source_unchanged_including_generated_files": true,
+      "source_cache_files": 0,
+      "suites": [
+        {
+          "name": "committed-lifecycle-replanning",
+          "passed": true,
+          "exit": 0,
+          "counts": {
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": true,
+            "skipped": 0,
+            "tests": 3,
+            "unexpected_successes": 0
+          },
+          "seconds": 51.98514474998228
+        },
+        {
+          "name": "runtime-uninstall",
+          "passed": true,
+          "exit": 0,
+          "counts": {
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": true,
+            "skipped": 0,
+            "tests": 11,
+            "unexpected_successes": 0
+          },
+          "seconds": 103.24560000002384
+        },
+        {
+          "name": "migration-runtime-rollback",
+          "passed": true,
+          "exit": 0,
+          "counts": {
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": true,
+            "skipped": 0,
+            "tests": 1,
+            "unexpected_successes": 0
+          },
+          "seconds": 25.105030249920674
+        },
+        {
+          "name": "known-hold-capacity",
+          "passed": true,
+          "exit": 0,
+          "counts": {
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": true,
+            "skipped": 0,
+            "tests": 5,
+            "unexpected_successes": 0
+          },
+          "seconds": 235.91897491691634
+        },
+        {
+          "name": "explicit-migration",
+          "passed": true,
+          "exit": 0,
+          "counts": {
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": true,
+            "skipped": 0,
+            "tests": 12,
+            "unexpected_successes": 0
+          },
+          "seconds": 242.38112570904195
+        },
+        {
+          "name": "uninstall-write-copy-before",
+          "passed": true,
+          "exit": 0,
+          "counts": {
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": true,
+            "skipped": 0,
+            "tests": 1,
+            "unexpected_successes": 0
+          },
+          "seconds": 253.7345553750638
+        },
+        {
+          "name": "uninstall-write-copy-after",
+          "passed": true,
+          "exit": 0,
+          "counts": {
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": true,
+            "skipped": 0,
+            "tests": 1,
+            "unexpected_successes": 0
+          },
+          "seconds": 273.2171054590726
+        },
+        {
+          "name": "uninstall-write-link-before",
+          "passed": true,
+          "exit": 0,
+          "counts": {
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": true,
+            "skipped": 0,
+            "tests": 1,
+            "unexpected_successes": 0
+          },
+          "seconds": 221.6220768339699
+        },
+        {
+          "name": "uninstall-write-link-after",
+          "passed": true,
+          "exit": 0,
+          "counts": {
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": true,
+            "skipped": 0,
+            "tests": 1,
+            "unexpected_successes": 0
+          },
+          "seconds": 216.2815053750528
+        }
+      ]
+    },
+    {
+      "revision": "r9",
+      "source_manifest_sha256": "e57458defef8e49b02cc4591e0c2476e1b24b23ba30ea3b1928feb7bfc96e043",
+      "result_sha256": "94c956c8a5ac71578ada57a8dbc1bdefc565a3c328d3416eb90b4f67ac973089",
+      "passed": true,
+      "source_unchanged_including_generated_files": true,
+      "source_cache_files": 0,
+      "suites": [
+        {
+          "name": "private-lifecycle-observation",
+          "passed": true,
+          "exit": 0,
+          "counts": {
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": true,
+            "skipped": 0,
+            "tests": 5,
+            "unexpected_successes": 0
+          },
+          "seconds": 90.6511686249869
+        },
+        {
+          "name": "committed-lifecycle-replanning",
+          "passed": true,
+          "exit": 0,
+          "counts": {
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": true,
+            "skipped": 0,
+            "tests": 4,
+            "unexpected_successes": 0
+          },
+          "seconds": 67.92743924993556
+        },
+        {
+          "name": "skill-routes",
+          "passed": true,
+          "exit": 0,
+          "counts": {
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": true,
+            "skipped": 0,
+            "tests": 18,
+            "unexpected_successes": 0
+          },
+          "seconds": 32.665101249935105
+        },
+        {
+          "name": "portable-artifact",
+          "passed": true,
+          "exit": 0,
+          "counts": {
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": true,
+            "skipped": 0,
+            "tests": 8,
+            "unexpected_successes": 0
+          },
+          "seconds": 27.64367391599808
+        },
+        {
+          "name": "omp-native-source-reconciliation",
+          "passed": true,
+          "exit": 0,
+          "counts": {
+            "case_selection": {
+              "batch": "omp-native-source-reconciliation",
+              "complete": [
+                "contract_suite.ExplicitNativeOwnership.test_all_never_enables_omp_and_root_is_required",
+                "contract_suite.ExplicitNativeOwnership.test_explicit_native_install_applies_preview_for_copy_and_link",
+                "contract_suite.ExplicitNativeOwnership.test_explicit_root_and_peer_attestation_never_come_from_environment",
+                "contract_suite.ExplicitNativeOwnership.test_saved_root_changes_and_implicit_all_removal_refuse",
+                "contract_suite.NativeLifecyclePublic.test_managed_native_updates_read_back_only_owned_public_commands",
+                "contract_suite.NativeLifecyclePublic.test_native_update_ignores_missing_historical_worktree_but_preserves_required_enrollment",
+                "contract_suite.NativeLifecyclePublic.test_public_uninstall_keeps_pending_sources_and_disabled_owned_binding",
+                "contract_suite.NativeLifecyclePublic.test_public_uninstall_requires_quiescence_and_actually_drains_completed_sources",
+                "contract_suite.NativeLifecyclePublic.test_signed_native_updates_preserve_extension_integrity",
+                "contract_suite.NativeSmokeQualification.test_both_exact_current_human_turns_and_persistent_session_are_required",
+                "contract_suite.NativeSmokeQualification.test_historical_observers_cannot_qualify_new_current_session",
+                "contract_suite.NativeSmokeQualification.test_late_native_frames_cannot_reuse_initial_answer_or_settled_proof",
+                "contract_suite.NativeSmokeQualification.test_source_verifier_binds_completed_human_ids_text_roots_and_digests",
+                "contract_suite.NativeSmokeQualification.test_source_verifier_waits_for_fault_free_shared_registration",
+                "contract_suite.NativeSmokeQualification.test_stream_readback_requires_terminal_receipts_and_current_leaf_not_child_quiescence",
+                "contract_suite.NativeSmokeQualification.test_unsupported_binary_refuses_before_native_launch_or_human_turns",
+                "contract_suite.NativeSources.test_admission_requires_sealed_registered_segment",
+                "contract_suite.NativeSources.test_capacity_retains_arrival_then_reuses_reference_after_capacity_frees",
+                "contract_suite.NativeSources.test_completed_snapshots_require_bound_drain_proof_after_marker_removal",
+                "contract_suite.NativeSources.test_crashed_pure_snapshot_never_reopens_sealed_parent",
+                "contract_suite.NativeSources.test_exact_own_hidden_batch_does_not_open_a_source_successor",
+                "contract_suite.NativeSources.test_gap_refuses_both_assessment_outcomes_and_preserves_marker",
+                "contract_suite.NativeSources.test_long_segment_uses_two_shared_observations_and_ingest_is_idempotent",
+                "contract_suite.NativeSources.test_manual_marker_delete_cannot_hide_unregistered_source",
+                "contract_suite.NativeSources.test_protected_private_root_cannot_silently_move_or_lose_binding",
+                "contract_suite.NativeSources.test_root_wake_is_once_and_later_human_carries_unassessed_old_source",
+                "contract_suite.OwnedInstructionBoundary.test_exact_carrier_and_unforgeable_witness",
+                "contract_suite.OwnedInstructionBoundary.test_fresh_capture_preserves_surrounding_source_and_retries",
+                "contract_suite.OwnedInstructionBoundary.test_historical_annotation_is_closed_and_installation_independent",
+                "contract_suite.OwnedInstructionBoundary.test_link_witness_declines_retargeted_owned_link",
+                "contract_suite.OwnedInstructionBoundary.test_malformed_carriers_and_invocations_decline",
+                "contract_suite.OwnedInstructionBoundary.test_mismatched_orphan_snapshot_is_integrity_failure",
+                "contract_suite.OwnedInstructionBoundary.test_nonread_result_never_mints_manual_witness",
+                "contract_suite.OwnedInstructionBoundary.test_preexisting_native_gap_is_not_reclassified",
+                "contract_suite.OwnedInstructionBoundary.test_same_sweep_human_boundary_preserves_sealed_tool_gap",
+                "contract_suite.OwnedInstructionBoundary.test_screened_invocation_does_not_hide_following_answer",
+                "contract_suite.OwnedInstructionBoundary.test_sealed_tool_gap_does_not_authorize_late_classification",
+                "contract_suite.OwnedInstructionBoundary.test_snapshot_publication_recovery_survives_uninstall_and_retry",
+                "contract_suite.OwnedInstructionBoundary.test_unrelated_ancestor_churn_preserves_witness_and_public_annotation",
+                "contract_suite.OwnedInstructionBoundary.test_verification_races_refuse_selected_binding_payload_and_policy_changes",
+                "contract_suite.OwnedInstructionBoundary.test_witness_declines_changed_receipt_file_and_permissions",
+                "contract_suite.StoredBatchControls.test_foreign_companions_and_human_input_never_become_own_maintenance"
+              ],
+              "selected": [
+                "contract_suite.NativeSources.test_completed_snapshots_require_bound_drain_proof_after_marker_removal",
+                "contract_suite.NativeSources.test_crashed_pure_snapshot_never_reopens_sealed_parent",
+                "contract_suite.NativeSources.test_exact_own_hidden_batch_does_not_open_a_source_successor",
+                "contract_suite.NativeSources.test_manual_marker_delete_cannot_hide_unregistered_source"
+              ]
+            },
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": true,
+            "skipped": 0,
+            "tests": 4,
+            "unexpected_successes": 0
+          },
+          "seconds": 79.7522062920034
+        },
+        {
+          "name": "omp-native-public-lifecycle",
+          "passed": true,
+          "exit": 0,
+          "counts": {
+            "case_selection": {
+              "batch": "omp-native-public-lifecycle",
+              "complete": [
+                "contract_suite.ExplicitNativeOwnership.test_all_never_enables_omp_and_root_is_required",
+                "contract_suite.ExplicitNativeOwnership.test_explicit_native_install_applies_preview_for_copy_and_link",
+                "contract_suite.ExplicitNativeOwnership.test_explicit_root_and_peer_attestation_never_come_from_environment",
+                "contract_suite.ExplicitNativeOwnership.test_saved_root_changes_and_implicit_all_removal_refuse",
+                "contract_suite.NativeLifecyclePublic.test_managed_native_updates_read_back_only_owned_public_commands",
+                "contract_suite.NativeLifecyclePublic.test_native_update_ignores_missing_historical_worktree_but_preserves_required_enrollment",
+                "contract_suite.NativeLifecyclePublic.test_public_uninstall_keeps_pending_sources_and_disabled_owned_binding",
+                "contract_suite.NativeLifecyclePublic.test_public_uninstall_requires_quiescence_and_actually_drains_completed_sources",
+                "contract_suite.NativeLifecyclePublic.test_signed_native_updates_preserve_extension_integrity",
+                "contract_suite.NativeSmokeQualification.test_both_exact_current_human_turns_and_persistent_session_are_required",
+                "contract_suite.NativeSmokeQualification.test_historical_observers_cannot_qualify_new_current_session",
+                "contract_suite.NativeSmokeQualification.test_late_native_frames_cannot_reuse_initial_answer_or_settled_proof",
+                "contract_suite.NativeSmokeQualification.test_source_verifier_binds_completed_human_ids_text_roots_and_digests",
+                "contract_suite.NativeSmokeQualification.test_source_verifier_waits_for_fault_free_shared_registration",
+                "contract_suite.NativeSmokeQualification.test_stream_readback_requires_terminal_receipts_and_current_leaf_not_child_quiescence",
+                "contract_suite.NativeSmokeQualification.test_unsupported_binary_refuses_before_native_launch_or_human_turns",
+                "contract_suite.NativeSources.test_admission_requires_sealed_registered_segment",
+                "contract_suite.NativeSources.test_capacity_retains_arrival_then_reuses_reference_after_capacity_frees",
+                "contract_suite.NativeSources.test_completed_snapshots_require_bound_drain_proof_after_marker_removal",
+                "contract_suite.NativeSources.test_crashed_pure_snapshot_never_reopens_sealed_parent",
+                "contract_suite.NativeSources.test_exact_own_hidden_batch_does_not_open_a_source_successor",
+                "contract_suite.NativeSources.test_gap_refuses_both_assessment_outcomes_and_preserves_marker",
+                "contract_suite.NativeSources.test_long_segment_uses_two_shared_observations_and_ingest_is_idempotent",
+                "contract_suite.NativeSources.test_manual_marker_delete_cannot_hide_unregistered_source",
+                "contract_suite.NativeSources.test_protected_private_root_cannot_silently_move_or_lose_binding",
+                "contract_suite.NativeSources.test_root_wake_is_once_and_later_human_carries_unassessed_old_source",
+                "contract_suite.OwnedInstructionBoundary.test_exact_carrier_and_unforgeable_witness",
+                "contract_suite.OwnedInstructionBoundary.test_fresh_capture_preserves_surrounding_source_and_retries",
+                "contract_suite.OwnedInstructionBoundary.test_historical_annotation_is_closed_and_installation_independent",
+                "contract_suite.OwnedInstructionBoundary.test_link_witness_declines_retargeted_owned_link",
+                "contract_suite.OwnedInstructionBoundary.test_malformed_carriers_and_invocations_decline",
+                "contract_suite.OwnedInstructionBoundary.test_mismatched_orphan_snapshot_is_integrity_failure",
+                "contract_suite.OwnedInstructionBoundary.test_nonread_result_never_mints_manual_witness",
+                "contract_suite.OwnedInstructionBoundary.test_preexisting_native_gap_is_not_reclassified",
+                "contract_suite.OwnedInstructionBoundary.test_same_sweep_human_boundary_preserves_sealed_tool_gap",
+                "contract_suite.OwnedInstructionBoundary.test_screened_invocation_does_not_hide_following_answer",
+                "contract_suite.OwnedInstructionBoundary.test_sealed_tool_gap_does_not_authorize_late_classification",
+                "contract_suite.OwnedInstructionBoundary.test_snapshot_publication_recovery_survives_uninstall_and_retry",
+                "contract_suite.OwnedInstructionBoundary.test_unrelated_ancestor_churn_preserves_witness_and_public_annotation",
+                "contract_suite.OwnedInstructionBoundary.test_verification_races_refuse_selected_binding_payload_and_policy_changes",
+                "contract_suite.OwnedInstructionBoundary.test_witness_declines_changed_receipt_file_and_permissions",
+                "contract_suite.StoredBatchControls.test_foreign_companions_and_human_input_never_become_own_maintenance"
+              ],
+              "selected": [
+                "contract_suite.ExplicitNativeOwnership.test_all_never_enables_omp_and_root_is_required",
+                "contract_suite.ExplicitNativeOwnership.test_explicit_native_install_applies_preview_for_copy_and_link",
+                "contract_suite.ExplicitNativeOwnership.test_explicit_root_and_peer_attestation_never_come_from_environment",
+                "contract_suite.ExplicitNativeOwnership.test_saved_root_changes_and_implicit_all_removal_refuse",
+                "contract_suite.NativeLifecyclePublic.test_managed_native_updates_read_back_only_owned_public_commands",
+                "contract_suite.NativeLifecyclePublic.test_native_update_ignores_missing_historical_worktree_but_preserves_required_enrollment",
+                "contract_suite.NativeLifecyclePublic.test_public_uninstall_keeps_pending_sources_and_disabled_owned_binding",
+                "contract_suite.NativeLifecyclePublic.test_public_uninstall_requires_quiescence_and_actually_drains_completed_sources",
+                "contract_suite.NativeLifecyclePublic.test_signed_native_updates_preserve_extension_integrity"
+              ]
+            },
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": true,
+            "skipped": 0,
+            "tests": 9,
+            "unexpected_successes": 0
+          },
+          "seconds": 214.7266364999814
+        },
+        {
+          "name": "mixed-layout-first",
+          "passed": true,
+          "exit": 0,
+          "counts": {
+            "case_selection": {
+              "batch": "mixed-layout-first",
+              "complete": [
+                "contract_suite.MixedPrivateCapabilities.test_completed_omp_drains_before_layout_then_old_reader_after_both",
+                "contract_suite.MixedPrivateCapabilities.test_layout_first_native_activation_requires_reviewed_new_routes_without_omp_preseed",
+                "contract_suite.MixedPrivateCapabilities.test_managed_update_accepts_repository_under_symlinked_ancestor",
+                "contract_suite.MixedPrivateCapabilities.test_omp_first_mixed_pending_rejects_actual_published_old_managed_candidate",
+                "contract_suite.MixedPrivateCapabilities.test_private_lifecycle_observation_refuses_config_bank_hold_and_attestation_races"
+              ],
+              "selected": [
+                "contract_suite.MixedPrivateCapabilities.test_layout_first_native_activation_requires_reviewed_new_routes_without_omp_preseed"
+              ]
+            },
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": true,
+            "skipped": 0,
+            "tests": 1,
+            "unexpected_successes": 0
+          },
+          "seconds": 94.57289858302101
+        },
+        {
+          "name": "mixed-omp-drain-first",
+          "passed": true,
+          "exit": 0,
+          "counts": {
+            "case_selection": {
+              "batch": "mixed-omp-drain-first",
+              "complete": [
+                "contract_suite.MixedPrivateCapabilities.test_completed_omp_drains_before_layout_then_old_reader_after_both",
+                "contract_suite.MixedPrivateCapabilities.test_layout_first_native_activation_requires_reviewed_new_routes_without_omp_preseed",
+                "contract_suite.MixedPrivateCapabilities.test_managed_update_accepts_repository_under_symlinked_ancestor",
+                "contract_suite.MixedPrivateCapabilities.test_omp_first_mixed_pending_rejects_actual_published_old_managed_candidate",
+                "contract_suite.MixedPrivateCapabilities.test_private_lifecycle_observation_refuses_config_bank_hold_and_attestation_races"
+              ],
+              "selected": [
+                "contract_suite.MixedPrivateCapabilities.test_completed_omp_drains_before_layout_then_old_reader_after_both"
+              ]
+            },
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": true,
+            "skipped": 0,
+            "tests": 1,
+            "unexpected_successes": 0
+          },
+          "seconds": 116.87423299998045
+        },
+        {
+          "name": "layout-recovery-legacy-consumers",
+          "passed": true,
+          "exit": 0,
+          "counts": {
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": true,
+            "skipped": 0,
+            "tests": 1,
+            "unexpected_successes": 0
+          },
+          "seconds": 18.551405749982223
+        }
+      ]
+    },
+    {
+      "revision": "r10",
+      "source_manifest_sha256": "2566862cb4db769f3be8a3a37164b0fd5dc0b9fb62d39ed91c0d6f9f126c301b",
+      "result_sha256": "094085cb781ece92fe83e8f914040dd435105ebc46e357e0e0e7d6836be0b378",
+      "passed": true,
+      "source_unchanged_including_generated_files": true,
+      "source_cache_files": 0,
+      "suites": [
+        {
+          "name": "skill-routes",
+          "passed": true,
+          "exit": 0,
+          "counts": {
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": true,
+            "skipped": 0,
+            "tests": 18,
+            "unexpected_successes": 0
+          },
+          "seconds": 33.60647566593252
+        },
+        {
+          "name": "portable-artifact",
+          "passed": true,
+          "exit": 0,
+          "counts": {
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": true,
+            "skipped": 0,
+            "tests": 8,
+            "unexpected_successes": 0
+          },
+          "seconds": 28.873871791991405
+        },
+        {
+          "name": "private-lifecycle-observation",
+          "passed": true,
+          "exit": 0,
+          "counts": {
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": true,
+            "skipped": 0,
+            "tests": 5,
+            "unexpected_successes": 0
+          },
+          "seconds": 84.03434658295009
+        },
+        {
+          "name": "installer",
+          "passed": true,
+          "exit": 0,
+          "counts": {
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": true,
+            "skipped": 0,
+            "tests": 33,
+            "unexpected_successes": 0
+          },
+          "seconds": 133.00524862494785
+        },
+        {
+          "name": "signed-release-lifecycle",
+          "passed": true,
+          "exit": 0,
+          "counts": {
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": true,
+            "skipped": 0,
+            "tests": 5,
+            "unexpected_successes": 0
+          },
+          "seconds": 71.16577479196712
+        },
+        {
+          "name": "public-cli-user-journey",
+          "passed": true,
+          "exit": 0,
+          "counts": {
+            "errors": 0,
+            "expected_failures": 0,
+            "failures": 0,
+            "passed": true,
+            "skipped": 0,
+            "tests": 7,
+            "unexpected_successes": 0
+          },
+          "seconds": 53.76783799997065
+        }
+      ]
+    }
+  ],
+  "evidence_archives": [
+    {
+      "name": "runtime-corrections-r7-terminal-evidence-20261109.tar.gz",
+      "sha256": "a68a0a91361d72e7f03853379418b767441b08297dcb221470f612e1cc3a6314",
+      "bytes": 477581
+    },
+    {
+      "name": "runtime-corrections-r8-terminal-evidence-20261109.tar.gz",
+      "sha256": "81d30dc29fe36d7533916745e5c40205fbff3724f6121a4f2690440764423616",
+      "bytes": 123211358
+    },
+    {
+      "name": "runtime-corrections-r9-terminal-evidence-20261109.tar.gz",
+      "sha256": "ae212a193af56bd196a16caae586d2495ecdd3f10f361aeee67547ab0cf01701",
+      "bytes": 123216555
+    },
+    {
+      "name": "runtime-corrections-r10-terminal-evidence-20261109.tar.gz",
+      "sha256": "75d0f93f32b38c014aedada0928efb87b1ac8f57007acd0276c878a5e63e6b2c",
+      "bytes": 123215730
+    },
+    {
+      "name": "runtime-corrections-public-smokes-and-provenance-20261109.tar.gz",
+      "sha256": "f444c70f198b0eaf5cc2f68415c67d4192c3cbdc1217d14cb8dc014823239d3c",
+      "bytes": 23825
+    }
+  ],
+  "limits": [
+    "Original 300-second suite budgets unchanged. Local scoped suites are not the full hosted matrix.",
+    "Hosted run 42494359530 failed; these observations do not supersede it with a passing full gate.",
+    "Stock omp R5b failed; original cause, automatic wake and switched-source reconciliation remain unqualified.",
+    "No signed release, production/licence approval or G1 acceptance.",
+    "One earlier source reviewer violated a no-Git restriction; its findings were diagnostic only, independently reproduced and separately reviewed. It was parked and is not counted as independent acceptance."
+  ],
+  "r10_artifact": {
+    "valid": true,
+    "version": "0.0.15",
+    "artifact_digest": "b78fe88351c286384bf602c7a9dedf6ee7f14fc7cc9f4ca4cb582890db9f4caf",
+    "file_count": 217
+  },
+  "actual_smokes": {
+    "released_v014": {
+      "fixture_source_commit": "342448aa0d045c554c6094ca3b36d997f47f6d79",
+      "fixture_archive_sha256": "c40f73e7c48d17056a48d9f99f3b799c5bcf3bad042ef555c7faa45fdbfeb4bb",
+      "signature_verification_performed": false,
+      "failing_before": {
+        "trusted_previews_exit": 1,
+        "current_activation_exit": 1
+      },
+      "passing_after": {
+        "trusted_previews_exit": 0,
+        "read_only_and_barrier_absent": true,
+        "actual_old_updater_then_current_updater_verified": true,
+        "current_activation_creates_real_barrier": true,
+        "canonical_bank_and_original_sources_preserved": true
+      }
+    },
+    "committed_replanning": {
+      "strict_recovery_after_external_edit_exit": 1,
+      "strict_recovery_repeated_exit": 1,
+      "three_previews_exit": 0,
+      "entire_world_unchanged_by_previews": true,
+      "actual_explicit_update_exit": 0,
+      "subsequent_recovery_exit": 0,
+      "feature_index_HEAD_bank_external_edit_and_prior_journal_preserved": true
+    },
+    "managed_index_only_drift": {
+      "failing_before_recovery_exit": 1,
+      "passing_after_recovery_exit": 0,
+      "source_and_receipt_preserved": true
+    }
+  },
+  "independent_source_reviews": [
+    {
+      "reviewer": "LegacyAbsenceR9Opus",
+      "model": "anthropic/claude-opus-5-5",
+      "scope": "source only; no runtime or release acceptance",
+      "retained_review_sha256": "dfe1ecce50dc257ddee48035cb48085bd8af9758fcf62844b825af4805e43bdb"
+    },
+    {
+      "reviewer": "CommittedSourceR9Opus",
+      "model": "anthropic/claude-opus-5-5",
+      "scope": "source only; no runtime or release acceptance",
+      "retained_review_sha256": "810fcf66c0da6bfec32925e9ebe9d174c21248ce2fab12822da748b6f527535d"
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "schema": "am255/same-weight-serving-probes-v2",
+  "origin": "Same public/private synthetic calibration texts as immutable probe-spec.json; no independent-suite answers inspected",
+  "probes": ["Synthetic pagination retains a continuation token.", "Synthetic retry budgets stop after three attempts.", "Synthetic generation publication uses a complete candidate.", "Synthetic erased records cannot reappear from a stale build."],
+  "documents": [
+    {"id": "retry", "own": "Retry a temporary synthetic transport failure at most three times.", "neighbor": "pagination"},
+    {"id": "pagination", "own": "Continue a synthetic paginated scan whenever a next cursor exists, even after an empty page.", "neighbor": "retry"},
+    {"id": "publication", "own": "Publish a synthetic generation only after every required vector and graph node is complete.", "neighbor": "deletion"},
+    {"id": "deletion", "own": "A synthetic privacy epoch fences stale builders before deleted content can be republished.", "neighbor": "publication"},
+    {"id": "orientation", "own": "The synthetic compiler pipeline parses input before lowering its intermediate representation.", "neighbor": "retry"},
+    {"id": "unrelated", "own": "The synthetic cafeteria menu rotates fruit on Thursdays.", "neighbor": "pagination"}
+  ],
+  "queries": [
+    {"text": "How many times may a transient failure be tried again?", "expected": "retry"},
+    {"text": "Does an empty page end a scan if continuation remains?", "expected": "pagination"},
+    {"text": "When is an unfinished graph safe to activate?", "expected": "publication"},
+    {"text": "What stops an old worker restoring removed guidance?", "expected": "deletion"}
+  ],
+  "query_prefix": "Instruct: Retrieve applicable saved project guidance for the question.\nQuery: ",
+  "relationship_separator": "\nRelated title: ",
+  "short": "Synthetic complete input with an unmistakable terminal marker AM255_END.",
+  "over_context": {"repeat": " synthetic", "count": 8256, "suffix": " AM255_DIFFERENT_END"},
+  "aggregate_budget": {"repeat": " synthetic", "count": 4160, "suffix": ""},
+  "batch_rows": ["Synthetic batch row 0", "Synthetic batch row 1", "Synthetic batch row 2", "Synthetic batch row 3", "Synthetic batch row 4", "Synthetic batch row 5", "Synthetic batch row 6", "Synthetic batch row 7", "Synthetic batch row 8"],
+  "settings": {"threads": 4, "threads_batch": 4, "threads_http": 4, "context": 8192, "batch": 8192, "ubatch": 8192, "parallel": 1, "pooling": "last", "backend": "Metal", "device": "MTL0", "gpu_layers": 99, "flash_attention": "off", "fit": "off", "alias": "qwen3-embedding-8b-q8_0-d20ddc71e8a5", "dimension": 4096, "launches_per_binary": 2, "cache_ram_mib": 0, "log_verbosity": 5},
+  "cache_profile": {
+    "purpose": "Pre-output diagnostic serving configuration only; not a managed profile or ADR freeze",
+    "cli": ["--cache-ram", "0", "--log-verbosity", "5"],
+    "ram_prompt_cache": "disabled by explicit CLI; must be confirmed by actual server log",
+    "per_request_settings": {"cache_prompt": "omitted on every embedding request; not assumed honored"},
+    "slot_local_prefix_reuse": "enabled task default; must retain actual prefix/evaluated-token logs per successful embedding row",
+    "not_prompt_cache_disabled": true,
+    "request_sequence": "three probe batches; two query batches; two own batches; two relationship batches; tokenize short/over_context/aggregate_budget; short; over-context diagnostic; unknown alias single; known alias single; empty and malformed diagnostics; batch1/4/8/9 diagnostics",
+    "source_evidence": {
+      "source_commit": "a578bb6b94529b7b2721d0ee49eaea5dbb2c6d07",
+      "path": "tools/server/server-context.cpp",
+      "sha256": "4c8bee10fa5629fb35d1f80c50ef56d9d0d04219c8afc6950bdf76684d4afb2b",
+      "embedding_handler_lines": "4452-4547; tasks created directly at4512, only res_type/embd_normalize set at4518-4519; body.cache_prompt never parsed here",
+      "ram_cache_lines": "958-969; --cache-ram0 disables the RAM prompt cache object, not slot-local reuse",
+      "slot_cache_lines": "2473-2475; task.params.cache_prompt enables longest-common-prefix reuse",
+      "default_path": "tools/server/server-task.h",
+      "default_sha256": "d41d2c681a3a3e02b4826decbd592769690cc6acc45477cdc6dea15790b6c92a",
+      "default_lines": "52; bool cache_prompt = true",
+      "limit": "Direct source evidence is for the reference fork; upstream behavior must be established from new actual logs, not inferred from an accepted unknown HTTP field"
+    }
+  },
+  "diagnostics": {"coordinate_tolerance": 0.00001, "cosine_distance_tolerance": 0.00001, "rank_changes_tolerance": 0, "not_quality_acceptance": true, "not_eligibility_or_usability_acceptance": true},
+  "maintenance_policy": {"max_inputs": 8, "aggregate_tokens": 8192, "status": "offline draft contract; no actual AM production client implementation"},
+  "unknown_alias": "am255-synthetic-unknown-weight-alias",
+  "scope": "Same existing 8B GGUF on two existing serving binaries, loopback synthetic only, explicitly bounded cache history; no held-out tuning, threshold relaxation, clean timing or production/legal/G1/ADR pass"
+}

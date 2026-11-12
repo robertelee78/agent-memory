@@ -1,0 +1,74 @@
+{
+  "schema": "agent-memory/recovery-original-worker-budget-checks-v1",
+  "scope": "Actual four original registered modules; overall failed because two hit the unchanged300second deadline. No acceptance reduction or timeout increase. Full original28method long-group success remains separate historical proof.",
+  "overall_passed": false,
+  "runs": [
+    {
+      "suite": "layout-recovery-publication",
+      "source_commit": "2732df8bd2d11dfbc4999469cbdd0cd372427b60",
+      "passed": true,
+      "timed_out": false,
+      "elapsed_seconds": 271.8341782920179,
+      "timeout_seconds": 300,
+      "receipt": {
+        "path": "layout-recovery-publication.json",
+        "sha256": "33973dfd75511600ec27122168e38d6c236a5cd27e988c5cc5aae14cd1df2ebc"
+      },
+      "counts": {
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 10,
+        "unexpected_successes": 0
+      }
+    },
+    {
+      "suite": "layout-recovery-retention",
+      "source_commit": "2732df8bd2d11dfbc4999469cbdd0cd372427b60",
+      "passed": true,
+      "timed_out": false,
+      "elapsed_seconds": 59.882440874993335,
+      "timeout_seconds": 300,
+      "receipt": {
+        "path": "layout-recovery-retention.json",
+        "sha256": "812ba7def2e549df9fe6f28a3c67510ffbdca7bce2b9ccfc545dd893b03bacfc"
+      },
+      "counts": {
+        "errors": 0,
+        "expected_failures": 0,
+        "failures": 0,
+        "passed": true,
+        "skipped": 0,
+        "tests": 9,
+        "unexpected_successes": 0
+      }
+    },
+    {
+      "suite": "layout-recovery-reconciliation",
+      "source_commit": "2732df8bd2d11dfbc4999469cbdd0cd372427b60",
+      "passed": false,
+      "timed_out": true,
+      "elapsed_seconds": 300.02545462502167,
+      "timeout_seconds": 300,
+      "receipt": {
+        "path": "layout-recovery-reconciliation.json",
+        "sha256": "a2fa15a1fbd2c03fe87fbb9bb1d36fe83898d5855ad888e9d156b7b191272182"
+      }
+    },
+    {
+      "suite": "layout-nested-reconciliation",
+      "source_commit": "2732df8bd2d11dfbc4999469cbdd0cd372427b60",
+      "passed": false,
+      "timed_out": true,
+      "elapsed_seconds": 300.02281141700223,
+      "timeout_seconds": 300,
+      "receipt": {
+        "path": "layout-nested-reconciliation.json",
+        "sha256": "959c6e4e2b27c099964951b721898058255ef1d212a6a31926a34ec403ce2563"
+      }
+    }
+  ],
+  "next": "Rebalance only complete real discovered cases with exhaustive disjoint batch proof. Preserve all original assertions, subcases and300second/180minute budgets; qualify actual final batches separately."
+}

@@ -65,7 +65,7 @@ hashing still scale with bank size. These are bounds, not a latency guarantee.
 With `SKILL_DIR` resolved to this package:
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/compare_learning.py" inspect --repo /path/to/repo \
+python3 -I "$SKILL_DIR/scripts/compare_learning.py" inspect --repo /path/to/repo \
   --request /private/path/comparison.json
 ```
 
@@ -86,13 +86,50 @@ provenance. It MUST NOT choose truth by recency, confidence, landing order or
 identity. Before combining, it MUST compare current source authority using
 [the authority guide](../authority/GUIDE.md).
 
-The judgment MUST contain exactly `observation`, `decisions` and `rationale`.
+The v2 judgment MUST contain exactly `observation`, `decisions`,
+`pending_decisions` and `rationale`. `pending_decisions` MUST be explicitly `[]`
+for a freshly checked empty frontier; omission and unfinished v1 proofs refuse.
 `observation` MUST be the unchanged `observation` field from the actual inspect result. The CLI also accepts the entire inspect result as a shorthand and extracts that field before validating current sources; the stored proof uses the nested observation.
 `decisions` MUST classify every returned path exactly once. Each decision has
 exactly `path`, `classification` and a meaningful bounded `rationale`.
 The overall rationale MUST explain the comparison, including why no plausible
 match is equivalent when proposing distinct learning. A digest is not evidence
 that the agent actually understood the sources.
+
+A private recovery frontier is a separate source input, not current guidance.
+Every unresolved same-bank unit MUST have one pending decision, including units
+with unknown scope or no lexical hit. Its exact fields are `unit_id`,
+`classification`, `rationale` and `coverage_claim`; each claim contains the
+same unit ID, `covered_source_ranges`, `target_record_refs` and `coverage`
+(`full`, `partial` or `none`). Each fragment allows two exact original ranges
+and two actual resulting record references. Partial fragments accumulate through
+real governed receipts; they MUST NOT clear the original unit.
+
+With pending units, comparison and discovery commands MUST use
+`--private-output /private/path/result.json`; stdout contains only a safe
+artifact envelope. Bodies, original ranges and private source hashes MUST NOT
+be pasted into canonical history, a shared record or public diagnostics.
+The full source review MUST be independently authored by a distinct actual
+agent/session. Pass its source-bound `layout-coverage-review-v1` artifact with
+comparison review's `--coverage-review`; the stored v2 proof binds its digest,
+the entire ledger frontier and the private reference map. A matching hash is
+not authenticated truth. Contradiction, uncertainty and unresolved scope remain
+pending rather than authorizing a new record.
+
+An explicitly requested `--private-output` MUST also be honored when the freshly
+checked frontier is empty; the CLI MUST NOT silently print the complete result.
+Where final coverage depends on a future maintenance UUID, version or hash, the
+session MUST use the read-only [consolidation plan](../consolidation/GUIDE.md) or
+[governance plan](../governance/GUIDE.md) with complete current semantic judgments
+and initial `coverage:none`. This is not comparison approval. A distinct reviewing
+session MUST inspect the actual planned files before completing the independent
+coverage review and final comparison proof. The ordinary final proof MUST bind
+every actual claim and intended output; planning MUST NOT weaken that contract.
+
+The complete encoded proof and disclosure each retain their separate 65,536-byte
+limits and the combined canonical/pending row count remains at most 64.
+No caller may silently omit a frontier field, generation or unresolved unit.
+
 
 | Classification | Meaning and required handling |
 | --- | --- |
@@ -121,7 +158,7 @@ and consequential corrections MUST surface promptly at the next boundary.
 ## Apply
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/compare_learning.py" review --repo /path/to/repo \
+python3 -I "$SKILL_DIR/scripts/compare_learning.py" review --repo /path/to/repo \
   --request /private/path/comparison.json --judgment /private/path/judgment.json
 ```
 
@@ -154,7 +191,7 @@ comparison against its locked observed bank immediately before mutation.
 ## Verify
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/compare_learning.py" check --repo /path/to/repo \
+python3 -I "$SKILL_DIR/scripts/compare_learning.py" check --repo /path/to/repo \
   --request /private/path/comparison.json --proof /private/path/proof.json
 ```
 

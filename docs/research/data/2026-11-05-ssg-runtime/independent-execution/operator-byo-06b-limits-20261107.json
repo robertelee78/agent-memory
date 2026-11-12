@@ -1,0 +1,163 @@
+{
+  "schema": "am255/operator-byo-embedding-limits-observations-v1",
+  "scope": "Diagnostic HTTP capability/discovery and provider-declared limit observations only; no exact token-boundary, truncation, batch hard-cap, quality, immutable weights, G1, managed-profile or release acceptance",
+  "model_requested": "qwen3-embedding-0.6b",
+  "identity_assurance": "provider-alias-unverified",
+  "execution_location": "Operator inference host over existing authenticated SSH; no workstation reachability/latency claim",
+  "limits_observation": {
+    "schema": "am255/byo-limits-redacted-v1",
+    "started_utc": "2026-11-07T06:15:46.941160+00:00",
+    "endpoint": "operator-configured dedicated OpenAI-compatible endpoint; address withheld",
+    "model_requested": "qwen3-embedding-0.6b",
+    "operator_declared": {
+      "tokens_per_input": 4096,
+      "inputs_per_batch": 8,
+      "dimensions": 1024
+    },
+    "calls": [
+      {
+        "case": "model-discovery",
+        "path": "/v1/models",
+        "method": "GET",
+        "started_utc": "2026-11-07T06:15:46.941174+00:00",
+        "http_status": 200,
+        "response_bytes": 196,
+        "response_sha256": "3e7f63e4b1412f4e4f8a7be8563119ad44aaf623e0b54fc5e67de8eb6d8bafa7",
+        "elapsed_seconds": 0.01,
+        "model_count": 1,
+        "requested_id_matches": 1,
+        "single_model_is_requested": true,
+        "safe_metadata": {
+          "max_model_len": 4096
+        }
+      },
+      {
+        "case": "tokenize-1",
+        "path": "/tokenize",
+        "method": "POST",
+        "started_utc": "2026-11-07T06:15:46.951321+00:00",
+        "request_bytes": 46,
+        "request_sha256": "a05f82470f59f05fe35e40429cfd52199bd83929af79000f996dc91bd2cdb086",
+        "http_status": 404,
+        "error_class": "HTTPError",
+        "error_body_read": false,
+        "elapsed_seconds": 0.001
+      },
+      {
+        "case": "bounded-fallback-256-ascii-bytes",
+        "path": "/v1/embeddings",
+        "method": "POST",
+        "started_utc": "2026-11-07T06:15:46.952070+00:00",
+        "request_bytes": 325,
+        "request_sha256": "a333e90291e845181d3608324c1f27da6b122df0308a2a35896700ee4ef0907c",
+        "http_status": 200,
+        "response_bytes": 12888,
+        "response_sha256": "ccc730a1a7effd4f4be1722fec4e4b081b1aa5ae543c33667b4a47b468546b0b",
+        "elapsed_seconds": 0.523,
+        "input_bytes": 256,
+        "provider_count": null,
+        "usage": {
+          "prompt_tokens": 33,
+          "total_tokens": 33
+        },
+        "response_model_matches_requested": true,
+        "indices_exact": true,
+        "dimensions": 1024,
+        "finite": true,
+        "nonzero": true,
+        "vector_valid": true
+      }
+    ],
+    "notes": [
+      "No project text or reasoning calls",
+      "No response bodies retained; successful bodies hashed",
+      "Authentication error bodies never read",
+      "Batch hard limit not tested",
+      "Tokenizer counts, if available, are provider reports, not verified embedding preprocessing"
+    ],
+    "tokenizer": {
+      "available": false,
+      "reported_count_targets_found": {},
+      "path": "/tokenize",
+      "special_token_equivalence_to_embedding": "unverified"
+    },
+    "finished_utc": "2026-11-07T06:15:47.475571+00:00",
+    "elapsed_seconds": 0.585,
+    "credential_value_retained": false,
+    "redirects_allowed": false,
+    "environment_proxy_used": false
+  },
+  "pretokenized_diagnostic": {
+    "schema": "am255/byo-pretokenized-boundary-redacted-v1",
+    "started_utc": "2026-11-07T06:28:02.252745+00:00",
+    "endpoint": "operator-configured dedicated OpenAI-compatible endpoint; address withheld",
+    "model_requested": "qwen3-embedding-0.6b",
+    "operator_declared_string_limit": 4096,
+    "calls": [
+      {
+        "case": "single-pretokenized-input",
+        "token_id": 0,
+        "input_token_ids": 2,
+        "request_bytes": 72,
+        "request_sha256": "e8aa1add7ec24fb7032074dfffc9204b71eb4b4117030e86926a3e52b96007ae",
+        "started_utc": "2026-11-07T06:28:02.252797+00:00",
+        "http_status": 200,
+        "response_bytes": 12891,
+        "response_sha256": "92c04c2a7b93f659d7ba775d9b7315a58d6583e7a749945b6754c0b23dcc606d",
+        "usage": {
+          "prompt_tokens": 1,
+          "total_tokens": 1
+        },
+        "response_model_matches_requested": true,
+        "indices_exact": true,
+        "dimensions": 1024,
+        "finite": true,
+        "nonzero": true,
+        "vector_valid": true,
+        "usage_matches_input": false,
+        "elapsed_seconds": 0.15
+      }
+    ],
+    "scope": "Synthetic one-input integer-token array only; no assumptions about token identity, string preprocessing, quality, weights or boot",
+    "credential_value_retained": false,
+    "redirects_allowed": false,
+    "environment_proxy_used": false,
+    "boundary_calls_skipped": "small pretokenized input not accepted with valid vector and matching usage",
+    "finished_utc": "2026-11-07T06:28:02.402978+00:00",
+    "elapsed_seconds": 0.172
+  },
+  "subsequent_string_diagnostics": {
+    "scope": "Four additional synthetic string requests; no real project text, endpoint changes, reasoning calls or exact-tokenizer claim.",
+    "repeated_ascii_units": [32, 4096, 4097, 4095],
+    "input_bytes": [64, 8192, 8194, 8190],
+    "observations": [
+      "32 units returned HTTP200, valid finite nonzero1024-vector and provider-reported33 prompt tokens.",
+      "4096 units returned HTTP413 in0.031s; error body not read.",
+      "4097 units returned HTTP413 in0.030s; error body not read.",
+      "4095 units exceeded the70-second client deadline. No completion, accepted4096-token boundary or service cancellation is established."
+    ],
+    "interpretation": "Large requests demonstrably refuse or time out rather than establishing a usable maximum. HTTP413 alone does not distinguish provider token policy from a transport body cap. Exact tokenization, silent truncation and successful maximum-size inference remain unqualified.",
+    "raw_receipts": [
+      "operator-embedding-06b-string-boundary.json",
+      "operator-embedding-06b-string-boundary-4095.json"
+    ],
+    "public_receipt_record": "operator-byo-06b-string-diagnostics-20261107.json"
+  },
+  "interpretation": {
+    "single_model_discovery": "One advertised model; requested ID matched; max_model_len=4096 is provider-reported, not independently measured tokenization or truncation enforcement",
+    "tokenizer": "Optional /tokenize returned404; diagnostic route is not a required AM configuration or OpenAI-compatible endpoint prerequisite",
+    "pretokenized": "Two integer IDs returned a valid vector but usage reported one token; preprocessing/format/count interpretation remains inconclusive. Exact4096/4097 probes deliberately not sent",
+    "batch": "Eight-input success retained in operator-byo-06b-capability-20261107.json; eight remains operator client cap, not proven server hard limit",
+    "configuration": "Required product setup remains OpenAI-compatible URL plus optional key; model only when discovery is ambiguous. No tokenizer/model-weight path prerequisite added",
+    "real_project_disclosure": "None; synthetic inputs only; provider permission for real text is separate"
+  },
+  "raw_private_bindings": {
+    "operator-embedding-06b-limits-redacted.json": "b2741a31dcafe497e794fb6f0cecf37a438428f9d041f6354678120e5ae9ea63",
+    "operator-embedding-06b-token-ids-redacted.json": "b31060ed6dd223f9472f5a946d3b66bef52c5586a560f38080b9a49b570c641b",
+    "operator-embedding-06b-limits-completion.json": "74efa8028c73f338aa4b4fbb895a5d85d0286704b52d073e318a1e1ae7fe52be",
+    "operator-embedding-06b-limits-completion-ip.json": "7524f574fbe4dfcdebcd6f1ccdbf0fd1f2b8aaa57d1e0d7e0f5b8447b0c02fcc",
+    "operator-embedding-06b-token-ids-completion.json": "a98ad714326c0f9c6b04c64b01cebcf73f6f6e918ddac1f376478fc9039b783c",
+    "remote_embedding_06b_limits.py": "4828338352a5d9fa6d45c7e807c143abe9e6de0fd64aad6b0fca183603f17e8e",
+    "remote_embedding_06b_token_ids.py": "6b39efee93ba1b6bf1f16b78a4fec869351b3e859f069c317bb5cbb6cbd873c4"
+  }
+}

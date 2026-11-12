@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "podman",
+    "container",
+    "exists",
+    "am255-linux-302b5222e537-preflight"
+  ],
+  "duration_seconds": 0.06891798973083496,
+  "exit": 1,
+  "start_unix": 1793997536.6744142,
+  "stderr": "",
+  "stdout": ""
+}

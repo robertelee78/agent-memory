@@ -1,0 +1,14 @@
+{
+ "argv": [
+  "sh",
+  "-c",
+  "curl -sSL --max-time 20 \"$0\" | shasum -a 256",
+  "https://raw.githubusercontent.com/memgraph/memgraph/v3.10.1/licenses/BSL.txt"
+ ],
+ "cwd": "/Users/robert.lee/.omp/wt/tba949e054/m/data/2026-11-05-ssg-runtime/licenses",
+ "exit": 0,
+ "seconds": 0.054,
+ "started_at": "2026-11-05T16:52:21.230405+00:00",
+ "stderr": "",
+ "stdout": "633e829d0a5358c94168283133701803e5ecc7a65652ad583629000580e019d1  -\n"
+}

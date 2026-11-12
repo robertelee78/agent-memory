@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "podman",
+    "volume",
+    "ls",
+    "--format",
+    "json"
+  ],
+  "duration_seconds": 0.06984686851501465,
+  "exit": 0,
+  "start_unix": 1793997536.143271,
+  "stderr": "",
+  "stdout": "[]\n"
+}

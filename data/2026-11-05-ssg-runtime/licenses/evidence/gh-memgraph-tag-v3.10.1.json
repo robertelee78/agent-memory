@@ -1,0 +1,15 @@
+{
+ "argv": [
+  "curl",
+  "-sSL",
+  "--max-time",
+  "20",
+  "https://api.github.com/repos/memgraph/memgraph/git/ref/tags/v3.10.1"
+ ],
+ "cwd": "/Users/robert.lee/.omp/wt/tba949e054/m/data/2026-11-05-ssg-runtime/licenses",
+ "exit": 0,
+ "seconds": 0.332,
+ "started_at": "2026-11-05T16:52:20.487112+00:00",
+ "stderr": "",
+ "stdout": "{\n  \"ref\": \"refs/tags/v3.10.1\",\n  \"node_id\": \"MDM6UmVmMjk3MzAyMDYzOnJlZnMvdGFncy92My4xMC4x\",\n  \"url\": \"https://api.github.com/repos/memgraph/memgraph/git/refs/tags/v3.10.1\",\n  \"object\": {\n    \"sha\": \"0e77b786fc03fe4f92a18b9730940e11c62a0c32\",\n    \"type\": \"commit\",\n    \"url\": \"https://api.github.com/repos/memgraph/memgraph/git/commits/0e77b786fc03fe4f92a18b9730940e11c62a0c32\"\n  }\n}\n"
+}

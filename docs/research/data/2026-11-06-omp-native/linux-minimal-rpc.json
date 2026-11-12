@@ -1,0 +1,349 @@
+{
+  "schema": "agent-memory/omp-linux-minimal-rpc-evidence-v1",
+  "scope": "Actual explicitly installed Linux arm64 VM-container persistent RPC two-human/source smoke and stable-scoped private copy only. Not full #249, source completeness, assessment, refresh, drain, global writer fence, authority, peer publication, TUI, print or release qualification.",
+  "source_binding": {
+    "git_commit": "90d822b42e41b96b27682ebca2bcf405c6a26bfc",
+    "archive_sha256": "13dc8f59989e96f22eb2bf0c4a414badf1bf0b085a8439a117fe3168e1a9fa2c",
+    "archive_extraction_manifest_sha256": "8e53a9f74465d14764a4a41768f8e7c8ee3339a859bb61aa61c11bc913696abe",
+    "canonical_git_manifest_sha256": "8bea30e0bd5acda22c0a42ade635c6efe99cc33670578f71b8102068ed4b842c",
+    "mode_policy": "All tracked extracted blob bytes and symlink targets matched the original Git tree IDs; ordinary modes normalized to Git 100644/100755 and owned directories 0755. Archive bytes and original extraction manifest retained. Export is not a Git checkout; installed revision reports unversioned.",
+    "artifact_sha256": "c8c4a03280d7c34e2eb975dfc4157a8a5999409790a0973a5d020ea3166a55b5",
+    "git_policy_receipt_sha256": "bb45ed53a9e42e97020f61ac3e51edf3f12262a89258aa4d74eac2ba33324fdf",
+    "artifact_inspection_receipt_sha256": "9f25c74c53f24424acdc204fc84f5559614ed38cc97f486ae2a4b7e7598a0c17"
+  },
+  "native_binary": {
+    "version": "omp/18.16.0",
+    "bytes": 236702712,
+    "sha256": "c2be1ea85ce17c4270854b57efff2a7ea1d5a03c7557fd08721f2b9bb32698de",
+    "url": "https://github.com/can1357/oh-my-pi/releases/download/v18.16.0/omp-linux-arm64"
+  },
+  "runs": [
+    {
+      "python_series": "3.11",
+      "python_version": "3.11.18",
+      "python_version_evidence": "Same pinned image offline startup receipt in linux-startup.json; this RPC run did not separately rerun python --version.",
+      "platform": "linux/arm64 Podman VM container; not bare-metal",
+      "image_manifest": "sha256:745246f656c3003b62fa182fcce49fbb83c6caee3871a4d4ef9e183c5d54d782",
+      "image_config_id": "9a1bb53d5a98d5917820d4379ef47073e6af0790b325173f2fe9b3e0ebd250f4",
+      "execution": {
+        "mode": "persistent RPC",
+        "model": "openai-codex/gpt-6.1-sol",
+        "approval_mode": "native-existing-default",
+        "install_mode": "copy",
+        "install_source_kind": "development",
+        "install_revision": "unversioned",
+        "install_receipt_schema": "agent-memory/install-receipt-v2",
+        "installed_artifact_digest": "c8c4a03280d7c34e2eb975dfc4157a8a5999409790a0973a5d020ea3166a55b5",
+        "receipt_sha256": "3bebb473a8608e8375effccf3639acdaf0a824a721ac5935d52ded07c643bfa5",
+        "extension_sha256": "9db597fda02430a2f3bba821ab654de3da454a01a16da00eedbd2f497275235f",
+        "binary_sha256": "c2be1ea85ce17c4270854b57efff2a7ea1d5a03c7557fd08721f2b9bb32698de",
+        "native_version": "omp/18.16.0",
+        "caps": "ALL dropped",
+        "no_new_privileges": true,
+        "user_namespace": "keep-id, nonroot",
+        "resources": "2 CPU, 2 GiB memory and swap, 256 pids",
+        "mounts": "verified source export and native binary read-only, owned writable isolated fixture/state/evidence; no host home/config/socket mount",
+        "provider_access": "ordinary existing provider credentials in ephemeral native-child environment, unchanged native approval mode"
+      },
+      "result": {
+        "driver_exit": 0,
+        "driver_seconds": 62.031678915023804,
+        "driver_qualified": true,
+        "full_native_qualification": false,
+        "native_exit": 0,
+        "native_is_settled": true,
+        "answer_sentinel_counts": [
+          1,
+          1
+        ],
+        "refused_ui_requests": 0,
+        "failures_count": 0,
+        "observer_diagnostics": [
+          "observer wait ended; retained work pending"
+        ],
+        "observer_wait_seconds": 7.852389529987704,
+        "session_id": "01a1b393-c466-7504-9f24-d600d7712c9f",
+        "current_human_observations": [
+          {
+            "native_entry_id": "d8e6e71c",
+            "human_root": "d8ad60a3-dd7f-4e38-bd00-d2ef147ce115",
+            "observation_id": "e71180f8-c4df-45e6-8616-1766100eea06",
+            "source_reference": "omp:capture:ee2290de-c22f-5de8-813d-219778e9021c",
+            "source_sha256": "b4d76959e7f409ff7bf1dc1424141d4d9aeb657851b7da59673cc9762ed34e40",
+            "mapping": "verified"
+          },
+          {
+            "native_entry_id": "01e4d2e7",
+            "human_root": "13e9ddb4-f188-5916-a4da-160b2d0c53d2",
+            "observation_id": "476b6184-bfb2-4efa-a2e2-9824dfc6fe7b",
+            "source_reference": "omp:capture:8b306cc3-245b-5071-93a2-11ea4e577710",
+            "source_sha256": "209f799277727cb16ca834fc3332e5baf825b755c38844219658038a47f3c830",
+            "mapping": "verified"
+          }
+        ],
+        "readback_attempts": 11
+      },
+      "pending_readback": {
+        "status_counts": {
+          "pending-assessment": 2,
+          "pending-coverage-gap": 2,
+          "pending-native-tool": 1,
+          "pending-stored-source": 1
+        },
+        "fault_count": 0,
+        "inventory_complete": true,
+        "next_offset": null,
+        "source_completeness_verified": false,
+        "canonical_writes_performed": false,
+        "verified": true
+      },
+      "scoped_copy": {
+        "process_samples": [
+          {
+            "elapsed_seconds": 0.0,
+            "roles": [
+              "unknown"
+            ]
+          },
+          {
+            "elapsed_seconds": 0.505,
+            "roles": []
+          },
+          {
+            "elapsed_seconds": 1.011,
+            "roles": []
+          }
+        ],
+        "process_roles_after": [],
+        "world_file_hashes_equal": true,
+        "world_manifest_comparison": "Decoded relative-path file-hash maps compared equal; raw manifest JSON byte hashes can differ because entry ordering differs.",
+        "public_verifier_responses_equal": true,
+        "qualification": "stable-scoped-copy",
+        "samples_are_not_global_writer_fence": true,
+        "source_verifiers_before": [
+          {
+            "exit": 0,
+            "source_sha256": "b4d76959e7f409ff7bf1dc1424141d4d9aeb657851b7da59673cc9762ed34e40",
+            "response_sha256": "8e2e8f9a0e988faaaf41ad59b68114574db64a607b897b818f5501049bfcca77"
+          },
+          {
+            "exit": 0,
+            "source_sha256": "209f799277727cb16ca834fc3332e5baf825b755c38844219658038a47f3c830",
+            "response_sha256": "75f7fc7b22983af7d74746f5b00ea1ce05f1bd6a2ed98f563a0c1bc7cfd367c3"
+          }
+        ],
+        "source_verifiers_after": [
+          {
+            "exit": 0,
+            "source_sha256": "b4d76959e7f409ff7bf1dc1424141d4d9aeb657851b7da59673cc9762ed34e40",
+            "response_sha256": "8e2e8f9a0e988faaaf41ad59b68114574db64a607b897b818f5501049bfcca77"
+          },
+          {
+            "exit": 0,
+            "source_sha256": "209f799277727cb16ca834fc3332e5baf825b755c38844219658038a47f3c830",
+            "response_sha256": "75f7fc7b22983af7d74746f5b00ea1ce05f1bd6a2ed98f563a0c1bc7cfd367c3"
+          }
+        ]
+      },
+      "cleanup": {
+        "owned_container_absence_exit": 1,
+        "owned_only": true,
+        "forensic_erasure_claimed": false
+      },
+      "private_receipt_sha256": {
+        "raw_smoke_report": "e70951dfb4c824960e093fba5781cb6d9809ad295d9caab8aaee25584889ca0d",
+        "driver_result": "069439b43cfcb69f4eda2b1f996d5d07afb15c5c2913cfe67a38985c9a9fa146",
+        "installed_binding": "d512119afad3faeee4769c8452200febd94086007ea753ad3b83d31956ead5fa",
+        "fixture": "4b83825087875aad1ce8f4dd9f46044d402bbbb0f9767e5dc59f23476c8d5308",
+        "launch": "67f6149aa4471b0c4100d98b05893a623c9e5f581d133ddc6c53a4cc35e54222",
+        "copy_qualification": "4c6d8d5218d2c5850648188f46b8f24822f736685c3e5efc5bff04c86b5b2819",
+        "public_source_before": "d4bdcd83b975b8e05c5ed97cdddcaba5ba1aaea2e0b18cb0b5f5898786a05473",
+        "public_source_after": "38d26c072a49caea1b02657c93cff81fac5eaa17c1d460be5f457fafe0dfb840",
+        "world_manifest_before": "e5b01335034e3eeff8408ed3965c3678499c0e01785aab8149a1df3c8375ac40",
+        "world_manifest_copy": "a45a0a04e85f5f4074ea13ea9a7f440f31d4a9358f36527a010190524373169f",
+        "world_manifest_after": "e5b01335034e3eeff8408ed3965c3678499c0e01785aab8149a1df3c8375ac40",
+        "cleanup": "9caf372eb266ab85e47436a63e23f0f2c602a342541d0e62f5b9fa2866e7f635"
+      },
+      "scope_history": {
+        "initial_conservative_override_qualified": false,
+        "override_sha256": "455f8013d6566ce4a60a41800316b93444e542e375ed8463310fde40afc06189",
+        "parent_scope_addendum_sha256": "bdb7e41df41821cf4ab09fecce0f53db8bfe05354dc110f72e26ec75cea8eaf5",
+        "parent_clarification": "Unknown role blocks while present; an unknown that exits before two empty samples and copy does not alone invalidate this scoped snapshot. Original override and raw report unchanged."
+      }
+    },
+    {
+      "python_series": "3.15",
+      "python_version": "3.15.2",
+      "python_version_evidence": "Same pinned image offline startup receipt in linux-startup.json; this RPC run did not separately rerun python --version.",
+      "platform": "linux/arm64 Podman VM container; not bare-metal",
+      "image_manifest": "sha256:1ad74dbefc00f66c4694756feecadd5cdfe54fdcbce1c78c74357b6660916960",
+      "image_config_id": "0d539227a5680f3930ee694bba8b37d8d990f7ff247ae834668096df4af5a294",
+      "execution": {
+        "mode": "persistent RPC",
+        "model": "openai-codex/gpt-6.1-sol",
+        "approval_mode": "native-existing-default",
+        "install_mode": "copy",
+        "install_source_kind": "development",
+        "install_revision": "unversioned",
+        "install_receipt_schema": "agent-memory/install-receipt-v2",
+        "installed_artifact_digest": "c8c4a03280d7c34e2eb975dfc4157a8a5999409790a0973a5d020ea3166a55b5",
+        "receipt_sha256": "c5d9156c2fe3f2a990d54f3534efb9aab390b47adb547c6caaa41a44ea150bda",
+        "extension_sha256": "f0f4c143b013640ee2be9cb9e83599d7ab86bd367f873b96e9b2c217ffc59c09",
+        "binary_sha256": "c2be1ea85ce17c4270854b57efff2a7ea1d5a03c7557fd08721f2b9bb32698de",
+        "native_version": "omp/18.16.0",
+        "caps": "ALL dropped",
+        "no_new_privileges": true,
+        "user_namespace": "keep-id, nonroot",
+        "resources": "2 CPU, 2 GiB memory and swap, 256 pids",
+        "mounts": "verified source export and native binary read-only, owned writable isolated fixture/state/evidence; no host home/config/socket mount",
+        "provider_access": "ordinary existing provider credentials in ephemeral native-child environment, unchanged native approval mode"
+      },
+      "result": {
+        "driver_exit": 0,
+        "driver_seconds": 68.96631956100464,
+        "driver_qualified": true,
+        "full_native_qualification": false,
+        "native_exit": 0,
+        "native_is_settled": true,
+        "answer_sentinel_counts": [
+          1,
+          1
+        ],
+        "refused_ui_requests": 0,
+        "failures_count": 0,
+        "observer_diagnostics": [
+          "observer wait ended; retained work pending"
+        ],
+        "observer_wait_seconds": 10.930711088993121,
+        "session_id": "01a1b397-f874-7675-8d76-a52d5ac8dd2d",
+        "current_human_observations": [
+          {
+            "native_entry_id": "715200dc",
+            "human_root": "0fe510e0-7502-485b-a17b-414796c17567",
+            "observation_id": "4b19608f-bc28-4f09-8454-2c025701e009",
+            "source_reference": "omp:capture:cd38418c-e955-5883-ab7e-b9a00121fc11",
+            "source_sha256": "2c0c2fa3fbfe4abce8eb8a3b711c3e07a1c43dd86ed7d9c5ef71b847ef129a78",
+            "mapping": "verified"
+          },
+          {
+            "native_entry_id": "3215b20d",
+            "human_root": "2122af00-f781-557c-b5cd-17e0868fe8a9",
+            "observation_id": "abf22443-7af7-4504-a719-b75f0705cdcc",
+            "source_reference": "omp:capture:3a8fc7c0-9511-5b93-8b05-ca0ed040315b",
+            "source_sha256": "035910b014674c6dc64c55ed20197cfafe870f3f432b8c27c1bb71ee11847a93",
+            "mapping": "verified"
+          }
+        ],
+        "readback_attempts": 16
+      },
+      "pending_readback": {
+        "status_counts": {
+          "pending-assessment": 4,
+          "pending-coverage-gap": 2,
+          "pending-native-tool": 1,
+          "pending-stored-source": 1
+        },
+        "fault_count": 0,
+        "inventory_complete": true,
+        "next_offset": null,
+        "source_completeness_verified": false,
+        "canonical_writes_performed": false,
+        "verified": true
+      },
+      "scoped_copy": {
+        "process_samples": [
+          {
+            "elapsed_seconds": 0.0,
+            "roles": [
+              "unknown",
+              "unknown"
+            ]
+          },
+          {
+            "elapsed_seconds": 0.501,
+            "roles": [
+              "unknown"
+            ]
+          },
+          {
+            "elapsed_seconds": 1.002,
+            "roles": []
+          },
+          {
+            "elapsed_seconds": 1.507,
+            "roles": []
+          }
+        ],
+        "process_roles_after": [],
+        "world_file_hashes_equal": true,
+        "world_manifest_comparison": "Decoded relative-path file-hash maps compared equal; raw manifest JSON byte hashes can differ because entry ordering differs.",
+        "public_verifier_responses_equal": true,
+        "qualification": "stable-scoped-copy",
+        "samples_are_not_global_writer_fence": true,
+        "source_verifiers_before": [
+          {
+            "exit": 0,
+            "source_sha256": "2c0c2fa3fbfe4abce8eb8a3b711c3e07a1c43dd86ed7d9c5ef71b847ef129a78",
+            "response_sha256": "f371d0c78a7c2177f7776b09d0fcfd4b689cde6e98f9039e7788170eef9eb7eb"
+          },
+          {
+            "exit": 0,
+            "source_sha256": "035910b014674c6dc64c55ed20197cfafe870f3f432b8c27c1bb71ee11847a93",
+            "response_sha256": "d002131648870006b1b435de9a37991d667994406e708b0297d5ed4aa268e8c8"
+          }
+        ],
+        "source_verifiers_after": [
+          {
+            "exit": 0,
+            "source_sha256": "2c0c2fa3fbfe4abce8eb8a3b711c3e07a1c43dd86ed7d9c5ef71b847ef129a78",
+            "response_sha256": "f371d0c78a7c2177f7776b09d0fcfd4b689cde6e98f9039e7788170eef9eb7eb"
+          },
+          {
+            "exit": 0,
+            "source_sha256": "035910b014674c6dc64c55ed20197cfafe870f3f432b8c27c1bb71ee11847a93",
+            "response_sha256": "d002131648870006b1b435de9a37991d667994406e708b0297d5ed4aa268e8c8"
+          }
+        ]
+      },
+      "cleanup": {
+        "owned_container_absence_exit": 1,
+        "owned_only": true,
+        "forensic_erasure_claimed": false
+      },
+      "private_receipt_sha256": {
+        "raw_smoke_report": "a69ed34efa9f0e1e4e5fc183e7f244796ba674747781a4452db6cb4f78ff4b85",
+        "driver_result": "8d851adcf3b315b0a1f65c8a3748dbebfa14e8f16cbd6770ef2098966682e046",
+        "installed_binding": "ad8af99ceeaffbec5a52c6aedf94682d772fddcfdc5767c8c1330b8ccdcf5074",
+        "fixture": "b2a5d2afc2c8ac83563bf999c6c9b39f9b09e0e1c78504844e8de15983aec432",
+        "launch": "ae2597728382d50aba661097ad6e8c98b4f26eed21f46cfce661fb0b7fc759cb",
+        "copy_qualification": "d667cf9c4895f42849e8eb24a87bdbb211fe98846213afdb7c9efb71a76c6de5",
+        "public_source_before": "77f0db2d420af5e7f2a981939409e89d4836337d9b477e76bf129eeb0b473e64",
+        "public_source_after": "2d0f2042270a441f01bbaae89993d0ce1c04e302b8d7db51e913a331f7c74416",
+        "world_manifest_before": "7df7423a413f137bdecc7cdc3dfa93fe9acce15a6abc435d4093760b81ca52cf",
+        "world_manifest_copy": "0c4119a9e8d3b370f7fa6fa2a74986e3aec0bf6a139a53acb95715d77d8aea31",
+        "world_manifest_after": "7df7423a413f137bdecc7cdc3dfa93fe9acce15a6abc435d4093760b81ca52cf",
+        "cleanup": "2dd3306c87e36c87d51ff1397131de2a3ffa8682f8f51cd473d8bd025166ea51"
+      }
+    }
+  ],
+  "earlier_attempts": [
+    {
+      "kind": "install-preview refusal: owned archive-export directory group writable; no model launched",
+      "private_receipt_sha256": "866ed299c8bf04040986af9bccb7a4846b0310d27a4394aff808221e917a86ac",
+      "cleanup_receipt_sha256": "a428ebd23317d3bbca99f97ebf310442cdab6cd3f4337e6dd86403fcec24342e"
+    },
+    {
+      "kind": "install-preview refusal: owned archive-export file group writable; no model launched",
+      "private_receipt_sha256": "282675bd254176715ca5339b9a64a7aa7d29a23c4109f1f53c9d60f3af491c8b",
+      "cleanup_receipt_sha256": "e5bd4984de6e0e846c5cab6a0688215455a32a83bd7b768a11812b775471f10c"
+    },
+    {
+      "kind": "prior driver qualified but effective evidence unqualified because live processes were present before World copy",
+      "raw_smoke_report_sha256": "656f664a40c8989e5ae82138fe6828b3257b5ca9ace5a4ecd2d3a1e5fc890a28",
+      "conservative_override_sha256": "1141552030de367025c501a6378a57c16ec341e60cad230cd06cdfd67e0613c6",
+      "snapshot_receipt_sha256": "ddbfc94b781346c7d737473a400cd2b39f69e6a4a721b94f9b4e1dec05447103",
+      "cleanup_receipt_sha256": "5fb42c623d3d0372190a4b06e6c4c21ea7148b1e3c9ee3d08d36ced1abc6a06f"
+    }
+  ],
+  "privacy_and_provenance": "Curated allowlisted projection only; no transcript, prompts, answers, private World, credentials, environment, host addresses or private paths are published. SHA-256 ties projections to retained private originals but does not authenticate the publisher or establish reproducible source/binary equivalence."
+}

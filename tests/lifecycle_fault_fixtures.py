@@ -11,7 +11,7 @@ import sys
 import unittest
 
 from world import World
-from fault_partitions import select as partition_rows, emit as emit_partition
+from fault_partitions import select as partition_rows, emit as emit_partition, selected_partition
 from runtime_update_fixtures import ROOT, PACK, version, bank, snapshot, receipt_path
 
 
@@ -76,7 +76,9 @@ def restore(world, base, parts):
 
 
 class LifecycleWriteCases:
-    def replay(self, operation, mode, phase, partition=None):
+    def replay(self, operation, mode, phase):
+        group = f'{operation}-write-{mode}-{phase}'
+        partition = selected_partition(group) if operation in {'install', 'uninstall'} else None
         with World() as world:
             install_argv, memory = setup(world, mode)
             memory_before = snapshot(memory)
@@ -116,7 +118,8 @@ class LifecycleWriteCases:
                               if t['kind'] != 'source' or expected.get('uninstalled')}
             clean_rows = read_trace(clean_path)
             all_selected = [row for row in clean_rows if row['phase'] == phase]
-            selected = partition_rows(all_selected, partition)
+            selected = partition_rows(all_selected, partition,
+                                      group=f'{operation}-write-{mode}-{phase}')
             kinds = {row['kind'] for row in clean_rows}
             self.assertTrue({'file-stage', 'record-publication'} <= kinds)
             if operation in {'install', 'uninstall', 'recover-rollback'}:
@@ -160,7 +163,7 @@ class LifecycleWriteCases:
             self.assertEqual(executed, [event['point'] for event in selected])
             self.assertGreater(len(executed), 0)
             if partition is not None:
-                emit_partition(f'{operation}-write-{mode}-{phase}', partition, all_selected, executed,
+                emit_partition(group, partition, all_selected, executed,
                                expected['source']['artifact_digest'])
             sys.stderr.write(json.dumps({'operation': operation, 'mode': mode, 'phase': phase,
                 'observed_write_points': len(selected), 'actual_interruptions_and_retries': len(executed),

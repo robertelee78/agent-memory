@@ -1,0 +1,115 @@
+{
+  "schema": "agent-memory/matched-eval-task-manifest-v0-proposed",
+  "status": "worked example of the #248 proposed schema; NOT a qualified task; no seed patch, reference repair, smoke test, assignment text or memory bank has been authored",
+  "task_id": "am-scope-missing-context-v0",
+  "family": "scope-applicability",
+  "use_case": "coding",
+  "repository": {
+    "url": "https://github.com/robertelee78/agent-memory",
+    "license_status": "no LICENSE/COPYING/NOTICE file tracked at base; redistribution of derived fixtures requires operator decision U3",
+    "self_hosting": true,
+    "primary_eligible": false,
+    "primary_ineligibility_reason": "No sealed runtime or both-arm answer-source canary proof exists; not a qualified task"
+  },
+  "base": {
+    "commit": "ce8660aecdbd40c8b11fb409d6cafc5cb15fbb3e",
+    "tree": "10181f7ec224d0b66e36107e4230dd5ed9f278a6",
+    "integrated_main": "2a0d7cbd73d425fb39cfa347d9262fcc8a8bc13e",
+    "repin_rule": "re-pin to the published v0.0.15 release commit at execution start and repeat every check below"
+  },
+  "target_source": [
+    {"path": "skills/agent-memory/scripts/agent_memory/scopes.py", "blob": "d6e622e61f8815a5b38d0e72101caa324cf676b3", "role": "module the future seed patch would alter; exact seed location is chosen by the independent task author"},
+    {"path": "skills/agent-memory/scripts/scope_policy.py", "blob": "4a3fda7a233286f5419a12cabe38bba49fa53ea2", "role": "portable entry point"},
+    {"path": "scripts/scope_policy.py", "blob": "23e46bcb3f5707a4b5277db6221f4291c1c54411", "role": "checkout entry point used by the oracle"}
+  ],
+  "hidden_oracle": {
+    "module": "tests/contracts/test_scope_policy.py",
+    "blob": "aa59ba7c8cfb361ba9803fb3189fe892447ce620",
+    "class": "ScopePolicyContract",
+    "target_test": "test_all_conditions_must_match_and_missing_context_never_becomes_universal",
+    "module_tests_expected": 4,
+    "registry_entry": {"name": "scope-policy", "layer": "bank", "scope": "v0.0.1", "path": "tests/contracts/test_scope_policy.py"},
+    "fixture_dependencies": ["tests/world.py", "scripts/scope_policy.py", "scripts/bank_contract.py", "skills/agent-memory/**"]
+  },
+  "grader": {
+    "runner_sources": [
+      {"path": "scripts/test.sh", "blob": "e9714627dd636c360af0aa15010fa34790f47991"},
+      {"path": "scripts/test_gate.py", "blob": "99051a34121ecb319441b431a3990f8c7f19d67e"},
+      {"path": "scripts/run_contract_suite.py", "blob": "9540f63ad20f78a2db18d342057f823e228de3ad"},
+      {"path": "tests/world.py", "blob": "27d7ccd9d224edb454a162b804e6a739cb604a68"},
+      {"path": "tests/fault_partitions.py", "blob": "f64da4a6b9cfe389a4a21df0f9b3ac0836f85d5f"},
+      {"path": "tests/contracts.json", "blob": "7868c50d6d8c1b8287716f2ff12ecbaf82406f43"}
+    ],
+    "single_module_invocation": "inside a fresh tests/world.py World(): world.run([sys.executable, '-I', ROOT/'scripts/run_contract_suite.py', ROOT/'tests/contracts/test_scope_policy.py'], check=False, timeout=300, group=True); mirrors scripts/test_gate.py main() per-suite execution; worker prints one JSON counts line",
+    "full_gate_invocation": "scripts/test.sh --release --json (as .github/workflows/contracts.yml)",
+    "pass_rule": "returncode 0 AND counts.passed true AND counts.tests == 4 AND zero failures/errors/skipped/expected_failures/unexpected_successes AND every module in the baseline-green regression set still passes AND no prohibited path changed",
+    "baseline_green_regression_set": {"status": "not measured in #248", "rule": "modules passing at the clean base on the same grader host/Python during qualification; a module failing at base is reported, never counted as solver regression"},
+    "grading_copy": "separate immutable clean-base copy plus sha256-verified seed_patch, then oracle/registry/bank restored by bound blobs; never grade an unseeded base; apply only allowlisted product-code diff relative to the seeded sanitized solver root, never canonical/private memory deltas; retain memory changes separately as S3 evidence; never return hidden test text",
+    "wrapper_qualification": "through the actual grading wrapper, an empty solver diff must fail target_test and must not receive exact-pass; the reference-repair diff relative to the seeded sanitized solver root must pass the complete oracle module and baseline-green regression set; record base/seed/diff hashes, commands and exits"
+  },
+  "seed_patch": {"status": "not-authored", "author": "independent task author (unassigned)", "sha256": null, "qualification": "sha256-verify and apply to the immutable clean base for every grading tree; empty solver diff through the actual grading wrapper must fail target_test; not executed in #248"},
+  "reference_repair": {"status": "not-authored", "author": "author separate from seed author (unassigned)", "sha256": null, "qualification": "diff relative to the seeded sanitized solver root; actual grading wrapper must pass the complete oracle module and baseline-green set; not executed in #248"},
+  "solver_tree_transform": {
+    "history": "one orphan root commit of the sanitized tree; no source refs, packs, reflogs, stashes, notes or remote; no access to the pinned repository objects",
+    "remove": [
+      {"path": "tests/contracts/test_scope_policy.py", "blob": "aa59ba7c8cfb361ba9803fb3189fe892447ce620", "reason": "hidden oracle"},
+      {"path": "docs/research/v0.0.15-matched-evaluation-protocol.md", "blob": null, "reason": "names the task's oracle and target module; blob bound after review"},
+      {"path": "docs/research/data/2026-11-05-matched-evaluation/", "blob": null, "reason": "this manifest and calculation data are answer-bearing"},
+      {"path": "docs/design/v0.0.15-248-research.md", "blob": null, "reason": "approved study plan names oracle/seed; remove and bind blob if present at release re-pin"},
+      {"path": "memory-bank/MEMORY.md", "blob": "c4b769638fd802a6e6a8290a3c46090101d0aad9", "reason": "committed project bank (self-hosting isolation)"},
+      {"path": "memory-bank/activeContext.md", "blob": "abd9f5565cddcadbb384972983e55c791d7bd400", "reason": "committed project bank"},
+      {"path": "memory-bank/history/events/02fae92e-c392-48c6-80c9-e76b82cca2b9.md", "blob": "51380b87e86dd3000576daacb212715707c28346", "reason": "committed project bank"},
+      {"path": "memory-bank/history/events/476b2d8d-6ecd-4bf7-a0f2-99fea4dfd79b.md", "blob": "d586db87e1d66a8d1baf9d73ea6b711d7ce216cd", "reason": "committed project bank"},
+      {"path": "memory-bank/history/events/4d451b02-97c0-4f2b-9a68-13f74b9530d3.md", "blob": "b7656cdba370c0e0e5cc2b24c60f725ffa38e3e2", "reason": "committed project bank"},
+      {"path": "memory-bank/history/events/7fc8ac35-41c4-47c9-8652-3484ae7ef3fa.md", "blob": "9584a6b6d0934d385a0cdc2843d5626a46e6deba", "reason": "committed project bank"},
+      {"path": "memory-bank/history/events/89b6ec8a-3773-4831-8380-e239330fcd45.md", "blob": "784d59d121347f3a03ac2cb6cff38bfc648f247d", "reason": "committed project bank"},
+      {"path": "memory-bank/history/events/c76fd836-d207-4ebb-8450-8827baf0df6a.md", "blob": "a004bb037233044483af1f143f6c0314ffb596c1", "reason": "committed project bank"},
+      {"path": "memory-bank/history/events/f439f01a-ddcf-4833-8dc3-bff8f08b10ef.md", "blob": "3fc0715b0a52b64bd3ad53cd6155aa863ed1b308", "reason": "committed project bank"},
+      {"path": "memory-bank/productContext.md", "blob": "9ddb8fdc010b5f0d84d3c339276b3e6eec16627a", "reason": "committed project bank"},
+      {"path": "memory-bank/progress.md", "blob": "8dfca16e9cf2574cd58ccdce4fef31d44ae6f8bc", "reason": "committed project bank"},
+      {"path": "memory-bank/projectbrief.md", "blob": "ee82ca9b8f73a071e25687961aad6fc600dc028c", "reason": "committed project bank"},
+      {"path": "memory-bank/systemPatterns.md", "blob": "d17b83b3479ef43b7d442099fcfe0e5e57489b5c", "reason": "committed project bank"},
+      {"path": "memory-bank/techContext.md", "blob": "8f28c5dfcc65e5e1defe86870d94ab144547c37a", "reason": "committed project bank"},
+      {"path": "memory-bank/topics/163d04c3-1d70-41ec-99b3-9b06f6f80b61.md", "blob": "4d3e9935481981c293ea3036cd1674cb2b16681c", "reason": "committed project bank"},
+      {"path": "memory-bank/topics/672d154e-be1e-4db9-a56b-dca30a9db915.md", "blob": "f94c805412f0acbe5c140ac2b5f314d88c75ef83", "reason": "committed project bank"},
+      {"path": "memory-bank/topics/6ef34ab6-b7ea-47fc-a97d-74440e18c464.md", "blob": "85c147664c2b8583b9e4006eac20a2a13c81bb4b", "reason": "committed project bank"},
+      {"path": "memory-bank/topics/829b92b6-6926-4e3e-801e-e51f88b62b57.md", "blob": "067a1fa0d0c4faeef5e2abbadd68d43e9876cbf2", "reason": "committed project bank"},
+      {"path": "memory-bank/topics/a1d938e4-a5a1-4fa1-a401-b0d2367368f4.md", "blob": "057a43723925ba99efaef84d9ea73ff5b848ab30", "reason": "committed project bank"},
+      {"path": "memory-bank/topics/a7a752e7-b981-41b7-95be-f0f37de1e3e3.md", "blob": "1a0c8142a1c45718fe678c9dd166f105f45e5df9", "reason": "committed project bank"},
+      {"path": "memory-bank/topics/fb0c23a6-148a-44f4-b050-bb161e903119.md", "blob": "a7d07027ab10180bdcad3e8f47121e0c0880c9d8", "reason": "committed project bank"}
+    ],
+    "rewrite": [
+      {"path": "tests/contracts.json", "base_blob": "7868c50d6d8c1b8287716f2ff12ecbaf82406f43", "drop_entries": ["scope-policy", "bounded-bank-observation"], "reason": "scripts/test_gate.py registry() rejects a registered path that is not a file; test_bounded_bank_observation.py copies ROOT/memory-bank, which self-hosting isolation removes"}
+    ],
+    "add": [
+      {"path": "tests/contracts/<separately authored non-revealing smoke>.py", "status": "not-authored", "registry": "optional new entry; must not reuse the hidden assertions"}
+    ],
+    "retain_inert_product_source": {
+      "paths": ["skills/agent-memory/**"],
+      "reason": "the code under edit lives here (scripts/*.py are runpy shims into skills/agent-memory/scripts) and 74 tracked test files reference skills/agent-memory by path",
+      "conditions": "identical bytes in both arms; not under any harness skill/context/extension discovery root; no installed runtime, hook or binding points at it; per-harness off-arm canary must confirm it is not listed as a loadable skill; else the pair is invalid (proposed disposition P4)"
+    },
+    "visible_overlap_review": [
+      {"path": "tests/contracts/test_retrieval.py", "blob": "40d19759e7ec87820739db648b1d85c4b3a2756e", "line": 379, "observation": "asserts 'missing-context:branch' exclusion through retrieval; ordinary regression signal overlapping the hidden behavior", "proposed": "retain as visible regression test unless the reviewer classifies it answer-bearing, then remove/hash/restore in grader"}
+    ]
+  },
+  "visible_smoke": {"status": "not-authored", "requirements": "exercises scope_policy decide on a non-hidden input; must not contain the hidden condition matrix; registered or runnable through the same World wrapper"},
+  "assignment_text": {"status": "not-authored", "requirements": "describe the user-visible symptom only; no file, function or oracle name"},
+  "environment": {"python_min": "3.11 (scripts/test_gate.py main)", "git": "required by tests/world.py", "network": "none required by the oracle; World sets GIT_ALLOW_PROTOCOL=file"},
+  "memory_on_bank": {"status": "not-authored", "requirements": "independently labeled safe project-scoped records from earlier independent tasks; relevant/irrelevant/stale/conflicting/revoked/no-help cases; never the target fix or hidden oracle"},
+  "runtime_answer_source_isolation": {
+    "status": "not-authored",
+    "runtime_artifact_hashes": null,
+    "agent_visible_roots": null,
+    "os_or_broker_boundary": null,
+    "blocked_source_debug_process_trace_routes": null,
+    "both_arm_planted_answer_source_canary_results": null,
+    "requirements": "Protocol section 6.6: source-hash and content checks including installed AM source, caches, archives, history, process/debug/network routes; accessible answer or uninspectable route excludes self-hosted task from P"
+  },
+  "grading_diff_boundary": {
+    "product_code_allowlist": null,
+    "excluded_memory_roots": ["memory-bank/", "all private AM runtime/config/state roots from the run manifest"],
+    "memory_delta_evidence": {"status": "not-authored", "requirements": "retain canonical/private memory changes separately for S3/lifecycle; legitimate memory writes are not a coding failure"},
+    "prohibited_changes": ["hidden oracle", "grader", "registry outside declared rewrite", "CI"]
+  }
+}

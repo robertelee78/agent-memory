@@ -35,12 +35,44 @@ owned targets when managed source is missing, but MUST NOT guess targets when
 the ownership receipt is missing or invalid. Explicit developer sources remain
 outside removal ownership.
 
+Uninstall MUST refuse target removal while unknown or unresolved private
+recovery/source requirements would lose their capable reader/writer. An already
+active independently verified equivalent capable runtime MUST be explicitly
+selected and preserved before that removal can proceed. Quiescence, complete
+private-state discovery and the union capability preflight are separate from
+file ownership. Removing executable bindings does not resolve source units,
+publish memory or authorize deletion of external recovery evidence.
+The explicit selection is
+`--preserve-capable-runtime /absolute/other-install-state/receipt.json`.
+The helper rechecks that separate active ownership receipt, measured package
+and every owned target, and refuses overlap with the removal set. Supplying a
+path or capability boolean without a verified active installation is insufficient.
+When the selected reader's digest or actual invocation routes need a new bound
+review, supply repeatable `--layout-quiescence /private/path/renewal.json`
+files alongside that selection. The envelope contains the exact recovery
+attestation and independent review; `--check` validates it without publication.
+Apply rechecks the reader receipt, all targets, the bank frontier and the
+reviewed routes under the source barriers. No separate reader selection is
+needed only when the complete private-state union is genuinely empty.
+
+For an owned native binding, the session MUST stop its AM writers and explicitly
+pass `--omp-writers-quiesced` to preview and apply. Drain verifies both the
+historical source proof and the separate `omp-stream-drain-v1` proof before
+removing the compatibility marker. It MUST preserve the old proof format for
+older readers and retain stream evidence after removal. An open stream,
+unresolved source, unknown attempt or sticky `startup-incomplete` record MUST
+keep drain pending; stopping a process alone is not proof of coverage. The
+session MUST NOT delete such records or the marker to force removal.
+
+
+
+
 ## Plan
 
 The session MUST preview removal before applying it:
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/uninstall_runtime.py" uninstall --check > /private/path/uninstall-plan.json
+python3 -I "$SKILL_DIR/scripts/uninstall_runtime.py" uninstall --check > /private/path/uninstall-plan.json
 ```
 
 The session MUST review each target's before/after identity and the `preserved`
@@ -54,7 +86,7 @@ After an authorized acceptable preview, the session MUST run the same helper
 without `--check`, or the installed `agent-memory uninstall` command:
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/uninstall_runtime.py" uninstall > /private/path/uninstall-receipt.json
+python3 -I "$SKILL_DIR/scripts/uninstall_runtime.py" uninstall > /private/path/uninstall-receipt.json
 ```
 
 The lifecycle lock, external journal and native per-target moves retain rollback
@@ -102,9 +134,14 @@ The session MUST recover interrupted runtime removal using the trusted complete
 package, even when the installed command and managed source are gone:
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/installer.py" recover
+python3 -I "$SKILL_DIR/scripts/installer.py" recover
 ```
 
-The session MUST read the verified recovery result before retrying uninstall.
+The session MUST inspect the recovery result before retrying uninstall.
 Recovery restores an incomplete removal or verifies its committed receipt;
 external edits discovered during recovery remain preserved for reconciliation.
+An already-uninstalled receipt with a pending, unverified journal MUST NOT be
+reported as verified merely by repeating uninstall. The session MUST preserve
+that journal and the edits. If re-establishing the runtime is authorized, it MAY
+use the recorded reinstall recipe through the installation operation's explicit
+ownership re-plan; it MUST NOT delete evidence or initialize replacement memory.

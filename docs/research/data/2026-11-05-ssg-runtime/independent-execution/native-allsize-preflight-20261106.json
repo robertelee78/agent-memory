@@ -1,0 +1,388 @@
+{
+  "schema": "am255/native-allsize-preflight-and-catalog-integrity-v1",
+  "source_commit": "3187629caa2d1aa39649582a576751540500b5b3",
+  "qualification_scope": "Real native fixtures/catalog/profile integrity only; no model/graph services, embeddings or semantic-quality queries. Not G1/legal/profile/production/release acceptance.",
+  "all_size_preflight": {
+    "observed_exit": 0,
+    "elapsed_seconds": 933.92,
+    "receipt_sha256": "a04a44bd9db0e080d4f26030796e3085b48ceccdc7a001c8e5186353b70c3acb",
+    "missing_prerequisites": [],
+    "sizes": [
+      {
+        "size": 1000,
+        "generations": 8,
+        "variant_controls": {
+          "base": 88,
+          "overlay": 101
+        },
+        "valid_requests": 183,
+        "native_refusals": 6,
+        "matched_crosschecks": 183,
+        "distinct_first_allowed_queries": 73,
+        "schedule_sha256": "8710fc8438bd7be7c31fd92f0a10dc852a9e8c2a289386a8029eb8af21a83466",
+        "catalogs": [
+          {
+            "generation_id": "g-1000-base-fe470421f76be2112a58",
+            "variant": "base",
+            "mutation": null,
+            "stage": null,
+            "canonical_sha256": "fe470421f76be2112a58780588bc17d53475296f4a437c96625c7e61dd2c72e8",
+            "catalog": {
+              "path": "sizes/1000/g-1000-base-fe470421f76be2112a58/catalog.json",
+              "sha256": "b1201f0b87c823e4350998f53914ec3c109d06fee1ba008107c3c463caeadff0"
+            }
+          },
+          {
+            "generation_id": "g-1000-overlay-c8034c687a059a6fd9e7",
+            "variant": "overlay",
+            "mutation": null,
+            "stage": null,
+            "canonical_sha256": "c8034c687a059a6fd9e7b3c94ed52473104c4bc31b5039fed7aaf73a42d4ea01",
+            "catalog": {
+              "path": "sizes/1000/g-1000-overlay-c8034c687a059a6fd9e7/catalog.json",
+              "sha256": "803ac01e385cdbd5a92ef95eab350edd622316fd6927ab96ef4fef8d841d39cf"
+            }
+          },
+          {
+            "generation_id": "g-1000-base-8a36f9421cae99ecf099",
+            "variant": "base",
+            "mutation": "correct-retry-limit",
+            "stage": "after-rebuild",
+            "canonical_sha256": "8a36f9421cae99ecf0992043cf1888a289ddb1a6c59650eed7673f31b5245539",
+            "catalog": {
+              "path": "sizes/1000/g-1000-base-8a36f9421cae99ecf099/catalog.json",
+              "sha256": "e20ebe7611e57e7bb03e3804bd78a884fd63ccfd3ef5a5ee393bf0d11efc5b72"
+            }
+          },
+          {
+            "generation_id": "g-1000-overlay-fe7071a9e5520733d5c3",
+            "variant": "overlay",
+            "mutation": "correct-retry-limit",
+            "stage": "after-rebuild",
+            "canonical_sha256": "fe7071a9e5520733d5c3500a6a40e993daa71f8a49619e889162f1394ccf3bb4",
+            "catalog": {
+              "path": "sizes/1000/g-1000-overlay-fe7071a9e5520733d5c3/catalog.json",
+              "sha256": "8abe1e79ade26a2c93fb5a471fac1639b254b8c4a5143a3450dcffe8d9252bde"
+            }
+          },
+          {
+            "generation_id": "g-1000-base-78b8cb458802ab779d3a",
+            "variant": "base",
+            "mutation": "revoke-deployment-queue",
+            "stage": "after-rebuild",
+            "canonical_sha256": "78b8cb458802ab779d3a5c5e802f8c425b8e36cf310e697f63fc735c0d1a483c",
+            "catalog": {
+              "path": "sizes/1000/g-1000-base-78b8cb458802ab779d3a/catalog.json",
+              "sha256": "393b017c408be7de0342aea1d31a73be8cc2b2e37cf75c4e086ceec3393cd3f9"
+            }
+          },
+          {
+            "generation_id": "g-1000-overlay-077c4e0de3ad52811b0f",
+            "variant": "overlay",
+            "mutation": "revoke-deployment-queue",
+            "stage": "after-rebuild",
+            "canonical_sha256": "077c4e0de3ad52811b0fa00060891ceb95aa9a477a1ab197f26a3245729d5d77",
+            "catalog": {
+              "path": "sizes/1000/g-1000-overlay-077c4e0de3ad52811b0f/catalog.json",
+              "sha256": "512da4863997879d8d0e42b34e3f2f2832fa91e23592d1b64878e481c29603f9"
+            }
+          },
+          {
+            "generation_id": "g-1000-base-69c85bc67e5fd111e4d0",
+            "variant": "base",
+            "mutation": "delete-receipt-b",
+            "stage": "after-rebuild",
+            "canonical_sha256": "69c85bc67e5fd111e4d0be0c203190808e6bb887763d524bff5cb449383ae017",
+            "catalog": {
+              "path": "sizes/1000/g-1000-base-69c85bc67e5fd111e4d0/catalog.json",
+              "sha256": "38cebb1a5b320fdb1d9829cd226d8c86a5d5c984a9aef055e1ebcd7df7a058dd"
+            }
+          },
+          {
+            "generation_id": "g-1000-overlay-d5064fe72e4a92bee534",
+            "variant": "overlay",
+            "mutation": "delete-receipt-b",
+            "stage": "after-rebuild",
+            "canonical_sha256": "d5064fe72e4a92bee5347776aedf2be3d64fe13cb4ebc39aac325990f03e621f",
+            "catalog": {
+              "path": "sizes/1000/g-1000-overlay-d5064fe72e4a92bee534/catalog.json",
+              "sha256": "1ac1852fe1f2cc44ad4e8e7f381087300c42a9bbcb4d137af9d8f8fb7b3493b8"
+            }
+          }
+        ]
+      },
+      {
+        "size": 10000,
+        "generations": 8,
+        "variant_controls": {
+          "base": 88,
+          "overlay": 101
+        },
+        "valid_requests": 183,
+        "native_refusals": 6,
+        "matched_crosschecks": 183,
+        "distinct_first_allowed_queries": 73,
+        "schedule_sha256": "1899bb2c43987e6d981c4210b46c2dc718578ab09f7f702ea0cc7c30ce9e73bd",
+        "catalogs": [
+          {
+            "generation_id": "g-10000-base-a44563adada60bc3487d",
+            "variant": "base",
+            "mutation": null,
+            "stage": null,
+            "canonical_sha256": "a44563adada60bc3487dd07f8a94ed81345654635da4a1aca3bbacfb65a5d5e8",
+            "catalog": {
+              "path": "sizes/10000/g-10000-base-a44563adada60bc3487d/catalog.json",
+              "sha256": "d03bb5d9dc7f64f66dfe6128d9645f2e991a8ac5445fa1fb28c41f921da19615"
+            }
+          },
+          {
+            "generation_id": "g-10000-overlay-471a853041329ae06ac3",
+            "variant": "overlay",
+            "mutation": null,
+            "stage": null,
+            "canonical_sha256": "471a853041329ae06ac33fd07ba566b522a401ffe05bc1ccc18d76647c4e4e9e",
+            "catalog": {
+              "path": "sizes/10000/g-10000-overlay-471a853041329ae06ac3/catalog.json",
+              "sha256": "39688bcc969fc9754470323b1d5f2e7e26e2780d06d9ceee291591baab44c91c"
+            }
+          },
+          {
+            "generation_id": "g-10000-base-524cf25ec916f821a009",
+            "variant": "base",
+            "mutation": "correct-retry-limit",
+            "stage": "after-rebuild",
+            "canonical_sha256": "524cf25ec916f821a0090eb4ce2cb30a1ad93df974bd9cac748d82ec7bd29bc8",
+            "catalog": {
+              "path": "sizes/10000/g-10000-base-524cf25ec916f821a009/catalog.json",
+              "sha256": "d6a9add254d2da960e0e7542512e49980537c7b4a7db77dee9284f1c86c65284"
+            }
+          },
+          {
+            "generation_id": "g-10000-overlay-2b47ab86bc4d631ba34c",
+            "variant": "overlay",
+            "mutation": "correct-retry-limit",
+            "stage": "after-rebuild",
+            "canonical_sha256": "2b47ab86bc4d631ba34c73b9a2e739b76a5a5ae835f71464617a39acd1c2ba88",
+            "catalog": {
+              "path": "sizes/10000/g-10000-overlay-2b47ab86bc4d631ba34c/catalog.json",
+              "sha256": "5f5b12e3541545bce45cb6e62cd3f45e5b567ba5311eb7ce4371262a530380f8"
+            }
+          },
+          {
+            "generation_id": "g-10000-base-23d0d2a5a2ae75bc8f9a",
+            "variant": "base",
+            "mutation": "revoke-deployment-queue",
+            "stage": "after-rebuild",
+            "canonical_sha256": "23d0d2a5a2ae75bc8f9a8fd07a3e9be6083132702ed94d55f2ff7ce73fec1d1d",
+            "catalog": {
+              "path": "sizes/10000/g-10000-base-23d0d2a5a2ae75bc8f9a/catalog.json",
+              "sha256": "2838fb1024689f53024ec3759abaedc9fec3b01f2807218cfb3774b184d730c1"
+            }
+          },
+          {
+            "generation_id": "g-10000-overlay-26536ebfcbb5af4d2ff5",
+            "variant": "overlay",
+            "mutation": "revoke-deployment-queue",
+            "stage": "after-rebuild",
+            "canonical_sha256": "26536ebfcbb5af4d2ff52848e4a819fab76cf42da7820a420ab2521b90c97769",
+            "catalog": {
+              "path": "sizes/10000/g-10000-overlay-26536ebfcbb5af4d2ff5/catalog.json",
+              "sha256": "77487f6eb8d83e54da3fce18da35e4203192b2f50767bdb636a1400768799447"
+            }
+          },
+          {
+            "generation_id": "g-10000-base-a594183d2282956b375b",
+            "variant": "base",
+            "mutation": "delete-receipt-b",
+            "stage": "after-rebuild",
+            "canonical_sha256": "a594183d2282956b375bbac0ff48672370ddb70d24069b2836485353c858d832",
+            "catalog": {
+              "path": "sizes/10000/g-10000-base-a594183d2282956b375b/catalog.json",
+              "sha256": "51bf6d130aaef5e77e7831299784192d1f05826076c25c921050d9ef3ae11306"
+            }
+          },
+          {
+            "generation_id": "g-10000-overlay-3192c9c1fe35800a1d1c",
+            "variant": "overlay",
+            "mutation": "delete-receipt-b",
+            "stage": "after-rebuild",
+            "canonical_sha256": "3192c9c1fe35800a1d1ceb19aa64c2763ec4a6efe648d95e522d77a10f6802ef",
+            "catalog": {
+              "path": "sizes/10000/g-10000-overlay-3192c9c1fe35800a1d1c/catalog.json",
+              "sha256": "16700d1db121f62f1d862c07ca4e2c50aa1ffc004112d160330856f93f46e8f4"
+            }
+          }
+        ]
+      },
+      {
+        "size": 50000,
+        "generations": 8,
+        "variant_controls": {
+          "base": 88,
+          "overlay": 101
+        },
+        "valid_requests": 183,
+        "native_refusals": 6,
+        "matched_crosschecks": 183,
+        "distinct_first_allowed_queries": 73,
+        "schedule_sha256": "0534447a5c204cdaf043767f5a7fb3796bc4e8646cc3b4aa7d27b8f7f2a240a9",
+        "catalogs": [
+          {
+            "generation_id": "g-50000-base-183230b232a6b38c55c1",
+            "variant": "base",
+            "mutation": null,
+            "stage": null,
+            "canonical_sha256": "183230b232a6b38c55c11424c6c5653d2b0121060f015945ed7cf054a4137ff6",
+            "catalog": {
+              "path": "sizes/50000/g-50000-base-183230b232a6b38c55c1/catalog.json",
+              "sha256": "8114fa7d94da0d34bf1bfcb98245ac892b3e25adb2495bba62f5115745085260"
+            }
+          },
+          {
+            "generation_id": "g-50000-overlay-9f1fecb6c3cfed11c166",
+            "variant": "overlay",
+            "mutation": null,
+            "stage": null,
+            "canonical_sha256": "9f1fecb6c3cfed11c1668e3f4e51c5cf55f4f475da9c687559fba188883fe931",
+            "catalog": {
+              "path": "sizes/50000/g-50000-overlay-9f1fecb6c3cfed11c166/catalog.json",
+              "sha256": "09f319a3c9fdc769ccf956140de57e36aee1a045f94bc741528e05ca4a4ada64"
+            }
+          },
+          {
+            "generation_id": "g-50000-base-b70c011ba8ef44ec1778",
+            "variant": "base",
+            "mutation": "correct-retry-limit",
+            "stage": "after-rebuild",
+            "canonical_sha256": "b70c011ba8ef44ec177862fef52e2bace23ef5e828abec23ed6772aaa75f2b5b",
+            "catalog": {
+              "path": "sizes/50000/g-50000-base-b70c011ba8ef44ec1778/catalog.json",
+              "sha256": "247b331fbd7d33947d3309eeb522c2dc6d618f84ab653d1300b7940b8c82db93"
+            }
+          },
+          {
+            "generation_id": "g-50000-overlay-859bc3ddabeb9c146336",
+            "variant": "overlay",
+            "mutation": "correct-retry-limit",
+            "stage": "after-rebuild",
+            "canonical_sha256": "859bc3ddabeb9c146336d1d60b0f6b59b17af602c83ca12a47600e1cef0af886",
+            "catalog": {
+              "path": "sizes/50000/g-50000-overlay-859bc3ddabeb9c146336/catalog.json",
+              "sha256": "a97bbe55a0794f6c8847fe10a82499ff074373eacbd8211dfb15c6a19644ef90"
+            }
+          },
+          {
+            "generation_id": "g-50000-base-00ca457704b7ba1873fc",
+            "variant": "base",
+            "mutation": "revoke-deployment-queue",
+            "stage": "after-rebuild",
+            "canonical_sha256": "00ca457704b7ba1873fc0a3390f28e32d5636bb4743e5216746f4d07569db0ec",
+            "catalog": {
+              "path": "sizes/50000/g-50000-base-00ca457704b7ba1873fc/catalog.json",
+              "sha256": "44dcdd049560e5f8e8d4ca447da62af352beaafac3801b79e68d8874b1adbe70"
+            }
+          },
+          {
+            "generation_id": "g-50000-overlay-3a9cc0e72e16af471f28",
+            "variant": "overlay",
+            "mutation": "revoke-deployment-queue",
+            "stage": "after-rebuild",
+            "canonical_sha256": "3a9cc0e72e16af471f28867340131a13d1a9fe472aa45b28452f3b4efa17d207",
+            "catalog": {
+              "path": "sizes/50000/g-50000-overlay-3a9cc0e72e16af471f28/catalog.json",
+              "sha256": "ccd3acc1834477eb15c6893acd173bd18b24223b5cd103a210cdbd4f40ffc7d1"
+            }
+          },
+          {
+            "generation_id": "g-50000-base-a2d669a60de1ef40c510",
+            "variant": "base",
+            "mutation": "delete-receipt-b",
+            "stage": "after-rebuild",
+            "canonical_sha256": "a2d669a60de1ef40c5105c7f9183c166644b12ae6cbba8246ac5a1210c822885",
+            "catalog": {
+              "path": "sizes/50000/g-50000-base-a2d669a60de1ef40c510/catalog.json",
+              "sha256": "84be5f10b4c6ac341b4f6a1ad0f21cb156fd4f5af0e27b1cd517b50f71d3a681"
+            }
+          },
+          {
+            "generation_id": "g-50000-overlay-0a982ce752f08a0be64c",
+            "variant": "overlay",
+            "mutation": "delete-receipt-b",
+            "stage": "after-rebuild",
+            "canonical_sha256": "0a982ce752f08a0be64cd62740723469076d26fba71d1b9af51cc3f64c9f267c",
+            "catalog": {
+              "path": "sizes/50000/g-50000-overlay-0a982ce752f08a0be64c/catalog.json",
+              "sha256": "8e9c2e291f053c70ac38c7c265ac5d51ebcec30cc8bd5d49334be236cfed732a"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "catalog_integrity_score": {
+    "observed_exit": 0,
+    "elapsed_seconds": 19.88,
+    "expected_source_commit": "3187629caa2d1aa39649582a576751540500b5b3",
+    "report_sha256": "6996cbe981432c7a9ce54b5133949b587fe406c2b013d11574c43563eaca7e73",
+    "integrity_only_manifest_sha256": "df2e14c720762515645f1616239ce488e09277b206d8ab8cab5ab939feb8ca52",
+    "status": "raw-research-report-not-acceptance",
+    "expected_cells": 567,
+    "observation_cells": 0,
+    "bound_artifact_count": 69,
+    "every_quality_cell_unexecuted": true,
+    "model_graph_llm_calls": 0
+  },
+  "retained_raw_root": "/private/tmp/am-v15-delivery/255-integrated-allsize-preflight-20261106",
+  "later_source_boundary": {
+    "final_reviewed_source": "8577e1f3756f0b18c328081bfbd006f64ff6d169",
+    "changes": "Controller/graph/template finalization/disposal guards changed after3187629. Native/render/catalog code unchanged; this earlier preflight is not retroattested to8577e1f. The subsequent freeze and failed actual run are recorded below."
+  },
+  "later_attempts": [
+    {
+      "source_commit": "8577e1f3756f0b18c328081bfbd006f64ff6d169",
+      "preflight": {
+        "observed_exit": 0,
+        "elapsed_seconds": 947.79,
+        "freeze_sha256": "b99d759270c6d9a46d981054edb2cf30dcf8ce59ba92780b51fa8d2f53732e53",
+        "retained_root": "/private/tmp/am-v15-delivery/255-final-allsize-freeze-20261106"
+      },
+      "canonical_catalog_score": {
+        "observed_exit": 0,
+        "elapsed_seconds": 18.7267,
+        "report_sha256": "cc6109a8a1fa79bf3cf99180a9bf0f2bfca0ede2526fc073b295a560661c11e1",
+        "expected_cells": 567,
+        "observation_cells": 0,
+        "all_quality_unexecuted": true,
+        "earlier_rejected_attempt_retained": "The first score used a symlinked /tmp source path and was integrity-rejected; the separate canonical /private/tmp score passed. Neither executed model or graph queries."
+      },
+      "actual_run": {
+        "observed_exit": 1,
+        "elapsed_seconds": 933.2873498749686,
+        "retained_root": "/private/tmp/am-v15-delivery/255-independent-actual-20261106",
+        "controller_root": "/private/tmp/am-v15-delivery/255-independent-actual-controller-20261106",
+        "services_started": false,
+        "failure": "Retained independently reviewed freeze differs: source_fixture_identity_sha256",
+        "diagnosis": "Only runtime profile version.stderr changed: Metal load timing0.028s versus0.027s. Source, inputs, spec, IO, schedules and catalogs were unchanged. This is an identity-construction defect, not query-quality evidence."
+      }
+    },
+    {
+      "source_commit": "35f27906120221ebbc06093c1e11fb6ec722e586",
+      "change": "Retain the full untouched version command as a hash-bound runtime_observations pointer outside source_fixture_identity. Stable profile retains exact build/revision/compiler, verified executable/weight/library inventory, dependencies, image, OS and kernel facts. No warning or diagnostic is suppressed.",
+      "actual_artifact_smoke": {
+        "passed": true,
+        "elapsed_seconds": 7.663295375008602,
+        "profiles_byte_equal": true,
+        "profile_sha256": "1e3b9069db08f068e6bfcc9ee6c92d787e73551fc4e510db2cd772c1983db407",
+        "raw_observation_sha256": [
+          "f93750a7b41278b68befc57f7ba4e43ccbc176af492246d3af846d325710cf82",
+          "c81295a22dc082dffc66cddb420d29f0dabcd97ad14a6d8441378b45f441ca86"
+        ],
+        "retained_root": "/private/tmp/am-v15-delivery/255-stable-runtime-identity-smoke-20261107",
+        "services_started": false,
+        "limit": "Two real artifact probes only; not a new all-size freeze, graph smoke or query-quality result."
+      },
+      "independent_review": "Executor255RuntimeOpus and Executor255ControllerOpus: scoped source PASS at35f2790, actual probe receipts inspected; reviewers ran no workloads. No G1/legal/profile/quality/release acceptance.",
+      "residual": "The retained uname -a identity includes the host name; a host-name change still fails closed and requires a new reviewed freeze."
+    }
+  ]
+}

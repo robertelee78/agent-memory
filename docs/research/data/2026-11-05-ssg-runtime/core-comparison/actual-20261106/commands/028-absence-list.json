@@ -1,0 +1,15 @@
+{
+  "argv": [
+    "podman",
+    "volume",
+    "ls",
+    "--format",
+    "{{.Name}}"
+  ],
+  "cwd": "/Users/robert.lee/.omp/wt/t4d88ac83b/m",
+  "exit": 0,
+  "seconds": 0.0766395420068875,
+  "started_at": "2026-11-06T19:17:01.708378+00:00",
+  "stderr": "",
+  "stdout": "am255-compare-27803fd335de-core-logs\n"
+}

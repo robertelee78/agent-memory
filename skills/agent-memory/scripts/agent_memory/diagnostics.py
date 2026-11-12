@@ -167,7 +167,8 @@ def receipt_view(report):
         raw = record(path)
         installation.require(isinstance(raw, dict), 'Invalid receipt')
         active = installation.read_receipt(state)
-        installation.require(raw.get('schema') == installation.RECEIPT_SCHEMA, 'Unknown receipt schema')
+        from . import omp_installation
+        installation.require(raw.get('schema') in omp_installation.SCHEMAS, 'Unknown receipt schema')
         report.value['installation'].update(
             state='active' if active else 'uninstalled', receipt_schema=raw['schema'],
             mode=raw.get('mode'), enabled_adapters=raw.get('enabled_adapters', []) if active else [],
@@ -458,8 +459,19 @@ def runtime_doctor(report, active):
                             if artifact.inspect(path)['artifact_digest'] != target['artifact_digest']:
                                 raise DiagnosticFailure('Client artifact digest differs from the installation receipt.')
                         if target['kind'] == 'wrapper':
-                            installation.require(read(path) == installation.wrapper(Path(active['source']['pack'])) and
-                                                 os.access(path, os.X_OK), 'Wrapper is not the owned executable entrypoint')
+                            binding = active.get('omp_binding')
+                            pack = Path(active['source']['pack'])
+                            if binding and target['path'] == binding['extension_target']:
+                                from . import omp_installation
+                                expected = omp_installation.extension_wrapper(
+                                    pack, active['source']['artifact_digest'], binding)
+                                installation.require(read(path) == expected,
+                                                     'Native extension differs from its owned entrypoint')
+                            elif path in {Path(active['bin_dir']) / name for name in installation.COMMAND_NAMES}:
+                                installation.require(read(path) == installation.wrapper(pack) and
+                                                     os.access(path, os.X_OK), 'Wrapper is not the owned executable entrypoint')
+                            else:
+                                raise DiagnosticFailure('Wrapper path has no recognized role in the installation receipt.')
                     if target['kind'] == 'hook-config':
                         report.add('runtime.target.hook-config', 'pass',
                                    'Receipt-owned prompt and recorded Stop entries are intact; other configuration may differ.', path=path)
@@ -669,6 +681,12 @@ def run(operation, repo='.', projection=None):
         bank = {'state': 'unresolved', 'path': None, 'project_id': None, 'counts_by_lifecycle': None}
     report.value.update(repository=str(root), bank=bank)
     identities(report, root, bank)
+    if active and active.get('omp_binding'):
+        def native_status():
+            from . import omp_installation
+            report.value['omp'] = omp_installation.diagnostics(root, active)
+        report.attempt('omp.native_boundary', native_status,
+                       'Inspect saved omp binding and retained source evidence. Disk integrity is not native discovery, assessment, refresh or witnessed publication.')
     if operation == 'status':
         report.attempt('data.purge', lambda: shallow_purge_state(report, root),
                        'Preserve purge metadata and quarantine; inspect through am doctor without resuming deletion.')

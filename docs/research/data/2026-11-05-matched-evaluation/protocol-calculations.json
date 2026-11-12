@@ -1,0 +1,463 @@
+{
+  "assumptions": {
+    "cache_read_fraction_of_input_rate": 0.1,
+    "input_tokens_per_run": 120000,
+    "minutes_per_run": 10,
+    "output_tokens_per_run": 20000,
+    "status": "placeholders, not measurements or prices",
+    "usd_per_million_input": 3.0,
+    "usd_per_million_output": 15.0
+  },
+  "budget": [
+    {
+      "design": "pilot",
+      "multiplier": 0.5,
+      "per_arm_usd_cold": 26.4,
+      "runs": 160,
+      "serial_minutes": 800.0,
+      "tokens_total": 11200000,
+      "usd_cold": 52.8,
+      "usd_warm80": 32.06
+    },
+    {
+      "design": "pilot",
+      "multiplier": 1,
+      "per_arm_usd_cold": 52.8,
+      "runs": 160,
+      "serial_minutes": 1600,
+      "tokens_total": 22400000,
+      "usd_cold": 105.6,
+      "usd_warm80": 64.13
+    },
+    {
+      "design": "pilot",
+      "multiplier": 2,
+      "per_arm_usd_cold": 105.6,
+      "runs": 160,
+      "serial_minutes": 3200,
+      "tokens_total": 44800000,
+      "usd_cold": 211.2,
+      "usd_warm80": 128.26
+    },
+    {
+      "design": "pilot",
+      "multiplier": 5,
+      "per_arm_usd_cold": 264.0,
+      "runs": 160,
+      "serial_minutes": 8000,
+      "tokens_total": 112000000,
+      "usd_cold": 528.0,
+      "usd_warm80": 320.64
+    },
+    {
+      "design": "pilot",
+      "multiplier": 10,
+      "per_arm_usd_cold": 528.0,
+      "runs": 160,
+      "serial_minutes": 16000,
+      "tokens_total": 224000000,
+      "usd_cold": 1056.0,
+      "usd_warm80": 641.28
+    },
+    {
+      "design": "confirmatory",
+      "multiplier": 0.5,
+      "per_arm_usd_cold": 237.6,
+      "runs": 1440,
+      "serial_minutes": 7200.0,
+      "tokens_total": 100800000,
+      "usd_cold": 475.2,
+      "usd_warm80": 288.58
+    },
+    {
+      "design": "confirmatory",
+      "multiplier": 1,
+      "per_arm_usd_cold": 475.2,
+      "runs": 1440,
+      "serial_minutes": 14400,
+      "tokens_total": 201600000,
+      "usd_cold": 950.4,
+      "usd_warm80": 577.15
+    },
+    {
+      "design": "confirmatory",
+      "multiplier": 2,
+      "per_arm_usd_cold": 950.4,
+      "runs": 1440,
+      "serial_minutes": 28800,
+      "tokens_total": 403200000,
+      "usd_cold": 1900.8,
+      "usd_warm80": 1154.3
+    },
+    {
+      "design": "confirmatory",
+      "multiplier": 5,
+      "per_arm_usd_cold": 2376.0,
+      "runs": 1440,
+      "serial_minutes": 72000,
+      "tokens_total": 1008000000,
+      "usd_cold": 4752.0,
+      "usd_warm80": 2885.76
+    },
+    {
+      "design": "confirmatory",
+      "multiplier": 10,
+      "per_arm_usd_cold": 4752.0,
+      "runs": 1440,
+      "serial_minutes": 144000,
+      "tokens_total": 2016000000,
+      "usd_cold": 9504.0,
+      "usd_warm80": 5771.52
+    },
+    {
+      "design": "mechanism_pilot_omp",
+      "multiplier": 0.5,
+      "per_arm_usd_cold": null,
+      "runs": 84,
+      "serial_minutes": 420.0,
+      "tokens_total": 5880000,
+      "usd_cold": 27.72,
+      "usd_warm80": 16.83
+    },
+    {
+      "design": "mechanism_pilot_omp",
+      "multiplier": 1,
+      "per_arm_usd_cold": null,
+      "runs": 84,
+      "serial_minutes": 840,
+      "tokens_total": 11760000,
+      "usd_cold": 55.44,
+      "usd_warm80": 33.67
+    },
+    {
+      "design": "mechanism_pilot_omp",
+      "multiplier": 2,
+      "per_arm_usd_cold": null,
+      "runs": 84,
+      "serial_minutes": 1680,
+      "tokens_total": 23520000,
+      "usd_cold": 110.88,
+      "usd_warm80": 67.33
+    },
+    {
+      "design": "mechanism_pilot_omp",
+      "multiplier": 5,
+      "per_arm_usd_cold": null,
+      "runs": 84,
+      "serial_minutes": 4200,
+      "tokens_total": 58800000,
+      "usd_cold": 277.2,
+      "usd_warm80": 168.34
+    },
+    {
+      "design": "mechanism_pilot_omp",
+      "multiplier": 10,
+      "per_arm_usd_cold": null,
+      "runs": 84,
+      "serial_minutes": 8400,
+      "tokens_total": 117600000,
+      "usd_cold": 554.4,
+      "usd_warm80": 336.67
+    },
+    {
+      "design": "discovery_canaries",
+      "multiplier": 0.5,
+      "per_arm_usd_cold": null,
+      "runs": 8,
+      "serial_minutes": 40.0,
+      "tokens_total": 560000,
+      "usd_cold": 2.64,
+      "usd_warm80": 1.6
+    },
+    {
+      "design": "discovery_canaries",
+      "multiplier": 1,
+      "per_arm_usd_cold": null,
+      "runs": 8,
+      "serial_minutes": 80,
+      "tokens_total": 1120000,
+      "usd_cold": 5.28,
+      "usd_warm80": 3.21
+    },
+    {
+      "design": "discovery_canaries",
+      "multiplier": 2,
+      "per_arm_usd_cold": null,
+      "runs": 8,
+      "serial_minutes": 160,
+      "tokens_total": 2240000,
+      "usd_cold": 10.56,
+      "usd_warm80": 6.41
+    },
+    {
+      "design": "discovery_canaries",
+      "multiplier": 5,
+      "per_arm_usd_cold": null,
+      "runs": 8,
+      "serial_minutes": 400,
+      "tokens_total": 5600000,
+      "usd_cold": 26.4,
+      "usd_warm80": 16.03
+    },
+    {
+      "design": "discovery_canaries",
+      "multiplier": 10,
+      "per_arm_usd_cold": null,
+      "runs": 8,
+      "serial_minutes": 800,
+      "tokens_total": 11200000,
+      "usd_cold": 52.8,
+      "usd_warm80": 32.06
+    }
+  ],
+  "designs": {
+    "confirmatory": {
+      "pairs": 720,
+      "per_arm_runs": 720,
+      "runs": 1440
+    },
+    "discovery_canaries": {
+      "runs": 8
+    },
+    "mechanism_pilot_omp": {
+      "off_reference_runs": 12,
+      "on_variant_runs": 72,
+      "runs": 84
+    },
+    "pilot": {
+      "base_pairs": 48,
+      "pairs": 80,
+      "per_arm_runs": 80,
+      "repeat_pairs": 32,
+      "runs": 160
+    }
+  },
+  "evidence_run": {
+    "argv": [
+      "/Users/robert.lee/.pyenv/versions/3.13.12/bin/python3",
+      "-I",
+      "-B",
+      "docs/research/data/2026-11-05-matched-evaluation/protocol_calculations.py"
+    ],
+    "exit": 0,
+    "machine": "arm64",
+    "platform": "macOS-27.2-arm64-arm-64bit-Mach-O",
+    "python": "3.13.12",
+    "scope": "Research-only disposable scenarios/arithmetic; no production feature qualification",
+    "script_sha256": "557813828435f746a963f8b9c2a559b157a7f0b923e82b4bad1222651b613912",
+    "seconds": 1.0705160420038737,
+    "source_revision": "a5ccf6bb2a87b8159e48107f095782d4c87d6c05",
+    "started_at": "2026-11-05T04:39:40.808478+00:00"
+  },
+  "few_cluster_sign_flip": [
+    {
+      "can_reject_at_0.05": false,
+      "can_reject_at_holm_first_0.05/3": false,
+      "clusters": 3,
+      "min_two_sided_p": 0.25,
+      "patterns": 8
+    },
+    {
+      "can_reject_at_0.05": false,
+      "can_reject_at_holm_first_0.05/3": false,
+      "clusters": 4,
+      "min_two_sided_p": 0.125,
+      "patterns": 16
+    },
+    {
+      "can_reject_at_0.05": false,
+      "can_reject_at_holm_first_0.05/3": false,
+      "clusters": 5,
+      "min_two_sided_p": 0.0625,
+      "patterns": 32
+    },
+    {
+      "can_reject_at_0.05": true,
+      "can_reject_at_holm_first_0.05/3": false,
+      "clusters": 6,
+      "min_two_sided_p": 0.03125,
+      "patterns": 64
+    },
+    {
+      "can_reject_at_0.05": true,
+      "can_reject_at_holm_first_0.05/3": true,
+      "clusters": 7,
+      "min_two_sided_p": 0.015625,
+      "patterns": 128
+    },
+    {
+      "can_reject_at_0.05": true,
+      "can_reject_at_holm_first_0.05/3": true,
+      "clusters": 8,
+      "min_two_sided_p": 0.0078125,
+      "patterns": 256
+    },
+    {
+      "can_reject_at_0.05": true,
+      "can_reject_at_holm_first_0.05/3": true,
+      "clusters": 9,
+      "min_two_sided_p": 0.00390625,
+      "patterns": 512
+    },
+    {
+      "can_reject_at_0.05": true,
+      "can_reject_at_holm_first_0.05/3": true,
+      "clusters": 10,
+      "min_two_sided_p": 0.001953125,
+      "patterns": 1024
+    },
+    {
+      "can_reject_at_0.05": true,
+      "can_reject_at_holm_first_0.05/3": true,
+      "clusters": 11,
+      "min_two_sided_p": 0.0009765625,
+      "patterns": 2048
+    },
+    {
+      "can_reject_at_0.05": true,
+      "can_reject_at_holm_first_0.05/3": true,
+      "clusters": 12,
+      "min_two_sided_p": 0.00048828125,
+      "patterns": 4096
+    }
+  ],
+  "illustrative_power": [
+    {
+      "alpha_two_sided": 0.05,
+      "base_pass_mean": 0.4,
+      "delta": 0.1,
+      "power": 0.0,
+      "repositories": 5,
+      "reps": 3,
+      "sd_repo": 0.05,
+      "sd_task": 0.1,
+      "sims": 300,
+      "tasks": 60
+    },
+    {
+      "alpha_two_sided": 0.05,
+      "base_pass_mean": 0.4,
+      "delta": 0.2,
+      "power": 0.0,
+      "repositories": 5,
+      "reps": 3,
+      "sd_repo": 0.05,
+      "sd_task": 0.1,
+      "sims": 300,
+      "tasks": 60
+    },
+    {
+      "alpha_two_sided": 0.05,
+      "base_pass_mean": 0.4,
+      "delta": 0.1,
+      "power": 0.157,
+      "repositories": 6,
+      "reps": 3,
+      "sd_repo": 0.05,
+      "sd_task": 0.1,
+      "sims": 300,
+      "tasks": 60
+    },
+    {
+      "alpha_two_sided": 0.05,
+      "base_pass_mean": 0.4,
+      "delta": 0.2,
+      "power": 0.647,
+      "repositories": 6,
+      "reps": 3,
+      "sd_repo": 0.05,
+      "sd_task": 0.1,
+      "sims": 300,
+      "tasks": 60
+    },
+    {
+      "alpha_two_sided": 0.05,
+      "base_pass_mean": 0.4,
+      "delta": 0.1,
+      "power": 0.343,
+      "repositories": 8,
+      "reps": 3,
+      "sd_repo": 0.05,
+      "sd_task": 0.1,
+      "sims": 300,
+      "tasks": 60
+    },
+    {
+      "alpha_two_sided": 0.05,
+      "base_pass_mean": 0.4,
+      "delta": 0.2,
+      "power": 0.89,
+      "repositories": 8,
+      "reps": 3,
+      "sd_repo": 0.05,
+      "sd_task": 0.1,
+      "sims": 300,
+      "tasks": 60
+    },
+    {
+      "alpha_two_sided": 0.05,
+      "base_pass_mean": 0.4,
+      "delta": 0.1,
+      "power": 0.393,
+      "repositories": 10,
+      "reps": 3,
+      "sd_repo": 0.05,
+      "sd_task": 0.1,
+      "sims": 300,
+      "tasks": 60
+    },
+    {
+      "alpha_two_sided": 0.05,
+      "base_pass_mean": 0.4,
+      "delta": 0.2,
+      "power": 0.903,
+      "repositories": 10,
+      "reps": 3,
+      "sd_repo": 0.05,
+      "sd_task": 0.1,
+      "sims": 300,
+      "tasks": 60
+    },
+    {
+      "alpha_two_sided": 0.05,
+      "base_pass_mean": 0.4,
+      "delta": 0.1,
+      "power": 0.407,
+      "repositories": 12,
+      "reps": 3,
+      "sd_repo": 0.05,
+      "sd_task": 0.1,
+      "sims": 300,
+      "tasks": 60
+    },
+    {
+      "alpha_two_sided": 0.05,
+      "base_pass_mean": 0.4,
+      "delta": 0.2,
+      "power": 0.913,
+      "repositories": 12,
+      "reps": 3,
+      "sd_repo": 0.05,
+      "sd_task": 0.1,
+      "sims": 300,
+      "tasks": 60
+    }
+  ],
+  "per_run": {
+    "tokens": 140000,
+    "usd": 0.66
+  },
+  "schema": "agent-memory/248-protocol-calculations-v0",
+  "worked_manifest_check": {
+    "blob_mismatches": [],
+    "checked_blobs": 33,
+    "committed_bank_files": 21,
+    "dropped_entries_exist": true,
+    "dropped_entries_not_required_or_partition_owned": true,
+    "every_committed_bank_file_listed": true,
+    "integrated_main_same_tree": true,
+    "registry_after_rewrite": "valid (166 suites)",
+    "registry_without_rewrite": "invalid: Invalid suite path: scope-policy",
+    "tree_matches": true
+  }
+}

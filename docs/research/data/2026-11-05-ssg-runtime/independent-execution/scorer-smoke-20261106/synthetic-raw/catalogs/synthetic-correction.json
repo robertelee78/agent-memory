@@ -1,0 +1,1042 @@
+{
+  "canonical_sha256": "6e51634fc8aa9164c8aa956305cf37a8ef7122dc49eb2e8a2a76e7cdeb6fea85",
+  "entries": [
+    {
+      "file_sha256": "42b781dfd73e9bb136f4bc04e65b821fa9d99eb99dacf0e6b20d37c39a875e65",
+      "fixture_label": "cache-replacement",
+      "id": "7e02428b-37b7-44fe-9fd8-12d2635fabd8",
+      "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:7e02428b-37b7-44fe-9fd8-12d2635fabd8:1",
+      "metadata": {
+        "conditions": {},
+        "corrects": [],
+        "derived-from": [],
+        "evidence": [
+          "fixture://quality/cache-replacement"
+        ],
+        "id": "7e02428b-37b7-44fe-9fd8-12d2635fabd8",
+        "kind": "semantic-fact",
+        "origin": {
+          "session": "fixed-quality-labels"
+        },
+        "scope": "repository",
+        "status": "active",
+        "superseded-by": [],
+        "supersedes": [],
+        "version": 1,
+        "visibility": "hidden"
+      },
+      "path": "topics/r/7e02428b-37b7-44fe-9fd8-12d2635fabd8-v1.md",
+      "status": "active",
+      "version": 1,
+      "visibility": "hidden"
+    },
+    {
+      "file_sha256": "41472872e9abe9c9f4a86c0282eb1376afd2e03c5d7af08a5d26c6a79a0a2bda",
+      "fixture_label": "cache-v1",
+      "id": "5b65484c-5b54-45da-90f2-c045f228d76e",
+      "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:5b65484c-5b54-45da-90f2-c045f228d76e:1",
+      "metadata": {
+        "conditions": {},
+        "corrects": [],
+        "derived-from": [],
+        "evidence": [
+          "fixture://quality/cache-v1"
+        ],
+        "id": "5b65484c-5b54-45da-90f2-c045f228d76e",
+        "kind": "semantic-fact",
+        "origin": {
+          "session": "fixed-quality-labels"
+        },
+        "scope": "repository",
+        "status": "active",
+        "superseded-by": [],
+        "supersedes": [],
+        "version": 1,
+        "visibility": "visible"
+      },
+      "path": "topics/r/5b65484c-5b54-45da-90f2-c045f228d76e-v1.md",
+      "status": "active",
+      "version": 1,
+      "visibility": "visible"
+    },
+    {
+      "file_sha256": "5a32b7784f17a49c61225396aa3c0dbf4712df9f1f5e2754bb5daddce7ec9b0b",
+      "fixture_label": "conditional-resume",
+      "id": "5e84b6ba-4fa3-4ee8-a2e8-7014c5fd53c4",
+      "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:5e84b6ba-4fa3-4ee8-a2e8-7014c5fd53c4:1",
+      "metadata": {
+        "conditions": {
+          "prerequisite": "receipt-verified"
+        },
+        "corrects": [],
+        "derived-from": [],
+        "evidence": [
+          "fixture://quality/conditional-resume"
+        ],
+        "id": "5e84b6ba-4fa3-4ee8-a2e8-7014c5fd53c4",
+        "kind": "semantic-fact",
+        "origin": {
+          "session": "fixed-quality-labels"
+        },
+        "scope": "repository",
+        "status": "active",
+        "superseded-by": [],
+        "supersedes": [],
+        "version": 1,
+        "visibility": "visible"
+      },
+      "path": "topics/r/5e84b6ba-4fa3-4ee8-a2e8-7014c5fd53c4-v1.md",
+      "status": "active",
+      "version": 1,
+      "visibility": "visible"
+    },
+    {
+      "file_sha256": "d0aa7121dd342a1bf58f0b79a5733a0b4426951205b25b5ceb00cefa52fd7f20",
+      "fixture_label": "cursor-empty",
+      "id": "6993a696-6d7b-49ea-a918-2d815377ce45",
+      "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:6993a696-6d7b-49ea-a918-2d815377ce45:1",
+      "metadata": {
+        "conditions": {},
+        "corrects": [],
+        "derived-from": [],
+        "evidence": [
+          "fixture://quality/cursor-empty"
+        ],
+        "id": "6993a696-6d7b-49ea-a918-2d815377ce45",
+        "kind": "semantic-fact",
+        "origin": {
+          "session": "fixed-quality-labels"
+        },
+        "scope": "repository",
+        "status": "active",
+        "superseded-by": [],
+        "supersedes": [],
+        "version": 1,
+        "visibility": "visible"
+      },
+      "path": "topics/r/6993a696-6d7b-49ea-a918-2d815377ce45-v1.md",
+      "status": "active",
+      "version": 1,
+      "visibility": "visible"
+    },
+    {
+      "file_sha256": "959eea04b32e8e77bfc13bc54ac79fa267aa5b0141f1a86e0a71612a8918eaac",
+      "fixture_label": "cursor-repeated",
+      "id": "c7b17274-e5ae-433f-a9f9-a0a2198a1c67",
+      "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:c7b17274-e5ae-433f-a9f9-a0a2198a1c67:1",
+      "metadata": {
+        "conditions": {},
+        "corrects": [],
+        "derived-from": [],
+        "evidence": [
+          "fixture://quality/cursor-repeated"
+        ],
+        "id": "c7b17274-e5ae-433f-a9f9-a0a2198a1c67",
+        "kind": "semantic-fact",
+        "origin": {
+          "session": "fixed-quality-labels"
+        },
+        "scope": "repository",
+        "status": "active",
+        "superseded-by": [],
+        "supersedes": [],
+        "version": 1,
+        "visibility": "visible"
+      },
+      "path": "topics/r/c7b17274-e5ae-433f-a9f9-a0a2198a1c67-v1.md",
+      "status": "active",
+      "version": 1,
+      "visibility": "visible"
+    },
+    {
+      "file_sha256": "22505fc55cbb389d1a6f93f742301a5b05107889b142d2c006eeda537d33de7d",
+      "fixture_label": "deployment-queue",
+      "id": "c0df2f68-7867-447c-885c-6b0ba7e36866",
+      "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:c0df2f68-7867-447c-885c-6b0ba7e36866:1",
+      "metadata": {
+        "conditions": {},
+        "corrects": [],
+        "derived-from": [],
+        "evidence": [
+          "fixture://quality/deployment-queue"
+        ],
+        "id": "c0df2f68-7867-447c-885c-6b0ba7e36866",
+        "kind": "semantic-fact",
+        "origin": {
+          "session": "fixed-quality-labels"
+        },
+        "scope": "repository",
+        "status": "active",
+        "superseded-by": [],
+        "supersedes": [],
+        "version": 1,
+        "visibility": "visible"
+      },
+      "path": "topics/r/c0df2f68-7867-447c-885c-6b0ba7e36866-v1.md",
+      "status": "active",
+      "version": 1,
+      "visibility": "visible"
+    },
+    {
+      "file_sha256": "c3af453c40db4388357bac855584da1e0d33f251b97294a0658e74f0ffee4197",
+      "fixture_label": "expired-endpoint",
+      "id": "612fc506-2490-4e5c-a38a-b318780b8260",
+      "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:612fc506-2490-4e5c-a38a-b318780b8260:1",
+      "metadata": {
+        "conditions": {},
+        "corrects": [],
+        "derived-from": [],
+        "evidence": [
+          "fixture://quality/expired-endpoint"
+        ],
+        "id": "612fc506-2490-4e5c-a38a-b318780b8260",
+        "kind": "semantic-fact",
+        "origin": {
+          "session": "fixed-quality-labels"
+        },
+        "scope": "repository",
+        "status": "active",
+        "superseded-by": [],
+        "supersedes": [],
+        "version": 1,
+        "visibility": "visible"
+      },
+      "path": "topics/r/612fc506-2490-4e5c-a38a-b318780b8260-v1.md",
+      "status": "active",
+      "version": 1,
+      "visibility": "visible"
+    },
+    {
+      "file_sha256": "87f5d469d63789ef91dbbc473ffdad8972aa170eb97b86c123bc1a91f5af1277",
+      "fixture_label": "head-dispatch",
+      "id": "b4e28e97-60cb-48ba-bf14-55c60de3f7f7",
+      "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:b4e28e97-60cb-48ba-bf14-55c60de3f7f7:1",
+      "metadata": {
+        "conditions": {
+          "branch": "main"
+        },
+        "corrects": [],
+        "derived-from": [],
+        "evidence": [
+          "fixture://quality/head-dispatch"
+        ],
+        "id": "b4e28e97-60cb-48ba-bf14-55c60de3f7f7",
+        "kind": "semantic-fact",
+        "origin": {
+          "session": "fixed-quality-labels"
+        },
+        "scope": "repository",
+        "status": "active",
+        "superseded-by": [],
+        "supersedes": [],
+        "version": 1,
+        "visibility": "visible"
+      },
+      "path": "topics/r/b4e28e97-60cb-48ba-bf14-55c60de3f7f7-v1.md",
+      "status": "active",
+      "version": 1,
+      "visibility": "visible"
+    },
+    {
+      "file_sha256": "60f8419dabf4bf6332abd6f83bd4b72bcc253d343793c40da1dfcf2a9095fa18",
+      "fixture_label": "ledger-only",
+      "id": "63a9c482-eebd-450d-a075-deb5c416a7d7",
+      "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:63a9c482-eebd-450d-a075-deb5c416a7d7:1",
+      "metadata": {
+        "conditions": {},
+        "corrects": [],
+        "derived-from": [],
+        "evidence": [
+          "fixture://quality/ledger-only"
+        ],
+        "id": "63a9c482-eebd-450d-a075-deb5c416a7d7",
+        "kind": "semantic-fact",
+        "origin": {
+          "session": "fixed-quality-labels"
+        },
+        "scope": "component:src/ledger",
+        "status": "active",
+        "superseded-by": [],
+        "supersedes": [],
+        "version": 1,
+        "visibility": "visible"
+      },
+      "path": "topics/r/63a9c482-eebd-450d-a075-deb5c416a7d7-v1.md",
+      "status": "active",
+      "version": 1,
+      "visibility": "visible"
+    },
+    {
+      "file_sha256": "8249527c01157fc6ac6a5dcaa0e5cddc01622c9be0e6025f25d4334414558b2e",
+      "fixture_label": "quota-replacement",
+      "id": "9e205ff1-9e5e-4b87-9937-11144172e762",
+      "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:9e205ff1-9e5e-4b87-9937-11144172e762:1",
+      "metadata": {
+        "conditions": {},
+        "corrects": [],
+        "derived-from": [],
+        "evidence": [
+          "fixture://quality/quota-replacement"
+        ],
+        "id": "9e205ff1-9e5e-4b87-9937-11144172e762",
+        "kind": "semantic-fact",
+        "origin": {
+          "session": "fixed-quality-labels"
+        },
+        "scope": "repository",
+        "status": "active",
+        "superseded-by": [],
+        "supersedes": [],
+        "version": 1,
+        "visibility": "visible"
+      },
+      "path": "topics/r/9e205ff1-9e5e-4b87-9937-11144172e762-v1.md",
+      "status": "active",
+      "version": 1,
+      "visibility": "visible"
+    },
+    {
+      "file_sha256": "eeb6c0baba48846148924b183c79df72112b66210b732f53c7e70b278ce5fd47",
+      "fixture_label": "quota-v1",
+      "id": "28dbf45e-d339-452b-bfcc-c95a4c1bbb7f",
+      "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:28dbf45e-d339-452b-bfcc-c95a4c1bbb7f:1",
+      "metadata": {
+        "conditions": {},
+        "corrects": [],
+        "derived-from": [],
+        "evidence": [
+          "fixture://quality/quota-v1"
+        ],
+        "id": "28dbf45e-d339-452b-bfcc-c95a4c1bbb7f",
+        "kind": "semantic-fact",
+        "origin": {
+          "session": "fixed-quality-labels"
+        },
+        "scope": "repository",
+        "status": "active",
+        "superseded-by": [],
+        "supersedes": [],
+        "version": 1,
+        "visibility": "visible"
+      },
+      "path": "topics/r/28dbf45e-d339-452b-bfcc-c95a4c1bbb7f-v1.md",
+      "status": "active",
+      "version": 1,
+      "visibility": "visible"
+    },
+    {
+      "file_sha256": "7e7e192dc6569f2574cb2cc00dec03161b2e18ac77fc7c70c48aae193bf33a64",
+      "fixture_label": "receipt-a",
+      "id": "5c53ca49-b171-41cb-ba2c-ff574c5ebd5b",
+      "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:5c53ca49-b171-41cb-ba2c-ff574c5ebd5b:1",
+      "metadata": {
+        "conditions": {},
+        "corrects": [],
+        "derived-from": [],
+        "evidence": [
+          "fixture://quality/receipt-a"
+        ],
+        "id": "5c53ca49-b171-41cb-ba2c-ff574c5ebd5b",
+        "kind": "semantic-fact",
+        "origin": {
+          "session": "fixed-quality-labels"
+        },
+        "scope": "repository",
+        "status": "active",
+        "superseded-by": [],
+        "supersedes": [],
+        "version": 1,
+        "visibility": "visible"
+      },
+      "path": "topics/r/5c53ca49-b171-41cb-ba2c-ff574c5ebd5b-v1.md",
+      "status": "active",
+      "version": 1,
+      "visibility": "visible"
+    },
+    {
+      "file_sha256": "70c40c63f1b9da4eb10dad00471b53828638770a7f7fd72419aa42e9018eebb4",
+      "fixture_label": "receipt-b",
+      "id": "429ebfbe-7713-40be-bca4-c3b904f82517",
+      "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:429ebfbe-7713-40be-bca4-c3b904f82517:1",
+      "metadata": {
+        "conditions": {},
+        "corrects": [],
+        "derived-from": [],
+        "evidence": [
+          "fixture://quality/receipt-b"
+        ],
+        "id": "429ebfbe-7713-40be-bca4-c3b904f82517",
+        "kind": "semantic-fact",
+        "origin": {
+          "session": "fixed-quality-labels"
+        },
+        "scope": "repository",
+        "status": "active",
+        "superseded-by": [],
+        "supersedes": [],
+        "version": 1,
+        "visibility": "visible"
+      },
+      "path": "topics/r/429ebfbe-7713-40be-bca4-c3b904f82517-v1.md",
+      "status": "active",
+      "version": 1,
+      "visibility": "visible"
+    },
+    {
+      "file_sha256": "fedcd6231ff91cf1f0c71e8013cd7d689ca791fe8aed258822b0473ee23f2a78",
+      "fixture_label": "retention-dev",
+      "id": "9f9cda10-fa6d-48f1-a6e0-ad7260adb02f",
+      "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:9f9cda10-fa6d-48f1-a6e0-ad7260adb02f:1",
+      "metadata": {
+        "conditions": {
+          "environment": "development"
+        },
+        "corrects": [],
+        "derived-from": [],
+        "evidence": [
+          "fixture://quality/retention-dev"
+        ],
+        "id": "9f9cda10-fa6d-48f1-a6e0-ad7260adb02f",
+        "kind": "semantic-fact",
+        "origin": {
+          "session": "fixed-quality-labels"
+        },
+        "scope": "repository",
+        "status": "active",
+        "superseded-by": [],
+        "supersedes": [],
+        "version": 1,
+        "visibility": "visible"
+      },
+      "path": "topics/r/9f9cda10-fa6d-48f1-a6e0-ad7260adb02f-v1.md",
+      "status": "active",
+      "version": 1,
+      "visibility": "visible"
+    },
+    {
+      "file_sha256": "a39f08f70865d023e12b5f4f643177dfa67322e97aa183b51c6e4954561eabad",
+      "fixture_label": "retention-prod",
+      "id": "6e174a9a-a99d-41ce-bc87-d6381849536c",
+      "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:6e174a9a-a99d-41ce-bc87-d6381849536c:1",
+      "metadata": {
+        "conditions": {
+          "environment": "production"
+        },
+        "corrects": [],
+        "derived-from": [],
+        "evidence": [
+          "fixture://quality/retention-prod"
+        ],
+        "id": "6e174a9a-a99d-41ce-bc87-d6381849536c",
+        "kind": "semantic-fact",
+        "origin": {
+          "session": "fixed-quality-labels"
+        },
+        "scope": "repository",
+        "status": "active",
+        "superseded-by": [],
+        "supersedes": [],
+        "version": 1,
+        "visibility": "visible"
+      },
+      "path": "topics/r/6e174a9a-a99d-41ce-bc87-d6381849536c-v1.md",
+      "status": "active",
+      "version": 1,
+      "visibility": "visible"
+    },
+    {
+      "file_sha256": "c89027e64ae32a796b7793f20302172aae06c865db076c54531978d35dede0a3",
+      "fixture_label": "retry-limit",
+      "id": "9a2b24a7-3464-4ce4-b488-28e5c6de71d3",
+      "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:9a2b24a7-3464-4ce4-b488-28e5c6de71d3:1",
+      "metadata": {
+        "conditions": {},
+        "corrects": [],
+        "derived-from": [],
+        "evidence": [
+          "fixture://quality/retry-limit"
+        ],
+        "id": "9a2b24a7-3464-4ce4-b488-28e5c6de71d3",
+        "kind": "semantic-fact",
+        "origin": {
+          "session": "fixed-quality-labels"
+        },
+        "scope": "repository",
+        "status": "superseded",
+        "superseded-by": [
+          {
+            "id": "9a2b24a7-3464-4ce4-b488-28e5c6de71d3",
+            "version": 2
+          }
+        ],
+        "supersedes": [],
+        "version": 1,
+        "visibility": "visible"
+      },
+      "path": "topics/r/9a2b24a7-3464-4ce4-b488-28e5c6de71d3-v1.md",
+      "status": "superseded",
+      "version": 1,
+      "visibility": "visible"
+    },
+    {
+      "file_sha256": "c4b496669c087bf749f4fd73bb24ac7a9cb27a78409ca0eba25a6874718ef74c",
+      "fixture_label": "revoked-fallback",
+      "id": "b79c487b-034b-42ef-b971-613fe7073691",
+      "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:b79c487b-034b-42ef-b971-613fe7073691:1",
+      "metadata": {
+        "conditions": {},
+        "corrects": [],
+        "derived-from": [],
+        "evidence": [
+          "fixture://quality/revoked-fallback"
+        ],
+        "id": "b79c487b-034b-42ef-b971-613fe7073691",
+        "kind": "semantic-fact",
+        "origin": {
+          "session": "fixed-quality-labels"
+        },
+        "scope": "repository",
+        "status": "revoked",
+        "superseded-by": [],
+        "supersedes": [],
+        "version": 1,
+        "visibility": "visible"
+      },
+      "path": "topics/r/b79c487b-034b-42ef-b971-613fe7073691-v1.md",
+      "status": "revoked",
+      "version": 1,
+      "visibility": "visible"
+    },
+    {
+      "file_sha256": "aa81c3a7fb70ff852d35eabe72c9b3a75b961cdffa2785670b2f5dbcd61e433c",
+      "fixture_label": "semantic-certificates-41",
+      "id": "d9616a81-3651-44aa-92ea-fcadb9a0ed05",
+      "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:d9616a81-3651-44aa-92ea-fcadb9a0ed05:1",
+      "metadata": {
+        "conditions": {
+          "component": "src/certificates/41"
+        },
+        "corrects": [],
+        "derived-from": [],
+        "evidence": [
+          "fixture://quality/semantic-certificates-41"
+        ],
+        "id": "d9616a81-3651-44aa-92ea-fcadb9a0ed05",
+        "kind": "semantic-fact",
+        "origin": {
+          "session": "fixed-quality-labels"
+        },
+        "scope": "component:src/certificates/41",
+        "status": "active",
+        "superseded-by": [],
+        "supersedes": [],
+        "version": 1,
+        "visibility": "visible"
+      },
+      "path": "topics/r/d9616a81-3651-44aa-92ea-fcadb9a0ed05-v1.md",
+      "status": "active",
+      "version": 1,
+      "visibility": "visible"
+    },
+    {
+      "file_sha256": "0c749fd23a903c82e392f19a1f7d2e3c8e10c330ac49ae4e57b7885451585987",
+      "fixture_label": "semantic-compression-12",
+      "id": "d20702f2-3282-478e-9285-e4a3bc4d2d65",
+      "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:d20702f2-3282-478e-9285-e4a3bc4d2d65:1",
+      "metadata": {
+        "conditions": {
+          "component": "src/compression/12"
+        },
+        "corrects": [],
+        "derived-from": [],
+        "evidence": [
+          "fixture://quality/semantic-compression-12"
+        ],
+        "id": "d20702f2-3282-478e-9285-e4a3bc4d2d65",
+        "kind": "semantic-fact",
+        "origin": {
+          "session": "fixed-quality-labels"
+        },
+        "scope": "component:src/compression/12",
+        "status": "active",
+        "superseded-by": [],
+        "supersedes": [],
+        "version": 1,
+        "visibility": "visible"
+      },
+      "path": "topics/r/d20702f2-3282-478e-9285-e4a3bc4d2d65-v1.md",
+      "status": "active",
+      "version": 1,
+      "visibility": "visible"
+    },
+    {
+      "file_sha256": "bc51a35852bb3d02007284f26fc17240ab81abe9a04933f7061eb058bef9c27b",
+      "fixture_label": "semantic-dns-19",
+      "id": "5558f984-9dd6-46ef-a5d2-19ba1d2624bc",
+      "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:5558f984-9dd6-46ef-a5d2-19ba1d2624bc:1",
+      "metadata": {
+        "conditions": {
+          "component": "src/dns/19"
+        },
+        "corrects": [],
+        "derived-from": [],
+        "evidence": [
+          "fixture://quality/semantic-dns-19"
+        ],
+        "id": "5558f984-9dd6-46ef-a5d2-19ba1d2624bc",
+        "kind": "semantic-fact",
+        "origin": {
+          "session": "fixed-quality-labels"
+        },
+        "scope": "component:src/dns/19",
+        "status": "active",
+        "superseded-by": [],
+        "supersedes": [],
+        "version": 1,
+        "visibility": "visible"
+      },
+      "path": "topics/r/5558f984-9dd6-46ef-a5d2-19ba1d2624bc-v1.md",
+      "status": "active",
+      "version": 1,
+      "visibility": "visible"
+    },
+    {
+      "file_sha256": "a801388ec97d5961fe671367303772496a476fe7476cc1fbe49894c36d61c649",
+      "fixture_label": "semantic-encoding-12",
+      "id": "a047cdde-e308-4d32-8e70-6a0392230911",
+      "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:a047cdde-e308-4d32-8e70-6a0392230911:1",
+      "metadata": {
+        "conditions": {
+          "component": "src/encoding/12"
+        },
+        "corrects": [],
+        "derived-from": [],
+        "evidence": [
+          "fixture://quality/semantic-encoding-12"
+        ],
+        "id": "a047cdde-e308-4d32-8e70-6a0392230911",
+        "kind": "semantic-fact",
+        "origin": {
+          "session": "fixed-quality-labels"
+        },
+        "scope": "component:src/encoding/12",
+        "status": "active",
+        "superseded-by": [],
+        "supersedes": [],
+        "version": 1,
+        "visibility": "visible"
+      },
+      "path": "topics/r/a047cdde-e308-4d32-8e70-6a0392230911-v1.md",
+      "status": "active",
+      "version": 1,
+      "visibility": "visible"
+    },
+    {
+      "file_sha256": "e33d188be9c8bd61dd37132cf75d2e049414a951142ae5ee03428b025aa54a2d",
+      "fixture_label": "semantic-journaling-7",
+      "id": "63db9c1f-87fd-4f69-bf92-1645294a6979",
+      "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:63db9c1f-87fd-4f69-bf92-1645294a6979:1",
+      "metadata": {
+        "conditions": {
+          "component": "src/journaling/7"
+        },
+        "corrects": [],
+        "derived-from": [],
+        "evidence": [
+          "fixture://quality/semantic-journaling-7"
+        ],
+        "id": "63db9c1f-87fd-4f69-bf92-1645294a6979",
+        "kind": "semantic-fact",
+        "origin": {
+          "session": "fixed-quality-labels"
+        },
+        "scope": "component:src/journaling/7",
+        "status": "active",
+        "superseded-by": [],
+        "supersedes": [],
+        "version": 1,
+        "visibility": "visible"
+      },
+      "path": "topics/r/63db9c1f-87fd-4f69-bf92-1645294a6979-v1.md",
+      "status": "active",
+      "version": 1,
+      "visibility": "visible"
+    },
+    {
+      "file_sha256": "4f325a935bb67da6ed640a2f5fa8e70b0815dbabf37b2d5a982b111ad5a50e0c",
+      "fixture_label": "semantic-journaling-8",
+      "id": "1ad759ea-69d7-412a-950d-a2301624cea6",
+      "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:1ad759ea-69d7-412a-950d-a2301624cea6:1",
+      "metadata": {
+        "conditions": {
+          "component": "src/journaling/8"
+        },
+        "corrects": [],
+        "derived-from": [],
+        "evidence": [
+          "fixture://quality/semantic-journaling-8"
+        ],
+        "id": "1ad759ea-69d7-412a-950d-a2301624cea6",
+        "kind": "semantic-fact",
+        "origin": {
+          "session": "fixed-quality-labels"
+        },
+        "scope": "component:src/journaling/8",
+        "status": "active",
+        "superseded-by": [],
+        "supersedes": [],
+        "version": 1,
+        "visibility": "visible"
+      },
+      "path": "topics/r/1ad759ea-69d7-412a-950d-a2301624cea6-v1.md",
+      "status": "active",
+      "version": 1,
+      "visibility": "visible"
+    },
+    {
+      "file_sha256": "fe4045a21235df6aeb76c28da3655cb195972e55dcb4247e17a10de0c2425093",
+      "fixture_label": "semantic-journaling-9",
+      "id": "b5a3a922-01b1-4ec9-a955-ad9484a65de4",
+      "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:b5a3a922-01b1-4ec9-a955-ad9484a65de4:1",
+      "metadata": {
+        "conditions": {
+          "component": "src/journaling/9"
+        },
+        "corrects": [],
+        "derived-from": [],
+        "evidence": [
+          "fixture://quality/semantic-journaling-9"
+        ],
+        "id": "b5a3a922-01b1-4ec9-a955-ad9484a65de4",
+        "kind": "semantic-fact",
+        "origin": {
+          "session": "fixed-quality-labels"
+        },
+        "scope": "component:src/journaling/9",
+        "status": "active",
+        "superseded-by": [],
+        "supersedes": [],
+        "version": 1,
+        "visibility": "visible"
+      },
+      "path": "topics/r/b5a3a922-01b1-4ec9-a955-ad9484a65de4-v1.md",
+      "status": "active",
+      "version": 1,
+      "visibility": "visible"
+    },
+    {
+      "file_sha256": "7b69ba4f6ea581e33383081150b2796a5cdb9190ce3ace688845dde555eae927",
+      "fixture_label": "semantic-leases-3",
+      "id": "4873f1d1-142f-4e71-a036-110bf7fc0086",
+      "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:4873f1d1-142f-4e71-a036-110bf7fc0086:1",
+      "metadata": {
+        "conditions": {
+          "component": "src/leases/3"
+        },
+        "corrects": [],
+        "derived-from": [],
+        "evidence": [
+          "fixture://quality/semantic-leases-3"
+        ],
+        "id": "4873f1d1-142f-4e71-a036-110bf7fc0086",
+        "kind": "semantic-fact",
+        "origin": {
+          "session": "fixed-quality-labels"
+        },
+        "scope": "component:src/leases/3",
+        "status": "active",
+        "superseded-by": [],
+        "supersedes": [],
+        "version": 1,
+        "visibility": "visible"
+      },
+      "path": "topics/r/4873f1d1-142f-4e71-a036-110bf7fc0086-v1.md",
+      "status": "active",
+      "version": 1,
+      "visibility": "visible"
+    },
+    {
+      "file_sha256": "8fd56406a1c04d5c56cdbaa04341ade47c9dc0d62f1fda009a91af9e28d893dc",
+      "fixture_label": "semantic-snapshots-30",
+      "id": "1e44a2b1-950c-4217-b2f9-a08d2713b7e3",
+      "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:1e44a2b1-950c-4217-b2f9-a08d2713b7e3:1",
+      "metadata": {
+        "conditions": {
+          "component": "src/snapshots/30"
+        },
+        "corrects": [],
+        "derived-from": [],
+        "evidence": [
+          "fixture://quality/semantic-snapshots-30"
+        ],
+        "id": "1e44a2b1-950c-4217-b2f9-a08d2713b7e3",
+        "kind": "semantic-fact",
+        "origin": {
+          "session": "fixed-quality-labels"
+        },
+        "scope": "component:src/snapshots/30",
+        "status": "active",
+        "superseded-by": [],
+        "supersedes": [],
+        "version": 1,
+        "visibility": "visible"
+      },
+      "path": "topics/r/1e44a2b1-950c-4217-b2f9-a08d2713b7e3-v1.md",
+      "status": "active",
+      "version": 1,
+      "visibility": "visible"
+    },
+    {
+      "file_sha256": "413f23a2f3b397fdc47cad7d58e88458a5f0e2f35763c4f429aea51e65058dcc",
+      "fixture_label": "session-bound",
+      "id": "5d3439a6-aaae-4ac1-8aa2-1e6bdebdc07a",
+      "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:5d3439a6-aaae-4ac1-8aa2-1e6bdebdc07a:1",
+      "metadata": {
+        "conditions": {
+          "session": "another-session"
+        },
+        "corrects": [],
+        "derived-from": [],
+        "evidence": [
+          "fixture://quality/session-bound"
+        ],
+        "id": "5d3439a6-aaae-4ac1-8aa2-1e6bdebdc07a",
+        "kind": "semantic-fact",
+        "origin": {
+          "session": "fixed-quality-labels"
+        },
+        "scope": "repository",
+        "status": "active",
+        "superseded-by": [],
+        "supersedes": [],
+        "version": 1,
+        "visibility": "visible"
+      },
+      "path": "topics/r/5d3439a6-aaae-4ac1-8aa2-1e6bdebdc07a-v1.md",
+      "status": "active",
+      "version": 1,
+      "visibility": "visible"
+    },
+    {
+      "file_sha256": "f47ba294870724a7b3b43eefc8001b01b75e385fcb9e71be40b2945b7ed41c05",
+      "fixture_label": "superseded-protocol",
+      "id": "2faa3d63-9d7d-487c-8250-a5532f5da65e",
+      "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:2faa3d63-9d7d-487c-8250-a5532f5da65e:1",
+      "metadata": {
+        "conditions": {},
+        "corrects": [],
+        "derived-from": [],
+        "evidence": [
+          "fixture://quality/superseded-protocol"
+        ],
+        "id": "2faa3d63-9d7d-487c-8250-a5532f5da65e",
+        "kind": "semantic-fact",
+        "origin": {
+          "session": "fixed-quality-labels"
+        },
+        "scope": "repository",
+        "status": "superseded",
+        "superseded-by": [],
+        "supersedes": [],
+        "version": 1,
+        "visibility": "visible"
+      },
+      "path": "topics/r/2faa3d63-9d7d-487c-8250-a5532f5da65e-v1.md",
+      "status": "superseded",
+      "version": 1,
+      "visibility": "visible"
+    },
+    {
+      "file_sha256": "4a6b10d2f0ed1c6cb35cd187447c30905d25c527a17e9111d95ed58e621f783b",
+      "fixture_label": "timeout-v1",
+      "id": "b14eec5a-7ad6-4ac8-bd3b-6950aae11602",
+      "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:b14eec5a-7ad6-4ac8-bd3b-6950aae11602:1",
+      "metadata": {
+        "conditions": {},
+        "corrects": [],
+        "derived-from": [],
+        "evidence": [
+          "fixture://quality/timeout-v1"
+        ],
+        "id": "b14eec5a-7ad6-4ac8-bd3b-6950aae11602",
+        "kind": "semantic-fact",
+        "origin": {
+          "session": "fixed-quality-labels"
+        },
+        "scope": "repository",
+        "status": "superseded",
+        "superseded-by": [
+          {
+            "id": "b14eec5a-7ad6-4ac8-bd3b-6950aae11602",
+            "version": 2
+          }
+        ],
+        "supersedes": [],
+        "version": 1,
+        "visibility": "visible"
+      },
+      "path": "topics/r/b14eec5a-7ad6-4ac8-bd3b-6950aae11602-v1.md",
+      "status": "superseded",
+      "version": 1,
+      "visibility": "visible"
+    },
+    {
+      "file_sha256": "665b6c2ac7a4451dbd5a06c7076233f94599dc2faa100d0c10828c181cbfd788",
+      "fixture_label": "timeout-v2",
+      "id": "b14eec5a-7ad6-4ac8-bd3b-6950aae11602",
+      "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:b14eec5a-7ad6-4ac8-bd3b-6950aae11602:2",
+      "metadata": {
+        "conditions": {},
+        "corrects": [
+          {
+            "id": "b14eec5a-7ad6-4ac8-bd3b-6950aae11602",
+            "version": 1
+          }
+        ],
+        "derived-from": [],
+        "evidence": [
+          "fixture://quality/timeout-v2"
+        ],
+        "id": "b14eec5a-7ad6-4ac8-bd3b-6950aae11602",
+        "kind": "semantic-fact",
+        "origin": {
+          "session": "fixed-quality-labels"
+        },
+        "scope": "repository",
+        "status": "active",
+        "superseded-by": [],
+        "supersedes": [],
+        "version": 2,
+        "visibility": "visible"
+      },
+      "path": "topics/r/b14eec5a-7ad6-4ac8-bd3b-6950aae11602-v2.md",
+      "status": "active",
+      "version": 2,
+      "visibility": "visible"
+    },
+    {
+      "file_sha256": "00b6357689d029977741d12b4b889ad7b50aa499e6fd039a4493bf0339209ad1",
+      "fixture_label": "unsafe-secret",
+      "id": "166e47fa-43fb-4892-91cc-32db01038dd7",
+      "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:166e47fa-43fb-4892-91cc-32db01038dd7:1",
+      "metadata": {
+        "conditions": {},
+        "corrects": [],
+        "derived-from": [],
+        "evidence": [
+          "fixture://quality/unsafe-secret"
+        ],
+        "id": "166e47fa-43fb-4892-91cc-32db01038dd7",
+        "kind": "semantic-fact",
+        "origin": {
+          "session": "fixed-quality-labels"
+        },
+        "scope": "repository",
+        "status": "active",
+        "superseded-by": [],
+        "supersedes": [],
+        "version": 1,
+        "visibility": "visible"
+      },
+      "path": "topics/r/166e47fa-43fb-4892-91cc-32db01038dd7-v1.md",
+      "status": "active",
+      "version": 1,
+      "visibility": "visible"
+    },
+    {
+      "file_sha256": "833a090efdc9e2510c6739237cb0a8e0a0a05a36cbe966623ba1f75772d561dc",
+      "fixture_label": "wall-blue",
+      "id": "845fcced-7acc-4247-81dd-c3c35d1575c2",
+      "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:845fcced-7acc-4247-81dd-c3c35d1575c2:1",
+      "metadata": {
+        "conditions": {},
+        "corrects": [],
+        "derived-from": [],
+        "evidence": [
+          "fixture://quality/wall-blue"
+        ],
+        "id": "845fcced-7acc-4247-81dd-c3c35d1575c2",
+        "kind": "semantic-fact",
+        "origin": {
+          "session": "fixed-quality-labels"
+        },
+        "scope": "repository",
+        "status": "active",
+        "superseded-by": [],
+        "supersedes": [],
+        "version": 1,
+        "visibility": "visible"
+      },
+      "path": "topics/r/845fcced-7acc-4247-81dd-c3c35d1575c2-v1.md",
+      "status": "active",
+      "version": 1,
+      "visibility": "visible"
+    },
+    {
+      "file_sha256": "8f35729e01eefa6b561ba9e90d29186a62fa10cc6ee9b3dda834b4fde4ae6065",
+      "fixture_label": "wall-yellow",
+      "id": "247b9b9c-8843-4ca3-9003-171c4f67a0e9",
+      "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:247b9b9c-8843-4ca3-9003-171c4f67a0e9:1",
+      "metadata": {
+        "conditions": {},
+        "corrects": [],
+        "derived-from": [],
+        "evidence": [
+          "fixture://quality/wall-yellow"
+        ],
+        "id": "247b9b9c-8843-4ca3-9003-171c4f67a0e9",
+        "kind": "semantic-fact",
+        "origin": {
+          "session": "fixed-quality-labels"
+        },
+        "scope": "repository",
+        "status": "active",
+        "superseded-by": [],
+        "supersedes": [],
+        "version": 1,
+        "visibility": "visible"
+      },
+      "path": "topics/r/247b9b9c-8843-4ca3-9003-171c4f67a0e9-v1.md",
+      "status": "active",
+      "version": 1,
+      "visibility": "visible"
+    },
+    {
+      "file_sha256": "1746abfc1164430f51cd1ad160c5ce7d2334908cebaad0ee6748d827908db048",
+      "fixture_label": "retry-limit-v2",
+      "id": "9a2b24a7-3464-4ce4-b488-28e5c6de71d3",
+      "key": "record:7eea1199-8123-4989-8cde-012d3361c8ee:9a2b24a7-3464-4ce4-b488-28e5c6de71d3:2",
+      "metadata": {
+        "conditions": {},
+        "corrects": [
+          {
+            "id": "9a2b24a7-3464-4ce4-b488-28e5c6de71d3",
+            "version": 1
+          }
+        ],
+        "derived-from": [],
+        "evidence": [
+          "fixture://quality/retry-limit"
+        ],
+        "id": "9a2b24a7-3464-4ce4-b488-28e5c6de71d3",
+        "kind": "semantic-fact",
+        "origin": {
+          "session": "fixed-quality-labels"
+        },
+        "scope": "repository",
+        "status": "active",
+        "superseded-by": [],
+        "supersedes": [],
+        "version": 2,
+        "visibility": "visible"
+      },
+      "path": "topics/r/9a2b24a7-3464-4ce4-b488-28e5c6de71d3-v2.md",
+      "status": "active",
+      "version": 2,
+      "visibility": "visible"
+    }
+  ],
+  "routes": [],
+  "schema": "am255/canonical-generation-v1",
+  "scope": "EXPLICITLY SYNTHETIC catalog constructed from frozen canonical identities for scorer math/integrity only; not an executed bank"
+}

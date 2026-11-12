@@ -2,7 +2,7 @@
 
 A portable, local-first Memory Bank for coding agents.
 
-## v0.0.14
+## v0.0.15 release candidate
 
 One repository owns one shared Markdown memory bank. The skill captures durable
 learning, reads existing memory before adding it, combines duplicates without
@@ -11,14 +11,33 @@ independently of unfinished feature code and refresh into other sessions,
 worktrees and clones through the repository's existing Git rules. Contradictions
 go to the detecting developer for clarification.
 
-The [v0.0.14 release guide](docs/releases/v0.0.14.md) covers consistent bounded
-bank eligibility and entry-scoped Codex/Claude hook health. Unreadable sources
-cannot be bypassed by an unrelated selector; capture remains pending without
-source-preserving layout recovery. Unrelated valid hook settings no longer
-cause a whole-file ownership failure. Signed-download diagnostics, publisher
-authentication and strict managed-runtime ownership checks remain in force.
-[Published releases](https://github.com/robertelee78/agent-memory/releases)
+The [v0.0.15 release guide](docs/releases/v0.0.15.md) covers source-preserving
+layout recovery, stock omp native integration, checked semantic-page export and
+the reviewed research deliverables. Candidate source is not published-release
+or full-platform qualification evidence; the remaining acceptance gates stay
+explicit until verified. Research protocols do not ship federation, graph-backed
+recall or a coding-benefit study.
+
+The [previous v0.0.14 guide](docs/releases/v0.0.14.md) records consistent bounded
+bank eligibility and entry-scoped Codex/Claude hook health. Signed-download
+diagnostics, publisher authentication and strict managed-runtime ownership
+checks remain in force. [Published releases](https://github.com/robertelee78/agent-memory/releases)
 hold the immutable source and actual qualification evidence for each version.
+
+### Source-preserving layout recovery (#244)
+
+`am bank recover-layout` now provides bounded private raw inspection/pages,
+independently reviewed full-source/native-result preparation, journaled
+router-last apply, status, exact known recovery and distinct child restoration.
+It does not increase normal limits or manufacture admission: recovered
+unadmitted units remain durably private with an explicit incomplete-coverage
+hold, all-source comparison and real receipt-bound resolution. Rollback retains
+those obligations. Publication and retention have separate reviewed paths.
+
+Read the [workflow, schema requirements and disposable synthetic smoke recipe](skills/agent-memory/bank/GUIDE.md#source-preserving-layout-recovery).
+Layout eligibility, semantic completion, qualified recall, publication and
+other-machine import are independent claims; only exercised evidence establishes
+each. The synthetic 79,054/28,478-byte fixtures are not the original incident.
 
 ## Install and first use
 
@@ -78,6 +97,29 @@ If you choose a custom `--bin-dir`, use the receipt's `bin_dir` instead.
 Follow the [installation guide](skills/agent-memory/lifecycle/install/GUIDE.md)
 for ownership, recovery and explicit local/development sources. Development
 sources are separate from the managed channel and are not updated by the updater.
+
+### Explicit native omp binding
+
+The native omp integration targets **18.16.0** and is opt-in, separate from
+`all`. From a trusted complete candidate, preview `install --check --presets omp
+--omp-agent-dir /absolute/omp-agent --omp-peers-upgraded` before applying the
+same selection. The rollout flag attests that writers sharing the participating
+private bank state are quiesced and peer readers upgraded; it is not a permission
+bypass or a process-list inference. Existing `all` updates do not activate omp.
+
+The [native setup, privacy, troubleshooting and qualification guide](docs/testing/omp-native-qualification.md)
+documents saved receipt-v2 ownership, normal tool permissions, retained private
+stored-source snapshots, one advisory wake per human root, coverage gaps and
+safe lifecycle drain. Disk presence or CLI tests are not proof of native loading
+or successful capture/publication. Actual supported-platform/mode/peer claims
+must be backed by the signed release's independent real-native qualification;
+the runnable minimal smoke is not the complete release matrix.
+
+For a qualifying full read of the receipt-owned AM manual, the omp learning
+snapshot records historical instruction-context provenance without the manual
+body. This narrow stored-source treatment does not change the native result,
+waive existing gaps or exempt other tool results from screening; see the guide
+for its verification and privacy limits.
 
 ### First use in a repository
 

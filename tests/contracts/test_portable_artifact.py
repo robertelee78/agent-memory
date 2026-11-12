@@ -1,11 +1,14 @@
 """A complete copied package identifies itself and operates without clients."""
 import ast
+from contextlib import redirect_stdout
 import hashlib
+from io import StringIO
 import json
 from pathlib import Path
 import shutil
 import sys
 import unittest
+from unittest.mock import patch
 
 from world import World
 
@@ -167,6 +170,123 @@ class PortableArtifactContract(unittest.TestCase):
             self.assertNotEqual(mode['artifact_digest'], changed['artifact_digest'])
             self.assertEqual(mode['files']['scripts/artifact.py']['sha256'], changed['files']['scripts/artifact.py']['sha256'])
             self.assertFalse(mode['source_origin_authenticated'])
+
+    def test_repeated_inspection_rechecks_changed_source_modes_and_topology(self):
+        with World() as world:
+            pack = self.copy(world)
+            with patch.object(sys, 'path', [str(PACK / 'scripts'), *sys.path]):
+                from agent_memory import artifact, pack_validation
+            baseline = artifact.inspect(pack)
+            # Identical bytes at a different physical candidate share no trust:
+            # every subsequent inspection must still check that actual root.
+            other = world.inside('same artifact at another root')
+            shutil.copytree(pack, other)
+            pack = other
+            # Returned validation data is caller-owned, never writable authority
+            # for the next inspection of the same physical candidate.
+            returned = pack_validation.validate(pack)
+            returned['files'].clear()
+            returned['guides'].clear()
+            self.assertEqual(artifact.inspect(pack)['artifact_digest'], baseline['artifact_digest'])
+            manual = pack / 'SKILL.md'
+            original = manual.read_bytes()
+            mode = manual.stat().st_mode & 0o777
+            outside = world.inside('same-manual-outside-artifact.md')
+            outside.write_bytes(original)
+            for mutation in ('bytes', 'mode', 'symlink', 'new-file'):
+                with self.subTest(mutation=mutation):
+                    if mutation == 'bytes':
+                        manual.write_bytes(original.replace(b'## Route\n', b'## Missing route\n'))
+                    elif mutation == 'mode':
+                        manual.chmod(0)
+                    elif mutation == 'symlink':
+                        manual.unlink()
+                        manual.symlink_to(outside)
+                    else:
+                        (pack / 'unreachable.md').write_text('# Unreachable instruction\n')
+                    try:
+                        with redirect_stdout(StringIO()) as output:
+                            status = artifact.main(['inspect', '--pack', str(pack)])
+                        refused = json.loads(output.getvalue())
+                        self.assertEqual(status, 1)
+                        self.assertFalse(refused['valid'])
+                        self.assertFalse(refused['writes_performed'])
+                        if mutation == 'bytes':
+                            # The direct validator has no artifact readback
+                            # backstop; stale byte validation must refuse here.
+                            with redirect_stdout(StringIO()) as output:
+                                status = pack_validation.main(['--pack', str(pack)])
+                            self.assertEqual(status, 1)
+                            self.assertFalse(json.loads(output.getvalue())['valid'])
+                    finally:
+                        if manual.is_symlink():
+                            manual.unlink()
+                        if not manual.exists() or mutation == 'bytes':
+                            manual.write_bytes(original)
+                        manual.chmod(mode)
+                        if mutation == 'new-file':
+                            (pack / 'unreachable.md').unlink()
+                    self.assertEqual(artifact.inspect(pack)['artifact_digest'], baseline['artifact_digest'])
+            guide = pack / 'maintain/artifact/GUIDE.md'
+            guide_bytes = guide.read_bytes()
+            guide.write_bytes(guide_bytes + b'\nAdditional maintainer context.\n')
+            changed = artifact.inspect(pack)
+            self.assertNotEqual(changed['artifact_digest'], baseline['artifact_digest'])
+            self.assertNotEqual(changed['files']['maintain/artifact/GUIDE.md']['sha256'],
+                                baseline['files']['maintain/artifact/GUIDE.md']['sha256'])
+            guide.write_bytes(guide_bytes)
+            self.assertEqual(artifact.inspect(pack)['artifact_digest'], baseline['artifact_digest'])
+            executable = pack / 'scripts/artifact.py'
+            old_mode = executable.stat().st_mode & 0o777
+            executable.chmod(old_mode ^ 0o100)
+            changed = artifact.inspect(pack)
+            self.assertNotEqual(changed['artifact_digest'], baseline['artifact_digest'])
+            self.assertEqual(changed['files']['scripts/artifact.py']['sha256'],
+                             baseline['files']['scripts/artifact.py']['sha256'])
+
+    def test_change_after_declaration_read_refuses_cold_and_cached_inspections(self):
+        with patch.object(sys, 'path', [str(PACK / 'scripts'), *sys.path]):
+            from agent_memory import artifact, pack_validation
+        for cached in (False, True):
+            for mutation in ('bytes', 'mode', 'added', 'removed'):
+                with self.subTest(cached=cached, mutation=mutation), World() as world:
+                    pack = self.copy(world)
+                    baseline = artifact.inspect(pack)
+                    asset = pack / 'hooks/boundary-prompt.txt'
+                    original, mode = asset.read_bytes(), asset.stat().st_mode & 0o777
+                    added = pack / 'inspection-arrival.txt'
+                    declaration = artifact.declaration
+                    changed = []
+                    def read_then_change(*args, **kwargs):
+                        value = declaration(*args, **kwargs)
+                        if not changed:
+                            if mutation == 'bytes':
+                                asset.write_bytes(original + b'\nChanged during inspection.\n')
+                            elif mutation == 'mode':
+                                asset.chmod(mode ^ 0o200)
+                            elif mutation == 'added':
+                                added.write_text('Arrived during inspection.\n')
+                            else:
+                                asset.unlink()
+                            changed.append(True)
+                        return value
+                    try:
+                        with patch.object(pack_validation, '_last_validation',
+                                          pack_validation._last_validation if cached else None), \
+                                patch.object(artifact, 'declaration', side_effect=read_then_change):
+                            with self.assertRaises(pack_validation.Invalid) as refused:
+                                artifact.inspect(pack)
+                        self.assertEqual(refused.exception.issue['code'], 'changed-pack')
+                        self.assertEqual(changed, [True])
+                    finally:
+                        if asset.exists():
+                            asset.chmod(mode | 0o200)
+                        asset.write_bytes(original)
+                        asset.chmod(mode)
+                        if added.exists():
+                            added.unlink()
+                    self.assertEqual(artifact.inspect(pack)['artifact_digest'],
+                                     baseline['artifact_digest'])
 
 
 if __name__ == '__main__':

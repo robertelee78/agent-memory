@@ -97,6 +97,6 @@ except ContractError:pass
 else:raise AssertionError('Complete refresh escaped the actual bank byte bound')
 print('complete-source scanning and action/aggregate bounds checked')
 '''
-            result=w.run([sys.executable,'-I','-c',program,self.pack/'scripts',repo],check=False)
+            result=w.run([sys.executable,'-I','-B','-c',program,self.pack/'scripts',repo],check=False)
             self.assertEqual(result.returncode,0,result.stderr);self.assertNotIn('WITHHELD_LATE_PRIMITIVE_FIXTURE',result.stdout+result.stderr)
             self.assertEqual(before,self.state(w,repo,bank))

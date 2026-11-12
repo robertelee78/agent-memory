@@ -1,0 +1,11 @@
+{
+  "argv": [
+    "pgrep",
+    "-x",
+    "llama-server"
+  ],
+  "exit": 1,
+  "seconds": 0.025953707983717322,
+  "stderr": "",
+  "stdout": ""
+}

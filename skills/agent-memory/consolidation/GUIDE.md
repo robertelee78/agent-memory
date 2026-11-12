@@ -7,7 +7,7 @@ domain: maintain
 
 ## Use when
 
-At a natural turn boundary, after foreground work, the session MUST automatically
+At a [natural turn boundary](../SKILL.md#natural-turn-boundary), after foreground work, the session MUST automatically
 combine equivalent learning and tighten wording when current evidence supports
 preserving its meaning. This needs no daemon or per-record approval. The session
 MUST follow the [comparison guide](../comparison/GUIDE.md), inspect all plausible
@@ -30,6 +30,11 @@ The packaged `consolidate_learning.py` takes a JSON input with exactly:
 | `comparison_proof` | The proof returned by review, or that review response. |
 | `capture` | A qualified admission capture or response, or `null` for tightening existing learning. |
 | `context` | Actual applicability context using the [retrieval fields](../retrieval/GUIDE.md). |
+
+For read-only `plan`, the input MUST replace `comparison_proof` with
+`comparison_judgment`: the complete current observation, decisions,
+pending decisions and rationale described by [comparison](../comparison/GUIDE.md).
+The session MUST NOT fabricate independent approval of output it has not seen.
 
 ## Observe
 
@@ -57,16 +62,49 @@ If another developer originated a conflicting claim, the session SHOULD recommen
 clarification with that developer. The helper sends no messages. A real unresolved
 code, approved-intent or work-record conflict MAY require a focused PM Q&A.
 
+When independent recovery coverage review needs exact future output, the session
+MUST first run read-only planning with the complete current semantic judgment.
+Planning pending decisions MUST use `coverage:none`; final coverage is reviewed
+only after actual planned files are available. Plans MUST stay private and MUST
+NOT be passed to apply. A distinct session MUST review the complete source and
+planned output, supply actual full/partial/none claims, and obtain the ordinary
+source-bound comparison proof. Final preview MUST use that proof and `--plan`;
+it rechecks current sources and exact rebuilt bytes before producing a proposal.
+An edited, foreign or stale plan MUST refuse rather than bypass qualification.
+Full or partial claims MUST identify the actual future record IDs, versions and
+file hashes in the private plan. Planning and final preview MUST leave every unit
+pending; only the actual matching canonical receipt and ledger linkage may resolve
+reviewed coverage. A `coverage:none` decision MUST remain pending after apply.
+
 ## Apply
 
 With `SKILL_DIR` resolved, save evidence and proposals outside canonical memory:
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/consolidate_learning.py" preview --repo /path/to/repo \
+python3 -I "$SKILL_DIR/scripts/consolidate_learning.py" preview --repo /path/to/repo \
   --input /private/path/maintenance-input.json > /private/path/maintenance.json
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/consolidate_learning.py" apply \
+python3 -I "$SKILL_DIR/scripts/consolidate_learning.py" apply \
   --proposal /private/path/maintenance.json
 ```
+
+For that two-phase workflow, keep the planning judgment input separate from the
+final proof-bearing input:
+
+```sh
+python3 -I "$SKILL_DIR/scripts/consolidate_learning.py" plan --repo /path/to/repo \
+  --input /private/path/planning-input.json --private-output /private/path/plan.json
+# Complete independent coverage review and ordinary comparison review here.
+python3 -I "$SKILL_DIR/scripts/consolidate_learning.py" preview --repo /path/to/repo \
+  --input /private/path/maintenance-input.json --plan /private/path/plan.json \
+  --private-output /private/path/maintenance.json
+python3 -I "$SKILL_DIR/scripts/consolidate_learning.py" apply \
+  --proposal /private/path/maintenance.json
+```
+
+`plan` MUST have a checked private destination. Preview MUST honor an explicitly
+requested private destination even with an empty recovery frontier; stdout then
+contains only the artifact summary. Planning MUST leave canonical memory unchanged
+and report `proposal:null`, `verified:false`, `coverage_review_required:true`.
 
 ## Read back
 

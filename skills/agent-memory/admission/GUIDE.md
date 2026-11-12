@@ -7,7 +7,7 @@ domain: capture
 
 ## Use when
 
-At a natural turn boundary, a session MUST consider durable discoveries, verified
+At a [natural turn boundary](../SKILL.md#natural-turn-boundary), a session MUST consider durable discoveries, verified
 fixes, useful failed approaches, user corrections and confirmed project decisions.
 It MUST automatically capture qualifying learning without seeking approval for
 each routine record. It MUST keep the unit small enough to change a future
@@ -86,7 +86,7 @@ With `SKILL_DIR` resolved, save inputs/results outside the canonical bank and
 outside any sharing delta:
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/admit_learning.py" capture --repo /path/to/repo \
+python3 -I "$SKILL_DIR/scripts/admit_learning.py" capture --repo /path/to/repo \
   --request /private/path/capture-request.json > /private/path/captured.json
 ```
 
@@ -124,10 +124,10 @@ silently omit a route or drop an older lesson to make room.
 ## Apply
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/admit_learning.py" preview --repo /path/to/repo \
+python3 -I "$SKILL_DIR/scripts/admit_learning.py" preview --repo /path/to/repo \
   --capture /private/path/captured.json --request /private/path/comparison-request.json \
   --proof /private/path/comparison-review.json > /private/path/admission.json
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/admit_learning.py" apply \
+python3 -I "$SKILL_DIR/scripts/admit_learning.py" apply \
   --proposal /private/path/admission.json
 ```
 
@@ -141,6 +141,30 @@ multi-file protocol. The record retains utility, evidence assessment, source
 review and a content hash reference for observed repository evidence. Trust is
 `reviewed`; source hashing does not promote it to `verified`. Related source
 facts, history and unrelated code MUST remain intact.
+
+### Admission during layout recovery
+
+An eligible repaired layout MAY still have private pending-admission units.
+Capture eligibility does not establish novelty or approve archived sources.
+Admission MUST use comparison-v2 over the whole same-bank frontier and retain
+the exact proof-bound unit claims, private reference-map digest and independent
+coverage review in its actual transaction proposal. With a pending frontier,
+preview MUST use `--private-output`; its complete proposal stays private.
+For a review of exact future output, preview accepts an explicitly selected
+`--operation-id` UUIDv4 and nonfuture `--recorded-at` time; the reviewer MUST bind
+the actual intended complete files, not a guessed resulting hash.
+
+The persistent hold is atomically replaced by a distinct nested transaction
+marker, never temporarily removed. A full claim receives capacity credit only
+after source/security/authority checks; the original frontier stays pending
+through canonical readback. Only a durable real admission/governance receipt
+and exact independently reviewed target records allow a ledger successor.
+Partial claims and unconfirmed evidence remain pending. After interruption,
+`am bank recover-layout recover-nested` permits rollback only before a canonical
+receipt and finish only after one; ordinary `resolve` cannot bypass that marker.
+Neither successful layout repair, a similar record nor elapsed time resolves
+an original source unit.
+
 
 ## Verify
 

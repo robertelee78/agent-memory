@@ -1,0 +1,114 @@
+{
+  "schema": "am255/peer-vector-study-integration-review-v1",
+  "immutable_peer_commit": "a2b728df7f57e5478bb18b5659230c8fec2b4191",
+  "original_report_url": "https://github.com/robertelee78/agent-memory/blob/a2b728df7f57e5478bb18b5659230c8fec2b4191/docs/research/2026-11-08-vector-alternatives.md",
+  "original_report_sha256": "b14bfddaec76a233f8624a13a60c919eb55e45eff5a04d08474ba60d5b00f44f",
+  "integrated_report_sha256": "0b677fdb7c3b7a3b896cc32a4ef40d78b5679460bd567cd2c3c8cb38104821d0",
+  "immutable_input_files": [
+    {
+      "path": "docs/research/2026-11-08-vector-alternatives.md",
+      "git_blob": "6dddf027a34d4a0228120658fc383f04d91e1aa6",
+      "sha256": "b14bfddaec76a233f8624a13a60c919eb55e45eff5a04d08474ba60d5b00f44f",
+      "bytes": 8256
+    },
+    {
+      "path": "docs/research/data/2026-11-08-vector-alternatives/10k-events.jsonl",
+      "git_blob": "a1ce1ffacb4eed7db475254e542132b57bad126b",
+      "sha256": "44227eb2b52bc93ad01b57d52252152f1e60af1014ab086f9763413a2516b12b",
+      "bytes": 24804
+    },
+    {
+      "path": "docs/research/data/2026-11-08-vector-alternatives/10k-manifest.json",
+      "git_blob": "789973eb29940003f13a84928deb00a646f3ab7b",
+      "sha256": "4292fe7cce1e1b7cdafc5629962757d797ceee39f8632d4373b2a779aa43c865",
+      "bytes": 1212
+    },
+    {
+      "path": "docs/research/data/2026-11-08-vector-alternatives/1k-events.jsonl",
+      "git_blob": "28c89b20f9046d26d7e11fde989d284490160d08",
+      "sha256": "e28736039d66e51653f6a1c422e16c02ae438c3efd392b572378cb55b06f0358",
+      "bytes": 24109
+    },
+    {
+      "path": "docs/research/data/2026-11-08-vector-alternatives/1k-manifest.json",
+      "git_blob": "714f7771f9f6309dee09b4a0af6be0aa461eab5e",
+      "sha256": "9ae74c39cf0eab0b96690e41ca8f29ee042d146b669859aceb480074e75a01c8",
+      "bytes": 1149
+    },
+    {
+      "path": "docs/research/data/2026-11-08-vector-alternatives/50k-events.jsonl",
+      "git_blob": "6a478bcca0424a1f199f23e58c1cfc68fbaa4cd5",
+      "sha256": "66e9e62c63e73afe027b15c04ada746db8a15ebd1f515530ce7f6c4aab62907c",
+      "bytes": 25437
+    },
+    {
+      "path": "docs/research/data/2026-11-08-vector-alternatives/50k-manifest.json",
+      "git_blob": "625ce31b17946c5023d2f5e02d522c42703f5465",
+      "sha256": "11caafad818e352ac53dd32345cc31840fd25045c3117a30747ef8dc1bef166e",
+      "bytes": 1212
+    },
+    {
+      "path": "docs/research/data/2026-11-08-vector-alternatives/design.json",
+      "git_blob": "12358d44e3d2feb0af0eecc85e8ee4f3cfc41df1",
+      "sha256": "8e4dad6369e08afa2e5efd66a4cd834863559643bec8077b2f1b6ceb3fa9932f",
+      "bytes": 10231
+    },
+    {
+      "path": "docs/research/data/2026-11-08-vector-alternatives/execution-review.txt",
+      "git_blob": "16d6fdfaf7cd67ae241189a4001aa9d116fac25e",
+      "sha256": "4b6066f56083a3709368ae1a1c1ca8d3e7a16090a6971d8a7b2b4186625c29a3",
+      "bytes": 5761
+    },
+    {
+      "path": "docs/research/data/2026-11-08-vector-alternatives/experiment.py",
+      "git_blob": "fb9dd7e46aa33c6b6961f9bb7d6fd38c33b75cff",
+      "sha256": "ca7b95fbdab40e0a87b92c83e0e9756314a703006f35656f5583e3c227a82bd0",
+      "bytes": 14618
+    },
+    {
+      "path": "docs/research/data/2026-11-08-vector-alternatives/interpretation-review-receipt.json",
+      "git_blob": "4353b1166a9ed3c96b4afaeac48a0b0038835c1e",
+      "sha256": "e7ddad0390ad001366f70aa383f200b22aec5ad18abaf242c2aa315370591fd3",
+      "bytes": 1438
+    },
+    {
+      "path": "docs/research/data/2026-11-08-vector-alternatives/interpretation-review.txt",
+      "git_blob": "efacd57731f0c72f15d1a317819061e189572a97",
+      "sha256": "c15a15c961390f602147118bd7a02b2c3f58acf8b2ce6a44fe52bd9488e2a02b",
+      "bytes": 5642
+    },
+    {
+      "path": "docs/research/data/2026-11-08-vector-alternatives/observations.json",
+      "git_blob": "b6d64ccd96817f11a6363d568718b880eb005733",
+      "sha256": "49c7b810b9bfa623bb5d006cf25b4af7f9ce41824856c69830f8f003c795b6d6",
+      "bytes": 7850
+    }
+  ],
+  "corrections": [
+    "Memgraph raw distance already preserves sign; 1-distance or exact rescoring does not require a binding change.",
+    "Candidate containment metric names oracle top10 within32 candidates, not library top10 recall.",
+    "64-d random integer-vector results and timings do not transfer to real AM embeddings or4096d.",
+    "Owner reported stagedinspection; executable itself gates only the1k smoke.",
+    "Memgraph primary source links pin immutable0e77b786 commit."
+  ],
+  "review_lineage": {
+    "peer_preexecution_model": "anthropic/claude-opus-5-5",
+    "peer_interpretation_model": "anthropic/claude-fable-5",
+    "main_independent_review_model": "anthropic/claude-opus-5-5",
+    "main_verdict": "Research-only integration with listed corrections/limits; raw numeric events and hash lineage verified; no G1/AMprofile/named-scale acceptance",
+    "historical_verdict_sha256_convention": "Recorded verdict digests exclude the one trailing newline; exact review files include it. Both conventions independently recomputed.",
+    "network_exception_disclosed": "During Main peer-evidence review, reviewer made one public GitHub curl despite explicit no-network instruction. No private data sent. Earlier cpp citation reused a prior allowed fetch. No runtime/model/import was performed.",
+    "editorial_git_exception_disclosed": "During the later source-only editorial check, the same reviewer ran git status --porcelain on two new paths despite explicit no-Git instruction. Any incidental index refresh was not independently measured. Reviewer acknowledged the violation and was parked. Findings remain narrowly source-bound; instruction compliance is not claimed."
+  },
+  "unverified": [
+    "wheel hashes not independently downloaded in Main review",
+    "private supervisor source/logs",
+    "whether peer execution cleared PYTHONPATH",
+    "compiled extension binary identity and RUSAGE_CHILDREN"
+  ],
+  "separation": [
+    "Standalone64dUSearch2.26.6 is not the4096dMemgraphR3 numeric study or native175 AM eligibility.",
+    "No runtime/profile/operator managed-core graph direction changes.",
+    "Original50k MAGE failure, openedheldout, licensing, semanticquality, originalAMnamedscaleACs and G1remain unchanged."
+  ]
+}

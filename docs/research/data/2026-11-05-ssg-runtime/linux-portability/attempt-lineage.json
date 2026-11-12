@@ -1,0 +1,23 @@
+{
+  "schema": "am255/linux-portability-attempt-lineage-v1",
+  "am_baseline": "483adede202bac2dc3a69856a73b16533190ebb7",
+  "evidence_lineage": "../evidence-commit-map.json; original history remains reachable under refs/heads/evidence/v015-255-linux-20261106. Integrated subtree hashes preserve bytes; integrated dates are not original freeze dates.",
+  "post_review_corrections": "post-review-corrections-20261106.json",
+  "source_freezes": [
+    {"commit": "a50f494ec2943f607d5c9e45d3bf24c8002b9573", "scope": "Initial primary-source discovery and unexecuted core-carrier recipe"},
+    {"commit": "5b3d04855257ff518497430465f6043904c3a900", "scope": "Pre-output source binding and owned preflight disposal"},
+    {"commit": "3cca42a1760fd8c72fb3549f66243c48601b1e14", "scope": "Exact existing MAGE carrier frozen from static ELF and existing BOM before Linux model outputs; actual-20261106 executed once from this source"},
+    {"commit": "4d43197784b5a5ee0539cc36b3994d0a70ddd6c0", "scope": "Actual Linux raw evidence retained; nonexecuting image collector email-header serialization correction frozen before corrected contents output"},
+    {"commit": "79196277e281f9bfa3faa96cc76fc19dee62c666", "scope": "Comparable direct-versus-vendored Python metadata domains and logical symlink copyright resolution frozen before final qualified contents output"}
+  ],
+  "attempts": [
+    {"path": "discovery-20261106/server-b9360-tag.json", "result": "Actual ghcr server-b9360 manifest-unknown discovery failure, not proof all immutable upstream artifacts are absent"},
+    {"path": "unexecuted-core-recipe.json", "result": "Retained before model execution; not executed. Exact release DT_NEEDED requires libgomp, core inventory lacks package; no random install"},
+    {"path": "actual-20261106", "result": "One completed frozen serial Linux-arm64 VM CPU qualification: exact 8B then exact 0.6B, two newly owned containers disposed; no model profile or output retuning"},
+    {"path": "amd64-contents-20261106", "result": "Retained failed collector: core contents/file inventory completed valid JSON; exact MAGE acquisition completed exit0, but MAGE contents serialization failed. Original failure.json narrative misidentified core/still-missing MAGE; dated post-review-corrections-20261106.json corrects that narrative without rewriting raw evidence. Both selected-text archives remain."},
+    {"path": "amd64-contents-20261106-fixed", "result": "Serialization-corrected contents retained, but recursive Python metadata scope and direct copyright-path assumptions are superseded by inventory-scope-correction.json. Earlier derived differences in architecture-comparison.json are not architecture findings"},
+    {"path": "amd64-contents-20261106-qualified", "result": "Authoritative nonexecuting contents: every manifest/config/layer hash rechecked, direct distributions comparable to prior arm64 inventory, nested vendored metadata separate, logical copyright paths resolved. architecture-comparison-final.json is the final derived comparison with explicitly dist-info-scoped notice attribution"}
+  ],
+  "unchanged": ["SSG source", "frozen independent-suite labels and inputs", "existing briefs/contracts", "borrowed model files and images", "other services/stores/accounts"],
+  "no_acceptance": ["G1", "legal", "managed profile", "independent quality", "clean performance", "native amd64 runtime"]
+}

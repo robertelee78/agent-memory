@@ -1,4 +1,5 @@
 """Complete bank observation enforces bounded, stable, read-only eligibility."""
+import errno
 import json
 import os
 from pathlib import Path
@@ -145,23 +146,293 @@ class BoundedBankObservation(unittest.TestCase):
             (inventory / name).write_bytes(b'original')
         outside = self.repo / 'outside-source'
         outside.write_bytes(b'PRIVATE_BODY_CANARY')
-        original_read = bank_observation.read_source
+        real_open = os.open
         reads = 0
-        def redirect(bank, relative, limit):
+        def redirect(path, flags, *args, **kwargs):
             nonlocal reads
-            reads += 1
-            if reads == 2:
-                path = bank / relative
-                path.unlink()
-                path.symlink_to(outside)
-            return original_read(bank, relative, limit)
+            if kwargs.get('dir_fd') is not None and str(path).endswith('.md'):
+                reads += 1
+                if reads == 2:
+                    source = inventory / path
+                    source.unlink()
+                    source.symlink_to(outside)
+            return real_open(path, flags, *args, **kwargs)
         with patch.object(bank_observation, 'MAX_FILES', 1), \
-             patch.object(bank_observation, 'read_source', side_effect=redirect):
+             patch.object(bank_observation.os, 'open', side_effect=redirect):
             with self.assertRaises(ContractError) as caught:
                 bank_observation.scan(inventory, read_sources=False, require_router=False)
         self.assertEqual(reads, 2)
         self.assertNotIsInstance(caught.exception, bank_capacity.BankCapacityError)
         self.assertEqual(outside.read_bytes(), b'PRIVATE_BODY_CANARY')
+
+    def test_reused_parent_substitution_refuses_and_closes_descriptors(self):
+        inventory = self.repo / 'parent-race'
+        nested = inventory / 'nested'
+        nested.mkdir(parents=True)
+        originals = {'one.md': b'one', 'two.md': b'two'}
+        for name, data in originals.items():
+            (nested / name).write_bytes(data)
+        outside = self.repo / 'parent-outside'
+        outside.mkdir()
+        for name in originals:
+            (outside / name).write_bytes(b'outside')
+        moved = inventory / 'moved'
+        real_open, real_stat = os.open, os.stat
+        descriptors = []
+        first_read = False
+        first_parent_checked = False
+        changed = False
+
+        def record_open(path, flags, *args, **kwargs):
+            fd = real_open(path, flags, *args, **kwargs)
+            descriptors.append(fd)
+            return fd
+
+        def substitute(path, *args, **kwargs):
+            nonlocal first_read, first_parent_checked, changed
+            if kwargs.get('dir_fd') is not None:
+                if path in originals:
+                    first_read = True
+                elif path == 'nested' and first_read and not changed:
+                    if first_parent_checked:
+                        nested.rename(moved)
+                        nested.symlink_to(outside, target_is_directory=True)
+                        changed = True
+                    else:
+                        first_parent_checked = True
+            return real_stat(path, *args, **kwargs)
+
+        with patch.object(bank_observation.os, 'open', side_effect=record_open), \
+             patch.object(bank_observation.os, 'stat', side_effect=substitute):
+            with self.assertRaises(ContractError) as caught:
+                bank_observation.scan(inventory, read_sources=False, require_router=False)
+        self.assertTrue(changed)
+        self.assertNotIsInstance(caught.exception, bank_capacity.BankCapacityError)
+        for fd in set(descriptors):
+            with self.assertRaises(OSError):
+                os.fstat(fd)
+        self.assertEqual({p.name: p.read_bytes() for p in moved.iterdir()}, originals)
+        self.assertEqual({p.name: p.read_bytes() for p in outside.iterdir()},
+                         {name: b'outside' for name in originals})
+
+    def test_reused_parent_replaced_after_leaf_open_refuses_and_closes(self):
+        inventory = self.repo / 'post-open-race'
+        nested = inventory / 'nested'
+        nested.mkdir(parents=True)
+        originals = {'one.md': b'one', 'two.md': b'two'}
+        for name, data in originals.items():
+            (nested / name).write_bytes(data)
+        outside = self.repo / 'post-open-outside'
+        outside.mkdir()
+        for name in originals:
+            (outside / name).write_bytes(b'outside')
+        moved = inventory / 'moved'
+        real_open, real_stat = os.open, os.stat
+        descriptors = []
+        named_leaves = 0
+        changed = False
+
+        def record_open(path, flags, *args, **kwargs):
+            fd = real_open(path, flags, *args, **kwargs)
+            descriptors.append(fd)
+            return fd
+
+        def substitute(path, *args, **kwargs):
+            nonlocal named_leaves, changed
+            if kwargs.get('dir_fd') is not None and path in originals:
+                named_leaves += 1
+                if named_leaves == 2:
+                    nested.rename(moved)
+                    nested.symlink_to(outside, target_is_directory=True)
+                    changed = True
+            return real_stat(path, *args, **kwargs)
+
+        with patch.object(bank_observation.os, 'open', side_effect=record_open), \
+             patch.object(bank_observation.os, 'stat', side_effect=substitute):
+            with self.assertRaises(ContractError) as caught:
+                bank_observation.scan(inventory, read_sources=True, require_router=False)
+        self.assertTrue(changed)
+        self.assertNotIsInstance(caught.exception, bank_capacity.BankCapacityError)
+        for fd in set(descriptors):
+            with self.assertRaises(OSError):
+                os.fstat(fd)
+        self.assertEqual({p.name: p.read_bytes() for p in moved.iterdir()}, originals)
+        self.assertEqual({p.name: p.read_bytes() for p in outside.iterdir()},
+                         {name: b'outside' for name in originals})
+
+    def test_scan_closes_descriptors_on_success_and_count_capacity(self):
+        inventory = self.repo / 'descriptor-inventory'
+        inventory.mkdir()
+        for name in ('one.md', 'two.md'):
+            (inventory / name).write_bytes(b'original')
+        real_open = os.open
+        for maximum in (1, 10):
+            with self.subTest(maximum=maximum):
+                descriptors = []
+                def record_open(path, flags, *args, **kwargs):
+                    fd = real_open(path, flags, *args, **kwargs)
+                    descriptors.append(fd)
+                    return fd
+                with patch.object(bank_observation, 'MAX_FILES', maximum), \
+                     patch.object(bank_observation.os, 'open', side_effect=record_open):
+                    if maximum == 1:
+                        with self.assertRaises(bank_capacity.BankCapacityError):
+                            bank_observation.scan(inventory, read_sources=False, require_router=False)
+                    else:
+                        bank_observation.scan(inventory, read_sources=False, require_router=False)
+                self.assertTrue(descriptors)
+                for fd in set(descriptors):
+                    with self.assertRaises(OSError):
+                        os.fstat(fd)
+
+    def test_stream_construction_failure_preserves_an_unrelated_descriptor(self):
+        source = self.bank / 'projectbrief.md'
+        original = source.read_bytes()
+        outside = self.repo / 'independent-descriptor'
+        outside.write_bytes(b'Independent descriptor must remain usable')
+        real_fdopen = os.fdopen
+        descriptors = []
+
+        def interrupted_constructor(fd, *args, **kwargs):
+            stream = real_fdopen(fd, *args, **kwargs)
+            stream.close()
+            descriptors.append(os.open(outside, os.O_RDONLY))
+            raise OSError(errno.EIO, 'Synthetic stream construction failure')
+
+        try:
+            with patch.object(bank_observation.os, 'fdopen', side_effect=interrupted_constructor):
+                with self.assertRaises(ContractError):
+                    bank_observation.read_source(self.bank, 'projectbrief.md', 16384)
+            self.assertEqual(os.read(descriptors[0], 128), outside.read_bytes())
+            self.assertEqual(source.read_bytes(), original)
+        finally:
+            for fd in descriptors:
+                try:
+                    os.close(fd)
+                except OSError:
+                    pass
+
+    def test_transaction_preflight_refuses_incomplete_inventory_and_failed_target_stat(self):
+        before = self.files()
+        proposal = {'observed_hashes': bank_transactions.file_hashes(
+                        {path: raw.decode('utf-8') for path, raw in before.items()}),
+                    'files': {path: raw.decode('utf-8') for path, raw in before.items()}}
+        hidden = self.bank / 'preflight-unreadable'
+        hidden.mkdir()
+        occupant = hidden / 'unobserved.bin'
+        occupant.write_bytes(b'preserve foreign occupant')
+        before = self.files()
+        real_scandir = os.scandir
+
+        def inaccessible(path):
+            if os.fspath(path) == os.fspath(hidden):
+                raise PermissionError(errno.EACCES, 'inaccessible directory', path)
+            return real_scandir(path)
+
+        with patch.object(os, 'scandir', side_effect=inaccessible):
+            with self.assertRaises(ContractError):
+                bank_transactions.preflight(self.bank, proposal)
+        self.assertEqual(self.files(), before)
+
+        class UnclassifiableEntry:
+            def __init__(self, entry):
+                self.name = entry.name
+
+            def is_dir(self, *args, **kwargs):
+                raise OSError(errno.EIO, 'unavailable entry type')
+
+        class IncompleteScan:
+            def __init__(self, scan):
+                self.scan = scan
+
+            def __enter__(self):
+                self.scan.__enter__()
+                return self
+
+            def __exit__(self, *args):
+                return self.scan.__exit__(*args)
+
+            def __iter__(self):
+                return self
+
+            def __next__(self):
+                entry = next(self.scan)
+                return UnclassifiableEntry(entry) if entry.name == hidden.name else entry
+
+        def unclassifiable(path):
+            scan = real_scandir(path)
+            return IncompleteScan(scan) if os.fspath(path) == os.fspath(self.bank) else scan
+
+        with patch.object(os, 'scandir', side_effect=unclassifiable):
+            with self.assertRaises(ContractError):
+                bank_transactions.preflight(self.bank, proposal)
+        self.assertEqual(self.files(), before)
+
+        real_stat = os.stat
+        target = self.bank / 'activeContext.md'
+
+        def failed_stat(path, *args, **kwargs):
+            if os.fspath(path) == os.fspath(target):
+                raise OSError(errno.EIO, 'unavailable metadata', path)
+            return real_stat(path, *args, **kwargs)
+
+        with patch.object(os, 'stat', side_effect=failed_stat):
+            with self.assertRaises(ContractError):
+                bank_transactions.preflight(self.bank, proposal)
+        self.assertEqual(self.files(), before)
+        self.assertFalse((self.world.paths['state'] / 'agent-memory').exists())
+
+    def test_transaction_preflight_refuses_symlink_inside_runtime_directory(self):
+        before = self.files()
+        files = {path: raw.decode('utf-8') for path, raw in before.items()}
+        proposal = {'observed_hashes': bank_transactions.file_hashes(files), 'files': files}
+        runtime = self.bank / '.agent-memory-private'
+        runtime.mkdir()
+        outside = self.repo / 'preflight-outside'
+        outside.write_bytes(b'preserve outside')
+        (runtime / 'link').symlink_to(outside)
+        before = self.files()
+        with self.assertRaises(ContractError):
+            bank_transactions.preflight(self.bank, proposal)
+        self.assertEqual(self.files(), before)
+        self.assertTrue((runtime / 'link').is_symlink())
+        self.assertEqual(outside.read_bytes(), b'preserve outside')
+        self.assertFalse((self.world.paths['state'] / 'agent-memory').exists())
+
+    def test_transaction_preflight_refuses_late_dangling_leaf_and_parent_symlinks(self):
+        for change in ('leaf', 'parent'):
+            with self.subTest(change=change):
+                nested = self.bank / 'preflight-race'
+                nested.mkdir()
+                source = nested / 'source.md'
+                source.write_bytes(b'preserve canonical source')
+                files = {path: raw.decode('utf-8') for path, raw in self.files().items()}
+                proposal = {'observed_hashes': bank_transactions.file_hashes(files), 'files': files}
+                target = source if change == 'leaf' else nested
+                saved = self.repo / ('saved-preflight-' + change)
+                original_paths = bank_contract.physical_paths
+                changed = False
+
+                def substitute(bank):
+                    nonlocal changed
+                    paths = original_paths(bank)
+                    target.rename(saved)
+                    target.symlink_to(self.repo / 'absent-preflight-target',
+                                      target_is_directory=change == 'parent')
+                    changed = True
+                    return paths
+
+                with patch.object(bank_contract, 'physical_paths', side_effect=substitute):
+                    with self.assertRaises(ContractError):
+                        bank_transactions.preflight(self.bank, proposal)
+                self.assertTrue(changed)
+                self.assertTrue(target.is_symlink())
+                preserved = saved if change == 'leaf' else saved / 'source.md'
+                self.assertEqual(preserved.read_bytes(), b'preserve canonical source')
+                self.assertFalse((self.world.paths['state'] / 'agent-memory').exists())
+                target.unlink()
+                if change == 'leaf':
+                    nested.rmdir()
 
     def test_symlink_and_nonregular_markdown_are_noncapacity_refusals(self):
         path = self.bank / 'outside.md'
@@ -249,7 +520,16 @@ class BoundedBankObservation(unittest.TestCase):
 
     def test_exact_owned_large_transaction_marker_and_mismatch(self):
         marker = self.bank / '.agent-memory-transaction.md'
-        original = b'PRIVATE_BODY_CANARY' + b'x' * 5000
+        files = bank_transactions.files_at(self.bank)
+        original = bank_transactions.marker_bytes({
+            'operation_id': '00000000-0000-4000-8000-000000000000',
+            'operation': 'replace',
+            'observed_hashes': bank_transactions.file_hashes(files),
+            'files': {**files, **{
+                f'topics/PRIVATE_BODY_CANARY-{index:03}.md': '# Proposed context\n'
+                for index in range(128)}},
+        })
+        self.assertGreater(len(original), 4096)
         marker.write_bytes(original)
         before = self.files()
         checked = bank_contract.validate(self.repo, owned_transaction=original)

@@ -1,0 +1,313 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Proposed G1 lifecycle and semantic result v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "operation", "status", "reason_code", "semantic_reason_code", "exit_code", "project_id", "namespace_id", "requested_mode", "effective_mode", "semantic_status", "resource_state", "generation_state", "generation_id", "profile_id", "identity_assurance", "identity_status", "alias_stability_reliance", "destination_class", "source_currency", "semantic_coverage", "native_coverage", "remote_freshness", "graph_capability", "vector_capability", "results", "mandatory_groups", "selection_ref", "next_page", "queued_hints", "mutated", "resource_changed", "purge", "exclusions"],
+  "properties": {
+    "schema": {"const": "agent-memory/semantic-result-v1"},
+    "operation": {"enum": ["graph.setup", "graph.status", "graph.start", "graph.stop", "graph.build", "graph.rebuild", "graph.diagnose", "graph.purge-preview", "graph.purge-apply", "embeddings.setup", "embeddings.status", "embeddings.start", "embeddings.stop", "embeddings.reembed", "embeddings.diagnose", "embeddings.purge-preview", "embeddings.purge-apply", "search", "get", "explain", "related"]},
+    "status": {"$ref": "#/$defs/status"},
+    "reason_code": {"$ref": "#/$defs/reason_code"},
+    "semantic_reason_code": {"anyOf": [{"$ref": "#/$defs/reason_code"}, {"type": "null"}]},
+    "exit_code": {"type": "integer", "enum": [0, 1, 2]},
+    "project_id": {"type": ["string", "null"]},
+    "namespace_id": {"type": ["string", "null"]},
+    "requested_mode": {"$ref": "#/$defs/mode"},
+    "effective_mode": {"$ref": "#/$defs/mode"},
+    "semantic_status": {"anyOf": [{"$ref": "#/$defs/status"}, {"const": "not-requested"}]},
+    "resource_state": {"enum": ["not-applicable", "unconfigured", "stopped", "running", "unknown"]},
+    "generation_state": {"enum": [null, "planned", "building-graph", "filling-vectors", "validating", "ready", "active", "retiring", "interrupted", "discarded", "erasure-pending", "erased"]},
+    "generation_id": {"type": ["string", "null"]},
+    "profile_id": {"type": ["string", "null"]},
+    "identity_assurance": {"enum": ["not-applicable", "managed-receipt-verified", "byo-attested", "provider-alias-unverified"]},
+    "identity_status": {"enum": ["provider model identity not verifiable", null]},
+    "alias_stability_reliance": {"type": "boolean"},
+    "destination_class": {"enum": ["not-applicable", "managed-local", "loopback-byo", "remote"]},
+    "source_currency": {"$ref": "#/$defs/assessment"},
+    "semantic_coverage": {"$ref": "#/$defs/assessment"},
+    "native_coverage": {"anyOf": [{"type": "null"}, {"$ref": "#/$defs/native_coverage"}]},
+    "remote_freshness": {"$ref": "#/$defs/assessment"},
+    "graph_capability": {"$ref": "#/$defs/capability"},
+    "vector_capability": {"$ref": "#/$defs/capability"},
+    "results": {"type": "array", "items": {"oneOf": [{"$ref": "#/$defs/result"}, {"$ref": "#/$defs/related"}]}},
+    "mandatory_groups": {"type": "array", "items": {"$ref": "#/$defs/mandatory_group"}},
+    "selection_ref": {"type": ["string", "null"]},
+    "next_page": {"type": ["string", "null"]},
+    "queued_hints": {"type": ["integer", "null"], "minimum": 0},
+    "mutated": {"type": "boolean"},
+    "resource_changed": {"type": "boolean"},
+    "purge": {"anyOf": [{"type": "null"}, {"$ref": "#/$defs/purge"}]},
+    "exclusions": {"type": "array", "uniqueItems": true, "items": {"enum": ["empty-input", "over-context", "held", "pending-recovery", "withheld", "capped", "truncation-unverified", "missing-score"]}}
+  },
+  "allOf": [
+    {"if": {"properties": {"status": {"const": "qualified"}}, "required": ["status"]}, "then": {"properties": {"exit_code": {"const": 0}}}},
+    {"if": {"properties": {"status": {"const": "invalid-request"}}, "required": ["status"]}, "then": {"properties": {"exit_code": {"const": 2}}}},
+    {"if": {"properties": {"status": {"not": {"enum": ["qualified", "invalid-request"]}}}, "required": ["status"]}, "then": {"properties": {"exit_code": {"const": 1}}}},
+    {"if": {"properties": {"requested_mode": {"const": "literal"}}}, "then": {"properties": {"semantic_status": {"const": "not-requested"}}}},
+    {"if": {"properties": {"identity_assurance": {"const": "provider-alias-unverified"}}}, "then": {"properties": {"identity_status": {"const": "provider model identity not verifiable"}}}, "else": {"properties": {"identity_status": {"const": null}, "alias_stability_reliance": {"const": false}}}},
+    {"if": {"properties": {"semantic_status": {"enum": ["qualified", "not-requested"]}}}, "then": {"properties": {"semantic_reason_code": {"const": null}}}, "else": {"properties": {"semantic_reason_code": {"$ref": "#/$defs/reason_code"}}}},
+    {"if": {"properties": {"reason_code": {"const": "literal-fallback"}}}, "then": {"properties": {"semantic_reason_code": {"not": {"enum": [null, "literal-fallback", "completed", "already-running", "already-stopped"]}}}}},
+    {"if": {"properties": {"reason_code": {"const": "literal-fallback"}}}, "then": {"properties": {"requested_mode": {"const": "semantic"}, "effective_mode": {"const": "literal"}, "semantic_status": {"not": {"enum": ["qualified", "partial", "not-requested", "erasure-pending", "approval-required", "invalid-request", "withheld", "clarification-required"]}}}}},
+    {"if": {"properties": {"requested_mode": {"const": "semantic"}, "effective_mode": {"const": "literal"}}}, "then": {"properties": {"reason_code": {"const": "literal-fallback"}, "semantic_status": {"not": {"enum": ["qualified", "partial", "not-requested", "erasure-pending", "approval-required", "invalid-request", "withheld", "clarification-required"]}}}}},
+    {"if": {"properties": {"operation": {"enum": ["graph.purge-preview", "graph.purge-apply", "embeddings.purge-preview", "embeddings.purge-apply"]}}}, "then": {"properties": {"purge": {"$ref": "#/$defs/purge"}}}},
+    {"if": {"properties": {"reason_code": {"const": "missing-score"}}}, "then": {"properties": {"status": {"const": "stale"}, "semantic_status": {"const": "stale"}}}},
+    {"if": {"properties": {"exclusions": {"contains": {"const": "missing-score"}}}}, "then": {"properties": {"semantic_status": {"const": "stale"}}}},
+    {"if": {"properties": {"native_coverage": {"type": "object", "properties": {"semantic_coverage": {"const": "incomplete-recovery"}}, "required": ["semantic_coverage"]}}}, "then": {"properties": {"exclusions": {"contains": {"const": "pending-recovery"}}, "semantic_coverage": {"not": {"const": "complete"}}}}},
+    {"if": {"properties": {"semantic_coverage": {"const": "complete"}}}, "then": {"properties": {"exclusions": {"items": {"const": "capped"}}, "native_coverage": {"$ref": "#/$defs/complete_native_coverage"}}}},
+    {"if": {"properties": {"operation": {"enum": ["search", "get", "explain"]}, "status": {"enum": ["qualified", "partial"]}}}, "then": {"properties": {"native_coverage": {"$ref": "#/$defs/native_coverage"}}}},
+    {"if": {"properties": {"operation": {"enum": ["search", "get", "explain"]}}}, "then": {"properties": {"results": {"items": {"$ref": "#/$defs/result"}}}}},
+    {"if": {"properties": {"status": {"const": "invalid-request"}}}, "then": {"properties": {"native_coverage": {"type": "null"}, "exclusions": {"maxItems": 0}, "effective_mode": {"const": "none"}, "results": {"maxItems": 0}}}},
+    {"if": {"properties": {"operation": {"enum": ["search", "get", "explain"]}, "requested_mode": {"const": "semantic"}, "effective_mode": {"not": {"const": "literal"}}}}, "then": {"$ref": "#/$defs/semantic_outcome"}},
+    {"if": {"properties": {"operation": {"const": "related"}}}, "then": {"properties": {"results": {"items": {"$ref": "#/$defs/related"}}}}}
+  ],
+  "$defs": {
+    "status": {"enum": ["qualified", "partial", "unavailable", "stale", "incompatible", "refused", "approval-required", "pending", "erasure-pending", "invalid-request", "withheld", "clarification-required", "failed"]},
+    "reason_code": {"enum": ["completed", "already-running", "already-stopped", "literal-fallback", "partial-coverage", "empty-input", "over-context", "invalid-response", "model-drift", "identity-unverified", "truncation-unverified", "endpoint-unavailable", "graph-unavailable", "profile-disabled", "approval-required", "remote-budget-exhausted", "source-stale", "missing-score", "resource-limit", "runtime-stopped", "erasure-pending", "byo-graph-erasure-unverifiable", "resource-set-changed", "foreign-scope", "foreign-reference", "stale-reference", "invalid-reference", "invalid-related-seed", "withheld", "clarification-required", "invalid-request", "operation-failed", "unsafe-endpoint", "ownership-unverified", "engine-unqualified", "termination-unverified", "storage-exhausted", "acquisition-offline", "acquisition-failed", "vector-integrity", "cache-integrity", "manifest-integrity"]},
+    "semantic_outcome": {
+      "oneOf": [
+        {"properties": {"status": {"const": "qualified"}, "semantic_status": {"const": "qualified"}}},
+        {"properties": {"status": {"const": "partial"}, "semantic_status": {"const": "partial"}}},
+        {"properties": {"status": {"const": "unavailable"}, "semantic_status": {"const": "unavailable"}}},
+        {"properties": {"status": {"const": "stale"}, "semantic_status": {"const": "stale"}}},
+        {"properties": {"status": {"const": "incompatible"}, "semantic_status": {"const": "incompatible"}}},
+        {"properties": {"status": {"const": "refused"}, "semantic_status": {"const": "refused"}}},
+        {"properties": {"status": {"const": "approval-required"}, "semantic_status": {"const": "approval-required"}}},
+        {"properties": {"status": {"const": "pending"}, "semantic_status": {"const": "pending"}}},
+        {"properties": {"status": {"const": "erasure-pending"}, "semantic_status": {"const": "erasure-pending"}}},
+        {"properties": {"status": {"const": "invalid-request"}, "semantic_status": {"const": "invalid-request"}}},
+        {"properties": {"status": {"const": "withheld"}, "semantic_status": {"const": "withheld"}}},
+        {"properties": {"status": {"const": "clarification-required"}, "semantic_status": {"const": "clarification-required"}}},
+        {"properties": {"status": {"const": "failed"}, "semantic_status": {"const": "failed"}}}
+      ]
+    },
+    "mode": {"enum": ["semantic", "literal", "related", "lifecycle", "none"]},
+    "assessment": {"enum": ["complete", "partial", "stale", "unavailable", "unverified", "not-applicable"]},
+    "capability": {"enum": ["available", "partial", "unavailable", "pending", "incompatible", "not-applicable"]},
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "ranking_request": {
+      "type": "object", "additionalProperties": false,
+      "required": ["mode", "profile", "fallback"],
+      "properties": {
+        "mode": {"const": "semantic"}, "profile": {"type": "string", "minLength": 1},
+        "fallback": {"enum": ["none", "literal"]}
+      }
+    },
+    "related_query": {
+      "type": "object", "additionalProperties": false,
+      "required": ["template", "arguments", "page_token"],
+      "properties": {
+        "template": {"enum": ["replacement-evidence", "component-attempts", "recorded-related"]},
+        "arguments": {"type": "object"},
+        "page_token": {"type": ["string", "null"]}
+      },
+      "oneOf": [
+        {"properties": {"template": {"const": "replacement-evidence"}, "arguments": {
+          "type": "object", "additionalProperties": false, "required": ["historical"],
+          "properties": {"historical": {"type": "boolean"}}
+        }}},
+        {"properties": {"template": {"const": "component-attempts"}, "arguments": {
+          "type": "object", "additionalProperties": false, "maxProperties": 0
+        }}},
+        {"properties": {"template": {"const": "recorded-related"}, "arguments": {
+          "type": "object", "additionalProperties": false, "required": ["relations"],
+          "properties": {"relations": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {
+            "enum": ["CORRECTS", "SUPERSEDES", "SUPERSEDED_BY", "DERIVED_FROM", "SUPPORTED_BY", "SIMILAR_SUGGESTION", "IN_SCOPE"]
+          }}}
+        }}}
+      ]
+    },
+    "related_request": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema", "selection_ref", "context", "query"],
+      "properties": {
+        "schema": {"const": "agent-memory/related-request-v1"},
+        "selection_ref": {"type": "string", "minLength": 1},
+        "context": {"type": "object", "additionalProperties": {"type": "string"}},
+        "query": {"$ref": "#/$defs/related_query"}
+      }
+    },
+    "native_coverage": {
+      "type": "object", "additionalProperties": false,
+      "required": ["bank_observation_sha256", "context", "scope_context", "excluded_counts", "semantic_coverage", "pending_recovery_unit_ids", "pending_recovery_units", "recovery_required_actions"],
+      "properties": {
+        "bank_observation_sha256": {"$ref": "#/$defs/sha256"},
+        "context": {"type": "object", "additionalProperties": {"type": "string"}},
+        "scope_context": {
+          "type": "object", "additionalProperties": false,
+          "required": ["developer_id", "project_id", "developer_sha256", "project_sha256", "checkout_key", "repository_settings_sha256", "initialization_only"],
+          "properties": {
+            "developer_id": {"type": "string"}, "project_id": {"type": "string"},
+            "developer_sha256": {"$ref": "#/$defs/sha256"}, "project_sha256": {"$ref": "#/$defs/sha256"},
+            "checkout_key": {"type": "string"}, "repository_settings_sha256": {"$ref": "#/$defs/sha256"},
+            "initialization_only": {"type": "boolean"}
+          }
+        },
+        "excluded_counts": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}},
+        "semantic_coverage": {"enum": ["complete-canonical-observation", "incomplete-recovery"]},
+        "pending_recovery_unit_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+        "pending_recovery_units": {"type": "integer", "minimum": 0},
+        "recovery_required_actions": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "complete_native_coverage": {
+      "allOf": [
+        {"$ref": "#/$defs/native_coverage"},
+        {"properties": {"semantic_coverage": {"const": "complete-canonical-observation"}, "pending_recovery_unit_ids": {"maxItems": 0}, "pending_recovery_units": {"const": 0}, "recovery_required_actions": {"maxItems": 0}}}
+      ]
+    },
+    "path_row": {
+      "type": "object", "additionalProperties": false,
+      "required": ["from", "rel", "to", "asserted_by", "source_sha256", "channel"],
+      "properties": {
+        "from": {"type": "string", "minLength": 1}, "to": {"type": "string", "minLength": 1},
+        "asserted_by": {"type": "string", "minLength": 1}, "source_sha256": {"$ref": "#/$defs/sha256"},
+        "rel": {"enum": ["CONTAINS", "ROUTES_TO", "IN_SCOPE", "HAS_CONDITION", "SUPPORTED_BY", "ATTRIBUTED_TO", "CORRECTS", "SUPERSEDES", "SUPERSEDED_BY", "DERIVED_FROM", "SIMILAR_SUGGESTION"]},
+        "channel": {"enum": ["recorded", "inferred"]}
+      },
+      "allOf": [
+        {"if": {"properties": {"rel": {"const": "SIMILAR_SUGGESTION"}}}, "then": {"properties": {"channel": {"const": "inferred"}}}, "else": {"properties": {"channel": {"const": "recorded"}}}}
+      ]
+    },
+    "related": {
+      "type": "object", "additionalProperties": false,
+      "required": ["target", "paths", "relation_channel", "selection_ref"],
+      "properties": {
+        "target": {
+          "type": "object", "additionalProperties": false,
+          "required": ["tagged_key", "path", "source_sha256", "lifecycle"],
+          "properties": {
+            "tagged_key": {"type": "string", "minLength": 1}, "path": {"type": "string", "minLength": 1},
+            "source_sha256": {"$ref": "#/$defs/sha256"}, "lifecycle": {"enum": ["current", "historical"]}
+          }
+        },
+        "paths": {"type": "array", "minItems": 1, "items": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/path_row"}}},
+        "relation_channel": {"enum": ["recorded", "inferred"]},
+        "selection_ref": {"type": "string", "minLength": 1}
+      },
+      "allOf": [
+        {"if": {"properties": {"paths": {"contains": {"contains": {"properties": {"channel": {"const": "inferred"}}, "required": ["channel"]}}}}}, "then": {"properties": {"relation_channel": {"const": "inferred"}}}, "else": {"properties": {"relation_channel": {"const": "recorded"}}}}
+      ]
+    },
+    "mandatory_group": {
+      "type": "object", "additionalProperties": false,
+      "required": ["kind", "use_as_settled_guidance", "rationales", "sources"],
+      "properties": {
+        "kind": {"const": "unresolved-conflict"},
+        "use_as_settled_guidance": {"const": false},
+        "rationales": {"type": "array", "items": {"type": "string"}},
+        "sources": {"type": "array", "minItems": 2, "items": {"$ref": "#/$defs/native"}}
+      }
+    },
+    "result": {
+      "type": "object", "additionalProperties": false,
+      "required": ["native", "selection_ref", "mandatory_caveats", "related", "related_next_page"],
+      "properties": {
+        "native": {"$ref": "#/$defs/native"},
+        "selection_ref": {"type": ["string", "null"]},
+        "related": {"type": "array", "items": {"$ref": "#/$defs/related"}},
+        "related_next_page": {"type": ["string", "null"]},
+        "mandatory_caveats": {"type": "array", "items": {"$ref": "#/$defs/native"}}
+      }
+    },
+    "native": {
+      "type": "object",
+      "required": ["path", "format", "body", "source_sha256", "scope_chain", "source_class", "untrusted_data", "source_assertions_verified", "admission_verified", "procedural_guidance", "selection_class", "match"],
+      "properties": {
+        "path": {"type": "string"}, "format": {"enum": ["standalone-record", "context-prose"]},
+        "body": {"type": "string"}, "source_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "scope_chain": {"type": "array", "items": {"type": "string"}},
+        "source_class": {"const": "external"}, "untrusted_data": {"const": true},
+        "source_assertions_verified": {"const": false}, "admission_verified": {"const": false},
+        "procedural_guidance": {"const": false}, "selection_class": {"enum": ["current-record", "orientation-only"]},
+        "match": {"$ref": "#/$defs/match"}
+      },
+      "oneOf": [
+        {
+          "required": ["record", "selection"],
+          "properties": {
+            "format": {"const": "standalone-record"}, "selection_class": {"const": "current-record"},
+            "record": {"$ref": "../../skills/agent-memory/schemas/record.json"},
+            "selection": {"$ref": "#/$defs/selection"}
+          }
+        },
+        {
+          "required": ["trust", "assignment", "context_assessment", "explanation"],
+          "properties": {
+            "format": {"const": "context-prose"}, "selection_class": {"const": "orientation-only"},
+            "trust": {"const": null}, "assignment": {"const": false},
+            "context_assessment": {"anyOf": [{"type": "null"}, {"$ref": "#/$defs/context_assessment"}]},
+            "explanation": {"type": "string"}
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "selection": {
+      "type": "object", "additionalProperties": false,
+      "required": ["current", "gates", "reasons"],
+      "properties": {
+        "current": {"const": true},
+        "gates": {
+          "type": "object", "additionalProperties": false,
+          "required": ["authorized-scope", "applicable", "active", "valid-time", "sufficient-trust", "visible", "no-active-superseder"],
+          "properties": {
+            "authorized-scope": {"const": true}, "applicable": {"const": true}, "active": {"const": true},
+            "valid-time": {"const": true}, "sufficient-trust": {"const": true}, "visible": {"const": true},
+            "no-active-superseder": {"const": true}
+          }
+        },
+        "reasons": {"type": "array", "maxItems": 0}
+      }
+    },
+    "match": {
+      "type": "object", "additionalProperties": false,
+      "required": ["strategy", "score", "matching_terms"],
+      "properties": {
+        "strategy": {"enum": ["exact-id", "exact-path", "ordinary-text", "current-inventory", "semantic-cosine"]},
+        "score": {"type": "number"}, "matching_terms": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "context_assessment": {
+      "type": "object", "additionalProperties": false,
+      "required": ["managed_checkpoint", "applicable", "assignment"],
+      "properties": {
+        "managed_checkpoint": {"type": "boolean"}, "applicable": {"type": ["boolean", "null"]}, "assignment": {"const": false},
+        "statement_applicability": {"const": "unassessed orientation"},
+        "conditions": {"anyOf": [{"type": "null"}, {"$ref": "../../skills/agent-memory/schemas/record.json#/properties/conditions"}]},
+        "reasons": {"type": "array", "items": {"type": "string"}},
+        "evidence_status": {"enum": ["not-inspected-inapplicable", "qualified-observations", "historical-or-unqualified-evidence"]},
+        "evidence": {"type": "array", "items": {"$ref": "#/$defs/evidence_comparison"}},
+        "evidence_bytes_match": {"type": "boolean"}
+      }
+    },
+    "evidence_comparison": {
+      "type": "object", "additionalProperties": false,
+      "required": ["ref", "recorded", "current", "qualification"],
+      "properties": {
+        "ref": {"type": "string"}, "recorded": {"$ref": "#/$defs/evidence_observation"},
+        "current": {"$ref": "#/$defs/evidence_observation"},
+        "qualification": {"enum": ["matching-local-bytes", "changed-local-bytes", "unavailable-here", "original-byte-binding-unverified"]}
+      }
+    },
+    "evidence_observation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["ref", "kind", "sha256", "bytes", "commit", "blob"],
+      "properties": {
+        "ref": {"type": "string"}, "kind": {"enum": ["external-unverified", "outside-uninspected", "unavailable", "canonical-memory-reference", "local-unpublished", "repository-committed"]},
+        "sha256": {"type": ["string", "null"]}, "bytes": {"type": ["integer", "null"], "minimum": 0},
+        "commit": {"type": ["string", "null"]}, "blob": {"type": ["string", "null"]}
+      }
+    },
+    "purge": {
+      "type": "object", "additionalProperties": false,
+      "required": ["resource_ids", "paths", "confirmation_token", "verified_absent", "forensic_media_provider_backup_erasure"],
+      "properties": {
+        "resource_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+        "paths": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+        "confirmation_token": {"type": ["string", "null"]}, "verified_absent": {"type": "boolean"},
+        "forensic_media_provider_backup_erasure": {"const": false}
+      }
+    }
+  }
+}

@@ -27,8 +27,141 @@ def call(world, operation, *options, receipt=None, expected=0):
 def component(value, name):
     return [v for v in value['checks'] if v['component'] == name]
 
+def native_fixture(world, mode):
+    channel = world.repository('native diagnostic channel')
+    shutil.copytree(PACK, channel / 'skills/agent-memory')
+    world.git('add', '.', cwd=channel)
+    world.git('commit', '-m', 'Disposable native diagnostic runtime', cwd=channel)
+    root = world.inside('native root')
+    root.mkdir()
+    installed = world.run([sys.executable, '-I', ROOT / 'scripts/installer.py',
+        'install', '--remote', channel, '--ref', 'main', '--mode', mode,
+        '--presets', 'omp', '--omp-agent-dir', root, '--omp-peers-upgraded',
+        '--bin-dir', world.inside('owned bin')], timeout=120)
+    bank(world, world.paths['repo'])
+    return json.loads(installed.stdout)['receipt']
+
 
 class RuntimeDiagnosticsContract(unittest.TestCase):
+    def test_native_copy_and_link_doctor_distinguishes_extension_and_launchers(self):
+        for mode in ('copy', 'link'):
+            with self.subTest(mode=mode), World() as world:
+                receipt = native_fixture(world, mode)
+                extension = Path(receipt['omp_binding']['extension_target'])
+                launcher = Path(receipt['bin_dir']) / 'am'
+                self.assertEqual(extension.stat().st_mode & 0o7777, 0o644)
+
+                def inspect(expected=0, command='am'):
+                    before = snapshot(world.root)
+                    result = world.run([Path(receipt['bin_dir']) / command, '--json',
+                        'doctor', '--repo', world.paths['repo']], check=False, timeout=120)
+                    self.assertEqual(result.returncode, expected, result.stdout + result.stderr)
+                    value = json.loads(result.stdout)
+                    self.assertEqual(value['ok'], expected == 0)
+                    for key in ('writes_performed', 'repairs_performed', 'network_performed'):
+                        self.assertFalse(value[key])
+                    self.assertEqual(snapshot(world.root), before)
+                    return value
+
+                healthy = inspect()
+                wrappers = component(healthy, 'runtime.target.wrapper')
+                self.assertEqual({check['path'] for check in wrappers},
+                    {str(extension), str(launcher), str(launcher.with_name('agent-memory'))})
+                self.assertTrue(all(check['state'] == 'pass' for check in wrappers))
+                for path, change in ((extension, 'bytes'), (extension, 'mode'),
+                                     (launcher, 'bytes'), (launcher, 'mode')):
+                    with self.subTest(target=path.name, change=change):
+                        original = path.read_bytes()
+                        mode_bits = path.stat().st_mode & 0o7777
+                        if change == 'bytes':
+                            path.write_bytes(original + b'\nchanged ownership bytes\n')
+                        else:
+                            path.chmod(0o600)
+                        failed = inspect(1, command='agent-memory')
+                        check = next(check for check in component(failed, 'runtime.target.wrapper')
+                                     if check['path'] == str(path))
+                        self.assertEqual(check['state'], 'failure')
+                        path.write_bytes(original)
+                        path.chmod(mode_bits)
+                inspect()
+
+    def test_native_doctor_rejects_rebound_wrapper_bytes_modes_and_roles(self):
+        for mode in ('copy', 'link'):
+            with self.subTest(mode=mode), World() as world:
+                original = native_fixture(world, mode)
+                extension = Path(original['omp_binding']['extension_target'])
+                launcher = Path(original['bin_dir']) / 'am'
+                receipt_file = receipt_path(world)
+                journal_file = receipt_file.parent / 'journal.json'
+                receipt_bytes, journal_bytes = receipt_file.read_bytes(), journal_file.read_bytes()
+                for case in ('extension-bytes', 'launcher-bytes', 'launcher-mode',
+                             'unknown-wrapper', 'extension-role-spoof'):
+                    with self.subTest(case=case):
+                        receipt = json.loads(receipt_bytes)
+                        changed = extension if case == 'extension-bytes' else launcher
+                        if case == 'unknown-wrapper':
+                            changed = world.inside('unrecognized wrapper')
+                            changed.write_bytes(launcher.read_bytes())
+                            changed.chmod(0o755)
+                            receipt['targets'].append({'path': str(changed), 'kind': 'wrapper',
+                                                       'identity': None})
+                        original_bytes = changed.read_bytes()
+                        original_mode = changed.stat().st_mode & 0o7777
+                        if case.endswith('-bytes'):
+                            changed.write_bytes(original_bytes + b'\nchanged entrypoint\n')
+                        elif case == 'launcher-mode':
+                            changed.chmod(0o600)
+                        elif case == 'extension-role-spoof':
+                            receipt['omp_binding']['extension_target'] = str(launcher)
+                        target = next(t for t in receipt['targets'] if t['path'] == str(changed))
+                        target['identity'] = {'kind': 'file',
+                            'hash': hashlib.sha256(changed.read_bytes()).hexdigest(),
+                            'mode': changed.stat().st_mode & 0o7777}
+                        raw = (json.dumps(receipt, sort_keys=True, indent=2) + '\n').encode()
+                        receipt_file.write_bytes(raw)
+                        journal = json.loads(journal_bytes)
+                        journal['receipt'] = receipt
+                        journal['receipt_identity'] = {'kind': 'file',
+                            'hash': hashlib.sha256(raw).hexdigest(),
+                            'mode': receipt_file.stat().st_mode & 0o7777}
+                        journal_file.write_text(json.dumps(journal))
+                        before = snapshot(world.root)
+                        value = call(world, 'doctor', '--repo', world.paths['repo'],
+                                     receipt=original, expected=1)
+                        if case == 'extension-role-spoof':
+                            self.assertTrue(component(value, 'runtime.receipt'))
+                        else:
+                            check = next(c for c in component(value, 'runtime.target.wrapper')
+                                         if c['path'] == str(changed))
+                            self.assertEqual(check['state'], 'failure')
+                            self.assertFalse(component(value, 'runtime.receipt'))
+                        self.assertEqual(snapshot(world.root), before)
+                        changed.write_bytes(original_bytes)
+                        changed.chmod(original_mode)
+                        if case == 'unknown-wrapper':
+                            changed.unlink()
+                        receipt_file.write_bytes(receipt_bytes)
+                        journal_file.write_bytes(journal_bytes)
+
+    def test_native_doctor_never_repairs_missing_observer_locks(self):
+        for mode in ('copy', 'link'):
+            with self.subTest(mode=mode), World() as world:
+                receipt = native_fixture(world, mode)
+                bank_path = world.paths['repo'] / 'memory-bank'
+                base = (world.paths['state'] / 'agent-memory/writes'
+                        / hashlib.sha256(str(bank_path).encode()).hexdigest())
+                base.mkdir(parents=True, mode=0o700)
+                barrier = base / 'source-barrier.lock'
+                barrier.write_bytes(b'')
+                barrier.chmod(0o600)
+                (base / 'omp-source-v1').mkdir(mode=0o700)
+                before = snapshot(world.root)
+                value = call(world, 'doctor', '--repo', world.paths['repo'],
+                             receipt=receipt, expected=1)
+                self.assertTrue(component(value, 'omp.native_boundary'))
+                self.assertEqual(snapshot(world.root), before)
+                self.assertFalse((base / 'omp-transport.lock').exists())
+
     def test_shared_owned_hook_health_and_negative_controls(self):
         for preset in ('codex', 'claude'):
             with self.subTest(preset=preset), World() as world:

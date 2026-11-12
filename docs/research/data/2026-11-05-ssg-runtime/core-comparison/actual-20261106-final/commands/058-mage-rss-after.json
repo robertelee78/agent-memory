@@ -1,0 +1,15 @@
+{
+  "argv": [
+    "podman",
+    "exec",
+    "0dbf20712618d0ef15d98db9262aa423f878e27b79b0f9296788eceec837361e",
+    "cat",
+    "/proc/1/status"
+  ],
+  "cwd": "/Users/robert.lee/.omp/wt/t4d88ac83b/m",
+  "exit": 0,
+  "seconds": 0.11449725000420585,
+  "started_at": "2026-11-06T19:20:41.316095+00:00",
+  "stderr": "",
+  "stdout": "Name:\tmemgraph\nUmask:\t0022\nState:\tS (sleeping)\nTgid:\t1\nNgid:\t0\nPid:\t1\nPPid:\t0\nTracerPid:\t0\nUid:\t101\t101\t101\t101\nGid:\t103\t103\t103\t103\nFDSize:\t128\nGroups:\t103 \nNStgid:\t1\nNSpid:\t1\nNSpgid:\t1\nNSsid:\t1\nKthread:\t0\nVmPeak:\t 2906292 kB\nVmSize:\t 2906292 kB\nVmLck:\t       0 kB\nVmPin:\t       0 kB\nVmHWM:\t  792196 kB\nVmRSS:\t  792196 kB\nRssAnon:\t  553980 kB\nRssFile:\t  238216 kB\nRssShmem:\t       0 kB\nVmData:\t 2226072 kB\nVmStk:\t     936 kB\nVmExe:\t   46336 kB\nVmLib:\t  457332 kB\nVmPTE:\t    2564 kB\nVmSwap:\t       0 kB\nHugetlbPages:\t       0 kB\nCoreDumping:\t0\nTHP_enabled:\t1\nuntag_mask:\t0xffffffffffffff\nThreads:\t58\nSigQ:\t1/128039\nSigPnd:\t0000000000000000\nShdPnd:\t0000000000000000\nSigBlk:\t0000000000000000\nSigIgn:\t0000000000001000\nSigCgt:\t0000000100000802\nCapInh:\t0000000000000000\nCapPrm:\t0000000000000000\nCapEff:\t0000000000000000\nCapBnd:\t00000000800405fb\nCapAmb:\t0000000000000000\nNoNewPrivs:\t0\nSeccomp:\t2\nSeccomp_filters:\t1\nSpeculation_Store_Bypass:\tvulnerable\nSpeculationIndirectBranch:\tunknown\nCpus_allowed:\tfff\nCpus_allowed_list:\t0-11\nMems_allowed:\t00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000001\nMems_allowed_list:\t0\nvoluntary_ctxt_switches:\t243\nnonvoluntary_ctxt_switches:\t56\n"
+}

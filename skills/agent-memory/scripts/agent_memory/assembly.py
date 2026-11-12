@@ -140,7 +140,8 @@ def assemble(repo, request):
         if len(proposed.encode()) <= request['max_bytes']:
             selected.append(unit);text = proposed
     root, _ = writes.bank_path(repo)
-    scope_binding.require(root, base['project_id'], expected=base['scope_context'])
+    from . import recovery_frontier
+    recovery_frontier.require_scope(root, base['project_id'], expected=base['scope_context'])
     checked, observed = writes.snapshot(root)
     bank_digest = digest(encoded({'project_id': checked['project_id'], 'sources': observed}))
     observed_git = {key: base['context'][key] for key in ('branch', 'revision') if base['context'].get(key) is not None}
@@ -150,6 +151,7 @@ def assemble(repo, request):
     peers = sorted({row['record']['origin']['developer-id'] for path, row in rows.items()
         if path in refs and 'record' in row and row['record']['origin']['developer-id'] != base['scope_context']['developer_id']})
     return {'schema': 'agent-memory/assembly-result-v1', 'operation': 'preview', 'project_id': base['project_id'],
+        **{key: base[key] for key in ('semantic_coverage', 'pending_recovery_unit_ids', 'pending_recovery_units', 'recovery_required_actions')},
         'context_text': text, 'context_sha256': digest(text.encode()), 'context_bytes': len(text.encode()),
         'max_bytes': request['max_bytes'], 'token_budget': request['token_budget'],
         'token_count': None, 'token_budget_verified': False, 'token_measurement_required': True,

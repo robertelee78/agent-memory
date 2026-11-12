@@ -635,7 +635,8 @@ def apply(value, *, recovery_scope=None):
     directory = locations(root, target, p['operation_id'])
     marker = owned_marker(target, p)
     context(root, p['project_id'], marker=marker)
-    with storage.exclusive(target / '.agent-memory.lock', p['operation_id'], 'bank-migrate') as owner:
+    from .turn_sources import canonical_writer_barrier
+    with canonical_writer_barrier(root), storage.exclusive(target / '.agent-memory.lock', p['operation_id'], 'bank-migrate') as owner:
         scope = context(root, p['project_id'], owner=owner, marker=marker)
         known = receipt_value(directory, p)
         if known is not None:
@@ -795,7 +796,8 @@ def recover(repo, mode=None, operation_id=None, prepared=None):
     # Resume the original pinned conversion under apply's own bank lock.
     if current['marker_sha256'] is None and current['receipt_sha256'] is None and mode == 'finish':
         return apply(p, recovery_scope=r['scope_context'])
-    with storage.exclusive(target / '.agent-memory.lock', p['operation_id'], 'bank-migrate') as owner:
+    from .turn_sources import canonical_writer_barrier
+    with canonical_writer_barrier(root), storage.exclusive(target / '.agent-memory.lock', p['operation_id'], 'bank-migrate') as owner:
         marker = owned_marker(target, p)
         scope = context(root, p['project_id'], expected=r['scope_context'], owner=owner, marker=marker)
         files, modes = snapshot(target, owner=owner, marker=marker)

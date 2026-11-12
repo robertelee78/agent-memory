@@ -1,8 +1,9 @@
 ---
 id: ADR-0004
 status: accepted
-approval-scope: v0.0.1 and v0.0.4 turn-boundary hooks
+approval-scope: v0.0.1; v0.0.4 turn-boundary hooks; v0.0.15 receipt-owned instruction-context, stock-harness source-authority, queued-guidance controls and answer-first omp timing for task 249
 date: 2026-10-21
+amended: 2026-11-12
 depends-on: [ADR-0001, ADR-0002]
 ---
 
@@ -10,8 +11,19 @@ depends-on: [ADR-0001, ADR-0002]
 
 The v0.0.1 scope was accepted in the [operator approval](../design/v0.0.1-approval.md).
 The operator subsequently approved v0.0.4 execution of turn-boundary hooks for
-Claude Code, Codex, and OpenCode. Other later-milestone proposals remain under
-review. Implementation, acceptance and delivery require separate evidence.
+Claude Code, Codex, and OpenCode. On 2026-11-07 the operator approved treating
+AM's exactly verified installed manual as operating instructions rather than
+learning material for task #249; independent Opus review approved the bounded
+engineering design. This clarifies the existing hook/skill authority separation,
+not a new memory authority or a change to ordinary source screening. Other
+later-milestone proposals remain under review. Implementation, native acceptance
+and delivery require separate evidence.
+
+On 2026-11-08 the operator clarified that omp is an independently maintained,
+frequently updated client: changing it is not an AM integration strategy. The
+stock-harness and source-authority constraints below clarify the existing
+public-surface and truthful-provenance decision. They do not approve an unfinished
+transport design or establish implementation, native qualification or delivery.
 
 ## Context
 
@@ -80,6 +92,123 @@ The implementation SHOULD support Codex `AGENTS.md`, OpenCode `AGENTS.md` and
 files to share identical syntax. Generated, sentinel-delimited activation
 blocks are preferred to whole-file symlinks. No binding MAY substitute a
 client-local repository identifier or credential for the common identity model.
+
+### v0.0.15: stock harnesses and stored-source authority
+
+Task #249 MUST work through unmodified, released omp public interfaces. It MUST
+NOT require an omp fork, custom build, private native patch or upstream change.
+AM MUST NOT reorder or disable unrelated operator extensions, weaken permissions
+or silently change the operator's client installation to qualify its integration.
+Supported capabilities and version limits MUST be stated and exercised against
+stock clients; compatibility MUST NOT be inferred from a version string alone.
+
+Native notifications SHALL be scheduling hints, not source-ownership authority.
+Genuine human origin MUST come from a checked native stored-user entry and its
+actual native identity. Notification role, attribution, current callback context,
+position or timing MUST NOT invent a human root, assign a foreign source to the
+current session or resolve a real source gap.
+
+Missing notification-to-entry mapping MAY remain absent or unverified while an
+independently checked, digest-verified safe stored source remains assessable.
+Actual unavailable, unsafe, oversized or incompletely transferred source evidence
+MUST remain explicitly pending. This distinction MUST NOT waive historical gaps,
+rewrite immutable evidence, fabricate completion or relax #249's existing native,
+peer-harness, lifecycle, permission and macOS/Linux acceptance. Detailed capture,
+transport and recovery changes still require independent engineering review and
+actual stock-client qualification.
+
+The task-specific [native delivery-window contract](../design/v0.0.15-omp-integration.md#helper-actions-acknowledgement-and-bounded-wakes)
+defines the reviewed Linux same-monotonic profile and atomic reservation-start
+transition. Source review does not substitute for the original native matrix.
+
+For #249's queued-guidance batch control only, the original same-prompt-batch
+requirement across all three previously undefined skipped/failed/deferred paths
+is replaced by the source-bound positive and negative controls in the
+[task design](../design/v0.0.15-omp-integration.md#diagnostics-dependencies-and-acceptance)
+and [native qualification matrix](../testing/omp-native-qualification.md#full-independent-native-release-matrix).
+They distinguish actual delivered guidance from loss and preserved pending work;
+a pending reference is not delivered guidance. Stock-source limitations are not
+runtime passes. This amendment changes no other #249 acceptance, permissions,
+platforms, modes, deadlines, provenance or recovery obligations, and requires
+independent review, operator approval and actual native qualification.
+
+### v0.0.15: answer-first omp boundaries
+
+On 2026-11-12 the operator explicitly selected
+[answer first, automatic maintenance afterward](https://github.com/robertelee78/agent-memory/issues/249#issuecomment-6814276233).
+The bounded activation and diagnostic design received
+[independent engineering review](https://github.com/robertelee78/agent-memory/issues/249#issuecomment-6814719830);
+implementation, native qualification and delivery remain separate gates.
+
+An ordinary omp foreground turn MUST use and refresh memory needed to answer
+correctly, then deliver its substantive answer once. Automatic capture,
+comparison, consolidation, pruning and publication SHALL run in the governed
+Agent Memory continuation after that answer. An explicit operator request for a
+memory operation remains foreground work; merely confirming a project decision
+MUST NOT be treated as such a request. This follows
+[ADR-0005](0005-admission-consolidation-retrieval.md)'s separation of consolidation
+from foreground work and [ADR-0021](0021-unobtrusive-memory-boundaries.md)'s
+truthful, unobtrusive completion policy. Other harnesses' approved timing is
+unchanged.
+
+The omp continuation MUST assess its actual sources and perform the governed
+boundary work before ending that continuation, or retain pending state. It MUST
+NOT defer itself, repeat or replace the business answer, or fabricate completion.
+An unavailable continuation MUST NOT move automatic maintenance into the next
+ordinary foreground turn or reset a wake budget.
+
+The receipt-owned omp activation SHALL identify this timing through the saved
+binding, independently of runtime-advisory readiness. Missing or unqualified
+activation MUST be reported honestly; installation ownership alone MUST NOT
+claim native loading. Other clients' activation, unrelated user text, permissions
+and lifecycle ownership rules MUST remain unchanged.
+
+Optional wake-decision diagnostics SHALL retain only bounded fixed codes and
+checked immutable source bindings after the response writer accepts the original,
+unsubstituted OBSERVED frame into its queue. Queue acceptance is not proof that
+the frame was written or received. Diagnostics MUST NOT become source,
+assessment, delivery or completion authority, alter source or drain inventories,
+rewrite historical evidence, or change callback deadlines.
+An offered continuation is not observed delivery. The
+[task design](../design/v0.0.15-omp-integration.md#foreground-answer-and-governed-maintenance)
+specifies the activation, private diagnostic and native acceptance contract.
+
+
+### v0.0.15: verified installed instructions are operating context
+
+Task #249 SHALL distinguish an exactly verified full native read of AM's own
+receipt-owned installed manual from substantive task evidence. The supported
+observer SHALL retain a content-free provenance annotation, not the manual body
+as learning material. This MUST NOT change native tool results, model input,
+permissions, provider/model selection, canonical admission or publication.
+Ordinary and unverified tool results MUST retain the existing source-screening
+and coverage rules; a caller-supplied flag MUST NOT confer instruction authority.
+
+The observer MUST verify the current installation receipt, exact owned target,
+artifact/manual bytes and unique invocation/result linkage against the measured
+supported carrier immediately before fresh capture. Copy and link renderers MUST
+be measured independently. Extra/mixed, partial, ambiguous, changed, foreign or
+unsupported representations MUST NOT receive this classification.
+
+Classification MUST NOT close any pre-existing native-keyed gap or retained
+tool-call gap. Immutable snapshots and sealed evidence MUST remain unchanged.
+Crash retry MUST complete an already-published representation without selecting a
+different representation after installation update or uninstall. Historical
+readback SHALL explain the observed provenance and intentionally nonlearning
+body without claiming current installation authentication or complete coverage.
+
+The shared source envelopes, exclusions, own-maintenance allowlist, wake budgets,
+human/foreign attribution and pending-source gates MUST remain unchanged.
+Classification itself SHALL create no new shared observation or wake; existing
+control policy MAY still enroll substantive or ambiguous intervals containing a
+manual read. The exact carrier, closed annotation, retry and qualification design
+is specified in the
+[task-specific execution addendum](../design/v0.0.15-omp-instruction-context.md).
+Actual copied and linked native reads, adversarial nonqualification, old-gap
+preservation, crash retry and historical readback MUST be qualified before
+claiming this behavior supported. This clarification MUST NOT narrow #249's
+previously approved native, lifecycle, peer-harness or platform acceptance.
+
 
 ## Consequences
 

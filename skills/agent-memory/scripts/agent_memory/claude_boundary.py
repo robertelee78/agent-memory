@@ -17,6 +17,7 @@ UUID = re.compile(r'[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-
 
 
 def complete(repo, value):
+    scope_binding.require(repo)
     if isinstance(value, dict) and 'observation_id' in value:
         from . import claude_turns
         return claude_turns.complete(repo, value)
@@ -136,14 +137,18 @@ def main(argv=None):
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--repo',required=True);parser.add_argument('--input')
     parser.add_argument('--list-pending',action='store_true');parser.add_argument('--session');parser.add_argument('--prompt')
-    parser.add_argument('--quiet',action='store_true');parser.add_argument('--refresh',action='store_true');args=parser.parse_args(argv)
+    parser.add_argument('--quiet',action='store_true');parser.add_argument('--refresh',action='store_true')
+    parser.add_argument('--offset',type=int,default=0);parser.add_argument('--legacy-offset',type=int,default=0)
+    parser.add_argument('--enrollment-offset',type=int,default=0);args=parser.parse_args(argv)
     try:
         if args.list_pending:
             if args.input or args.quiet or args.refresh:raise ContractError('Select pending inspection or acknowledgment')
             from . import claude_turns
-            result=claude_turns.pending(args.repo,args.session,args.prompt)
+            result=claude_turns.pending(args.repo,args.session,args.prompt,offset=args.offset,
+                                       legacy_offset=args.legacy_offset,enrollment_offset=args.enrollment_offset)
         else:
-            if not args.input or args.session or args.prompt:raise ContractError('Acknowledgment requires its exact input')
+            if not args.input or args.session or args.prompt or args.offset or args.legacy_offset or args.enrollment_offset:
+                raise ContractError('Acknowledgment requires its exact input, not pending-inventory page offsets')
             if args.input=='-':
                 raw=sys.stdin.buffer.read(65537)
                 if len(raw)>65536:raise ContractError('Stdin assessment exceeds64KiB')

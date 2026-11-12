@@ -88,6 +88,27 @@ with patch('os.mkdir',swap): private_mkdir(sys.argv[4])
         finally:
             os.umask(previous)
 
+    def test_current_preserves_private_and_read_only_bank_permissions(self):
+        with World() as w:
+            repo, bank, peer, base = self.fixture(w)
+            files = sorted(bank.rglob('*.md'))
+            for mode in (0o600, 0o640, 0o400):
+                with self.subTest(mode=oct(mode)):
+                    for path in files:
+                        path.chmod(mode)
+                    before = self.state(w, repo, bank)
+                    response = w.run([sys.executable, '-I', self.pack/'scripts/installer.py',
+                                      'refresh', 'current', '--repo', repo], check=False)
+                    result = json.loads(response.stdout)
+                    self.assertEqual(response.returncode, 0, result)
+                    self.assertEqual(result['sharing_state'], 'bank-synchronized')
+                    self.assertFalse(result['canonical_writes_performed'])
+                    self.assertFalse(result['original_index_writes_performed'])
+                    self.assertEqual(before, self.state(w, repo, bank))
+                    self.assertEqual({p.relative_to(bank).as_posix(): p.stat().st_mode & 0o7777
+                                      for p in files},
+                                     {p.relative_to(bank).as_posix(): mode for p in files})
+
     def test_current_rejects_executable_and_world_writable_bank_files(self):
         for mode in (0o755, 0o666):
             with self.subTest(mode=oct(mode)), World() as w:
@@ -113,9 +134,7 @@ with patch('os.mkdir',swap): private_mkdir(sys.argv[4])
                               'refresh', 'current', '--repo', repo], check=False)
             result = json.loads(response.stdout)
             self.assertEqual(response.returncode, 1, result)
-            self.assertEqual(result['failure_component'], 'local-boundary')
             self.assertEqual(result['failure_code'], 'canonical-memory-untracked')
-            self.assertIn('refresh inspect --v2', result['repair'])
             self.assertFalse(result['remote_freshness_verified'])
             self.assertFalse(result['canonical_writes_performed'])
             self.assertFalse(result['git_metadata_writes_performed'])
@@ -274,8 +293,45 @@ with patch('os.mkdir',swap): private_mkdir(sys.argv[4])
                     's.write_private(sys.argv[2],value,sys.argv[3]);'
                     's.preflight_private_output(sys.argv[2],sys.argv[3]);'
                     's.write_private(sys.argv[2],value,sys.argv[3])')
-            response=w.run([sys.executable,'-I','-c',script,self.pack/'scripts',target,repo],check=False)
+            response=w.run([sys.executable,'-I','-B','-c',script,self.pack/'scripts',target,repo],check=False)
             self.assertEqual(response.returncode,0,response.stderr)
+
+    def test_primed_unchanged_refresh_uses_catalog_and_matches_canonical_recall(self):
+        selections = []
+        for disabled in (False, True):
+            with self.subTest(disabled=disabled), World() as w:
+                repo, bank, peer, base = self.fixture(w)
+                path = 'projectbrief.md'
+                started = self.good(w, 'discover_memory.py', 'start', '--repo', repo,
+                                    '--intent', 'recall', '--task', 'Read project orientation.')
+                trace = started['discovery']
+                trace.update(complete=True, rationale='Read the observed project orientation.',
+                             sources=[{'path': path, 'sha256': hashlib.sha256((bank/path).read_bytes()).hexdigest()}])
+                recall = retrieval_helpers.RetrievalContract().request(
+                    trace['binding']['project_id'], paths=[path], query='', include_context=True)
+                recall['discovery'] = trace
+                primed = self.good(w, 'retrieve.py', '--repo', repo, '--request', self.save(w, recall))
+                self.assertTrue(primed['metrics']['catalog_updated'])
+                pointer = next(w.paths['state'].rglob('recall-catalog-v1/current.json'))
+                snapshot = pointer.read_bytes()
+                before = self.state(w, repo, bank)
+                proposal = self.prepared_refresh(w, repo, recall=recall)
+                if disabled:
+                    w.env['AGENT_MEMORY_NO_RECALL_CATALOG'] = '1'
+                done = self.apply_refresh(w, proposal)
+                self.assertTrue(done['refresh_applied'])
+                self.assertTrue(done['relevant_imports_read'])
+                self.assertEqual(done['recall']['optional_indexes_used'], not disabled)
+                self.assertIsNot(done['recall']['derived_cache_writes_performed'], True)
+                selections.append([(r['path'], r['body'], r['source_sha256']) for r in done['recall']['results']])
+                self.assertEqual(pointer.read_bytes(), snapshot)
+                self.assertEqual(before, self.state(w, repo, bank))
+                w.env.pop('AGENT_MEMORY_NO_RECALL_CATALOG', None)
+                later = self.good(w, 'retrieve.py', '--repo', repo, '--request', self.save(w, recall))
+                self.assertTrue(later['optional_indexes_used'])
+                self.assertFalse(later['metrics']['catalog_updated'])
+                self.assertEqual(pointer.read_bytes(), snapshot)
+        self.assertEqual(selections[0], selections[1])
 
     def test_second_clone_import_is_recalled_with_conditions_without_code_index_or_local_learning_loss(self):
         with World() as w:

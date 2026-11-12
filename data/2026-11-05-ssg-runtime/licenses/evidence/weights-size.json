@@ -1,0 +1,15 @@
+{
+ "argv": [
+  "stat",
+  "-f",
+  "%z %N",
+  "/tmp/am-v15-delivery/Qwen3-Embedding-0.6B-Q8_0.gguf",
+  "/tmp/am-v15-delivery/Qwen3-Embedding-8B-Q8_0.gguf"
+ ],
+ "cwd": "/Users/robert.lee/.omp/wt/tba949e054/m/data/2026-11-05-ssg-runtime/licenses",
+ "exit": 0,
+ "seconds": 0.004,
+ "started_at": "2026-11-05T16:52:22.788183+00:00",
+ "stderr": "",
+ "stdout": "639150592 /tmp/am-v15-delivery/Qwen3-Embedding-0.6B-Q8_0.gguf\n8047105824 /tmp/am-v15-delivery/Qwen3-Embedding-8B-Q8_0.gguf\n"
+}

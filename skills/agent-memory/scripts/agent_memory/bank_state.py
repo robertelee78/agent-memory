@@ -63,6 +63,8 @@ def git_context(root, observed):
 
 def inspect(repo, path=None):
     root, bank = writes.bank_path(repo)
+    from . import recovery_frontier
+    frontier = recovery_frontier.observe(root)
     checked, observed = writes.snapshot(root)
     if path is not None:
         return inspect_context(root, bank, checked, observed, path)
@@ -70,24 +72,28 @@ def inspect(repo, path=None):
     latest, hashes = writes.snapshot(root)
     if latest != checked or hashes != observed or git_context(root, hashes) != git:
         raise ContractError('Bank or local Git context changed during inspection; reread before use')
+    recovery_frontier.check(frontier, root)
     routes = {route['path']: route for route in checked['routes']}
     contexts = {name: {'present': name in observed, 'route': routes.get(name),
                        'omission_reason': checked['omitted'].get(name)} for name in contract.CONTEXTS}
     return {'schema': 'agent-memory/current-bank-view-v1', 'operation': 'inspect',
+            **recovery_frontier.public_coverage(frontier),
             'project_id': checked['project_id'], 'canonical_source': 'Markdown',
             'contexts': contexts, 'routes': checked['routes'], 'source_hashes': observed, 'git': git,
             'sharing': {'state': 'local-or-pending-sharing', 'publication_verified': False, 'freshness_verified': False},
-            'reads_memory_generated_state': False, 'writes_performed': False,
+            'reads_memory_generated_state': bool(frontier['operation_ids']), 'writes_performed': False,
             'validation_scope': 'current-file-inventory-and-local-git-context'}
 
 
 def inspect_context(root, bank, checked, observed, path):
     from . import scope_binding, security, handoff
+    from . import recovery_frontier
+    frontier = recovery_frontier.observe(root)
     from .retrieval import observed_context
     from .developer_identity import digest
     if path not in contract.CONTEXTS or path not in observed:
         raise ContractError('Explicit historical inspection selects an existing ordinary context file only')
-    scope = scope_binding.require(root, checked['project_id'])
+    scope = recovery_frontier.require_scope(root, checked['project_id'])
     context, _ = observed_context(root, {})
     with (bank / path).open('rb') as stream:
         raw = stream.read(16385)
@@ -96,6 +102,7 @@ def inspect_context(root, bank, checked, observed, path):
     body = raw.decode('utf-8')
     scanned = security.scan(body)
     value = {'schema': 'agent-memory/context-inspection-v1', 'operation': 'inspect',
+             **recovery_frontier.public_coverage(frontier),
              'project_id': checked['project_id'], 'inspection_class': 'historical-orientation',
              'assignment': False, 'usable_as_current_guidance': False,
              'source_assertions_verified': False, 'identity_authenticated': False,
@@ -108,7 +115,8 @@ def inspect_context(root, bank, checked, observed, path):
                      untrusted_data=True, trust=None, context_assessment=assessment)
     if writes.snapshot(root)[1] != observed or observed_context(root, {})[0] != context:
         raise ContractError('Bank or checkout changed during historical inspection')
-    scope_binding.require(root, checked['project_id'], expected=scope)
+    recovery_frontier.require_scope(root, checked['project_id'], expected=scope)
+    recovery_frontier.check(frontier, root)
     return value
 
 

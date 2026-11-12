@@ -1,0 +1,512 @@
+{
+  "cases": [
+    {
+      "case_id": "h16-retry-paraphrase",
+      "case_ordinal": 1,
+      "split": "calibration"
+    },
+    {
+      "case_id": "h16-pagination",
+      "case_ordinal": 2,
+      "split": "calibration"
+    },
+    {
+      "case_id": "h16-wrong-component",
+      "case_ordinal": 3,
+      "split": "calibration"
+    },
+    {
+      "case_id": "h16-unknown-prerequisite",
+      "case_ordinal": 4,
+      "split": "calibration"
+    },
+    {
+      "case_id": "h16-known-prerequisite",
+      "case_ordinal": 5,
+      "split": "calibration"
+    },
+    {
+      "case_id": "h16-corrected-deadline",
+      "case_ordinal": 6,
+      "split": "calibration"
+    },
+    {
+      "case_id": "h16-development-retention",
+      "case_ordinal": 7,
+      "split": "calibration"
+    },
+    {
+      "case_id": "h16-production-retention",
+      "case_ordinal": 8,
+      "split": "calibration"
+    },
+    {
+      "case_id": "h16-duplicate-evidence",
+      "case_ordinal": 9,
+      "split": "calibration"
+    },
+    {
+      "case_id": "h16-wall-disagreement",
+      "case_ordinal": 10,
+      "split": "calibration"
+    },
+    {
+      "case_id": "h16-no-match",
+      "case_ordinal": 11,
+      "split": "calibration"
+    },
+    {
+      "case_id": "h16-unknown-session",
+      "case_ordinal": 12,
+      "split": "calibration"
+    },
+    {
+      "case_id": "h16-hidden-replacement",
+      "case_ordinal": 13,
+      "split": "calibration"
+    },
+    {
+      "case_id": "h16-unsafe-source",
+      "case_ordinal": 14,
+      "split": "calibration"
+    },
+    {
+      "case_id": "h16-expired-source",
+      "case_ordinal": 15,
+      "split": "calibration"
+    },
+    {
+      "case_id": "h16-head-vs-staged",
+      "case_ordinal": 16,
+      "split": "calibration"
+    },
+    {
+      "case_id": "p-retry-flaky",
+      "case_ordinal": 17,
+      "split": "held-out"
+    },
+    {
+      "case_id": "p-cursor-empty-only",
+      "case_ordinal": 18,
+      "split": "held-out"
+    },
+    {
+      "case_id": "p-cursor-loop-only",
+      "case_ordinal": 19,
+      "split": "held-out"
+    },
+    {
+      "case_id": "p-deadline-now",
+      "case_ordinal": 20,
+      "split": "held-out"
+    },
+    {
+      "case_id": "p-half-minute-own-text",
+      "case_ordinal": 21,
+      "split": "held-out"
+    },
+    {
+      "case_id": "p-resend",
+      "case_ordinal": 22,
+      "split": "held-out"
+    },
+    {
+      "case_id": "p-queue-probe-own-text",
+      "case_ordinal": 23,
+      "split": "held-out"
+    },
+    {
+      "case_id": "p-paint",
+      "case_ordinal": 24,
+      "split": "held-out"
+    },
+    {
+      "case_id": "p-queue-coding",
+      "case_ordinal": 25,
+      "split": "held-out"
+    },
+    {
+      "case_id": "p-dispatch-trunk",
+      "case_ordinal": 26,
+      "split": "held-out"
+    },
+    {
+      "case_id": "p-ledger-descendant",
+      "case_ordinal": 27,
+      "split": "held-out"
+    },
+    {
+      "case_id": "p-ledger-broad-context",
+      "case_ordinal": 28,
+      "split": "held-out"
+    },
+    {
+      "case_id": "p-resume-unverified",
+      "case_ordinal": 29,
+      "split": "held-out"
+    },
+    {
+      "case_id": "p-retention-no-env",
+      "case_ordinal": 30,
+      "split": "held-out"
+    },
+    {
+      "case_id": "p-retention-staging",
+      "case_ordinal": 31,
+      "split": "held-out"
+    },
+    {
+      "case_id": "p-session-match",
+      "case_ordinal": 32,
+      "split": "held-out"
+    },
+    {
+      "case_id": "p-session-other",
+      "case_ordinal": 33,
+      "split": "held-out"
+    },
+    {
+      "case_id": "p-branch-feature",
+      "case_ordinal": 34,
+      "split": "held-out"
+    },
+    {
+      "case_id": "p-branch-substitution",
+      "case_ordinal": 35,
+      "split": "held-out"
+    },
+    {
+      "case_id": "p-expired-paraphrase",
+      "case_ordinal": 36,
+      "split": "held-out"
+    },
+    {
+      "case_id": "p-revoked-paraphrase",
+      "case_ordinal": 37,
+      "split": "held-out"
+    },
+    {
+      "case_id": "p-retired-protocol",
+      "case_ordinal": 38,
+      "split": "held-out"
+    },
+    {
+      "case_id": "p-quota-unsafe",
+      "case_ordinal": 39,
+      "split": "held-out"
+    },
+    {
+      "case_id": "p-cache-hidden",
+      "case_ordinal": 40,
+      "split": "held-out"
+    },
+    {
+      "case_id": "p-cache-own-text-leak",
+      "case_ordinal": 41,
+      "split": "held-out"
+    },
+    {
+      "case_id": "p-page-size-abstain",
+      "case_ordinal": 42,
+      "split": "held-out"
+    },
+    {
+      "case_id": "p-fonts-no-help",
+      "case_ordinal": 43,
+      "split": "held-out"
+    },
+    {
+      "case_id": "c-journaling-7",
+      "case_ordinal": 44,
+      "split": "held-out"
+    },
+    {
+      "case_id": "c-journaling-parent",
+      "case_ordinal": 45,
+      "split": "held-out"
+    },
+    {
+      "case_id": "c-journaling-no-context",
+      "case_ordinal": 46,
+      "split": "held-out"
+    },
+    {
+      "case_id": "c-compression-12",
+      "case_ordinal": 47,
+      "split": "held-out"
+    },
+    {
+      "case_id": "c-encoding-12",
+      "case_ordinal": 48,
+      "split": "held-out"
+    },
+    {
+      "case_id": "c-snapshots-30",
+      "case_ordinal": 49,
+      "split": "held-out"
+    },
+    {
+      "case_id": "c-leases-3",
+      "case_ordinal": 50,
+      "split": "held-out"
+    },
+    {
+      "case_id": "c-certificates-41",
+      "case_ordinal": 51,
+      "split": "held-out"
+    },
+    {
+      "case_id": "c-dns-19",
+      "case_ordinal": 52,
+      "split": "held-out"
+    },
+    {
+      "case_id": "c-applicable-irrelevant",
+      "case_ordinal": 53,
+      "split": "held-out"
+    },
+    {
+      "case_id": "o-brief",
+      "case_ordinal": 54,
+      "split": "held-out"
+    },
+    {
+      "case_id": "o-brief-not-requested",
+      "case_ordinal": 55,
+      "split": "held-out"
+    },
+    {
+      "case_id": "o-queue-orientation",
+      "case_ordinal": 56,
+      "split": "held-out"
+    },
+    {
+      "case_id": "o-route-request-reliability",
+      "case_ordinal": 57,
+      "split": "held-out"
+    },
+    {
+      "case_id": "e-id-intersection",
+      "case_ordinal": 58,
+      "split": "held-out"
+    },
+    {
+      "case_id": "e-path-withheld",
+      "case_ordinal": 59,
+      "split": "held-out"
+    },
+    {
+      "case_id": "e-literal-unchanged",
+      "case_ordinal": 60,
+      "split": "held-out"
+    },
+    {
+      "case_id": "f-held-deadline",
+      "case_ordinal": 61,
+      "split": "held-out"
+    },
+    {
+      "case_id": "f-held-wall",
+      "case_ordinal": 62,
+      "split": "held-out"
+    },
+    {
+      "case_id": "x-unsafe-query",
+      "case_ordinal": 63,
+      "split": "held-out"
+    },
+    {
+      "case_id": "x-injection-query",
+      "case_ordinal": 64,
+      "split": "held-out"
+    },
+    {
+      "case_id": "x-remote-unapproved",
+      "case_ordinal": 65,
+      "split": "held-out"
+    },
+    {
+      "case_id": "a-service-stopped",
+      "case_ordinal": 66,
+      "split": "held-out"
+    },
+    {
+      "case_id": "a-literal-fallback",
+      "case_ordinal": 67,
+      "split": "held-out"
+    },
+    {
+      "case_id": "a-interrupted-first-fill",
+      "case_ordinal": 68,
+      "split": "held-out"
+    },
+    {
+      "case_id": "a-prior-generation-qualified",
+      "case_ordinal": 69,
+      "split": "held-out"
+    },
+    {
+      "case_id": "a-other-branch-generation",
+      "case_ordinal": 70,
+      "split": "held-out"
+    },
+    {
+      "case_id": "a-profile-changed",
+      "case_ordinal": 71,
+      "split": "held-out"
+    },
+    {
+      "case_id": "a-opaque-alias",
+      "case_ordinal": 72,
+      "split": "held-out"
+    },
+    {
+      "case_id": "m-correct-retry-stale",
+      "case_ordinal": 73,
+      "split": "held-out"
+    },
+    {
+      "case_id": "m-correct-retry-rebuilt",
+      "case_ordinal": 74,
+      "split": "held-out"
+    },
+    {
+      "case_id": "m-revoke-queue-rebuilt",
+      "case_ordinal": 75,
+      "split": "held-out"
+    },
+    {
+      "case_id": "m-delete-receipt-rebuilt",
+      "case_ordinal": 76,
+      "split": "held-out"
+    },
+    {
+      "case_id": "r-timeout-history",
+      "case_ordinal": 77,
+      "split": "held-out"
+    },
+    {
+      "case_id": "r-timeout-current",
+      "case_ordinal": 78,
+      "split": "held-out"
+    },
+    {
+      "case_id": "r-cache-hidden",
+      "case_ordinal": 79,
+      "split": "held-out"
+    },
+    {
+      "case_id": "r-quota-unsafe",
+      "case_ordinal": 80,
+      "split": "held-out"
+    },
+    {
+      "case_id": "r-protocol-dangling",
+      "case_ordinal": 81,
+      "split": "held-out"
+    },
+    {
+      "case_id": "r-receipts-related",
+      "case_ordinal": 82,
+      "split": "held-out"
+    },
+    {
+      "case_id": "r-walls-related",
+      "case_ordinal": 83,
+      "split": "held-out"
+    },
+    {
+      "case_id": "r-retention-related",
+      "case_ordinal": 84,
+      "split": "held-out"
+    },
+    {
+      "case_id": "r-journaling-component",
+      "case_ordinal": 85,
+      "split": "held-out"
+    },
+    {
+      "case_id": "r-ledger-component",
+      "case_ordinal": 86,
+      "split": "held-out"
+    },
+    {
+      "case_id": "r-retry-co-routed",
+      "case_ordinal": 87,
+      "split": "held-out"
+    },
+    {
+      "case_id": "r-origin-not-relevance",
+      "case_ordinal": 88,
+      "split": "held-out"
+    },
+    {
+      "case_id": "ov-batch-attempts",
+      "case_ordinal": 89,
+      "split": "held-out"
+    },
+    {
+      "case_id": "ov-kinds-filter",
+      "case_ordinal": 90,
+      "split": "held-out"
+    },
+    {
+      "case_id": "ov-restart-no-double-apply",
+      "case_ordinal": 91,
+      "split": "held-out"
+    },
+    {
+      "case_id": "ov-rowcommit-own-text",
+      "case_ordinal": 92,
+      "split": "held-out"
+    },
+    {
+      "case_id": "ov-stream-neighbor",
+      "case_ordinal": 93,
+      "split": "held-out"
+    },
+    {
+      "case_id": "ov-unknown-env",
+      "case_ordinal": 94,
+      "split": "held-out"
+    },
+    {
+      "case_id": "ov-unknown-env-supplied",
+      "case_ordinal": 95,
+      "split": "held-out"
+    },
+    {
+      "case_id": "ov-task-match",
+      "case_ordinal": 96,
+      "split": "held-out"
+    },
+    {
+      "case_id": "ov-task-missing",
+      "case_ordinal": 97,
+      "split": "held-out"
+    },
+    {
+      "case_id": "ov-evidence-chain",
+      "case_ordinal": 98,
+      "split": "held-out"
+    },
+    {
+      "case_id": "ov-hidden-derivation",
+      "case_ordinal": 99,
+      "split": "held-out"
+    },
+    {
+      "case_id": "ov-invoice-unsafe-attempt",
+      "case_ordinal": 100,
+      "split": "held-out"
+    },
+    {
+      "case_id": "ov-injection-query-target",
+      "case_ordinal": 101,
+      "split": "held-out"
+    }
+  ],
+  "input_sha256": "fc22d917544e865b9acf2ecc63ff410ccd8d3ced18e810c7755ffb62fa8892f1",
+  "schema": "am255/scorer-only-case-map-v1",
+  "suite_sha256": "36b663df90a5002ef93996ccc76e0a5de932f984d4a35178fe32b6f74e83b21f"
+}

@@ -1,0 +1,241 @@
+{
+  "evidence_run": {
+    "argv": [
+      "/Users/robert.lee/.pyenv/versions/3.13.12/bin/python3",
+      "-I",
+      "-B",
+      "docs/research/data/2026-11-05-export-governance/local_invariant_scenarios.py"
+    ],
+    "exit": 0,
+    "machine": "arm64",
+    "platform": "macOS-27.2-arm64-arm-64bit-Mach-O",
+    "python": "3.13.12",
+    "scope": "Research-only disposable scenarios/arithmetic; no production feature qualification",
+    "script_sha256": "91d247fdb288a9f45e7c8c967a84699cf193a3d6de6df6d8160d09aa09e8246f",
+    "seconds": 16.642067999986466,
+    "source_revision": "a5ccf6bb2a87b8159e48107f095782d4c87d6c05",
+    "started_at": "2026-11-05T04:39:24.165477+00:00"
+  },
+  "part_a_current_source": {
+    "A1_local_eligibility": {
+      "excluded_count_keys": [
+        "active",
+        "applicable",
+        "different-context:branch",
+        "orientation-not-requested",
+        "security:credential",
+        "sufficient-trust",
+        "unknown-applicability",
+        "visible"
+      ],
+      "excluded_counts": {
+        "active": 2,
+        "applicable": 2,
+        "different-context:branch": 1,
+        "orientation-not-requested": 1,
+        "security:credential": 1,
+        "sufficient-trust": 1,
+        "unknown-applicability": 1,
+        "visible": 1
+      },
+      "exit": 0,
+      "metrics_inventory_files_present": true,
+      "returned_by_class": {
+        "active-reviewed-visible": true,
+        "branch-conditional-other-branch": false,
+        "expired": false,
+        "hidden-active": false,
+        "revoked": false,
+        "secret-bearing-active": false,
+        "unknown-applicability": false,
+        "untrusted-active": false
+      },
+      "secret_value_echoed": false
+    },
+    "A2_project_isolation": {
+      "destination-bank-with-source-id": {
+        "canary_echoed": false,
+        "exit": 1,
+        "results": null
+      },
+      "destination-guard-foreign-id-under-destination-project": {
+        "discarded": 1,
+        "exit": 0,
+        "remaining": []
+      },
+      "destination-guard-with-source-reference": {
+        "canary_echoed": false,
+        "exit": 1
+      },
+      "source-bank-with-destination-id": {
+        "canary_echoed": false,
+        "exit": 1,
+        "results": null
+      }
+    },
+    "A3_version_binding": {
+      "discarded": 1,
+      "error": null,
+      "exit": 0,
+      "remaining": [
+        {
+          "id": "be98ac3c-1dca-48d9-bc4f-dac16d0923bf",
+          "path": "topics/active.md",
+          "version": 1
+        }
+      ]
+    },
+    "A4_delete_stale_builder_non_resurrection": {
+      "inactive_filter_after_delete": {
+        "discarded": 1,
+        "exit": 0,
+        "remaining": []
+      },
+      "recall_after_delete_returns_deleted_id": false,
+      "recipient_retained_copy_still_contains_canary": true,
+      "stale_check_canary_echoed": false,
+      "stale_projection_check_error": "Invalid, stale or unauthorized projection/input; preserve canonical memory and rebuild before use",
+      "stale_projection_check_exit": 1,
+      "tombstone_contains_canary": false,
+      "tombstone_fields": [
+        "deleted-at",
+        "deletion-authority",
+        "id",
+        "reason-class",
+        "scope"
+      ],
+      "tombstone_rebuilds_under_changed_conditions": [
+        {
+          "canary_echoed": false,
+          "conditions": [
+            "branch:old"
+          ],
+          "exit": 0,
+          "kept_ids": [
+            "1b27d9f3-0657-4ab8-bef0-4159679e9124"
+          ],
+          "suppressed": 1
+        },
+        {
+          "canary_echoed": false,
+          "conditions": [
+            "repository"
+          ],
+          "exit": 0,
+          "kept_ids": [
+            "1b27d9f3-0657-4ab8-bef0-4159679e9124"
+          ],
+          "suppressed": 1
+        },
+        {
+          "canary_echoed": false,
+          "conditions": [
+            "component:other"
+          ],
+          "exit": 0,
+          "kept_ids": [
+            "1b27d9f3-0657-4ab8-bef0-4159679e9124"
+          ],
+          "suppressed": 1
+        }
+      ]
+    },
+    "A5_tombstone_content_free": {
+      "body": {
+        "canary_echoed": false,
+        "exit": 1
+      },
+      "content-sha256": {
+        "canary_echoed": false,
+        "exit": 1
+      },
+      "source-project-name": {
+        "canary_echoed": false,
+        "exit": 1
+      },
+      "title": {
+        "canary_echoed": false,
+        "exit": 1
+      }
+    },
+    "A6_outage_and_local_independence": {
+      "destination-bank-bytes-unchanged": true,
+      "destination-local-recall-while-source-offline": {
+        "exit": 0,
+        "optional_indexes_used": false,
+        "returns_destination_record": true
+      },
+      "interrupted-source-lock-rebuild-guard": {
+        "canary_echoed": false,
+        "exit": 1
+      },
+      "interrupted-source-lock-recall": {
+        "exit": 1,
+        "results_key_present": false
+      },
+      "missing-source-repository-recall": {
+        "exit": 1,
+        "results_key_present": false
+      }
+    },
+    "A7_foreign_id_in_canonical_derived_from": {
+      "dangling_record_returned": true,
+      "error": null,
+      "exit": 0,
+      "plain_record_returned": true,
+      "result_reports_relation_unavailable": false
+    },
+    "A8_unadmitted_routed_into_canonical_bank": {
+      "candidate": {
+        "canary_echoed": false,
+        "derived_guard_exit": 1,
+        "recall_exit": 1,
+        "recall_has_results": false
+      },
+      "quarantined": {
+        "canary_echoed": false,
+        "derived_guard_exit": 1,
+        "recall_exit": 1,
+        "recall_has_results": false
+      }
+    },
+    "A9_verbatim_foreign_record_in_destination_bank": {
+      "canary_echoed": false,
+      "destination_local_record_still_returned": false,
+      "destination_recall_exit_after": 1,
+      "destination_recall_exit_before": 0
+    }
+  },
+  "part_b_proposed_policy_model": {
+    "authority_rows_evaluated": 1944,
+    "override_rows_expected_formula": "count of rows where M,D,R,X true, P true-or-not-needed, mode=allow, receipt=False",
+    "precedence": {
+      "session=None,project=None": "ask",
+      "session=None,project=allow": "allow",
+      "session=None,project=ask": "ask",
+      "session=allow,project=None": "allow",
+      "session=allow,project=allow": "allow",
+      "session=allow,project=ask": "allow",
+      "session=ask,project=None": "ask",
+      "session=ask,project=allow": "ask",
+      "session=ask,project=ask": "ask"
+    },
+    "receipt_reuse": {
+      "added-destination": false,
+      "changed-query": false,
+      "expired": false,
+      "grant-revoked-version-bump": false,
+      "new-session-after-reset": false,
+      "other-developer-same-project": false,
+      "other-origin-project": false,
+      "other-parallel-session": false,
+      "page-beyond-bound": false,
+      "policy-revision": false,
+      "retry-after-denial": false,
+      "unchanged-page-2-retry": true
+    },
+    "rows_allowed_by_override_without_receipt": 4,
+    "rows_allowed_without_all_required_authorities": 0
+  },
+  "schema": "am-research/247-local-invariant-scenarios-v1"
+}

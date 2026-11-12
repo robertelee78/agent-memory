@@ -23,13 +23,13 @@ MUST NOT be treated as evidence that a guide is semantically complete.
 | [0001](0001-local-first-authority-boundaries.md) | Local-first memory and authority boundaries | Accepted (v0.0.1) |
 | [0002](0002-markdown-first-temporal-memory.md) | Markdown-first, typed, temporal memory model | Accepted (v0.0.1) |
 | [0003](0003-progressive-disclosure.md) | Progressive disclosure for memory and skills | Accepted (v0.0.1) |
-| [0004](0004-client-independent-integration.md) | Harness-independent skill and CLI | Accepted (v0.0.1) |
+| [0004](0004-client-independent-integration.md) | Harness-independent skill and CLI | Accepted (v0.0.1, v0.0.4 hooks; v0.0.15 owned instructions, stock-source authority, queued-guidance controls and answer-first omp timing) |
 | [0005](0005-admission-consolidation-retrieval.md) | Separate admission, consolidation, retrieval, and forgetting | Accepted (v0.0.1) |
 | [0006](0006-security-and-evaluation.md) | Security boundaries and executable evaluation | Accepted (v0.0.1) |
 | [0007](0007-portable-pack-and-lifecycle.md) | Portable skill pack and installation lifecycle | Accepted (v0.0.1) |
 | [0008](0008-project-bank-and-optional-federation.md) | Project Memory Bank first; optional ecosystem federation | Accepted (v0.0.1) |
 | [0009](0009-contract-tests-and-fault-injection.md) | End-to-end contract tests and incident-derived regressions | Accepted (v0.0.1) |
-| [0010](0010-memory-bank-file-contract.md) | Concrete Memory Bank file and scope contract | Accepted (v0.0.1) |
+| [0010](0010-memory-bank-file-contract.md) | Concrete Memory Bank file and scope contract | Accepted (v0.0.1); #244 v0.0.15 implementation design approved, independent acceptance/delivery pending |
 | [0011](0011-principal-and-project-identity.md) | Stable developer attribution and project identity | Accepted (v0.0.1) |
 | [0012](0012-git-shared-memory.md) | Git-shared memory across worktrees, machines, and developers | Accepted (v0.0.1) |
 | [0013](0013-public-cli-and-corrective-releases.md) | AWA-style public CLI and corrective release tracking | Accepted (v0.0.2) |
@@ -44,6 +44,10 @@ MUST NOT be treated as evidence that a guide is semantically complete.
 | [0022](0022-restricted-push-publication.md) | Publish memory as an explicitly allowed push actor | Accepted (v0.0.10) |
 | [0023](0023-guided-progressive-recall.md) | Guided progressive recall and explicit cross-project expansion | Accepted architecture; task execution designs gated |
 | [0024](0024-ssg-graph-embedding-runtime.md) | SSG-derived graph database, embedding model, and retrieval runtime | Accepted architecture/G1 research; v0.0.16 execution gated on G1 |
+| [0025](0025-project-and-shared-memory.md) | Project memory plus deliberately published shared memory | Accepted architecture; operator/team/ecosystem datasets, per-install configuration; execution gated |
+| [0026](0026-source-bound-sharing-performance.md) | Source-bound sharing performance for existing #209 | Accepted bounded fix after Fable review; implementation/qualification pending |
+| [0027](0027-managed-core-memgraph.md) | AM-managed core Memgraph selection for existing #255/#257 | Operator-selected graph direction; private-build licensing disposition recorded; technical profile and execution readiness gated |
+| [0028](0028-long-full-workload-qualification.md) | Long full-workload qualification for existing #209 | Accepted operator duration exception only; exact protocol, execution and acceptance remain gated |
 
 [ADR-0013](0013-public-cli-and-corrective-releases.md) defines the corrective
 `v0.0.2` public command contract and the current future-release mapping. Older

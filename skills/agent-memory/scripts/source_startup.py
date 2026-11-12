@@ -13,6 +13,9 @@ import tempfile
 
 
 def isolate():
+    if sys.version_info < (3, 11):
+        print('am: Python 3.11+ must be available as python3 on PATH to run agent-memory.', file=sys.stderr)
+        raise SystemExit(1)
     # Ignore TMPDIR: an arbitrary parent could replace even a private child.
     # Both supported systems provide a root-owned sticky system temporary root.
     parent = Path('/tmp').resolve(strict=True)

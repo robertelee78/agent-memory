@@ -42,7 +42,7 @@ class DiscoveryContract(unittest.TestCase):
         inspected=self.good(w,'compare_learning.py','inspect','--repo',repo,'--request',self.save(w,request))
         judgment={'observation':inspected['observation'],'decisions':[{'path':row['path'],'classification':'distinct-knowledge',
             'rationale':'This mechanical fixture uses an independently authored unrelated source.'} for row in inspected['matches']],
-            'rationale':'Actual semantic interpretation belongs to the harness; this contract exercises version binding.'}
+            'pending_decisions':[],'rationale':'Actual semantic interpretation belongs to the harness; this contract exercises version binding.'}
         proof=self.good(w,'compare_learning.py','review','--repo',repo,'--request',self.save(w,request),
             '--judgment',self.save(w,judgment,'judgment.json'))['proof']
         return request,proof
@@ -129,6 +129,7 @@ class DiscoveryContract(unittest.TestCase):
             self.assertEqual([row['path'] for row in view['matches']],[path])
             judgment={'observation':view['observation'],'decisions':[{'path':path,'classification':'equivalent',
                 'rationale':'The fixture retains one bounded retry cap with the same actual conditions.'}],
+                'pending_decisions':[],
                 'rationale':'All discovered plausible learning must enter the duplicate decision despite unrelated queries.'}
             proof=self.good(w,'compare_learning.py','review','--repo',repo,'--request',self.save(w,request),
                 '--judgment',self.save(w,judgment,'judgment.json'))['proof']

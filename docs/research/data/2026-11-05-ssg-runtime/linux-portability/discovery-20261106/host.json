@@ -1,0 +1,11 @@
+{
+  "argv": [
+    "uname",
+    "-a"
+  ],
+  "duration_seconds": 0.0032372474670410156,
+  "exit": 0,
+  "start_unix": 1793996227.0412748,
+  "stderr": "",
+  "stdout": "Darwin Mac 27.2.0 Darwin Kernel Version 27.2.0: Sun Sep 13 19:48:23 PDT 2026; root:xnu-13432.40.162~92/RELEASE_ARM64_T6050 arm64\n"
+}

@@ -215,13 +215,14 @@ def retrieve(repo, request, *, owned_lock=None, deferred_paths=()):
         if path != 'MEMORY.md':
             bank_contract.path_value(path)
     deferred_paths = frozenset(deferred_paths)
-    from . import recall_catalog
+    from . import recall_catalog, validation_memo
     # An optional accelerator cannot turn loss/corruption into failed memory.
     # Its complete frame is discarded before the authoritative fallback runs.
     if 'discovery' in request:
         try:
-            cached=recall_catalog.load_catalog(repo,request['project_id'],owner=owned_lock)
-            return _retrieve(repo,request,owned_lock,deferred_paths,started,cached=cached)
+            with validation_memo.suspended():
+                cached=recall_catalog.load_catalog(repo,request['project_id'],owner=owned_lock)
+                return _retrieve(repo,request,owned_lock,deferred_paths,started,cached=cached)
         except Exception:
             cached=None
     engine=None
@@ -235,7 +236,9 @@ def retrieve(repo, request, *, owned_lock=None, deferred_paths=()):
 
 def _retrieve(repo,request,owned_lock,deferred_paths,started,*,cached=None,cache_engine=None):
     root, bank = writes.bank_path(repo)
-    selected_scope = scope_binding.require(root, request['project_id'], owned_lock=owned_lock)
+    from . import recovery_frontier
+    frontier = recovery_frontier.observe(root, owned_lock)
+    selected_scope = recovery_frontier.require_scope(root, request['project_id'], owned_lock=owned_lock)
     context, observed_git = observed_context(root, request['context'])
     observation=cached if cached is not None else bank_observation.observe(root,owned_lock)
     checked,observed=observation.checked,observation.hashes
@@ -267,7 +270,7 @@ def _retrieve(repo,request,owned_lock,deferred_paths,started,*,cached=None,cache
     results,excluded,used,pool_count,ranked_count,canonical_bytes=evaluate_sources(root,bank,project,entries,
         source,parsed,observed,request,selection_request,
         context,now,deferred_paths,discovered_selection)
-    scope_binding.require(root, project, expected=selected_scope, owned_lock=owned_lock)
+    recovery_frontier.require_scope(root, project, expected=selected_scope, owned_lock=owned_lock)
     record_ids = sorted({item['record']['id'] for item in results if 'record' in item})
     audit = security.audit(root, str(uuid.uuid4()), 'retrieval', 'checked', selected_scope,
                            ['external'], record_ids=record_ids)
@@ -287,8 +290,10 @@ def _retrieve(repo,request,owned_lock,deferred_paths,started,*,cached=None,cache
         scan_metrics={'payload_bytes':observation.payload_bytes_read,'file_reads':observation.payload_file_reads}
     if git_context(root) != observed_git:
         raise ContractError('Bank or checkout context changed during recall; reread before use')
-    scope_binding.require(root, project, expected=selected_scope, owned_lock=owned_lock)
+    recovery_frontier.require_scope(root, project, expected=selected_scope, owned_lock=owned_lock)
+    recovery_frontier.check(frontier, root, owned_lock)
     return {'schema': 'agent-memory/retrieval-result-v1', 'project_id': project, 'results': results,
+        **recovery_frontier.public_coverage(frontier),
         'evaluated_at': now, 'context': context, 'scope_context': selected_scope,
         'bank_observation_sha256': digest(encoded({'project_id': project, 'sources': observed})),
         'excluded_counts': dict(sorted(excluded.items())),

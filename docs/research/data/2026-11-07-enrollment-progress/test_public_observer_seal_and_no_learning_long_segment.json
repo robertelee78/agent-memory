@@ -1,0 +1,34 @@
+{
+  "source_root": "/private/tmp/am-v15-delivery/enrollment-progress-clean-20261107",
+  "source_commit": "1be9ad0a5b67da637c5f1924831f6b52c9b2cbe0",
+  "source_files_before": {
+    "tests/contracts/test_omp_enrollment_progress.py": "a29d5b245b74214a4bb92b1d2c097f24196e0b54d6d69611225021d15ec99cb4",
+    "skills/agent-memory/scripts/agent_memory/omp_transport.py": "374b5660a9e24bfd2d9885305d8efc34a4c320efd0ff8f0bd4e45aaad5fd268f",
+    "tests/world.py": "6f4e78d202505872132ef4c8a5070cf550ac8993079bd79396f8b2d4614d0c5b"
+  },
+  "timeout_seconds": 300,
+  "profiled": false,
+  "method": "test_public_observer_seal_and_no_learning_long_segment",
+  "started_at": "2026-11-07T09:03:25.675355+00:00",
+  "command": [
+    "/Users/robert.lee/.pyenv/versions/3.13.12/bin/python3",
+    "-I",
+    "-B",
+    "/private/tmp/am-v15-delivery/enrollment-progress-evidence-20261107/run_profile.py",
+    "/private/tmp/am-v15-delivery/enrollment-progress-clean-20261107",
+    "/private/tmp/am-v15-delivery/enrollment-progress-evidence-20261107/final",
+    "test_public_observer_seal_and_no_learning_long_segment",
+    "--worker"
+  ],
+  "timed_out": false,
+  "exit": 0,
+  "elapsed_seconds": 44.79164125001989,
+  "stdout": "{\"elapsed_seconds\": 15.923738792014774, \"model_provider\": \"not-exercised\", \"native_loading\": \"not-exercised\", \"proof\": \"public-observer-and-no-learning\", \"retained_entries\": 151, \"sources\": [{\"observation_id\": \"b8a81162-a065-4d5b-9a99-7d30af2b96d8\", \"reference\": \"omp:capture:6b5d6eb1-ffea-5af1-b7cd-2db994ddd0b2\", \"source_sha256\": \"c493777a4f8cbf479bc8a27833e0d3d9929eaf170842e5cf80847c441964d954\"}, {\"observation_id\": \"59b9b61c-69e2-4572-b8f1-044913d6d55b\", \"reference\": \"omp:seal:a553dcac-0606-5a80-81b2-c856e6a17d5c\", \"source_sha256\": \"8ddd73d7dbb9367bb0e0ec94c6266bb6145bda5fda387c32fab197cde822bcb2\"}]}\n{\"elapsed_seconds\": 44.64496970799519, \"errors\": 0, \"expected_failures\": 0, \"failures\": 0, \"passed\": true, \"skipped\": 0, \"tests\": 1, \"unexpected_successes\": 0}\n",
+  "stderr": "test_public_observer_seal_and_no_learning_long_segment (contract_suite.EnrollmentProgress.test_public_observer_seal_and_no_learning_long_segment) ... ok\n\n----------------------------------------------------------------------\nRan 1 test in 44.645s\n\nOK\n",
+  "source_files_after": {
+    "tests/contracts/test_omp_enrollment_progress.py": "a29d5b245b74214a4bb92b1d2c097f24196e0b54d6d69611225021d15ec99cb4",
+    "skills/agent-memory/scripts/agent_memory/omp_transport.py": "374b5660a9e24bfd2d9885305d8efc34a4c320efd0ff8f0bd4e45aaad5fd268f",
+    "tests/world.py": "6f4e78d202505872132ef4c8a5070cf550ac8993079bd79396f8b2d4614d0c5b"
+  },
+  "passed": true
+}

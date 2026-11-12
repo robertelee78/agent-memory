@@ -12,6 +12,8 @@ sys.dont_write_bytecode=True
 p=argparse.ArgumentParser();p.add_argument('--root',required=True);p.add_argument('--out',required=True)
 p.add_argument('--sessions',type=int,required=True);p.add_argument('--lessons',type=int,required=True)
 p.add_argument('--recovery-controls',action='store_true');p.add_argument('--semantic-scenarios',action='store_true');p.add_argument('--workers',type=int,default=4);p.add_argument('--source-binding');p.add_argument('--rounds',type=int,default=2)
+p.add_argument('--page-source',choices=('pages','export'),default='export')
+p.add_argument('--fixture-identities',help='Reuse the fixture-identities.json from a comparison arm')
 a=p.parse_args();root=Path(a.root).resolve();out=Path(a.out);out.mkdir(mode=0o700,exist_ok=False)
 assert 3<=a.sessions<=48 and a.lessons in (128,1000,10000,50000) and 1<=a.workers<=8 and a.rounds==2
 assert not a.semantic_scenarios or a.sessions>=6
@@ -23,13 +25,17 @@ from contracts.test_comparison import render,unpack
 from identity_fixtures import bind
 import publication_github
 from labeled_recall_probe import source,inventory
+from agent_memory.developer_identity import encoded,digest
 from agent_memory import bank_layout,bank_contract
 if a.source_binding:expected=json.loads(Path(a.source_binding).read_text())
 else:expected=source(root)
 def verify_source(phase):
  for name,value in expected['tracked'].items():
   target=root/name
-  assert not target.is_symlink() and hashlib.sha256(target.read_bytes()).hexdigest()==value['sha256'] and stat.S_IMODE(target.stat().st_mode)==value['mode'],name
+  if value.get('kind')=='symlink':
+   assert name.startswith('docs/research/data/') and value['mode']==0o120000 and target.is_symlink() and hashlib.sha256(os.fsencode(os.readlink(target))).hexdigest()==value['sha256'],name
+  else:
+   assert value.get('kind') in (None,'file') and value['mode'] in (0o644,0o755) and not target.is_symlink() and hashlib.sha256(target.read_bytes()).hexdigest()==value['sha256'] and stat.S_IMODE(target.stat().st_mode)==value['mode'],name
  assert inventory(root/'skills/agent-memory')==expected['portable']
  (out/('source-'+phase+'.json')).write_text(json.dumps({'commit':expected['commit'],'tracked':len(expected['tracked']),'portable':len(expected['portable']),'all_bytes_and_modes_match':True})+'\n')
 verify_source('before');(out/'source-binding.json').write_text(json.dumps(expected,indent=2)+'\n')
@@ -54,9 +60,9 @@ def public(w,pack,helper,*args,expected_exit=0,fault_stage=None):
  inputs={str(x):retain(x.read_bytes()) for x in args if isinstance(x,Path) and x.is_file()}
  overrides={'AGENT_MEMORY_FAULT_STAGE':fault_stage,'AGENT_MEMORY_FAULT_MODE':'exit'} if fault_stage else {}
  row={'number':number,'argv':argv,'inputs':inputs,'environment':{**w.env,**overrides},'exit':None}
- before=time.perf_counter()
+ before=time.perf_counter();row['monotonic_start']=before
  def store(stdout,stderr):
-  row.update(seconds=time.perf_counter()-before,stdout_sha256=retain(stdout.encode()),stderr_sha256=retain(stderr.encode()))
+  end=time.perf_counter();row.update(monotonic_end=end,seconds=end-before,stdout_sha256=retain(stdout.encode()),stderr_sha256=retain(stderr.encode()))
   row['public_forbidden_marker_absent']=all(value not in stdout+stderr for value in forbidden_public)
   with lock:
    commands.append(row);(out/'commands.json').write_text(json.dumps(sorted(commands,key=lambda x:x['number']),indent=2)+'\n')
@@ -97,10 +103,12 @@ def profile(w,pack,actor,label):
  preview=public(w,pack,'developer_identity.py','preview','--adopt',actor,'--label',label)
  public(w,pack,'developer_identity.py','apply','--proposal',save(w,preview,'developer-profile'))
 
-def inspect(s,request=None,label='view'):
+def inspect(s,request=None,label='view',consume=False):
  w=s['world'];path=w.inside('inputs/'+s['name']+'-'+label+'.json')
  args=['inspect-v2','--repo',s['repo'],'--output',path]
  if request is not None:args+=['--input',save(w,request,s['name']+'-'+label+'-request')]
+ bundle=w.inside('inputs/'+s['name']+'-'+label+'-pages') if consume and a.page_source=='export' else None
+ if bundle is not None:args+=['--pages-dir',bundle]
  if request is None:
   # The supported boundary wrapper preserves a verified prior memory cursor;
   # no feature ancestry advance is needed. Unpack the exact inner manifest.
@@ -108,8 +116,83 @@ def inspect(s,request=None,label='view'):
   public(w,s['pack'],'refresh_memory.py','inspect','--v2','--repo',s['repo'],'--output',outer)
   value=json.loads(outer.read_text())['inspection'];path.write_text(json.dumps(value));path.chmod(0o600)
   return path,value
- public(w,s['pack'],'reconcile_memory.py',*args)
- return path,json.loads(path.read_text())
+ receipt=public(w,s['pack'],'reconcile_memory.py',*args)
+ result=(path,json.loads(path.read_text()))
+ return (*result,(bundle,receipt)) if consume else result
+
+def consume_pages(s,path,manifest,export):
+ # Both transports feed the same validated inventory; page-v2 prints JSON in
+ # presentation order, so its parsed value is re-encoded to the canonical bytes.
+ descriptors=manifest['pages'];binding=digest(encoded(manifest['binding']))
+ assert manifest['schema']=='agent-memory/semantic-sharing-inspection-v2'
+ assert digest(encoded({k:v for k,v in manifest.items() if k!='manifest_sha256'}))==manifest['manifest_sha256']
+ bundle,receipt=export
+ directory=None;sources=[];edges=[];holds=[];total=0
+ try:
+  if bundle is not None:
+   manifest_raw=path.read_bytes()
+   assert encoded(manifest)==manifest_raw and receipt['schema']=='agent-memory/private-review-artifact-v2' and receipt['path']==str(path) and receipt['sha256']==digest(manifest_raw) and receipt['bytes']==len(manifest_raw)
+   assert receipt['pages_dir']==str(bundle) and receipt['page_count']==receipt['review_pages']==len(descriptors)
+   directory=os.open(bundle,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW)
+   def fingerprint(info):
+    return (info.st_dev,info.st_ino,info.st_mode,info.st_uid,info.st_nlink,info.st_size,info.st_mtime_ns,info.st_ctime_ns)
+   directory_info=os.fstat(directory)
+   assert stat.S_ISDIR(directory_info.st_mode) and directory_info.st_uid==os.getuid() and stat.S_IMODE(directory_info.st_mode)==0o700
+   def check_directory():
+    assert fingerprint(os.fstat(directory))==fingerprint(directory_info)==fingerprint(os.stat(bundle,follow_symlinks=False))
+   check_directory()
+   expected_names={'complete.json',*(str(i)+'.json' for i in range(len(descriptors)))}
+   found=set()
+   with os.scandir(directory) as entries:
+    for entry in entries:
+     assert len(found)<len(expected_names) and entry.name in expected_names and entry.name not in found
+     found.add(entry.name)
+   assert found==expected_names
+   def read_export(name,maximum):
+    check_directory()
+    named_before=os.stat(name,dir_fd=directory,follow_symlinks=False)
+    fd=os.open(name,os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK,dir_fd=directory)
+    with os.fdopen(fd,'rb') as stream:
+     info=os.fstat(stream.fileno())
+     assert stat.S_ISREG(info.st_mode) and info.st_uid==os.getuid() and stat.S_IMODE(info.st_mode)==0o600 and info.st_nlink==1 and info.st_size<=maximum
+     assert fingerprint(named_before)==fingerprint(info)
+     raw=stream.read(maximum+1)
+     assert fingerprint(os.fstat(stream.fileno()))==fingerprint(info)
+    assert fingerprint(os.stat(name,dir_fd=directory,follow_symlinks=False))==fingerprint(info)
+    assert len(raw)==info.st_size and len(raw)<=maximum
+    check_directory();retain(raw)
+    return raw
+   marker_raw=read_export('complete.json',65536);marker=json.loads(marker_raw)
+   assert encoded(marker)==marker_raw and digest(marker_raw)==receipt['page_export_sha256']
+   assert marker=={'schema':'agent-memory/semantic-sharing-page-export-v1','manifest_sha256':manifest['manifest_sha256'],
+    'manifest_artifact_sha256':digest(manifest_raw),'binding_sha256':binding,'page_count':len(descriptors)}
+  for index,descriptor in enumerate(descriptors):
+   assert set(descriptor)=={'index','sha256','bytes','source_keys','edges'} and descriptor['index']==index
+   if bundle is None:
+    page=public(s['world'],s['pack'],'reconcile_memory.py','page-v2','--repo',s['repo'],'--input',path,'--page',str(index))
+    raw=encoded(page);retain(raw)
+   else:
+    raw=read_export(str(index)+'.json',65536);page=json.loads(raw)
+    assert encoded(page)==raw
+   total+=len(raw);assert total<=512*1024*1024 and len(raw)<=65536
+   assert len(raw)==descriptor['bytes'] and digest(raw)==descriptor['sha256']
+   assert set(page)=={'schema','binding_sha256','index','items'} and page['schema']=='agent-memory/semantic-sharing-page-v2' and page['index']==index and page['binding_sha256']==binding and isinstance(page['items'],list)
+   page_sources=[];page_edges=[]
+   for item in page['items']:
+    assert isinstance(item,dict) and len(item)==1
+    if 'source' in item:page_sources.append(item['source']['key']);sources.append(item['source'])
+    elif 'edge' in item:page_edges.append(item['edge']);edges.append(item['edge'])
+    else:assert set(item)=={'known_hold'};holds.append(item['known_hold'])
+   assert page_sources==descriptor['source_keys'] and page_edges==descriptor['edges']
+ finally:
+  if directory is not None:os.close(directory)
+ assert sources==manifest['sources'] and edges==manifest['required_pairs'] and holds==manifest['known_causes']
+ assert len({row['key'] for row in sources})==len(sources) and len({tuple(edge) for edge in edges})==len(edges)
+ keys={row['key'] for row in sources}
+ assert all(len(edge)==2 and edge[0] in keys and edge[1] in keys and edge[0]!=edge[1] for edge in edges)
+ inventory_raw=encoded({'source_keys':[row['key'] for row in sources],'edges':edges,'known_holds':holds,'pages':descriptors})
+ event('review-page-inventory',session=s['number'],page_source=a.page_source,inventory_sha256=retain(inventory_raw),sources=len(sources),edges=len(edges),known_holds=len(holds),pages=len(descriptors))
+ return {**manifest,'sources':sources,'required_pairs':edges,'known_causes':holds}
 
 def review(s,label):
  _,first=inspect(s,label=label+'-initial');rows={r['key']:r for r in first['sources']}
@@ -123,14 +206,14 @@ def review(s,label):
  if a.semantic_scenarios and s.get('clarified'):
   group=consolidation_group(first)
   request['consolidation_sources']=[group] if group else []
- path,view=inspect(s,request,label+'-selected');w=s['world']
+ path,view,export=inspect(s,request,label+'-selected',consume=True);w=s['world']
  if a.recovery_controls and s['number']==1 and label=='refresh-1':
   path.unlink()
   public(w,s['pack'],'reconcile_memory.py','page-v2','--repo',s['repo'],'--input',path,'--page','0',expected_exit=1)
-  path,reconstructed=inspect(s,request,label+'-reconstructed')
+  path,reconstructed,export=inspect(s,request,label+'-reconstructed',consume=True)
   assert reconstructed==view
   event('lost-page-state-reconstructed',session=s['number'],unchanged_complete_manifest=True)
- for page in view['pages']:public(w,s['pack'],'reconcile_memory.py','page-v2','--repo',s['repo'],'--input',path,'--page',str(page['index']))
+ view=consume_pages(s,path,view,export)
  judgment={'schema':'agent-memory/semantic-sharing-judgment-v2','request':request,'binding':view['binding'],
   'manifest_sha256':view['manifest_sha256'],'pages':[page['sha256'] for page in view['pages']],
   'pairs':[{'left':x,'right':y,'classification':classification({r['key']:r for r in view['sources']}[x],{r['key']:r for r in view['sources']}[y]) if a.semantic_scenarios else 'related',
@@ -199,6 +282,10 @@ def capture(s,round_number,role=None):
  existing=[row['path'] for row in existing_rows]
  dimension={1:'retention',2:'inspection',3:'audit cadence'}[round_number]
  searches=([subject+' retention',subject+' inspection',subject+' audit cadence'] if role is None else ['atrium wall color','paint specification'] if role.startswith('wall-') else ['transient retry cap','temporary network attempts'])
+ if role is None and round_number==3:
+  searches=['archive audit cadence','archive policy audits maintenance passes']
+  forbidden={'topics','md','seed','records','history','events'}
+  assert all(not any(c.isdigit() for c in word) and not all(c in '0123456789abcdef' for c in word) and word not in forbidden for query in searches for word in query.casefold().split())
  compared={'project_id':s['project'],'candidate':captured['capture']['request']['candidate'],
   'searches':searches,'read_paths':['projectbrief.md',*existing]}
  observed=public(w,pack,'discover_memory.py','start','--repo',repo,'--intent','comparison','--task','Compare the authored '+subject+' policy dimension against existing evidence.')
@@ -210,9 +297,11 @@ def capture(s,round_number,role=None):
  observed=public(w,pack,'discover_memory.py','read','--repo',repo,'--input',save(w,trace,tag+'-navigation-state'),
   '--request',save(w,compared,tag+'-comparison'),'--rationale','Read actual project orientation and the existing authored archive partition policy; seed partition counters are a separate fixture subject. This is a scripted mechanical coverage assertion.')
  compared=observed['request'];inspection=observed['inspection']
+ event('comparison-returned-matches',session=s['number'],round=round_number,count=len(inspection['matches']),paths=[row['path'] for row in inspection['matches']])
+ assert inspection['observation']['recovery_frontier']['coverage_complete'] and not inspection['pending_matches'],inspection
  judgment={'observation':inspection['observation'],'decisions':[{'path':row['path'],'classification':'distinct-knowledge',
   'rationale':'The authored archive partition/policy dimension differs; retain each identity, condition and independent evidence.'} for row in inspection['matches']],
-  'rationale':'Read all plausible authored partition-policy sources before capture; no model semantic-understanding claim.'}
+  'pending_decisions':[],'rationale':'Read all plausible authored partition-policy sources before capture; no model semantic-understanding claim.'}
  checked=public(w,pack,'compare_learning.py','review','--repo',repo,'--request',save(w,compared,tag+'-comparison'),
   '--judgment',save(w,judgment,tag+'-comparison-judgment'))
  node='topics/archive/partition-'+str(s['number'])+'.md' if role is None else ('topics/workspace/room-claims.md' if role.startswith('wall-') else 'topics/reliability/retry-claims.md')
@@ -220,7 +309,7 @@ def capture(s,round_number,role=None):
   'history':{'parent':node,'purpose':'Source and admission evidence for '+subject,'read-when':'When inspecting policy provenance'},
   'indexes':[] if (repo/'memory-bank'/node).exists() else [{'parent':'MEMORY.md','path':node,'scope':'repository','purpose':subject+' policy and evidence','read-when':'When working on this archive partition'}]}
  prepared=public(w,pack,'admit_learning.py','preview','--repo',repo,'--capture',save(w,captured,tag+'-captured'),
-  '--request',save(w,compared,tag+'-comparison'),'--proof',save(w,{'schema':'agent-memory/comparison-result-v1','proof':checked['proof']},tag+'-comparison-proof'),
+  '--request',save(w,compared,tag+'-comparison'),'--proof',save(w,checked,tag+'-comparison-proof'),
   '--navigation',save(w,navigation,tag+'-navigation'))
  done=public(w,pack,'admit_learning.py','apply','--proposal',save(w,prepared['proposal'],tag+'-admission'))
  assert done['admission_verified'] and state(s)==s['feature'],done
@@ -414,7 +503,8 @@ def correction_and_consolidation(all_sessions):
  capture=public(w,pack,'admit_learning.py','capture','--repo',repo,'--request',save(w,request,'clarified-wall-capture'))['capture']
  compared={'project_id':s['project'],'candidate':capture['request']['candidate'],'searches':['atrium wall color','paint specification'],'read_paths':[previous['path']]}
  inspected=public(w,pack,'compare_learning.py','inspect','--repo',repo,'--request',save(w,compared,'clarified-wall-comparison'))
- judgment={'observation':inspected['observation'],'decisions':[{'path':row['path'],'classification':'contradiction' if row['path']==previous['path'] else 'related-context','rationale':'Predeclared synthetic detecting-developer clarification confirms blue and explicitly corrects this yellow claim.'} for row in inspected['matches']],'rationale':'Preserve old yellow origin and all conditions; synthetic fixture clarification is not a real operator color decision.'}
+ assert inspected['observation']['recovery_frontier']['coverage_complete'] and not inspected['pending_matches'],inspected
+ judgment={'observation':inspected['observation'],'decisions':[{'path':row['path'],'classification':'contradiction' if row['path']==previous['path'] else 'related-context','rationale':'Predeclared synthetic detecting-developer clarification confirms blue and explicitly corrects this yellow claim.'} for row in inspected['matches']],'pending_decisions':[],'rationale':'Preserve old yellow origin and all conditions; synthetic fixture clarification is not a real operator color decision.'}
  checked=public(w,pack,'compare_learning.py','review','--repo',repo,'--request',save(w,compared,'clarified-wall-comparison'),'--judgment',save(w,judgment,'clarified-wall-judgment'))
  gov=GovernanceContract();gov.pid=s['project'];gov.actor=s['actor'];value=gov.request(bank,old,previous['path'],'correct')
  value['authority'].update(evidence=['user:fixture-wall-blue-clarification'],reason='Synthetic detecting developer A clarifies the atrium wall is blue after consulting the independently attributed developer B source.')
@@ -544,7 +634,7 @@ def withheld_replacement_independent_path(all_sessions):
  before=typed_recall(s,[old['id']],{'component':'src/seed/1'},kinds=['semantic-fact'])['results']
  assert len(before)==1 and before[0]['record']==old and before[0]['body']==body
  new_id,new_row=capture(s,3);lessons[new_id]=new_row
- replacement=copy.deepcopy(old);identity=str(uuid.uuid4());replacement.update(id=identity,visibility='hidden',supersedes=[{'id':old['id'],'version':old['version']}])
+ replacement=copy.deepcopy(old);identity=str(uuid.UUID(hex=hashlib.sha256((s['project']+s['name']+'-withheld-replacement').encode()).hexdigest()[:32],version=4));replacement.update(id=identity,visibility='hidden',supersedes=[{'id':old['id'],'version':old['version']}])
  path='topics/withheld-replacement-'+str(s['number'])+'.md';marker='sk-'+('Q'*24)
  # Deliberately seed hostile/untrusted source bytes as a negative fixture input;
  # this is not claimed as a successful governed admission or a real credential.
@@ -647,11 +737,35 @@ outcome={'complete_compatible_rounds':False,'full_daily_use_v1_acceptance':False
 try:
  with ExitStack() as stack:
   worlds=[stack.enter_context(World()) for _ in range(3)]
-  w=worlds[0];h=PublicationFixture();repo,bank,peer,base=h.fixture(w);pack=h.pack
+  w=worlds[0];h=PublicationFixture()
+  identities=(json.loads(Path(a.fixture_identities).read_text()) if a.fixture_identities else
+   {'schema':'agent-memory/daily-use-fixture-identities-v1','project_id':str(uuid.uuid4()),'developer_a':str(uuid.uuid4()),'developer_b':str(uuid.uuid4())})
+  assert set(identities)=={'schema','project_id','developer_a','developer_b'} and identities['schema']=='agent-memory/daily-use-fixture-identities-v1'
+  assert all(str(uuid.UUID(identities[key]))==identities[key] and uuid.UUID(identities[key]).version==4 for key in ('project_id','developer_a','developer_b'))
+  project=identities['project_id'];actor_a=identities['developer_a'];actor_b=identities['developer_b'];assert actor_a!=actor_b
+  (out/'fixture-identities.json').write_text(json.dumps(identities,sort_keys=True,indent=2)+'\n')
+  # Reproduce the public recovery fixture with the frozen identities installed
+  # before the router and scope binding are initialized.
+  pack=w.inside('portable pack');shutil.copytree(root/'skills/agent-memory',pack,ignore=shutil.ignore_patterns('__pycache__'));h.pack=pack
+  repo=w.repository();remote=w.repository('remote.git',bare=True)
+  w.git('remote','add','origin',str(remote),cwd=repo);w.git('config','--local','agent-memory.authorityBranch','main',cwd=repo)
+  proposal=json.loads((pack/'templates/router-proposal.example.json').read_text());proposal['project-id']=project
+  files=public(w,pack,'bank_contract.py','render','--input',save(w,proposal,'fixture-router'))['files']
+  bank=repo/'memory-bank';bank.mkdir()
+  for path,body in files.items():(bank/path).write_text(body)
+  (repo/'code.py').write_text('VALUE = 1\n');profile(w,pack,actor_a,'Authored developer A')
+  status=bind(w,repo);assert status['developer_id']==actor_a
+  w.git('add','memory-bank','code.py',cwd=repo);w.git('commit','-m','Fixture canonical memory',cwd=repo)
+  (repo/'code.py').write_text('VALUE = 2  # staged work\n');w.git('add','code.py',cwd=repo)
+  w.git('reset','--','code.py',cwd=repo)
+  (bank/'activeContext.md').write_text('# Current focus\n\nA useful isolated session focus.\n')
+  router=bank/'MEMORY.md';text=router.read_text()
+  text=''.join(line for line in text.splitlines(keepends=True) if not line.startswith('- `activeContext.md`:'))
+  text=text.replace('\n## Omitted contexts\n','| [activeContext.md](<activeContext.md>) | Session focus | repository | active | At a boundary |\n\n## Omitted contexts\n')
+  router.write_text(text);w.git('add','memory-bank',cwd=repo);w.git('commit','-m','Useful fixture context',cwd=repo)
+  w.git('add','code.py',cwd=repo);w.git('push','origin','HEAD:main',cwd=repo);w.clone(str(remote),'peer')
   w.git('reset','--','code.py',cwd=repo);(repo/'code.py').write_text('VALUE = 1\n')
   template=json.loads((pack/'templates/record-proposal.example.json').read_text())['metadata']
-  project=json.loads(next(line.split(': ',1)[1] for line in (bank/'MEMORY.md').read_text().splitlines() if line.startswith('project-id: ')))
-  status=bind(w,repo);actor_a=status['developer_id'];actor_b=str(uuid.uuid4())
   stamp='2026-10-25T00:00:00Z';header=lambda value:'---\n'+''.join(key+': '+json.dumps(value)+'\n' for key,value in value.items())+'---\n'
   seed={};leaf_routes=[];seed_reference={}
   for start in range(0,a.lessons,48):

@@ -142,7 +142,33 @@ def prepare(old, state, code):
             'actions': actions, 'restart': [], 'preserved': preserved, 'reinstall': reinstall(old)}
 
 
-def run(args):
+def preserved_reader(path, plan):
+    """Select a real separate already-active installation, not a capability flag."""
+    from . import artifact, layout_recovery_state
+    supplied = install.absolute(path)
+    install.require(supplied.name == 'receipt.json' and supplied.is_file() and not supplied.is_symlink(),
+                    'Select the existing receipt.json of the capable installation to preserve')
+    other = install.read_receipt(supplied.parent)
+    install.require(other is not None and other['installation_id'] != plan['old']['installation_id'],
+                    'The preserved capable reader must be a separate active installation')
+    install.verify_targets(other['targets'], source=other['source'])
+    runtime = artifact.inspect(other['source']['pack'])
+    install.require(runtime['artifact_digest'] == other['source']['artifact_digest'],
+                    'Preserved runtime changed from its actual owned artifact')
+    removals = [Path(action['path']) for action in plan['actions'] if action['changed']]
+    protected = [Path(other['source']['path']), *(Path(target['path']) for target in other['targets']), supplied.parent]
+    install.require(not any(left.is_relative_to(right) or right.is_relative_to(left)
+                    for left in removals for right in protected),
+                    'Uninstall would remove part of the selected preserved capable runtime')
+    install.require(any(target['kind'] in {'wrapper', 'hook-link', 'hook-config'} for target in other['targets']),
+                    'Preserved runtime must retain an actually active executable invocation route')
+    return {**other['source'], 'compatibility': runtime['compatibility'], 'already_active_verified': True,
+            'reader_receipt_path': str(supplied), 'reader_receipt_sha256': install.sha(layout_recovery_state.read_bytes(supplied)),
+            'reader_invocation_routes': [target['path'] for target in other['targets']
+                if target['kind'] in {'wrapper', 'hook-link', 'hook-config'}]}
+
+
+def run(args, *, _native_preflight=False):
     state, code = install.locations()
     old = install.read_receipt(state)
     install.preflight_layout(args, state, code, old)
@@ -151,10 +177,35 @@ def run(args):
         if current is None:
             historical = install.load(state/'receipt.json')
             install.require(historical.get('uninstalled') is True, 'No active ownership receipt; do not guess removal targets')
+            journal = install.read_journal(state)
+            install.require(journal is None or journal['status'] in ('complete', 'rolled-back'),
+                            'Removal receipt is committed but targets remain unverified; use trusted install to re-plan')
             return {'operation':'uninstall', 'verified':not args.check, 'check_complete':bool(args.check),
                     'changed':False, 'uninstalled':True, 'receipt':historical,
                     'preserved':historical['preserved'], 'reinstall':historical['reinstall']}
         plan = prepare(current, state, code)
+        if getattr(args, 'omp_writers_quiesced', False):
+            plan['omp_transition'] = {'writers_quiesced': True}
+        selection = getattr(args, 'preserve_capable_runtime', None)
+        if selection:
+            plan['preserved_private_state_reader'] = preserved_reader(selection, plan)
+        plan['layout_quiescence'] = list(getattr(args, 'layout_quiescence', None) or [])
+        from . import private_state
+        if plan.get('omp_transition') and args.check and not _native_preflight:
+            from . import omp_boundary
+            omp_boundary.native_transition(plan, check=True)
+        target = private_state.prepare_lifecycle(plan, check=True)
+        if plan.get('omp_transition') and (_native_preflight or not args.check):
+            # Only the real transition can disable the owned route and prove
+            # a drain. Never project that future state into a public preview.
+            # Unknown evidence or any other missing capability still refuses
+            # before publishing even diagnostic lifecycle ownership.
+            proof = private_state.required_private_state_capabilities(current, target, 'uninstall')
+            native = {'omp-harness-v1', 'omp-stored-source-v2'}
+            install.require(not proof['unknown_state'] and set(proof['missing_capabilities']) <= native,
+                            'Private-state runtime compatibility is pending; preserve the capable active runtime and evidence')
+        else:
+            private_state.require_compatible(current, target, 'uninstall')
         if args.check:
             return {'operation':'uninstall', 'verified':False, 'check_complete':True,
                     'installation_writes_performed':False,
@@ -165,16 +216,16 @@ def run(args):
         return {**result, 'uninstalled':True, 'preserved':plan['preserved'], 'reinstall':plan['reinstall'],
                 'project_memory_writes_performed':False, 'purge_performed':False}
     if args.check:
-        journal = state/'journal.json'
-        if os.path.lexists(journal):
-            recorded = install.load(journal)
-            install.require(recorded['status'] in ('complete','rolled-back'),
-                            'Recover the interrupted lifecycle transaction before planning uninstall')
-            if recorded['status']=='complete':
-                install.require(recorded.get('receipt_identity') is not None
-                                and install.fingerprint(state/'receipt.json')==recorded['receipt_identity'],
-                                'Completed installation receipt differs from its journal; preserve and reconcile ownership')
+        install._require_replannable_journal(state)
         return work()
+    # Refuse a known private-state hold before publishing even diagnostic lock
+    # ownership. The locked path repeats this check and guards activation.
+    journal = install.read_journal(state)
+    if old is not None and (journal is None or journal['status'] in ('complete', 'rolled-back')
+                            or (journal['status'] == 'activating' and install._receipt_committed(state, journal))):
+        preview_args = argparse.Namespace(**vars(args))
+        preview_args.check = True
+        run(preview_args, _native_preflight=True)
     paths = [state, code, *(Path(t['path']) for t in (old['targets'] if old else []))]
     with runtime_faults.operation('uninstall', paths), install.locked(state):
         install.recover(state, for_install=True)
@@ -198,6 +249,9 @@ def main(argv=None):
     commands = parser.add_subparsers(dest='command', required=True)
     uninstall = commands.add_parser('uninstall')
     uninstall.add_argument('--check', '--dry-run', action='store_true')
+    uninstall.add_argument('--omp-writers-quiesced', action='store_true')
+    uninstall.add_argument('--preserve-capable-runtime')
+    uninstall.add_argument('--layout-quiescence', action='append', default=[])
     purge = commands.add_parser('purge-data')
     purge.add_argument('--repo', required=True)
     purge.add_argument('--path', required=True)

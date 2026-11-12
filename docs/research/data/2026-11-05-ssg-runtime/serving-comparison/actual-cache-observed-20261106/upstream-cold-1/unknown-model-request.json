@@ -1,0 +1,11 @@
+{
+  "at": "2026-11-06T19:58:15.891246+00:00",
+  "body": {
+    "input": [
+      "Synthetic pagination retains a continuation token."
+    ],
+    "model": "am255-synthetic-unknown-weight-alias"
+  },
+  "name": "unknown-model",
+  "route": "/v1/embeddings"
+}

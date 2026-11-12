@@ -12,6 +12,10 @@ import stat
 import uuid
 from pathlib import Path
 import sys
+sys.dont_write_bytecode = True
+import runpy
+_cache_guard = runpy.run_path(str(Path(__file__).resolve().parent.parent/'scripts/source_startup.py'),
+                              run_name='am_source_startup')['isolate']()
 
 MAX_INPUT = 64 * 1024
 
@@ -23,6 +27,9 @@ def observed_stop(repo, event, pack):
     if not isinstance(session, str) or not isinstance(prompt, str):
         return None  # Legacy source handling still reports unsupported evidence.
     state = turn_sources.inspect(repo, 'claude', session, prompt)
+    if state.get('recovery_pending') is True:
+        print(json.dumps({'systemMessage': 'Agent Memory recovery-pending: preserve the native original and private pending evidence. Continue the human task; refresh and acknowledgement are inactive, not no-learning or published. Inspect am bank recover-layout status and am claude-boundary --list-pending.'}))
+        return 0
     if not state['sources'] and state['faults'] == ['source-missing']:
         return None
     if not state['sources'] and not state['faults']:
@@ -78,10 +85,10 @@ def main():
         if not os.path.lexists(candidate):
             return 0  # A repository without a bank is not automatically initialized.
         repo, bank = bank_writes.bank_path(repo)
-        context = scope_binding.require(repo)
         decision = observed_stop(repo, event, directory.parent)
         if decision is not None:
             return decision
+        context = scope_binding.require(repo)
         if event['stop_hook_active']:
             return 0
         scoped = source(event, require_final=False)
@@ -151,7 +158,6 @@ def main():
         finally:
             os.close(dfd)
         prompt = (directory / 'boundary-prompt.txt').read_text(encoding='utf-8').strip()
-        prompt = prompt.replace('{{SKILL_DIR}}', str(directory.parent))
         if not prompt or len(prompt.encode('utf-8')) > 4096:
             raise ValueError('invalid instruction')
         # A legacy v1 turn still receives one short, source-bound continuation.

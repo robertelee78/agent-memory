@@ -1,0 +1,15 @@
+{
+ "argv": [
+  "curl",
+  "-sSL",
+  "--max-time",
+  "20",
+  "https://raw.githubusercontent.com/memgraph/memgraph/v3.10.1/mage/python/requirements.txt"
+ ],
+ "cwd": "/Users/robert.lee/.omp/wt/tba949e054/m/data/2026-11-05-ssg-runtime/licenses",
+ "exit": 0,
+ "seconds": 0.056,
+ "started_at": "2026-11-05T16:52:21.544893+00:00",
+ "stderr": "",
+ "stdout": "--extra-index-url https://download.pytorch.org/whl/cpu\nboto3==1.36.23\ndefusedxml==0.7.1\nduckdb==1.2.1\nelasticsearch==8.17.0\nfilelock==3.20.3\ngekko==1.2.1\ngensim==4.3.3\ngqlalchemy==1.8.0\nhuggingface-hub==0.35.1\nigraph==0.11.8\njaraco-context==6.1.0\nmysql-connector-python==9.1.0\nneo4j==5.28.2\nnetworkx==2.8.8\noracledb==2.5.1\npandas==2.2.3\nplatformdirs==4.3.6\npyarrow==19.0.1\npsycopg2-binary==2.9.10\npyodbc==5.2.0\npython-Levenshtein==0.26.1\nscikit-learn==1.5.2\nscipy==1.13.1\nsentence-transformers==5.1.1\nsetuptools==81.0.0  # maximum version that can be used until torchmetrics doesn't rely on pkg_resources any more\nsix==1.17.0\ntorch==2.9.0+cpu; platform_machine != \"aarch64\"\ntorch==2.9.0; platform_machine == \"aarch64\"\ntorchmetrics==0.10.0 # current implementation of node_classification module depends on version <= 0.10.0\nlitellm==1.83.7\n"
+}

@@ -1,0 +1,11 @@
+{
+  "body": {
+    "encoding_format": "float",
+    "input": [
+      "Synthetic complete input with an unmistakable terminal marker AM255_END."
+    ],
+    "model": "am255-synthetic-unknown-weight-alias"
+  },
+  "method": "POST",
+  "url": "http://127.0.0.1:60006/v1/embeddings"
+}

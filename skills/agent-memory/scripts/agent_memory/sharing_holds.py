@@ -245,7 +245,8 @@ def bank_owner(root,operation_id,owned_lock):
             raise ContractError('Actual bank ownership is required for known-hold state changes')
         yield owned_lock
     else:
-        with storage.exclusive(bank/'.agent-memory.lock',operation_id,'semantic-review-holds') as owner:yield owner
+        from .turn_sources import canonical_writer_barrier
+        with canonical_writer_barrier(root), storage.exclusive(bank/'.agent-memory.lock',operation_id,'semantic-review-holds') as owner:yield owner
 
 
 def record(root,project_id,proof,references,*,resolutions=None,owned_lock=None,verify=None,expected_inventory=None):

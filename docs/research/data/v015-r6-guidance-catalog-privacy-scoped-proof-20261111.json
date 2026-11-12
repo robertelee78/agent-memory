@@ -1,0 +1,42 @@
+{
+  "complete_files": 9,
+  "exact_once": true,
+  "installed_smokes": {
+    "r6-hook-faithful-source-first-cancel-before-actual-20261111.json": {
+      "passed": true,
+      "sha256": "ad71dbb312c942f107d034fdd3088a599aaa4ab31b7a0c9faea0f1b59952de99"
+    },
+    "r6-hook-faithful-source-first-no-ack-actual-20261111.json": {
+      "passed": true,
+      "sha256": "917ed03602ecff8e2c09206782464874433eb75c4cbfa61cca7b759e58fe3bad"
+    },
+    "r6-installed-guides-copy-link-actual-20261111.json": {
+      "passed": true,
+      "sha256": "6cf0f60b4e00eea9335dc135beaca52c895688e742661946f1468b0865127fad"
+    },
+    "r6-installed-recall-warm-rebuild-actual-20261111.json": {
+      "passed": true,
+      "sha256": "8f50bc362bae43c0293f2193b816b6c638fe5b39926d0f61d07bfe9ad8ffb832"
+    }
+  },
+  "methods": 191,
+  "passed": true,
+  "paths": [
+    "tests/contracts/test_bank_transactions.py",
+    "tests/contracts/test_discovery_workflow.py",
+    "tests/contracts/test_doctor_fix.py",
+    "tests/contracts/test_layout_recovery_catalog.py",
+    "tests/contracts/test_memory_refresh.py",
+    "tests/contracts/test_omp_boundary.py",
+    "tests/contracts/test_omp_source_phase.py",
+    "tests/contracts/test_omp_stored_authority_v2.py",
+    "tests/contracts/test_recall_catalog.py"
+  ],
+  "registered_workers": 109,
+  "schema": "am/r6-guidance-catalog-privacy-local-proof-v1",
+  "scope": "Local Darwin arm64/Python3.15.0. No-ACK/cancel are source-retention/no-wake controls, not timing successes. Original armedR4 stillFAIL947056167ns/zero roots. No correctedhosted/native/clockrate/p99/release acceptance; later implementation requires newexactsourceproof.",
+  "seconds": 904.2041770840297,
+  "source_identity": "02eae511080dab08372658ee332e6bb124c0b5fac83461c15c86085e002c87e7",
+  "source_unchanged": true,
+  "subject_manifest_sha256": "15e1373c248815ff452f2da27f8ecb4d3e46c72623c89709c8913068f3063f16"
+}

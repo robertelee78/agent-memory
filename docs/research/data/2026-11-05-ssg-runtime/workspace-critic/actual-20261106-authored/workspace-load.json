@@ -1,0 +1,20 @@
+{
+  "callables": 9,
+  "calls": 9,
+  "commit": "e76f4612b9f2a63eae5d43625275d108beeb856d",
+  "dependencies": 2,
+  "dependencies_with_expertise": 2,
+  "entries": 4,
+  "expertise": {
+    "advisories": 0,
+    "embedded": 0,
+    "similar": 0,
+    "units": 974
+  },
+  "files": 4,
+  "launches": [],
+  "library_api_roots": 0,
+  "matches": 2,
+  "repo": "/Users/robert.lee/.omp/wt/tcb265d0cb/m/docs/research/data/2026-11-05-ssg-runtime/workspace-critic/actual-20261106-authored/scratch/repo",
+  "unresolved_entries": []
+}

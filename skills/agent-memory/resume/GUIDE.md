@@ -55,7 +55,7 @@ paths, `include_context: true`, actual task/component `context`, supported
 ## Apply
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/retrieve.py" --repo /path/to/repo \
+python3 -I "$SKILL_DIR/scripts/retrieve.py" --repo /path/to/repo \
   --request /private/path/task-recall.json
 ```
 
@@ -82,7 +82,7 @@ applicability; importing memory does not advance working code.
 
 ## Outcomes
 
-At natural turn boundaries the session MUST follow the ADR-0012 memory-only
+At [natural turn boundaries](../SKILL.md#natural-turn-boundary) the session MUST follow the ADR-0012 memory-only
 refresh workflow, check for landed memory, and load only changed knowledge that
 qualifies for its current task. Refresh MUST NOT interrupt a turn, change code,
 the index or feature ancestry, or assume that this branch contains remembered

@@ -1,0 +1,44 @@
+{
+  "all_method_selections_executed_exactly_once": true,
+  "consumer_files": 6,
+  "errors": 0,
+  "execution": {
+    "passed": true,
+    "python": "3.15.0 (main, Oct  9 2026, 11:16:41) [Clang 21.0.0 (clang-2100.3.34.2)]",
+    "seconds": 879.7319607920945,
+    "source_after": "634f2d87dc3b355962a2970b1777b5fdbf753738aa094e5dfaa2531c7cb598d9",
+    "source_before": "634f2d87dc3b355962a2970b1777b5fdbf753738aa094e5dfaa2531c7cb598d9",
+    "worker_deadline_seconds": 300,
+    "workers": 2
+  },
+  "failures": 0,
+  "ordering": [
+    {
+      "name": "omp-writer-fence-ordering",
+      "passed": true,
+      "seconds": 61.53766012494452,
+      "tests": 1
+    }
+  ],
+  "product_runtime_unchanged_from_first_campaign": true,
+  "raw_evidence": {
+    "bytes": 62820,
+    "name": "corrected-ordering-readback-full-six-helper-consumers-60workers-118tests-actual-20261110.tar.gz",
+    "original_private_location": "/tmp/am-v15-delivery/peer-readback-fixed-all-helper-consumers-py315-actual-20261110; /tmp/am-v15-delivery/peer-recovery-recall-readback-fixed-source-overlay-20261110.json; /tmp/am-v15-delivery/peer-readback-fixed-all-helper-consumers-paths-20261110.json; /tmp/am-v15-delivery/integrated_peer_consumers_20261110.py; /tmp/am-v15-delivery/peer-recovery-recall-integrated-readback-fixed-source-20261110/tests/contracts/test_omp_boundary.py; /tmp/am-v15-delivery/peer-recovery-recall-integrated-readback-fixed-source-20261110/tests/contracts/test_omp_writer_fence.py",
+    "sha256": "daa40960b7deba0bfd5fd3becdf33894c3e52d8c899602ac4f01a990eb70540f"
+  },
+  "registered_workers": 60,
+  "schema": "am/corrected-ordering-readback-complete-helper-consumers-v1",
+  "scope": "Six complete registered helper-consumer files on local macOS/Python3.15.0, not a full repeated920test/hosted/native/performance or acceptance pass",
+  "selected_paths": [
+    "tests/contracts/test_mixed_private_capabilities.py",
+    "tests/contracts/test_omp_boundary.py",
+    "tests/contracts/test_omp_enrollment_progress.py",
+    "tests/contracts/test_omp_finite_outcome_fence.py",
+    "tests/contracts/test_omp_stored_authority_v2.py",
+    "tests/contracts/test_omp_writer_fence.py"
+  ],
+  "skipped": 0,
+  "source_overlay_manifest_sha256": "add76a1d03c4d06e70b3e12a3413c64a1e3debbdf7768b4a5a57c775d75e6fdf",
+  "tests": 118
+}

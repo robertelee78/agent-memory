@@ -1,0 +1,15 @@
+{
+ "argv": [
+  "curl",
+  "-sSL",
+  "--max-time",
+  "20",
+  "https://raw.githubusercontent.com/memgraph/memgraph/v3.10.1/LICENSE"
+ ],
+ "cwd": "/Users/robert.lee/.omp/wt/tba949e054/m/data/2026-11-05-ssg-runtime/licenses",
+ "exit": 0,
+ "seconds": 0.047,
+ "started_at": "2026-11-05T16:52:21.397657+00:00",
+ "stderr": "",
+ "stdout": "Source code in this repository is variously licensed under the Business Source\nLicense 1.1 (BSL), the Memgraph Enterprise License (MEL). A copy of each licence\ncan be found in the licences directory. Source code in a given file is licensed\nunder the BSL and the copyright belongs to The Memgraph Authors unless\notherwise noted at the beginning of the file.\n"
+}

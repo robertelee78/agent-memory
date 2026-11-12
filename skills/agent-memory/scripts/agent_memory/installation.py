@@ -53,6 +53,7 @@ MEMORY_ROUTES = {
     'admission': ('admit_learning.py', ()),
     'claude-boundary': ('claude_boundary.py', ()),
     'codex-boundary': ('codex_boundary.py', ()),
+    'omp-boundary': ('omp_boundary.py', ()),
     'private': ('private_workspace.py', ()),
     'compare': ('compare_learning.py', ()),
     'compact': ('consolidate_learning.py', ()),
@@ -386,7 +387,8 @@ def read_receipt(state):
     if not os.path.lexists(path):
         return None
     value = load(path)
-    require(isinstance(value, dict) and value.get('schema') == RECEIPT_SCHEMA
+    from . import omp_installation
+    require(isinstance(value, dict) and value.get('schema') in omp_installation.SCHEMAS
             and value.get('verified') is True and isinstance(value.get('installation_id'), str)
             and isinstance(value.get('targets'), list) and isinstance(value.get('source'), dict),
             'Invalid installation ownership receipt: ' + str(path))
@@ -396,7 +398,22 @@ def read_receipt(state):
         require(isinstance(item, dict) and item.get('kind') in {'copy', 'link', 'wrapper', 'activation', 'source', 'hook-config', 'hook-link'}
                 and absolute(item['path']) == Path(item['path']) and 'identity' in item,
                 'Malformed target ownership receipt')
+    omp_installation.validate_receipt(value)
     return value
+
+
+def _activation_template(pack, *, omp=False):
+    """Render only the selected binding's candidate-owned invocation block."""
+    path = Path(pack)/'templates'/('activation-omp-markdown.example.txt' if omp else 'activation-markdown.example.txt')
+    if omp:
+        require(path.is_file(), 'Candidate omp activation template is required')
+        shim = path.read_text()
+    else:
+        shim = path.read_text() if path.is_file() else SHIM
+    require(shim.startswith(BEGIN+'\n') and shim.endswith(END)
+            and shim.count(BEGIN)==shim.count(END)==1 and len(shim.encode())<=4096,
+            'Candidate activation shim must be one bounded invocation block')
+    return shim
 
 
 def activation(raw, expected=None, *, shim=SHIM):
@@ -412,7 +429,7 @@ def activation(raw, expected=None, *, shim=SHIM):
     return raw + (b'' if not raw or raw.endswith(b'\n') else b'\n') + shim.encode() + b'\n'
 
 
-def presets(names):
+def presets(names, omp_agent_dir=None):
     home = Path.home(); config = Path(os.environ.get('XDG_CONFIG_HOME', home/'.config'))
     codex = Path(os.environ.get('CODEX_HOME', home/'.codex'))
     claude = Path(os.environ.get('CLAUDE_CONFIG_DIR', home/'.claude'))
@@ -426,9 +443,13 @@ def presets(names):
         names = ','.join(values)
     if names == 'none':
         return []
+    if 'omp' in names.split(','):
+        require(omp_agent_dir is not None, 'Explicit omp preset requires its saved or selected absolute agent root')
+        native = absolute(omp_agent_dir)
+        values['omp'] = (native/'skills', native/'AGENTS.md')
     keys = names.split(',')
     require(keys and len(set(keys)) == len(keys) and all(k in values for k in keys),
-            'Presets must be all, none, or a unique comma-separated agents,codex,claude,opencode list')
+            'Presets must be all, none, or a unique comma-separated agents,codex,claude,opencode,omp list')
     return [(key, *values[key]) for key in keys]
 
 
@@ -490,13 +511,16 @@ def preflight_path(path):
 
 
 def configuration(args, old):
-    return {
+    from . import omp_installation
+    cfg = {
         'mode': args.mode or (old['mode'] if old else 'link'),
         'presets': args.presets or (old['presets'] if old else 'all'),
         'custom_targets': args.target_dir if args.target_dir is not None else (old['custom_targets'] if old else []),
         'no_guidance': args.no_guidance or (old.get('no_guidance', False) if old else False),
         'bin_dir': absolute(args.bin_dir or (old['bin_dir'] if old else Path.home()/'.local/bin')),
     }
+    cfg['omp_binding'] = omp_installation.configuration(args, old, cfg['presets'], cfg['no_guidance'])
+    return cfg
 
 
 def preflight_layout(args, state, code, old):
@@ -531,20 +555,22 @@ def preflight_layout(args, state, code, old):
     if args.command == 'install':
         cfg = configuration(args, old)
         paths.extend(cfg['bin_dir']/name for name in COMMAND_NAMES)
-        for name, target, guidance in presets(cfg['presets']):
+        for name, target, guidance in presets(cfg['presets'], (cfg['omp_binding'] or {}).get('agent_dir')):
             paths.append(absolute(target/'agent-memory'))
             if guidance and not cfg['no_guidance']:
                 paths.append(absolute(guidance))
             hook = hook_paths(name)
             if hook and not cfg['no_guidance']:
                 paths.append(absolute(hook))
+            if name == 'omp':
+                paths.append(Path(cfg['omp_binding']['extension_target']))
         paths.extend(absolute(target)/'agent-memory' for target in cfg['custom_targets'])
         if args.development_source:
             sources.add(absolute(args.development_source).resolve(strict=True))
     elif args.command == 'update' and old:
         paths.extend(absolute(old['bin_dir'])/name for name in COMMAND_NAMES)
         if not old.get('no_guidance', False):
-            for name, _, _ in presets(old['presets']):
+            for name, _, _ in presets(old['presets'], (old.get('omp_binding') or {}).get('agent_dir')):
                 hook = hook_paths(name)
                 if hook:
                     paths.append(absolute(hook))
@@ -570,18 +596,21 @@ def lifecycle_paths(args, state, code, old):
     if args.command == 'install':
         cfg = configuration(args, old)
         paths.extend(cfg['bin_dir'] / name for name in COMMAND_NAMES)
-        for name, target, guidance in presets(cfg['presets']):
+        for name, target, guidance in presets(cfg['presets'], (cfg['omp_binding'] or {}).get('agent_dir')):
             paths.append(absolute(target / 'agent-memory'))
             if guidance and not cfg['no_guidance']:
                 paths.append(absolute(guidance))
             hook = hook_paths(name)
             if hook and not cfg['no_guidance']:
                 paths.append(absolute(hook))
+            if name == 'omp':
+                paths.append(Path(cfg['omp_binding']['extension_target']))
         paths.extend(absolute(target) / 'agent-memory' for target in cfg['custom_targets'])
     return paths
 
 
 def public_plan(plan):
+    from . import omp_installation
     return {'schema': 'agent-memory/install-plan-v1', 'operation': 'install', 'verified': False,
             'installation_writes_performed': False, 'source': plan['source'], 'mode': plan['mode'],
             'enabled_adapters': plan['adapters'], 'data_roots': [],
@@ -589,6 +618,7 @@ def public_plan(plan):
             'targets': [{k: v for k, v in item.items() if k in ('path', 'kind', 'before', 'after', 'changed')}
                         for item in plan['actions']],
             **({'cache_recovery': plan['cache_recovery']['summary']} if plan.get('cache_recovery') is not None else {}),
+            **({'omp': omp_installation.preview(plan['omp_binding'])} if plan.get('omp_binding') else {}),
             'restart_clients': plan['restart'], 'atomicity': 'per target; journaled rollback across targets'}
 
 
@@ -658,6 +688,9 @@ def prepare(args, state, code, old, *, candidate_root=None, candidate_kind=None,
                                     env={**os.environ, 'GIT_TERMINAL_PROMPT': '0'})
             require(result.returncode == 0, 'Could not stage source: ' + result.stderr.strip())
             source = source_info(root, 'managed', remote, ref)
+        if old and old.get('omp_binding'):
+            require('agent-memory/install-receipt-v2' in source['compatibility'].get('installation_receipt_schemas', []),
+                    'Candidate cannot read saved native installation receipt-v2')
         # source_info canonicalizes the trusted source. Keep root in that same
         # namespace before relative paths/ownership checks (/var -> /private/var
         # and symlinked TMPDIR are normal macOS layouts).
@@ -665,11 +698,7 @@ def prepare(args, state, code, old, *, candidate_root=None, candidate_kind=None,
         require(not state.is_relative_to(root) and not root.is_relative_to(state),
                 'Installation state must not overlap the selected source')
         pack_source = Path(source['pack'])
-        shim_path = pack_source/'templates/activation-markdown.example.txt'
-        shim = shim_path.read_text() if shim_path.is_file() else SHIM
-        require(shim.startswith(BEGIN+'\n') and shim.endswith(END)
-                and shim.count(BEGIN)==shim.count(END)==1 and len(shim.encode())<=4096,
-                'Candidate activation shim must be one bounded invocation block')
+        shim = _activation_template(pack_source)
         active_root = root if source['kind'] == 'development' else code
         active_pack = active_root / pack_source.relative_to(root)
         source = {**source, 'path': str(active_root), 'pack': str(active_pack)}
@@ -683,8 +712,11 @@ def prepare(args, state, code, old, *, candidate_root=None, candidate_kind=None,
             previous = prior.get(str(path))
             if block:
                 require(before is None or before['kind'] == 'file', 'Activation file collision: ' + str(path))
+                binding = cfg['omp_binding']
+                block_template = (_activation_template(pack_source, omp=True)
+                                  if binding and str(path) == binding['activation_target'] else shim)
                 raw = activation(path.read_bytes() if before else b'',
-                                 previous.get('block_hash') if previous and previous['kind']=='activation' and not (repair_missing_hooks and before is None) else None, shim=shim)
+                                 previous.get('block_hash') if previous and previous['kind']=='activation' and not (repair_missing_hooks and before is None) else None, shim=block_template)
                 mode_bits = before['mode'] if before else 0o644
             elif kind == 'hook-config':
                 from . import client_hooks
@@ -744,6 +776,8 @@ def prepare(args, state, code, old, *, candidate_root=None, candidate_kind=None,
             actions.append({'path': str(path), 'kind': kind, 'before': before, 'after': after,
                             'raw': raw, 'source_path': str(source_path) if source_path else None,
                             'mode_bits': mode_bits, 'changed': before != after})
+            if block:
+                actions[-1]['block_hash'] = sha(block_template.encode())
             if hook_entry is not None:
                 actions[-1]['hook_entry'] = hook_entry
                 actions[-1]['hook_original_shape'] = original_shape
@@ -753,7 +787,7 @@ def prepare(args, state, code, old, *, candidate_root=None, candidate_kind=None,
         if source['kind'] in ('managed', 'release'):
             add(code, 'source', source_path=root)
         groups = {}
-        for name, target, guidance in presets(selected):
+        for name, target, guidance in presets(selected, (cfg['omp_binding'] or {}).get('agent_dir')):
             groups[name] = [str(absolute(target/'agent-memory'))]
             if guidance and not no_guidance:
                 groups[name].append(str(absolute(guidance)))
@@ -769,6 +803,11 @@ def prepare(args, state, code, old, *, candidate_root=None, candidate_kind=None,
             elif name == 'opencode' and hook and not no_guidance:
                 add(hook, 'hook-link', source_path=active_pack/'hooks'/'opencode.js')
                 groups[name].append(str(absolute(hook)))
+            elif name == 'omp':
+                from . import omp_installation
+                hook = Path(cfg['omp_binding']['extension_target'])
+                add(hook, 'wrapper', raw=omp_installation.extension_wrapper(active_pack, source['artifact_digest'], cfg['omp_binding']))
+                groups[name].append(str(hook))
         for target in custom:
             add(absolute(target)/'agent-memory', mode, source_path=pack_source)
             adapter = 'custom:' + str(absolute(target))
@@ -803,8 +842,10 @@ def prepare(args, state, code, old, *, candidate_root=None, candidate_kind=None,
             if item['kind'] in ('copy','link'):
                 return previous is None or previous.get('artifact_digest') != source['artifact_digest']
             if item['kind'] == 'activation':
-                return previous is None or previous.get('block_hash') != sha(shim.encode())
+                return previous is None or previous.get('block_hash') != item['block_hash']
             if item['kind'] in ('hook-config', 'hook-link'):
+                return previous is None or item['changed'] or previous.get('artifact_digest') != source['artifact_digest']
+            if cfg['omp_binding'] and item['path'] == cfg['omp_binding']['extension_target']:
                 return previous is None or item['changed'] or previous.get('artifact_digest') != source['artifact_digest']
             return False
         restart = [a for a in adapters if any(item['path'] in groups[a] and loaded_change(item)
@@ -812,7 +853,11 @@ def prepare(args, state, code, old, *, candidate_root=None, candidate_kind=None,
         yield {'state': state, 'source': source, 'mode': mode, 'presets': selected,
                'custom_targets': [str(absolute(t)) for t in custom], 'no_guidance': no_guidance,
                'bin_dir': str(bin_dir), 'adapters': adapters, 'actions': actions, 'restart': restart,
-               'old': old, 'pack_source': pack_source, 'shim':shim, 'cache_recovery': cache_recovery}
+               'omp_binding': cfg['omp_binding'],
+               'omp_peers_upgraded': getattr(args, 'omp_peers_upgraded', False),
+               'omp_layout_quiescence': getattr(args, 'omp_layout_quiescence', None),
+               'layout_quiescence': getattr(args, 'layout_quiescence', None) or [],
+               'old': old, 'pack_source': pack_source, 'cache_recovery': cache_recovery}
 
 
 def make_parents(parent, journal, state):
@@ -959,6 +1004,8 @@ def rollback_compatibility(state, journal):
             and all(isinstance(p, str) and absolute(p) == Path(p) for p in repositories),
             'Malformed rollback repository inventory')
     from . import updating
+    from . import private_state
+    private_state.require_compatible({'rollback_repositories': repositories}, compatibility, 'rollback')
     updating.banks(repositories, compatibility, require_readable=True)
 
 
@@ -1010,6 +1057,15 @@ def preserve_preexchange_cache_writer(state, journal):
 
 
 def rollback(state, journal):
+    from . import private_state
+    installation = {**(read_receipt(state) or {}), 'rollback_repositories': journal.get('rollback_repositories', [])}
+    target = {'compatibility': journal.get('previous_compatibility') or {},
+        'artifact_digest': journal.get('previous_artifact_digest')}
+    with private_state.activation_guard(installation, target, 'rollback'):
+        return _rollback(state, journal)
+
+
+def _rollback(state, journal):
     trust_paths.state(state)
     rollback_compatibility(state, journal)
     preserve_preexchange_cache_writer(state, journal)
@@ -1071,11 +1127,55 @@ def read_journal(state):
     return journal
 
 
-def recover(state, *, for_install=False):
-    path = state/'journal.json'
+def _verify_rolled_back_targets(state, journal):
+    """Read-only ownership checks shared by recovery and native activation."""
+    require(journal['status'] == 'rolled-back', 'Runtime rollback is not complete')
+    for action in journal['actions']:
+        preserved = journal.get('preserved_opaque_source', {})
+        expected = (preserved['identity'] if action['kind'] == 'source'
+                    and preserved.get('path') == action['path'] else action['before'])
+        if action['kind'] == 'wrapper' and action['before'] is None and os.path.lexists(state/'omp-transition.json'):
+            from . import omp_boundary
+            restored = omp_boundary.native_recovery_expected(state, action['path'])
+            if restored is not None:
+                expected = restored
+        require(fingerprint(Path(action['path'])) == expected,
+                'Rolled-back target changed; preserve and reconcile: ' + action['path'])
+
+
+def _receipt_committed(state, journal):
+    return (journal.get('receipt_identity') is not None
+            and fingerprint(state/'receipt.json') == journal['receipt_identity'])
+
+
+def _require_replannable_journal(state):
     journal = read_journal(state)
     if journal is None:
-        return {'operation': 'recover', 'verified': True, 'status': 'no-pending-transaction'}
+        return
+    status = journal['status']
+    require(status in ('complete', 'rolled-back')
+            or (status == 'activating' and _receipt_committed(state, journal)),
+            'Uncommitted lifecycle transaction; use the trusted recover helper before replanning')
+    if status in ('complete', 'activating'):
+        require(_receipt_committed(state, journal),
+                'Current receipt differs from its committed journal; preserve and reconcile ownership')
+    if status == 'activating':
+        require((journal.get('operation') == 'uninstall') == (journal['receipt'].get('uninstalled') is True),
+                'Lifecycle journal and receipt operation differ')
+
+
+def recover(state, *, for_install=False, complete_native=True):
+    path = state/'journal.json'
+    journal = read_journal(state)
+    def restore_native():
+        if not for_install and os.path.lexists(state/'omp-transition.json'):
+            from . import omp_boundary
+            omp_boundary.recover_native_binding(state)
+    if journal is None or journal['status'] in {'complete', 'rolled-back'}:
+        restore_native()
+    if journal is None:
+        result = {'operation': 'recover', 'verified': True, 'status': 'no-pending-transaction'}
+        return finish_stored_source_activation(state, result) if complete_native and not for_install else result
     if journal['status'] == 'complete':
         require(journal.get('receipt_identity') is not None
                 and fingerprint(state/'receipt.json') == journal['receipt_identity'],
@@ -1086,33 +1186,86 @@ def recover(state, *, for_install=False):
             return {'operation': 'recover', 'verified': False, 'status': 'install-validation-pending'}
         if not journal['receipt'].get('uninstalled'):
             verify_targets(journal['receipt']['targets'], source=journal['receipt']['source'])
-        return {'operation': 'recover', 'verified': True, 'status': 'complete'}
+        result = {'operation': 'recover', 'verified': True, 'status': 'complete'}
+        return finish_stored_source_activation(state, result) if complete_native else result
     if journal['status'] == 'rolled-back':
         if for_install:
             return {'operation': 'recover', 'verified': False, 'status': 'install-validation-pending'}
-        for action in journal['actions']:
-            preserved = journal.get('preserved_opaque_source', {})
-            expected = (preserved['identity'] if action['kind'] == 'source'
-                        and preserved.get('path') == action['path'] else action['before'])
-            require(fingerprint(Path(action['path'])) == expected,
-                    'Rolled-back target changed; preserve and reconcile: ' + action['path'])
-        return {'operation': 'recover', 'verified': not bool(journal.get('opaque_cache_recovery')),
+        _verify_rolled_back_targets(state, journal)
+        result = {'operation': 'recover', 'verified': not bool(journal.get('opaque_cache_recovery')),
                 'status': 'opaque-cache-recovery-pending' if journal.get('opaque_cache_recovery') else 'rolled-back',
                 **({'repair': 'The previous source is preserved but its opaque caches remain untrusted. Retry using the trusted signed installer; do not execute old runtime caches.'}
                    if journal.get('opaque_cache_recovery') else {})}
+        return finish_stored_source_activation(state, result) if complete_native and result['verified'] else result
     # Receipt activation is the commit point; a lost final response must not undo it.
-    receipt = state/'receipt.json'
-    if journal.get('receipt_identity') is not None and fingerprint(receipt) == journal['receipt_identity']:
+    if _receipt_committed(state, journal):
+        require(journal['status'] == 'activating', 'Committed receipt has an invalid lifecycle journal state')
         uninstall_output = journal.get('operation') == 'uninstall'
         require(uninstall_output == (journal['receipt'].get('uninstalled') is True),
                 'Lifecycle journal and receipt operation differ')
-        verify_targets(journal['receipt']['targets'], uninstall_output=uninstall_output)
+        try:
+            restore_native()
+            verify_targets(journal['receipt']['targets'],
+                           source=None if uninstall_output else journal['receipt']['source'],
+                           uninstall_output=uninstall_output)
+        except (trust_paths.TrustPathError, LayoutError):
+            raise
+        except ContractError:
+            if not for_install:
+                raise
+            # A fresh ownership plan may reconcile allowed surrounding edits.
+            # Strict recovery must never call this unverified state complete.
+            return {'operation': 'recover', 'verified': False, 'status': 'install-validation-pending'}
         journal['status'] = 'complete'; replace_record(path, journal)
-        return {'operation': 'recover', 'verified': True, 'status': 'complete'}
-    return rollback(state, journal)
+        result = {'operation': 'recover', 'verified': True, 'status': 'complete'}
+        return finish_stored_source_activation(state, result) if complete_native else result
+    result = rollback(state, journal)
+    restore_native()
+    return result
 
 
 def install(plan, *, before_activate=None, after_activate=None):
+    from . import private_state
+    installation = {**(plan.get('old') or {}), 'rollback_repositories': plan.get('rollback_repositories', [])}
+    selected = plan.get('preserved_private_state_reader') if plan.get('operation') == 'uninstall' else plan['source']
+    target = dict(selected) if selected is not None else None
+    def transition():
+        if plan.get('omp_transition') or plan.get('omp_binding'):
+            from . import omp_boundary
+            if plan.get('omp_transition'):
+                omp_boundary.native_transition(plan, check=False)
+        prepared = private_state.prepare_lifecycle(plan, check=False)
+        if target is not None:
+            target.clear()
+            target.update(prepared)
+        if plan.get('omp_binding'):
+            omp_boundary.native_activation(plan, check=False)
+    with private_state.activation_guard(installation, target, plan.get('operation', 'install'), transition=transition) as proof:
+        plan['private_state_evidence'] = proof
+        result = _install(plan, before_activate=before_activate, after_activate=after_activate)
+    return finish_stored_source_activation(plan['state'], result)
+
+
+def finish_stored_source_activation(state, result):
+    """A post-commit qualification failure must never roll ownership back."""
+    from . import omp_boundary
+    try:
+        receipt = read_receipt(state)
+        selected = receipt.get('omp_binding') if receipt else None
+        if (not selected or receipt.get('uninstalled')
+                or selected['peer_reader_capability'] != omp_boundary.CAPABILITY):
+            return result
+        fault(result['operation'] + '-before-stored-source-activation')
+        activation = omp_boundary.complete_stored_source_activation(state)
+    except (OSError, ValueError, TypeError, KeyError, UnicodeError, subprocess.SubprocessError):
+        return {**result, 'verified': False, 'stored_source_activation': 'pending',
+                'receipt_committed': True, 'private_state_writes': 'stored-source-activation-may-be-partial',
+                'repair': 'Preserve the committed runtime and private evidence; quiesce bank writers, restore unavailable banks and run am recover. Stored-source observation remains activation-required.'}
+    return {**result, 'stored_source_activation': activation,
+            'private_state_writes': 'stored-source-activation-checked'}
+
+
+def _install(plan, *, before_activate=None, after_activate=None):
     operation = plan.get('operation', 'install')
     state = plan['state']; old = plan['old']; changed = [a for a in plan['actions'] if a['changed']]
     trust_paths.state(state)
@@ -1137,7 +1290,7 @@ def install(plan, *, before_activate=None, after_activate=None):
     for action in plan['actions']:
         target = {'path': action['path'], 'kind': action['kind'], 'identity': action['after'],
                   'pre_change_identity': action['before']}
-        if action['kind'] in ('copy','link','hook-link','hook-config'):
+        if action['kind'] in ('copy','link','hook-link','hook-config') or (plan.get('omp_binding') and action['path'] == plan['omp_binding']['extension_target']):
             target['artifact_digest'] = plan['source']['artifact_digest']
         if action['kind'] == 'hook-config' and operation != 'uninstall':
             target['hook_entry'] = action['hook_entry']
@@ -1148,11 +1301,12 @@ def install(plan, *, before_activate=None, after_activate=None):
             previous = next((t for t in (old['targets'] if old else []) if t['path']==action['path']), None)
             target['originally_absent'] = previous['originally_absent'] if previous else action['before'] is None
         if action['kind'] == 'activation' and operation != 'uninstall':
-            target['block_hash'] = sha(plan['shim'].encode())
+            target['block_hash'] = action['block_hash']
             previous = next((t for t in (old['targets'] if old else []) if t['path']==action['path']), None)
             target['originally_absent'] = previous['originally_absent'] if previous else action['before'] is None
         targets.append(target)
-    receipt = {'schema': RECEIPT_SCHEMA, 'installation_id': old['installation_id'] if old else uuid.uuid4().hex,
+    native_binding = plan.get('omp_binding') or (old.get('omp_binding') if old else None)
+    receipt = {'schema': 'agent-memory/install-receipt-v2' if native_binding else RECEIPT_SCHEMA, 'installation_id': old['installation_id'] if old else uuid.uuid4().hex,
                'installed_at': datetime.now(timezone.utc).isoformat(), 'verified': True,
                'source': plan['source'], 'mode': plan['mode'], 'presets': plan['presets'],
                'custom_targets': plan['custom_targets'], 'no_guidance': plan['no_guidance'],
@@ -1162,12 +1316,18 @@ def install(plan, *, before_activate=None, after_activate=None):
                'artifact_files': {} if operation == 'uninstall' else artifact.inspect(plan['pack_source'])['files'],
                'backups': list(old.get('backups', [])) if old else [], 'created_directories': [],
                'rollback_available': True, 'atomicity': 'per target; journaled rollback across targets'}
+    if native_binding:
+        receipt['omp_binding'] = native_binding
+    if plan.get('omp_disabled_backup'):
+        receipt['backups'].append(plan['omp_disabled_backup'])
     if operation == 'uninstall':
         receipt.update(uninstalled=True, uninstalled_at=receipt['installed_at'],
                        preserved=plan['preserved'], reinstall=plan['reinstall'])
     journal = {'schema': JOURNAL_SCHEMA, 'operation': operation, 'transaction': transaction, 'status': 'staging',
                'actions': [], 'receipt': receipt, 'receipt_identity': None, 'created_directories': [],
                'previous_compatibility': old['source']['compatibility'] if old else None,
+               'previous_artifact_digest': old['source']['artifact_digest'] if old else None,
+               'private_state_evidence': plan.get('private_state_evidence'),
                'rollback_repositories': plan.get('rollback_repositories', [])}
     if plan.get('cache_recovery') is not None:
         journal['opaque_cache_recovery'] = plan['cache_recovery']['summary']
@@ -1267,6 +1427,9 @@ def install(plan, *, before_activate=None, after_activate=None):
         require(fingerprint(receipt_path) == journal['receipt_identity'], 'Receipt readback failed')
         fault(operation + '-after-receipt')
         journal['status'] = 'complete'; replace_record(state/'journal.json', journal)
+        if plan.get('omp_transition') or plan.get('omp_binding'):
+            from . import omp_boundary
+            omp_boundary.finish_native_transition(plan)
         return {'operation': operation, 'verified': True, 'changed': True, 'receipt': receipt,
                 **({'cache_recovery': {**plan['cache_recovery']['summary'], 'planned': False,
                                       'old_runtime_preserved': True,
@@ -1276,7 +1439,7 @@ def install(plan, *, before_activate=None, after_activate=None):
                 'restart_clients': plan['restart'], 'receipt_path': str(receipt_path)}
     except Exception:
         # If the commit point landed, recovery verifies it; otherwise it restores old targets.
-        recover(state)
+        recover(state, complete_native=False)
         raise
 
 
@@ -1302,10 +1465,15 @@ def failure_repair(exc):
     try:
         state, _ = locations()
         journal = read_journal(state)
+        committed = bool(journal and journal['status'] == 'activating' and _receipt_committed(state, journal))
     except (OSError, ValueError, TypeError, KeyError, UnicodeError):
         return ('Preserve reported paths and installation records; inspect diagnostics and reconcile '
                 'unreadable recovery metadata before retrying.')
     if journal and journal['status'] not in ('complete', 'rolled-back'):
+        if committed:
+            command = 'install' if journal['receipt'].get('uninstalled') else 'install or update'
+            return ('Preserve the committed receipt and journal. Use the trusted helper to re-plan '
+                    + command + '; strict recover cannot accept changed targets.')
         return 'Preserve reported paths; rerun this trusted helper with recover before retrying installation.'
     return ('Preserve reported paths; resolve the reported planning or prerequisite error, then rerun '
             'install --check before retrying. No pending activation requires recovery.')
@@ -1327,15 +1495,26 @@ def main(argv=None):
     create.add_argument('--remote')
     create.add_argument('--ref')
     create.add_argument('--mode', choices=('link','copy'))
-    create.add_argument('--presets', help='all, none, or comma-separated agents,codex,claude,opencode')
+    create.add_argument('--presets', help='all, none, or comma-separated agents,codex,claude,opencode,omp (omp excluded from all)')
+    create.add_argument('--omp-agent-dir')
+    create.add_argument('--omp-peers-upgraded', action='store_true')
+    create.add_argument('--omp-layout-quiescence', action='append', help='Refreshed layout hold attestation including the new native invocation route')
+    create.add_argument('--layout-quiescence', action='append', default=[])
     create.add_argument('--target-dir', action='append')
     create.add_argument('--bin-dir')
     create.add_argument('--no-guidance', action='store_true')
     update = commands.add_parser('update', help='Check or activate a verified managed-channel update')
     update.add_argument('--check', action='store_true')
     update.add_argument('--repo', action='append', default=[])
+    update.add_argument('--omp-writers-quiesced', action='store_true')
+    update.add_argument('--omp-peers-upgraded', action='store_true')
+    update.add_argument('--omp-layout-quiescence', action='append')
+    update.add_argument('--layout-quiescence', action='append', default=[])
     uninstall = commands.add_parser('uninstall', help='Remove only unchanged owned runtime targets; preserve project memory')
     uninstall.add_argument('--check', '--dry-run', action='store_true')
+    uninstall.add_argument('--omp-writers-quiesced', action='store_true')
+    uninstall.add_argument('--preserve-capable-runtime')
+    uninstall.add_argument('--layout-quiescence', action='append', default=[])
     purge = commands.add_parser('purge-data', help='Explicitly preview or confirm deletion of one exact local project bank')
     purge.add_argument('--repo', required=True)
     purge.add_argument('--path', required=True)
@@ -1393,13 +1572,23 @@ def main(argv=None):
         if args.command == 'recover' and not os.path.lexists(state/'journal.json'):
             result = {'operation':'recover', 'verified':True, 'status':'no-pending-transaction',
                       'writes_performed':False}
+            if old and old.get('omp_binding'):
+                with locked(state):
+                    result = finish_stored_source_activation(state, {key: value for key, value in result.items()
+                                                                     if key != 'writes_performed'})
         elif args.command == 'install' and args.check:
-            require(not os.path.lexists(state/'journal.json') or load(state/'journal.json')['status'] in ('complete','rolled-back'),
-                    'An interrupted transaction requires recover before a new install plan')
+            _require_replannable_journal(state)
             with prepare(args, state, code, read_receipt(state)) as plan:
                 result = public_plan(plan)
+                if plan.get('omp_binding'):
+                    from .omp_boundary import native_activation
+                    result['omp_layout_activation'] = native_activation(plan, check=True)
                 from . import updating
                 result['compatibility'] = updating.banks([], plan['source']['compatibility'])
+                from . import private_state
+                target = private_state.prepare_lifecycle(plan, check=True)
+                result['private_compatibility'] = private_state.public_summary(
+                    private_state.require_compatible(plan['old'], target, 'install'))
         else:
             with runtime_faults.operation(args.command, lifecycle_paths(args, state, code, read_receipt(state))), locked(state):
                 recovered = recover(state, for_install=args.command == 'install')

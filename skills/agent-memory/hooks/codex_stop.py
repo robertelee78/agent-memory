@@ -8,6 +8,10 @@ import re
 import subprocess
 import uuid
 import sys
+sys.dont_write_bytecode = True
+import runpy
+_cache_guard = runpy.run_path(str(Path(__file__).resolve().parent.parent/'scripts/source_startup.py'),
+                              run_name='am_source_startup')['isolate']()
 
 
 
@@ -38,6 +42,7 @@ def quiet(repo,session,turn,expected=None):
 
 def main():
     diagnostic_repo=None;stage,reason='event','event.invalid'
+    scope_binding=None
     try:
         raw=sys.stdin.buffer.read(65537)
         event=json.loads(raw)
@@ -56,12 +61,14 @@ def main():
         from agent_memory import repository_config,scope_binding,turn_sources,bank_writes
         if not os.path.lexists(repository_config.bank_path(repo)):
             diagnostic(repo);print('{}');return 0
-        stage,reason='identity','identity.unresolved';context=scope_binding.require(repo)
         stage,reason='boundary','state.unavailable'
         current=turn_sources.inspect(repo,'codex',session,turn)
+        if current.get('recovery_pending') is True:
+            print(json.dumps({'systemMessage':'Agent Memory recovery-pending: preserve the native original and private pending evidence. Continue the human task; refresh and acknowledgement are inactive, not no-learning or published. Inspect am bank recover-layout status and am codex-boundary --list-pending.'}));return 0
         if current['complete']:return quiet(repo,session,turn,current['fingerprint'])
         _,_,_,state_directory,_=turn_sources.namespace(repo,'codex',session,turn)
         if not state_directory.exists():
+            context=scope_binding.require(repo)
             operations,_=bank_writes.state_paths(repo,repository_config.bank_path(repo),str(uuid.uuid4()))
             key=hashlib.sha256((session+':'+turn).encode()).hexdigest()
             legacy=operations.parent/'codex-boundaries'
@@ -91,7 +98,9 @@ def main():
         if turn_sources.reserve_wake(repo,'codex',session,turn,current['fingerprint'],generated):
             diagnostic(repo);print(json.dumps({'decision':'block','reason':text}));return 0
         print(json.dumps({'systemMessage':'Agent Memory assessment remains pending. Preserve the task answer; inspect original sources with am codex-boundary --list-pending. No further memory continuation was requested.'}));return 0
-    except (OSError,ValueError,TypeError,KeyError,UnicodeError,ImportError,subprocess.SubprocessError):
+    except (OSError,ValueError,TypeError,KeyError,UnicodeError,ImportError,subprocess.SubprocessError) as exc:
+        if scope_binding is not None and isinstance(exc,scope_binding.IdentityUnresolved):
+            stage,reason='identity','identity.unresolved'
         diagnostic(diagnostic_repo,stage,reason)
         print(json.dumps({'systemMessage':f'Agent Memory pending [{stage}/{reason}]. Preserve work; inspect am doctor and the retained original sources.'}));return 0
     except Exception:

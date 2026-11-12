@@ -42,12 +42,12 @@ Python helpers still emit JSON by default. The trusted source entry point remain
 installation or when repairing a missing wrapper:
 
 ```sh
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/installer.py" --help
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/installer.py" identity status --repo REPO --json
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/installer.py" init inspect --repo REPO
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/installer.py" search --repo REPO --request RECALL_JSON
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/installer.py" checkpoint inspect --repo REPO
-/bin/sh "$SKILL_DIR/hooks/python3.sh" "$SKILL_DIR/scripts/installer.py" boundary inspect --repo REPO
+python3 -I "$SKILL_DIR/scripts/installer.py" --help
+python3 -I "$SKILL_DIR/scripts/installer.py" identity status --repo REPO --json
+python3 -I "$SKILL_DIR/scripts/installer.py" init inspect --repo REPO
+python3 -I "$SKILL_DIR/scripts/installer.py" search --repo REPO --request RECALL_JSON
+python3 -I "$SKILL_DIR/scripts/installer.py" checkpoint inspect --repo REPO
+python3 -I "$SKILL_DIR/scripts/installer.py" boundary inspect --repo REPO
 ```
 
 The installed equivalents start with `am` (or `agent-memory`), followed by the same
@@ -56,6 +56,20 @@ command to discover its exact request/proposal arguments. Paths with spaces
 MUST remain one quoted argument. Invalid arguments exit 2; a refused operation
 exits nonzero and retains the helper's evidence/recovery instructions. A
 successful preview is not an applied mutation or verified publication.
+
+`admission preview` accepts `--operation-id UUID --recorded-at RFC3339` when an
+independent recovery review binds those values and the exact intended files.
+They are CLI options, not extra request fields, and MUST NOT replace source,
+authority or coverage review.
+
+When independent recovery coverage review needs exact future output, a session
+using `compact` or `govern` MUST first use `plan --private-output`, retain that
+nonauthorizing plan, obtain the independent coverage review, then use
+`preview --plan` and apply the resulting proposal. Ordinary unplanned preview
+remains valid otherwise. Their preview commands MUST NOT be given
+`--operation-id` or `--recorded-at`; a retained plan binds those values. See the
+[consolidation](../../consolidation/GUIDE.md) and
+[governance](../../governance/GUIDE.md) guides for the exact input envelopes.
 
 Bare `am`, `am help`, `am --help` and `am -h` show public help. `am --version`,
 `am -V` and `am version` show the executing version, revision/cleanliness and
@@ -69,6 +83,7 @@ retain the separately previewed installation operation.
 | --- | --- | --- |
 | `developer`, `project`, `identity` | `developer_identity.py`, `project_identity.py`, `scope_binding.py` | Explicit developer setup and repository binding |
 | `init`, `inspect`, `bank` | `initialize.py`, `bank_state.py inspect`, `bank_contract.py` | Evidence-based initialization and file contract inspection |
+| `bank recover-layout` | `recover_layout.py` | Bounded raw-source inspection/review, transactional layout repair, durable pending units and known recovery; separate publication/retention |
 | `search`, `get`, `explain` | `retrieve.py` | The same qualified recall engine; request text, IDs or paths and inspect inclusion/exclusion evidence |
 | `discover` | `discover_memory.py` | Bounded meaning-based navigation and source qualification by the invoking harness |
 | `context` | `assemble_context.py` | Bounded, source-labeled context preview/check |
@@ -78,6 +93,7 @@ retain the separately previewed installation operation.
 | `correct`, `supersede`, `revoke`, `forget`, `govern` | `govern_memory.py` | Evidence-bound governance preview/apply |
 | `semantic`, `publish` | `reconcile_memory.py`, `publish_memory.py` | Review shared meaning and land memory independently of feature code |
 | `refresh`, `boundary` | `refresh_memory.py` | Inspect/prepare/apply newly landed same-repository memory and qualified imported recall |
+| `omp-boundary` | `omp_boundary.py` | Private native source inspection and exact single-observation assessment, using ordinary approved tools; callbacks expose observation only |
 | `sharing`, `exchange` | `sharing_boundary.py`, `sharing_recovery.py` | Git boundary inspection and exchange recovery/replay |
 | `migrate` | `migrate_bank.py` | Explicit bundled format migration, recovery or verified completed-bank restoration |
 | `projection`, `writes`, `transaction` | `projection.py`, `bank_writes.py`, `bank_transactions.py` | Derived references and common observed-write primitives |
@@ -87,12 +103,24 @@ operation in both request and proposal. `forget` accepts explicit expiration,
 retention or deletion requests; it MUST NOT infer deletion consent. The generic
 `govern` group also exposes reactivation under the existing governance rules.
 
-For new shared-memory work, the owning semantic/refresh/publication guides MUST
-use their explicit v2 interfaces and private output artifacts. Legacy v1 proof
-entry points remain supported for existing bounded callers. A stdout artifact
-summary is not the stored complete manifest, judgment, proof or proposal.
+For new shared-memory work, follow the owning semantic/refresh/publication
+guides' explicit private-output interfaces. Ordinary learning comparison uses
+comparison-v2, including an explicit checked empty frontier; omitted frontier
+fields or unfinished v1 proofs cannot authorize writes. Semantic-sharing-v2
+remains a separate unchanged schema. A stdout summary is not the stored complete
+manifest, judgment, proof or proposal. See the
+[recovery workflow](../../bank/GUIDE.md#source-preserving-layout-recovery)
+for all-source review, source pages, independent attestation and recovery states.
+
+`am semantic inspect-v2 --pages-dir ABSOLUTE_NEW_DIRECTORY` optionally exports
+the exact checked disclosure pages alongside its required new manifest output.
+The [semantic guide](../../sharing/semantic/GUIDE.md) defines receipt/page checks,
+private output restrictions and the independent fresh authorization boundary.
+Reading that bundle does not rebuild the frontier or authorize a stale judgment.
 
 ### Natural turn boundaries
+
+Timing follows the [shared skill definition](../../SKILL.md#natural-turn-boundary).
 
 A session MUST use the [sharing domain](../../sharing/GUIDE.md) at natural turn
 boundaries to refresh landed memory before admitting new learning. The `boundary`

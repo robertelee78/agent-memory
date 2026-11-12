@@ -1,7 +1,7 @@
 ---
 name: agent-memory
 description: Maintain a repository's shared Markdown memory across sessions, worktrees and machines; use to initialize, resume, recall, capture durable project learning, correct, forget or checkpoint memory.
-metadata: {"version": "0.0.14"}
+metadata: {"version": "0.0.15"}
 ---
 
 # Agent memory
@@ -14,8 +14,9 @@ The words MUST, MUST NOT, SHOULD and MAY carry their RFC 2119 meanings in this
 file and its linked guides. A session MUST resolve `SKILL_DIR` to the directory
 containing this file before using a packaged script. Use the installed `am` command
 when available. For packaged scripts, a session MUST use the documented
-interpreter launcher or Python 3.11 or later with both `-I` and `-B`. Installed
-`am` and client hooks select a supported interpreter. If an older system Python
+helper commands with Python 3.11 or later in isolated mode. Each documented helper
+disables bytecode writes and isolates its cache before importing package code.
+Installed `am` and client hooks select a supported interpreter. If an older system Python
 appears first on PATH, put a supported Python first before running the examples.
 
 A session MUST NOT use ad hoc bare-Python imports of a managed AM installation
@@ -38,6 +39,13 @@ cannot be resolved by the selected domain and operation; a direct model question
 MAY route there immediately. After a state change the session MUST route again
 from observed state. Diagnostic file repair MUST remain a fallback after the
 ordinary command cannot establish a verified result.
+
+When the harness supports skill URIs, a session SHOULD read linked AM guides
+through `skill://agent-memory/<relative-path>` (for example,
+`skill://agent-memory/bank/GUIDE.md`). This preserves the skill resource identity
+for receipt-bound instruction handling. Other harnesses MAY use the installed
+filesystem paths; a path or URI alone MUST NOT establish receipt ownership or
+source authority.
 
 ## Standing responsibility
 
@@ -86,6 +94,35 @@ A session MUST read [writes/GUIDE.md](writes/GUIDE.md) before using the common
 observed-write primitives, and [projections/GUIDE.md](projections/GUIDE.md)
 before building or consuming optional derived references.
 
+
+### Natural turn boundary
+
+The natural automatic-maintenance boundary depends on the harness: same-turn
+integrations retain their pre-answer routes; post-answer integrations retain
+their governed continuations. On qualified omp it is the governed Agent Memory
+continuation after the substantive answer, not the end of an ordinary
+foreground turn.
+
+On ordinary omp foreground turns, a session MUST use or refresh only memory
+needed to answer correctly and deliver the useful business answer once promptly.
+Automatic capture, semantic comparison/consolidation, pruning, publication and
+pending-backlog maintenance MUST wait for the governed continuation. Explicit
+operator memory-operation requests remain normal substantive foreground work;
+merely confirming a project decision is NOT an instruction to record or publish
+it. If no continuation arrives, maintenance remains pending; the next ordinary
+foreground turn MUST NOT pick it up automatically. A missing runtime advisory
+MUST NOT become a pre-answer maintenance fallback.
+
+The actual omp governed continuation MUST perform the shared workflow now,
+assessing the exact original sources before ending this continuation, or retain
+pending work. It MUST NOT defer itself to another continuation or repeat or
+replace the business answer. This post-answer boundary refers to the exact
+reserved `[agent-memory omp request ...]` wake guidance, not the pre-answer
+ordering advisory. Neither a prefix nor customType alone confers authority;
+human dominance, source screening, own-message allowlists and provenance rules
+still apply. Missing, unloaded or unverified receipt-owned omp activation,
+including `no_guidance`, is unqualified for answer-first automation; healthy
+disk-only status does not prove model knowledge or continuation delivery.
 
 At natural turn boundaries a session MUST check for newly landed same-repository
 memory through the sharing domain before using it as current guidance or

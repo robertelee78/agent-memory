@@ -1,0 +1,111 @@
+{
+  "completed_hosted_run": {
+    "aggregate_passed": false,
+    "macos_cells_passed": false,
+    "private_artifact": {
+      "name": "hosted-42694848849-terminal-all-shards-cells-and-failure-diagnostics-20261110.tar.gz",
+      "sha256": "e266a1f7ea3a60ffa1ee8c134645cd18de05ccadc97d030780c9978aa40b40eb"
+    },
+    "source_commit": "80da8e71bf26a6aa2b9a63c68a3541c17625adbe",
+    "ubuntu_python311_cell_passed": true,
+    "ubuntu_python315_cell_passed": true,
+    "url": "https://github.com/robertelee78/agent-memory/actions/runs/42694848849"
+  },
+  "date": "2026-11-10",
+  "execution_limits": {
+    "case_fault_cell_or_deadline_reduction": false,
+    "interpreter": "Darwin arm64 Python3.13.12",
+    "model_token_endpoint_calls": 0,
+    "omp_source_install_config_live_extension_changes": false,
+    "original_user_worktree_changes": false
+  },
+  "known_hold_scheduling": {
+    "all_five_original_methods_selected_exactly_once": true,
+    "base_commit": "ca558a7e487fb1a34420308adecc9da012995e7f",
+    "cases_subtests_assertions_unchanged": true,
+    "overlay_manifest_sha256": "4d1b07e06b22e8e972f38d0d994f66b19dd2f6dd1997d2ffa3fd5515da05a994",
+    "passed": true,
+    "private_evidence": {
+      "bytes": 26822,
+      "name": "known-holds-five-original-method-batches-actual-20261110.tar.gz",
+      "sha256": "cb96caf37674a68e3a788b1b0352f9c3648b0faa966ebed580f7b01bd7d8fe08"
+    },
+    "rows": [
+      {
+        "errors": 0,
+        "failures": 0,
+        "name": "known-holds-v2",
+        "passed": true,
+        "seconds": 28.301781792077236,
+        "skipped": 0,
+        "tests": 1
+      },
+      {
+        "errors": 0,
+        "failures": 0,
+        "name": "known-holds-v2-indexed-review-refuses-changed-source-or-authority",
+        "passed": true,
+        "seconds": 23.40855404199101,
+        "skipped": 0,
+        "tests": 1
+      },
+      {
+        "errors": 0,
+        "failures": 0,
+        "name": "known-holds-v2-renewed-clarification-preserves-prior-resolution",
+        "passed": true,
+        "seconds": 96.15735525009222,
+        "skipped": 0,
+        "tests": 1
+      },
+      {
+        "errors": 0,
+        "failures": 0,
+        "name": "known-holds-v2-known-dispute-survives-framing-and-registry-recovery",
+        "passed": true,
+        "seconds": 54.32746275002137,
+        "skipped": 0,
+        "tests": 1
+      },
+      {
+        "errors": 0,
+        "failures": 0,
+        "name": "known-holds-v2-wrong-project-recovery-preserves-state-and-marker",
+        "passed": true,
+        "seconds": 4.109362084069289,
+        "skipped": 0,
+        "tests": 1
+      }
+    ],
+    "seconds": 119.66127766703721,
+    "source_hash": "774b47ce4644047c5fea40e0eafccb3c6c5d957c656ce112588fa168cf83843c",
+    "source_unchanged": true,
+    "worker_deadline_seconds": 300,
+    "workers": 2
+  },
+  "open_failures": [
+    "Historical admission preview exceeded30s; internal slow stack not recorded. Local raw recovery metadata prerequisite blocks positive profile.",
+    "Historical mixed update activation exceeded30s. Later root-independent static-validation cache is relevant but not proof of cause/currentplatformpass.",
+    "Required final hosted matrix and exactOpus independent review remain pending; no native/performance/signedrelease acceptance."
+  ],
+  "pagination_diagnostic": {
+    "controller_deadline_seconds": 90,
+    "controller_seconds": 44.350968791986816,
+    "exact_native_replays": 15,
+    "instrumentation": "Only flushed public-command timings in disposable complete controller; no production/test-source change or omitted assertion.",
+    "max_public_seconds": 2.2292612090241164,
+    "observed_commands": 8,
+    "passed": true,
+    "private_evidence": {
+      "name": "hosted-timeout-source-analysis-and-actual-pagination-budget-profile-20261110.tar.gz",
+      "sha256": "2691ce8db86efc6f28dcd21887d384772fe782d6cdc01be3e29cd945f117c72a"
+    },
+    "public_child_deadline_seconds": 30,
+    "public_commands": 23,
+    "qualification": "Local Python3.13 current-source diagnosis, not hostedMacPython3.15 timeout resolution or a retrospective cause. No speculative patch.",
+    "source_commit": "ca558a7e487fb1a34420308adecc9da012995e7f",
+    "source_test_sha256": "30fef5f84d1f708d107e7ddb856a19853dfc27bd90974e473e54dc602a10de36",
+    "sum_public_seconds": 42.19808442040812
+  },
+  "schema": "am/completed-hosted-timeout-corrections-scoped-proof-v1"
+}

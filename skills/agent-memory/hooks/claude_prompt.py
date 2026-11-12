@@ -6,6 +6,10 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+sys.dont_write_bytecode = True
+import runpy
+_cache_guard = runpy.run_path(str(Path(__file__).resolve().parent.parent/'scripts/source_startup.py'),
+                              run_name='am_source_startup')['isolate']()
 
 
 def main(event=None):
@@ -26,7 +30,7 @@ def main(event=None):
         repo = Path(found.stdout.strip()).resolve(strict=True)
         pack = Path(__file__).resolve().parent.parent
         sys.path.insert(0, str(pack / 'scripts'))
-        from agent_memory import repository_config, turn_sources
+        from agent_memory import repository_config, scope_binding, turn_sources
         if not os.path.lexists(repository_config.bank_path(repo)):
             print('{}'); return 0
         text, session, prompt = event['prompt'], event['session_id'], event['prompt_id']
@@ -35,19 +39,23 @@ def main(event=None):
             raise ValueError('native source unavailable')
         # The transcript may not exist yet. Store its native reference without
         # claiming a transcript UUID or requiring a premature transcript read.
+        enrollment = scope_binding.private_enrollment_context(repo)
         obs = turn_sources.register(repo, 'claude', session, prompt, hashlib.sha256(text.encode()).hexdigest(),
                                     native_source_id=prompt, source_reference=str(Path(reference).resolve()))
-        guide = (pack / 'hooks/boundary-prompt.txt').read_text().strip().replace('{{SKILL_DIR}}', str(pack))
+        guide = (pack / 'hooks/boundary-prompt.txt').read_text().strip()
         context = (guide + '\nClaude source: session=' + session + ' prompt=' + prompt +
                    ' observation_id=' + obs['observation_id'] + ' source_sha256=' + obs['source_sha256'] +
                    '. Before final submit top-level session,prompt,observation_id,source_sha256,outcome,assessment '
                    'via one am claude-boundary --repo REPO --input - --refresh --quiet for no-learning; assessment requires source_id=observation_id, source_review=actual review, candidates=authored list (empty only if none). '
-                   'Use actual source attribution. On routine success, output only the task response: no announcement of reading guides, assessments, no-learning or saved/unsaved memory, in progress or final.')
-        prior = turn_sources.backlog(repo, harness='claude')
-        if any(t.get('session') != session or t.get('lifecycle') != prompt for t in prior.get('turns', [])) or prior.get('legacy'):
-            context += ' Earlier memory work remains pending; inspect am claude-boundary --list-pending before assessing an original source.'
+                   'Attribute the actual source. On routine success, output only the task response; do not announce guides, assessments, no-learning or memory status.')
+        if enrollment.held:
+            context += ' Recovery-pending: input retained privately; continue the task. No refresh, acknowledgement or canonical writes; never fabricate no-learning or publication.'
+        prior = turn_sources.pending_notice(repo, 'claude', session, prompt)
+        if prior:
+            context += ' Pending work: use am claude-boundary --list-pending before assessing the original source.'
         if len(context.encode()) > 2048:
             raise ValueError('guidance bound')
+        scope_binding.recheck_private_enrollment(enrollment)
         print(json.dumps({'hookSpecificOutput': {'hookEventName': 'UserPromptSubmit', 'additionalContext': context}}))
         return 0
     except Exception:
