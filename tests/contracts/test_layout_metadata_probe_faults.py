@@ -20,6 +20,21 @@ def attributes(path):
 
 
 class LayoutMetadataProbeFaults(unittest.TestCase):
+    def test_fresh_inspection_refuses_unowned_probe_without_mutating_sources(self):
+        with World() as world:
+            helper = existing.LayoutRecoveryContract()
+            command, _, repo, bank, _, _, _, git = helper.setup_fault_repair(world)
+            probe = bank / '.agent-memory-probe-00000000-0000-4000-8000-000000000000.tmp'
+            probe.write_bytes(b'Unowned interrupted metadata probe; preserve this evidence.\n')
+            before = snapshot(bank)
+            output = world.inside('fresh-inspection-refused.json')
+            result = world.run([command, 'bank', 'recover-layout', 'inspect',
+                                '--repo', repo, '--output', output], check=False, timeout=60)
+            self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+            self.assertFalse(output.exists())
+            self.assertEqual(snapshot(bank), before)
+            helper.assert_fault_work_unchanged(world, repo, git)
+
     def prepare_fixture(self, world):
         helper = existing.LayoutRecoveryContract()
         command, source, repo, bank, native, originals, modes, git = helper.setup_fault_repair(world)
