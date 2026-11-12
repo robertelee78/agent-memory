@@ -1,0 +1,23 @@
+{
+  "schema": "am255/operator-weak-match-policy-disposition-v1",
+  "date": "2026-11-09",
+  "work_key": "robertelee78/agent-memory:ADR-0024:ssg-runtime-qualification",
+  "operator_response": "calibrated sounds right -- assuming it's QE proven good",
+  "disposition": "Conditional product direction: calibrated suppression of weak primary guidance, enabled only after actual QE qualification of the applicable embedding profile and use-case population.",
+  "required_evidence": [
+    "Calibration data and fitting are separated from fresh independently authored validation, frozen before observing validation outputs.",
+    "QE measures noisy-guidance suppression and useful-memory misses separately; a cutoff is not proved good by a few selected examples or an ANN agreement result.",
+    "Opened historical cases remain regression evidence and cannot be represented as fresh independent validation.",
+    "Claims are bounded to the measured embedding profile and use-case population; coding-only calibration is not a universal non-developer-memory guarantee.",
+    "The exact cutoff, numeric acceptance criteria and source-bound QE verdict remain explicit prerequisites, not invented approvals."
+  ],
+  "uncalibrated_behavior": "Calibration absence adds no setup requirement beyond URL plus optional key and explicit model only when discovery is ambiguous. Actual maintenance and endpoint disclosure remain subject to the execution contract. All v1 rankings are uncalibrated by schema version; human output must say so without inventing an undocumented machine field, semantic-absence claim or proven suppression.",
+  "not_authorized_by_this_direction": [
+    "Any numeric cutoff or unpresented quality target",
+    "Automatic disclosure to a new endpoint or expansion of approved provider ceilings",
+    "A new embedding-server/model selection, coupling to the reasoning model, licensing clearance, production acceptance or downstream readiness",
+    "Retrospective upgrades of historical failures or narrowing the original qualification matrix"
+  ],
+  "qe_qualified": false,
+  "suppression_enabled": false
+}
