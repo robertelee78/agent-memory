@@ -459,8 +459,19 @@ def runtime_doctor(report, active):
                             if artifact.inspect(path)['artifact_digest'] != target['artifact_digest']:
                                 raise DiagnosticFailure('Client artifact digest differs from the installation receipt.')
                         if target['kind'] == 'wrapper':
-                            installation.require(read(path) == installation.wrapper(Path(active['source']['pack'])) and
-                                                 os.access(path, os.X_OK), 'Wrapper is not the owned executable entrypoint')
+                            binding = active.get('omp_binding')
+                            pack = Path(active['source']['pack'])
+                            if binding and target['path'] == binding['extension_target']:
+                                from . import omp_installation
+                                expected = omp_installation.extension_wrapper(
+                                    pack, active['source']['artifact_digest'], binding)
+                                installation.require(read(path) == expected,
+                                                     'Native extension differs from its owned entrypoint')
+                            elif path in {Path(active['bin_dir']) / name for name in installation.COMMAND_NAMES}:
+                                installation.require(read(path) == installation.wrapper(pack) and
+                                                     os.access(path, os.X_OK), 'Wrapper is not the owned executable entrypoint')
+                            else:
+                                raise DiagnosticFailure('Wrapper path has no recognized role in the installation receipt.')
                     if target['kind'] == 'hook-config':
                         report.add('runtime.target.hook-config', 'pass',
                                    'Receipt-owned prompt and recorded Stop entries are intact; other configuration may differ.', path=path)
