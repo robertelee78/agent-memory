@@ -45,7 +45,7 @@ fn argv(parts: &[&str]) -> Vec<OsString> {
 
 fn spec<'a>(args: &'a [OsString], cwd: &'a Path) -> Spec<'a> {
     Spec {
-        argv: args, search_path: false, env: &[], cwd, stdin: Input::Null,
+        argv: args, search_path: false, env: &[], cwd: Some(cwd), stdin: Input::Null,
         stdout: Target::Capture { limit: 2 * 1024 * 1024 },
         stderr: Target::Capture { limit: 2 * 1024 * 1024 },
         deadline: Deadline::after(Duration::from_secs(10)).unwrap(),

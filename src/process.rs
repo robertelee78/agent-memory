@@ -13,6 +13,8 @@ use std::process::{Child, ChildStderr, ChildStdin, ChildStdout, Command, ExitSta
 compile_error!("agent-memory process supervision requires Linux or macOS");
 
 pub enum Input<'a> {
+    /// Inherit descriptor zero as-is, including a closed descriptor.
+    Inherit,
     Null,
     Bytes(&'a [u8]),
     Descriptor(BorrowedFd<'a>),
@@ -35,7 +37,8 @@ pub struct Spec<'a> {
     pub argv: &'a [OsString],
     pub search_path: bool,
     pub env: &'a [(OsString, OsString)],
-    pub cwd: &'a Path,
+    /// None inherits the parent's cwd without a chdir or getcwd call.
+    pub cwd: Option<&'a Path>,
     pub stdin: Input<'a>,
     pub stdout: Target<'a>,
     pub stderr: Target<'a>,
@@ -467,7 +470,7 @@ enum Timing {
 
 fn spawn<'a>(spec: &Spec<'a>, timing: Timing) -> std::result::Result<Active<'a>, ProcessError> {
     let Some(argv0) = spec.argv.first() else { return Err(invalid("Empty argv")); };
-    if argv0.is_empty() || !spec.cwd.is_absolute()
+    if argv0.is_empty() || spec.cwd.is_some_and(|cwd| !cwd.is_absolute())
         || (!Path::new(argv0).is_absolute() && (!spec.search_path || argv0.as_bytes().contains(&b'/')))
     {
         return Err(invalid("Cwd and slash-containing executables must be absolute; bare names require search_path"));
@@ -494,8 +497,10 @@ fn spawn<'a>(spec: &Spec<'a>, timing: Timing) -> std::result::Result<Active<'a>,
     let start = monotonic_ns();
     let executable = PreparedExec::new(spec, argv0).map_err(|error| early_error(Refusal::Spawn, error))?;
     let mut command = Command::new(argv0);
-    command.env_clear().current_dir(spec.cwd);
+    command.env_clear();
+    if let Some(cwd) = spec.cwd { command.current_dir(cwd); }
     let stdin = match &spec.stdin {
+        Input::Inherit => Stdio::inherit(),
         Input::Null => Stdio::null(),
         Input::Bytes(_) => Stdio::piped(),
         Input::Descriptor(fd) => Stdio::from(fd.try_clone_to_owned().map_err(|error| early_error(Refusal::Spawn, error))?),
@@ -932,6 +937,9 @@ impl<'a> Group<'a> {
         }
     }
 
+    /// True once any supervision fault has invalidated a pending query.
+    pub fn failed(&self) -> bool { self.failed }
+
     pub fn set_exit_poll_interval(&mut self, interval: Duration) -> std::result::Result<(), ProcessError> {
         if interval.is_zero() {
             return Err(invalid("Exit poll interval must be positive"));
@@ -1019,3 +1027,65 @@ pub fn pid_is_alive(pid: i32) -> io::Result<bool> {
     if error.raw_os_error() == Some(libc::ESRCH) { Ok(false) } else { Err(error) }
 }
 
+
+#[cfg(test)]
+mod inherited_git_context_tests {
+    use super::*;
+    use std::os::unix::fs::DirBuilderExt;
+    use std::path::PathBuf;
+
+    // Re-exec keeps cwd/fd-zero changes out of the parallel test runner.
+    #[test]
+    fn git_inherited_context_worker() {
+        let Some(repo) = std::env::var_os("AM_TEST_INHERITED_GIT_REPO") else { return; };
+        let repo = PathBuf::from(repo);
+        let mode = std::env::var("AM_TEST_INHERITED_GIT_MODE").unwrap();
+        if mode != "closed-stdin" {
+            let removed = repo.parent().unwrap().join("removed-cwd");
+            std::fs::create_dir(&removed).unwrap();
+            std::env::set_current_dir(&removed).unwrap();
+            std::fs::remove_dir(&removed).unwrap();
+            assert!(std::env::current_dir().is_err());
+        }
+        if mode != "deleted-cwd" {
+            // This is an isolated re-exec worker; no other thread uses stdin.
+            let closed = unsafe { libc::close(0) };
+            assert!(closed == 0 || std::io::Error::last_os_error().raw_os_error() == Some(libc::EBADF));
+            assert_eq!(unsafe { libc::fcntl(0, libc::F_GETFD) }, -1);
+        }
+        let observed = crate::identity_git::root_head(&repo).unwrap();
+        assert_eq!(observed.0.as_deref(), Some(repo.as_os_str()));
+        assert_eq!(observed.1, None);
+        let specs = vec![(vec![OsString::from("rev-parse"), OsString::from("--show-toplevel")], false)];
+        crate::identity_git::_git_group(&repo, &specs, |group| {
+            assert_eq!(group.value(0, false)?.as_deref(), Some(repo.as_os_str()));
+            Ok(())
+        }).unwrap();
+    }
+
+    #[test]
+    fn git_inherits_deleted_cwd_and_closed_stdin_without_optional_absence() {
+        struct PrivateDir(PathBuf);
+        impl Drop for PrivateDir {
+            fn drop(&mut self) { let _ = std::fs::remove_dir_all(&self.0); }
+        }
+        for mode in ["deleted-cwd", "closed-stdin", "both"] {
+            let path = PathBuf::from(format!("/tmp/am-inherited-git-{}-{}-{mode}",
+                std::process::id(), monotonic_ns()));
+            std::fs::DirBuilder::new().mode(0o700).create(&path).unwrap();
+            let root = PrivateDir(std::fs::canonicalize(path).unwrap());
+            let repo = root.0.join("repo");
+            std::fs::create_dir(&repo).unwrap();
+            let init = crate::identity_git::_run(&repo,
+                &[OsString::from("init"), OsString::from("--initial-branch=main")], false).unwrap();
+            assert_eq!(init.status, Status::Code(0));
+            let child = Command::new(std::env::current_exe().unwrap())
+                .args(["--exact", "process::inherited_git_context_tests::git_inherited_context_worker", "--nocapture"])
+                .env("AM_TEST_INHERITED_GIT_REPO", &repo)
+                .env("AM_TEST_INHERITED_GIT_MODE", mode)
+                .output().unwrap();
+            assert!(child.status.success(), "{mode}: stdout={} stderr={}",
+                String::from_utf8_lossy(&child.stdout), String::from_utf8_lossy(&child.stderr));
+        }
+    }
+}

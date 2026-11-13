@@ -5,8 +5,6 @@ use crate::error::ContractError;
 use crate::process::{self, Input, Output, ProcessError, Refusal, Spec, Status, Target};
 use std::ffi::{OsStr, OsString};
 use std::fmt;
-use std::os::fd::AsFd;
-use std::os::fd::BorrowedFd;
 use std::time::Duration;
 use std::os::unix::ffi::{OsStrExt, OsStringExt};
 use std::path::Path;
@@ -22,6 +20,16 @@ pub enum Error {
     InvalidInput(&'static str),
     Supervision { message: &'static str, source: Option<ProcessError> },
     Cleanup { primary: Box<Error>, cleanup: ProcessError },
+}
+impl Error {
+    /// The caller's contract refusal stays primary even if cleanup also failed.
+    pub fn contract(&self) -> Option<&ContractError> {
+        match self {
+            Self::Contract(error) => Some(error),
+            Self::Cleanup { primary, .. } => primary.contract(),
+            _ => None,
+        }
+    }
 }
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -51,7 +59,9 @@ pub fn _invocation(repo: &Path, args: &[OsString], glob_pathspecs: bool) -> Invo
 pub fn invocation_with_env(repo: &Path, args: &[OsString], glob_pathspecs: bool,
     inherited: impl IntoIterator<Item = (OsString, OsString)>) -> Invocation
 {
-    let mut env: Vec<_> = inherited.into_iter().filter(|(key, _)| !key.as_bytes().starts_with(b"GIT_")).collect();
+    let mut seen = std::collections::HashSet::new();
+    let mut env: Vec<_> = inherited.into_iter().filter(|(key, _)|
+        !key.as_bytes().starts_with(b"GIT_") && seen.insert(key.clone())).collect();
     env.extend([
         ("GIT_NO_LAZY_FETCH", "1"), ("GIT_ALLOW_PROTOCOL", ""), ("GIT_OPTIONAL_LOCKS", "0"),
         ("GIT_TRACE", "0"), ("GIT_TRACE2", "0"), ("GIT_TRACE2_EVENT", "0"), ("GIT_TRACE2_PERF", "0"),
@@ -70,25 +80,16 @@ pub fn _run(repo: &Path, args: &[OsString], glob_pathspecs: bool) -> std::result
 /// Separate deadline/environment injection lets the caller retain its own fixed
 /// operation context; production `_run` always inherits the exact ambient non-GIT environment.
 pub fn run_invocation(invocation: &Invocation, deadline: Deadline) -> std::result::Result<Output, ProcessError> {
-    let stdin = std::io::stdin();
-    let cwd = current_directory()?;
-    process::run(&spec(invocation, &cwd, stdin.as_fd(), deadline))
+    process::run(&spec(invocation, deadline))
 }
 
 pub fn run_invocation_for(invocation: &Invocation, timeout: Duration) -> std::result::Result<Output, ProcessError> {
-    let stdin = std::io::stdin();
-    let cwd = current_directory()?;
-    process::run_for(&spec(invocation, &cwd, stdin.as_fd(), Deadline::from_absolute_ns(u64::MAX)), timeout)
+    process::run_for(&spec(invocation, Deadline::from_absolute_ns(u64::MAX)), timeout)
 }
-fn current_directory() -> std::result::Result<std::path::PathBuf, ProcessError> {
-    std::env::current_dir().map_err(|source| ProcessError {
-        reason: Refusal::Spawn, evidence: None, source: Some(source), cleanup_error: None, incomplete: false,
-    })
-}
-fn spec<'a>(invocation: &'a Invocation, cwd: &'a Path, stdin: BorrowedFd<'a>, deadline: Deadline) -> Spec<'a> {
+fn spec(invocation: &Invocation, deadline: Deadline) -> Spec<'_> {
     Spec {
-        argv: &invocation.argv, env: &invocation.env, cwd, search_path: true,
-        stdin: Input::Descriptor(stdin),
+        argv: &invocation.argv, env: &invocation.env, cwd: None, search_path: true,
+        stdin: Input::Inherit,
         // The baseline has no stdout/stderr capture bound. Do not invent one.
         stdout: Target::Capture { limit: usize::MAX }, stderr: Target::Capture { limit: usize::MAX },
         deadline, new_session: false, file_size_limit: None, umask: None, pass_fds: &[],
@@ -203,10 +204,8 @@ pub fn git_group_with<T>(repo: &Path, specs: &[(Vec<OsString>, bool)],
     }
     let invocations: Vec<_> = specs.iter().map(|(args, glob)|
         invocation_with_env(repo, args, *glob, inherited.iter().cloned())).collect();
-    let cwd = current_directory().map_err(Error::Infrastructure)?;
-    let stdin = std::io::stdin();
     let process_specs: Vec<_> = invocations.iter().map(|invocation|
-        spec(invocation, &cwd, stdin.as_fd(), Deadline::from_absolute_ns(u64::MAX))).collect();
+        spec(invocation, Deadline::from_absolute_ns(u64::MAX))).collect();
     let mut group = process::Group::launch(&process_specs, timeout).map_err(|source| Error::Supervision {
         message: "Git query supervision failed; no observation accepted", source: Some(source),
     })?;
@@ -216,7 +215,7 @@ pub fn git_group_with<T>(repo: &Path, specs: &[(Vec<OsString>, bool)],
     let mut owned = GitGroup { group, next: 0, len: specs.len(), failed: false };
     let primary = body(&mut owned);
     let incomplete = owned.next != owned.len;
-    let failed = owned.failed;
+    let failed = owned.failed || owned.group.failed();
     // Explicit finish is mandatory: Drop is solely the panic/early-exit safety net.
     let cleanup = owned.group.finish();
     match primary {

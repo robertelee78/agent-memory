@@ -59,6 +59,22 @@ impl Memo {
         let weight = encoded.len().saturating_add(256);
         if weight > self.limits.bytes { return; }
         let is_map = identity.namespace == "bank-format";
+        // Reentrant production may already have stored this key. Assignment
+        // replaces its value without moving its LRU position or double-counting it.
+        if let Some(old) = self.values.get_mut(&identity) {
+            self.bytes = self.bytes - old.weight + weight;
+            old.value = value.clone();
+            old.weight = weight;
+            while !self.values.is_empty() && (self.values.len() > self.limits.entries
+                || self.bytes > self.limits.bytes || self.maps > self.limits.maps)
+            {
+                let (_, key) = self.order.pop_first().unwrap();
+                let old = self.values.remove(&key).unwrap();
+                self.bytes -= old.weight;
+                self.maps -= usize::from(key.namespace == "bank-format");
+            }
+            return;
+        }
         while !self.values.is_empty() && (self.values.len() >= self.limits.entries
             || self.bytes.saturating_add(weight) > self.limits.bytes
             || (is_map && self.maps >= self.limits.maps))
@@ -66,11 +82,6 @@ impl Memo {
             let (_, key) = self.order.pop_first().unwrap();
             let old = self.values.remove(&key).unwrap(); self.bytes -= old.weight;
             self.maps -= usize::from(key.namespace == "bank-format");
-        }
-        // Just like OrderedDict assignment, reentrant production replaces an existing key.
-        if let Some(old) = self.values.remove(&identity) {
-            self.order.remove(&old.order); self.bytes -= old.weight;
-            self.maps -= usize::from(is_map);
         }
         let identity = Rc::new(identity); let order = self.tick();
         self.order.insert(order, identity.clone());

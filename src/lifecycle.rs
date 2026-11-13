@@ -1,4 +1,5 @@
 //! Shared deterministic lifecycle decisions; never performs a memory mutation.
+//! Version-dependent baseline choice: RFC3339 T24:00:00 is refused, not normalized.
 use crate::codec::json::{self, DecodePolicy, DuplicateKeys, NonFinite, Value};
 use crate::error::{ContractError, Result};
 use std::sync::LazyLock;
@@ -156,7 +157,7 @@ fn version_reference_matches(value: &Value, version: &Value) -> bool {
     }
 }
 
-pub fn transition(record: &Value, operation: &str, event: &Value) -> Result<Value> {
+pub fn transition(record: &Value, operation: &Value, event: &Value) -> Result<Value> {
     let status = state(record)?;
     if event.as_object().is_none() { return Err(ContractError::new("Transition requires an explicit event")); }
     if !identity(get(record, "id")) || !positive(get(record, "version")) {
@@ -194,7 +195,7 @@ pub fn transition(record: &Value, operation: &str, event: &Value) -> Result<Valu
         ("expiry-reached", reached),
     ];
     let rule = get(&MODEL, "transitions").as_array().unwrap().iter().find(|r|
-        text(r, "operation") == Some(operation) && member(get(r, "from"), &string(status)));
+        get(r, "operation") == operation && member(get(r, "from"), &string(status)));
     let Some(rule) = rule else { return Ok(object([("legal", Value::Bool(false)),
         ("reasons", Value::Array(vec![string(if status == "deleted" { "terminal-deletion" } else { "illegal-transition" })]))])); };
     let missing: Vec<Value> = get(rule, "requires").as_array().unwrap().iter().filter(|v|
@@ -204,9 +205,9 @@ pub fn transition(record: &Value, operation: &str, event: &Value) -> Result<Valu
     Ok(object([
         ("legal", Value::Bool(true)), ("reasons", Value::Array(vec![])), ("to", get(rule, "to").clone()),
         ("creates_new_version", Value::Bool(new_version)),
-        ("prior_version_status", if operation == "reactivate" { string(status) } else { get(rule, "to").clone() }),
+        ("prior_version_status", if operation.as_str() == Some("reactivate") { string(status) } else { get(rule, "to").clone() }),
         ("new_version_status", if new_version { string("active") } else { Value::Null }),
-        ("terminal_record_id", Value::Bool(operation == "delete")),
+        ("terminal_record_id", Value::Bool(operation.as_str() == Some("delete"))),
     ]))
 }
 
@@ -254,9 +255,17 @@ pub fn command(operation: &str, request: Option<&Value>) -> CommandResult {
     let result = match operation {
         "definition" => Ok(definition()),
         "current" | "transition" => request.ok_or_else(|| ContractError::new("--input is required")).and_then(|r| {
-            let required = |key| r.get(key).ok_or_else(|| ContractError::new(format!("'{key}'")));
+            let required = |key: &str| match r {
+                Value::Object(_) => r.get(key).ok_or_else(|| ContractError::new(format!("'{key}'"))),
+                Value::Array(_) => Err(ContractError::new("list indices must be integers or slices, not str")),
+                Value::String(_) => Err(ContractError::new("string indices must be integers, not 'str'")),
+                Value::Null => Err(ContractError::new("'NoneType' object is not subscriptable")),
+                Value::Int(_) => Err(ContractError::new("'int' object is not subscriptable")),
+                Value::Float(_) => Err(ContractError::new("'float' object is not subscriptable")),
+                Value::Bool(_) => Err(ContractError::new("'bool' object is not subscriptable")),
+            };
             if operation == "current" { current(required("record")?, required("context")?) }
-            else { transition(required("record")?, required("operation")?.as_str().ok_or_else(|| ContractError::new("Invalid operation"))?, required("event")?) }
+            else { transition(required("record")?, required("operation")?, required("event")?) }
         }),
         _ => Err(ContractError::new("Unknown lifecycle operation")),
     };

@@ -31,7 +31,7 @@ fn event(status: &str) -> (Value, Value) {
     (record, event)
 }
 fn is_current(record: &Value, context: &Value) -> bool { field(&lifecycle::current(record, context).unwrap(), "current").as_bool().unwrap() }
-fn legal(record: &Value, operation: &str, event: &Value) -> bool { field(&lifecycle::transition(record, operation, event).unwrap(), "legal").as_bool().unwrap() }
+fn legal(record: &Value, operation: &str, event: &Value) -> bool { field(&lifecycle::transition(record, &s(operation), event).unwrap(), "legal").as_bool().unwrap() }
 
 // obligation: tests/contracts/test_boundary_assessment.py::BoundaryAssessmentContract.test_duplicate_needs_explicit_read_evidence_and_rationale
 #[test]
@@ -150,7 +150,7 @@ fn fractional_boundaries_preserve_every_accepted_digit() {
 #[test]
 fn transition_table_drives_all_legal_states_and_deletion_is_terminal() {
     for rule in field(&lifecycle::definition(), "transitions").as_array().unwrap() {
-        let operation = field(rule, "operation").as_str().unwrap();
+        let operation = field(rule, "operation");
         for status in field(rule, "from").as_array().unwrap() {
             let (r, e) = event(status.as_str().unwrap()); let decision = lifecycle::transition(&r, operation, &e).unwrap();
             assert_eq!(field(&decision, "legal"), &Value::Bool(true)); assert_eq!(field(&decision, "to"), field(rule, "to"));
@@ -163,7 +163,7 @@ fn transition_table_drives_all_legal_states_and_deletion_is_terminal() {
 // obligation: tests/contracts/test_lifecycle_model.py::LifecycleContract.test_correction_and_supersession_require_exact_active_replacement
 #[test]
 fn correction_and_supersession_require_exact_active_replacement() {
-    let (r, e) = event("active"); let decision = lifecycle::transition(&r, "correct", &e).unwrap();
+    let (r, e) = event("active"); let decision = lifecycle::transition(&r, &s("correct"), &e).unwrap();
     assert_eq!(field(&decision, "creates_new_version"), &Value::Bool(true)); assert_eq!(field(&decision, "prior_version_status"), &s("superseded"));
     assert_eq!(field(&decision, "new_version_status"), &s("active"));
     for (key, new) in [("status", s("candidate")), ("version", value("1")),
@@ -182,11 +182,11 @@ fn correction_and_supersession_require_exact_active_replacement() {
 #[test]
 fn revocation_expiry_and_reactivation_remain_distinct() {
     let (r, mut e) = event("active"); remove(&mut e, "replacement"); set(&mut e, "evidence", value("[]"));
-    assert_eq!(field(&lifecycle::transition(&r, "revoke", &e).unwrap(), "to"), &s("revoked"));
+    assert_eq!(field(&lifecycle::transition(&r, &s("revoke"), &e).unwrap(), "to"), &s("revoked"));
     set(&mut e, "now", s("2026-10-22T16:59:59Z")); assert!(!legal(&r, "expire", &e));
     set(&mut e, "now", s("2026-10-22T17:00:00Z")); assert!(legal(&r, "expire", &e));
     for status in ["superseded", "revoked", "expired"] {
-        let (r, mut e) = event(status); let decision = lifecycle::transition(&r, "reactivate", &e).unwrap();
+        let (r, mut e) = event(status); let decision = lifecycle::transition(&r, &s("reactivate"), &e).unwrap();
         assert_eq!(field(&decision, "legal"), &Value::Bool(true)); assert_eq!(field(&decision, "prior_version_status"), &s(status));
         assert_eq!(field(&decision, "new_version_status"), &s("active"));
         set(&mut e, "evidence", field(&r, "evidence").clone()); assert!(!legal(&r, "reactivate", &e));
@@ -201,12 +201,12 @@ fn each_event_guard_refuses_missing_authority_review_or_new_event() {
         let (r, mut e) = event(if op == "admit" { "candidate" } else { "active" }); remove(&mut e, key); assert!(!legal(&r, op, &e));
     }
     let (mut r, e) = event("active"); set(&mut r, "event-ids", value(&format!(r#"["{OLD}","{NEW}"]"#)));
-    assert!(field(&lifecycle::transition(&r, "correct", &e).unwrap(), "reasons").as_array().unwrap().contains(&s("new-event")));
+    assert!(field(&lifecycle::transition(&r, &s("correct"), &e).unwrap(), "reasons").as_array().unwrap().contains(&s("new-event")));
     assert!(lifecycle::identity(&s(RECORD)));
     for bad in [RECORD.to_uppercase(), RECORD.replace('-', ""), format!("{{{RECORD}}}"), format!("urn:uuid:{RECORD}"), RECORD.replacen("4d83", "1d83", 1), RECORD.replacen("a728", "c728", 1)] {
         assert!(!lifecycle::identity(&s(&bad)));
     }
-    set(&mut r, "version", Value::Bool(true)); assert!(lifecycle::transition(&r, "correct", &e).is_err());
+    set(&mut r, "version", Value::Bool(true)); assert!(lifecycle::transition(&r, &s("correct"), &e).is_err());
 }
 
 // obligation: tests/contracts/test_lifecycle_model.py::LifecycleContract.test_copied_portable_evaluator_does_not_modify_inputs_or_create_state
@@ -602,8 +602,30 @@ impl Gate {
     fn alias(&self) -> String {
         // Test-owned finite shell child: even assertion failure cannot leave it
         // blocked forever. No test or implementation signals an unowned PID.
-        format!("alias.gate=!printf ready > '{}'; i=0; while [ ! -f '{}' ] && [ \"$i\" -lt 500 ]; do sleep 0.01; i=$((i+1)); done; printf done > '{}'",
+        format!("alias.gate=!printf '%s' \"$PPID\" > '{}'; i=0; while [ ! -f '{}' ] && [ \"$i\" -lt 500 ]; do sleep 0.01; i=$((i+1)); done; printf done > '{}'",
             self.ready.display(), self.release.display(), self.done.display())
+    }
+    fn holding_alias(&self) -> String {
+        format!("{}; i=0; while [ ! -f '{}' ] && [ \"$i\" -lt 500 ]; do sleep 0.01; i=$((i+1)); done",
+            self.alias(), self.done.with_extension("finish").display())
+    }
+    fn pid(&self) -> i32 {
+        let end = std::time::Instant::now() + std::time::Duration::from_secs(3);
+        loop {
+            if let Ok(text) = std::fs::read_to_string(&self.ready) {
+                if let Ok(pid) = text.parse() { return pid; }
+            }
+            assert!(std::time::Instant::now() < end, "Git alias did not record its parent's PID");
+            std::thread::sleep(std::time::Duration::from_millis(2));
+        }
+    }
+    fn release_and_wait_done(&self) {
+        std::fs::write(&self.release, b"release").unwrap();
+        let end = std::time::Instant::now() + std::time::Duration::from_secs(3);
+        while !self.done.exists() {
+            assert!(std::time::Instant::now() < end, "Git alias did not finish the release gate");
+            std::thread::sleep(std::time::Duration::from_millis(2));
+        }
     }
     fn wait_ready(&self) {
         let end = std::time::Instant::now() + std::time::Duration::from_secs(3);
@@ -616,6 +638,7 @@ impl Gate {
 impl Drop for Gate {
     fn drop(&mut self) {
         let _ = std::fs::write(&self.release, b"release");
+        let _ = std::fs::write(self.done.with_extension("finish"), b"release");
         if self.ready.exists() {
             let end = std::time::Instant::now() + std::time::Duration::from_secs(6);
             while !self.done.exists() && std::time::Instant::now() < end { std::thread::sleep(std::time::Duration::from_millis(2)); }
@@ -631,16 +654,21 @@ fn real_git_owner_parsing_time_cannot_turn_pending_timeout_into_success() {
     let environment = git_environment(&temp.0);
     for consume in [true, false] {
         let gate = Gate::new(&temp.0, if consume { "value" } else { "exit" });
-        let alias = gate.alias();
+        let alias = gate.holding_alias();
         let specs = vec![query(&["rev-parse", "--show-toplevel"]), query(&["-c", &alias, "gate"])];
         let observed = identity_git::git_group_with(&temp.0, &specs, &environment, std::time::Duration::from_secs(1), |group| {
             assert_eq!(group.value(0, false)?.unwrap(), temp.0.as_os_str()); gate.wait_ready();
             std::thread::sleep(std::time::Duration::from_millis(1100));
+            gate.release_and_wait_done();
+            // The alias remains held after done, so its Git parent cannot exit
+            // naturally. Its disappearance below proves timeout cancellation.
+            assert!(agent_memory::process::pid_is_alive(gate.pid()).unwrap());
             if consume { assert!(group.value(1, true)?.is_none()); }
             Ok(())
         });
         if consume { observed.unwrap(); }
         else { assert_eq!(observed.unwrap_err().to_string(), "Incomplete ordered Git query observation"); }
+        assert!(!agent_memory::process::pid_is_alive(gate.pid()).unwrap(), "expired Git child was not killed and reaped");
         drop(gate); // release and observe the owned test alias's finite descendant
     }
 }
@@ -679,4 +707,107 @@ fn real_git_already_observed_completion_survives_late_consumption() {
 fn model_renderer_reports_missing_axis_section_without_panicking() {
     assert_eq!(agent_memory::model_reference::render("# incomplete").unwrap_err().to_string(),
         "not enough values to unpack (expected 2, got 1)");
+}
+
+#[test]
+fn malformed_scp_user_hosts_are_not_local_path_fallbacks() {
+    let temp = Temp::new();
+    for remote in ["git@:org/repo", "[x]@:p"] {
+        assert_eq!(remote_identity::normalize(&s(remote), Some(&temp.0)).unwrap_err().to_string(),
+            "Unsupported or ambiguous repository remote; choose an explicit canonical binding");
+    }
+    assert_eq!(remote_identity::normalize(&s("git@:"), Some(&temp.0)).unwrap(),
+        format!("file://{}/git@:", temp.0.display()));
+    assert_eq!(remote_identity::normalize(&s("ssh://]u@[::1/repo"), None).unwrap(), "repo://[::1]/repo");
+    assert_eq!(remote_identity::normalize(&s("ssh://[FE80::1%ZoneCase]:22/repo"), None).unwrap(), "repo://[fe80::1%ZoneCase]/repo");
+}
+
+#[test]
+fn lifecycle_non_string_operations_and_non_object_requests_match_python() {
+    let (record, event) = event("active");
+    for operation in [Value::Null, value("[]"), value("{}"), value("1"), value("1.0"), Value::Bool(true)] {
+        let request = Value::Object(vec![("record".into(), record.clone()), ("operation".into(), operation.clone()), ("event".into(), event.clone())]);
+        let result = lifecycle::command("transition", Some(&request));
+        assert_eq!(result.exit_code, 0);
+        assert_eq!(field(result.value.as_ref().unwrap(), "result"), &value(r#"{"legal":false,"reasons":["illegal-transition"]}"#));
+        assert!(lifecycle::transition(&value("{}"), &operation, &event).is_err(), "record validation must happen before the unknown-operation decision");
+    }
+    for (request, message) in [
+        (value("[]"), "list indices must be integers or slices, not str"),
+        (Value::Null, "'NoneType' object is not subscriptable"),
+        (s("text"), "string indices must be integers, not 'str'"),
+        (value("1"), "'int' object is not subscriptable"),
+        (value("1.0"), "'float' object is not subscriptable"),
+        (Value::Bool(true), "'bool' object is not subscriptable"),
+    ] {
+        for operation in ["current", "transition"] {
+            let result = lifecycle::command(operation, Some(&request));
+            assert_eq!(result.exit_code, 1);
+            assert_eq!(field(result.value.as_ref().unwrap(), "error"), &s(message));
+        }
+    }
+}
+
+#[test]
+fn reentrant_memo_assignment_preserves_lru_position_and_counts_once() {
+    memo::operation(|active| {
+        active.borrow_mut().limits.entries = 2;
+        memo::checked("bank-format", b"a", || {
+            memo::checked("bank-format", b"a", || Ok(s("inner")), None)?;
+            memo::checked("scan", b"b", || Ok(s("b")), None)?;
+            Ok(s("outer"))
+        }, None).unwrap();
+        assert_eq!(active.borrow().len(), 2);
+        assert_eq!(active.borrow().maps, 1);
+        let expected = json::encode(&s("outer"), json::COMPACT_UTF8).unwrap().len()
+            + json::encode(&s("b"), json::COMPACT_UTF8).unwrap().len() + 512;
+        assert_eq!(active.borrow().bytes, expected);
+        memo::checked("scan", b"c", || Ok(s("c")), None).unwrap();
+        assert_eq!(active.borrow().maps, 0, "replaced oldest entry must remain the eviction victim");
+        assert_eq!(memo::checked("scan", b"b", || panic!("replacement moved a to MRU and evicted b"), None).unwrap(), s("b"));
+    });
+}
+
+#[test]
+fn inherited_git_environment_uses_first_duplicate_and_cleanup_exposes_contract() {
+    let environment = [("PATH", "/first"), ("PATH", "/second"), ("HOME", "/home"), ("HOME", "/wrong"),
+        ("GIT_TRACE", "bad"), ("GIT_TRACE", "worse")].map(|(key, value)| (key.into(), value.into()));
+    let invocation = identity_git::invocation_with_env(Path::new("."), &[], false, environment);
+    assert_eq!(invocation.env.iter().filter(|(key, _)| key == "PATH").count(), 1);
+    assert_eq!(invocation.env.iter().find(|(key, _)| key == "PATH").unwrap().1, "/first");
+    assert_eq!(invocation.env.iter().find(|(key, _)| key == "HOME").unwrap().1, "/home");
+    assert_eq!(invocation.env.iter().find(|(key, _)| key == "GIT_TRACE").unwrap().1, "0");
+    let cleanup = agent_memory::process::ProcessError {
+        reason: agent_memory::process::Refusal::Infrastructure, source: None, evidence: None,
+        cleanup_error: Some(std::io::Error::other("cleanup")), incomplete: false,
+    };
+    let error = identity_git::Error::Cleanup {
+        primary: Box::new(identity_git::Error::Contract(ContractError::new("original refusal"))), cleanup,
+    };
+    assert_eq!(error.contract().unwrap().message(), "original refusal");
+    assert!(identity_git::Error::InvalidInput("not a contract").contract().is_none());
+}
+
+#[test]
+fn git_group_refuses_child_that_really_exited_after_deadline_before_consumption() {
+    let temp = Temp::new(); fixture_git(&temp.0, &temp.0, &["init", "--initial-branch=main"]);
+    let gate = Gate::new(&temp.0, "late-exit"); let alias = gate.alias();
+    let specs = vec![query(&["rev-parse", "--show-toplevel"]), query(&["-c", &alias, "gate"])];
+    identity_git::git_group_with(&temp.0, &specs, &git_environment(&temp.0), std::time::Duration::from_secs(1), |group| {
+        group.value(0, false)?; gate.wait_ready();
+        std::thread::sleep(std::time::Duration::from_millis(1100));
+        gate.release_and_wait_done();
+        let pid = gate.pid().to_string();
+        let end = std::time::Instant::now() + std::time::Duration::from_secs(3);
+        loop {
+            // Git is our direct child but has deliberately not been polled by
+            // the owner; zombie status proves real exit, not only closed pipes.
+            let status = std::process::Command::new("ps").args(["-o", "stat=", "-p", &pid]).output().unwrap();
+            if String::from_utf8_lossy(&status.stdout).trim_start().starts_with('Z') { break; }
+            assert!(std::time::Instant::now() < end, "late Git child did not exit before consumption");
+            std::thread::sleep(std::time::Duration::from_millis(2));
+        }
+        assert!(group.value(1, true)?.is_none());
+        Ok(())
+    }).unwrap();
 }

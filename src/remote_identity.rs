@@ -1,4 +1,6 @@
 //! Sanitized repository identifiers, never URLs to fetch or push.
+//! Version-dependent baseline choices: local symlink loops and non-UTF-8 local
+//! paths are refused rather than yielding unusable repository identities.
 use crate::codec::json::Value;
 use crate::error::{ContractError, Result};
 use std::collections::VecDeque;
@@ -63,17 +65,20 @@ fn helper(value: &str) -> bool {
         && bytes.all(|c| c.is_ascii_alphanumeric() || matches!(c, b'+' | b'-'))
 }
 fn scp(value: &str) -> Option<(&str, &str)> {
-    let hostpart = value.split_once('@').filter(|(user, _)| !user.is_empty()
-        && !user.contains(['/', ':'])).map_or(value, |(_, rest)| rest);
-    if let Some(bracketed) = hostpart.strip_prefix('[') {
-        if let Some((host, path)) = bracketed.split_once("]:") {
-            if !host.is_empty() && !path.is_empty() && !host.contains(']') {
-                return Some((&hostpart[..host.len() + 2], path));
+    fn parse(hostpart: &str) -> Option<(&str, &str)> {
+        if let Some(bracketed) = hostpart.strip_prefix('[') {
+            if let Some((host, path)) = bracketed.split_once("]:") {
+                if !host.is_empty() && !path.is_empty() && !host.contains(']') {
+                    return Some((&hostpart[..host.len() + 2], path));
+                }
             }
         }
+        let (host, path) = hostpart.split_once(':')?;
+        if host.is_empty() || path.is_empty() || host.contains('/') { None } else { Some((host, path)) }
     }
-    let (host, path) = hostpart.split_once(':')?;
-    if host.is_empty() || path.is_empty() || host.contains('/') { None } else { Some((host, path)) }
+    // The regex's optional user group backtracks when its host alternative fails.
+    value.split_once('@').filter(|(user, _)| !user.is_empty()
+        && !user.contains(['/', ':'])).and_then(|(_, rest)| parse(rest)).or_else(|| parse(value))
 }
 fn unquote(path: &str) -> String {
     let mut bytes = Vec::with_capacity(path.len()); let input = path.as_bytes(); let mut i = 0;
@@ -117,7 +122,7 @@ fn host_port(netloc: &str) -> Result<(String, Option<u16>)> {
     let (host, port) = if has_open {
         let (before, rest) = hostinfo.split_once('[').ok_or_else(ambiguous)?;
         if !before.is_empty() { return Err(ambiguous()); }
-        let (host, rest) = rest.split_once(']').ok_or_else(ambiguous)?;
+        let (host, rest) = rest.split_once(']').unwrap_or((rest, ""));
         if !rest.is_empty() && !rest.starts_with(':') { return Err(ambiguous()); }
         if let Some(future) = host.strip_prefix('v') {
             let (version, address) = future.split_once('.').ok_or_else(ambiguous)?;
@@ -138,7 +143,13 @@ fn host_port(netloc: &str) -> Result<(String, Option<u16>)> {
         let trimmed = port.trim_start_matches('0');
         Some(if trimmed.is_empty() { 0 } else { trimmed.parse().map_err(|_| ambiguous())? })
     };
-    Ok((host.to_lowercase(), port))
+    let host = if has_open {
+        let (address, zone) = host.split_once('%').unwrap_or((host, ""));
+        let mut lower = address.to_lowercase();
+        if host.contains('%') { lower.push('%'); lower.push_str(zone); }
+        lower
+    } else { host.to_lowercase() };
+    Ok((host, port))
 }
 
 pub fn normalize(value: &Value, base: Option<&Path>) -> Result<String> {
