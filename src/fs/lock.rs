@@ -1,5 +1,5 @@
 use super::descriptor::{
-    Descriptor, DirectoryChain, Identity, contract_io, private_mkdir_with_sync,
+    Descriptor, DirectoryChain, Identity, ReadError, contract_io, private_mkdir_with_sync,
 };
 use super::trust;
 use crate::error::{ContractError, Result};
@@ -83,8 +83,13 @@ impl FlockGuard {
     pub fn descriptor(&self) -> &Descriptor {
         &self.descriptor
     }
-    pub fn descriptor_mut(&mut self) -> &mut Descriptor {
-        &mut self.descriptor
+    /// Bounded read through the locked descriptor; the descriptor never leaves the guard.
+    pub fn read_bounded(&mut self, limit: usize) -> std::result::Result<Vec<u8>, ReadError> {
+        self.descriptor.read_bounded(limit)
+    }
+    /// One write through the locked descriptor (baseline `os.write`), retried only on EINTR.
+    pub fn write_once(&mut self, bytes: &[u8]) -> io::Result<usize> {
+        self.descriptor.write_once(bytes)
     }
 }
 impl Drop for FlockGuard {

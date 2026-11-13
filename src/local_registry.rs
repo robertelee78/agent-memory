@@ -197,11 +197,14 @@ pub fn paths(name: &str) -> Result<(std::path::PathBuf, std::path::PathBuf, std:
                         "Registry config root must be absolute and use canonical directories",
                     ));
                 }
-                Ok(info) if !info.is_directory() => {
+                // Python refuses only a non-directory root; a non-directory
+                // ancestor leaves the root absent (later creation fails).
+                Ok(info) if !info.is_directory() && current.join(part) == root => {
                     return Err(ContractError::new(
                         "Registry config root is not a directory",
                     ));
                 }
+                Ok(info) if !info.is_directory() => missing = true,
                 Ok(_) => (),
                 Err(e) if e.kind() == io::ErrorKind::NotFound => missing = true,
                 Err(e) => return Err(io_error(e)),
@@ -214,7 +217,10 @@ pub fn paths(name: &str) -> Result<(std::path::PathBuf, std::path::PathBuf, std:
     if !missing {
         let chain = DirectoryChain::open(&current).map_err(io_error)?;
         for path in [&registry, &lock] {
-            match chain.directory().stat_at(path.file_name().unwrap()) {
+            let Some(leaf) = path.file_name() else {
+                continue;
+            };
+            match chain.directory().stat_at(leaf) {
                 Ok(info) if info.is_symlink() => {
                     return Err(ContractError::new("Registry and lock must not be symlinks"));
                 }
@@ -263,6 +269,10 @@ pub fn check_canonical_writer(
         CanonicalWriter::Busy => Err(CanonicalWriterError::Busy),
         CanonicalWriter::Initializing => Err(CanonicalWriterError::Initializing),
     }
+}
+/// Python's outer `except OSError` for every descriptor operation in the probe.
+fn unsafe_observation() -> ContractError {
+    ContractError::new("Canonical writer observation became unsafe; preserve for inspection")
 }
 fn probe_canonical_writer(lock: &Path, operations: &[&str]) -> Result<CanonicalWriter> {
     use crate::developer_identity::{encoded, load, uuid_valid};
@@ -338,7 +348,7 @@ fn probe_canonical_writer(lock: &Path, operations: &[&str]) -> Result<CanonicalW
             ));
         }
     };
-    let before = file.stat().map_err(io_error)?;
+    let before = file.stat().map_err(|_| unsafe_observation())?;
     let Some(current) = current_name()? else {
         return Ok(CanonicalWriter::Absent);
     };
@@ -367,7 +377,7 @@ fn probe_canonical_writer(lock: &Path, operations: &[&str]) -> Result<CanonicalW
         .recheck()
         .map_err(|_| fail("Canonical writer bank changed; preserve for inspection"))?;
     if before.size == 0 {
-        let after = file.stat().map_err(io_error)?;
+        let after = file.stat().map_err(|_| unsafe_observation())?;
         let Some(current) = current_name()? else {
             return Ok(CanonicalWriter::Absent);
         };
@@ -395,7 +405,7 @@ fn probe_canonical_writer(lock: &Path, operations: &[&str]) -> Result<CanonicalW
             ));
         }
     };
-    let after = file.stat().map_err(io_error)?;
+    let after = file.stat().map_err(|_| unsafe_observation())?;
     let Some(current) = current_name()? else {
         return Ok(CanonicalWriter::Absent);
     };
@@ -418,14 +428,16 @@ fn probe_canonical_writer(lock: &Path, operations: &[&str]) -> Result<CanonicalW
     let operation = get(&owner, "operation")
         .as_str()
         .and_then(|s| s.strip_prefix("bank-"));
-    let pid = get(&owner, "pid")
-        .as_int()
-        .and_then(|v| v.as_str().parse::<i32>().ok());
+    // Any positive JSON integer is accepted here (Python `type(pid) is int and pid > 0`).
+    let positive_pid = get(&owner, "pid").as_int().is_some_and(|value| {
+        let digits = value.as_str();
+        !digits.starts_with('-') && digits.trim_start_matches('0') != ""
+    });
     if !valid_fields
         || !uuid_valid(get(&owner, "operation_id"))
         || !operation.is_some_and(|s| operations.contains(&s))
         || get(&owner, "host").as_str() != Some(crate::host::hostname()?.as_str())
-        || !pid.is_some_and(|p| p > 0)
+        || !positive_pid
         || encoded(&owner)? != raw
     {
         return Err(fail(
@@ -436,13 +448,14 @@ fn probe_canonical_writer(lock: &Path, operations: &[&str]) -> Result<CanonicalW
     let (held, unheld) = match FlockGuard::try_acquire_owned(file, LockMode::Shared) {
         Ok(guard) => (Some(guard), None),
         Err((file, LockError::Busy)) => (None, Some(file)),
-        Err((_, error)) => return Err(io_error(error)),
+        Err((_, _)) => return Err(unsafe_observation()),
     };
-    let inspected = match &held {
-        Some(guard) => guard.descriptor().stat(),
-        None => unheld.as_ref().unwrap().stat(),
+    let inspected = match (&held, &unheld) {
+        (Some(guard), _) => guard.descriptor().stat(),
+        (None, Some(file)) => file.stat(),
+        (None, None) => return Err(unsafe_observation()),
     }
-    .map_err(io_error)?;
+    .map_err(|_| unsafe_observation())?;
     let Some(current) = current_name()? else {
         return Ok(CanonicalWriter::Absent);
     };
@@ -491,7 +504,6 @@ pub fn recover(
         return Err(ContractError::new("Lock changed before inspection"));
     }
     let raw = guard
-        .descriptor_mut()
         .read_bounded(LOCK_MAX_BYTES)
         .map_err(|_| ContractError::new("Unknown lock; preserve it for operator review"))?;
     let owner = load(&raw)?;
@@ -516,12 +528,13 @@ pub fn recover(
         .as_int()
         .and_then(|p| p.as_str().parse::<i32>().ok())
         .filter(|p| *p > 0);
-    if get(&owner, "host").as_str() != Some(crate::host::hostname()?.as_str()) || pid.is_none() {
+    let same_host = get(&owner, "host").as_str() == Some(crate::host::hostname()?.as_str());
+    let Some(pid) = pid.filter(|_| same_host) else {
         return Err(ContractError::new(
             "Foreign or malformed lock requires operator review",
         ));
-    }
-    match crate::host::pid_state(pid.unwrap())? {
+    };
+    match crate::host::pid_state(pid)? {
         crate::host::PidState::Gone => (),
         crate::host::PidState::Denied => {
             return Err(ContractError::new("Cannot prove owner is gone"));
@@ -530,7 +543,7 @@ pub fn recover(
             return Err(ContractError::new("Lock owner is still alive"));
         }
     }
-    let hash = digest(Some(&raw)).unwrap();
+    let hash = crate::developer_identity::sha256_hex(&raw);
     let path = crate::host::text(registry.as_os_str(), "registry path")?;
     let Some(prepared) = prepared else {
         return Ok(object([
@@ -688,10 +701,15 @@ pub fn exclusive<T>(
     let guard = match FlockGuard::try_acquire_owned(file, LockMode::Exclusive) {
         Ok(guard) => guard,
         Err((file, error)) => {
-            fs::discard_created_empty_slot(&parent.join(name), &file, created).map_err(|_| {
-                ContractError::new(
-                    "Metadata ownership acquisition failed; empty-slot cleanup became unsafe",
-                )
+            fs::discard_created_empty_slot(&parent.join(name), &file, created).map_err(|error| {
+                // Python lets the parent-changed refusal through; OS errors become one refusal.
+                if error.message() == "Created metadata slot parent changed; preserve the marker" {
+                    error
+                } else {
+                    ContractError::new(
+                        "Metadata ownership acquisition failed; empty-slot cleanup became unsafe",
+                    )
+                }
             })?;
             return Err(ContractError::new(match error {
                 LockError::Busy => {
@@ -712,15 +730,11 @@ pub fn exclusive<T>(
         finished: false,
     };
     let outcome = (|| {
-        let written = owner
-            .guard
-            .descriptor_mut()
-            .write_once(&owner.payload)
-            .map_err(|_| {
-                ContractError::new(
-                    "Metadata owner publication failed; preserve the marker for inspection",
-                )
-            })?;
+        let written = owner.guard.write_once(&owner.payload).map_err(|_| {
+            ContractError::new(
+                "Metadata owner publication failed; preserve the marker for inspection",
+            )
+        })?;
         if written != owner.payload.len() {
             return Err(ContractError::new(
                 "Incomplete metadata owner publication; preserve the marker for inspection",

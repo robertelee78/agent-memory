@@ -1125,37 +1125,70 @@ fn canonical_names_resolve_links_before_parent_components() {
     symlink("loop", root.join("loop")).unwrap();
     assert!(amfs::canonical_path(&root.join("loop"), true).is_err());
     assert!(amfs::canonical_path(&root.join("loop"), false).is_err());
+    // A self-amplifying link re-queues its whole target on every expansion;
+    // the symlink and pending-component bounds refuse it quickly.
+    let amplifying = vec!["amp"; 250].join("/");
+    symlink(&amplifying, root.join("amp")).unwrap();
+    let started = std::time::Instant::now();
+    assert!(amfs::canonical_path(&root.join("amp"), true).is_err());
+    assert!(amfs::canonical_path(&root.join("amp"), false).is_err());
+    assert!(started.elapsed() < std::time::Duration::from_secs(5));
+    // Exactly MAX_SYMLINKS links resolve; one more is refused (declared delta).
+    fs::create_dir(root.join("end")).unwrap();
+    symlink(root.join("end"), root.join("chain-0")).unwrap();
+    for index in 1..=amfs::resolve::MAX_SYMLINKS {
+        symlink(
+            root.join(&format!("chain-{}", index - 1)),
+            root.join(&format!("chain-{index}")),
+        )
+        .unwrap();
+    }
+    let last = amfs::resolve::MAX_SYMLINKS - 1;
+    assert_eq!(
+        amfs::canonical_path(&root.join(&format!("chain-{last}")), true).unwrap(),
+        root.join("end")
+    );
+    let beyond = amfs::resolve::MAX_SYMLINKS;
+    assert!(amfs::canonical_path(&root.join(&format!("chain-{beyond}")), true).is_err());
 }
 
 #[test]
 fn replace_rename_never_exposes_missing_target_to_a_reader() {
     let root = PrivateDirectory::new();
-    file(&root.join("source"), b"new");
     file(&root.join("target"), b"old");
     let target = root.join("target");
     let running = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(true));
+    let barrier = std::sync::Arc::new(std::sync::Barrier::new(2));
     let flag = running.clone();
+    let ready = barrier.clone();
     let reader = std::thread::spawn(move || {
-        let mut reads = 0;
+        let mut reads = 0u64;
+        ready.wait();
         while flag.load(Ordering::Acquire) || reads == 0 {
-            let bytes = fs::read(&target).unwrap();
+            let bytes = fs::read(&target).expect("target is never missing during replace");
             assert!(bytes == b"old" || bytes == b"new");
             reads += 1;
         }
+        reads
     });
     let directory = Descriptor::open_directory(root.path()).unwrap();
-    amfs::rename_at(
-        &directory,
-        OsStr::new("source"),
-        &directory,
-        OsStr::new("target"),
-        RenameMode::Replace,
-    )
-    .unwrap();
+    barrier.wait();
+    for round in 0..2000 {
+        let body: &[u8] = if round % 2 == 0 { b"new" } else { b"old" };
+        file(&root.join("source"), body);
+        amfs::rename_at(
+            &directory,
+            OsStr::new("source"),
+            &directory,
+            OsStr::new("target"),
+            RenameMode::Replace,
+        )
+        .unwrap();
+    }
     running.store(false, Ordering::Release);
-    reader.join().unwrap();
+    assert!(reader.join().unwrap() > 0);
     assert!(!root.join("source").exists());
-    assert_eq!(fs::read(root.join("target")).unwrap(), b"new");
+    assert_eq!(fs::read(root.join("target")).unwrap(), b"old");
 }
 
 #[test]
@@ -1167,7 +1200,7 @@ fn flock_failure_returns_the_live_descriptor_and_mutable_io_is_locked() {
         .unwrap();
     let identity = file.stat().unwrap();
     let mut owner = FlockGuard::try_acquire(file, LockMode::Exclusive).unwrap();
-    assert_eq!(owner.descriptor_mut().write_once(b"payload").unwrap(), 7);
+    assert_eq!(owner.write_once(b"payload").unwrap(), 7);
     let other = directory
         .open_at(OsStr::new("lock"), libc::O_RDONLY, 0)
         .unwrap();
@@ -1175,7 +1208,7 @@ fn flock_failure_returns_the_live_descriptor_and_mutable_io_is_locked() {
     assert!(matches!(error, LockError::Busy));
     assert!(other.stat().unwrap().same_inode(identity));
     assert_eq!(other.read_prefix(7).unwrap(), b"payload");
-    assert_eq!(owner.descriptor_mut().write_once(b"").unwrap(), 0);
+    assert_eq!(owner.write_once(b"").unwrap(), 0);
     drop(owner);
     let _owner = FlockGuard::try_acquire(other, LockMode::Exclusive).unwrap();
 }

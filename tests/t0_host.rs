@@ -26,6 +26,34 @@ fn fixed_utc_instants_match_datetime_isoformat() {
         host::isoformat_utc(-1, 1).unwrap(),
         "1969-12-31T23:59:59.000001+00:00"
     );
+    // datetime's year range ends: year 1 and year 9999.
+    assert_eq!(
+        host::isoformat_utc(-62135596800, 0).unwrap(),
+        "0001-01-01T00:00:00+00:00"
+    );
+    assert_eq!(
+        host::isoformat_utc(253402300799, 0).unwrap(),
+        "9999-12-31T23:59:59+00:00"
+    );
+    assert!(host::isoformat_utc(-62135596801, 0).is_err());
+    assert!(host::isoformat_utc(253402300800, 0).is_err());
+    // Non-leap centuries: 1900-02-28 is followed by 1900-03-01, likewise 2100.
+    assert_eq!(
+        host::isoformat_utc(-2203891200, 0).unwrap(),
+        "1900-03-01T00:00:00+00:00"
+    );
+    assert_eq!(
+        host::isoformat_utc(-2203977600, 0).unwrap(),
+        "1900-02-28T00:00:00+00:00"
+    );
+    assert_eq!(
+        host::isoformat_utc(4107542400, 0).unwrap(),
+        "2100-03-01T00:00:00+00:00"
+    );
+    assert_eq!(
+        host::isoformat_utc(4107456000, 0).unwrap(),
+        "2100-02-28T00:00:00+00:00"
+    );
     assert!(host::isoformat_utc(0, 1000000).is_err());
 }
 #[test]
@@ -35,6 +63,7 @@ fn os_uuid_and_host_are_real_and_bounded() {
         &agent_memory::codec::json::Value::String(value.clone())
     ));
     assert_eq!(value.len(), 36);
+    assert_ne!(host::uuid4().unwrap(), value);
     assert!(!host::hostname().unwrap().is_empty());
     assert_eq!(
         host::pid_state(std::process::id() as i32).unwrap(),
@@ -51,14 +80,18 @@ fn os_uuid_and_host_are_real_and_bounded() {
 }
 
 #[test]
-fn expanduser_matches_posix_home_rules_without_environment_mutation() {
+fn expanduser_matches_pathlib_without_environment_mutation() {
     use std::ffi::OsStr;
     use std::path::Path;
-    let expand =
-        |path| host::expanduser_with_home(Path::new(path), Some(OsStr::new("/a/home///"))).unwrap();
+    let home = Some(OsStr::new("/a/home///"));
+    let expand = |path| host::expanduser_with_home(Path::new(path), home).unwrap();
     assert_eq!(expand("~"), Path::new("/a/home"));
     assert_eq!(expand("~/x"), Path::new("/a/home/x"));
     assert_eq!(expand("a/~/x"), Path::new("a/~/x"));
+    // pathlib drops `.` parts before looking for `~`.
+    assert_eq!(expand("./~/x"), Path::new("/a/home/x"));
+    // pathlib's textual form: repeated, `.` and trailing separators vanish.
+    assert_eq!(expand("/x//y/./z/").as_os_str(), OsStr::new("/x/y/z"));
     assert_eq!(
         host::expanduser_with_home(Path::new("~"), Some(OsStr::new(""))).unwrap(),
         Path::new("/")
@@ -67,13 +100,23 @@ fn expanduser_matches_posix_home_rules_without_environment_mutation() {
         host::expanduser_with_home(Path::new("~/x"), Some(OsStr::new(""))).unwrap(),
         Path::new("/x")
     );
-    let missing = "~agent-memory-no-such-user-9d8d035a01234/x";
-    assert_eq!(expand(missing), Path::new(missing));
-    if let Some(name) = host::current_username().unwrap() {
-        let named = Path::new(&format!("~{}", name.to_str().unwrap())).to_path_buf();
-        assert_eq!(
-            host::expanduser_with_home(&named, None).unwrap(),
-            host::expanduser_with_home(Path::new("~"), None).unwrap()
-        );
-    }
+    let refusal = "Could not determine home directory.";
+    let missing = Path::new("~agent-memory-no-such-user-9d8d035a01234/x");
+    assert_eq!(
+        host::expanduser_with_home(missing, home)
+            .unwrap_err()
+            .message(),
+        refusal
+    );
+    assert_eq!(
+        host::expanduser_with_home(Path::new("~/x"), Some(OsStr::new("~elsewhere")))
+            .unwrap_err()
+            .message(),
+        refusal
+    );
+    // `root` has a passwd entry on every supported platform.
+    let root = host::expanduser_with_home(Path::new("~root/x"), home).unwrap();
+    assert!(root.is_absolute());
+    assert!(root.ends_with("x"));
+    assert!(!root.starts_with("~root"));
 }

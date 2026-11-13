@@ -1,6 +1,8 @@
 //! Injectable OS identity, randomness and UTC clock primitives.
 use crate::error::{ContractError, Result};
-use std::io::Read;
+use std::ffi::{OsStr, OsString};
+use std::os::unix::ffi::{OsStrExt, OsStringExt};
+use std::path::{Component, Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 #[derive(Clone, Copy)]
@@ -16,31 +18,26 @@ impl Default for Sources {
         }
     }
 }
+/// Random UUIDv4 from the kernel entropy call (no `/dev` path is opened).
 pub fn uuid4() -> Result<String> {
     let mut bytes = [0u8; 16];
-    std::fs::File::open("/dev/urandom")
-        .and_then(|mut file| file.read_exact(&mut bytes))
-        .map_err(|e| ContractError::new(format!("OS UUID entropy unavailable: {e}")))?;
+    if unsafe { libc::getentropy(bytes.as_mut_ptr().cast(), bytes.len()) } != 0 {
+        return Err(ContractError::new(format!(
+            "OS UUID entropy unavailable: {}",
+            std::io::Error::last_os_error()
+        )));
+    }
     bytes[6] = (bytes[6] & 15) | 64;
     bytes[8] = (bytes[8] & 63) | 128;
+    let hex: Vec<String> = bytes.iter().map(|byte| format!("{byte:02x}")).collect();
+    // `hex` always has exactly 16 entries, one per entropy byte.
     Ok(format!(
-        "{:02x}{:02x}{:02x}{:02x}-{:02x}{:02x}-{:02x}{:02x}-{:02x}{:02x}-{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}",
-        bytes[0],
-        bytes[1],
-        bytes[2],
-        bytes[3],
-        bytes[4],
-        bytes[5],
-        bytes[6],
-        bytes[7],
-        bytes[8],
-        bytes[9],
-        bytes[10],
-        bytes[11],
-        bytes[12],
-        bytes[13],
-        bytes[14],
-        bytes[15]
+        "{}-{}-{}-{}-{}",
+        hex[0..4].concat(),
+        hex[4..6].concat(),
+        hex[6..8].concat(),
+        hex[8..10].concat(),
+        hex[10..16].concat()
     ))
 }
 pub fn isoformat_utc(secs: i64, micros: u32) -> Result<String> {
@@ -105,8 +102,8 @@ pub fn hostname() -> Result<String> {
         .iter()
         .position(|b| *b == 0)
         .ok_or_else(|| ContractError::new("Hostname exceeds its bound"))?;
-    use std::os::unix::ffi::OsStrExt;
-    text(std::ffi::OsStr::from_bytes(&bytes[..len]), "hostname").map(str::to_owned)
+    // `len` is a position inside `bytes`, so the prefix is in range.
+    text(OsStr::from_bytes(&bytes[..len]), "hostname").map(str::to_owned)
 }
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PidState {
@@ -137,14 +134,14 @@ pub fn pid() -> u32 {
     std::process::id()
 }
 
-fn passwd(
-    name: Option<&std::ffi::OsStr>,
-) -> Result<Option<(std::ffi::OsString, std::path::PathBuf)>> {
-    use std::os::unix::ffi::{OsStrExt, OsStringExt};
-    let name = name
-        .map(|name| std::ffi::CString::new(name.as_bytes()))
-        .transpose()
-        .map_err(|_| ContractError::new("NUL in user name"))?;
+/// Home directory from the passwd database. Like CPython's `pwd`, any lookup
+/// error is "no entry" (`KeyError`), never a distinct failure.
+fn passwd_home(name: Option<&OsStr>) -> Option<PathBuf> {
+    let name = match name.map(|name| std::ffi::CString::new(name.as_bytes())) {
+        Some(Ok(name)) => Some(name),
+        Some(Err(_)) => return None,
+        None => None,
+    };
     let mut size = 1024usize;
     loop {
         let mut buffer = vec![0u8; size];
@@ -173,77 +170,75 @@ fn passwd(
             size *= 2;
             continue;
         }
-        if code != 0 {
-            return Err(ContractError::new(
-                std::io::Error::from_raw_os_error(code).to_string(),
-            ));
-        }
-        if result.is_null() {
-            return Ok(None);
+        if code != 0 || result.is_null() {
+            return None;
         }
         let entry = unsafe { entry.assume_init() };
-        if entry.pw_name.is_null() || entry.pw_dir.is_null() {
-            return Err(ContractError::new("Malformed passwd entry"));
+        if entry.pw_dir.is_null() {
+            return None;
         }
-        let user = unsafe { std::ffi::CStr::from_ptr(entry.pw_name) }
-            .to_bytes()
-            .to_vec();
         let home = unsafe { std::ffi::CStr::from_ptr(entry.pw_dir) }
             .to_bytes()
             .to_vec();
-        return Ok(Some((
-            std::ffi::OsString::from_vec(user),
-            std::path::PathBuf::from(std::ffi::OsString::from_vec(home)),
-        )));
+        return Some(PathBuf::from(OsString::from_vec(home)));
     }
 }
-pub fn current_username() -> Result<Option<std::ffi::OsString>> {
-    Ok(passwd(None)?.map(|(name, _)| name))
+fn no_home() -> ContractError {
+    ContractError::new("Could not determine home directory.")
 }
-pub fn expanduser(path: &std::path::Path) -> Result<std::path::PathBuf> {
+/// pathlib parsing: repeated separators, `.` parts and trailing separators vanish.
+fn pathlib_parts(path: &Path) -> PathBuf {
+    path.components()
+        .filter(|part| *part != Component::CurDir)
+        .collect()
+}
+/// `pathlib.Path(path).expanduser()`, the form every baseline caller uses.
+pub fn expanduser(path: &Path) -> Result<PathBuf> {
     expanduser_with_home(path, std::env::var_os("HOME").as_deref())
 }
 /// Explicit HOME injection avoids mutating the process environment in tests.
-pub fn expanduser_with_home(
-    path: &std::path::Path,
-    home: Option<&std::ffi::OsStr>,
-) -> Result<std::path::PathBuf> {
-    use std::os::unix::ffi::{OsStrExt, OsStringExt};
-    let bytes = path.as_os_str().as_bytes();
-    if bytes.first() != Some(&b'~') {
-        return Ok(path.to_path_buf());
-    }
-    let end = bytes.iter().position(|c| *c == b'/').unwrap_or(bytes.len());
-    let home = if end == 1 {
+pub fn expanduser_with_home(path: &Path, home: Option<&OsStr>) -> Result<PathBuf> {
+    let parsed = pathlib_parts(path);
+    let mut parts = parsed.components();
+    let first = match parts.next() {
+        Some(Component::Normal(first)) if first.as_bytes().first() == Some(&b'~') => first,
+        _ => return Ok(parsed),
+    };
+    let user = first.as_bytes().get(1..).unwrap_or_default();
+    // os.path.expanduser: HOME (even empty) for `~`, else the passwd entry.
+    let home = if user.is_empty() {
         match home {
-            Some(value) => value.to_owned(),
-            None => match passwd(None)? {
-                Some((_, home)) => home.into_os_string(),
-                None => return Ok(path.to_path_buf()),
-            },
+            Some(value) => PathBuf::from(value),
+            None => passwd_home(None).ok_or_else(no_home)?,
         }
     } else {
-        match passwd(Some(std::ffi::OsStr::from_bytes(&bytes[1..end])))? {
-            Some((_, home)) => home.into_os_string(),
-            None => return Ok(path.to_path_buf()),
-        }
+        passwd_home(Some(OsStr::from_bytes(user))).ok_or_else(no_home)?
     };
-    let trimmed = home
+    let trimmed_len = home
+        .as_os_str()
         .as_bytes()
         .iter()
         .rposition(|c| *c != b'/')
         .map_or(0, |i| i + 1);
-    let mut expanded = home.as_bytes()[..trimmed].to_vec();
-    expanded.extend_from_slice(&bytes[end..]);
-    if expanded.is_empty() {
-        expanded.push(b'/');
+    let trimmed = home
+        .as_os_str()
+        .as_bytes()
+        .get(..trimmed_len)
+        .unwrap_or_default();
+    let homedir = if trimmed.is_empty() {
+        PathBuf::from("/")
+    } else {
+        PathBuf::from(OsStr::from_bytes(trimmed))
+    };
+    if homedir.as_os_str().as_bytes().first() == Some(&b'~') {
+        return Err(no_home());
     }
-    Ok(std::path::PathBuf::from(std::ffi::OsString::from_vec(
-        expanded,
-    )))
+    let mut expanded = pathlib_parts(&homedir);
+    expanded.extend(parts);
+    Ok(expanded)
 }
 
 /// Native bytes remain native unless a boundary must record Unicode text.
-pub fn text<'a>(value: &'a std::ffi::OsStr, what: &str) -> Result<&'a str> {
+pub fn text<'a>(value: &'a OsStr, what: &str) -> Result<&'a str> {
     value.to_str().ok_or_else(|| ContractError::non_utf8(what))
 }

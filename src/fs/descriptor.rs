@@ -492,8 +492,12 @@ impl Descriptor {
     }
 
     pub fn entries(&self) -> io::Result<Vec<OsString>> {
-        let names = self.entries_up_to(None)?;
-        Ok(names.expect("an unbounded listing is never truncated"))
+        match self.entries_up_to(None)? {
+            Some(names) => Ok(names),
+            None => Err(io::Error::other(
+                "Unbounded directory listing was truncated",
+            )),
+        }
     }
 
     /// Sorted names, or `None` once the directory holds more than `limit` entries.

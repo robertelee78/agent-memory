@@ -2287,6 +2287,24 @@ mod policy_contract {
             Some("exact")
         );
     }
+
+    // Baseline scopes.py:54-56: the scope is parsed before conditions are validated.
+    #[test]
+    fn scope_refusal_precedes_conditions_refusal() {
+        use agent_memory::{
+            codec::json::{self, DecodePolicy},
+            scopes,
+        };
+        let request = json::decode(
+            r#"{"bank_project_id":"123e4567-e89b-42d3-a456-426614174000","project_id":"123e4567-e89b-42d3-a456-426614174000","scope":"personal:me","conditions":[]}"#,
+            DecodePolicy::default(),
+        )
+        .unwrap();
+        assert_eq!(
+            scopes::decide(&request).unwrap_err().message(),
+            "Scope requires a known route kind"
+        );
+    }
 }
 
 mod handoff_contract {
@@ -2365,6 +2383,41 @@ mod handoff_contract {
         let body = "## Checkpoint conditions\n\n{}\n\n<h2>Checkpoint conditions</h2>\n";
         let cues = agent_memory::handoff::managed_cues(body, &["Checkpoint conditions".into()]);
         assert_eq!(cues.len(), 2);
+    }
+
+    // Baseline handoff.py:225-235: a missing identity key in the current
+    // observation (KeyError) means "not reusable", never a null match.
+    #[test]
+    fn handoff_reusable_does_not_treat_missing_identity_as_null() {
+        use agent_memory::{
+            codec::json::{DecodePolicy, Value, decode},
+            error::Result,
+            handoff::{self, Checkpoint},
+        };
+        struct Parser;
+        impl Checkpoint for Parser {
+            fn headings(&self, body: &str) -> Result<Vec<(usize, usize, String)>> {
+                Ok(vec![(0, body.len(), handoff::SECTION.to_owned())])
+            }
+            fn fields(&self) -> Vec<String> {
+                vec![]
+            }
+            fn extra(&self) -> Vec<String> {
+                vec![]
+            }
+            fn list_text(&self, _: &[String]) -> String {
+                String::new()
+            }
+        }
+        let prior = r#"{"schema":"agent-memory/checkpoint-evidence-v1","references":[{"ref":"x","kind":"unavailable","sha256":null,"bytes":null,"commit":null,"blob":null}],"observed_checkout":{"head":null,"branch":null},"publication_verified":false,"identity_authenticated":false}"#;
+        let body = format!("## {}\n```json\n{}\n```", handoff::SECTION, prior);
+        let current = decode(
+            r#"{"references":[{"ref":"x","kind":"unavailable","sha256":null,"bytes":null}]}"#,
+            DecodePolicy::default(),
+        )
+        .unwrap();
+        let result: Value = handoff::reusable_with(&body, &current, &Parser);
+        assert_eq!(result, current);
     }
 }
 
@@ -2591,6 +2644,53 @@ mod records_slice {
             );
             assert!(records::validate_with_parser(&marker, "", &["confidence"], None).is_err());
         }
+
+        // Baseline records.py:79-85: every evidence string is validated before duplicates.
+        #[test]
+        fn evidence_validates_before_checking_duplicates() {
+            let values = Value::Array(vec![s("same"), s("same"), Value::Null]);
+            assert_eq!(
+                records::evidence(&values).unwrap_err().message(),
+                "A nonempty explicit metadata string is required"
+            );
+        }
+
+        // Baseline records.py:52-59: `{'id': ..., 'version': 1} in derived-from`
+        // uses Python equality, so `True` and `1.0` match version 1.
+        #[test]
+        fn source_capture_uses_python_numeric_equality() {
+            let capture = "a9abac6f-c33e-44c9-b40f-7b2ebafda860";
+            let source = "ce66f980-2ff9-4c89-9c50-0a7a901f76ec";
+            let path = format!("history/sources/{capture}/{source}.md");
+            for version in [Value::Bool(true), Value::Float(1.0)] {
+                let metadata = Value::Object(vec![
+                    ("id".into(), s(source)),
+                    (
+                        "derived-from".into(),
+                        Value::Array(vec![Value::Object(vec![
+                            ("id".into(), s(capture)),
+                            ("version".into(), version),
+                        ])]),
+                    ),
+                ]);
+                assert_eq!(
+                    records::source_capture_id(&path, &metadata).as_deref(),
+                    Some(capture)
+                );
+            }
+        }
+
+        // Baseline records.py:219-235: `render` never reads `--file`.
+        #[test]
+        fn render_ignores_unused_content_error() {
+            let result = records::command(
+                "render",
+                Ok(Some(proposal())),
+                Err(agent_memory::error::ContractError::new("unused")),
+                &[],
+            );
+            assert_eq!(result.exit_code, 0);
+        }
     }
 }
 
@@ -2693,5 +2793,32 @@ mod private_output_contract {
             "Complete private input exceeds its explicit encoded budget; no truncation"
         );
         assert_eq!(std::fs::read(source).unwrap(), b"{}");
+    }
+
+    // Baseline sharing_limits.py:86-87: len() of the JSON values and Python truthiness.
+    #[test]
+    fn inspection_receipt_uses_json_lengths_and_truthiness() {
+        use agent_memory::codec::json::{self, DecodePolicy};
+        let root = PrivateRoot::new();
+        let repo = root.child("repository");
+        let runtime = root.child("runtime");
+        let value = json::decode(
+            r#"{"schema":"agent-memory/semantic-sharing-inspection-v2","changed":"éx","pages":{"a":1},"pending_selections":[],"known_causes":"pending","withheld_sources":[]}"#,
+            DecodePolicy::default(),
+        )
+        .unwrap();
+        let receipt =
+            sharing_limits::write_private(&root.0.join("inspection.json"), &value, &repo, &runtime)
+                .unwrap();
+        assert_eq!(
+            receipt.get("changed_components"),
+            Some(&Value::Int(2.into()))
+        );
+        assert_eq!(receipt.get("review_pages"), Some(&Value::Int(1.into())));
+        assert_eq!(
+            receipt.get("selection_required"),
+            Some(&Value::Int(0.into()))
+        );
+        assert_eq!(receipt.get("conflicts_pending"), Some(&Value::Bool(true)));
     }
 }

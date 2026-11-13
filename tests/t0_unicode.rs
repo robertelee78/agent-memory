@@ -24,6 +24,16 @@ fn casefold_table_is_exact_baseline_fixture() {
         assert_eq!(hex(row[0].as_str().unwrap()), *source);
         assert_eq!(scalars(row[1].as_str().unwrap()), *target);
     }
+    // Lookup is a binary search: the table must be strictly ascending.
+    assert!(unicode::CASEFOLD.windows(2).all(|w| w[0].0 < w[1].0));
+    for (source, target) in unicode::CASEFOLD {
+        let source = char::from_u32(*source).unwrap();
+        assert_eq!(
+            unicode::casefold(&source.to_string()),
+            *target,
+            "{source:?}"
+        );
+    }
     assert_eq!(unicode::casefold("Straße Σςİ"), "strasse σσi\u{307}");
     assert_eq!(unicode::nfc_casefold("E\u{301}"), "é");
 }
@@ -41,6 +51,16 @@ fn word_ranges_are_exact_baseline_fixture() {
         assert!(unicode::is_word(char::from_u32(*start).unwrap()));
         assert!(unicode::is_word(char::from_u32(*end).unwrap()));
     }
+    assert!(unicode::ALNUM.iter().all(|(start, end)| start <= end));
+    assert!(unicode::ALNUM.windows(2).all(|w| w[0].1 < w[1].0));
+    for pair in unicode::ALNUM.windows(2) {
+        let gap = pair[0].1 + 1;
+        if gap < pair[1].0 {
+            if let Some(c) = char::from_u32(gap) {
+                assert!(!unicode::is_word(c) || c == '_', "{c:?}");
+            }
+        }
+    }
     assert!(unicode::is_word('_'));
     assert!(!unicode::is_word('\u{301}'));
 }
@@ -54,6 +74,7 @@ fn html_entities_and_numeric_rules_are_exact_baseline_fixtures() {
         assert_eq!(row[0].as_str().unwrap(), *name);
         assert_eq!(scalars(row[1].as_str().unwrap()), *target);
     }
+    assert!(unicode::HTML5.windows(2).all(|w| w[0].0 < w[1].0));
     let rows = vector.get("invalid_charrefs").unwrap().as_array().unwrap();
     assert_eq!(rows.len(), unicode::INVALID_CHARREFS.len());
     for (row, (source, target)) in rows.iter().zip(unicode::INVALID_CHARREFS) {

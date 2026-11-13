@@ -7,6 +7,7 @@ use std::collections::HashSet;
 use std::sync::LazyLock;
 
 pub static SPEC: LazyLock<Value> = LazyLock::new(|| {
+    // Invariant: the schema is compiled in from the pack and decoded by a test.
     json::decode(
         include_str!("../skills/agent-memory/schemas/developers.json"),
         DecodePolicy {
@@ -17,6 +18,18 @@ pub static SPEC: LazyLock<Value> = LazyLock::new(|| {
     )
     .expect("bundled developer schema")
 });
+const LOCK_FILE: &str = ".developers.lock";
+
+fn spec_text(key: &str) -> Result<&'static str> {
+    let spec: &'static Value = &SPEC;
+    spec.get(key)
+        .and_then(Value::as_str)
+        .ok_or_else(|| ContractError::new("Bundled developer schema lacks a required field"))
+}
+fn leaf(path: &Path) -> Result<&OsStr> {
+    path.file_name()
+        .ok_or_else(|| ContractError::new("Identity registry and lock must be named files"))
+}
 
 pub fn uuid_valid(value: &Value) -> bool {
     let Some(s) = value.as_str() else {
@@ -32,7 +45,10 @@ pub fn uuid_valid(value: &Value) -> bool {
         })
 }
 pub fn digest(data: Option<&[u8]>) -> Option<String> {
-    data.map(|v| crate::validation_memo::hex(&Sha256::digest(v)))
+    data.map(sha256_hex)
+}
+pub(crate) fn sha256_hex(data: &[u8]) -> String {
+    crate::validation_memo::hex(&Sha256::digest(data))
 }
 pub fn encoded(data: &Value) -> Result<Vec<u8>> {
     let mut s = json::encode(data, json::SORTED_INDENT2_UTF8_FINITE)?;
@@ -86,15 +102,18 @@ pub fn aliases(values: &Value) -> Result<&Value> {
     let items = values
         .as_array()
         .ok_or_else(|| ContractError::new("Identity aliases must be a list"))?;
-    let mut keys = HashSet::new();
+    let mut keys = Vec::new();
     for v in items {
         alias(v)?;
-        if !keys.insert((
-            get(v, "kind").as_str().unwrap(),
-            get(v, "value").as_str().unwrap(),
-        )) {
-            return Err(ContractError::new("Duplicate identity aliases"));
-        }
+        keys.push((get(v, "kind"), get(v, "value")));
+    }
+    // Python validates every alias before comparing (kind, value) pairs.
+    if keys
+        .iter()
+        .enumerate()
+        .any(|(index, key)| keys.iter().skip(index + 1).any(|other| other == key))
+    {
+        return Err(ContractError::new("Duplicate identity aliases"));
     }
     Ok(values)
 }
@@ -102,12 +121,14 @@ pub fn labels(values: &Value) -> Result<&Value> {
     let items = values
         .as_array()
         .ok_or_else(|| ContractError::new("Identity labels must be a list"))?;
-    let mut keys = HashSet::new();
+    let mut keys = Vec::new();
     for v in items {
-        let s = text(v, 128)?;
-        if !keys.insert(s) {
-            return Err(ContractError::new("Duplicate identity labels"));
-        }
+        keys.push(text(v, 128)?);
+    }
+    // Python validates every label before comparing them.
+    let unique: HashSet<&str> = keys.iter().copied().collect();
+    if unique.len() != keys.len() {
+        return Err(ContractError::new("Duplicate identity labels"));
     }
     Ok(values)
 }
@@ -275,10 +296,12 @@ pub fn paths() -> Result<(PathBuf, PathBuf, PathBuf)> {
     if !root.is_absolute() {
         return Err(ContractError::new("Identity config root must be absolute"));
     }
-    let mut ancestors: Vec<_> = root.ancestors().filter(|p| p.parent().is_some()).collect();
+    let mut ancestors: Vec<_> = root.ancestors().collect();
     ancestors.reverse();
     for part in ancestors {
-        let parent = part.parent().unwrap();
+        let Some(parent) = part.parent() else {
+            continue;
+        };
         let chain = match DirectoryChain::open(parent) {
             Ok(v) => v,
             Err(e) if e.kind() == io::ErrorKind::NotFound => break,
@@ -303,12 +326,12 @@ pub fn paths() -> Result<(PathBuf, PathBuf, PathBuf)> {
             Err(e) => return Err(io_error(e)),
         }
     }
-    let registry = root.join(get(&SPEC, "registry-file").as_str().unwrap());
-    let lock = root.join(".developers.lock");
+    let registry = root.join(spec_text("registry-file")?);
+    let lock = root.join(LOCK_FILE);
     match DirectoryChain::open(&root) {
         Ok(chain) => {
             for path in [&registry, &lock] {
-                match chain.directory().stat_at(path.file_name().unwrap()) {
+                match chain.directory().stat_at(leaf(path)?) {
                     Ok(v) if v.is_symlink() => {
                         return Err(ContractError::new(
                             "Identity registry and lock must not be symlinks",
@@ -351,7 +374,7 @@ fn read_named(root: &Path, name: &OsStr) -> Result<Option<Vec<u8>>> {
 }
 pub fn observe() -> Result<(Value, Option<String>)> {
     let (root, registry, _) = paths()?;
-    let raw = read_named(&root, registry.file_name().unwrap())?;
+    let raw = read_named(&root, leaf(&registry)?)?;
     let data = match raw.as_deref() {
         Some(bytes) => {
             let v = load(bytes)?;
@@ -380,7 +403,7 @@ pub fn result(
 }
 fn lock_present(root: &Path, lock: &Path) -> Result<bool> {
     match DirectoryChain::open(root) {
-        Ok(chain) => exists(chain.directory(), lock.file_name().unwrap()),
+        Ok(chain) => exists(chain.directory(), leaf(lock)?),
         Err(e) if e.kind() == io::ErrorKind::NotFound => Ok(false),
         Err(e) => Err(io_error(e)),
     }
@@ -439,16 +462,14 @@ pub fn status(
     let mut evidence = Vec::new();
     let mut conflicts = Vec::new();
     for item in observed {
-        let matches: Vec<Value> = get(&data, "developers")
-            .as_object()
-            .unwrap()
-            .iter()
-            .filter(|(_, entry)| get(entry, "aliases").as_array().unwrap().contains(&item))
+        let developers = get(&data, "developers").as_object().into_iter().flatten();
+        let matches: Vec<Value> = developers
+            .filter(|(_, entry)| member(get(entry, "aliases"), &item))
             .map(|(id, _)| string(id))
             .collect();
         let state = if matches.is_empty() {
             "unknown"
-        } else if matches.len() == 1 && matches[0] == *get(&data, "selected") {
+        } else if matches == [get(&data, "selected").clone()] {
             "matches-selected"
         } else {
             "conflicting"
@@ -533,10 +554,12 @@ pub fn preview_with_sources(
             "Developer ID must be a canonical random UUIDv4",
         ));
     }
+    let selected = id.as_str().unwrap_or_default();
+    let truthy = crate::sharing_limits::truthy;
     if action == "select"
-        && (get(&data, "developers").get(id.as_str().unwrap()).is_none()
-            || new_labels.as_array().is_none_or(|v| !v.is_empty())
-            || new_aliases.as_array().is_none_or(|v| !v.is_empty()))
+        && (get(&data, "developers").get(selected).is_none()
+            || truthy(new_labels)
+            || truthy(new_aliases))
     {
         return Err(ContractError::new(
             "Selection requires an existing ID and does not modify aliases or labels",
@@ -629,19 +652,77 @@ impl Drop for Temp<'_> {
         let _ = self.finish();
     }
 }
-fn map_mut(value: &mut Value) -> &mut Vec<(String, Value)> {
-    match value {
-        Value::Object(v) => v,
-        _ => unreachable!("validated registry object"),
-    }
-}
-fn insert(value: &mut Value, key: &str, item: Value) {
-    let map = map_mut(value);
+fn insert(value: &mut Value, key: &str, item: Value) -> Result<()> {
+    let Value::Object(map) = value else {
+        return Err(ContractError::new("Invalid attribution registry maps"));
+    };
     if let Some((_, v)) = map.iter_mut().find(|(k, _)| k == key) {
         *v = item;
     } else {
         map.push((key.to_owned(), item));
     }
+    Ok(())
+}
+/// Typed view of a proposal already accepted by `proposal_value`.
+struct ProposalFields<'a> {
+    operation_id: &'a str,
+    action: &'a str,
+    developer_id: &'a str,
+    labels: &'a [Value],
+    aliases: &'a [Value],
+}
+impl<'a> ProposalFields<'a> {
+    fn of(p: &'a Value) -> Result<Self> {
+        let invalid = || ContractError::new("Invalid developer proposal fields");
+        Ok(Self {
+            operation_id: get(p, "operation_id").as_str().ok_or_else(invalid)?,
+            action: get(p, "action").as_str().ok_or_else(invalid)?,
+            developer_id: get(p, "developer_id").as_str().ok_or_else(invalid)?,
+            labels: get(p, "labels").as_array().ok_or_else(invalid)?,
+            aliases: get(p, "aliases").as_array().ok_or_else(invalid)?,
+        })
+    }
+    fn items(&self, key: &str) -> &'a [Value] {
+        if key == "labels" {
+            self.labels
+        } else {
+            self.aliases
+        }
+    }
+}
+/// Python `setdefault(target, {...})` followed by ordered, de-duplicated extension.
+fn merged_entry(existing: Option<&Value>, fields: &ProposalFields<'_>) -> Result<Value> {
+    let mut entry = Vec::new();
+    for key in ["labels", "aliases"] {
+        let mut items: Vec<Value> = match existing {
+            Some(entry) => get(entry, key)
+                .as_array()
+                .ok_or_else(|| {
+                    ContractError::new(
+                        "Registry stores stable developer IDs and identity metadata only",
+                    )
+                })?
+                .to_vec(),
+            None => Vec::new(),
+        };
+        for item in fields.items(key) {
+            if !items.contains(item) {
+                items.push(item.clone());
+            }
+        }
+        entry.push((key.to_owned(), Value::Array(items)));
+    }
+    // Keep the registry's own key order for an existing entry.
+    if let Some(Value::Object(original)) = existing {
+        let mut ordered = original.clone();
+        for (key, value) in entry {
+            if let Some((_, slot)) = ordered.iter_mut().find(|(k, _)| *k == key) {
+                *slot = value;
+            }
+        }
+        return Ok(Value::Object(ordered));
+    }
+    Ok(Value::Object(entry))
 }
 pub fn apply(proposal: &Value) -> Result<Value> {
     apply_with_sources(proposal, Sources::default())
@@ -649,22 +730,21 @@ pub fn apply(proposal: &Value) -> Result<Value> {
 pub fn apply_with_sources(proposal: &Value, sources: Sources) -> Result<Value> {
     let (root, registry, lock) = paths()?;
     let p = proposal_value(proposal, &registry)?;
-    let request_sha = digest(Some(&encoded(p)?)).unwrap();
+    let fields = ProposalFields::of(p)?;
+    let request_sha = sha256_hex(&encoded(p)?);
     fs::private_mkdir(&root)?;
     let owner = object([
         ("operation_id", get(p, "operation_id").clone()),
         ("host", string(host::hostname()?)),
         ("pid", Value::Int(host::pid().into())),
-        (
-            "operation",
-            string(format!("developer-{}", get(p, "action").as_str().unwrap())),
-        ),
+        ("operation", string(format!("developer-{}", fields.action))),
         ("start", string((sources.utc_now)()?)),
     ]);
     let bytes = encoded(&owner)?;
     let chain = DirectoryChain::open(&root).map_err(io_error)?;
     let dir = chain.directory();
-    let lock_name = lock.file_name().unwrap();
+    let lock_name = leaf(&lock)?;
+    let registry_name = leaf(&registry)?;
     let file = dir
         .create_exclusive(lock_name, libc::O_WRONLY, 0o600)
         .map_err(|e| {
@@ -687,9 +767,19 @@ pub fn apply_with_sources(proposal: &Value, sources: Sources) -> Result<Value> {
     let mut file = Some(file);
     let mut guard = None;
     let outcome = (|| -> Result<Value> {
-        file.as_mut().unwrap().write_all(&bytes).map_err(io_error)?;
-        file.as_ref().unwrap().fsync().map_err(io_error)?;
-        match FlockGuard::try_acquire_owned(file.take().unwrap(), LockMode::Exclusive) {
+        let Some(mut descriptor) = file.take() else {
+            return Err(ContractError::new(
+                "Attribution registry lock descriptor is unavailable",
+            ));
+        };
+        let published = descriptor
+            .write_all(&bytes)
+            .and_then(|()| descriptor.fsync());
+        if let Err(error) = published {
+            file = Some(descriptor);
+            return Err(io_error(error));
+        }
+        match FlockGuard::try_acquire_owned(descriptor, LockMode::Exclusive) {
             Ok(value) => guard = Some(value),
             Err((descriptor, error)) => {
                 file = Some(descriptor);
@@ -697,7 +787,7 @@ pub fn apply_with_sources(proposal: &Value, sources: Sources) -> Result<Value> {
             }
         }
         let (data, before) = observe()?;
-        let op_id = get(p, "operation_id").as_str().unwrap();
+        let op_id = fields.operation_id;
         if let Some(known) = get(&data, "operations").get(op_id) {
             if get(known, "proposal_sha256").as_str() != Some(&request_sha) {
                 return Err(ContractError::new(
@@ -724,8 +814,8 @@ pub fn apply_with_sources(proposal: &Value, sources: Sources) -> Result<Value> {
                 "Attribution registry changed after preview; reread and prepare a fresh proposal",
             ));
         }
-        let target = get(p, "developer_id").as_str().unwrap();
-        let action = get(p, "action").as_str().unwrap();
+        let target = fields.developer_id;
+        let action = fields.action;
         let existing = get(&data, "developers").get(target);
         if action == "create" && existing.is_some() {
             return Err(ContractError::new(
@@ -733,9 +823,7 @@ pub fn apply_with_sources(proposal: &Value, sources: Sources) -> Result<Value> {
             ));
         }
         if action == "select"
-            && (existing.is_none()
-                || !get(p, "labels").as_array().unwrap().is_empty()
-                || !get(p, "aliases").as_array().unwrap().is_empty())
+            && (existing.is_none() || !fields.labels.is_empty() || !fields.aliases.is_empty())
         {
             return Err(ContractError::new(
                 "Selection requires an existing ID and cannot change metadata",
@@ -743,32 +831,23 @@ pub fn apply_with_sources(proposal: &Value, sources: Sources) -> Result<Value> {
         }
         let mut updated = data.clone();
         if action != "select" {
-            let mut entry = existing.cloned().unwrap_or_else(|| {
-                object([
-                    ("labels", Value::Array(vec![])),
-                    ("aliases", Value::Array(vec![])),
-                ])
-            });
-            for key in ["labels", "aliases"] {
-                let Value::Array(items) = entry.get_mut(key).unwrap() else {
-                    unreachable!()
-                };
-                for item in get(p, key).as_array().unwrap() {
-                    if !items.contains(item) {
-                        items.push(item.clone());
-                    }
-                }
-            }
-            insert(updated.get_mut("developers").unwrap(), target, entry);
+            let entry = merged_entry(existing, &fields)?;
+            let developers = updated
+                .get_mut("developers")
+                .ok_or_else(|| ContractError::new("Invalid attribution registry maps"))?;
+            insert(developers, target, entry)?;
         }
-        insert(&mut updated, "selected", string(target));
+        insert(&mut updated, "selected", string(target))?;
         let history = object([
             ("proposal_sha256", string(request_sha)),
             ("developer_id", string(target)),
             ("action", string(action)),
             ("at", string((sources.utc_now)()?)),
         ]);
-        insert(updated.get_mut("operations").unwrap(), op_id, history);
+        let operations = updated
+            .get_mut("operations")
+            .ok_or_else(|| ContractError::new("Invalid attribution registry maps"))?;
+        insert(operations, op_id, history)?;
         validate(&updated)?;
         let payload = encoded(&updated)?;
         let temp_name = OsString::from(format!(".developers-{}", (sources.uuid4)()?));
@@ -789,17 +868,15 @@ pub fn apply_with_sources(proposal: &Value, sources: Sources) -> Result<Value> {
                 ));
             }
             chain.recheck().map_err(io_error)?;
-            fs::rename_at(
-                dir,
-                &temp.name,
-                dir,
-                registry.file_name().unwrap(),
-                RenameMode::Replace,
-            )
-            .map_err(io_error)?;
+            fs::rename_at(dir, &temp.name, dir, registry_name, RenameMode::Replace)
+                .map_err(io_error)?;
             temp.present = false;
             dir.fsync_directory().map_err(io_error)?;
-            let actual = read_named(&root,registry.file_name().unwrap())?.ok_or_else(|| ContractError::new("Attribution write needs inspection: readback differs; replay the same proposal"))?;
+            let actual = read_named(&root, registry_name)?.ok_or_else(|| {
+                ContractError::new(
+                    "Attribution write needs inspection: readback differs; replay the same proposal",
+                )
+            })?;
             if actual != payload {
                 return Err(ContractError::new(
                     "Attribution write needs inspection: readback differs; replay the same proposal",
@@ -838,7 +915,7 @@ pub fn recover_with_sources(prepared: Option<&Value>, sources: Sources) -> Resul
     }
     let chain = DirectoryChain::open(&root).map_err(io_error)?;
     let dir = chain.directory();
-    let name = lock.file_name().unwrap();
+    let name = leaf(&lock)?;
     let file = dir
         .open_at(name, libc::O_RDONLY | libc::O_NONBLOCK, 0)
         .map_err(io_error)?;
@@ -850,15 +927,12 @@ pub fn recover_with_sources(prepared: Option<&Value>, sources: Sources) -> Resul
     if !dir.stat_at(name).map_err(io_error)?.same_inode(inode) {
         return Err(ContractError::new("Lock changed before recovery inventory"));
     }
-    let raw = guard
-        .descriptor_mut()
-        .read_bounded(LOCK_MAX_BYTES)
-        .map_err(|e| match e {
-            fs::ReadError::SizeLimit { .. } => ContractError::new(
-                "Unrecognized developer lock requires operator review; preserve it",
-            ),
-            other => io_error(other),
-        })?;
+    let raw = guard.read_bounded(LOCK_MAX_BYTES).map_err(|e| match e {
+        fs::ReadError::SizeLimit { .. } => {
+            ContractError::new("Unrecognized developer lock requires operator review; preserve it")
+        }
+        other => io_error(other),
+    })?;
     let owner = load_with_limit(&raw, LOCK_MAX_BYTES)?;
     let operation = get(&owner, "operation")
         .as_str()
@@ -878,12 +952,13 @@ pub fn recover_with_sources(prepared: Option<&Value>, sources: Sources) -> Resul
         .as_int()
         .and_then(|v| v.as_str().parse::<i32>().ok())
         .filter(|v| *v > 0);
-    if get(&owner, "host").as_str() != Some(host::hostname()?.as_str()) || pid.is_none() {
+    let same_host = get(&owner, "host").as_str() == Some(host::hostname()?.as_str());
+    let Some(pid) = pid.filter(|_| same_host) else {
         return Err(ContractError::new(
             "Foreign-host or malformed lock needs explicit operator review; no automatic removal",
         ));
-    }
-    match host::pid_state(pid.unwrap())? {
+    };
+    match host::pid_state(pid)? {
         host::PidState::Gone => (),
         host::PidState::Denied => {
             return Err(ContractError::new("Cannot prove lock owner is gone"));
@@ -894,7 +969,7 @@ pub fn recover_with_sources(prepared: Option<&Value>, sources: Sources) -> Resul
             ));
         }
     }
-    let hash = digest(Some(&raw)).unwrap();
+    let hash = sha256_hex(&raw);
     let path = path_text(&registry)?;
     let Some(prepared) = prepared else {
         return Ok(result(
@@ -990,7 +1065,17 @@ pub fn command_result(operation: &str, outcome: Result<Value>) -> crate::lifecyc
             json::DEFAULT,
         ),
     };
-    let stdout = json::encode(&value, style).expect("developer result encoding") + "\n";
+    let stdout = match json::encode(&value, style) {
+        Ok(text) => text + "\n",
+        Err(error) => {
+            return crate::lifecycle::CommandResult {
+                value: Some(value),
+                exit_code: 1,
+                stdout: String::new(),
+                stderr: format!("{error}\n"),
+            };
+        }
+    };
     crate::lifecycle::CommandResult {
         value: Some(value),
         exit_code,

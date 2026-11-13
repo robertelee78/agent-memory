@@ -4,6 +4,26 @@ use std::collections::VecDeque;
 use std::ffi::OsString;
 use std::path::{Component, Path, PathBuf};
 
+/// Symlink expansions per resolution (Linux `MAXSYMLINKS`); a longer
+/// non-looping chain is refused although CPython's `realpath` resolves it.
+pub const MAX_SYMLINKS: usize = 40;
+/// Queued name components; bounds a self-amplifying target such as `a -> a/a/…/a`.
+pub const MAX_PENDING_COMPONENTS: usize = 131_072;
+
+fn loop_refusal() -> ContractError {
+    ContractError::new("Symlink loop or excessive name resolution")
+}
+
+fn components(path: &Path) -> Vec<OsString> {
+    path.components()
+        .filter_map(|c| match c {
+            Component::Normal(s) => Some(s.to_owned()),
+            Component::ParentDir => Some(OsString::from("..")),
+            _ => None,
+        })
+        .collect()
+}
+
 pub fn canonical_path(path: &Path, strict: bool) -> Result<PathBuf> {
     let absolute = if path.is_absolute() {
         path.to_path_buf()
@@ -12,14 +32,7 @@ pub fn canonical_path(path: &Path, strict: bool) -> Result<PathBuf> {
             .map_err(|e| ContractError::new(e.to_string()))?
             .join(path)
     };
-    let mut pending: VecDeque<OsString> = absolute
-        .components()
-        .filter_map(|c| match c {
-            Component::Normal(s) => Some(s.to_owned()),
-            Component::ParentDir => Some(OsString::from("..")),
-            _ => None,
-        })
-        .collect();
+    let mut pending: VecDeque<OsString> = components(&absolute).into();
     let mut resolved = PathBuf::from("/");
     let mut links = 0usize;
     while let Some(part) = pending.pop_front() {
@@ -34,25 +47,19 @@ pub fn canonical_path(path: &Path, strict: bool) -> Result<PathBuf> {
         match std::fs::symlink_metadata(&candidate) {
             Ok(meta) if meta.file_type().is_symlink() => {
                 links += 1;
-                if links > 4096 {
-                    return Err(ContractError::new(
-                        "Symlink loop or excessive name resolution",
-                    ));
+                if links > MAX_SYMLINKS {
+                    return Err(loop_refusal());
                 }
                 let target = std::fs::read_link(&candidate)
                     .map_err(|e| ContractError::new(e.to_string()))?;
+                let expansion = components(&target);
+                if pending.len() + expansion.len() > MAX_PENDING_COMPONENTS {
+                    return Err(loop_refusal());
+                }
                 if target.is_absolute() {
                     resolved = PathBuf::from("/");
                 }
-                let components: Vec<_> = target
-                    .components()
-                    .filter_map(|c| match c {
-                        Component::Normal(s) => Some(s.to_owned()),
-                        Component::ParentDir => Some(OsString::from("..")),
-                        _ => None,
-                    })
-                    .collect();
-                for component in components.into_iter().rev() {
+                for component in expansion.into_iter().rev() {
                     pending.push_front(component);
                 }
             }
