@@ -307,7 +307,7 @@ class LayoutMetadataProbeFaults(unittest.TestCase):
                 before = target.stat()
                 observed = json.loads(pin.read_bytes())
                 observed['flags'] ^= stat.UF_NODUMP if sys.platform == 'darwin' else 0x40
-                pin.write_text(json.dumps(observed))
+                pin.write_bytes((json.dumps(observed, sort_keys=True, ensure_ascii=False, indent=2) + '\n').encode())
                 self.assertEqual(target.stat(), before)
             elif foreign:
                 original_inode = target.stat().st_ino

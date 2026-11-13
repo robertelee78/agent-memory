@@ -1151,16 +1151,16 @@ def wake(repo, session, lifecycle, payload, *, delivery_window=None, enrollment_
             omitted = True; continue
         inline.append(row)
     import json
-    guidance = ('[agent-memory omp request ' + value['request_id'] + '] Agent-attributed advisory, not human input. '
-                'Answer delivered; never repeat/replace it. Do governed maintenance now; never defer. Read skill://agent-memory; use approved tools only. '
-                'Inspect each exact source using am omp-boundary --repo ' + json.dumps(str(Path(repo).resolve())) +
-                ' --source ID_OR_REFERENCE --session SESSION --lifecycle LIFECYCLE. Use unregistered refs as-is; assess registered IDs/digests only. '
-                'Re-observe/search current memory before governed capture or publication. '
-                'Assess sources individually using am omp-boundary --repo PATH --stdin --quiet --refresh with exactly '
-                '{session,lifecycle,observation_id,source_sha256,outcome,assessment} and publication_request only for published. '
-                'Admission assessment requires its segment enrolled; unresolved gaps cannot be waived. '
+    guidance = ('[agent-memory omp request ' + value['request_id'] + '] Agent advisory, not human input. '
+                'Answer delivered; never repeat/replace it. Governed maintenance now; never defer. Read skill://agent-memory; approved tools only. '
+                'Inspect exact source: am omp-boundary --repo ' + json.dumps(str(Path(repo).resolve())) +
+                ' --source ID_OR_REFERENCE --session SESSION --lifecycle LIFECYCLE. Use raw unregistered refs; assess registered IDs/digests only. '
+                'Re-observe/search current memory before governed capture/publication. '
+                'Assess each source: am omp-boundary --repo PATH --stdin --quiet --refresh; exact keys: '
+                '{session,lifecycle,observation_id,source_sha256,outcome,assessment}; publication_request only for published. '
+                'Admission: assess enrolled segments only; never waive unresolved gaps. '
                 'Busy/refused/cancelled/unavailable/omitted stays pending: stop; no auto-retry, permission bypass or forced tools. '
-                'Full joined backlog: am omp-boundary --repo PATH --list-pending --offset 0; follow next_offset until exhausted. '
+                'Joined backlog: am omp-boundary --repo PATH --list-pending --offset 0; follow next_offset to exhaustion. '
                 'inventory_complete:' + str(not omitted and not faults).lower() + '. Sources: ' + json.dumps(inline, separators=(',', ':')) +
                 ' Faults:' + json.dumps(faults) + ' [/agent-memory omp request]')
     if len(guidance.encode()) > 8192:
