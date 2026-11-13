@@ -7,6 +7,9 @@
 pub mod artifact;
 pub mod authority;
 pub mod bank_capacity;
+pub mod bank_contract;
+pub mod bank_layout;
+pub mod bank_writes;
 pub mod boundary_assessment;
 pub mod clock;
 pub mod codec;
@@ -19,6 +22,7 @@ pub mod identity_git;
 pub mod lifecycle;
 pub mod local_registry;
 pub mod model_reference;
+pub mod omp_installation;
 pub mod pack_validation;
 pub mod process;
 pub mod records;
