@@ -18,13 +18,40 @@ impl Default for Sources {
         }
     }
 }
-/// Random UUIDv4 from the kernel entropy call (no `/dev` path is opened).
+/// Sixteen bytes from the kernel entropy call (no `/dev` path is opened).
+#[cfg(target_os = "macos")]
+fn entropy(bytes: &mut [u8; 16]) -> std::io::Result<()> {
+    if unsafe { libc::getentropy(bytes.as_mut_ptr().cast(), bytes.len()) } != 0 {
+        return Err(std::io::Error::last_os_error());
+    }
+    Ok(())
+}
+/// Sixteen bytes from the kernel entropy call (no `/dev` path is opened).
+/// `getrandom` returns at most 256 bytes uninterrupted once the pool is
+/// initialised; a short or interrupted result is retried.
+#[cfg(target_os = "linux")]
+fn entropy(bytes: &mut [u8; 16]) -> std::io::Result<()> {
+    let mut filled = 0;
+    while filled < bytes.len() {
+        let remaining = &mut bytes[filled..];
+        let count = unsafe { libc::getrandom(remaining.as_mut_ptr().cast(), remaining.len(), 0) };
+        if count < 0 {
+            let error = std::io::Error::last_os_error();
+            if error.kind() == std::io::ErrorKind::Interrupted {
+                continue;
+            }
+            return Err(error);
+        }
+        filled += count as usize;
+    }
+    Ok(())
+}
+/// Random UUIDv4 from the kernel entropy call.
 pub fn uuid4() -> Result<String> {
     let mut bytes = [0u8; 16];
-    if unsafe { libc::getentropy(bytes.as_mut_ptr().cast(), bytes.len()) } != 0 {
+    if let Err(error) = entropy(&mut bytes) {
         return Err(ContractError::new(format!(
-            "OS UUID entropy unavailable: {}",
-            std::io::Error::last_os_error()
+            "OS UUID entropy unavailable: {error}"
         )));
     }
     bytes[6] = (bytes[6] & 15) | 64;
