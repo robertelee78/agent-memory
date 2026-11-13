@@ -27,9 +27,12 @@ They do not transfer merely because the version gate admits this target.
 - Shutdown handlers start in load order but complete concurrently under stock's
   two-second cap. AM's 1.8-second flush cannot prove that another handler did not
   append after its final capture; current-producer qualification remains pending.
-- The Linux clock gate currently admits only the independently reviewed 18.16
-  image. The 18.19 image's clock contract must be reviewed and qualified before
-  admitting automatic wake; adding its hash without that proof is prohibited.
+- The Linux clock gate admits only the exact reviewed 18.16 and 18.19 arm64
+  images. The 18.19 image is
+  `61826bf89c2c0512417fee05fa2f486e60ee11b23ea95a17257a6c49edb6b8d5`.
+  Actual Python 3.11/3.15 private clock probes exercised image rejection and
+  same-clock admission. This is not automatic-wake, elapsed-rate, native
+  workflow or timing qualification; those cells remain required.
 - Exact recognition of receipt-owned manual reads is not yet qualified for
   18.19. Unknown renderer differences remain ordinary screened evidence/gaps,
   not instruction-context provenance. Qualify the actual result, not a
@@ -200,10 +203,12 @@ explicit pending cursors/faults account for omitted references. There is no
 shared-core wake reservation that can suppress the healthy new root.
 
 The total stop-callback bound remains **950 ms**, earlier on cancellation;
-helpers are never killed during shared writes. A source-first seal is handed
-off immediately without reserving a wake. After a fresh nonce-bound clock
-handshake, a second counted seal of the same detached view may request the
-one existing root wake. Bun hrtime and Python monotonic have different epochs.
+helpers are never killed during shared writes. ONE armed source-first seal,
+with a fresh nonce and terminal false, is handed off before CLOCK/CLOCK-ACK.
+There is no prewarm or second seal. The worker commits the source outcome
+before considering the one existing root wake; bounded registration follows
+the response attempt and guard unwind. Bun hrtime and Python monotonic have
+different epochs.
 Four timestamps bound their offset; use the conservative lower bound and
 subtract the platform rate uncertainty before the pre-reservation check.
 The provisional 100 ms margin must cover measured post-reservation p99.

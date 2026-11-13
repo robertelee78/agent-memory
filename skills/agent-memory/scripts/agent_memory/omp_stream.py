@@ -46,8 +46,11 @@ REFUSAL_CODES = frozenset({'capture-refused', 'identity-changed', 'unsafe-view',
 _HEADER = re.compile(rb'AM249 ([A-Z-]+) (0|[1-9][0-9]{0,15}) (0|[1-9][0-9]{0,8}) (-|[0-9a-f-]{36})\n')
 _HEX = re.compile(r'[0-9a-f]{64}')
 _WINDOW_MINT = object()
-# The exact upstream 18.16.0 Linux arm64 image; see the v0.0.15 clock contract.
-_LINUX_MONOTONIC_IMAGES = frozenset({'c2be1ea85ce17c4270854b57efff2a7ea1d5a03c7557fd08721f2b9bb32698de'})
+# Exact upstream Linux arm64 images; see the v0.0.15 clock qualification contract.
+_LINUX_MONOTONIC_IMAGES = frozenset({
+    'c2be1ea85ce17c4270854b57efff2a7ea1d5a03c7557fd08721f2b9bb32698de',
+    '61826bf89c2c0512417fee05fa2f486e60ee11b23ea95a17257a6c49edb6b8d5',
+})
 _MAX_NATIVE_IMAGE_BYTES = 512 * 1024 * 1024
 _NONLEARNING_MINT = object()
 
